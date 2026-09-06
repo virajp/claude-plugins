@@ -70,9 +70,10 @@
   "compatibility_flags": ["nodejs_compat"],
 
   "assets": {
-    // The build output directory, relative to this file. `./dist` is what the
-    // framework packs that pair with this bundle emit at a repo root; a repo
-    // whose site is a sub-project points at that project's output
+    // The build output directory, relative to this file. `./dist` is the
+    // framework pack's own stated fact — its "## Build output" heading, which
+    // says where the build writes and that a deploy target may rely on it. A
+    // repo whose site is a sub-project points at that project's output
     // ("./site/dist") instead.
     "directory": "./dist",
 

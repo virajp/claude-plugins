@@ -103,8 +103,14 @@ framework's business and not this component's.
 ## The artifact contract
 
 **A script plus the file set it fronts**, uploaded together: `./dist` by
-default, matching what the framework packs that pair here emit, and
-overridable in one place when a project's site is a sub-project.
+default, and overridable in one place when a project's site is a
+sub-project. **That default is not this pack's guess — it is the framework
+pack's stated fact**, under the heading `## Build output` in the project
+bundle's framework component, which says where the build writes and that a
+deploy target may rely on the path. `framework/astro` is the specimen that
+states it today; any framework pack stating the same fact under the same
+heading pairs here the same way, and one that states a different path is
+one whose `assets.directory` differs by that much.
 
 - **Fingerprinted assets are immutable.** Where the framework hashes
   content into the filename, those paths get a long `max-age` with

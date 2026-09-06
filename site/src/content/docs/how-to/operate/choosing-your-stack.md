@@ -45,6 +45,16 @@ TypeScript and JavaScript; `app-framework/flutter` covers Dart and Flutter and
 serves `mobile`, `tablet`, `desktop` and `webapp` from a single codebase.
 Anything else takes the **generate** entry — see below.
 
+**A `site` project picks between four Astro bundles**, all on the one
+`framework/astro` pack, all carrying React for islands, differing by how a page
+is rendered: `astro-ssg` builds every route at build time with no adapter;
+`astro-ssr` renders every route per request behind an adapter; `astro-hybrid` is
+prerendered by default with the routes that must read a request opting out one
+by one; `astro-csr` serves one shell page and lets a client-only island own
+everything after the first paint. A page with no island ships no JavaScript in
+any of them. (`astro-ssr` was `typescript-astro-react` before 2026-09-06 — a pin
+on the old slug has to be re-pointed.)
+
 **The backing axis splits into a vendor-free half and a managed half.** Each
 capability has a neutral contract — what any provider must guarantee — beside
 the providers that realize it. Vendor-free: `postgres` for the datastore, `oidc`
@@ -58,13 +68,19 @@ points at a cloud's answer rather than offering a neutral one.
 **The deploy axis has a provider-neutral default that is a real answer**, not a
 placeholder: `deploy-target/container-image` is an OCI image on any registry and
 any host that runs containers, with the Compose wiring the acceptance verifier's
-readiness gates depend on. The managed alternatives are `cloud-run`, `gke` and
-`cloudflare-workers-static` — that last one for a project whose whole deployment
-is a build output directory rather than a running server: it lays down a root
-`wrangler.jsonc` for an assets-only Worker and a `p:<id>:deploy` task that
-uploads the directory. `zero-trust-access` composes with a host rather than
-replacing one — a private plane in front of a project that must not be publicly
-reachable, whichever cloud hosts it.
+readiness gates depend on. The managed alternatives are `cloud-run`, `gke`,
+`cloudflare-workers-static` and `cloudflare-workers-ssr`. The first Cloudflare
+one is for a project whose whole deployment is a build output directory rather
+than a running server: it lays down a root `wrangler.jsonc` for an assets-only
+Worker and a `p:<id>:deploy` task that uploads the directory. The second is the
+same shape with a **script in front of its own assets** — the Worker carries a
+`main`, the platform serves the uploaded file set for every request that matches
+one, and everything else falls through to the script, so one `wrangler deploy`
+ships both halves. It is the preferred pairing for `astro-ssr` and
+`astro-hybrid`; the container targets remain fully supported for both.
+`zero-trust-access` composes with a host rather than replacing one — a private
+plane in front of a project that must not be publicly reachable, whichever cloud
+hosts it.
 
 **The repo axis** is the package manager and workspace layout: `pnpm-workspace`,
 `pnpm-turbo`, or `bun`. A single-package repo pins no workspace bundle — that is

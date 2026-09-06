@@ -151,13 +151,15 @@ started as:
 enforces it as a ceiling. These files, and only these, may sit at a shaped
 repo's root: `.gitignore`, `.graphifyignore`, `.editorconfig`,
 `.gitattributes`, `.npmrc`, `LICENSE`, `SECURITY.md`, `CONTRIBUTING.md`,
-`readme.md`, `CLAUDE.md`, `fnox.toml`, `eslint.config.mjs`, `dprint.json`,
-`wrangler.jsonc`, the directory `.github/` — **excluding
-`.github/workflows/`** — and the manifests and lockfiles a language
-mandates. A `config/` tree landing a root path that is not on this list is
-a **pack authoring error**: the materializer refuses it and reports it,
-rather than quietly adding one more dotfile to a place the doctrine says is
-closed. Everything else a pack configures lives under `.config/`.
+`readme.md`, `fnox.toml`, `eslint.config.mjs`, `dprint.json`,
+`wrangler.jsonc`, and the directory `.github/` — **excluding
+`.github/workflows/`**. A language's manifests and lockfiles are **not**
+on it: a manifest is fenced out below, as it always was, and a lockfile is
+the manifest's shadow. A `config/` tree landing a root path that is not on
+this list is a **pack authoring error**: the materializer refuses it and
+reports it, rather than quietly adding one more dotfile to a place the
+doctrine says is closed. Everything else a pack configures lives under
+`.config/`.
 
 **Why each of the five added on 2026-09-06 is at the root**, and the answer
 is the same shape every time — the tool that reads it discovers it there
@@ -186,10 +188,11 @@ at the repo root leaves a pack two ways to ship one — the root file, or
 `--config` on every invocation any caller might type — and a flag every
 caller has to remember is the worse of the two.
 
-Being on that list is a ceiling, never a licence: `readme.md` and `CLAUDE.md`
-are on it because a shaped repo has them, and **no pack may ship either** —
-they belong to `/vwf:readme` and `/vwf:setup`, and the ban on writing
-CLAUDE.md below is unchanged. The rule reaches `wrangler.jsonc` unchanged:
+Being on that list is a ceiling, never a licence: `readme.md` is on it
+because a shaped repo has one, and **no pack may ship it** — it belongs to
+`/vwf:readme`. `CLAUDE.md` is not on the list at all: it is fenced out
+below, it is `/vwf:setup`'s, and `plugins:check` refuses a pack that ships
+one at the root. The rule reaches `wrangler.jsonc` unchanged:
 being on the list makes it landable, not standard, and only a
 `static-hosting` service pack ships one.
 

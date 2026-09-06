@@ -45,8 +45,10 @@ stack live, and it holds no product code — now or ever.
 ```
 
 `init` shapes the base repo the same way it shapes any other
-([`/vwf:init`](./single-repo.md#vwfinit)) — and each member repo gets its own
-`init` run when it is created, since the shape is per repo, not per product.
+([`/vwf:init`](./single-repo.md#vwfinit)), git pass included — so the base repo
+leaves that run with a first commit, both branches and a forge default — and
+each member repo gets its own `init` run when it is created, since the shape is
+per repo, not per product.
 
 The setup run is the spine's blank-repo bootstrap unchanged
 ([`/vwf:setup`](./single-repo.md#vwfsetup)): two questions, both proposed from

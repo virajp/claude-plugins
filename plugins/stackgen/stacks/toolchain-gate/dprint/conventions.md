@@ -84,27 +84,27 @@ rejects a `//` comment in it, and dprint rejects an unknown property with a
 config diagnostic. Both routes are closed, so the note is in this file — read it
 before "tidying" the exclusion away.
 
-## `--config` on every invocation, and the editor cost of that
+## Two routes to the same config: `--config`, and discovery through the shim
 
 dprint discovers `dprint.json` and `dprint.jsonc` by walking up from the file
-being formatted. It does **not** look inside `.config/`. Putting the config
-there with the rest of the repo's tooling is therefore a trade, made
-deliberately, and the price is stated rather than discovered:
+being formatted, and it does **not** look inside `.config/`. The config lives
+under `.config/` anyway, with the rest of the repo's tooling, and the two
+consumers reach it differently:
 
 - **Every command-line call carries `--config .config/dprint.json`** — the
-  format task, the pre-commit hook, and the CI step alike. A call without it
-  formats with dprint's built-in defaults and reports success, which is the
-  worst of the available failures.
-- **The editor extension has no setting that answers this.** The VS Code
-  extension contributes exactly `dprint.path`, `dprint.verbose` and
-  `dprint.experimentalLsp`; none of them names a config file. Format-on-save is
-  therefore inert in a repo whose only config is under `.config/`, and no
-  warning says so — the extension simply finds nothing and does nothing.
+  format task, the pre-commit hook, and the CI step alike. A call without it,
+  in a tree with no shim at the root, formats with dprint's built-in defaults
+  and reports success, which is the worst of the available failures.
+- **The editor has only discovery.** The VS Code extension contributes exactly
+  `dprint.path`, `dprint.verbose` and `dprint.experimentalLsp`; none of them
+  names a config file, and there is no setting to add. So the pack ships a root
+  `dprint.json` that extends the real one — format-on-save finds it by walking
+  up, and formats with the same config the gate uses.
 
-So the trade is asymmetric, and worth naming plainly. The CLI, the pre-commit
-hook and the CI step all pass `--config` and are unaffected — the gate that
-decides whether a commit lands sees the real config every time. Format-on-save
-does not follow `--config`, and there is no setting that makes it.
+Both routes therefore land on `.config/dprint.json`, which is the whole point:
+one authority, reached two ways, with nothing that formats differently
+depending on which one ran. The next two sections are what that costs to keep
+true — the shim's shape, and the one config key it rules out.
 
 ## The root shim, and why it is a file rather than a symlink
 

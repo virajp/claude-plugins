@@ -77,7 +77,7 @@ much smaller than the one it replaced: whole families of assertion became
    two-directions-cover-each-other-on-a-rename idiom rule 7 uses for agent
    cross-references.
 10. **The technology-free vwf guard.** Below.
-11. **A pack's `config/` payload tier is materializable as-is.** Five
+11. **A pack's `config/` payload tier is materializable as-is.** Seven
     assertions, every one of them about a file whose failure mode in the
     *target* repo is silence rather than an error:
     - a **task file lands executable**. `config/.config/mise/tasks/**` is a
@@ -91,19 +91,31 @@ much smaller than the one it replaced: whole families of assertion became
       narrower set because a hook is wired into `settings.json` as a bare path).
       Same reasoning from the other end: a hook fault is the quietest fault
       there is, since nothing downstream ever reports that it did not run;
-    - the tier's **root stays allowlisted** — `.gitignore`, `.editorconfig`,
-      `.gitattributes`, `LICENSE`, `SECURITY.md`, `readme.md`, `CLAUDE.md`,
-      `fnox.toml`, `eslint.config.mjs`, `wrangler.jsonc` and a language's
-      mandated manifests. Everything else belongs under `.config/`, and a pack
-      landing one more dotfile beside them is widening the root of every repo it
-      materializes into. `wrangler.jsonc` joined on 2026-09-05 as the same
-      exception `eslint.config.mjs` already is: a tool that discovers its config
-      only at the repo root leaves a pack a choice between the root file and
-      `--config` on every invocation any caller might type, and the flag is the
-      worse of the two;
+    - the tier's **root stays allowlisted**, and inside the one forge directory
+      the list admits, a **workflow file is refused**. Read the list itself off
+      `PACK_CONFIG_ROOT_FILES` and `PACK_CONFIG_ROOT_DIRS` in
+      `scripts/src/check.ts` rather than from prose here — every prose copy of
+      it has drifted at least once, and this one deliberately enumerates
+      nothing. What the list is *for*: everything a pack configures belongs
+      under `.config/`, so the root admits only what a tool or a host cannot be
+      pointed elsewhere for, plus the files humans read first. A pack landing
+      one more dotfile beside them is widening the root of every repo it
+      materializes into, and each entry joins on the same argument — a tool with
+      root-only discovery leaves a pack a choice between the root file and a
+      flag on every invocation any caller might type, and the flag is the worse
+      of the two. The forge directory is on the list for that same reason and
+      the workflow is carved back out of it: a pack states which task CI runs,
+      and the workflow is the repo's release model's;
     - a **pre-commit fragment parses** and declares a top-level `repos:` list,
       because `/vwf:init` concatenates the fragments into one config and a
-      malformed one breaks a file no pack owns.
+      malformed one breaks a file no pack owns;
+    - the gate pack's **whole pre-commit config parses** and declares `repos:`
+      too. It is neither a fragment nor at the `config/` root, so the fragment
+      walk never reached it — and until it was named, nothing parsed the base
+      the fragments merge into at all;
+    - an **editor fragment parses as JSONC** and carries only `settings`,
+      `nesting` and `extensions`. `/vwf:init` composes the fragments into editor
+      files no pack owns, and a fourth key is dropped without a word.
 
     The walk is its own rather than the plugin file reader's, because every one
     of these paths runs through a dot segment the reader's glob does not descend

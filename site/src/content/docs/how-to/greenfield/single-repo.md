@@ -62,8 +62,10 @@ questions in one round each — the repo name and a one-line brief (both propose
 or skippable), which provider holds Relay's secrets, the licence, and a security
 contact — then shows **one plan** and applies it on one yes.
 
-It ends by naming the two commands that follow, and runs neither. Details:
-[`/vwf:init`](../../plugins/vwf.md#vwfinit).
+It closes with a git pass: it stages what it wrote and asks once whether to
+commit, commit and push, or leave it, creates `develop` and `main`, and asks
+which branch the remote should default to. Then it names the two commands that
+follow, and runs neither. Details: [`/vwf:init`](../../plugins/vwf.md#vwfinit).
 
 Skipping this step is legal: `/vwf:setup` checks the shape and offers init
 itself. Running it first is simply the shorter path.

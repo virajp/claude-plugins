@@ -32,6 +32,7 @@ restate a count or a rule that an asset below already owns.
 | `assets/kinds.md`             | the **kind vocabulary** — each kind a closed topic bar, one artifact per topic              |
 | `assets/pack-format.md`       | the shape of a pack: `<type>/<slug>/pack.yaml` + prose + optional skills/agents/`config/`   |
 | `assets/output-tree.md`       | where a materialization lands, the lockfile, the three targets outside `.claude/`           |
+| `assets/ids.md`               | the **project-id slug** — the rule, its measured reason, and the four surfaces it fills     |
 | `assets/artifact-doctrine.md` | the **host rules** deciding whether a generated skill, agent or hook is valid at all        |
 | `assets/contracts/`           | the provider-neutral doctrine per capability or kind that instance packs cite and stay thin |
 | `stacks/inventory.md`         | **generated** — every pack, bundle and kind with counts; `mise run plugins:inventory`       |
@@ -81,8 +82,8 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   language server is to *be* a plugin. User scope is safe because every
   generated `lspServers` entry **must** carry an `extensionToLanguage` map;
 - a pack's own **`config/` tree**, mirroring the repo root, for the repo config
-  a component genuinely owns — **mode preserved**, so a task file lands 755. Six
-  kinds of entry: **(a)** the toolchain manager's own config and its task
+  a component genuinely owns — **mode preserved**, so a task file lands 755.
+  Seven kinds of entry: **(a)** the toolchain manager's own config and its task
   library (`.config/mise*.toml`, `.config/mise/tasks/**`); **(b)** a gate's own
   config (`.config/dprint.json`, `.config/pre-commit-config.yaml`,
   `.config/gitleaks.toml`, `.config/grype.yaml`, …); **(c)** the hygiene files
@@ -92,19 +93,32 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   edits `mise.toml`; **(e)** a hook fragment at
   `.config/pre-commit.d/<pack>.yaml`, copied verbatim — **`/vwf:init` merges
   it**, nothing in stackgen edits the pre-commit config, which is what keeps a
-  fragment a fragment; and, since 2026-09-05, **(f)** a deploy target's own
-  config and its deploy task — `cloud-service/workers-static-assets` ships
-  `wrangler.jsonc` at the root and a `.config/mise/tasks/p/_project/deploy`
-  overlay, the first `cloud-provider`/`cloud-service` pack to ship a `config/`
-  tree at all, which is also what put those two types on the composition order
-  (**last**, after `capability-provider`). Note the second underscore rule:
+  fragment a fragment; **(f)** a deploy target's own config and its deploy task,
+  since 2026-09-05 — both `cloud-service/workers-static-assets` and its
+  `workers-ssr` sibling ship `wrangler.jsonc` at the root (the SSR one carrying
+  `main`) plus a `.config/mise/tasks/p/_project/deploy` overlay, and those two
+  were the first `cloud-provider`/`cloud-service` packs to ship a `config/` tree
+  at all, which is what put both types on the composition order (**last**, after
+  `capability-provider`); and, since 2026-09-06, **(g)** a pack's **editor
+  fragment** at `.config/vscode.d/<pack>.jsonc`, three keys only (`settings`,
+  `nesting`, `extensions`) — **`/vwf:init` composes them** into
+  `.vscode/settings.json` and `.vscode/extensions.json`, which no pack ever
+  ships whole and which the convention in `assets/pack-format.md` names (init
+  itself never names an editor). The dprint gate's fragment is the one filename
+  exception, `dprint-editor.jsonc`: dprint discovers any `dprint.jsonc` below
+  the root as a sub-directory config, and one with no `plugins` array makes a
+  bare `dprint check` exit 13. Note the second underscore rule:
   `config/_<name>/` at the top of the tier is pack-private and never copied, but
   nested deeper `p/_project/` is a **marked position**, copied and renamed to
-  the pinned project's id. Still fenced out: `package.json`, any language
-  manifest or lockfile, and CI workflows. What lands at the repo **root** is
-  capped by a fixed allowlist (`plugins:check` rule 11 enforces it); `readme.md`
-  and `CLAUDE.md` are on that list only because a shaped repo has them — **no
-  pack may ship either**.
+  the pinned project's id — **slugged** per `assets/ids.md`, which owns that
+  rule and the measured reason for it. Still fenced out: `package.json`, any
+  language manifest or lockfile, a **whole** editor file, and CI workflows — the
+  last of those refused *inside* `.github/`, which is otherwise an allowlisted
+  root directory beside `.config/`. What lands at the repo **root** is capped by
+  a fixed allowlist (`plugins:check` rule 11 enforces it, and
+  `PACK_CONFIG_ROOT_FILES` in `scripts/src/check.ts` is the list). `readme.md`
+  is on it only because a shaped repo has one — **no pack may ship it**, and
+  `CLAUDE.md` is not on the list at all, being vwf's outright.
 
 **Three consent tiers**: the `.claude/` files ride the ordinary dry-run gate;
 `settings.json`, `.mcp.json` and a pack's `config/` tree are never written
@@ -116,11 +130,15 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
 ## Authoring a pack
 
 - **The whole `config/` payload tier is checked before it ships.**
-  `plugins:check` rule 11 asserts the exec bit and a known shebang on every task
-  file (mise reports a 644 task as an *unknown* one rather than a permission
-  error) and on every `hooks/*.sh`, the root allowlist over the tier's top
-  level, and that each `.config/pre-commit.d/*.yaml` parses with a top-level
-  `repos:` list. `plugins:shellcheck` runs `shellcheck -x` and `shfmt -d` over
+  `plugins:check` rule 11 makes **seven** assertions: the exec bit and a known
+  shebang on every task file (mise reports a 644 task as an *unknown* one rather
+  than a permission error) and on every `hooks/*.sh`; the root allowlist over
+  the tier's top level, with a CI workflow refused inside `.github/`; that each
+  `.config/pre-commit.d/*.yaml` parses with a top-level `repos:` list, and that
+  the gate pack's **whole** `.config/pre-commit-config.yaml` does too — it is
+  neither a fragment nor at the tier's root, so nothing parsed it until it was
+  named; and that each `.config/vscode.d/*.jsonc` parses as JSONC carrying only
+  the three keys. `plugins:shellcheck` runs `shellcheck -x` and `shfmt -d` over
   the same shell, in two groups — task libraries with the pack's `_scripts/`
   beside them, hooks with no flags, since a hook lands alone and may declare
   `sh`.
