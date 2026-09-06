@@ -257,6 +257,12 @@ carrying build metadata. The `X.Y.Z+N` the authoring machine runs between
 releases exists only in the gitignored staged copies `mise run plugins:local`
 writes, so `claude plugin update` sees each edit without a commit.
 
+**A release is two stages, and only the second reaches anyone else.** Local
+first — `mise run plugins:local` stages the changed plugins into the dev
+marketplace and updates this machine's install, publishing nothing and cutting
+no tag, so `/execute-plan` runs it unprompted at the end of a green run and a
+staged plugin loads in the next **restarted** session. Public second — the tags.
+
 **Ask the user before running `plugins:release`, `i:release` or
 `site:release`.**
 

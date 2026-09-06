@@ -61,11 +61,20 @@ idiomatic answer given the repo, do not ask — state it and move on.
 
 15. **Landing.** May a fully green run merge to `develop` and push without a
     further prompt? Default when unanswered is **no**.
-16. **Release, per affected project.** Release or not; patch, minor or major.
-    Record every answer including "not this time". Note in the same breath that
-    execute-plan always stops once before the `main` merge and tags — consent
-    here is intent, not authorisation to run `i:release`, `plugins:release` or
-    `site:release`.
+16. **The local stage.** May a fully green run finish with
+    `mise run plugins:local` — staging the changed plugins into the dev
+    marketplace and updating this machine's install? It publishes nothing and
+    touches no tag, so the default when unanswered is **yes**. Ask it only to
+    confirm; a `no` is for a machine in user mode, where the task refuses
+    anyway. Say that a staged plugin needs a **restarted** session before its
+    skills load.
+17. **Public release, per affected project.** Release to users or not; patch,
+    minor or major. Record every answer including "not this time". Note in the
+    same breath that execute-plan always stops once before the `main` merge and
+    tags — consent here is intent, not authorisation to run `i:release`,
+    `plugins:release` or `site:release`. The local stage is not an alternative
+    answer to this question and never substitutes for it: it reaches this
+    machine, a tag reaches users.
 
 ## F. Parked
 
@@ -75,6 +84,6 @@ conversation.
 
 ## G. The gate
 
-17. **Present the shape** per SKILL.md §5 and ask once: approve, revise or
+18. **Present the shape** per SKILL.md §5 and ask once: approve, revise or
     abandon. Only an explicit approve writes the folder, and only a later
     explicit yes after self-review sets the status to `APPROVED`.

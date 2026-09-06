@@ -148,6 +148,8 @@ the account that survived. Present:
 - the review findings that survived the cap, marked `contested`
 - the wave gate and orchestrator gate results
 - the versions bumped and the worktree path
+- the local stage, once §7a has run: each plugin and the `X.Y.Z+N` it staged as,
+  or the refusal and why
 
 If any unit is `skipped`, `failed` or `unresolved`, this report is the block
 notice and the run stops here with the status set to `BLOCKED`.
@@ -164,18 +166,51 @@ list, and commit as one final `docs:` commit. Then read the Consent block:
 - **no** → stop with the worktree path and the branch name, and say the branch
   is ready to land. Ask nothing further.
 
-### 8. Release — always stops once
+### 7a. Stage locally — the first half of a release
+
+When the run changed anything under `plugins/` and the Consent block's local
+stage is `yes`, run **`mise run plugins:local`** once, from the repo root the
+landing left behind: the main checkout when the branch merged, the worktree when
+it did not. It stages each changed plugin into the gitignored dev marketplace
+under `X.Y.Z+N` and updates this machine's install, so the next session runs the
+plugin this run produced rather than the last release.
+
+The orchestrator runs it, never a unit — it mutates the machine's plugin install
+rather than the tree under review, and a unit never reaches outside the
+worktree. It is not gated on a prompt because it publishes nothing, commits
+nothing and cuts no tag.
+
+Two outcomes are both fine and both reported:
+
+- **Staged.** Name each plugin and the `X.Y.Z+N` it went out as, and say the
+  session must be **restarted** before the new skills load — they are read at
+  session start.
+- **Refused.** The task exits non-zero on a machine in **user mode**, where the
+  registered marketplace is the published one. Report that verbatim, point at
+  `.claude/docs/dev-marketplace.md`, and continue to §8 — it is a fact about the
+  machine, not a failure of the run, and it is never worked around by editing a
+  marketplace registration.
+
+Nothing under `plugins/` changed → skip the step and say so in one clause.
+
+### 8. Public release — always stops once
 
 If any Consent row records a release, and the landing merged and pushed, ask
-**one** question: run the release now? The answer authorises invoking the
+**one** question: cut the public release now? The answer authorises invoking the
 `release` skill, which owns the `develop → main` merge, `plugins:release`,
 `i:release` and `site:release`. It does not authorise anything else, and it is
 asked in the moment even though the plan recorded the intent — `CLAUDE.md`'s
 hard rule stands, and `i:release` and `site:release` are interactive in any
 case.
 
-If the landing was not consented, there is nothing to release yet; say so in the
-final line and stop.
+**Offer waiting as the equal option, not the fallback.** §7a has already put the
+change on this machine, and a staged plugin is only exercised in a restarted
+session — so "not yet, I want to run it first" is the answer the two-stage shape
+exists to make easy. Say what is already staged, and that `/release` cuts the
+tags whenever they come back to it.
+
+If the landing was not consented, there is nothing to release publicly yet; say
+so in the final line and stop.
 
 ## Resource caps
 
@@ -195,16 +230,21 @@ pause to re-ask a ruling, confirm a file scope, report progress between waves,
 ask whether to continue after a green gate, ask before a commit, or ask what to
 do about a `GAP:` — a gap is recorded and the stated assumption stands until the
 final report. It pauses for an inherited red preflight, a merge conflict, a
-resource cap, and the release question. Everything else is recorded in the run
-log and answered at the end.
+resource cap, and the public-release question. Everything else is recorded in
+the run log and answered at the end — including the local stage, which is run
+and reported, never asked about.
 
 ## What this skill never does
 
 - Reads a unit's owned files itself, or does a unit's work inline because it
   looks small
 - Dispatches a wave whose predecessor is not green or explicitly skipped
-- Runs a generator or bumps a version outside the gates-and-bump unit
+- Runs a generator or bumps a version outside the gates-and-bump unit —
+  `plugins:local` in §7a is the one exception, and it is the orchestrator's
+  because it writes outside the worktree
 - Runs `plugins:release`, `i:release` or `site:release` itself, or merges to
   `main`
+- Treats the local stage as a release, or lets it stand in for the tags nobody
+  has consented to
 - Picks up an item from *Out of scope* or *Parked*, however adjacent
 - Reports the run from recollection when the run log exists

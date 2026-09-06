@@ -41,6 +41,33 @@ pattern and gets **no** protection, silently: nothing fails, it is just
 unguarded. Either give the new family a `-v` or widen
 `conditions.ref_name.include` to `["~ALL"]` on ruleset `21871515`.
 
+## Local first
+
+**A plugin is staged locally before it is tagged publicly.** The staging command
+is `mise run plugins:local`: it copies each changed plugin into the gitignored
+dev marketplace under `X.Y.Z+N` and updates this machine's install, so the
+author runs the plugin they are about to publish. It commits nothing, pushes
+nothing and cuts no tag; `/execute-plan` runs it unprompted at the end of a
+green run, and a hand-made change reaches it the same way.
+
+So, before `plugins:release`, confirm the plugin being tagged has been staged
+and actually exercised — in a **restarted** session, since skills are read at
+session start. If it has not, offer to run `plugins:local` and stop there; the
+tag can be cut in the next session and nothing is lost by waiting. This is a
+question, not a gate: the user can say the change is docs-only, or that they
+have exercised it another way, and that answer stands.
+
+Two limits, both worth stating rather than papering over:
+
+- **It covers plugins only.** The installer's and the website's nearest local
+  steps are `mise run i:test` and `mise run site:check` — gates over the built
+  artifact, not an install of it, so they prove less. `site:dev` serves the site
+  locally and is the closest thing the website has to running the real change.
+- **It refuses in user mode**, where the registered marketplace is the published
+  one — it would otherwise re-copy the last release, which is the state it
+  exists to escape. Setup is `.claude/docs/dev-marketplace.md`. A refusal is
+  reported, never routed around.
+
 ## Releasing plugins
 
 Each entry in `.claude-plugin/marketplace.json` pins its plugin to a
@@ -225,6 +252,7 @@ release.
 
 ## Before cutting
 
-Confirm the working tree is clean and that the change being released has its
-docs reconciled — `readme.md`, `CLAUDE.md` and
-`site/src/content/docs/plugins/<plugin>.md` ship with the change, not after it.
+Confirm the working tree is clean, that a plugin release has been through the
+local stage above, and that the change being released has its docs reconciled —
+`readme.md`, `CLAUDE.md` and `site/src/content/docs/plugins/<plugin>.md` ship
+with the change, not after it.

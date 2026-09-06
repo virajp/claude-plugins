@@ -95,7 +95,7 @@ table is what they review.
 
 Derive from the unit file scopes, then confirm with the user per project:
 
-| Scope touched                         | Project   | Release means                                        |
+| Scope touched                         | Project   | Public release means                                 |
 | ------------------------------------- | --------- | ---------------------------------------------------- |
 | `plugins/vwf/**`                      | vwf       | bump `plugin.json` version; tag `vwf-vX.Y.Z`         |
 | `plugins/stackgen/**`                 | stackgen  | bump `plugin.json` version; tag `stackgen-vX.Y.Z`    |
@@ -103,11 +103,34 @@ Derive from the unit file scopes, then confirm with the user per project:
 | `site/**`                             | site      | `mise run site:version`; tag `site-vX.Y.Z`; deploy   |
 | `scripts/**`, `.claude/**`, root docs | none      | nothing to release — lands on the next merge to main |
 
-A plugin whose **user-visible behaviour** changed needs a release for users to
-see it; a plugin whose files changed but whose behaviour did not may not. Ask,
-per project: release or not, and patch / minor / major. Record the answer in the
-consent block whatever it is. A shipped plugin change with no release recorded
-is a valid answer — the user has said it waits for the next one.
+**A release has two stages, and only the second one is a release to anybody
+else.** Plan both:
+
+1. **Local first — `mise run plugins:local`.** It stages every changed plugin
+   into the gitignored dev marketplace under `X.Y.Z+N` and updates this
+   machine's install, so the author runs the plugin they just changed instead of
+   the last release. It publishes nothing, commits nothing, and touches no tag,
+   so it needs **no** consent and is recorded as `yes` by default. Two facts
+   bound it: it covers **plugins only** — the installer's and the site's local
+   equivalents are `i:test` and `site:check`, which are gates, not installs —
+   and it **refuses to run on a machine in user mode**, where the registered
+   marketplace is the published one (`.claude/docs/dev-marketplace.md`). A
+   refusal there is reported, never worked around.
+2. **Public second — the tags.** `plugins:release`, `i:release`, `site:release`,
+   each after the `develop → main` merge. This is what reaches users, and it is
+   what the consent block's release rows are about.
+
+A plugin whose **user-visible behaviour** changed needs a public release for
+users to see it; a plugin whose files changed but whose behaviour did not may
+not. Ask, per project: release publicly or not, and patch / minor / major.
+Record the answer in the consent block whatever it is. A shipped plugin change
+with no public release recorded is a valid answer — the user has said it waits
+for the next one, and the local stage still gives them the change today.
+
+Say plainly, when proposing it, that a staged plugin is only picked up by a
+**restarted** session — skills are read at session start — so the local stage
+and the judgement about whether to release publicly usually straddle two
+sessions.
 
 ### 5. Present the shape — the hard gate
 

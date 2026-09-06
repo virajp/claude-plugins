@@ -31,15 +31,21 @@ requires: [] # earlier plan folders this one stands on, e.g. docs/plans/2026-09-
 
 ## Consent
 
-| Action                                   | Granted                      |
-| ---------------------------------------- | ---------------------------- |
-| Merge to `develop` and push on green run | yes / no                     |
-| Release `vwf`                            | none / patch / minor / major |
-| Release `stackgen`                       | none / patch / minor / major |
-| Release installer                        | none / patch / minor / major |
+| Action                                       | Granted                      |
+| -------------------------------------------- | ---------------------------- |
+| Merge to `develop` and push on green run     | yes / no                     |
+| Stage locally (`plugins:local`) on green run | yes / no                     |
+| Release `vwf` publicly                       | none / patch / minor / major |
+| Release `stackgen` publicly                  | none / patch / minor / major |
+| Release installer publicly                   | none / patch / minor / major |
 
-Releases are intent: execute-plan stops once before the `main` merge and the
-tags and asks, per `CLAUDE.md`.
+**A release is two stages.** The local one — `mise run plugins:local` — stages
+the changed plugins into the dev marketplace and updates this machine's install;
+it publishes nothing, so execute-plan runs it without a further prompt and only
+reports what it staged. The public one is the tags, and it is what the release
+rows above are about: they are intent, and execute-plan stops once before the
+`main` merge and the tags and asks, per `CLAUDE.md`. A staged plugin loads only
+in a **restarted** session.
 
 ## Goal
 
@@ -198,3 +204,7 @@ confirmed reversal from the interview also lands here, as a
 `mise run plugins:marketplace` and `mise run plugins:inventory`, and passes the
 full wave gate. Runs `target-verifier` when `plugins/` or `installer/` changed.
 Its report is the run's final gate.
+
+It does **not** run `mise run plugins:local` — that is the orchestrator's, after
+the landing, because the task mutates the machine's own plugin install rather
+than the tree under review, and a unit never reaches outside the worktree.
