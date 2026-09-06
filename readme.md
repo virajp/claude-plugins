@@ -108,8 +108,10 @@ Restart your agent afterward so the skills, hooks and MCP servers load, then run
 `/vwf:doctor`. It is the closest thing to a preflight now that nothing is gated
 at install time — though see the [caveat](#caveats) on what it does and does not
 check. On a repo that has never been shaped — no `.config/` layout, no task
-library — run `/vwf:init` before either: it lays down the config layout, the
-gates and the hygiene files the rest of the workflow assumes.
+library — run `/vwf:setup`: its Step 0 offers `init`, which lays down the config
+layout, the gates and the hygiene files the rest of the workflow assumes.
+`/vwf:setup reshape` runs that pass alone, and is what `/vwf:doctor` prints when
+a shaped repo has fallen behind.
 
 Scope is yours to choose: `--user` / `--project` on the wrapper, or
 `--scope project` on Claude's commands, keep a plugin to one repo instead of

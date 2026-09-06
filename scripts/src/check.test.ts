@@ -722,15 +722,17 @@ describe("the stack-adapter contract", () => {
       ]),
     );
 
-  it("accepts both skills at disable-model-invocation: false", () => {
-    expect(check(tree(adapter(both("disable-model-invocation: false\n")))))
-      .toEqual([]);
+  /** The state the contract wants: reachable by vwf, absent from the menu. */
+  const called = "disable-model-invocation: false\nuser-invocable: false\n";
+
+  it("accepts both skills carrying both invocation keys", () => {
+    expect(check(tree(adapter(both(called))))).toEqual([]);
   });
 
   it("flags a missing adapter skill", () => {
     const files = Object.fromEntries(
       Object
-        .entries(both("disable-model-invocation: false\n"))
+        .entries(both(called))
         .filter(([path]) => !path.includes("stack-template")),
     );
     expect(messages(check(tree(adapter(files))))).toEqual([
@@ -742,17 +744,30 @@ describe("the stack-adapter contract", () => {
     // vwf reaches these by constructed name, so `true` yields an empty menu
     // rather than an error — indistinguishable from a plugin offering nothing.
     const found = messages(check(tree(adapter(
-      both("disable-model-invocation: true\n"),
+      both("disable-model-invocation: true\nuser-invocable: false\n"),
     ))));
     expect(found).toHaveLength(2);
     expect(found[0]).toContain("is not `disable-model-invocation: false`");
   });
 
-  it("flags a skill that is model-invocable but hidden from the user", () => {
-    // Both are documented as user-runnable, so only the explicit `false` means
-    // both — banning `true` alone would wrongly pass this.
-    expect(messages(check(tree(adapter(both("user-invocable: false\n"))))))
-      .toHaveLength(2);
+  it("flags a skill that says nothing about model invocation", () => {
+    // Absence is not a claim: `user-invocable: false` alone leaves the state
+    // vwf depends on unstated, so banning `true` would wrongly pass this.
+    const found = messages(
+      check(tree(adapter(both("user-invocable: false\n")))),
+    );
+    expect(found).toHaveLength(2);
+    expect(found[0]).toContain("is not `disable-model-invocation: false`");
+  });
+
+  it("flags a skill still offered in the / menu", () => {
+    // An adapter answers in a payload shape only vwf reads, so a user typing
+    // it gets nothing usable — it is vwf's to call, not a user's to type.
+    const found = messages(check(tree(adapter(
+      both("disable-model-invocation: false\n"),
+    ))));
+    expect(found).toHaveLength(2);
+    expect(found[0]).toContain("is not `user-invocable: false`");
   });
 
   it("flags an adapter skill on a plugin that dropped the keyword", () => {
@@ -762,7 +777,7 @@ describe("the stack-adapter contract", () => {
     const root = tree({
       stackgen: {
         manifest: { name: "stackgen", version: "1.0.0", description: "x" },
-        files: both("disable-model-invocation: false\n"),
+        files: both(called),
       },
     });
     expect(messages(check(root))).toEqual([

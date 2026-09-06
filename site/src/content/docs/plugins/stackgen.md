@@ -383,7 +383,7 @@ in `.config/vwf.yaml` for any of them — nothing was chosen, so there is no
 choice to record — and the landing goes in `lock.yaml` like any other
 materialization. All three slugs present in that lockfile is what "this repo is
 shaped" means: `/vwf:setup` no longer fetches them, it checks for exactly that
-and offers `/vwf:init` when one is missing.
+and offers `/vwf:init` when one is missing — or when the shape has drifted.
 
 They are unconditional because a repo that has picked no stack yet still needs a
 formatter, a secret scanner, a vulnerability scanner, an ignore set, and a way
@@ -701,12 +701,21 @@ toolkit will find it: vwf probes `setup:worktree`, the aggregators call
 
 ## Skills and the agent
 
-| Name                      | Kind                     | Does                                                                                                                                                                                                                                                    |
-| ------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `stackgen-stack-menu`     | adapter, model-invocable | The packs + the one open `generate` entry, as a vwf menu payload. Answers the same in every product                                                                                                                                                     |
-| `stackgen-stack-template` | adapter, model-invocable | The dispatch: materialized entry → pure read; a first pin resolves the bundle's composition and dispatches **per component** — packs copied, uncovered components generated — landing once behind one consent gate. Unknown slug → error, never a guess |
-| `stackgen-sync`           | user-only                | The explicit re-sync, **per component**: lockfile-anchored diff against current component packs, regeneration offered per generated component, the delta presented for consent. Repo edits never overwritten by default                                 |
-| `stackgen-skill-reviewer` | subagent                 | The stateless trust gate on generation: catalog fidelity, the **when-not-to-apply** checks, citations that resolve and support, honest emitted facts, **kind conformance**, and **topic-bar coverage** against the composition                          |
+| Name                      | Kind                   | Does                                                                                                                                                                                                                                                    |
+| ------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stackgen-stack-menu`     | adapter, skill-invoked | The packs + the one open `generate` entry, as a vwf menu payload. Answers the same in every product                                                                                                                                                     |
+| `stackgen-stack-template` | adapter, skill-invoked | The dispatch: materialized entry → pure read; a first pin resolves the bundle's composition and dispatches **per component** — packs copied, uncovered components generated — landing once behind one consent gate. Unknown slug → error, never a guess |
+| `stackgen-sync`           | user-only              | The explicit re-sync, **per component**: lockfile-anchored diff against current component packs, regeneration offered per generated component, the delta presented for consent. Repo edits never overwritten by default                                 |
+| `stackgen-skill-reviewer` | subagent               | The stateless trust gate on generation: catalog fidelity, the **when-not-to-apply** checks, citations that resolve and support, honest emitted facts, **kind conformance**, and **topic-bar coverage** against the composition                          |
+
+**"skill-invoked" is two frontmatter keys, not one.** The two adapter skills
+carry `disable-model-invocation: false`, so vwf can reach them by their
+constructed names, *and* `user-invocable: false`, so neither takes a slot in
+your `/` menu: an adapter answers in a payload shape only vwf reads, and there
+is nothing for a user to do with it. Both keys are part of the adapter contract,
+not a preference: `disable-model-invocation: true` would make vwf's call a
+silent no-op rather than an error, and leaving the skills user-invocable spends
+two menu slots on skills that answer only a program.
 
 ## Trust: how a generated skill earns its place
 
@@ -726,10 +735,12 @@ before it lands:
    thinness are disclosed.
 3. **Artifact validity.** Separately from what it covers, every artifact has to
    *work*: strict-YAML frontmatter (a rejected skill is dropped with no error),
-   the invocation state its kind rules (a user-only skill is invisible to a
-   delegating caller, silently), a **fixed** skill name rather than one
-   assembled from configuration, and the hook verdict shape its event requires.
-   These are host rules rather than stack rules, they live in
+   the invocation state its kind rules — an adapter carries both
+   `disable-model-invocation: false` and `user-invocable: false`, since a
+   user-only skill is invisible to a delegating caller, silently, and a
+   user-visible one offers a menu entry nobody can use — a **fixed** skill name
+   rather than one assembled from configuration, and the hook verdict shape its
+   event requires. These are host rules rather than stack rules, they live in
    `assets/artifact-doctrine.md`, and every one of them fails **silently at run
    time** — which is why they are gated here and nowhere downstream.
 4. **The reviewer + you.** The `stackgen-skill-reviewer` agent returns `NO GAPS`

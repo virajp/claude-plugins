@@ -196,14 +196,18 @@ missing room in a `mempalace.yaml`). Anything that installs, or that changes
 code, is reported and left to the user — as is anything needing a **choice**: a
 `custom` pin and an unknown language both look like one-line config edits and are
 not, since resolving either means picking off a menu or installing a plugin.
-Nudge `/vwf:setup` and stop there; a template doctor guessed would silently
-change what `plan` and `execute` read.
+Nudge plain `/vwf:setup` — the config-side door, never `reshape` — and stop
+there; a template doctor guessed would silently change what `plan` and
+`execute` read.
 
 **One remedy, printed once.** Every row of the repo-shape check (§5) shares the
-same remedy, so print `/vwf:init` a single time with the rows that led to it
-underneath — a list repeating one command per row reads as several problems
-when it is one re-run, and hides how much of the baseline has moved. It is not
-a remedy doctor applies: re-shaping a repo is `/vwf:init`'s consent to take.
+same remedy, so print `/vwf:setup reshape` a single time with the rows that led
+to it underneath — a list repeating one command per row reads as several
+problems when it is one re-run, and hides how much of the baseline has moved.
+That argument is what separates it from the config-side nudge above: plain
+`/vwf:setup` reconciles what the config declares, `reshape` reconciles the
+shape. It is not a remedy doctor applies: `reshape` is the door, and the
+consent to re-shape a repo is `/vwf:init`'s to take behind it.
 
 **Persist.** File this run's findings to room `doctor` — one compressed line per
 finding per the memory asset's AAAK style, plus what was fixed if the user

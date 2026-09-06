@@ -55,25 +55,32 @@ were **absorbed**. The reasoning is [`dependencies.md`][de].
 ## Foundations & ordering
 
 The workflow is
-`init → setup → product → architecture → design-system → blueprint → plan → execute`,
+`setup → product → architecture → design-system → blueprint → plan → execute`,
 with `verify` (post-deploy) and `feedback` (production intake) closing the loop
-back into `product`/`blueprint`/`plan`. `init` shapes the **base repo** and
-`setup` sets up **vwf** in it — two different things, and a repo can have either
-without the other. `init` materializes the three unconditional bundles through
-the stack adapter by the fixed slugs `mise`, `repo-gates` and `repo-hygiene`,
-fills the marked positions those packs leave it (the member flags, the shell
-aliases, the per-project groups, the repo-name key, the commit gate's scopes and
-forge links), runs **three** merges — ignore sections, pre-commit fragments,
-editor fragments — and writes a two-line readme stub; it names no tool, and
-every file it lays down is a pack's. It then closes with a **consent-gated git
-pass**: it stages what the run wrote, asks one question with three answers
+back into `product`/`blueprint`/`plan`. `init` is not a command on that line:
+since 2026-09-06 it is **skill-invoked** and runs inside setup's Step 0, or
+alone via `/vwf:setup reshape`. `init` shapes the **base repo** and `setup` sets
+up **vwf** in it — two different things, and a repo can have either without the
+other. `init` materializes the three unconditional bundles through the stack
+adapter by the fixed slugs `mise`, `repo-gates` and `repo-hygiene`, fills the
+marked positions those packs leave it (the member flags, the shell aliases, the
+per-project groups, the repo-name key, the commit gate's scopes and forge
+links), runs **three** merges — ignore sections, pre-commit fragments, editor
+fragments — and writes a two-line readme stub; it names no tool, and every file
+it lays down is a pack's. Before any of that it asks **six** questions, the
+second confirming every project id, the slug it resolves to and the source the
+name came from — nothing writes a `p:<slug>:*` group, a member flag, an alias or
+`REPO_NAME` until that list is accepted. It then closes with a **consent-gated
+git pass**: it stages what the run wrote, asks one question with three answers
 (commit / commit and push / leave it), commits with a fixed `ops:` message,
 creates whichever of `develop` and `main` the branch model needs, and asks which
 branch the forge should default to — running a pack task for that rather than
-naming a forge. Init is **not a one-time bootstrap**: its "when to run it again"
-doctrine names the moments, and `/vwf:doctor` has the drift finding that says
-so. `setup` is the Phase-0 bootstrapper — it onboards a repo (a Step-0 shape
-check that offers `/vwf:init` when any of the three slugs is missing,
+naming a forge. Init is **not a one-time bootstrap**: its "when it runs again"
+doctrine names the moments, and `/vwf:doctor` has the drift finding that prints
+the one remedy, `/vwf:setup reshape`. `setup` is the Phase-0 bootstrapper — it
+onboards a repo (a Step-0 shape check that offers `/vwf:init` when any of the
+three slugs is missing **or** any of doctor's four baseline predicates fails,
+the `reshape` argument forcing that offer and stopping once init returns,
 detect-or-ask topology via MCQ, consent-gated reconciliation into the
 `docs/blueprint/` format, the CLAUDE.md vwf section, the memory tree and
 `mempalace.yaml`, the `environment.md` bootstrap) and is **re-runnable**:
@@ -125,18 +132,32 @@ pick the invocation mode per the policy below, and run `mise run plugins:check`
 ### Invocation policy
 
 Claude spells this with two independent booleans, and the useful states are
-three:
+four:
 
-| State              | Frontmatter                        | For                      |
-| ------------------ | ---------------------------------- | ------------------------ |
-| user **and** model | `disable-model-invocation: false`  | anything delegated to    |
-| model only         | `user-invocable: false` + `paths:` | auto-applying doctrine   |
-| user only          | `disable-model-invocation: true`   | the user owns the timing |
+| State              | Frontmatter                                                              | For                         |
+| ------------------ | ------------------------------------------------------------------------ | --------------------------- |
+| user **and** model | `disable-model-invocation: false`                                        | anything delegated to       |
+| model only         | `user-invocable: false` + `paths:`                                       | auto-applying doctrine      |
+| **skill-invoked**  | `user-invocable: false` + `disable-model-invocation: false`, no `paths:` | a skill another skill calls |
+| user only          | `disable-model-invocation: true`                                         | the user owns the timing    |
 
 It is **not cosmetic**: a user-only skill is removed from the model's context
 entirely, so it **cannot be invoked by another skill**, and the failure is
 **silent** — the caller simply cannot see it. The rule: model-invocable when
 anything delegates to it, user-only when nothing does.
+
+**Skill-invoked** is the fourth state and the newest: hidden from the `/` menu,
+still reachable by the skill that owns its seam. Three skills are in it today —
+vwf's `init`, called by `/vwf:setup` (Step 0's offer, or `/vwf:setup reshape`),
+and stackgen's `stackgen-stack-menu` and `stackgen-stack-template`, called by
+vwf through the adapter contract. Both keys are load-bearing together:
+`user-invocable: false` alone would be the model-only row minus its `paths:`,
+and `disable-model-invocation: true` would silently break the call. Checker rule
+9 asserts the pair on the two adapter skills; `init` carries it as one skill's
+choice, not a contract, so rule 4 and `claude plugin validate` are all that
+check it. `user-invocable: false` **without** `paths:` is what tells this state
+apart from auto-applying doctrine — the three `vwf:import-*` adapters are
+candidates and are deliberately unchanged.
 
 Cross-plugin skill-name uniqueness is no longer required — Claude scopes a skill
 to its plugin. The `<plugin>-` prefix on adapter skill names is readability now,

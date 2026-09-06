@@ -171,9 +171,11 @@ only by pushing it.
   directions cover each other on a rename); the vwf design-adapter contract (all
   **three** import skills present and model-invocable); the vwf
   **stack-adapter** contract (both `<plugin>-stack-menu` and
-  `<plugin>-stack-template` present and model-invocable on every plugin
-  keyworded `vwf-stack-adapter`, **and** the keyword declared by every plugin
-  shipping either skill — the same two-directions-cover-each-other idiom, since
+  `<plugin>-stack-template` present, each carrying an explicit
+  `disable-model-invocation: false` **and** a `user-invocable: false` — an
+  adapter is vwf's to call, not a user's to type — on every plugin keyworded
+  `vwf-stack-adapter`, **and** the keyword declared by every plugin shipping
+  either skill — the same two-directions-cover-each-other idiom, since
   `stackgen` is now the only adapter left and dropping that one keyword would
   otherwise have turned the rule off entirely while `check()` still passed); the
   **technology-free vwf** guard; and **retired vocabulary stated as live** (a

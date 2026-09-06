@@ -66,7 +66,8 @@ doctrine.
 of the menu payload and fetched by `/vwf:init` at their fixed slugs, because a
 repo that has picked no stack still has to run its gates by name. `/vwf:setup`
 no longer fetches them — it checks the adapter's lockfile for all three and
-offers `/vwf:init` when one is missing.
+offers `/vwf:init` when one is missing, or when the shape has drifted from
+doctor's baseline.
 
 ## Where it lands, and the consent tiers
 
@@ -160,6 +161,14 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
   `plugins:check` requires the menu + template pair on every plugin carrying it,
   **and** the keyword on every plugin shipping either skill, so dropping one
   side cannot silently turn the rule off.
+- Both adapter skills are **skill-invoked**: `disable-model-invocation: false`
+  so vwf can reach them by their constructed names, **and**
+  `user-invocable: false` so neither spends a `/` menu slot on a skill that
+  answers only a program. Rule 9 asserts both literal lines, and asserts the
+  explicit `false` rather than the mere absence of `true` — absence states
+  nothing about the thing vwf depends on. `stackgen-stack-template` keeps its
+  `argument-hint`; it costs nothing on a hidden skill and documents the one
+  argument the caller passes.
 
 ## Two scripts that are not plugin hooks
 

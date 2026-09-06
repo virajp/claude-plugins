@@ -68,6 +68,13 @@ much smaller than the one it replaced: whole families of assertion became
    — and because the stack menu is closed, that silently removes every option
    the plugin was the only source of.
 
+   Both skills carry **two** invocation keys: `disable-model-invocation: false`
+   so vwf can reach them, and `user-invocable: false` so no user is offered a
+   skill that answers only a program — an adapter replies in a payload shape
+   only vwf reads. The explicit `false` on the first is asserted rather than the
+   mere absence of `true`, because absence states nothing about the one thing
+   vwf depends on.
+
    The converse direction is what keeps the rule alive. With `stackgen` the only
    adapter left, deleting that one keyword would have switched the whole rule
    off while `check()` still passed green. Now: drop the keyword and the skills

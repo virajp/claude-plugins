@@ -5,14 +5,23 @@ description: Bootstrap a new repo, or reshape an existing one, to the standard
   and its task library, the repo gates, the hygiene files and a secrets provider
   — materialized from the stack adapter's three unconditional bundles. Surveys,
   shows one plan, applies on one consent. Stack-agnostic; it orchestrates the
-  packs and writes no tool config of its own.
-argument-hint: "[--new | --existing] [target-dir]"
+  packs and writes no tool config of its own. Invoked by /vwf:setup — its Step 0
+  offer, or /vwf:setup reshape — and never typed by a user.
 model: sonnet
 effort: high
+user-invocable: false
 disable-model-invocation: false
 ---
 
 # init — Shape the repo the rest of the workflow runs in
+
+> **Called by `/vwf:setup`, never typed.** `user-invocable: false` is what keeps
+> `init` out of the `/` menu, which is short on purpose;
+> `disable-model-invocation: false` is what keeps setup's call working, because
+> a user-only skill is removed from the model's context entirely and the
+> invocation would be a silent no-op rather than an error. `/vwf:setup` is the
+> only caller: its Step 0 offers `init` when the repo shape is missing or has
+> drifted, and `/vwf:setup reshape` forces that offer.
 
 `init` sets up the **base repo**; `/vwf:setup` sets up **vwf** in it. The two
 are a pair and neither does the other's job: everything a repository needs
@@ -70,16 +79,16 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
   come from a different source** — a registry the repo did not have before —
   which the existing-repo pipeline reports in those words.
 - **A decline is a deferral, never a halt.** Materialization is consent-gated;
-  a declined write is recorded and named with its unlock — re-run `/vwf:init`
-  — exactly as `/vwf:setup`'s tooling step already defers.
+  a declined write is recorded and named with its unlock — run
+  `/vwf:setup reshape` — exactly as `/vwf:setup`'s tooling step already defers.
 
 ## Step 0 — Resolve the mode
 
-`$ARGUMENTS` may carry `--new` or `--existing`, and a target directory. Default
-the target to the current repo root; if an argument names a directory, operate
-on it.
+The target is the repository the caller is already in: `init` takes no
+arguments, reads no flag and never operates on another directory. Shaping a
+different repository means running `/vwf:setup` there.
 
-An explicit flag wins. With no flag, detect:
+Detect the mode from the target itself:
 
 | The target                                                | Mode         |
 | --------------------------------------------------------- | ------------ |
@@ -122,18 +131,40 @@ written here would record a decision nobody was asked for.
 
 ## The questions
 
-Five in all, each one round, MCQ where an option set exists, per
-`${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`.
+Six in all, each one round, MCQ where an option set exists, per
+`${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`. Two of them — 1 and 3 — are
+asked on a **new repo only**, because an existing repo already answers them;
+the other four are asked on any repo.
 
-**Two, on a new repo only** — an existing repo already answers them:
+1. **The repo name.** *New repo only.* Proposed from the target directory's
+   basename.
+2. **The ids, confirmed.** The one question asked before a single `p:<slug>:*`
+   task group, member flag, shell alias or repo-name key is written. Show one
+   list — the repo's own name first, then one row per project `init` will
+   create a task group for — and give each row three things: the **name** as
+   the repo spells it, the **id** that name slugifies to, and the **source**
+   the name came from, in the words [new repo](references/new-repo.md) §7
+   resolves them by: the registry, a sub-project directory, or the repo's own
+   name. Say on the repo's row that its id is what `REPO_NAME` receives.
 
-1. **The repo name.** Proposed from the target directory's basename.
-2. **A one-line brief.** What the repo is, in a sentence. **May be empty** —
-   an empty brief writes a one-line stub, and `/vwf:readme` fills the rest.
+   Naming the source is the point of showing the list: a row a user disagrees
+   with is usually a row whose source they did not expect, and the source is
+   the only thing that explains where the name came from.
 
-**Three, on any repo:**
+   The answer is **accept the list**, or a replacement for any row. A
+   replacement is slugified by the same rule the proposed ids were — the stack
+   adapter's `assets/ids.md`, which owns it — and is shown once more for
+   acceptance **only if slugifying changed what was typed**; a replacement that
+   is already its own slug is taken silently. Read the asset; never restate the
+   rule here.
 
-3. **The secrets provider.** Fetch the adapter's menu once
+   What this question settles is what the plan shows and what §7 writes — the
+   per-project task groups, the aggregator's member flags, the shell aliases
+   and `REPO_NAME`. Nothing downstream re-derives an id.
+3. **A one-line brief.** *New repo only.* What the repo is, in a sentence.
+   **May be empty** — an empty brief writes a one-line stub, and `/vwf:readme`
+   fills the rest.
+4. **The secrets provider.** Fetch the adapter's menu once
    (`/<plugin>:<plugin>-stack-menu`) and **filter** it to the entries on the
    backing axis whose kind is *capability provider*. Those two fields are
    what the payload actually carries; it has no field meaning *secrets*, and
@@ -149,9 +180,9 @@ Five in all, each one round, MCQ where an option set exists, per
    can detect, and it does not pretend to: the slot the packs left stays
    unfilled, announces itself, and is reported exactly as a **none** answer
    is reported.
-4. **The licence.** MIT, Apache-2.0, or none. The hygiene pack ships the two
+5. **The licence.** MIT, Apache-2.0, or none. The hygiene pack ships the two
    texts; **none** is a legible answer and writes no file.
-5. **The security-contact URL.** Defaulted to the origin remote's advisories
+6. **The security-contact URL.** Defaulted to the origin remote's advisories
    page where an origin exists. Declining writes no security file — a file
    naming a channel nobody watches is worse than none.
 
@@ -178,7 +209,7 @@ Both pipelines materialize the same three baselines. They are fetched by the
 constructed: a name assembled from configuration is one that can silently
 resolve to nothing, which is the rule the `ux-gate` and design-adapter seams
 already follow. The secrets provider is fetched by whichever slug the user
-picked at question 3.
+picked at question 4.
 
 Their landing is consent-gated by the materializer, and their presence in its
 lockfile is what tells a later run — or `/vwf:setup` — that the repo is shaped
@@ -223,14 +254,20 @@ Print them as the last thing, and **run neither**. Each resolves its own mode
 and reports what it did, which a call from here could only guess at on their
 behalf.
 
-## When to run it again
+The `/vwf:setup` line stays true whichever way `init` was reached. Through
+`/vwf:setup reshape`, setup stops once `init` returns, so the line names the
+next run; through setup's Step 0 offer, setup is already carrying on past it,
+and the line is the record of where control goes back to.
 
-`init` is not a one-time bootstrap. It is the command that keeps a repo's
-**shape** — its configuration layout, its task vocabulary, its gates, its
-hygiene — in step with what the packs ship and with what the repo has since
-learned about itself. A repo drifts from that shape silently: nothing fails,
-until the day a task is missing or a gate reads a config nobody filled. So run
-it on a schedule of events rather than on a symptom:
+## When it runs again
+
+`init` is not a one-time bootstrap. It is what keeps a repo's **shape** — its
+configuration layout, its task vocabulary, its gates, its hygiene — in step
+with what the packs ship and with what the repo has since learned about itself.
+A repo drifts from that shape silently: nothing fails, until the day a task is
+missing or a gate reads a config nobody filled. So the re-run is owed on a
+schedule of events rather than on a symptom, and the way to ask for one is
+`/vwf:setup reshape`:
 
 - **After the registry exists.** `/vwf:architecture` declares the projects and
   `/vwf:setup` writes the config that names them. That is the moment the
@@ -246,12 +283,15 @@ it on a schedule of events rather than on a symptom:
   a re-run.
 - **Whenever `/vwf:doctor` says so.** Doctor is what notices the drift between
   a run: adapter lockfile against installed packs, registry ids against the
-  scope list and the task groups, a missing branch. Its finding names this
-  command.
+  scope list and the task groups, a missing branch. Its finding prints
+  `/vwf:setup reshape`, once, as the one remedy for every shape row.
 
 A run that finds nothing costs one empty plan and says the repo is shaped —
 which is the answer, not a wasted run.
 
-`/vwf:setup` already offers `init` when it finds the shape missing, so a repo
-that reached setup first is not stranded. That offer is for the **absent**
-shape; this section is about the shape that exists and has fallen behind.
+Every one of those moments reaches `init` through the same door. `/vwf:setup`'s
+Step 0 offers `init` whenever the repo shape is **missing or drifted**, so a
+repo that reached setup first is not stranded and a repo that has fallen behind
+is not left there; `/vwf:setup reshape` forces that offer and stops once `init`
+returns, which is what a user runs when they want the shape reconciled and
+nothing else.

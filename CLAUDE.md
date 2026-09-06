@@ -207,7 +207,7 @@ index.
 
 | Plugin     | Is                                                                                                                                                                                                                                                                                                                                 |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, `/vwf:init` (the repo-shape orchestrator), the guarded `rtk` hook, the two mempalace auto-save hooks, and two MCP servers. Names **no** technology. Depends on `stackgen` alone. → [`vwf-plugin`][vwf]                                             |
+| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, `init` (the repo-shape orchestrator, reached through `/vwf:setup`), the guarded `rtk` hook, the two mempalace auto-save hooks, and two MCP servers. Names **no** technology. Depends on `stackgen` alone. → [`vwf-plugin`][vwf]                    |
 | `stackgen` | The principles-driven stack materializer — shipped packs for the covered path, a Context7-researched generator for the uncovered tail, and the repo's own toolchain manager, gates and hygiene since `devtools` dissolved into it. Its packs ship the **config files** too, which `/vwf:init` lays down. → [`stackgen-plugin`][sg] |
 
 Full inventory, the native manifest shape, and the generated marketplace
@@ -215,17 +215,22 @@ manifest: [`.claude/docs/plugins.md`][plug]. Authoring doctrine that applies to
 both — the checker rules, the two mise gates, the hook rules, the traps — is the
 [`plugin-authoring`][auth] skill, which auto-applies under `plugins/`.
 
-The workflow runs `init` → `setup` → `product` → `architecture` →
-`design-system` → `blueprint` → `plan` → `execute`, with `verify` and `feedback`
-closing the loop. `init` shapes the **base repo** — the config layout, the task
-vocabulary, the gates, the hygiene files — from stackgen's three unconditional
-bundles, and since 2026-09-06 closes with a consent-gated git pass (the first
-commit, the `develop`/`main` pair, the forge default); `setup` then sets up
-**vwf** in it, and offers `init` when the shape is missing. **Everything up to
-`blueprint` is done in full before planning** — `plan` hard-halts on a partial
-coverage stamp. The ordering gates, the skill and agent tables, how to add a
-skill and pick its invocation mode, and the dependency reasoning are the
-[`vwf-plugin`][vwf] skill.
+The workflow runs `setup` → `product` → `architecture` → `design-system` →
+`blueprint` → `plan` → `execute`, with `verify` and `feedback` closing the loop.
+`init` is no longer a command in that line: since 2026-09-06 it is
+**skill-invoked**, hidden from the `/` menu and reached only from inside `setup`
+— Step 0's offer, or `/vwf:setup reshape`, which runs the shape pass alone.
+`init` shapes the **base repo** — the config layout, the task vocabulary, the
+gates, the hygiene files — from stackgen's three unconditional bundles, asks six
+questions (the second confirming every project id, its slug and the source the
+name came from, before any `p:<slug>:*` group, alias or `REPO_NAME` is written),
+and closes with a consent-gated git pass (the first commit, the `develop`/`main`
+pair, the forge default); `setup` then sets up **vwf** in it, and offers `init`
+when the shape is **missing or drifted**, on the four baseline predicates
+`/vwf:doctor` owns. **Everything up to `blueprint` is done in full before
+planning** — `plan` hard-halts on a partial coverage stamp. The ordering gates,
+the skill and agent tables, how to add a skill and pick its invocation mode, and
+the dependency reasoning are the [`vwf-plugin`][vwf] skill.
 
 ## The installer CLI
 
@@ -336,8 +341,10 @@ pins and finds nothing.
 
 **Nothing is gated at install time**, so the first thing to run afterwards is
 `/vwf:doctor` — it is what reports a missing required binary, as a **blocking**
-finding. On a repo that has never been shaped, run `/vwf:init` before either: it
-lays down the config layout and the gates the rest of the workflow assumes.
+finding. On a repo that has never been shaped, run `/vwf:setup` — its Step 0
+offers `init`, which lays down the config layout and the gates the rest of the
+workflow assumes, and `/vwf:setup reshape` runs that pass alone on a repo that
+has drifted.
 
 For **other agents** there is no marketplace and no rendered tree: point the
 tool at this repo and ask it to adapt the plugin. `readme.md`'s "Other tools"

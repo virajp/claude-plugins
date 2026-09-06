@@ -719,8 +719,8 @@ record.
 
 | Command                  | What it does                                                                                                                                |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/vwf:init`              | Shape a repo — the config layout, the task library, the gates, the hygiene files, a licence (re-runnable)                                   |
-| `/vwf:setup`             | Onboard/migrate a repo into vwf's format (re-runnable)                                                                                      |
+| `/vwf:init`              | Internal — shape a repo (config layout, task library, gates, hygiene files, a licence); reached only through `/vwf:setup`                   |
+| `/vwf:setup [reshape]`   | Onboard/migrate a repo into vwf's format; `reshape` runs the repo-shape pass alone (re-runnable)                                            |
 | `/vwf:product`           | The Phase −1 outcome contract — problem, users, goals, slice priority                                                                       |
 | `/vwf:architecture`      | Bootstrap or update the system shape + Project Registry                                                                                     |
 | `/vwf:design-system`     | Import the product's design system from its design tool into the contract (mandatory once UI exists)                                        |
@@ -750,6 +750,15 @@ the workflow **delegates to them by name** — `recall` resumes a paused run
 Marking one of those user-only would silently break the chain: the flag blocks
 programmatic invocation, not just auto-triggering.
 
+**`init` is the one skill in the other direction** — hidden from you, reachable
+by a skill. It carries `user-invocable: false`, which keeps it out of the `/`
+menu, *and* `disable-model-invocation: false`, which keeps `/vwf:setup`'s call
+to it working; a user-only skill would have made that call a silent no-op. So
+init is reached exactly two ways, both through setup: Step 0's offer, or
+`/vwf:setup reshape`. The two stack-adapter skills a stack plugin ships carry
+the same pair for the same reason — they answer vwf in a payload shape no user
+reads.
+
 Model and reasoning effort are **tiered per surface**, not uniform. `opus` runs
 where judgment decides the outcome or where nobody is watching — `product`,
 `blueprint`, `plan`, and `execute` (the only unattended command), plus the
@@ -769,12 +778,13 @@ plugin ships no `commands/` directory.
 
 ### /vwf:init
 
-`/vwf:init [--new | --existing] [target-dir]` shapes the **base repo** — the
+`init` takes no arguments and is **not typed**: `/vwf:setup` is its only door —
+Step 0's offer, or `/vwf:setup reshape`. It shapes the **base repo** — the
 layout everything else assumes. `/vwf:setup` sets up **vwf** in it. The two are
 a pair and neither does the other's job: the config layout, the task vocabulary,
 the gates, the ignore set and a licence belong to `init`; `docs/blueprint/`,
 `.config/vwf.yaml` and the memory tree stay `setup`'s. On a repo that has
-neither, run `init` first.
+neither, run `/vwf:setup` and take the offer it makes first.
 
 **It names no tool, and that is the design.** Every file it lays down comes from
 a stackgen pack, fetched through the stack adapter by three fixed slugs — the
@@ -820,20 +830,35 @@ the repo-level environment key your own shell aliases can read. `REPO_NAME` is
 written **literally** and never derived from the directory: a linked worktree's
 config root is named for the branch.
 
-**Mode resolves from what is on disk**, unless `--new` or `--existing` says
-otherwise: no `.config/` directory *and* no task-library directory means
-**new**; anything else means **existing**. The signal is deliberately narrow — a
-repo with source, a readme and a licence but no configuration layout has never
-been shaped, and nothing in the new pipeline touches source.
+**Mode resolves from what is on disk**, and from nothing else — there is no flag
+to override it and no directory argument to point it elsewhere: no `.config/`
+directory *and* no task-library directory means **new**; anything else means
+**existing**. The signal is deliberately narrow — a repo with source, a readme
+and a licence but no configuration layout has never been shaped, and nothing in
+the new pipeline touches source. Shaping a *different* repository means running
+`/vwf:setup` there.
 
-**Five questions, each one round**, asked *before* the plan so one yes covers
-all of it. Two on a new repo only — the repo name (proposed from the directory)
-and a one-line brief, which may be empty. Three on any repo — which provider
-holds this repo's secrets (the adapter's own menu, filtered to capability
-providers, plus *none — decide later*), the licence (MIT, Apache-2.0 or none),
-and a security-contact URL (defaulted to the origin's advisories page; declining
-writes no security file, since one naming a channel nobody watches is worse than
-none).
+**Six questions, each one round**, asked *before* the plan so one yes covers all
+of it. Two on a new repo only — the repo name (proposed from the directory) and
+a one-line brief, which may be empty. Four on any repo, listed in order — the
+first of them is question 2 overall, and it is the one this section's slug rule
+waits on:
+
+- **The ids, confirmed** — one list, the repo's own name first and then a row
+  per project init will write a task group for, each row showing the **name**
+  the repo spells, the **id** it slugifies to, and the **source** that name came
+  from (the registry, a sub-project directory, or the repo's own name). Naming
+  the source is the point: a row you disagree with is usually a row whose source
+  you did not expect. Accept the list, or type a replacement for any row — a
+  replacement is slugged by the same rule and shown once more only if slugging
+  changed it. Nothing is written until this is answered: not a `p:<slug>:*`
+  group, not a member flag, not an alias, not `REPO_NAME`.
+- **The secrets provider** — the adapter's own menu, filtered to capability
+  providers, plus *none — decide later*.
+- **The licence** — MIT, Apache-2.0 or none.
+- **The security-contact URL** — defaulted to the origin's advisories page;
+  declining writes no security file, since one naming a channel nobody watches
+  is worse than none.
 
 **On an existing repo it surveys, plans, and applies on one consent.** The
 survey walks ten checks — root files against the allowlist, the readme's casing,
@@ -904,40 +929,54 @@ An empty section prints as `none`. Then two next-step lines, always both and
 neither of them run: `/vwf:readme` to fill the readme the stub only opens, and
 `/vwf:setup` to bring the repo into vwf's format.
 
-**When to run it again.** `init` is not a one-time bootstrap — it is what keeps
-a repo's *shape* in step with what the packs ship and with what the repo has
-since learned about itself, and drift there is silent until the day a task is
-missing or a gate reads a config nobody filled. Run it **after the registry
-exists** (`/vwf:architecture` and `/vwf:setup` give the project ids their real
-source, which makes the commit gate's scope list fillable and may move a task
-group), **after a pack version moves**, **on a fresh clone that reports drift**,
-and **whenever `/vwf:doctor` says so**. Doctor's repo-shape check is what
-notices between runs: the pack versions the adapter's lockfile recorded against
-what it ships now, each registry id against its task group, commit scope and
-alias, both branches, and the repo-name key. Every one of those is `drift` and
-none is blocking — a repo behind its baseline is out of date, not broken — and
-all of them share the one remedy, printed once. A run that finds nothing costs
-one empty plan and says the repo is shaped, which is the answer rather than a
-wasted run.
+**When it runs again.** `init` is not a one-time bootstrap — it is what keeps a
+repo's *shape* in step with what the packs ship and with what the repo has since
+learned about itself, and drift there is silent until the day a task is missing
+or a gate reads a config nobody filled. The way to ask for a re-run is
+`/vwf:setup reshape`, and it is owed **after the registry exists**
+(`/vwf:architecture` and `/vwf:setup` give the project ids their real source,
+which makes the commit gate's scope list fillable and may move a task group),
+**after a pack version moves**, **on a fresh clone that reports drift**, and
+**whenever `/vwf:doctor` says so**. Doctor's repo-shape check is what notices
+between runs: the pack versions the adapter's lockfile recorded against what it
+ships now, each registry id against its task group, commit scope and alias, both
+branches, and the repo-name key. Every one of those is `drift` and none is
+blocking — a repo behind its baseline is out of date, not broken — and all of
+them share one remedy, `/vwf:setup reshape`, printed once. A run that finds
+nothing costs one empty plan and says the repo is shaped, which is the answer
+rather than a wasted run.
 
 A second run on a shaped repo produces an **empty plan** and says so, **for the
 same id source**. The one legitimate exception is a run whose ids now come from
 a registry the repo did not have before: those rows read *id source changed*,
 naming both sources, and are never reported as a pack having moved. A declined
-write is a recorded deferral, never a halt — re-run `/vwf:init` whenever.
+write is a recorded deferral, never a halt — run `/vwf:setup reshape` whenever.
 
 ### /vwf:setup
 
 Run this to **onboard a repo** — new or existing — into vwf's format, and re-run
 it after upgrading vwf to bring the tree back to the current format.
 
-**Step 0 begins with a shape check, before the mode fork.** A repo is *shaped*
-when the stack adapter's lockfile records all three unconditional slugs. Any of
-them missing and setup says what is absent and offers [`/vwf:init`](#vwfinit),
-which is what lays them down — that seam is why `init` is model-invocable as
-well as slash-invocable. Declining is a recorded deferral, not a halt: the repo
-shape and the vwf format are two different things, and a repo can be onboarded
-into one without the other. Setup itself never materializes a bundle any more.
+**`/vwf:setup reshape` is the shape pass alone.** It skips the mode fork
+entirely: `init` runs — surveying, showing its one plan, taking its own consents
+— its report prints verbatim, and setup stops. No validation, no stamp, no
+doctor, no commit; a re-shape never touches `.config/vwf.yaml`, so a user who
+wants both runs `/vwf:setup` again afterwards. It is also the line `/vwf:doctor`
+prints for every repo-shape finding, so most runs of it arrive from a drift row.
+
+**Step 0 begins with a shape check, before the mode fork**, and it asks two
+things. Is the shape *there* — the stack adapter's lockfile records all three
+unconditional slugs — and is it *current*, against the four repo-shape
+predicates `/vwf:doctor` owns (the pack versions the lockfile recorded, the
+registry ids behind the surfaces generated from them, the `develop`/`main` pair,
+and the repo-name environment key). Any slug missing, or any predicate failing,
+and setup says what is absent or behind and offers [`/vwf:init`](#vwfinit),
+which is what lays the shape down and what brings it forward. That seam is why
+`init` stays model-invocable — and it is hidden from the `/` menu, so this offer
+and `reshape` above are the only two ways it is reached. Declining is a recorded
+deferral, not a halt: the repo shape and the vwf format are two different
+things, and a repo can be onboarded into one without the other. Setup itself
+never materializes a bundle any more.
 
 **Step 0 resolves one of three entry paths**, once, from what is on disk, and
 nothing after it re-derives the mode:
@@ -1830,9 +1869,9 @@ fix reaches it only at the next rebuild.
 
 A first slice, end to end. Assume a backend service whose first flow is
 `place-order` (with an `order` entity under it). (On a bare repo, run
-[`/vwf:init`](#vwfinit) first to shape it, then `/vwf:setup` — which offers init
-itself if you skip it. `/vwf:setup` then prints these steps as the chain and
-offers to start step 1; it runs none of them.)
+`/vwf:setup`: its Step 0 finds no shape and offers [`init`](#vwfinit), which
+lays it down. `/vwf:setup` then prints these steps as the chain and offers to
+start step 1; it runs none of them.)
 
 ```text
 # 1. Pin the outcome contract (once per workspace, re-run to pivot)

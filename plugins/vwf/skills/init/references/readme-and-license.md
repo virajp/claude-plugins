@@ -13,9 +13,10 @@ hygiene pack's; `init` places them, fills the three placeholders, and stops.
 <the one-line brief>
 ```
 
-Both lines come from the two questions the new-repo path asks. An **empty
-brief** writes the H1 alone — an honest empty file beats an invented sentence
-about a product nobody has described yet.
+Both lines come from the two questions the new-repo path asks — question 1 the
+name, question 3 the brief. An **empty brief** writes the H1 alone — an honest
+empty file beats an invented sentence about a product nobody has described
+yet.
 
 Then **name `/vwf:readme`** in the report as the command that fills the rest.
 It writes the title, the project list, the architecture diagram, the setup
@@ -28,7 +29,7 @@ pass lists it. `init` writes a stub only where there is no readme at all.
 
 ## The licence
 
-Question 4's answer, one of three:
+Question 5's answer, one of three:
 
 - **MIT** or **Apache-2.0** — copy that one text from the hygiene pack's
   licence catalogue to `LICENSE` at the repo root, filling `<YEAR>` and
@@ -47,7 +48,7 @@ name, ask for it once rather than writing an empty holder.
 
 ## The security contact
 
-Question 5's answer fills `<REPO_URL>` in the hygiene pack's security file —
+Question 6's answer fills `<REPO_URL>` in the hygiene pack's security file —
 the origin remote's web URL, no trailing slash, with the advisories page as
 the proposed default.
 
