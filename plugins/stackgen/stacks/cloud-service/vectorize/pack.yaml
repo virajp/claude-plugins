@@ -1,0 +1,37 @@
+name: Cloudflare Vectorize
+summary: A vector index bound to a Worker — similarity search over
+  embeddings for retrieval, recommendation and classification, with
+  namespace and metadata filtering, and the place a product's own
+  embeddings live.
+version: 0.1.0
+type: cloud-service
+category: vector
+capability: search-index
+kind: cloud-provider
+axis: backing
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      An index has no endpoint to probe. The honest check is a query for a
+      known vector issued by the consuming Worker, or `wrangler vectorize
+      info` against the index; the first proves the binding resolves and
+      the index answers, the second proves only that the index exists —
+      and neither proves the vectors in it are current, because writes are
+      asynchronous
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      One index per environment, named for it, bound under the same
+      binding name so no code branches on environment. Dimensions and
+      metric are fixed at creation, so an index that disagrees with
+      production's is a mistake made at create time and not correctable
+      afterwards — the suite seeds what it queries and waits for the write
+      to become visible rather than querying immediately
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None — Vectorize has no local simulation, so the binding is opted
+      into a live index with `remote: true` and the dev loop reads and
+      writes shared remote state. There is no engine to compose behind a
+      readiness gate, and this component adds nothing to the local task
