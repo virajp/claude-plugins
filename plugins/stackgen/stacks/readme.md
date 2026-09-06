@@ -177,18 +177,34 @@ ninth kind and the last one that had been defined but never authored against.
 spans a provider's services — `gcp` and `cloudflare` — and `cloud-service`
 carries one component per service: `cloud-run`, `cloud-sql`, `firestore`,
 `firebase-auth`, `firebase-messaging`, `firebase-storage`, `gke` and
-`zero-trust-access`. `workers-static-assets` joined them on 2026-09-05, after
-the wave — the first Cloudflare service here that hosts rather than fronts.
-Wave D deferred this deliberately, because folding the two clouds honestly
-needed per-topic research with citations rather than a fold of their four
-~80-line service templates.
+`zero-trust-access`. Wave D deferred this deliberately, because folding the
+two clouds honestly needed per-topic research with citations rather than a
+fold of their four ~80-line service templates.
 
-Three `cloud-service` categories have been minted here
-(`../assets/taxonomy.md`): `document`, for Firestore, `access`, for Zero Trust
-Access, and `static-hosting`, for Workers Static Assets — none of them
-compute/sql/queue/object-storage/cdn. `access` and `static-hosting` both leave
-`capability` unset and stay that way — minting a capability token is vwf's
-move, never the taxonomy's.
+**Cloudflare kept growing after the wave closed.** `workers-static-assets`
+joined on 2026-09-05 — the first Cloudflare service here that hosts rather
+than fronts — `workers-ssr` the day after, and then the storage and data
+services: `kv`, `r2`, `d1`, `hyperdrive`, `vectorize`, `pipelines` and
+`analytics-engine`, which gave Cloudflare a managed **backing** offering
+rather than hosting alone. Each is a `backing`-axis bundle of its own, pinned
+beside the others rather than chosen between, and each ships **no `config/`
+tier**: a binding is an entry in the project's root `wrangler.jsonc`, which a
+deploy pack owns, so nothing here writes a file of its own. The provider
+component's scope prose is now three lists — offered, planned and declined —
+so a service the menu does not carry says which of the three it is rather
+than leaving a reader to guess, and the planned ones arrive under their own
+efforts.
+
+Every landing that brings a service nothing already classifies mints its
+`cloud-service` category in `../assets/taxonomy.md`, which owns the closed
+list and the reasoning — the wave itself minted `document`, for Firestore,
+and `access`, for Zero Trust Access; `static-hosting` came with
+`workers-static-assets` after it; and the Cloudflare storage and data work
+minted a further set, once for that whole developer platform rather than per
+landing, so the services still to come need no second edit there. Several of
+those leave `capability` unset and stay that way: minting a capability token
+is vwf's move, never the taxonomy's, and the taxonomy names which ones
+rather than this file restating the list.
 
 **Every stack adapter has now retired**, and `stackgen` is the only plugin left
 shipping a `-stack-menu` / `-stack-template` pair. The retirement test stayed
@@ -200,10 +216,10 @@ this, since with one adapter left, deleting its keyword would otherwise have
 switched the whole rule off while the checker still passed.
 
 `object-storage` still gets no pack of its own, and will not: every object store
-is a cloud's, so its flavour arrives from `cloud-service/firebase-storage` or
-whichever provider's equivalent lands next. Its contract sits in
-`../assets/contracts/` regardless, because the clauses are the same whoever
-provides it.
+is a cloud's, so its flavour arrives from `cloud-service/firebase-storage`,
+`cloud-service/r2`, or whichever provider's equivalent lands next. Its
+contract sits in `../assets/contracts/` regardless, because the clauses are
+the same whoever provides it.
 
 `eslint` is deliberately absent: it is JS/TS-only, so it is topic 10 of the
 TypeScript language bundle rather than a repo gate. See the `repo-gate` seam
