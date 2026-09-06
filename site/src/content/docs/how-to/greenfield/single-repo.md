@@ -47,43 +47,42 @@ daemon is yours to run.
 
 Restart Claude Code, then `cd` into the empty Relay repo.
 
-### /vwf:init
-
-```text
-/vwf:init
-```
-
-An empty repo has no `.config/` layout and no task library, so init resolves to
-its **new** pipeline and shapes the repo before anything else runs: the config
-layout, the toolchain manager's five-file split, the task library grouped
-`setup:*` / `code:*` / `p:*`, the four repo gates with their configs and hook
-fragments, the hygiene files, and the licence Relay chose. It asks five
-questions in one round each — the repo name and a one-line brief (both proposed
-or skippable), which provider holds Relay's secrets, the licence, and a security
-contact — then shows **one plan** and applies it on one yes.
-
-It closes with a git pass: it stages what it wrote and asks once whether to
-commit, commit and push, or leave it, creates `develop` and `main`, and asks
-which branch the remote should default to. Then it names the two commands that
-follow, and runs neither. Details: [`/vwf:init`](../../plugins/vwf.md#vwfinit).
-
-Skipping this step is legal: `/vwf:setup` checks the shape and offers init
-itself. Running it first is simply the shorter path.
-
 ### /vwf:setup
 
 ```text
 /vwf:setup
 ```
 
-A repo with no manifest, no source directories and no `docs/blueprint/` is
-*blank*, and setup treats it as such: it asks nothing about architecture,
-because nothing is there to interrogate and those decisions belong to the two
-commands that will have the product contract to derive them from. What it does
-instead is make the repo ready for that conversation — the empty doc trees, the
-memory tree, a `.graphifyignore` carrying the standard excludes, a vwf section
-in `CLAUDE.md` — and stop there. The repo's own tooling is `/vwf:init`'s, and
-setup's first act is to check it is there.
+One command, and it does two things in order. **Step 0 runs first and finds no
+shape** — no `.config/` layout, no task library — so it says what is absent and
+offers [`init`](../../plugins/vwf.md#vwfinit), which is what lays it down. Say
+yes. `init` is not something you type: this offer and `/vwf:setup reshape` are
+the only two ways it is reached. Declining is legal and is recorded as a
+deferral, with `/vwf:setup reshape` as the unlock whenever you want it.
+
+On an empty repo `init` resolves to its **new** pipeline and shapes the repo
+before anything else runs: the config layout, the toolchain manager's five-file
+split, the task library grouped `setup:*` / `code:*` / `p:*`, the four repo
+gates with their configs and hook fragments, the hygiene files, and the licence
+Relay chose. It asks six questions in one round each — the repo name and a
+one-line brief (both proposed or skippable), the ids it will write task groups
+and aliases for (each shown with its slug and where the name came from, yours to
+replace), which provider holds Relay's secrets, the licence, and a security
+contact — then shows **one plan** and applies it on one yes.
+
+It closes with a git pass: it stages what it wrote and asks once whether to
+commit, commit and push, or leave it, creates `develop` and `main`, and asks
+which branch the remote should default to. Its report prints, and setup carries
+on with its own work.
+
+**Then setup does its half.** A repo with no manifest, no source directories and
+no `docs/blueprint/` is *blank*, and setup treats it as such: it asks nothing
+about architecture, because nothing is there to interrogate and those decisions
+belong to the two commands that will have the product contract to derive them
+from. What it does instead is make the repo ready for that conversation — the
+empty doc trees, the memory tree, a `.graphifyignore` carrying the standard
+excludes, a vwf section in `CLAUDE.md` — and stop there. The repo's own tooling
+is `/vwf:init`'s, and setup's first act is to check it is there.
 
 It asks exactly two questions, both proposed from the directory name. Relay
 answers `relay` to both — the product name, and the memory wing.
