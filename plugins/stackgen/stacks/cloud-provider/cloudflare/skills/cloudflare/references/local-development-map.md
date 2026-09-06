@@ -14,18 +14,22 @@ where none does.
 | Workers KV | **Simulated**, and can be pointed at the real namespace — the binding supports both modes |
 | R2 | **Simulated**, and can be pointed at the real bucket — the binding supports both modes |
 | D1 | **Simulated**, and can be pointed at the real database — the binding supports both modes |
-| Hyperdrive | **Simulated only** — the binding resolves to a database you name yourself; there is no remote mode |
+| Hyperdrive | **Runs for real, against a local database you stand up and point the binding at** — no per-binding remote mode |
 | Vectorize | **Remote only** — no local simulation exists; the binding must be opted into the live index |
-| Analytics Engine | **Simulated only** — writes land in the local simulation; there is no remote mode |
+| Analytics Engine | **Simulated** — writes land in the local simulation; no per-binding remote mode |
 | Pipelines | **Not stated** by Cloudflare's per-binding table; the `pipelines` component's own local-dev reference settles it |
 | The services planned under their own plans | Arriving with their components; until then, out of scope |
 | The declined set, and account-level products | Out of this stack's scope entirely |
 
 Modes are Cloudflare's, not this stack's: a binding either has a local
-simulation, or a remote connection to the live resource, or both, and
+form, or a per-binding `remote` connection to the live resource, or both,
+and
 [the per-binding table](https://developers.cloudflare.com/workers/local-development/bindings-per-env/)
-is what says which. The scope fence in the `cloudflare` skill says which
-services are here at all.
+is what says which. "No per-binding remote mode" above never means the
+real resource is unreachable from a dev session — `wrangler dev --remote`
+uploads the Worker and runs it on Cloudflare with **every** binding on the
+live resource, whatever the column says. The scope fence in the
+`cloudflare` skill says which services are here at all.
 
 Three rows are a genuine local runtime rather than a stand-in, and they
 are the exceptions: the asset server exercises the real routing rules;
