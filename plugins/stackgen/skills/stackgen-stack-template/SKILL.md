@@ -115,9 +115,10 @@ check real.
   artifact kind**: copied verbatim, gated on its own tier-2 consent line,
   merging rather than owning, recorded per file in the lockfile with the
   component that supplied it, and executable where mise requires it. The
-  tier covers a gate's own config file and a provider's environment
-  fragment; what it still may not write — a language manifest, a CI
-  workflow, editor settings, CLAUDE.md — and the allowlist of what may land
+  tier covers a gate's own config file, a provider's environment fragment
+  and a pack's editor fragment (`.config/vscode.d/<pack>.jsonc`); what it
+  still may not write — a language manifest, a CI workflow, a **whole**
+  editor file, CLAUDE.md — and the allowlist of what may land
   at the repo **root** are
   `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. The procedure is the
   materializer.

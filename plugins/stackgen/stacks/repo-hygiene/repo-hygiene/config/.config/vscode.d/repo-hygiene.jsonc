@@ -1,0 +1,173 @@
+// The editor baseline. Every other pack's fragment sits on top of this one,
+// so what belongs here is what is true of a repository before it has a stack:
+// the nesting map for repo-root and hygiene files, the exclude lists, and the
+// editor-wide keys that name no language and no tool.
+//
+// A key that names a tool belongs to that tool's pack, not here — the
+// formatter keys and `[toml]` are the dprint gate's, `eslint.*` the eslint
+// gate's, `js/ts.*` the tsconfig gate's, `[dart]` and `dart.*` the Dart
+// gate's, and the toolchain manager's extension is its own. Composition order
+// decides a collision, so a duplicated key is a silent override rather than an
+// error: keep them disjoint.
+{
+  "settings": {
+    "diffEditor.ignoreTrimWhitespace": false,
+    "diffEditor.renderSideBySide": false,
+    "editor.autoIndent": "full",
+    "editor.codeActions.triggerOnFocusChange": false,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "never",
+      "source.sort.json": "explicit",
+    },
+    "editor.defaultColorDecorators": "always",
+    "editor.detectIndentation": false,
+    "editor.indentSize": 2,
+    "editor.insertSpaces": true,
+    "editor.quickSuggestions": {
+      "comments": true,
+      "other": true,
+      "strings": true,
+    },
+    "editor.suggest.insertMode": "replace",
+    "editor.tabSize": 2,
+    // File nesting is switched on here and collapsed by default; the map
+    // itself is the `nesting` key below, which every pack contributes to.
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.expand": false,
+    "files.autoGuessEncoding": true,
+    // Regenerable output and the lockfile, hidden from the explorer. A path
+    // hidden here is still searched unless it is in `search.exclude` too.
+    //
+    // `graphify-out/` is deliberately absent. .gitignore tracks exactly one
+    // file inside it — GRAPH_REPORT.md, which is there to be read — and this
+    // setting has no negation form, so hiding the directory would hide the one
+    // file the negation exists for.
+    "files.exclude": {
+      "**/.astro/": true,
+      "**/.dart_tool": true,
+      "**/.turbo/": true,
+      "**/*.log": true,
+      "**/node_modules/": true,
+      "**/tsconfig.build.tsbuildinfo": true,
+      "**/tsconfig.tsbuildinfo": true,
+      "**/ui-debug.log": true,
+      "pnpm-lock.yaml": true,
+    },
+    // `**/dist/` is deliberately `false`: a build watcher is how a rebuilt
+    // artifact is noticed, and the tree is small enough to watch.
+    "files.watcherExclude": {
+      "**/.dart_tool": true,
+      "**/.git/objects/**": true,
+      "**/.git/subtree-cache/**": true,
+      "**/.hg/store/**": true,
+      "**/.turbo/": true,
+      "**/*.log": true,
+      "**/coverage/": true,
+      "**/dist/": false,
+      "**/node_modules/": true,
+      "**/tsconfig.build.tsbuildinfo": true,
+      "**/tsconfig.tsbuildinfo": true,
+      "**/ui-debug.log": true,
+    },
+    "outline.showKeys": true,
+    "search.exclude": {
+      "**/.turbo/": true,
+      "**/*.code-search": true,
+      "**/*.log": true,
+      "**/bower_components": true,
+      "**/coverage/": true,
+      "**/dist/": true,
+      "**/node_modules/": true,
+      "**/tsconfig.build.tsbuildinfo": true,
+      "**/tsconfig.tsbuildinfo": true,
+      "**/ui-debug.log": true,
+    },
+    "template-string-converter.autoRemoveTemplateString": true,
+    "template-string-converter.convertOutermostQuotes": true,
+    "template-string-converter.convertWithinTemplateString": true,
+    "template-string-converter.quoteType": "both",
+    "template-string-converter.validLanguages": [
+      "javascript",
+      "typescript",
+    ],
+    "todo-tree.general.tags": [
+      "TODO",
+      "FIXME",
+      "HACK",
+      "REVIEW",
+      "NOTE",
+      "REFACTOR",
+      "REMOVE",
+    ],
+    "todo-tree.highlights.defaultHighlight": {
+      "hideFromActivityBar": true,
+      "hideFromStatusBar": false,
+      "type": "text-and-comment",
+    },
+    "yaml.completion": true,
+    // The repo formatter owns YAML; the language server formatting it too
+    // would be two formatters disagreeing on save.
+    "yaml.format.enable": false,
+    "yaml.hover": true,
+  },
+  // Parent → children, merged into `explorer.fileNesting.patterns`. Only
+  // parents this pack owns are here; a pack nests its own files under its own
+  // parent. `${capture}` and the glob forms are VS Code's, verbatim.
+  //
+  // Every ignore file the repo carries nests under `.gitignore`, whichever
+  // tool reads it — that is where you go looking for an ignore file.
+  "nesting": {
+    ".envrc": [".env", ".env.*", ".env.*.secrets", ".nvmrc", "*.env"],
+    ".gitignore": [
+      ".gitkeep",
+      ".gitmodules",
+      ".gitattributes",
+      ".dockerignore",
+      ".graphifyignore",
+      ".prettierignore",
+      ".env",
+    ],
+    "*.js": ["${capture}.js.map", "${capture}.d.ts", "${capture}.d.ts.map"],
+    "AGENTS.md": ["CLAUDE.md"],
+    "package.json": [
+      "pnpm-lock.yaml",
+      "pnpm-workspace.yaml",
+      ".npmrc",
+      "vitest.config.ts",
+      "turbo.json",
+      "build.ts",
+      "esbuild.mjs",
+      "waitOn.json",
+      "waitOnExternal.json",
+      "apphosting.yaml",
+      "apphosting.*.yaml",
+      ".prettierrc.yaml",
+      ".markdownlint.yaml",
+      "doppler.yaml",
+    ],
+    "readme.md": [
+      "todo.md",
+      "LICENSE",
+      "CLAUDE.md",
+      "CONTRIBUTING.md",
+      "SECURITY.md",
+    ],
+  },
+  // Editor-wide helpers that belong to no one pack, and that a repository
+  // wants before it has a stack. An extension for a tool, a framework or a
+  // language is recommended by that thing's own pack — recommending it from
+  // the baseline would put it in front of every repository, including the
+  // ones that pinned the alternative.
+  //
+  // Each of these except the icon theme and the error display is the companion
+  // to a settings key above; drop one and the setting it serves goes dead.
+  "extensions": [
+    "bmalehorn.vscode-fish",
+    "gruntfuggly.todo-tree",
+    "meganrogge.template-string-converter",
+    "oderwat.indent-rainbow",
+    "pkief.material-icon-theme",
+    "redhat.vscode-yaml",
+    "usernamehw.errorlens",
+  ],
+}

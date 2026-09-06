@@ -86,7 +86,16 @@ variant is loaded.
   same reason — the file-based tasks must be executable under `MISE_ENV=ci` too.
   It is also where the freshness policy lives: `minimum_release_age` defers a
   release younger than ten hours, and `lockfile = true` records what a fuzzy pin
-  resolved to.
+  resolved to — **one lockfile per config file that declares tools, named after
+  that file's stem, and all of them tracked**. With the split as shipped that is
+  `.config/mise.dev.lock` alone; a runtime pinned in `mise.toml` adds
+  `.config/mise.lock` beside it. Only `mise.local.lock` is ignored.
+  It also carries three settings that are policy rather than taste:
+  `all_compile = false` (take the published binary for every tool, never build
+  one), `task.timings = true` (an aggregate gate whose steps have no elapsed
+  time is a slowdown nobody can attribute), and
+  `task.disable_spec_from_run_scripts = true` (a task's flags come from its
+  `#USAGE` header, never from executing it to find out).
 - **`mise.dev.toml`** — everything a human needs locally that a pipeline does
   not: formatters, linters, scanners, the shell gates, pre-commit. It also holds
   the repo's **shell aliases**, of which three are part of the contract:
@@ -100,8 +109,8 @@ variant is loaded.
 
   plus one `setup-<project-id>` per member project, generated from the same id
   list `setup:all`'s flags and the `p:<id>:*` task group use.
-- **`mise.ci.toml`** — `locked = true`, so the pipeline installs from
-  `mise.lock` and fails rather than resolving; the deployed runtime's env
+- **`mise.ci.toml`** — `locked = true`, so the pipeline installs from the
+  tracked lockfiles and fails rather than resolving; the deployed runtime's env
   values; and any per-runtime CI workaround (topic 5). **Never a secret.**
 - **`mise.test.toml`** — only the keys a test run has to differ on.
 - **`mise.local.toml`** — nothing ships one; it is gitignored and written by
@@ -122,13 +131,26 @@ The shipped task library reaches for `.config/dprint.json`,
 no-ops with a warning when its config is absent. Name any the repo still needs;
 never write one from this side.
 
+`setup:vscode` reads one more: `.vscode/extensions.json`, which no pack owns
+either. It is **composed** by the orchestrator from every pack's
+`.config/vscode.d/<pack>.jsonc` fragment, this one included; the task reads the
+result and no-ops when it is absent.
+
 ## 2. Environment values
 
 **Names are shared across layers; values are split by layer.** Development and
 production override the *same* keys rather than each inventing their own, so the
 two differ in value and never in vocabulary.
 
-- `mise.toml` `[env]` — only what is identical everywhere (`DISABLE_TELEMETRY`).
+- `mise.toml` `[env]` — only what is identical everywhere (`DISABLE_TELEMETRY`),
+  plus **`REPO_NAME`**: a marked position the orchestrator fills with this repo's
+  project id, the slug `${CLAUDE_PLUGIN_ROOT}/assets/ids.md` defines and the same
+  token the `p:<id>:*` group, the member flags and the `setup-<id>` aliases
+  carry. **A literal, never derived at load time** — the basename of the config
+  root is the *branch* name inside a linked worktree, so a derived value would
+  address a different repo depending on where you stood. Aliases that vary only
+  by repo (the agent launchers) belong in the user's **global** config reading
+  `$REPO_NAME`, not here: one definition, per-repo values.
 - `mise.dev.toml` `[env]` — the **development** values: verbose logging, local
   hosts, emulator endpoints, test credentials.
 - `mise.ci.toml` `[env]` — the CI and **production** values for those same keys.
@@ -191,6 +213,17 @@ different command.
 - **`code:precommit` runs before staging.** The hooks rewrite files, and running
   them against the working tree is what folds those rewrites into the commit
   that caused them instead of a follow-up "fix hooks" commit.
+- **`setup:vscode` is `setup:all`'s last step**, and it is what makes the editor
+  part of the bootstrap rather than a page in a README: a profile named after
+  `REPO_NAME`, reconciled against the repo's recommendation list — installed
+  when missing, **uninstalled when no longer listed**. Per-repo, because a
+  recommendation accepted globally never goes away and a global prune would take
+  another repo's tools with it. Silent without the editor's CLI.
+- **`setup:default-branch <branch>` is not in `setup:all`.** It edits a remote
+  through whichever forge CLI recognizes it, prints the command when none does,
+  and never fails — so it is run deliberately, once, rather than on every
+  re-sync. What it sets is orthogonal to the merge tasks: work flows feature →
+  `develop` → `main` whatever the forge calls default.
 - **Per-runtime CI workarounds live in `mise.ci.toml` alone.** The one that
   ships: for a **Node** project, set `node.gpg_verify = false` there. mise's
   bundled Node release-key gpg import fails on Linux CI runners ("no valid

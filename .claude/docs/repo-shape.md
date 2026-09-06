@@ -148,29 +148,38 @@ only by pushing it.
 - **`plugins:check`** — validates the authored tree. Twelve rules: manifest
   name↔dir; dependencies resolving within the marketplace; hook scripts existing
   and executable; **a pack's `config/` payload tier being materializable as-is**
-  (five assertions in one rule: exec bit *and* a known shebang on every file
+  (seven assertions in one rule: exec bit *and* a known shebang on every file
   under `config/.config/mise/tasks/**`, because mise reports a 644 task as an
   *unknown* one rather than a permission error and execs the file directly; the
   same two on every `hooks/*.sh`, which the host execs from a bare path in
-  `settings.json`; the tier's root against the hygiene allowlist; and every
-  `config/.config/pre-commit.d/*.yaml` parsing with a top-level `repos:` list,
-  since `/vwf:init` concatenates them into a file no pack owns); **strict-YAML
-  frontmatter**; relative links under `assets/examples/**`; **root-relative
-  reference resolution** (every such reference resolves inside the plugin that
-  wrote it); **agent cross-reference resolution** in both directions (every
-  role-shaped `` `token` `` in a plugin's own prose names a real agent, and
-  every declared agent is referenced at least once — the two directions cover
-  each other on a rename); the vwf design-adapter contract (all **three** import
-  skills present and model-invocable); the vwf **stack-adapter** contract (both
-  `<plugin>-stack-menu` and `<plugin>-stack-template` present and
-  model-invocable on every plugin keyworded `vwf-stack-adapter`, **and** the
-  keyword declared by every plugin shipping either skill — the same
-  two-directions-cover-each-other idiom, since `stackgen` is now the only
-  adapter left and dropping that one keyword would otherwise have turned the
-  rule off entirely while `check()` still passed); the **technology-free vwf**
-  guard; and **retired vocabulary stated as live** (a closed list of spellings
-  the corpus stopped meaning, flagged per line and exempt on a line that marks
-  itself as history — the only rule that reports a line number).
+  `settings.json`; the tier's root against the hygiene allowlist, whose two
+  allowed **directories** are `.config/` and `.github/`; a **CI workflow refused
+  inside `.github/`**, since a pack names the task CI runs and never the
+  workflow; every `config/.config/pre-commit.d/*.yaml` parsing with a top-level
+  `repos:` list, since `/vwf:init` concatenates them into a file no pack owns;
+  the gate pack's **whole** `config/.config/pre-commit-config.yaml` parsing on
+  the same terms, from the base end, since it is neither a fragment nor at the
+  tier's root and nothing reached it before; and every
+  `config/.config/vscode.d/*.jsonc` parsing as JSONC with only the three keys
+  `settings`, `nesting` and `extensions`, since init composes them into an
+  editor file no pack owns and a fourth key is dropped without a word);
+  **strict-YAML frontmatter**; relative links under `assets/examples/**`;
+  **root-relative reference resolution** (every such reference resolves inside
+  the plugin that wrote it); **agent cross-reference resolution** in both
+  directions (every role-shaped `` `token` `` in a plugin's own prose names a
+  real agent, and every declared agent is referenced at least once — the two
+  directions cover each other on a rename); the vwf design-adapter contract (all
+  **three** import skills present and model-invocable); the vwf
+  **stack-adapter** contract (both `<plugin>-stack-menu` and
+  `<plugin>-stack-template` present and model-invocable on every plugin
+  keyworded `vwf-stack-adapter`, **and** the keyword declared by every plugin
+  shipping either skill — the same two-directions-cover-each-other idiom, since
+  `stackgen` is now the only adapter left and dropping that one keyword would
+  otherwise have turned the rule off entirely while `check()` still passed); the
+  **technology-free vwf** guard; and **retired vocabulary stated as live** (a
+  closed list of spellings the corpus stopped meaning, flagged per line and
+  exempt on a line that marks itself as history — the only rule that reports a
+  line number).
 
   Two of those are worth the extra sentence. The technology-free guard bans vwf
   naming a concrete technology **only where the mention prescribes**, which is

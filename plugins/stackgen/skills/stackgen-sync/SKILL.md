@@ -36,10 +36,13 @@ user's clock.
    repo config files from its `config/` tree — the toolchain manager's
    layers and task library, a gate's own config file, the hygiene files at
    the repo root, a provider's `.config/mise/conf.d/` fragment, a
-   `.config/pre-commit.d/` hook fragment — and those are ordinary lockfile
-   entries carrying a `path`, a `component`, a `hash` and a `mode`.
-   Inventory them with the rest; they differ only in where they sit and in
-   the consent line they take.
+   `.config/pre-commit.d/` hook fragment, a `.config/vscode.d/` editor
+   fragment, a deploy target's root config — and those are ordinary
+   lockfile entries carrying a `path`, a `component`, a `hash` and a
+   `mode`. Inventory them with the rest; they differ only in where they sit
+   and in the consent line they take. What may sit at the repo **root** is
+   the allowlist in `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`, which is
+   the one statement of it — never re-list it here.
 
 2. **Diff pack-sourced components.** For each component, re-derive its
    landing set from the current pack

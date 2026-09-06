@@ -18,8 +18,11 @@ a hostname rather than a `workers.dev` subdomain — one `routes` entry with
 
 **No `main`.** That is the definition of this stack, not a default. A
 Worker with a script fronting the assets is a different arrangement with
-different failure modes, and `assets.binding` and `run_worker_first` only
-mean anything there. Adding any of the three is leaving this pack.
+different failure modes, and it is `cloud-service/workers-ssr`;
+`assets.binding` and `run_worker_first` only mean anything there — as does
+the fall-through rule that makes `not_found_handling` the script's business
+rather than the platform's. Adding any of the three is leaving this pack
+for that one.
 
 **`compatibility_date` is a date, not a version, and pinning it is the
 point.** It fixes the runtime behaviour this deployment was written

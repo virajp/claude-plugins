@@ -43,6 +43,11 @@ halt on a blocking finding they were never told about.
 | Membership        | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                   |
 | Knowledge graph   | `graphify-out/graph.json` (each checkout root)                 |
 | Format stamp      | `${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`                |
+| Adapter lockfile  | `.claude/stackgen/lock.yaml`                                   |
+| Commit scopes     | `.config/git-conventional-commits.yaml`                        |
+
+The last two are read for the repo-shape check in §5 and, like everything else
+in this table, are only ever read.
 
 ## Hard Rules
 
@@ -135,7 +140,7 @@ optional, and no reference restates a rule that lives above.
 
 | Sections                                                   | Reference                                                 | Covers                                                                                            |
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, an unknown language, framework/dependency drift per manifest, the six stack axes, a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, the recommended `rtk`. **Blocking findings live here** |
+| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, an unknown language, framework/dependency drift per manifest, the six stack axes, a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, the recommended `rtk`, and the repo shape against its baseline — the adapter lockfile's pack versions, the registry ids behind the task groups, the commit scopes and the aliases, the two branches, and the repo-name environment key. **Blocking findings live here** |
 | **6–7** — harness & health, memory config                  | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `mempalace.yaml` placement, wing/room contract and secret excludes, and the markdown mirror. **Blocking findings live here** |
 | **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, a graph per locally-present checkout, the refresh hook, staleness, the `.graphifyignore`. **Blocking findings live here** |
 
@@ -164,7 +169,11 @@ project whose template does not cover every platform it declares, a broken
 membership link (§1), an unwaived **critical** dependency advisory (the audit
 check), a misplaced / duplicated /
 missing `mempalace.yaml` or one carrying no secret excludes; callers must halt),
-**drift** (config and repo disagree), **missing** (something declared has no
+**drift** (config and repo disagree — **including the whole repo-shape check
+against the baseline `/vwf:init` lays down** (§5): a pack version behind, a
+registry id with no task group, commit scope or alias, a missing `develop` or
+`main`, an unfilled repo-name key. A repo behind its baseline still works, so
+none of those is ever blocking), **missing** (something declared has no
 install — including a **`B`**-kind capability a project declares that none of
 its `backing_template` pins provides, which is never blocking; §5),
 **unavailable** (nothing shipped here to install), **unknown**
@@ -189,6 +198,12 @@ code, is reported and left to the user — as is anything needing a **choice**: 
 not, since resolving either means picking off a menu or installing a plugin.
 Nudge `/vwf:setup` and stop there; a template doctor guessed would silently
 change what `plan` and `execute` read.
+
+**One remedy, printed once.** Every row of the repo-shape check (§5) shares the
+same remedy, so print `/vwf:init` a single time with the rows that led to it
+underneath — a list repeating one command per row reads as several problems
+when it is one re-run, and hides how much of the baseline has moved. It is not
+a remedy doctor applies: re-shaping a repo is `/vwf:init`'s consent to take.
 
 **Persist.** File this run's findings to room `doctor` — one compressed line per
 finding per the memory asset's AAAK style, plus what was fixed if the user

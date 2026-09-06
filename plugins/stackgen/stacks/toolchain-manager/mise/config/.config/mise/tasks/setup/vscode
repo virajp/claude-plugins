@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+
+#MISE description="Reconcile this repo's editor profile with its recommended extensions"
+# `dir` is load-bearing here and not decoration: the message below tells a human
+# to run `code --profile <name> .`, and the folder that `.` names is what the
+# editor associates the profile with. Run from a subdirectory, the association
+# would be for the wrong folder.
+#MISE dir="{{ config_root }}"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# The extensions half of the editor setup: `.vscode/extensions.json` is the list
+# the repo composed from its packs, and this makes a profile match it — install
+# what is listed and missing, REMOVE what is installed and no longer listed.
+#
+# **A per-repo profile, not a global install.** A recommendation list only ever
+# prompts; accepting one installs globally, so a repo you worked on for a week
+# leaves its whole toolchain enabled in every other window forever. A profile is
+# the editor's own answer to that, and it is the only one that makes "stale
+# extension" a thing this task can act on: pruning globally would uninstall a
+# neighbouring repo's tools.
+#
+# **The profile name is `$REPO_NAME`** — the slug in `.config/mise.toml`'s
+# `[env]`, the same token the `p:<id>:*` task group carries. Reading it rather
+# than deriving one is what keeps the profile stable inside a linked worktree,
+# whose directory is named after the branch.
+#
+# **Everything here is best-effort and silent when it does not apply.** It runs
+# from `setup:all`, which a machine without the editor must still finish.
+
+EDITOR_CLI="code"
+RECOMMENDATIONS="${MISE_PROJECT_ROOT}/.vscode/extensions.json"
+
+if ! command -v "${EDITOR_CLI}" >/dev/null 2>&1; then
+  exit 0
+fi
+
+if [ -z "${REPO_NAME:-}" ] || [ "${REPO_NAME}" = "unfilled" ]; then
+  print_warn "REPO_NAME is not filled in .config/mise.toml — skipping the editor profile."
+  print_yellow "It is the marked position the orchestrator fills with this repo's id."
+  exit 0
+fi
+
+if [ ! -f "${RECOMMENDATIONS}" ]; then
+  print_warn "No .vscode/extensions.json — skipping the editor profile."
+  exit 0
+fi
+
+print_header "Reconciling the ${REPO_NAME} editor profile ..."
+
+# The file is JSONC: comments are legal and the shipped one has them. Rather
+# than pull in a parser, read the one array this task cares about with awk —
+# strip `//` and `/* */`, then collect the quoted strings between
+# `"recommendations"` and its closing bracket. `unwantedRecommendations` sits in
+# the same file and is deliberately not collected.
+read_recommendations() {
+  awk '
+    { line = $0 }
+
+    # Comments first, in both spellings. A block comment spanning lines is
+    # carried on the in_block flag; a line comment runs to end of line. An
+    # extension id contains neither sequence, so no id can be eaten by this.
+    { gsub(/\/\*[^*]*\*\//, "", line) }
+    in_block { if (line !~ /\*\//) next; sub(/^.*\*\//, "", line); in_block = 0 }
+    line ~ /\/\*/ { sub(/\/\*.*$/, "", line); in_block = 1 }
+    { sub(/\/\/.*$/, "", line) }
+
+    # Then the one array this task reads. `unwantedRecommendations` sits in the
+    # same file and is deliberately not collected: it is what the editor should
+    # stop suggesting, not what this profile should hold.
+    line ~ /"recommendations"/ { collecting = 1; sub(/^.*"recommendations"[^[]*\[/, "", line) }
+    collecting {
+      body = line
+      if (index(body, "]") > 0) { sub(/\].*$/, "", body); collecting = 0 }
+      n = split(body, chunk, "\"")
+      for (i = 2; i <= n; i += 2) if (chunk[i] != "") print chunk[i]
+    }
+  ' "${RECOMMENDATIONS}" | sort -u
+}
+
+wanted="$(read_recommendations)"
+
+# **A profile the editor has never created cannot be written to from here.**
+# Measured on VS Code 1.136.1: `--profile <name>` combines with
+# `--list-extensions`, `--install-extension` and `--uninstall-extension`, but
+# only once the profile EXISTS — and none of those three creates it. On a
+# missing profile the CLI writes `Profile '<name>' not found.` to STDERR and,
+# for `--list-extensions`, still exits 0 — so neither the status nor stdout says
+# anything, and that one line is the whole signal. Creating a profile is a
+# windowed action: opening the folder under it creates the profile and records
+# the association, after which the folder always reopens under it.
+#
+# The two streams are kept apart rather than merged: stdout is the id list, and
+# stderr carries both the sentinel and whatever runtime deprecation notices the
+# editor's bundled node feels like printing that release. Merging them would put
+# those notices in the list and try to uninstall one.
+probe_err="$(mktemp)"
+# shellcheck disable=SC2064
+trap "rm -f '${probe_err}'" EXIT
+before="$("${EDITOR_CLI}" --profile "${REPO_NAME}" --list-extensions 2>"${probe_err}" || true)"
+
+if grep -qF "Profile '${REPO_NAME}' not found." "${probe_err}"; then
+  print_warn "The '${REPO_NAME}' editor profile does not exist yet."
+  print_yellow "Create it once, from this directory:"
+  print_yellow ""
+  print_yellow "  ${EDITOR_CLI} --profile \"${REPO_NAME}\" ."
+  print_yellow ""
+  print_yellow "The editor creates the profile and remembers it for this folder, so"
+  print_yellow "every later open uses it. In the profile dialog, choose to SHARE"
+  print_yellow "settings and keybindings with the Default profile — this repo's own"
+  print_yellow "settings live in .vscode/settings.json, and a profile that copies the"
+  print_yellow "defaults instead of sharing them stops tracking your global ones."
+  print_yellow ""
+  print_yellow "Then run this again to install the recommended extensions."
+  exit 0
+fi
+
+installed="$(printf '%s\n' "${before}" | sed '/^[[:space:]]*$/d' | sort -u)"
+
+to_install="$(comm -23 <(printf '%s\n' "${wanted}") <(printf '%s\n' "${installed}"))"
+to_remove="$(comm -13 <(printf '%s\n' "${wanted}") <(printf '%s\n' "${installed}"))"
+
+if [ -z "${to_install}" ] && [ -z "${to_remove}" ]; then
+  print_success "Profile '${REPO_NAME}' already matches .vscode/extensions.json."
+  exit 0
+fi
+
+if [ -n "${to_install}" ]; then
+  print_subheader "Installing ..."
+  while IFS= read -r id; do
+    [ -n "${id}" ] || continue
+    print_wait "  ${id} ... "
+    if "${EDITOR_CLI}" --profile "${REPO_NAME}" --install-extension "${id}" >/dev/null 2>&1; then
+      print_ok
+    else
+      # A id that no longer exists in the marketplace is a stale list, not a
+      # broken machine: name it and keep going, so one dead entry does not stop
+      # the rest of the toolchain from arriving.
+      print_warn "FAILED (not installed)"
+    fi
+  done <<<"${to_install}"
+fi
+
+# **Pruning is the half a recommendation list cannot do.** An extension dropped
+# from the list stays installed forever otherwise, and the profile drifts into
+# exactly the global-install pile it was created to avoid. Scoped to this
+# profile, so nothing another repo relies on is touched.
+if [ -n "${to_remove}" ]; then
+  print_subheader "Removing (installed here, no longer recommended) ..."
+  while IFS= read -r id; do
+    [ -n "${id}" ] || continue
+    print_wait "  ${id} ... "
+    if "${EDITOR_CLI}" --profile "${REPO_NAME}" --uninstall-extension "${id}" >/dev/null 2>&1; then
+      print_ok
+    else
+      print_warn "FAILED (still installed)"
+    fi
+  done <<<"${to_remove}"
+fi
+
+print_success "Profile '${REPO_NAME}' reconciled."

@@ -38,10 +38,19 @@ makes local and CI run the same command.
 
 ## What this pack writes
 
-Two files, both under `.config/`. `pre-commit-config.yaml` is the base hook set
+Three files, all under `.config/`. `pre-commit-config.yaml` is the base hook set
 and the merge point every pack fragment lands in.
 `git-conventional-commits.yaml` is the commit convention the `commit-msg` hook
-enforces.
+enforces. `vscode.d/pre-commit.jsonc` is this pack's editor fragment, and it
+carries nesting alone — the gate runs on commit, so it contributes no setting
+and recommends no extension.
+
+**Two positions in the convention file are marked for `/vwf:init` to fill, and
+the comments say when.** `commitScopes` is filled on a **re-run**, once the
+project registry exists — empty is the correct first-run state. The changelog
+links are filled on **any** run where the repo has a remote. Both were claimed
+unconditionally before 2026-09-06 and neither was implemented; the claims now
+match what init does.
 
 The convention file lives in **this** pack rather than beside the release task
 that also reads it, because the hook is what enforces it: a convention nothing

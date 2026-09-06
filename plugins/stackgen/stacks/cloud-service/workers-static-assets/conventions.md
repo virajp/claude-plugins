@@ -71,8 +71,14 @@ this component's.
 
 ## The artifact contract
 
-**A directory of files** — `./dist` by default, matching what most static
-builders emit and overridable in one place when a framework disagrees.
+**A directory of files** — `./dist` by default, overridable in one place
+when a framework disagrees. **That default is not this pack's guess — it is
+the framework pack's stated fact**, under the heading `## Build output` in
+the project bundle's framework component, which says where the build writes
+and that a deploy target may rely on the path. `framework/astro` is the
+specimen that states it today; any framework pack stating the same fact
+under the same heading pairs here the same way, and one that states a
+different path is one whose `assets.directory` differs by that much.
 
 - **Fingerprinted assets are immutable.** Where the framework hashes
   content into the filename, those paths get a long `max-age` with
@@ -91,8 +97,9 @@ builders emit and overridable in one place when a framework disagrees.
 **No Worker script.** No `main`, no `assets.binding`, no
 `run_worker_first`. Those are the shape where code fronts the files —
 server-side rendering, an API route beside the site, an auth check at the
-edge — and that is a separate pack under its own effort, **not offered
-here**.
+edge — and that shape is **`cloud-service/workers-ssr`**, a separate pack
+and a separate pin. The two are alternatives rather than layers: a
+deployment either has a `main` or it does not.
 
 **No other Cloudflare service.** Pages, R2, D1, KV, Durable Objects,
 Queues, Images and Stream remain planned under their own effort and are
@@ -109,4 +116,6 @@ records.
 
 Full judgment: the `workers-static-assets` skill and its references. The
 provider-wide doctrine it cites — the account model, the role grants,
-seat-shaped billing, the private plane — is the `cloudflare` skill's.
+seat-shaped billing, the private plane — is the `cloudflare` skill's. The
+shape with a script in front of the files is
+`cloud-service/workers-ssr`.

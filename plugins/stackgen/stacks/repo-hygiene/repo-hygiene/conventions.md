@@ -15,18 +15,25 @@ by the fixed slug `repo-hygiene`, the way `mise` and `repo-gates` are.
 | Lands at              | Is                                                      |
 | --------------------- | ------------------------------------------------------- |
 | `.gitignore`          | the sectioned base; stack sections are appended to it   |
+| `.graphifyignore`     | what the code-intelligence graph does not ingest        |
 | `.editorconfig`       | the shape defaults a formatter has no plugin for        |
 | `.gitattributes`      | line-ending normalisation, generated trees, binaries    |
+| `CONTRIBUTING.md`     | setup, the branch model, commits, the gates             |
+| `.github/ISSUE_TEMPLATE/` | the bug and feature forms, and the two contact links |
 | `.config/renovate.json` | the dependency-update policy                          |
+| `.config/vscode.d/repo-hygiene.jsonc` | the editor baseline every other fragment sits on |
 | `SECURITY.md`         | the private report channel — written only when asked for |
 | `LICENSE`             | one of `_licenses/`, **copied by the initializer**      |
 
-Six of the seven files sit at the repo root, which is the whole of the
-exception list — everything a repo configures otherwise lives under
-`.config/`. The allowlist is `.gitignore`, `.editorconfig`, `.gitattributes`,
-`LICENSE`, `SECURITY.md`, `readme.md`, `CLAUDE.md`, `fnox.toml`, the linter's
-root shim, `wrangler.jsonc` — which wrangler discovers only at the root —
-and the manifests and lockfiles a language mandates at the root. A tool that
+Most of these sit at the repo root, which is the whole of the exception list —
+everything a repo configures otherwise lives under `.config/`. The allowlist is
+`.gitignore`, `.graphifyignore`, `.editorconfig`, `.gitattributes`, `.npmrc`,
+`LICENSE`, `SECURITY.md`, `CONTRIBUTING.md`, `readme.md`, `CLAUDE.md`,
+`dprint.json` — the shim, because that formatter discovers its config only at
+the root — `fnox.toml`, the linter's root shim, `wrangler.jsonc` — which
+wrangler discovers only at the root — the directory `.github/` **with
+`.github/workflows/` refused inside it**, and the manifests and lockfiles a
+language mandates at the root. A tool that
 merely *prefers* the root is configured under `.config/` and pointed at from
 the command line.
 
@@ -48,7 +55,15 @@ hold the file together:
   loads a local override from; dropping one is how a machine-local pin ends
   up in a review.
 - **A negation follows the pattern it re-includes.** `!.env.example` after
-  `.env.*`, never before, or git never sees it.
+  `.env.*`, never before, or git never sees it. The `graphify` section is the
+  second case: `graphify-out/*` then `!graphify-out/GRAPH_REPORT.md`, because
+  the graph is rebuilt locally but its report is prose worth diffing.
+
+**`.graphifyignore` is a different file for a different reader.** `.gitignore`
+says what git does not track; this one says what the code-intelligence graph
+does not ingest, and its one shipped entry is the graph's own output — feeding
+the last run's summary back in as source. Both live at the root and nest under
+`.gitignore` in the editor, which is the grouping rule below.
 
 ### Which template a pinned pack takes
 
@@ -89,6 +104,45 @@ a secret that was never scanned — so an ignore entry is never the answer to a
 scanner finding, and an entry added because "the scanner keeps complaining" is
 the one edit to refuse. The allowlist belongs to the scanner's own config, by
 fingerprint.
+
+## The editor baseline
+
+The editor is set up by the same composition that sets up everything else. No
+pack ships a whole `.vscode/settings.json`; each ships a fragment at
+`config/.config/vscode.d/<pack>.jsonc` — `settings`, `nesting`, `extensions` —
+and the initializer merges them into the editor's two files inside one marked
+block, with hand-written keys after the block winning. The convention is in
+`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`.
+
+**This pack's fragment is the baseline the others sit on**: the nesting map,
+the three exclude lists, the editor-wide keys that name no language and no
+tool, and every extension no other pack owns. Its organising rule is the
+user's: *"all ignore files are ideally grouped under gitignore; logic being
+that my brain thinks gitignore when we talk about any ignore files and then I
+expand it to find the one I am looking for."* So the `.gitignore` parent
+collects every ignore file any pack ships — `.dockerignore`, `.graphifyignore`,
+`.prettierignore` — alongside `.gitattributes` and `.gitmodules`.
+
+A key that names a tool belongs to that tool's pack, not here — and so does an
+extension id. The baseline is **unconditional**, so anything it recommends
+reaches every repository including the one that pinned the alternative; an
+extension for a framework, a language or a tool is that pack's fragment's to
+recommend. A duplicated key is not an error, it is a silent override decided
+by composition order, so keeping the fragments disjoint is the whole
+discipline.
+
+## Contributing and the issue forms
+
+`CONTRIBUTING.md` is developer-facing and repo-neutral: setup in one command,
+the branch model in three lines, where the commit types and scopes live, the
+gate tasks, and the pointer to `SECURITY.md` for a vulnerability. It says
+nothing the readme should say — a user who is not changing the repo has no
+reason to open it.
+
+`.github/ISSUE_TEMPLATE/` carries a bug form, a feature form and `config.yml`,
+which turns blank issues off and points at the docs and the private advisory
+channel. **Nothing else goes under `.github/`** — a workflow is the CI pack's,
+and the initializer lays none down.
 
 ## The placeholder vocabulary
 

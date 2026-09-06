@@ -61,12 +61,21 @@ back into `product`/`blueprint`/`plan`. `init` shapes the **base repo** and
 `setup` sets up **vwf** in it — two different things, and a repo can have either
 without the other. `init` materializes the three unconditional bundles through
 the stack adapter by the fixed slugs `mise`, `repo-gates` and `repo-hygiene`,
-fills the marked positions those packs leave it, merges the pre-commit
-fragments, and writes a two-line readme stub; it names no tool, and every file
-it lays down is a pack's. `setup` is the Phase-0 bootstrapper — it onboards a
-repo (a Step-0 shape check that offers `/vwf:init` when any of the three slugs
-is missing, detect-or-ask topology via MCQ, consent-gated reconciliation into
-the `docs/blueprint/` format, the CLAUDE.md vwf section, the memory tree and
+fills the marked positions those packs leave it (the member flags, the shell
+aliases, the per-project groups, the repo-name key, the commit gate's scopes and
+forge links), runs **three** merges — ignore sections, pre-commit fragments,
+editor fragments — and writes a two-line readme stub; it names no tool, and
+every file it lays down is a pack's. It then closes with a **consent-gated git
+pass**: it stages what the run wrote, asks one question with three answers
+(commit / commit and push / leave it), commits with a fixed `ops:` message,
+creates whichever of `develop` and `main` the branch model needs, and asks which
+branch the forge should default to — running a pack task for that rather than
+naming a forge. Init is **not a one-time bootstrap**: its "when to run it again"
+doctrine names the moments, and `/vwf:doctor` has the drift finding that says
+so. `setup` is the Phase-0 bootstrapper — it onboards a repo (a Step-0 shape
+check that offers `/vwf:init` when any of the three slugs is missing,
+detect-or-ask topology via MCQ, consent-gated reconciliation into the
+`docs/blueprint/` format, the CLAUDE.md vwf section, the memory tree and
 `mempalace.yaml`, the `environment.md` bootstrap) and is **re-runnable**:
 re-running *is* the resume mechanism, since Step 0 re-resolves the mode from
 what is on disk and a conforming repo resolves to `current`. **It runs none of

@@ -32,6 +32,7 @@ stacks/<type>/<slug>/
     ├── .config/…        #   e.g. .config/mise/tasks/code/format (consent-gated)
     ├── .config/mise/conf.d/<pack>.toml       #   env fragment, auto-loaded
     ├── .config/pre-commit.d/<pack>.yaml      #   hook fragment, merged by /vwf:init
+    ├── .config/vscode.d/<pack>.jsonc         #   editor fragment, merged by /vwf:init
     └── _<name>/…        #   pack-private payload — NEVER copied
 ```
 
@@ -52,8 +53,9 @@ stacks/<type>/<slug>/
   Copying the directory wholesale would land two licences and answer a
   question nobody asked. Nested deeper, the same character means the
   opposite: `.config/mise/tasks/p/_project/` is a **marked position**, copied
-  and renamed to the project's id as it lands, and the materializer's copy
-  rules are where that behaviour is specified.
+  and renamed to the project's id as it lands — the id being the slug
+  `${CLAUDE_PLUGIN_ROOT}/assets/ids.md` defines, never the raw name — and
+  the materializer's copy rules are where that behaviour is specified.
 - **Fragments are named `<pack-name>.<ext>`, one per pack.**
   `.config/mise/conf.d/<pack>.toml` is an environment fragment the toolchain
   manager auto-loads, which is how a provider contributes variables without
@@ -62,7 +64,8 @@ stacks/<type>/<slug>/
   copies **verbatim** and `/vwf:init` merges into
   `.config/pre-commit-config.yaml` between markers. The pack name in the
   filename is what makes a fragment attributable at a glance and keeps two
-  packs from colliding on one path.
+  packs from colliding on one path. **Editor fragments** are the third of
+  these, and have their own shape — below.
 
 `<type>` is a component type from
 `${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`. The slug is unique within the
@@ -84,11 +87,59 @@ composition order when two components write one tree, the root allowlist and
 the four things the tier still may not write are
 `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. A gate pack **does** ship the
 config file it governs, and a provider pack its environment fragment; what
-stays out is a language manifest, a CI workflow, editor settings and
-CLAUDE.md. **Mode is preserved**:
+stays out is a language manifest, a CI workflow, a **whole** editor file
+and CLAUDE.md — a pack contributes to the editor through the fragment
+below, never by shipping `.vscode/settings.json`. **Mode is preserved**:
 anything under `config/.config/mise/tasks/**` must be authored executable
 (755), which `plugins:check` asserts, because mise runs a task file directly
 and reports a non-executable one as an unknown task.
+
+### Editor fragments
+
+A pack may ship `config/.config/vscode.d/<pack>.jsonc`: a JSONC object
+with exactly three optional top-level keys, and nothing else.
+
+**One pack is exempt from the filename**, and it is the formatter: the
+`dprint` pack's fragment is `dprint-editor.jsonc`, because dprint 0.57.1
+discovers any `dprint.jsonc` below the repo root as a sub-directory config
+— and a fragment carrying no `plugins` makes every bare `dprint check` or
+`dprint fmt` exit 13. The composition glob is `*.jsonc`, so the renamed
+file is still found; nothing else about the fragment changes.
+
+| Key          | Is                                                           |
+| ------------ | ------------------------------------------------------------ |
+| `settings`   | an object of editor settings keys, verbatim                  |
+| `nesting`    | an object: parent file name → a list of child names or globs |
+| `extensions` | a list of extension ids                                      |
+
+`nesting` is the source for the editor's `explorer.fileNesting.patterns`;
+it is spelled as a list per parent rather than the editor's comma-joined
+string so two packs contributing children of one parent merge without
+either parsing the other's punctuation.
+
+**The materializer copies a fragment verbatim** and stops, exactly as it
+does for `.config/pre-commit.d/<pack>.yaml`. The **orchestrator** composes
+them, into `.vscode/settings.json` and `.vscode/extensions.json`:
+
+- `settings` keys are applied in composition order
+  (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`) — a later component's
+  value for the same key wins.
+- `nesting` and `extensions` are **unions**: every pack's children under a
+  parent, every pack's extension ids, each id once.
+- Everything composed lands inside **one marked block per file**, placed
+  **first**, between `// >>> vscode.d` and `// <<< vscode.d` on their own
+  lines. First is deliberate: JSON's own last-wins rule then makes a key a
+  person adds after the block beat the composed one, so a repo can
+  override any of this by typing below it and a re-run rewrites only what
+  is between the markers.
+
+**Ownership of the base.** The `repo-hygiene` pack's fragment carries the
+editor **baseline** — the nesting map, the exclude lists, the editor-wide
+keys a repo has regardless of stack. Every other pack carries only keys
+for the files or the tools **it** ships. A gate pack naming itself the
+default formatter for the files it formats is in scope; a gate pack
+setting the font size is not, and the split is what keeps two packs from
+fighting over a key neither owns.
 
 ## `pack.yaml`
 

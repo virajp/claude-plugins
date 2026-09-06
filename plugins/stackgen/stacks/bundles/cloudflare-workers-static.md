@@ -48,11 +48,14 @@ review.
 **A Worker script fronting these assets is not here.** No `main`, no
 `run_worker_first`, no assets binding — the moment code runs in front of
 the directory, the deployable stops being a directory and the reproducible
-build stops being the whole story. That is a separate service pack under
-its own effort, and until it exists, a product that needs server-side
-rendering on Workers has a gap to name rather than a gap to fill from
-general Cloudflare knowledge. So are Pages, R2, D1, KV, Durable Objects,
-Queues, Images and Stream.
+build stops being the whole story. That is the sibling bundle,
+[Cloudflare Workers SSR](cloudflare-workers-ssr.md), and the two are
+alternatives rather than layers: a deployment either has a `main` or it
+does not. Among the Astro project bundles, `astro-ssg` and `astro-csr` pair
+**here** — every response decided at build time — while `astro-ssr` and
+`astro-hybrid` pair there. Pages, R2, D1, KV, Durable Objects, Queues,
+Images and Stream remain a gap to name rather than a gap to fill from
+general Cloudflare knowledge.
 
 **The seam with [Cloudflare Zero Trust Access](cloudflare-zero-trust.md).**
 That bundle produces no artifact and "composes with a hosting pin rather

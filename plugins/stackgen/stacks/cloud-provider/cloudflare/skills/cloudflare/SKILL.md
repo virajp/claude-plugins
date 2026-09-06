@@ -8,7 +8,8 @@ description: >-
   and what frees a seat, what does and does not exist locally, and the
   networking rule that decides whether the private plane is real or
   decorative. Provider-wide judgment every Cloudflare service component —
-  Zero Trust Access and Workers Static Assets — cites rather than restates.
+  Zero Trust Access, Workers Static Assets and Workers SSR — cites rather
+  than restates.
 license: MIT
 allowed-tools: Read Grep Glob Edit Write Bash
 ---
@@ -29,19 +30,19 @@ Read the reference that matches what you are doing — one, not all of them.
 | Making a project unreachable except through the proxy | [Networking & private plane](references/networking-and-private-plane.md) |
 
 **Two rules that do not wait for a reference.** Cloudflare, at the scope
-this stack offers, **hosts** exactly one kind of thing — a built directory
-of files, on Workers Static Assets — and for anything with a running
-process it **fronts** what runs elsewhere, where "elsewhere" is that
-project's hosting pin's business and never this one's. And an origin that
-answers a direct request is a private plane in name only; that failure is
-invisible from the outside and is the subject of the networking reference.
+this stack offers, **hosts** two shapes — a built directory of files, on
+Workers Static Assets, and that directory with a script in front of it, on
+Workers SSR — and for anything with a running process the edge cannot hold
+it **fronts** what runs elsewhere, where "elsewhere" is that project's
+hosting pin's business and never this one's. And an origin that answers a
+direct request is a private plane in name only; that failure is invisible
+from the outside and is the subject of the networking reference.
 
 ## What this stack does not cover
 
-Coverage is parked at **Zero Trust Access** and **Workers Static Assets**.
-A **Worker script fronting static assets** — server-side rendering on
-Workers — along with Pages, R2, D1, KV, Durable Objects, Queues, Images
-and Stream, is planned under its own effort and is **not** part of this
+Coverage is parked at **Zero Trust Access**, **Workers Static Assets** and
+**Workers SSR**. Pages, R2, D1, KV, Durable Objects, Queues, Images and
+Stream are planned under their own effort and are **not** part of this
 stack. If the product needs one of them, that is a gap to name — not a gap
 to fill from general Cloudflare knowledge, because doctrine nobody wrote
 is doctrine nobody reviewed.

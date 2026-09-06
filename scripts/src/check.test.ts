@@ -258,6 +258,15 @@ describe("the pack config tier", () => {
           [`${pack}/_licenses/MIT.txt`]: "MIT\n",
           [`${pack}/.config/dprint.json`]: "{}\n",
           [fragment]: "repos:\n  - repo: local\n",
+          // The five root entries a tool discovers only from the repo root, or
+          // that a human reads there: the dprint shim, the package-manager
+          // file, the contributing guide, graphify's ignore file, and the forge
+          // directory.
+          [`${pack}/dprint.json`]: "{ \"extends\": \".config/dprint.json\" }\n",
+          [`${pack}/.npmrc`]: "fund=false\n",
+          [`${pack}/CONTRIBUTING.md`]: "# Contributing\n",
+          [`${pack}/.graphifyignore`]: "dist/\n",
+          [`${pack}/.github/ISSUE_TEMPLATE/bug.md`]: "---\nname: Bug\n---\n",
         },
         executable: [task],
       },
@@ -335,7 +344,7 @@ describe("the pack config tier", () => {
     // Everything a tool can be pointed at lives under `.config/`; a pack
     // dropping a config beside it widens the root of every repo it lands in.
     const root = tree({
-      alpha: { files: { [`${pack}/dprint.json`]: "{}\n" } },
+      alpha: { files: { [`${pack}/.prettierrc`]: "{}\n" } },
     });
     expect(messages(check(root))).toEqual([
       expect.stringContaining("unallowlisted root entry"),
@@ -360,6 +369,95 @@ describe("the pack config tier", () => {
     });
     expect(messages(check(root))).toEqual([
       expect.stringContaining("unallowlisted root entry"),
+    ]);
+  });
+
+  it("flags a CI workflow inside the forge directory", () => {
+    // `.github/` is allowlisted so a pack can ship issue templates; the fence is
+    // that a pack contributes the task a workflow calls, never the workflow.
+    const root = tree({
+      alpha: {
+        files: { [`${pack}/.github/workflows/ci.yml`]: "on: push\n" },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("ships a CI workflow"),
+    ]);
+  });
+
+  it("flags whole editor settings at the config/ tier root", () => {
+    // Editor settings are composed from per-pack fragments under
+    // `.config/vscode.d/`; a whole file here is a pack owning the merge target.
+    const root = tree({
+      alpha: { files: { [`${pack}/.vscode/settings.json`]: "{}\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("unallowlisted root entry"),
+    ]);
+  });
+
+  it("accepts an editor fragment with comments and a trailing comma", () => {
+    // The target file is JSONC, so the fragment is authored as JSONC too.
+    const root = tree({
+      alpha: {
+        files: {
+          [`${pack}/.config/vscode.d/mise.jsonc`]: "{\n"
+            + "  // what this pack contributes\n"
+            + "  /* and why */\n"
+            + "  \"settings\": { \"files.watcherExclude\": true },\n"
+            + "  \"nesting\": { \"mise.toml\": [\"mise.*.toml\"] },\n"
+            + "  \"extensions\": [\"hverlin.mise-vscode\"],\n"
+            + "}\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags an editor fragment with a key outside the three", () => {
+    // Init's merge reads exactly three keys; a fourth is dropped without a word.
+    const root = tree({
+      alpha: {
+        files: {
+          [`${pack}/.config/vscode.d/mise.jsonc`]:
+            "{ \"settings\": {}, \"tasks\": {} }\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("declares `tasks`, which is not one of"),
+    ]);
+  });
+
+  it("flags an editor fragment whose nesting value is not a list", () => {
+    // The merge joins the lists per parent; a bare string would be spread into
+    // characters or dropped, depending on where it lands.
+    const root = tree({
+      alpha: {
+        files: {
+          [`${pack}/.config/vscode.d/mise.jsonc`]:
+            "{ \"nesting\": { \"mise.toml\": \"mise.*.toml\" } }\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("`nesting.mise.toml` is not a list of strings"),
+    ]);
+  });
+
+  it("flags a pack's whole pre-commit config with no repos list", () => {
+    // The gate pack ships the base config the fragments merge into, and it sits
+    // under `.config/` rather than in `pre-commit.d/`, so nothing else sees it.
+    const root = tree({
+      alpha: {
+        files: {
+          "stacks/toolchain-gate/pre-commit/config/.config/pre-commit-config.yaml":
+            "default_stages: [pre-commit]\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("pre-commit config declares no top-level"),
     ]);
   });
 

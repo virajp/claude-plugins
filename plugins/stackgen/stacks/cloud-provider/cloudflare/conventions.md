@@ -5,23 +5,24 @@ service the product uses, carried once so no service component restates it.
 
 **The coverage here is deliberately narrow, and saying so is part of the
 component.** This provider component exists to support **Zero Trust
-Access** and **Workers Static Assets**, and nothing else. A **Worker script
-fronting static assets** — server-side rendering on Workers — along with
-Pages, R2, D1, KV, Durable Objects, Queues, Images and Stream, is planned
-under its own effort and is **not offered** — a menu that comes back short
-without explaining itself is indistinguishable from a broken one, so the
-shortfall is stated rather than implied. Do not fill the gap from general
-Cloudflare knowledge: a service this component has not written doctrine for
-is a service it does not offer.
+Access**, **Workers Static Assets** and **Workers SSR** — a Worker with a
+script in front of its own assets — and nothing else. Pages, R2, D1, KV,
+Durable Objects, Queues, Images and Stream are planned under their own
+effort and are **not offered** — a menu that comes back short without
+explaining itself is indistinguishable from a broken one, so the shortfall
+is stated rather than implied. Do not fill the gap from general Cloudflare
+knowledge: a service this component has not written doctrine for is a
+service it does not offer.
 
-**Cloudflare hosts static files and fronts everything else.** At the scope
-offered here it hosts exactly one kind of thing — a built directory of
-files, on Workers Static Assets — and for anything with a running process
-it fronts what runs on another cloud. That second half inverts the usual
-reading of a Cloud-Bundle and is the single fact most likely to be got
-wrong: a service or fullstack project pins its hosting elsewhere and pairs
-the private plane with it, which is vwf's job, and any cloud's own deploy
-bundle composes with it.
+**Cloudflare hosts what it can serve from the edge and fronts everything
+else.** At the scope offered here it hosts two shapes — a built directory
+of files, on Workers Static Assets, and that directory with a script in
+front of it, on Workers SSR — and for anything with a running process of a
+kind the edge cannot hold, it fronts what runs on another cloud. That
+second half inverts the usual reading of a Cloud-Bundle and is the single
+fact most likely to be got wrong: a service or fullstack project pins its
+hosting elsewhere and pairs the private plane with it, which is vwf's job,
+and any cloud's own deploy bundle composes with it.
 
 **The account is the unit of blast radius, and the roles are broader than
 they look.** Grants are account-scoped, so a role handed out to edit one
@@ -47,5 +48,5 @@ project directly and inject the identity assertion as a fake through the
 same seam the project already verifies in production.
 
 Full judgment: the `cloudflare` skill and its references. The services this
-provider carries are `cloud-service/zero-trust-access` and
-`cloud-service/workers-static-assets`.
+provider carries are `cloud-service/zero-trust-access`,
+`cloud-service/workers-static-assets` and `cloud-service/workers-ssr`.

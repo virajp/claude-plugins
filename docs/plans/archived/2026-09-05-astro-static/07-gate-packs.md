@@ -56,6 +56,26 @@ D19 — `no-commit-to-branch` is **unchanged**.
 
 D37 — no `pack.yaml` `version:` moves.
 
+### Ruling on the resume — 2026-09-06
+
+Orchestrator gate 12 failed twice on the first run. First cause: `includes` is
+not inherited through `extends` on dprint 0.57.1 (`excludes` is), so D28's
+`${configDir}` rewrite cannot work; the unit deleted the key, the pinned plugin
+list is the include set, and the wider file set (`.astro`, `.vue`, `.svelte`,
+`Dockerfile`) stands as the pack documents it. Second cause: dprint discovers
+`.config/vscode.d/dprint.jsonc` — this pack's editor fragment, named
+`<pack>.jsonc` by the convention — as a sub-directory config with no `plugins`,
+so bare `dprint check`/`fmt` through the shim exits 13.
+
+**The user ruled (a): rename the fragment.** The dprint pack's editor fragment
+is the one exception to `<pack>.jsonc` and ships as
+`.config/vscode.d/dprint-editor.jsonc`. The merge algorithm's `*.jsonc` glob
+still finds it; nothing else in the pack changes. This pack's `conventions.md`
+states the exception and why in one sentence, and U5 — the convention's only
+writer under the shared-file rule — adds the same exception to
+`assets/pack-format.md` on a re-dispatch (this unit reports it as
+`DOCS FALSIFIED:`, since `assets/` is not its Owns).
+
 ## Edits
 
 1. **`dprint/config/dprint.json`** — new, at the pack's `config/` root: a JSONC

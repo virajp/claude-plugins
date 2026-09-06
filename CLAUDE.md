@@ -143,10 +143,14 @@ inventory and check in that order — freshness before validity:
   from the stacks tree, so no pack, bundle or kind count is ever typed by hand;
   **`--check`** fails if the committed file differs.
 - **`plugins:check`** — validates the authored tree, twelve rules. Rule 11 is
-  the widest: it walks a stackgen pack's whole `config/` payload tier — exec bit
-  and shebang on every task file, exec bit and shebang on every shipped hook
-  script, the `config/` root against the hygiene allowlist, and every
-  `pre-commit.d/*.yaml` parsing with a top-level `repos:` list.
+  the widest: it walks a stackgen pack's whole `config/` payload tier — seven
+  assertions. Exec bit and shebang on every task file, exec bit and shebang on
+  every shipped hook script, the `config/` root against the hygiene allowlist
+  (whose two allowed directories are `.config/` and `.github/`), a CI workflow
+  **refused** inside `.github/`, every `pre-commit.d/*.yaml` parsing with a
+  top-level `repos:` list, the gate pack's whole `pre-commit-config.yaml`
+  parsing on the same terms, and every `vscode.d/*.jsonc` parsing as JSONC with
+  only the three keys `/vwf:init` composes.
 - **`plugins:shellcheck`** — the shell gate over everything a pack ships as
   shell: `shellcheck -x` plus `shfmt -d` over the pack task libraries and their
   `_scripts/*`, and a second pass over `hooks/*.sh` with no flags, since a hook
@@ -215,11 +219,13 @@ The workflow runs `init` → `setup` → `product` → `architecture` →
 `design-system` → `blueprint` → `plan` → `execute`, with `verify` and `feedback`
 closing the loop. `init` shapes the **base repo** — the config layout, the task
 vocabulary, the gates, the hygiene files — from stackgen's three unconditional
-bundles; `setup` then sets up **vwf** in it, and offers `init` when the shape is
-missing. **Everything up to `blueprint` is done in full before planning** —
-`plan` hard-halts on a partial coverage stamp. The ordering gates, the skill and
-agent tables, how to add a skill and pick its invocation mode, and the
-dependency reasoning are the [`vwf-plugin`][vwf] skill.
+bundles, and since 2026-09-06 closes with a consent-gated git pass (the first
+commit, the `develop`/`main` pair, the forge default); `setup` then sets up
+**vwf** in it, and offers `init` when the shape is missing. **Everything up to
+`blueprint` is done in full before planning** — `plan` hard-halts on a partial
+coverage stamp. The ordering gates, the skill and agent tables, how to add a
+skill and pick its invocation mode, and the dependency reasoning are the
+[`vwf-plugin`][vwf] skill.
 
 ## The installer CLI
 

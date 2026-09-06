@@ -50,6 +50,12 @@ mise run setup:precommit
 print_header "Setting up AI tooling ..."
 mise run code:ai
 
+# Last, and after the hooks are wired: the editor is what the repo is used FROM
+# once everything that gates it is in place, and the task is silent on a machine
+# without the editor, so putting it here costs a headerless no-op at worst.
+print_header "Setting up the editor ..."
+mise run setup:vscode
+
 # Members are set up only on request: the common case is working in one project,
 # and recursing by default turns every setup into the slowest one. Each member
 # runs its OWN task library through `mise run --cd`, so a polyglot repo gets one
