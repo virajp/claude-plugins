@@ -53,7 +53,6 @@ here and restated nowhere.
 an auth check at the edge: all of that is the `workers-ssr` pack, a
 separate pin, and is **not** part of this stack.
 
-Neither are Pages, R2, D1, KV, Durable Objects, Queues, Images or Stream.
-If the product needs one, that is a gap to name — not a gap to fill from
-general Cloudflare knowledge, because doctrine nobody wrote is doctrine
-nobody reviewed.
+**Any other Cloudflare service.** Which ones stackgen offers, and which
+are planned or declined, is the provider component's to state — see
+`cloud-provider/cloudflare/conventions.md`.

@@ -102,9 +102,10 @@ vwf's job.
 
 ## What is still not offered
 
-**Pages, R2, D1, KV, Durable Objects, Queues, Images and Stream.** A
-product that needs one of them has a gap to name rather than a gap to fill
-from general Cloudflare knowledge — a service nobody wrote doctrine for is
-a service nobody reviewed.
+Which Cloudflare services stackgen offers, and which are planned or
+declined, is the provider component's to state — see
+`cloud-provider/cloudflare/conventions.md`. A product that needs one it
+does not offer has a gap to name rather than a gap to fill from general
+Cloudflare knowledge.
 
 Full judgment: the components' own skills and their references.

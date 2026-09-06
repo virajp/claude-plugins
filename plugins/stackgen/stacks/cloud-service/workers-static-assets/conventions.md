@@ -101,11 +101,10 @@ edge — and that shape is **`cloud-service/workers-ssr`**, a separate pack
 and a separate pin. The two are alternatives rather than layers: a
 deployment either has a `main` or it does not.
 
-**No other Cloudflare service.** Pages, R2, D1, KV, Durable Objects,
-Queues, Images and Stream remain planned under their own effort and are
-**not offered**. A service nobody wrote doctrine for is a service nobody
-reviewed; that gap is one to name rather than to fill from general
-Cloudflare knowledge.
+**No other Cloudflare service is this component's to speak for.** Which
+Cloudflare services stackgen offers, and which are planned or declined, is
+the provider component's to state — see
+`cloud-provider/cloudflare/conventions.md`.
 
 **No wrangler pin.** Wrangler is a development dependency of the project
 that deploys, declared in that project's language manifest — and a

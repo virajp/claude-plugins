@@ -11,18 +11,32 @@ where none does.
 | The identity assertion it passes | Injected as a fake through the project's own seam |
 | Static assets on Workers | **Really runs** — `wrangler dev` serves the built directory |
 | A Worker with a script on those assets | **Really runs** — the framework adapter's dev server executes it under the platform's own runtime, and `wrangler dev` serves the built output |
-| Everything else Cloudflare sells | Out of this stack's scope entirely |
+| Workers KV | **Simulated**, and can be pointed at the real namespace — the binding supports both modes |
+| R2 | **Simulated**, and can be pointed at the real bucket — the binding supports both modes |
+| D1 | **Simulated**, and can be pointed at the real database — the binding supports both modes |
+| Hyperdrive | **Simulated only** — the binding resolves to a database you name yourself; there is no remote mode |
+| Vectorize | **Remote only** — no local simulation exists; the binding must be opted into the live index |
+| Analytics Engine | **Simulated only** — writes land in the local simulation; there is no remote mode |
+| Pipelines | **Not stated** by Cloudflare's per-binding table; the `pipelines` component's own local-dev reference settles it |
+| The services planned under their own plans | Arriving with their components; until then, out of scope |
+| The declined set, and account-level products | Out of this stack's scope entirely |
 
-That is the whole map, and its shortness is the point rather than an
-omission — see the scope fence in the `cloudflare` skill. Two rows of it
-are a genuine local runtime rather than a stand-in, and they are the
-exceptions: the asset server exercises the real routing rules, and where a
-script is present the adapter's dev server runs it under `workerd` rather
-than under Node, so the compatibility cliff shows up on the laptop instead
-of at the edge. Their own fidelity traps — the edge, the custom domain, the
-cache, the CPU ceiling — belong to the `workers-static-assets` and
-`workers-ssr` components' local-dev references. The rest of this page is
-about the proxy, which has no local existence at all.
+Modes are Cloudflare's, not this stack's: a binding either has a local
+simulation, or a remote connection to the live resource, or both, and
+[the per-binding table](https://developers.cloudflare.com/workers/local-development/bindings-per-env/)
+is what says which. The scope fence in the `cloudflare` skill says which
+services are here at all.
+
+Three rows are a genuine local runtime rather than a stand-in, and they
+are the exceptions: the asset server exercises the real routing rules;
+where a script is present the adapter's dev server runs it under `workerd`
+rather than under Node, so the compatibility cliff shows up on the laptop
+instead of at the edge; and Hyperdrive's local mode is a real database,
+because the thing it proxies is one. Every row's own fidelity traps — the
+edge, the custom domain, the cache, the CPU ceiling, a simulation's
+divergence from the managed service — belong to that component's local-dev
+reference, not here. This page is the index of them, plus the proxy, which
+has no local existence at all.
 
 ## Why simulating the proxy is the wrong instinct
 
