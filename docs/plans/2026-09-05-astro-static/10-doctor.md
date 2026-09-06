@@ -4,7 +4,7 @@
 - **Depends on:** —
 - **Owns:** `plugins/vwf/skills/doctor/**`. Touch nothing outside this list —
   not `init` (U9), not any stackgen file.
-- **Model:** inherit
+- **Model:** opus
 - **Read first:** `SKILL.md` (207 lines — `:31-46` the doc-paths table,
   `:130-141` the dispatch table, `:143-154` the dependency audit's use of the
   word "lockfile", `:157-179` the finding kinds and every inline blocking

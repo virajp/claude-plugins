@@ -9,6 +9,7 @@ description: Turn a change request into an autonomous-executable plan under
   the result is what /execute-plan runs in a fresh session.
 argument-hint: "[what to plan]"
 allowed-tools: Read Grep Glob Bash Write Edit Agent AskUserQuestion
+model: fable
 ---
 
 # create-plan

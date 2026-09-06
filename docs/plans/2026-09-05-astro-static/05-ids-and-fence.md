@@ -5,7 +5,7 @@
 - **Owns:** `plugins/stackgen/assets/**`,
   `plugins/stackgen/skills/stackgen-stack-template/references/materializer.md`.
   Touch nothing outside this list — no pack, no bundle, no vwf file.
-- **Model:** inherit
+- **Model:** opus
 - **Read first:** `plugins/stackgen/assets/pack-format.md` (the `config/` tier,
   `:51-56` the `p/_project` cross-reference, the `pre-commit.d` fragment
   passage), `plugins/stackgen/assets/output-tree.md` (`:142-150` the root

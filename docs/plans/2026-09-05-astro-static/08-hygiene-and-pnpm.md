@@ -5,7 +5,7 @@
 - **Owns:** `plugins/stackgen/stacks/repo-hygiene/**`,
   `plugins/stackgen/stacks/package-manager/pnpm/**`. Touch nothing outside this
   list.
-- **Model:** inherit
+- **Model:** opus
 - **Read first:** the editor-fragment convention U5 adds to
   `plugins/stackgen/assets/pack-format.md` (cite by name if not there yet);
   `repo-hygiene/repo-hygiene/config/.gitignore` (`:4`–`:65`, the sections and

@@ -5,7 +5,7 @@
 - **Owns:** `plugins/stackgen/stacks/toolchain-manager/mise/**`. Touch nothing
   outside this list — not the hygiene pack's `.gitignore`, not a bundle, not an
   asset.
-- **Model:** inherit
+- **Model:** opus
 - **Read first:** `pack.yaml`, `conventions.md`, `skills/mise/SKILL.md`,
   `skills/mise/references/config-files.md` (`:8-35` the five-file split,
   `:52-54` the lockfile claim), `skills/mise/references/task-library.md`

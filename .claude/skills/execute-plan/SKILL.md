@@ -10,6 +10,7 @@ description: Run an approved plan folder from docs/plans/ autonomously in a
   /execute-plan <plan-folder> in a session that has done nothing else.
 argument-hint: "<plan-folder or its index.md>"
 allowed-tools: Read Grep Glob Bash Edit Agent AskUserQuestion Skill
+model: opus
 ---
 
 # execute-plan
@@ -87,13 +88,14 @@ For each wave in index.md order, skipping units already `green` on a resume:
 1. **Dispatch** every unit in the wave in **one message with multiple `Agent`
    calls**, `subagent_type: "general-purpose"` unless the unit file names
    another, `name: "U<n>"`, on the model the unit file's `Model:` line names
-   (`inherit` means the session's). The prompt is the unit contract from
-   index.md: *"Read `<folder>/index.md` — Facts, New dependencies, Shared-file
-   rule, Unit contract — then read `<folder>/NN-<unit>.md` in full. Execute its
-   Edits in order inside `<worktree>`, run its Verification, and return the
-   block the contract asks for and nothing else. Touch nothing outside your Owns
-   list. Do not bump a version, run a generator, edit a doc, add a dependency
-   the plan does not list, or commit."* Pass paths, never conversation context.
+   (`opus` by default; `inherit` means the session's). The prompt is the unit
+   contract from index.md: *"Read `<folder>/index.md` — Facts, New dependencies,
+   Shared-file rule, Unit contract — then read `<folder>/NN-<unit>.md` in full.
+   Execute its Edits in order inside `<worktree>`, run its Verification, and
+   return the block the contract asks for and nothing else. Touch nothing
+   outside your Owns list. Do not bump a version, run a generator, edit a doc,
+   add a dependency the plan does not list, or commit."* Pass paths, never
+   conversation context.
 2. **Wait** for every report. As each returns, mark the unit in the Units table
    and append a run-log row — unit, model, round 1, outcome, the `DECIDED:` and
    `GAP:` lines condensed into *Detail*. A unit whose agent **errored** rather

@@ -7,7 +7,7 @@
   `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md` —
   the last two generated. Touch nothing outside this list. **The installer does
   not move**: consent is none.
-- **Model:** inherit
+- **Model:** opus
 - **Read first:** index.md §Consent and §Waves (the inventory caveat).
 - **Lazy-load:** `.claude/skills/release/SKILL.md` for what a bump declares (the
   marketplace ref renames itself) and for the local-first stage the orchestrator

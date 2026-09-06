@@ -5,7 +5,7 @@
 - **Owns:** `plugins/stackgen/stacks/toolchain-gate/**` — the dprint, eslint,
   tsconfig, ruff, analysis-options, pre-commit, gitleaks and grype packs. Touch
   nothing outside this list.
-- **Model:** inherit
+- **Model:** opus
 - **Read first:** the editor-fragment convention U5 adds to
   `plugins/stackgen/assets/pack-format.md` (cite by name if not there yet);
   `toolchain-gate/dprint/config/.config/dprint.json` and `taplo.toml`;

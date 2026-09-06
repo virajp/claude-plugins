@@ -158,7 +158,7 @@ Run in a fresh session:
 - **Wave:** <n>
 - **Depends on:** <ids or —>
 - **Owns:** <explicit paths>
-- **Model:** <inherit | a named tier>
+- **Model:** <opus | a named tier | inherit>
 - **Read first:** every owned file, top to bottom, before editing.
 - **Lazy-load:** <files to open only if an edit needs them>
 

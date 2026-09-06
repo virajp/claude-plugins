@@ -6,7 +6,7 @@
   `.claude/skills/stackgen-plugin/**`, `.claude/skills/plugin-authoring/**`,
   `.claude/skills/vwf-plugin/**`, `site/src/content/docs/**`,
   `docs/memory/decisions/*`. Touch nothing outside this list.
-- **Model:** inherit
+- **Model:** opus
 - **Read first:** index.md's **Facts** and **Run log**, then the
   `docs-reconciler` findings the orchestrator passes in, then every
   `DOCS FALSIFIED:` line the wave-1 units returned.

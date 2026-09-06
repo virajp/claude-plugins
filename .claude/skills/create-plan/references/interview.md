@@ -43,8 +43,9 @@ idiomatic answer given the repo, do not ask — state it and move on.
 10. **Ordering.** Which units can run concurrently (disjoint paths, no
     dependency) and which must wait. The user overrides the derived order only
     where they know something the survey did not.
-11. **Model per unit.** Default is the session's model. A unit the user wants on
-    a stronger or cheaper tier records it in its file's `Model:` line.
+11. **Model per unit.** Default is `opus`, written explicitly into every unit
+    file's `Model:` line. A unit the user wants on a stronger or cheaper tier
+    records that tier instead; `inherit` means the session's model.
 
 ## D. Gates and docs
 

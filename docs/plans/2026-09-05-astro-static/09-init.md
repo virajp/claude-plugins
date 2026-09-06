@@ -4,7 +4,7 @@
 - **Depends on:** —
 - **Owns:** `plugins/vwf/skills/init/**`. Touch nothing outside this list — not
   `doctor` (U10), not `setup`, not any stackgen file.
-- **Model:** inherit
+- **Model:** opus
 - **Read first:** `SKILL.md` (187 lines — hard rules, mode resolution, the five
   questions, the pipeline table, the report; `:84-85` on when `.config/vwf.yaml`
   exists), `references/new-repo.md` (198 — `:12-20` §1 branches, `:77-82` step

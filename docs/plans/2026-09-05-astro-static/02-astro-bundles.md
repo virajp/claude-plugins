@@ -8,7 +8,7 @@
   `plugins/stackgen/stacks/bundles/astro-hybrid.md` (new),
   `plugins/stackgen/stacks/bundles/astro-csr.md` (new). Touch nothing outside
   this list — no other bundle, no pack.
-- **Model:** inherit
+- **Model:** opus
 - **Read first:** `plugins/stackgen/stacks/bundles/typescript-astro-react.md`
   top to bottom; `typescript-parseargs-cli.md` and `typescript-effect-cli.md`
   (the sibling precedent — same platform, differing by what is present);

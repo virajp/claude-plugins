@@ -4,7 +4,7 @@
 - **Depends on:** —
 - **Owns:** `plugins/stackgen/stacks/framework/astro/**` — everything under it
   is new. Touch nothing outside this list.
-- **Model:** inherit
+- **Model:** opus
 - **Read first:** `plugins/stackgen/stacks/framework/effect/**` top to bottom —
   the only framework pack, and the model for every file here: `pack.yaml`
   fields, `conventions.md` in the "layers on top of the language baseline"

@@ -5,7 +5,7 @@
 - **Owns:** `scripts/src/**` — `check.ts`, `check.test.ts` and any fixture they
   need. Touch nothing outside this list; `inventory.ts` and `marketplace.ts` are
   not this unit's.
-- **Model:** inherit
+- **Model:** opus
 - **Read first:** `scripts/src/check.ts` — rule 11 whole (`:343-420`), the root
   allowlist constant (`:301`), the `pre-commit.d` parse (`:257`, `:400-418`);
   `scripts/src/check.test.ts` — the rule-11 cases, especially the pass fixture

@@ -10,7 +10,7 @@
   `plugins/stackgen/stacks/cloud-service/workers-static-assets/**`,
   `plugins/stackgen/stacks/cloud-service/zero-trust-access/**`. Touch nothing
   outside this list.
-- **Model:** inherit
+- **Model:** opus
 - **Read first:**
   `plugins/stackgen/stacks/cloud-service/workers-static-assets/**` top to bottom
   — the model for every file here (`pack.yaml`, `conventions.md`,
