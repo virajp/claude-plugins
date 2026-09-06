@@ -5,10 +5,14 @@
 # selects.
 
 [settings]
-# Install exactly what `mise.lock` records and fail rather than resolve.
-# `lockfile = true` in the base keeps the file current on a laptop; this line is
-# what makes the pipeline a reader of it. A CI run that silently resolves a
+# Install exactly what the lockfiles record and fail rather than resolve.
+# `lockfile = true` in the base keeps them current on a laptop; this line is
+# what makes the pipeline a reader of them. A CI run that silently resolves a
 # newer version is a build nobody can reproduce afterwards.
+#
+# There is one lockfile per config file that declares tools, named after that
+# file's stem — with the split as shipped, `mise.dev.lock` alone. All of them
+# are tracked, so the pipeline reads the same versions a laptop resolved.
 locked = true
 
 # Per-runtime CI workarounds go here and nowhere else.

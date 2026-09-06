@@ -1,0 +1,10 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: <REPO_URL>#readme
+    about: What this repository ships, and how to use it — check here before
+      filing a bug.
+  - name: Report a vulnerability
+    url: <REPO_URL>/security/advisories/new
+    about: Security reports go through the private advisory channel, never
+      through an issue.

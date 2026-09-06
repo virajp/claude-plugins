@@ -58,8 +58,7 @@ to a repo, and every write it makes is consent-gated and committed once.
        payload carries `.config/mise/tasks/p/_project/`, `_project` is a
        **marked position**, not a task group: rename the directory to the
        registry id of the project this stack is being pinned for,
-       slugified — a dot becomes a dash, because mise reads
-       `p/virajp.dev/deploy` as a task with an extension — so
+       slugified per `${CLAUDE_PLUGIN_ROOT}/assets/ids.md` — so
        `p/_project/deploy` lands as `p/<id>/deploy` and runs as
        `p:<id>:deploy`. This is **not** the skip rule above: that one is
        about a `config/_<name>/` entry at the top of the tier, and this
@@ -72,8 +71,9 @@ to a repo, and every write it makes is consent-gated and committed once.
      - **A root path must be on the allowlist.** Only `.gitignore`,
        `.editorconfig`, `.gitattributes`, `LICENSE`, `SECURITY.md`,
        `readme.md`, `CLAUDE.md`, `fnox.toml`, `eslint.config.mjs`,
-       `wrangler.jsonc` and a language-mandated manifest or lockfile may
-       land at the repo root
+       `wrangler.jsonc`, `dprint.json`, `.npmrc`, `CONTRIBUTING.md`,
+       `.graphifyignore`, `.github/` — never `.github/workflows/` — and a
+       language-mandated manifest or lockfile may land at the repo root
        (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). Any other root
        path in a `config/` tree is a **pack authoring error**: halt the
        landing set, name the pack and the path, and write nothing. This is
@@ -84,11 +84,22 @@ to a repo, and every write it makes is consent-gated and committed once.
        CLAUDE.md is separately out of scope below. `wrangler.jsonc` is on
        it because the deploy tool that reads it discovers its config only
        at the root, and only a `static-hosting` service pack ships one.
+       The five that joined on 2026-09-06 are there for that one reason
+       too — the tool reading each discovers it at the root and cannot be
+       pointed elsewhere — and `dprint.json` is a **shim** whose only
+       content is `extends` into `.config/`, exactly as
+       `eslint.config.mjs` is.
      - **A `.config/pre-commit.d/<pack>.yaml` fragment lands as a file and
        stops there.** It is an ordinary landing-set member with an
        ordinary lockfile entry; merging the fragments into
        `.config/pre-commit-config.yaml` is `/vwf:init`'s work, and nothing
-       in this procedure reads or rewrites that file.
+       in this procedure reads or rewrites that file. A
+       `.config/vscode.d/<pack>.jsonc` **editor fragment** lands the same
+       way and under the same rule: copied verbatim, recorded per file,
+       and composed into `.vscode/settings.json` and
+       `.vscode/extensions.json` by the orchestrator alone, per
+       `${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`. Nothing here reads
+       or rewrites either editor file.
    - The lockfile update — every path above, with its component ref,
      source and content hash, plus the **mode** for a `config/` file. The
      per-component record is what lets sync act on one component alone,

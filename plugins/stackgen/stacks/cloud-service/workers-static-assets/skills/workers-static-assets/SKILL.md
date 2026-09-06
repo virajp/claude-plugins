@@ -50,8 +50,8 @@ here and restated nowhere.
 
 **A Worker script fronting the assets** — `main`, `assets.binding`,
 `run_worker_first`. Server-side rendering, an API route beside the site,
-an auth check at the edge: all of that is a separate pack under its own
-effort and is **not** part of this stack.
+an auth check at the edge: all of that is the `workers-ssr` pack, a
+separate pin, and is **not** part of this stack.
 
 Neither are Pages, R2, D1, KV, Durable Objects, Queues, Images or Stream.
 If the product needs one, that is a gap to name — not a gap to fill from

@@ -30,9 +30,11 @@ warm or watch, and the deploy is an upload rather than a rollout.
 
 - **Anything that must run per request.** Server-side rendering with
   request-dependent output, a session check, a form handler, an API route.
-  That is a Worker with a script in front of the assets — a real and
-  supported shape, and deliberately **not this pack**. Reaching for
-  `main` here is the signal that the project needs the other one.
+  That is a Worker with a script in front of the assets — deliberately
+  **not this pack**, and offered as `cloud-service/workers-ssr` on the same
+  provider. Reaching for `main` here is the signal to move to it, and the
+  move is a cheap one: the file set, the route, the token and the deploy
+  task all survive it.
 - **Personalized HTML.** If two users must get different bytes for the same
   path, no amount of asset configuration produces it.
 - **A build that cannot enumerate its pages.** Content-driven routes that
@@ -56,9 +58,9 @@ warm or watch, and the deploy is an upload rather than a rollout.
 **What it costs:**
 
 - **The dynamic escape hatch is a different stack.** The day a form needs
-  a handler, the answer is a Worker script, and this pack does not cover
-  it. That is a real migration, not a config flag, and it is worth
-  predicting rather than discovering.
+  a handler, the answer is a Worker script — `cloud-service/workers-ssr` —
+  and this pack does not cover it. That is a change of pin rather than a
+  config flag, and it is worth predicting rather than discovering.
 - **`not_found_handling` is a decision with a wrong answer in both
   directions** — see [service doctrine](service-doctrine.md). Getting it
   wrong is silent.

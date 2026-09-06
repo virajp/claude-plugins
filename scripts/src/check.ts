@@ -255,6 +255,19 @@ function* hookCommands(
 const PACK_MISE_TASKS = join("config", ".config", "mise", "tasks");
 /** Where a pack's `config/` tier puts its pre-commit hook fragment. */
 const PACK_HOOK_FRAGMENTS = join("config", ".config", "pre-commit.d");
+/**
+ * Where the pre-commit gate pack puts the **whole** config the fragments merge
+ * into. Not a fragment and not at the `config/` root, so the fragment walk
+ * above never reaches it — and until it was named here nothing parsed it at
+ * all.
+ */
+const PACK_PRE_COMMIT_CONFIG = join(
+  "config",
+  ".config",
+  "pre-commit-config.yaml",
+);
+/** Where a pack's `config/` tier puts its editor-settings fragment. */
+const PACK_EDITOR_FRAGMENTS = join("config", ".config", "vscode.d");
 /** Where a pack keeps the hook scripts that land in `.claude/hooks/`. */
 const PACK_HOOKS = "hooks";
 /**
@@ -302,8 +315,16 @@ const PACK_CONFIG_ROOT_FILES = new Set([
   ".editorconfig",
   ".gitattributes",
   ".gitignore",
+  // graphify reads its ignore file from the root only, as git does.
+  ".graphifyignore",
+  // npm and pnpm read `.npmrc` from the root of the project they install in.
+  ".npmrc",
+  "CONTRIBUTING.md",
   "LICENSE",
   "SECURITY.md",
+  // dprint's config discovery is root-only and `--config` is the CLI's only
+  // override, so the gate pack ships a root shim that `extends` `.config/`.
+  "dprint.json",
   "eslint.config.mjs",
   "fnox.toml",
   "readme.md",
@@ -313,10 +334,34 @@ const PACK_CONFIG_ROOT_FILES = new Set([
 ]);
 
 /**
+ * The directories a pack may ship at the top of its `config/` tier.
+ *
+ * `.config/` is where the doctrine puts everything a tool can be pointed at,
+ * and a `_`-prefixed directory is materializer staging. `.github/` is the third
+ * because a forge reads it only from there — but a *workflow* file inside it is
+ * refused by {@link PACK_CONFIG_FORGE_FENCE}: a pack states which task CI runs
+ * and never writes the workflow.
+ */
+const PACK_CONFIG_ROOT_DIRS = new Set([
+  ".config",
+  ".github",
+]);
+
+/**
+ * The one path inside an allowlisted root directory a pack may not ship.
+ *
+ * `.github/workflows/` is the forge's CI surface, and the charter fence is that
+ * a pack contributes the task vocabulary a workflow calls, never the workflow
+ * itself — a payload that writes one takes over a file the repo's own release
+ * model owns.
+ */
+const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
+
+/**
  * What a stackgen pack ships to run in a target repo must be materializable
  * as-is.
  *
- * Five assertions, all of them about a file whose failure mode in the target
+ * Seven assertions, all of them about a file whose failure mode in the target
  * repo is silence rather than an error:
  *
  * - a task file lands **executable** — `.config/mise/tasks/**` is a *file-based*
@@ -331,10 +376,18 @@ const PACK_CONFIG_ROOT_FILES = new Set([
  *   because nothing downstream of it ever reports that it did not run;
  * - the `config/` tier's **root stays allowlisted**, because everything else
  *   belongs under `.config/` and nothing else looks at what a pack puts beside
- *   it;
+ *   it — and inside the one forge directory the list admits, a **workflow file
+ *   is refused**: a pack states which task CI runs and never writes the
+ *   workflow;
  * - a **pre-commit fragment parses** and declares `repos:`, because `/vwf:init`
  *   concatenates the fragments into one pre-commit config and a malformed one
- *   breaks a file no pack owns.
+ *   breaks a file no pack owns;
+ * - the gate pack's **whole pre-commit config** — which is neither a fragment
+ *   nor at the `config/` root, so nothing else here reaches it — parses and
+ *   declares `repos:` on the same reasoning, from the base end;
+ * - an **editor fragment** parses as JSONC and carries only `settings`,
+ *   `nesting` and `extensions`, because init merges the fragments into a file
+ *   no pack owns and a key outside the three is dropped without a word.
  *
  * The walk is its own rather than `plugin.files`: most of these paths run
  * through `.config/`, and the reader's glob does not descend into a dot
@@ -381,7 +434,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     if (existsSync(config)) {
       for (const entry of readdirSync(config, { withFileTypes: true })) {
         const allowed = entry.isDirectory()
-          ? entry.name === ".config" || entry.name.startsWith("_")
+          ? PACK_CONFIG_ROOT_DIRS.has(entry.name) || entry.name.startsWith("_")
           : PACK_CONFIG_ROOT_FILES.has(entry.name);
         if (!allowed) {
           at(
@@ -392,6 +445,35 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
           );
         }
       }
+
+      for (
+        const absolute of filesUnder(join(config, PACK_CONFIG_FORGE_FENCE))
+      ) {
+        at(
+          `pack config/ tier ships a CI workflow — a pack states which task CI `
+            + `runs and never writes the workflow: ${path(absolute)}`,
+        );
+      }
+    }
+
+    for (
+      const absolute of filesUnder(
+        join(plugin.root, pack, PACK_EDITOR_FRAGMENTS),
+      )
+    ) {
+      if (!absolute.endsWith(".jsonc")) {
+        continue;
+      }
+      for (const message of editorFragmentFaults(readText(absolute))) {
+        at(`${path(absolute)}: ${message}`);
+      }
+    }
+
+    const preCommit = join(plugin.root, pack, PACK_PRE_COMMIT_CONFIG);
+    if (existsSync(preCommit)) {
+      for (const message of preCommitFaults(readText(preCommit), "config")) {
+        at(`${path(preCommit)}: ${message}`);
+      }
     }
 
     for (
@@ -400,27 +482,142 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       if (!/\.ya?ml$/.test(absolute)) {
         continue;
       }
-      let fragment: unknown;
-      try {
-        fragment = parseYaml(readText(absolute));
-      }
-      catch (error) {
-        at(
-          `${path(absolute)}: pre-commit fragment is not valid YAML — `
-            + firstLine(error),
-        );
-        continue;
-      }
-      const repos = (fragment as { repos?: unknown; } | null)?.repos;
-      if (!Array.isArray(repos)) {
-        at(
-          `${path(absolute)}: pre-commit fragment declares no top-level `
-            + `\`repos\` list`,
-        );
+      for (const message of preCommitFaults(readText(absolute), "fragment")) {
+        at(`${path(absolute)}: ${message}`);
       }
     }
   }
   return findings;
+}
+
+/**
+ * What a pre-commit YAML a pack ships gets held to, fragment or whole config.
+ *
+ * The same two assertions either way — it parses, and it carries a top-level
+ * `repos:` list — because the merge that produces the target repo's config is
+ * a concatenation on that key: a document without it contributes nothing and
+ * says nothing about having contributed nothing.
+ */
+function preCommitFaults(source: string, noun: string): string[] {
+  let document: unknown;
+  try {
+    document = parseYaml(source);
+  }
+  catch (error) {
+    return [`pre-commit ${noun} is not valid YAML — ${firstLine(error)}`];
+  }
+  const repos = (document as { repos?: unknown; } | null)?.repos;
+  return Array.isArray(repos)
+    ? []
+    : [`pre-commit ${noun} declares no top-level \`repos\` list`];
+}
+
+/**
+ * The only three keys an editor fragment may carry.
+ *
+ * The fragment is not an editor settings file: it is the slice of one a single
+ * pack owns, and init composes the real file from every pack's slice. A fourth
+ * key is a pack reaching past its slice into a file it does not own, and the
+ * merge would drop it silently.
+ */
+const EDITOR_FRAGMENT_KEYS = ["settings", "nesting", "extensions"];
+
+/** Strings and arrays-of-strings are the only leaf shapes a fragment may use. */
+function isStringList(value: unknown): boolean {
+  return Array.isArray(value) && value.every(item => typeof item === "string");
+}
+
+/** A JSON object — not an array, not `null`. */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * JSONC minus the C: comments and trailing commas removed so `JSON.parse` can
+ * read what an editor would. String-aware, because a `//` inside a URL value is
+ * not a comment.
+ */
+function stripJsonc(source: string): string {
+  let out = "";
+  let index = 0;
+  while (index < source.length) {
+    const char = source[index]!;
+    if (char === "\"") {
+      const start = index++;
+      while (index < source.length) {
+        if (source[index] === "\\") {
+          index += 2;
+          continue;
+        }
+        index++;
+        if (source[index - 1] === "\"") {
+          break;
+        }
+      }
+      out += source.slice(start, index);
+      continue;
+    }
+    if (char === "/" && source[index + 1] === "/") {
+      while (index < source.length && source[index] !== "\n") {
+        index++;
+      }
+      continue;
+    }
+    if (char === "/" && source[index + 1] === "*") {
+      const end = source.indexOf("*/", index + 2);
+      index = end === -1 ? source.length : end + 2;
+      continue;
+    }
+    out += char;
+    index++;
+  }
+  return out.replace(/,(\s*[}\]])/g, "$1");
+}
+
+/** What a pack's `config/.config/vscode.d/<pack>.jsonc` is held to. */
+function editorFragmentFaults(source: string): string[] {
+  let fragment: unknown;
+  try {
+    fragment = JSON.parse(stripJsonc(source));
+  }
+  catch (error) {
+    return [`editor fragment is not valid JSONC — ${firstLine(error)}`];
+  }
+  if (!isPlainObject(fragment)) {
+    return ["editor fragment is not a JSON object"];
+  }
+
+  const faults: string[] = [];
+  for (const key of Object.keys(fragment)) {
+    if (!EDITOR_FRAGMENT_KEYS.includes(key)) {
+      faults.push(
+        `editor fragment declares \`${key}\`, which is not one of `
+          + `${EDITOR_FRAGMENT_KEYS.join(", ")}`,
+      );
+    }
+  }
+  const { settings, nesting, extensions } = fragment;
+  if (settings !== undefined && !isPlainObject(settings)) {
+    faults.push("editor fragment's `settings` is not an object");
+  }
+  if (nesting !== undefined) {
+    if (!isPlainObject(nesting)) {
+      faults.push("editor fragment's `nesting` is not an object");
+    }
+    else {
+      for (const [parent, children] of Object.entries(nesting)) {
+        if (!isStringList(children)) {
+          faults.push(
+            `editor fragment's \`nesting.${parent}\` is not a list of strings`,
+          );
+        }
+      }
+    }
+  }
+  if (extensions !== undefined && !isStringList(extensions)) {
+    faults.push("editor fragment's `extensions` is not a list of strings");
+  }
+  return faults;
 }
 
 /** Every regular file under a directory, recursively; none when it is absent. */

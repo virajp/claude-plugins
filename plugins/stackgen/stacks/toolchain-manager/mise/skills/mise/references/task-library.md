@@ -149,6 +149,8 @@ until someone reads two tasks side by side.
 | `setup:deps:all`                                      | `cleanup → install → upgrade → outdated → audit`                            |
 | `setup:deps:{install,cleanup,upgrade,outdated,audit}` | **slots** — the package manager's verbs; `install` honours `--frozen`       |
 | `setup:precommit`                                     | autoupdate, unset `core.hooksPath`, install the hooks                       |
+| `setup:vscode`                                        | reconcile the repo's editor profile with its recommended extensions        |
+| `setup:default-branch <branch>`                       | set the default branch on the remote through whichever forge CLI is here   |
 | `setup:worktree`                                      | the lighter sibling a fresh worktree runs                                   |
 | `code:all [--fix] [--debug]`                          | the one-command gate: `format → lint → sec`                                 |
 | `code:format [--fix]`                                 | format or check; ships a real default                                       |
@@ -159,11 +161,14 @@ until someone reads two tasks side by side.
 | `code:worktrees`                                      | list worktrees across the repo and its members                              |
 | `code:merge:develop <branch>`                         | merge a feature branch into `develop` and push                              |
 | `code:merge:main`                                     | merge `develop` into `main` and push                                        |
+| `code:count`                                          | lines of tracked text, grouped by extension, plus a total                   |
 | `code:ai`                                             | install and reconcile this repo's agent plugins                             |
 
-`code:all` is the one-command gate. `precommit`, `git-config`, `merge:*` and
-`ai` are not in it — they are wired into the hooks, into `setup:all`, or run by
-hand.
+`code:all` is the one-command gate. `precommit`, `git-config`, `merge:*`,
+`count` and `ai` are not in it — they are wired into the hooks, into
+`setup:all`, or run by hand. `setup:default-branch` is the one `setup:*` member
+`setup:all` does **not** call: it edits a remote, so it is run deliberately,
+once, by whoever shapes the repo.
 
 ## Slots and their placeholders
 
@@ -242,6 +247,7 @@ setup:all  (--all recurses into every member)
   ├─ setup:deps:all        # the package manager's five verbs      (SLOTS)
   ├─ setup:precommit       # autoupdate + install the hooks        (common)
   ├─ code:ai               # install and reconcile agent plugins   (common)
+  ├─ setup:vscode          # the repo's editor profile            (common)
   └─ <each member>         # only with --all
 ```
 
@@ -273,8 +279,18 @@ passes it without knowing the repo's shape.
 Two sibling surfaces, kept apart because a repo routinely has one and not the
 other in both directions:
 
-- **`setup/deps/*`** — the language's **package manager**.
-- **`setup/external/*`** — emulators, containers, local queues.
+- **`setup/deps/*`** — the language's **package manager**: the repo's **own**
+  packages, the ones its manifest declares. Node modules, Flutter packages,
+  Swift packages, Python distributions.
+- **`setup/external/*`** — **services** the repo talks to but does not contain,
+  brought up by a process supervisor or a container runtime: emulators, local
+  queues, databases.
+
+**Those two sentences are the whole distinction, and the names are not
+negotiable.** "Dependencies" reads as either one in English, which is exactly
+why the split is written down here: a rename in one direction has been proposed
+more than once, and it would move a package install under the name reserved for
+starting a database.
 
 `deps/` is a folder rather than a file because a package manager has verbs, and
 **all five ship as slots and all five run**:
@@ -306,6 +322,47 @@ dev shell rather than failing.
 `setup:all` calls `start`, so one bootstrap leaves a developer able to run the
 product. A repo with no external services leaves the three slots as shipped.
 
+### `setup:vscode` — the repo's editor profile
+
+`setup:all`'s last step, and silent on a machine without the editor. It reads
+the recommendation ids out of `.vscode/extensions.json` — the file the
+orchestrator composes from every pack's `.config/vscode.d/<pack>.jsonc`
+fragment — and makes a profile named `$REPO_NAME` match it: install what is
+listed and missing, **uninstall what is installed there and no longer listed**.
+
+**A per-repo profile rather than a global install**, because a recommendation
+list only ever prompts and accepting one installs globally: a repo worked on for
+a week leaves its whole toolchain enabled in every other window forever. The
+profile is also what makes pruning safe — uninstalling globally would take a
+neighbouring repo's tools with it.
+
+Measured on VS Code 1.136.1, and the reason the task has a first-run branch:
+`--profile <name>` combines with `--list-extensions`, `--install-extension` and
+`--uninstall-extension`, but **only once the profile exists**, and none of the
+three creates it. On a missing profile the CLI prints `Profile '<name>' not
+found.` and, for `--list-extensions`, still exits 0 — so that string is the only
+signal there is. Creating a profile is a windowed action: opening the folder
+under it creates the profile and records the association, after which every
+later open uses it. The task detects the sentinel, prints that one-time command
+plus the share-settings-with-Default step, and exits 0.
+
+### `setup:default-branch <branch>` — the forge's default
+
+The one setting in the branch model that is not in the repo: what a clone lands
+on and what a pull request targets. It is **orthogonal to the merge tasks** —
+work flows feature → `develop` → `main` whichever branch the forge calls
+default — and this only makes the forge agree with the repo's choice.
+
+It sets it where it can and prints the command where it cannot, and it never
+fails: no `origin` yet is the ordinary first-day case, and a contributor whose
+forge CLI is missing still needs the one line to run. The probe is
+`<cli> repo view` rather than the CLI merely being installed, because both are
+commonly present on a machine that hosts elsewhere and only `view` answers for a
+remote the tool actually recognizes.
+
+**`setup:all` does not call it** — it edits a remote, so it is run deliberately,
+once, by whoever shapes the repo.
+
 ### `setup:worktree` — the lighter sibling
 
 Members checked out, tools installed, secrets set up, `setup:deps:install
@@ -313,6 +370,11 @@ Members checked out, tools installed, secrets set up, `setup:deps:install
 running services, so it needs its own dependencies and no tool upgrade, no hook
 installation and no plugin reconciliation. `--frozen` on purpose — a worktree is
 a place to work on a branch, not a place to move the lockfile.
+
+The tool half is frozen by the same logic and needs no flag for it: `mise
+install` honours the tracked `mise.<env>.lock` files and writes nothing new, so
+`git status` is clean after the task and a version cannot move because of which
+worktree ran first.
 
 **vwf's git-workflow probes for it by name** before falling back to `setup:all`,
 so a repo without it silently takes the slower path.
@@ -350,7 +412,10 @@ reaches `main`.
 The shared procedure is `_scripts/merge`; the predicates it asks are
 `_scripts/checks`. In order: refuse a merge **from** `main`; refuse into `main`
 from anywhere but `develop`; refuse a branch merging into itself; refuse when
-you are already standing on the destination; then no untracked files, no
+you are already standing on the destination; **refuse when the destination
+branch does not exist locally**, naming the two-branch model — asked here rather
+than left to the checkout, so a repo whose branches were never laid out fails in
+one command instead of after the whole-tree hook pass; then no untracked files, no
 uncommitted changes, no unpushed commits, then the hook safety net. Only after
 all of that does it touch git — hop to the main worktree if this is a linked
 one, check out the destination, pull with tags, `git merge --no-ff --no-edit`,
@@ -363,6 +428,21 @@ is a judgement call a task cannot make.
 `--no-ff` is also on purpose: a fast-forward would leave the two branches as the
 same commit with no record that a merge happened, and the merge commit is what
 makes "what shipped" a question git can answer.
+
+### `code:count` — a size reading
+
+Lines of tracked text, grouped by extension, top ten plus a total. It is a
+**size reading, not a metric**: how big this repo is and where the bulk of it
+sits, which is the question worth asking before a refactor and after a big
+merge, and nothing else.
+
+**It counts what git tracks and nothing more**, which is the whole ignore story
+for free — no build output, no vendored tree, and no second exclusion list to
+keep in step with `.gitignore`. `git grep -I -c ''` does it in one process: the
+empty pattern matches every line, `-c` reports the count per file, and `-I`
+drops binaries by git's own rule rather than by guessing from an extension. No
+external counter — a dedicated one is a better report and a tool every clone
+would have to install to run a single task.
 
 ## `p:<id>:*` — one project's own commands
 
@@ -378,8 +458,13 @@ of what this project *is*, and that no contract can name in advance.
    not `p:app:build`. A repo that later becomes a member keeps working, and a
    task name never has to be re-learned because the repo grew.
 
+Whichever of the three the name comes from, the **resolved id is slugified**
+per `${CLAUDE_PLUGIN_ROOT}/assets/ids.md` — that file is the rule and the
+measured reason behind it, and nothing here restates either. `REPO_NAME` in
+`.config/mise.toml`'s `[env]` carries the same slug for the repo itself.
+
 Every id is the same one `setup:all`'s member flags and the `setup-<id>` shell
-aliases use. One list, three surfaces.
+aliases use. One list, four surfaces.
 
 **Every project gets a `_default` slot.** No pack can know a project's commands,
 so `/vwf:init` creates `p/<id>/_default` as a `#PLACEHOLDER` that prints "no

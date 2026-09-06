@@ -1,8 +1,8 @@
 # Fragments and Sections
 
-The two merge algorithms both pipelines share. Both are **re-runnable**: a
-second run over an already-merged file changes nothing, which is what makes
-the empty-plan invariant hold.
+The three merge algorithms both pipelines share. All three are
+**re-runnable**: a second run over an already-merged file changes nothing,
+which is what makes the empty-plan invariant hold.
 
 Both write files the packs own the *shape* of. `init` is the only thing that
 merges them, deliberately — a pack that edited a shared file would stop being
@@ -128,3 +128,80 @@ Steps 2 and 3 together are what make a re-run a no-op: the same fragments,
 sorted the same way, produce the same blocks between the same markers, and
 everything else in the file was never touched. That is the property the
 existing-repo pipeline's empty plan rests on.
+
+## Editor fragments
+
+The same shape again, for the files a repository is *worked in* rather than
+built by. Packs contribute per-pack fragments; `init` composes them; the whole
+editor files are never a pack's to ship, because two packs writing one of them
+is the lost update this whole tier exists to avoid.
+
+**Never name the editor here.** The **convention names its target** — it lives
+in the stack adapter's `assets/pack-format.md`, in its editor-fragment
+subsection, and it owns the fragment path, the two output files, the marker
+spelling and the name of the nesting setting. This section is the algorithm
+alone. Read the convention for every literal it uses.
+
+### Inputs
+
+Every `.config/vscode.d/*.jsonc` present in the repo after the packs have
+landed, taken in the **composition order the materializer documents** — the
+same order the packs themselves landed in, so a later pack's opinion wins
+where two disagree, exactly as it does for a shared file.
+
+Parse each one as JSONC — comments and trailing commas are part of the format.
+A fragment that does not parse is a **halt for this step**, naming the file:
+merging a half-read fragment produces an editor configuration that is wrong in
+a way nobody notices until the editor behaves oddly.
+
+Three keys, and nothing else is merged:
+
+| Key          | Is                                        | Merged by                                     |
+| ------------ | ----------------------------------------- | --------------------------------------------- |
+| `settings`   | editor settings, an object                | deep merge, later fragment wins on a conflict |
+| `nesting`    | a parent file name → its child file names | union of children, per parent                 |
+| `extensions` | recommended extension ids, a list         | union                                         |
+
+### Outputs
+
+The **two editor files the convention names**. Each gets exactly one marked
+block, and the block goes **first** — at the top of the object for the
+settings file, at the top of the array for the recommendations file — so that
+anything a human wrote afterwards sits after it and, for the settings file,
+wins by ordinary later-key precedence.
+
+1. **`settings`** merges into the first file, deep, later fragment winning.
+2. **`nesting`** renders into the single nesting setting the convention names.
+   Merge per parent as a **union of children**, sort the children, and join
+   them with the separator that setting takes. One parent collecting every
+   ignore file any pack ships is the point of the union: no pack knows what
+   the others contribute.
+3. **`extensions`** is a sorted union, no duplicates, rendered as the
+   recommendations list.
+
+### The marked block
+
+Markers are the convention's — one pair, spelled there, using that file's own
+comment syntax. Then:
+
+- **Markers present** → replace everything between them.
+- **Markers absent** → insert the pair, with the merged content, at the top.
+- **Everything outside the pair survives byte-for-byte.** No reordering, no
+  reformatting, no comment stripping. A key somebody added by hand after the
+  block is theirs, it wins over the block's value, and a second merge must
+  leave it exactly as it was.
+- **A file that does not exist yet** is created holding the block alone.
+
+### Validate
+
+Parse the **result**. A merged file that does not parse is a halt for this
+step: report the parse error verbatim, restore the previous file, and let the
+run continue to the report with the failure in **Deferred**. An editor
+configuration that does not parse is silently ignored by the editor, so it
+fails as behaviour nobody can explain rather than as an error anybody sees.
+
+### Idempotency
+
+Same fragments, same composition order, same sorts — same block between the
+same markers, and nothing outside it touched. That is what makes a second run
+an empty plan.

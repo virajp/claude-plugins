@@ -28,6 +28,14 @@
 .worktrees/
 .opencode/
 
+# ==== graphify ====
+# The code-intelligence graph is rebuilt from the tree on demand, so the graph
+# itself is machine-local. GRAPH_REPORT.md is the one artifact worth diffing —
+# it is prose about what the graph found, and a review can read it — so the
+# negation follows the pattern that would otherwise swallow it.
+graphify-out/*
+!graphify-out/GRAPH_REPORT.md
+
 # ==== mise ====
 # The uncommitted local override, at every path mise loads one from.
 mise.local.toml

@@ -91,8 +91,9 @@ builders emit and overridable in one place when a framework disagrees.
 **No Worker script.** No `main`, no `assets.binding`, no
 `run_worker_first`. Those are the shape where code fronts the files —
 server-side rendering, an API route beside the site, an auth check at the
-edge — and that is a separate pack under its own effort, **not offered
-here**.
+edge — and that shape is **`cloud-service/workers-ssr`**, a separate pack
+and a separate pin. The two are alternatives rather than layers: a
+deployment either has a `main` or it does not.
 
 **No other Cloudflare service.** Pages, R2, D1, KV, Durable Objects,
 Queues, Images and Stream remain planned under their own effort and are
@@ -109,4 +110,6 @@ records.
 
 Full judgment: the `workers-static-assets` skill and its references. The
 provider-wide doctrine it cites — the account model, the role grants,
-seat-shaped billing, the private plane — is the `cloudflare` skill's.
+seat-shaped billing, the private plane — is the `cloudflare` skill's. The
+shape with a script in front of the files is
+`cloud-service/workers-ssr`.

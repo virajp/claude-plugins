@@ -11,7 +11,7 @@ what the survey listed.
 
 ## Survey
 
-Read-only, and exhaustive before anything is printed. Nine passes.
+Read-only, and exhaustive before anything is printed. Ten passes.
 
 ### 1 — Root files against the allowlist
 
@@ -30,6 +30,25 @@ avoid.
 A root file matching **no** pack declaration and **not** on the allowlist is
 **reported, not moved**. It belongs to something outside this toolkit, and
 guessing a destination for it is how a tool stops finding its own config.
+
+#### The move-and-shim case
+
+One shape needs saying because a naive move breaks it. Where a gate pack
+declares **both** a file in the configuration directory *and* a file of the
+same basename at the root — the root one being a two-line stand-in that does
+nothing but point at the other — the root file is not a config that failed to
+move. It is the pack's answer to a tool whose config discovery is root-only
+and cannot be redirected.
+
+So: a **real** configuration file of that basename at the root moves to where
+the pack's `config/` tree declares it, exactly as pass 1 says, and the pack's
+stand-in takes its place at the root. Record it as a **rename** row plus the
+create the stand-in already is, and say in the plan that the settings survive
+the move — they are read through the stand-in.
+
+Tell the two apart by content, never by name: the pack's stand-in is the file
+the pack ships, byte for byte, and the survey has that file in hand. Anything
+else of that basename is the repo's own and is the thing being moved.
 
 ### 2 — The readme
 
@@ -112,18 +131,73 @@ this command does.
 
 ### 9 — Per-project groups
 
-Resolve the project ids the way [new repo](new-repo.md) §7 does. A per-project
-task group whose segment is **not** one of those ids is a **rename**, listed
-with the proposed destination — the group was named for something other than a
-project, and the segment is what tells a reader which thing a task acts on.
+Resolve the project ids the way [new repo](new-repo.md) §7 does — resolution
+order, then slugification. A per-project task group whose segment is **not**
+one of those ids is a **rename**, listed with the proposed destination — the
+group was named for something other than a project, and the segment is what
+tells a reader which thing a task acts on.
+
+**Say which kind of rename it is.** There are two, and calling them the same
+thing misleads:
+
+- The group's segment is the value a **previous id source** resolved to — the
+  repo's own name, or a directory — and the id now resolves from the
+  registry. The row reads
+  `id source changed: <old> → <new> (repo name → registry)`, naming both
+  sources. Nothing moved and nothing was wrong; the repo grew a registry
+  between the two runs, which is exactly what the re-run doctrine expects.
+- The segment matches no id under any source. That is an ordinary rename, and
+  the row says so.
+
+Never report either as a pack having moved. A pack that moved is the
+adapter's re-sync command's business and produces a different kind of row
+entirely.
 
 Groups that already match need nothing, and a project id with no group at all
 gets its `_default` slot as a create.
 
-The other two surfaces of that same id list — the bootstrap aggregator's
-member flags and the shell aliases — are checked in the same pass. A position
-still carrying only the pack's commented template, on a repo that **has**
-members, is a create; one already carrying the right lines needs nothing.
+The other marked positions of that same id list — the bootstrap aggregator's
+member flags, the shell aliases, and the repo-name key — are checked in the
+same pass. A position still carrying only the pack's commented template, on a
+repo that **has** members, is a create; one already carrying the right lines
+needs nothing. The repo-name key is a create wherever it still holds the
+pack's placeholder.
+
+### 10 — The gate-config fills
+
+Two positions the commit gate's packs ship **marked, with a comment saying
+`init` fills them once the thing they read exists**. They are not the same
+kind of wait, and the shipped comments say which is which:
+
+- **The scope list is re-run work by construction.** Its source is the
+  registry, which does not exist when `init` first shapes a repo, so the empty
+  list a first run leaves is the correct state and not an unfinished one.
+- **The forge links fill on *any* run where the repo has a remote** — the
+  first one included, since a cloned or already-pushed repo has one from the
+  start. Only a repo with no remote yet keeps them as shipped, and the next
+  run after the remote is added fills them. They ship **commented out**, so
+  filling them means uncommenting them too; a filled line left commented is
+  the same as no link.
+
+| The fill        | Its source                                                     | Fillable                | When it stays as shipped                       |
+| --------------- | -------------------------------------------------------------- | ----------------------- | ---------------------------------------------- |
+| commit scopes   | the project ids of pass 9, from the registry                   | on a re-run only        | no `.config/vwf.yaml`, or it names no projects |
+| the forge links | the origin remote's URL, read with `git remote get-url origin` | on any run with a remote | no origin remote                               |
+
+Rules for both:
+
+- **The registry is the only scope source.** Ids resolved from directories or
+  from the repo's own name are not scopes — a scope names a project somebody
+  declared, and a directory that happens to exist is not a declaration. Where
+  the registry is absent, leave the position exactly as the pack ships it,
+  and say in the plan that the fill is waiting on `/vwf:architecture` and
+  `/vwf:setup`.
+- **Never delete the comment.** It is what a later run reads to find the
+  position, and it is the record of where the values came from.
+- **Each fill is its own plan row**, `+ <what>` with its source named, so the
+  user sees a config being completed rather than a file quietly changing.
+- The exact spelling of both positions — the key names, the value shape — is
+  the packs', read from the shipped file in place. Nothing here re-spells it.
 
 ## Plan
 
@@ -181,6 +255,45 @@ In the plan's own order, and touching **nothing** the survey did not list.
   [fragments and sections](fragments-and-sections.md), because both are
   idempotent and both read files the earlier steps may have moved.
 
+### The gate configuration commits first, alone
+
+An existing repo may already have its hooks wired, and that changes the order
+of what follows. The commit gate reads its configuration from the working
+tree, and a configuration file that is **modified but unstaged** aborts every
+commit — including the one that would have staged it. So a run that touched
+the gate's configuration has to close that file before it can commit anything
+else.
+
+Where this run wrote, merged into or moved any of: the gate's configuration
+file, the commit-message gate's configuration, or anything under the fragment
+directory — stage **those paths only** and commit them first, on their own,
+with the fixed message:
+
+```text
+ops: update the pre-commit configuration
+```
+
+They travel together because they are one change: the fragment merge is what
+the gate config's marked blocks hold, and the commit-message gate's
+configuration is what the gate config invokes. Splitting them leaves a commit
+whose hooks read a file the next commit is still going to change.
+
+Then the rest, exactly as the new-repo pipeline's **git pass** describes it
+([new repo](new-repo.md) §11): stage what this run wrote, one consent with
+three answers, the fixed shaping message, the branches, the forge-default
+question, the push. Two differences, both from the fact that this repo already
+existed:
+
+- The first commit here is **not** before hook wiring. That is why the gate
+  configuration went first: with the hooks live, the commit above is what
+  makes the tree committable, and the shaping commit then runs through hooks
+  that read a settled configuration.
+- The branch table's first row cannot apply — this repo has commits. Create
+  `develop` from `main` where `develop` is missing, `main` from `develop`
+  where `main` is missing, and nothing where both exist. Then ask the same
+  forge-default question, with `develop` preselected, and run the same task —
+  `mise run setup:default-branch <answer>` — reporting only what it reported.
+
 ## Report
 
 The six-section report and the two next-step lines from SKILL.md, filled from
@@ -188,7 +301,14 @@ what was actually applied rather than from what was planned. A deferred
 materialization, a flagged rewrite and a reported-but-unmoved root file all
 belong in **Deferred**, each with its unlock.
 
-**The invariant, stated in the report itself:** running `init` again on a
-shaped repo produces an empty plan. If a second run finds work, either the
-first run deferred something — which the report names — or a pack moved, which
-the adapter's re-sync command is for.
+**The invariant, stated in the report itself, and stated with its scope:**
+running `init` again on a shaped repo produces an empty plan **for the same id
+source**. If a second run finds work, it is one of three things, and the report
+names which: the first run deferred something; a pack moved, which the
+adapter's re-sync command is for; or the **id source changed** — the repo grew
+a registry, so ids that came from directories or from the repo's own name now
+come from declarations, and pass 9's rename rows say so in those words.
+
+The third is not a broken invariant. It is the re-run doctrine working: `init`
+is meant to be run again as the repo learns things about itself, and the
+registry is the largest thing it learns.

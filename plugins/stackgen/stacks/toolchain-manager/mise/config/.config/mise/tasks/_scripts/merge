@@ -116,6 +116,21 @@ merge_to_destination_branch() {
     exit 1
   fi
 
+  # The destination has to EXIST, and it is asked here rather than discovered at
+  # the checkout below. A repo whose branches were never laid out — one commit on
+  # `main` and no `develop` — otherwise passes every predicate above, runs the
+  # whole-tree hook pass, hops to the main worktree, and only then fails on
+  # `git checkout`, having spent minutes to say something knowable in one command.
+  if ! git show-ref --verify --quiet "refs/heads/${DESTINATION_BRANCH}"; then
+    print_error "ERROR: branch '${DESTINATION_BRANCH}' does not exist locally."
+    print_warn "- this repo's branch model needs both 'develop' and 'main': work is"
+    print_warn "  authored on feature branches, integrated on 'develop', and reaches"
+    print_warn "  'main' only by merge"
+    print_warn "- create it (\`git branch ${DESTINATION_BRANCH}\`, or fetch it from the"
+    print_warn "  remote) and run this again"
+    exit 1
+  fi
+
   # A branch checked out in a linked worktree cannot be checked out again in
   # another, so the checkout below has to happen in the main worktree. Where we
   # end up afterwards differs by case: from a linked worktree the main worktree

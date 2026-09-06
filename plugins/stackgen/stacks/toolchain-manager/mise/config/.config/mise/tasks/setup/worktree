@@ -14,6 +14,11 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # the machine's tools and the repo's history, so it needs its members checked
 # out, its secrets reachable and its dependencies installed, and nothing else.
 # No tool upgrades, no hook installation, no plugin reconciliation.
+#
+# "Nothing else" includes the lockfiles. The `mise install` below honours the
+# tracked `mise.<env>.lock` files and writes nothing new — every pinned tool is
+# already recorded there, so a worktree cannot be the place a version quietly
+# moves. That is the same reason `setup:deps:install` is called `--frozen`.
 
 print_header "Checking out members ..."
 git -C "${MISE_PROJECT_ROOT}" submodule update --init --recursive

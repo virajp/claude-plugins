@@ -2,7 +2,8 @@
   // An ASSETS-ONLY Worker: there is no `main`, so no script runs. The edge
   // matches each request against the uploaded file set and serves it, and
   // `wrangler deploy` uploads the directory below. Adding `main` here turns
-  // this into a different stack — see the `workers-static-assets` skill.
+  // this into a different stack — the `workers-ssr` pack, which ships this
+  // file with an entry, an assets binding and no `not_found_handling`.
   //
   // CREDENTIALS NEVER LIVE IN THIS FILE. Wrangler reads CLOUDFLARE_API_TOKEN
   // and CLOUDFLARE_ACCOUNT_ID from the environment; the secrets provider

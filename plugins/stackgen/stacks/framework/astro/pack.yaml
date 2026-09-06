@@ -1,0 +1,12 @@
+name: Astro
+summary: Astro as the content-first web framework that owns the build — file
+  routes, content collections, islands only where interactivity demands it,
+  and two config decisions (`output`, and whether an adapter is present) that
+  between them give four ways to render.
+version: 0.1.0
+type: framework
+category: meta-framework
+kind: language-bundle
+axis: project
+# Topic 2 of the language-bundle bar — one artifact per detected framework.
+harness: n/a

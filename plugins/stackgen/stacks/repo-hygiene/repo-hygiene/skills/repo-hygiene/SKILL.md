@@ -4,17 +4,23 @@ version: 1.0.0
 category: development
 description: The repo's hygiene files — the sectioned ignore set, the editor
   and attribute defaults, the security contact and the dependency-update
-  policy. Keep the sections, keep the why-comments, and never drop the local
-  override patterns. Auto-applies when editing .gitignore, .editorconfig,
-  .gitattributes, SECURITY.md or the Renovate config.
+  policy, the contributor guide and the editor baseline. Keep the sections,
+  keep the why-comments, and never drop the local override patterns.
+  Auto-applies when editing .gitignore, .graphifyignore, .editorconfig,
+  .gitattributes, SECURITY.md, CONTRIBUTING.md, an issue form, an editor
+  fragment or the Renovate config.
 license: MIT
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
 paths:
   - "**/.gitignore"
+  - "**/.graphifyignore"
   - "**/.editorconfig"
   - "**/.gitattributes"
   - "**/SECURITY.md"
+  - "**/CONTRIBUTING.md"
+  - "**/.github/ISSUE_TEMPLATE/*"
+  - "**/.config/vscode.d/*.jsonc"
   - "**/.config/renovate.json"
   - "**/renovate.json"
 ---
@@ -49,6 +55,15 @@ the file simply stays ignored.
 **A value never becomes an ignore entry.** If a secret was committed, the
 answer is to rotate it; ignoring the file afterwards hides the next one too.
 
+## `.graphifyignore`
+
+A second reader, not a second `.gitignore`. This one says what the
+code-intelligence graph does not ingest; the entry that ships is the graph's
+own output directory, because ingesting it feeds the last run's summary back
+in as source. In `.gitignore` the same directory is ignored *except* for
+`GRAPH_REPORT.md`, which is prose about the graph and is worth diffing — the
+negation goes after the pattern, as always.
+
 ## `.editorconfig`
 
 The formatter is the authority for every file type it has a plugin for. This
@@ -72,6 +87,32 @@ Both are per-repo answers, not defaults. `SECURITY.md` names one private
 channel; if the channel changes, this file is the only place that says so.
 `LICENSE` is copied once, with the year and holder filled — editing the licence
 body itself is not a hygiene edit, it is a relicensing decision.
+
+## `CONTRIBUTING.md` and the issue forms
+
+`CONTRIBUTING.md` is for someone changing the repository, and the readme is
+for someone using it — a line that belongs in one does not belong in both.
+What it must keep current: the setup command, the branch model, where the
+commit scopes live, and the gate tasks. If a task is renamed, this file is one
+of the places that goes stale silently.
+
+`.github/` holds issue forms and their contact links and **nothing else**. A
+workflow there is not a hygiene file, and this pack ships none.
+
+## The editor fragment
+
+`.config/vscode.d/repo-hygiene.jsonc` is a fragment, not the editor's settings
+file: three keys — `settings`, `nesting`, `extensions` — merged with every
+other pack's fragment into one marked block. Two rules hold it together.
+
+**A key that names a tool belongs to that tool's pack.** A key present in two
+fragments is not an error; it is a silent override decided by composition
+order, so the only way to keep it legible is to keep the fragments disjoint.
+
+**Every ignore file nests under `.gitignore`.** Whichever tool reads it — git,
+the container build, the graph, the formatter — that is where someone goes
+looking for it. Adding a new ignore file means adding it to that parent's
+children in the fragment of whichever pack ships it.
 
 ## The dependency-update policy
 

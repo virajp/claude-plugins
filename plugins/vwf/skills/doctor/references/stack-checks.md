@@ -211,7 +211,10 @@ severity: report it and nudge `/vwf:init`, which materializes the three
 unconditional bundles — `mise`, `repo-gates` and `repo-hygiene` — by their
 fixed slugs through the stack adapter's `-stack-template` skill. `/vwf:setup`
 is not the remedy: it checks whether the repo is shaped and offers
-`/vwf:init`, and materializes no tooling itself.
+`/vwf:init`, and materializes no tooling itself. That is the coarsest form of
+one question — is this repo still shaped the way `/vwf:init` shapes one — and
+the section at the end of this file is the fuller version of the same check:
+this one fires when the shape is absent, that one when it is behind.
 
 Then check `repo.stack`: the `package_manager` resolves (lockfile present, tool
 on `PATH` or in mise config) and each entry in `tools` has its expected marker —
@@ -227,3 +230,70 @@ runs correctly and simply pays full price. Missing from `PATH` → a
 <https://github.com/rtk-ai/rtk>). This is the one place vwf tells a user the
 tool exists at all — without it the hook is silent in both directions, which is
 why the finding is worth reporting on every run rather than once.
+
+## The repo shape against its baseline
+
+Part of §5, and the one check that reads the **shape** `/vwf:init` lays down
+rather than what `.config/vwf.yaml` declares. A repo drifts from that baseline
+by standing still: the adapter's packs move, `/vwf:architecture` names projects
+that did not exist when the repo was shaped, and a fresh clone arrives with one
+branch. None of that stops the repo working, so **every finding here is
+`drift`, and none is blocking** — a repo behind its baseline is out of date,
+not broken. All four sub-checks carry the **same remedy, `/vwf:init`**, which
+is why §9 prints that line once with the rows that led to it.
+
+**(a) Pack versions.** Read `.claude/stackgen/lock.yaml`, the adapter's
+materialization record — its `-sync` skill owns the file, and this check reads
+one thing out of it: the `entries:` list. Each entry names the component it
+landed for and a `source:` of the form `pack/<type>/<slug>@<version>`; an entry
+sourced `generated` carries no version and is skipped, as is everything outside
+`entries:`. Compare each recorded version against the version the adapter ships
+**now** for that ref, and resolve "now" from the adapter rather than by
+guessing: the `-stack-template` payload for a pinned template carries the same
+`<type>/<slug>@<version>` composition refs, so a component named there is read
+off the payload. A component no pinned template names is read from
+`stacks/<type>/<slug>/pack.yaml` inside the installed adapter plugin's own
+tree, located from `claude plugin list` the way this section locates `mise` —
+vwf's own plugin-root token names vwf and can never spell another plugin's
+root. A recorded version **older** than the shipped one is one drift row naming
+the component and both versions. A **newer** recorded version is not a finding
+here: the adapter went backwards, which is the sync skill's conversation, not
+doctor's. **No lockfile at all** is `missing` rather than drift, with the same
+remedy — the shape was never laid down here.
+
+**(b) Project ids.** Every registry project has an id, and three surfaces are
+generated from it. Slugify each id per the adapter's `assets/ids.md` — the rule
+lives there and is not restated here — and check that:
+
+- a task directory `.config/mise/tasks/p/<slug>/` exists;
+- the slug appears in `.config/git-conventional-commits.yaml`'s `commitScopes`.
+  An **empty** list is not a miss: a single-project repo is meant to leave it
+  empty and use no scope, and the shipped config says so;
+- when — and only when — `.config/mise.dev.toml` carries `[shell_alias]`
+  entries of the `setup-<id>` form, one of them names this slug. A repo whose
+  aliases were never laid down is not drifting from them.
+
+Each miss is one drift row naming the project, the surface, and the slug that
+was expected. The reverse direction is a row too: a sub-directory of
+`.config/mise/tasks/p/` whose segment matches no registry slug is drift worded
+**"id source changed: `<dir>` is not a registry id"** — the expected state once
+`/vwf:architecture` first writes ids into a repo that was shaped before it, and
+a rename a re-run performs. It is never "a pack moved", and never a reason to
+suspect the adapter.
+
+**(c) Branches.** `git show-ref --verify --quiet refs/heads/develop`, and the
+same for `refs/heads/main`. Either one missing is a drift row: work flows from
+a feature branch or a worktree to `develop`, and from `develop` to `main`, and
+the repo's own merge tasks refuse a destination branch that does not exist
+locally. Remedy `/vwf:init`, which creates the missing branch. A repo with no
+commit yet has neither branch and reports one row saying that, not two.
+
+**(d) The environment key.** `.config/mise.toml` sets `REPO_NAME`, and its
+value is this repo's own slug rather than the marked position the toolchain
+pack ships. Absent or still unfilled is a drift row, remedy `/vwf:init`: that
+key is what the user's own shell aliases read, so an unfilled one is quietly
+wrong everywhere it is used.
+
+Doctor **writes none of this** — no branch, no directory, no key, no scope.
+It reports the rows, gives `/vwf:init` once as the remedy, and stops there, as
+it does with every other structural change in this file.

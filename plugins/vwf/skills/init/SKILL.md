@@ -36,8 +36,10 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
   **Placeholders** — `<REPO_URL>`, `<YEAR>` and `<HOLDER>` — are values a pack
   templated into a file it ships; the hygiene pack's conventions are
   authoritative for them. **Marked positions** are the commented slots a pack
-  ships *because no pack can know a repo's project ids*: the bootstrap
-  aggregator's member flags, the shell aliases, the per-project task groups.
+  ships *because no pack can know a repo's project ids, its name, its remote
+  or which other packs landed beside it*: the bootstrap aggregator's member
+  flags, the shell aliases, the per-project task groups, the repo-name key,
+  the commit gate's scope list and forge links, and the composed editor block.
   Filling one is exactly `init`'s job and is not authoring pack content — what
   the rule forbids is inventing pack-owned content from scratch, at a path or
   a position no pack marked.
@@ -51,8 +53,22 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
   the two-line stub** below, which `/vwf:readme` then fills.
 - **One consent, then apply.** The whole plan is presented once and applied on
   one yes. `init` never asks per file and never writes before the yes.
-- **Idempotent.** A second run on a shaped repo produces an **empty plan** and
-  says so. Every step below is written to be re-runnable.
+- **The git pass is the one exception, and it is at the end.** `init` shapes a
+  tree and then closes it: it stages what this run wrote and asks **one
+  question with three answers** — commit, commit and push, leave it — commits
+  with a fixed `ops:` message when told to, creates whichever of `develop` and
+  `main` the branch model needs and the repo lacks, asks which branch the
+  remote forge should default to, and pushes **only** on the commit-and-push
+  answer. Push is a second decision inside one question, never an assumed
+  consequence of committing. History is never rewritten, nothing is
+  force-pushed, and no verification-skipping flag is ever passed. Both
+  pipelines describe the pass; [new repo](references/new-repo.md) §11 is where
+  it is written down.
+- **Idempotent, for the same id source.** A second run on a shaped repo
+  produces an **empty plan** and says so. Every step below is written to be
+  re-runnable. The one legitimate exception is a run whose **project ids now
+  come from a different source** — a registry the repo did not have before —
+  which the existing-repo pipeline reports in those words.
 - **A decline is a deferral, never a halt.** Materialization is consent-gated;
   a declined write is recorded and named with its unlock — re-run `/vwf:init`
   — exactly as `/vwf:setup`'s tooling step already defers.
@@ -144,12 +160,18 @@ covers all of it.
 
 ## The pipelines
 
-| Read                                                           | When                            |
-| -------------------------------------------------------------- | ------------------------------- |
-| [new repo](references/new-repo.md)                             | mode **new**                    |
-| [existing repo](references/existing-repo.md)                   | mode **existing**               |
-| [fragments and sections](references/fragments-and-sections.md) | both — the two merge algorithms |
-| [readme and licence](references/readme-and-license.md)         | both — the stub and the files   |
+| Read                                                           | When                              |
+| -------------------------------------------------------------- | --------------------------------- |
+| [new repo](references/new-repo.md)                             | mode **new** — and the git pass   |
+| [existing repo](references/existing-repo.md)                   | mode **existing**                 |
+| [fragments and sections](references/fragments-and-sections.md) | both — the three merge algorithms |
+| [readme and licence](references/readme-and-license.md)         | both — the stub and the files     |
+
+Whichever pipeline runs, the same work happens in the same order at the end:
+the **fills** the packs marked — the project ids and their surfaces, the
+repo-name key, the commit gate's scopes and forge links where their sources
+exist — then the **three merges** (ignore sections, hook fragments, editor
+fragments), then the **git pass**, then the report.
 
 Both pipelines materialize the same three baselines. They are fetched by the
 **fixed slugs** `mise`, `repo-gates` and `repo-hygiene` — fixed, never
@@ -164,8 +186,8 @@ at all.
 
 ## The report
 
-Every run ends with the same six-section report, each section a count and its
-lines, and an empty section printed as `none`:
+Every run ends with the same report — six file sections, then the git section
+— each a count and its lines, and an empty section printed as `none`:
 
 ```text
 Files written     <n>    + <path>            (one per line)
@@ -176,6 +198,21 @@ Fragments merged  <n>    <name>
 Deferred          <n>    <what> — unlock: <what would let it happen>
 ```
 
+Then a **git** section, from the pass that just ran — four lines, each `none`
+where nothing happened:
+
+```text
+Branches created  <n>    <name>
+Commit                   <short hash> <the fixed message>   (or: not committed)
+Pushed            <n>    <branch> → origin
+Forge default            <what the task reported, verbatim>
+```
+
+The forge line is the task's own words and never a paraphrase: whether the
+default was set or a command was printed for a human to run is the task's
+finding, and re-stating it here is how a printed command gets quietly reported
+as a completed change.
+
 Then the two next-step lines, in this order and always both:
 
 - `/vwf:readme` — fills the readme the stub only opens.
@@ -185,3 +222,36 @@ Then the two next-step lines, in this order and always both:
 Print them as the last thing, and **run neither**. Each resolves its own mode
 and reports what it did, which a call from here could only guess at on their
 behalf.
+
+## When to run it again
+
+`init` is not a one-time bootstrap. It is the command that keeps a repo's
+**shape** — its configuration layout, its task vocabulary, its gates, its
+hygiene — in step with what the packs ship and with what the repo has since
+learned about itself. A repo drifts from that shape silently: nothing fails,
+until the day a task is missing or a gate reads a config nobody filled. So run
+it on a schedule of events rather than on a symptom:
+
+- **After the registry exists.** `/vwf:architecture` declares the projects and
+  `/vwf:setup` writes the config that names them. That is the moment the
+  project ids gain their real source, the commit gate's scope list becomes
+  fillable, and a per-project task group may need to move. The run reports it
+  as an **id source changed**, and it is expected work rather than drift.
+- **After a stack pack's version moves.** New files, new fragments, new marked
+  positions. The plan shows what the repo lacks; the adapter's own re-sync
+  command is what shows a diff for a file the repo already has.
+- **On a fresh clone that reports drift.** Anything the previous run
+  **deferred** — an offline ignore section, a missing toolchain binary, a
+  declined materialization — is still deferred in the clone, and its unlock is
+  a re-run.
+- **Whenever `/vwf:doctor` says so.** Doctor is what notices the drift between
+  a run: adapter lockfile against installed packs, registry ids against the
+  scope list and the task groups, a missing branch. Its finding names this
+  command.
+
+A run that finds nothing costs one empty plan and says the repo is shaped —
+which is the answer, not a wasted run.
+
+`/vwf:setup` already offers `init` when it finds the shape missing, so a repo
+that reached setup first is not stranded. That offer is for the **absent**
+shape; this section is about the shape that exists and has fallen behind.
