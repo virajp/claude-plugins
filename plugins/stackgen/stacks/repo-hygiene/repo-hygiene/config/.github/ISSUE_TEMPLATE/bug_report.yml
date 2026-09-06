@@ -1,7 +1,7 @@
 name: Bug report
 description: Something this repository ships behaves differently from what it
   documents.
-labels: [ "bug" ]
+labels: ["bug"]
 body:
   - type: markdown
     attributes:

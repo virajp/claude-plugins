@@ -99,6 +99,13 @@ and reports a non-executable one as an unknown task.
 A pack may ship `config/.config/vscode.d/<pack>.jsonc`: a JSONC object
 with exactly three optional top-level keys, and nothing else.
 
+**One pack is exempt from the filename**, and it is the formatter: the
+`dprint` pack's fragment is `dprint-editor.jsonc`, because dprint 0.57.1
+discovers any `dprint.jsonc` below the repo root as a sub-directory config
+— and a fragment carrying no `plugins` makes every bare `dprint check` or
+`dprint fmt` exit 13. The composition glob is `*.jsonc`, so the renamed
+file is still found; nothing else about the fragment changes.
+
 | Key          | Is                                                           |
 | ------------ | ------------------------------------------------------------ |
 | `settings`   | an object of editor settings keys, verbatim                  |

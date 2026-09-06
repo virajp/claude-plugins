@@ -1,6 +1,6 @@
 name: Feature request
 description: A behaviour that should exist and does not.
-labels: [ "enhancement" ]
+labels: ["enhancement"]
 body:
   - type: markdown
     attributes:

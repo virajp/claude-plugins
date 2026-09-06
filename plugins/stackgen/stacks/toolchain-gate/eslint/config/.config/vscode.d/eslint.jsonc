@@ -1,0 +1,47 @@
+// Editor fragment — the lint gate's contribution to the repo's editor
+// settings. `/vwf:init` merges every `.config/vscode.d/*.jsonc` into the two
+// editor files inside one marked block; a key written by hand after that block
+// wins.
+//
+// Scope: `eslint.*` and nothing else. The formatter keys are the dprint
+// fragment's — the split between the two gates holds in the editor too.
+{
+  "extensions": [
+    "dbaeumer.vscode-eslint",
+  ],
+
+  "settings": {
+    // Flat config only. The extension still supports the legacy cascade, and
+    // leaving this unset means a repo can be linted one way by the editor and
+    // another by the gate.
+    "eslint.useFlatConfig": true,
+    "eslint.enable": true,
+
+    // The extension does NOT format. dprint owns layout; a lint rule that can
+    // rewrite whitespace is the fight this pack's conventions exist to avoid.
+    "eslint.format.enable": false,
+
+    // Auto-fix on save, all rules. Mechanical fixes land as you write instead
+    // of arriving in a batch at commit time.
+    "eslint.codeActionsOnSave.mode": "all",
+    "eslint.codeActionsOnSave.options": {},
+    "eslint.codeActionsOnSave.rules": null,
+
+    // A generated disable comment is a decision, so make it visible: its own
+    // line, line-comment style, above the offending line rather than trailing
+    // it. A reason still has to be written by hand.
+    "eslint.codeAction.disableRuleComment": {
+      "commentStyle": "line",
+      "enable": true,
+      "location": "separateLine",
+    },
+    "eslint.codeAction.showDocumentation": {
+      "enable": true,
+    },
+
+    "eslint.lintTask.enable": true,
+    "eslint.lintTask.options": "",
+    "eslint.execArgv": [],
+    "eslint.debug": false,
+  },
+}

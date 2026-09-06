@@ -1,8 +1,8 @@
 # Contributing
 
-How this repository is set up, changed and landed. If you are here to *use*
-what it ships, [readme.md](./readme.md) is the page you want — keep developer
-detail out of it and put it here instead.
+How this repository is set up, changed and landed. If you are here to *use* what
+it ships, [readme.md](./readme.md) is the page you want — keep developer detail
+out of it and put it here instead.
 
 ## Setup
 

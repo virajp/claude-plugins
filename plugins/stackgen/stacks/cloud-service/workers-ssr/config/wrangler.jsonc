@@ -82,7 +82,6 @@
     // path, which is why a script deployment names a binding and an
     // assets-only one does not.
     "binding": "ASSETS",
-
     // NOTE THE ABSENCE OF `not_found_handling`, and that it is deliberate.
     //
     // With `main` present, a request that matches no asset FALLS THROUGH TO
@@ -100,7 +99,6 @@
     // the script must see requests the assets would otherwise have answered,
     // such as an auth check over the whole site. See the `workers-ssr` skill.
   },
-
   // ---------------------------------------------------------------------
   // MARKED POSITION — the custom domain, filled when this stack is pinned.
   //

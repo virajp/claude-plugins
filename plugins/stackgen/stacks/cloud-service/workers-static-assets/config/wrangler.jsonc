@@ -56,7 +56,6 @@
     // and disappears the site from search results.
     "not_found_handling": "404-page",
   },
-
   // ---------------------------------------------------------------------
   // MARKED POSITION — the custom domain, filled when this stack is pinned.
   //

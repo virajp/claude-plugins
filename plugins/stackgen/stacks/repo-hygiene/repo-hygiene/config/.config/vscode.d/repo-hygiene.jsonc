@@ -17,7 +17,7 @@
     "editor.codeActions.triggerOnFocusChange": false,
     "editor.codeActionsOnSave": {
       "source.organizeImports": "never",
-      "source.sort.json": "explicit"
+      "source.sort.json": "explicit",
     },
     "editor.defaultColorDecorators": "always",
     "editor.detectIndentation": false,
@@ -26,7 +26,7 @@
     "editor.quickSuggestions": {
       "comments": true,
       "other": true,
-      "strings": true
+      "strings": true,
     },
     "editor.suggest.insertMode": "replace",
     "editor.tabSize": 2,
@@ -51,7 +51,7 @@
       "**/tsconfig.build.tsbuildinfo": true,
       "**/tsconfig.tsbuildinfo": true,
       "**/ui-debug.log": true,
-      "pnpm-lock.yaml": true
+      "pnpm-lock.yaml": true,
     },
     // `**/dist/` is deliberately `false`: a build watcher is how a rebuilt
     // artifact is noticed, and the tree is small enough to watch.
@@ -67,7 +67,7 @@
       "**/node_modules/": true,
       "**/tsconfig.build.tsbuildinfo": true,
       "**/tsconfig.tsbuildinfo": true,
-      "**/ui-debug.log": true
+      "**/ui-debug.log": true,
     },
     "outline.showKeys": true,
     "search.exclude": {
@@ -80,7 +80,7 @@
       "**/node_modules/": true,
       "**/tsconfig.build.tsbuildinfo": true,
       "**/tsconfig.tsbuildinfo": true,
-      "**/ui-debug.log": true
+      "**/ui-debug.log": true,
     },
     "template-string-converter.autoRemoveTemplateString": true,
     "template-string-converter.convertOutermostQuotes": true,
@@ -88,7 +88,7 @@
     "template-string-converter.quoteType": "both",
     "template-string-converter.validLanguages": [
       "javascript",
-      "typescript"
+      "typescript",
     ],
     "todo-tree.general.tags": [
       "TODO",
@@ -97,18 +97,18 @@
       "REVIEW",
       "NOTE",
       "REFACTOR",
-      "REMOVE"
+      "REMOVE",
     ],
     "todo-tree.highlights.defaultHighlight": {
       "hideFromActivityBar": true,
       "hideFromStatusBar": false,
-      "type": "text-and-comment"
+      "type": "text-and-comment",
     },
     "yaml.completion": true,
     // The repo formatter owns YAML; the language server formatting it too
     // would be two formatters disagreeing on save.
     "yaml.format.enable": false,
-    "yaml.hover": true
+    "yaml.hover": true,
   },
   // Parent → children, merged into `explorer.fileNesting.patterns`. Only
   // parents this pack owns are here; a pack nests its own files under its own
@@ -117,7 +117,7 @@
   // Every ignore file the repo carries nests under `.gitignore`, whichever
   // tool reads it — that is where you go looking for an ignore file.
   "nesting": {
-    ".envrc": [ ".env", ".env.*", ".env.*.secrets", ".nvmrc", "*.env" ],
+    ".envrc": [".env", ".env.*", ".env.*.secrets", ".nvmrc", "*.env"],
     ".gitignore": [
       ".gitkeep",
       ".gitmodules",
@@ -125,10 +125,10 @@
       ".dockerignore",
       ".graphifyignore",
       ".prettierignore",
-      ".env"
+      ".env",
     ],
-    "*.js": [ "${capture}.js.map", "${capture}.d.ts", "${capture}.d.ts.map" ],
-    "AGENTS.md": [ "CLAUDE.md" ],
+    "*.js": ["${capture}.js.map", "${capture}.d.ts", "${capture}.d.ts.map"],
+    "AGENTS.md": ["CLAUDE.md"],
     "package.json": [
       "pnpm-lock.yaml",
       "pnpm-workspace.yaml",
@@ -143,9 +143,15 @@
       "apphosting.*.yaml",
       ".prettierrc.yaml",
       ".markdownlint.yaml",
-      "doppler.yaml"
+      "doppler.yaml",
     ],
-    "readme.md": [ "todo.md", "LICENSE", "CLAUDE.md", "CONTRIBUTING.md", "SECURITY.md" ]
+    "readme.md": [
+      "todo.md",
+      "LICENSE",
+      "CLAUDE.md",
+      "CONTRIBUTING.md",
+      "SECURITY.md",
+    ],
   },
   // Editor-wide helpers that belong to no one pack, and that a repository
   // wants before it has a stack. An extension for a tool, a framework or a
@@ -162,6 +168,6 @@
     "oderwat.indent-rainbow",
     "pkief.material-icon-theme",
     "redhat.vscode-yaml",
-    "usernamehw.errorlens"
-  ]
+    "usernamehw.errorlens",
+  ],
 }
