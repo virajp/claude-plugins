@@ -8,6 +8,7 @@ description: Return one stackgen stack as a vwf template payload — reading the
   not a general-purpose skill.
 argument-hint: "<slug>"
 disable-model-invocation: false
+user-invocable: false
 ---
 
 # stackgen-stack-template
@@ -19,8 +20,11 @@ resolves the bundle's composition and materializes each component — shipped
 packs by copy, uncovered components by generation. Materialization is
 **explicit and consent-gated — never a silent re-run**.
 
-> **`disable-model-invocation` must stay `false`** — see
-> `stackgen-stack-menu`.
+> **`disable-model-invocation` must stay `false`, and `user-invocable` must
+> stay `false`** — the first so vwf can reach the skill by its constructed
+> name, the second because no user types it. See `stackgen-stack-menu`. The
+> `argument-hint` stays: it costs nothing on a hidden skill and documents the
+> one argument the caller passes.
 
 ## Resolution order
 

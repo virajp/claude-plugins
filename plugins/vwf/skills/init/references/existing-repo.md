@@ -132,10 +132,16 @@ this command does.
 ### 9 — Per-project groups
 
 Resolve the project ids the way [new repo](new-repo.md) §7 does — resolution
-order, then slugification. A per-project task group whose segment is **not**
-one of those ids is a **rename**, listed with the proposed destination — the
-group was named for something other than a project, and the segment is what
-tells a reader which thing a task acts on.
+order, then slugification — and treat what comes out as the **proposal** it is.
+SKILL.md's **question 2** shows every row with its source and takes a
+replacement, and it is asked before the plan is printed, so no row below is ever
+computed against an id the user is about to change. The ids this pass compares
+against are the **confirmed** ones.
+
+A per-project task group whose segment is **not** one of those ids is a
+**rename**, listed with the proposed destination — the group was named for
+something other than a project, and the segment is what tells a reader which
+thing a task acts on.
 
 **Say which kind of rename it is.** There are two, and calling them the same
 thing misleads:
@@ -148,6 +154,13 @@ thing misleads:
   between the two runs, which is exactly what the re-run doctrine expects.
 - The segment matches no id under any source. That is an ordinary rename, and
   the row says so.
+
+**A customised id is neither.** Where question 2 took a replacement, the
+**confirmed** slug is what a group's segment is compared against — never the
+value the resolution order would have proposed on its own. A user who renamed
+an id once, and confirms the same replacement on the next run, sees no row at
+all: an id somebody chose is not drift, and reporting it as a rename every run
+is how a deliberate choice gets undone by a plan the user approves in a hurry.
 
 Never report either as a pack having moved. A pack that moved is the
 adapter's re-sync command's business and produces a different kind of row
@@ -228,7 +241,7 @@ where the task names moved and their callers did not, which is worse than
 either end state.
 
 A stop is a clean exit. Print the plan again as the record of what was not
-done, and name `/vwf:init` as the way to revisit it.
+done, and name `/vwf:setup reshape` as the way to revisit it.
 
 ## Apply
 

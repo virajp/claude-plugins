@@ -73,8 +73,8 @@ never fail the run: the ignore file's base sections are already in place and
 cover what every repo needs.
 
 The skipped names go in the report's **Deferred** list, with the unlock — a
-later `/vwf:init` run with the network reachable — so a repo shaped on a plane
-is a repo somebody can finish shaping later.
+later `/vwf:setup reshape` with the network reachable — so a repo shaped on a
+plane is a repo somebody can finish shaping later.
 
 ## Hook fragments
 

@@ -864,10 +864,13 @@ function checkDesignAdapters(plugins: readonly Plugin[]): Finding[] {
  * menu is closed, so an empty one silently removes every option that plugin
  * was the only source of.
  *
- * Unlike the design adapter, both skills are also documented as user-runnable,
- * so the assertion is again the explicit `disable-model-invocation: false`
- * rather than the mere absence of `true` — `user-invocable: false` would be
- * model-invocable but hidden from the user, and would wrongly pass.
+ * Both keys are asserted, and they say different things. The explicit
+ * `disable-model-invocation: false` rather than the mere absence of `true`,
+ * because absence is not a claim — a file that never mentions the key would
+ * pass a ban on `true` while saying nothing about the state vwf depends on.
+ * And `user-invocable: false`, because an adapter skill is vwf's to call, not
+ * a user's to type: it answers in a payload shape only vwf reads, so offering
+ * it in the `/` menu spends a slot on a skill no user has a use for.
  *
  * It is checked in **both directions**, for the same reason the agent
  * cross-reference rule is. The keyword is what selects a plugin into this rule,
@@ -928,6 +931,15 @@ function checkStackAdapters(plugins: readonly Plugin[]): Finding[] {
             + `reaches it by constructed name, and a skill the model cannot `
             + `invoke returns an empty menu rather than an error, which is `
             + `indistinguishable from a plugin that offers nothing`,
+        });
+      }
+      if (!/^user-invocable:\s*false\s*$/m.test(front)) {
+        findings.push({
+          scope: plugin.dir,
+          message:
+            `${expected} is not \`user-invocable: false\` — an adapter skill `
+            + `is vwf's to call, not a user's to type, and leaving it in the `
+            + `\`/\` menu offers a skill that answers only a program`,
         });
       }
     }

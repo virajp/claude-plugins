@@ -207,14 +207,13 @@ and no capability claimed, it is a **degradation**: there is no toolchain to
 manage and no harness task to run, so halting `setup` and `execute` over it
 would block a product on day one for a stack nobody has chosen yet. A repo with
 no `.config/mise*.toml` at all is the same finding one level up, at the same
-severity: report it and nudge `/vwf:init`, which materializes the three
-unconditional bundles — `mise`, `repo-gates` and `repo-hygiene` — by their
-fixed slugs through the stack adapter's `-stack-template` skill. `/vwf:setup`
-is not the remedy: it checks whether the repo is shaped and offers
-`/vwf:init`, and materializes no tooling itself. That is the coarsest form of
-one question — is this repo still shaped the way `/vwf:init` shapes one — and
-the section at the end of this file is the fuller version of the same check:
-this one fires when the shape is absent, that one when it is behind.
+severity: report it and nudge `/vwf:setup reshape`, the one repo-shape remedy.
+Setup materializes no tooling itself — `/vwf:init` does, laying down the three
+unconditional bundles `mise`, `repo-gates` and `repo-hygiene` by their fixed
+slugs through the stack adapter's `-stack-template` skill. That is the coarsest
+form of one question — is this repo still shaped the way `/vwf:init` shapes one
+— and the section at the end of this file is the fuller version of the same
+check: this one fires when the shape is absent, that one when it is behind.
 
 Then check `repo.stack`: the `package_manager` resolves (lockfile present, tool
 on `PATH` or in mise config) and each entry in `tools` has its expected marker —
@@ -239,8 +238,8 @@ by standing still: the adapter's packs move, `/vwf:architecture` names projects
 that did not exist when the repo was shaped, and a fresh clone arrives with one
 branch. None of that stops the repo working, so **every finding here is
 `drift`, and none is blocking** — a repo behind its baseline is out of date,
-not broken. All four sub-checks carry the **same remedy, `/vwf:init`**, which
-is why §9 prints that line once with the rows that led to it.
+not broken. All four sub-checks carry the **same remedy, `/vwf:setup reshape`**,
+which is why §9 prints that line once with the rows that led to it.
 
 **(a) Pack versions.** Read `.claude/stackgen/lock.yaml`, the adapter's
 materialization record — its `-sync` skill owns the file, and this check reads
@@ -285,15 +284,15 @@ suspect the adapter.
 same for `refs/heads/main`. Either one missing is a drift row: work flows from
 a feature branch or a worktree to `develop`, and from `develop` to `main`, and
 the repo's own merge tasks refuse a destination branch that does not exist
-locally. Remedy `/vwf:init`, which creates the missing branch. A repo with no
-commit yet has neither branch and reports one row saying that, not two.
+locally. Remedy `/vwf:setup reshape`, which creates the missing branch. A repo
+with no commit yet has neither branch and reports one row saying that, not two.
 
 **(d) The environment key.** `.config/mise.toml` sets `REPO_NAME`, and its
 value is this repo's own slug rather than the marked position the toolchain
-pack ships. Absent or still unfilled is a drift row, remedy `/vwf:init`: that
-key is what the user's own shell aliases read, so an unfilled one is quietly
-wrong everywhere it is used.
+pack ships. Absent or still unfilled is a drift row, remedy
+`/vwf:setup reshape`: that key is what the user's own shell aliases read, so an
+unfilled one is quietly wrong everywhere it is used.
 
 Doctor **writes none of this** — no branch, no directory, no key, no scope.
-It reports the rows, gives `/vwf:init` once as the remedy, and stops there, as
-it does with every other structural change in this file.
+It reports the rows, gives `/vwf:setup reshape` once as the remedy, and stops
+there, as it does with every other structural change in this file.

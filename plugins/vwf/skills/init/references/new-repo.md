@@ -4,7 +4,7 @@ Read this in mode **new** — a target with no configuration directory and no
 task library. Nothing here reads or moves a source file, so it is safe on a
 repository that has code but has never been shaped.
 
-The five questions in SKILL.md are already answered. Present the whole plan
+The six questions in SKILL.md are already answered. Present the whole plan
 below, get **one** consent, then apply it in this order. The order is the
 contract: a step that runs early because it happens to be cheap produces a
 tree the next step has to undo.
@@ -42,22 +42,22 @@ write the same path, and getting the order wrong silently lands the wrong
 version of a shared file.
 
 Each landing is the materializer's own consent line. **A decline is a
-deferral, not a halt**: record what was skipped and name its unlock — re-run
-`/vwf:init` with the write consented — then continue with the rest of the
-pipeline. This is the same rule `/vwf:setup`'s tooling step follows, and it
-matters most here, where a repo that has picked no stack is the normal case
-rather than a fault.
+deferral, not a halt**: record what was skipped and name its unlock — run
+`/vwf:setup reshape` with the write consented — then continue with the rest
+of the pipeline. This is the same rule `/vwf:setup`'s tooling step follows,
+and it matters most here, where a repo that has picked no stack is the normal
+case rather than a fault.
 
 ## 3 — The secrets provider
 
-Materialize the bundle whose slug the user picked at question 3, by that slug,
+Materialize the bundle whose slug the user picked at question 4, by that slug,
 through the same adapter. **Last**, after the three baselines — a provider's
 files are the most specific answer anything gives to the slot they overlay,
 and the composition order puts them there.
 
 A user who answered **none — decide later** gets nothing here. Record it as a
-deferral whose unlock is a later `/vwf:init` run, and say plainly that the
-slot the packs left for it will announce itself as unconfigured until then.
+deferral whose unlock is a later `/vwf:setup reshape` run, and say plainly that
+the slot the packs left for it will announce itself as unconfigured until then.
 
 ## 4 — The placeholders
 
@@ -112,16 +112,21 @@ as an **id source changed**, never as a pack that moved.
 
 **Then slugify.** The resolved id is not used raw: it is slugified per the
 stack adapter's `assets/ids.md`, which owns the rule and is the only place it
-is written down — lowercased, every run of characters outside the slug
-alphabet collapsed to a single `-`, and leading and trailing separators
-trimmed, so `My.App` resolves to `my-app`. The reason is measured rather than
-stylistic, and the asset states it: the toolchain manager reads a per-project
-group's directory name as the task's **last** segment once the group's
-default slot collapses into it, and strips what looks like a file extension
-from that segment — so an id carrying a dot silently loses everything after
-it, and the task the repo shows a user is not the task it has. The flag and
-alias grammars the same list fills are the second reason. Read the asset;
-never re-derive the rule here.
+is written down. The reason is measured rather than stylistic, and the asset
+states it: the toolchain manager reads a per-project group's directory name as
+the task's **last** segment once the group's default slot collapses into it,
+and strips what looks like a file extension from that segment — so an id
+carrying a dot silently loses everything after it, and the task the repo shows
+a user is not the task it has. The flag and alias grammars the same list fills
+are the second reason. Read the asset; never re-derive the rule here.
+
+**Then confirm, before anything is written.** The resolution order and the
+slugification above are how `init` *proposes* this list, and a proposal is all
+they are: SKILL.md's **question 2** shows every row — the name, the slug and
+which of the three sources the name came from — and takes a replacement for any
+of them, slugified by the same asset. The ids that reach the surfaces below are
+the ones that question **confirmed**, carried from the answer. Nothing here
+re-derives them, and nothing downstream re-derives them either.
 
 That list is one list with **three** surfaces — the per-project task groups,
 the bootstrap aggregator's **member flags**, and the **shell aliases** that
@@ -153,11 +158,12 @@ repo's shape, and deleting either comment would cost the next run — after the
 repo grows a second project — the template it fills.
 
 **The third is the repo's own name**, `REPO_NAME`, a marked position in the
-toolchain manager's environment block. It takes the **repo** slug — the same
-slugification, applied to the repo name question 1 answered — and it is
-written **literally**, never derived at read time from the directory the
-config sits in: a linked worktree's config root is named for the branch, so a
-derived value would change identity every time somebody cut one.
+toolchain manager's environment block. It takes the **repo** slug **as question
+2 confirmed it** — the name question 1 proposed, slugified, then accepted or
+replaced on that list's first row — and it is written **literally**, never
+derived at read time from the directory the config sits in: a linked
+worktree's config root is named for the branch, so a derived value would
+change identity every time somebody cut one.
 
 That key exists because the things that vary only by repo — the per-repo
 launch aliases the user keeps — belong in the **user's own global
@@ -229,8 +235,8 @@ or re-spelling their commands here. A step those files do not document is a
 step `init` does not invent.
 
 Where the manager's own binary is not installed, this step **defers** with its
-unlock — install the manager, re-run `/vwf:init` — and the run continues to
-the report. Everything above it has already landed on disk.
+unlock — install the manager, then run `/vwf:setup reshape` — and the run
+continues to the report. Everything above it has already landed on disk.
 
 ## 10 — Offer the bootstrap aggregator
 
