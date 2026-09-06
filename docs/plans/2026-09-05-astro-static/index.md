@@ -1,20 +1,22 @@
 ---
 type: repo-plan
-title: Astro on the project axis — a real framework pack carrying both output
-  modes, and two static bundles; plus the /vwf:init defects from the first real
-  run
+title: Astro on the project axis — one framework pack, four rendering modes,
+  four bundles, and a Workers SSR deploy; plus the /vwf:init defects from the
+  first real run
 requires: [ docs/plans/2026-09-05-cloudflare-workers-static ]
 ---
 
-# Plan — Astro on the project axis, and the `/vwf:init` defects from the first real run (2026-09-05, amended 2026-09-06)
+# Plan — Astro on the project axis, Workers SSR, and the `/vwf:init` defects from the first real run (2026-09-05, amended 2026-09-06)
 
 ## Status
 
 **APPROVED**
 
-APPROVED 2026-09-05 by the user for the Astro half, after the self-review.
-Amended 2026-09-06 with the `/vwf:init` defects at the user's direction ("You
-can add the fixes to that itself"); the amendment APPROVED 2026-09-06 by the
+APPROVED 2026-09-05 by the user for the Astro half (two static bundles), after
+the self-review. Amended 2026-09-06 twice at the user's direction: first with
+the `/vwf:init` defects ("You can add the fixes to that itself"), then with the
+Astro half re-planned for four rendering modes and a Workers SSR deploy ("Let's
+complete the Astro stack properly"). Both amendments APPROVED 2026-09-06 by the
 user, after the self-review.
 
 ## Consent
@@ -38,39 +40,45 @@ in a **restarted** session.
 
 The 2026-09-05 answer — no release for anything — is overtaken by the amendment:
 `/vwf:init`'s behaviour changes, so users only see it through a tag. stackgen
-`1.1.0` is staged but untagged, so the `1.2.0` tag ships the Workers pack too;
-site `1.1.3` is bumped and unreleased, so `1.1.4` ships both.
+`1.1.0` is staged but untagged, so the `1.2.0` tag ships the Workers Static
+Assets pack too; site `1.1.3` is bumped and unreleased, so `1.1.4` ships both.
+The stackgen minor carries one **renamed released slug**
+(`typescript-astro-react` → `astro-ssr`, D6); the only pin in existence is the
+user's own, and the release note says so.
 
 ## Goal
 
-After this lands, the stack menu offers three project-axis bundles for platform
-`site`, all pinning one real `framework/astro` pack: `typescript-astro-react`
-(the existing SSR · React bundle, re-pinned from `framework/astro@generated` to
-`@0.1.0`), `typescript-astro-static` (new: no islands framework, zero JavaScript
-by default) and `typescript-astro-static-react` (new: static output with React
-islands). The pack's doctrine covers both output modes — `output: 'static'`,
-Astro's default, needing no adapter, and `output: 'server'` with an adapter —
-and states when each is the answer. It states the build-output contract as a
-**named fact** in its conventions: the build output is `./dist`, and a deploy
-pack may rely on it — which is what the Workers Static Assets pack's
-`assets.directory` cites.
+After this lands, the stack menu offers **four** project-axis bundles for
+platform `site`, all pinning one real `framework/astro` pack and each carrying
+React for islands: `Astro (SSG)`, `Astro (SSR)`, `Astro (Hybrid)` and
+`Astro (CSR)`. The pack's doctrine carries all four as decisions over Astro's
+two output values plus the adapter and the client directives, and states when
+each is the answer. It states the build-output contract as a **named fact** in
+its conventions: the build output is `./dist`, and a deploy pack may rely on it
+— which is what the Workers packs' `assets.directory` cite. The deploy menu
+gains `cloudflare-workers-ssr` — a Worker with a script — as the preferred
+pairing for the two server-rendering bundles, redeeming the second half of the
+Cloudflare reservation.
 
-**And**, from the amendment: a repo that `/vwf:init` shapes can, with no hand
-repair, make its first commit, cut a worktree and land it through its own merge
-tasks; every promise a payload makes about init is one init keeps; and the
+**And**, from the first amendment: a repo that `/vwf:init` shapes can, with no
+hand repair, make its first commit, cut a worktree and land it through its own
+merge tasks; every promise a payload makes about init is one init keeps; and the
 editor and shell the repo is used from are set up by the same composition that
 sets up everything else.
 
 **Framing — Astro.** The greenfield `/vwf:init` → `/vwf:architecture` run on the
 user's website repo (Astro, static, one page, no React) found that the only
 `platforms: [site]` bundle is named "Astro (SSR)", with both framework
-components `@generated`. The user ruled that Astro has two modes and stackgen
-must support both. The taxonomy supports a sibling bundle, not a mode — no
-output-mode key exists in the bundle frontmatter, and SSR is load-bearing in
-that bundle's body (the Node adapter, an Effect `AppLayer`, same-origin proxy
-endpoints) — on the precedent `typescript-effect-cli` /
-`typescript-parseargs-cli` already set: two bundles, one platform, differing by
-what frameworks are present.
+components `@generated`. The user first ruled that Astro has two modes; on
+2026-09-06 widened it: "There are 4 types of projects that can be created using
+Astro" — SSG, SSR, Hybrid, CSR — "create 4 bundles or packs to support each",
+display names `Astro (SSG)`, `Astro (SSR)`, `Astro (Hybrid)`, `Astro (CSR)`,
+"drop `Typescript` since that's implicitly used for Astro projects". The
+research (Context7, 2026-09-06) found that Astro has two `output` values, that
+`hybrid` was removed in Astro 5 and merged into `static`, and that CSR is a
+shape (a `client:only` app in a static shell), not a mode — so four bundles on
+one pack, each pinning a mode, on the precedent `typescript-effect-cli` /
+`typescript-parseargs-cli` already set.
 
 **Framing — the init defects.** The same first real run (`virajp.dev`,
 2026-09-05) reported five defects, parked twice. The 2026-09-06 survey found
@@ -89,7 +97,7 @@ closed stack menu must not force the maintainer's choices
 generator's open entry and removes nothing; the `generate:` block still ships on
 every menu answer.
 
-**Three reversals (the amendment)**, each recorded by the docs unit:
+**Four reversals**, each recorded by the docs unit:
 
 1. **The charter fence reopens for editor settings.** `output-tree.md:202-214`
    keeps editor settings outside every pack. Narrowed: whole editor files stay
@@ -99,18 +107,22 @@ every menu answer.
    pipeline touches git history" — becomes a git pass with two consents.
 3. **The slug reason** written on 2026-09-05 into `materializer.md:57-68` is
    replaced by the measured mechanism.
+4. **The Cloudflare reservation narrows a second time.** On 2026-09-05 a Worker
+   *with* a script was reserved by name; `cloud-service/workers-ssr` redeems it.
+   Pages, R2, D1, KV, Durable Objects, Queues, Images and Stream stay reserved.
 
 **This plan stands on the Workers plan.** The static bundles name
 `cloudflare-workers-static` as the deploy pairing they were built for, the dist
-fact is what that pack's `./dist` cites, and the manual describes the two
-together. `requires:` is set accordingly, and that plan is `COMPLETE`.
+fact is what that pack's `./dist` cites, the new SSR pack is that pack's
+sibling, and the manual describes them together. `requires:` is set accordingly,
+and that plan is `COMPLETE`.
 
 ## Facts the survey established
 
 **This repo.**
 
 - stackgen is `1.1.0` (staged locally as `1.1.0+1`, untagged); vwf `19.12.0`;
-  site `1.1.3` (unreleased). `develop` is at `7ce78db5`.
+  site `1.1.3` (unreleased). `develop` is at `c75bc8e3`.
 - `stacks/bundles/typescript-astro-react.md:1-16`:
   `name: TypeScript · Astro (SSR) · React`, `axis: project`,
   `kind: language-bundle`, `platforms: [site]`, components
@@ -122,7 +134,9 @@ together. `requires:` is set accordingly, and that plan is `COMPLETE`.
   shadcn/Radix/Tailwind, a shared Effect `AppLayer`, server-side datastore reads
   through the common package's layers, same-origin SSR proxy endpoints,
   per-route cache middleware, OTel via Effect, Vitest + jsdom at 100 % on a
-  scoped include.
+  scoped include. **It shipped in `stackgen-v1.0.0`, and it is pinned today in
+  95octane's `.config/vwf.yaml:1034` as `project/site/typescript-astro-react`**
+  — the only pin that exists.
 - SSR there is prose, not a field: the bundle frontmatter schema
   (`assets/pack-format.md:144-152`) is `axis`, `kind`, `platforms`, `artifact`
   (deploy only), `unconditional`, `components`. No `output`/`ssg`/`static`
@@ -137,6 +151,11 @@ together. `requires:` is set accordingly, and that plan is `COMPLETE`.
   `[service, webapp]`; `typescript-astro-react` `[site]`; `typescript-pulumi`
   `[iac]`; `dart-flutter` `[mobile, tablet, desktop, webapp]` (kind
   `app-framework`); `claude-code-plugin` `[plugin]`.
+- Every `axis: deploy` bundle and its artifact: `cloudflare-workers-static`
+  (`static-assets`), `cloudflare-zero-trust` (`n/a`), `container-generic`,
+  `gcp-cloud-run`, `gcp-gke` (all `container-image`), `npm-package`
+  (`npm-package`). None is unconditional. **No deploy exists for a Worker with a
+  script.**
 - The `language-bundle` kind (`assets/kinds.md:49-135`): composition is a
   `language` plus its `package-manager`, `framework` and `toolchain-gate`
   components; framework components are optional (topic 2 is conditional on
@@ -155,6 +174,28 @@ together. `requires:` is set accordingly, and that plan is `COMPLETE`.
   and `skills/effect/references/{effect,effect-runtime,testing}.md`. No
   `config/` tier. Framework categories (`taxonomy.md:93`): `meta-framework` /
   `ui-library` / `cli` / `iac` / `workflow-sdk`.
+- The model deploy pack, `stacks/cloud-service/workers-static-assets/` (landed
+  2026-09-05): `pack.yaml` (`type: cloud-service`, `category: static-hosting`,
+  `kind: cloud-provider`, `axis: deploy`, `artifact: static-assets`, `harness:`
+  with `local_stack`, `pipeline`, `health`), `conventions.md`,
+  `config/wrangler.jsonc` (no `main`; `name` and `routes` as marked positions;
+  `assets.directory: ./dist`, `not_found_handling: "404-page"`),
+  `config/.config/mise/tasks/p/_project/deploy` (credential guard on
+  `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID`, `--dry-run` exempt, build via
+  `p:<id>:build` when present, `pnpm exec wrangler` with an `npx` fallback),
+  `skills/workers-static-assets/SKILL.md` + eight references. The `compute`
+  category carries the three-topic deploy-target extension (`kinds.md:193-194`,
+  `:252-259`); `cloud-run/pack.yaml` is the `compute` specimen for `category`,
+  `capability` and `harness`.
+- The Cloudflare reservation after 2026-09-05:
+  `cloud-provider/cloudflare/conventions.md:5-16` and `cloudflare-zero-trust.md`
+  reserve "a Worker script fronting static assets — server-side rendering on
+  Workers — along with Pages, R2, D1, KV, Durable Objects, Queues, Images and
+  Stream"; the provider skill's coverage fence, `cost-doctrine.md`,
+  `local-development-map.md`, `zero-trust-access/conventions.md` and its
+  `pick-and-trade.md` were all reworded that day to name two services. The
+  static pack's `wrangler.jsonc` header says "Adding `main` here turns this into
+  a different stack".
 - `@generated` at pin time (`pack-format.md:172-177`) is a first-class outcome:
   covered components land verbatim, uncovered ones run the generation pipeline
   on first fetch, and the lockfile records which was which.
@@ -315,6 +356,39 @@ root; only `virajp.dev` has `.config/dprint.json`.
 
 **Tool facts (Context7, 2026-09-06).**
 
+- Astro (`/withastro/docs`): `output` is `'static'` (default — every page
+  prerendered; a route exporting `prerender = false` renders on demand and then
+  needs an adapter) or `'server'` (every page on demand; `prerender =
+  true`
+  opts a route out). **`output: 'hybrid'` was removed in Astro 5** and merged
+  into `'static'`. `outDir` defaults to `./dist`. `client:only="react"` skips
+  server rendering and runs a component entirely on the client; the docs' own
+  "migrate from Create React App" guide uses it to host a whole React app.
+  `<ClientRouter />` from `astro:transitions` is view transitions between
+  prerendered pages, not SPA routing. `@astrojs/node` and `@astrojs/cloudflare`
+  are the adapters for a Node target and for Workers; neither is required for a
+  purely static site; **Astro 6 requires `@astrojs/cloudflare` v13**, whose
+  `main` moved from a built file path to the unified entrypoint
+  `@astrojs/cloudflare/entrypoints/server`.
+- Cloudflare Workers (`/websites/developers_cloudflare_workers`): a Worker with
+  a script names `main`, `assets.directory` and `assets.binding: "ASSETS"` (the
+  script fetches assets through the binding); `run_worker_first` invokes the
+  script before matching assets; a request no asset matches falls through to the
+  script; `compatibility_flags: ["nodejs_compat"]` is what the Astro adapter
+  needs; the Astro SSR guide's config is exactly `main` + `nodejs_compat`
+  - `assets` with a binding; a static-only site needs no `main`.
+- React Router (`/websites/reactrouter`): three modes — **Declarative**
+  (`<BrowserRouter>`, the simplest; routes do not participate in loaders,
+  actions or code splitting), **Data** (`createBrowserRouter` +
+  `RouterProvider`; loaders and actions, `clientLoader`/`clientAction` in SPA
+  use, you keep your own build), **Framework** (owns the Vite build; the typegen
+  `.react-router/types/` lives here only). Library modes: params are strings;
+  `href()` is typed. `useSearchParams` wraps `URLSearchParams`.
+- TanStack Router (`/tanstack/router`): 100 % inferred types for params,
+  validated search params (zod/valibot), loader data; built-in loaders with SWR
+  caching and prefetching; file-based routing via `@tanstack/router-plugin/vite`
+  placed before the React plugin, generating `routeTree.gen.ts`; code-based
+  routing needs no plugin; its docs ship a migration guide *from* React Router.
 - dprint (`/websites/dprint_dev`): config discovery is root-only —
   `dprint.json`, `.dprint.json`, `dprint.jsonc`, `.dprint.jsonc` — with
   `--config` the CLI's only override; `extends` accepts a relative local path;
@@ -329,84 +403,88 @@ root; only `virajp.dev` has `.config/dprint.json`.
   shell on `cd` in and removed on `cd` out; `[shell_alias]` entries are set
   dynamically per directory and are ordinary shell aliases — `$VAR` in the body
   expands at invocation; global-config aliases apply everywhere.
-- Astro (`/withastro/docs`, 2026-09-05): `output` defaults to `'static'`;
-  `outDir` defaults to `./dist`; `export const prerender = false` opts a route
-  into on-demand rendering and needs an adapter.
 
 ## Assumed decisions — confirm or override at review
 
 User rulings are quoted; rows marked *(assumed)* were made by the planner and
-are the review surface. D1–D14 are the Astro half (approved 2026-09-05); D15–D37
-are the amendment.
+are the review surface. D1–D14 are the Astro half (re-ruled 2026-09-06); D15–D37
+the init amendment; D38–D41 the four-mode and Workers SSR additions.
 
-| #  | Decision                       | Ruling                                                                                                                                                                                                                                                                                                                                                                                                   | Rejected                                                                          | Unit       |
-| -- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ---------- |
-| 1  | Shape                          | A sibling bundle per mode, not a mode field — the frontmatter has no output-mode key, SSR is load-bearing in the existing body, and `typescript-effect-cli` / `typescript-parseargs-cli` is the precedent.                                                                                                                                                                                               | renaming the SSR bundle; a mode key; a per-project setting                        | U2         |
-| 2  | Pack                           | "Ship a real framework/astro pack": the second framework pack in the tree, redeeming `framework/astro@generated`.                                                                                                                                                                                                                                                                                        | keep `@generated`; fold `framework/react` in too                                  | U1, U2     |
-| 3  | Modes                          | "One pack, both modes, two bundles": the pack's doctrine covers `output: 'static'` and `output: 'server'` + adapter and says when each is the answer; the SSR bundle re-pins `framework/astro@0.1.0`; both static bundles pin the same pack.                                                                                                                                                             | two packs; SSR bundle left on `@generated`                                        | U1, U2     |
-| 4  | React                          | "Two static bundles, with and without": `typescript-astro-static` carries no islands framework; `typescript-astro-static-react` carries `framework/react@generated`.                                                                                                                                                                                                                                     | no React; React only                                                              | U2         |
-| 5  | dist seam                      | "Framework pack conventions, as a named fact": `framework/astro`'s `conventions.md` and its Framework-doctrine reference state, under a fixed heading, that the build output is `./dist` (Astro's `outDir` default) and a deploy pack may rely on it; the Workers pack's `./dist` cites that heading.                                                                                                    | a `build_output:` payload field (reaches into vwf); leave it with the deploy pack | U1         |
-| 6  | Slugs *(assumed)*              | `typescript-astro-static` ("TypeScript · Astro (static)") and `typescript-astro-static-react` ("TypeScript · Astro (static) · React"); `typescript-astro-react` keeps its name — "(SSR)" is accurate now a sibling exists.                                                                                                                                                                               | `typescript-astro-ssg`; renaming the SSR bundle                                   | U2         |
-| 7  | Composition *(assumed)*        | Static: `language/typescript@0.1.0`, `package-manager/pnpm@0.1.0`, `toolchain-gate/tsconfig@0.1.0`, `toolchain-gate/eslint@0.1.0`, `framework/astro@0.1.0`. Static · React adds `framework/react@generated`. Neither carries `framework/effect` — it exists in the SSR bundle for the server `AppLayer`.                                                                                                 | Effect in the static bundles                                                      | U2         |
-| 8  | Category and scope *(assumed)* | `category: meta-framework` (Astro owns the build, as Effect owns composition); the skill is `user-invocable: false` and paths-scoped to `**/*.astro`, `**/astro.config.*` and `**/src/content/**`.                                                                                                                                                                                                       | `ui-library`; model-invocable                                                     | U1         |
-| 9  | Specimen *(assumed)*           | This repo's `site/` is the cited static specimen for the four config facts: `output`, `trailingSlash: "always"` and why, the CSP-forced `inlineStylesheets: "never"` + `assetsInlineLimit: 0`, and `site:` for sitemap and canonicals. Cited as facts and reasons, never as paths or the domain.                                                                                                         | uncited doctrine                                                                  | U1         |
-| 10 | Testing *(assumed)*            | Static: Vitest, node environment, no jsdom — there are no islands to mount. Static · React: the SSR bundle's Vitest + jsdom + Testing Library for the islands. The SSR bundle's 100 %-coverage rule is **not** copied; each static bundle states its scoped include and leaves the threshold to the repo.                                                                                                | the 100 % rule verbatim                                                           | U2         |
-| 11 | SSR body *(assumed)*           | The SSR bundle's body keeps its decisions but **cites** the pack for what Astro is and how output modes work, rather than restating them; the one-line "SSR is not a published API" ruling stays.                                                                                                                                                                                                        | leaving the body untouched                                                        | U2         |
-| 12 | Deploy pairing *(assumed)*     | Each static bundle's body names `cloudflare-workers-static` as the deploy pairing it was built for, in the same voice `cloudflare-zero-trust.md:26-32` names its pairing, and states the artifact is a directory of files at `./dist` per the pack's named fact. Frontmatter names no deploy slug.                                                                                                       | naming it in frontmatter (the axes are independent)                               | U2         |
-| 13 | References *(assumed)*         | `skills/astro/references/`: `framework-doctrine.md` (topic 2, the one owed artifact — both modes and the mode choice), `static-output.md`, `server-output.md`, `content-and-routing.md`, `build-output.md` (the named dist fact), `testing.md`. Six.                                                                                                                                                     | a single reference; per-integration references                                    | U1         |
-| 14 | Release (2026-09-05)           | "No release yet" for stackgen; "No site release." — **overtaken** by the consent block above on 2026-09-06.                                                                                                                                                                                                                                                                                              | minor; patch                                                                      | U4         |
-| 15 | Slug                           | One asset `plugins/stackgen/assets/ids.md`: lowercase; runs outside `[a-z0-9]` → one `-`; trimmed. Reason: mise strips an extension from a task's **last** segment and `_default` makes the directory that segment; plus the alias and flag grammars. Init §7 and the materializer cite it.                                                                                                              | define in init; dots-only                                                         | U5, U6, U9 |
-| 16 | Branches                       | "If the git is empty, start with `develop` and NOT `main`. Once a commit is done, add `main`." Existing repo: create `develop` from `main` where missing. "No matter which is default branch, work must flow from feature branches/worktree to develop to main."                                                                                                                                         | main first; leave an existing repo's branches alone                               | U9         |
-| 17 | Forge default                  | "Ask user which branch must be default branch in remote … with `develop` being default selection." Set it when it can, print it when it can't: a task `setup:default-branch <branch>` uses the forge CLI it finds (`gh`, `glab`), else prints the command; init runs the task and names no forge.                                                                                                        | print only; record it in the repo                                                 | U6, U9     |
-| 18 | Commits                        | "At the end of `init`, ask user to commit (local commit, push, etc)": init commits on consent — commit / commit and push / leave — with a fixed `ops:` message; push is the second consent. "When there's a change in `.config/pre-commit-config.yaml`, it must be committed independently (along with it's dependencies like `.config/git-conventional-commits.yaml`)" — that commit goes first, alone. | init stages and prints; never pushes                                              | U9         |
-| 19 | Branch guard                   | `no-commit-to-branch --branch main` ships unchanged at the commit stage; the new-repo first commit precedes hook wiring by construction, which is the whole fix for defect 3.                                                                                                                                                                                                                            | guard `develop` too; `stages: [manual]`                                           | U7, U9     |
-| 20 | Lockfile                       | "Use lock file is good for reproducability, let's start using it for all projects, specifically brownfield projects": `mise.<env>.lock` files are tracked, one per config declaring tools; `.gitignore` unchanged; every "`mise.lock`" claim corrected to the per-config rule.                                                                                                                           | ignore it                                                                         | U6         |
-| 21 | Merge tasks                    | `_scripts/merge` gains a predicate — the destination branch must exist locally — before the hook pass, with a message naming the branch model.                                                                                                                                                                                                                                                           | leave the checkout failure                                                        | U6         |
-| 22 | Unbacked promises              | "In greenfield it will be impossible for `init` to fill this fully but it can still have commit scopes when it's re-run at later stages": the `commitScopes` and forge-link comments say init fills them on a re-run once the registry / remote exist; init gains that step.                                                                                                                             | drop the claims                                                                   | U7, U9     |
-| 23 | Re-run                         | "`init` must be run at regular interval to keep everything in sync": doctrine names the moments (after architecture, after a pack bump, fresh clone), and `/vwf:doctor` gains a finding — adapter lockfile vs installed packs, registry ids vs `commitScopes` and `p:<id>` groups, missing `develop`/`main` — that says "run /vwf:init".                                                                 | offer from architecture only; doctrine only                                       | U9, U10    |
-| 24 | Id source changed              | A re-run after architecture renames `p/<repo>/` → `p/<registry-id>/`; the report says "id source changed", not "a pack moved"; idempotence is claimed per id source.                                                                                                                                                                                                                                     | —                                                                                 | U9         |
-| 25 | Step 10 guard                  | The bootstrap offer is conditional on step 9 having run.                                                                                                                                                                                                                                                                                                                                                 | —                                                                                 | U9         |
-| 26 | Editor shape                   | "Composed from per-pack fragments": each pack ships `config/.config/vscode.d/<pack>.jsonc` (`settings`, `nesting`, `extensions`); init merges into the two editor files between one marked block placed first, user keys after it winning. Init never names the editor — the convention names the target.                                                                                                | one hygiene payload; a profile for the common set                                 | U5, U6–U9  |
-| 27 | Nesting                        | "all ignore files are ideally grouped under gitignore": parent `.gitignore` collects every ignore file any pack ships; each pack nests its own files; the hygiene fragment carries the editor baseline.                                                                                                                                                                                                  | —                                                                                 | U6, U7, U8 |
-| 28 | dprint shim                    | dprint discovery is root-only and cannot be pointed at `.config/`; the gate ships root `dprint.json` = `{ "extends": ".config/dprint.json" }`; the existing-repo path moves a real root `dprint.json` into `.config/` and leaves the shim. The unit verifies `includes` resolve through `extends` on the real CLI.                                                                                       | a symlink                                                                         | U7, U9     |
-| 29 | Extension install              | "Per-repo profile generated is better, however it must also clean up stale extensions": `setup:vscode` in the mise pack — `code --profile "$REPO_NAME"`, install the merged list, **prune** what is installed there and not listed; wired into `setup:all`; silent without `code`; prints the one-time share-with-Default step when the profile was empty.                                               | global install; recommendations only                                              | U6         |
-| 30 | Aliases                        | "use repo-specific env variables to change the name value": the pack ships `[env] REPO_NAME = "<slug>"` as a marked position, literal, never derived (a worktree's config root is the branch name); the `cc` family lives in the user's global config reading `$REPO_NAME`.                                                                                                                              | full command shipped; `dcc` wrapper                                               | U6, U9     |
-| 31 | mise settings                  | `all_compile = false`, `task.timings = true`, `task.disable_spec_from_run_scripts = true`; the third verified against current mise before shipping.                                                                                                                                                                                                                                                      | fish completions postinstall                                                      | U6         |
-| 32 | Hygiene adds                   | `.graphifyignore`; a graphify `.gitignore` section (`graphify-out/*`, `!graphify-out/GRAPH_REPORT.md`); `CONTRIBUTING.md`; `.github/ISSUE_TEMPLATE/{bug,feature,config}`.                                                                                                                                                                                                                                | `.config/claude-status.json`                                                      | U8         |
-| 33 | Pack adds                      | eslint gate ships `.config/linter.yaml`; pnpm pack ships `.npmrc` (`ignore-scripts=true`, `fund=false`) and the alias `npx = "pnpm dlx"`; mise pack ships `code:count`.                                                                                                                                                                                                                                  | —                                                                                 | U6, U7, U8 |
-| 34 | Vocabulary                     | "`setup:external` to setup external dependencies (using pitchfork or docker) and `setup:deps` are used to install internal dependencies": unchanged, restated where the groups are defined.                                                                                                                                                                                                              | renaming `setup:external` to `setup:deps`                                         | U6         |
-| 35 | Unused baseline                | "They are the standard; the old repos are behind": nothing dropped; the re-run doctrine and the doctor finding are what bring them up.                                                                                                                                                                                                                                                                   | drop some                                                                         | —          |
-| 36 | Allowlist                      | Root allowlist gains `dprint.json`, `.npmrc`, `CONTRIBUTING.md`, `.graphifyignore`, and the directory `.github/` with `.github/workflows/` refused inside it.                                                                                                                                                                                                                                            | —                                                                                 | U5, U11    |
-| 37 | Pack versions *(assumed)*      | No pack `version:` moves in this plan; the plugin's minor carries the change. Bumping the mise, gate, hygiene and pnpm packs would force a ref change in every bundle that pins them — including the three Astro bundles U2 writes — and the sync lockfile diffs per file, not per version.                                                                                                              | per-pack minor bumps with every bundle ref updated                                | U6, U7, U8 |
+| #  | Decision                       | Ruling                                                                                                                                                                                                                                                                                                                                                                                                               | Rejected                                                                                   | Unit       |
+| -- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ---------- |
+| 1  | Shape                          | Four sibling bundles on one pack, each pinning a mode — the frontmatter has no output-mode key, Astro itself has only two `output` values, and `typescript-effect-cli` / `typescript-parseargs-cli` is the precedent.                                                                                                                                                                                                | a mode field; a per-project setting; one bundle per `output` value                         | U2         |
+| 2  | Pack                           | "Ship a real framework/astro pack": the second framework pack in the tree, redeeming `framework/astro@generated`.                                                                                                                                                                                                                                                                                                    | keep `@generated`; fold `framework/react` in too                                           | U1, U2     |
+| 3  | Modes                          | "There are 4 types of projects that can be created using Astro" — SSG (`static`, no adapter), Hybrid (`static` + adapter + per-route `prerender = false`), SSR (`server` + adapter), CSR (`static`, one shell page + catch-all, the app a `client:only` island). One pack carries all four doctrines; `hybrid` is stated as no longer a config value.                                                                | two packs; two bundles                                                                     | U1, U2     |
+| 4  | React                          | "React in all four": every bundle carries `framework/react@generated`; a page with no island ships no JavaScript, and the SSG doctrine says so.                                                                                                                                                                                                                                                                      | React only where the mode needs it; with/without pairs (six bundles)                       | U2         |
+| 5  | dist seam                      | "Framework pack conventions, as a named fact": `framework/astro`'s `conventions.md` and its Framework-doctrine reference state, under a fixed heading, that the build output is `./dist` (Astro's `outDir` default) and a deploy pack may rely on it; both Workers packs' `./dist` cite that heading.                                                                                                                | a `build_output:` payload field (reaches into vwf); leave it with the deploy pack          | U1         |
+| 6  | Slugs and names                | `astro-ssg`, `astro-ssr`, `astro-hybrid`, `astro-csr`; display names `Astro (SSG)`, `Astro (SSR)`, `Astro (Hybrid)`, `Astro (CSR)` — "drop `Typescript` since that's implicitly used for Astro projects". `typescript-astro-react.md` is `git mv`'d to `astro-ssr.md`; the one live pin (95octane) is re-pointed in its own session, parked.                                                                         | keep `typescript-astro-react` as the SSR slug; an alias stub                               | U2         |
+| 7  | Composition *(assumed)*        | Every bundle: `language/typescript@0.1.0`, `package-manager/pnpm@0.1.0`, `toolchain-gate/tsconfig@0.1.0`, `toolchain-gate/eslint@0.1.0`, `framework/astro@0.1.0`, `framework/react@generated`. SSR and Hybrid add `framework/effect@0.1.0`.                                                                                                                                                                          | Effect in SSG or CSR                                                                       | U2         |
+| 8  | Category and scope *(assumed)* | `category: meta-framework` (Astro owns the build, as Effect owns composition); the skill is `user-invocable: false` and paths-scoped to `**/*.astro`, `**/astro.config.*` and `**/src/content/**`.                                                                                                                                                                                                                   | `ui-library`; model-invocable                                                              | U1         |
+| 9  | Specimen *(assumed)*           | This repo's `site/` is the cited static specimen for the four config facts: `output`, `trailingSlash: "always"` and why, the CSP-forced `inlineStylesheets: "never"` + `assetsInlineLimit: 0`, and `site:` for sitemap and canonicals. Cited as facts and reasons, never as paths or the domain.                                                                                                                     | uncited doctrine                                                                           | U1         |
+| 10 | Testing *(assumed)*            | SSG: Vitest, node for `lib/` and endpoints, jsdom + Testing Library only for islands a repo writes. Hybrid and SSR: the SSR bundle's Vitest + jsdom + Testing Library plus endpoint tests. CSR: jsdom + Testing Library, route tests through React Router's `createMemoryRouter`. The SSR bundle's 100 %-coverage rule is **not** copied; each states its scoped include.                                            | the 100 % rule verbatim                                                                    | U1, U2     |
+| 11 | SSR body *(assumed)*           | The SSR bundle's body keeps its decisions but **cites** the pack for what Astro is and how the modes work; "SSR is not a published API" stays; the adapter sentence follows the pairing.                                                                                                                                                                                                                             | leaving the body untouched                                                                 | U2         |
+| 12 | Deploy pairings                | SSG and CSR name `cloudflare-workers-static` (CSR flips the host's not-found handling to single-page-application mode). SSR and Hybrid: "Pair with all supported deployments, Cloudflare Workers as preferred option" — `cloudflare-workers-ssr` first, then `gcp-cloud-run`, `gcp-gke`, `container-generic`; the adapter follows the pairing. Frontmatter names no deploy slug.                                     | container pairings only; Workers SSR named but not built                                   | U2, U12    |
+| 13 | References *(assumed)*         | `skills/astro/references/`: `framework-doctrine.md` (topic 2, the one owed artifact — the four-mode decision), `ssg.md`, `ssr.md`, `hybrid.md`, `csr.md`, `content-and-routing.md`, `build-output.md` (the named dist fact), `testing.md`. Eight.                                                                                                                                                                    | a single reference; per-integration references; six with static/server only                | U1         |
+| 14 | Release (2026-09-05)           | "No release yet" for stackgen; "No site release." — **overtaken** by the consent block above on 2026-09-06.                                                                                                                                                                                                                                                                                                          | minor; patch                                                                               | U4         |
+| 15 | Slug                           | One asset `plugins/stackgen/assets/ids.md`: lowercase; runs outside `[a-z0-9]` → one `-`; trimmed. Reason: mise strips an extension from a task's **last** segment and `_default` makes the directory that segment; plus the alias and flag grammars. Init §7 and the materializer cite it.                                                                                                                          | define in init; dots-only                                                                  | U5, U6, U9 |
+| 16 | Branches                       | "If the git is empty, start with `develop` and NOT `main`. Once a commit is done, add `main`." Existing repo: create `develop` from `main` where missing. "No matter which is default branch, work must flow from feature branches/worktree to develop to main."                                                                                                                                                     | main first; leave an existing repo's branches alone                                        | U9         |
+| 17 | Forge default                  | "Ask user which branch must be default branch in remote … with `develop` being default selection." Set it when it can, print it when it can't: a task `setup:default-branch <branch>` uses the forge CLI it finds (`gh`, `glab`), else prints the command; init runs the task and names no forge.                                                                                                                    | print only; record it in the repo                                                          | U6, U9     |
+| 18 | Commits                        | "At the end of `init`, ask user to commit (local commit, push, etc)": init commits on consent — commit / commit and push / leave — with a fixed `ops:` message; push is the second consent. "When there's a change in `.config/pre-commit-config.yaml`, it must be committed independently (along with it's dependencies like `.config/git-conventional-commits.yaml`)" — that commit goes first, alone.             | init stages and prints; never pushes                                                       | U9         |
+| 19 | Branch guard                   | `no-commit-to-branch --branch main` ships unchanged at the commit stage; the new-repo first commit precedes hook wiring by construction, which is the whole fix for defect 3.                                                                                                                                                                                                                                        | guard `develop` too; `stages: [manual]`                                                    | U7, U9     |
+| 20 | Lockfile                       | "Use lock file is good for reproducability, let's start using it for all projects, specifically brownfield projects": `mise.<env>.lock` files are tracked, one per config declaring tools; `.gitignore` unchanged; every "`mise.lock`" claim corrected to the per-config rule.                                                                                                                                       | ignore it                                                                                  | U6         |
+| 21 | Merge tasks                    | `_scripts/merge` gains a predicate — the destination branch must exist locally — before the hook pass, with a message naming the branch model.                                                                                                                                                                                                                                                                       | leave the checkout failure                                                                 | U6         |
+| 22 | Unbacked promises              | "In greenfield it will be impossible for `init` to fill this fully but it can still have commit scopes when it's re-run at later stages": the `commitScopes` and forge-link comments say init fills them on a re-run once the registry / remote exist; init gains that step.                                                                                                                                         | drop the claims                                                                            | U7, U9     |
+| 23 | Re-run                         | "`init` must be run at regular interval to keep everything in sync": doctrine names the moments (after architecture, after a pack bump, fresh clone), and `/vwf:doctor` gains a finding — adapter lockfile vs installed packs, registry ids vs `commitScopes` and `p:<id>` groups, missing `develop`/`main` — that says "run /vwf:init".                                                                             | offer from architecture only; doctrine only                                                | U9, U10    |
+| 24 | Id source changed              | A re-run after architecture renames `p/<repo>/` → `p/<registry-id>/`; the report says "id source changed", not "a pack moved"; idempotence is claimed per id source.                                                                                                                                                                                                                                                 | —                                                                                          | U9         |
+| 25 | Step 10 guard                  | The bootstrap offer is conditional on step 9 having run.                                                                                                                                                                                                                                                                                                                                                             | —                                                                                          | U9         |
+| 26 | Editor shape                   | "Composed from per-pack fragments": each pack ships `config/.config/vscode.d/<pack>.jsonc` (`settings`, `nesting`, `extensions`); init merges into the two editor files between one marked block placed first, user keys after it winning. Init never names the editor — the convention names the target.                                                                                                            | one hygiene payload; a profile for the common set                                          | U5, U6–U9  |
+| 27 | Nesting                        | "all ignore files are ideally grouped under gitignore": parent `.gitignore` collects every ignore file any pack ships; each pack nests its own files; the hygiene fragment carries the editor baseline.                                                                                                                                                                                                              | —                                                                                          | U6, U7, U8 |
+| 28 | dprint shim                    | dprint discovery is root-only and cannot be pointed at `.config/`; the gate ships root `dprint.json` = `{ "extends": ".config/dprint.json" }`; the existing-repo path moves a real root `dprint.json` into `.config/` and leaves the shim. The unit verifies `includes` resolve through `extends` on the real CLI.                                                                                                   | a symlink                                                                                  | U7, U9     |
+| 29 | Extension install              | "Per-repo profile generated is better, however it must also clean up stale extensions": `setup:vscode` in the mise pack — `code --profile "$REPO_NAME"`, install the merged list, **prune** what is installed there and not listed; wired into `setup:all`; silent without `code`; prints the one-time share-with-Default step when the profile was empty.                                                           | global install; recommendations only                                                       | U6         |
+| 30 | Aliases                        | "use repo-specific env variables to change the name value": the pack ships `[env] REPO_NAME = "<slug>"` as a marked position, literal, never derived (a worktree's config root is the branch name); the `cc` family lives in the user's global config reading `$REPO_NAME`.                                                                                                                                          | full command shipped; `dcc` wrapper                                                        | U6, U9     |
+| 31 | mise settings                  | `all_compile = false`, `task.timings = true`, `task.disable_spec_from_run_scripts = true`; the third verified against current mise before shipping.                                                                                                                                                                                                                                                                  | fish completions postinstall                                                               | U6         |
+| 32 | Hygiene adds                   | `.graphifyignore`; a graphify `.gitignore` section (`graphify-out/*`, `!graphify-out/GRAPH_REPORT.md`); `CONTRIBUTING.md`; `.github/ISSUE_TEMPLATE/{bug,feature,config}`.                                                                                                                                                                                                                                            | `.config/claude-status.json`                                                               | U8         |
+| 33 | Pack adds                      | eslint gate ships `.config/linter.yaml`; pnpm pack ships `.npmrc` (`ignore-scripts=true`, `fund=false`) and the alias `npx = "pnpm dlx"`; mise pack ships `code:count`.                                                                                                                                                                                                                                              | —                                                                                          | U6, U7, U8 |
+| 34 | Vocabulary                     | "`setup:external` to setup external dependencies (using pitchfork or docker) and `setup:deps` are used to install internal dependencies": unchanged, restated where the groups are defined.                                                                                                                                                                                                                          | renaming `setup:external` to `setup:deps`                                                  | U6         |
+| 35 | Unused baseline                | "They are the standard; the old repos are behind": nothing dropped; the re-run doctrine and the doctor finding are what bring them up.                                                                                                                                                                                                                                                                               | drop some                                                                                  | —          |
+| 36 | Allowlist                      | Root allowlist gains `dprint.json`, `.npmrc`, `CONTRIBUTING.md`, `.graphifyignore`, and the directory `.github/` with `.github/workflows/` refused inside it.                                                                                                                                                                                                                                                        | —                                                                                          | U5, U11    |
+| 37 | Pack versions *(assumed)*      | No existing pack `version:` moves in this plan; the plugin's minor carries the change. Bumping the mise, gate, hygiene and pnpm packs would force a ref change in every bundle that pins them — including the four Astro bundles U2 writes — and the sync lockfile diffs per file, not per version. New packs start at `0.1.0`.                                                                                      | per-pack minor bumps with every bundle ref updated                                         | U6, U7, U8 |
+| 38 | Hybrid server                  | "Hybrid is SSR with prerender flipped": `astro-hybrid` pins `framework/effect@0.1.0` and cites the SSR bundle's server doctrine (AppLayer, layered reads, proxy endpoints, cache middleware) for its on-demand routes; same adapter; the two bodies differ in the default and in what to prerender.                                                                                                                  | Hybrid without Effect                                                                      | U1, U2     |
+| 39 | CSR router                     | React Router in **Data** mode (`createBrowserRouter` + `RouterProvider`, `clientLoader`/`clientAction`) inside the `client:only="react"` island; a catch-all page so deep links serve the shell; TanStack Router named as the swap when the URL is the app's state, with its costs (a Vite plugin inside Astro's, a generated `routeTree.gen.ts`).                                                                   | TanStack Router file-based; TanStack code-based; React Router Declarative; no router named | U1, U2     |
+| 40 | Workers SSR                    | "Pair with all supported deployments, Cloudflare Workers as preferred option" → this plan builds it: `cloud-service/workers-ssr` (a Worker with a script; `category: compute`; `wrangler.jsonc` with `main`, `nodejs_compat`, an assets binding; the same `p/_project/deploy` overlay) and the `cloudflare-workers-ssr` bundle. Workers-with-a-script leaves the reserved list; the other eight services stay on it. | name it preferred and ship it next plan; container pairings only                           | U12        |
+| 41 | Artifact token *(assumed)*     | `artifact: worker-script` on the pack and the bundle — the vocabulary is open, and a script plus its assets is neither a container nor a directory. `main` is shipped as a marked position whose default is the Astro adapter's unified entrypoint, with the comment that another framework's adapter names another entry.                                                                                           | reuse `container-image`; reuse `static-assets`                                             | U12        |
 
 ## New dependencies
 
-None. Context7's `/withastro/docs` is the citation source for the pack and is
-already available; the pack pins nothing — a repo's manifest carries `astro`,
-and the manifest is fenced. The amendment adds no npm package and no mise tool:
-`code:count` uses `git ls-files` and `wc`; `setup:vscode` and
-`setup:default-branch` invoke `code`, `gh` and `glab` when present and do
-nothing otherwise.
+None. Context7's `/withastro/docs`, `/websites/developers_cloudflare_workers`,
+`/websites/reactrouter` and `/tanstack/router` are the citation sources and are
+already available; the packs pin nothing — a repo's manifest carries `astro`,
+its adapter, its router and `wrangler`, and the manifest is fenced. The init
+amendment adds no npm package and no mise tool: `code:count` uses `git
+ls-files`
+and `wc`; `setup:vscode` and `setup:default-branch` invoke `code`, `gh` and
+`glab` when present and do nothing otherwise.
 
 ## Units
 
-| Id  | Wave | Unit file                                        | Owns                                                                                                                                                                                                                            | Depends on | Status  | Commit |
-| --- | ---- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1  | 1    | [01-astro-pack.md](01-astro-pack.md)             | `plugins/stackgen/stacks/framework/astro/**`                                                                                                                                                                                    | —          | pending |        |
-| U2  | 1    | [02-astro-bundles.md](02-astro-bundles.md)       | `plugins/stackgen/stacks/bundles/typescript-astro-react.md`, `plugins/stackgen/stacks/bundles/typescript-astro-static.md`, `plugins/stackgen/stacks/bundles/typescript-astro-static-react.md`                                   | —          | pending |        |
-| U5  | 1    | [05-ids-and-fence.md](05-ids-and-fence.md)       | `plugins/stackgen/assets/**`, `plugins/stackgen/skills/stackgen-stack-template/references/materializer.md`                                                                                                                      | —          | pending |        |
-| U6  | 1    | [06-mise-pack.md](06-mise-pack.md)               | `plugins/stackgen/stacks/toolchain-manager/mise/**`                                                                                                                                                                             | —          | pending |        |
-| U7  | 1    | [07-gate-packs.md](07-gate-packs.md)             | `plugins/stackgen/stacks/toolchain-gate/**`                                                                                                                                                                                     | —          | pending |        |
-| U8  | 1    | [08-hygiene-and-pnpm.md](08-hygiene-and-pnpm.md) | `plugins/stackgen/stacks/repo-hygiene/**`, `plugins/stackgen/stacks/package-manager/pnpm/**`                                                                                                                                    | —          | pending |        |
-| U9  | 1    | [09-init.md](09-init.md)                         | `plugins/vwf/skills/init/**`                                                                                                                                                                                                    | —          | pending |        |
-| U10 | 1    | [10-doctor.md](10-doctor.md)                     | `plugins/vwf/skills/doctor/**`                                                                                                                                                                                                  | —          | pending |        |
-| U11 | 1    | [11-checker.md](11-checker.md)                   | `scripts/src/**`                                                                                                                                                                                                                | —          | pending |        |
-| U3  | 2    | [03-docs.md](03-docs.md)                         | `readme.md`, `CLAUDE.md`, `site/CLAUDE.md`, `.claude/docs/**`, `.claude/skills/stackgen-plugin/**`, `.claude/skills/plugin-authoring/**`, `.claude/skills/vwf-plugin/**`, `site/src/content/docs/**`, `docs/memory/decisions/*` | all        | pending |        |
-| U4  | 3    | [04-gates.md](04-gates.md)                       | `plugins/*/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md`                                                                                          | U3         | pending |        |
+| Id  | Wave | Unit file                                        | Owns                                                                                                                                                                                                                                                                                                                                                                                                                                    | Depends on | Status  | Commit |
+| --- | ---- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
+| U1  | 1    | [01-astro-pack.md](01-astro-pack.md)             | `plugins/stackgen/stacks/framework/astro/**`                                                                                                                                                                                                                                                                                                                                                                                            | —          | pending |        |
+| U2  | 1    | [02-astro-bundles.md](02-astro-bundles.md)       | `plugins/stackgen/stacks/bundles/typescript-astro-react.md` (→ `astro-ssr.md`), `plugins/stackgen/stacks/bundles/astro-ssg.md`, `plugins/stackgen/stacks/bundles/astro-hybrid.md`, `plugins/stackgen/stacks/bundles/astro-csr.md`                                                                                                                                                                                                       | —          | pending |        |
+| U5  | 1    | [05-ids-and-fence.md](05-ids-and-fence.md)       | `plugins/stackgen/assets/**`, `plugins/stackgen/skills/stackgen-stack-template/references/materializer.md`                                                                                                                                                                                                                                                                                                                              | —          | pending |        |
+| U6  | 1    | [06-mise-pack.md](06-mise-pack.md)               | `plugins/stackgen/stacks/toolchain-manager/mise/**`                                                                                                                                                                                                                                                                                                                                                                                     | —          | pending |        |
+| U7  | 1    | [07-gate-packs.md](07-gate-packs.md)             | `plugins/stackgen/stacks/toolchain-gate/**`                                                                                                                                                                                                                                                                                                                                                                                             | —          | pending |        |
+| U8  | 1    | [08-hygiene-and-pnpm.md](08-hygiene-and-pnpm.md) | `plugins/stackgen/stacks/repo-hygiene/**`, `plugins/stackgen/stacks/package-manager/pnpm/**`                                                                                                                                                                                                                                                                                                                                            | —          | pending |        |
+| U9  | 1    | [09-init.md](09-init.md)                         | `plugins/vwf/skills/init/**`                                                                                                                                                                                                                                                                                                                                                                                                            | —          | pending |        |
+| U10 | 1    | [10-doctor.md](10-doctor.md)                     | `plugins/vwf/skills/doctor/**`                                                                                                                                                                                                                                                                                                                                                                                                          | —          | pending |        |
+| U11 | 1    | [11-checker.md](11-checker.md)                   | `scripts/src/**`                                                                                                                                                                                                                                                                                                                                                                                                                        | —          | pending |        |
+| U12 | 1    | [12-workers-ssr.md](12-workers-ssr.md)           | `plugins/stackgen/stacks/cloud-service/workers-ssr/**`, `plugins/stackgen/stacks/bundles/cloudflare-workers-ssr.md`, `plugins/stackgen/stacks/bundles/cloudflare-zero-trust.md`, `plugins/stackgen/stacks/bundles/cloudflare-workers-static.md`, `plugins/stackgen/stacks/cloud-provider/cloudflare/**`, `plugins/stackgen/stacks/cloud-service/workers-static-assets/**`, `plugins/stackgen/stacks/cloud-service/zero-trust-access/**` | —          | pending |        |
+| U3  | 2    | [03-docs.md](03-docs.md)                         | `readme.md`, `CLAUDE.md`, `site/CLAUDE.md`, `.claude/docs/**`, `.claude/skills/stackgen-plugin/**`, `.claude/skills/plugin-authoring/**`, `.claude/skills/vwf-plugin/**`, `site/src/content/docs/**`, `docs/memory/decisions/*`                                                                                                                                                                                                         | all        | pending |        |
+| U4  | 3    | [04-gates.md](04-gates.md)                       | `plugins/*/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md`                                                                                                                                                                                                                                                                                                  | U3         | pending |        |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`. The ids are not contiguous by wave on purpose: U1–U4 are the
-2026-09-05 units and keep their files; U5–U11 are the amendment.
+2026-09-05 units and keep their files; U5–U12 are the amendments.
 
 ## Shared-file rule
 
@@ -416,33 +494,45 @@ Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 | `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md`                                                                 | generated; regenerating mid-wave races                                        | U4 only (see Waves for the inventory caveat)                               |
 | `readme.md`, `CLAUDE.md`, `site/CLAUDE.md`, `site/src/content/docs/**`, `.claude/docs/**`, `.claude/skills/**`, `docs/memory/decisions/*` | n units editing one doc                                                       | U3 only                                                                    |
 | `plugins/stackgen/stacks/framework/astro/pack.yaml`                                                                                       | U2's refs name the version U1 declares                                        | U1 only; U2 reads it, never edits it                                       |
-| `plugins/stackgen/assets/ids.md`, the editor-fragment subsection of `pack-format.md`                                                      | U6–U9 cite them by name; only one unit writes them                            | U5 only; the others cite by the names this plan fixes                      |
-| `plugins/stackgen/stacks/bundles/*.md` other than the three Astro bundles                                                                 | pack versions do not move (D37), so no bundle ref changes                     | nobody                                                                     |
+| `plugins/stackgen/stacks/cloud-service/workers-ssr/pack.yaml`                                                                             | U12's bundle names the version U12's pack declares — same unit, no collision  | U12                                                                        |
+| `plugins/stackgen/assets/ids.md`, the editor-fragment subsection of `pack-format.md`                                                      | U6–U9, U12 cite them by name; only one unit writes them                       | U5 only; the others cite by the names this plan fixes                      |
+| `plugins/stackgen/stacks/bundles/cloudflare-*.md`                                                                                         | the reservation prose and the sibling cross-references                        | U12 only                                                                   |
+| `plugins/stackgen/stacks/bundles/*.md` other than the four Astro and the three Cloudflare bundles                                         | pack versions do not move (D37), so no bundle ref changes                     | nobody                                                                     |
+| `plugins/stackgen/stacks/cloud-service/workers-static-assets/**`                                                                          | the cross-references to the SSR sibling                                       | U12 only                                                                   |
 | `plugins/stackgen/stacks/repo-hygiene/repo-hygiene/config/.gitignore`                                                                     | U6's lockfile ruling could tempt an edit; the lock is tracked, nothing to add | U8 only                                                                    |
-| every pack's `pack.yaml` `version:`                                                                                                       | D37                                                                           | nobody                                                                     |
+| every existing pack's `pack.yaml` `version:`                                                                                              | D37                                                                           | nobody                                                                     |
 | `plugins/stackgen/skills/stackgen-sync/SKILL.md`                                                                                          | restates composition order and the allowlist                                  | nobody this plan; a falsified passage is `DOCS FALSIFIED:` for U3 to route |
 
 ## Waves
 
-- **Wave 1 — U1, U2, U5, U6, U7, U8, U9, U10, U11.** Nine disjoint trees: the
-  Astro pack; the three Astro bundles; the stackgen assets and the materializer;
-  the mise pack; the gate packs; the hygiene and pnpm packs; init; doctor; the
-  checker. U2's component refs name `framework/astro@0.1.0`, the version U1's
-  `pack.yaml` declares; U2 reads that file and never edits it. U6–U9 cite
+- **Wave 1 — U1, U2, U5, U6, U7, U8, U9, U10, U11, U12.** Ten disjoint trees:
+  the Astro pack; the four Astro bundles; the stackgen assets and the
+  materializer; the mise pack; the gate packs; the hygiene and pnpm packs; init;
+  doctor; the checker; the Workers SSR pack with the Cloudflare prose. U2's
+  component refs name `framework/astro@0.1.0`, the version U1's `pack.yaml`
+  declares; U2 reads that file and never edits it. U2's SSR and Hybrid bodies
+  name `cloudflare-workers-ssr` by the slug this plan fixes; U12's bundle names
+  `astro-ssr` and `astro-hybrid` the same way. U6–U9 and U12 cite
   `assets/ids.md` and the editor-fragment convention by the names this plan
   fixes, so they need nothing U5 writes first. As the previous runs established,
   this repo's repo-wide pre-commit hooks force wave 1 into **one commit**: the
   payload root files U7 and U8 add need U11's allowlist in the same tree, and
   the new inventory entries need the regenerated inventory.
-- **Wave 2 — U3.** Docs and the four decision docs, from the `docs-reconciler`
+- **Wave 2 — U3.** Docs and the five decision docs, from the `docs-reconciler`
   findings plus every `DOCS FALSIFIED:` line.
 - **Wave 3 — U4.** Versions, generators, full gate, `target-verifier`.
 
+**Every unit is a subagent** — the user's standing instruction for this plan,
+and execute-plan's construction: wave 1 is ten concurrent `Agent` dispatches,
+the wave review is a subagent, the docs reconciler and the real-install verifier
+are subagents, and the orchestrator decides, gates and commits without reading a
+unit's owned files or doing a unit's work inline.
+
 **Inventory caveat.** This repo's pre-commit runs `plugins:inventory --check`,
-and a new pack plus two new bundles make the generated inventory stale, so no
-wave-1 commit can land until it is regenerated. The previous runs resolved this
-by letting the orchestrator run `plugins:inventory` at the wave-1 commit; the
-same ruling applies. U4 re-runs it with the version bumps.
+and two new packs plus five new or renamed bundles make the generated inventory
+stale, so no wave-1 commit can land until it is regenerated. The previous runs
+resolved this by letting the orchestrator run `plugins:inventory` at the wave-1
+commit; the same ruling applies. U4 re-runs it with the version bumps.
 
 ## Wave gate
 
@@ -452,22 +542,32 @@ same ruling applies. U4 re-runs it with the version bumps.
 `mise run plugins:npm-normalize-test`, `mise run site:check` from wave 2 on,
 plus the wave review, plus every report read for `UNRESOLVED:`.
 
-Plan-specific lines, Astro:
+Plan-specific lines, Astro and Workers SSR:
 
 - `grep -c "framework/astro@generated" plugins/stackgen/stacks/bundles/*.md`
   totals **0** after wave 1; `grep -l "framework/astro@0.1.0"` over the same
-  glob returns exactly the three Astro bundles.
-- `grep -n "platforms" -A1 plugins/stackgen/stacks/bundles/typescript-astro-*.md`
-  shows `- site` under all three.
-- `grep -n "unconditional" plugins/stackgen/stacks/bundles/typescript-astro-*.md`
-  is empty.
-- The three Astro bundles trip neither retired-terms trap: no backticked `web`
+  glob returns exactly the four `astro-*.md` files, and
+  `typescript-astro-react.md` no longer exists.
+- `grep -n "^name:" plugins/stackgen/stacks/bundles/astro-*.md` shows exactly
+  `Astro (SSG)`, `Astro (SSR)`, `Astro (Hybrid)`, `Astro (CSR)`; no `name:`
+  under `bundles/astro-*.md` contains "TypeScript".
+- `grep -n "platforms" -A1 plugins/stackgen/stacks/bundles/astro-*.md` shows
+  `- site` under all four; `grep -n "unconditional"` over the same glob is
+  empty.
+- `grep -l "framework/effect@0.1.0" plugins/stackgen/stacks/bundles/astro-*.md`
+  returns exactly `astro-ssr.md` and `astro-hybrid.md`.
+- The four Astro bundles trip neither retired-terms trap: no backticked `web`
   beside another platform token, no literal `stacks/project/`.
 - `plugins/stackgen/stacks/framework/astro/skills/astro/SKILL.md` parses as
   strict YAML frontmatter with `user-invocable: false` and a non-empty `paths:`
-  list.
+  list; its `references/` directory holds eight files.
+- `grep -rn "not offered" plugins/stackgen/stacks/cloud-provider/cloudflare plugins/stackgen/stacks/bundles/cloudflare-*.md`
+  — no hit's reserved list contains "Workers" as a bare word or "Worker script";
+  Pages, R2, D1, KV, Durable Objects, Queues, Images and Stream are still on it.
+- `grep -n "artifact: worker-script" plugins/stackgen/stacks/bundles/cloudflare-workers-ssr.md plugins/stackgen/stacks/cloud-service/workers-ssr/pack.yaml`
+  hits both.
 
-Plan-specific lines, the amendment:
+Plan-specific lines, the init amendment:
 
 - `grep -rn "as a task with an extension" plugins/` returns nothing;
   `test -f plugins/stackgen/assets/ids.md`.
@@ -490,14 +590,15 @@ Plan-specific lines, the amendment:
 tier, so no scratch materialization for them):
 
 1. **The menu source.** `grep -l "^- site" plugins/stackgen/stacks/bundles/*.md`
-   (or the equivalent YAML read) returns exactly three files, none carrying
-   `unconditional:` — the menu will offer all three.
-2. **Every component ref resolves.** For each `components:` line across the
-   three Astro bundles, either the ref ends in `@generated` or
-   `plugins/stackgen/stacks/<type>/<slug>/pack.yaml` exists **and** declares the
-   named version. This is the check `inventory.ts` does not do (`:161-165`), so
-   the orchestrator does it by hand; a mismatch is a wave-1 finding for U2 (a
-   wrong ref) or U1 (a wrong version), not a GAP.
+   (or the equivalent YAML read) returns exactly **four** files, none carrying
+   `unconditional:` — the menu will offer all four.
+2. **Every component ref resolves.** For each `components:` line across the four
+   Astro bundles and the new Cloudflare bundle, either the ref ends in
+   `@generated` or `plugins/stackgen/stacks/<type>/<slug>/pack.yaml` exists
+   **and** declares the named version. This is the check `inventory.ts` does not
+   do (`:161-165`), so the orchestrator does it by hand; a mismatch is a wave-1
+   finding for the bundle's unit (a wrong ref) or the pack's unit (a wrong
+   version), not a GAP.
 3. **The specimen facts are true.** The four D9 facts the pack cites grep true
    against `site/astro.config.ts`: `output: "static"`,
    `trailingSlash: "always"`, `inlineStylesheets: "never"`,
@@ -506,57 +607,77 @@ tier, so no scratch materialization for them):
    `grep -n "./dist" plugins/stackgen/stacks/framework/astro/conventions.md`
    hits a line under a fixed heading, and the same heading text appears in
    `skills/astro/references/build-output.md`.
-5. `mise run plugins:check` and `mise run plugins:inventory --check` exit 0 from
+5. **The pairings cross-reference.** `astro-ssr.md` and `astro-hybrid.md` name
+   `cloudflare-workers-ssr` before any container pairing;
+   `cloudflare-workers-ssr.md` names `astro-ssr` and `astro-hybrid`;
+   `astro-ssg.md` and `astro-csr.md` name `cloudflare-workers-static`; the
+   `hybrid` reference states the config value was removed in Astro 5.
+6. `mise run plugins:check` and `mise run plugins:inventory --check` exit 0 from
    the worktree.
 
 **The scratch materialization**, after wave 1 and before wave 2, in a temp git
 repo whose directory is named `scratch.dev`:
 
-6. Compose, in the documented order, the `config/` trees of
+7. Compose, in the documented order, the `config/` trees of
    `toolchain-manager/mise`, the four `toolchain-gate` packs of the `repo-gates`
-   bundle, `repo-hygiene/repo-hygiene` and `package-manager/pnpm`, skipping
-   `_`-prefixed top-level entries; trust the mise config.
-7. **The slug.** Author `p/scratch-dev/_default` by hand (init's file) and
+   bundle, `repo-hygiene/repo-hygiene`, `package-manager/pnpm` and — last, per
+   the cloud rule — `cloud-service/workers-ssr`, skipping `_`-prefixed top-level
+   entries; trust the mise config.
+8. **The slug.** Author `p/scratch-dev/_default` by hand (init's file) and
    `p/scratch.dev/_default` beside it as the control:
    `MISE_ENV=dev mise tasks
    ls --hidden` lists `p:scratch-dev` and lists the
    control as `p:scratch`, not `p:scratch.dev`. Remove the control.
-8. **The merge predicate.** With one commit on `main` and no `develop`,
+9. **The merge predicate.** With one commit on `main` and no `develop`,
    `MISE_ENV=dev mise run code:merge:develop` exits non-zero with U6's message,
    and `git branch --show-current` is still `main` — nothing was checked out and
    no hook ran.
-9. **The lock.** `.config/mise.dev.lock` is created by `mise install`; commit
-   it; `MISE_ENV=dev mise run setup:worktree` (or `mise install` again) leaves
-   `git status --porcelain` empty.
-10. **The editor composition.** Run the merge algorithm from
+10. **The lock.** `.config/mise.dev.lock` is created by `mise install`; commit
+    it; `MISE_ENV=dev mise run setup:worktree` (or `mise install` again) leaves
+    `git status --porcelain` empty.
+11. **The editor composition.** Run the merge algorithm from
     `fragments-and-sections.md` by hand over the composed fragments:
     `.vscode/settings.json` parses as JSONC, its `explorer.fileNesting.patterns`
     has a `.gitignore` parent whose children include `.graphifyignore`, and
     `.vscode/extensions.json` lists the union with no duplicate; a key written
     by hand after the block survives a second merge byte-for-byte.
-11. **The shim.** From the scratch root, `dprint check` (or
+12. **The shim.** From the scratch root, `dprint check` (or
     `dprint output-file-paths`) through the root `dprint.json` yields the same
     file set as `dprint --config .config/dprint.json output-file-paths`.
-12. **`setup:vscode`, hermetically.** With `REPO_NAME=scratch-dev` and a two-id
+13. **`setup:vscode`, hermetically.** With `REPO_NAME=scratch-dev` and a two-id
     `.vscode/extensions.json`, run the task with `code` wrapped to add
     `--user-data-dir` and `--extensions-dir` under the temp dir: both ids
     install into a profile named `scratch-dev`; plant a third by hand, re-run:
     it is uninstalled. Never the real user directory.
-13. `mise run plugins:check` from the worktree reports every new payload file
+14. **The Worker with a script.** `wrangler.jsonc` lands at the scratch root
+    (the cloud pack composed last), parses as JSONC (comments and trailing
+    commas stripped), carries `main`, `compatibility_flags` containing
+    `nodejs_compat`, `assets.directory` and `assets.binding`, **no**
+    `not_found_handling`, and its marked positions (`name`, the route block,
+    `main`) intact and clearly marked. The deploy overlay renamed to
+    `p/scratch-dev/` lists as `p:scratch-dev:deploy`, is clean under
+    `shellcheck -x -s bash -P .config/mise/tasks/_scripts -e SC2034 -e SC2154`
+    and `shfmt -d -i 2 -ci`, and with no credentials in the environment exits 1
+    naming both variables before invoking wrangler.
+15. `mise run plugins:check` from the worktree reports every new payload file
     accepted.
 
-Pass = all thirteen. A failure is a wave-1 finding routed to the owning unit (U5
-for the asset, U6 for the mise pack, U7 for the shim, U8 for the fragment
-baseline, U9 for the algorithm, U11 for the checker), not a GAP.
+Pass = all fifteen. A failure is a wave-1 finding routed to the owning unit
+(U1/U2 for the Astro pack and bundles, U5 for the asset, U6 for the mise pack,
+U7 for the shim, U8 for the fragment baseline, U9 for the algorithm, U11 for the
+checker, U12 for the Worker), not a GAP.
 
 **`target-verifier`** runs inside U4: a hermetic install of the working tree's
-dev marketplace shows `stackgen@1.2.0` and `vwf@19.13.0`, the installed stackgen
-tree contains `stacks/framework/astro/pack.yaml`, all three
-`stacks/bundles/typescript-astro-*.md`, `assets/ids.md`, the root `dprint.json`
-shim under the dprint gate's `config/`, and at least one `vscode.d/*.jsonc`; the
-installed vwf tree's `skills/init/references/new-repo.md` contains
-`setup:default-branch`; every task file survives with its executable bit; and
-uninstall leaves only Claude's own cache.
+dev marketplace shows `stackgen@1.2.0` and `vwf@19.13.0`; the installed stackgen
+tree contains `stacks/framework/astro/pack.yaml`, all four
+`stacks/bundles/astro-*.md` and no `typescript-astro-react.md`,
+`stacks/cloud-service/workers-ssr/config/wrangler.jsonc`,
+`stacks/bundles/cloudflare-workers-ssr.md`, `assets/ids.md`, the root
+`dprint.json` shim under the dprint gate's `config/`, and at least one
+`vscode.d/*.jsonc`; the installed vwf tree's
+`skills/init/references/new-repo.md` contains `setup:default-branch`; every task
+file survives with its executable bit; and uninstall leaves only Claude's own
+cache.
 
 ## Unit contract
 
@@ -583,7 +704,7 @@ the unit could not proceed without; it blocks the unit and its dependents.
 ## Out of scope
 
 - **A `framework/react` pack.** Declined at review ("fold react in too" was
-  rejected); both React bundles keep `framework/react@generated`.
+  rejected); all four Astro bundles keep `framework/react@generated`.
 - **An output-mode field on bundles or a per-project setting.** The taxonomy
   supports a sibling bundle (D1).
 - **A `build_output:` payload field.** The shape E3 recommended, but it changes
@@ -592,6 +713,8 @@ the unit could not proceed without; it blocks the unit and its dependents.
   Astro config is the cited specimen, read-only.
 - **A scratch Astro project** (`pnpm create astro`) as an orchestrator gate —
   network, tooling and a manifest the pack must not write.
+- **Pages, R2, D1, KV, Durable Objects, Queues, Images, Stream** — the
+  reservation stands for all of them.
 - **Dropping any baseline item** (D35). **Renaming `setup:external`** (D34).
 - **Guarding `develop`** with the branch hook (D19).
 - **A shell `slugify` helper** — no shell consumer exists; both consumers are
@@ -602,14 +725,18 @@ the unit could not proceed without; it blocks the unit and its dependents.
 - **Mirroring payload fixes into this repo's own
   `.config/pre-commit-config.yaml` and `.config/git-conventional-commits.yaml`**
   — independently authored, not copies.
-- **Per-pack version bumps** (D37).
+- **Per-pack version bumps for existing packs** (D37).
 - **`.config/claude-status.json`** — declined at the hygiene pick.
 
 ## Parked
 
-- **`framework/react` as a real pack** — now referenced `@generated` from two
-  bundles (`typescript-astro-react`, `typescript-astro-static-react`) plus
-  `typescript-hono-refine`. Same shape as this plan's U1.
+- **95octane's pin** — `.config/vwf.yaml:1034` reads
+  `project/site/typescript-astro-react` and must become `project/site/astro-ssr`
+  once stackgen `1.2.0` is installed there; a one-line edit in that repo's own
+  session, plus a `/vwf:doctor` run to confirm the template resolves.
+- **`framework/react` as a real pack** — now referenced `@generated` from all
+  four Astro bundles plus `typescript-hono-refine`. Same shape as this plan's
+  U1.
 - **`build_output:` as a template-payload field** the framework pack declares
   and the deploy pack reads at pin time — the `harness:` shape. Needs vwf's
   `stack-adapter.md` payload contract to gain a key, so it is a vwf plan.
@@ -636,6 +763,9 @@ the unit could not proceed without; it blocks the unit and its dependents.
   dogfooding paragraph predates the dev marketplace and reads stale beside it;
   adjacent, not this plan's.
 - **The `oc = "opencode"` alias** — global, the user's.
+- **`run_worker_first` and a Worker script in front of a *static* site** — the
+  SSR pack ships the knob off and says why; a middleware-only Worker over SSG
+  output is a shape nobody has asked for.
 
 ## Run log
 

@@ -1,7 +1,7 @@
-# U3 — Docs reconciled; the sibling-bundle decision and the three amendment reversals recorded
+# U3 — Docs reconciled; the four-mode decision, the Workers SSR redemption and the amendment reversals recorded
 
 - **Wave:** 2
-- **Depends on:** U1, U2, U5, U6, U7, U8, U9, U10, U11
+- **Depends on:** U1, U2, U5, U6, U7, U8, U9, U10, U11, U12
 - **Owns:** `readme.md`, `CLAUDE.md`, `site/CLAUDE.md`, `.claude/docs/**`,
   `.claude/skills/stackgen-plugin/**`, `.claude/skills/plugin-authoring/**`,
   `.claude/skills/vwf-plugin/**`, `site/src/content/docs/**`,
@@ -21,11 +21,13 @@
 ## Ruling
 
 The whole assumed-decisions table, as the docs must describe the tree that
-landed. For the Astro half: D1 (a sibling bundle per mode, on the CLI
-precedent), D3 (one pack, both modes) and D5 (the named dist fact) — and the
-framing that this is **not** a reversal of the 2026-08-17 north-star decision.
+landed. For the Astro half: D1 (four sibling bundles on one pack, on the CLI
+precedent), D3 (one pack, four modes on two output values), D6 (the slugs, the
+display names, the rename), D12 (the pairings, Cloudflare first), D38, D39 and
+D5 (the named dist fact) — and the framing that this is **not** a reversal of
+the 2026-08-17 north-star decision.
 
-For the amendment, the three confirmed reversals:
+For the amendments, the four confirmed reversals:
 
 1. "The fence's editor-settings clause is narrowed to 'nothing a pack cannot
    compose': whole `.vscode/` files stay outside, fragments merged by init come
@@ -34,6 +36,8 @@ For the amendment, the three confirmed reversals:
 2. Init now touches git history — D16, D17, D18 — replacing `new-repo.md:20`.
 3. The slug reason — D15 — replacing the 2026-09-05 wording in
    `materializer.md:57-68`.
+4. The Cloudflare reservation narrowed a second time — D40 — a Worker with a
+   script is offered; the other eight services stay reserved.
 
 And the user's framing, to be quoted where the manual explains why the baseline
 is what it is: "while I am open-sourcing this for the world, it's specifically
@@ -42,16 +46,20 @@ designed for my way of using and setting up projects, that's why it's
 
 ## Edits
 
-1. **`docs/memory/decisions/2026-09-05-astro-modes-are-sibling-bundles.md`** —
-   new. What was decided (one real `framework/astro` pack carrying both output
-   modes; three `site` bundles; the dist contract as a named fact in the
-   framework pack's conventions), the alternatives rejected from the table (a
-   mode field, a per-project setting, two packs, keeping `@generated`, folding
-   React in, a `build_output:` payload field), why (the first real greenfield
-   run; the frontmatter has no mode key; SSR is load-bearing in the existing
-   body; the CLI precedent), and the explicit note that the north-star
-   decision's "closed menu" objection is not reopened because the generator's
-   open entry still ships.
+1. **`docs/memory/decisions/2026-09-06-astro-four-modes-four-bundles.md`** —
+   new. What was decided (one real `framework/astro` pack carrying four
+   rendering doctrines over Astro's two `output` values; four `site` bundles
+   named `Astro (SSG|SSR|Hybrid|CSR)` with React in all four; the SSR bundle
+   renamed from `typescript-astro-react` to `astro-ssr`; Hybrid as SSR with
+   prerender flipped; React Router in Data mode as CSR's router; the dist
+   contract as a named fact), the measured facts that shaped it (`hybrid`
+   removed in Astro 5; CSR is a shape, not a mode), the alternatives rejected
+   from the table (a mode field, a per-project setting, two packs, with/without
+   React pairs, keeping the old slug, an alias stub, TanStack Router as the
+   default, a `build_output:` payload field), and the explicit note that the
+   north-star decision's "closed menu" objection is not reopened because the
+   generator's open entry still ships. Record the rename as a breaking change
+   for anyone pinning the old slug, and that the only pin is the user's own.
 2. **`docs/memory/decisions/2026-09-06-editor-fragments-inside-the-fence.md`** —
    new. The reversal: what the fence said (editor settings outside, decided
    2026-09-05 and reopened once for gate configs), what changed (per-pack
@@ -73,24 +81,38 @@ designed for my way of using and setting up projects, that's why it's
    short. The measured mechanism (the last-segment extension rule and
    `_default`), the asset that now defines the id, the four surfaces, the
    correction of the 2026-09-05 reason, and that `REPO_NAME` carries the slug.
+   4b.
+   **`docs/memory/decisions/2026-09-06-workers-ssr-redeems-the-script-reservation.md`**
+   — new, in the shape of the 2026-09-05 Workers Static Assets decision: what
+   leaves the reserved list (a Worker with a script), what stays (Pages, R2, D1,
+   KV, Durable Objects, Queues, Images, Stream), why now (the SSR and Hybrid
+   bundles needed a preferred pairing and the user ruled Cloudflare first), the
+   artifact token, and the pairing rule (Astro's Cloudflare adapter as the fact
+   the pairing rests on).
+
 5. **`site/src/content/docs/plugins/stackgen.md`** — (a) Astro: wherever the
-   manual lists project-axis bundles or the `site` platform, the three Astro
-   bundles, one sentence each, and that all three pin the `astro` pack; the
-   framework pack beside `effect` wherever framework packs are listed; the dist
-   contract stated once, cross-linking the Cloudflare Workers entry. (b)
-   Amendment: the fence passage names editor fragments as inside and whole
-   editor files as outside; the allowlist enumeration gains the five names; the
-   config-tier ownership list gains the mise pack's editor task and the gate
-   packs' fragments; `:429-436` (the merge tasks) gains the branch-exists
-   predicate; `:444` and the lockfile sentence state the per-config, tracked
-   rule; `:501-510` (the `p:<id>` groups) says where `<id>` comes from and that
-   it is slugged, citing the asset; the mise pack's entry names `REPO_NAME`,
-   `setup:vscode`, `setup:default-branch`, `code:count` and the three settings;
-   the pnpm pack's entry names `.npmrc` and the `npx` alias; the eslint gate's
-   entry names `.config/linter.yaml`; the hygiene pack's entry names
-   `.graphifyignore`, the graphify ignore section, `CONTRIBUTING.md` and the
-   issue templates. Every link and anchor must resolve — `site:check` is the
-   gate.
+   manual lists project-axis bundles or the `site` platform, the four Astro
+   bundles by display name, one sentence each stating the mode, and that all
+   four pin the `astro` pack and carry React; that `typescript-astro-react` is
+   now `astro-ssr` (a re-pin for anyone who had it); the framework pack beside
+   `effect` wherever framework packs are listed; the dist contract stated once,
+   cross-linking both Cloudflare Workers entries; the Cloudflare entry gains
+   `cloudflare-workers-ssr` beside the static one, with the pairing rule (SSG
+   and CSR → static; SSR and Hybrid → SSR preferred, containers supported) and
+   the narrowed reservation. `how-to/operate/choosing-your-stack.md`'s deploy
+   menu gains `cloudflare-workers-ssr`. (b) Amendment: the fence passage names
+   editor fragments as inside and whole editor files as outside; the allowlist
+   enumeration gains the five names; the config-tier ownership list gains the
+   mise pack's editor task and the gate packs' fragments; `:429-436` (the merge
+   tasks) gains the branch-exists predicate; `:444` and the lockfile sentence
+   state the per-config, tracked rule; `:501-510` (the `p:<id>` groups) says
+   where `<id>` comes from and that it is slugged, citing the asset; the mise
+   pack's entry names `REPO_NAME`, `setup:vscode`, `setup:default-branch`,
+   `code:count` and the three settings; the pnpm pack's entry names `.npmrc` and
+   the `npx` alias; the eslint gate's entry names `.config/linter.yaml`; the
+   hygiene pack's entry names `.graphifyignore`, the graphify ignore section,
+   `CONTRIBUTING.md` and the issue templates. Every link and anchor must resolve
+   — `site:check` is the gate.
 6. **`site/src/content/docs/plugins/vwf.md:770-847`** — the init passage gains
    what it never had: the branch model (develop first on an empty repo, both
    branches always, the forge-default question), the two consents at the end,
@@ -142,8 +164,7 @@ designed for my way of using and setting up projects, that's why it's
   (`readme.md`, `CLAUDE.md`, `site/CLAUDE.md`, `.claude/docs/**`,
   `.claude/skills/**`, `site/src/content/docs/**`, `docs/memory/decisions/*`) —
   run the formatter, do not hand-pad.
-- `ls docs/memory/decisions/2026-09-05-astro-modes-*.md docs/memory/decisions/2026-09-06-*.md`
-  lists four files.
+- `ls docs/memory/decisions/2026-09-06-*.md` lists five files.
 - `grep -n "setup:default-branch\|REPO_NAME" site/src/content/docs/plugins/vwf.md site/src/content/docs/plugins/stackgen.md`
   hits both files.
 - `grep -rn "never touches git\|touches git history" site/ .claude/ readme.md CLAUDE.md`
@@ -162,5 +183,5 @@ designed for my way of using and setting up projects, that's why it's
 
 ## Commit
 
-`docs: document the astro pack and site bundles, init's git pass, the editor fragments and the slug`
+`docs: document the four astro bundles, workers-ssr, init's git pass, the editor fragments and the slug`
 — written by the orchestrator after the wave gate, not by the unit.

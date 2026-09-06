@@ -56,8 +56,10 @@ the orchestrator's, after the landing.
 - **`target-verifier`** is dispatched by the orchestrator after this unit
   reports: a hermetic `CLAUDE_CONFIG_DIR=/tmp/…` install of the working tree's
   dev marketplace shows `stackgen@1.2.0` and `vwf@19.13.0`; the installed
-  stackgen tree contains `stacks/framework/astro/pack.yaml`, all three
-  `stacks/bundles/typescript-astro-*.md`, `assets/ids.md`, the dprint gate's
+  stackgen tree contains `stacks/framework/astro/pack.yaml`, all four
+  `stacks/bundles/astro-*.md` and no `typescript-astro-react.md`,
+  `stacks/cloud-service/workers-ssr/config/wrangler.jsonc`,
+  `stacks/bundles/cloudflare-workers-ssr.md`, `assets/ids.md`, the dprint gate's
   root `dprint.json` shim under its `config/`, and at least one
   `config/.config/vscode.d/*.jsonc`; the installed vwf tree's
   `skills/init/references/new-repo.md` contains `setup:default-branch`; every
