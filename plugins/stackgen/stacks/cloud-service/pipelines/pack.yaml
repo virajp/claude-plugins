@@ -1,0 +1,39 @@
+name: Cloudflare Pipelines
+summary: Streaming ingestion into the object store — events sent from a
+  Worker binding or posted to an HTTP endpoint, optionally reshaped by SQL,
+  landing in R2 as JSON, Parquet or Apache Iceberg tables, so clickstream,
+  telemetry and structured product events become durable without a broker
+  the team runs.
+version: 0.1.0
+type: cloud-service
+category: ingestion
+# `capability` is deliberately unset: `ingestion` realizes no vwf capability
+# token today (../../../assets/taxonomy.md), and nothing here mints one —
+# minting capabilities is vwf's move.
+kind: cloud-provider
+axis: backing
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      What proves the stream is accepting is a send through the binding, or
+      a POST to its HTTP ingest endpoint, that resolves. What that does not
+      prove is delivery: the sink writes a file only when the rolling
+      policy closes one, so an accepted event and a queryable row are
+      minutes apart and a probe that conflates them reports the wrong
+      system
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      A stream, a pipeline and a sink bucket per environment, named for it.
+      Never one sink shared behind a prefix — a rolled file belongs to
+      whoever wrote into it, so a failed pre-production run leaves rows in
+      the table production reads and nothing marks them as test data
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None — Cloudflare states no local form for a Pipelines binding, and
+      its per-binding development table does not list one at all. A project
+      either points the binding at a dev stream feeding a dev bucket, or
+      stubs the send at the seam its own code already has; there is no
+      engine to compose behind a readiness gate
