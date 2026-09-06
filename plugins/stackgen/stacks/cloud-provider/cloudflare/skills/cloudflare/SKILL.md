@@ -7,9 +7,9 @@ description: >-
   account and role model behind least-privilege grants, seat-shaped billing
   and what frees a seat, what does and does not exist locally, and the
   networking rule that decides whether the private plane is real or
-  decorative. Provider-wide judgment every Cloudflare service component —
-  Zero Trust Access, Workers Static Assets and Workers SSR — cites rather
-  than restates.
+  decorative. Provider-wide judgment every Cloudflare service component
+  cites rather than restates, and the fence that says which services are
+  offered, which are planned and which are declined.
 license: MIT
 allowed-tools: Read Grep Glob Edit Write Bash
 ---
@@ -38,11 +38,24 @@ hosting pin's business and never this one's. And an origin that answers a
 direct request is a private plane in name only; that failure is invisible
 from the outside and is the subject of the networking reference.
 
-## What this stack does not cover
+## What this stack covers, and what it does not
 
-Coverage is parked at **Zero Trust Access**, **Workers Static Assets** and
-**Workers SSR**. Pages, R2, D1, KV, Durable Objects, Queues, Images and
-Stream are planned under their own effort and are **not** part of this
-stack. If the product needs one of them, that is a gap to name — not a gap
-to fill from general Cloudflare knowledge, because doctrine nobody wrote
-is doctrine nobody reviewed.
+**Offered.** Zero Trust Access, Workers Static Assets, Workers SSR, and
+the storage and data services — Workers KV, R2 (with R2 Data Catalog and
+R2 SQL), D1, Hyperdrive, Vectorize, Pipelines, Analytics Engine. Each is
+its own service component with its own doctrine.
+
+**Planned, not offered yet**, each under its own effort: Durable Objects,
+Workflows, Containers and Queues; Workers AI, AI Gateway, AI Search,
+Browser Rendering and the Agents SDK; Images, Realtime, Email Service and
+Secrets Store.
+
+**Declined.** Pages (superseded by Workers Static Assets in Cloudflare's
+own guidance), Workers Sites (deprecated in Wrangler v4), Stream and
+Turnstile (offered and declined), and account-level products such as WAF,
+DNS, Tunnels, Zaraz and Logpush, which configure an account rather than
+compose a repo's stack.
+
+If the product needs something on the second or third list, that is a gap
+to name — not a gap to fill from general Cloudflare knowledge, because
+doctrine nobody wrote is doctrine nobody reviewed.

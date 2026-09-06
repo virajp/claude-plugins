@@ -1,0 +1,35 @@
+name: Cloudflare D1
+summary: A serverless SQLite database bound to a Worker — relational data
+  with read replication, sized for a per-tenant or per-product dataset
+  rather than for one monolith.
+version: 0.1.0
+type: cloud-service
+category: sql
+capability: relational-datastore
+kind: cloud-provider
+axis: backing
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      A trivial query through the binding, from the consuming Worker's
+      readiness path. `SELECT 1` proves the binding resolved and the
+      database answered — it proves nothing about the schema, so a
+      readiness check worth having reads one row from a table a migration
+      created
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      A database per environment, selected by the `database_id` in that
+      environment's binding, with migrations applied to it before the
+      suite runs. Never Time Travel as a test reset: it is a recovery
+      tool that rewinds the whole database, not a fixture
+  local_stack:
+    task: n/a
+    mechanism: >-
+      `wrangler dev` runs in local mode by default and gives the Worker a
+      local database behind the same binding rather than reaching the
+      managed one, and `wrangler d1 migrations apply --local`
+      migrates it. That state persists across runs until the persistence
+      directory is cleared, so a suite that passes only on the second run
+      is depending on leftovers

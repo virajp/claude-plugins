@@ -53,9 +53,9 @@ build stops being the whole story. That is the sibling bundle,
 alternatives rather than layers: a deployment either has a `main` or it
 does not. Among the Astro project bundles, `astro-ssg` and `astro-csr` pair
 **here** — every response decided at build time — while `astro-ssr` and
-`astro-hybrid` pair there. Pages, R2, D1, KV, Durable Objects, Queues,
-Images and Stream remain a gap to name rather than a gap to fill from
-general Cloudflare knowledge.
+`astro-hybrid` pair there. Which Cloudflare services stackgen offers, and
+which are planned or declined, is the provider component's to state — see
+`cloud-provider/cloudflare/conventions.md`.
 
 **The seam with [Cloudflare Zero Trust Access](cloudflare-zero-trust.md).**
 That bundle produces no artifact and "composes with a hosting pin rather

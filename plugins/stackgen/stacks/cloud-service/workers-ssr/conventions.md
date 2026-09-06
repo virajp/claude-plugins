@@ -133,11 +133,10 @@ otherwise have answered — an auth check over the whole site, a redirect
 table in code — and that is a decision a product makes deliberately with
 its cost in view, not a default.
 
-**No other Cloudflare service.** Pages, R2, D1, KV, Durable Objects,
-Queues, Images and Stream remain planned under their own effort and are
-**not offered**. A service nobody wrote doctrine for is a service nobody
-reviewed; that gap is one to name rather than to fill from general
-Cloudflare knowledge.
+**No other Cloudflare service is this component's to speak for.** Which
+Cloudflare services stackgen offers, and which are planned or declined, is
+the provider component's to state — see
+`cloud-provider/cloudflare/conventions.md`.
 
 **No wrangler pin, and no adapter pin.** Both are development
 dependencies of the project that deploys, declared in that project's

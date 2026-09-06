@@ -90,10 +90,14 @@ The finer cut, closed per type. A type absent here has no categories yet,
 and its components leave `category` unset.
 
 - **`framework`**: `webserver` / `orm` / `otel-sdk` / `testing` /
-  `meta-framework` / `ui-library` / `cli` / `iac` / `workflow-sdk`
+  `meta-framework` / `ui-library` / `cli` / `iac` / `workflow-sdk` /
+  `agent-sdk`
 - **`cloud-service`**: `compute` / `sql` / `document` / `queue` /
   `object-storage` / `cdn` / `static-hosting` / `access` / `identity` /
-  `messaging`
+  `messaging` / `key-value` / `stateful-compute` / `orchestration` /
+  `database-proxy` / `vector` / `ingestion` / `analytics` /
+  `inference` / `ai-gateway` / `retrieval` / `browser` / `media` /
+  `realtime` / `secrets-manager`
 - **`datastore`**: `sql` / `document` / `graph` / `vector` / `key-value` /
   `in-memory`
 - **`capability-provider`**: `identity` / `telemetry` / `workflow` /
@@ -116,14 +120,32 @@ vwf never sees. vwf never learns what an ORM is; stackgen never redefines
 what `relational-datastore` means. A component's `capability` field names
 the vwf token it realizes: a `datastore`/`sql` component realizes
 `relational-datastore`; a `queue` component `message-queue` or `pub-sub`.
+The cloud side reads the same way: a `cloud-service`/`key-value`
+component realizes `cache-layer`, `vector` realizes `search-index`,
+`orchestration` realizes `durable-workflows`, and `messaging` realizes
+whichever channel token the service actually is — `email`,
+`push-notifications` or `sms`.
 
 Some categories have **no capability token today** — `cdn`,
-`secrets-manager`, `access` and `static-hosting` are the four. That is a
-known vwf-side gap, not a taxonomy error: the component leaves
-`capability` unset, and nothing here mints a token to fill the hole —
-minting capabilities is vwf's move. It is also why a category can exist
-here before vwf has decided whether every product must have one: the
-taxonomy classifies what a component *is*, never whether it is required.
+`secrets-manager`, `access`, `static-hosting`, `stateful-compute`,
+`database-proxy`, `ingestion`, `analytics`, `inference`, `ai-gateway`,
+`retrieval`, `browser`, `media` and `realtime`. That is a known vwf-side
+gap, not a taxonomy error: the component leaves `capability` unset, and
+nothing here mints a token to fill the hole — minting capabilities is
+vwf's move. It is also why a category can exist here before vwf has
+decided whether every product must have one: the taxonomy classifies what
+a component *is*, never whether it is required.
+
+Fourteen `cloud-service` tokens and one `framework` token (`agent-sdk`)
+were minted on 2026-09-06 for the Cloudflare developer platform.
+`stateful-compute` is deliberately not `object-storage`: a per-key
+durable object is compute that keeps state, so pick-and-trade must not
+line it up against a blob store or ask it to satisfy a blob-storage
+contract it cannot meet. And `secrets-manager` now sits under both
+`cloud-service` and `capability-provider` on purpose — the first names
+the runtime secrets binding a hosted service reads, the second the
+developer-machine and CI secrets provider; they share a noun and neither
+replaces the other.
 
 ## Bundles — how types compose
 

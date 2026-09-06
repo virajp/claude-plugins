@@ -1,0 +1,39 @@
+name: Cloudflare Hyperdrive
+summary: A connection pool and query cache between Workers and an existing
+  Postgres or MySQL wherever it lives — the datastore stays where it is,
+  and the Worker stops paying a cold TCP+TLS handshake per request.
+version: 0.1.0
+type: cloud-service
+category: database-proxy
+# `capability` is deliberately unset: `database-proxy` realizes no vwf
+# capability token today (../../../assets/taxonomy.md), and nothing here
+# mints one. The datastore this fronts is what realizes
+# `relational-datastore`; a proxy carries a capability, it does not
+# realize one.
+kind: cloud-provider
+axis: backing
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      One trivial query through the binding, because it exercises the
+      pool, the origin and the credential in a single call — a missing
+      binding fails at the driver, an unreachable origin at connect, and
+      a rotated password at authentication, so one probe names its own
+      failing layer instead of reporting three as one
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      One Hyperdrive configuration per environment, each created from
+      that environment's own database, and each named by its own binding
+      id — never one configuration whose origin is edited between runs,
+      which is how a pre-production suite writes to production without a
+      line of code changing
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None of its own — the binding resolves to a database you run or
+      reach yourself, named by `localConnectionString` or the
+      `CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_<BINDING>`
+      variable. There is no simulated origin, so the local stack that
+      runs is the datastore component's

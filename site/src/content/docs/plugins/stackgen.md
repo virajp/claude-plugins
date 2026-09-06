@@ -49,14 +49,16 @@ category-level doctrine + an instance component.
 
 The taxonomy splits at the existing seam: **capability tokens stay vwf's**
 (`capability-vocabulary.md`); the finer **category taxonomy is stackgen's**. vwf
-never learns what an ORM is; stackgen never redefines a capability — the `cdn`,
-`secrets-manager`, `access` and `static-hosting` categories' capability tokens
-are deliberately unset until vwf defines them, because a category classifies
-what a component *is*, never whether a product must have one. Categories make
-components substitutable answers to one blueprint capability, which is what lets
-stack menus become category-filtered queries instead of per-plugin lists.
-Category-level doctrine is written once as curated knowledge; instance
-components cite it and stay thin.
+never learns what an ORM is; stackgen never redefines a capability — several
+categories, `cdn` and `access` among them, leave their capability token
+deliberately unset until vwf defines one, because a category classifies what a
+component *is*, never whether a product must have one. Which categories those
+are is
+[`assets/taxonomy.md`](https://github.com/virajp/claude-plugins/blob/main/plugins/stackgen/assets/taxonomy.md)'s
+to say. Categories make components substitutable answers to one blueprint
+capability, which is what lets stack menus become category-filtered queries
+instead of per-plugin lists. Category-level doctrine is written once as curated
+knowledge; instance components cite it and stay thin.
 
 ### Four bundles on one pack — the Astro example
 

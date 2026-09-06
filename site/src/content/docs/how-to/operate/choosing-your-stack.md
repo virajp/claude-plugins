@@ -59,11 +59,14 @@ on the old slug has to be re-pointed.)
 capability has a neutral contract — what any provider must guarantee — beside
 the providers that realize it. Vendor-free: `postgres` for the datastore, `oidc`
 for identity, `otel-lgtm` for observability, `temporal` for orchestration,
-`doppler` and `fnox` for secrets. Managed: a cloud's own services, `gcp`
-bringing Firestore, Cloud SQL and the Firebase services. Object storage is the
-one to know about — **it has no vendor-free provider by design**, because every
-object store belongs to a cloud, so its contract states the requirement and
-points at a cloud's answer rather than offering a neutral one.
+`doppler` and `fnox` for secrets. Managed: a cloud's own services — `gcp`
+bringing Firestore, Cloud SQL and the Firebase services, and `cloudflare`
+bringing Workers KV, R2, D1, Hyperdrive, Vectorize, Pipelines and Analytics
+Engine. Each managed service is its own bundle, so they are pinned side by side,
+one per capability, rather than chosen between. Object storage is the one to
+know about — **it has no vendor-free provider by design**, because every object
+store belongs to a cloud, so its contract states the requirement and points at
+whichever cloud you have pinned rather than offering a neutral one.
 
 **The deploy axis has a provider-neutral default that is a real answer**, not a
 placeholder: `deploy-target/container-image` is an OCI image on any registry and

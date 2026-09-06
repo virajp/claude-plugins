@@ -7,7 +7,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 `../assets/kinds.md`. The narrative — which wave landed what, and why — is
 [`readme.md`](readme.md); the shape of a pack is `../assets/pack-format.md`.
 
-**42 packs, 38 bundles, 12 kinds.**
+**49 packs, 45 bundles, 12 kinds.**
 
 ## Kinds
 
@@ -15,7 +15,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | ---- | ----: | ------: |
 | `language-bundle` | 10 | 12 |
 | `database` | 1 | 1 |
-| `cloud-provider` | 12 | 7 |
+| `cloud-provider` | 19 | 14 |
 | `repo-gate` | 4 | 1 |
 | `toolchain-manager` | 1 | 1 |
 | `repo-hygiene` | 1 | 1 |
@@ -39,13 +39,20 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `ci-system/github-actions` | GitHub Actions | `ci-system` | cicd |  | n/a | 0.2.0 | The delivery pipeline on GitHub Actions — workflow layout, toolchain installation through mise, the gate sequence, and vwf's tag-triggered release contract. |
 | `cloud-provider/cloudflare` | Cloudflare | `cloud-provider` |  |  |  | 0.1.0 | The provider-wide judgment behind Cloudflare's private plane — the account and role model, seat-shaped billing, and why an origin reachable without the proxy makes the whole arrangement decorative. |
 | `cloud-provider/gcp` | Google Cloud | `cloud-provider` |  |  |  | 0.1.0 | The provider-wide judgment every Google Cloud service inherits — how the meter runs, how a workload gets an identity without a key, which services have emulators, and what a private plane looks like here. |
+| `cloud-service/analytics-engine` | Cloudflare Analytics Engine | `cloud-provider` | backing | analytics |  | 0.1.0 | High-cardinality time-series written from a Worker with one non-blocking call and read back with SQL — usage metrics, per-tenant counters and service telemetry without a metrics pipeline the team runs. |
 | `cloud-service/cloud-run` | Cloud Run · Artifact Registry | `cloud-provider` | deploy | compute |  | 0.1.0 | Serverless containers — scale to zero, no cluster to operate, one service per deployable project. The default compute target here, and the right answer until a workload genuinely does not fit it. |
 | `cloud-service/cloud-sql` | Cloud SQL for PostgreSQL | `cloud-provider` | backing | sql | relational-datastore | 0.1.0 | Managed relational Postgres — the answer when the data model has real relationships, when reporting queries matter, or when the product must stay portable off this provider. |
+| `cloud-service/d1` | Cloudflare D1 | `cloud-provider` | backing | sql | relational-datastore | 0.1.0 | A serverless SQLite database bound to a Worker — relational data with read replication, sized for a per-tenant or per-product dataset rather than for one monolith. |
 | `cloud-service/firebase-auth` | Firebase Auth · Identity Platform | `cloud-provider` | backing | identity | third-party-auth | 0.1.0 | The provider's managed identity issuer — one service under two names, the second being the same product at organization scale. Federated sign-in, verifiable ID tokens, and an emulator that stubs the provider handshake. |
 | `cloud-service/firebase-messaging` | Firebase Cloud Messaging | `cloud-provider` | backing | messaging | push-notifications | 0.1.0 | The provider's push transport to mobile and web clients — free at the service, best-effort by design, and the one service in this bundle with no emulator for delivery. |
 | `cloud-service/firebase-storage` | Cloud Storage for Firebase | `cloud-provider` | backing | object-storage | object-file-storage | 0.1.0 | The provider's object store with a client-direct path in front of it — the same buckets a server reaches, plus a security-rules layer that lets clients upload and download without a service in the middle. |
 | `cloud-service/firestore` | Firestore | `cloud-provider` | backing | document | document-datastore | 0.1.0 | The document datastore with a first-class offline emulator and a governed client-direct path — the fastest way to a working product where the data model is document-shaped. |
 | `cloud-service/gke` | GKE Autopilot · Artifact Registry | `cloud-provider` | deploy | compute |  | 0.1.0 | Managed Kubernetes, for products that have outgrown per-service autoscaling or need workloads a request-scoped platform cannot host — taken deliberately, for a larger operational surface and a per-cluster cost floor. |
+| `cloud-service/hyperdrive` | Cloudflare Hyperdrive | `cloud-provider` | backing | database-proxy |  | 0.1.0 | A connection pool and query cache between Workers and an existing Postgres or MySQL wherever it lives — the datastore stays where it is, and the Worker stops paying a cold TCP+TLS handshake per request. |
+| `cloud-service/kv` | Cloudflare Workers KV | `cloud-provider` | backing | key-value | cache-layer | 0.1.0 | A global, eventually consistent key-value store for read-heavy configuration, routing metadata and cached results — the cache layer a Worker reads on every request, not the datastore it writes on every one. |
+| `cloud-service/pipelines` | Cloudflare Pipelines | `cloud-provider` | backing | ingestion |  | 0.1.0 | Streaming ingestion into the object store — events sent from a Worker binding or posted to an HTTP endpoint, optionally reshaped by SQL, landing in R2 as JSON, Parquet or Apache Iceberg tables, so clickstream, telemetry and structured product events become durable without a broker the team runs. |
+| `cloud-service/r2` | Cloudflare R2 | `cloud-provider` | backing | object-storage | object-file-storage | 0.1.0 | S3-compatible object storage with no egress fee — the product's object store for user files, build artifacts, datasets and logs, with an Iceberg catalog and SQL over it when the objects are tables. |
+| `cloud-service/vectorize` | Cloudflare Vectorize | `cloud-provider` | backing | vector | search-index | 0.1.0 | A vector index bound to a Worker — similarity search over embeddings for retrieval, recommendation and classification, with namespace and metadata filtering, and the place a product's own embeddings live. |
 | `cloud-service/workers-ssr` | Cloudflare Workers SSR | `cloud-provider` | deploy | compute |  | 0.1.0 | A Worker that runs a script in front of its own static assets — on-demand rendering at the edge, the prerendered files served by the platform, and one `wrangler deploy` for both. |
 | `cloud-service/workers-static-assets` | Cloudflare Workers Static Assets | `cloud-provider` | deploy | static-hosting |  | 0.1.0 | An assets-only Worker — the build output directory is the whole deployment. No script, no bindings, no server; the edge serves files and `wrangler deploy` uploads them. |
 | `cloud-service/zero-trust-access` | Cloudflare Zero Trust Access | `cloud-provider` | deploy | access |  | 0.1.0 | An identity-aware proxy in front of a project that must not be publicly reachable — an operator plane invisible to the internet rather than merely authenticated, whichever cloud actually hosts it. |
@@ -84,6 +91,13 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `bun` | bun · workspaces | `workspace` | repo | `package-manager/bun@generated` |  |
 | `claude-code-plugin` | Claude Code plugin | `language-bundle` | project | `language/markdown@0.1.0`, `language/bash@0.1.0` |  |
 | `claude-design` | Claude Design | `design-tool` | design | `design-tool/claude-design@0.1.0` |  |
+| `cloudflare-analytics-engine` | Cloudflare Analytics Engine | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/analytics-engine@0.1.0` |  |
+| `cloudflare-d1` | Cloudflare D1 | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/d1@0.1.0` |  |
+| `cloudflare-hyperdrive` | Cloudflare Hyperdrive | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/hyperdrive@0.1.0` |  |
+| `cloudflare-kv` | Cloudflare Workers KV | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/kv@0.1.0` |  |
+| `cloudflare-pipelines` | Cloudflare Pipelines | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/pipelines@0.1.0` |  |
+| `cloudflare-r2` | Cloudflare R2 | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/r2@0.1.0` |  |
+| `cloudflare-vectorize` | Cloudflare Vectorize | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/vectorize@0.1.0` |  |
 | `cloudflare-workers-ssr` | Cloudflare Workers SSR | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/workers-ssr@0.1.0` |  |
 | `cloudflare-workers-static` | Cloudflare Workers Static Assets | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/workers-static-assets@0.1.0` |  |
 | `cloudflare-zero-trust` | Cloudflare Zero Trust Access | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/zero-trust-access@0.1.0` |  |

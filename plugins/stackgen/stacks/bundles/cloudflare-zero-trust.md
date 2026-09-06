@@ -33,16 +33,14 @@ representable — pin this alongside the hosting entry, not instead of it.
 Pairing the two is vwf's job, and any cloud's deploy bundle composes with
 this one.
 
-**The scope is parked at Zero Trust Access, Workers Static Assets and
-Workers SSR, and the bundle says so rather than coming back quietly
-short.** Both hosting shapes are offered: a directory of files as
+**Both hosting shapes are offered** — a directory of files as
 `cloudflare-workers-static`, and that directory with a script in front of
-it — server-side rendering on Workers — as `cloudflare-workers-ssr`. Pages,
-R2, D1, KV, Durable Objects, Queues, Images and Stream are planned under
-their own effort and are **not** offered here. A short menu with no
-explanation is indistinguishable from a broken adapter; a product needing
-one of those has a gap to name, not a gap to fill from general Cloudflare
-knowledge.
+it, server-side rendering on Workers, as `cloudflare-workers-ssr`. Which
+Cloudflare services stackgen offers beyond those, and which are planned or
+declined, is the provider component's to state — see
+`cloud-provider/cloudflare/conventions.md`. A short menu with no
+explanation is indistinguishable from a broken adapter, which is why that
+fence is written down rather than implied.
 
 **What it decides that neither component decides alone** is that the
 private plane is a **per-project** decision belonging in the registry,
