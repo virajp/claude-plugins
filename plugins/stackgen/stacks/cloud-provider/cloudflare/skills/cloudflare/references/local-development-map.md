@@ -18,6 +18,10 @@ where none does.
 | Vectorize | **Remote only** — no local simulation exists; the binding must be opted into the live index |
 | Analytics Engine | **Simulated** — writes land in the local simulation; no per-binding remote mode |
 | Pipelines | **Not stated** by Cloudflare's per-binding table; the `pipelines` component's own local-dev reference settles it |
+| Durable Objects | **Simulated** — `wrangler dev` runs the class on the laptop; no per-binding remote mode, though a locally-run object can reach remote bindings |
+| Workflows | **Simulated** — instances run and their steps sleep on the laptop; no remote binding and no `--remote` |
+| Queues | **Simulated**, and can be pointed at the real queue — the binding supports both modes; locally a producer's messages invoke a consumer, and a separate consumer Worker can be started alongside |
+| Containers | **Really runs** — `wrangler dev` builds and runs the image, so Docker must be running on the machine; no per-binding remote mode |
 | The services planned under their own plans | Arriving with their components; until then, out of scope |
 | The declined set, and account-level products | Out of this stack's scope entirely |
 
@@ -28,19 +32,36 @@ and
 is what says which. "No per-binding remote mode" above never means the
 real resource is unreachable from a dev session — `wrangler dev --remote`
 uploads the Worker and runs it on Cloudflare with **every** binding on the
-live resource, whatever the column says. The scope fence in the
-`cloudflare` skill says which services are here at all.
+live resource, whatever the column says. **Three rows are outside that
+escape hatch**, and the same page names them: its remote-development list
+carries every binding remote development supports and then states that
+Containers, Queues and Workflows are not among them, so a Worker binding
+any of the three cannot be run with `--remote`
+([supported bindings per development mode](https://developers.cloudflare.com/workers/local-development/bindings-per-env/)).
+That is a statement about the whole-Worker mode and about nothing else.
+A Queues binding still reaches the real queue from a local session, by
+the per-binding route its row above describes; Containers and Workflows
+have no remote route of either kind, which is what leaves them running
+on the laptop or not at all.
 
-Three rows are a genuine local runtime rather than a stand-in, and they
-are the exceptions: the asset server exercises the real routing rules;
-where a script is present the adapter's dev server runs it under `workerd`
-rather than under Node, so the compatibility cliff shows up on the laptop
-instead of at the edge; and Hyperdrive's local mode is a real database,
-because the thing it proxies is one. Every row's own fidelity traps — the
-edge, the custom domain, the cache, the CPU ceiling, a simulation's
-divergence from the managed service — belong to that component's local-dev
-reference, not here. This page is the index of them, plus the proxy, which
-has no local existence at all.
+**Durable Objects is not one of the three.** That same list names it as
+supported in remote development, even though its own binding has no
+per-binding remote mode — the two questions have different answers for
+it, which is exactly why they are asked separately here. The scope fence
+in the `cloudflare` skill says which services are here at all.
+
+Fidelity is a different cut of the same table, and on it four rows are a
+genuine local runtime rather than a stand-in: the asset server exercises
+the real routing rules; where a script is present the adapter's dev
+server runs it under `workerd` rather than under Node, so the
+compatibility cliff shows up on the laptop instead of at the edge;
+Hyperdrive's local mode is a real database, because the thing it proxies
+is one; and a Container is the real image under a real Docker daemon,
+which is also why nothing about Containers runs on a machine without one.
+Every row's own fidelity traps — the edge, the custom domain, the cache,
+the CPU ceiling, a simulation's divergence from the managed service —
+belong to that component's local-dev reference, not here. This page is
+the index of them, plus the proxy, which has no local existence at all.
 
 ## Why simulating the proxy is the wrong instinct
 
