@@ -193,8 +193,8 @@ because a shaped repo has one, and **no pack may ship it** — it belongs to
 `/vwf:readme`. `CLAUDE.md` is not on the list at all: it is fenced out
 below, it is `/vwf:setup`'s, and `plugins:check` refuses a pack that ships
 one at the root. The rule reaches `wrangler.jsonc` unchanged:
-being on the list makes it landable, not standard, and only a
-`static-hosting` service pack ships one.
+being on the list makes it landable, not standard, and the three Cloudflare
+deploy packs ship one (`workers-static-assets`, `workers-ssr`, `containers`).
 
 The rules mirror the ones the other targets already have:
 

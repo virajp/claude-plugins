@@ -76,10 +76,10 @@ lost its binding fails at the first read, not at deploy time.
 ## What this component does not cover
 
 **Strongly consistent per-key state** — a counter, a lock, anything
-read-after-write. That is Durable Objects, which this stack has not
-written doctrine for yet. **Relational data** is the `d1` component's.
-Which Cloudflare services are offered, planned or declined is the
-provider component's to state — see
+read-after-write. That is Durable Objects — the
+`cloud-service/durable-objects` component. **Relational data** is the
+`d1` component's. Which Cloudflare services are offered, planned or
+declined is the provider component's to state — see
 `cloud-provider/cloudflare/conventions.md`, and do not fill a gap from
 general Cloudflare knowledge.
 

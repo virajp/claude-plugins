@@ -22,7 +22,8 @@ invocation any caller might ever type, which is a flag someone eventually
 forgets and then deploys from a config that does not exist. The root
 allowlist admits the file for exactly that reason
 (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`); being on the list makes
-it landable, not standard, and only a `static-hosting` pack ships one.
+it landable, not standard, and the three Cloudflare deploy packs ship one
+— this pack, `workers-ssr` and `containers`.
 
 **`.config/mise/tasks/p/<project-id>/deploy`**, an overlay in the
 project's own task group. It ships as `p/_project/deploy` — a marked

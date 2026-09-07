@@ -79,7 +79,7 @@ else's assumptions silently.
 Local mode is not the only option: **remote bindings** run the Worker's
 code locally while routing one named binding's operations to the deployed
 resource, and they are supported by Wrangler, the Vite plugin and the
-Workers vitest pool
+Workers Vitest integration (`@cloudflare/vitest-plugin`)
 ([remote bindings](https://developers.cloudflare.com/workers/local-development/)).
 
 Worth knowing, rarely worth using here. It is the answer when the

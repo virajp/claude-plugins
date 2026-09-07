@@ -35,20 +35,24 @@ no server to size, patch or keep warm, and the deploy is still an upload.
 - **The work is CPU-heavy or long-running.** Image processing, a
   report build, anything that wants to hold a request open for a long
   stretch. The platform caps CPU time per invocation, and a workload that
-  fights the cap wants a container — `cloud-run` — where the ceiling is a
-  configuration rather than a platform property.
+  fights the cap wants a container — `containers` on this provider, or
+  `cloud-run` elsewhere — where the ceiling is a configuration rather
+  than a platform property.
 - **The code needs a real Node runtime.** `nodejs_compat` provides a
   surface, not Node. A dependency reaching for a built-in outside it fails
   at the edge, at runtime, on the path that used it — which is the worst
   place to find out. A container runs the actual runtime and has no such
-  cliff.
+  cliff; on this provider that container is `cloud-service/containers`.
 - **The process must hold state between requests, or hold a connection.**
   Isolates start and stop per request. A pool, a warm cache, a long-lived
   socket to a database — none of them survive, and simulating one is worse
-  than not having it.
+  than not having it. The destinations are `cloud-service/durable-objects`
+  for state and connections held per object, or `cloud-service/containers`
+  for a process.
 - **The datastore is reached over a protocol the runtime does not speak.**
   A driver expecting raw TCP is the usual case, and the answer is either a
-  proxy the platform does support or a different deploy target.
+  proxy the platform does support — `cloud-service/hyperdrive` — or a
+  different deploy target.
 
 ## The trade, stated plainly
 

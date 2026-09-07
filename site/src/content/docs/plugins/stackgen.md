@@ -157,11 +157,14 @@ The retirement wave then took the four that were left — `typescript`, `flutter
 ordering is the no-skill-lost rule: a pack is the destination that must exist
 *before* a plugin retires, never a replacement the moment it lands.
 
-Two **framework** packs ship today, `effect` and `astro`; every other framework
-a bundle names is a `@generated` ref, which is the generated path working as
-designed rather than a gap. `framework/astro` arrived on 2026-09-06 as the
-second, and it is the pack all four bundles in
+Three **framework** packs ship today, `effect`, `astro` and `cloudflare-agents`;
+every other framework a bundle names is a `@generated` ref, which is the
+generated path working as designed rather than a gap. `framework/astro` arrived
+on 2026-09-06 as the second, and it is the pack all four bundles in
 [the Astro example](#four-bundles-on-one-pack--the-astro-example) pin.
+`framework/cloudflare-agents` arrived on 2026-09-06 as the third — the
+Cloudflare Agents SDK, whose `Agent` class compiles to a Durable Object — and it
+is the pack the `typescript-cloudflare-agents` bundle pins.
 
 The `devtools` plugin then dissolved into stackgen and was deleted, closing the
 marketplace at two plugins. Its mise doctrine and its file-based task library

@@ -22,7 +22,11 @@ where none does.
 | Workflows | **Simulated** — instances run and their steps sleep on the laptop; no remote binding and no `--remote` |
 | Queues | **Simulated**, and can be pointed at the real queue — the binding supports both modes; locally a producer's messages invoke a consumer, and a separate consumer Worker can be started alongside |
 | Containers | **Really runs** — `wrangler dev` builds and runs the image, so Docker must be running on the machine; no per-binding remote mode |
-| The services planned under their own plans | Arriving with their components; until then, out of scope |
+| Workers AI | **Remote only** — no local simulation; the `ai` binding takes `remote: true` and runs inference on the production models, which is a billed call from a laptop |
+| AI Gateway | **No local form, and none is wanted** — the gateway is an HTTPS endpoint, so a local session calls the same live gateway a deployed Worker does, and its cache, logs and rate limits are the real ones |
+| AI Search | **Remote only** — no local simulation; local development works by proxying to a deployed instance, so the instance binding — `ai_search`, carrying an `instance_name` — takes `remote: true` |
+| Browser Rendering | **Remote only** — no local simulation; the `browser` binding takes `remote: true` and drives a real headless browser on Cloudflare |
+| Images, Realtime, Email Service, Secrets Store | Planned under their own plans; arriving with their components, and until then out of scope |
 | The declined set, and account-level products | Out of this stack's scope entirely |
 
 Modes are Cloudflare's, not this stack's: a binding either has a local
@@ -49,6 +53,28 @@ supported in remote development, even though its own binding has no
 per-binding remote mode — the two questions have different answers for
 it, which is exactly why they are asked separately here. The scope fence
 in the `cloudflare` skill says which services are here at all.
+
+**The AI rows are all one shape, and it is the remote one.** Workers AI,
+AI Search and Browser Rendering have no local simulation whatever: each
+binding takes `remote: true` and the call leaves the laptop for the live
+service
+([Workers AI and Browser Rendering](https://developers.cloudflare.com/workers/local-development/),
+[AI Search](https://developers.cloudflare.com/ai-search/api/instances/workers-binding/)).
+A dev session against any of the three is therefore a session against
+production — it bills, and for AI Search it reads a real index. AI
+Gateway sits outside the question: it is an HTTPS endpoint under
+`gateway.ai.cloudflare.com`, which the Worker binding's `getUrl()` hands
+back
+([worker binding methods](https://developers.cloudflare.com/ai-gateway/usage/worker-binding-methods/)),
+so a local session and a deployed one call the same live gateway and
+there is nothing to simulate or opt into. What each of those costs, and
+what it makes unsafe to run from a laptop, is the service component's own
+local-dev reference; this page says only which mode exists.
+
+**The Agents SDK is a framework, not a binding, so it has no row.** An
+agent runs locally exactly as the Durable Object it compiles to does —
+read that row, and the `cloudflare-agents` pack for what the SDK adds on
+top of it.
 
 Fidelity is a different cut of the same table, and on it four rows are a
 genuine local runtime rather than a stand-in: the asset server exercises

@@ -55,6 +55,20 @@ everything after the first paint. A page with no island ships no JavaScript in
 any of them. (`astro-ssr` was `typescript-astro-react` before 2026-09-06 — a pin
 on the old slug has to be re-pointed.)
 
+**An agent is a project, not a capability bolted onto one.**
+`typescript-cloudflare-agents` is the project-axis answer for a TypeScript
+service whose unit of design is an addressable, stateful object that persists
+what it knows, schedules its own work and holds live connections to its clients.
+Its framework component compiles to a Durable Object, so the bundle says it
+pairs with a deploy pin — `cloudflare-workers-ssr`, the Worker the class is
+exported from, or `cloudflare-containers` where the compute is an image beside
+it — and with the `cloudflare-durable-objects` backing pin, whose judgment about
+instance names, alarms and hibernation it cites rather than restates. Both stay
+pins the project makes on those axes: a language bundle that folded them in
+would answer, for every agent, a question those axes exist to ask. A stateless
+API that merely calls a model is an ordinary service with an AI pin beside it,
+not this.
+
 **The backing axis splits into a vendor-free half and a managed half.** Each
 capability has a neutral contract — what any provider must guarantee — beside
 the providers that realize it. Vendor-free: `postgres` for the datastore, `oidc`
@@ -62,12 +76,13 @@ for identity, `otel-lgtm` for observability, `temporal` for orchestration,
 `doppler` and `fnox` for secrets. Managed: a cloud's own services — `gcp`
 bringing Firestore, Cloud SQL and the Firebase services, and `cloudflare`
 bringing Workers KV, R2, D1, Hyperdrive, Vectorize, Pipelines, Analytics Engine,
-Durable Objects, Workflows and Queues. Each managed service is its own bundle,
-so they are pinned side by side, one per capability, rather than chosen between.
-Object storage is the one to know about — **it has no vendor-free provider by
-design**, because every object store belongs to a cloud, so its contract states
-the requirement and points at whichever cloud you have pinned rather than
-offering a neutral one.
+Durable Objects, Workflows, Queues, Workers AI, AI Gateway, AI Search and
+Browser Rendering. Each managed service is its own bundle, so they are pinned
+side by side, one per capability, rather than chosen between. Object storage is
+the one to know about — **it has no vendor-free provider by design**, because
+every object store belongs to a cloud, so its contract states the requirement
+and points at whichever cloud you have pinned rather than offering a neutral
+one.
 
 **The deploy axis has a provider-neutral default that is a real answer**, not a
 placeholder: `deploy-target/container-image` is an OCI image on any registry and

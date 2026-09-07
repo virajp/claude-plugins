@@ -45,12 +45,18 @@ from the outside and is the subject of the networking reference.
 Assets, Workers SSR, Containers, the last pinned *instead of* Workers SSR
 rather than beside it; the storage and data services — Workers KV, R2
 (with R2 Data Catalog and R2 SQL), D1, Hyperdrive, Vectorize, Pipelines,
-Analytics Engine; and compute and orchestration — Durable Objects,
-Workflows, Queues. Each is its own service component with its own
-doctrine.
+Analytics Engine; compute and orchestration — Durable Objects, Workflows,
+Queues; and AI — Workers AI, AI Gateway, AI Search, Browser Rendering.
+Each is its own service component with its own doctrine.
 
-**Planned, not offered yet**, each under its own effort: Workers AI, AI
-Gateway, AI Search, Browser Rendering and the Agents SDK; Images,
+**The Agents SDK is offered as a framework, not a service.** It compiles
+to a Durable Object, so it ships as `framework/cloudflare-agents` on the
+project axis, reached through the `typescript-cloudflare-agents` language
+bundle; there is nothing for it under `cloud-service/`. An agent project
+pins that bundle on the project axis and `cloudflare-durable-objects` on
+the backing one.
+
+**Planned, not offered yet**, each under its own effort: Images,
 Realtime, Email Service and Secrets Store.
 
 **Declined.** Pages (superseded by Workers Static Assets in Cloudflare's
@@ -59,6 +65,6 @@ Turnstile (offered and declined), and account-level products such as WAF,
 DNS, Tunnels, Zaraz and Logpush, which configure an account rather than
 compose a repo's stack.
 
-If the product needs something on the second or third list, that is a gap
-to name — not a gap to fill from general Cloudflare knowledge, because
-doctrine nobody wrote is doctrine nobody reviewed.
+If the product needs something on the planned or the declined list, that
+is a gap to name — not a gap to fill from general Cloudflare knowledge,
+because doctrine nobody wrote is doctrine nobody reviewed.

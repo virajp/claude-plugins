@@ -1,0 +1,43 @@
+name: Cloudflare Browser Rendering
+summary: Headless Chrome as a service — a Worker drives a real browser
+  through a binding, or any caller hits a REST endpoint for content,
+  screenshots, PDFs and structured scrapes, so the product renders,
+  tests and crawls without running browsers of its own.
+version: 0.1.0
+type: cloud-service
+category: browser
+# `capability` is deliberately unset: `browser` realizes no vwf capability
+# token today (../../../assets/taxonomy.md), and nothing here mints one —
+# minting capabilities is vwf's move.
+kind: cloud-provider
+axis: backing
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      A browser is slow and metered to open, so the probe is not a
+      session. The honest check is a Quick Action `/content` POST against
+      a page whose output is known, which proves the token, the service
+      and the account's allowance in one request and bills a few seconds
+      of browser time; `puppeteer.limits()` or `playwright.limits()` from
+      the consuming Worker proves the binding resolves and reports the
+      concurrency headroom, and costs nothing, but does not prove a
+      browser will actually open
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      The service is account-wide and has no per-environment resource to
+      create, so environments are not isolated by it — a pre-production
+      run and production draw on the same browser-hour allowance and the
+      same concurrent-browser ceiling, and a suite that opens browsers in
+      a loop is what exhausts both. Isolation is by the URLs the run
+      renders and by a bounded concurrency the suite imposes on itself,
+      never by a second instance of the service
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None — there is no local simulation, so the binding carries
+      `remote: true` and every render leaves the laptop for a real
+      browser on Cloudflare, billing exactly as production does. There is
+      no engine to compose behind a readiness gate and this component
+      adds nothing to the local task

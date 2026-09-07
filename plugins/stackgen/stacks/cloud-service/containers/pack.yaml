@@ -42,8 +42,10 @@ harness:
       the machine's own Docker daemon, so the container is the real image
       rather than a simulation — and nothing about this stack runs on a
       machine without Docker. The fidelity trap is the sleep/wake
-      lifecycle and the ports: local runs need every port the Worker
-      reaches declared with `EXPOSE`, which production does not, so a
-      Dockerfile that works deployed can refuse connections locally. There
-      is still no backing engine to compose behind a readiness gate, so the
-      harness answer stays `n/a`
+      lifecycle and the ports: declaring every port the Worker reaches
+      with `EXPOSE` is a recommendation here, documented by Cloudflare for
+      Sandbox rather than for Containers itself
+      (`references/local-dev.md`), and a Dockerfile that works deployed
+      can refuse connections locally without it. There is still no backing
+      engine to compose behind a readiness gate, so the harness answer
+      stays `n/a`

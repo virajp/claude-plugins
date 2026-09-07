@@ -20,7 +20,8 @@ Node runtime underneath it. What Node surface exists is the compatibility
 layer the `nodejs_compat` flag turns on, and the framework adapter this
 pairing names requires it. A dependency that reaches for a Node built-in
 the flag does not cover fails at the edge and not at build time, which is
-the failure mode most worth predicting here.
+the failure mode most worth predicting here. A workload that does need an
+image is `cloud-service/containers`, pinned instead of this pack.
 
 **It is not a second stack in front of the static one.** The assets and
 the script are one deployment under one Worker name. The script fetches

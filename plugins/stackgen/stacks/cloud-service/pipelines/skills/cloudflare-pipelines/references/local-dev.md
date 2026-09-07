@@ -11,8 +11,8 @@ Cloudflare's per-binding development table sorts bindings into three
 groups — local simulation, remote connection, or both. It names Workers
 AI, Media Transformations, mTLS and Vectorize as remote-connection only;
 Assets, Analytics Engine, Durable Objects, Containers, Hyperdrive, Rate
-Limiting and Workflows as local simulation only; D1, KV, R2, Queues and
-Service Bindings as supporting both
+Limiting and Workflows as local simulation only; and Browser Run, D1,
+Email, Images, KV, Queues, R2 and Service Bindings as supporting both
 ([bindings per environment](https://developers.cloudflare.com/workers/local-development/bindings-per-env/)).
 
 **Pipelines is on none of those three lists**, and the Pipelines

@@ -209,6 +209,22 @@ the `p/_project/deploy` overlay. It is also the first bundle here pinned
 sitting beside it, because both write that one root file — the reasoning is
 `docs/memory/decisions/2026-09-06-containers-pin-instead-of-workers-ssr.md`.
 
+**The AI services followed, and one of them is not a service.** `workers-ai`,
+`ai-gateway`, `ai-search` and `browser-rendering` joined on the storage
+services' terms — one `backing` bundle each, no `config/` tier, the binding an
+entry in a `wrangler.jsonc` a deploy pack owns: inference, the plane in front
+of every model call, a managed retrieval pipeline, and headless Chrome.
+
+**The Agents SDK is the exception in that landing**, and why is worth stating:
+it has no binding, and it is not a service at all but an npm framework whose
+`Agent` class compiles to a Durable Object. So it ships as
+`framework/cloudflare-agents` — the third `framework/` pack, beside `effect`
+and `astro` — reachable through the project-axis language bundle
+`typescript-cloudflare-agents`, because a framework pack no bundle names is
+authored and unreachable, a defect this tree already carries once in its
+python packs. The reasoning is
+`docs/memory/decisions/2026-09-06-agents-sdk-is-a-framework-pack.md`.
+
 Every landing that brings a service nothing already classifies mints its
 `cloud-service` category in `../assets/taxonomy.md`, which owns the closed
 list and the reasoning — the wave itself minted `document`, for Firestore,

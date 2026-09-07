@@ -82,10 +82,9 @@ the test never touched.
 **What this component is not.** A database that already exists somewhere
 else stays there and is reached through Hyperdrive, which is its own
 component. Per-object strongly consistent state is Durable Objects'
-SQLite, which is planned under its own effort and is not offered yet.
-Which Cloudflare services this stack offers, plans and declines is the
-provider component's to state — see
-`cloud-provider/cloudflare/conventions.md`.
+SQLite, offered as `cloud-service/durable-objects`. Which Cloudflare
+services this stack offers, plans and declines is the provider
+component's to state — see `cloud-provider/cloudflare/conventions.md`.
 
 Full judgment: the `cloudflare-d1` skill's references. The provider-wide
 half — cost doctrine, account roles and API tokens, the local development
