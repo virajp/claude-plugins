@@ -10,16 +10,19 @@ are stated rather than implied. Do not fill a gap from general Cloudflare
 knowledge: a service this component has not written doctrine for is a
 service it does not offer.
 
-**Offered.** Two hosting shapes — **Workers Static Assets** and **Workers
-SSR**, a Worker with a script in front of its own assets — plus **Zero
-Trust Access** for the private plane, and the storage and data services:
+**Offered.** Three deploy targets — **Workers Static Assets**, **Workers
+SSR** (a Worker with a script in front of its own assets) and
+**Containers** (a container image running beside a Worker) — plus **Zero
+Trust Access** for the private plane, the storage and data services —
 **Workers KV**, **R2** (including R2 Data Catalog and R2 SQL), **D1**,
-**Hyperdrive**, **Vectorize**, **Pipelines** and **Analytics Engine**.
-Each is its own service component and its own bundle; they are pinned
-side by side, not chosen between.
+**Hyperdrive**, **Vectorize**, **Pipelines** and **Analytics Engine** —
+and compute and orchestration: **Durable Objects**, **Workflows** and
+**Queues**. Each is its own service component and its own bundle; they
+are pinned side by side, not chosen between, with one exception —
+Containers is pinned *instead of* Workers SSR, never beside it, and the
+`cloudflare-containers` bundle carries the reasoning.
 
-**Planned, each under its own effort, and not offered yet.** Compute and
-orchestration — Durable Objects, Workflows, Containers, Queues. AI —
+**Planned, each under its own effort, and not offered yet.** AI —
 Workers AI, AI Gateway, AI Search, Browser Rendering, the Agents SDK.
 Media, messaging and secrets — Images, Realtime, Email Service, Secrets
 Store. A product that needs one of these has a gap to name.
@@ -33,14 +36,15 @@ components of a repo's stack, so they have no place in this model at
 all.
 
 **Cloudflare hosts what it can serve from the edge and fronts everything
-else.** At the scope offered here it hosts two shapes — a built directory
-of files, on Workers Static Assets, and that directory with a script in
-front of it, on Workers SSR — and for anything with a running process of a
-kind the edge cannot hold, it fronts what runs on another cloud. That
-second half inverts the usual reading of a Cloud-Bundle and is the single
-fact most likely to be got wrong: a service or fullstack project pins its
-hosting elsewhere and pairs the private plane with it, which is vwf's job,
-and any cloud's own deploy bundle composes with it.
+else.** At the scope offered here it hosts three shapes — a built
+directory of files, on Workers Static Assets; that directory with a script
+in front of it, on Workers SSR; and a container image beside a Worker, on
+Containers — and for anything with a running process of a kind none of
+those can hold, it fronts what runs on another cloud. That second half
+inverts the usual reading of a Cloud-Bundle and is the single fact most
+likely to be got wrong: a service or fullstack project none of the three
+fits pins its hosting elsewhere and pairs the private plane with it, which
+is vwf's job, and any cloud's own deploy bundle composes with it.
 
 **The account is the unit of blast radius, and the roles are broader than
 they look.** Grants are account-scoped, so a role handed out to edit one
@@ -70,5 +74,6 @@ same seam the project already verifies in production.
 Full judgment: the `cloudflare` skill and its references. The services
 this provider carries are the `cloud-service` components named in the
 offered list above, each under its own slug — `zero-trust-access`,
-`workers-static-assets`, `workers-ssr`, `kv`, `r2`, `d1`, `hyperdrive`,
-`vectorize`, `pipelines`, `analytics-engine`.
+`workers-static-assets`, `workers-ssr`, `containers`, `kv`, `r2`, `d1`,
+`hyperdrive`, `vectorize`, `pipelines`, `analytics-engine`,
+`durable-objects`, `workflows`, `queues`.

@@ -1,0 +1,136 @@
+{
+  // A CONTAINER IMAGE RUNNING BESIDE A WORKER. The Worker is the front door;
+  // the image runs the process an isolate cannot host. The container is
+  // addressed through a Durable Object, which is why three blocks below move
+  // together: `containers`, the `durable_objects` binding whose `class_name`
+  // matches it, and the `migrations` entry that declares the class. One
+  // `wrangler deploy` builds the image, pushes it and publishes the Worker.
+  //
+  // CREDENTIALS NEVER LIVE IN THIS FILE. Wrangler reads CLOUDFLARE_API_TOKEN
+  // and CLOUDFLARE_ACCOUNT_ID from the environment; the secrets provider
+  // supplies them from GLB_CLOUDFLARE_API_TOKEN and GLB_CLOUDFLARE_ACCOUNT_ID.
+  //
+  // This file sits at the REPO ROOT because wrangler discovers its config by
+  // walking up from the working directory and cannot be told to look under
+  // .config/ without a --config flag on every invocation.
+  //
+  // THIS STACK IS PINNED INSTEAD OF `workers-ssr`, NOT BESIDE IT. That pack
+  // ships this same file at this same path, so pinning both is two components
+  // writing one config and the composition order deciding which survives.
+
+  // Editor completion and validation. The path is relative to THIS file, so a
+  // repo that installs wrangler inside a sub-project points at that project's
+  // node_modules instead.
+  "$schema": "node_modules/wrangler/config-schema.json",
+
+  // ---------------------------------------------------------------------
+  // MARKED POSITION — the Worker's name. Filled when this stack is pinned.
+  //
+  // Cloudflare names are account-unique and lowercase: letters, digits and
+  // dashes only. Derive it from the project, not from the domain, so a repo
+  // that moves domains keeps its Worker:
+  //
+  //   "name": "acme-render-service",
+  //
+  // The value shipped below is deliberately invalid — uppercase names are
+  // rejected — so an unfilled slot fails at the first deploy rather than
+  // publishing a Worker nobody meant to create.
+  // ---------------------------------------------------------------------
+  "name": "PLACEHOLDER",
+
+  // ---------------------------------------------------------------------
+  // MARKED POSITION — the Worker script that fronts the container. Unlike
+  // the position above it ships a REAL value, because unlike a rendering
+  // stack there is no framework adapter to name one: the Worker here is a
+  // few lines the project writes, exporting the container class and routing
+  // requests to it.
+  //
+  // The default is the path Cloudflare's own starter uses, in TypeScript. A
+  // JavaScript project points at "./src/index.js"; a repo whose service is a
+  // sub-project points inside it ("./api/src/index.ts").
+  // ---------------------------------------------------------------------
+  "main": "./src/index.ts",
+
+  // The runtime behaviour this deployment was written against. It is a date,
+  // not a version: pinning it is what stops a future runtime change from
+  // altering how an already-shipped deployment behaves. Move it deliberately
+  // and read the changelog for the span you skipped.
+  "compatibility_date": "2026-09-07",
+
+  // The Node surface the Worker in front of the container may need. The
+  // platform's runtime is not Node, and this flag is what provides the
+  // built-ins a dependency expects.
+  //
+  // CLOUDFLARE'S OWN CONTAINER STARTER SHIPS NO FLAGS AT ALL, and a Worker
+  // that does nothing but pick an instance and forward the request needs
+  // none. This pack ships the flag because that Worker rarely stays that
+  // small — reading a body, signing something, calling a datastore are what
+  // reach for Node built-ins, and the failure arrives at the edge rather
+  // than at build time. Delete it where the front door really is only a
+  // router; every flag changes runtime behaviour, so do not add others
+  // speculatively.
+  "compatibility_flags": ["nodejs_compat"],
+
+  "containers": [
+    {
+      // The class the Worker script exports. THIS NAME APPEARS THREE TIMES
+      // in this file — here, in the Durable Object binding below, and in the
+      // migration — and all three must match the exported class. A mismatch
+      // is the usual first failure and it reports as a missing class rather
+      // than as a typo.
+      "class_name": "AppContainer",
+
+      // A Dockerfile path is what makes the build automatic: `wrangler
+      // deploy` builds this image with the local Docker daemon and pushes it
+      // to the Cloudflare-managed registry, authenticating the push itself.
+      // Docker must therefore be running wherever a deploy runs, CI included.
+      "image": "./Dockerfile",
+
+      // A ceiling, not a target. Instances are started on demand and sleep
+      // when idle, and every awake instance bills for its vCPU, memory and
+      // disk — so this is the number that bounds what a traffic spike can
+      // cost. Three is deliberately small: raise it once the concurrency the
+      // workload actually needs has been measured, rather than before.
+      "max_instances": 3
+
+      // `instance_type` is deliberately UNSET, which takes the platform
+      // default of `lite` — the smallest of the six predefined types. Sizing
+      // up is a cost decision made with a measurement behind it; the custom
+      // form naming `vcpu`, `memory_mib` and `disk_mb` is the other shape,
+      // and both belong in the pack's cost-shape reference rather than here.
+    }
+  ],
+
+  // The container is not addressed directly. It is declared as a Durable
+  // Object class and reached through this binding — `env.APP_CONTAINER.get(id)`
+  // returns an instance, starting it if it was asleep. `class_name` must match
+  // the `containers` entry above.
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "APP_CONTAINER",
+        "class_name": "AppContainer"
+      }
+    ]
+  },
+
+  // The migration is what declares the class to the platform. Without it the
+  // binding names a class the account does not know about and the deploy is
+  // rejected. `new_sqlite_classes` is the SQLite-backed storage form, which is
+  // what a container-backed class takes; the tag is an ordering label and
+  // later changes to the class append a new entry rather than editing this one.
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["AppContainer"]
+    }
+  ],
+
+  // Worker logs, on. Two processes now produce output — the Worker and the
+  // container — and the Worker's half is the one that shows how a request was
+  // routed and whether the instance was awake. Turning it off makes a
+  // cold-start timeout indistinguishable from a dead container.
+  "observability": {
+    "enabled": true
+  }
+}

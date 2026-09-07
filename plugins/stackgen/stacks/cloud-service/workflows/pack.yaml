@@ -1,0 +1,42 @@
+name: Cloudflare Workflows
+summary: Durable multi-step execution bound to a Worker — steps that retry,
+  sleep for days and wait for an external event without holding compute,
+  for a process that must finish once it has started.
+version: 0.1.0
+type: cloud-service
+category: orchestration
+capability: durable-workflows
+kind: cloud-provider
+axis: backing
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      A Workflow has no endpoint, and no process that can be down
+      independently of the Worker whose script defines its class. Two
+      mechanisms exist and a design picks one deliberately — the
+      consuming Worker's readiness path creates a trivial instance and
+      polls its status until it completes, which proves the binding, the
+      class registration and the engine at the cost of a billed instance
+      per probe; or it reads a recent instance's status through the
+      binding, which costs nothing and proves the binding resolved but
+      says nothing about whether a new instance would run
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      The class lives in the Worker, so a staging Worker has its own
+      Workflow and its own instances — the environment is the deployed
+      script rather than a separate resource id to swap. The suite
+      creates instances and asserts on their status and on what each step
+      left behind, never on wall-clock: a step that sleeps for a day
+      sleeps for a day, so the durations a suite waits out are the ones
+      it passed in
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None to compose behind a readiness gate. `wrangler dev` runs
+      Workflows on the laptop — instances execute, steps retry, and
+      sleeps elapse in real time rather than being fast-forwarded — and
+      every `wrangler workflows` subcommand takes `--local` to drive that
+      session, so there is no engine for a stack task to start and no
+      port to wait on beyond the dev server's own

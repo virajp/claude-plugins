@@ -61,26 +61,32 @@ the providers that realize it. Vendor-free: `postgres` for the datastore, `oidc`
 for identity, `otel-lgtm` for observability, `temporal` for orchestration,
 `doppler` and `fnox` for secrets. Managed: a cloud's own services — `gcp`
 bringing Firestore, Cloud SQL and the Firebase services, and `cloudflare`
-bringing Workers KV, R2, D1, Hyperdrive, Vectorize, Pipelines and Analytics
-Engine. Each managed service is its own bundle, so they are pinned side by side,
-one per capability, rather than chosen between. Object storage is the one to
-know about — **it has no vendor-free provider by design**, because every object
-store belongs to a cloud, so its contract states the requirement and points at
-whichever cloud you have pinned rather than offering a neutral one.
+bringing Workers KV, R2, D1, Hyperdrive, Vectorize, Pipelines, Analytics Engine,
+Durable Objects, Workflows and Queues. Each managed service is its own bundle,
+so they are pinned side by side, one per capability, rather than chosen between.
+Object storage is the one to know about — **it has no vendor-free provider by
+design**, because every object store belongs to a cloud, so its contract states
+the requirement and points at whichever cloud you have pinned rather than
+offering a neutral one.
 
 **The deploy axis has a provider-neutral default that is a real answer**, not a
 placeholder: `deploy-target/container-image` is an OCI image on any registry and
 any host that runs containers, with the Compose wiring the acceptance verifier's
 readiness gates depend on. The managed alternatives are `cloud-run`, `gke`,
-`cloudflare-workers-static` and `cloudflare-workers-ssr`. The first Cloudflare
-one is for a project whose whole deployment is a build output directory rather
-than a running server: it lays down a root `wrangler.jsonc` for an assets-only
-Worker and a `p:<id>:deploy` task that uploads the directory. The second is the
-same shape with a **script in front of its own assets** — the Worker carries a
-`main`, the platform serves the uploaded file set for every request that matches
-one, and everything else falls through to the script, so one `wrangler deploy`
-ships both halves. It is the preferred pairing for `astro-ssr` and
-`astro-hybrid`; the container targets remain fully supported for both.
+`cloudflare-workers-static`, `cloudflare-workers-ssr` and
+`cloudflare-containers`. The first Cloudflare one is for a project whose whole
+deployment is a build output directory rather than a running server: it lays
+down a root `wrangler.jsonc` for an assets-only Worker and a `p:<id>:deploy`
+task that uploads the directory. The second is the same shape with a **script in
+front of its own assets** — the Worker carries a `main`, the platform serves the
+uploaded file set for every request that matches one, and everything else falls
+through to the script, so one `wrangler deploy` ships both halves. It is the
+preferred pairing for `astro-ssr` and `astro-hybrid`; the container targets
+remain fully supported for both. The third runs a **Docker image beside a
+Worker**, addressed through a Durable Object, for a workload that needs a real
+filesystem, a runtime the isolate cannot host, or more CPU than one invocation
+is allowed — and because a Containers project *is* a Workers project, it is
+pinned **instead of** `cloudflare-workers-ssr`, never beside it.
 `zero-trust-access` composes with a host rather than replacing one — a private
 plane in front of a project that must not be publicly reachable, whichever cloud
 hosts it.

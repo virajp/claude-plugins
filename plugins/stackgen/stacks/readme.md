@@ -195,6 +195,20 @@ so a service the menu does not carry says which of the three it is rather
 than leaving a reader to guess, and the planned ones arrive under their own
 efforts.
 
+**Compute and orchestration followed on 2026-09-06.** `durable-objects`,
+`workflows` and `queues` joined on the same backing terms as the storage
+services — one bundle each, no `config/` tier, the binding an entry in a
+`wrangler.jsonc` a deploy pack owns. `containers` is on neither term: it is
+a **deploy** target, category `compute`, `artifact: container-image`, and
+the third `cloud-service` pack to ship a `config/` tier — a root
+`wrangler.jsonc` carrying `main`, the container block, the Durable Object
+binding that addresses it and the migration that declares the class, plus
+the `p/_project/deploy` overlay. It is also the first bundle here pinned
+*instead of* another: a Containers project **is** a Workers project, so
+`cloudflare-containers` replaces `cloudflare-workers-ssr` rather than
+sitting beside it, because both write that one root file — the reasoning is
+`docs/memory/decisions/2026-09-06-containers-pin-instead-of-workers-ssr.md`.
+
 Every landing that brings a service nothing already classifies mints its
 `cloud-service` category in `../assets/taxonomy.md`, which owns the closed
 list and the reasoning — the wave itself minted `document`, for Firestore,

@@ -88,12 +88,15 @@ splitting the menu into with- and without-React pairs.
 
 **The build output is a named fact.** The `framework/astro` pack's conventions
 carry a fixed `## Build output` heading stating that the build writes `./dist` —
-Astro's `outDir` default — and that a deploy pack may rely on it. Both
-Cloudflare Workers deploy packs' `assets.directory` cite that heading, which is
-what makes the seam between the project axis and the deploy axis a written
-contract instead of a coincidence. A repo that changes `outDir` has changed that
-contract and has to change its deploy configuration in the same commit; nothing
-detects the mismatch.
+Astro's `outDir` default — and that a deploy pack may rely on it. The two
+Cloudflare deploy packs that upload an asset directory —
+`cloud-service/workers-static-assets` and `cloud-service/workers-ssr` — cite
+that heading from their `assets.directory`, which is what makes the seam between
+the project axis and the deploy axis a written contract instead of a
+coincidence. (`cloud-service/containers`, the third Cloudflare deploy pack,
+ships no `assets` block at all: what it publishes is an image.) A repo that
+changes `outDir` has changed that contract and has to change its deploy
+configuration in the same commit; nothing detects the mismatch.
 
 **Which deploy each pairs with.** SSG and CSR name `cloudflare-workers-static`,
 the bundle they were built for — CSR flipping the host's not-found handling to
@@ -252,17 +255,18 @@ than something that rides the landing:
   task library under `.config/mise/tasks/`; a gate owns its own config file; the
   hygiene pack owns most of the root files; a provider drops an env fragment
   into `.config/mise/conf.d/` and a hook fragment into `.config/pre-commit.d/`;
-  a deploy target owns the root config its own tool reads, which is how both
-  `cloud-service/workers-static-assets` and `cloud-service/workers-ssr` ship a
-  `wrangler.jsonc` and the `p:<id>:deploy` task beside it; and any pack may drop
-  an **editor fragment** into `.config/vscode.d/`, three keys wide, which
-  `/vwf:init` composes — declares them in a `config/` tree mirroring the repo
-  root, and they land there. Everything else goes under `.config/`: a `config/`
-  tree landing a root path outside the fixed allowlist is a pack authoring error
-  the materializer refuses. Two **directories** are allowlisted at that root,
-  `.config/` and `.github/`, and a CI workflow inside the second is refused
-  outright. Mode is preserved, because a task file arriving without its exec bit
-  fails as an *unknown task* rather than as a permission error.
+  a deploy target owns the root config its own tool reads, which is how
+  `cloud-service/workers-static-assets`, `cloud-service/workers-ssr` and
+  `cloud-service/containers` each ship a `wrangler.jsonc` and the
+  `p:<id>:deploy` task beside it; and any pack may drop an **editor fragment**
+  into `.config/vscode.d/`, three keys wide, which `/vwf:init` composes —
+  declares them in a `config/` tree mirroring the repo root, and they land
+  there. Everything else goes under `.config/`: a `config/` tree landing a root
+  path outside the fixed allowlist is a pack authoring error the materializer
+  refuses. Two **directories** are allowlisted at that root, `.config/` and
+  `.github/`, and a CI workflow inside the second is refused outright. Mode is
+  preserved, because a task file arriving without its exec bit fails as an
+  *unknown task* rather than as a permission error.
 
 The need still travels as `language_facts` in the template payload for
 `/vwf:doctor` to verify; the local plugin is what actually provides the server.
@@ -645,7 +649,8 @@ outranks every language and framework pack, for the reason it always did: it is
 the most specific answer anything gives to `setup:secrets`. The two cloud types
 joined the order on 2026-09-05, when `cloud-service/workers-static-assets`
 became the first cloud pack to ship a `config/` tree at all;
-`cloud-service/workers-ssr` is its sibling and ships the same pair.
+`cloud-service/workers-ssr` and `cloud-service/containers` followed with the
+same pair.
 
 **What no pack can know, and `/vwf:init` fills.** It is more than two things,
 and each is a commented slot a pack ships **in place**, never a file init
@@ -679,8 +684,8 @@ task the repo shows you is not the task it has.
 A pack can still contribute **one task** to a project's group without knowing
 its name: a `config/` tree's `.config/mise/tasks/p/_project/` directory is
 itself a marked position, and the materializer renames it to the pinned
-project's slugged id as it copies — which is how both Workers packs land
-`p:<id>:deploy`.
+project's slugged id as it copies — which is how all three Cloudflare deploy
+packs land `p:<id>:deploy`.
 
 **Legacy names.** The contract replaced these, and the pack carries the table so
 `/vwf:init` can rename them on an existing repo — the renaming is a fact about
