@@ -7,7 +7,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 `../assets/kinds.md`. The narrative — which wave landed what, and why — is
 [`readme.md`](readme.md); the shape of a pack is `../assets/pack-format.md`.
 
-**49 packs, 45 bundles, 12 kinds.**
+**53 packs, 49 bundles, 12 kinds.**
 
 ## Kinds
 
@@ -15,7 +15,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | ---- | ----: | ------: |
 | `language-bundle` | 10 | 12 |
 | `database` | 1 | 1 |
-| `cloud-provider` | 19 | 14 |
+| `cloud-provider` | 23 | 18 |
 | `repo-gate` | 4 | 1 |
 | `toolchain-manager` | 1 | 1 |
 | `repo-hygiene` | 1 | 1 |
@@ -42,7 +42,9 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `cloud-service/analytics-engine` | Cloudflare Analytics Engine | `cloud-provider` | backing | analytics |  | 0.1.0 | High-cardinality time-series written from a Worker with one non-blocking call and read back with SQL — usage metrics, per-tenant counters and service telemetry without a metrics pipeline the team runs. |
 | `cloud-service/cloud-run` | Cloud Run · Artifact Registry | `cloud-provider` | deploy | compute |  | 0.1.0 | Serverless containers — scale to zero, no cluster to operate, one service per deployable project. The default compute target here, and the right answer until a workload genuinely does not fit it. |
 | `cloud-service/cloud-sql` | Cloud SQL for PostgreSQL | `cloud-provider` | backing | sql | relational-datastore | 0.1.0 | Managed relational Postgres — the answer when the data model has real relationships, when reporting queries matter, or when the product must stay portable off this provider. |
+| `cloud-service/containers` | Cloudflare Containers | `cloud-provider` | deploy | compute |  | 0.1.0 | A Docker image running beside a Worker and addressed through a Durable Object — the deploy target for a process that needs a real filesystem, a runtime the Workers sandbox cannot host, or more CPU than an invocation is allowed, while the Worker stays the front door. |
 | `cloud-service/d1` | Cloudflare D1 | `cloud-provider` | backing | sql | relational-datastore | 0.1.0 | A serverless SQLite database bound to a Worker — relational data with read replication, sized for a per-tenant or per-product dataset rather than for one monolith. |
+| `cloud-service/durable-objects` | Cloudflare Durable Objects | `cloud-provider` | backing | stateful-compute |  | 0.1.0 | Stateful serverless — one addressable object per id, single-threaded, with its own strongly consistent SQLite storage, alarms and WebSocket coordination; where state that must be correct per key lives, which is neither the cache nor the shared database. |
 | `cloud-service/firebase-auth` | Firebase Auth · Identity Platform | `cloud-provider` | backing | identity | third-party-auth | 0.1.0 | The provider's managed identity issuer — one service under two names, the second being the same product at organization scale. Federated sign-in, verifiable ID tokens, and an emulator that stubs the provider handshake. |
 | `cloud-service/firebase-messaging` | Firebase Cloud Messaging | `cloud-provider` | backing | messaging | push-notifications | 0.1.0 | The provider's push transport to mobile and web clients — free at the service, best-effort by design, and the one service in this bundle with no emulator for delivery. |
 | `cloud-service/firebase-storage` | Cloud Storage for Firebase | `cloud-provider` | backing | object-storage | object-file-storage | 0.1.0 | The provider's object store with a client-direct path in front of it — the same buckets a server reaches, plus a security-rules layer that lets clients upload and download without a service in the middle. |
@@ -51,10 +53,12 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `cloud-service/hyperdrive` | Cloudflare Hyperdrive | `cloud-provider` | backing | database-proxy |  | 0.1.0 | A connection pool and query cache between Workers and an existing Postgres or MySQL wherever it lives — the datastore stays where it is, and the Worker stops paying a cold TCP+TLS handshake per request. |
 | `cloud-service/kv` | Cloudflare Workers KV | `cloud-provider` | backing | key-value | cache-layer | 0.1.0 | A global, eventually consistent key-value store for read-heavy configuration, routing metadata and cached results — the cache layer a Worker reads on every request, not the datastore it writes on every one. |
 | `cloud-service/pipelines` | Cloudflare Pipelines | `cloud-provider` | backing | ingestion |  | 0.1.0 | Streaming ingestion into the object store — events sent from a Worker binding or posted to an HTTP endpoint, optionally reshaped by SQL, landing in R2 as JSON, Parquet or Apache Iceberg tables, so clickstream, telemetry and structured product events become durable without a broker the team runs. |
+| `cloud-service/queues` | Cloudflare Queues | `cloud-provider` | backing | queue | message-queue | 0.1.0 | Durable at-least-once messaging between Workers — a producer binding that sends, a consumer handler that receives batches with retries and a dead-letter queue behind them, and the place a product puts the background work it must not lose once the request that created it has already answered. |
 | `cloud-service/r2` | Cloudflare R2 | `cloud-provider` | backing | object-storage | object-file-storage | 0.1.0 | S3-compatible object storage with no egress fee — the product's object store for user files, build artifacts, datasets and logs, with an Iceberg catalog and SQL over it when the objects are tables. |
 | `cloud-service/vectorize` | Cloudflare Vectorize | `cloud-provider` | backing | vector | search-index | 0.1.0 | A vector index bound to a Worker — similarity search over embeddings for retrieval, recommendation and classification, with namespace and metadata filtering, and the place a product's own embeddings live. |
 | `cloud-service/workers-ssr` | Cloudflare Workers SSR | `cloud-provider` | deploy | compute |  | 0.1.0 | A Worker that runs a script in front of its own static assets — on-demand rendering at the edge, the prerendered files served by the platform, and one `wrangler deploy` for both. |
 | `cloud-service/workers-static-assets` | Cloudflare Workers Static Assets | `cloud-provider` | deploy | static-hosting |  | 0.1.0 | An assets-only Worker — the build output directory is the whole deployment. No script, no bindings, no server; the edge serves files and `wrangler deploy` uploads them. |
+| `cloud-service/workflows` | Cloudflare Workflows | `cloud-provider` | backing | orchestration | durable-workflows | 0.1.0 | Durable multi-step execution bound to a Worker — steps that retry, sleep for days and wait for an external event without holding compute, for a process that must finish once it has started. |
 | `cloud-service/zero-trust-access` | Cloudflare Zero Trust Access | `cloud-provider` | deploy | access |  | 0.1.0 | An identity-aware proxy in front of a project that must not be publicly reachable — an operator plane invisible to the internet rather than merely authenticated, whichever cloud actually hosts it. |
 | `datastore/postgres` | PostgreSQL | `database` | backing | sql | relational-datastore | 0.1.0 | The relational datastore that needs no cloud — open engine, managed equivalent everywhere, no lock-in beyond SQL itself. |
 | `deploy-target/container-image` | OCI image · any container host | `deploy-target` | deploy |  |  | 0.1.0 | Build one standard OCI image, push it to any registry, run it on any host that runs containers — portability bought by declining the managed features one cloud would otherwise supply. |
@@ -92,14 +96,18 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `claude-code-plugin` | Claude Code plugin | `language-bundle` | project | `language/markdown@0.1.0`, `language/bash@0.1.0` |  |
 | `claude-design` | Claude Design | `design-tool` | design | `design-tool/claude-design@0.1.0` |  |
 | `cloudflare-analytics-engine` | Cloudflare Analytics Engine | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/analytics-engine@0.1.0` |  |
+| `cloudflare-containers` | Cloudflare Containers | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/containers@0.1.0` |  |
 | `cloudflare-d1` | Cloudflare D1 | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/d1@0.1.0` |  |
+| `cloudflare-durable-objects` | Cloudflare Durable Objects | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/durable-objects@0.1.0` |  |
 | `cloudflare-hyperdrive` | Cloudflare Hyperdrive | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/hyperdrive@0.1.0` |  |
 | `cloudflare-kv` | Cloudflare Workers KV | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/kv@0.1.0` |  |
 | `cloudflare-pipelines` | Cloudflare Pipelines | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/pipelines@0.1.0` |  |
+| `cloudflare-queues` | Cloudflare Queues | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/queues@0.1.0` |  |
 | `cloudflare-r2` | Cloudflare R2 | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/r2@0.1.0` |  |
 | `cloudflare-vectorize` | Cloudflare Vectorize | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/vectorize@0.1.0` |  |
 | `cloudflare-workers-ssr` | Cloudflare Workers SSR | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/workers-ssr@0.1.0` |  |
 | `cloudflare-workers-static` | Cloudflare Workers Static Assets | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/workers-static-assets@0.1.0` |  |
+| `cloudflare-workflows` | Cloudflare Workflows | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/workflows@0.1.0` |  |
 | `cloudflare-zero-trust` | Cloudflare Zero Trust Access | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/zero-trust-access@0.1.0` |  |
 | `container-generic` | OCI image · any container host | `deploy-target` | deploy | `deploy-target/container-image@0.1.0` |  |
 | `dart-flutter` | Dart · Flutter | `app-framework` | project | `app-framework/flutter@0.1.0`, `package-manager/pub@0.1.0`, `toolchain-gate/analysis-options@0.1.0` |  |
