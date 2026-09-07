@@ -22,9 +22,14 @@ nothing else there.
 
 ## Status
 
-**RUNNING** — started 2026-09-07 in worktree
-`.worktrees/2026-09-06-cloudflare-ai` on branch `2026-09-06-cloudflare-ai`. Both
-`requires:` plans read COMPLETE (A and B, archived 2026-09-07).
+**COMPLETE** — 2026-09-07. Ran in worktree `.worktrees/2026-09-06-cloudflare-ai`
+on branch `2026-09-06-cloudflare-ai`, every unit green, no unit skipped, failed
+or unresolved.
+
+Commits, in order: `3342cf49` (U1), `10e8d6e0` (the inventory, regenerated at
+the wave-2 boundary by the orchestrator), `48a45e95` (U2), `e021624e` (U3),
+`b51fc46c` (U4), `6b529f8b` (U5), `a5a52024` (U6), `431df17e` (U7), `75d64158`
+(U9), `045fd1fa` (U8).
 
 Approved 2026-09-07 by the user, at the shape gate, after the self-review.
 **Amended** 2026-09-07, approved at a second shape gate: U9, the sibling sweep
@@ -203,17 +208,17 @@ None. Packs are YAML and Markdown; no unit adds a package.
 
 ## Units
 
-| Id | Wave | Unit file                                                    | Owns                                                                                                                                                                                                                                                                                                                                | Depends on | Status  | Commit |
-| -- | ---- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-provider-narrowing.md](01-provider-narrowing.md)         | `plugins/stackgen/stacks/cloud-provider/cloudflare/**`                                                                                                                                                                                                                                                                              | —          | pending |        |
-| U2 | 2    | [02-workers-ai-pack.md](02-workers-ai-pack.md)               | `plugins/stackgen/stacks/cloud-service/workers-ai/**`, `plugins/stackgen/stacks/bundles/cloudflare-workers-ai.md`                                                                                                                                                                                                                   | U1         | pending |        |
-| U3 | 2    | [03-ai-gateway-pack.md](03-ai-gateway-pack.md)               | `plugins/stackgen/stacks/cloud-service/ai-gateway/**`, `plugins/stackgen/stacks/bundles/cloudflare-ai-gateway.md`                                                                                                                                                                                                                   | U1         | pending |        |
-| U4 | 2    | [04-ai-search-pack.md](04-ai-search-pack.md)                 | `plugins/stackgen/stacks/cloud-service/ai-search/**`, `plugins/stackgen/stacks/bundles/cloudflare-ai-search.md`                                                                                                                                                                                                                     | U1         | pending |        |
-| U5 | 2    | [05-browser-rendering-pack.md](05-browser-rendering-pack.md) | `plugins/stackgen/stacks/cloud-service/browser-rendering/**`, `plugins/stackgen/stacks/bundles/cloudflare-browser-rendering.md`                                                                                                                                                                                                     | U1         | pending |        |
-| U6 | 2    | [06-agents-sdk.md](06-agents-sdk.md)                         | `plugins/stackgen/stacks/framework/cloudflare-agents/**`, `plugins/stackgen/stacks/bundles/typescript-cloudflare-agents.md`                                                                                                                                                                                                         | U1         | pending |        |
-| U7 | 3    | [07-docs.md](07-docs.md)                                     | `readme.md`, `CLAUDE.md`, `site/src/content/docs/**`, `.claude/docs/**`, `.claude/skills/stackgen-plugin/**`, `plugins/stackgen/stacks/readme.md`, `docs/memory/decisions/2026-09-06-agents-sdk-is-a-framework-pack.md`                                                                                                             | U1–U6      | pending |        |
-| U8 | 4    | [08-gates-and-bump.md](08-gates-and-bump.md)                 | `plugins/stackgen/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md`                                                                                                                                                                                                            | U7, U9     | pending |        |
-| U9 | 3    | [09-sibling-sweep.md](09-sibling-sweep.md)                   | the listed passages, by `path:line`, in eighteen older Cloudflare files under `plugins/stackgen/stacks/` (pipelines, kv, d1, zero-trust, workers-ssr, workers-static-assets, containers `pack.yaml`), plus `assets/output-tree.md:196` and `skills/stackgen-stack-template/references/materializer.md:85` (D21) — see the unit file | U2–U6      | pending |        |
+| Id | Wave | Unit file                                                    | Owns                                                                                                                                                                                                                                                                                                                                | Depends on | Status | Commit   |
+| -- | ---- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ | -------- |
+| U1 | 1    | [01-provider-narrowing.md](01-provider-narrowing.md)         | `plugins/stackgen/stacks/cloud-provider/cloudflare/**`                                                                                                                                                                                                                                                                              | —          | green  | 3342cf49 |
+| U2 | 2    | [02-workers-ai-pack.md](02-workers-ai-pack.md)               | `plugins/stackgen/stacks/cloud-service/workers-ai/**`, `plugins/stackgen/stacks/bundles/cloudflare-workers-ai.md`                                                                                                                                                                                                                   | U1         | green  | 48a45e95 |
+| U3 | 2    | [03-ai-gateway-pack.md](03-ai-gateway-pack.md)               | `plugins/stackgen/stacks/cloud-service/ai-gateway/**`, `plugins/stackgen/stacks/bundles/cloudflare-ai-gateway.md`                                                                                                                                                                                                                   | U1         | green  | e021624e |
+| U4 | 2    | [04-ai-search-pack.md](04-ai-search-pack.md)                 | `plugins/stackgen/stacks/cloud-service/ai-search/**`, `plugins/stackgen/stacks/bundles/cloudflare-ai-search.md`                                                                                                                                                                                                                     | U1         | green  | b51fc46c |
+| U5 | 2    | [05-browser-rendering-pack.md](05-browser-rendering-pack.md) | `plugins/stackgen/stacks/cloud-service/browser-rendering/**`, `plugins/stackgen/stacks/bundles/cloudflare-browser-rendering.md`                                                                                                                                                                                                     | U1         | green  | 6b529f8b |
+| U6 | 2    | [06-agents-sdk.md](06-agents-sdk.md)                         | `plugins/stackgen/stacks/framework/cloudflare-agents/**`, `plugins/stackgen/stacks/bundles/typescript-cloudflare-agents.md`                                                                                                                                                                                                         | U1         | green  | a5a52024 |
+| U7 | 3    | [07-docs.md](07-docs.md)                                     | `readme.md`, `CLAUDE.md`, `site/src/content/docs/**`, `.claude/docs/**`, `.claude/skills/stackgen-plugin/**`, `plugins/stackgen/stacks/readme.md`, `docs/memory/decisions/2026-09-06-agents-sdk-is-a-framework-pack.md`                                                                                                             | U1–U6      | green  | 431df17e |
+| U8 | 4    | [08-gates-and-bump.md](08-gates-and-bump.md)                 | `plugins/stackgen/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md`                                                                                                                                                                                                            | U7, U9     | green  | 045fd1fa |
+| U9 | 3    | [09-sibling-sweep.md](09-sibling-sweep.md)                   | the listed passages, by `path:line`, in eighteen older Cloudflare files under `plugins/stackgen/stacks/` (pipelines, kv, d1, zero-trust, workers-ssr, workers-static-assets, containers `pack.yaml`), plus `assets/output-tree.md:196` and `skills/stackgen-stack-template/references/materializer.md:85` (D21) — see the unit file | U2–U6      | green  | 75d64158 |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -373,6 +378,97 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | 0    | preflight | —     | 1     | green   | check, marketplace --check, inventory --check, shellcheck, vitest 272 passed, tsc installer+scripts, npm-normalize 33 cases, site:check all clean                                                                                                                                                          | —      |
 | 1    | U1        | opus  | 1     | retried | agent applied all three edits then died without returning its block; mechanical re-dispatch                                                                                                                                                                                                                | —      |
 | 1    | U1        | opus  | 2     | green   | offered list derived from disk (18 cloud-service slugs); Agents SDK named as a framework pack; four map rows, every local-dev claim re-verified against Context7 and cited; planned reduced to plan D's four. DOCS FALSIFIED: site stackgen.md "Two framework packs" (drifted to :160). GAP: none blocking | —      |
+
+| 2 | U2 | opus | 1 | green | Workers AI pack + bundle; no model id as doctrine
+(one cited `@cf/` example); token permission states both Cloudflare spellings;
+health names two probes. GAP: `wrangler ai` exposes only `models` — documented
+as the service's shape | | | 2 | U3 | opus | 1 | green | AI Gateway pack +
+bundle; feature set written from the create-gateway API field list; cost leads
+with the log store. GAP: no documented wrangler command creates a gateway, so
+the pack states the verified positive rather than a flat negative; D15's fourth
+key-creation route (plan D's dashboard) omitted by design | | | 2 | U4 | opus |
+1 | green | AI Search pack + bundle; pins BOTH wrangler binding forms
+(`ai_search`/`instance_name`, `ai_search_namespaces`/`namespace`) as different
+reach, not spellings; three source kinds; free-during-open-beta cost shape with
+the beta-expiry trap | | | 2 | U5 | opus | 1 | green | Browser Rendering pack +
+bundle; records Cloudflare's rename to Browser Run while keeping the slug
+(wrangler key, REST path and token permission unchanged); three access paths;
+ten Quick Actions | | | 2 | U6 | opus | 1 | green | Agents SDK framework pack +
+`typescript-cloudflare-agents` bundle; five topic references; paths-scoped
+`user-invocable: false` router with the wrangler globs; documents both live DO
+declaration forms without picking a winner. GAP: the unit file's unanchored
+`capability\|artifact\|platforms` grep is unsatisfiable (the mandated comment
+contains "artifact") — re-verified with anchored ERE greps | | | 2 | orch | — |
+1 | pass | plan checks: 20 references with D12's five names, no `config/` tier,
+no `artifact:` on the four bundles, categories exactly
+inference/ai-gateway/retrieval/browser/agent-sdk all present in taxonomy, zero
+`capability:` lines, language-bundle in both agents files, one `platforms:`, one
+`@cf/` hit and it is the cited example. Menu check: five rows parse, all 13
+component refs resolve | |
+
+| 2 | R2 | opus | 1 | findings(5) | 3 routed to units (U2 fold width, U2+U4
+`stacks/`-prefixed sibling citations, U6 vitest package name); 2 held for U7 as
+docs findings (readme.md wave narrative jumps E→H since plans A and B never
+added F or G; choosing-your-stack.md:41 project-axis walkthrough omits a fifth
+project-axis bundle). CONTRACT clean, RULINGS clean | — | | 2 | U2 | opus | 2 |
+green | re-folded the 103-char line; swept all four sibling citations to the
+bare form | 48a45e95 | | 2 | U4 | opus | 2 | green | swept the same citation
+form across four files, re-folded the affected paragraphs | b51fc46c | | 2 | U6
+| opus | 2 | regressed | changed the import to `@cloudflare/vitest-pool-workers`
+on stale Context7 data, contradicting the pages it cites | — | | 2 | R2 | opus |
+2 | findings(2) | the vitest package name resurfaced (reviewer fetched both
+pages live and checked npm); bundle heading `# Project —` where all thirteen
+project-axis siblings head with their platform. CONTRACT clean, RULINGS clean |
+— | | 2 | orch | — | 2 | settled | convergence guard tripped (a resolved finding
+resurfaced), so the orchestrator settled both facts itself rather than recording
+them contested: npm shows `@cloudflare/vitest-plugin` at 1.1.5 modified
+2026-09-07 against `@cloudflare/vitest-pool-workers` frozen at 0.22.0, and all
+thirteen project-axis bundles head with their platform. Both mechanical, no
+ruling needed | — | | 2 | U6 | opus | 3 | green | reverted to
+`@cloudflare/vitest-plugin` throughout with a predecessor clause citing the
+migration guide; heading now `# service — …`. DOCS FALSIFIED: d1 local-dev.md:82
+"Workers vitest pool" — flagged for U9 | a5a52024 | | 2 | orch | — | 3 | green |
+wave gate: check, marketplace --check, shellcheck, vitest, tsc, npm-normalize
+all clean. Inventory regenerated at the wave-2 boundary as the plan permits —
+generated header is exactly the predicted **58 packs, 54 bundles, 12 kinds**;
+committed separately first because the inventory hook fails every per-pack
+commit until it matches | 10e8d6e0 |
+
+| 3 | U7 | opus | 1 | green | site stackgen.md two→three framework packs;
+choosing-your-stack managed-backing list and a project-axis paragraph for the
+agents bundle; two dated-narrative paragraphs in stacks/readme.md; the
+agents-SDK decision doc. DECIDED: no Wave H — the register closed at Wave E and
+plans A and B already continued in dated-narrative form. GAP: stacks/readme.md
+"the eight TypeScript ones" left alone | 431df17e | | 3 | U9 | opus | 1 | green
+| 19 files swept — pipelines, kv, d1, zero-trust, workers-ssr,
+workers-static-assets, containers pack.yaml, plus the d1 vitest naming the
+orchestrator granted; D21 held to exactly one sentence in output-tree.md and
+materializer.md. Edit-5 run-time grep returns nothing | 75d64158 | | 3 | orch |
+— | 1 | pass | plan check: all seven "none of the old sentences survives" greps
+empty, Edit-5 grep empty, no `config/` path in the diff, D21 diffs are one
+sentence each | — | | 3 | R3 | opus | 1 | findings(2) | both reporting-only:
+`workers-ssr/conventions.md:11` and `workers-static-assets/conventions.md:102`
+still carry the two-vs-three deploy-shape miscount D20 fixed elsewhere —
+unlisted passages, correctly left unedited, recorded here as DOCS FALSIFIED.
+CONTRACT clean, RULINGS clean; both of U7's judgment calls upheld, and R3
+confirms only eight `typescript-*` bundles exist, so R2's count premise was
+wrong | — | | 3 | DR | opus | 1 | pass | docs-reconciler: NO STALE DOCS.
+Confirmed readme.md, CLAUDE.md and .claude/docs/plugins.md carry no
+framework-pack count or Cloudflare enumeration, and no pack/bundle count is
+typed by hand anywhere | — | | 3 | orch | — | 2 | green | wave gate: check,
+marketplace, inventory, shellcheck, vitest 272, tsc, npm-normalize, and
+site:check (23 pages, 1441 links, all resolve) | — |
+
+| 4 | U8 | opus | 1 | green | stackgen `1.4.0` → `1.5.0`, a minor from the
+run-time value as D17 requires; marketplace regenerated (stackgen entry's
+version and `stackgen-v1.5.0` ref, vwf byte-identical); inventory confirmed no
+diff. Full nine-line gate all exit 0 | 045fd1fa | | 4 | TV | opus | 1 | pass |
+target-verifier, two hermetic homes: stackgen 1.5.0 installs byte-identical to
+the working tree (621 files, `diff -r` exit 0) with all four cloud-service dirs,
+`framework/cloudflare-agents` and all five bundles; `plugin list` reports 1.5.0;
+the vwf dependency edge pulls the same 1.5.0. Uninstall leaves every
+registration clean; Claude's own version-keyed cache dir survives with an
+`.orphaned_at` marker — its deferred reaping, not a toolkit defect | — |
 
 ## Launch
 
