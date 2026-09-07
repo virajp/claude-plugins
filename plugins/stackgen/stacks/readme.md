@@ -190,10 +190,10 @@ rather than hosting alone. Each is a `backing`-axis bundle of its own, pinned
 beside the others rather than chosen between, and each ships **no `config/`
 tier**: a binding is an entry in the project's root `wrangler.jsonc`, which a
 deploy pack owns, so nothing here writes a file of its own. The provider
-component's scope prose is now three lists — offered, planned and declined —
-so a service the menu does not carry says which of the three it is rather
-than leaving a reader to guess, and the planned ones arrive under their own
-efforts.
+component's scope prose is now two lists — offered and declined — so a
+service the menu does not carry says which of the two it is rather than
+leaving a reader to guess. It carried a third, `planned`, while the
+remaining services were still arriving; the landing below emptied it.
 
 **Compute and orchestration followed on 2026-09-06.** `durable-objects`,
 `workflows` and `queues` joined on the same backing terms as the storage
@@ -225,13 +225,26 @@ authored and unreachable, a defect this tree already carries once in its
 python packs. The reasoning is
 `docs/memory/decisions/2026-09-06-agents-sdk-is-a-framework-pack.md`.
 
+**Media, messaging and secrets closed the platform.** `images`, `realtime`,
+`email-service` and `secrets-store` joined on the storage services' terms —
+one `backing` bundle each, no `config/` tier — and with them the last of the
+four Cloudflare plans landed, which is what emptied the provider's planned
+list. Two are unlike their siblings. `realtime` has no binding at all: it is
+an HTTPS API reached with an app id and secret, so it has no row on the
+per-binding table and no local form. And `secrets-store` shares the category
+noun `secrets-manager` with `capability-provider/fnox` on purpose — this one
+is the **runtime** store a deployed Worker or Container reads in staging and
+production, fnox the developer-machine and CI provider that injects on the
+way in, so a repo pins both and neither replaces the other. The reasoning is
+`docs/memory/decisions/2026-09-06-secrets-store-is-runtime-not-development.md`.
+
 Every landing that brings a service nothing already classifies mints its
 `cloud-service` category in `../assets/taxonomy.md`, which owns the closed
 list and the reasoning — the wave itself minted `document`, for Firestore,
 and `access`, for Zero Trust Access; `static-hosting` came with
 `workers-static-assets` after it; and the Cloudflare storage and data work
 minted a further set, once for that whole developer platform rather than per
-landing, so the services still to come need no second edit there. Several of
+landing, so every landing that followed needed no second edit there. Several of
 those leave `capability` unset and stay that way: minting a capability token
 is vwf's move, never the taxonomy's, and the taxonomy names which ones
 rather than this file restating the list.
