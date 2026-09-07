@@ -1,0 +1,41 @@
+name: Cloudflare Images
+summary: Transform, optimize and deliver images at the edge — from objects
+  the product already stores or from Images' own storage — the media layer
+  a site or app reads rather than a bucket it writes.
+version: 0.1.0
+type: cloud-service
+category: media
+# `capability` is deliberately unset: `media` realizes no vwf capability
+# token today (../../../assets/taxonomy.md), and nothing here mints one —
+# minting capabilities is vwf's move.
+kind: cloud-provider
+axis: backing
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      A transformation URL for a known source image, fetched from the
+      consuming project's own readiness path and reported as that
+      project's dependency check. Read the failure carefully: a 404 on the
+      source is the origin, a pass-through of the untransformed bytes is
+      the zone setting, and an error from the binding is the Worker — three
+      different repairs behind one red light
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      The two halves isolate differently and this is the honest answer.
+      Transformations are a zone setting, so a staging hostname on its own
+      zone is already separate; Images storage is account-level, with one
+      variant set and one delivery hash, so two environments in one account
+      share both. Either give the pre-production environment its own
+      account, or accept the sharing and prefix the image ids the suite
+      creates so a cleanup can find them
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None to start — `wrangler dev` resolves an `images` binding to a
+      low-fidelity offline mock covering resize, rotate, width, height and
+      format, and `--remote` runs the full feature set against the real
+      service without a usage charge. The storage half is mocked over an
+      embedded KV namespace locally, so image ids and variant URLs are the
+      mock's rather than the account's

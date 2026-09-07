@@ -5,10 +5,10 @@ service the product uses, carried once so no service component restates it.
 
 **The coverage here is bounded, and saying where the boundary falls is
 part of the component.** A menu that comes back short without explaining
-itself is indistinguishable from a broken one, so what is offered, what
-is planned and what is declined are stated below rather than implied. Do
-not fill a gap from general Cloudflare knowledge: a service this
-component has not written doctrine for is a service it does not offer.
+itself is indistinguishable from a broken one, so what is offered and
+what is declined are stated below rather than implied. Do not fill a gap
+from general Cloudflare knowledge: a service this component has not
+written doctrine for is a service it does not offer.
 
 **Offered.** Three deploy targets — **Workers Static Assets**, **Workers
 SSR** (a Worker with a script in front of its own assets) and
@@ -17,11 +17,13 @@ Trust Access** for the private plane, the storage and data services —
 **Workers KV**, **R2** (including R2 Data Catalog and R2 SQL), **D1**,
 **Hyperdrive**, **Vectorize**, **Pipelines** and **Analytics Engine** —
 compute and orchestration — **Durable Objects**, **Workflows** and
-**Queues** — and AI: **Workers AI**, **AI Gateway**, **AI Search** and
-**Browser Rendering**. Each is its own service component and its own
-bundle; they are pinned side by side, not chosen between, with one
-exception — Containers is pinned *instead of* Workers SSR, never beside
-it, and the `cloudflare-containers` bundle carries the reasoning.
+**Queues** — AI: **Workers AI**, **AI Gateway**, **AI Search** and
+**Browser Rendering** — and media, messaging and secrets: **Images**,
+**Realtime**, **Email Service** and **Secrets Store**. Each is its own
+service component and its own bundle; they are pinned side by side, not
+chosen between, with one exception — Containers is pinned *instead of*
+Workers SSR, never beside it, and the `cloudflare-containers` bundle
+carries the reasoning.
 
 **The Agents SDK is offered too, and it is the one that is not a
 service.** It is an npm framework that compiles to a Durable Object, so
@@ -33,9 +35,21 @@ agent pins that language bundle on its project axis and the
 `cloudflare-durable-objects` bundle on its backing axis; the object is
 what the agent runs as.
 
-**Planned, each under its own effort, and not offered yet.** Media,
-messaging and secrets — Images, Realtime, Email Service, Secrets Store.
-A product that needs one of these has a gap to name.
+**Nothing is planned-but-missing any more.** The developer-platform
+coverage this component set out to carry is complete: every Cloudflare
+surface a repo composes its stack from is either offered above or
+declined below. A service not named on either list is out of scope by
+decision, never by omission — so a product that needs one has a gap to
+name and a decision to reopen, not an oversight to route around.
+
+**The runtime secrets store and the repo's secrets provider are two
+different things, and they coexist.** **Secrets Store** is the
+account-level store a deployed Worker or Container reads through a
+binding in staging and production; `capability-provider/fnox`, on the
+capability axis, is what holds a developer's and CI's secrets on the
+way in. A repo pins both, for different environments, and neither
+replaces the other. Which clause of the secrets contract each satisfies
+is the `secrets-store` component's doctrine to state, not this one's.
 
 **Declined, and they are not coming.** Pages is superseded by Workers
 Static Assets in Cloudflare's own guidance; Workers Sites is deprecated
@@ -87,5 +101,6 @@ offered list above, each under its own slug — `zero-trust-access`,
 `workers-static-assets`, `workers-ssr`, `containers`, `kv`, `r2`, `d1`,
 `hyperdrive`, `vectorize`, `pipelines`, `analytics-engine`,
 `durable-objects`, `workflows`, `queues`, `workers-ai`, `ai-gateway`,
-`ai-search` and `browser-rendering` — plus one framework component,
+`ai-search`, `browser-rendering`, `images`, `realtime`, `email-service`
+and `secrets-store` — plus one framework component,
 `framework/cloudflare-agents`.

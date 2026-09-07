@@ -9,7 +9,7 @@ description: >-
   networking rule that decides whether the private plane is real or
   decorative. Provider-wide judgment every Cloudflare service component
   cites rather than restates, and the fence that says which services are
-  offered, which are planned and which are declined.
+  offered and which are declined.
 license: MIT
 allowed-tools: Read Grep Glob Edit Write Bash
 ---
@@ -46,8 +46,9 @@ Assets, Workers SSR, Containers, the last pinned *instead of* Workers SSR
 rather than beside it; the storage and data services — Workers KV, R2
 (with R2 Data Catalog and R2 SQL), D1, Hyperdrive, Vectorize, Pipelines,
 Analytics Engine; compute and orchestration — Durable Objects, Workflows,
-Queues; and AI — Workers AI, AI Gateway, AI Search, Browser Rendering.
-Each is its own service component with its own doctrine.
+Queues; AI — Workers AI, AI Gateway, AI Search, Browser Rendering; and
+media, messaging and secrets — Images, Realtime, Email Service, Secrets
+Store. Each is its own service component with its own doctrine.
 
 **The Agents SDK is offered as a framework, not a service.** It compiles
 to a Durable Object, so it ships as `framework/cloudflare-agents` on the
@@ -56,8 +57,9 @@ bundle; there is nothing for it under `cloud-service/`. An agent project
 pins that bundle on the project axis and `cloudflare-durable-objects` on
 the backing one.
 
-**Planned, not offered yet**, each under its own effort: Images,
-Realtime, Email Service and Secrets Store.
+**Nothing is planned-but-missing.** The coverage is complete: a
+Cloudflare surface not on the offered list is on the declined one, by
+decision rather than by omission.
 
 **Declined.** Pages (superseded by Workers Static Assets in Cloudflare's
 own guidance), Workers Sites (deprecated in Wrangler v4), Stream and
@@ -65,6 +67,7 @@ Turnstile (offered and declined), and account-level products such as WAF,
 DNS, Tunnels, Zaraz and Logpush, which configure an account rather than
 compose a repo's stack.
 
-If the product needs something on the planned or the declined list, that
-is a gap to name — not a gap to fill from general Cloudflare knowledge,
-because doctrine nobody wrote is doctrine nobody reviewed.
+If the product needs something on the declined list, or something on
+neither list, that is a gap to name — not a gap to fill from general
+Cloudflare knowledge, because doctrine nobody wrote is doctrine nobody
+reviewed.
