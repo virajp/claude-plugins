@@ -28,7 +28,7 @@ where none does.
 | Browser Rendering | **Remote only** — no local simulation; the `browser` binding takes `remote: true` and drives a real headless browser on Cloudflare |
 | Images | **Simulated**, and can be pointed at the real service — the binding supports both modes, so a transformation runs under `wrangler dev` either way |
 | Realtime | **No local form at all** — it is reached over an HTTPS API with an app id and secret rather than through a Worker binding, so it has no row on the per-binding table and nothing to simulate or opt into |
-| Email Service | **Simulated** for sending, and can be pointed at the real service — the `send_email` binding supports both modes, and the remote one sends real mail; the receive side has no local form |
+| Email Service | **Simulated** on both sides — the `send_email` binding supports both modes and the remote one sends real mail, and the `email()` handler is invoked by POSTing a message to a local endpoint; what has no local form is the routing rule that decides which mail reaches the Worker |
 | Secrets Store | **Simulated only**, and deliberately — the `secrets_store_secrets` binding reads secrets created locally, and production secrets are unreachable from a dev session by design |
 | The declined set, and account-level products | Out of this stack's scope entirely |
 
@@ -84,9 +84,16 @@ be inspected — but set `remote: true` and `env.EMAIL.send()` sends
 **real mail to real recipients**, so a dev session uses test addresses
 or it reaches people
 ([local development — sending](https://developers.cloudflare.com/email-service/local-development/sending/)).
-Email's receive side — routing an address to a Worker — has no local
-form of any kind, and is exercised in a deployed environment or not at
-all.
+Email's receive side is simulated too, and the seam is a plain HTTP
+one: under `wrangler dev`, a POST to `/cdn-cgi/local/email` carrying
+`from` and `to` as query parameters and a raw RFC 5322 message — which
+must include a `Message-ID` header — invokes the `email()` handler
+([local development — routing](https://developers.cloudflare.com/email-service/local-development/routing/)).
+So the handler's logic is exercised locally. What is **not** is the
+routing rule: the POST names its own recipient, so nothing on the
+laptop decides which addresses reach this Worker at all. That binding
+of an address to a Worker is account configuration, and it is verified
+in a deployed environment or not at all.
 
 **Realtime has no binding, which is why its row says something
 different.** It is an HTTPS API taking an app id and secret
