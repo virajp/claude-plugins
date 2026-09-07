@@ -1,7 +1,7 @@
 # U8 — Gates and bump: stackgen one minor up, the generators, the full gate, target-verifier
 
 - **Wave:** 4
-- **Depends on:** U7
+- **Depends on:** U7, U9
 - **Owns:** `plugins/stackgen/.claude-plugin/plugin.json`,
   `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md`.
   Touch nothing outside this list.

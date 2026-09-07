@@ -101,8 +101,10 @@ any doc; the docs point at `plugins/stackgen/stacks/inventory.md` and
 - Do not rename a heading in any site page; do not add a new site page (the nav
   would need an entry and the build fails without it).
 - `readme.md`, `CLAUDE.md` are dprint-formatted — run `dprint fmt` on exactly
-  those two if you widen a table; `plugins/**/*.md` and `docs/memory/**/*.md`
-  are not — hand-fold.
+  those two if you widen a table. `plugins/**/*.md` is not — hand-fold.
+  `docs/memory/**/*.md` and `.claude/**/*.md` **are** (plan B's docs unit found
+  the opposite claim wrong): run `dprint fmt` on exactly the files you edit
+  there.
 - `cat` is aliased to `bat`: Write/Edit, never heredocs.
 - Cite the earlier decisions docs by path; do not edit them.
 
