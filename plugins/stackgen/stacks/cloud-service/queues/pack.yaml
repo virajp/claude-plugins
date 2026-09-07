@@ -1,0 +1,51 @@
+name: Cloudflare Queues
+summary: Durable at-least-once messaging between Workers — a producer
+  binding that sends, a consumer handler that receives batches with
+  retries and a dead-letter queue behind them, and the place a product
+  puts the background work it must not lose once the request that
+  created it has already answered.
+version: 0.1.0
+type: cloud-service
+category: queue
+capability: message-queue
+kind: cloud-provider
+axis: backing
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      A queue has no endpoint to probe and no process that can be down
+      independently of the Workers bound to it, so there are two honest
+      mechanisms and they prove different things. The queue's own
+      backlog reading — message count, bytes, and the timestamp of the
+      oldest message, from the producer binding or the REST endpoint —
+      proves work is draining, and it is the **age** term rather than
+      the depth that detects a stopped consumer, because depth stays
+      low while nothing is being enqueued either. A canary message with
+      an assertion on the consumer's own side effect proves the whole
+      path instead, and is the only one of the two that catches a
+      consumer that acknowledges and then does nothing. Pick which the
+      probe reports and say so
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      A queue per environment, created by name and bound under that
+      environment's block with the same binding name, each with its own
+      dead-letter queue. Never the production queue with a message-type
+      field distinguishing the suite's traffic — a consumer subscribes
+      to a queue and not to a field in the body, so that message is
+      delivered to the production consumer and does the production
+      thing. The suite asserts on the consumer's side effect and never
+      on delivery order or timing, neither of which the service
+      promises
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None to compose behind a readiness gate. `wrangler dev` runs the
+      producer and the consumer against a local queue in the same
+      process, so there is no engine for a stack task to start and no
+      port to wait on; where the two are separate Workers, one dev
+      invocation given both configuration files runs them together and
+      the producer's messages invoke the local consumer. Consumer
+      concurrency is the one behaviour that has no local form, so a
+      suite must not depend on it
