@@ -26,7 +26,10 @@ where none does.
 | AI Gateway | **No local form, and none is wanted** — the gateway is an HTTPS endpoint, so a local session calls the same live gateway a deployed Worker does, and its cache, logs and rate limits are the real ones |
 | AI Search | **Remote only** — no local simulation; local development works by proxying to a deployed instance, so the instance binding — `ai_search`, carrying an `instance_name` — takes `remote: true` |
 | Browser Rendering | **Remote only** — no local simulation; the `browser` binding takes `remote: true` and drives a real headless browser on Cloudflare |
-| Images, Realtime, Email Service, Secrets Store | Planned under their own plans; arriving with their components, and until then out of scope |
+| Images | **Simulated**, and can be pointed at the real service — the binding supports both modes, so a transformation runs under `wrangler dev` either way |
+| Realtime | **No local form at all** — it is reached over an HTTPS API with an app id and secret rather than through a Worker binding, so it has no row on the per-binding table and nothing to simulate or opt into |
+| Email Service | **Simulated** for sending, and can be pointed at the real service — the `send_email` binding supports both modes, and the remote one sends real mail; the receive side has no local form |
+| Secrets Store | **Simulated only**, and deliberately — the `secrets_store_secrets` binding reads secrets created locally, and production secrets are unreachable from a dev session by design |
 | The declined set, and account-level products | Out of this stack's scope entirely |
 
 Modes are Cloudflare's, not this stack's: a binding either has a local
@@ -70,6 +73,38 @@ so a local session and a deployed one call the same live gateway and
 there is nothing to simulate or opt into. What each of those costs, and
 what it makes unsafe to run from a laptop, is the service component's own
 local-dev reference; this page says only which mode exists.
+
+**The media, messaging and secrets rows split three ways, and two of
+them are unlike anything above.** Images and Email Bindings are ordinary
+both-modes rows on the per-binding table
+([supported bindings per development mode](https://developers.cloudflare.com/workers/local-development/bindings-per-env/)),
+with one warning attached to the email one: locally the binding sends
+nothing — the message is logged to the console and written to a file to
+be inspected — but set `remote: true` and `env.EMAIL.send()` sends
+**real mail to real recipients**, so a dev session uses test addresses
+or it reaches people
+([local development — sending](https://developers.cloudflare.com/email-service/local-development/sending/)).
+Email's receive side — routing an address to a Worker — has no local
+form of any kind, and is exercised in a deployed environment or not at
+all.
+
+**Realtime has no binding, which is why its row says something
+different.** It is an HTTPS API taking an app id and secret
+([Realtime SFU HTTPS API](https://developers.cloudflare.com/realtime/sfu/https-api/)),
+so it never appears on the per-binding table, `--remote` means nothing
+for it, and a local session calls the same live service a deployed one
+does — the shape AI Gateway has, arrived at for the same reason.
+
+**Secrets Store inverts the usual worry.** Its local mode is not a
+lesser version of the real thing to be escaped with `--remote`; reaching
+production secrets from a laptop is the thing Cloudflare refuses. You
+cannot read a production secret from local development, and local
+secrets are created with `wrangler secrets-store secret` commands
+**without** `--remote`
+([Secrets Store Workers integration](https://developers.cloudflare.com/secrets-store/integrations/workers/)).
+Treat that as a property to keep rather than a limitation to work
+around: it is the one row where the local/remote seam is a security
+boundary and not a fidelity tradeoff.
 
 **The Agents SDK is a framework, not a binding, so it has no row.** An
 agent runs locally exactly as the Durable Object it compiles to does —

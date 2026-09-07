@@ -17,8 +17,9 @@ does not matter.
 
 ## Status
 
-**APPROVED** — 2026-09-07 by the user, at the shape gate, after the self-review.
-Not yet run; halts at preflight until every `requires:` plan reads COMPLETE.
+**RUNNING** — started 2026-09-07, in worktree
+`.worktrees/2026-09-06-cloudflare-media-messaging-secrets` on branch
+`2026-09-06-cloudflare-media-messaging-secrets`. Plan A reads COMPLETE.
 
 ## Consent
 
@@ -184,7 +185,7 @@ None. Packs are YAML and Markdown; no unit adds a package.
 
 | Id | Wave | Unit file                                            | Owns                                                                                                                                                                                                                              | Depends on | Status  | Commit |
 | -- | ---- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-provider-narrowing.md](01-provider-narrowing.md) | `plugins/stackgen/stacks/cloud-provider/cloudflare/**`                                                                                                                                                                            | —          | pending |        |
+| U1 | 1    | [01-provider-narrowing.md](01-provider-narrowing.md) | `plugins/stackgen/stacks/cloud-provider/cloudflare/**`                                                                                                                                                                            | —          | running |        |
 | U2 | 2    | [02-images-pack.md](02-images-pack.md)               | `plugins/stackgen/stacks/cloud-service/images/**`, `plugins/stackgen/stacks/bundles/cloudflare-images.md`                                                                                                                         | U1         | pending |        |
 | U3 | 2    | [03-realtime-pack.md](03-realtime-pack.md)           | `plugins/stackgen/stacks/cloud-service/realtime/**`, `plugins/stackgen/stacks/bundles/cloudflare-realtime.md`                                                                                                                     | U1         | pending |        |
 | U4 | 2    | [04-email-service-pack.md](04-email-service-pack.md) | `plugins/stackgen/stacks/cloud-service/email-service/**`, `plugins/stackgen/stacks/bundles/cloudflare-email-service.md`                                                                                                           | U1         | pending |        |
@@ -326,8 +327,13 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                                                                                                                       | Commit |
+| ---- | --------- | ----- | ----- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight | —     | —     | green       | all nine gate lines pass on develop; worktree `.worktrees/2026-09-06-cloudflare-media-messaging-secrets`, deps installed                                                                                                                                                                                                                                                                                                     | —      |
+| 1    | U1        | opus  | 1     | green       | three provider lists narrowed; DECIDED planned clause dropped (A, B, C all landed — twenty complete), Realtime no local form, Secrets Store simulated-only as a security boundary, Email send/receive split; GAP map intro not rewritten for a binding-less service; DOCS FALSIFIED choosing-your-stack.md:62 and :72-78                                                                                                     |        |
+| 1    | R1        | opus  | 1     | findings(4) | stacks/readme.md:193 planned-list sentence falsified (U6's file, unreported); 15 pointer sentences in A/B/C packs say "planned or declined is the provider's to state" (nobody-owned, unreported); local-development-map.md:84 real-mail warning cited to product root not the local-development/sending page (D10); SKILL.md:53 fnox coexistence paragraph added beyond edit 2's named scope. CONTRACT clean, RULINGS clean |        |
+| 1    | U1        | opus  | 2     | green       | citation moved to /email-service/local-development/sending/ (local mode logs and files the message); SKILL.md fnox paragraph removed — conventions.md carries it, U5 owns the doctrine; DOCS FALSIFIED stacks/readme.md:193-195 and 17 "planned or declined" pointer sentences across A/B/C packs and bundles (nobody-owned)                                                                                                 |        |
+| 1    | R1        | opus  | 2     | pass        | both fixes verified; three files, all inside Owns                                                                                                                                                                                                                                                                                                                                                                            |        |
 
 ## Launch
 
