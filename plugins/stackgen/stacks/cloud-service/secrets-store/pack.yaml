@@ -1,0 +1,52 @@
+name: Cloudflare Secrets Store
+summary: The account-level secrets a deployed Worker or Container reads at
+  run time through a binding — the staging and production values, held
+  once for the account and never in the repo, the laptop or a per-Worker
+  secret list.
+version: 0.1.0
+type: cloud-service
+category: secrets-manager
+# `capability` is deliberately unset: `secrets-manager` has no vwf
+# capability token today (../../../assets/taxonomy.md, "The capability
+# seam"), and minting one is vwf's move — nothing here fills the hole.
+# The category name is shared with `capability-provider/fnox` on purpose,
+# and the two do not compete. This component is the RUNTIME store a
+# deployed Worker or Container reads in staging and production; fnox is
+# the developer-machine and CI provider that injects secrets on the way
+# in. A repo pins both, for different environments, and neither replaces
+# the other.
+kind: cloud-provider
+axis: backing
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      The store has no endpoint of its own and this pack ships no probe.
+      The honest signal is the consuming Worker's own readiness path
+      calling `.get()` on a sentinel secret created for the purpose — a
+      known, non-sensitive value whose whole job is to prove the binding
+      resolves and the store answers. A real credential is never the
+      probe: a readiness path that fetches a live secret pulls it into
+      memory on every unauthenticated request, and a probe that reports
+      which secret failed has published the name of what is missing
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      The store is account-level and the open beta allows one store per
+      account, so environment isolation is by secret NAME and by which
+      name each Workers environment's binding block points at — never by
+      a second store, because there is not one to have. The suite reaches
+      its own environment's values through the same binding name pointed
+      at that environment's secret; a secret name that carries no
+      environment is how a staging run reads production's credential
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None to start, and the gap is a security property rather than a
+      fidelity one. `wrangler dev` resolves the binding against a LOCAL
+      store, populated by `wrangler secrets-store secret create` without
+      `--remote`; production secrets are unreachable from a dev session
+      by design and no flag opens them. The local values come from the
+      repo's developer-side secrets provider, injected as environment
+      variables and seeded into the local store — never from the account
+      store
