@@ -1,0 +1,42 @@
+name: Cloudflare AI Search
+summary: A managed retrieval pipeline — point an instance at a bucket, a
+  website or its own storage and it chunks, embeds, indexes and answers
+  queries with citations, so the product gets retrieval without running
+  the pipeline that produces it.
+version: 0.1.0
+type: cloud-service
+category: retrieval
+# `capability` is deliberately unset: `retrieval` realizes no vwf
+# capability token today (../../../assets/taxonomy.md), and stretching
+# `search-index` onto it would be wrong — a managed pipeline that chunks,
+# embeds and re-syncs is not an index the product writes vectors into.
+# Minting capabilities is vwf's move.
+kind: cloud-provider
+axis: backing
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      An instance has no endpoint to probe and this pack ships no probe.
+      The honest signal is two readings taken together by the consuming
+      Worker: the latest sync job's terminal state, and a fixed query
+      whose expected top source is known. The first says the pipeline
+      ran, the second says the index answers — and only the pair
+      distinguishes a healthy instance from one serving a stale corpus,
+      because a stale index answers confidently
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      One instance per environment over that environment's own source,
+      bound under the same binding name so no code branches on
+      environment. Indexing is asynchronous, so the suite waits for
+      readiness rather than querying immediately — `uploadAndPoll` where
+      it uploads its own fixtures, or the instance's job status where a
+      sync populates it
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None — AI Search has no local simulation. The binding is opted into
+      a deployed instance with `remote: true` and the dev loop reads a
+      real index over the network. There is no engine to compose behind a
+      readiness gate, and this component adds nothing to the local task
