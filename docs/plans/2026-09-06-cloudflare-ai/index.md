@@ -22,11 +22,14 @@ nothing else there.
 
 ## Status
 
-**APPROVED** — 2026-09-07 by the user, at the shape gate, after the self-review.
+**RUNNING** — started 2026-09-07 in worktree
+`.worktrees/2026-09-06-cloudflare-ai` on branch `2026-09-06-cloudflare-ai`. Both
+`requires:` plans read COMPLETE (A and B, archived 2026-09-07).
+
+Approved 2026-09-07 by the user, at the shape gate, after the self-review.
 **Amended** 2026-09-07, approved at a second shape gate: U9, the sibling sweep
 (D20–D22), added to wave 3 — plans A and B left two dozen passages in files no
-unit owned; plan B's archived run log lists them. Not yet run; halts at
-preflight until every `requires:` plan reads COMPLETE.
+unit owned; plan B's archived run log lists them.
 
 ## Consent
 
@@ -365,8 +368,11 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome | Detail                                                                                                                                                                                                                                                                                                     | Commit |
+| ---- | --------- | ----- | ----- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight | —     | 1     | green   | check, marketplace --check, inventory --check, shellcheck, vitest 272 passed, tsc installer+scripts, npm-normalize 33 cases, site:check all clean                                                                                                                                                          | —      |
+| 1    | U1        | opus  | 1     | retried | agent applied all three edits then died without returning its block; mechanical re-dispatch                                                                                                                                                                                                                | —      |
+| 1    | U1        | opus  | 2     | green   | offered list derived from disk (18 cloud-service slugs); Agents SDK named as a framework pack; four map rows, every local-dev claim re-verified against Context7 and cited; planned reduced to plan D's four. DOCS FALSIFIED: site stackgen.md "Two framework packs" (drifted to :160). GAP: none blocking | —      |
 
 ## Launch
 

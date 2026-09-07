@@ -5,10 +5,10 @@ service the product uses, carried once so no service component restates it.
 
 **The coverage here is bounded, and saying where the boundary falls is
 part of the component.** A menu that comes back short without explaining
-itself is indistinguishable from a broken one, so the three lists below
-are stated rather than implied. Do not fill a gap from general Cloudflare
-knowledge: a service this component has not written doctrine for is a
-service it does not offer.
+itself is indistinguishable from a broken one, so what is offered, what
+is planned and what is declined are stated below rather than implied. Do
+not fill a gap from general Cloudflare knowledge: a service this
+component has not written doctrine for is a service it does not offer.
 
 **Offered.** Three deploy targets — **Workers Static Assets**, **Workers
 SSR** (a Worker with a script in front of its own assets) and
@@ -16,16 +16,26 @@ SSR** (a Worker with a script in front of its own assets) and
 Trust Access** for the private plane, the storage and data services —
 **Workers KV**, **R2** (including R2 Data Catalog and R2 SQL), **D1**,
 **Hyperdrive**, **Vectorize**, **Pipelines** and **Analytics Engine** —
-and compute and orchestration: **Durable Objects**, **Workflows** and
-**Queues**. Each is its own service component and its own bundle; they
-are pinned side by side, not chosen between, with one exception —
-Containers is pinned *instead of* Workers SSR, never beside it, and the
-`cloudflare-containers` bundle carries the reasoning.
+compute and orchestration — **Durable Objects**, **Workflows** and
+**Queues** — and AI: **Workers AI**, **AI Gateway**, **AI Search** and
+**Browser Rendering**. Each is its own service component and its own
+bundle; they are pinned side by side, not chosen between, with one
+exception — Containers is pinned *instead of* Workers SSR, never beside
+it, and the `cloudflare-containers` bundle carries the reasoning.
 
-**Planned, each under its own effort, and not offered yet.** AI —
-Workers AI, AI Gateway, AI Search, Browser Rendering, the Agents SDK.
-Media, messaging and secrets — Images, Realtime, Email Service, Secrets
-Store. A product that needs one of these has a gap to name.
+**The Agents SDK is offered too, and it is the one that is not a
+service.** It is an npm framework that compiles to a Durable Object, so
+it ships as a framework component on the project axis —
+`framework/cloudflare-agents`, reached through the
+`typescript-cloudflare-agents` language bundle — and a reader looking for
+it under `cloud-service/` will not find it there. A project that is an
+agent pins that language bundle on its project axis and the
+`cloudflare-durable-objects` bundle on its backing axis; the object is
+what the agent runs as.
+
+**Planned, each under its own effort, and not offered yet.** Media,
+messaging and secrets — Images, Realtime, Email Service, Secrets Store.
+A product that needs one of these has a gap to name.
 
 **Declined, and they are not coming.** Pages is superseded by Workers
 Static Assets in Cloudflare's own guidance; Workers Sites is deprecated
@@ -76,4 +86,6 @@ this provider carries are the `cloud-service` components named in the
 offered list above, each under its own slug — `zero-trust-access`,
 `workers-static-assets`, `workers-ssr`, `containers`, `kv`, `r2`, `d1`,
 `hyperdrive`, `vectorize`, `pipelines`, `analytics-engine`,
-`durable-objects`, `workflows`, `queues`.
+`durable-objects`, `workflows`, `queues`, `workers-ai`, `ai-gateway`,
+`ai-search` and `browser-rendering` — plus one framework component,
+`framework/cloudflare-agents`.
