@@ -83,7 +83,8 @@ to a repo, and every write it makes is consent-gated and committed once.
        repo has them, not because a pack may ship them — no pack may, and
        CLAUDE.md is separately out of scope below. `wrangler.jsonc` is on
        it because the deploy tool that reads it discovers its config only
-       at the root, and only a `static-hosting` service pack ships one.
+       at the root, and the three Cloudflare deploy packs ship one
+       (`workers-static-assets`, `workers-ssr`, `containers`).
        The five that joined on 2026-09-06 are there for that one reason
        too — the tool reading each discovers it at the root and cannot be
        pointed elsewhere — and `dprint.json` is a **shim** whose only

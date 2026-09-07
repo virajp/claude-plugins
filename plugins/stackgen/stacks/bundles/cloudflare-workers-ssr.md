@@ -83,14 +83,16 @@ billed, and under free-tier limits a forced invocation returns 429 rather
 than falling back to the file. Turning it on is a deliberate act with its
 cost written down, not a default.
 
-## The seam with the other two Cloudflare bundles
+## The seam with the other Cloudflare deploy bundles
 
 **[Cloudflare Workers Static Assets](cloudflare-workers-static.md) is the
-alternative, not a layer.** A deployment either has a `main` or it does
-not, and the two bundles are the two answers. `astro-ssg` and `astro-csr`
-pair there; `astro-ssr` and `astro-hybrid` pair here. A static site that
-grows a rendered route moves from that bundle to this one, and the file
-set, the route and the token all survive the move.
+alternative, not a layer.** It has no `main`; this one does, and
+[Cloudflare Containers](cloudflare-containers.md) has a `main` that
+fronts a container image — pinned **instead of** this bundle, never
+beside it, because both ship the root `wrangler.jsonc`. `astro-ssg` and
+`astro-csr` pair with the static one; `astro-ssr` and `astro-hybrid` pair
+here. A static site that grows a rendered route moves from that bundle to
+this one, and the file set, the route and the token all survive the move.
 
 **[Cloudflare Zero Trust Access](cloudflare-zero-trust.md)** produces no
 artifact and "composes with a hosting pin rather than replacing one" — this

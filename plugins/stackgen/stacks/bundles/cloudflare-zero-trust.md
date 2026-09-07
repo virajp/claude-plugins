@@ -24,23 +24,24 @@ decorative. The service component carries this one service and **cites**
 that rule rather than restating it.
 
 **This is a deploy-axis entry that produces no artifact and composes with a
-hosting pin — such as `cloudflare-workers-static` or
-`cloudflare-workers-ssr` — rather than replacing one.** It runs no code:
-the project still ships however its own hosting bundle says, and this
-decides who can reach it once it has. Since
+hosting pin — such as `cloudflare-workers-static`,
+`cloudflare-workers-ssr` or `cloudflare-containers` — rather than
+replacing one.** It runs no code: the project still ships however its own
+hosting bundle says, and this decides who can reach it once it has. Since
 `config_format` 16 made `deploy_template` a list, that pairing is
 representable — pin this alongside the hosting entry, not instead of it.
 Pairing the two is vwf's job, and any cloud's deploy bundle composes with
 this one.
 
-**Both hosting shapes are offered** — a directory of files as
-`cloudflare-workers-static`, and that directory with a script in front of
-it, server-side rendering on Workers, as `cloudflare-workers-ssr`. Which
-Cloudflare services stackgen offers beyond those, and which are planned or
-declined, is the provider component's to state — see
-`cloud-provider/cloudflare/conventions.md`. A short menu with no
-explanation is indistinguishable from a broken adapter, which is why that
-fence is written down rather than implied.
+**Three hosting shapes are offered** — a directory of files as
+`cloudflare-workers-static`; that directory with a script in front of it,
+server-side rendering on Workers, as `cloudflare-workers-ssr`; and a
+Worker fronting a container image as `cloudflare-containers`, pinned
+instead of the SSR one. Which Cloudflare services stackgen offers beyond
+those, and which are planned or declined, is the provider component's to
+state — see `cloud-provider/cloudflare/conventions.md`. A short menu with
+no explanation is indistinguishable from a broken adapter, which is why
+that fence is written down rather than implied.
 
 **What it decides that neither component decides alone** is that the
 private plane is a **per-project** decision belonging in the registry,

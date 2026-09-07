@@ -7,9 +7,9 @@ build runs in CI, the output directory is uploaded, and the edge serves it
 from every location. There is no `main`, so no code of yours runs on a
 request — which is the property that makes everything below true.
 
-Unlike the account's other stack here, this **is** where the project runs.
-It produces an artifact and it is what a `site` project pins on the
-`deploy` axis.
+Like the account's other deploy stacks here — `workers-ssr` and
+`containers` — this **is** where the project runs. It produces an artifact
+and it is what a `site` project pins on the `deploy` axis.
 
 ## When a project belongs here
 
@@ -41,7 +41,9 @@ warm or watch, and the deploy is an upload rather than a rollout.
   only exist once a database is read are not a static file set, however
   much the framework claims otherwise.
 - **Anything needing storage or state.** The assets are immutable once
-  uploaded. There is no writable surface here at all.
+  uploaded. There is no writable surface here at all: `kv`, `r2`, `d1` and
+  `durable-objects` are the backing pins for one, and they sit beside a
+  deploy pin that has a `main`.
 
 ## The trade, stated plainly
 

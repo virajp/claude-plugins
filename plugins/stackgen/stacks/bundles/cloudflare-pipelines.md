@@ -47,7 +47,7 @@ metrics, and Pipelines for streaming ingestion. Pinning this one records
 that the product wants **records, not work and not aggregates** — events
 that still exist in six months, queried by questions nobody has asked yet.
 A product that also needs work done per event needs a second answer, and
-Queues is planned under its own effort rather than offered today.
+Queues is offered as `cloudflare-queues`.
 
 **That the ingestion path has two bills and they are read in two places.**
 The processing and delivery terms are this service's; every byte after it

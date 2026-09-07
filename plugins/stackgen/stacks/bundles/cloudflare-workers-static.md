@@ -49,12 +49,14 @@ review.
 `run_worker_first`, no assets binding — the moment code runs in front of
 the directory, the deployable stops being a directory and the reproducible
 build stops being the whole story. That is the sibling bundle,
-[Cloudflare Workers SSR](cloudflare-workers-ssr.md), and the two are
-alternatives rather than layers: a deployment either has a `main` or it
-does not. Among the Astro project bundles, `astro-ssg` and `astro-csr` pair
-**here** — every response decided at build time — while `astro-ssr` and
-`astro-hybrid` pair there. Which Cloudflare services stackgen offers, and
-which are planned or declined, is the provider component's to state — see
+[Cloudflare Workers SSR](cloudflare-workers-ssr.md), and the three
+Cloudflare deploy bundles are alternatives rather than layers: a `main`
+that fronts a container image is
+[Cloudflare Containers](cloudflare-containers.md). Among the Astro
+project bundles, `astro-ssg` and `astro-csr` pair **here** — every
+response decided at build time — while `astro-ssr` and `astro-hybrid`
+pair there. Which Cloudflare services stackgen offers, and which are
+planned or declined, is the provider component's to state — see
 `cloud-provider/cloudflare/conventions.md`.
 
 **The seam with [Cloudflare Zero Trust Access](cloudflare-zero-trust.md).**

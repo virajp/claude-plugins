@@ -35,8 +35,8 @@ Three signals, and the first two together are usually enough:
   object at a time. Cloudflare states the pricing and query limits are
   intended to be the same, so the choice is about shape rather than cost:
   a shared relational database many requests read, versus a single
-  object's private store. That component is **planned and not offered
-  yet** — a product that needs it has a gap to name.
+  object's private store. That component is `cloud-service/durable-objects`,
+  and a product that needs it pins `cloudflare-durable-objects` beside D1.
 - **The access pattern is a key lookup with no relationships in it.**
   Workers KV is the cheaper and simpler answer for configuration,
   routing metadata and read-mostly lookups, and it is its own component.

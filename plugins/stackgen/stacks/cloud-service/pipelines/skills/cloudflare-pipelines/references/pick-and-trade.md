@@ -47,8 +47,8 @@ there is no handler. And **a product that needs both is not choosing**;
 the same event can be queued for work and streamed for the record, and
 the two paths fail independently, which is a feature.
 
-Queues is planned under its own effort and is not offered by this stack
-today — see the provider component's scope fence.
+Queues is offered as `cloud-service/queues`, pinned as the
+`cloudflare-queues` bundle.
 
 ## Against Analytics Engine
 

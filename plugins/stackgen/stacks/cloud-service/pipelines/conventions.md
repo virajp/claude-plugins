@@ -75,11 +75,12 @@ larger, rarer files invert both. Pick against the read pattern, not
 against the write one.
 
 **What this component is not.** It is not a task queue — work with
-consumers, retries and a dead-letter path is Queues, which this stack
-plans and does not yet offer. It is not a metrics store — pre-aggregated,
-high-cardinality time-series is the `analytics-engine` component. Which
-Cloudflare services are offered, planned and declined is the provider
-component's to state; see `cloud-provider/cloudflare/conventions.md`.
+consumers, retries and a dead-letter path is Queues, the
+`cloud-service/queues` component. It is not a metrics store —
+pre-aggregated, high-cardinality time-series is the `analytics-engine`
+component. Which Cloudflare services are offered, planned and declined is
+the provider component's to state; see
+`cloud-provider/cloudflare/conventions.md`.
 
 Full judgment: the `cloudflare-pipelines` skill and its references. The
 provider-wide doctrine it cites — the account and role model, the billing
