@@ -1,7 +1,7 @@
 # Doppler — contract satisfaction
 
-Clause by clause against the neutral secrets contract
-(`assets/contracts/secrets.md`). It cites, and does not restate.
+Clause by clause against stackgen's neutral secrets contract. It cites, and
+does not restate.
 
 ## The rule that outranks every other
 

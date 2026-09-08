@@ -7,9 +7,9 @@ no vendor account, no monthly bill and no third party in the loop — the trade
 is that offboarding is your job rather than a revoke button.
 
 **Secrets reach a process as environment variables, injected by
-`fnox exec -- <the repo's own task>`.** This is the secrets contract's rule
-that outranks the rest (`assets/contracts/secrets.md`), and fnox satisfies it
-without an SDK: nothing downstream of that boundary knows fnox exists.
+`fnox exec -- <the repo's own task>`.** This is the rule that outranks the
+rest in stackgen's secrets contract, and fnox satisfies it without an SDK:
+nothing downstream of that boundary knows fnox exists.
 
 **Every environment is a named profile, and every secret is declared in every
 profile.** `[secrets]` is the `default` profile and the other profiles inherit
@@ -84,5 +84,5 @@ its own prefix rather than widening that one. Machine-local additions go in
 
 Committing ciphertext requires the repo-wide gate edits the contract's
 encrypt-into-git allowance mandates. Full judgment, and the exact blocks: the
-`fnox` skill's references. The contract it cites is
-`assets/contracts/secrets.md`.
+`fnox` skill's references. The contract it cites is stackgen's secrets
+contract.
