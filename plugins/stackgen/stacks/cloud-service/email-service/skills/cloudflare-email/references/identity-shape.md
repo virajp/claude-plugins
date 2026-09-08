@@ -104,9 +104,8 @@ which is deliberate:
   it at the process boundary as an environment variable.
 - **In staging and production**, `cloud-service/secrets-store` is the
   account-level store a deployed Worker reads through its own binding.
-  That component's doctrine states which clause of
-  `assets/contracts/secrets.md` the binding model satisfies; it is not
-  restated here.
+  That component's doctrine states which clause of stackgen's secrets
+  contract the binding model satisfies; it is not restated here.
 
 Neither replaces the other, and a repo pins both.
 

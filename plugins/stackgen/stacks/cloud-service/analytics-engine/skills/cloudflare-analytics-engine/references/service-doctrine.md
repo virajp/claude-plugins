@@ -9,7 +9,7 @@ correct rather than missing.** The `analytics` category realizes no vwf
 capability token today, so there is no neutral capability contract to
 check this against — the taxonomy records that as a known vwf-side gap
 and nothing here mints a token to fill it. The one contract a reader
-might reach for, `assets/contracts/observability.md`, governs the
+might reach for, stackgen's observability contract, governs the
 telemetry sink instead; [pick & trade](pick-and-trade.md) states why in
 one place so it is not re-opened here.
 

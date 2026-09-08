@@ -80,8 +80,9 @@ crawl a site or keep an index current — that is managed retrieval, also a
 sibling component. And it does not decide anything account-wide: the
 meter, the token model and what exists on a laptop are the `cloudflare`
 component's, cited here and never restated. Which Cloudflare services this
-stack offers at all is that component's scope fence to state — see
-`cloud-provider/cloudflare/conventions.md`.
+stack offers at all is that component's scope fence to state — see the
+`cloud-provider/cloudflare` component's conventions, in this
+composition's template.
 
 Full judgment: the `cloudflare-workers-ai` skill and its references. The
 provider-wide doctrine it cites is the `cloudflare` skill's.

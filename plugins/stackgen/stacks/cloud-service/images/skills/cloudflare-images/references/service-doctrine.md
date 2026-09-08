@@ -1,9 +1,9 @@
 # Service doctrine — Cloudflare Images
 
 This component realizes **no vwf capability token** — `media` is one of the
-categories the taxonomy records as a known vwf-side gap
-(`assets/taxonomy.md`) — so there is no neutral contract to satisfy clause
-by clause. What follows is the service's own usage doctrine.
+categories stackgen's taxonomy records as a known vwf-side gap — so there
+is no neutral contract to satisfy clause by clause. What follows is the
+service's own usage doctrine.
 
 Two halves, in the order a project meets them.
 

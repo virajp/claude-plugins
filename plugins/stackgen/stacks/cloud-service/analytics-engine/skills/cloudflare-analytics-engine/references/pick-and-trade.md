@@ -26,7 +26,7 @@ There is no collector to run, no schema to migrate, and nothing to size.
 
 ## The line against a telemetry sink, drawn once
 
-**`assets/contracts/observability.md` is not this component's contract,
+**Stackgen's observability contract is not this component's contract,
 and this pack does not cite it.** That contract governs the sink for
 traces, metrics and logs as one correlated system, and its ranking
 requirement is that leaving the backend must not be a rewrite. Analytics

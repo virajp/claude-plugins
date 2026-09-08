@@ -63,5 +63,6 @@ project should pin one for its own sake, is
 `cloud-service/durable-objects`.
 
 **Any other Cloudflare service.** Which ones stackgen offers, and which
-are planned or declined, is the provider component's to state — see
-`cloud-provider/cloudflare/conventions.md`.
+are planned or declined, is the provider component's to state — see the
+`cloud-provider/cloudflare` component's conventions, in this
+composition's template.

@@ -11,8 +11,9 @@ that means for this service.
 Developing a container-enabled Worker locally needs a Docker-compatible
 CLI **and** engine — Docker Desktop and Colima are the two Cloudflare
 names — so **nothing about this stack runs on a machine without one**
-([local development](https://developers.cloudflare.com/containers/guides/local-dev/),
-`cloud-provider/cloudflare/skills/cloudflare/references/local-development-map.md`).
+([local development](https://developers.cloudflare.com/containers/guides/local-dev/);
+the `cloudflare` skill's local-development-map reference, which lands
+beside this one).
 That is a genuine local runtime rather than a simulation: the process
 under test is the process that will be deployed, in the image that will be
 pushed.

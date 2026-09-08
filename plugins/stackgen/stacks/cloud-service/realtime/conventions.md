@@ -35,9 +35,9 @@ anything — a laptop and a deployed Worker call the same live service.
 Where the app secret lives is the provider's rule, not a new one: a
 secret injected at the process boundary and catalogued by name in
 `docs/blueprint/environment.md`, per the `cloudflare` skill's identity
-and IAM reference. Its **runtime** home in a hosted environment is
-`../secrets-store/`; on a laptop and in CI it is whatever
-`capability-provider/` the repo already pinned.
+and IAM reference. Its **runtime** home in a hosted environment is the
+`cloud-service/secrets-store` component; on a laptop and in CI it is
+whatever `capability-provider/` the repo already pinned.
 
 **The app secret is server-side and stays there.** A browser never holds
 it. The Worker calls the API; the client negotiates WebRTC with the SFU
@@ -49,7 +49,7 @@ using what the Worker hands back, and the TURN half is handled by
 Object.** Nothing in Realtime tells one participant that another has
 joined, left, or published a track — who is in a room and what they may
 subscribe to is application state the product owns. At this provider that
-state belongs in `../durable-objects/` (bundle
+state belongs in `cloud-service/durable-objects` (bundle
 `cloudflare-durable-objects`), whose doctrine is that component's and is
 not restated here. A Realtime pin with no such pin beside it is a design
 with a hole in it.
@@ -66,14 +66,16 @@ above stop being the product's problem.
 ## What this component does not cover
 
 **Data synchronization** — a client subscribing to state that changes —
-is `../durable-objects/`, and it is why this pack leaves `capability`
-unset rather than claiming vwf's `realtime-sync` token. **Stored or
-archived media** is object storage, `../r2/`; the SFU forwards and holds
+is `cloud-service/durable-objects`, and it is why this pack leaves
+`capability` unset rather than claiming vwf's `realtime-sync` token.
+**Stored or archived media** is object storage,
+`cloud-service/r2`; the SFU forwards and holds
 nothing, so anything that must exist after the call ends was written
 somewhere by the product. Which Cloudflare services are offered or
-declined is the provider component's to state — see
-`cloud-provider/cloudflare/conventions.md`, and do not fill a gap from
-general Cloudflare knowledge.
+declined is the provider component's to state — see the
+`cloud-provider/cloudflare` component's conventions, in this
+composition's template, and do not fill a gap from general Cloudflare
+knowledge.
 
 Full judgment: the `cloudflare-realtime` skill and its references. The
 provider-wide half — the billing principle, the account and role model,

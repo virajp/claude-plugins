@@ -167,13 +167,12 @@ What a running instance is configured with is set from the Worker side, on
 the Container class. Read the current property names at Context7 when you
 write the class; what does not move is the rule — **the Worker is the only
 thing holding secrets, and it passes the container what that container
-needs and nothing else**. The provider's secrets doctrine and the repo's
-secrets contract
-(`${CLAUDE_PLUGIN_ROOT}/assets/contracts/secrets.md`) govern how a value
-reaches the Worker in the first place; a dedicated Cloudflare secrets
-service is not among the services this stack offers today, and the
-provider component's scope fence
-(`cloud-provider/cloudflare/conventions.md`) is what says so.
+needs and nothing else**. The provider's secrets doctrine and stackgen's
+secrets contract govern how a value reaches the Worker in the first
+place; a dedicated Cloudflare secrets service is not among the services
+this stack offers today, and the scope fence in the
+`cloud-provider/cloudflare` component's conventions, in this
+composition's template, is what says so.
 
 ## Observing it
 

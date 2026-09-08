@@ -79,8 +79,8 @@ consumers, retries and a dead-letter path is Queues, the
 `cloud-service/queues` component. It is not a metrics store —
 pre-aggregated, high-cardinality time-series is the `analytics-engine`
 component. Which Cloudflare services are offered, planned and declined is
-the provider component's to state; see
-`cloud-provider/cloudflare/conventions.md`.
+the provider component's to state; see the `cloud-provider/cloudflare`
+component's conventions, in this composition's template.
 
 Full judgment: the `cloudflare-pipelines` skill and its references. The
 provider-wide doctrine it cites — the account and role model, the billing

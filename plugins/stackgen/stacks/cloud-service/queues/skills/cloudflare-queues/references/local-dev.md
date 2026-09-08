@@ -7,10 +7,9 @@ handler is invoked with batches, and nothing has to be provisioned
 first
 ([local development](https://developers.cloudflare.com/queues/configuration/local-development/)).
 That makes this one of the good rows on the provider's local
-development map — the `cloudflare` skill's, at
-`cloud-provider/cloudflare/skills/cloudflare/references/local-development-map.md`
-— and most of this reference is about the two edges of that row rather
-than about a substitution.
+development map — the `cloudflare` skill's local-development-map
+reference, which lands beside this one — and most of this reference is
+about the two edges of that row rather than about a substitution.
 
 ## The three modes, and which two Queues has
 

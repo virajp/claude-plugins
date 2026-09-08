@@ -6,11 +6,10 @@ is changed after it has objects in it.
 
 **There is no clause-by-clause contract satisfaction here, and that is
 correct rather than missing.** This component's category is
-`stateful-compute`, which realizes **no vwf capability token** — the
-taxonomy records it among the known vwf-side gaps
-(`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`), so `capability` is unset in
-`pack.yaml` and nothing here mints one. `assets/contracts/orchestration.md`
-is the async-orchestration contract and it is **not** this component's: a
+`stateful-compute`, which realizes **no vwf capability token** —
+stackgen's taxonomy records this category among the known vwf-side gaps,
+so `capability` is unset in `pack.yaml` and nothing here mints one.
+Stackgen's async-orchestration contract is **not** this component's: a
 Durable Object is a place that holds state, not a durable multi-step run.
 The `workflows` component cites that contract; this one states its rules
 directly below and invents no file to cite.

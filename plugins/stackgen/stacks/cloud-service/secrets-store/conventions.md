@@ -121,8 +121,8 @@ has nothing to return to.
 
 ## The secrets contract
 
-The neutral contract this product's secrets owe is
-`assets/contracts/secrets.md`. This component satisfies part of it and
+The neutral contract this product's secrets owe is stackgen's secrets
+contract. This component satisfies part of it and
 does not satisfy the rest — which is the correct outcome for a runtime
 store, because the clauses about a developer's machine and a pipeline are
 the `capability-provider` pack's to answer. The walk is clause by clause

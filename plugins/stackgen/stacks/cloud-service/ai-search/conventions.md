@@ -112,8 +112,9 @@ makes itself — `cloud-service/vectorize/` and
 them and this one is the pick-and-trade reference's.
 
 **Which Cloudflare services this stack offers at all** is the `cloudflare`
-skill's scope fence — see `cloud-provider/cloudflare/conventions.md` —
-not something to infer from what this service can be pointed at.
+skill's scope fence — see the `cloud-provider/cloudflare` component's
+conventions, in this composition's template — not something to infer from
+what this service can be pointed at.
 
 Cost and identity are **cited, never restated**: the account-wide billing
 principle and the credential rule are the `cloudflare` skill's cost

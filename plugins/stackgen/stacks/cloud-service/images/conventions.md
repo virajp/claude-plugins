@@ -4,8 +4,8 @@ The product's **media layer for images**: the thing a page or an app reads
 from when it wants a picture at the right size, in the right format, for
 the device asking. It is not a bucket — nothing here is the durable home
 of the bytes — and it realizes no vwf capability token, because `media` is
-one of the categories the taxonomy records as a known vwf-side gap
-(`assets/taxonomy.md`). There is no neutral media contract to satisfy
+one of the categories stackgen's taxonomy records as a known vwf-side gap.
+There is no neutral media contract to satisfy
 clause by clause; what this component owes is judgment, and that lives in
 the `cloudflare-images` skill's five references.
 

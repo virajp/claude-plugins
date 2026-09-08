@@ -2,7 +2,7 @@
 
 How a project names, binds, reads and rotates the secrets a deployed
 Worker or Container consumes, and how that measures against the neutral
-secrets contract. The contract is `assets/contracts/secrets.md`; it states
+secrets contract. The contract is stackgen's secrets contract; it states
 what **any** secrets manager owes a vwf product, and this file states how
 this one answers — **citing rather than restating**, and naming the
 clauses it does not answer instead of omitting them.

@@ -79,9 +79,10 @@ lost its binding fails at the first read, not at deploy time.
 read-after-write. That is Durable Objects — the
 `cloud-service/durable-objects` component. **Relational data** is the
 `d1` component's. Which Cloudflare services are offered, planned or
-declined is the provider component's to state — see
-`cloud-provider/cloudflare/conventions.md`, and do not fill a gap from
-general Cloudflare knowledge.
+declined is the provider component's to state — see the
+`cloud-provider/cloudflare` component's conventions, in this
+composition's template, and do not fill a gap from general Cloudflare
+knowledge.
 
 Full judgment: the `cloudflare-kv` skill and its references. The
 provider-wide half — the billing principle, the account and role model,

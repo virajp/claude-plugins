@@ -129,14 +129,14 @@ management, open tracking — needs a marketing provider beside this one,
 and pinning this component does not answer that need.
 
 **It is one channel of three.** `messaging` covers email, push
-notifications and SMS, and this component realizes `email` alone
-(`../../../assets/taxonomy.md`). A product that also notifies a device or
+notifications and SMS, and this component realizes `email` alone, in
+stackgen's taxonomy. A product that also notifies a device or
 a phone number pins a different component for each; there is no
 Cloudflare answer to the other two in this stack.
 
 Which Cloudflare services this stack offers, plans and declines is the
-provider component's to state — see
-`cloud-provider/cloudflare/conventions.md`.
+provider component's to state — see the `cloud-provider/cloudflare`
+component's conventions, in this composition's template.
 
 Full judgment: the `cloudflare-email` skill's references. The
 provider-wide half — cost doctrine, account roles and API tokens, the

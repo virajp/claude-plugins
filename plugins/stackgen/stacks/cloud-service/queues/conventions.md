@@ -102,14 +102,15 @@ batches itself. It is a switch, not an addition: Cloudflare refuses to
 add an HTTP consumer to a queue that already has a Worker consumer
 ([pull consumers](https://developers.cloudflare.com/queues/configuration/pull-consumers/)).
 
-**R2 can produce into a queue** rather than the Worker doing it — the
-object-store side of that arrangement, the notification rule and what it
-buys, is the `cloudflare-r2` component's, stated once in
-`cloud-service/r2/conventions.md` and not restated here.
+**R2 can produce into a queue** rather than the Worker doing it: a bucket
+emits an event notification into a queue when objects are written or
+deleted, which is how an upload becomes a job. The object-store side of
+that arrangement is the `cloud-service/r2` component's and is not
+restated here.
 
 **What this component satisfies.** The `queue` category realizes vwf's
-`message-queue` token, and the neutral contract for it is
-`assets/contracts/orchestration.md`. This component answers the
+`message-queue` token, and the neutral contract for it is stackgen's
+async-orchestration contract. This component answers the
 `message-queue` clauses of that contract — at-least-once delivery with
 idempotent consumers, bounded retry with back-off, a poison path,
 visible work in flight — clause by clause in its service doctrine
@@ -127,8 +128,9 @@ column is the mistake the contract names; see
 `cloud-service/durable-objects`. And it is not an ingestion path: events
 kept as a record rather than acted on one at a time are
 `cloud-service/pipelines`. Which Cloudflare services are offered,
-planned and declined is the provider component's to state; see
-`cloud-provider/cloudflare/conventions.md`.
+planned and declined is the provider component's to state; see the
+`cloud-provider/cloudflare` component's conventions, in this
+composition's template.
 
 Full judgment: the `cloudflare-queues` skill and its references. The
 provider-wide doctrine it cites — the account and role model behind

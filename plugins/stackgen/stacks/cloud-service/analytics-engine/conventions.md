@@ -90,8 +90,8 @@ report of nothing.
 
 ## What this component does not cover
 
-**Traces and logs.** Those are the telemetry sink's, under
-`assets/contracts/observability.md`, which requires that leaving the
+**Traces and logs.** Those are the telemetry sink's, under stackgen's
+observability contract, which requires that leaving the
 backend not be a rewrite — a different requirement from this one, and this
 component neither satisfies it nor competes for it.
 
@@ -103,8 +103,9 @@ its own bundle.
 invoice is computed from is stored where every row is kept.
 
 Which Cloudflare services this stack offers beyond this one, and which are
-planned or declined, is the provider component's to state — see
-`cloud-provider/cloudflare/conventions.md`.
+planned or declined, is the provider component's to state — see the
+`cloud-provider/cloudflare` component's conventions, in this
+composition's template.
 
 Full judgment: the `cloudflare-analytics-engine` skill and its references.
 The provider-wide doctrine it cites is the `cloudflare` skill's.

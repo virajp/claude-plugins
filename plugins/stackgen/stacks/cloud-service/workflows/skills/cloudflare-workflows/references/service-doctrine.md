@@ -1,8 +1,8 @@
 # Service doctrine — Cloudflare Workflows
 
 This component realizes the `durable-workflows` capability, so what it
-owes is the neutral async-orchestration contract
-(`assets/contracts/orchestration.md`), clause by clause. The contract
+owes is stackgen's neutral async-orchestration contract, clause by
+clause. The contract
 states what **any** backend for work that happens later must do; this file
 states how this one does each, **citing rather than restating**, which is
 what lets a queue or a self-hosted engine be judged against the same
@@ -216,8 +216,9 @@ holds either way, and it follows from step names being cache keys:
 
 There is no resource id to swap: **the environment is the deployed
 script.** The binding names a Workflow by `name` and a class by
-`class_name` in the script `main` points at
-(`../../../conventions.md` carries the block), so a staging Worker has its
+`class_name` in the script `main` points at (this component's
+conventions, in the composition's template, carry the block), so a
+staging Worker has its
 own Workflow and its own instances by virtue of being a different
 deployment. Where a Workflow is shared across Workers, `script_name` names
 the one that owns the class — and that makes the owning script the thing

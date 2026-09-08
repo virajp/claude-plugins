@@ -180,7 +180,7 @@ back a deploy.
 ## What the capability commits to
 
 `email` is one of the three channels `messaging` can realize, alongside
-`push-notifications` and `sms` (`assets/taxonomy.md`). A
+`push-notifications` and `sms`, in stackgen's taxonomy. A
 blueprint that names the `email` capability is answered by this
 component and by nothing else in this stack; the other two channels have
 no Cloudflare component here at all, so a product needing them has a
