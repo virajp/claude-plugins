@@ -39,4 +39,4 @@ Read the reference that matches what you are doing — one, not all of them.
    the code is identical across all of them.
 3. **Observability leaves through OTLP.** The provider's trace, metrics and
    logging services are sinks the collector exports to — never an SDK product
-   code imports. `assets/contracts/observability.md` is why.
+   code imports. Stackgen's observability contract is why.

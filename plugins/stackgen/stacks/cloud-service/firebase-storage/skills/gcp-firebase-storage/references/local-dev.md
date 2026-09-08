@@ -3,8 +3,8 @@
 The **Firebase Emulator Suite's storage emulator** runs offline as part of the
 same suite start, and it evaluates storage rules — which is the half that most
 needs testing. It is covered by the suite's single readiness signal, so it
-contributes nothing extra to vwf's `local_stack`
-(`assets/contracts/local-stack.md`).
+contributes nothing extra to vwf's `local_stack` (stackgen's local-stack
+contract).
 
 The provider's full emulator map is the `gcp` skill's local-development
 reference.

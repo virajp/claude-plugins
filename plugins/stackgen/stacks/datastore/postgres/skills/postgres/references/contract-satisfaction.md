@@ -1,8 +1,8 @@
 # Postgres — contract satisfaction
 
-Clause by clause against the neutral datastore contract
-(`assets/contracts/datastore.md`). The contract states what any datastore must
-do; this states how Postgres does it. It cites, and does not restate.
+Clause by clause against stackgen's neutral datastore contract. The contract
+states what any datastore must do; this states how Postgres does it. It cites,
+and does not restate.
 
 ## Record versioning / optimistic concurrency
 

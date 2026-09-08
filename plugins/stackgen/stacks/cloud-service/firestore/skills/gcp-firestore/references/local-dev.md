@@ -7,9 +7,9 @@ enough that tests running against it are meaningful.
 
 ## It satisfies `local_stack` without Docker
 
-`assets/contracts/local-stack.md` is the harness contract, and its
-non-negotiable is the **deterministic readiness signal** the acceptance verifier
-gates on — never a fixed sleep. The suite has one.
+The harness contract is stackgen's local-stack contract, and its non-negotiable
+is the **deterministic readiness signal** the acceptance verifier gates on —
+never a fixed sleep. The suite has one.
 
 So report `local_stack` as satisfied by the suite with its startup task. **Do not
 wrap it in a compose file to look conventional**: that adds a layer, adds a

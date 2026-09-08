@@ -4,7 +4,7 @@
 Postgres on production's major version**, behind a readiness gate, with
 migrations run against it as a task.
 
-`assets/contracts/local-stack.md` is the harness contract and applies here in
+Stackgen's local-stack contract is the harness contract and applies here in
 full — this file states only what is specific to this service. The provider's
 emulator map, for the services that do have one, is the `gcp` skill's
 local-development reference.

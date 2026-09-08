@@ -28,8 +28,8 @@ send.** The platform's permission prompt is the floor, not the policy: a product
 that sends what a user asked not to receive loses the permission for everything.
 
 **There is no emulator for delivery.** Nothing local reaches a device, so keep
-sending behind a seam and assert the constructed payload in tests
-(`assets/contracts/local-stack.md`).
+sending behind a seam and assert the constructed payload in tests (stackgen's
+local-stack contract).
 
 Full judgment: the `gcp-firebase-messaging` skill's references. The
 provider-wide half — cost doctrine, IAM, the emulator map, the private plane —
