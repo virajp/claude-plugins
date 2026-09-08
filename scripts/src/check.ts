@@ -825,8 +825,10 @@ interface LandedFile {
  * - **a `../` chain** that leaves the directory the file lands in. A pack's
  *   skills land as sibling directories in `.claude/skills/`, so a link within
  *   a skill's own `references/`, and a link across to another skill of the
- *   same pack, both still resolve — but a `conventions.md` or a bundle body
- *   lands as one file with nothing above it, so any climb at all is a break;
+ *   same pack, both still resolve — but only a `skills/` file has a tree to
+ *   move within. Every other landed `.md` — an agent, a rule, a
+ *   `conventions.md`, a bundle body — lands as one file with nothing above
+ *   it, so any climb at all is a break;
  * - **a path into another pack**, `<type>/<slug>/<segment…>`, since a sibling
  *   pack is only materialized when the composition also picked it, and even
  *   then it lands under its own template name rather than at that path. A bare
@@ -1000,9 +1002,10 @@ function blankFences(body: string): string {
  *
  * A pack's `skills/` becomes `.claude/skills/`, so every skill of one pack
  * keeps its neighbours: the whole tier is the boundary, not one skill's own
- * directory. Everything else lands flattened — a `conventions.md` and a
- * bundle body both become one file under `.claude/stackgen/templates/` — so
- * there is no tree to move within and this is null.
+ * directory. Everything else lands flattened — an agent and a rule become one
+ * file each under `.claude/`, a `conventions.md` and a bundle body one file
+ * each under `.claude/stackgen/templates/` — so there is no tree to move
+ * within and this is null.
  */
 function landingRootOf(path: string): string | null {
   const parts = path.split("/");
@@ -1019,7 +1022,8 @@ function climbEscapes(
   ref: string,
 ): boolean {
   if (landingRoot === null) {
-    // A conventions.md or a bundle body lands as one file. There is no `..`.
+    // An agent, a rule, a conventions.md or a bundle body lands as one file.
+    // There is no `..`.
     return true;
   }
   const target = resolve(join(file.absolute, ".."), ref);
