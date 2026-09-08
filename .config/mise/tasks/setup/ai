@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #MISE description="Setup AI plugins"
-#MISE hide=true
+#MISE hide=false
 
 set -e
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
