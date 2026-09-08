@@ -44,20 +44,21 @@ status: draft                                      # required — draft | review
 
 ### `type` vocabulary
 
-| `type`              | Doc                                                                 |
-| ------------------- | ------------------------------------------------------------------- |
-| `vwf-product`       | `product.md`                                                        |
-| `vwf-architecture`  | `architecture.md`                                                   |
-| `vwf-conventions`   | `conventions.md`                                                    |
-| `vwf-design-system` | `design-system.md`                                                  |
-| `vwf-environment`   | `environment.md`                                                    |
-| `vwf-flow`          | a flow contract `flows/<project>/<NNN>-<flow>/index.md`             |
-| `vwf-flow-platform` | a flow's platform file `flows/<project>/<NNN>-<flow>/<platform>.md` |
-| `vwf-integration`   | `flows/index.md` (the flow catalog + contracts)                     |
-| `vwf-entity`        | an entity doc `entities/<entity>/index.md`                          |
-| `vwf-entities`      | `entities/index.md` (the entity catalog + ERD)                      |
-| `vwf-plan`          | a `docs/plans/` cycle plan                                          |
-| `vwf-gap-report`    | a legacy `*.gap-report.md` (retired autopilot)                      |
+| `type`              | Doc                                                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------------------- |
+| `vwf-product`       | `product.md`                                                                                            |
+| `vwf-architecture`  | `architecture.md`                                                                                       |
+| `vwf-conventions`   | `conventions.md`                                                                                        |
+| `vwf-design-system` | `design-system.md`                                                                                      |
+| `vwf-environment`   | `environment.md`                                                                                        |
+| `vwf-flow`          | a flow contract `flows/<project>/<NNN>-<flow>/index.md`                                                 |
+| `vwf-flow-platform` | a flow's platform file `flows/<project>/<NNN>-<flow>/<platform>.md`                                     |
+| `vwf-integration`   | `flows/index.md` (the flow catalog + contracts)                                                         |
+| `vwf-entity`        | an entity doc `entities/<entity>/index.md`                                                              |
+| `vwf-entities`      | `entities/index.md` (the entity catalog + ERD)                                                          |
+| `vwf-plan`          | a `docs/plans/` cycle plan                                                                              |
+| `vwf-change-plan`   | an ad-hoc change plan `docs/plans/<date>-<name>/index.md`; the blueprint completeness bars do not apply |
+| `vwf-gap-report`    | a legacy `*.gap-report.md` (retired autopilot)                                                          |
 
 Every flow is a **folder** (`docs/blueprint/flows/<project>/<NNN>-<flow>/` — one
 uniform depth for UI and non-UI projects alike) holding `index.md` (the
