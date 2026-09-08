@@ -139,15 +139,15 @@ adopting it.
 - **Model and effort are tiered per surface, not uniform.** `opus` runs where
   judgment decides the outcome (`product`, `blueprint`, `plan`, the
   `blueprint-reviewer` and `blueprint-coherence-reviewer` gates) or where nobody
-  is watching — `execute` is the only unattended command, and its
-  `execute-coder`, code-review, security-review, and ux subagents are all `opus`
-  too. `sonnet` runs the remaining commands and the writer/surveyor subagents;
-  `haiku` runs the two purely mechanical ones (`archive`, `recall`). Effort
-  follows the same logic rather than sitting at maximum everywhere: a stronger
-  model reaches the same answer in fewer reasoning tokens, so capability and
-  effort are traded against each other per surface instead of both being maxed.
-  No gate is weakened — every review stage still runs, and config can never
-  disable one.
+  is watching — `execute` and `change-execute` are the unattended commands, and
+  `execute`'s `execute-coder`, code-review, security-review, and ux subagents
+  are all `opus` too. `sonnet` runs the remaining commands and the
+  writer/surveyor subagents; `haiku` runs the two purely mechanical ones
+  (`archive`, `recall`). Effort follows the same logic rather than sitting at
+  maximum everywhere: a stronger model reaches the same answer in fewer
+  reasoning tokens, so capability and effort are traded against each other per
+  surface instead of both being maxed. No gate is weakened — every review stage
+  still runs, and config can never disable one.
 - **Read-heavy work is delegated to keep the orchestrator fast.** Coverage
   scans, the desired-vs-actual codebase survey, and the bulk doc writing run in
   subagents (`blueprint-surveyor`, `plan-surveyor`, `flow-writer`,
@@ -210,7 +210,9 @@ adopting it.
 - **Assumes a registry-described workspace.** `plan` and `execute` map each
   slice to a project in the architecture registry and read its code (submodules
   included). You model the codebase with `/vwf:architecture` first; it won't
-  operate on an ad-hoc folder.
+  operate on an ad-hoc folder. Work that has no slice behind it goes to
+  `/vwf:change-plan` → `/vwf:change-execute` instead, which read no registry and
+  no blueprint.
 - **Structure and stacks are both menus.** `vwf` ships three topology templates
   (`repo` / `monorepo` / `multi-repo`) and `/vwf:architecture` presents stack
   templates per axis — you pick, and the choice plus its reason is recorded so
@@ -328,6 +330,12 @@ environment (and, on a clean production pass, offers to freeze the released API
 contracts) and `feedback` routes what production says back into the product.
 When execution exposes a hole in the blueprint or plan, `vwf` captures it and
 loops back to fix the source — never silently working around it.
+
+Work with **no blueprint slice behind it** — tooling, CI, a docs tree, a
+refactor, a repo the blueprint does not describe — never enters this chain at
+all: it goes to [`/vwf:change-plan`](#vwfchange-plan) and then, in a fresh
+session, [`/vwf:change-execute`](#vwfchange-execute), which sit beside the chain
+and read no blueprint.
 
 ## The documents it maintains
 
@@ -717,38 +725,45 @@ record.
 
 ## Commands
 
-| Command                  | What it does                                                                                                                                |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/vwf:init`              | Internal — shape a repo (config layout, task library, gates, hygiene files, a licence); reached only through `/vwf:setup`                   |
-| `/vwf:setup [reshape]`   | Onboard/migrate a repo into vwf's format; `reshape` runs the repo-shape pass alone (re-runnable)                                            |
-| `/vwf:product`           | The Phase −1 outcome contract — problem, users, goals, slice priority                                                                       |
-| `/vwf:architecture`      | Bootstrap or update the system shape + Project Registry                                                                                     |
-| `/vwf:design-system`     | Import the product's design system from its design tool into the contract (mandatory once UI exists)                                        |
-| `/vwf:blueprint [flow]`  | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                                                |
-| `/vwf:mockups [flow]`    | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                                                    |
-| `/vwf:screens <mode>`    | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                                          |
-| `/vwf:plan [slice]`      | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                                                           |
-| `/vwf:execute [plan]`    | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                                                  |
-| `/vwf:archive [plan]`    | Retire a completed plan into `docs/plans/archived/`                                                                                         |
-| `/vwf:doctor [project]`  | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, dependency audit, mempalace, graphify, repo shape, stamps |
-| `/vwf:verify [env]`      | Post-deploy: health-check + re-run acceptance criteria against the environment                                                              |
-| `/vwf:feedback [input]`  | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat)                            |
-| `/vwf:handoff [name]`    | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                                                     |
-| `/vwf:recall [name]`     | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                                                 |
-| `/vwf:readme`            | Scan a repo and write or update its README against eight required sections                                                                  |
-| `/vwf:docs-sync [range]` | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog                                        |
-| `/vwf:git-workflow`      | Internal — worktree isolation, commits, merges                                                                                              |
+| Command                        | What it does                                                                                                                                |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/vwf:init`                    | Internal — shape a repo (config layout, task library, gates, hygiene files, a licence); reached only through `/vwf:setup`                   |
+| `/vwf:setup [reshape]`         | Onboard/migrate a repo into vwf's format; `reshape` runs the repo-shape pass alone (re-runnable)                                            |
+| `/vwf:product`                 | The Phase −1 outcome contract — problem, users, goals, slice priority                                                                       |
+| `/vwf:architecture`            | Bootstrap or update the system shape + Project Registry                                                                                     |
+| `/vwf:design-system`           | Import the product's design system from its design tool into the contract (mandatory once UI exists)                                        |
+| `/vwf:blueprint [flow]`        | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                                                |
+| `/vwf:mockups [flow]`          | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                                                    |
+| `/vwf:screens <mode>`          | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                                          |
+| `/vwf:plan [slice]`            | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                                                           |
+| `/vwf:execute [plan]`          | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                                                  |
+| `/vwf:archive [plan]`          | Retire a completed plan into `docs/plans/archived/`                                                                                         |
+| `/vwf:doctor [project]`        | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, dependency audit, mempalace, graphify, repo shape, stamps |
+| `/vwf:verify [env]`            | Post-deploy: health-check + re-run acceptance criteria against the environment                                                              |
+| `/vwf:feedback [input]`        | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat)                            |
+| `/vwf:change-plan [what]`      | Plan an ad-hoc change — work with no blueprint slice behind it — into a folder `/vwf:change-execute` can run                                |
+| `/vwf:change-execute <folder>` | Run an approved change plan unattended in a fresh session — waves, review, the plan's own gate, then land                                   |
+| `/vwf:handoff [name]`          | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                                                     |
+| `/vwf:recall [name]`           | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                                                 |
+| `/vwf:readme`                  | Scan a repo and write or update its README against eight required sections                                                                  |
+| `/vwf:docs-sync [range]`       | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog                                        |
+| `/vwf:git-workflow`            | Internal — worktree isolation, commits, merges                                                                                              |
 
-**Five are user-only** — `setup`, `verify`, `mockups`, `archive` and `recall`
-carry `disable-model-invocation: true`, so the model never fires them on its
-own; you decide when a migration, a post-deploy check, a re-render, a plan
-retirement or a session resume happens. The rest stay model-invocable because
-the workflow **delegates to them by name** — `recall` resumes a paused run
-*through* `blueprint`/`plan`/`execute`, every skill commits *through*
-`git-workflow`, `setup` runs `doctor` inside its own spine, and `feedback` and
-`plan` route work into `product`/`architecture`/`design-system`/`blueprint`.
-Marking one of those user-only would silently break the chain: the flag blocks
-programmatic invocation, not just auto-triggering.
+**Seven are user-only** — `setup`, `design-system`, `verify`, `mockups`,
+`archive`, `recall` and `change-execute` carry `disable-model-invocation: true`,
+so the model never fires them on its own; you decide when a migration, a design
+import, a post-deploy check, a re-render, a plan retirement, a session resume or
+an unattended change run happens. `change-execute` is user-only for a reason of
+its own: it must start in a session that has done nothing else, and only you can
+guarantee that. Its partner `change-plan` stays model-invocable, so a future
+hand-off — a `/vwf:feedback` intake that turns out not to be a blueprint gap —
+can route into it by name. The rest stay model-invocable because the workflow
+**delegates to them by name** — `recall` resumes a paused run *through*
+`blueprint`/`plan`/`execute`, every skill commits *through* `git-workflow`,
+`setup` runs `doctor` inside its own spine, and `feedback` and `plan` route work
+into `product`/`architecture`/`design-system`/`blueprint`. Marking one of those
+user-only would silently break the chain: the flag blocks programmatic
+invocation, not just auto-triggering.
 
 **`init` is the one skill in the other direction** — hidden from you, reachable
 by a skill. It carries `user-invocable: false`, which keeps it out of the `/`
@@ -761,14 +776,15 @@ reads.
 
 Model and reasoning effort are **tiered per surface**, not uniform. `opus` runs
 where judgment decides the outcome or where nobody is watching — `product`,
-`blueprint`, `plan`, and `execute` (the only unattended command), plus the
-`blueprint-reviewer`, `blueprint-coherence-reviewer`, `execute-coder`,
-code-review, security-review, and ux subagents. `sonnet` runs the remaining
-commands and the writer/surveyor subagents; `haiku` runs the two purely
-mechanical ones (`archive`, `recall`). Effort tracks the same logic — `high`
-through most of the workflow, `medium`/`low` on mechanical surfaces. No
-configuration can skip a gate: `pipeline.models` may re-tier a stage, but the
-stage always runs and any downgrade is reported at that gate.
+`blueprint`, `plan`, `change-plan`, `execute` and `change-execute` (the last two
+being the unattended ones), plus the `blueprint-reviewer`,
+`blueprint-coherence-reviewer`, `execute-coder`, code-review, security-review,
+and ux subagents. `sonnet` runs the remaining commands and the writer/surveyor
+subagents; `haiku` runs the two purely mechanical ones (`archive`, `recall`).
+Effort tracks the same logic — `high` through most of the workflow,
+`medium`/`low` on mechanical surfaces. No configuration can skip a gate:
+`pipeline.models` may re-tier a stage, but the stage always runs and any
+downgrade is reported at that gate.
 
 Under the hood each command is a **skill** (`skills/<name>/SKILL.md`) — Claude
 Code's unified skills keep the `/vwf:<name>` invocation exactly as before (this
@@ -1620,6 +1636,128 @@ went through the adapter, `canvas` reached a single tool's server directly — s
 it worked for one of the three configurable tools and silently harvested nothing
 for the other two, which is indistinguishable from a review nobody wrote.
 
+### /vwf:change-plan
+
+Not every change is a blueprint slice. Tooling, CI, a docs tree, a refactor that
+moves no behavior, a repo the blueprint never described — that work is real, and
+routing it through `/vwf:plan` would mean inventing a flow to hang it on.
+`/vwf:change-plan` is its front door, and `/vwf:change-execute` runs what it
+writes. The two sit **beside** the chain rather than inside it.
+
+```text
+/vwf:change-plan "move the release notes into the CI workflow"
+```
+
+It **recalls before it asks** — `docs/memory/decisions/`, the last archived plan
+that touched the same tree (its *Out of scope*, *Parked* list and run log are
+often where the request came from), and the memory palace's `planning`,
+`decisions` and `gaps` rooms when the server is up, skipped silently when it is
+not. Then it surveys through concurrent `Explore` subagents that return
+`file:line` conclusions rather than file contents, so the session stays small
+enough to hold an interview afterwards.
+
+A request that is really **several independent pieces** is decomposed before
+anything is refined — one folder per piece, in an agreed order, each later
+folder naming the earlier one in its `requires:` list. One plan never swallows
+another, and an answer that raises something outside the plan's scope is parked
+durably rather than absorbed.
+
+The interview is one question per turn, worked down a checklist and never
+batched. It asks only what has more than one reasonable answer given the repo,
+proposes two or three approaches with their trade-offs, and records every ruling
+with the alternative it rejected. Three things are always agreed before anything
+is written:
+
+- **The wave gate** — the exact commands the run must pass, proposed from the
+  repo's own task list, its `harness:` stamp and what CI already runs over the
+  touched trees. `/vwf:change-execute` runs what is written and nothing it
+  infers. A repo with neither task runner nor stamp records `none`, and the plan
+  says plainly that the wave review is then the only check.
+- **The after-landing steps** — each marked `run` (executed unprompted; it
+  publishes nothing, cuts no tag, and reaches no one but this machine) or `ask`
+  (the run stops once and asks first). Every release step is `ask`. An empty
+  list is a valid answer.
+- **The release intent** — per project the units touch, whether a user sees a
+  difference and how that project ships, recorded as a consent row reading
+  `none`, `patch`, `minor` or `major` together with the command that bumps it. A
+  release recorded here is **intent, not authorization**.
+
+Nothing reaches disk before a **hard gate**: the goal and any reversal, the
+assumed-decisions table, the unit map, every new third-party dependency a unit
+would introduce, the gates, the consent block and the parked list — presented
+for approve / revise / abandon. Only *approve* writes the folder; *abandon* ends
+with nothing on disk and a one-line note the next attempt can recall.
+
+What it writes is `docs/plans/<date>-<name>/` — an `index.md` with frontmatter
+`type: vwf-change-plan`, plus one `NN-<unit>.md` per subagent unit. Units in a
+wave own **disjoint paths** (the shared-file rule), a change that needs a new or
+altered check plans that as an owned edit rather than "update the gates", and
+the last two units are fixed: a docs unit and a gates-and-bump unit. Then it
+stops and prints the launch line. The stop is deliberate — the run belongs to a
+fresh session, and this one's context is the survey and the interview.
+
+### /vwf:change-execute
+
+The unattended half of the pair. `index.md` is its only input: every ruling,
+file scope, gate and consent the run needs is already in the folder, so this
+skill reads them and never re-asks them.
+
+```text
+/vwf:change-execute docs/plans/2026-09-08-retire-repo-plan-skills
+```
+
+Run it in a **fresh session that has done nothing else** — it cannot verify
+that, which is why the skill is user-only and why the plan's last line is the
+launch line. From there:
+
+- **Refuse early.** A `DRAFT` folder is not approved; a `COMPLETE` one has
+  nothing to do; a `requires:` folder that is not `COMPLETE` is named and the
+  run stops, with no override. `BLOCKED` or `RUNNING` is a **resume**.
+- **One worktree** for the whole run, created through
+  [`/vwf:git-workflow`](#vwfgit-workflow), which resolves what the integration
+  branch is called — this skill never assumes a branch name. No unit gets a
+  worktree of its own.
+- **Preflight** — the plan's whole wave gate once, before wave 1. A red line
+  here is the branch's, not the plan's, and is reported as such rather than
+  worked around.
+- **Waves.** Every unit in a wave is dispatched in one message as its own
+  subagent, on the model its unit file names, given paths and never conversation
+  context. Each report becomes a run-log row **as it arrives**. Then a reviewer
+  subagent over the wave's diff, with findings looped back to the owning unit
+  for at most two rounds; then the wave gate; then one commit per green unit.
+- **The two fixed final units** — the docs unit, which runs
+  [`/vwf:docs-sync`](#vwfdocs-sync) over the run's branch delta and applies its
+  findings, and the gates-and-bump unit, which bumps each released project's
+  version with the command the plan names and passes the full gate.
+
+The orchestrator **decides, reviews and verifies, and never reads unit work
+inline** — every edit is a subagent's, so the session's context stays the size
+of the reports rather than the size of the diff.
+
+A failure **skips what it blocks and keeps going** with what it does not. A unit
+that returns `UNRESOLVED:`, and everything that depends on it, is skipped; the
+rest of the run continues and the run stops once at the end with every ruling it
+needs — never mid-wave, and never with "how should I proceed". The status line
+records where it stopped, and re-running the same command once the ruling is in
+`index.md` resumes at the first unit that is not `green`. A context cap is
+handled the same way: the pending rows are written, the green units committed,
+the status set to `RUNNING — paused at wave <n> for context`, and the launch
+line printed.
+
+The **final report is rendered from the run log**, not from recollection — by
+then the run may have spanned dozens of dispatches or a compaction. With every
+unit green it moves the folder to `docs/plans/archived/`, lands per the recorded
+consent, runs each after-landing `run` step and reports its outcome, then asks
+**one** question naming the `ask` steps in order. Waiting is offered as the
+equal option rather than the fallback.
+
+**It never reads the blueprint**, and that is the line between the two pairs. A
+blueprint slice goes to [`/vwf:plan`](#vwfplan) → [`/vwf:execute`](#vwfexecute),
+which map the slice to a registry project, enforce TDD and a coverage gate, and
+stamp the blueprint docs as they land. The change pair maps nothing and stamps
+nothing; it gates on what its own plan names, which is what lets it run in a
+tree the blueprint does not describe.
+
 ### /vwf:handoff and /vwf:recall
 
 Long sessions lose fidelity. When the context window grows **beyond ~60%**,
@@ -1726,8 +1864,10 @@ only what the change falsified.
 Every reality-changing command ends here: `execute`'s reconcile step, and
 `architecture`/`product` in update mode, pass it their own change set and relay
 its report. `blueprint` and `plan` are exempt — they document intent, not
-reality, so nothing has landed for them to contradict. Run it yourself after
-work the pipeline never saw; that ad-hoc turn is what nothing covered before.
+reality, so nothing has landed for them to contradict. A
+[`/vwf:change-execute`](#vwfchange-execute) run ends here too, through its fixed
+docs unit. Run it yourself after work neither pipeline saw; that ad-hoc turn is
+what nothing covered before.
 
 It delegates the scan to a stateless `docs-sync-surveyor` subagent, which reads
 the diff graph-first and returns the contradicted passages as `file:line`
@@ -1927,11 +2067,12 @@ plan/execute loop picks the change up.
 
 vwf ships two kinds of skills: the **workflow skills** above (invoked via
 `/vwf:<name>` — most are also reachable by the skills that delegate to them; a
-few, like `setup` and `verify`, are yours to time and nothing else can call) and
-the **doctrine skills** below. The doctrine skills back the workflow's quality —
-most you never invoke, since they auto-apply and inform how Claude writes and
-reviews (`karpathy-guidelines` is the exception, also reachable by hand as
-`/vwf:karpathy-guidelines`):
+few, like `setup`, `verify` and `change-execute`, are yours to time and nothing
+else can call, `change-execute` most sharply of all, since it must open a fresh
+session) and the **doctrine skills** below. The doctrine skills back the
+workflow's quality — most you never invoke, since they auto-apply and inform how
+Claude writes and reviews (`karpathy-guidelines` is the exception, also
+reachable by hand as `/vwf:karpathy-guidelines`):
 
 - **`product-foundations`** — the thirteen foundational concerns every product
   decides, as **elicited defaults** distilled from a production reference: users
@@ -1987,9 +2128,9 @@ across the workflow — elicitation (think before coding), the plan-as-a-diff an
 the coder's "nothing not in the plan" (surgical changes, YAGNI/the minimalism
 ladder), and TDD with a coverage gate (goal-driven execution). The vendored
 **[karpathy-guidelines](./karpathy-guidelines.md)** skill states them explicitly
-and covers the ad-hoc, off-pipeline turn the pipeline does not gate. It ships
-inside `vwf` as `/vwf:karpathy-guidelines`, so there is nothing separate to
-install.
+and covers the unplanned, off-pipeline turn neither pipeline gates — ad-hoc work
+you *do* plan has [`/vwf:change-plan`](#vwfchange-plan). It ships inside `vwf`
+as `/vwf:karpathy-guidelines`, so there is nothing separate to install.
 
 ## Tips
 

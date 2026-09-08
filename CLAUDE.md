@@ -212,10 +212,10 @@ in [`repo-shape.md`][repo].
 Two plugins ship. Each row's linked home is authoritative; the cells are an
 index.
 
-| Plugin     | Is                                                                                                                                                                                                                                                                                                                                 |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, `init` (the repo-shape orchestrator, reached through `/vwf:setup`), the guarded `rtk` hook, the two mempalace auto-save hooks, and two MCP servers. Names **no** technology. Depends on `stackgen` alone. → [`vwf-plugin`][vwf]                    |
-| `stackgen` | The principles-driven stack materializer — shipped packs for the covered path, a Context7-researched generator for the uncovered tail, and the repo's own toolchain manager, gates and hygiene since `devtools` dissolved into it. Its packs ship the **config files** too, which `/vwf:init` lays down. → [`stackgen-plugin`][sg] |
+| Plugin     | Is                                                                                                                                                                                                                                                                                                                                                                |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, `init` (the repo-shape orchestrator, reached through `/vwf:setup`), the ad-hoc `change-plan` / `change-execute` pair, the guarded `rtk` hook, the two mempalace auto-save hooks, and two MCP servers. Names **no** technology. Depends on `stackgen` alone. → [`vwf-plugin`][vwf] |
+| `stackgen` | The principles-driven stack materializer — shipped packs for the covered path, a Context7-researched generator for the uncovered tail, and the repo's own toolchain manager, gates and hygiene since `devtools` dissolved into it. Its packs ship the **config files** too, which `/vwf:init` lays down. → [`stackgen-plugin`][sg]                                |
 
 Full inventory, the native manifest shape, and the generated marketplace
 manifest: [`.claude/docs/plugins.md`][plug]. Authoring doctrine that applies to
@@ -235,9 +235,13 @@ and closes with a consent-gated git pass (the first commit, the `develop`/`main`
 pair, the forge default); `setup` then sets up **vwf** in it, and offers `init`
 when the shape is **missing or drifted**, on the four baseline predicates
 `/vwf:doctor` owns. **Everything up to `blueprint` is done in full before
-planning** — `plan` hard-halts on a partial coverage stamp. The ordering gates,
-the skill and agent tables, how to add a skill and pick its invocation mode, and
-the dependency reasoning are the [`vwf-plugin`][vwf] skill.
+planning** — `plan` hard-halts on a partial coverage stamp. The ad-hoc pair
+`change-plan` → `change-execute` sits **beside** that line rather than in it: it
+plans and runs work with no blueprint slice behind it — tooling, CI, docs, a
+refactor, a tree the blueprint does not describe — reads neither the blueprint
+nor the registry, and gates on the commands its own plan folder names. The
+ordering gates, the skill and agent tables, how to add a skill and pick its
+invocation mode, and the dependency reasoning are the [`vwf-plugin`][vwf] skill.
 
 ## The installer CLI
 

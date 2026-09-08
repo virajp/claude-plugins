@@ -218,9 +218,12 @@ what production teaches you back to the document that fixes it. It carries
 [cross-session memory](https://claude-plugins.virajp.dev/plugins/mempalace/), a
 knowledge-graph layer, session handoff and recall, the
 [Karpathy coding guidelines](https://claude-plugins.virajp.dev/plugins/karpathy-guidelines/),
-and the Markdown and Context7 docs surfaces it absorbed. It names **no**
-technology — no language, no framework, no cloud — which is what lets the rest
-of this list exist. `vwf@virajp-plugins`
+and the Markdown and Context7 docs surfaces it absorbed. Beside that arc it
+carries an ad-hoc pair — `/vwf:change-plan` plans work with no blueprint slice
+behind it (tooling, CI, docs, a refactor) into a plan folder, and
+`/vwf:change-execute` runs that folder unattended in a fresh session. It names
+**no** technology — no language, no framework, no cloud — which is what lets the
+rest of this list exist. `vwf@virajp-plugins`
 
 ### Tooling, design and delivery
 

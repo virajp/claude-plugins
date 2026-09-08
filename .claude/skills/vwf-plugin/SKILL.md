@@ -57,47 +57,51 @@ were **absorbed**. The reasoning is [`dependencies.md`][de].
 The workflow is
 `setup → product → architecture → design-system → blueprint → plan → execute`,
 with `verify` (post-deploy) and `feedback` (production intake) closing the loop
-back into `product`/`blueprint`/`plan`. `init` is not a command on that line:
-since 2026-09-06 it is **skill-invoked** and runs inside setup's Step 0, or
-alone via `/vwf:setup reshape`. `init` shapes the **base repo** and `setup` sets
-up **vwf** in it — two different things, and a repo can have either without the
-other. `init` materializes the three unconditional bundles through the stack
-adapter by the fixed slugs `mise`, `repo-gates` and `repo-hygiene`, fills the
-marked positions those packs leave it (the member flags, the shell aliases, the
-per-project groups, the repo-name key, the commit gate's scopes and forge
-links), runs **three** merges — ignore sections, pre-commit fragments, editor
-fragments — and writes a two-line readme stub; it names no tool, and every file
-it lays down is a pack's. Before any of that it asks **six** questions, the
-second confirming every project id, the slug it resolves to and the source the
-name came from — nothing writes a `p:<slug>:*` group, a member flag, an alias or
-`REPO_NAME` until that list is accepted. It then closes with a **consent-gated
-git pass**: it stages what the run wrote, asks one question with three answers
-(commit / commit and push / leave it), commits with a fixed `ops:` message,
-creates whichever of `develop` and `main` the branch model needs, and asks which
-branch the forge should default to — running a pack task for that rather than
-naming a forge. Init is **not a one-time bootstrap**: its "when it runs again"
-doctrine names the moments, and `/vwf:doctor` has the drift finding that prints
-the one remedy, `/vwf:setup reshape`. `setup` is the Phase-0 bootstrapper — it
-onboards a repo (a Step-0 shape check that offers `/vwf:init` when any of the
-three slugs is missing **or** any of doctor's four baseline predicates fails,
-the `reshape` argument forcing that offer and stopping once init returns,
-detect-or-ask topology via MCQ, consent-gated reconciliation into the
-`docs/blueprint/` format, the CLAUDE.md vwf section, the memory tree and
-`mempalace.yaml`, the `environment.md` bootstrap) and is **re-runnable**:
-re-running *is* the resume mechanism, since Step 0 re-resolves the mode from
-what is on disk and a conforming repo resolves to `current`. **It runs none of
-the foundations** — it ends by printing the chain and offering to start
-`/vwf:product`, because each of those commands resolves its own mode and reports
-what it did, which a gate inside setup could only guess at on their behalf.
-`product.md` (the Phase −1 outcome contract, type `vwf-product`, gated by the
-`product-reviewer`) and `architecture` (the registry) are both unconditionally
-required before `blueprint` — every **flow's** Purpose must `Serves:`-link a
-product goal anchor (entities trace to goals transitively via their `Used by:`
-flow links), which the `blueprint-reviewer` verifies and the minimalism check
-traces to. `design-system` is a second foundation, **required once the registry
-has a UI project** (some project declares a **screen platform**): `blueprint`
-halts on a flow with a Screens surface if `docs/blueprint/design-system.md` is
-missing. `environment.md` (the per-project env-var/secret catalog, type
+back into `product`/`blueprint`/`plan`. The pair `change-plan` →
+`change-execute` sits **beside** that workflow line and never joins it — it
+plans and runs work with no blueprint slice behind it, reads neither the
+blueprint nor the registry, and gates on the commands its own plan folder names.
+`init` is not a command on that line: since 2026-09-06 it is **skill-invoked**
+and runs inside setup's Step 0, or alone via `/vwf:setup reshape`. `init` shapes
+the **base repo** and `setup` sets up **vwf** in it — two different things, and
+a repo can have either without the other. `init` materializes the three
+unconditional bundles through the stack adapter by the fixed slugs `mise`,
+`repo-gates` and `repo-hygiene`, fills the marked positions those packs leave it
+(the member flags, the shell aliases, the per-project groups, the repo-name key,
+the commit gate's scopes and forge links), runs **three** merges — ignore
+sections, pre-commit fragments, editor fragments — and writes a two-line readme
+stub; it names no tool, and every file it lays down is a pack's. Before any of
+that it asks **six** questions, the second confirming every project id, the slug
+it resolves to and the source the name came from — nothing writes a `p:<slug>:*`
+group, a member flag, an alias or `REPO_NAME` until that list is accepted. It
+then closes with a **consent-gated git pass**: it stages what the run wrote,
+asks one question with three answers (commit / commit and push / leave it),
+commits with a fixed `ops:` message, creates whichever of `develop` and `main`
+the branch model needs, and asks which branch the forge should default to —
+running a pack task for that rather than naming a forge. Init is **not a
+one-time bootstrap**: its "when it runs again" doctrine names the moments, and
+`/vwf:doctor` has the drift finding that prints the one remedy,
+`/vwf:setup reshape`. `setup` is the Phase-0 bootstrapper — it onboards a repo
+(a Step-0 shape check that offers `/vwf:init` when any of the three slugs is
+missing **or** any of doctor's four baseline predicates fails, the `reshape`
+argument forcing that offer and stopping once init returns, detect-or-ask
+topology via MCQ, consent-gated reconciliation into the `docs/blueprint/`
+format, the CLAUDE.md vwf section, the memory tree and `mempalace.yaml`, the
+`environment.md` bootstrap) and is **re-runnable**: re-running *is* the resume
+mechanism, since Step 0 re-resolves the mode from what is on disk and a
+conforming repo resolves to `current`. **It runs none of the foundations** — it
+ends by printing the chain and offering to start `/vwf:product`, because each of
+those commands resolves its own mode and reports what it did, which a gate
+inside setup could only guess at on their behalf. `product.md` (the Phase −1
+outcome contract, type `vwf-product`, gated by the `product-reviewer`) and
+`architecture` (the registry) are both unconditionally required before
+`blueprint` — every **flow's** Purpose must `Serves:`-link a product goal anchor
+(entities trace to goals transitively via their `Used by:` flow links), which
+the `blueprint-reviewer` verifies and the minimalism check traces to.
+`design-system` is a second foundation, **required once the registry has a UI
+project** (some project declares a **screen platform**): `blueprint` halts on a
+flow with a Screens surface if `docs/blueprint/design-system.md` is missing.
+`environment.md` (the per-project env-var/secret catalog, type
 `vwf-environment`) is a third foundation, **required once the registry declares
 an external integration or a secrets-manager `config`** — `setup` bootstraps it
 from the repo's existing env-var/secret usage (names only, never values) and
@@ -145,6 +149,15 @@ It is **not cosmetic**: a user-only skill is removed from the model's context
 entirely, so it **cannot be invoked by another skill**, and the failure is
 **silent** — the caller simply cannot see it. The rule: model-invocable when
 anything delegates to it, user-only when nothing does.
+
+The change pair is the one place the rule is applied by hand rather than read
+off the delegation graph. `change-execute` is **user only**: it must run in a
+session that has done nothing else, which no caller can guarantee, and nothing
+delegates to it — the plan's own launch line is the invocation. `change-plan` is
+**user and model** even though nothing calls it today, because the seam is
+planned: a `/vwf:feedback` intake that turns out not to be a blueprint gap
+routes into it by name, and marking it user-only would make that call a silent
+no-op the day it is written.
 
 **Skill-invoked** is the fourth state and the newest: hidden from the `/` menu,
 still reachable by the skill that owns its seam. Three skills are in it today —
