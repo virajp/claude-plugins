@@ -213,4 +213,4 @@ Publisher and validates the entry-point filename.
 
 Behaviour changes here must reconcile `readme.md`, the root `CLAUDE.md`, this
 file and `site/src/content/docs/installer/` in the same commit. Delegate that
-sweep to the `docs-reconciler` agent.
+sweep to `/vwf:docs-sync`.

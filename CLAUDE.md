@@ -45,24 +45,24 @@ only its build output), so their context can sit in place.
 
 Each row below is loaded **on demand** — follow the link when you need more than
 the summary here. The `.claude/skills/` rows also auto-apply the moment you edit
-the tree they govern; `release`, `create-plan` and `execute-plan` are slash
-commands — a change to this repo is planned with `/create-plan` and run, in a
-fresh session, with `/execute-plan <folder>`.
+the tree they govern; `release` is a slash command; a change to this repo is
+planned with `/vwf:change-plan` and run, in a fresh session, with
+`/vwf:change-execute <folder>` — each plan folder carries this repo's gate
+lines, `mise run plugins:local` as a `run` step and `/release` as an `ask` step.
 
-| Read                                       | For                                                                                             |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------- |
-| [`.claude/docs/repo-shape.md`][repo]       | the one authored tree, what the installer writes, the mise tasks, the traps                     |
-| [`.claude/docs/plugins.md`][plug]          | the full plugin inventory, the native manifest shape, the generated marketplace manifest        |
-| [`.claude/docs/ci-and-releases.md`][ci]    | the mise environments, the branch model, the three tag families, the workflows, the rituals     |
-| [`.claude/docs/dev-marketplace.md`][dev]   | running the plugins you are editing — setup, the refresh loop, and why `update` is not it       |
-| [`installer/CLAUDE.md`][icl]               | the installer — flags, the read-only receipt path, the interactive uninstall, testing           |
-| [`site/CLAUDE.md`][scl]                    | the website — the tree, the link rule, the gate, the release model, the design source, traps    |
-| [`.claude/skills/vwf-plugin/`][vwf]        | vwf's own shape — skills, agents, assets, hooks, adding a skill, the docs tree it maintains     |
-| [`.claude/skills/stackgen-plugin/`][sg]    | stackgen's own shape — the dispatch rule, packs and bundles, where output lands, consent        |
-| [`.claude/skills/plugin-authoring/`][auth] | the thirteen checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions |
-| [`.claude/skills/release/`][rel]           | the release ritual, the note format, the CI facts that make a failed publish legible            |
-| [`.claude/skills/create-plan/`][cp]        | planning a repo change — the survey, the one-question-at-a-time interview, the plan folder      |
-| [`.claude/skills/execute-plan/`][ep]       | running an approved plan autonomously — waves, review, the gate, resume, landing, release       |
+| Read                                                         | For                                                                                                                                                                                                                      |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`.claude/docs/repo-shape.md`][repo]                         | the one authored tree, what the installer writes, the mise tasks, the traps                                                                                                                                              |
+| [`.claude/docs/plugins.md`][plug]                            | the full plugin inventory, the native manifest shape, the generated marketplace manifest                                                                                                                                 |
+| [`.claude/docs/ci-and-releases.md`][ci]                      | the mise environments, the branch model, the three tag families, the workflows, the rituals                                                                                                                              |
+| [`.claude/docs/dev-marketplace.md`][dev]                     | running the plugins you are editing — setup, the refresh loop, and why `update` is not it                                                                                                                                |
+| [`installer/CLAUDE.md`][icl]                                 | the installer — flags, the read-only receipt path, the interactive uninstall, testing                                                                                                                                    |
+| [`site/CLAUDE.md`][scl]                                      | the website — the tree, the link rule, the gate, the release model, the design source, traps                                                                                                                             |
+| [`.claude/skills/vwf-plugin/`][vwf]                          | vwf's own shape — skills, agents, assets, hooks, adding a skill, the docs tree it maintains                                                                                                                              |
+| [`.claude/skills/stackgen-plugin/`][sg]                      | stackgen's own shape — the dispatch rule, packs and bundles, where output lands, consent                                                                                                                                 |
+| [`.claude/skills/plugin-authoring/`][auth]                   | the thirteen checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions                                                                                                                          |
+| [`.claude/skills/release/`][rel]                             | the release ritual, the note format, the CI facts that make a failed publish legible                                                                                                                                     |
+| [`site/src/content/docs/plugins/vwf.md#vwfchange-plan`][chg] | planning a change to this repo with the vwf pair — the interview, the folder; running it is [`#vwfchange-execute`][chge] — waves, the gate, after-landing steps; the how-to is [`how-to/operate/ad-hoc-change.md`][chgh] |
 
 [repo]: .claude/docs/repo-shape.md
 [plug]: .claude/docs/plugins.md
@@ -74,8 +74,9 @@ fresh session, with `/execute-plan <folder>`.
 [sg]: .claude/skills/stackgen-plugin/SKILL.md
 [auth]: .claude/skills/plugin-authoring/SKILL.md
 [rel]: .claude/skills/release/SKILL.md
-[cp]: .claude/skills/create-plan/SKILL.md
-[ep]: .claude/skills/execute-plan/SKILL.md
+[chg]: site/src/content/docs/plugins/vwf.md#vwfchange-plan
+[chge]: site/src/content/docs/plugins/vwf.md#vwfchange-execute
+[chgh]: site/src/content/docs/how-to/operate/ad-hoc-change.md
 
 The user-facing docs are a different tree and a different audience: `readme.md`,
 and `site/src/content/docs/{installer,plugins,how-to}/`, published as the
@@ -282,8 +283,9 @@ writes, so `claude plugin update` sees each edit without a commit.
 **A release is two stages, and only the second reaches anyone else.** Local
 first — `mise run plugins:local` stages the changed plugins into the dev
 marketplace and updates this machine's install, publishing nothing and cutting
-no tag, so `/execute-plan` runs it unprompted at the end of a green run and a
-staged plugin loads in the next **restarted** session. Public second — the tags.
+no tag, so `/vwf:change-execute` runs it as the plan's after-landing `run` step
+and a staged plugin loads in the next **restarted** session. Public second — the
+tags.
 
 **Ask the user before running `plugins:release`, `i:release` or
 `site:release`.**

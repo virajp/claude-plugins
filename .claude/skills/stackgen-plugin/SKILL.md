@@ -212,13 +212,13 @@ scripts must stay portable to macOS BSD `sed` — no `\s`, no `\b`.
 
 Any change to stackgen's behaviour must reconcile `readme.md`, `CLAUDE.md` and
 `site/src/content/docs/plugins/stackgen.md` in the **same commit** — the repo's
-hard rule. Delegate the sweep to the `docs-reconciler` agent. A behaviour change
-also bumps `version` in `plugin.json` (plain `X.Y.Z`) and regenerates the
-marketplace with `mise run plugins:marketplace`. A new pack, bundle or kind
-regenerates `stacks/inventory.md` with `mise run plugins:inventory` — never type
-a count into prose; `--check` in pre-commit and CI fails a stale inventory, and
-the generator throws on a `kind` that `assets/kinds.md` does not define — and on
-a bundle component ref that is not `<type>/<slug>@<version>`, that names no
+hard rule. Delegate the sweep to `/vwf:docs-sync`. A behaviour change also bumps
+`version` in `plugin.json` (plain `X.Y.Z`) and regenerates the marketplace with
+`mise run plugins:marketplace`. A new pack, bundle or kind regenerates
+`stacks/inventory.md` with `mise run plugins:inventory` — never type a count
+into prose; `--check` in pre-commit and CI fails a stale inventory, and the
+generator throws on a `kind` that `assets/kinds.md` does not define — and on a
+bundle component ref that is not `<type>/<slug>@<version>`, that names no
 `stacks/<type>/<slug>/pack.yaml`, or that pins a version the pack no longer
 carries. Bumping a pack therefore means re-pinning every bundle that names it.
 `@generated` refs name no pack by design and are skipped.
