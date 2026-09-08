@@ -3,7 +3,7 @@ name: change-execute
 description: Run an approved /vwf:change-plan folder autonomously in a fresh
   session — preflight, one worktree, subagent units in waves, a wave review
   with a capped finding loop, the plan's own gate between waves, a commit per
-  green wave, a run log the final report renders, docs reconciled and versions
+  green unit, a run log the final report renders, docs reconciled and versions
   bumped by the fixed final units, then land per the plan's recorded consent,
   run the after-landing steps, and stop once before any ask step. Blocks only
   what a missing ruling blocks and resumes from its last green unit. Invoke as
