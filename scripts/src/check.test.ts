@@ -508,6 +508,43 @@ describe("frontmatter", () => {
       expect.stringContaining("no YAML frontmatter"),
     ]);
   });
+
+  it("flags a pack skill's frontmatter, and a pack agent's", () => {
+    // The larger half, and the one that had never been parsed: a pack's skills
+    // land in a user's repo, where the host reading them is not this one.
+    const root = tree({
+      stackgen: {
+        files: {
+          "stacks/language/x/skills/x/SKILL.md":
+            "---\nname: x\ndescription: a: b\n---\n\nprose\n",
+          "stacks/language/x/agents/x-writer.md":
+            "---\nname: x-writer\ndescription: a: b\n---\n\nprose\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(
+        "stacks/language/x/agents/x-writer.md: frontmatter is not valid YAML",
+      ),
+      expect.stringContaining(
+        "stacks/language/x/skills/x/SKILL.md: frontmatter is not valid YAML",
+      ),
+    ]);
+  });
+
+  it("accepts a valid pack skill, and ignores a pack rule", () => {
+    // `rules/*.md` is left out on purpose: frontmatter is optional there, so
+    // absence is not a fault and this would be a finding on every one of them.
+    const root = tree({
+      stackgen: {
+        files: {
+          "stacks/language/x/skills/x/SKILL.md": skill("x"),
+          "stacks/language/x/rules/house-style.md": "# House style\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
 });
 
 describe("agent cross-references", () => {
@@ -630,6 +667,187 @@ describe("root-relative references", () => {
     expect(messages(check(root))).toEqual([
       expect.stringContaining("climbs out of plugins/"),
     ]);
+  });
+
+  it("says nothing about a landed file, which the citation rule owns", () => {
+    // Both rules would fire on this line, and two findings for one mistake send
+    // the author to two different fixes — one of which (make the path resolve)
+    // is the wrong one, since a landed file may not carry the token at all.
+    const root = tree({
+      stackgen: {
+        files: {
+          "stacks/language/x/conventions.md":
+            "read `${CLAUDE_PLUGIN_ROOT}/assets/nope.md`\n",
+        },
+      },
+    });
+    const found = check(root);
+    expect(found).toHaveLength(1);
+    expect(found[0]?.scope).toBe(
+      "stackgen:stacks/language/x/conventions.md:1",
+    );
+    expect(found[0]?.message).toContain("expands to nothing");
+  });
+});
+
+describe("landed citations", () => {
+  // A pack is copied into a target repo verbatim, and that repo has no plugin
+  // installed. Every citation below resolves inside the plugin — which is why
+  // the resolving rule is silent about all of them — and none of them resolves
+  // once landed, which is the failure with no reader but this one.
+  const packs = (files: Record<string, string>, executable?: string[]) => ({
+    stackgen: {
+      files: {
+        "stacks/cloud-provider/cloudflare/pack.yaml": "name: cf\n",
+        ...files,
+      },
+      executable,
+    },
+  });
+
+  it("flags the token in a skill, a conventions, a bundle and a config file", () => {
+    // Form (a) holds for every landed file, not just prose: a shell task under
+    // `config/` can spell the token as readily as a skill can, and the dot
+    // segments on its way there are why this walks rather than filters.
+    const task = "stacks/language/x/config/.config/mise/tasks/x";
+    const root = tree(packs(
+      {
+        "stacks/language/x/skills/x/SKILL.md": skill(
+          "x",
+          "",
+          "read `${CLAUDE_PLUGIN_ROOT}/assets/doc.md`",
+        ),
+        "stacks/language/x/conventions.md":
+          "read `${CLAUDE_PLUGIN_ROOT}/assets/doc.md`\n",
+        "stacks/bundles/thing.md": "read `${CLAUDE_PLUGIN_ROOT}`\n",
+        [task]:
+          "#!/usr/bin/env bash\n# see ${CLAUDE_PLUGIN_ROOT}/assets/x.md\n",
+      },
+      [task],
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("expands to nothing"),
+      expect.stringContaining("expands to nothing"),
+      expect.stringContaining("expands to nothing"),
+      expect.stringContaining("expands to nothing"),
+    ]);
+  });
+
+  it("does not flag the token at the plugin root", () => {
+    // The plugin's own skills are not landed, and the token is how they are
+    // supposed to point at their assets.
+    const root = tree({
+      stackgen: {
+        files: {
+          "assets/doc.md": "x",
+          "skills/one/SKILL.md": skill(
+            "one",
+            "",
+            "read `${CLAUDE_PLUGIN_ROOT}/assets/doc.md`",
+          ),
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a bare assets/ path, once, and leaves a lookalike alone", () => {
+    // The lookbehind is what keeps the token form from being counted twice and
+    // keeps a word merely ending in `assets` out.
+    const root = tree(packs({
+      "stacks/language/x/conventions.md":
+        "see `assets/contracts/secrets.md`, `${CLAUDE_PLUGIN_ROOT}/assets/x.md`"
+        + " and `my-assets/x.md`\n",
+    }));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("expands to nothing"),
+      expect.stringContaining("cites `assets/contracts/secrets.md`"),
+    ]);
+  });
+
+  it("flags a climb out of the pack's skills tier, not one within it", () => {
+    // A pack's skills land as siblings in `.claude/skills/`, so a link inside
+    // one skill's `references/` and a link across to another skill of the same
+    // pack both still resolve; the pack's own conventions land elsewhere
+    // entirely, so the climb to it does not.
+    const root = tree(packs({
+      "stacks/language/x/skills/one/SKILL.md": skill(
+        "one",
+        "",
+        "see [d](../two/references/z.md)",
+      ),
+      "stacks/language/x/skills/one/references/y.md":
+        "see [a](../references/z.md), [b](../../two/references/z.md) and"
+        + " [c](../../../conventions.md)\n",
+      "stacks/language/x/skills/two/SKILL.md": skill("two"),
+      "stacks/language/x/skills/two/references/z.md": "z\n",
+      "stacks/language/x/skills/one/references/z.md": "z\n",
+    }));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("cites `../../../conventions.md`"),
+    ]);
+  });
+
+  it("flags any climb at all out of a conventions file", () => {
+    // It lands as one file under `.claude/stackgen/templates/`, with nothing
+    // above it and no tree to move within.
+    const root = tree(packs({
+      "stacks/language/x/conventions.md": "see [a](../x.md)\n",
+    }));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("cites `../x.md`"),
+    ]);
+  });
+
+  it("flags a path into another pack, and never a bare component ref", () => {
+    // `<type>/<slug>` is the lockfile's and a bundle's identifier vocabulary.
+    // Only a trailing segment makes it a path — and a path is what breaks,
+    // because the sibling lands under its own template name or not at all.
+    const root = tree(packs({
+      "stacks/bundles/thing.md":
+        "pins `cloud-provider/cloudflare` and `cloud-provider/cloudflare@1.0.0`,"
+        + " see `cloud-provider/cloudflare/conventions.md`\n",
+    }));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(
+        "cites a path inside the `cloud-provider/cloudflare` pack",
+      ),
+    ]);
+  });
+
+  it("does not flag a type this plugin ships no packs under", () => {
+    // The type list is read from the tree at check time, so the form covers a
+    // new type directory without an edit — and covers nothing that is not one.
+    const root = tree(packs({
+      "stacks/bundles/thing.md": "see `datastore/postgres/conventions.md`\n",
+    }));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("ignores a fence, and still reports the true line after it", () => {
+    // A fence is a worked example — the `extends` samples in the tsconfig pack
+    // show a path the TARGET repo will hold. Blanking it has to keep the line
+    // count, because the line is the whole value of the finding.
+    const root = tree(packs({
+      "stacks/language/x/conventions.md": [
+        "intro",
+        "",
+        "```json",
+        "{ \"extends\": \"assets/contracts/secrets.md\" }",
+        "```",
+        "",
+        "see `assets/contracts/secrets.md`",
+        "",
+      ]
+        .join("\n"),
+    }));
+    const found = check(root);
+    expect(messages(found)).toEqual([
+      expect.stringContaining("cites `assets/contracts/secrets.md`"),
+    ]);
+    expect(found[0]?.scope).toBe(
+      "stackgen:stacks/language/x/conventions.md:7",
+    );
   });
 });
 

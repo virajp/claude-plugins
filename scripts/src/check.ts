@@ -89,6 +89,7 @@ export function check(repoRoot: string): Finding[] {
     findings.push(...checkExampleLinks(plugin));
     findings.push(...checkRootRefs(plugin, pluginsRoot));
     findings.push(...checkRetiredVocabulary(plugin));
+    findings.push(...checkLandedCitations(plugin));
   }
 
   findings.push(...checkDesignAdapters(plugins));
@@ -641,11 +642,17 @@ function* filesUnder(dir: string): Generator<string> {
  * host dropped the whole skill with no error at all. Nothing normalises the
  * block on its way to disk any more — it *is* the authored bytes — so this is
  * the only reader that ever holds it to the spec.
+ *
+ * A pack's skills and agents are held to it too, and they are the larger half:
+ * they outnumber the plugin's own, they are the documents that actually land in
+ * a user's repo — where the host reading them is not this one — and until this
+ * widened not one of them had ever been parsed. A pack's `rules/*.md` is left
+ * out: frontmatter there is optional, so absence is not a fault.
  */
 function checkFrontmatterYaml(plugin: Plugin): Finding[] {
   const findings: Finding[] = [];
 
-  for (const path of [...plugin.skills, ...plugin.agents]) {
+  for (const path of frontmatteredDocs(plugin)) {
     const raw = frontmatterBlock(readText(join(plugin.root, path)));
     if (raw === null) {
       findings.push({
@@ -666,6 +673,19 @@ function checkFrontmatterYaml(plugin: Plugin): Finding[] {
     }
   }
   return findings;
+}
+
+/** A pack's skills and agents, which the reader's plugin-root globs miss. */
+const PACK_SKILL_RE = /^stacks\/[^/]+\/[^/]+\/skills\/[^/]+\/SKILL\.md$/;
+const PACK_AGENT_RE = /^stacks\/[^/]+\/[^/]+\/agents\/[^/]+\.md$/;
+
+/** Every document in a plugin whose frontmatter a host parses. */
+function frontmatteredDocs(plugin: Plugin): string[] {
+  const packs = plugin
+    .files
+    .map(f => f.path)
+    .filter(path => PACK_SKILL_RE.test(path) || PACK_AGENT_RE.test(path));
+  return [...plugin.skills, ...plugin.agents, ...packs];
 }
 
 /** Relative links inside the worked example bundle must resolve. */
@@ -702,11 +722,18 @@ function checkExampleLinks(plugin: Plugin): Finding[] {
  * pick the entry matching their case. `../<plugin>/` also resolves — Claude
  * installs every plugin as a sibling, so a relative hop between them is stable —
  * but it may not climb past `plugins/`, since nothing above it is installed.
+ *
+ * A landed pack file is skipped: it may not carry the token at all, resolvable
+ * or not, and {@link checkLandedCitations} owns that — so a bad reference there
+ * is one finding rather than two.
  */
 function checkRootRefs(plugin: Plugin, pluginsRoot: string): Finding[] {
   const findings: Finding[] = [];
 
   for (const file of plugin.files) {
+    if (isLandedPath(file.path)) {
+      continue;
+    }
     for (const ref of captures(readText(file.absolute), ROOT_REF_RE)) {
       const target = resolveRootRef(plugin.root, ref);
       if (outside(pluginsRoot, target)) {
@@ -737,6 +764,267 @@ export function resolveRootRef(pluginRoot: string, ref: string): string {
 function outside(root: string, path: string): boolean {
   const rel = relative(root, path);
   return rel === "" || rel.startsWith("..") || isAbsolute(rel);
+}
+
+// ---------------------------------------------------------------------------
+// Landed pack files
+// ---------------------------------------------------------------------------
+
+/**
+ * The tiers of a pack that are copied into a target repo, verbatim.
+ *
+ * A pack is materialized, never referenced in place: `skills/`, `agents/`,
+ * `rules/`, `hooks/` and `config/` are copied byte-for-byte, a pack's
+ * `conventions.md` — like a bundle's body — lands as the body of
+ * `.claude/stackgen/templates/<slug>.md`, and the materializer's only mutation
+ * is the `p/_project/` -> `p/<id>/` rename. Nothing else is rewritten.
+ */
+const LANDED_TIERS = ["skills", "agents", "rules", "hooks", "config"];
+
+/** The literal token, matched for its own sake rather than for its path. */
+const LANDED_TOKEN_RE = /\$\{CLAUDE_PLUGIN_ROOT\}/g;
+/**
+ * A bare reference into the plugin's `assets/` tree.
+ *
+ * The lookbehind is load-bearing twice over, and the `-` in it is not
+ * decoration: it keeps `${CLAUDE_PLUGIN_ROOT}/assets/x.md` from being counted a
+ * second time here, and it keeps a word merely ending in `assets` —
+ * `pnpm-assets/x.md` — out, which without the hyphen it does not.
+ */
+const LANDED_ASSET_RE = /(?<![\w./-])(assets\/[A-Za-z0-9_./-]+\.(?:md|ya?ml))/g;
+/** A relative path that climbs. Where it lands is decided by resolving it. */
+const LANDED_CLIMB_RE = /(?<!\w)((?:\.\.\/)+[A-Za-z0-9_./-]+)/g;
+
+/** A landed file, by its plugin-relative path and where it is on disk. */
+interface LandedFile {
+  readonly path: string;
+  readonly absolute: string;
+}
+
+/**
+ * A landed pack file may not cite anything by a path only the plugin has.
+ *
+ * A pack's whole point is that its output works for every collaborator on a
+ * repo where **no plugin is installed** (`assets/output-tree.md`), and the
+ * materializer copies these tiers without rewriting a word. Inside the plugin
+ * every one of these citations resolves, so rule 6 is silent about all of them;
+ * after landing not one of them does, and nothing reports it — the reader is
+ * simply sent to a path that is not there. That is the failure this rule exists
+ * for, and it is why rule 6 now skips the same files: one bad reference is one
+ * finding, from the rule that knows what the file is for.
+ *
+ * Four forms, matched separately because they fail differently and are fixed
+ * differently:
+ *
+ * - **the token** `${CLAUDE_PLUGIN_ROOT}`, anywhere and even without a path,
+ *   because outside a plugin the host expands it to nothing at all. Checked in
+ *   every landed file, not just prose: a shell task or a config fragment can
+ *   spell it as readily as a skill;
+ * - **a bare `assets/…`** path, which reads as repo-relative in the target and
+ *   resolves to nothing there;
+ * - **a `../` chain** that leaves the directory the file lands in. A pack's
+ *   skills land as sibling directories in `.claude/skills/`, so a link within
+ *   a skill's own `references/`, and a link across to another skill of the
+ *   same pack, both still resolve — but a `conventions.md` or a bundle body
+ *   lands as one file with nothing above it, so any climb at all is a break;
+ * - **a path into another pack**, `<type>/<slug>/<segment…>`, since a sibling
+ *   pack is only materialized when the composition also picked it, and even
+ *   then it lands under its own template name rather than at that path. A bare
+ *   `<type>/<slug>` (or `<type>/<slug>@<version>`) is the lockfile's and a
+ *   bundle's identifier vocabulary and is never refused — only a trailing
+ *   segment makes it a path.
+ *
+ * Forms (b)–(d) hold for `.md` files only, and after fenced blocks are blanked:
+ * a shell script under `config/` legitimately points at files that land beside
+ * it, and a fence is a worked example — the `extends` samples in the `tsconfig`
+ * pack's skill show a real relative path a *target* repo will hold. The
+ * blanking preserves line count, because the finding's whole value is the line
+ * it names: the links from the `flutter-ios` skill's `references/standards.md`
+ * across to the `flutter` skill beside it are legitimate and stay unflagged, so
+ * an author sent to the wrong line learns nothing.
+ *
+ * What replaces a citation is in the message, and it is never another path:
+ * name the asset by role ("stackgen's secrets contract"), or state the rule it
+ * carries inline.
+ */
+function checkLandedCitations(plugin: Plugin): Finding[] {
+  const findings: Finding[] = [];
+  const packPath = packPathPattern(stackTypes(plugin));
+
+  for (const file of landedFiles(plugin)) {
+    const markdown = file.path.endsWith(".md");
+    const text = readText(file.absolute);
+    const lines = (markdown ? blankFences(text) : text).split("\n");
+    const landingRoot = landingRootOf(file.path);
+
+    for (const [index, line] of lines.entries()) {
+      const at = (message: string) =>
+        findings.push({
+          scope: `${plugin.dir}:${file.path}:${index + 1}`,
+          message,
+        });
+
+      for (const _ of line.matchAll(LANDED_TOKEN_RE)) {
+        at(
+          "spells `${CLAUDE_PLUGIN_ROOT}` in a file that is copied into a "
+            + "target repo, where the token expands to nothing — name what it "
+            + "pointed at by role, or state the rule it carries inline",
+        );
+      }
+      if (!markdown) {
+        continue;
+      }
+
+      for (const [, ref] of line.matchAll(LANDED_ASSET_RE)) {
+        at(
+          `cites \`${ref}\`, a path that exists only inside this plugin — this `
+            + `file lands in a repo with no plugin installed, so name the asset `
+            + `by role or state its rule inline`,
+        );
+      }
+
+      for (const [, ref] of line.matchAll(LANDED_CLIMB_RE)) {
+        if (ref !== undefined && climbEscapes(plugin, file, landingRoot, ref)) {
+          at(
+            `cites \`${ref}\`, which climbs out of what this file lands as — `
+              + `nothing sits above it in the target repo, so state what it `
+              + `needs inline`,
+          );
+        }
+      }
+
+      if (packPath === null) {
+        continue;
+      }
+      for (const [, component] of line.matchAll(packPath)) {
+        at(
+          `cites a path inside the \`${component}\` pack — a pack is copied, `
+            + `never referenced in place, so say "the \`${component}\` `
+            + `component's conventions, in this composition's template"`,
+        );
+      }
+    }
+  }
+  return findings;
+}
+
+/** Is this plugin-relative path one of the files a pack lands? */
+function isLandedPath(path: string): boolean {
+  const parts = path.split("/");
+  const [stacks, type, slug, tier] = parts;
+  if (stacks !== "stacks" || type === undefined || slug === undefined) {
+    return false;
+  }
+  if (type === "bundles") {
+    return parts.length === 3 && slug.endsWith(".md");
+  }
+  if (parts.length === 4) {
+    return tier === "conventions.md";
+  }
+  return parts.length > 4 && tier !== undefined && LANDED_TIERS.includes(tier);
+}
+
+/**
+ * Every landed file of every pack, walked rather than filtered.
+ *
+ * `plugin.files` is one glob and a glob does not descend into a dot segment, so
+ * most of the `config/` tier is invisible there — the same reason
+ * {@link checkPackConfigTier} walks its own way.
+ */
+function* landedFiles(plugin: Plugin): Generator<LandedFile> {
+  for (const pack of globSync("stacks/*/*", { cwd: plugin.root })) {
+    const absolute = join(plugin.root, pack);
+    if (pack.startsWith("stacks/bundles/")) {
+      if (isLandedPath(pack)) {
+        yield { path: pack, absolute };
+      }
+      continue;
+    }
+    for (const tier of LANDED_TIERS) {
+      for (const found of filesUnder(join(absolute, tier))) {
+        yield { path: relative(plugin.root, found), absolute: found };
+      }
+    }
+    const conventions = join(absolute, "conventions.md");
+    if (existsSync(conventions)) {
+      yield { path: `${pack}/conventions.md`, absolute: conventions };
+    }
+  }
+}
+
+/**
+ * The pack types, read from the tree at check time.
+ *
+ * A new type directory therefore extends the cross-pack form without an edit
+ * here — which is what keeps this rule from being one `mkdir` behind the
+ * taxonomy it polices.
+ */
+function stackTypes(plugin: Plugin): string[] {
+  return globSync("stacks/*", { cwd: plugin.root })
+    .filter(path =>
+      path !== "stacks/bundles"
+      && statSync(join(plugin.root, path)).isDirectory()
+    )
+    .map(path => path.slice("stacks/".length));
+}
+
+/** `<type>/<slug>/<segment…>`, or null when the plugin ships no packs. */
+function packPathPattern(types: readonly string[]): RegExp | null {
+  if (types.length === 0) {
+    return null;
+  }
+  const alternation = types
+    .map(type => type.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("|");
+  return new RegExp(
+    `(?<![\\w./-])((?:${alternation})/[a-z0-9-]+)/[A-Za-z0-9_]`,
+    "g",
+  );
+}
+
+/**
+ * Fenced code blocks, blanked to their own line count.
+ *
+ * Unlike {@link stripFences} this keeps the lines: a finding whose whole value
+ * is the line it names cannot afford to renumber the file under it.
+ */
+function blankFences(body: string): string {
+  return body.replace(
+    /^```[\s\S]*?^```/gm,
+    block => "\n".repeat((block.match(/\n/g) ?? []).length),
+  );
+}
+
+/**
+ * The tree a `../` may move within, mirrored from where the file lands.
+ *
+ * A pack's `skills/` becomes `.claude/skills/`, so every skill of one pack
+ * keeps its neighbours: the whole tier is the boundary, not one skill's own
+ * directory. Everything else lands flattened — a `conventions.md` and a
+ * bundle body both become one file under `.claude/stackgen/templates/` — so
+ * there is no tree to move within and this is null.
+ */
+function landingRootOf(path: string): string | null {
+  const parts = path.split("/");
+  return parts[3] === "skills" && parts.length > 5
+    ? parts.slice(0, 4).join("/")
+    : null;
+}
+
+/** Does this `../` chain leave the tree the file lands in? */
+function climbEscapes(
+  plugin: Plugin,
+  file: LandedFile,
+  landingRoot: string | null,
+  ref: string,
+): boolean {
+  if (landingRoot === null) {
+    // A conventions.md or a bundle body lands as one file. There is no `..`.
+    return true;
+  }
+  const target = resolve(join(file.absolute, ".."), ref);
+  const rel = relative(join(plugin.root, landingRoot), target);
+  return rel.startsWith("..") || isAbsolute(rel);
 }
 
 // ---------------------------------------------------------------------------
