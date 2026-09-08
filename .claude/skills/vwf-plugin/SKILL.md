@@ -207,7 +207,8 @@ skill.
 
 Any change to vwf's behaviour must reconcile `readme.md`, `CLAUDE.md` and
 `site/src/content/docs/plugins/vwf.md` in the **same commit** — the repo's hard
-rule. Delegate the sweep to the `docs-reconciler` agent rather than reading
-those files inline; that file is large enough that loading it costs the rest of
-the session. A behaviour change also bumps `version` in `plugin.json` (plain
-`X.Y.Z`) and regenerates the marketplace with `mise run plugins:marketplace`.
+rule. Delegate the sweep to `vwf:docs-sync` (its surveyor agent reads the docs)
+rather than reading those files inline; that file is large enough that loading
+it costs the rest of the session. A behaviour change also bumps `version` in
+`plugin.json` (plain `X.Y.Z`) and regenerates the marketplace with
+`mise run plugins:marketplace`.
