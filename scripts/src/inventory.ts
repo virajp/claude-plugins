@@ -21,10 +21,15 @@
  *
  * `plugins/**` is excluded from dprint, so the table lands exactly as rendered.
  *
- * Two things fail the generation outright rather than rendering a wrong row: a
- * pack or bundle missing a field the format requires, and a `kind` no heading in
+ * Four things fail the generation outright rather than rendering a wrong row: a
+ * pack or bundle missing a field the format requires; a `kind` no heading in
  * `kinds.md` defines — the vocabulary is closed, and an undefined kind is a
- * typo, not a new kind.
+ * typo, not a new kind; a bundle component ref that is not
+ * `<type>/<slug>@<version>`; and a ref that names no `pack.yaml`, or pins a
+ * version differing from the one that pack.yaml carries. A pin that resolves to
+ * nothing, or to a version the pack no longer has, would otherwise advertise a
+ * composition the materializer cannot copy. `@generated` refs are skipped —
+ * they name no pack by design.
  */
 
 import {
@@ -86,6 +91,7 @@ export function readInventory(repoRoot: string): Inventory {
   for (const bundle of bundles) {
     assertKind(defined, bundle.kind, `${BUNDLES_DIR}/${bundle.slug}.md`);
   }
+  assertComponents(packs, bundles);
 
   return { kinds, packs, bundles };
 }
@@ -293,6 +299,48 @@ function assertKind(defined: Set<string>, kind: string, rel: string): void {
     throw new Error(
       `${rel} declares kind \`${kind}\`, which ${KINDS_PATH} does not define`,
     );
+  }
+}
+
+/**
+ * Every bundle pin resolves to a pack.yaml at exactly that version.
+ *
+ * A bundle is the recorded composition, so a pin is a claim about what the
+ * materializer will copy. `@generated` is the one ref that names no pack: the
+ * component is uncovered and runs the generation pipeline on first fetch.
+ */
+function assertComponents(
+  packs: readonly Pack[],
+  bundles: readonly Bundle[],
+): void {
+  const byRef = new Map(packs.map(p => [`${p.type}/${p.slug}`, p]));
+  for (const bundle of bundles) {
+    const rel = `${BUNDLES_DIR}/${bundle.slug}.md`;
+    for (const entry of bundle.components) {
+      const match = /^([a-z0-9-]+)\/([a-z0-9-]+)@(.+)$/.exec(entry);
+      if (!match) {
+        throw new Error(
+          `${rel} component ref "${entry}" is not <type>/<slug>@<version>`,
+        );
+      }
+      const [, type, slug, version] = match;
+      if (version === "generated") {
+        continue;
+      }
+      const pack = byRef.get(`${type}/${slug}`);
+      if (!pack) {
+        throw new Error(
+          `${rel} pins "${entry}" but there is no ${STACKS_DIR}/${type}/${slug}/pack.yaml`,
+        );
+      }
+      if (pack.version !== version) {
+        throw new Error(
+          `${rel} pins "${entry}" but that pack.yaml is at version ${pack.version}`
+            + ` — a bundle is the recorded composition, so bumping a pack means`
+            + ` re-pinning every bundle that names it`,
+        );
+      }
+    }
   }
 }
 
