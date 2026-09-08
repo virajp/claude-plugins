@@ -3,9 +3,9 @@
 The product's **object store**: user uploads, generated documents, build
 artifacts, exports, datasets, archived logs — anything whose natural unit
 is a file rather than a row. It realizes the `object-file-storage`
-capability, and what it owes is
-`assets/contracts/object-storage.md`, satisfied clause by clause in the
-skill's service doctrine rather than restated here.
+capability, and what it owes is stackgen's object-storage contract,
+satisfied clause by clause in the skill's service doctrine rather than
+restated here.
 
 **Two access paths, and picking between them is the first decision.** A
 Worker reaches a bucket through a **binding**, with no credential in the

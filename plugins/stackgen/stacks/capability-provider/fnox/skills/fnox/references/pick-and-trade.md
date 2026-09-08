@@ -1,7 +1,7 @@
 # fnox — pick & trade
 
 The axis this category is chosen on is **where the secret lives, and what
-onboarding a teammate costs** (`assets/contracts/secrets.md`, "What this
+onboarding a teammate costs** (stackgen's secrets contract, "What this
 contract does not decide"). fnox's answer: **you hold them** — encrypted in
 your own repository, or referenced in your own cloud — and onboarding is a
 public key plus a re-encrypt.

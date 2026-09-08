@@ -27,7 +27,7 @@ keeps a migration between the two targets tractable.
 **The release runs behind a mise task**, applying manifests versioned in the
 repo and rendered per environment, so the same command runs locally and in CI.
 Deploys obey vwf's delivery-pipeline contract; the trigger belongs to the CI
-system on the project's `cicd` axis (`assets/contracts/release-trigger.md`).
+system on the project's `cicd` axis (stackgen's release-trigger contract).
 
 **Workload identity federation binds a Kubernetes service account to a cloud
 one**, so pods get short-lived credentials with no key material in the cluster.

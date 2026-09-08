@@ -9,8 +9,7 @@ Three signals, and the first is the one that decides:
   "halfway through" is a real state someone would ask about. The
   async-orchestration contract calls this the heaviest of its four shapes
   and reserves it for "a multi-step process with state, timers and
-  compensation" (`assets/contracts/orchestration.md`, *Pick the smallest
-  thing that holds*).
+  compensation", under *Pick the smallest thing that holds*.
 - **The process outlives a request, and possibly a day.** A step may sleep
   for up to 365 days, and `waitForEvent` blocks on something outside the
   system entirely — a webhook, an approval — with a timeout that defaults
@@ -52,7 +51,7 @@ Three signals, and the first is the one that decides:
   own instruction applies: pick the smallest thing that holds. Migrating a
   working Temporal deployment onto Workflows buys edge co-location and
   costs the durable-timer semantics, the SDK and the operational knowledge
-  the team has. The contract's `assets/contracts/orchestration.md` says
+  the team has. Stackgen's async-orchestration contract says
   which engine is the user's pick, and this component is one of the
   answers rather than the answer.
 

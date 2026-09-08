@@ -42,7 +42,7 @@ package deal.
 own ready signal, covering the datastore, identity and object storage together.
 It satisfies vwf's `local_stack` capability **without Docker**, and wrapping it
 in a compose file to look conventional adds a failure mode and satisfies nothing
-`assets/contracts/local-stack.md` asks for. Push is the exception with no local
+stackgen's local-stack contract asks for. Push is the exception with no local
 answer at all.
 
 **Two access rules hold across the whole bundle.** Server code reaches these
@@ -59,7 +59,7 @@ fan-out's cost lands too.
 
 **Observability is not in this bundle.** Telemetry leaves through OTLP and
 terminates in the provider's trace, metrics and logging services as a **sink** —
-never a vendor SDK in product code. That is `assets/contracts/observability.md`,
+never a vendor SDK in product code. That is stackgen's observability contract,
 and the provider component states the position.
 
 Full judgment: each component's own skill and its references.

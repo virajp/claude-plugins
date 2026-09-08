@@ -92,11 +92,12 @@ is first instantiated, not a placement guarantee and not a relocation.
 ## What this component does not cover
 
 **Which Cloudflare services are offered, planned or declined** is the
-provider component's to state — see
-`cloud-provider/cloudflare/conventions.md`, and do not fill a gap from
-general Cloudflare knowledge. **A durable multi-step run** — retries,
-`sleep`, waiting for an event — is the `workflows` component's; a Durable
-Object is a long-lived coordinator, not a workflow engine. **The account and
+provider component's to state — see the `cloud-provider/cloudflare`
+component's conventions, in this composition's template, and do not fill
+a gap from general Cloudflare knowledge. **A durable multi-step run** —
+retries, `sleep`, waiting for an event — is the `workflows` component's;
+a Durable Object is a long-lived coordinator, not a workflow engine.
+**The account and
 role model behind the deploy credential**, and **the account-level billing
 shape**, are the `cloudflare` skill's identity-and-iam and cost-doctrine
 references, cited and never restated here.

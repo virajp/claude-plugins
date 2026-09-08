@@ -64,7 +64,7 @@ injected at the boundary — means the injector is a prefix on a command line.
 Replacing Doppler with a local-first manager, or with a cloud's secret manager,
 changes the prefix and nothing downstream of it.
 
-**And not a ranking.** `assets/contracts/secrets.md` deliberately declines to
+**And not a ranking.** Stackgen's secrets contract deliberately declines to
 say whether a hosted platform beats a local-first tool; the axis is **where the
 secret lives and what onboarding a teammate costs**, and both answers are
 legitimate. This page is the case for one end of that axis, not a verdict.

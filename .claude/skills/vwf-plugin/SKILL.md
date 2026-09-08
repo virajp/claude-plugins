@@ -38,7 +38,7 @@ before it was cut.
 [dt]: references/docs-tree.md
 [de]: references/dependencies.md
 
-The twelve checker rules, the two mise gates and the authoring traps are the
+The thirteen checker rules, the two mise gates and the authoring traps are the
 sibling `plugin-authoring` skill, which also applies here. The user-facing
 reference is `site/src/content/docs/plugins/vwf.md`, published at
 `https://claude-plugins.virajp.dev/plugins/vwf/`.

@@ -44,7 +44,7 @@ taxonomy records as a known vwf-side gap, so the service component leaves
 `capability` unset and nothing here mints one.
 
 **The line worth carrying forward** is that this is not the product's
-telemetry. Traces and logs answer to `assets/contracts/observability.md`
+telemetry. Traces and logs answer to stackgen's observability contract
 and its requirement that changing backend not be a rewrite; this is a
 Cloudflare-specific binding writing product metrics, and the two coexist
 rather than substitute. A product usually wants both, and that is two

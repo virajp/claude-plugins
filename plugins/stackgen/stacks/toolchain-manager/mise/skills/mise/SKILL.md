@@ -144,13 +144,14 @@ two differ in value and never in vocabulary.
 
 - `mise.toml` `[env]` — only what is identical everywhere (`DISABLE_TELEMETRY`),
   plus **`REPO_NAME`**: a marked position the orchestrator fills with this repo's
-  project id, the slug `${CLAUDE_PLUGIN_ROOT}/assets/ids.md` defines and the same
-  token the `p:<id>:*` group, the member flags and the `setup-<id>` aliases
-  carry. **A literal, never derived at load time** — the basename of the config
-  root is the *branch* name inside a linked worktree, so a derived value would
-  address a different repo depending on where you stood. Aliases that vary only
-  by repo (the agent launchers) belong in the user's **global** config reading
-  `$REPO_NAME`, not here: one definition, per-repo values.
+  project id — the same token the `p:<id>:*` group, the member flags and the
+  `setup-<id>` aliases carry, derived once by `/vwf:init`, shown and confirmed
+  before any of the four is written. **A literal, never derived at load time** —
+  the basename of the config root is the *branch* name inside a linked worktree,
+  so a derived value would address a different repo depending on where you stood.
+  Aliases that vary only by repo (the agent launchers) belong in the user's
+  **global** config reading `$REPO_NAME`, not here: one definition, per-repo
+  values.
 - `mise.dev.toml` `[env]` — the **development** values: verbose logging, local
   hosts, emulator endpoints, test credentials.
 - `mise.ci.toml` `[env]` — the CI and **production** values for those same keys.

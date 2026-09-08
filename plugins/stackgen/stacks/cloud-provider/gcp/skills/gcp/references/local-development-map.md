@@ -47,10 +47,10 @@ device.
 
 ## What this means for vwf's `local_stack`
 
-The harness contract is `assets/contracts/local-stack.md`, and it is what the
+The harness contract is stackgen's local-stack contract, and it is what the
 acceptance verifier gates on: a local stack comes up behind a **deterministic
-readiness signal**, never a fixed sleep. Read it for the full mechanism — this
-file only says which half of it each service lands in.
+readiness signal**, never a fixed sleep. Read that contract for the full
+mechanism — this file only says which half of it each service lands in.
 
 Three consequences:
 

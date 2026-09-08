@@ -40,5 +40,5 @@ anything the product must be sure of.
 
 The line this skill leans on hardest is with the telemetry sink. Metrics
 about the product live here; traces and logs about the system live where
-`assets/contracts/observability.md` says, and that contract's
+stackgen's observability contract says, and that contract's
 replaceability requirement is not one this component tries to meet.

@@ -5,20 +5,25 @@ format, and the one generated file that needs a freshness gate of its own.
 
 ## The gates
 
-| Task                          | Does                                                                                                                  |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `plugins:check`               | validates the authored tree; non-zero on any finding                                                                  |
-| `plugins:marketplace`         | regenerates both marketplace manifests from the 2 plugin manifests, plus the `.dev-marketplace/plugins/` staging dir  |
-| `plugins:marketplace --check` | asserts the committed manifest matches a fresh generation                                                             |
-| `plugins:inventory`           | regenerates `plugins/stackgen/stacks/inventory.md` from the stacks tree; `--check` asserts the committed file matches |
-| `plugins:shellcheck`          | `shellcheck -x` + `shfmt -d` over every shell file a pack ships — task libraries and `_scripts/*`, then `hooks/*.sh`  |
-| `plugins:npm-normalize-test`  | table-tests the pnpm pack's `npm-normalize.sh` through the system sed                                                 |
-| `pnpm vitest run`             | the `scripts/` and `installer/` suites                                                                                |
+| Task                          | Does                                                                                                                                                                                   |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `plugins:check`               | validates the authored tree; non-zero on any finding                                                                                                                                   |
+| `plugins:marketplace`         | regenerates both marketplace manifests from the 2 plugin manifests, plus the `.dev-marketplace/plugins/` staging dir                                                                   |
+| `plugins:marketplace --check` | asserts the committed manifest matches a fresh generation                                                                                                                              |
+| `plugins:inventory`           | regenerates `plugins/stackgen/stacks/inventory.md` from the stacks tree, and asserts every bundle pin resolves to a pack at that version; `--check` asserts the committed file matches |
+| `plugins:shellcheck`          | `shellcheck -x` + `shfmt -d` over every shell file a pack ships — task libraries and `_scripts/*`, then `hooks/*.sh`                                                                   |
+| `plugins:npm-normalize-test`  | table-tests the pnpm pack's `npm-normalize.sh` through the system sed                                                                                                                  |
+| `pnpm vitest run`             | the `scripts/` and `installer/` suites                                                                                                                                                 |
 
 `plugins:marketplace --check`, `plugins:inventory --check` and then
 `plugins:check` run in that order — **freshness before validity**, in pre-commit
 and in `plugins.yml` alike — so a stale generated file fails as staleness rather
 than as a confusing downstream assertion.
+
+The `plugins:check` task is two readers, not one: the rules below, and then
+`claude plugin validate --strict` over the marketplace and each plugin when
+`claude` is on PATH — Claude's own view of the manifest, which the rules
+deliberately do not restate.
 
 `--check` exists because `marketplace.json` is generated **and** committed. That
 combination has no other guard — a `plugin.json` edited without a regenerate is
@@ -26,7 +31,7 @@ invisible to every other check, and the committed file keeps advertising the old
 version. It is the surviving fragment of the retired `plugins:render-clean`,
 narrowed to the one file that still has the problem.
 
-## The twelve rules
+## The thirteen rules
 
 Each is something no format and no type can state. The checker is deliberately
 much smaller than the one it replaced: whole families of assertion became
@@ -43,13 +48,19 @@ much smaller than the one it replaced: whole families of assertion became
    nowhere good to report it.
 4. **Strict-YAML frontmatter.** Claude's parser is lenient and accepts what a
    strict parser rejects — and **a rejected skill is dropped silently**. This is
-   the highest-value rule in the file.
+   the highest-value rule in the file. It reads every skill and agent a plugin
+   ships **and** every `stacks/*/*/skills/*/SKILL.md` and
+   `stacks/*/*/agents/*.md` a pack does — the pack half is the larger one, and
+   it is what actually lands in a user's repo, where the host reading it is not
+   this one. A pack's `rules/*.md` is left out: frontmatter is optional there.
 5. **Example-bundle links.** Relative links under
    `plugins/vwf/assets/examples/**` resolve. That bundle is the worked "what
    good looks like" for a blueprint, so a broken link there teaches the wrong
    shape.
 6. **Root-relative reference resolution.** Every root-relative reference in a
-   plugin's prose resolves inside **that** plugin. See the trap below.
+   plugin's prose resolves inside **that** plugin. See the trap below. A file a
+   pack **lands** is skipped, because rule 13 owns it on stricter terms — so a
+   bad reference there is one finding rather than two.
 7. **Agent cross-references, both directions.** Every role-shaped `` `token` ``
    in a plugin's prose names a real agent of that plugin, and every declared
    agent is referenced at least once. Either direction alone misses a rename.
@@ -134,10 +145,45 @@ much smaller than the one it replaced: whole families of assertion became
     happened — nothing fails, because the old word is prose, not a reference. So
     the checker holds a **closed, case-sensitive list** of the retired spellings
     and scans every `.md`, `.yml` and `.yaml` file a plugin ships, line by line.
-    It is the only rule that reports a **line number**, because it is the only
-    one that fires on a sentence rather than a file. Below.
+    It and rule 13 are the two rules that report a **line number**, because they
+    are the two that fire on a sentence rather than on a file. Below.
+13. **A landed pack file cites nothing by plugin path.** A pack's landed tiers —
+    `skills/`, `agents/`, `rules/`, `hooks/`, `config/`, its `conventions.md`
+    and a bundle's body — are copied into a target repo **verbatim**, and that
+    repo has no plugin installed. Inside the plugin every citation in them
+    resolves, which is exactly why rule 6 was silent about all of them; after
+    landing not one does, and nothing reports it — the reader is sent to a path
+    that is not there. Four forms, matched separately because they fail and are
+    fixed differently:
+    - the **literal `${CLAUDE_PLUGIN_ROOT}`**, anywhere and even with no path
+      after it, since outside a plugin the host expands it to nothing. This form
+      is checked in every landed file, not only prose: a task script or a config
+      fragment can spell it as readily as a skill;
+    - a **bare `assets/…` path** ending `.md`, `.yml` or `.yaml`, which reads as
+      repo-relative in the target and finds nothing there;
+    - a **`../` chain that leaves the tree the file lands in**. Only a file
+      under `skills/` has a tree to climb within: a pack's skills land as
+      sibling directories under `.claude/skills/`, so a climb inside a skill's
+      own `references/`, and one across to another skill of the *same* pack,
+      both still resolve. Every other landed `.md` — an agent, a rule, a
+      `conventions.md`, a bundle body — lands as a single file with nothing
+      above it, so **any** climb at all is a break;
+    - a **path into another pack**, `<type>/<slug>/` plus a segment: a sibling
+      pack is materialized only when the composition picked it too, and even
+      then it lands under its own template name rather than at that path.
 
-### The plugin-root trap (rule 6)
+    A **bare `<type>/<slug>`** — or `<type>/<slug>@<version>` — is the
+    lockfile's and a bundle's identifier vocabulary and is never refused; only a
+    trailing segment makes it a path. The last three forms hold for `.md` files
+    alone and are matched after **fenced blocks are blanked to their own line
+    count**: a shell script under `config/` legitimately points at files that
+    land beside it, and a fence is a worked example — the `extends` samples in
+    the `tsconfig` pack show a real relative path the *target* repo will hold.
+    The blanking keeps the line numbers true, which is the finding's whole
+    value. The fix is never another path: name the asset by role ("stackgen's
+    secrets contract"), or state inline the rule it carries.
+
+### The plugin-root trap (rules 6 and 13)
 
 `${CLAUDE_PLUGIN_ROOT}` resolves to **the plugin the file lives in**, and
 nothing spells another plugin's root. So a reference to an asset a different
@@ -149,6 +195,13 @@ spelled it with the own-plugin token, so it shipped broken in **all four**
 render trees and no per-target check caught it, for months. The fix is to name
 the contract and rely on the caller having it — vwf is what fetches those
 conventions, and vwf owns the file.
+
+The trap has a **landing-side half**, and it is worse: a file a pack lands is
+copied into a repo where there is no plugin at all, so the token expands to
+nothing and every plugin-relative path beside it resolves to nothing — including
+the ones that were correct inside the plugin. That half is rule 13's, and the
+fix above is its doctrine too: name what the path pointed at by role, or state
+the rule it carries inline. Never replace one path with another.
 
 ### The technology-free guard (rule 10)
 

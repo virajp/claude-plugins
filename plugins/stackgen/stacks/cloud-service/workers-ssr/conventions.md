@@ -36,9 +36,8 @@ discovers its configuration by walking up from the working directory to a
 otherwise — the alternative is `--config .config/wrangler.jsonc` on every
 invocation any caller might ever type, which is a flag someone eventually
 forgets and then deploys from a config that does not exist. The root
-allowlist admits the file for exactly that reason
-(`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`); being on the list makes
-it landable, not standard.
+allowlist in stackgen's output charter admits the file for exactly that
+reason; being on the list makes it landable, not standard.
 
 **`.config/mise/tasks/p/<project-id>/deploy`**, an overlay in the
 project's own task group. It ships as `p/_project/deploy` — a marked
@@ -76,9 +75,9 @@ is outside the config tier's fence.
 **`CLOUDFLARE_ACCOUNT_ID`** from the environment. They are account-wide
 values shared across every repo that deploys to the account, so the
 secrets convention names them **`GLB_CLOUDFLARE_API_TOKEN`** and
-**`GLB_CLOUDFLARE_ACCOUNT_ID`** in the secrets provider
-(`${CLAUDE_PLUGIN_ROOT}/assets/contracts/secrets.md`), and the provider
-supplies them to the process under the names wrangler expects. They never
+**`GLB_CLOUDFLARE_ACCOUNT_ID`** in the secrets provider, per stackgen's
+secrets contract, and the provider supplies them to the process under the
+names wrangler expects. They never
 appear in `wrangler.jsonc`, and the deploy task refuses to start without
 them rather than letting wrangler fail with an auth trace that reads like
 a network problem.
@@ -92,8 +91,8 @@ one that breaks when they leave.
 
 **The task CI must run is `p:<project-id>:deploy`.** The workflow that
 calls it is the repo's own — a pack states the task name and never writes
-the workflow (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`, the charter
-fence). Nothing here decides the trigger either; that belongs to the CI
+the workflow, which is stackgen's output charter's fence. Nothing here
+decides the trigger either; that belongs to the CI
 system pinned on the project's `cicd` axis.
 
 The task does not build. It runs `p:<project-id>:build` when that task
@@ -136,8 +135,8 @@ its cost in view, not a default.
 
 **No other Cloudflare service is this component's to speak for.** Which
 Cloudflare services stackgen offers, and which are planned or declined, is
-the provider component's to state — see
-`cloud-provider/cloudflare/conventions.md`.
+the provider component's to state — see the `cloud-provider/cloudflare`
+component's conventions, in this composition's template.
 
 **No wrangler pin, and no adapter pin.** Both are development
 dependencies of the project that deploys, declared in that project's

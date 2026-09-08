@@ -1,10 +1,9 @@
 # Service doctrine — Cloudflare R2
 
 This component realizes the `object-file-storage` capability, so what it
-owes is the neutral object-storage contract
-(`assets/contracts/object-storage.md`), clause by clause. The contract
-states what **any** object store must satisfy; this file states how this
-one does, **citing rather than restating**.
+owes is stackgen's neutral object-storage contract, clause by clause. The
+contract states what **any** object store must satisfy; this file states
+how this one does, **citing rather than restating**.
 
 ## Contract satisfaction
 

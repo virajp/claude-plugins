@@ -1,7 +1,7 @@
 # fnox — contract satisfaction
 
-Clause by clause against the neutral secrets contract
-(`assets/contracts/secrets.md`). It cites, and does not restate.
+Clause by clause against stackgen's neutral secrets contract. It cites, and
+does not restate.
 
 ## The rule that outranks every other
 
@@ -129,10 +129,10 @@ applies to its own `--redact` flag applies here.
 ## The encrypt-into-git allowance — the four conditions
 
 Committing ciphertext is permitted only under the contract's four conditions
-(`assets/contracts/secrets.md`, "The encrypt-into-git allowance"). **This
-pack meets all four**, and conditions 1 and 4 are repo-wide edits it emits
-rather than advice — both configs live outside `.claude/`, so they are landed
-here with their exact blocks and enforced by the guard below.
+(stackgen's secrets contract, "The encrypt-into-git allowance"). **This pack
+meets all four**, and conditions 1 and 4 are repo-wide edits it emits rather
+than advice — both configs live outside `.claude/`, so they are landed here
+with their exact blocks and enforced by the guard below.
 
 ### Condition 1 — the scanner is allowlisted by path, never by rule
 

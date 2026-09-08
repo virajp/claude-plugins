@@ -5,7 +5,7 @@ are testing your process, not the platform.
 
 The provider's full emulator map, and what each service means for vwf's
 `local_stack` capability, is the `gcp` skill's local-development reference. The
-harness contract itself is `assets/contracts/local-stack.md`.
+harness contract itself is stackgen's local-stack contract.
 
 ## Why not a local cluster
 
@@ -23,7 +23,7 @@ the same files the release task applies.
 
 **Nothing.** The local stack is the *backing* bundle's — the datastore, the
 emulator suite, whatever the E2E suite actually talks to. That is the line
-`assets/contracts/local-stack.md` draws between the two jobs containers do: the
+stackgen's local-stack contract draws between the two jobs containers do: the
 local stack and the deploy artifact are unrelated, and a repo needs either, both
 or neither.
 

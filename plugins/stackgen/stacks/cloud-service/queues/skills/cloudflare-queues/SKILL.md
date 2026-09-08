@@ -52,5 +52,5 @@ Both are async, both retry, and only one of them carries state across
 steps. A queue holds **independent messages**; a workflow holds **one
 process with steps, sleeps and compensation**. Reaching for a queue plus
 a status column when the second is what the product has is the mistake
-`assets/contracts/orchestration.md` was written to name, and it is the
+stackgen's async-orchestration contract was written to name, and it is the
 subject of the pick-and-trade reference.

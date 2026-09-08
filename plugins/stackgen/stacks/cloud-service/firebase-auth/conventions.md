@@ -9,9 +9,8 @@ component covers both.
 **Tokens are verified in middleware, on every authenticated route**, by the
 product's own services — signature, then issuer, then audience, then expiry. Not
 once at a gateway and trusted thereafter. A failure is a coded response, never a
-stack trace. That is the identity contract's requirement
-(`assets/contracts/identity.md`), and it does not bend because the issuer is
-managed.
+stack trace. That is stackgen's identity contract's requirement, and it does not
+bend because the issuer is managed.
 
 **Custom claims carry account status only** — banned, pending deletion, and the
 like, each mapping to a coded response — **never roles**. A per-user claim cannot
@@ -34,8 +33,8 @@ protection on, or not at all.
 
 **The emulator stubs the provider handshake.** Federated sign-in flows and
 provider-specific token claims are never exercised locally, so keep verification
-behind a seam and inject a verified-principal fake in tests
-(`assets/contracts/local-stack.md`).
+behind a seam and inject a verified-principal fake in tests (stackgen's
+local-stack contract).
 
 Full judgment: the `gcp-firebase-auth` skill's references. The provider-wide
 half — cost doctrine, IAM, the emulator map, the private plane — is the `gcp`

@@ -133,6 +133,20 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
 
 ## Authoring a pack
 
+- **A landed file cites nothing by plugin path.** Everything under `skills/`,
+  `agents/`, `rules/`, `hooks/` and `config/`, plus a pack's `conventions.md`
+  and a bundle's body, is copied verbatim into a repo where **no plugin is
+  installed**, so `plugins:check` rule 13 refuses four forms in them: the
+  literal `${CLAUDE_PLUGIN_ROOT}`, a bare `assets/…` path, a `../` climb leaving
+  the tree the file lands in (only a file under `skills/` has one — it may still
+  reach a sibling skill of the same pack, which lands beside it; an agent, a
+  rule, a `conventions.md` and a bundle body each land as one file, so any climb
+  at all is a break), and a path into another pack. A bare `<type>/<slug>` — or
+  `<type>/<slug>@<version>` — is the identifier vocabulary and stays legal. Name
+  the asset by **role** ("stackgen's secrets contract"), or state the rule it
+  carries **inline**; a sibling component's conventions are "the `<type>/<slug>`
+  component's conventions, in this composition's template". Never swap one path
+  for another.
 - **The whole `config/` payload tier is checked before it ships.**
   `plugins:check` rule 11 makes **seven** assertions: the exec bit and a known
   shebang on every task file (mise reports a 644 task as an *unknown* one rather
@@ -203,4 +217,8 @@ also bumps `version` in `plugin.json` (plain `X.Y.Z`) and regenerates the
 marketplace with `mise run plugins:marketplace`. A new pack, bundle or kind
 regenerates `stacks/inventory.md` with `mise run plugins:inventory` — never type
 a count into prose; `--check` in pre-commit and CI fails a stale inventory, and
-the generator throws on a `kind` that `assets/kinds.md` does not define.
+the generator throws on a `kind` that `assets/kinds.md` does not define — and on
+a bundle component ref that is not `<type>/<slug>@<version>`, that names no
+`stacks/<type>/<slug>/pack.yaml`, or that pins a version the pack no longer
+carries. Bumping a pack therefore means re-pinning every bundle that names it.
+`@generated` refs name no pack by design and are skipped.

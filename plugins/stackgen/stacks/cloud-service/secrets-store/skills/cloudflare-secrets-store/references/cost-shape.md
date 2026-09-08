@@ -64,8 +64,8 @@ different custody mechanism rather than splitting it across two secrets.
 
 Not its own line — the consuming Worker's. Reading a secret is an
 asynchronous call inside a request, so it spends the Worker's CPU time,
-and Worker invocations and CPU time are billed
-(`cloud-provider/cloudflare/skills/cloudflare/references/cost-doctrine.md`).
+and Worker invocations and CPU time are billed — the `cloudflare` skill's
+cost-doctrine reference, which lands beside this one.
 
 The design consequence is the same one [service doctrine](service-doctrine.md)
 reaches from the correctness direction: **resolve once per request, never

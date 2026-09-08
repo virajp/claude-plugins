@@ -3,8 +3,8 @@
 The files a repository needs **before** it has a stack. Nothing here runs, so
 nothing here is a gate: this is the ignore set, the editor and attribute
 defaults, the licence and the security contact, and the dependency-update
-policy — the four topics of the `repo-hygiene` bar
-(`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`).
+policy — the four topics of the `repo-hygiene` bar in stackgen's kind
+vocabulary.
 
 This bundle is **unconditional**: there is exactly one pack for the slot, so
 nothing is picked and nothing is recorded in `.config/vwf.yaml`. It is fetched
@@ -111,8 +111,8 @@ The editor is set up by the same composition that sets up everything else. No
 pack ships a whole `.vscode/settings.json`; each ships a fragment at
 `config/.config/vscode.d/<pack>.jsonc` — `settings`, `nesting`, `extensions` —
 and the initializer merges them into the editor's two files inside one marked
-block, with hand-written keys after the block winning. The convention is in
-`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`.
+block, with hand-written keys after the block winning. The convention is
+stackgen's pack format.
 
 **This pack's fragment is the baseline the others sit on**: the nesting map,
 the three exclude lists, the editor-wide keys that name no language and no

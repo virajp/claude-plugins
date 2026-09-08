@@ -111,7 +111,8 @@ component and its own bundle. Third-party providers are not components here
 at all — the gateway fronts them and this stack has no doctrine about
 choosing between them. Which Cloudflare services this stack offers, and
 which are planned or declined, is the provider component's to state — see
-`cloud-provider/cloudflare/conventions.md`.
+the `cloud-provider/cloudflare` component's conventions, in this
+composition's template.
 
 Full judgment: the `cloudflare-ai-gateway` skill and its references. The
 provider-wide doctrine it cites — cost, identity and IAM, the local

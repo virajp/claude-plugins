@@ -6,9 +6,10 @@ this component satisfies the capability it realizes.
 ## The contract, clause by clause
 
 The `queue` category realizes vwf's **`message-queue`** token, and the
-neutral contract for it is `assets/contracts/orchestration.md`. That
-file's tokens are four — `durable-workflows`, `message-queue`, `pub-sub`
-and `scheduled-jobs` — and this component answers exactly one of them.
+neutral contract for it is stackgen's async-orchestration contract. That
+contract's tokens are four — `durable-workflows`, `message-queue`,
+`pub-sub` and `scheduled-jobs` — and this component answers exactly one
+of them.
 The `durable-workflows` clauses belong to `cloud-service/workflows`;
 `pub-sub` is not answered here at all, because each queue has one active
 consumer

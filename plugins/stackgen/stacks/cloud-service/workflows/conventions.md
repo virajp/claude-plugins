@@ -89,12 +89,12 @@ invoice — is what makes "start the workflow for this order" safe to call
 twice; a random id makes a retried HTTP request a second process.
 
 **Contract satisfaction.** This component realizes the
-`durable-workflows` capability, so what it owes is the async-orchestration
-contract (`assets/contracts/orchestration.md`), and the service-doctrine
+`durable-workflows` capability, so what it owes is stackgen's
+async-orchestration contract, and the service-doctrine
 reference walks those clauses one by one. The same contract's
 `message-queue` and `pub-sub` clauses are **not** this component's — they
-belong to `cloud-service/queues`, which cites the same file for its own
-half. A product that pins this one and expects a queue out of it has
+belong to `cloud-service/queues`, which cites the same contract for its
+own half. A product that pins this one and expects a queue out of it has
 picked the heaviest of the four shapes the contract enumerates for a
 problem the lightest one solves.
 
@@ -102,8 +102,9 @@ problem the lightest one solves.
 serializes concurrent writers is Durable Objects
 (`cloud-service/durable-objects`) — a run that ends versus an object that
 persists. Which Cloudflare services this stack offers, plans and declines
-is the provider component's to state — see
-`cloud-provider/cloudflare/conventions.md`.
+is the provider component's to state — see the
+`cloud-provider/cloudflare` component's conventions, in this
+composition's template.
 
 Full judgment: the `cloudflare-workflows` skill's references. The
 provider-wide half — cost doctrine, account roles and API tokens, the local

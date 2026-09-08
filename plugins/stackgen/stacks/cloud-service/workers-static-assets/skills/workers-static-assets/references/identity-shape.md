@@ -48,9 +48,9 @@ deploy task reads its configuration from one place.
 
 Both are **account-wide values shared across every repo that deploys to
 the account**, so the secrets convention names them
-`GLB_CLOUDFLARE_API_TOKEN` and `GLB_CLOUDFLARE_ACCOUNT_ID`
-(`${CLAUDE_PLUGIN_ROOT}/assets/contracts/secrets.md`) rather than with a
-per-repo prefix. Catalogued by name and never by value in
+`GLB_CLOUDFLARE_API_TOKEN` and `GLB_CLOUDFLARE_ACCOUNT_ID`, the prefix
+stackgen's secrets contract reserves for an account-wide value, rather
+than with a per-repo prefix. Catalogued by name and never by value in
 `docs/blueprint/environment.md`.
 
 **There is no keyless story available here, and claiming one would be

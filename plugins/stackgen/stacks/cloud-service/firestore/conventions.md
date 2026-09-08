@@ -34,8 +34,8 @@ that needs them.
 
 **The local stack is the Firebase Emulator Suite**, started by one task with its
 own ready signal. It satisfies vwf's `local_stack` capability without Docker; do
-not wrap it in a compose file to look conventional
-(`assets/contracts/local-stack.md`).
+not wrap it in a compose file to look conventional (stackgen's local-stack
+contract).
 
 Full judgment: the `gcp-firestore` skill's references. The provider-wide half —
 cost doctrine, IAM, the emulator map, the private plane — is the `gcp` skill's.

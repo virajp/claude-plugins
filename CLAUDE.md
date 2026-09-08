@@ -49,20 +49,20 @@ the tree they govern; `release`, `create-plan` and `execute-plan` are slash
 commands — a change to this repo is planned with `/create-plan` and run, in a
 fresh session, with `/execute-plan <folder>`.
 
-| Read                                       | For                                                                                           |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| [`.claude/docs/repo-shape.md`][repo]       | the one authored tree, what the installer writes, the mise tasks, the traps                   |
-| [`.claude/docs/plugins.md`][plug]          | the full plugin inventory, the native manifest shape, the generated marketplace manifest      |
-| [`.claude/docs/ci-and-releases.md`][ci]    | the mise environments, the branch model, the three tag families, the workflows, the rituals   |
-| [`.claude/docs/dev-marketplace.md`][dev]   | running the plugins you are editing — setup, the refresh loop, and why `update` is not it     |
-| [`installer/CLAUDE.md`][icl]               | the installer — flags, the read-only receipt path, the interactive uninstall, testing         |
-| [`site/CLAUDE.md`][scl]                    | the website — the tree, the link rule, the gate, the release model, the design source, traps  |
-| [`.claude/skills/vwf-plugin/`][vwf]        | vwf's own shape — skills, agents, assets, hooks, adding a skill, the docs tree it maintains   |
-| [`.claude/skills/stackgen-plugin/`][sg]    | stackgen's own shape — the dispatch rule, packs and bundles, where output lands, consent      |
-| [`.claude/skills/plugin-authoring/`][auth] | the twelve checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions |
-| [`.claude/skills/release/`][rel]           | the release ritual, the note format, the CI facts that make a failed publish legible          |
-| [`.claude/skills/create-plan/`][cp]        | planning a repo change — the survey, the one-question-at-a-time interview, the plan folder    |
-| [`.claude/skills/execute-plan/`][ep]       | running an approved plan autonomously — waves, review, the gate, resume, landing, release     |
+| Read                                       | For                                                                                             |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| [`.claude/docs/repo-shape.md`][repo]       | the one authored tree, what the installer writes, the mise tasks, the traps                     |
+| [`.claude/docs/plugins.md`][plug]          | the full plugin inventory, the native manifest shape, the generated marketplace manifest        |
+| [`.claude/docs/ci-and-releases.md`][ci]    | the mise environments, the branch model, the three tag families, the workflows, the rituals     |
+| [`.claude/docs/dev-marketplace.md`][dev]   | running the plugins you are editing — setup, the refresh loop, and why `update` is not it       |
+| [`installer/CLAUDE.md`][icl]               | the installer — flags, the read-only receipt path, the interactive uninstall, testing           |
+| [`site/CLAUDE.md`][scl]                    | the website — the tree, the link rule, the gate, the release model, the design source, traps    |
+| [`.claude/skills/vwf-plugin/`][vwf]        | vwf's own shape — skills, agents, assets, hooks, adding a skill, the docs tree it maintains     |
+| [`.claude/skills/stackgen-plugin/`][sg]    | stackgen's own shape — the dispatch rule, packs and bundles, where output lands, consent        |
+| [`.claude/skills/plugin-authoring/`][auth] | the thirteen checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions |
+| [`.claude/skills/release/`][rel]           | the release ritual, the note format, the CI facts that make a failed publish legible            |
+| [`.claude/skills/create-plan/`][cp]        | planning a repo change — the survey, the one-question-at-a-time interview, the plan folder      |
+| [`.claude/skills/execute-plan/`][ep]       | running an approved plan autonomously — waves, review, the gate, resume, landing, release       |
 
 [repo]: .claude/docs/repo-shape.md
 [plug]: .claude/docs/plugins.md
@@ -141,8 +141,11 @@ inventory and check in that order — freshness before validity:
   or if that path is the retired symlink.
 - **`plugins:inventory`** — generates `plugins/stackgen/stacks/inventory.md`
   from the stacks tree, so no pack, bundle or kind count is ever typed by hand;
-  **`--check`** fails if the committed file differs.
-- **`plugins:check`** — validates the authored tree, twelve rules. Rule 11 is
+  **`--check`** fails if the committed file differs. Generation itself fails a
+  bundle whose `<type>/<slug>@<version>` pin is malformed, names no pack, or
+  pins a version that pack no longer carries — `@generated` refs name no pack by
+  design and are skipped.
+- **`plugins:check`** — validates the authored tree, thirteen rules. Rule 11 is
   the widest: it walks a stackgen pack's whole `config/` payload tier — seven
   assertions. Exec bit and shebang on every task file, exec bit and shebang on
   every shipped hook script, the `config/` root against the hygiene allowlist
@@ -150,7 +153,11 @@ inventory and check in that order — freshness before validity:
   **refused** inside `.github/`, every `pre-commit.d/*.yaml` parsing with a
   top-level `repos:` list, the gate pack's whole `pre-commit-config.yaml`
   parsing on the same terms, and every `vscode.d/*.jsonc` parsing as JSONC with
-  only the three keys `/vwf:init` composes.
+  only the three keys `/vwf:init` composes. Rule 13 is the newest: it refuses a
+  plugin-relative citation in anything a pack **lands** — the token, a bare
+  `assets/…` path, a `../` climb out of the tree the file lands in, or a path
+  into a sibling pack — since that file is copied into a repo with no plugin,
+  where each resolves to nothing silently.
 - **`plugins:shellcheck`** — the shell gate over everything a pack ships as
   shell: `shellcheck -x` plus `shfmt -d` over the pack task libraries and their
   `_scripts/*`, and a second pass over `hooks/*.sh` with no flags, since a hook

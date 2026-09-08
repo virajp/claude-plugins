@@ -6,8 +6,8 @@ and what to keep replaceable so retrieval can move later.
 
 **This component realizes no vwf capability token, so there is no
 clause-by-clause contract to satisfy.** `retrieval` is one of the
-categories `assets/taxonomy.md` records as a known vwf-side gap, and
-`assets/contracts/` carries no retrieval doctrine. What this component
+categories stackgen's taxonomy records as a known vwf-side gap, and
+stackgen carries no retrieval contract. What this component
 satisfies is stated directly below, and nothing here writes a contract to
 fill the hole — a contract is a reviewed asset, not something a service
 component mints for itself.

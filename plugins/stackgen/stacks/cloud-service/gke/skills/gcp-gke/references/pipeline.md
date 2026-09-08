@@ -32,7 +32,7 @@ spelling, and this component satisfies them without redefining them:
 ## What triggers it is not this component's decision
 
 The trigger — a tag, a dispatch, an approval — belongs to the CI system pinned
-on the project's `cicd` axis, behind `assets/contracts/release-trigger.md`. The
+on the project's `cicd` axis, behind stackgen's release-trigger contract. The
 recommended default is a `<project>-<env>-v<semver>` tag, and it is a
 recommendation, not this component's rule.
 

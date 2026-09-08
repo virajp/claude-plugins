@@ -1,9 +1,9 @@
 # Service doctrine — Firestore
 
 This component realizes the `document-datastore` capability, so what it owes is
-the neutral datastore contract (`assets/contracts/datastore.md`), clause by
-clause. The contract states what **any** datastore must do; this file states how
-this one does each, **citing rather than restating**.
+stackgen's neutral datastore contract, clause by clause. The contract states
+what **any** datastore must do; this file states how this one does each,
+**citing rather than restating**.
 
 ## Contract satisfaction
 

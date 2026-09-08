@@ -6,10 +6,9 @@ product must stay **portable off this provider** — Postgres has an equivalent
 everywhere, which a proprietary document store does not.
 
 **Access is services-only.** Every read and write goes through the product's own
-services. That is the datastore contract's access rule
-(`assets/contracts/datastore.md`), and here it is also a hard limit rather than
-a policy: there is no client-direct path, so a flow whose blueprint assumes a
-client subscription needs a different design.
+services. That is stackgen's datastore contract's access rule, and here it is
+also a hard limit rather than a policy: there is no client-direct path, so a
+flow whose blueprint assumes a client subscription needs a different design.
 
 **Concurrency is a version column plus a transaction.** Mutations read the
 record, check the expected version, and write `version + 1` in the same atomic
@@ -36,7 +35,7 @@ non-production instances are the most common waste, and storage auto-grows but
 
 **The local stack is Docker-composed Postgres** on production's major version,
 behind a readiness gate, with migrations run against it as a task. There is no
-emulator for this service, so `assets/contracts/local-stack.md` applies in full.
+emulator for this service, so stackgen's local-stack contract applies in full.
 
 Full judgment: the `gcp-cloud-sql` skill's references. The provider-wide half —
 cost doctrine, IAM, the emulator map, the private plane — is the `gcp` skill's.

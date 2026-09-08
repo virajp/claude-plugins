@@ -42,7 +42,7 @@ retried. "Take payment, provision the account, send the welcome mail,
 and if provisioning fails refund the payment" has three middles and a
 compensation, and each of them needs to know what the previous one did.
 
-`assets/contracts/orchestration.md` states the rule neutrally, and
+Stackgen's async-orchestration contract states the rule neutrally, and
 states it in both directions: a workflow engine is the heaviest of the
 four async shapes and **the only one that carries state across steps**,
 so do not buy it for a job table's worth of work — and do not simulate
@@ -133,4 +133,4 @@ expects a Workers deploy pin in the project — `cloudflare-workers-ssr`,
 or `cloudflare-containers` where the work needs an image. And **what
 the messages mean**: which of the product's processes are asynchronous
 at all is a blueprint contract, authored per product per flow, which
-`assets/contracts/orchestration.md` says plainly it does not decide.
+stackgen's async-orchestration contract says plainly it does not decide.

@@ -47,8 +47,9 @@ without it can call none.
   Caching, retries, fallbacks between providers, rate limiting and a log
   of every call are the gateway's job, not this component's. That is a
   sibling component with its own bundle, and it fronts this service as
-  readily as it fronts a third-party one — see
-  `cloud-provider/cloudflare/conventions.md` for what the stack offers.
+  readily as it fronts a third-party one — see the
+  `cloud-provider/cloudflare` component's conventions, in this
+  composition's template, for what the stack offers.
 - **The product wants managed retrieval over its documents.** Chunking,
   embedding on a schedule, crawling and keeping an index current is a
   different service again. Building it by hand over this component plus

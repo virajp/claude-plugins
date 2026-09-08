@@ -14,9 +14,9 @@ Cloudflare account is on the other end. A workflow that shells out to
 `wrangler` directly has welded the pipeline to the target.
 
 **The workflow file is the repo's, not this pack's.** A pack states which
-task CI must run and never writes the workflow — the charter fence in
-`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md` — because a generated
-pipeline nobody maintains is worse than none.
+task CI must run and never writes the workflow — the fence stackgen's
+output charter draws — because a generated pipeline nobody maintains is
+worse than none.
 
 ## What the runner needs
 
@@ -76,8 +76,8 @@ a spelling, and this component satisfies them without redefining them:
 ## What triggers it is not this component's decision
 
 The trigger — a tag, a dispatch, an approval — belongs to the CI system
-pinned on the project's `cicd` axis, behind
-`${CLAUDE_PLUGIN_ROOT}/assets/contracts/release-trigger.md`.
+pinned on the project's `cicd` axis, behind stackgen's release-trigger
+contract.
 
 ## Pre-production
 

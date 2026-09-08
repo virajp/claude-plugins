@@ -41,9 +41,9 @@ which in the blueprint.
 
 Even with the client path, a signed, expiring URL issued by a service that
 authorized the request is the answer whenever a client needs an object it does
-not own the path to. That is the contract's mechanism
-(`assets/contracts/object-storage.md`), it does not go away, and it is always
-the answer in preference to opening a bucket.
+not own the path to. That is the mechanism stackgen's object-storage contract
+names, it does not go away, and it is always the answer in preference to opening
+a bucket.
 
 ## What this does not decide
 

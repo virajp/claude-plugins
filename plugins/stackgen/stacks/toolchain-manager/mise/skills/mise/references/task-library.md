@@ -458,10 +458,11 @@ of what this project *is*, and that no contract can name in advance.
    not `p:app:build`. A repo that later becomes a member keeps working, and a
    task name never has to be re-learned because the repo grew.
 
-Whichever of the three the name comes from, the **resolved id is slugified**
-per `${CLAUDE_PLUGIN_ROOT}/assets/ids.md` — that file is the rule and the
-measured reason behind it, and nothing here restates either. `REPO_NAME` in
-`.config/mise.toml`'s `[env]` carries the same slug for the repo itself.
+Whichever of the three the name comes from, four surfaces — `REPO_NAME` in
+`.config/mise.toml`'s `[env]`, the `p:<id>:*` group, the member flag and the
+`setup-<id>` alias — carry one identical project-id token, which `/vwf:init`
+derives, shows and has you confirm before any of them is written. A mismatch
+between any two is a defect, and this library never derives the id itself.
 
 Every id is the same one `setup:all`'s member flags and the `setup-<id>` shell
 aliases use. One list, four surfaces.

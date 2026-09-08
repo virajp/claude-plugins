@@ -13,7 +13,8 @@ them.
 ## The `@/` path alias
 
 Inside a package, import siblings via `@/*` (mapped to `./src/*` in
-`tsconfig.json`) instead of brittle `../../` chains:
+`tsconfig.json`) instead of brittle relative chains that climb out of the
+importing directory:
 
 ```typescript
 import { UserSchema } from "@/user/user.schema";

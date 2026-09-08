@@ -5,10 +5,10 @@ with no local answer at all: nothing offline reaches a device, and the Firebase
 Emulator Suite does not cover it. The functions emulator can trigger the code
 path that *sends*, which is a different thing.
 
-So this component contributes **nothing** to vwf's `local_stack`
-(`assets/contracts/local-stack.md`) — a product whose local E2E suite needs no
-push needs no local stack for it, and inventing one satisfies nothing. The
-provider's full emulator map is the `gcp` skill's local-development reference.
+So this component contributes **nothing** to vwf's `local_stack` (stackgen's
+local-stack contract) — a product whose local E2E suite needs no push needs no
+local stack for it, and inventing one satisfies nothing. The provider's full
+emulator map is the `gcp` skill's local-development reference.
 
 ## Keep sending behind a seam
 

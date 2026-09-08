@@ -69,7 +69,7 @@ wrangler is invoked.
 workflow.** The task is the only thing that knows a Cloudflare account is
 on the other end, which is what keeps the target swappable; the CI system
 pinned on the project's `cicd` axis decides what fires it, behind
-`assets/contracts/release-trigger.md`. Naming the task and writing the
+stackgen's release-trigger contract. Naming the task and writing the
 workflow are different jobs, and only the first one is stackgen's.
 
 **Credentials arrive from the environment, never from the config file**,
@@ -100,8 +100,9 @@ one decides how the work gets served, that one decides who may reach it.
 ## What is still not offered
 
 Which Cloudflare services stackgen offers, and which are planned or
-declined, is the provider component's to state — see
-`cloud-provider/cloudflare/conventions.md`. A product that needs one it
+declined, is the provider component's to state — see the
+`cloud-provider/cloudflare` component's conventions, in this composition's
+template. A product that needs one it
 does not offer has a gap to name rather than a gap to fill from general
 Cloudflare knowledge.
 

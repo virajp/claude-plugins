@@ -6,9 +6,9 @@ build around a result that is plausible rather than correct.
 
 **This component realizes no vwf capability token, and that is recorded
 rather than worked around.** `inference` is one of the categories
-`assets/taxonomy.md` lists as having no token today, so `pack.yaml`
-leaves `capability` unset and there is no category contract in
-`assets/contracts/` to satisfy clause by clause. What this component
+stackgen's taxonomy lists as having no token today, so `pack.yaml`
+leaves `capability` unset and stackgen carries no category contract for
+it to satisfy clause by clause. What this component
 asserts, it asserts below. Nothing here mints a token or writes a
 contract to fill the hole — both are reviewed decisions taken elsewhere,
 and a service component that mints one for itself has invented a
