@@ -62,3 +62,7 @@ product's journey diverges, so read the spine first and keep it open alongside.
   vwf names no technology, so every concrete option comes from a `stackgen`
   bundle. Which bundle answers each of the six axes, decided **before**
   `/vwf:architecture`, with a reason for each pin.
+- **[Change something the blueprint does not describe](./operate/ad-hoc-change.md)**
+  — the work that is not a flow: CI, tooling, a docs tree, a refactor that moves
+  no behavior. Planned with `/vwf:change-plan` and run unattended with
+  `/vwf:change-execute`, beside the chain rather than in it.

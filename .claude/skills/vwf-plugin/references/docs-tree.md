@@ -33,8 +33,13 @@ the `service` platform — plus the frozen `apis/released/` snapshots, which a
 project's API serves its own UI, so no independent consumer needs the freeze),
 and `apis/released/entities/<entity>@<date>.schema.yaml`, frozen at the same
 moment for every entity regardless of project shape; the blueprint root holds
-only the system docs), `docs/plans/` (`<date>-<time>-<slice>.md`, with
-`archived/`), `docs/runbooks/` (per-project operational runbooks plus
+only the system docs), `docs/plans/` (two forms side by side — `/vwf:plan`'s
+cycle plans as flat `<date>-<time>-<slice>.md` files, discovered through the
+base repo's `docs/plans/index.md`, and `/vwf:change-plan`'s ad-hoc change
+folders `<date>-<name>/`, each an `index.md` plus one file per unit and
+deliberately **never** listed in that index; `/vwf:archive` retires the flat
+files and `/vwf:change-execute` moves its own folder, both into
+`archived/<name>/`), `docs/runbooks/` (per-project operational runbooks plus
 `postmortems.md`, seeded by the incident-response foundation and appended to by
 `/vwf:feedback incident`), and `docs/prompts/`
 (`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design briefs grouped by
@@ -57,17 +62,18 @@ The `docs/blueprint/` tree is an **OKF bundle** — vwf is an opinionated
 concept: mandatory YAML frontmatter (`type` from a fixed vocabulary —
 `vwf-product`/`vwf-architecture`/`vwf-conventions`/`vwf-design-system`/
 `vwf-environment`/`vwf-flow`/`vwf-flow-platform`/`vwf-integration` (the flow
-catalog)/`vwf-entity`/`vwf-entities`/`vwf-plan`/`vwf-gap-report` — plus `title`,
-`description`, `status`; optional `timestamp`/`owner`/`resource`/`tags`;
-flow/entity docs additionally carry the pipeline-owned `implementation:` build
-stamp), and cross-doc relationships are typed markdown links (the OKF edge)
-rather than prose. YAML artifacts (`registry.yaml`, `schema.yaml`,
-`*.openapi.yaml`) are typed by **path**, not frontmatter (the OpenAPI files
-carry only `info.x-vwf.status`). This makes a blueprint portable to any
-OKF-aware tool (e.g. the OKF static-HTML visualizer) and ingestable by graphify,
-and lets the `blueprint-reviewer` verify frontmatter + that every edge resolves.
-The doctrine lives in the blueprint-authoring skill's `frontmatter-and-links`
-reference.
+catalog)/`vwf-entity`/`vwf-entities`/`vwf-plan`/`vwf-change-plan` (an ad-hoc
+change plan `docs/plans/<date>-<name>/index.md`; the blueprint completeness bars
+do not apply to it)/`vwf-gap-report` — plus `title`, `description`, `status`;
+optional `timestamp`/`owner`/`resource`/`tags`; flow/entity docs additionally
+carry the pipeline-owned `implementation:` build stamp), and cross-doc
+relationships are typed markdown links (the OKF edge) rather than prose. YAML
+artifacts (`registry.yaml`, `schema.yaml`, `*.openapi.yaml`) are typed by
+**path**, not frontmatter (the OpenAPI files carry only `info.x-vwf.status`).
+This makes a blueprint portable to any OKF-aware tool (e.g. the OKF static-HTML
+visualizer) and ingestable by graphify, and lets the `blueprint-reviewer` verify
+frontmatter + that every edge resolves. The doctrine lives in the
+blueprint-authoring skill's `frontmatter-and-links` reference.
 
 **Format versioning.** vwf ships the stamp in `assets/blueprint-format`
 (currently **24**). Since vwf 18 the stamps are **drift detectors only** —
