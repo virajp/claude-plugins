@@ -204,7 +204,7 @@ platforms: [ <platform> ] # project axis only
 artifact: <token> # deploy axis only
 unconditional: true # omitted by every bundle a user picks — see below
 components:
-  - <type>/<slug>@<version> # a shipped pack, copied verbatim
+  - <type>/<slug>@<version> # a shipped pack, at its current version
   - <type>/<slug>@generated # no pack covers it — generated on first fetch
 ```
 
@@ -257,6 +257,25 @@ which is the grain `stackgen-sync` acts at.
   upgrades arrive only through the explicit sync diff, keyed on the pack's
   `version` and the lockfile's landing hashes — per component, so one
   pack's bump never churns the rest of its bundle.
+- **A bundle pins the pack's current `version`.** Every
+  `<type>/<slug>@<version>` component must name an existing pack at that
+  exact version, or be `@generated`; `plugins:inventory` fails generation
+  otherwise, rather than rendering a row for a composition nothing can
+  copy. So bumping a pack means re-pinning every bundle that names it —
+  the bundle is the recorded composition, and `stackgen-sync` diffs on
+  that version.
+- **A landed file cites nothing by plugin path.** Everything under
+  `skills/`, `agents/`, `rules/`, `hooks/` and `config/`, plus a pack's
+  `conventions.md` and a bundle's body, is copied verbatim into a repo
+  that has **no plugin installed** — so the `${CLAUDE_PLUGIN_ROOT}` token,
+  a bare `assets/…` path, a `../` climb out of the tree the file lands in,
+  and a path into a sibling pack all resolve to nothing there, silently.
+  Name the asset by role ("stackgen's secrets contract") or state its rule
+  inline; a sibling component's conventions are "the `<type>/<slug>`
+  component's conventions, in this composition's template". A bare
+  `<type>/<slug>` ref is an identifier and is fine. `plugins:check`
+  rule 13 enforces it. This file is an asset rather than a landed tier, so
+  its own citations may keep the token.
 - **Structure follows the kind; the slice follows the type.** A pack
   declares the bundle `kind` it composes into and ships the structural
   slice its `type` owns within that kind — the reviewer bar generated

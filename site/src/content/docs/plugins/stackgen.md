@@ -752,7 +752,10 @@ before it lands:
    rather than one assembled from configuration, and the hook verdict shape its
    event requires. These are host rules rather than stack rules, they live in
    `assets/artifact-doctrine.md`, and every one of them fails **silently at run
-   time** — which is why they are gated here and nowhere downstream.
+   time** — which is why they are gated here and nowhere downstream. The
+   frontmatter bar is not the generator's alone: stackgen's own repo gate parses
+   every **shipped** pack skill and pack agent under a strict parser too, so a
+   curated pack is held to what a generated one is.
 4. **The reviewer + you.** The `stackgen-skill-reviewer` agent returns `NO GAPS`
    or a numbered list — checking the kind's **topic-bar coverage**, artifact
    validity and the content — and generation loops under a convergence guard of
