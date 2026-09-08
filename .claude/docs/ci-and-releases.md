@@ -59,10 +59,10 @@ mise run plugins:release                                 → creates + pushes th
 ```
 
 The third line is the **local half** of a release and needs no consent: it
-publishes nothing, commits nothing and cuts no tag, so `/execute-plan` runs it
-at the end of a green run and the author's next **restarted** session is on the
-plugin that just landed. Only the last line reaches users, and it is the one
-`CLAUDE.md`'s hard rule guards.
+publishes nothing, commits nothing and cuts no tag, so `/vwf:change-execute`
+runs it as the plan's after-landing `run` step and the author's next
+**restarted** session is on the plugin that just landed. Only the last line
+reaches users, and it is the one `CLAUDE.md`'s hard rule guards.
 
 The tracked version is always plain `X.Y.Z` — `plugins:check` fails a manifest
 carrying build metadata. The `X.Y.Z+N` the authoring machine runs between

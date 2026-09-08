@@ -132,6 +132,6 @@ kind now, per `plugins/stackgen/assets/kinds.md`.
 
 Any change to plugin behaviour must reconcile `readme.md`, `CLAUDE.md` and
 `site/src/content/docs/plugins/<plugin>.md` in the **same commit** — the repo's
-hard rule. Delegate the sweep to the `docs-reconciler` agent rather than reading
-those files inline; `CLAUDE.md` and the vwf manual are large enough that loading
-them costs the rest of the session.
+hard rule. Delegate the sweep to `/vwf:docs-sync` (its surveyor agent reads the
+docs) rather than reading those files inline; `CLAUDE.md` and the vwf manual are
+large enough that loading them costs the rest of the session.
