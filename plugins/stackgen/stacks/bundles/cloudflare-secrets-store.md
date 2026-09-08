@@ -31,7 +31,7 @@ beta allows one store per account; the create / re-point / delete rotation
 order, and why editing a value in place throws away the rollback; the
 Admin-versus-Deployer split that separates holding a secret from deploying
 with it, and the deploy-token permission that is broader than the deploy
-needs; and the clause-by-clause walk of `assets/contracts/secrets.md`,
+needs; and the clause-by-clause walk of stackgen's secrets contract,
 including the one place a binding answers the contract's cardinal rule
 differently from an environment variable. No file lands in the repo: the
 `secrets_store_secrets` block is a shape the project adds to the wrangler
@@ -80,5 +80,5 @@ a collision — one names the runtime binding, the other the developer-side
 provider.
 
 Full judgment: the components' own skills and their references, and the
-neutral contract the service half walks clause by clause,
-`assets/contracts/secrets.md`.
+neutral contract the service half walks clause by clause — stackgen's
+secrets contract.

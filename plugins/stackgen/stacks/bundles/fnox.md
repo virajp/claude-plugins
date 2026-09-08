@@ -13,10 +13,10 @@ secret is either encrypted in place (age, AWS KMS) or a reference into a
 remote manager, and the two mix per secret. No vendor account, no per-seat
 bill, nothing to reach at install time.
 
-**The composition is the neutral secrets contract plus this one manager.** The
-contract (`assets/contracts/secrets.md`) leads with the rule that outranks the
-rest — a secret reaches a process as an environment variable, injected by a
-wrapper around the repo's own task — which fnox satisfies without an SDK:
+**The composition is stackgen's neutral secrets contract plus this one
+manager.** The contract leads with the rule that outranks the rest — a secret
+reaches a process as an environment variable, injected by a wrapper around the
+repo's own task — which fnox satisfies without an SDK:
 `fnox exec -- mise run <task>`, and nothing downstream knows fnox exists.
 
 The axis this is chosen on is **where the secret lives, and what onboarding a
@@ -43,8 +43,8 @@ guard it ships refuses a commit when any of them is missing.
 accepted exception to the rule that everything configurable lives under
 `.config/`, because this tool discovers its config by walking up from the
 working directory and a nested one would be found from some directories and
-not others. Beside it, through the `config/` tier
-(`assets/output-tree.md`): an environment fragment under
+not others. Beside it, through the `config/` tier of stackgen's output
+charter: an environment fragment under
 `.config/mise/conf.d/`, which the toolchain manager auto-loads, and an
 overlay of the manager's `setup/secrets` slot that verifies the tool is
 reachable and reports the keychain prefix in use. A capability provider
@@ -56,4 +56,4 @@ pack, and the ciphertext guard this pack ships is what makes the
 encrypt-into-git allowance safe rather than merely permitted.
 
 Full judgment: the component's own skill and its references. The contract it
-cites is `assets/contracts/secrets.md`.
+cites is stackgen's secrets contract.

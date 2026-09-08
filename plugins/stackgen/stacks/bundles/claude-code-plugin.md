@@ -64,7 +64,8 @@ Two bodies of doctrine sit behind this stack, and neither is in this file:
 
 - **What makes a skill, agent or hook valid** — invocation states and the
   silent failure a wrong one causes, strict-YAML frontmatter, hook verdict
-  shapes, MCP and LSP wiring — is `assets/artifact-doctrine.md`, which the
-  generator writes against and the reviewer gates on.
+  shapes, MCP and LSP wiring — is doctrine the generator writes against and
+  the reviewer gates on; it lives inside stackgen and is not distributed with
+  this template.
 - **How a plugin is structured, packaged and registered** is the authoring
   repo's own, and is not distributed.

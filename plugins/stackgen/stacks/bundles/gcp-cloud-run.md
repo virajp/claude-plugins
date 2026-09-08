@@ -48,7 +48,7 @@ pipeline is defined and one place to look when a release surprises someone.
 delivery-pipeline contract — deliberate rather than branch-pushed,
 branch-validated, tested before release — and *what fires the task* belongs to
 the CI system pinned on the project's `cicd` axis, behind
-`assets/contracts/release-trigger.md`. The recommended default is a
+stackgen's release-trigger contract. The recommended default is a
 `<project>-<env>-v<semver>` tag.
 
 **A client-distributed project does not deploy here.** A frontend ships through
@@ -58,7 +58,7 @@ accordingly rather than pointing at this bundle.
 
 **The local stack is not here either.** Containers do two unrelated jobs, and
 this bundle is the deploy artifact. The local stack belongs to the backing
-bundle and to `assets/contracts/local-stack.md`; running this image locally is
+bundle and to stackgen's local-stack contract; running this image locally is
 just running the process under test.
 
 Full judgment: each component's own skill and its references.

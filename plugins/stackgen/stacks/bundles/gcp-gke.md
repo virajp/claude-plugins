@@ -50,7 +50,7 @@ pipeline is how a green check comes to mean nothing.
 **The trigger is not this bundle's decision.** Deploys obey vwf's
 delivery-pipeline contract — deliberate, branch-validated, tested before release
 — and *what fires the task* belongs to the CI system pinned on the project's
-`cicd` axis, behind `assets/contracts/release-trigger.md`.
+`cicd` axis, behind stackgen's release-trigger contract.
 
 **Network policy is not optional.** Pod-to-pod traffic is allow-all until a
 policy says otherwise, which on a private cluster is what turns one compromised
@@ -59,7 +59,7 @@ the product uses.
 
 **The local stack is not here.** Containers do two unrelated jobs and this bundle
 is the deploy artifact; the local stack belongs to the backing bundle and to
-`assets/contracts/local-stack.md`. A local Kubernetes cluster reproduces
+stackgen's local-stack contract. A local Kubernetes cluster reproduces
 manifests, not application behaviour, and is rarely worth the iteration cost.
 
 Full judgment: each component's own skill and its references.

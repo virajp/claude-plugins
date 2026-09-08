@@ -39,9 +39,10 @@ server-side rendering on Workers, as `cloudflare-workers-ssr`; and a
 Worker fronting a container image as `cloudflare-containers`, pinned
 instead of the SSR one. Which Cloudflare services stackgen offers beyond
 those, and which are planned or declined, is the provider component's to
-state — see `cloud-provider/cloudflare/conventions.md`. A short menu with
-no explanation is indistinguishable from a broken adapter, which is why
-that fence is written down rather than implied.
+state — see the `cloud-provider/cloudflare` component's conventions, in
+this composition's template. A short menu with no explanation is
+indistinguishable from a broken adapter, which is why that fence is
+written down rather than implied.
 
 **What it decides that neither component decides alone** is that the
 private plane is a **per-project** decision belonging in the registry,

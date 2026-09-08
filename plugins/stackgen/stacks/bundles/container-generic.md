@@ -37,4 +37,4 @@ store or update channel, and a `cli` frontend ships to a package registry
 `deploy_template: n/a`.
 
 Full judgment: the component's own skills and their references. The local stack
-this bundle does **not** cover is `assets/contracts/local-stack.md`.
+this bundle does **not** cover is stackgen's local-stack contract.

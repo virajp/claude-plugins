@@ -77,7 +77,7 @@ after the first topic-shaped design.
 **That the work is asynchronous but not a process.** A queue holds
 independent messages; a multi-step process with state, timers and
 compensation is `cloudflare-workflows`, and per-key coordination is
-`cloudflare-durable-objects`. `assets/contracts/orchestration.md` draws
+`cloudflare-durable-objects`. Stackgen's orchestration contract draws
 those lines neutrally and the service component walks its
 `message-queue` clauses one by one. Pinning this instead of one of the
 other two is a decision about the product's shape, not about

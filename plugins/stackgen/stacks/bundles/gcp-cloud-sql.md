@@ -35,7 +35,7 @@ datastore does not change the identity answer.
 
 ## What this bundle decides that no component decides alone
 
-**The local stack is Docker-composed**, per `assets/contracts/local-stack.md` in
+**The local stack is Docker-composed**, per stackgen's local-stack contract in
 full: Postgres on production's major version behind a readiness gate, with
 migrations run against it as a task. A fixed sleep in place of the gate is a
 finding, not a variant. The identity and object-storage halves take the Firebase
@@ -63,6 +63,6 @@ that prevent it, and all three are taken up front.
 
 **Observability is not in this bundle.** Telemetry leaves through OTLP and
 terminates in the provider's services as a **sink** — never a vendor SDK in
-product code (`assets/contracts/observability.md`).
+product code (stackgen's observability contract).
 
 Full judgment: each component's own skill and its references.

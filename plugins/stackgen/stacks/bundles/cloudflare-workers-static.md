@@ -36,7 +36,7 @@ environment, each fed its own build of the same commit.
 workflow.** The task is the only thing that knows a Cloudflare Worker is on
 the other end, which is what keeps the target swappable; the CI system
 pinned on the project's `cicd` axis decides what fires it, behind
-`assets/contracts/release-trigger.md`. Naming the task and writing the
+stackgen's release-trigger contract. Naming the task and writing the
 workflow are different jobs, and only the first one is stackgen's.
 
 **Credentials arrive from the environment, never from the config file.**
@@ -56,8 +56,9 @@ that fronts a container image is
 project bundles, `astro-ssg` and `astro-csr` pair **here** — every
 response decided at build time — while `astro-ssr` and `astro-hybrid`
 pair there. Which Cloudflare services stackgen offers, and which are
-planned or declined, is the provider component's to state — see
-`cloud-provider/cloudflare/conventions.md`.
+planned or declined, is the provider component's to state — see the
+`cloud-provider/cloudflare` component's conventions, in this
+composition's template.
 
 **The seam with [Cloudflare Zero Trust Access](cloudflare-zero-trust.md).**
 That bundle produces no artifact and "composes with a hosting pin rather

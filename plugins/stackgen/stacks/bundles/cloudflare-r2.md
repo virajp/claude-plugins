@@ -53,5 +53,5 @@ shared, and recording it per project is what lets `/vwf:doctor` check a
 project against what it actually declared.
 
 Full judgment: the components' own skills and their references, and the
-neutral contract the service half satisfies clause by clause,
-`assets/contracts/object-storage.md`.
+neutral contract the service half satisfies clause by clause — stackgen's
+object-storage contract.
