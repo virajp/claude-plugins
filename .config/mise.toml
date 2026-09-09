@@ -22,6 +22,27 @@ pnpm        = { version = "latest" }
 [env]
 _.path = { path = "node_modules/.bin", tools = true }
 
+# A MARKED POSITION. The orchestrator that shapes this repo replaces "unfilled"
+# with the repo's project id: the name lowercased, every run of characters
+# outside [a-z0-9] replaced by a single "-", leading and trailing "-" trimmed.
+# So `virajp.dev` becomes `virajp-dev`. It is the same token the `p:<id>:*` task
+# group, `setup:all`'s member flags and the `setup-<id>` aliases carry, and the
+# rule and its reasons are stackgen's `assets/ids.md`.
+#
+# **It is a literal, and it is never derived at load time.** The obvious
+# shorthand — reading the basename of the config root — is wrong in a linked
+# worktree, whose directory is named after the BRANCH. A `REPO_NAME` that
+# changes with the branch you are standing on is worse than none: everything
+# reading it (a launcher, an editor profile) silently addresses a different repo.
+#
+# **Aliases that vary only by repo do not live here.** The Claude launchers are
+# the case: `cc`, `cco`, `ccf` and their siblings are the same command in every
+# repo with one token different, so they belong in the user's GLOBAL mise config
+# reading `$REPO_NAME` — one definition, per-repo values. Shipping them here
+# would copy the same alias into every repo and make a change to the launcher a
+# change to every repo that has one.
+REPO_NAME = "claude-plugins"
+
 [tasks.init]
 description = "Initialize mise tasks"
 hide        = true

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+#MISE description="Install and refresh this repo's package-manager dependencies"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# `setup:deps:*` is the LANGUAGE PACKAGE MANAGER's surface, and nothing else.
+# Services a product runs against — emulators, containers, local queues — are
+# `setup:external:*`, a sibling. Keeping them apart is what lets a repo have one
+# and not the other, which is the common case in both directions.
+#
+# All five verbs ship as slots and all five run, in this order. A package
+# manager that has no such verb fills the slot with an overlay that says so and
+# exits 0 — the absence is stated by the pack that knows, not inferred here from
+# a task that happens not to exist.
+
+print_subheader "Cleaning up ..."
+mise run setup:deps:cleanup
+
+print_subheader "Installing ..."
+mise run setup:deps:install
+
+print_subheader "Upgrading ..."
+mise run setup:deps:upgrade
+
+print_subheader "Checking what is outdated ..."
+mise run setup:deps:outdated
+
+print_subheader "Auditing for known vulnerabilities ..."
+mise run setup:deps:audit

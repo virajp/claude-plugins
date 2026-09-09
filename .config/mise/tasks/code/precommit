@@ -5,7 +5,7 @@
 #USAGE flag "--all" "Run pre-commit hooks on all files (default: only staged/unstaged changed files)"
 
 set -e
-source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 if [[ "${usage_all:-false}" == "true" ]]; then
   print_header "Running pre-commit on all files ..."

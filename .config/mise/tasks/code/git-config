@@ -5,7 +5,7 @@
 #USAGE flag "--fix" help="Remove forbidden configs from local git-config"
 
 set -e
-source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 print_normal_wait "Validating git-config ... "
 

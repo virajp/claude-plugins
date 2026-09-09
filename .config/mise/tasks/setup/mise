@@ -4,7 +4,7 @@
 #MISE hide=false
 
 set -e
-source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 # Reshim mise to ensure all tools are available
 print_header "Reshimming mise ..."
