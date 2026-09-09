@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+#MISE description="Set the default branch on this repo's remote"
+#MISE hide=true
+
+#USAGE arg "<branch>" help="the branch the forge should show and target by default"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# The forge's default branch is the one thing about the branch model that is not
+# in the repo: it decides what a clone lands on and what a pull request targets,
+# and it lives in the hosting provider's settings.
+#
+# **It is orthogonal to the merge tasks.** Work flows feature → `develop` →
+# `main` regardless of which branch the forge calls default; this task only
+# makes the forge agree with whichever one the repo chose to present.
+#
+# **Set it where it can, print it where it cannot, and never fail.** A repo with
+# no remote yet is the ordinary case on the first day, and a contributor whose
+# forge CLI is not installed still needs to know the one command to run. Both
+# exit 0: this is a convenience, not a gate.
+
+BRANCH="${usage_branch:-${1:-}}"
+
+if [ -z "${BRANCH}" ]; then
+  print_error "Usage: mise run setup:default-branch <branch>"
+  exit 1
+fi
+
+remote=""
+remote=$(git -C "${MISE_PROJECT_ROOT}" remote get-url origin 2>/dev/null) || remote=""
+
+print_the_commands() {
+  print_yellow "  gh repo edit --default-branch ${BRANCH}"
+  print_yellow "  glab repo update --defaultBranch ${BRANCH}"
+}
+
+if [ -z "${remote}" ]; then
+  print_warn "No 'origin' remote — nothing to set the default branch on yet."
+  print_yellow "Once this repo has one, run whichever matches the forge:"
+  print_the_commands
+  exit 0
+fi
+
+print_wait "Setting the default branch to '${BRANCH}' on origin ... "
+
+# `repo view` is the probe rather than the CLI merely being installed: both
+# tools are commonly present on a machine that hosts elsewhere, and both answer
+# `view` only for a remote they actually recognize and are authenticated to.
+# Asking the wrong one to edit would fail with an auth error that reads like a
+# permissions problem on a repo that is not there.
+if command -v gh >/dev/null 2>&1 && gh repo view >/dev/null 2>&1; then
+  if gh repo edit --default-branch "${BRANCH}" >/dev/null 2>&1; then
+    print_ok
+    exit 0
+  fi
+elif command -v glab >/dev/null 2>&1 && glab repo view >/dev/null 2>&1; then
+  # The flag is spelled in camelCase on this CLI, unlike its GitHub counterpart.
+  if glab repo update --defaultBranch "${BRANCH}" >/dev/null 2>&1; then
+    print_ok
+    exit 0
+  fi
+fi
+
+print_warn "not set"
+print_yellow "No forge CLI here recognized this remote, or the edit was refused."
+print_yellow "Set it in the forge's settings, or run whichever matches:"
+print_the_commands
+exit 0

@@ -2,7 +2,7 @@
 #MISE description="Run pnpm outdated"
 
 set -e
-source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 # Check for outdated packages across all workspaces
 print_header "Check for outdated packages ..."

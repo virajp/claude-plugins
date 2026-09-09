@@ -4,15 +4,15 @@
 #MISE hide=false
 
 set -e
-source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/_helpers"
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 mise run setup:mise
-mise run setup:doppler
+mise run setup:secrets
 
 print_header "Linter setup ..."
 pnpm dlx @askviraj/linter@latest --init
 
 mise run setup:precommit
-mise run setup:ai
+mise run code:ai
 
 print_header "Setup complete!"
