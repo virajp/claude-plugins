@@ -37,9 +37,6 @@ uv     = { version = "latest" }
 
 [shell_alias]
 be-setup  = "mise run --cd ../backend setup:all"
-cc        = "dcc --name 'claude-plugins'"
-ccf       = "dccf --name 'claude-plugins'"
-cco       = "dcco --name 'claude-plugins'"
 fe-setup  = "mise run --cd ../frontend setup:all"
 precommit = "mise run code:precommit"
 setup     = "mise run setup:all"
