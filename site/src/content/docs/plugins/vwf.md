@@ -885,16 +885,26 @@ marked for it to fill. Pass 1 has one case worth knowing: where a gate pack
 declares both a config under `.config/` and a two-line stand-in of the same name
 at the root — the stand-in existing because that tool's config discovery is
 root-only — your **real** config moves into `.config/` and the stand-in takes
-its place, with the plan saying the settings survive the move. The two are told
-apart by content, never by name. What comes back is **one plan**, in six counted
-sections: moves, creates, renames, appends, merges — all applied on a single yes
-— and `Rewrites (flagged, not applied)`, which is applied by nothing. A task
-file whose shebang names a shell other than bash goes there, listed with the
-shell-specific syntax it uses, and is **never** rewritten: auto-translating a
-shell script is how a working task becomes a subtly broken one, so it lands in
-the report's `Deferred` section for you to rewrite deliberately. It never asks
-per file, never writes before the yes, never touches application code, and never
-writes a language manifest, a lockfile or a CI workflow.
+its place, with the plan saying the settings survive the move. Not every key
+does, and the plan says which: a gate pack's own skill names the key that is
+**not** inherited through the stand-in, where an extended file declaring it is a
+fatal diagnostic rather than a warning, so the move drops it. Dropping it
+**widens** what the gate covers, since the pack's own pinned plugin list is then
+what defines the file set. So the move row carries **sub-lines** — one for the
+dropped key, and one per **exclusion** the drop makes necessary, each naming the
+files that exclusion keeps out of the gate. Never a restored key, which puts the
+diagnostic back, and never after the fact: they are changes to the settings the
+row claims survive the move, so you read them before the one consent. The two
+are told apart by content, never by name. What comes back is **one plan**, in
+six counted sections: moves, creates, renames, appends, merges — all applied on
+a single yes — and `Rewrites (flagged, not applied)`, which is applied by
+nothing. A task file whose shebang names a shell other than bash goes there,
+listed with the shell-specific syntax it uses, and is **never** rewritten:
+auto-translating a shell script is how a working task becomes a subtly broken
+one, so it lands in the report's `Deferred` section for you to rewrite
+deliberately. It never asks per file, never writes before the yes, never touches
+application code, and never writes a language manifest, a lockfile or a CI
+workflow.
 
 **Your readme is moved, never rewritten.** `README.md` → `readme.md` is a move
 like any other in the plan — content untouched, applied with `git mv` so the
@@ -1656,6 +1666,16 @@ not. Then it surveys through concurrent `Explore` subagents that return
 `file:line` conclusions rather than file contents, so the session stays small
 enough to hold an interview afterwards.
 
+Two of the survey's reads exist to spare the run a class of failure it used to
+hit. It reads the repo's **commit convention** —
+`.config/git-conventional-commits.yaml` where there is one, else whatever the
+commit-message gate reads — so every unit file's commit line already carries a
+type that gate accepts, rather than one the orchestrator has to substitute at
+commit time. And when the request **retires or renames a name**, it greps that
+name across every tree the repo has, because each hit is a passage the change
+falsifies; each one gets an owner in the unit table before the plan is written,
+instead of surfacing at run time as a passage nobody owns.
+
 A request that is really **several independent pieces** is decomposed before
 anything is refined — one folder per piece, in an agreed order, each later
 folder naming the earlier one in its `requires:` list. One plan never swallows
@@ -1671,8 +1691,12 @@ is written:
 - **The wave gate** — the exact commands the run must pass, proposed from the
   repo's own task list, its `harness:` stamp and what CI already runs over the
   touched trees. `/vwf:change-execute` runs what is written and nothing it
-  infers. A repo with neither task runner nor stamp records `none`, and the plan
-  says plainly that the wave review is then the only check.
+  infers. Every line has to be green **before wave 1**, since the gate runs as
+  the preflight too — so a check that only starts holding once a particular unit
+  has landed is not a gate line at all. It goes in that unit's *Verification*,
+  and again in the gates-and-bump unit's. A repo with neither task runner nor
+  stamp records `none`, and the plan says plainly that the wave review is then
+  the only check.
 - **The after-landing steps** — each marked `run` (executed unprompted; it
   publishes nothing, cuts no tag, and reaches no one but this machine) or `ask`
   (the run stops once and asks first). Every release step is `ask`. An empty
@@ -1724,7 +1748,14 @@ launch line. From there:
   subagent, on the model its unit file names, given paths and never conversation
   context. Each report becomes a run-log row **as it arrives**. Then a reviewer
   subagent over the wave's diff, with findings looped back to the owning unit
-  for at most two rounds; then the wave gate; then one commit per green unit.
+  for at most two rounds — with one exception. A **docs** finding in a file no
+  unit owns has nobody to loop to, so it does not loop: it goes to the docs unit
+  instead, whose owned paths the orchestrator widens to cover that passage,
+  recorded as a `GAP:` and listed in the final report. Then the wave gate; then
+  one commit per green unit, each staging **exactly** that unit's owned paths —
+  anything else that reached the index is unstaged before the commit, so no
+  unit's work rides another's. Units delete with plain `rm` and stage nothing,
+  which is the other half of the same guarantee.
 - **The two fixed final units** — the docs unit, which runs
   [`/vwf:docs-sync`](#vwfdocs-sync) over the run's branch delta and applies its
   findings, and the gates-and-bump unit, which bumps each released project's

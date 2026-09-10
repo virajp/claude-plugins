@@ -63,6 +63,15 @@ Then it surveys — concurrent `Explore` subagents that return `file:line`
 conclusions rather than file contents, so the session stays small enough to hold
 a conversation afterwards.
 
+Two of those reads exist because earlier runs got them wrong. It reads your
+repo's **commit convention**, so every unit's commit line already uses a type
+your commit-message hook accepts rather than one that has to be swapped at the
+last moment. And when the request **retires or renames** something — Relay's
+hand-written release-notes step is exactly that — it greps that name across
+every tree you have, and every hit gets an owner in the unit map before you are
+shown the plan. A hit with no owner is what becomes a stray doc edit halfway
+through the run.
+
 If your request is really several things, it says so **before** refining any of
 them, and proposes one folder per piece with an order. Relay's is: the CI change
 first, the contributing-guide cleanup inside it, and "switch the whole repo to a
@@ -83,9 +92,12 @@ are worth answering carefully:
   repo's own task list and its `harness:` stamp. Relay's is its lint task, its
   test task, and the workflow linter. `/vwf:change-execute` runs **what is
   written and nothing it infers** — a check you leave out is a check the run
-  will not do, however obvious it looks in the tree. If the repo has no task
-  runner and no stamp, the answer is `none`, and the plan says plainly that the
-  wave review is then the only gate.
+  will not do, however obvious it looks in the tree. It also runs the whole gate
+  once **before** the first wave, so every line has to be green on the untouched
+  branch — which means a check that can only pass once one of the units has
+  landed does not belong here. That one goes in the unit's own verification. If
+  the repo has no task runner and no stamp, the answer is `none`, and the plan
+  says plainly that the wave review is then the only gate.
 - **The after-landing steps.** What happens once the branch is in. Each is
   marked `run` — done unprompted, publishes nothing, cuts no tag, reaches nobody
   but this machine — or `ask`, where the run stops and asks first. Every release
@@ -136,7 +148,12 @@ once as a preflight (a red line here is the branch's problem, not the plan's,
 and it says so rather than fixing it), then works wave by wave: every unit in a
 wave dispatched at once as its own subagent, a reviewer over the wave's diff
 with at most two rounds of findings, the gate again, and one commit per green
-unit. The last two units are fixed — a docs unit that runs
+unit. Each of those commits stages only what that unit owns, and unstages
+anything else that reached the index first, so one unit's work never rides
+another's commit. The two-round loop has one exception: a docs finding in a file
+no unit owns has nowhere to loop back to, so it goes to the docs unit, which is
+given that passage to own for the rest of the run, and you see it in the report
+as a `GAP:`. The last two units are fixed — a docs unit that runs
 [`/vwf:docs-sync`](../../plugins/vwf.md#vwfdocs-sync) over the branch delta, and
 a gates-and-bump unit. Relay's docs unit is what actually deletes the
 hand-written step from the contributing guide.
@@ -149,8 +166,9 @@ size of the reports, not the size of the diff.
 The final report is rendered from the run log rather than from memory — by then
 the run may have spanned dozens of dispatches. It gives you every unit with its
 outcome and commit, every `GAP:` a unit proceeded past and the assumption it
-took (read these), the review findings that survived the cap, the gate results,
-and the worktree path.
+took — including every unit whose owned paths the run widened, with the finding
+that widened them (read these) — the review findings that survived the cap, the
+gate results, and the worktree path.
 
 If everything is green it archives the folder to `docs/plans/archived/`, lands
 per the consent you recorded, runs the after-landing `run` steps and reports
