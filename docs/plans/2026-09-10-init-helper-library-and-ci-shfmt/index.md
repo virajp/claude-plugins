@@ -9,8 +9,13 @@ requires: []
 
 ## Status
 
-**APPROVED** 2026-09-10 by the user, after the shape gate, one revision (this
-repo's task library left to the reshape run) and the post-self-review yes.
+**RUNNING** since 2026-09-10 — worktree
+`.worktrees/init-helper-library-and-ci-shfmt`, branch
+`init-helper-library-and-ci-shfmt`.
+
+Previously **APPROVED** 2026-09-10 by the user, after the shape gate, one
+revision (this repo's task library left to the reshape run) and the
+post-self-review yes.
 
 ## Consent
 
@@ -220,13 +225,13 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                                              | Owns                                                                                                                                                                                         | Depends on | Status  | Commit |
-| -- | ---- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-ci-tools.md](01-ci-tools.md)                       | `.config/mise.ci.toml`                                                                                                                                                                       | —          | pending |        |
-| U2 | 1    | [02-pack-legacy-table.md](02-pack-legacy-table.md)     | `plugins/stackgen/stacks/toolchain-manager/mise/skills/mise/references/task-library.md`                                                                                                      | —          | pending |        |
-| U3 | 1    | [03-init-helper-library.md](03-init-helper-library.md) | `plugins/vwf/skills/init/references/existing-repo.md`, `plugins/vwf/skills/init/SKILL.md`                                                                                                    | —          | pending |        |
-| U4 | 2    | [04-docs.md](04-docs.md)                               | `site/src/content/docs/**`, `.claude/docs/**`, `.claude/skills/**`, `readme.md`, `CLAUDE.md`, `docs/memory/decisions/**`                                                                     | U1–U3      | pending |        |
-| U5 | 3    | [05-gates-and-bump.md](05-gates-and-bump.md)           | `plugins/vwf/.claude-plugin/plugin.json`, `plugins/stackgen/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md` — no diff expected in any | U4         | pending |        |
+| Id | Wave | Unit file                                              | Owns                                                                                                                                                                                                                                   | Depends on | Status  | Commit   |
+| -- | ---- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
+| U1 | 1    | [01-ci-tools.md](01-ci-tools.md)                       | `.config/mise.ci.toml`                                                                                                                                                                                                                 | —          | green   | 66060fc4 |
+| U2 | 1    | [02-pack-legacy-table.md](02-pack-legacy-table.md)     | `plugins/stackgen/stacks/toolchain-manager/mise/skills/mise/references/task-library.md`                                                                                                                                                | —          | green   | f724c2d4 |
+| U3 | 1    | [03-init-helper-library.md](03-init-helper-library.md) | `plugins/vwf/skills/init/references/existing-repo.md`, `plugins/vwf/skills/init/SKILL.md`                                                                                                                                              | —          | green   | 696c3094 |
+| U4 | 2    | [04-docs.md](04-docs.md)                               | `site/src/content/docs/**`, `.claude/docs/**`, `.claude/skills/**`, `readme.md`, `CLAUDE.md`, `docs/memory/decisions/**`, plus (widened at run time by R1 rule 5) the one passage `plugins/vwf/skills/init/references/new-repo.md:361` | U1–U3      | pending |          |
+| U5 | 3    | [05-gates-and-bump.md](05-gates-and-bump.md)           | `plugins/vwf/.claude-plugin/plugin.json`, `plugins/stackgen/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md` — no diff expected in any                                           | U4         | pending |          |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -341,8 +346,16 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Commit   |
+| ---- | --------- | ----- | ----- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 0    | preflight | —     | 1     | green       | all eight wave-gate lines green on the branch point: check, marketplace --check, inventory --check, npm-normalize-test, vitest (288), tsc ×2, site:check                                                                                                                                                                                                                                                                                                                                  | —        |
+| 1    | U1        | opus  | 1     | green       | DECIDED: file header sentence repaired (own edit falsified it); comment folded over three lines. GAP: unit's taplo line omits `--config .config/taplo.toml` — assumed the dprint.json:22 form, exits 0. DOCS FALSIFIED: ci-and-releases.md:10-16 (already U4's). CI replica exits 0 in ci env                                                                                                                                                                                             | 66060fc4 |
+| 1    | U2        | opus  | 1     | green       | nine rows + preamble sentence + diverged-helpers-not-a-sibling sentence. DECIDED: reason wording, ruling's row order, padding matched by hand. GAP: unit's `grep -c` counts 18 not 9 (vocabulary table matches too) — assumed "nine new". GAP: awk 80-col line cannot exclude table rows — fold rule read as prose-only. DOCS FALSIFIED: stackgen.md:700-706 (U4's, decision 7)                                                                                                           | f724c2d4 |
+| 1    | U3        | opus  | 1     | green       | existing-repo.md pass 5 compare/replace/rewrite/flag, pass 4 exception clause, pass 6 already-owned exception, Plan eight sections, Report Deferred; SKILL.md report block gains Files replaced / Calls rewritten. DECIDED: "table says so in its own rows" not "last row" (U2 appends rows); "eight-section report"; cites the pack table by heading only. GAP: report line columns aligned to the block, bare path for a replace. DOCS FALSIFIED: vwf.md:881, :899-902, :950-955 (U4's) | 696c3094 |
+| 1    | R1        | opus  | 1     | findings(4) | CONTRACT clean, RULINGS clean. (a) ci-and-releases.md:122 wrapper rationale now false → U4; (b) ci-and-releases.md:23 + stackgen.md:450 "don't duplicate across dev/ci" contradicted by decision 1's deliberate duplication → U4; (c) plugins/vwf/skills/init/references/new-repo.md:361 "six-section report" falsified by SKILL.md's eight — nobody-owned, rule 5 → GAP: U4's Owns widened to that passage; (d) SKILL.md:81 fold orphan → U3 round 2                                     | —        |
+| 1    | U3        | opus  | 2     | green       | idempotence bullet re-folded, no words changed; checker green                                                                                                                                                                                                                                                                                                                                                                                                                             | 696c3094 |
+| 1    | R1        | opus  | 2     | pass        | 0 findings; re-fold byte-identical in words; CONTRACT clean, RULINGS clean                                                                                                                                                                                                                                                                                                                                                                                                                | —        |
+| 1    | gate      | —     | 1     | green       | all eight wave-gate lines green; CI replica `MISE_ENV=ci mise x shellcheck@latest shfmt@latest -- mise run plugins:shellcheck` exits 0 (60 files clean); check + replica re-run green after the round-2 re-fold                                                                                                                                                                                                                                                                           | —        |
 
 ## Launch
 
