@@ -20,22 +20,31 @@ by the fixed slug `repo-hygiene`, the way `mise` and `repo-gates` are.
 | `.gitattributes`      | line-ending normalisation, generated trees, binaries    |
 | `CONTRIBUTING.md`     | setup, the branch model, commits, the gates             |
 | `.github/ISSUE_TEMPLATE/` | the bug and feature forms, and the two contact links |
-| `.config/renovate.json` | the dependency-update policy                          |
+| `renovate.json`       | the dependency-update policy — at the root, where Renovate reads it |
 | `.config/vscode.d/repo-hygiene.jsonc` | the editor baseline every other fragment sits on |
 | `SECURITY.md`         | the private report channel — written only when asked for |
 | `LICENSE`             | one of `_licenses/`, **copied by the initializer**      |
 
 Most of these sit at the repo root, which is the whole of the exception list —
-everything a repo configures otherwise lives under `.config/`. The allowlist is
-`.gitignore`, `.graphifyignore`, `.editorconfig`, `.gitattributes`, `.npmrc`,
-`LICENSE`, `SECURITY.md`, `CONTRIBUTING.md`, `readme.md`, `CLAUDE.md`,
-`dprint.json` — the shim, because that formatter discovers its config only at
-the root — `fnox.toml`, the linter's root shim, `wrangler.jsonc` — which
-wrangler discovers only at the root — the directory `.github/` **with
-`.github/workflows/` refused inside it**, and the manifests and lockfiles a
-language mandates at the root. A tool that
-merely *prefers* the root is configured under `.config/` and pointed at from
-the command line.
+everything a repo configures otherwise lives under `.config/`. The allowlist
+names what may **sit** at a shaped repo's root, and it has two tiers. A pack
+may land `.gitignore`, `.graphifyignore`, `.editorconfig`, `.gitattributes`,
+`.npmrc`, `LICENSE`, `SECURITY.md`, `CONTRIBUTING.md`, `readme.md`,
+`fnox.toml`, `eslint.config.mjs`, the linter's root shim, `dprint.json`, the
+formatter's — because each of those two discovers its config only at the
+root — `wrangler.jsonc`, which wrangler discovers only at the root,
+`renovate.json`, because Renovate's discovery is root-first
+(`renovate.json`, then `.github/`, `.gitlab/`, `.renovaterc`) and never
+`.config/`, and the directory `.github/` **with `.github/workflows/` refused
+inside it**. Two more may sit at that root but are **vwf's — no pack lands
+them**: `CLAUDE.md`, which the workflow merges its own section into, and
+`mempalace.yaml`, which the memory mine discovers at the root and nowhere
+else. A language's manifests and lockfiles are **not** on the list at all —
+a manifest is fenced out, and a lockfile is its shadow. A tool that merely
+*prefers* the root is configured under `.config/` and pointed at from the
+command line. Both tiers are stackgen's root-allowlist doctrine, stated in
+its output-tree contract and enforced there by the materializer; this list
+restates that contract and adds nothing to it.
 
 **`config/_licenses/` is the one path in this tree that is NOT copied into a
 repo.** It is a two-file catalogue the initializer reads: it asks which
@@ -169,8 +178,10 @@ at is better off with no file than with one naming a channel nobody watches.
 
 ## Dependency updates
 
-`.config/renovate.json` is a policy, not an installation — nothing here adds a
-bot to the repository, and the file is inert until one is enabled on it. What
+`renovate.json` is a policy, not an installation — nothing here adds a bot to
+the repository, and the file is inert until one is enabled on it. It sits at
+the repo root because that is the first path Renovate's config discovery
+reads; under `.config/` it is a file the bot never opens. What
 it encodes: the recommended baseline, minor and patch grouped into one pull
 request, weekly lockfile maintenance, and a **ten-hour minimum release age**,
 which is the same number the toolchain manager pins its fuzzy resolution to.
