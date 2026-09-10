@@ -1,0 +1,72 @@
+name: Bug report
+description: Something this repository ships behaves differently from what it
+  documents.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. The fields below are the ones that actually
+        triage a bug — a version and an exact reproduction usually settle it on
+        the first pass.
+
+        Anything you paste is public. Redact paths, hostnames and identifiers
+        you would rather not publish; it does not change what the report is
+        worth.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The released version, or the commit you built from.
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you saw, verbatim where you can paste it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-expected
+    attributes:
+      label: What did you expect instead?
+      description: And where it says so — a line in the readme, a doc, or a
+        message the tool itself printed.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: How can it be reproduced?
+      description: >-
+        The smallest sequence that shows it. "Sometimes, on a big repo" is a
+        real answer if that is the truth — say so rather than leaving this
+        blank.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: >-
+        Operating system and version, and anything about the machine that you
+        suspect matters.
+      render: text
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you file
+      options:
+        - label: I searched the existing issues.
+          required: true
+        - label: I am on the latest release, or I have said above why I am not.
+          required: true

@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+
+#MISE description="Count lines of code"
+#MISE dir="{{ config_root }}"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# A size reading, not a metric. It answers "how big is this repo, and where is
+# the bulk of it" — the question worth asking before a refactor and after a big
+# merge. Lines of code is a famously bad measure of anything else, and this task
+# is not the place to pretend otherwise.
+#
+# **It counts what git tracks and nothing more.** That is the whole ignore story
+# for free: no `node_modules`, no build output, no `.git`, and no second
+# exclusion list to keep in step with `.gitignore` — a `find` with `-not -path`
+# arms is the same query written worse, and it goes stale the day a build
+# directory is renamed.
+#
+# `git grep -I -c ''` is one process for the whole repo: the empty pattern
+# matches every line, `-c` reports the count per file, and `-I` drops binaries
+# by git's own rule rather than by guessing from an extension. No external
+# counter — a dedicated one is a better report and a tool every clone would have
+# to install to run a single task in this library.
+
+print_header "Counting lines of code ..."
+
+counts=""
+# `|| true`: git grep exits 1 when nothing matched, which here means "no tracked
+# text files" rather than an error — and under `set -e` the assignment would
+# take that status and kill the task before the check below could say so.
+counts=$(git -C "${MISE_PROJECT_ROOT}" grep -I -c '' -- . 2>/dev/null) || true
+
+if [ -z "${counts}" ]; then
+  print_warn "No tracked text files."
+  exit 0
+fi
+
+# Grouped by extension, biggest first, ten rows. A basename with no dot — every
+# task file in this library, for one — groups under `(none)` rather than being
+# dropped. The `path:count` line is split on the LAST colon, so a path that
+# contains one still parses.
+print_subheader "By extension"
+printf '%s\n' "${counts}" | awk '
+  {
+    at = match($0, /:[0-9]+$/)
+    if (at == 0) next
+    n = substr($0, at + 1) + 0
+    path = substr($0, 1, at - 1)
+
+    slash = split(path, parts, "/")
+    base = parts[slash]
+    dot = split(base, pieces, ".")
+    ext = (dot > 1) ? "." pieces[dot] : "(none)"
+
+    lines[ext] += n
+    files[ext] += 1
+  }
+  END {
+    for (e in lines) printf "%12d  %6d  %s\n", lines[e], files[e], e
+  }
+' | sort -rn | head -10
+
+printf '%s\n' "${counts}" | awk '
+  {
+    at = match($0, /:[0-9]+$/)
+    if (at == 0) next
+    total += substr($0, at + 1) + 0
+    count += 1
+  }
+  END { printf "\n%12d lines in %d tracked text files\n", total, count }
+'

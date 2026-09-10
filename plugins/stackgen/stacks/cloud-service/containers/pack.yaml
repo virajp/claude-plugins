@@ -1,0 +1,51 @@
+name: Cloudflare Containers
+summary: A Docker image running beside a Worker and addressed through a
+  Durable Object — the deploy target for a process that needs a real
+  filesystem, a runtime the Workers sandbox cannot host, or more CPU than
+  an invocation is allowed, while the Worker stays the front door.
+version: 0.1.0
+type: cloud-service
+category: compute
+# `capability` is deliberately unset, as `cloud-service/workers-ssr` and
+# `cloud-service/cloud-run` leave it: `compute` names no vwf capability
+# token in the capability vocabulary, and nothing here mints one —
+# minting capabilities is vwf's move.
+kind: cloud-provider
+axis: deploy
+artifact: container-image
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      An HTTP probe of the deployed Worker, never of the container, because
+      a container instance has no address of its own — every request
+      reaches it through the Durable Object the Worker holds a binding to.
+      The readiness path the probe asks for is one the Worker forwards to
+      the container's own health endpoint, so a green answer proves the
+      whole chain rather than the front door alone. The probe must budget
+      for a cold start: an instance that has slept is started by the
+      request that woke it, and a timeout tuned to a warm instance reports
+      a sleeping one as dead
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      A staging Worker with its own container class and its own image tag,
+      and the suite targets that Worker's URL. Never a shared image tag
+      between environments: the registry is account-wide, so two Workers
+      pointed at one tag are two environments that cannot be rolled back
+      independently, and the one promoted last silently becomes the one
+      both run
+  local_stack:
+    task: n/a
+    mechanism: >-
+      `wrangler dev` builds the image from the Dockerfile and runs it under
+      the machine's own Docker daemon, so the container is the real image
+      rather than a simulation — and nothing about this stack runs on a
+      machine without Docker. The fidelity trap is the sleep/wake
+      lifecycle and the ports: declaring every port the Worker reaches
+      with `EXPOSE` is a recommendation here, documented by Cloudflare for
+      Sandbox rather than for Containers itself
+      (`references/local-dev.md`), and a Dockerfile that works deployed
+      can refuse connections locally without it. There is still no backing
+      engine to compose behind a readiness gate, so the harness answer
+      stays `n/a`

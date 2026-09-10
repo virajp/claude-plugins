@@ -5,7 +5,9 @@ description: Bring a repo into vwf's format and keep it there. Step 0 resolves
   is detected and confirmed), migrate (reconcile a tree written against an older
   format), or current (say so and exit) — then runs the shared spine that
   validates, stamps .config/vwf.yaml, checks the repo, commits, and prints the
-  chain forward.
+  chain forward. The argument reshape skips the fork and runs the repo-shape
+  pass alone.
+argument-hint: "[reshape]"
 model: sonnet
 effort: high
 disable-model-invocation: true
@@ -54,30 +56,56 @@ Read the one the step needs, not all of them.
   drift is a written recommendation — see Recommendations, never moves.
 - **Don't write repo tooling.** The repo shape — the toolchain manager's config
   and task library, the repo gates, the hygiene files — is `/vwf:init`'s. Setup
-  checks for it and offers init; it never materializes a bundle itself. **Never
-  write a README by hand** either — `/vwf:readme` owns it, and setup only names
-  it in the chain.
+  checks for it and offers init; it never materializes a bundle itself. Setup
+  is also the **only** way init is reached — Step 0's offer, or `reshape` —
+  since init is hidden from the `/` menu. **Never write a README by hand**
+  either — `/vwf:readme` owns it, and setup only names it in the chain.
 - **Idempotent.** A migrate run reconciles only what drifted; a conforming tree
   yields an empty plan, and Step 0 routes it to `current` before that.
 
+## The `reshape` argument — the shape pass, alone
+
+`$ARGUMENTS` carries at most one word. With `reshape`, setup **skips the
+detection below entirely**: invoke `/vwf:init` — which surveys, shows its one
+plan and takes its own consents — print init's report verbatim, and **stop**.
+No mode fork, no validation, no stamp, no doctor, no commit; a re-shape never
+touches `.config/vwf.yaml`, because the spine below is a setup run's, and a
+user who wants both runs `/vwf:setup` again afterwards.
+
+`/vwf:setup reshape` is the line `/vwf:doctor` prints for every repo-shape
+finding, so most runs of it arrive from a drift row and should act on exactly
+what that row named.
+
 ## Step 0 — Resolve the mode
 
-**The shape check comes first, before the mode fork.** A repo is **shaped** when
-the stack adapter's lockfile records all three unconditional repo slugs —
-`mise`, `repo-gates` and `repo-hygiene`
+**The shape check comes first, before the mode fork**, and it asks two things.
+First, is the shape **there**: the stack adapter's lockfile records all three
+unconditional repo slugs — `mise`, `repo-gates` and `repo-hygiene`
 (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). Named exactly, never
 constructed: a slug assembled from configuration is one that can silently
-resolve to nothing. All three present — say so in one line and read on.
+resolve to nothing. Second, is it **current**: the four predicates under **"The
+repo shape against its baseline"** in `/vwf:doctor`'s stack-checks reference,
+on their four subjects — the pack versions the adapter lockfile records
+against what the adapter ships now, the registry's project ids behind the
+surfaces generated from them, the `develop`/`main` pair, and the toolchain
+manager's repo-name environment key. Read the artifacts that section reads
+and evaluate them **by it**: the predicates are doctor's and are deliberately
+not restated here, so the two can never drift apart. All three slugs recorded
+and all four predicates holding — say so in one line and read on.
 
-**Any of the three missing, the repo is unshaped: offer `/vwf:init`.** Say what
-is absent and that init is what lays it down, and on a yes invoke `/vwf:init`
-and continue once it returns — init is model-invocable for exactly this seam.
-A **decline** is a recorded deferral on the terms in
+**Otherwise the repo needs init, and setup offers it.** Any of the three slugs
+missing, the repo is **unshaped**: say what is absent. Any predicate failing,
+the repo is **behind its baseline**: name which, in the words doctor's rows
+use. Both reach the same offer — init is what lays the shape down and what
+brings it forward — and on a yes invoke `/vwf:init` and continue once it
+returns. init is **skill-invoked**: hidden from the `/` menu and called from
+here alone, so this offer and `reshape` above are the only two ways it is
+reached. A **decline** is a recorded deferral on the terms in
 [the onboard pipeline](references/onboard-pipeline.md), named with its unlock
-(`/vwf:init`, run whenever), and the run continues to the mode table. setup
-never materializes a bundle itself and never halts on an unshaped repo: the
-repo shape and the vwf format are two different things, and a repo can be
-onboarded into one without the other.
+(`/vwf:setup reshape`, run whenever), and the run continues to the mode table.
+setup never materializes a bundle itself and never halts on an unshaped or
+drifted repo: the repo shape and the vwf format are two different things, and a
+repo can be onboarded into one without the other.
 
 Read `.config/vwf.yaml`, then compare its `blueprint_format` and `config_format`
 against the shipped integers (`${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`, and the

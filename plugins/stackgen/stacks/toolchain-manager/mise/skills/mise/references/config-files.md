@@ -19,6 +19,15 @@ not cover, or when you are editing one that landed.
 | `mise.ci.toml`    | `MISE_ENV=ci`          | the pipeline's and production's overrides      |
 | `mise.test.toml`  | `MISE_ENV=dev,test`    | test deltas, layered on top of dev             |
 | `mise.local.toml` | always, last           | **never committed** — this machine's overrides |
+| `mise.<env>.lock` | not loaded — written   | the versions each config's fuzzy pins resolved to |
+
+The sixth row is not a sixth file to author: `mise install` writes **one lock
+per config file that declares tools**, named after that file's stem. With the
+split as shipped — an empty base `[tools]`, nine tools in `mise.dev.toml` — the
+only file produced is `mise.dev.lock`, and a runtime pinned in `mise.toml` would
+add `mise.lock` beside it. **They are tracked**, which is the whole point:
+`locked = true` in `mise.ci.toml` makes the pipeline a reader of what a laptop
+resolved. Only `mise.local.lock` is ignored, matching its config.
 
 mise loads `mise.toml` first, then deep-merges the active `MISE_ENV` variants on
 top, then `mise.local.toml` and `mise.<env>.local.toml` last of all. So a
@@ -39,6 +48,7 @@ variant holds **deltas** and never a copy of the base.
 ```toml
 [settings]
 activate_aggressive  = true     # let mise shims win on PATH
+all_compile          = false    # never build a tool from source
 env_shell_expand     = true     # expand $VARS in [env]
 gpg_verify           = true     # verify tool signatures (see the CI exception)
 raw                  = true     # streams output
@@ -49,11 +59,14 @@ status.missing_tools = "always"
 # clone installs. mise's own default is 24h.
 minimum_release_age = "10h"
 
-# Record every resolved version in `mise.lock`, which IS committed. That is what
-# makes "latest" reproducible.
+# Record every resolved version in a lockfile, which IS committed. One lock per
+# config file that declares tools, named after its stem. That is what makes
+# "latest" reproducible.
 lockfile = true
 
 task.output = "interleave"
+task.timings = true                        # elapsed time after each task
+task.disable_spec_from_run_scripts = true  # flags come from #USAGE, not from a run
 
 # Node settings — only when the project uses Node
 node.compile        = false
@@ -67,6 +80,11 @@ python.uv_venv_auto = "create|source"
 [env]
 # Only what is identical in every environment.
 DISABLE_TELEMETRY = 1
+
+# A marked position: the orchestrator fills it with this repo's project id (the
+# slug `assets/ids.md` defines). A LITERAL — never derived from the config root,
+# whose basename is the branch name inside a linked worktree.
+REPO_NAME = "unfilled"
 
 [tools]
 # Language RUNTIME only — the minimum to run/build the project anywhere. It
@@ -141,8 +159,9 @@ never touches this file.
 
 ```toml
 [settings]
-# Install exactly what mise.lock records and fail rather than resolve. A CI run
-# that silently picks up a newer version is a build nobody can reproduce.
+# Install exactly what the tracked lockfiles record — one per config file that
+# declares tools — and fail rather than resolve. A CI run that silently picks up
+# a newer version is a build nobody can reproduce.
 locked = true
 
 # CI runs on Linux, where mise's bundled Node release-key gpg import can fail

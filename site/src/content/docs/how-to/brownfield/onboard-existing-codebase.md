@@ -80,12 +80,15 @@ into the existing `CLAUDE.md` (merged, not overwritten).
 
 The repo's own tooling is **not** in that plan. Before the mode fork, setup
 checks whether the repo is *shaped* — whether the toolchain config, the repo
-gates and the hygiene files are recorded as materialized — and if any is missing
-it offers [`/vwf:init`](../../plugins/vwf.md#vwfinit), which is what lays them
-down. Bookable has a `Makefile` and a hand-rolled CI script and no `.config/`
-layout, so the offer comes up; accepting runs init's existing-repo survey (which
-shows its own plan, and its own single consent) before setup carries on.
-Declining is recorded as a deferral and the onboard continues — the repo shape
+gates and the hygiene files are recorded as materialized, and whether what is
+there is still current against the four baseline predicates `/vwf:doctor` owns —
+and if anything is missing or behind it offers
+[`/vwf:init`](../../plugins/vwf.md#vwfinit), which is what lays them down and
+what brings them forward. Bookable has a `Makefile` and a hand-rolled CI script
+and no `.config/` layout, so the offer comes up; accepting runs init's
+existing-repo survey (which shows its own plan, and its own single consent)
+before setup carries on. Declining is recorded as a deferral, with
+`/vwf:setup reshape` as the unlock, and the onboard continues — the repo shape
 and the vwf format are two different things.
 
 Two brownfield-only items appear in that plan. **Harness detection** records

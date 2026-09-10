@@ -41,7 +41,6 @@ platform's store or update channel; a `cli` frontend ships to a package
 registry instead.
 
 The local stack is **not** this component's subject, even though it uses the
-same runtime: that is the harness contract at
-`assets/contracts/local-stack.md`.
+same runtime: that is the harness contract, stackgen's local-stack contract.
 
 Full judgment: the `container-image` skill's references.

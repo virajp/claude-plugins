@@ -23,9 +23,16 @@ convention:
     - merge # a merge commit. Written by the merge task, rarely by hand.
     - wip # work in progress. Never survives a merge; excluded from notes.
 
-  # One scope per sub-project, so a reader can tell which part of the repo a
-  # commit touched without opening it. `/vwf:init` fills this from the project
-  # registry; a single-project repo can leave it empty and use no scope.
+  # ---------------------------------------------------------------------
+  # MARKED POSITION — one scope per sub-project, so a reader can tell which
+  # part of the repo a commit touched without opening it.
+  #
+  # `/vwf:init` fills this on a re-run, from the project registry — and only
+  # then, because the registry does not exist yet when init first shapes a
+  # repo. So the empty list below is the correct first-run state, not an
+  # unfinished one: a single-project repo leaves it empty and uses no scope,
+  # and a repo that grows sub-projects gets them here the next time init runs.
+  # ---------------------------------------------------------------------
   #
   # A scope that stops existing stays listed with a comment saying so —
   # deleting it retroactively invalidates every commit that used it.
@@ -70,9 +77,17 @@ changelog:
     revert: Reverts
     breakingChange: BREAKING CHANGES
 
-  # Links, left commented because they name the forge and the repository, which
-  # this pack cannot know. `/vwf:init` fills the placeholders from the remote;
-  # uncomment then. Without them the notes still generate — just without links.
+  # ---------------------------------------------------------------------
+  # MARKED POSITION — the changelog links, left commented because they name the
+  # forge and the repository, which this pack cannot know.
+  #
+  # `/vwf:init` fills these and uncomments them on ANY run where the repo has a
+  # remote — the first one included, since a cloned or already-pushed repo has
+  # one from the start. A repo with no remote yet keeps them as shipped, and
+  # the next init run after `git remote add` fills them.
+  #
+  # Without them the notes still generate, just without links.
+  # ---------------------------------------------------------------------
   #
   # commitUrl: <forge>/<owner>/<repo>/commit/%commit%
   # commitRangeUrl: <forge>/<owner>/<repo>/compare/%from%...%to%?diff=split

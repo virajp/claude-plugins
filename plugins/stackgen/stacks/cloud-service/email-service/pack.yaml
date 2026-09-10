@@ -1,0 +1,45 @@
+name: Cloudflare Email Service
+summary: Transactional email a Worker sends through a binding, and inbound
+  mail routed back into a Worker — the product's own email provider on its
+  own domain, with the bounce, SPF and DKIM records held at the zone.
+version: 0.1.0
+type: cloud-service
+category: messaging
+capability: email
+kind: cloud-provider
+axis: backing
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      The binding resolving on `env` proves configuration and nothing
+      else. The send that proves the path is one to a **verified
+      destination address**, which Cloudflare excludes from the quota
+      and charges nothing for, so a readiness path may make one — and
+      must read the result, whose recipients come back split into
+      delivered, queued and permanent bounces. Accepted is not
+      delivered, and a probe that only checks for an absence of thrown
+      errors reports the difference as success. Receive health is the
+      routing rule's state read over the zone API, because nothing but
+      real inbound mail exercises the handler
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      A sending domain per environment — a separate zone, or its own
+      onboarded subdomain — so staging's bounce, SPF and DKIM records
+      are never production's, and a staging misconfiguration cannot
+      spend production's sending reputation. On top of that,
+      `allowed_destination_addresses` on the staging binding, which
+      turns a run that would have reached a customer into a failure at
+      the binding rather than a delivered message. Assertions read a
+      sink mailbox the environment owns, never a real recipient
+  local_stack:
+    task: n/a
+    mechanism: >-
+      Both halves run locally, which is unusual for a service with a
+      mail network behind it. `wrangler dev` simulates the send — the
+      message is logged and its body written to a file to be read — and
+      a POST to the local `/cdn-cgi/local/email` endpoint, carrying a
+      raw RFC 5322 message, triggers the `email()` handler. The trap is
+      the opt-out: `remote: true` on the binding makes that same local
+      session send real mail to real recipients

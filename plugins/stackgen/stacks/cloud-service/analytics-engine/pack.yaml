@@ -1,0 +1,41 @@
+name: Cloudflare Analytics Engine
+summary: High-cardinality time-series written from a Worker with one
+  non-blocking call and read back with SQL — usage metrics, per-tenant
+  counters and service telemetry without a metrics pipeline the team runs.
+version: 0.1.0
+type: cloud-service
+category: analytics
+# `capability` is deliberately unset, as `cloud-service/zero-trust-access`
+# leaves it: `analytics` realizes no vwf capability token today
+# (../../../assets/taxonomy.md), and nothing here mints one — minting
+# capabilities is vwf's move.
+kind: cloud-provider
+axis: backing
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      A write returns nothing and is deliberately not awaited, so there is
+      no call to probe. The only honest check is a read: a SQL API query
+      for a recent row of the dataset, over a window wide enough that
+      write visibility and index-based sampling cannot make an empty
+      result mean an outage. Treat it as a check that the pipeline is
+      producing, not as a liveness probe of the service
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      A dataset per environment, named for it, and the dataset name is the
+      whole of the isolation — nothing else separates a staging write from
+      a production one. Pre-production points its binding at its own
+      dataset; a suite left on production's poisons the numbers the
+      product reads
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None. The binding is local-simulation only — it has no per-binding
+      remote mode — so a locally executed write lands in the simulation
+      and never reaches the account's dataset, and there is no engine to
+      compose behind a readiness gate. Assertions about what was written
+      belong at the seam that calls the binding; a `wrangler dev --remote`
+      run, which executes the whole Worker on Cloudflare, is the escape
+      hatch when the question is about the real dataset

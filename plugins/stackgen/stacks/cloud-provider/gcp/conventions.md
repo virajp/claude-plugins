@@ -34,8 +34,8 @@ layer; application auth is the second lock, never the only one.
 **Observability leaves through OTLP.** The product instruments against
 OpenTelemetry and terminates in the provider's trace, metrics and logging
 services as a **sink**. No vendor observability SDK enters product code — that
-is what the neutral contract in `assets/contracts/observability.md` requires, and
-it is the one decision here that cannot be undone cheaply.
+is what stackgen's neutral observability contract requires, and it is the one
+decision here that cannot be undone cheaply.
 
 **Emulator coverage is per service, not per provider.** Some services have a
 first-class offline emulator, some have a substitute, and some have neither;

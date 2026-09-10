@@ -1,0 +1,39 @@
+---
+# The lint gate's config file — read by `@askviraj/linter`, which the
+# `code:lint` task and the `linter` pre-commit hook both invoke.
+#
+# The linter is ZERO-CONFIG without this file: it ships an opinionated flat
+# config covering every preset, and a repo that never opens this file gets the
+# whole gate. This file exists so that when a default genuinely misfires there
+# is one obvious place to say so, rather than an `eslint.config.*` grown by
+# hand and a `--init` run nobody remembers to make.
+#
+# It ships EMPTY of overrides on purpose. Every commented block below is the
+# shape of an override, not a rule this pack has an opinion about.
+#
+# Where each kind of change goes:
+#   ignores   — paths the gate should not read at all
+#   overrides — rules changed for one preset (preset names: javascript,
+#               typescript, astro, json, jsonc, markdown, markdown-typescript,
+#               yaml, toml, html, css)
+#   configs   — a block scoped to a `files` glob, for a change that belongs to
+#               a location rather than to a language
+#
+# Scope narrowly. A `files`-scoped override states WHERE a rule is wrong; a
+# global one states that nobody wanted to look. Never disable a rule to make a
+# real finding go away — that is the one use this file is not for.
+
+version: 1
+# ignores:
+#   - "**/generated/**"
+#   - "**/*.d.ts"
+#
+# overrides:
+#   typescript:
+#     rules:
+#       "@typescript-eslint/no-explicit-any": "error"
+#
+# configs:
+#   - name: "custom"
+#     files: ["**/*.ts"]
+#     rules: {}

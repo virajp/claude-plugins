@@ -1,0 +1,12 @@
+name: Cloudflare Agents SDK
+summary: The `agents` package as the shape of a stateful, addressable agent on
+  Workers — an `Agent` class that compiles to a Durable Object, with state that
+  survives hibernation, its own SQLite, scheduled work and live client
+  connections, plus the client that talks to it.
+version: 0.1.0
+type: framework
+category: agent-sdk
+kind: language-bundle
+axis: project
+# Topic 2 of the language-bundle bar — one artifact per detected framework.
+harness: n/a

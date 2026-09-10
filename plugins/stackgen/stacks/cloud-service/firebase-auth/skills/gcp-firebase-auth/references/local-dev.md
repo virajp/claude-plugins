@@ -4,7 +4,7 @@ The **Firebase Emulator Suite's auth emulator** runs offline as part of the same
 suite start, so sign-in works with no billing account and no shared environment.
 It is part of the suite's single readiness signal, so it contributes nothing
 extra to vwf's `local_stack` beyond being started with everything else
-(`assets/contracts/local-stack.md`).
+(stackgen's local-stack contract).
 
 The provider's full emulator map is the `gcp` skill's local-development
 reference.

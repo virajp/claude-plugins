@@ -1,0 +1,7 @@
+# What the code-intelligence graph does NOT ingest. This is graphify's own
+# ignore file; a repo appends its own paths below this block.
+
+# The graph's own output directory. Ingesting it would feed the last run's
+# summary back in as source. The tracked file inside it, GRAPH_REPORT.md, is
+# prose about the graph rather than code, so it is excluded with the rest.
+graphify-out/

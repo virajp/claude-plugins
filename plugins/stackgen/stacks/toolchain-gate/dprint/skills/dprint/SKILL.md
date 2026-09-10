@@ -39,7 +39,6 @@ because it is a separate repository whose checkout may not contain the parent's
 
 ```jsonc
 {
-  "includes": ["**/*.ts", "**/*.json", "**/*.md", "**/*.toml"],
   "excludes": ["**/node_modules/", "**/dist/", "**/*-lock.yaml"],
   "markdown": { "lineWidth": 80 },
   "exec": {
@@ -51,6 +50,11 @@ because it is a separate repository whose checkout may not contain the parent's
 }
 ```
 
+- **There is no `includes` key, deliberately.** The pinned plugin list *is* the
+  include set — each plugin declares the extensions it claims. A hand-written
+  `includes` is a second copy of that list which drifts from it, and it is also
+  the one key `extends` does not inherit, so a config carrying it breaks the
+  root shim. Add a plugin to widen; add an exclusion to narrow.
 - **`plugins` are pinned by version in the URL.** Unpinned, the same commit
   formats differently on two machines and the diff is attributed to whoever
   committed second.
@@ -97,18 +101,30 @@ next run.
 and it is a deliberate act run from `setup:mise`, not something that happens on
 its own. Pinned plugins are the whole reason two machines format identically.
 
-## The editor does not follow `--config`
+## The editor does not follow `--config`, so a root shim answers it
 
 The VS Code extension contributes three settings — `dprint.path`,
 `dprint.verbose` and `dprint.experimentalLsp` — and **none of them names a
-config file**. With the config under `.config/`, format-on-save finds nothing
-and silently does nothing; the gate still holds, because the hook and CI both
-pass `--config`, but the editor stops helping.
+config file**. Discovery is the only route it has, and discovery is root-only.
 
-There is no pointer to write, so this pack ships none. The CLI path is the one
-the gate depends on and it is correct either way; format-on-save is an editor
-preference the root allowlist does not carry a file for, and a repo that wants
-it back is deciding that for itself.
+So this pack ships a root `dprint.json` whose entire content is
+`{ "extends": ".config/dprint.json" }`. The editor finds it by walking up, the
+real config stays under `.config/`, and the root symlink repos were carrying to
+get the same effect is gone. **Edit `.config/dprint.json`; never the shim** —
+it has one job, and a second key in it is a formatting opinion sitting where
+nobody looks. The shim carries no comment because `check-json` parses `.json`
+strictly; the reasoning is in the pack's `conventions.md`.
+
+The gate is unchanged by any of this: the task, the hook and CI still pass
+`--config .config/dprint.json`, and they must — a call without it in a repo
+whose shim was deleted formats with built-in defaults and reports success.
+
+**`excludes` is inherited through `extends`; `includes` is not** (measured,
+dprint 0.57.1) — an extended `includes` is dropped *and* reported as a fatal
+config diagnostic against the extending file. That is why `.config/dprint.json`
+has no `includes` key: with it, every bare invocation through the shim exits 11.
+Without it, the bare and the `--config` invocations resolve the same file set,
+and both exit 0.
 
 ## Where this stops
 

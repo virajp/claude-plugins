@@ -1,0 +1,50 @@
+name: Cloudflare Realtime
+summary: A selective forwarding unit and TURN service for WebRTC audio,
+  video and data tracks — the media plane behind calls, live rooms and
+  low-latency control channels, driven from a Worker over an HTTPS API
+  rather than through a binding.
+version: 0.1.0
+type: cloud-service
+category: realtime
+# `capability` is deliberately unset: `realtime` realizes no vwf
+# capability token today (../../../assets/taxonomy.md), and nothing here
+# mints one — minting capabilities is vwf's move.
+#
+# Not `realtime-sync`, which is the token that looks close and is not.
+# That token is *data* synchronization — a client subscribing to state
+# that changes, which at this provider is Durable Objects over WebSockets
+# (`../durable-objects/`). This is a *media* plane: audio, video and
+# DataChannel frames forwarded between peers and never stored. Claiming
+# the sync token would put a camera behind a slug the blueprint reads as
+# shared state.
+kind: cloud-provider
+axis: backing
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      A session created and immediately closed against the app, from the
+      readiness path of the Worker that owns the signalling. It proves
+      the app id, the app secret and the SFU path, and it costs nothing
+      on the meter because the meter is data egress and a session with no
+      tracks moves none. What it does not prove is media — a probe that
+      stopped there and stayed green is compatible with every real call
+      failing, so record it as a credential check rather than a service
+      check
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      One app per environment, each with its own app id and app secret,
+      because every session inside an app can reach every track inside
+      that app. One shared app with a naming convention is not a
+      convention the service enforces — a staging session that knows a
+      track id pulls production media, and nothing in the API refuses it
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None — the SFU and TURN are remote by construction and must not be
+      simulated. A laptop session calls the same live service a deployed
+      one does, so the substitution is a separate development app whose
+      credentials are not production's, or a fake behind the signalling
+      seam the project already owns, exactly as the zero-trust component
+      fakes the identity assertion

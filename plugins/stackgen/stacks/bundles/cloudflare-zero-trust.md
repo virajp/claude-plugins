@@ -24,19 +24,25 @@ decorative. The service component carries this one service and **cites**
 that rule rather than restating it.
 
 **This is a deploy-axis entry that produces no artifact and composes with a
-hosting pin rather than replacing one.** It runs no code: the project still
-ships however its own hosting bundle says, and this decides who can reach
-it once it has. Since `config_format` 16 made `deploy_template` a list,
-that pairing is representable — pin this alongside the hosting entry, not
-instead of it. Pairing the two is vwf's job, and any cloud's deploy bundle
-composes with this one.
+hosting pin — such as `cloudflare-workers-static`,
+`cloudflare-workers-ssr` or `cloudflare-containers` — rather than
+replacing one.** It runs no code: the project still ships however its own
+hosting bundle says, and this decides who can reach it once it has. Since
+`config_format` 16 made `deploy_template` a list, that pairing is
+representable — pin this alongside the hosting entry, not instead of it.
+Pairing the two is vwf's job, and any cloud's deploy bundle composes with
+this one.
 
-**The scope is parked at Zero Trust Access, and the bundle says so rather
-than coming back quietly short.** Workers, Pages, R2, D1, KV, Durable
-Objects, Queues, Images and Stream are planned under their own effort and
-are **not** offered here. A short menu with no explanation is
-indistinguishable from a broken adapter; a product needing one of those has
-a gap to name, not a gap to fill from general Cloudflare knowledge.
+**Three hosting shapes are offered** — a directory of files as
+`cloudflare-workers-static`; that directory with a script in front of it,
+server-side rendering on Workers, as `cloudflare-workers-ssr`; and a
+Worker fronting a container image as `cloudflare-containers`, pinned
+instead of the SSR one. Which Cloudflare services stackgen offers beyond
+those, and which are planned or declined, is the provider component's to
+state — see the `cloud-provider/cloudflare` component's conventions, in
+this composition's template. A short menu with no explanation is
+indistinguishable from a broken adapter, which is why that fence is
+written down rather than implied.
 
 **What it decides that neither component decides alone** is that the
 private plane is a **per-project** decision belonging in the registry,

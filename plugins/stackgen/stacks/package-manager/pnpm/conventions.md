@@ -13,6 +13,16 @@ an automated update adopts a release published minutes ago.
 **In a workspace, internal dependencies are linked, not versioned**, and shared
 versions live in a catalog so one bump moves every package.
 
+**Two settings ship as `.npmrc` at the repo root**, which is the one path the
+manager reads them from: `ignore-scripts=true`, so an install never executes a
+dependency's install-time code, and `fund=false`, so it never prints a banner
+over what it did. A dependency that genuinely has to build is allowed by name
+in `pnpm-workspace.yaml` — the exception is a reviewable line, not a switch.
+Beside it, `.config/mise/conf.d/pnpm.toml` aliases `npx` to `pnpm dlx`, so a
+one-off package runs through this manager's store, resolver and registry
+settings rather than another tool's; the file sits in `conf.d/` for the same
+reason the secrets provider's does — `mise.toml` names no package manager.
+
 **An agent's `npm`/`npx` command is rewritten before it runs.** This pack
 ships `hooks/npm-normalize.sh`, which lands at `.claude/hooks/npm-normalize.sh`
 and — once its `hooks.yaml` entry is accepted into `.claude/settings.json` —

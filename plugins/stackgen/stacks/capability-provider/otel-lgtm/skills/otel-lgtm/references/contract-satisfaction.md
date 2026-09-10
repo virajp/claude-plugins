@@ -1,7 +1,7 @@
 # OTel-LGTM — contract satisfaction
 
-Clause by clause against the neutral observability contract
-(`assets/contracts/observability.md`). It cites, and does not restate.
+Clause by clause against stackgen's neutral observability contract. It cites,
+and does not restate.
 
 ## The product emits OTLP, never a vendor SDK
 

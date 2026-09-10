@@ -12,7 +12,7 @@ vwf's delivery-pipeline contract, implemented on GitHub Actions: workflow
 layout, toolchain installation through the repo's own manager, the gate
 sequence, and the tag-triggered release shape.
 
-The neutral contract it cites is `assets/contracts/release-trigger.md` — the
+The neutral contract it cites is stackgen's release-trigger contract — the
 recommended release-trigger mechanism vwf's rules deliberately leave open:
 the tag grammar, the branch mapping, the release task names and how far a
 deploy path may be split. It is the bundle's second half, the way a

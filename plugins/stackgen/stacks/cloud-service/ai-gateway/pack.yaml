@@ -1,0 +1,42 @@
+name: Cloudflare AI Gateway
+summary: One URL in front of every model call the product makes — to Workers
+  AI or to any third-party provider — adding caching, rate limiting, logging,
+  retries and fallbacks, and holding the upstream provider keys so the Worker
+  never does.
+version: 0.1.0
+type: cloud-service
+category: ai-gateway
+# `capability` is deliberately unset: `ai-gateway` realizes no vwf
+# capability token today (../../../assets/taxonomy.md), and nothing here
+# mints one — minting capabilities is vwf's move.
+kind: cloud-provider
+axis: backing
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      The gateway is a proxy, so a probe that sends a model call through it
+      measures the gateway plus the upstream provider plus the model, bills
+      for the privilege, and reports the union as one number. What proves
+      the gateway itself is reachable is the analytics or logs endpoint the
+      REST API exposes, or a request the cache is known to answer; either
+      way the readiness path reports on the product's own dependencies and
+      says separately, from the gateway's own logs, whether upstream calls
+      are erroring
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      One gateway per environment, so logs, caches, rate limits and spend
+      limits never mix — the gateway id is environment configuration the
+      run reads, not a constant in the source. The trap is the cache: a
+      suite can pass on an answer stored before the change under test, so
+      the run either sends the documented skip-cache header or the
+      staging gateway is configured with caching off
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None, and none is wanted. A gateway is an HTTPS endpoint with no
+      local form, so a local session calls the same live gateway a deployed
+      Worker does — there is no engine for a stack task to start and no
+      port to wait on. What a local run stubs instead is the model call at
+      the product's own seam, which is the same seam the gateway sits at

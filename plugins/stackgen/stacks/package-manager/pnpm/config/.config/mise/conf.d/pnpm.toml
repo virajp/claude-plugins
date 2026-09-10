@@ -1,0 +1,15 @@
+# The package manager's shell aliases, and nothing else. It sits in conf.d/ so
+# that mise.toml stays free of any package manager's name: swapping the manager
+# is deleting this file and landing the next one's, with no edit to a file the
+# toolchain manager owns.
+#
+# conf.d has NO environment scoping — the directory is read by glob, so this
+# loads under every MISE_ENV. That is right for an alias: it costs nothing
+# where it is unused, and a task never depends on it.
+
+[shell_alias]
+# `npx` runs a package from the registry, and its own resolution and cache are
+# not this repo's. Routing it to the manager's equivalent keeps one store, one
+# lockfile-aware resolver and one set of registry settings — including the
+# `ignore-scripts` default in .npmrc, which the other tool does not read.
+npx = "pnpm dlx"

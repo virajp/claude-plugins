@@ -22,8 +22,8 @@ artifact the released one.
 what keeps the target swappable: the CI workflow calls the task. Deploys obey
 vwf's delivery-pipeline contract — deliberate rather than branch-pushed, and
 branch-validated. Which trigger fires the task belongs to the CI system on the
-project's `cicd` axis (`assets/contracts/release-trigger.md`), and this
-component defines no second pipeline of its own.
+project's `cicd` axis (stackgen's release-trigger contract), and this component
+defines no second pipeline of its own.
 
 **Configuration and secrets arrive from the platform** as environment variables
 and mounted secret versions. Nothing environment-specific is baked into the

@@ -5,6 +5,7 @@ description: Return the stack options the stackgen plugin offers — its shipped
   menu payload. Invoked by /vwf:architecture and /vwf:setup when `stackgen` is
   listed in the config's `stacks:` — not a general-purpose skill.
 disable-model-invocation: false
+user-invocable: false
 model: sonnet
 effort: low
 ---
@@ -15,9 +16,12 @@ Return the options this plugin offers, per the vwf stack-adapter contract.
 **Return the payload and nothing else** — no prose, no recommendation, no
 comparison. Choosing is the user's job and presenting the choice is vwf's.
 
-> **`disable-model-invocation` must stay `false`.** A user-only skill is
-> removed from the model's context entirely and cannot be invoked
-> programmatically — vwf does not get an error, it gets an empty menu.
+> **`disable-model-invocation` must stay `false`, and `user-invocable` must
+> stay `false` too.** A user-only skill is removed from the model's context
+> entirely and cannot be invoked programmatically — vwf does not get an
+> error, it gets an empty menu. And no user types this skill: it answers vwf
+> in a payload shape only vwf reads, so it stays out of the `/` menu, which
+> is shorter for it.
 
 ## How to answer
 

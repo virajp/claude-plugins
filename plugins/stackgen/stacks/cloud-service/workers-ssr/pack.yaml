@@ -1,0 +1,41 @@
+name: Cloudflare Workers SSR
+summary: A Worker that runs a script in front of its own static assets —
+  on-demand rendering at the edge, the prerendered files served by the
+  platform, and one `wrangler deploy` for both.
+version: 0.1.0
+type: cloud-service
+category: compute
+# `capability` is deliberately unset, as `cloud-service/cloud-run` leaves it:
+# `compute` names no vwf capability token in the capability vocabulary, and
+# nothing here mints one — minting capabilities is vwf's move.
+kind: cloud-provider
+axis: deploy
+artifact: worker-script
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      Two HTTP probes of the deployed origin, because half of this
+      deployment is files and half of it is a script, and only one of the
+      two can be unhealthy. `/` returns 200 — which a prerendered site
+      passes even with a broken script — and one route known to render on
+      demand returns 200 with a response the platform did not cache; the
+      second is the one worth having, because it is what proves the script
+      actually runs rather than every request having matched an asset
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      A preview deployment — a second Worker name, or a version uploaded
+      rather than deployed — and the suite targets that URL. Which of the
+      two, and where the URL comes from, is the product's decision to make
+      and record; this component states that pre-production is a separate
+      URL rather than a separate configuration of the same one
+  local_stack:
+    task: n/a
+    mechanism: >-
+      The framework's own dev server, which for the Astro adapter this
+      pairing names runs the site under the platform's `workerd` runtime
+      rather than under Node — so the script is exercised by the same
+      runtime that will serve it, and `wrangler dev` against the built
+      output is the second, closer surface. There is no backing engine to
+      compose behind a readiness gate, so the harness answer stays `n/a`

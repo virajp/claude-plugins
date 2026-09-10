@@ -108,8 +108,10 @@ Restart your agent afterward so the skills, hooks and MCP servers load, then run
 `/vwf:doctor`. It is the closest thing to a preflight now that nothing is gated
 at install time — though see the [caveat](#caveats) on what it does and does not
 check. On a repo that has never been shaped — no `.config/` layout, no task
-library — run `/vwf:init` before either: it lays down the config layout, the
-gates and the hygiene files the rest of the workflow assumes.
+library — run `/vwf:setup`: its Step 0 offers `init`, which lays down the config
+layout, the gates and the hygiene files the rest of the workflow assumes.
+`/vwf:setup reshape` runs that pass alone, and is what `/vwf:doctor` prints when
+a shaped repo has fallen behind.
 
 Scope is yours to choose: `--user` / `--project` on the wrapper, or
 `--scope project` on Claude's commands, keep a plugin to one repo instead of
@@ -216,9 +218,12 @@ what production teaches you back to the document that fixes it. It carries
 [cross-session memory](https://claude-plugins.virajp.dev/plugins/mempalace/), a
 knowledge-graph layer, session handoff and recall, the
 [Karpathy coding guidelines](https://claude-plugins.virajp.dev/plugins/karpathy-guidelines/),
-and the Markdown and Context7 docs surfaces it absorbed. It names **no**
-technology — no language, no framework, no cloud — which is what lets the rest
-of this list exist. `vwf@virajp-plugins`
+and the Markdown and Context7 docs surfaces it absorbed. Beside that arc it
+carries an ad-hoc pair — `/vwf:change-plan` plans work with no blueprint slice
+behind it (tooling, CI, docs, a refactor) into a plan folder, and
+`/vwf:change-execute` runs that folder unattended in a fresh session. It names
+**no** technology — no language, no framework, no cloud — which is what lets the
+rest of this list exist. `vwf@virajp-plugins`
 
 ### Tooling, design and delivery
 
@@ -249,22 +254,24 @@ never a `settings.json` edit without separate consent, and removal is by
 subtraction, dropping only the keys your repo's lockfile recorded. A pack may
 also declare **repo config files** it owns — the mise config and the file-based
 task library everything else runs through, each gate's own config, the hygiene
-files, a provider's environment fragment, and the pre-commit fragment
-`/vwf:init` merges — on the same merges-never-owns terms, behind their own
-consent line, and capped by a fixed allowlist of what may sit at a repo's root.
-Language manifests and CI workflow files stay outside that fence: they declare
-what the project *is*, and no pack decides that. The packs, bundles and kinds
-that ship are inventoried in
-[`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md), generated from
-the tree itself; the newest kind is `repo-hygiene`, joining `toolchain-manager`
-and `workspace`, which arrived when the `devtools` plugin dissolved into
-stackgen. stackgen is now the only stack plugin: its packs are the covered path,
-its generator the uncovered tail. A `vwf` dependency, because vwf's stack menu
-is the union of what the installed stack plugins offer — with none present it
-comes back empty, and the axes carry no free-text escape. You can defer an axis
-and keep defining the product, but `/vwf:plan` and `/vwf:execute` halt until it
-is answered. Having it installed commits you to nothing; it acts only once an
-axis is pinned. `stackgen@virajp-plugins`
+files, a provider's environment fragment, a deploy target's own root config and
+the deploy task beside it, and the two fragments `/vwf:init` merges: the
+pre-commit one, and the per-pack editor fragment — on the same merges-never-owns
+terms, behind their own consent line, and capped by a fixed allowlist of what
+may sit at a repo's root. Language manifests, CI workflow files and a **whole**
+editor file stay outside that fence: the first two declare what the project
+*is*, the third is composed from every pack's slice and belongs to no single
+one, and no pack decides any of them. The packs, bundles and kinds that ship are
+inventoried in [`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md),
+generated from the tree itself; the newest kind is `repo-hygiene`, joining
+`toolchain-manager` and `workspace`, which arrived when the `devtools` plugin
+dissolved into stackgen. stackgen is now the only stack plugin: its packs are
+the covered path, its generator the uncovered tail. A `vwf` dependency, because
+vwf's stack menu is the union of what the installed stack plugins offer — with
+none present it comes back empty, and the axes carry no free-text escape. You
+can defer an axis and keep defining the product, but `/vwf:plan` and
+`/vwf:execute` halt until it is answered. Having it installed commits you to
+nothing; it acts only once an axis is pinned. `stackgen@virajp-plugins`
 
 Every plugin above is authored here. Nothing in this marketplace is re-listed
 from another repo any more: the last one that was — the Karpathy coding

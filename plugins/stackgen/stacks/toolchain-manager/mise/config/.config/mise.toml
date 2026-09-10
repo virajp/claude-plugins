@@ -26,10 +26,17 @@
 
 [settings]
 activate_aggressive  = true     # let mise shims win on PATH
+all_compile          = false    # never build a tool from source
 env_shell_expand     = true     # expand $VARS in [env]
 gpg_verify           = true     # verify tool signatures (see the CI exception)
 raw                  = true     # streams output
 status.missing_tools = "always"
+
+# `all_compile = false` is the repo-wide form of the per-runtime `node.compile` /
+# `python.compile` lines further down: take the published binary for EVERY tool,
+# never build one. A tool that compiles turns a thirty-second install into a
+# twenty-minute one on the first machine that lacks a matching prebuild, and the
+# compiler toolchain it then needs is a dependency nothing in this repo declares.
 
 # Freshness with a quarantine. Fuzzy pins ("latest", "26") resolve to the newest
 # release that is at least this old, so a version yanked hours after publication
@@ -37,15 +44,36 @@ status.missing_tools = "always"
 # a same-day fix reachable without taking the first minutes of a release.
 minimum_release_age = "10h"
 
-# Record every resolved version in `mise.lock`, which IS committed. That is what
+# Record every resolved version in a lockfile, which IS committed. That is what
 # makes "latest" reproducible: humans move the lockfile forward deliberately
 # (`mise upgrade`), and the pipeline installs from it (see mise.ci.toml).
+#
+# **One lockfile per config file that declares tools, named after that file's
+# stem.** `mise install` writes `mise.dev.lock` beside `mise.dev.toml`, and would
+# write `mise.lock` beside this file the moment `[tools]` below stops being
+# empty. With the split as shipped — an empty base and the dev tools — the only
+# file produced is `.config/mise.dev.lock`. All of them are tracked; only
+# `mise.local.lock`, the counterpart of the uncommitted `mise.local.toml`, is
+# ignored.
 lockfile = true
 
 # Interleave task output rather than buffering per task. Applies when `raw` is
 # off; with `raw = true` above, mise streams straight through and this is inert
 # — it is set so that turning `raw` off does not change the shape of the logs.
 task.output = "interleave"
+
+# Print each task's elapsed time. `code:all` is an aggregate of gates and
+# `setup:all` an aggregate of installs; without timings a run that got slow is a
+# run nobody can attribute to a step. Set explicitly rather than left to mise's
+# default so that a future default flip does not silently take it away.
+task.timings = true
+
+# A task file's `#USAGE` block is read from the header this library already
+# writes, and ONLY from there. Left on, mise also infers a usage spec by
+# executing a run-script — which for this library means running a task to find
+# out what its flags are. The headers are the contract; inference is a second,
+# quieter source that can disagree with them.
+task.disable_spec_from_run_scripts = true
 
 # Runtime-specific settings blocks — keep ONLY the one matching this repo's
 # runtime, and delete the rest. A block for a runtime the repo does not have is
@@ -64,6 +92,27 @@ task.output = "interleave"
 # Names shared with the variants; the VALUES live per layer. Only what is the
 # same everywhere belongs here.
 DISABLE_TELEMETRY = 1
+
+# A MARKED POSITION. The orchestrator that shapes this repo replaces "unfilled"
+# with the repo's project id: the name lowercased, every run of characters
+# outside [a-z0-9] replaced by a single "-", leading and trailing "-" trimmed.
+# So `virajp.dev` becomes `virajp-dev`. It is the same token the `p:<id>:*` task
+# group, `setup:all`'s member flags and the `setup-<id>` aliases carry, and the
+# rule and its reasons are stackgen's `assets/ids.md`.
+#
+# **It is a literal, and it is never derived at load time.** The obvious
+# shorthand — reading the basename of the config root — is wrong in a linked
+# worktree, whose directory is named after the BRANCH. A `REPO_NAME` that
+# changes with the branch you are standing on is worse than none: everything
+# reading it (a launcher, an editor profile) silently addresses a different repo.
+#
+# **Aliases that vary only by repo do not live here.** The Claude launchers are
+# the case: `cc`, `cco`, `ccf` and their siblings are the same command in every
+# repo with one token different, so they belong in the user's GLOBAL mise config
+# reading `$REPO_NAME` — one definition, per-repo values. Shipping them here
+# would copy the same alias into every repo and make a change to the launcher a
+# change to every repo that has one.
+REPO_NAME = "unfilled"
 
 # Project-local binaries on PATH without a `<pm> exec` prefix. Shipped commented
 # because it is a claim about the stack: uncomment it when a package-manager

@@ -1,11 +1,10 @@
 # GitHub Actions — release triggering
 
-The release-trigger contract (`assets/contracts/release-trigger.md`) states
-the shape: the tag grammar, right-to-left parsing, the branch mapping, the
-release task names, and how far a deploy path may be split. **Read it
-first.** This states how Actions is wired to express it, and cites rather
-than restates — both it and vwf's delivery-pipeline contract, which is what
-the trigger contract serves.
+Stackgen's release-trigger contract states the shape: the tag grammar,
+right-to-left parsing, the branch mapping, the release task names, and how
+far a deploy path may be split. **Read that contract first.** This states how
+Actions is wired to express it, and cites rather than restates — both it and
+vwf's delivery-pipeline contract, which is what the trigger contract serves.
 
 ## The trigger is a tag
 

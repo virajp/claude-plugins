@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+
+#MISE description="Build this project's container image and deploy it with its Worker to Cloudflare"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--dry-run" help="validate the config and the upload without publishing"
+
+# THIS FILE SHIPS UNDER `p/_project/` AND MUST BE RENAMED.
+#
+# `_project` is a MARKED POSITION, not a task group. The command that pins this
+# stack renames the directory to the project's registry id, so this becomes
+# `p/<id>/deploy` and runs as `p:<id>:deploy` — the same id `setup:all`'s member
+# flags and the `setup-<id>` shell aliases use.
+#
+# The underscore is doing two jobs. `config/_<name>/` at the TOP of a pack's
+# config tier is pack-private and never copied; this is nested well below that,
+# so the materializer does copy it. But mise ignores a task directory whose name
+# starts with an underscore — the same rule that keeps `_scripts/` out of
+# `mise tasks` — so an unrenamed copy is INERT rather than a task called
+# `p:_project:deploy`. Forgetting the rename loses the task; it never publishes
+# something under the wrong name.
+
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no path
+# here for -x to follow.
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# The id is READ FROM THE DIRECTORY NAME rather than written into the file, so
+# the rename above is the only edit the pinning command has to make and the two
+# can never disagree.
+project_id="$(basename "$(dirname "${BASH_SOURCE[0]}")")"
+
+# `have_task` is not in `helpers` — `setup/mise` defines its own copy for the
+# same reason. Keep the two in step if either moves into the library.
+have_task() { mise tasks 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
+
+print_header "Deploying ${project_id} to Cloudflare Containers ..."
+
+# 1. Credentials, BEFORE anything is invoked.
+#
+# Wrangler reads these two from the environment. The secrets provider supplies
+# them from GLB_CLOUDFLARE_API_TOKEN and GLB_CLOUDFLARE_ACCOUNT_ID — account-wide
+# values shared across every repo that deploys to the account, hence the GLB_
+# prefix rather than a per-repo one.
+#
+# Checking here is the whole point of the step: wrangler's own failure for a
+# missing token is an auth error that reads like a network or permissions
+# problem, and diagnosing it costs an afternoon the first time.
+#
+# `--dry-run` is exempt. It neither authenticates nor uploads, so requiring
+# credentials for it would stop a contributor without account access from ever
+# validating the config — which is the one thing the flag exists for.
+if [[ "${usage_dry_run:-false}" != "true" ]]; then
+  missing=""
+  [[ -n "${CLOUDFLARE_API_TOKEN:-}" ]] || missing="CLOUDFLARE_API_TOKEN"
+  [[ -n "${CLOUDFLARE_ACCOUNT_ID:-}" ]] || missing="${missing:+${missing} }CLOUDFLARE_ACCOUNT_ID"
+  if [[ -n "${missing}" ]]; then
+    print_error "Missing Cloudflare credentials: ${missing}"
+    print_warn "wrangler reads CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID from the"
+    print_warn "environment. This repo's secrets provider supplies them from"
+    print_warn "GLB_CLOUDFLARE_API_TOKEN and GLB_CLOUDFLARE_ACCOUNT_ID — run through"
+    print_warn "\`mise run setup:secrets\` first, or export them for a one-off deploy."
+    print_warn "\`wrangler login\` is the interactive alternative and is a laptop-only"
+    print_warn "convenience: CI has no browser and must use the token."
+    exit 1
+  fi
+fi
+
+# 2. Docker, and the step the Workers-script sibling does not have.
+#
+# `wrangler deploy` BUILDS THE IMAGE before it publishes anything: the config's
+# `image` names a Dockerfile, and wrangler hands it to the local Docker daemon
+# and pushes the result to Cloudflare's managed registry. So Docker is a
+# prerequisite of the deploy itself and not only of local development, on a
+# laptop and on a CI runner alike.
+#
+# Checked here rather than left to wrangler for the same reason the credentials
+# are: a daemon that is not running surfaces as a build failure several steps
+# in, which reads like a broken Dockerfile. Checked AFTER the credentials,
+# because a missing token is the more common fault and the cheaper one to
+# report — and `--dry-run` is exempt on the same terms, since it builds nothing.
+if [[ "${usage_dry_run:-false}" != "true" ]]; then
+  if ! command -v docker >/dev/null 2>&1; then
+    print_error "Docker is not on PATH"
+    print_warn "\`wrangler deploy\` builds this project's container image before it"
+    print_warn "publishes, and it builds it with Docker. Install Docker on this"
+    print_warn "machine — or, on a CI runner, use one whose image ships it."
+    exit 1
+  fi
+  if ! docker info >/dev/null 2>&1; then
+    print_error "The Docker daemon is not answering"
+    print_warn "\`docker\` is installed but \`docker info\` failed, so the image cannot"
+    print_warn "be built. Start the daemon and retry; on a CI runner, that usually"
+    print_warn "means the Docker service was not enabled for the job."
+    exit 1
+  fi
+fi
+
+# 3. The application build is NOT this task's.
+#
+# What the image contains — the compiled service, the assets it serves — is the
+# project's business, so this runs whatever build task the project already has
+# and otherwise says what it is assuming. The IMAGE build is a different thing
+# and belongs to wrangler, below.
+if have_task "p:${project_id}:build"; then
+  print_subheader "Building ${project_id} ..."
+  mise run "p:${project_id}:build"
+else
+  print_subheader "Skipping the build ..."
+  print_warn "No p:${project_id}:build task — assuming the Dockerfile builds"
+  print_warn "everything the image needs."
+fi
+
+# 4. Deploy.
+#
+# THE PACK PINS NO WRANGLER. It is a development dependency of the project that
+# deploys, declared in that project's language manifest — and a manifest is
+# outside the config tier's fence, so nothing here may write one. Calling
+# wrangler through the package manager is what makes the version CI runs the
+# version the lockfile records; a `[tools] wrangler` entry in a mise fragment
+# would be a second, unpinned copy that drifts from it silently.
+if [[ -f "pnpm-lock.yaml" ]]; then
+  wrangler=(pnpm exec wrangler)
+else
+  wrangler=(npx wrangler)
+fi
+
+deploy_args=(deploy)
+if [[ "${usage_dry_run:-false}" == "true" ]]; then
+  deploy_args+=(--dry-run)
+  print_subheader "Validating the deploy (--dry-run) ..."
+else
+  print_subheader "Building the image, pushing it, and publishing the Worker ..."
+fi
+
+"${wrangler[@]}" "${deploy_args[@]}"

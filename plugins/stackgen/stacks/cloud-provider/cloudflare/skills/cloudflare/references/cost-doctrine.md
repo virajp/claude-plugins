@@ -51,6 +51,21 @@ credential is not a seat.
 
 ## What this doctrine deliberately does not cover
 
-The bill for **where the product actually runs**. Cloudflare fronts a
-service here; the hosting cloud's own cost doctrine owns the compute,
-the storage and the egress, and this component says nothing about them.
+The bill for **where a project with a running process actually runs**.
+Cloudflare fronts such a service rather than hosting it; the hosting
+cloud's own cost doctrine owns the compute, the storage and the egress,
+and this component says nothing about them.
+
+Nor the bill for **any Cloudflare service this stack offers besides the
+proxy**. Every one of them bills by consumption rather than by seat — a
+different shape from the principle above — and what each consumption term
+is belongs to that service component's own cost-shape reference, not to
+this one. Two examples, because they are the hosting surfaces the rest of
+this reference's seat reasoning sits beside. Static assets served on
+Workers are the `workers-static-assets` component's: requests served, with
+the stored file set as a small second term. A Worker **with a script** in
+front of those assets is the `workers-ssr` component's, and it splits —
+the requests the assets answer stay free, while the requests that invoke
+the script are billed by invocation and by the CPU time each one spends.
+Reading either across from the seat principle gets the answer exactly
+backwards.

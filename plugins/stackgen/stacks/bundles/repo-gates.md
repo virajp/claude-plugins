@@ -21,8 +21,8 @@ rather than four unrelated tools.
 **Each gate now ships its config file**, not only the doctrine describing
 one. `.config/dprint.json`, `.config/gitleaks.toml`, `.config/grype.yaml`,
 `.config/pre-commit-config.yaml` and `.config/git-conventional-commits.yaml`
-land with the skills, through the `config/` tier
-(`assets/output-tree.md`), and each gate also drops the hook fragment that
+land with the skills, through the `config/` tier of stackgen's output
+charter, and each gate also drops the hook fragment that
 wires it — `.config/pre-commit.d/<gate>.yaml` — for `/vwf:init` to merge.
 The earlier line stopped at naming the file as a prerequisite, which left
 every repo hand-writing the config the skill assumes and no two repos

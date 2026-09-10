@@ -1,0 +1,38 @@
+name: Cloudflare Workers KV
+summary: A global, eventually consistent key-value store for read-heavy
+  configuration, routing metadata and cached results — the cache layer a
+  Worker reads on every request, not the datastore it writes on every one.
+version: 0.1.0
+type: cloud-service
+category: key-value
+capability: cache-layer
+kind: cloud-provider
+axis: backing
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      A read is not a health signal for the store — there is no endpoint
+      to probe and no process that can be down independently of the Worker
+      bound to it. The mechanism is that the Worker probes its own
+      dependency: it reads the key it cannot serve without and reports the
+      miss as its own unhealthy, distinguishing a key that is absent from
+      one whose write has not propagated yet, because an eventually
+      consistent read moments after a write is a miss by design
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      A separate namespace per environment, bound by id under that
+      environment's block with the same binding name, so the code under
+      test is unchanged and only the id differs. Never the production
+      namespace with a key prefix — a prefix is a convention the runtime
+      does not enforce, so one wrong key in a suite writes into production
+      data and a production list() returns the suite's keys
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None to compose behind a readiness gate. `wrangler dev` runs the
+      binding against a local simulation that persists to disk between
+      runs, so there is no engine for a stack task to start and no port to
+      wait on; the project's own dev command is the whole local story, and
+      seeding is a Wrangler subcommand rather than a fixture loader

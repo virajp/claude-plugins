@@ -8,6 +8,7 @@ description: Return one stackgen stack as a vwf template payload — reading the
   not a general-purpose skill.
 argument-hint: "<slug>"
 disable-model-invocation: false
+user-invocable: false
 ---
 
 # stackgen-stack-template
@@ -19,8 +20,11 @@ resolves the bundle's composition and materializes each component — shipped
 packs by copy, uncovered components by generation. Materialization is
 **explicit and consent-gated — never a silent re-run**.
 
-> **`disable-model-invocation` must stay `false`** — see
-> `stackgen-stack-menu`.
+> **`disable-model-invocation` must stay `false`, and `user-invocable` must
+> stay `false`** — the first so vwf can reach the skill by its constructed
+> name, the second because no user types it. See `stackgen-stack-menu`. The
+> `argument-hint` stays: it costs nothing on a hidden skill and documents the
+> one argument the caller passes.
 
 ## Resolution order
 
@@ -115,9 +119,10 @@ check real.
   artifact kind**: copied verbatim, gated on its own tier-2 consent line,
   merging rather than owning, recorded per file in the lockfile with the
   component that supplied it, and executable where mise requires it. The
-  tier covers a gate's own config file and a provider's environment
-  fragment; what it still may not write — a language manifest, a CI
-  workflow, editor settings, CLAUDE.md — and the allowlist of what may land
+  tier covers a gate's own config file, a provider's environment fragment
+  and a pack's editor fragment (`.config/vscode.d/<pack>.jsonc`); what it
+  still may not write — a language manifest, a CI workflow, a **whole**
+  editor file, CLAUDE.md — and the allowlist of what may land
   at the repo **root** are
   `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. The procedure is the
   materializer.

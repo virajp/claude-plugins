@@ -50,20 +50,21 @@ The repo shape — the toolchain manager's config and task library, the repo
 gates, the hygiene files — is `/vwf:init`'s, not setup's. Step 0 only
 **checks** for it, reading the stack adapter's lockfile for the three
 unconditional slugs `mise`, `repo-gates` and `repo-hygiene`, and offers init
-when any is missing. Harness provisioning is the other half of the same story:
-it can need a stack to act against, and setup runs before `/vwf:architecture`
-has chosen one. Both therefore **defer** — neither halts the run, and neither
-continues silently.
+when any is missing — and makes the same offer when all three are recorded
+but the repo has fallen **behind its baseline**, on doctor's four predicates.
+Harness provisioning is the other half of the same story: it can need a stack
+to act against, and setup runs before `/vwf:architecture` has chosen one. Both
+therefore **defer** — neither halts the run, and neither continues silently.
 
 Whatever could not be settled is **recorded and named, with its unlock**: what
 was skipped, and what would let it happen — an axis to pin via
-`/vwf:architecture`, a stack plugin to install, or an **unshaped repo** whose
-unlock is `/vwf:init`, run whenever. A declined offer is a deferral on exactly
-those terms: named with its unlock, never a halt and never a silent skip. On a
-blank repo the deferred set is usually everything stack-shaped, which is the
-honest state of a repo nobody has described a product for yet. An unshaped repo
-is not one of those: nothing about the shape waits on a stack, which is why the
-offer is worth making here rather than postponing it.
+`/vwf:architecture`, a stack plugin to install, or an **unshaped or drifted
+repo** whose unlock is `/vwf:setup reshape`, run whenever. A declined offer is
+a deferral on exactly those terms: named with its unlock, never a halt and
+never a silent skip. On a blank repo the deferred set is usually everything
+stack-shaped, which is the honest state of a repo nobody has described a
+product for yet. The repo shape is not one of those: nothing about it waits on
+a stack, which is why the offer is worth making here rather than postponing it.
 
 **setup never writes `unresolved`.** That value arrives only from an
 `/vwf:architecture` run, which offered the axis and had it deferred

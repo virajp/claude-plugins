@@ -177,14 +177,77 @@ ninth kind and the last one that had been defined but never authored against.
 spans a provider's services — `gcp` and `cloudflare` — and `cloud-service`
 carries one component per service: `cloud-run`, `cloud-sql`, `firestore`,
 `firebase-auth`, `firebase-messaging`, `firebase-storage`, `gke` and
-`zero-trust-access`. Wave D deferred this deliberately, because folding the two
-clouds honestly needed per-topic research with citations rather than a fold of
-their four ~80-line service templates.
+`zero-trust-access`. Wave D deferred this deliberately, because folding the
+two clouds honestly needed per-topic research with citations rather than a
+fold of their four ~80-line service templates.
 
-Two `cloud-service` categories were minted for it (`../assets/taxonomy.md`):
-`document`, for Firestore, and `access`, for Zero Trust Access, which is none of
-compute/sql/queue/object-storage/cdn. `access` leaves `capability` unset and
-stays that way — minting a capability token is vwf's move, never the taxonomy's.
+**Cloudflare kept growing after the wave closed.** `workers-static-assets`
+joined on 2026-09-05 — the first Cloudflare service here that hosts rather
+than fronts — `workers-ssr` the day after, and then the storage and data
+services: `kv`, `r2`, `d1`, `hyperdrive`, `vectorize`, `pipelines` and
+`analytics-engine`, which gave Cloudflare a managed **backing** offering
+rather than hosting alone. Each is a `backing`-axis bundle of its own, pinned
+beside the others rather than chosen between, and each ships **no `config/`
+tier**: a binding is an entry in the project's root `wrangler.jsonc`, which a
+deploy pack owns, so nothing here writes a file of its own. The provider
+component's scope prose is now two lists — offered and declined — so a
+service the menu does not carry says which of the two it is rather than
+leaving a reader to guess. It carried a third, `planned`, while the
+remaining services were still arriving; the landing below emptied it.
+
+**Compute and orchestration followed on 2026-09-06.** `durable-objects`,
+`workflows` and `queues` joined on the same backing terms as the storage
+services — one bundle each, no `config/` tier, the binding an entry in a
+`wrangler.jsonc` a deploy pack owns. `containers` is on neither term: it is
+a **deploy** target, category `compute`, `artifact: container-image`, and
+the third `cloud-service` pack to ship a `config/` tier — a root
+`wrangler.jsonc` carrying `main`, the container block, the Durable Object
+binding that addresses it and the migration that declares the class, plus
+the `p/_project/deploy` overlay. It is also the first bundle here pinned
+*instead of* another: a Containers project **is** a Workers project, so
+`cloudflare-containers` replaces `cloudflare-workers-ssr` rather than
+sitting beside it, because both write that one root file — the reasoning is
+`docs/memory/decisions/2026-09-06-containers-pin-instead-of-workers-ssr.md`.
+
+**The AI services followed, and one of them is not a service.** `workers-ai`,
+`ai-gateway`, `ai-search` and `browser-rendering` joined on the storage
+services' terms — one `backing` bundle each, no `config/` tier, the binding an
+entry in a `wrangler.jsonc` a deploy pack owns: inference, the plane in front
+of every model call, a managed retrieval pipeline, and headless Chrome.
+
+**The Agents SDK is the exception in that landing**, and why is worth stating:
+it has no binding, and it is not a service at all but an npm framework whose
+`Agent` class compiles to a Durable Object. So it ships as
+`framework/cloudflare-agents` — the third `framework/` pack, beside `effect`
+and `astro` — reachable through the project-axis language bundle
+`typescript-cloudflare-agents`, because a framework pack no bundle names is
+authored and unreachable, a defect this tree already carries once in its
+python packs. The reasoning is
+`docs/memory/decisions/2026-09-06-agents-sdk-is-a-framework-pack.md`.
+
+**Media, messaging and secrets closed the platform.** `images`, `realtime`,
+`email-service` and `secrets-store` joined on the storage services' terms —
+one `backing` bundle each, no `config/` tier — and with them the last of the
+four Cloudflare plans landed, which is what emptied the provider's planned
+list. Two are unlike their siblings. `realtime` has no binding at all: it is
+an HTTPS API reached with an app id and secret, so it has no row on the
+per-binding table and no local form. And `secrets-store` shares the category
+noun `secrets-manager` with `capability-provider/fnox` on purpose — this one
+is the **runtime** store a deployed Worker or Container reads in staging and
+production, fnox the developer-machine and CI provider that injects on the
+way in, so a repo pins both and neither replaces the other. The reasoning is
+`docs/memory/decisions/2026-09-06-secrets-store-is-runtime-not-development.md`.
+
+Every landing that brings a service nothing already classifies mints its
+`cloud-service` category in `../assets/taxonomy.md`, which owns the closed
+list and the reasoning — the wave itself minted `document`, for Firestore,
+and `access`, for Zero Trust Access; `static-hosting` came with
+`workers-static-assets` after it; and the Cloudflare storage and data work
+minted a further set, once for that whole developer platform rather than per
+landing, so every landing that followed needed no second edit there. Several of
+those leave `capability` unset and stay that way: minting a capability token
+is vwf's move, never the taxonomy's, and the taxonomy names which ones
+rather than this file restating the list.
 
 **Every stack adapter has now retired**, and `stackgen` is the only plugin left
 shipping a `-stack-menu` / `-stack-template` pair. The retirement test stayed
@@ -196,10 +259,10 @@ this, since with one adapter left, deleting its keyword would otherwise have
 switched the whole rule off while the checker still passed.
 
 `object-storage` still gets no pack of its own, and will not: every object store
-is a cloud's, so its flavour arrives from `cloud-service/firebase-storage` or
-whichever provider's equivalent lands next. Its contract sits in
-`../assets/contracts/` regardless, because the clauses are the same whoever
-provides it.
+is a cloud's, so its flavour arrives from `cloud-service/firebase-storage`,
+`cloud-service/r2`, or whichever provider's equivalent lands next. Its
+contract sits in `../assets/contracts/` regardless, because the clauses are
+the same whoever provides it.
 
 `eslint` is deliberately absent: it is JS/TS-only, so it is topic 10 of the
 TypeScript language bundle rather than a repo gate. See the `repo-gate` seam

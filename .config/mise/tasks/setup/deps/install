@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+#MISE description="Install dependencies"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Cleanup before upgrade
+mise run setup:deps:cleanup
+
+# Upgrade pnpm to the latest version & install dependencies
+mise run setup:deps:upgrade
+
+# Check for outdated packages after upgrade
+mise run setup:deps:outdated
+
+# Run audit after upgrade
+mise run setup:deps:audit
+
+print_header "Installation complete!"

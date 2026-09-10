@@ -1,9 +1,9 @@
 # Service doctrine — Firebase Auth · Identity Platform
 
 This component realizes the `third-party-auth` capability, so what it owes is
-the neutral identity contract (`assets/contracts/identity.md`), clause by
-clause. The contract states what **any** identity provider must satisfy; this
-file states how this one does, **citing rather than restating**.
+stackgen's neutral identity contract, clause by clause. The contract states what
+**any** identity provider must satisfy; this file states how this one does,
+**citing rather than restating**.
 
 ## Contract satisfaction
 

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+#MISE description="Setup AI plugins"
+#MISE hide=false
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+print_header "Upgrading AI tools ..."
+
+print_subheader "Adding marketplaces ..."
+pnpx @virajp.dev/claude-plugins --all

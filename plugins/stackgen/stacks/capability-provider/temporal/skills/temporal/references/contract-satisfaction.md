@@ -1,7 +1,7 @@
 # Temporal — contract satisfaction
 
-Clause by clause against the neutral orchestration contract
-(`assets/contracts/orchestration.md`). It cites, and does not restate.
+Clause by clause against stackgen's neutral orchestration contract. It cites,
+and does not restate.
 
 ## At-least-once, and the idempotency it forces
 

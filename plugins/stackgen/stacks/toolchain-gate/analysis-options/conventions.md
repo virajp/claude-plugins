@@ -10,4 +10,13 @@ no longer has.
 
 **Analyzer errors fail the build**, wired as one task the pipeline runs too.
 
+## What this pack writes
+
+One file: `.config/vscode.d/analysis-options.jsonc`, the editor fragment. It
+recommends the two Dart extensions, binds `[dart]` to the SDK's own formatter —
+Dart is the language dprint does not format, and the analyzer assumes that
+formatter's output — and nests `pubspec.lock` and `analysis_options.yaml` under
+`pubspec.yaml`. The `analysis_options.yaml` file itself is the app's, written
+where the app is.
+
 Full judgment: the `analysis-options` skill.

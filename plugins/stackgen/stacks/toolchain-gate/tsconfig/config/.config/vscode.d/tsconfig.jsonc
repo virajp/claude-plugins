@@ -1,0 +1,41 @@
+// Editor fragment — the TypeScript compiler config's contribution to the
+// repo's editor settings. `/vwf:init` merges every `.config/vscode.d/*.jsonc`
+// into the two editor files inside one marked block; a key written by hand
+// after that block wins.
+//
+// No `extensions` entry: TypeScript support is built into the editor, so there
+// is nothing to recommend installing.
+{
+  "settings": {
+    // The `@/` path alias is the point of the shared base config, and these
+    // three keys are what make the editor's own import machinery agree with
+    // it: non-relative specifiers, paths honoured, double quotes as the
+    // formatter writes them.
+    "js/ts.preferences.importModuleSpecifier": "non-relative",
+    "js/ts.preferences.quoteStyle": "double",
+    "js/ts.suggest.paths": true,
+
+    // Auto-import off, package.json auto-imports on. A suggestion list that
+    // silently adds an import is how a dependency edge appears in a file
+    // nobody chose to add it to.
+    "js/ts.suggest.autoImports": false,
+    "js/ts.preferences.includePackageJsonAutoImports": "on",
+
+    // A file move rewrites paths in the repo; let the refactor be deliberate
+    // rather than a diff that arrives with a drag.
+    "js/ts.updateImportsOnFileMove.enabled": "never",
+
+    // Whole-project diagnostics, so an error in a file that is not open still
+    // surfaces — the same question `tsc --noEmit` asks in the gate.
+    "js/ts.tsserver.experimental.enableProjectDiagnostics": true,
+    "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+  },
+
+  // The per-project configs sit beside the base one; nest them under it so the
+  // explorer shows one entry rather than a column of near-identical names.
+  "nesting": {
+    "tsconfig.json": [
+      "tsconfig.*.json",
+    ],
+  },
+}

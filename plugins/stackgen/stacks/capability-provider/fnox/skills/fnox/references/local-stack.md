@@ -21,9 +21,8 @@ fnox exec --profile staging -- mise run e2e:staging
 
 The wrapping is one level deep and belongs at the outermost invocation. The
 tasks it wraps — including `stack:up` and whatever readiness gate it holds —
-are the local-stack contract's business
-(`assets/contracts/local-stack.md`), and nothing about them changes because
-fnox is present.
+are stackgen's local-stack contract's business, and nothing about them changes
+because fnox is present.
 
 ## The development profile
 

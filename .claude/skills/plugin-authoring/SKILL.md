@@ -109,6 +109,12 @@ declaring `bash` would be checked as bash and its bashisms would ship. What the
 `stackgen-plugin` skill still owns is what those scripts are *for*. The host
 rules in full are stackgen's `assets/artifact-doctrine.md` §4.
 
+The payload's other two halves have rules of their own. Rule 13 covers its
+**prose**: no citation a pack lands may be plugin-relative, because the file is
+copied into a repo where no plugin is installed and the path resolves to nothing
+without a word. Rule 4 covers its **frontmatter**, parsing every pack skill and
+pack agent under `stacks/*/*/` on the same strict terms as a plugin's own.
+
 ## References
 
 | Reference                               | Covers                                                                    |
@@ -126,6 +132,6 @@ kind now, per `plugins/stackgen/assets/kinds.md`.
 
 Any change to plugin behaviour must reconcile `readme.md`, `CLAUDE.md` and
 `site/src/content/docs/plugins/<plugin>.md` in the **same commit** — the repo's
-hard rule. Delegate the sweep to the `docs-reconciler` agent rather than reading
-those files inline; `CLAUDE.md` and the vwf manual are large enough that loading
-them costs the rest of the session.
+hard rule. Delegate the sweep to `/vwf:docs-sync` (its surveyor agent reads the
+docs) rather than reading those files inline; `CLAUDE.md` and the vwf manual are
+large enough that loading them costs the rest of the session.

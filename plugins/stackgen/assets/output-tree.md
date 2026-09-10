@@ -138,21 +138,63 @@ started as:
   stops**; `/vwf:init` is what merges them into
   `.config/pre-commit-config.yaml`, between its markers. Nothing in stackgen
   edits that file, which is what keeps a fragment a fragment.
+- **(f) A deploy target's own config and its deploy task** — a root
+  `wrangler.jsonc` and a `.config/mise/tasks/p/_project/deploy` overlay,
+  which `cloud-service/workers-static-assets` was the first
+  `cloud-provider`/`cloud-service` pack to ship at all. `_project` is a
+  **marked position** the materializer renames to the pinned project's id,
+  not a task group. A deploy stack that names the task CI must run and then
+  leaves both that task and the config it reads to be typed by hand is the
+  failure (b) describes, one axis up.
 
 **The root allowlist** is the hygiene doctrine's, and the materializer
 enforces it as a ceiling. These files, and only these, may sit at a shaped
-repo's root: `.gitignore`, `.editorconfig`, `.gitattributes`, `LICENSE`,
-`SECURITY.md`, `readme.md`, `CLAUDE.md`, `fnox.toml`, `eslint.config.mjs`,
-and the manifests and lockfiles a language mandates. A `config/` tree
-landing a root path that is not on this list is a **pack authoring error**:
-the materializer refuses it and reports it, rather than quietly adding one
-more dotfile to a place the doctrine says is closed. Everything else a pack
-configures lives under `.config/`.
+repo's root: `.gitignore`, `.graphifyignore`, `.editorconfig`,
+`.gitattributes`, `.npmrc`, `LICENSE`, `SECURITY.md`, `CONTRIBUTING.md`,
+`readme.md`, `fnox.toml`, `eslint.config.mjs`, `dprint.json`,
+`wrangler.jsonc`, and the directory `.github/` — **excluding
+`.github/workflows/`**. A language's manifests and lockfiles are **not**
+on it: a manifest is fenced out below, as it always was, and a lockfile is
+the manifest's shadow. A `config/` tree landing a root path that is not on
+this list is a **pack authoring error**: the materializer refuses it and
+reports it, rather than quietly adding one more dotfile to a place the
+doctrine says is closed. Everything else a pack configures lives under
+`.config/`.
 
-Being on that list is a ceiling, never a licence: `readme.md` and `CLAUDE.md`
-are on it because a shaped repo has them, and **no pack may ship either** —
-they belong to `/vwf:readme` and `/vwf:setup`, and the ban on writing
-CLAUDE.md below is unchanged.
+**Why each of the five added on 2026-09-06 is at the root**, and the answer
+is the same shape every time — the tool that reads it discovers it there
+and cannot be pointed elsewhere:
+
+- `dprint.json` — dprint's config discovery is root-only (`dprint.json`,
+  `.dprint.json`, `dprint.jsonc`, `.dprint.jsonc`), with `--config` the
+  only override, so the file at the root is a **shim** whose whole content
+  is `extends` into `.config/` — the same shape `eslint.config.mjs` already
+  has, and for the same reason.
+- `.npmrc` — the package manager reads it from the project root; a flag on
+  every install is the alternative.
+- `CONTRIBUTING.md` — the forge links to it from a pull request only when
+  it is at the root (or in `.github/`), and a contribution guide nobody is
+  shown is not one.
+- `.graphifyignore` — the tool reads it beside `.gitignore`, the file it
+  parallels, which is also where a person looks for it.
+- `.github/` — the forge discovers issue templates, and the rest of its
+  furniture, only from that directory. `.github/workflows/` is **refused
+  inside it**: the CI fence below is unchanged, and a pack that may write a
+  template still may not write a pipeline.
+
+`wrangler.jsonc` joined on 2026-09-05, and it is the same exception
+`eslint.config.mjs` already is: a deploy tool that discovers its config only
+at the repo root leaves a pack two ways to ship one — the root file, or
+`--config` on every invocation any caller might type — and a flag every
+caller has to remember is the worse of the two.
+
+Being on that list is a ceiling, never a licence: `readme.md` is on it
+because a shaped repo has one, and **no pack may ship it** — it belongs to
+`/vwf:readme`. `CLAUDE.md` is not on the list at all: it is fenced out
+below, it is `/vwf:setup`'s, and `plugins:check` refuses a pack that ships
+one at the root. The rule reaches `wrangler.jsonc` unchanged:
+being on the list makes it landable, not standard, and the three Cloudflare
+deploy packs ship one (`workers-static-assets`, `workers-ssr`, `containers`).
 
 The rules mirror the ones the other targets already have:
 
@@ -174,15 +216,25 @@ The rules mirror the ones the other targets already have:
 By component type: `toolchain-manager`, then `toolchain-gate` (the
 `repo-gate` kind's components), then `repo-hygiene`, then
 `package-manager` / `language`, then `app-framework`, then
-`capability-provider` — a later component's file wins, and the lockfile
-records per file which component supplied the version that landed.
+`capability-provider`, then `cloud-provider`, then `cloud-service` — a
+later component's file wins, and the lockfile records per file which
+component supplied the version that landed.
 
 The two ends are what the order is for. The **manager goes first** because
 it ships the baseline every overlay overlays — the whole task library,
-including the slots a stack fills in. The **provider goes last** because a
-secrets overlay is the most specific answer anything gives to
-`setup/secrets`: whatever a language pack thought that task should do, the
-repo's actual secrets manager knows better.
+including the slots a stack fills in. The **deploy target goes last**
+because it is the most specific thing a repo pins: a `cloud-service` pack's
+`wrangler.jsonc`, and the `p/<id>/deploy` overlay beside it, are the answer
+to how this repo actually ships, and nothing may overwrite that. The
+**secrets provider still outranks everything before it**, for the reason it
+always did — a secrets overlay is the most specific answer anything gives
+to `setup/secrets`, whatever a language pack thought that task should do.
+
+The two cloud types were absent from this order until 2026-09-05, for a
+plain reason rather than an oversight: no `cloud-provider` or
+`cloud-service` pack shipped a `config/` tree, so there was nothing of
+theirs to compose. `cloud-service/workers-static-assets` is the first that
+does, and is what put them on it.
 
 **Precedent, and its limit.** The `capability-provider/fnox` and
 `package-manager/pnpm` packs already ship hook scripts copied into a target
@@ -194,10 +246,13 @@ config lives in a plugin that exists for no other reason.
 **The fence, and where it now runs.** The tier originally stopped at the
 toolchain manager: a gate pack named its config file as a prerequisite and
 wrote nothing. That line was **opened on 2026-09-05, deliberately and once**,
-for gate and provider config files — the (b), (c), (d) and (e) rows above —
-because a gate that ships its doctrine and not its config leaves every repo
-to hand-write the file the doctrine describes, which is the failure the
-tier exists to prevent.
+for gate and provider config files — the (b), (c), (d), (e) and (f) rows
+above — because a gate that ships its doctrine and not its config leaves
+every repo to hand-write the file the doctrine describes, which is the
+failure the tier exists to prevent. Row (f) is that one opening reaching the
+cloud types later the same day, when the first `cloud-service` pack shipped a
+`config/` tree: a deploy target that ships its doctrine and not its config
+leaves the repo hand-writing that file too.
 
 Four things stay **outside** the fence, and they are the whole of it:
 
@@ -208,9 +263,14 @@ Four things stay **outside** the fence, and they are the whole of it:
 2. **CI workflow files.** A pack states which task names CI must run; the
    workflow that runs them is the repo's, and a generated pipeline nobody
    maintains is worse than none.
-3. **Editor settings.** A repo's editor configuration belongs to the people
-   typing in it, and no pack ships one — there is no editor setting that
-   would point at a config under `.config/` in the first place.
+3. **Whole editor files.** A pack never ships `.vscode/settings.json` or
+   `.vscode/extensions.json`: it ships a fragment under
+   `.config/vscode.d/<pack>.jsonc` and the orchestrator composes the
+   fragments into those two files, inside one marked block a person's own
+   keys sit after and beat (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`).
+   The file stays the repo's; only the block is anyone else's. Narrowed
+   2026-09-06 from "editor settings" outright — the reasoning is
+   `docs/memory/decisions/2026-09-06-editor-fragments-inside-the-fence.md`.
 4. **`CLAUDE.md`** — vwf's, out of scope outright, as it always was.
 
 **Charters ratchet**, which is why the four are enumerated rather than left

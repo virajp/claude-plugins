@@ -66,7 +66,7 @@ repo's own skills, docs, agents and worktrees. None of them is `plugins/`.
 Setup and the refresh loop — `mise run plugins:local`, and the three measured
 CLI facts that shape it — are [`dev-marketplace.md`](dev-marketplace.md).
 
-> **Authoring one:** the twelve checker rules, the invocation frontmatter, the
+> **Authoring one:** the thirteen checker rules, the invocation frontmatter, the
 > plugin-root trap and the dprint exclusion live in
 > `.claude/skills/plugin-authoring/`, which auto-applies while you edit
 > `plugins/`.
@@ -142,35 +142,63 @@ only by pushing it.
   frontmatter, and the kind headings in `assets/kinds.md`. It exists because the
   pack, bundle and kind counts were typed into four prose files and drifted; the
   tree is the only inventory true by construction. It throws on a `kind` no
-  heading defines, since the vocabulary is closed. **`--check`** is the same
-  byte compare the marketplace task makes, run by pre-commit and `plugins.yml`,
-  and `inventory.test.ts` pins it in vitest too.
-- **`plugins:check`** — validates the authored tree. Twelve rules: manifest
+  heading defines, since the vocabulary is closed — and on a bundle component
+  ref that is not `<type>/<slug>@<version>`, that names no
+  `stacks/<type>/<slug>/pack.yaml`, or that pins a version the pack no longer
+  carries: a bundle is the recorded composition, so a stale pin advertises
+  something the materializer cannot copy. `@generated` refs name no pack by
+  design and are skipped. **`--check`** is the same byte compare the marketplace
+  task makes, run by pre-commit and `plugins.yml`, and `inventory.test.ts` pins
+  it in vitest too.
+- **`plugins:check`** — validates the authored tree. Thirteen rules: manifest
   name↔dir; dependencies resolving within the marketplace; hook scripts existing
   and executable; **a pack's `config/` payload tier being materializable as-is**
-  (five assertions in one rule: exec bit *and* a known shebang on every file
+  (seven assertions in one rule: exec bit *and* a known shebang on every file
   under `config/.config/mise/tasks/**`, because mise reports a 644 task as an
   *unknown* one rather than a permission error and execs the file directly; the
   same two on every `hooks/*.sh`, which the host execs from a bare path in
-  `settings.json`; the tier's root against the hygiene allowlist; and every
-  `config/.config/pre-commit.d/*.yaml` parsing with a top-level `repos:` list,
-  since `/vwf:init` concatenates them into a file no pack owns); **strict-YAML
-  frontmatter**; relative links under `assets/examples/**`; **root-relative
-  reference resolution** (every such reference resolves inside the plugin that
-  wrote it); **agent cross-reference resolution** in both directions (every
-  role-shaped `` `token` `` in a plugin's own prose names a real agent, and
-  every declared agent is referenced at least once — the two directions cover
-  each other on a rename); the vwf design-adapter contract (all **three** import
-  skills present and model-invocable); the vwf **stack-adapter** contract (both
-  `<plugin>-stack-menu` and `<plugin>-stack-template` present and
-  model-invocable on every plugin keyworded `vwf-stack-adapter`, **and** the
-  keyword declared by every plugin shipping either skill — the same
-  two-directions-cover-each-other idiom, since `stackgen` is now the only
-  adapter left and dropping that one keyword would otherwise have turned the
-  rule off entirely while `check()` still passed); the **technology-free vwf**
-  guard; and **retired vocabulary stated as live** (a closed list of spellings
-  the corpus stopped meaning, flagged per line and exempt on a line that marks
-  itself as history — the only rule that reports a line number).
+  `settings.json`; the tier's root against the hygiene allowlist, whose two
+  allowed **directories** are `.config/` and `.github/`; a **CI workflow refused
+  inside `.github/`**, since a pack names the task CI runs and never the
+  workflow; every `config/.config/pre-commit.d/*.yaml` parsing with a top-level
+  `repos:` list, since `/vwf:init` concatenates them into a file no pack owns;
+  the gate pack's **whole** `config/.config/pre-commit-config.yaml` parsing on
+  the same terms, from the base end, since it is neither a fragment nor at the
+  tier's root and nothing reached it before; and every
+  `config/.config/vscode.d/*.jsonc` parsing as JSONC with only the three keys
+  `settings`, `nesting` and `extensions`, since init composes them into an
+  editor file no pack owns and a fourth key is dropped without a word);
+  **strict-YAML frontmatter** (every skill and agent a plugin ships, and every
+  `stacks/*/*/skills/*/SKILL.md` and `stacks/*/*/agents/*.md` a pack ships — the
+  larger half, and the half that actually lands in a user's repo; a pack's
+  `rules/*.md` is out, frontmatter being optional there); relative links under
+  `assets/examples/**`; **root-relative reference resolution** (every such
+  reference resolves inside the plugin that wrote it — in the files a pack
+  **lands** the rule stands aside, because rule 13 owns those on stricter terms
+  and one bad reference should be one finding); **agent cross-reference
+  resolution** in both directions (every role-shaped `` `token` `` in a plugin's
+  own prose names a real agent, and every declared agent is referenced at least
+  once — the two directions cover each other on a rename); the vwf
+  design-adapter contract (all **three** import skills present and
+  model-invocable); the vwf **stack-adapter** contract (both
+  `<plugin>-stack-menu` and `<plugin>-stack-template` present, each carrying an
+  explicit `disable-model-invocation: false` **and** a `user-invocable: false` —
+  an adapter is vwf's to call, not a user's to type — on every plugin keyworded
+  `vwf-stack-adapter`, **and** the keyword declared by every plugin shipping
+  either skill — the same two-directions-cover-each-other idiom, since
+  `stackgen` is now the only adapter left and dropping that one keyword would
+  otherwise have turned the rule off entirely while `check()` still passed); the
+  **technology-free vwf** guard; **retired vocabulary stated as live** (a closed
+  list of spellings the corpus stopped meaning, flagged per line and exempt on a
+  line that marks itself as history); and **a landed pack file citing nothing by
+  plugin path** (in `skills/`, `agents/`, `rules/`, `hooks/`, `config/`, a
+  pack's `conventions.md` and a bundle's body — all copied verbatim into a repo
+  with no plugin — the literal `${CLAUDE_PLUGIN_ROOT}`, a bare `assets/…` path,
+  a `../` climb leaving the tree the file lands in, and a path into a sibling
+  pack are each refused; a bare `<type>/<slug>` ref is the identifier vocabulary
+  and stays legal, and the last three forms read `.md` only, with fenced blocks
+  blanked to their own line count). Those last two are the rules that report a
+  **line number**, being the two that fire on a sentence rather than a file.
 
   Two of those are worth the extra sentence. The technology-free guard bans vwf
   naming a concrete technology **only where the mention prescribes**, which is

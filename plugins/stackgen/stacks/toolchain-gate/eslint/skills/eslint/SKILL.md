@@ -82,8 +82,9 @@ The linter is **zero-config** — it ships an opinionated flat config, so no
 Only reach for config when a default genuinely misfires — never to make a real
 finding disappear.
 
-- **Linter:** add `.config/linter.yaml` (`pnpm dlx @askviraj/linter --init`
-  scaffolds it). Scope changes narrowly: extra `ignores`, per-preset `overrides`
+- **Linter:** edit `.config/linter.yaml` — this pack ships it, empty of
+  overrides, so the file to change already exists. Scope changes narrowly:
+  extra `ignores`, per-preset `overrides`
   (preset names: `javascript`, `typescript`, `astro`, `json`, `jsonc`,
   `markdown`, `markdown-typescript`, `yaml`, `toml`, `html`, `css`), or a
   `configs` entry that targets specific `files`. Prefer a `files`-scoped

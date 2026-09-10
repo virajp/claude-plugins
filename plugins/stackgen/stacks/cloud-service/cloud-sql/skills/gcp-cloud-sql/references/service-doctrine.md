@@ -1,10 +1,10 @@
 # Service doctrine — Cloud SQL
 
 This component realizes the `relational-datastore` capability, so what it owes
-is the neutral datastore contract (`assets/contracts/datastore.md`), clause by
-clause. The contract states what **any** datastore must do; this file states how
-this one does each, **citing rather than restating**, which is what lets a second
-datastore be judged against the same clauses.
+is stackgen's neutral datastore contract, clause by clause. The contract states
+what **any** datastore must do; this file states how this one does each,
+**citing rather than restating**, which is what lets a second datastore be
+judged against the same clauses.
 
 ## Contract satisfaction
 

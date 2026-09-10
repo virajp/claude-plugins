@@ -77,4 +77,4 @@ Names are `[A-Z0-9_]`. The convention is stated once in the config file, beside
 the variables, so the reader who needs it is looking at it.
 
 Full judgment: the `doppler` skill's references. The contract it cites is
-`assets/contracts/secrets.md`.
+stackgen's secrets contract.

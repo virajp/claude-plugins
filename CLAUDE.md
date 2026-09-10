@@ -45,24 +45,24 @@ only its build output), so their context can sit in place.
 
 Each row below is loaded **on demand** — follow the link when you need more than
 the summary here. The `.claude/skills/` rows also auto-apply the moment you edit
-the tree they govern; `release`, `create-plan` and `execute-plan` are slash
-commands — a change to this repo is planned with `/create-plan` and run, in a
-fresh session, with `/execute-plan <folder>`.
+the tree they govern; `release` is a slash command; a change to this repo is
+planned with `/vwf:change-plan` and run, in a fresh session, with
+`/vwf:change-execute <folder>` — each plan folder carries this repo's gate
+lines, `mise run plugins:local` as a `run` step and `/release` as an `ask` step.
 
-| Read                                       | For                                                                                           |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| [`.claude/docs/repo-shape.md`][repo]       | the one authored tree, what the installer writes, the mise tasks, the traps                   |
-| [`.claude/docs/plugins.md`][plug]          | the full plugin inventory, the native manifest shape, the generated marketplace manifest      |
-| [`.claude/docs/ci-and-releases.md`][ci]    | the mise environments, the branch model, the three tag families, the workflows, the rituals   |
-| [`.claude/docs/dev-marketplace.md`][dev]   | running the plugins you are editing — setup, the refresh loop, and why `update` is not it     |
-| [`installer/CLAUDE.md`][icl]               | the installer — flags, the read-only receipt path, the interactive uninstall, testing         |
-| [`site/CLAUDE.md`][scl]                    | the website — the tree, the link rule, the gate, the release model, the design source, traps  |
-| [`.claude/skills/vwf-plugin/`][vwf]        | vwf's own shape — skills, agents, assets, hooks, adding a skill, the docs tree it maintains   |
-| [`.claude/skills/stackgen-plugin/`][sg]    | stackgen's own shape — the dispatch rule, packs and bundles, where output lands, consent      |
-| [`.claude/skills/plugin-authoring/`][auth] | the twelve checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions |
-| [`.claude/skills/release/`][rel]           | the release ritual, the note format, the CI facts that make a failed publish legible          |
-| [`.claude/skills/create-plan/`][cp]        | planning a repo change — the survey, the one-question-at-a-time interview, the plan folder    |
-| [`.claude/skills/execute-plan/`][ep]       | running an approved plan autonomously — waves, review, the gate, resume, landing, release     |
+| Read                                                         | For                                                                                                                                                                                                                      |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`.claude/docs/repo-shape.md`][repo]                         | the one authored tree, what the installer writes, the mise tasks, the traps                                                                                                                                              |
+| [`.claude/docs/plugins.md`][plug]                            | the full plugin inventory, the native manifest shape, the generated marketplace manifest                                                                                                                                 |
+| [`.claude/docs/ci-and-releases.md`][ci]                      | the mise environments, the branch model, the three tag families, the workflows, the rituals                                                                                                                              |
+| [`.claude/docs/dev-marketplace.md`][dev]                     | running the plugins you are editing — setup, the refresh loop, and why `update` is not it                                                                                                                                |
+| [`installer/CLAUDE.md`][icl]                                 | the installer — flags, the read-only receipt path, the interactive uninstall, testing                                                                                                                                    |
+| [`site/CLAUDE.md`][scl]                                      | the website — the tree, the link rule, the gate, the release model, the design source, traps                                                                                                                             |
+| [`.claude/skills/vwf-plugin/`][vwf]                          | vwf's own shape — skills, agents, assets, hooks, adding a skill, the docs tree it maintains                                                                                                                              |
+| [`.claude/skills/stackgen-plugin/`][sg]                      | stackgen's own shape — the dispatch rule, packs and bundles, where output lands, consent                                                                                                                                 |
+| [`.claude/skills/plugin-authoring/`][auth]                   | the thirteen checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions                                                                                                                          |
+| [`.claude/skills/release/`][rel]                             | the release ritual, the note format, the CI facts that make a failed publish legible                                                                                                                                     |
+| [`site/src/content/docs/plugins/vwf.md#vwfchange-plan`][chg] | planning a change to this repo with the vwf pair — the interview, the folder; running it is [`#vwfchange-execute`][chge] — waves, the gate, after-landing steps; the how-to is [`how-to/operate/ad-hoc-change.md`][chgh] |
 
 [repo]: .claude/docs/repo-shape.md
 [plug]: .claude/docs/plugins.md
@@ -74,8 +74,9 @@ fresh session, with `/execute-plan <folder>`.
 [sg]: .claude/skills/stackgen-plugin/SKILL.md
 [auth]: .claude/skills/plugin-authoring/SKILL.md
 [rel]: .claude/skills/release/SKILL.md
-[cp]: .claude/skills/create-plan/SKILL.md
-[ep]: .claude/skills/execute-plan/SKILL.md
+[chg]: site/src/content/docs/plugins/vwf.md#vwfchange-plan
+[chge]: site/src/content/docs/plugins/vwf.md#vwfchange-execute
+[chgh]: site/src/content/docs/how-to/operate/ad-hoc-change.md
 
 The user-facing docs are a different tree and a different audience: `readme.md`,
 and `site/src/content/docs/{installer,plugins,how-to}/`, published as the
@@ -141,12 +142,23 @@ inventory and check in that order — freshness before validity:
   or if that path is the retired symlink.
 - **`plugins:inventory`** — generates `plugins/stackgen/stacks/inventory.md`
   from the stacks tree, so no pack, bundle or kind count is ever typed by hand;
-  **`--check`** fails if the committed file differs.
-- **`plugins:check`** — validates the authored tree, twelve rules. Rule 11 is
-  the widest: it walks a stackgen pack's whole `config/` payload tier — exec bit
-  and shebang on every task file, exec bit and shebang on every shipped hook
-  script, the `config/` root against the hygiene allowlist, and every
-  `pre-commit.d/*.yaml` parsing with a top-level `repos:` list.
+  **`--check`** fails if the committed file differs. Generation itself fails a
+  bundle whose `<type>/<slug>@<version>` pin is malformed, names no pack, or
+  pins a version that pack no longer carries — `@generated` refs name no pack by
+  design and are skipped.
+- **`plugins:check`** — validates the authored tree, thirteen rules. Rule 11 is
+  the widest: it walks a stackgen pack's whole `config/` payload tier — seven
+  assertions. Exec bit and shebang on every task file, exec bit and shebang on
+  every shipped hook script, the `config/` root against the hygiene allowlist
+  (whose two allowed directories are `.config/` and `.github/`), a CI workflow
+  **refused** inside `.github/`, every `pre-commit.d/*.yaml` parsing with a
+  top-level `repos:` list, the gate pack's whole `pre-commit-config.yaml`
+  parsing on the same terms, and every `vscode.d/*.jsonc` parsing as JSONC with
+  only the three keys `/vwf:init` composes. Rule 13 is the newest: it refuses a
+  plugin-relative citation in anything a pack **lands** — the token, a bare
+  `assets/…` path, a `../` climb out of the tree the file lands in, or a path
+  into a sibling pack — since that file is copied into a repo with no plugin,
+  where each resolves to nothing silently.
 - **`plugins:shellcheck`** — the shell gate over everything a pack ships as
   shell: `shellcheck -x` plus `shfmt -d` over the pack task libraries and their
   `_scripts/*`, and a second pass over `hooks/*.sh` with no flags, since a hook
@@ -201,25 +213,36 @@ in [`repo-shape.md`][repo].
 Two plugins ship. Each row's linked home is authoritative; the cells are an
 index.
 
-| Plugin     | Is                                                                                                                                                                                                                                                                                                                                 |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, `/vwf:init` (the repo-shape orchestrator), the guarded `rtk` hook, the two mempalace auto-save hooks, and two MCP servers. Names **no** technology. Depends on `stackgen` alone. → [`vwf-plugin`][vwf]                                             |
-| `stackgen` | The principles-driven stack materializer — shipped packs for the covered path, a Context7-researched generator for the uncovered tail, and the repo's own toolchain manager, gates and hygiene since `devtools` dissolved into it. Its packs ship the **config files** too, which `/vwf:init` lays down. → [`stackgen-plugin`][sg] |
+| Plugin     | Is                                                                                                                                                                                                                                                                                                                                                                |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, `init` (the repo-shape orchestrator, reached through `/vwf:setup`), the ad-hoc `change-plan` / `change-execute` pair, the guarded `rtk` hook, the two mempalace auto-save hooks, and two MCP servers. Names **no** technology. Depends on `stackgen` alone. → [`vwf-plugin`][vwf] |
+| `stackgen` | The principles-driven stack materializer — shipped packs for the covered path, a Context7-researched generator for the uncovered tail, and the repo's own toolchain manager, gates and hygiene since `devtools` dissolved into it. Its packs ship the **config files** too, which `/vwf:init` lays down. → [`stackgen-plugin`][sg]                                |
 
 Full inventory, the native manifest shape, and the generated marketplace
 manifest: [`.claude/docs/plugins.md`][plug]. Authoring doctrine that applies to
 both — the checker rules, the two mise gates, the hook rules, the traps — is the
 [`plugin-authoring`][auth] skill, which auto-applies under `plugins/`.
 
-The workflow runs `init` → `setup` → `product` → `architecture` →
-`design-system` → `blueprint` → `plan` → `execute`, with `verify` and `feedback`
-closing the loop. `init` shapes the **base repo** — the config layout, the task
-vocabulary, the gates, the hygiene files — from stackgen's three unconditional
-bundles; `setup` then sets up **vwf** in it, and offers `init` when the shape is
-missing. **Everything up to `blueprint` is done in full before planning** —
-`plan` hard-halts on a partial coverage stamp. The ordering gates, the skill and
-agent tables, how to add a skill and pick its invocation mode, and the
-dependency reasoning are the [`vwf-plugin`][vwf] skill.
+The workflow runs `setup` → `product` → `architecture` → `design-system` →
+`blueprint` → `plan` → `execute`, with `verify` and `feedback` closing the loop.
+`init` is no longer a command in that line: since 2026-09-06 it is
+**skill-invoked**, hidden from the `/` menu and reached only from inside `setup`
+— Step 0's offer, or `/vwf:setup reshape`, which runs the shape pass alone.
+`init` shapes the **base repo** — the config layout, the task vocabulary, the
+gates, the hygiene files — from stackgen's three unconditional bundles, asks six
+questions (the second confirming every project id, its slug and the source the
+name came from, before any `p:<slug>:*` group, alias or `REPO_NAME` is written),
+and closes with a consent-gated git pass (the first commit, the `develop`/`main`
+pair, the forge default); `setup` then sets up **vwf** in it, and offers `init`
+when the shape is **missing or drifted**, on the four baseline predicates
+`/vwf:doctor` owns. **Everything up to `blueprint` is done in full before
+planning** — `plan` hard-halts on a partial coverage stamp. The ad-hoc pair
+`change-plan` → `change-execute` sits **beside** that line rather than in it: it
+plans and runs work with no blueprint slice behind it — tooling, CI, docs, a
+refactor, a tree the blueprint does not describe — reads neither the blueprint
+nor the registry, and gates on the commands its own plan folder names. The
+ordering gates, the skill and agent tables, how to add a skill and pick its
+invocation mode, and the dependency reasoning are the [`vwf-plugin`][vwf] skill.
 
 ## The installer CLI
 
@@ -256,6 +279,13 @@ A tracked plugin version is always plain `X.Y.Z` — `plugins:check` fails one
 carrying build metadata. The `X.Y.Z+N` the authoring machine runs between
 releases exists only in the gitignored staged copies `mise run plugins:local`
 writes, so `claude plugin update` sees each edit without a commit.
+
+**A release is two stages, and only the second reaches anyone else.** Local
+first — `mise run plugins:local` stages the changed plugins into the dev
+marketplace and updates this machine's install, publishing nothing and cutting
+no tag, so `/vwf:change-execute` runs it as the plan's after-landing `run` step
+and a staged plugin loads in the next **restarted** session. Public second — the
+tags.
 
 **Ask the user before running `plugins:release`, `i:release` or
 `site:release`.**
@@ -324,8 +354,10 @@ pins and finds nothing.
 
 **Nothing is gated at install time**, so the first thing to run afterwards is
 `/vwf:doctor` — it is what reports a missing required binary, as a **blocking**
-finding. On a repo that has never been shaped, run `/vwf:init` before either: it
-lays down the config layout and the gates the rest of the workflow assumes.
+finding. On a repo that has never been shaped, run `/vwf:setup` — its Step 0
+offers `init`, which lays down the config layout and the gates the rest of the
+workflow assumes, and `/vwf:setup reshape` runs that pass alone on a repo that
+has drifted.
 
 For **other agents** there is no marketplace and no rendered tree: point the
 tool at this repo and ask it to adapt the plugin. `readme.md`'s "Other tools"

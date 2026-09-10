@@ -24,26 +24,6 @@
       }
     ]
   },
-  "includes": [
-    "**/*.json",
-    "**/*.jsonc",
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.js",
-    "**/*.jsx",
-    "**/*.mjs",
-    "**/*.cjs",
-    "**/*.css",
-    "**/*.scss",
-    "**/*.htm",
-    "**/*.html",
-    "**/*.md",
-    "**/*.yml",
-    "**/*.yaml",
-    "**/*.toml",
-    "**/dockerfile",
-    "**/dockerfile.*"
-  ],
   "json": {
     "jsonTrailingCommaFiles": [
       "tsconfig.json",

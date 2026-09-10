@@ -5,8 +5,8 @@
 **Entirely outside the process.** fnox resolves secrets, sets them as
 environment variables, and executes the task; the application never links a
 client, never opens a config file, and never learns which provider backed a
-given value. That is the secrets contract's outranking rule
-(`assets/contracts/secrets.md`) and it is the whole integration.
+given value. That is the outranking rule of stackgen's secrets contract, and
+it is the whole integration.
 
 The seam is one line in the task runner:
 

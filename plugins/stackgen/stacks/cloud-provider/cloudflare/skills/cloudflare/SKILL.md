@@ -3,11 +3,13 @@ name: cloudflare
 version: 0.1.0
 category: development
 description: >-
-  Cloudflare as this product's private plane — the account and role model
-  behind least-privilege grants, seat-shaped billing and what frees a seat,
-  what does and does not exist locally, and the networking rule that decides
-  whether the private plane is real or decorative. Provider-wide judgment
-  every Cloudflare service component cites rather than restates.
+  Cloudflare as this product's private plane and as its host — the
+  account and role model behind least-privilege grants, seat-shaped billing
+  and what frees a seat, what does and does not exist locally, and the
+  networking rule that decides whether the private plane is real or
+  decorative. Provider-wide judgment every Cloudflare service component
+  cites rather than restates, and the fence that says which services are
+  offered and which are declined.
 license: MIT
 allowed-tools: Read Grep Glob Edit Write Bash
 ---
@@ -28,16 +30,44 @@ Read the reference that matches what you are doing — one, not all of them.
 | Making a project unreachable except through the proxy | [Networking & private plane](references/networking-and-private-plane.md) |
 
 **Two rules that do not wait for a reference.** Cloudflare, at the scope
-this stack offers, **fronts** a service and does not host one — where the
-project runs is its hosting pin's business, never this one's. And an
-origin that answers a direct request is a private plane in name only; that
-failure is invisible from the outside and is the subject of the networking
-reference.
+this stack offers, **hosts** three shapes — a built directory of files, on
+Workers Static Assets; that directory with a script in front of it, on
+Workers SSR; and a container image beside a Worker, on Containers — and
+for anything with a running process none of the three can hold it
+**fronts** what runs elsewhere, where "elsewhere" is that project's
+hosting pin's business and never this one's. And an origin that answers a
+direct request is a private plane in name only; that failure is invisible
+from the outside and is the subject of the networking reference.
 
-## What this stack does not cover
+## What this stack covers, and what it does not
 
-Coverage is parked at **Zero Trust Access**. Workers, Pages, R2, D1, KV,
-Durable Objects, Queues, Images and Stream are planned under their own
-effort and are **not** part of this stack. If the product needs one of
-them, that is a gap to name — not a gap to fill from general Cloudflare
-knowledge, because doctrine nobody wrote is doctrine nobody reviewed.
+**Offered.** Zero Trust Access; the three deploy targets — Workers Static
+Assets, Workers SSR, Containers, the last pinned *instead of* Workers SSR
+rather than beside it; the storage and data services — Workers KV, R2
+(with R2 Data Catalog and R2 SQL), D1, Hyperdrive, Vectorize, Pipelines,
+Analytics Engine; compute and orchestration — Durable Objects, Workflows,
+Queues; AI — Workers AI, AI Gateway, AI Search, Browser Rendering; and
+media, messaging and secrets — Images, Realtime, Email Service, Secrets
+Store. Each is its own service component with its own doctrine.
+
+**The Agents SDK is offered as a framework, not a service.** It compiles
+to a Durable Object, so it ships as `framework/cloudflare-agents` on the
+project axis, reached through the `typescript-cloudflare-agents` language
+bundle; there is nothing for it under `cloud-service/`. An agent project
+pins that bundle on the project axis and `cloudflare-durable-objects` on
+the backing one.
+
+**Nothing is planned-but-missing.** The coverage is complete: a
+Cloudflare surface not on the offered list is on the declined one, by
+decision rather than by omission.
+
+**Declined.** Pages (superseded by Workers Static Assets in Cloudflare's
+own guidance), Workers Sites (deprecated in Wrangler v4), Stream and
+Turnstile (offered and declined), and account-level products such as WAF,
+DNS, Tunnels, Zaraz and Logpush, which configure an account rather than
+compose a repo's stack.
+
+If the product needs something on the declined list, or something on
+neither list, that is a gap to name — not a gap to fill from general
+Cloudflare knowledge, because doctrine nobody wrote is doctrine nobody
+reviewed.

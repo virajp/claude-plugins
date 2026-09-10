@@ -1,0 +1,35 @@
+name: Cloudflare R2
+summary: S3-compatible object storage with no egress fee — the product's
+  object store for user files, build artifacts, datasets and logs, with an
+  Iceberg catalog and SQL over it when the objects are tables.
+version: 0.1.0
+type: cloud-service
+category: object-storage
+capability: object-file-storage
+kind: cloud-provider
+axis: backing
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      A bucket has no health endpoint and this pack ships no probe. The
+      honest signal is the consuming service's own dependency check — a
+      HEAD through the binding for a sentinel object the deploy writes,
+      reported as that service's readiness rather than as a service of its
+      own, because a probe that reaches R2 from outside the product
+      measures Cloudflare and not the product
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      A bucket per environment, never a prefix inside the production
+      bucket. Public access, CORS and lifecycle rules are bucket-level
+      settings, so one bucket cannot hold two environments' policies; the
+      suite reaches its own bucket through the same binding name, pointed
+      at that environment's bucket
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None to start — the Workers dev server simulates the bucket on disk
+      behind the binding, and the same binding can be pointed at the real
+      bucket instead. The S3-compatible endpoint has no local target at
+      all, so a project reaching R2 that way has nothing local to run

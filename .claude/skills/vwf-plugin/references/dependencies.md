@@ -37,11 +37,12 @@ because a name assembled from configuration can silently resolve to nothing,
 which is the same failure a skill vwf cannot see already has. With no stack
 adapter installed, `init` **halts** with the install command rather than
 printing an empty plan that reads like an already-shaped repo. `/vwf:setup` no
-longer fetches any of them: it checks the adapter's lockfile for all three and
-offers `/vwf:init`, which is why `init` is model-invocable. Note that `mise`
-legitimately appears in two different meanings: the **bundle** slug stackgen
-materializes, and the **binary** `mise`, which is a mandate `/vwf:doctor` blocks
-on once a stack axis is pinned.
+longer fetches any of them: it checks the adapter's lockfile for all three — and
+the shape against doctor's four baseline predicates — and offers `/vwf:init`,
+which is why `init` is model-invocable and, being hidden from the `/` menu,
+reached no other way. Note that `mise` legitimately appears in two different
+meanings: the **bundle** slug stackgen materializes, and the **binary** `mise`,
+which is a mandate `/vwf:doctor` blocks on once a stack axis is pinned.
 
 **Required binaries are no longer gated at install time.** A plugin used to
 declare `requires:`, and the CLI computed the union over the dependency-expanded

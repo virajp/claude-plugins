@@ -1,8 +1,8 @@
 # OIDC issuer — contract satisfaction
 
-Clause by clause against the neutral identity contract
-(`assets/contracts/identity.md`). The contract states what any provider must do;
-this states how an OIDC issuer does it. It cites, and does not restate.
+Clause by clause against stackgen's neutral identity contract. The contract
+states what any provider must do; this states how an OIDC issuer does it. It
+cites, and does not restate.
 
 ## Issue a verifiable token
 

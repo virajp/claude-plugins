@@ -1,0 +1,43 @@
+name: Cloudflare Durable Objects
+summary: Stateful serverless — one addressable object per id, single-threaded,
+  with its own strongly consistent SQLite storage, alarms and WebSocket
+  coordination; where state that must be correct per key lives, which is
+  neither the cache nor the shared database.
+version: 0.1.0
+type: cloud-service
+category: stateful-compute
+# `capability` is deliberately unset: `stateful-compute` realizes no vwf
+# capability token today (../../../assets/taxonomy.md), and nothing here
+# mints one — minting capabilities is vwf's move.
+kind: cloud-provider
+axis: backing
+harness:
+  health:
+    task: n/a
+    mechanism: >-
+      An object has no endpoint of its own and no process that can be down
+      independently of the Worker that binds it. The mechanism is that the
+      consuming Worker's readiness path fetches one known object by name and
+      reports the round trip, which proves the binding resolves, the class
+      is deployed under its migration and the object wakes; it proves
+      nothing about any other id, because every id is its own instance in
+      its own location
+  e2e_staging:
+    task: n/a
+    mechanism: >-
+      The class and its migration live in the Worker script, so the
+      environment is the Worker's — a staging Worker deploys its own class
+      and therefore has its own objects, and the same binding name resolves
+      to them with no code change. Never one namespace shared across
+      environments with an id prefix: a prefix is a convention the runtime
+      does not enforce, so one wrong name in a suite mutates a production
+      object's storage
+  local_stack:
+    task: n/a
+    mechanism: >-
+      None to compose behind a readiness gate. `wrangler dev` runs the class
+      on the laptop and persists its storage under the local state directory
+      between runs, so there is no engine for a stack task to start and no
+      port to wait on; the trap is that the persisted state outlives the
+      test run that wrote it, and that alarms can stop firing after a hot
+      reload until the dev server is restarted

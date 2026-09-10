@@ -167,8 +167,8 @@ only `{installer,scripts}/src/**/*.test.ts`, so a test file anywhere else is
 | The flag surface, the uninstall shape, testing discipline | [`installer/CLAUDE.md`](https://github.com/virajp/claude-plugins/blob/main/installer/CLAUDE.md)        |
 
 Behaviour changes here must reconcile `readme.md`, `CLAUDE.md` and these pages
-in the same commit — `installer/CLAUDE.md` names the `docs-reconciler` agent for
-that sweep.
+in the same commit — `installer/CLAUDE.md` names `/vwf:docs-sync` as the skill
+for that sweep.
 
 ## Related
 

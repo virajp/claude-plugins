@@ -254,9 +254,19 @@ describe("the pack config tier", () => {
         files: {
           [task]: "#!/usr/bin/env bash\n",
           [`${pack}/.gitignore`]: "node_modules/\n",
+          [`${pack}/wrangler.jsonc`]: "{}\n",
           [`${pack}/_licenses/MIT.txt`]: "MIT\n",
           [`${pack}/.config/dprint.json`]: "{}\n",
           [fragment]: "repos:\n  - repo: local\n",
+          // The five root entries a tool discovers only from the repo root, or
+          // that a human reads there: the dprint shim, the package-manager
+          // file, the contributing guide, graphify's ignore file, and the forge
+          // directory.
+          [`${pack}/dprint.json`]: "{ \"extends\": \".config/dprint.json\" }\n",
+          [`${pack}/.npmrc`]: "fund=false\n",
+          [`${pack}/CONTRIBUTING.md`]: "# Contributing\n",
+          [`${pack}/.graphifyignore`]: "dist/\n",
+          [`${pack}/.github/ISSUE_TEMPLATE/bug.md`]: "---\nname: Bug\n---\n",
         },
         executable: [task],
       },
@@ -334,7 +344,18 @@ describe("the pack config tier", () => {
     // Everything a tool can be pointed at lives under `.config/`; a pack
     // dropping a config beside it widens the root of every repo it lands in.
     const root = tree({
-      alpha: { files: { [`${pack}/dprint.json`]: "{}\n" } },
+      alpha: { files: { [`${pack}/.prettierrc`]: "{}\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("unallowlisted root entry"),
+    ]);
+  });
+
+  it("flags a root config another deploy tool prefers", () => {
+    // `wrangler.jsonc` is on the list because wrangler reads it only from the
+    // root; the widening is that one name, not the class of deploy configs.
+    const root = tree({
+      alpha: { files: { [`${pack}/netlify.toml`]: "[build]\n" } },
     });
     expect(messages(check(root))).toEqual([
       expect.stringContaining("unallowlisted root entry"),
@@ -348,6 +369,95 @@ describe("the pack config tier", () => {
     });
     expect(messages(check(root))).toEqual([
       expect.stringContaining("unallowlisted root entry"),
+    ]);
+  });
+
+  it("flags a CI workflow inside the forge directory", () => {
+    // `.github/` is allowlisted so a pack can ship issue templates; the fence is
+    // that a pack contributes the task a workflow calls, never the workflow.
+    const root = tree({
+      alpha: {
+        files: { [`${pack}/.github/workflows/ci.yml`]: "on: push\n" },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("ships a CI workflow"),
+    ]);
+  });
+
+  it("flags whole editor settings at the config/ tier root", () => {
+    // Editor settings are composed from per-pack fragments under
+    // `.config/vscode.d/`; a whole file here is a pack owning the merge target.
+    const root = tree({
+      alpha: { files: { [`${pack}/.vscode/settings.json`]: "{}\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("unallowlisted root entry"),
+    ]);
+  });
+
+  it("accepts an editor fragment with comments and a trailing comma", () => {
+    // The target file is JSONC, so the fragment is authored as JSONC too.
+    const root = tree({
+      alpha: {
+        files: {
+          [`${pack}/.config/vscode.d/mise.jsonc`]: "{\n"
+            + "  // what this pack contributes\n"
+            + "  /* and why */\n"
+            + "  \"settings\": { \"files.watcherExclude\": true },\n"
+            + "  \"nesting\": { \"mise.toml\": [\"mise.*.toml\"] },\n"
+            + "  \"extensions\": [\"hverlin.mise-vscode\"],\n"
+            + "}\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags an editor fragment with a key outside the three", () => {
+    // Init's merge reads exactly three keys; a fourth is dropped without a word.
+    const root = tree({
+      alpha: {
+        files: {
+          [`${pack}/.config/vscode.d/mise.jsonc`]:
+            "{ \"settings\": {}, \"tasks\": {} }\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("declares `tasks`, which is not one of"),
+    ]);
+  });
+
+  it("flags an editor fragment whose nesting value is not a list", () => {
+    // The merge joins the lists per parent; a bare string would be spread into
+    // characters or dropped, depending on where it lands.
+    const root = tree({
+      alpha: {
+        files: {
+          [`${pack}/.config/vscode.d/mise.jsonc`]:
+            "{ \"nesting\": { \"mise.toml\": \"mise.*.toml\" } }\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("`nesting.mise.toml` is not a list of strings"),
+    ]);
+  });
+
+  it("flags a pack's whole pre-commit config with no repos list", () => {
+    // The gate pack ships the base config the fragments merge into, and it sits
+    // under `.config/` rather than in `pre-commit.d/`, so nothing else sees it.
+    const root = tree({
+      alpha: {
+        files: {
+          "stacks/toolchain-gate/pre-commit/config/.config/pre-commit-config.yaml":
+            "default_stages: [pre-commit]\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("pre-commit config declares no top-level"),
     ]);
   });
 
@@ -397,6 +507,43 @@ describe("frontmatter", () => {
     expect(messages(check(root))).toEqual([
       expect.stringContaining("no YAML frontmatter"),
     ]);
+  });
+
+  it("flags a pack skill's frontmatter, and a pack agent's", () => {
+    // The larger half, and the one that had never been parsed: a pack's skills
+    // land in a user's repo, where the host reading them is not this one.
+    const root = tree({
+      stackgen: {
+        files: {
+          "stacks/language/x/skills/x/SKILL.md":
+            "---\nname: x\ndescription: a: b\n---\n\nprose\n",
+          "stacks/language/x/agents/x-writer.md":
+            "---\nname: x-writer\ndescription: a: b\n---\n\nprose\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(
+        "stacks/language/x/agents/x-writer.md: frontmatter is not valid YAML",
+      ),
+      expect.stringContaining(
+        "stacks/language/x/skills/x/SKILL.md: frontmatter is not valid YAML",
+      ),
+    ]);
+  });
+
+  it("accepts a valid pack skill, and ignores a pack rule", () => {
+    // `rules/*.md` is left out on purpose: frontmatter is optional there, so
+    // absence is not a fault and this would be a finding on every one of them.
+    const root = tree({
+      stackgen: {
+        files: {
+          "stacks/language/x/skills/x/SKILL.md": skill("x"),
+          "stacks/language/x/rules/house-style.md": "# House style\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
   });
 });
 
@@ -521,6 +668,187 @@ describe("root-relative references", () => {
       expect.stringContaining("climbs out of plugins/"),
     ]);
   });
+
+  it("says nothing about a landed file, which the citation rule owns", () => {
+    // Both rules would fire on this line, and two findings for one mistake send
+    // the author to two different fixes — one of which (make the path resolve)
+    // is the wrong one, since a landed file may not carry the token at all.
+    const root = tree({
+      stackgen: {
+        files: {
+          "stacks/language/x/conventions.md":
+            "read `${CLAUDE_PLUGIN_ROOT}/assets/nope.md`\n",
+        },
+      },
+    });
+    const found = check(root);
+    expect(found).toHaveLength(1);
+    expect(found[0]?.scope).toBe(
+      "stackgen:stacks/language/x/conventions.md:1",
+    );
+    expect(found[0]?.message).toContain("expands to nothing");
+  });
+});
+
+describe("landed citations", () => {
+  // A pack is copied into a target repo verbatim, and that repo has no plugin
+  // installed. Every citation below resolves inside the plugin — which is why
+  // the resolving rule is silent about all of them — and none of them resolves
+  // once landed, which is the failure with no reader but this one.
+  const packs = (files: Record<string, string>, executable?: string[]) => ({
+    stackgen: {
+      files: {
+        "stacks/cloud-provider/cloudflare/pack.yaml": "name: cf\n",
+        ...files,
+      },
+      executable,
+    },
+  });
+
+  it("flags the token in a skill, a conventions, a bundle and a config file", () => {
+    // Form (a) holds for every landed file, not just prose: a shell task under
+    // `config/` can spell the token as readily as a skill can, and the dot
+    // segments on its way there are why this walks rather than filters.
+    const task = "stacks/language/x/config/.config/mise/tasks/x";
+    const root = tree(packs(
+      {
+        "stacks/language/x/skills/x/SKILL.md": skill(
+          "x",
+          "",
+          "read `${CLAUDE_PLUGIN_ROOT}/assets/doc.md`",
+        ),
+        "stacks/language/x/conventions.md":
+          "read `${CLAUDE_PLUGIN_ROOT}/assets/doc.md`\n",
+        "stacks/bundles/thing.md": "read `${CLAUDE_PLUGIN_ROOT}`\n",
+        [task]:
+          "#!/usr/bin/env bash\n# see ${CLAUDE_PLUGIN_ROOT}/assets/x.md\n",
+      },
+      [task],
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("expands to nothing"),
+      expect.stringContaining("expands to nothing"),
+      expect.stringContaining("expands to nothing"),
+      expect.stringContaining("expands to nothing"),
+    ]);
+  });
+
+  it("does not flag the token at the plugin root", () => {
+    // The plugin's own skills are not landed, and the token is how they are
+    // supposed to point at their assets.
+    const root = tree({
+      stackgen: {
+        files: {
+          "assets/doc.md": "x",
+          "skills/one/SKILL.md": skill(
+            "one",
+            "",
+            "read `${CLAUDE_PLUGIN_ROOT}/assets/doc.md`",
+          ),
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a bare assets/ path, once, and leaves a lookalike alone", () => {
+    // The lookbehind is what keeps the token form from being counted twice and
+    // keeps a word merely ending in `assets` out.
+    const root = tree(packs({
+      "stacks/language/x/conventions.md":
+        "see `assets/contracts/secrets.md`, `${CLAUDE_PLUGIN_ROOT}/assets/x.md`"
+        + " and `my-assets/x.md`\n",
+    }));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("expands to nothing"),
+      expect.stringContaining("cites `assets/contracts/secrets.md`"),
+    ]);
+  });
+
+  it("flags a climb out of the pack's skills tier, not one within it", () => {
+    // A pack's skills land as siblings in `.claude/skills/`, so a link inside
+    // one skill's `references/` and a link across to another skill of the same
+    // pack both still resolve; the pack's own conventions land elsewhere
+    // entirely, so the climb to it does not.
+    const root = tree(packs({
+      "stacks/language/x/skills/one/SKILL.md": skill(
+        "one",
+        "",
+        "see [d](../two/references/z.md)",
+      ),
+      "stacks/language/x/skills/one/references/y.md":
+        "see [a](../references/z.md), [b](../../two/references/z.md) and"
+        + " [c](../../../conventions.md)\n",
+      "stacks/language/x/skills/two/SKILL.md": skill("two"),
+      "stacks/language/x/skills/two/references/z.md": "z\n",
+      "stacks/language/x/skills/one/references/z.md": "z\n",
+    }));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("cites `../../../conventions.md`"),
+    ]);
+  });
+
+  it("flags any climb at all out of a conventions file", () => {
+    // It lands as one file under `.claude/stackgen/templates/`, with nothing
+    // above it and no tree to move within.
+    const root = tree(packs({
+      "stacks/language/x/conventions.md": "see [a](../x.md)\n",
+    }));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("cites `../x.md`"),
+    ]);
+  });
+
+  it("flags a path into another pack, and never a bare component ref", () => {
+    // `<type>/<slug>` is the lockfile's and a bundle's identifier vocabulary.
+    // Only a trailing segment makes it a path — and a path is what breaks,
+    // because the sibling lands under its own template name or not at all.
+    const root = tree(packs({
+      "stacks/bundles/thing.md":
+        "pins `cloud-provider/cloudflare` and `cloud-provider/cloudflare@1.0.0`,"
+        + " see `cloud-provider/cloudflare/conventions.md`\n",
+    }));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(
+        "cites a path inside the `cloud-provider/cloudflare` pack",
+      ),
+    ]);
+  });
+
+  it("does not flag a type this plugin ships no packs under", () => {
+    // The type list is read from the tree at check time, so the form covers a
+    // new type directory without an edit — and covers nothing that is not one.
+    const root = tree(packs({
+      "stacks/bundles/thing.md": "see `datastore/postgres/conventions.md`\n",
+    }));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("ignores a fence, and still reports the true line after it", () => {
+    // A fence is a worked example — the `extends` samples in the tsconfig pack
+    // show a path the TARGET repo will hold. Blanking it has to keep the line
+    // count, because the line is the whole value of the finding.
+    const root = tree(packs({
+      "stacks/language/x/conventions.md": [
+        "intro",
+        "",
+        "```json",
+        "{ \"extends\": \"assets/contracts/secrets.md\" }",
+        "```",
+        "",
+        "see `assets/contracts/secrets.md`",
+        "",
+      ]
+        .join("\n"),
+    }));
+    const found = check(root);
+    expect(messages(found)).toEqual([
+      expect.stringContaining("cites `assets/contracts/secrets.md`"),
+    ]);
+    expect(found[0]?.scope).toBe(
+      "stackgen:stacks/language/x/conventions.md:7",
+    );
+  });
 });
 
 describe("the design-adapter contract", () => {
@@ -612,15 +940,17 @@ describe("the stack-adapter contract", () => {
       ]),
     );
 
-  it("accepts both skills at disable-model-invocation: false", () => {
-    expect(check(tree(adapter(both("disable-model-invocation: false\n")))))
-      .toEqual([]);
+  /** The state the contract wants: reachable by vwf, absent from the menu. */
+  const called = "disable-model-invocation: false\nuser-invocable: false\n";
+
+  it("accepts both skills carrying both invocation keys", () => {
+    expect(check(tree(adapter(both(called))))).toEqual([]);
   });
 
   it("flags a missing adapter skill", () => {
     const files = Object.fromEntries(
       Object
-        .entries(both("disable-model-invocation: false\n"))
+        .entries(both(called))
         .filter(([path]) => !path.includes("stack-template")),
     );
     expect(messages(check(tree(adapter(files))))).toEqual([
@@ -632,17 +962,30 @@ describe("the stack-adapter contract", () => {
     // vwf reaches these by constructed name, so `true` yields an empty menu
     // rather than an error — indistinguishable from a plugin offering nothing.
     const found = messages(check(tree(adapter(
-      both("disable-model-invocation: true\n"),
+      both("disable-model-invocation: true\nuser-invocable: false\n"),
     ))));
     expect(found).toHaveLength(2);
     expect(found[0]).toContain("is not `disable-model-invocation: false`");
   });
 
-  it("flags a skill that is model-invocable but hidden from the user", () => {
-    // Both are documented as user-runnable, so only the explicit `false` means
-    // both — banning `true` alone would wrongly pass this.
-    expect(messages(check(tree(adapter(both("user-invocable: false\n"))))))
-      .toHaveLength(2);
+  it("flags a skill that says nothing about model invocation", () => {
+    // Absence is not a claim: `user-invocable: false` alone leaves the state
+    // vwf depends on unstated, so banning `true` would wrongly pass this.
+    const found = messages(
+      check(tree(adapter(both("user-invocable: false\n")))),
+    );
+    expect(found).toHaveLength(2);
+    expect(found[0]).toContain("is not `disable-model-invocation: false`");
+  });
+
+  it("flags a skill still offered in the / menu", () => {
+    // An adapter answers in a payload shape only vwf reads, so a user typing
+    // it gets nothing usable — it is vwf's to call, not a user's to type.
+    const found = messages(check(tree(adapter(
+      both("disable-model-invocation: false\n"),
+    ))));
+    expect(found).toHaveLength(2);
+    expect(found[0]).toContain("is not `user-invocable: false`");
   });
 
   it("flags an adapter skill on a plugin that dropped the keyword", () => {
@@ -652,7 +995,7 @@ describe("the stack-adapter contract", () => {
     const root = tree({
       stackgen: {
         manifest: { name: "stackgen", version: "1.0.0", description: "x" },
-        files: both("disable-model-invocation: false\n"),
+        files: both(called),
       },
     });
     expect(messages(check(root))).toEqual([

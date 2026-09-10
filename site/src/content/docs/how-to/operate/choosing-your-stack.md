@@ -45,20 +45,66 @@ TypeScript and JavaScript; `app-framework/flutter` covers Dart and Flutter and
 serves `mobile`, `tablet`, `desktop` and `webapp` from a single codebase.
 Anything else takes the **generate** entry — see below.
 
+**A `site` project picks between four Astro bundles**, all on the one
+`framework/astro` pack, all carrying React for islands, differing by how a page
+is rendered: `astro-ssg` builds every route at build time with no adapter;
+`astro-ssr` renders every route per request behind an adapter; `astro-hybrid` is
+prerendered by default with the routes that must read a request opting out one
+by one; `astro-csr` serves one shell page and lets a client-only island own
+everything after the first paint. A page with no island ships no JavaScript in
+any of them. (`astro-ssr` was `typescript-astro-react` before 2026-09-06 — a pin
+on the old slug has to be re-pointed.)
+
+**An agent is a project, not a capability bolted onto one.**
+`typescript-cloudflare-agents` is the project-axis answer for a TypeScript
+service whose unit of design is an addressable, stateful object that persists
+what it knows, schedules its own work and holds live connections to its clients.
+Its framework component compiles to a Durable Object, so the bundle says it
+pairs with a deploy pin — `cloudflare-workers-ssr`, the Worker the class is
+exported from, or `cloudflare-containers` where the compute is an image beside
+it — and with the `cloudflare-durable-objects` backing pin, whose judgment about
+instance names, alarms and hibernation it cites rather than restates. Both stay
+pins the project makes on those axes: a language bundle that folded them in
+would answer, for every agent, a question those axes exist to ask. A stateless
+API that merely calls a model is an ordinary service with an AI pin beside it,
+not this.
+
 **The backing axis splits into a vendor-free half and a managed half.** Each
 capability has a neutral contract — what any provider must guarantee — beside
 the providers that realize it. Vendor-free: `postgres` for the datastore, `oidc`
 for identity, `otel-lgtm` for observability, `temporal` for orchestration,
-`doppler` and `fnox` for secrets. Managed: a cloud's own services, `gcp`
-bringing Firestore, Cloud SQL and the Firebase services. Object storage is the
-one to know about — **it has no vendor-free provider by design**, because every
-object store belongs to a cloud, so its contract states the requirement and
-points at a cloud's answer rather than offering a neutral one.
+`doppler` and `fnox` for secrets. Those two are the **developer-machine and CI**
+providers; the runtime secrets a deployed Worker or Container reads in staging
+and production are a backing pin of their own, Cloudflare's being
+`cloudflare-secrets-store`, and a repo pins both. Managed: a cloud's own
+services — `gcp` bringing Firestore, Cloud SQL and the Firebase services, and
+`cloudflare` bringing Workers KV, R2, D1, Hyperdrive, Vectorize, Pipelines,
+Analytics Engine, Durable Objects, Workflows, Queues, Workers AI, AI Gateway, AI
+Search, Browser Rendering, Images, Realtime, Email Service and Secrets Store.
+Each managed service is its own bundle, so they are pinned side by side rather
+than chosen between. Object storage is the one to know about — **it has no
+vendor-free provider by design**, because every object store belongs to a cloud,
+so its contract states the requirement and points at whichever cloud you have
+pinned rather than offering a neutral one.
 
 **The deploy axis has a provider-neutral default that is a real answer**, not a
 placeholder: `deploy-target/container-image` is an OCI image on any registry and
 any host that runs containers, with the Compose wiring the acceptance verifier's
-readiness gates depend on. The managed alternatives are `cloud-run` and `gke`.
+readiness gates depend on. The managed alternatives are `cloud-run`, `gke`,
+`cloudflare-workers-static`, `cloudflare-workers-ssr` and
+`cloudflare-containers`. The first Cloudflare one is for a project whose whole
+deployment is a build output directory rather than a running server: it lays
+down a root `wrangler.jsonc` for an assets-only Worker and a `p:<id>:deploy`
+task that uploads the directory. The second is the same shape with a **script in
+front of its own assets** — the Worker carries a `main`, the platform serves the
+uploaded file set for every request that matches one, and everything else falls
+through to the script, so one `wrangler deploy` ships both halves. It is the
+preferred pairing for `astro-ssr` and `astro-hybrid`; the container targets
+remain fully supported for both. The third runs a **Docker image beside a
+Worker**, addressed through a Durable Object, for a workload that needs a real
+filesystem, a runtime the isolate cannot host, or more CPU than one invocation
+is allowed — and because a Containers project *is* a Workers project, it is
+pinned **instead of** `cloudflare-workers-ssr`, never beside it.
 `zero-trust-access` composes with a host rather than replacing one — a private
 plane in front of a project that must not be publicly reachable, whichever cloud
 hosts it.

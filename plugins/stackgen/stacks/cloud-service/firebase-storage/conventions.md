@@ -31,9 +31,9 @@ the `gcp` skill's identity reference.
 
 **The emulator does not simulate lifecycle rules or storage classes**, so the
 two decisions with the longest-lived cost consequences are the two nothing local
-exercises (`assets/contracts/local-stack.md`).
+exercises (stackgen's local-stack contract).
 
 Full judgment: the `gcp-firebase-storage` skill's references, and the neutral
-contract they cite is `assets/contracts/object-storage.md`. The provider-wide
+contract they cite is stackgen's object-storage contract. The provider-wide
 half — cost doctrine, IAM, the emulator map, the private plane — is the `gcp`
 skill's.
