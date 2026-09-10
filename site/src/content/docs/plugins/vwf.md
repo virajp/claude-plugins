@@ -879,32 +879,45 @@ waits on:
 **On an existing repo it surveys, plans, and applies on one consent.** The
 survey walks ten checks — root files against the allowlist, the readme's casing,
 task names against the pack's *legacy-name table*, task shebangs, the helper
-library's shape, missing files, ignore sections and hook fragments, commit
-types, per-project task groups, and the gate-config positions the packs ship
-marked for it to fill. Pass 1 has one case worth knowing: where a gate pack
-declares both a config under `.config/` and a two-line stand-in of the same name
-at the root — the stand-in existing because that tool's config discovery is
-root-only — your **real** config moves into `.config/` and the stand-in takes
-its place, with the plan saying the settings survive the move. Not every key
-does, and the plan says which: a gate pack's own skill names the key that is
-**not** inherited through the stand-in, where an extended file declaring it is a
-fatal diagnostic rather than a warning, so the move drops it. Dropping it
-**widens** what the gate covers, since the pack's own pinned plugin list is then
-what defines the file set. So the move row carries **sub-lines** — one for the
-dropped key, and one per **exclusion** the drop makes necessary, each naming the
-files that exclusion keeps out of the gate. Never a restored key, which puts the
-diagnostic back, and never after the fact: they are changes to the settings the
-row claims survive the move, so you read them before the one consent. The two
-are told apart by content, never by name. What comes back is **one plan**, in
-six counted sections: moves, creates, renames, appends, merges — all applied on
-a single yes — and `Rewrites (flagged, not applied)`, which is applied by
-nothing. A task file whose shebang names a shell other than bash goes there,
-listed with the shell-specific syntax it uses, and is **never** rewritten:
-auto-translating a shell script is how a working task becomes a subtly broken
-one, so it lands in the report's `Deferred` section for you to rewrite
-deliberately. It never asks per file, never writes before the yes, never touches
-application code, and never writes a language manifest, a lockfile or a CI
-workflow.
+library's name and whether its contents still match the pack's, missing files,
+ignore sections and hook fragments, commit types, per-project task groups, and
+the gate-config positions the packs ship marked for it to fill. Pass 1 has one
+case worth knowing: where a gate pack declares both a config under `.config/`
+and a two-line stand-in of the same name at the root — the stand-in existing
+because that tool's config discovery is root-only — your **real** config moves
+into `.config/` and the stand-in takes its place, with the plan saying the
+settings survive the move. Not every key does, and the plan says which: a gate
+pack's own skill names the key that is **not** inherited through the stand-in,
+where an extended file declaring it is a fatal diagnostic rather than a warning,
+so the move drops it. Dropping it **widens** what the gate covers, since the
+pack's own pinned plugin list is then what defines the file set. So the move row
+carries **sub-lines** — one for the dropped key, and one per **exclusion** the
+drop makes necessary, each naming the files that exclusion keeps out of the
+gate. Never a restored key, which puts the diagnostic back, and never after the
+fact: they are changes to the settings the row claims survive the move, so you
+read them before the one consent. The two are told apart by content, never by
+name. What comes back is **one plan**, in eight counted sections: moves,
+creates, replaces, renames, rewrites applied, appends, merges — all applied on a
+single yes — and `Rewrites (flagged, not applied)`, which is applied by nothing.
+A task file whose shebang names a shell other than bash goes there, listed with
+the shell-specific syntax it uses, and is **never** rewritten: auto-translating
+a shell script is how a working task becomes a subtly broken one, so it lands in
+the report's `Deferred` section for you to rewrite deliberately.
+
+**The helper library is the one named exception**, and the reason it earns one
+is timing. A repo whose copy has drifted from the pack's is not carrying a
+library of its own but an older version of the same one — and every task file
+this run creates is written against the pack's, so keeping the old copy means
+those brand-new tasks die on their first line, on a breakage this run caused.
+The plan therefore carries a **replace** of that file, sub-lined with each
+function that disappears along with it, and one **rewrite** row per call site of
+a retired name, `old → new` at its file and line, so you count them before the
+one yes rather than after. Nothing is translated on the spot: the mapping is
+read from the pack's legacy-name table, the same table the task-name check
+reads. A call to a name that table has no row for is flagged, never rewritten,
+and deferred with what would unlock it. It never asks per file, never writes
+before the yes, never touches application code, and never writes a language
+manifest, a lockfile or a CI workflow.
 
 **Your readme is moved, never rewritten.** `README.md` → `readme.md` is a move
 like any other in the plan — content untouched, applied with `git mv` so the
@@ -947,13 +960,13 @@ anything else. On a new repo no such ordering is needed — the first commit
 precedes hook wiring by construction, which is also why the shipped
 protected-branch hook ships unchanged and never sees it.
 
-**Every run ends with the same report** — files written, files moved, tasks
-renamed, sections appended, fragments merged, and anything deferred with the
-thing that would unlock it, then a **git** section: branches created, the
-commit's short hash, what was pushed, and the forge task's own words verbatim.
-An empty section prints as `none`. Then two next-step lines, always both and
-neither of them run: `/vwf:readme` to fill the readme the stub only opens, and
-`/vwf:setup` to bring the repo into vwf's format.
+**Every run ends with the same report** — files written, files replaced, files
+moved, tasks renamed, calls rewritten, sections appended, fragments merged, and
+anything deferred with the thing that would unlock it, then a **git** section:
+branches created, the commit's short hash, what was pushed, and the forge task's
+own words verbatim. An empty section prints as `none`. Then two next-step lines,
+always both and neither of them run: `/vwf:readme` to fill the readme the stub
+only opens, and `/vwf:setup` to bring the repo into vwf's format.
 
 **When it runs again.** `init` is not a one-time bootstrap — it is what keeps a
 repo's *shape* in step with what the packs ship and with what the repo has since

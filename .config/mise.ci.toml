@@ -1,7 +1,8 @@
 # CI-only environment — loaded when MISE_ENV=ci (set by the GitHub workflows in
 # .github/workflows/). The common runtime CI needs (node, pnpm) lives in
-# mise.toml, so no extra tools are required today. Add CI-specific tools here as
-# the pipelines grow — they will NOT leak into the dev environment.
+# mise.toml; only what CI needs on top of it is declared here. Add CI-specific
+# tools here as the pipelines grow — they will NOT leak into the dev
+# environment.
 
 [settings]
 # mise's bundled Node release-key import (gpg --import) fails on the Ubuntu CI
@@ -13,3 +14,8 @@
 node.gpg_verify = false
 
 [tools]
+# `plugins:shellcheck`'s two binaries — CI resolves them from this layer, not
+# from the `mise x shellcheck@latest shfmt@latest` wrapper in plugins.yml, whose
+# ad-hoc install does not survive the inner `mise run`.
+shellcheck = { version = "latest" }
+shfmt      = { version = "latest" }

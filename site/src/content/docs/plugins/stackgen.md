@@ -691,8 +691,9 @@ project's slugged id as it copies — which is how all three Cloudflare deploy
 packs land `p:<id>:deploy`.
 
 **Legacy names.** The contract replaced these, and the pack carries the table so
-`/vwf:init` can rename them on an existing repo — the renaming is a fact about
-this task library, and vwf's own prose names no tool.
+`/vwf:init` can rename them on an existing repo — and, for the `print_*` rows,
+rewrite the calls to them. What moved is a fact about this task library, so the
+table lives with the pack and vwf's own prose names no tool.
 
 | Was                                         | Is now               |
 | ------------------------------------------- | -------------------- |
@@ -701,9 +702,27 @@ this task library, and vwf's own prose names no tool.
 | `setup:pnpm:*`, `setup:uv:*`, `setup:app:*` | `setup:deps:*`       |
 | `setup:ai`                                  | `code:ai`            |
 | `setup:doppler`                             | `setup:secrets`      |
-| `setup:deps:{start,stop,pull,update}`       | `setup:external:*`   |
+| `setup:deps:{start,stop,pull}`              | `setup:external:*`   |
 | `setup:deps:update`                         | `setup:deps:upgrade` |
-| `_scripts/_helpers`, `_scripts/_checks`     | `_scripts/helpers`   |
+| `_scripts/_helpers`                         | `_scripts/helpers`   |
+| `_scripts/_checks`                          | `_scripts/checks`    |
+| `print_normal`                              | `print_yellow`       |
+| `print_normal_wait`                         | `print_wait`         |
+| `print_green`                               | `print_success`      |
+| `print_green_wait`                          | `print_wait`         |
+| `print_yellow_wait`                         | `print_wait`         |
+| `print_red`                                 | `print_error`        |
+| `print_red_wait`                            | `print_wait`         |
+| `print_header_wait`                         | `print_header`       |
+| `print_subheader_wait`                      | `print_subheader`    |
+
+The last nine rows are read for a second job. A repo whose shared helper file
+has drifted from the pack's is carrying a diverged copy of it, not a library of
+its own, so `/vwf:init` replaces that file and rewrites every call to a
+left-hand name into its right-hand one — one token per call site, nothing else
+on the line. A call to a name the table has no row for is flagged for the user
+and never rewritten. One of the nine is more than a rename: the red line became
+the error line, and an error line goes to stderr.
 
 A repo still carrying a left-hand name is not broken, but nothing else in the
 toolkit will find it: vwf probes `setup:worktree`, the aggregators call
