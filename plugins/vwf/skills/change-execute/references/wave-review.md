@@ -44,6 +44,14 @@ quietly lost a rule is the defect, exactly as a dropped branch would be.
 - Other findings loop to the owning unit with the finding lines appended, then
   the reviewer runs again. **At most two rounds.** A round counts once even when
   several units were re-dispatched.
+- A **rule-5 finding in a file no unit owns** does not loop. It becomes a
+  `DOCS FALSIFIED:` line handed to the docs unit, whose Owns the orchestrator
+  widens to that passage; the widening is written into the Units table's Owns
+  cell and into the run log as a `GAP:`, and the final report lists it. The
+  plan's Goal is what authorises the widening — a passage the plan's own stated
+  outcome falsifies is in scope even when no unit file named it. Only rule 5: a
+  finding under rules 1–4 in a nobody-owned path is still `CONTRACT:` or
+  `RULINGS:` residue, handled by the bullets above.
 - **Convergence guard.** Before a second round, compare its findings with the
   first, matching on `path:line` and rule. The loop is not converging when the
   count did not strictly decrease or a resolved finding resurfaced. Stop there.

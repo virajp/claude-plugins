@@ -55,7 +55,9 @@ idiomatic answer given the repo, do not ask — state it and move on.
 13. **Verification the orchestrator keeps.** Anything a diff cannot prove — a
     real install, a scratch-repo run, a smoke test. Name it, name its pass
     condition.
-14. **Docs the change falsifies.** Confirm the survey's list. The docs unit
+14. **Docs the change falsifies.** Confirm the survey's list, including every
+    hit of the retired-name grep — a hit with no owner is a unit-table row to
+    add now, not a `DOCS FALSIFIED:` line to discover at run time. The docs unit
     reconciles exactly these plus whatever `vwf:docs-sync` finds.
 
 ## E. Consent

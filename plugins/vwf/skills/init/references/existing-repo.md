@@ -46,6 +46,22 @@ stand-in takes its place at the root. Record it as a **rename** row plus the
 create the stand-in already is, and say in the plan that the settings survive
 the move — they are read through the stand-in.
 
+**Not every key survives it, though, and the pack says which.** A gate pack
+that ships a stand-in states, in its own skill, what the file it points at may
+not carry: at least one key is *not inherited* through the pointing mechanism,
+and an extended file declaring it is a fatal config diagnostic — so every bare
+invocation of that tool fails, not only the one that reads the moved config.
+Read that pack's skill for which key and why; it is the authority, and this
+file names neither the tool nor the key on purpose. The move **drops** the
+key, and the plan says so as its own line.
+
+Dropping it **widens** what the gate covers, which is the other half of the
+same trap: with the key gone, the pack's own pinned plugin list defines the
+file set, so files the repo had kept out of the gate by omission now enter it.
+The survey re-derives the covered set after the drop, the plan lists every
+file that newly enters, and each is narrowed away with an **exclusion** —
+never by restoring the dropped key, which puts the fatal diagnostic back.
+
 Tell the two apart by content, never by name: the pack's stand-in is the file
 the pack ships, byte for byte, and the survey has that file in hand. Anything
 else of that basename is the repo's own and is the thing being moved.
@@ -219,6 +235,12 @@ count; each line is `old → new` for anything that moves or is renamed, `+
 path` for anything created, and a bare path with its reason for anything
 flagged. Print an empty section as `none` rather than omitting it — a missing
 section reads as an oversight, and the reader cannot tell which.
+
+A move-and-shim row carries **sub-lines**: one for the key the move drops from
+the real configuration, and one for each exclusion the drop makes necessary,
+naming the files that exclusion keeps out of the gate. Both are changes to the
+settings the row claims survive the move, so the user reads them before the
+one consent rather than finding them in the report.
 
 ```text
 Moves        <n>

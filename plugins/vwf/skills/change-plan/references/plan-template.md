@@ -91,7 +91,8 @@ Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 
 <the exact commands confirmed in the interview, one per line, or `none`> plus
 the wave review, plus every report read for `UNRESOLVED:`. <Add the plan's own
-checks here.>
+checks here.> Every line here must be green before wave 1 — a check that holds
+only once a unit has landed belongs in that unit's **Verification**, not here.
 
 ## After landing
 
@@ -113,7 +114,8 @@ Every unit prompt carries, in order: its ruling quoted from this file, its owned
 paths plus "touch nothing outside this list", the facts section, the shared-file
 rule, and the return block below. A unit never bumps a version, never runs a
 generator, never edits a doc, never adds a dependency this file does not list,
-never commits.
+never commits. A unit deletes with plain `rm`, never `git rm` — it stages
+nothing.
 
 A unit returns exactly this block and nothing else — no file contents, no diff:
 
@@ -181,13 +183,16 @@ never paraphrased>
 ## Guardrails
 
 - Do not touch <the neighbour another unit owns>.
+- Delete with `rm`, never `git rm`.
 - <the trap specific to this tree — the formatter's scope, strict-YAML
   frontmatter, BSD sed, byte-copy not retype>
 
 ## Commit
 
 `<type>: <description>` — written by the orchestrator after the wave gate, not
-by the unit.
+by the unit. The type, and the scope where the repo's convention file lists any,
+comes from the file the survey read — `.config/git-conventional-commits.yaml` or
+the repo's equivalent — never a type that file does not allow.
 ```
 
 ## The two fixed final units

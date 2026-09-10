@@ -66,6 +66,17 @@ map, for the request in `$ARGUMENTS`:
   `docs/`, and any per-project README or home doc
 - the third-party dependencies already available to each tree, so a unit can be
   told to reuse before adding
+- the repo's commit convention — `.config/git-conventional-commits.yaml` where
+  the repo has one, else whatever its commit-message gate reads — so every unit
+  file's `## Commit` line carries a type, and a scope, that gate accepts. A repo
+  with no convention file takes git-workflow's common types: `feat`, `fix`,
+  `refactor`, `wip`, `blueprint`, `test`, `ops`, `docs`, `merge`
+- when the request retires or renames a name, the name itself, grepped across
+  every tree the repo has — `.claude/`, `installer/`, `site/src/content/docs/`,
+  `plugins/`, the root docs. Every hit is a passage the change falsifies, and
+  every one needs an owner in the unit table before the plan is written; the
+  three plans that skipped this each left the docs unit inheriting nobody-owned
+  passages at run time
 
 Instruct every Explore agent to return **conclusions and `file:line` pointers
 only** — never file contents, diffs or directory dumps. Hold the findings; they
@@ -115,9 +126,12 @@ written and nothing it infers**.
 line, drawn from the survey's gate list — the repo's own task runner tasks, the
 capabilities the `harness:` stamp records, the checks CI already runs over the
 touched trees. Confirm them. These become `index.md`'s **Wave gate** section,
-and `/vwf:change-execute` runs them before wave 1 and after every wave. A repo
-with no task runner and no harness stamp records `none` — say plainly, in that
-case, that the run has no automated gate and the wave review is the only check.
+and `/vwf:change-execute` runs them before wave 1 and after every wave. A check
+that only holds once a particular unit has landed is **not** a wave-gate line —
+the gate runs before wave 1 and must be green then — it is that unit's
+*Verification*, repeated in the gates-and-bump unit's. A repo with no task
+runner and no harness stamp records `none` — say plainly, in that case, that the
+run has no automated gate and the wave review is the only check.
 
 **(b) After landing.** Propose the ordered steps that follow a consented
 landing, each marked one of two modes, and confirm each:
@@ -174,6 +188,8 @@ Rules the plan must obey, learned from the plans that came before:
 - **One unit, one subagent, one commit.** A unit is stateless and inherits no
   context; its file carries its ruling quoted from index.md, its owned paths,
   its verification, and its commit line.
+- **A unit deletes with plain `rm`, never `git rm`.** A unit stages nothing, so
+  no unit's deletion can ride another unit's commit.
 - **Shared-file rule.** Any file two units would write is owned by exactly one,
   or by the orchestrator. Version files, generated files, and every doc are
   always the orchestrator's or the final units'. Units in one wave own disjoint
@@ -203,6 +219,8 @@ Re-read the folder with fresh eyes before handing it off, and fix inline:
   shared-file rule has an owner
 - every gate delta from the interview is an owned edit somewhere
 - every unit's *Verification* names at least one gate line it must pass
+- every hit of the retired-name grep sits inside some unit's *Owns*, and every
+  `## Commit` line's type is one the repo's convention file allows
 - every `requires:` plan exists and is not `DRAFT`
 - the launch line names this folder
 
