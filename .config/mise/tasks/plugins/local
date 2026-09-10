@@ -52,7 +52,7 @@ INSTALLED_JSON="${HOME}/.claude/plugins/installed_plugins.json"
 #    the state this task exists to escape.
 if ! claude plugin marketplace list | grep -q '\.dev-marketplace'; then
   print_error "${MARKETPLACE} is not registered from ./.dev-marketplace — this machine is in user mode."
-  print_normal "Setup is .claude/docs/dev-marketplace.md: 'claude plugin marketplace add ./.dev-marketplace' (the leading ./ is required)."
+  print_yellow "Setup is .claude/docs/dev-marketplace.md: 'claude plugin marketplace add ./.dev-marketplace' (the leading ./ is required)."
   exit 1
 fi
 
@@ -114,7 +114,7 @@ for dir in plugins/*/; do
   # A cache directory Claude has seen for this version is stale by definition.
   rm -rf "${CACHE}/${name}/${base}-${next#*+}"
 
-  print_normal "${name}: staged ${next}"
+  print_yellow "${name}: staged ${next}"
   STAGED+=("${name}")
 done
 

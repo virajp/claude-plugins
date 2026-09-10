@@ -101,4 +101,4 @@ print_header "Pushing ${#TO_TAG[@]} tag(s) ..."
 git push origin "${TO_TAG[@]}"
 
 print_success "Released: ${TO_TAG[*]}"
-print_normal "Users pick these up with 'claude plugin marketplace update virajp-plugins' then 'claude plugin update <name>'."
+print_yellow "Users pick these up with 'claude plugin marketplace update virajp-plugins' then 'claude plugin update <name>'."

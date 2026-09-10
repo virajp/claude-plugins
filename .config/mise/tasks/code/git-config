@@ -7,7 +7,7 @@
 set -e
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-print_normal_wait "Validating git-config ... "
+print_wait "Validating git-config ... "
 
 FIXIT=${usage_fix:-false}
 
@@ -19,10 +19,10 @@ LOCAL_CONFIG=$(git config --local --list | grep -E "^($FORBIDDEN)=" || true);
 
 if [ ! -z "$LOCAL_CONFIG" ]; then
   if [ "$FIXIT" = "true" ]; then
-    print_normal "Fixing";
+    print_yellow "Fixing";
     for line in ${(f)LOCAL_CONFIG}; do
       key=${line%=*}
-      print_normal_wait "- removing $key ... "
+      print_wait "- removing $key ... "
       git config unset --local $key
       print_success "OK"
     done
