@@ -9,9 +9,12 @@ requires: []
 
 ## Status
 
-**RUNNING** since 2026-09-11 — worktree
+**COMPLETE** 2026-09-11. Ran in worktree
 `.worktrees/2026-09-10-hygiene-pack-renovate-and-allowlist`, branch
 `2026-09-10-hygiene-pack-renovate-and-allowlist` off `develop` at `c417a02d`.
+Commits, in branch order: `90fdc4d2` (U2), `e6689f7c` (U1), `6982a210` (U3),
+`17720393` (wave 1 log), `80acd7fd` (U4), `8b0d1d65` (U5, carrying U1's and U3's
+`pack.yaml` lines), `e59e0022` (waves 2–3 log), then this archive commit.
 
 Approved 2026-09-10 by the user, after the shape gate and the post-self-review
 yes.
