@@ -10,18 +10,32 @@ resolves env variants):
 - `.config/mise.dev.toml` — loaded when `MISE_ENV=dev` (the maintainer's machine
   has this exported): the full dev toolchain (doppler, pre-commit, dprint,
   taplo, gitleaks, grype, actionlint, shellcheck, shfmt, jq, python, uv) + shell
-  aliases. The last three of the gate tools are `plugins:shellcheck`'s, which is
-  why `plugins.yml` runs that task under `mise x shellcheck@latest shfmt@latest`
-  rather than relying on the runner.
+  aliases. `shellcheck` and `shfmt` are `plugins:shellcheck`'s two binaries, and
+  the CI layer declares them too.
 - `.config/mise.ci.toml` — loaded when `MISE_ENV=ci` (the workflows set this):
-  CI-only tools/settings. Currently sets `node.gpg_verify = false` to work
-  around a mise-on-Linux bug where its bundled Node release-key import fails on
-  the CI runner's gpg with "no valid OpenPGP data found" (the Node tarball is
-  still SHA256-checksum verified). Same mise version verifies fine on macOS; see
+  CI-only tools/settings. It declares `shellcheck` and `shfmt` for
+  `plugins:shellcheck`, and sets `node.gpg_verify = false` to work around a
+  mise-on-Linux bug where its bundled Node release-key import fails on the CI
+  runner's gpg with "no valid OpenPGP data found" (the Node tarball is still
+  SHA256-checksum verified). Same mise version verifies fine on macOS; see
   jdx/mise discussion #10553.
 
+The `mise x shellcheck@latest shfmt@latest` wrapper still standing around that
+task in `plugins.yml` is now **redundant**, and the task-groups plan drops it
+when it rewrites that line. It never worked in the first place: the inner
+`mise run` rebuilds PATH from the config-resolved toolset and drops the ad-hoc
+install, so `shfmt` reached a shim with no version under `MISE_ENV=ci` and the
+workflow died on `No version is set for shim: shfmt`. `shellcheck` survived only
+because the runner image ships one. Declaring both in the CI layer is what
+actually resolves them.
+
 Keep common tools in `mise.toml` (don't duplicate across dev/ci); put
-environment-specific tools in the matching env file.
+environment-specific tools in the matching env file. `shellcheck` and `shfmt`
+are the one **named exception**, and a temporary one: both sit in
+`mise.dev.toml` and `mise.ci.toml` at the same `latest` pin, because the change
+that unblocked CI could not also edit `mise.toml` — that file belongs to the
+task-groups plan, which is where the two are meant to end up. Read the
+duplication as a debt with an owner, not as the rule being relaxed.
 
 ## The branch model, and the three tag families
 
@@ -119,8 +133,8 @@ loads the working tree for that session, no install and no cache.
 - **`plugins.yml`** — validates the plugin toolkit on every push to `main` or
   `develop` and every PR: `plugins:marketplace --check`, then
   `plugins:inventory --check`, then `plugins:check`, then `plugins:shellcheck`
-  (under `mise x shellcheck@latest shfmt@latest`, since neither is in the
-  runner's base toolchain), then the vitest suites, then
+  (whose two binaries `mise.ci.toml` declares; the `mise x` wrapper still
+  wrapping that line is redundant), then the vitest suites, then
   `plugins:npm-normalize-test`, then `tsc --noEmit` per project. The order
   matters — proving the two committed generated files are what their sources
   generate *before* validating anything means a stale one fails as staleness
