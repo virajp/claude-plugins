@@ -92,8 +92,8 @@ For each wave in index.md order, skipping units already `green` on a resume:
    Execute its Edits in order inside `<worktree>`, run its Verification, and
    return the block the contract asks for and nothing else. Touch nothing
    outside your Owns list. Do not bump a version, run a generator, edit a doc,
-   add a dependency the plan does not list, or commit."* Pass paths, never
-   conversation context.
+   add a dependency the plan does not list, or commit. Delete with plain `rm`,
+   never `git rm` — stage nothing."* Pass paths, never conversation context.
 2. **Wait** for every report. As each returns, mark the unit in the Units table
    and append a run-log row — unit, model, round 1, outcome, the `DECIDED:` and
    `GAP:` lines condensed into *Detail*. A unit whose agent **errored** rather
@@ -113,10 +113,15 @@ For each wave in index.md order, skipping units already `green` on a resume:
    whose Owns covers the failing path and handled as that unit's failure; one
    that cannot be attributed marks every unit in the wave `failed` with the gate
    line as detail.
-5. **Commit** the green units via `vwf:git-workflow` step 3, one commit per unit
-   in wave order using each unit file's commit line. Write the short hash into
-   the Units table and the run-log row. Commits are free; they are what makes a
-   later failure roll back to the last green unit instead of discarding the run.
+5. **Commit** the green units, one commit per unit in wave order. Stage exactly
+   that unit's Owns — `git add -- <every owned path>`, which stages a deletion
+   as readily as an edit — then read `git diff --cached --stat`: for any path
+   outside that unit's Owns, `git reset -q HEAD -- <path>` before committing. A
+   path another unit staged is that unit's, and rides its own commit. Then
+   commit with the unit file's commit line via `vwf:git-workflow` step 3. Write
+   the short hash into the Units table and the run-log row. Commits are free;
+   they are what makes a later failure roll back to the last green unit instead
+   of discarding the run.
 
 The two fixed final units run as their own waves, and **only when no unit is
 skipped**: the docs unit invokes `vwf:docs-sync` over the run's branch delta —
@@ -144,7 +149,9 @@ the account that survived. Present:
 
 - every unit with its outcome, rounds, model, commit, and any `skipped` or
   `failed` reason
-- every `GAP:` the units returned, with the assumption each proceeded on
+- every `GAP:` the units returned, with the assumption each proceeded on —
+  including every Owns the orchestrator widened at run time, with the finding
+  that caused it
 - the review findings that survived the cap, marked `contested`
 - the wave gate and orchestrator gate results
 - the versions bumped and the worktree path
