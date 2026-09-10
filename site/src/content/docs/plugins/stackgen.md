@@ -265,11 +265,13 @@ than something that rides the landing:
   into `.config/vscode.d/`, three keys wide, which `/vwf:init` composes —
   declares them in a `config/` tree mirroring the repo root, and they land
   there. Everything else goes under `.config/`: a `config/` tree landing a root
-  path outside the fixed allowlist is a pack authoring error the materializer
-  refuses. Two **directories** are allowlisted at that root, `.config/` and
-  `.github/`, and a CI workflow inside the second is refused outright. Mode is
-  preserved, because a task file arriving without its exec bit fails as an
-  *unknown task* rather than as a permission error.
+  path outside the **landable** tier of the fixed allowlist is a pack authoring
+  error the materializer refuses — that list also names the root files vwf
+  itself writes, `CLAUDE.md` and `mempalace.yaml`, which may sit at a shaped
+  root and which no pack may land. Two **directories** are allowlisted at that
+  root, `.config/` and `.github/`, and a CI workflow inside the second is
+  refused outright. Mode is preserved, because a task file arriving without its
+  exec bit fails as an *unknown task* rather than as a permission error.
 
 The need still travels as `language_facts` in the template payload for
 `/vwf:doctor` to verify; the local plugin is what actually provides the server.
@@ -419,9 +421,9 @@ and never supplied.
 needs and no tool owns: a sectioned `.gitignore` (with a graphify section that
 ignores `graphify-out/*` while keeping `GRAPH_REPORT.md`), `.graphifyignore`,
 `.editorconfig`, `.gitattributes`, `SECURITY.md`, `CONTRIBUTING.md`, three
-`.github/ISSUE_TEMPLATE/` files, a Renovate config, the chosen `LICENSE`, and
-the **editor baseline** — the largest `vscode.d/` fragment, since the settings
-every repo wants regardless of stack are hygiene by the same definition
+`.github/ISSUE_TEMPLATE/` files, a root `renovate.json`, the chosen `LICENSE`,
+and the **editor baseline** — the largest `vscode.d/` fragment, since the
+settings every repo wants regardless of stack are hygiene by the same definition
 everything else here is.
 
 The seam with `repo-gates` is worth stating, because it is the reason the kind

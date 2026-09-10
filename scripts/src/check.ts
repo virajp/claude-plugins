@@ -311,6 +311,11 @@ const PACK_HOOK_SHEBANGS = new Set([
  * list of files a tool or a host *cannot* be told to look elsewhere for, plus
  * the two humans read first. Anything else arriving here is a pack quietly
  * widening the root of every repo it materializes into.
+ *
+ * This is the **landable** tier of the doctrine's root allowlist
+ * (`stackgen/assets/output-tree.md`). That list has a second tier — the root
+ * files *vwf* writes, `CLAUDE.md` and `mempalace.yaml` — which is deliberately
+ * absent here: they may sit at a shaped root, and no pack may land them.
  */
 const PACK_CONFIG_ROOT_FILES = new Set([
   ".editorconfig",
@@ -329,6 +334,9 @@ const PACK_CONFIG_ROOT_FILES = new Set([
   "eslint.config.mjs",
   "fnox.toml",
   "readme.md",
+  // Renovate discovers its config at the repo root, in `.github/` or in
+  // `.gitlab/` — never under `.config/`, where one would be silently inert.
+  "renovate.json",
   // wrangler discovers its config only at the repo root, so a `static-hosting`
   // pack shipping a deploy target has nowhere else to put it.
   "wrangler.jsonc",

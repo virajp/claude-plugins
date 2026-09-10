@@ -2,7 +2,7 @@ name: Repo hygiene
 summary: The files a repository needs before it has a stack — the ignore set,
   the editor and attribute defaults, the licence and the security contact, and
   the dependency-update policy.
-version: 1.0.0
+version: 1.0.1
 type: repo-hygiene
 kind: repo-hygiene
 axis: repo
