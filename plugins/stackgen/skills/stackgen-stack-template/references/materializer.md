@@ -69,27 +69,34 @@ to a repo, and every write it makes is consent-gated and committed once.
        costs the task and never publishes one under a name nobody meant.
        The lockfile records the **landed** path, not the authored one.
      - **A root path must be on the allowlist.** Only `.gitignore`,
-       `.editorconfig`, `.gitattributes`, `LICENSE`, `SECURITY.md`,
-       `readme.md`, `CLAUDE.md`, `fnox.toml`, `eslint.config.mjs`,
-       `wrangler.jsonc`, `dprint.json`, `.npmrc`, `CONTRIBUTING.md`,
-       `.graphifyignore`, `.github/` — never `.github/workflows/` — and a
-       language-mandated manifest or lockfile may land at the repo root
-       (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). Any other root
-       path in a `config/` tree is a **pack authoring error**: halt the
-       landing set, name the pack and the path, and write nothing. This is
-       the materializer's own assertion because a pack author is the only
-       one who can fix it and the plan is the last place anyone would read
-       it. `readme.md` and `CLAUDE.md` are on the list because a shaped
-       repo has them, not because a pack may ship them — no pack may, and
-       CLAUDE.md is separately out of scope below. `wrangler.jsonc` is on
-       it because the deploy tool that reads it discovers its config only
-       at the root, and the three Cloudflare deploy packs ship one
-       (`workers-static-assets`, `workers-ssr`, `containers`).
+       `.graphifyignore`, `.editorconfig`, `.gitattributes`, `.npmrc`,
+       `LICENSE`, `SECURITY.md`, `CONTRIBUTING.md`, `readme.md`,
+       `fnox.toml`, `eslint.config.mjs`, `dprint.json`, `wrangler.jsonc`,
+       `renovate.json` and the directory `.github/` — never
+       `.github/workflows/` — may land at the repo root
+       (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). That doctrine's
+       list is what may **sit** at a shaped root, and it has a second tier
+       nothing here ever lands: `CLAUDE.md` and `mempalace.yaml` are
+       vwf's, so a pack shipping either is refused like any other
+       unallowlisted path. A language's manifests and lockfiles are not on
+       the list at all. Any other root path in a `config/` tree is a
+       **pack authoring error**: halt the landing set, name the pack and
+       the path, and write nothing. This is the materializer's own
+       assertion because a pack author is the only one who can fix it and
+       the plan is the last place anyone would read it. `readme.md` is on
+       the landable tier because a shaped repo has one, not because a pack
+       may ship it — no pack may, and `CLAUDE.md` is separately out of
+       scope below. `wrangler.jsonc` is on it because the deploy tool that
+       reads it discovers its config only at the root, and the three
+       Cloudflare deploy packs ship one (`workers-static-assets`,
+       `workers-ssr`, `containers`).
        The five that joined on 2026-09-06 are there for that one reason
        too — the tool reading each discovers it at the root and cannot be
-       pointed elsewhere — and `dprint.json` is a **shim** whose only
-       content is `extends` into `.config/`, exactly as
-       `eslint.config.mjs` is.
+       pointed elsewhere — as is `renovate.json`, which joined on
+       2026-09-10 because Renovate's config discovery reaches the root,
+       `.github/` and `.gitlab/` and never `.config/`. `dprint.json` is a
+       **shim** whose only content is `extends` into `.config/`, exactly
+       as `eslint.config.mjs` is.
      - **A `.config/pre-commit.d/<pack>.yaml` fragment lands as a file and
        stops there.** It is an ordinary landing-set member with an
        ordinary lockfile entry; merging the fragments into

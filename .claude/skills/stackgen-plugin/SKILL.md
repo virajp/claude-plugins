@@ -89,9 +89,9 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   config (`.config/dprint.json`, `.config/pre-commit-config.yaml`,
   `.config/gitleaks.toml`, `.config/grype.yaml`, …); **(c)** the hygiene files
   (`.gitignore`, `.editorconfig`, `.gitattributes`, `SECURITY.md`,
-  `.config/renovate.json`, the licence texts); **(d)** a provider's environment
-  fragment at `.config/mise/conf.d/<pack>.toml`, auto-loaded, so no component
-  edits `mise.toml`; **(e)** a hook fragment at
+  `renovate.json` at the root, the licence texts); **(d)** a provider's
+  environment fragment at `.config/mise/conf.d/<pack>.toml`, auto-loaded, so no
+  component edits `mise.toml`; **(e)** a hook fragment at
   `.config/pre-commit.d/<pack>.yaml`, copied verbatim — **`/vwf:init` merges
   it**, nothing in stackgen edits the pre-commit config, which is what keeps a
   fragment a fragment; **(f)** a deploy target's own config and its deploy task,
@@ -119,10 +119,15 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   language manifest or lockfile, a **whole** editor file, and CI workflows — the
   last of those refused *inside* `.github/`, which is otherwise an allowlisted
   root directory beside `.config/`. What lands at the repo **root** is capped by
-  a fixed allowlist (`plugins:check` rule 11 enforces it, and
-  `PACK_CONFIG_ROOT_FILES` in `scripts/src/check.ts` is the list). `readme.md`
-  is on it only because a shaped repo has one — **no pack may ship it**, and
-  `CLAUDE.md` is not on the list at all, being vwf's outright.
+  a fixed allowlist, whose doctrine is `assets/output-tree.md` and whose two
+  tiers do not both reach the checker: the **landable** tier is
+  `PACK_CONFIG_ROOT_FILES` in `scripts/src/check.ts`, enforced by
+  `plugins:check` rule 11, and beside it sits a second tier of root files
+  **vwf** writes — `CLAUDE.md` and `mempalace.yaml` — which may sit at a shaped
+  root and which no pack may land. `readme.md` is on the landable tier only
+  because a shaped repo has one — **no pack may ship it** — and `renovate.json`
+  joined that tier on 2026-09-10, at the root because Renovate's config
+  discovery never reaches `.config/`.
 
 **Three consent tiers**: the `.claude/` files ride the ordinary dry-run gate;
 `settings.json`, `.mcp.json` and a pack's `config/` tree are never written
@@ -150,16 +155,18 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
 - **The whole `config/` payload tier is checked before it ships.**
   `plugins:check` rule 11 makes **seven** assertions: the exec bit and a known
   shebang on every task file (mise reports a 644 task as an *unknown* one rather
-  than a permission error) and on every `hooks/*.sh`; the root allowlist over
-  the tier's top level, with a CI workflow refused inside `.github/`; that each
-  `.config/pre-commit.d/*.yaml` parses with a top-level `repos:` list, and that
-  the gate pack's **whole** `.config/pre-commit-config.yaml` does too — it is
-  neither a fragment nor at the tier's root, so nothing parsed it until it was
-  named; and that each `.config/vscode.d/*.jsonc` parses as JSONC carrying only
-  the three keys. `plugins:shellcheck` runs `shellcheck -x` and `shfmt -d` over
-  the same shell, in two groups — task libraries with the pack's `_scripts/`
-  beside them, hooks with no flags, since a hook lands alone and may declare
-  `sh`.
+  than a permission error) and on every `hooks/*.sh`; the **landable** tier of
+  the root allowlist over the tier's top level — the vwf-owned tier never
+  reaches the checker, so a pack shipping `CLAUDE.md` or `mempalace.yaml` there
+  is refused like any unallowlisted path — with a CI workflow refused inside
+  `.github/`; that each `.config/pre-commit.d/*.yaml` parses with a top-level
+  `repos:` list, and that the gate pack's **whole**
+  `.config/pre-commit-config.yaml` does too — it is neither a fragment nor at
+  the tier's root, so nothing parsed it until it was named; and that each
+  `.config/vscode.d/*.jsonc` parses as JSONC carrying only the three keys.
+  `plugins:shellcheck` runs `shellcheck -x` and `shfmt -d` over the same shell,
+  in two groups — task libraries with the pack's `_scripts/` beside them, hooks
+  with no flags, since a hook lands alone and may declare `sh`.
 - **Never format a payload file with this repo's dprint config.** The tier is
   excluded from it on purpose: the target repo formats these files with the
   *shipped* config, which omits settings this repo sets, so formatting one here

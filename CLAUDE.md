@@ -149,16 +149,18 @@ inventory and check in that order — freshness before validity:
 - **`plugins:check`** — validates the authored tree, thirteen rules. Rule 11 is
   the widest: it walks a stackgen pack's whole `config/` payload tier — seven
   assertions. Exec bit and shebang on every task file, exec bit and shebang on
-  every shipped hook script, the `config/` root against the hygiene allowlist
-  (whose two allowed directories are `.config/` and `.github/`), a CI workflow
-  **refused** inside `.github/`, every `pre-commit.d/*.yaml` parsing with a
-  top-level `repos:` list, the gate pack's whole `pre-commit-config.yaml`
-  parsing on the same terms, and every `vscode.d/*.jsonc` parsing as JSONC with
-  only the three keys `/vwf:init` composes. Rule 13 is the newest: it refuses a
-  plugin-relative citation in anything a pack **lands** — the token, a bare
-  `assets/…` path, a `../` climb out of the tree the file lands in, or a path
-  into a sibling pack — since that file is copied into a repo with no plugin,
-  where each resolves to nothing silently.
+  every shipped hook script, the `config/` root against the **landable** tier of
+  the hygiene allowlist (whose two allowed directories are `.config/` and
+  `.github/`; the list's other tier is the root files vwf writes, which may sit
+  at a shaped root and which no pack may land), a CI workflow **refused** inside
+  `.github/`, every `pre-commit.d/*.yaml` parsing with a top-level `repos:`
+  list, the gate pack's whole `pre-commit-config.yaml` parsing on the same
+  terms, and every `vscode.d/*.jsonc` parsing as JSONC with only the three keys
+  `/vwf:init` composes. Rule 13 is the newest: it refuses a plugin-relative
+  citation in anything a pack **lands** — the token, a bare `assets/…` path, a
+  `../` climb out of the tree the file lands in, or a path into a sibling pack —
+  since that file is copied into a repo with no plugin, where each resolves to
+  nothing silently.
 - **`plugins:shellcheck`** — the shell gate over everything a pack ships as
   shell: `shellcheck -x` plus `shfmt -d` over the pack task libraries and their
   `_scripts/*`, and a second pass over `hooks/*.sh` with no flags, since a hook

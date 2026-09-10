@@ -460,7 +460,8 @@ person looking for either would have found neither.
   shape `repo-gate` takes and for the same reason. One paths-scoped skill,
   bound to the files it governs; there is no reference tier, because the
   judgment here is a screen and the rest is the files themselves.
-- **What it writes**: the root files and `.config/renovate.json`, through
+- **What it writes**: the root files, `renovate.json` among them — at the
+  root, as Renovate's config discovery never reaches `.config/` — through
   the `config/` tier (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). It is
   the kind the **root allowlist** belongs to — the doctrine of what may sit
   at a repo root at all — which every other kind's `config/` tree is then

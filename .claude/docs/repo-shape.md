@@ -157,14 +157,16 @@ only by pushing it.
   under `config/.config/mise/tasks/**`, because mise reports a 644 task as an
   *unknown* one rather than a permission error and execs the file directly; the
   same two on every `hooks/*.sh`, which the host execs from a bare path in
-  `settings.json`; the tier's root against the hygiene allowlist, whose two
-  allowed **directories** are `.config/` and `.github/`; a **CI workflow refused
-  inside `.github/`**, since a pack names the task CI runs and never the
-  workflow; every `config/.config/pre-commit.d/*.yaml` parsing with a top-level
-  `repos:` list, since `/vwf:init` concatenates them into a file no pack owns;
-  the gate pack's **whole** `config/.config/pre-commit-config.yaml` parsing on
-  the same terms, from the base end, since it is neither a fragment nor at the
-  tier's root and nothing reached it before; and every
+  `settings.json`; the tier's root against the **landable** tier of the hygiene
+  allowlist, whose two allowed **directories** are `.config/` and `.github/` and
+  whose sibling tier — the root files vwf writes, `CLAUDE.md` and
+  `mempalace.yaml` — no pack may land; a **CI workflow refused inside
+  `.github/`**, since a pack names the task CI runs and never the workflow;
+  every `config/.config/pre-commit.d/*.yaml` parsing with a top-level `repos:`
+  list, since `/vwf:init` concatenates them into a file no pack owns; the gate
+  pack's **whole** `config/.config/pre-commit-config.yaml` parsing on the same
+  terms, from the base end, since it is neither a fragment nor at the tier's
+  root and nothing reached it before; and every
   `config/.config/vscode.d/*.jsonc` parsing as JSONC with only the three keys
   `settings`, `nesting` and `extensions`, since init composes them into an
   editor file no pack owns and a fourth key is dropped without a word);
