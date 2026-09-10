@@ -362,6 +362,43 @@ describe("the pack config tier", () => {
     ]);
   });
 
+  it("accepts a Renovate config at the config/ tier root", () => {
+    // Renovate discovers its config at the repo root, in `.github/` or in
+    // `.gitlab/`; one under `.config/` is read by nothing and reports no error.
+    const root = tree({
+      alpha: {
+        files: {
+          [`${pack}/renovate.json`]:
+            "{ \"extends\": [\"config:best-practices\"] }\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a root file vwf owns — CLAUDE.md", () => {
+    // `CLAUDE.md` may sit at a shaped root, but `/vwf:setup` writes it. The
+    // doctrine's list names it in its second tier; the checker's landable tier
+    // does not, so a pack shipping one is refused.
+    const root = tree({
+      alpha: { files: { [`${pack}/CLAUDE.md`]: "# Repo\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("unallowlisted root entry"),
+    ]);
+  });
+
+  it("flags a root file vwf owns — mempalace.yaml", () => {
+    // Same tier, same reasoning: the mine reads it at the root and nowhere
+    // else, and `/vwf:setup` is what writes it.
+    const root = tree({
+      alpha: { files: { [`${pack}/mempalace.yaml`]: "wing: alpha\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("unallowlisted root entry"),
+    ]);
+  });
+
   it("flags a directory the config/ tier root does not allowlist", () => {
     // Same rule for a tree: `.config/` and the `_*` staging dirs, nothing else.
     const root = tree({
