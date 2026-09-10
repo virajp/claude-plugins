@@ -75,9 +75,11 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
   it is written down.
 - **Idempotent, for the same id source.** A second run on a shaped repo
   produces an **empty plan** and says so. Every step below is written to be
-  re-runnable. The one legitimate exception is a run whose **project ids now
-  come from a different source** — a registry the repo did not have before —
-  which the existing-repo pipeline reports in those words.
+  re-runnable, and a file replaced on one run is identical to the pack's on
+  the next, so it is replaced once. The one legitimate exception is a run
+  whose **project ids now come from a different source** — a registry the
+  repo did not have before — which the existing-repo pipeline reports in
+  those words.
 - **A decline is a deferral, never a halt.** Materialization is consent-gated;
   a declined write is recorded and named with its unlock — run
   `/vwf:setup reshape` — exactly as `/vwf:setup`'s tooling step already defers.
@@ -217,13 +219,18 @@ at all.
 
 ## The report
 
-Every run ends with the same report — six file sections, then the git section
-— each a count and its lines, and an empty section printed as `none`:
+Every run ends with the same report — eight file sections, then the git
+section — each a count and its lines, and an empty section printed as `none`.
+A replace and a rewrite are counted only where they were applied; a call the
+pack's legacy table could not map is a `Deferred` line, with its unlock like
+any other:
 
 ```text
 Files written     <n>    + <path>            (one per line)
+Files replaced    <n>    <path>              (one per line)
 Files moved       <n>    <old> → <new>
 Tasks renamed     <n>    <old> → <new>
+Calls rewritten   <n>    <file:line> <old> → <new>
 Sections appended <n>    <name>
 Fragments merged  <n>    <name>
 Deferred          <n>    <what> — unlock: <what would let it happen>

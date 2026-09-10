@@ -96,15 +96,49 @@ shell is **flagged for rewrite and never rewritten**: report the file, and
 report the shell-specific syntax it uses — the constructs that would not
 survive a mechanical translation — so the user can rewrite it deliberately.
 Auto-translating a shell script is how a working task becomes a subtly broken
-one, and the breakage surfaces in whatever that task was protecting.
+one, and the breakage surfaces in whatever that task was protecting. The one
+mechanical rewrite `init` does apply is pass 5's, and it applies for the
+reason this rule refuses: what it maps is written down in a table the pack
+owns, not translated by `init` on the spot.
 
 ### 5 — The helper library
 
 The shared helper file's name lost its leading underscore, and so did its
-siblings — the legacy table's last row. That is two renames, not one: the
-**file**, and every `source` line naming it. A repo that renames the file and
-not the sources has a task library where every task fails on its first line.
-List both.
+siblings — the legacy table says so in its own rows. That is two renames, not
+one: the **file**, and every `source` line naming it. A repo that renames the
+file and not the sources has a task library where every task fails on its
+first line. List both.
+
+Then **compare the file's content**, under its new name, against the one the
+toolchain pack ships — byte for byte, the same way pass 1 tells the pack's
+stand-in from the repo's own. Identical, and the pass ends here. Different,
+and the repo's file is a **diverged copy** of the library every pack script
+is written against: the tasks pass 6 would create call into it by name, and a
+name this copy never defined fails the moment that task first prints.
+
+So the plan carries a **replace** row for the helper file — the pack's file
+over the repo's, applied on the same one consent as everything else — with a
+**sub-line for every function the repo's copy defines and the pack's does
+not**. Those are the retired names, and listing them is what lets the user
+read what disappears before saying yes rather than after.
+
+Each retired name then becomes **rewrite** rows: one per call site in a
+repo-owned task file, `old → new` at `file:line`, the new name read from the
+**Legacy names** table in the toolchain pack's task-library reference — the
+same table pass 3 reads for task names, and the pack's for the same reason.
+The mapping is a fact about that library, so vwf's prose carries none of it.
+A rewrite replaces one token in place; nothing else on the line changes.
+
+A call to a retired name the table carries **no row for** is flagged and
+never rewritten: listed with its file, its line and the name, and deferred
+with the unlock *add the row to the pack's legacy table, or rewrite the call
+by hand*. The replace still lands. That is the trade — one named task breaks
+loudly, rather than every task the pack creates breaking quietly against a
+library that never grew the names they call.
+
+A pack-owned task file the repo already carries byte for byte is untouched by
+any of this, and so is every file pass 6 creates: both are written against
+the pack's library already.
 
 ### 6 — Missing files
 
@@ -117,6 +151,13 @@ overwrite — list it as **already owned**, and point at the adapter's own
 re-sync command, which shows the diff and takes its own consent. That command
 is **user-run by design**, so `init` names it and never invokes it: seeing a
 diff before accepting it is the whole reason it exists.
+
+**The helper library is the one exception, and pass 5 holds it.** Every task
+file created here sources that library, so a kept copy missing a function the
+created scripts call is a repo that fails on its first print — a breakage
+this run causes and a later, user-run command would be too late to prevent.
+Pass 5 compares it and plans its replacement; nothing else in this pass
+changes.
 
 ### 7 — Fragments and sections
 
@@ -230,7 +271,7 @@ Rules for both:
 
 ## Plan
 
-One document, printed once, in six sections. Each section opens with its
+One document, printed once, in eight sections. Each section opens with its
 count; each line is `old → new` for anything that moves or is renamed, `+
 path` for anything created, and a bare path with its reason for anything
 flagged. Print an empty section as `none` rather than omitting it — a missing
@@ -242,10 +283,18 @@ naming the files that exclusion keeps out of the gate. Both are changes to the
 settings the row claims survive the move, so the user reads them before the
 one consent rather than finding them in the report.
 
+A **replace** row carries sub-lines on the same principle: one for each
+function that disappears with the file being overwritten. Every **rewrite**
+row is `old → new` at `file:line` — one row per call site, never one per
+name — so the user counts the call sites before the one consent as plainly as
+the files.
+
 ```text
 Moves        <n>
 Creates      <n>
+Replaces     <n>
 Renames      <n>
+Rewrites (applied)               <n>
 Rewrites (flagged, not applied)  <n>
 Appends      <n>
 Merges       <n>
@@ -331,10 +380,11 @@ existed:
 
 ## Report
 
-The six-section report and the two next-step lines from SKILL.md, filled from
+The eight-section report and the two next-step lines from SKILL.md, filled from
 what was actually applied rather than from what was planned. A deferred
-materialization, a flagged rewrite and a reported-but-unmoved root file all
-belong in **Deferred**, each with its unlock.
+materialization, a flagged rewrite, a call the legacy table could not map and
+a reported-but-unmoved root file all belong in **Deferred**, each with its
+unlock.
 
 **The invariant, stated in the report itself, and stated with its scope:**
 running `init` again on a shaped repo produces an empty plan **for the same id
@@ -343,6 +393,10 @@ names which: the first run deferred something; a pack moved, which the
 adapter's re-sync command is for; or the **id source changed** — the repo grew
 a registry, so ids that came from directories or from the repo's own name now
 come from declarations, and pass 9's rename rows say so in those words.
+
+A **replace is applied once**, and that is part of the same invariant: the
+second run reads a file byte-identical to the pack's, plans no row for it,
+and rewrites no call — the names it would have mapped are gone from the tree.
 
 The third is not a broken invariant. It is the re-run doctrine working: `init`
 is meant to be run again as the repo learns things about itself, and the
