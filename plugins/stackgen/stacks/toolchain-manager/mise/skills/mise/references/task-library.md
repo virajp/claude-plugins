@@ -83,7 +83,9 @@ twice.
 `merge` ship with it too, because the merge tasks are part of the contract. A
 repo that grows a library of its own adds a sibling here rather than a directory
 — `_scripts/helpers/` would make `helpers` a path and every `source` line in the
-repo wrong at once.
+repo wrong at once. A repo already carrying an older `helpers` of its own is not
+a sibling but a diverged copy of this one, and the legacy table below is what
+maps its vocabulary onto this one.
 
 ### The print vocabulary
 
@@ -511,6 +513,11 @@ to bottom: no old name appears on the left twice, but a name a row *produces*
 can be a later row's left-hand side — `setup:pnpm:update` becomes
 `setup:deps:update`, then `setup:deps:upgrade`.
 
+The `print_*` rows are how a repo's own tasks are rewritten when a diverged
+`_scripts/helpers` is replaced by this pack's: every call to a left-hand name
+becomes its right-hand one, and a call to a name with no row here is flagged for
+the user rather than rewritten.
+
 | Was                                                | Is now                | Why it moved                                                             |
 | -------------------------------------------------- | --------------------- | ------------------------------------------------------------------------ |
 | `worktree:init`                                     | → `setup:worktree`    | it is a bootstrap step; `worktree:` was a group of one                   |
@@ -522,6 +529,15 @@ can be a later row's left-hand side — `setup:pnpm:update` becomes
 | `setup:deps:update`                                 | → `setup:deps:upgrade` | "update" read as both install-and-refresh; the verbs are now separate    |
 | `_scripts/_helpers`                                 | → `_scripts/helpers`  | `_scripts/` already says library; the second underscore says it twice    |
 | `_scripts/_checks`                                  | → `_scripts/checks`   | same reason — and it is a separate library, not part of `helpers`        |
+| `print_normal`                                      | → `print_yellow`      | the vocabulary has no uncoloured line; a plain yellow one is the nearest |
+| `print_normal_wait`                                 | → `print_wait`        | the `_wait` variants collapsed — an in-progress line has one colour      |
+| `print_green`                                       | → `print_success`     | a task says what happened, not what colour it said it in                 |
+| `print_green_wait`                                  | → `print_wait`        | same collapse; the green belonged to the `print_ok` that closes the line |
+| `print_yellow_wait`                                 | → `print_wait`        | it was already the colour `print_wait` prints, under a second name       |
+| `print_red`                                         | → `print_error`       | role-named now — and the line moves to stderr, where a failure belongs   |
+| `print_red_wait`                                    | → `print_wait`        | same collapse; the failure that follows is `print_error`'s to print      |
+| `print_header_wait`                                 | → `print_header`      | a header opens a section, and a section is not an in-progress step       |
+| `print_subheader_wait`                              | → `print_subheader`   | same reason — the rule and the title are the whole of a subheader        |
 
 A repo still carrying a left-hand name is not broken, but nothing else in the
 toolkit will find it: vwf probes `setup:worktree`, the aggregators call
