@@ -96,7 +96,7 @@ bootstrap it so it can build and run — prefer the dedicated `setup:worktree`
 task, falling back to the full bootstrap entrypoint `setup:all`:
 
 ```bash
-have_task() { mise tasks 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
+have_task() { mise tasks --hidden 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
 
 if have_task setup:worktree; then
   mise run setup:worktree
