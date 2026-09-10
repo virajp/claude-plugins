@@ -1,7 +1,7 @@
 name: dprint
 summary: The repo's single formatter — one config, plugins pinned, generated
   trees excluded. Ships .config/dprint.json and .config/taplo.toml.
-version: 1.0.0
+version: 1.0.1
 type: toolchain-gate
 kind: repo-gate
 axis: repo

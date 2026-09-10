@@ -82,9 +82,9 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `package-manager/pnpm` | pnpm | `language-bundle` | repo |  |  | 0.1.0 | Dependency installation, locking and workspace layout for the Node ecosystem — the manifest contract and the monorepo shape. |
 | `package-manager/pub` | pub | `app-framework` | repo |  |  | 0.1.0 | Dependency declaration and locking for a Flutter app — pubspec.yaml, which also carries the SDK constraints and native package-manager config. |
 | `package-manager/uv` | uv | `language-bundle` | repo |  |  | 0.1.0 | Dependency resolution, locking, virtualenv management and process running for Python — one tool where the ecosystem historically had four. |
-| `repo-hygiene/repo-hygiene` | Repo hygiene | `repo-hygiene` | repo |  |  | 1.0.0 | The files a repository needs before it has a stack — the ignore set, the editor and attribute defaults, the licence and the security contact, and the dependency-update policy. |
+| `repo-hygiene/repo-hygiene` | Repo hygiene | `repo-hygiene` | repo |  |  | 1.0.1 | The files a repository needs before it has a stack — the ignore set, the editor and attribute defaults, the licence and the security contact, and the dependency-update policy. |
 | `toolchain-gate/analysis-options` | analysis_options | `app-framework` | project |  |  | 0.1.0 | The Dart analyzer and lint configuration for a Flutter app. |
-| `toolchain-gate/dprint` | dprint | `repo-gate` | repo |  |  | 1.0.0 | The repo's single formatter — one config, plugins pinned, generated trees excluded. Ships .config/dprint.json and .config/taplo.toml. |
+| `toolchain-gate/dprint` | dprint | `repo-gate` | repo |  |  | 1.0.1 | The repo's single formatter — one config, plugins pinned, generated trees excluded. Ships .config/dprint.json and .config/taplo.toml. |
 | `toolchain-gate/eslint` | ESLint | `language-bundle` | repo |  |  | 0.1.0 | The correctness gate for TypeScript and JavaScript — flat config, zero formatting rules, overrides scoped by glob. |
 | `toolchain-gate/gitleaks` | gitleaks | `repo-gate` | repo |  |  | 1.0.0 | The repo's secret scanner — working tree every commit, history once, allowlist by fingerprint. Ships .config/gitleaks.toml. |
 | `toolchain-gate/grype` | grype | `repo-gate` | repo |  |  | 1.0.0 | The repo's dependency vulnerability scanner — source per commit, artifact before release, ignores time-boxed. Ships .config/grype.yaml. |
@@ -143,8 +143,8 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `pnpm-turbo` | pnpm · Turborepo | `workspace` | repo | `package-manager/pnpm@0.1.0`, `build-orchestrator/turbo@generated` |  |
 | `pnpm-workspace` | pnpm · workspace | `workspace` | repo | `package-manager/pnpm@0.1.0` |  |
 | `postgres` | PostgreSQL | `database` | backing | `datastore/postgres@0.1.0` |  |
-| `repo-gates` | Repo gates | `repo-gate` | repo | `toolchain-gate/dprint@1.0.0`, `toolchain-gate/gitleaks@1.0.0`, `toolchain-gate/grype@1.0.0`, `toolchain-gate/pre-commit@1.0.0` | yes |
-| `repo-hygiene` | repo-hygiene | `repo-hygiene` | repo | `repo-hygiene/repo-hygiene@1.0.0` | yes |
+| `repo-gates` | Repo gates | `repo-gate` | repo | `toolchain-gate/dprint@1.0.1`, `toolchain-gate/gitleaks@1.0.0`, `toolchain-gate/grype@1.0.0`, `toolchain-gate/pre-commit@1.0.0` | yes |
+| `repo-hygiene` | repo-hygiene | `repo-hygiene` | repo | `repo-hygiene/repo-hygiene@1.0.1` | yes |
 | `stitch` | Google Stitch | `design-tool` | design | `design-tool/stitch@0.1.0` |  |
 | `temporal` | Temporal | `capability-provider` | backing | `capability-provider/temporal@0.1.0` |  |
 | `typescript-cloudflare-agents` | TypeScript · Cloudflare Agents | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.1.0`, `toolchain-gate/tsconfig@0.1.0`, `toolchain-gate/eslint@0.1.0`, `framework/cloudflare-agents@0.1.0` |  |
