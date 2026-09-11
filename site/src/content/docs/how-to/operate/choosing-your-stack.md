@@ -59,6 +59,8 @@ on the old slug has to be re-pointed.)
 `typescript-cloudflare-agents` is the project-axis answer for a TypeScript
 service whose unit of design is an addressable, stateful object that persists
 what it knows, schedules its own work and holds live connections to its clients.
+Effect runs inside that class on the SDK's terms — one runtime rebuilt per wake,
+its layers holding `this`, never disposed, since hibernation has no stop hook.
 Its framework component compiles to a Durable Object, so the bundle says it
 pairs with a deploy pin — `cloudflare-workers-ssr`, the Worker the class is
 exported from, or `cloudflare-containers` where the compute is an image beside

@@ -147,7 +147,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `repo-hygiene` | repo-hygiene | `repo-hygiene` | repo | `repo-hygiene/repo-hygiene@1.0.1` | yes |
 | `stitch` | Google Stitch | `design-tool` | design | `design-tool/stitch@0.1.0` |  |
 | `temporal` | Temporal | `capability-provider` | backing | `capability-provider/temporal@0.1.0` |  |
-| `typescript-cloudflare-agents` | TypeScript · Cloudflare Agents | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.1.0`, `toolchain-gate/tsconfig@0.1.0`, `toolchain-gate/eslint@0.1.0`, `framework/cloudflare-agents@0.1.0` |  |
+| `typescript-cloudflare-agents` | TypeScript · Cloudflare Agents · Effect | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.1.0`, `toolchain-gate/tsconfig@0.1.0`, `toolchain-gate/eslint@0.1.0`, `framework/effect@0.1.0`, `framework/cloudflare-agents@0.1.0` |  |
 | `typescript-effect-cli` | TypeScript · Effect CLI | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.1.0`, `toolchain-gate/tsconfig@0.1.0`, `toolchain-gate/eslint@0.1.0`, `framework/effect@0.1.0` |  |
 | `typescript-effect-hono` | TypeScript · Hono · Effect | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.1.0`, `toolchain-gate/tsconfig@0.1.0`, `toolchain-gate/eslint@0.1.0`, `framework/effect@0.1.0`, `framework/hono@generated` |  |
 | `typescript-effect-temporal` | TypeScript · Temporal · Effect | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.1.0`, `toolchain-gate/tsconfig@0.1.0`, `toolchain-gate/eslint@0.1.0`, `framework/effect@0.1.0`, `framework/temporal@generated` |  |

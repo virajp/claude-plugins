@@ -28,6 +28,22 @@ product parent. vwf enforces this (`/vwf:doctor` raises a violation as
 blocking); the reasoning is in the vwf plugin's `assets/topologies/`. So this
 template scaffolds a **repo**, not a directory in someone else's.
 
+**No Effect, deliberately.** Pulumi already is the composition and dependency
+model: a resource constructor registers desired state with the engine rather
+than creating anything, an `Output` is an eventually-available value that
+carries its dependency edge with it, and the engine orders the graph from those
+edges — the job an Effect `Layer` graph does in a service, done by the tool.
+Wrapping a constructor in an `Effect` hides the edge, since the engine cannot
+see through a fiber, and `apply` runs only during `up`, so a program that
+resolves values through a runtime shows nothing on `preview`. The other Effect
+wins do not apply either: a program that runs once and exits owns no
+long-lived runtime and mounts no layer per request, and its failures are the
+engine's, reported by the CLI, not a typed channel the program maps. Where a
+`ComponentResource` needs a computed value, `apply` and `pulumi.all` are the
+composition; where it needs config, the typed parse under Stack is the
+fail-fast. A workspace on `typescript-effect` keeps Effect in its services and
+leaves the `iac` repo on the platform's own model.
+
 ## Stack
 
 - **Programs per stack**: one Pulumi stack per environment (`development` /
