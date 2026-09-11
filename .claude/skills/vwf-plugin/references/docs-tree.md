@@ -37,15 +37,16 @@ only the system docs), `docs/plans/` (two forms side by side — `/vwf:plan`'s
 cycle plans as flat `<date>-<time>-<slice>.md` files, discovered through the
 base repo's `docs/plans/index.md`, and `/vwf:change-plan`'s ad-hoc change
 folders `<date>-<name>/`, each an `index.md` plus one file per unit and
-deliberately **never** listed in that index; `/vwf:archive` retires the flat
-files and `/vwf:change-execute` moves its own folder, both into
-`archived/<name>/`), `docs/runbooks/` (per-project operational runbooks plus
-`postmortems.md`, seeded by the incident-response foundation and appended to by
-`/vwf:feedback incident`), and `docs/prompts/`
-(`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design briefs grouped by
-prompt type → registry project → flow, one brief per platform regenerated in
-place (the filename carries the platform, mirroring the flows tree exactly),
-plus the per-design-project canvas conventions files
+deliberately **never** listed in that index; `/vwf:archive` retires **either**
+shape — a flat file with its index row, or a folder moved whole with only its
+Status line rewritten and no row to fix — and `/vwf:change-execute` archives its
+own folder at landing, everything into `archived/`), `docs/runbooks/`
+(per-project operational runbooks plus `postmortems.md`, seeded by the
+incident-response foundation and appended to by `/vwf:feedback incident`), and
+`docs/prompts/` (`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design
+briefs grouped by prompt type → registry project → flow, one brief per platform
+regenerated in place (the filename carries the platform, mirroring the flows
+tree exactly), plus the per-design-project canvas conventions files
 `screens/<project>/CLAUDE--<platform>.md`; written by `/vwf:screens prompt`;
 committed intent artifacts, not blueprint docs), and `docs/scratchpad/`
 (**gitignored, never committed** — the mockup render tree,

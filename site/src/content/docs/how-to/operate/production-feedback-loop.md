@@ -185,11 +185,15 @@ reading and every later plan is a guess.
 
 ### Classification is the judgment, not the paperwork
 
-The same sentence from a user can be any of six things — a behavior bug, a
-blueprint hole, a metric reading, a UX issue, a feature idea, or an incident. An
-outage is the easy one — production itself broke, so it routes as an incident
-(`/vwf:feedback incident`), filed with a postmortem stub whose action items come
-back through this same classifier. For the rest, what decides is not the wording
+The same sentence from a user can be any of seven things — a behavior bug, a
+blueprint hole, a metric reading, a UX issue, a feature idea, an incident, or
+something the blueprint does not describe at all. An outage is the easy one —
+production itself broke, so it routes as an incident (`/vwf:feedback incident`),
+filed with a postmortem stub whose action items come back through this same
+classifier. The last one is the other easy one, in the opposite direction:
+tooling, docs, CI or a refactor has no flow, entity or screen to file against,
+so it is handed verbatim to `/vwf:change-plan` rather than forced into a
+blueprint shape it does not have. For the rest, what decides is not the wording
 but what the blueprint already says about that surface. "The badge looks wrong"
 is a UX issue when the design system pinned a colour role and the screen ignored
 it, and a blueprint hole when nothing ever pinned what that badge means.
@@ -235,6 +239,13 @@ the item lives in the same tree as the contract it contradicts, and the next
 is the fast path, not the record: with the daemon down the routing is unchanged
 and only the recall step is skipped, which is what makes it safe to defer.
 [Memory](../../plugins/vwf.md#memory).
+
+The one item with no doc to fall back on is the seventh kind — the report the
+blueprint does not describe at all. There is no flow, entity or screen it
+contradicts, so declining
+[`/vwf:change-plan`](../../plugins/vwf.md#vwfchange-plan) files it to memory
+tagged `non-blueprint` and memory is then the only record. That is the one place
+deferring costs something, and it is worth knowing before you decline.
 
 ## When things halt
 
