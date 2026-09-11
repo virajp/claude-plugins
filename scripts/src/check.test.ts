@@ -103,7 +103,7 @@ describe("the manifest", () => {
   });
 
   it("flags a missing, non-semver, or build-metadata version", () => {
-    // `1.0.0+3` is the staged dev copy's shape (`plugins:local`); tracked, it
+    // `1.0.0+3` is the staged dev copy's shape (`p:plugins:local`); tracked, it
     // is that local counter leaking into what an install pins to.
     const root = tree({
       alpha: { manifest: { name: "alpha", version: "1.0", description: "x" } },

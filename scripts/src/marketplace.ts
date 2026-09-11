@@ -11,7 +11,7 @@
  * - `.dev-marketplace/.claude-plugin/marketplace.json` — **local authoring
  *   only**, never published and **gitignored**. Every `source` is a
  *   repo-relative path into `.dev-marketplace/plugins/`, the staged copies of
- *   the authored tree that `plugins:local` writes under `X.Y.Z+N` versions, so
+ *   the authored tree that `p:plugins:local` writes under `X.Y.Z+N` versions, so
  *   the authoring machine runs the working tree rather than the last release.
  *
  * Both are written and checked together on purpose. A `--dev` flag was the
@@ -86,7 +86,7 @@ export const DEV_MANIFEST_PATH =
 /**
  * The directory a dev `source` resolves into, relative to `DEV_MARKETPLACE_DIR`.
  *
- * It holds a **staged copy** of each plugin, written by `plugins:local` with the
+ * It holds a **staged copy** of each plugin, written by `p:plugins:local` with the
  * version rewritten to `X.Y.Z+N` — the build number Claude's `update` needs to
  * see a change, kept out of the tracked tree. It has to sit inside the
  * marketplace root because Claude rejects every other way of naming a local
@@ -145,7 +145,7 @@ export const MANIFESTS: readonly {
  * unknown field Claude *ignores at load time* — so it named the marketplace to
  * nobody, and `--strict` (the mode Claude's own help recommends for CI) failed on
  * it. `name` is what users see. Do not restore it without checking `validate`
- * first; that is what `plugins:check` now does.
+ * first; that is what `p:plugins:check` now does.
  */
 const HEADER = {
   $schema: "https://json.schemastore.org/claude-code-marketplace.json",
@@ -214,7 +214,7 @@ function ref(plugin: Plugin): string {
     // field already carries.
     throw new Error(
       `${plugin.dir}: plugin.json declares no version, so there is no tag to `
-        + `pin to. Run 'mise run plugins:check'.`,
+        + `pin to. Run 'mise run p:plugins:check'.`,
     );
   }
   return `${plugin.dir}-v${version}`;
@@ -332,7 +332,7 @@ if (import.meta.main) {
         console.error(`${path} is not what the plugin manifests generate.\n`);
         console.error(firstDifference(committed, generated));
         console.error(
-          `\nRe-run 'mise run plugins:marketplace' and stage the result.`,
+          `\nRe-run 'mise run p:plugins:marketplace' and stage the result.`,
         );
         process.exit(1);
       }
@@ -367,7 +367,7 @@ function devMarketplaceExists(repoRoot: string): boolean {
 /**
  * The directory every dev `source` resolves into.
  *
- * `plugins:local` fills it; this only makes sure it is a real directory. Until
+ * `p:plugins:local` fills it; this only makes sure it is a real directory. Until
  * 2026-09-03 it was a symlink to `../plugins`, which served the working tree
  * but under the tracked version — so `update` never saw an edit. A symlink
  * found here is that retired shape and is replaced, since the staged copies
@@ -379,7 +379,7 @@ function writeDevPluginsDir(repoRoot: string): void {
     rmSync(dir);
     console.log(
       `replaced the ${DEV_MARKETPLACE_DIR}/${DEV_PLUGINS_DIR} symlink — run `
-        + `'mise run plugins:local' to stage the plugins`,
+        + `'mise run p:plugins:local' to stage the plugins`,
     );
   }
   mkdirSync(dir, { recursive: true });
@@ -394,8 +394,8 @@ function checkDevPluginsDir(repoRoot: string): void {
   if (isSymlink(join(repoRoot, DEV_MARKETPLACE_DIR, DEV_PLUGINS_DIR))) {
     console.error(
       `${rel} is a symlink — the retired shape, under which 'claude plugin `
-        + `update' never sees an edit.\n\nRe-run 'mise run plugins:marketplace', `
-        + `then 'mise run plugins:local'.`,
+        + `update' never sees an edit.\n\nRe-run 'mise run p:plugins:marketplace', `
+        + `then 'mise run p:plugins:local'.`,
     );
     process.exit(1);
   }

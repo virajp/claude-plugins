@@ -130,7 +130,7 @@ function fileSource(root: string, path: string): PluginFile | null {
     path,
     absolute,
     // Preserved because a hook script without it is dead at run time, and
-    // `plugins:check` is the only thing that notices.
+    // `p:plugins:check` is the only thing that notices.
     executable: (stat.mode & 0o111) !== 0,
   };
 }
