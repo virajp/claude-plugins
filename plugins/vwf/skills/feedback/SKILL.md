@@ -1,13 +1,13 @@
 ---
 name: feedback
 description: The front door for production feedback — a bug, a metric reading,
-  a UX
-  complaint, a feature idea, or an incident. Classifies it and routes it into
-  the doc and command that fix it (gaps → blueprint/plan, metrics → product,
-  UX → design-system/screens, incidents → postmortem stub + action items).
-  "canvas" harvests the design review conversations from each project's own
-  design tool, via the design adapter, into the same routes. Durable even when
-  mempalace is down.
+  a UX complaint, a feature idea, an incident, or a fix the blueprint does not
+  describe. Classifies it and routes it into the doc and command that fix it
+  (gaps → blueprint/plan, metrics → product, UX → design-system/screens,
+  incidents → postmortem stub + action items, not a blueprint gap →
+  change-plan). "canvas" harvests the design review conversations from each
+  project's own design tool, via the design adapter, into the same routes.
+  Durable even when mempalace is down.
 argument-hint: "[the feedback — paste a bug report, metric, or complaint | incident <what happened> | canvas]"
 model: sonnet
 effort: high
@@ -83,14 +83,15 @@ and show its status instead of re-filing it.
 Classify — confirm by MCQ when ambiguous, per
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`:
 
-| Kind               | Signal                                           |
-| ------------------ | ------------------------------------------------ |
-| **Behavior bug**   | The product violates what the blueprint promises |
-| **Blueprint hole** | The blueprint never pinned this behavior down    |
-| **Metric reading** | A number for a `product.md` metric (hit or miss) |
-| **UX issue**       | Rendered experience contradicts design-system/UX |
-| **Feature idea**   | A want that serves (or implies) a product goal   |
-| **Incident**       | Production broke — outage, failed probe, SLO burn |
+| Kind                    | Signal                                             |
+| ----------------------- | -------------------------------------------------- |
+| **Behavior bug**        | The product violates what the blueprint promises   |
+| **Blueprint hole**      | The blueprint never pinned this behavior down      |
+| **Metric reading**      | A number for a `product.md` metric (hit or miss)   |
+| **UX issue**            | Rendered experience contradicts design-system/UX   |
+| **Feature idea**        | A want that serves (or implies) a product goal     |
+| **Incident**            | Production broke — outage, failed probe, SLO burn  |
+| **Not a blueprint gap** | Tooling, docs, CI, a refactor — no blueprint slice |
 
 ### 2. Route
 
@@ -136,6 +137,14 @@ of the fixing command**:
   **error-budget stance** (`conventions.md#reliability`): state what the stance
   says happens now. Invoked as `/vwf:feedback incident <what happened>` — the
   form `/vwf:verify` offers when a production probe fails.
+- **Not a blueprint gap** → nothing under `docs/blueprint/` describes this, so
+  there is no flow, entity or screen to edit: offer `/vwf:change-plan <request>`
+  and hand it the report **verbatim** as the request, plus the one-line reason
+  the classifier ruled it outside the blueprint. `/vwf:change-plan` then runs
+  its own recall, survey and interview and writes the plan folder — that folder
+  is the durable record; feedback pre-surveys nothing for it. Deferred → file
+  it to room `gaps` tagged `non-blueprint`: no blueprint doc owns it, so memory
+  is then the only record.
 
 ### 3. Persist & commit
 

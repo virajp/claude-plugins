@@ -5,6 +5,7 @@ description: Read a flow's designed screens back from the project's design tool
   payload. Invoked by /vwf:screens import as its design adapter — not a
   general-purpose skill.
 argument-hint: "<flow> <platform>"
+user-invocable: false
 disable-model-invocation: false
 model: sonnet
 effort: high
@@ -20,7 +21,9 @@ doc.
 > **`disable-model-invocation` must stay `false`.** vwf reaches this skill by
 > delegation. Flipping it to `true` removes the skill from the model's context
 > and blocks programmatic invocation — the call would not error, it would
-> silently import nothing.
+> silently import nothing. `user-invocable` is `false` beside it — the same
+> pair `init` carries: out of the `/` menu, which is short on purpose, and
+> still reachable by `/vwf:screens import`, its only caller.
 
 The payload shape is defined by the vwf adapter contract; read it before
 returning anything: `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`.

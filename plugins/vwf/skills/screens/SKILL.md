@@ -84,9 +84,9 @@ reconcilable against the flows tree.
 
 Adapter contract: `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md` — the payload
 `import` consumes, the delegation names, and the preflight. vwf never speaks a
-design tool's API: `import` delegates to `/<tool>:<tool>-import-screens` and
-diffs the payload it returns. `prompt` needs no adapter at all — the briefs are
-files. Doctrine: the blueprint-authoring skill's `ui-ux-contract` reference
+design tool's API: `import` delegates to `/vwf:import-screens` and diffs the
+payload it returns. `prompt` needs no adapter at all — the briefs are files.
+Doctrine: the blueprint-authoring skill's `ui-ux-contract` reference
 (what a Screens contract pins — error and empty states are mandatory pins,
 conditional product states pinned where the screen has them).
 

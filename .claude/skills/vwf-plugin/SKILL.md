@@ -141,7 +141,7 @@ four:
 | State              | Frontmatter                                                              | For                         |
 | ------------------ | ------------------------------------------------------------------------ | --------------------------- |
 | user **and** model | `disable-model-invocation: false`                                        | anything delegated to       |
-| model only         | `user-invocable: false` + `paths:`                                       | auto-applying doctrine      |
+| model only         | `user-invocable: false`, `paths:` optional                               | doctrine                    |
 | **skill-invoked**  | `user-invocable: false` + `disable-model-invocation: false`, no `paths:` | a skill another skill calls |
 | user only          | `disable-model-invocation: true`                                         | the user owns the timing    |
 
@@ -154,23 +154,37 @@ The change pair is the one place the rule is applied by hand rather than read
 off the delegation graph. `change-execute` is **user only**: it must run in a
 session that has done nothing else, which no caller can guarantee, and nothing
 delegates to it — the plan's own launch line is the invocation. `change-plan` is
-**user and model** even though nothing calls it today, because the seam is
-planned: a `/vwf:feedback` intake that turns out not to be a blueprint gap
-routes into it by name, and marking it user-only would make that call a silent
-no-op the day it is written.
+**user and model**, and the seam that reasoning reserved is now live:
+`/vwf:feedback`'s *not a blueprint gap* route calls it by name, which marking it
+user-only would have made a silent no-op.
 
 **Skill-invoked** is the fourth state and the newest: hidden from the `/` menu,
-still reachable by the skill that owns its seam. Three skills are in it today —
-vwf's `init`, called by `/vwf:setup` (Step 0's offer, or `/vwf:setup reshape`),
-and stackgen's `stackgen-stack-menu` and `stackgen-stack-template`, called by
-vwf through the adapter contract. Both keys are load-bearing together:
+still reachable by the skill that owns its seam. Six skills are in it today —
+vwf's `init`, called by `/vwf:setup` (Step 0's offer, or `/vwf:setup reshape`);
+vwf's three import adapters `import-design-system`, `import-screens` and
+`import-conversations`, called by `/vwf:design-system`, `/vwf:screens import`
+and `/vwf:feedback canvas` respectively, each its skill's only caller; and
+stackgen's `stackgen-stack-menu` and `stackgen-stack-template`, called by vwf
+through the adapter contract. Both keys are load-bearing together:
 `user-invocable: false` alone would be the model-only row minus its `paths:`,
 and `disable-model-invocation: true` would silently break the call. Checker rule
-9 asserts the pair on the two adapter skills; `init` carries it as one skill's
-choice, not a contract, so rule 4 and `claude plugin validate` are all that
-check it. `user-invocable: false` **without** `paths:` is what tells this state
-apart from auto-applying doctrine — the three `vwf:import-*` adapters are
-candidates and are deliberately unchanged.
+9 asserts the pair on the two stack-adapter skills; rule 8 asserts only
+`disable-model-invocation: false` on the pack-landed `design-import-*` skills,
+so `init` and the three `vwf:import-*` carry `user-invocable: false` as their
+own choice, not a contract, and rule 4 plus `claude plugin validate` are all
+that check it.
+
+**The frontmatter does not tell this state apart from doctrine.** Nine vwf
+skills carry `user-invocable: false`: the four above, the four **path-scoped**
+doctrine skills (`blueprint-authoring`, `design-system-authoring`,
+`documentation-standards`, `product-foundations`), and `rest-api-design`, which
+is doctrine with **no** `paths:` — no file pattern is narrow enough to mean "an
+API is being designed", so the model loads it on its own judgment. So
+`user-invocable: false` without `paths:` reads identically on `init` and on
+`rest-api-design`. What separates them is **who calls** — a named caller, a
+file, or the model's own judgment — and only the first is written down, in the
+caller's own step. Adding a hidden skill means saying which of the three it is
+in its own prose, because nothing in the frontmatter will say it for you.
 
 Cross-plugin skill-name uniqueness is no longer required — Claude scopes a skill
 to its plugin. The `<plugin>-` prefix on adapter skill names is readability now,

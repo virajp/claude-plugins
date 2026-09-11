@@ -119,7 +119,11 @@ delegate to three more fixed names in **the repo's own `.claude/`** —
 `design-import-screens`, `design-import-design-system` and
 `design-import-conversations`. Those are what the project's `design:` pin
 materializes from a stack `design-tool` pack, resolved **per project**, so a
-product can design its website with one tool and its app with another.
+product can design its website with one tool and its app with another. vwf's own
+three — `import-design-system`, `import-screens`, `import-conversations` — are
+**skill-invoked**: hidden from the `/` menu, reached only from
+`/vwf:design-system`, `/vwf:screens import` and `/vwf:feedback canvas`. They
+answer in a payload shape no user reads, so there is nothing to type.
 
 Adding a tool is a pack and a menu entry in the stack plugin, never a vwf
 change. Export needs no adapter at all, since `/vwf:screens prompt` just writes
@@ -737,7 +741,7 @@ record.
 | `/vwf:screens <mode>`          | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                                          |
 | `/vwf:plan [slice]`            | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                                                           |
 | `/vwf:execute [plan]`          | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                                                  |
-| `/vwf:archive [plan]`          | Retire a completed plan into `docs/plans/archived/`                                                                                         |
+| `/vwf:archive [plan]`          | Retire a plan into `docs/plans/archived/` — a flat cycle plan file, or a whole change-plan folder                                           |
 | `/vwf:doctor [project]`        | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, dependency audit, mempalace, graphify, repo shape, stamps |
 | `/vwf:verify [env]`            | Post-deploy: health-check + re-run acceptance criteria against the environment                                                              |
 | `/vwf:feedback [input]`        | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat)                            |
@@ -755,9 +759,9 @@ so the model never fires them on its own; you decide when a migration, a design
 import, a post-deploy check, a re-render, a plan retirement, a session resume or
 an unattended change run happens. `change-execute` is user-only for a reason of
 its own: it must start in a session that has done nothing else, and only you can
-guarantee that. Its partner `change-plan` stays model-invocable, so a future
-hand-off — a `/vwf:feedback` intake that turns out not to be a blueprint gap —
-can route into it by name. The rest stay model-invocable because the workflow
+guarantee that. Its partner `change-plan` stays model-invocable, and that seam
+is now live: a `/vwf:feedback` intake that turns out not to be a blueprint gap
+routes into it by name. The rest stay model-invocable because the workflow
 **delegates to them by name** — `recall` resumes a paused run *through*
 `blueprint`/`plan`/`execute`, every skill commits *through* `git-workflow`,
 `setup` runs `doctor` inside its own spine, and `feedback` and `plan` route work
@@ -765,14 +769,19 @@ into `product`/`architecture`/`design-system`/`blueprint`. Marking one of those
 user-only would silently break the chain: the flag blocks programmatic
 invocation, not just auto-triggering.
 
-**`init` is the one skill in the other direction** — hidden from you, reachable
-by a skill. It carries `user-invocable: false`, which keeps it out of the `/`
-menu, *and* `disable-model-invocation: false`, which keeps `/vwf:setup`'s call
-to it working; a user-only skill would have made that call a silent no-op. So
-init is reached exactly two ways, both through setup: Step 0's offer, or
-`/vwf:setup reshape`. The two stack-adapter skills a stack plugin ships carry
-the same pair for the same reason — they answer vwf in a payload shape no user
-reads.
+**Four skills go in the other direction** — hidden from you, reachable by a
+skill. Each carries `user-invocable: false`, which keeps it out of the `/` menu,
+*and* `disable-model-invocation: false`, which keeps its caller's invocation
+working; a user-only skill would have made that call a silent no-op. `init` is
+reached exactly two ways, both through setup: Step 0's offer, or
+`/vwf:setup reshape`. The three import adapters — `import-design-system`,
+`import-screens` and `import-conversations` — are reached only from
+`/vwf:design-system`, `/vwf:screens import` and `/vwf:feedback canvas`
+respectively; each answers vwf in a payload shape no user reads, so the `/` menu
+is the wrong place for them. The two stack-adapter skills a stack plugin ships
+carry the same pair for the same reason. Four is the count of **commands**
+hidden this way; the [doctrine skills](#vwf-skills) are hidden too, but a file
+or Claude's own judgment summons those rather than a caller.
 
 Model and reasoning effort are **tiered per surface**, not uniform. `opus` runs
 where judgment decides the outcome or where nobody is watching — `product`,
@@ -1584,12 +1593,40 @@ it and cannot detect its absence.
 
 ### /vwf:archive
 
-Move a finished plan out of the active set into `docs/plans/archived/`. It never
-deletes. Run it manually, or accept the offer at the end of `execute`.
+Move a plan out of the active set into `docs/plans/archived/`. It never deletes.
+Run it manually, or accept the offer at the end of `execute`. Finished is the
+usual case, not a requirement — a plan you decided not to run is archived too,
+with a warning rather than a refusal.
 
 ```text
 /vwf:archive
+/vwf:archive docs/plans/2026-09-10-release-notes-in-ci    # a change-plan folder
 ```
+
+**Two shapes are archived.** A **flat cycle plan** — `/vwf:plan`'s
+`docs/plans/<plan>.md`, plus its gap-report if one exists — moves file by file,
+and its row in `docs/plans/index.md` is flipped to archived in the same commit,
+because that index is the product's only view of its plans. A **change-plan
+folder** — `/vwf:change-plan`'s `docs/plans/<date>-<name>/`, recognised by an
+`index.md` whose frontmatter reads `type: vwf-change-plan` — moves **whole**,
+unit files and run log together; a half-moved folder is a plan
+`/vwf:change-execute` can no longer read. Change plans are never listed in
+`docs/plans/index.md` and archiving one does not start listing them, so there is
+no row to flip. Only the folder's Status block is rewritten, and only when it
+does not already read `COMPLETE` — `/vwf:change-execute` wrote that at landing
+and it is the truer record. Anything else becomes
+`ARCHIVED <date> — not run; was <previous status>`: archiving a plan that was
+never run is a legitimate thing to want, so an unfinished one is a warning, not
+a refusal. With no argument it lists both shapes side by side, change plans
+marked as such and a `RUNNING` folder — one a live `/vwf:change-execute` owns —
+left out.
+
+A folder's `requires:` and `covers:` are read from its `index.md` on the same
+terms as a flat plan's frontmatter, so a plan another non-archived plan still
+requires is warned on before anything moves. A directory that is not a plan
+folder is refused in one line rather than guessed at, and a destination that
+already exists is never overwritten — which bites hardest here, since `mv` onto
+an existing directory nests it instead of failing.
 
 ### /vwf:verify
 
@@ -1640,6 +1677,14 @@ reading, or a user complaint; it classifies and routes it to where it gets
 - **Incident** (`/vwf:feedback incident <what happened>`) → filed to memory as a
   problem with a postmortem stub appended to `docs/runbooks/postmortems.md`;
   each action item goes back through the classifier as its own intake.
+- **Not a blueprint gap** — tooling, docs, CI, a refactor, a tree the blueprint
+  never described → [`/vwf:change-plan`](#vwfchange-plan), handed the report
+  **verbatim** plus the one-line reason it was ruled outside the blueprint.
+  Nothing under `docs/blueprint/` describes this work, so there is no flow,
+  entity or screen to edit; change-plan runs its own recall, survey and
+  interview, and the folder it writes is the durable record. Deferred instead,
+  it is filed to memory tagged `non-blueprint` — with no blueprint doc to own
+  it, memory is the only record there is.
 
 ```text
 /vwf:feedback "cancelled order #1043 was refunded twice"

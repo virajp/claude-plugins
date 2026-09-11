@@ -4,6 +4,7 @@ description: Read the design system back from the project's design tool (whichev
   pins on the design axis) and return it as a vwf design-system
   payload. Invoked by /vwf:design-system as its design adapter — not a
   general-purpose skill.
+user-invocable: false
 disable-model-invocation: false
 model: sonnet
 effort: high
@@ -18,7 +19,9 @@ blueprint doc, and you never decide what the design system *should* be.
 > **`disable-model-invocation` must stay `false`.** vwf reaches this skill by
 > delegation. Flipping it to `true` removes the skill from the model's context
 > and blocks programmatic invocation — the call would not error, it would
-> silently import nothing.
+> silently import nothing. `user-invocable` is `false` beside it — the same
+> pair `init` carries: out of the `/` menu, which is short on purpose, and
+> still reachable by `/vwf:design-system`, its only caller.
 
 The payload shape is defined by the vwf adapter contract; read it before
 returning anything: `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`.

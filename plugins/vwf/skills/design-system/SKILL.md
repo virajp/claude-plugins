@@ -125,10 +125,10 @@ never as a fallback when an adapter is missing for a product that has some.
 **Skipped on the text-only path** — there is no payload to import; §5 elicits
 every section instead.
 
-Invoke `/<tool>:<tool>-import-design-system` and parse its reply as a
-**design-system payload** per the adapter contract. Everything downstream is
-vwf's job: you write `docs/blueprint/design-system.md` from the payload, gated
-by the `design-system-reviewer` — the adapter never touches a blueprint doc.
+Invoke `/vwf:import-design-system` and parse its reply as a **design-system
+payload** per the adapter contract. Everything downstream is vwf's job: you
+write `docs/blueprint/design-system.md` from the payload, gated by the
+`design-system-reviewer` — the adapter never touches a blueprint doc.
 
 **Record `source.derived`.** When the adapter reports `derived: true`, it
 reconstructed the tokens from generated code rather than reading a stored design

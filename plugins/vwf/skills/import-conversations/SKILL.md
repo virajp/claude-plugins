@@ -4,6 +4,7 @@ description: Read the design review conversation back from a project's design
   tool (whichever it pins on the design axis) and return it as a vwf
   conversations payload. Invoked by /vwf:feedback canvas as its design
   adapter — not a general-purpose skill.
+user-invocable: false
 disable-model-invocation: false
 model: sonnet
 effort: high
@@ -19,7 +20,9 @@ blueprint doc — those are vwf's, and `/vwf:feedback` does them.
 > **`disable-model-invocation` must stay `false`.** vwf reaches this skill by
 > delegation. Flipping it to `true` removes the skill from the model's context
 > and blocks programmatic invocation — the call would not error, it would
-> silently harvest nothing.
+> silently harvest nothing. `user-invocable` is `false` beside it — the same
+> pair `init` carries: out of the `/` menu, which is short on purpose, and
+> still reachable by `/vwf:feedback canvas`, its only caller.
 
 The payload shape is defined by the vwf adapter contract; read it before
 returning anything: `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`.

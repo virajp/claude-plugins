@@ -43,6 +43,13 @@ When it is genuinely both — a CI change that also alters an API's published
 version, say — plan the slice and let the change ride along in its cycle plan.
 Two folders for one landing is how you get two merge conflicts.
 
+You do not always have to make that call yourself.
+[`/vwf:feedback`](../../plugins/vwf.md#vwffeedback) asks the same question of
+every report it takes, and one of its seven classes is *not a blueprint gap* —
+which hands the report here, verbatim, with the reason it was ruled outside the
+blueprint. So a production report about tooling or docs reaches `change-plan`
+without ever being forced into a flow it does not fit.
+
 ## The journey
 
 ### 1. Ask for the plan, not the change
@@ -202,6 +209,12 @@ A **merge conflict at the landing** is the one hard halt: the worktree is kept,
 the status goes to `BLOCKED`, and the conflicting files are named. Resolve it
 and land through [`/vwf:git-workflow`](../../plugins/vwf.md#vwfgit-workflow)
 yourself.
+
+A plan you decide **not** to run at all is retired the same way a completed one
+is: [`/vwf:archive <folder>`](../../plugins/vwf.md#vwfarchive) moves the whole
+folder into `docs/plans/archived/` and marks its Status as archived-and-not-run,
+naming what it was before. Nothing is deleted, and the next plan's recall still
+reads it.
 
 ## What this pair will not do for you
 
