@@ -33,7 +33,7 @@
 # install yesterday's copy. Hence N is taken past the installed number too, and
 # a pre-existing directory for the target version is removed first.
 #
-# This does NOT release anything. Users are reached only by `plugins:release`,
+# This does NOT release anything. Users are reached only by `p:plugins:release`,
 # from main. The setup this task assumes (registering ./.dev-marketplace) is
 # .claude/docs/dev-marketplace.md.
 
@@ -120,7 +120,7 @@ done
 
 # 3. Regenerate both manifests and refresh the marketplace's view of them
 #    before asking for updates.
-mise run plugins:marketplace
+mise run p:plugins:marketplace
 claude plugin marketplace update "${MARKETPLACE}"
 
 # 4. Update, or install on a machine that has nothing yet — vwf pulls stackgen

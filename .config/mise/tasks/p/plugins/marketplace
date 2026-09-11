@@ -16,9 +16,9 @@
 #                                                   repo-relative paths into
 #                                                   .dev-marketplace/plugins, a
 #                                                   staging directory of copies
-#                                                   that `plugins:local` writes,
-#                                                   so this machine runs the
-#                                                   working tree rather than
+#                                                   that `p:plugins:local`
+#                                                   writes, so this machine runs
+#                                                   the working tree rather than
 #                                                   the last release.
 #
 # The published one lives at the repo ROOT because every `source` inside it is

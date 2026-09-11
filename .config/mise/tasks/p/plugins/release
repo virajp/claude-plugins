@@ -21,7 +21,7 @@
 # committed manifest is proven fresh.
 #
 # This does NOT touch package.json or the installer's tags. That release is
-# `mise run i:release`, whose tags are namespaced `installer-v*`.
+# `mise run p:i:release`, whose tags are namespaced `installer-v*`.
 
 set -euo pipefail
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
@@ -50,7 +50,7 @@ fi
 # 3. The committed manifest must be what the plugin manifests generate. Without
 #    this the refs tagged below are the STALE ones, so a version bump would ship
 #    under the previous release's tag.
-mise run plugins:marketplace --check
+mise run p:plugins:marketplace --check
 
 # 4. Every ref the manifest names, in entry order.
 mapfile -t REFS < <(node -p "

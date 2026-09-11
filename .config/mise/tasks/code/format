@@ -20,8 +20,8 @@ dprint ${CMD} \
 # `pnpm exec`, not `pnpm dlx` — the sorter rewrites committed files, so an
 # unpinned one picking up a new upstream key order would fail this check with
 # nothing having changed locally. (It used to have a second reason: the render
-# emitted the Oh-My-Pi bundles' package.json and `plugins:build` sorted them with
-# the same pinned binary. Both retired with the template layer — every
+# emitted the Oh-My-Pi bundles' package.json and a sibling task sorted them
+# with the same pinned binary. Both retired with the template layer — every
 # package.json in the tree is now hand-authored.)
 print_header "Sorting package.json files ..."
 pnpm exec sort-package-json ${SORT_PKGJSON} "**/package.json" --ignore "**/node_modules"

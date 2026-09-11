@@ -22,5 +22,5 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 cd "$MISE_PROJECT_ROOT"
 
-# "$@" so --check passes straight through, as plugins:marketplace does.
+# "$@" so --check passes straight through, as p:plugins:marketplace does.
 node scripts/src/inventory.ts "$@"
