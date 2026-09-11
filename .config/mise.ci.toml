@@ -14,7 +14,7 @@
 node.gpg_verify = false
 
 [tools]
-# `plugins:shellcheck`'s two binaries — CI resolves them from this layer, not
+# `p:plugins:shellcheck`'s two binaries — CI resolves them from this layer, not
 # from the `mise x shellcheck@latest shfmt@latest` wrapper in plugins.yml, whose
 # ad-hoc install does not survive the inner `mise run`.
 shellcheck = { version = "latest" }

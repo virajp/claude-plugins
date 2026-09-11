@@ -13,7 +13,7 @@ tree diagram is [`CLAUDE.md`](../../CLAUDE.md)'s and is not repeated here.
 **Two files are generated**, both projections of the same 2 plugin manifests and
 differing in exactly one field per entry — `source`. Only the **published** one
 is committed, so what users install is inspectable and diffable;
-`plugins:marketplace --check` asserts it matches a fresh generation.
+`p:plugins:marketplace --check` asserts it matches a fresh generation.
 
 `.claude-plugin/marketplace.json` is the **published** one, and it lives at the
 repo **root** because that is where Claude looks when this repo is added as a
@@ -23,16 +23,16 @@ which is what lets unreleased work sit on `develop`.
 `.dev-marketplace/.claude-plugin/marketplace.json` is **local authoring only**,
 **gitignored**, and never published. Every `source` is a repo-relative
 `./plugins/<name>`, resolved into the `.dev-marketplace/plugins/` staging
-directory the same run creates and `plugins:local` fills with `X.Y.Z+N` copies,
-so the authoring machine runs the working tree rather than the last release. It
-exists because this repo ships a workflow plugin whose author could not
-otherwise run the unreleased version of it.
+directory the same run creates and `p:plugins:local` fills with `X.Y.Z+N`
+copies, so the authoring machine runs the working tree rather than the last
+release. It exists because this repo ships a workflow plugin whose author could
+not otherwise run the unreleased version of it.
 
 **It is gitignored rather than committed**, which was the reverse of the plan's
 D1. Committing it would buy a fresh clone one command, at the price of a second
 file in the tree declaring the marketplace name `virajp-plugins` on the branch
 users read — a footgun that outweighs the convenience, since regenerating is
-`mise run plugins:marketplace`. The consequence is that `--check` has to tell
+`mise run p:plugins:marketplace`. The consequence is that `--check` has to tell
 **absent** (normal in CI and in a fresh clone) apart from **present but stale**
 (a real bug on a machine that uses it), which is what `MANIFESTS`'s `tracked`
 flag is for.
@@ -63,7 +63,7 @@ Note the three neighbours that read confusingly: `.claude-plugin/` is the
 published manifest, `.dev-marketplace/` is the local one, and `.claude/` is this
 repo's own skills, docs, agents and worktrees. None of them is `plugins/`.
 
-Setup and the refresh loop — `mise run plugins:local`, and the three measured
+Setup and the refresh loop — `mise run p:plugins:local`, and the three measured
 CLI facts that shape it — are [`dev-marketplace.md`](dev-marketplace.md).
 
 > **Authoring one:** the thirteen checker rules, the invocation frontmatter, the
@@ -122,8 +122,8 @@ on this list because it is not a mise task and checks nothing under `plugins/`:
 the workflows are this repo's own, and a typo in one is otherwise discovered
 only by pushing it.
 
-- **`plugins:marketplace`** — generates **both** marketplace manifests from the
-  2 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →
+- **`p:plugins:marketplace`** — generates **both** marketplace manifests from
+  the 2 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →
   `tags` and supplying what no manifest holds: the marketplace header, and the
   per-entry `category`, `strict` and `source`. It also creates the
   `.dev-marketplace/plugins/` staging directory the dev sources resolve into.
@@ -137,7 +137,7 @@ only by pushing it.
   narrowed down to. **There is no `--dev` flag**: both are written together
   because a flag is one more thing to forget, and a stale dev manifest fails as
   a plugin quietly serving yesterday's tree.
-- **`plugins:inventory`** — generates `plugins/stackgen/stacks/inventory.md`
+- **`p:plugins:inventory`** — generates `plugins/stackgen/stacks/inventory.md`
   from the stacks tree: every `<type>/<slug>/pack.yaml`, every bundle
   frontmatter, and the kind headings in `assets/kinds.md`. It exists because the
   pack, bundle and kind counts were typed into four prose files and drifted; the
@@ -150,7 +150,7 @@ only by pushing it.
   design and are skipped. **`--check`** is the same byte compare the marketplace
   task makes, run by pre-commit and `plugins.yml`, and `inventory.test.ts` pins
   it in vitest too.
-- **`plugins:check`** — validates the authored tree. Thirteen rules: manifest
+- **`p:plugins:check`** — validates the authored tree. Thirteen rules: manifest
   name↔dir; dependencies resolving within the marketplace; hook scripts existing
   and executable; **a pack's `config/` payload tier being materializable as-is**
   (seven assertions in one rule: exec bit *and* a known shebang on every file
@@ -212,7 +212,7 @@ only by pushing it.
   pointing at vwf's `delivery-pipeline.md` resolved to nothing at runtime. Both
   are in `.claude/skills/plugin-authoring/references/checks.md`, along with the
   eight rules that retired.
-- **`plugins:shellcheck`** — the shell gate over everything a pack ships as
+- **`p:plugins:shellcheck`** — the shell gate over everything a pack ships as
   shell, in **two groups with different arguments**. The task libraries and
   their `_scripts/*` run with `-x` and a source path, `-s bash`, and SC2034 /
   SC2154 disabled — right for files that source a colour library and read mise's
@@ -223,7 +223,7 @@ only by pushing it.
   over both. Its flags must agree with what the mise pack's own gate ships — a
   mismatch here rewrites a payload file into something the target repo rejects,
   which is how it first went wrong.
-- **`plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
+- **`p:plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed (the BSD-sed portability guarantee), for **both**
   package managers: each table runs in a temp dir seeded with the lockfile that
   selects pnpm or bun, so resolution is exercised alongside the rewrite. It runs
@@ -235,22 +235,22 @@ only by pushing it.
 - **`tsc --noEmit`** per TypeScript project — `installer/` and `scripts/`.
   Nothing emits, so `tsc` is only ever a checker, and there are no project
   references to walk.
-- **`site:*`** — the website's family, all under `.config/mise/tasks/site/` and
-  all run from `site/`: `site:dev` (the Astro dev server), `site:build`
-  (`astro build` then `pagefind --site dist`), `site:check` (the gate:
-  `astro check`, `site:build`, then `scripts/check-links.ts` in two passes —
+- **`p:site:*`** — the website's family, all under `.config/mise/tasks/p/site/`
+  and all run from `site/`: `p:site:dev` (the Astro dev server), `p:site:build`
+  (`astro build` then `pagefind --site dist`), `p:site:check` (the gate:
+  `astro check`, `p:site:build`, then `scripts/check-links.ts` in two passes —
   over `dist/**/*.html`, asserting every internal href resolves to a built file
   and every `#fragment` to an id in its target, and over the markdown mirror the
   build also emits, asserting every absolute site URL in `dist/**/*.md`,
   `llms.txt` and `llms-full.txt` resolves the same way and that each docs page
   carries exactly one markdown alternate link to a file that exists),
-  `site:icons` (rasterizes the committed favicon set from
+  `p:site:icons` (rasterizes the committed favicon set from
   `public/brand/vwf-favicon.svg`, run by hand when the mark changes and part of
-  no gate), `site:version` (bumps `site/package.json`, no tag) and
-  `site:release` (tags `site-v<version>` from `main` and watches `site.yml`).
+  no gate), `p:site:version` (bumps `site/package.json`, no tag) and
+  `p:site:release` (tags `site-v<version>` from `main` and watches `site.yml`).
   None of them runs in `plugins.yml` or in pre-commit — `site.yml` owns them.
 
-`plugins:check` is deliberately much smaller than the checker it replaced, and
+`p:plugins:check` is deliberately much smaller than the checker it replaced, and
 smaller again than the Python task before that. Whole families of assertion
 became *unrepresentable* rather than merely unchecked — the two dependency lists
 kept identical by hand, marketplace registration in both directions, skill

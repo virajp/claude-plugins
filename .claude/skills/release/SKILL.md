@@ -1,7 +1,7 @@
 ---
 name: release
-description: Cut a release — the plugins via plugins:release, the installer
-  CLI via i:release, the website via site:release, the GitHub Release note
+description: Cut a release — the plugins via p:plugins:release, the installer
+  CLI via p:i:release, the website via p:site:release, the GitHub Release note
   format, and the CI facts that make a failed publish legible. Run when the
   user asks to cut, tag, or publish a release.
 allowed-tools: Read Grep Glob Bash
@@ -9,18 +9,19 @@ allowed-tools: Read Grep Glob Bash
 
 # Release
 
-**Ask the user before running `i:release`, `plugins:release` or
-`site:release`.** It is the repo's hard rule, and all three tasks tag and push.
+**Ask the user before running `p:i:release`, `p:plugins:release` or
+`p:site:release`.** It is the repo's hard rule, and all three tasks tag and
+push.
 
 **There are three independent things to release, and one tag family each.** Ask
 which is meant before doing anything; the answer is usually visible in what
 changed.
 
-| Releasing           | Tag                    | Task              | Ends at                  |
-| ------------------- | ---------------------- | ----------------- | ------------------------ |
-| one or more plugins | `<name>-v<version>`    | `plugins:release` | the pushed tag           |
-| the installer CLI   | `installer-v<version>` | `i:release`       | npm + GitHub Release     |
-| the website         | `site-v<version>`      | `site:release`    | Workers + GitHub Release |
+| Releasing           | Tag                    | Task                | Ends at                  |
+| ------------------- | ---------------------- | ------------------- | ------------------------ |
+| one or more plugins | `<name>-v<version>`    | `p:plugins:release` | the pushed tag           |
+| the installer CLI   | `installer-v<version>` | `p:i:release`       | npm + GitHub Release     |
+| the website         | `site-v<version>`      | `p:site:release`    | Workers + GitHub Release |
 
 When plugins, installer and site release together, cut them from the same `main`
 merge in that order — plugins, installer, site — each with its own note.
@@ -44,15 +45,15 @@ unguarded. Either give the new family a `-v` or widen
 ## Local first
 
 **A plugin is staged locally before it is tagged publicly.** The staging command
-is `mise run plugins:local`: it copies each changed plugin into the gitignored
+is `mise run p:plugins:local`: it copies each changed plugin into the gitignored
 dev marketplace under `X.Y.Z+N` and updates this machine's install, so the
 author runs the plugin they are about to publish. It commits nothing, pushes
 nothing and cuts no tag; `/vwf:change-execute` runs it as the plan's
 after-landing `run` step, and a hand-made change reaches it the same way.
 
-So, before `plugins:release`, confirm the plugin being tagged has been staged
+So, before `p:plugins:release`, confirm the plugin being tagged has been staged
 and actually exercised — in a **restarted** session, since skills are read at
-session start. If it has not, offer to run `plugins:local` and stop there; the
+session start. If it has not, offer to run `p:plugins:local` and stop there; the
 tag can be cut in the next session and nothing is lost by waiting. This is a
 question, not a gate: the user can say the change is docs-only, or that they
 have exercised it another way, and that answer stands.
@@ -60,9 +61,10 @@ have exercised it another way, and that answer stands.
 Two limits, both worth stating rather than papering over:
 
 - **It covers plugins only.** The installer's and the website's nearest local
-  steps are `mise run i:test` and `mise run site:check` — gates over the built
-  artifact, not an install of it, so they prove less. `site:dev` serves the site
-  locally and is the closest thing the website has to running the real change.
+  steps are `mise run p:i:test` and `mise run p:site:check` — gates over the
+  built artifact, not an install of it, so they prove less. `p:site:dev` serves
+  the site locally and is the closest thing the website has to running the real
+  change.
 - **It refuses in user mode**, where the registered marketplace is the published
   one — it would otherwise re-copy the last release, which is the state it
   exists to escape. Setup is `.claude/docs/dev-marketplace.md`. A refusal is
@@ -77,17 +79,18 @@ materializes the tag the manifest already names.
 
 ```sh
 # on develop: bump plugins/<name>/.claude-plugin/plugin.json, then
-mise run plugins:marketplace     # the ref renames itself
+mise run p:plugins:marketplace     # the ref renames itself
 # merge develop → main, then
-mise run plugins:release --dry-run
-mise run plugins:release
+mise run p:plugins:release --dry-run
+mise run p:plugins:release
 ```
 
 The tracked version is plain `X.Y.Z` always; the `X.Y.Z+N` the authoring machine
 runs between releases exists only in the gitignored staged copies
-`plugins:local` writes, and `plugins:check` fails a manifest that carries one.
+`p:plugins:local` writes, and `p:plugins:check` fails a manifest that carries
+one.
 
-`plugins:release` tags only the plugins whose ref has no tag yet, so a plugin
+`p:plugins:release` tags only the plugins whose ref has no tag yet, so a plugin
 whose version did not move is skipped and its entry stays byte-identical — that
 is what makes releases per-plugin. It refuses to run off `main`, on a dirty
 tree, or against a stale manifest.
@@ -97,22 +100,22 @@ with `claude plugin marketplace update virajp-plugins` (re-reads the pins) then
 `claude plugin update <name>` (fetches them) — both steps, or nothing moves.
 
 If `plugins.yml` goes red on `main` with *"marketplace.json pins X, which is not
-a tag"*, the merge landed and the tags did not. Run `plugins:release`.
+a tag"*, the merge landed and the tags did not. Run `p:plugins:release`.
 
 ## Releasing the installer CLI
 
-Releasing via CI is preferred over the local `i:publish`, so every version keeps
-the strongest npm trust level (trusted publisher).
+Releasing via CI is preferred over the local `p:i:publish`, so every version
+keeps the strongest npm trust level (trusted publisher).
 
 ### 1. Bump on develop, merge to main
 
 `main` is merge-only — the `no-commit-to-branch` hook blocks a commit there — so
-`i:release` neither bumps nor commits. It is the same shape as
-`plugins:release`: tag what has already landed.
+`p:i:release` neither bumps nor commits. It is the same shape as
+`p:plugins:release`: tag what has already landed.
 
 ```sh
 # on develop
-mise run i:version              # patch; --minor / --major to choose the bump
+mise run p:i:version              # patch; --minor / --major to choose the bump
 git add package.json && mise x -- git commit -m "ops: bump installer to X.Y.Z"
 # merge develop → main
 ```
@@ -121,19 +124,19 @@ git add package.json && mise x -- git commit -m "ops: bump installer to X.Y.Z"
 
 ```sh
 # on main
-mise run i:release
+mise run p:i:release
 ```
 
 It requires a clean tree **and `main`**, refuses if `installer-vX.Y.Z` already
 exists (which means `package.json` was never bumped for this release), runs
-`i:test`, creates the annotated tag, then — interactively — pushes **`main`
+`p:i:test`, creates the annotated tag, then — interactively — pushes **`main`
 first and the tag second** and watches the `release.yml` run with
 `gh run watch --exit-status`, so the task only succeeds if the publish pipeline
 does. It needs `gh` installed and authenticated.
 
 The push order is load-bearing: `release.yml` checks the tagged commit is
 reachable from `origin/main`, so a tag arriving before the branch fails that
-gate. `plugins:release` pushes tags alone because no plugin tag is checked for
+gate. `p:plugins:release` pushes tags alone because no plugin tag is checked for
 reachability.
 
 `--ci` stops after the tag, with no push and no watch. `deps-update.yml` passes
@@ -166,7 +169,7 @@ nothing. Same shape as the installer: bump on `develop`, tag on `main`.
 
 ```sh
 # on develop
-mise run site:version           # patch; --minor / --major to choose the bump
+mise run p:site:version           # patch; --minor / --major to choose the bump
 git add site/package.json && mise x -- git commit -m "ops: bump site to X.Y.Z"
 # merge develop → main
 ```
@@ -175,13 +178,13 @@ git add site/package.json && mise x -- git commit -m "ops: bump site to X.Y.Z"
 
 ```sh
 # on main
-mise run site:release
+mise run p:site:release
 ```
 
 It requires a clean tree **and `main`**, refuses if `site-vX.Y.Z` already exists
 (which means `site/package.json` was never bumped for this release), runs
-`mise run site:check`, creates the annotated tag, then — interactively — pushes
-**`main` first and the tag second** and watches the `site.yml` run with
+`mise run p:site:check`, creates the annotated tag, then — interactively —
+pushes **`main` first and the tag second** and watches the `site.yml` run with
 `gh run watch --exit-status`, so the task only succeeds if the deploy does. The
 push order is load-bearing for the same reason as the installer's: `site.yml`
 checks the tagged commit is reachable from `origin/main`.

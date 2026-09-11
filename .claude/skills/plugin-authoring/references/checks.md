@@ -1,26 +1,26 @@
 # The checks
 
-What `plugins:check` asserts, why each rule cannot be replaced by a type or a
+What `p:plugins:check` asserts, why each rule cannot be replaced by a type or a
 format, and the one generated file that needs a freshness gate of its own.
 
 ## The gates
 
-| Task                          | Does                                                                                                                                                                                   |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `plugins:check`               | validates the authored tree; non-zero on any finding                                                                                                                                   |
-| `plugins:marketplace`         | regenerates both marketplace manifests from the 2 plugin manifests, plus the `.dev-marketplace/plugins/` staging dir                                                                   |
-| `plugins:marketplace --check` | asserts the committed manifest matches a fresh generation                                                                                                                              |
-| `plugins:inventory`           | regenerates `plugins/stackgen/stacks/inventory.md` from the stacks tree, and asserts every bundle pin resolves to a pack at that version; `--check` asserts the committed file matches |
-| `plugins:shellcheck`          | `shellcheck -x` + `shfmt -d` over every shell file a pack ships — task libraries and `_scripts/*`, then `hooks/*.sh`                                                                   |
-| `plugins:npm-normalize-test`  | table-tests the pnpm pack's `npm-normalize.sh` through the system sed                                                                                                                  |
-| `pnpm vitest run`             | the `scripts/` and `installer/` suites                                                                                                                                                 |
+| Task                            | Does                                                                                                                                                                                   |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `p:plugins:check`               | validates the authored tree; non-zero on any finding                                                                                                                                   |
+| `p:plugins:marketplace`         | regenerates both marketplace manifests from the 2 plugin manifests, plus the `.dev-marketplace/plugins/` staging dir                                                                   |
+| `p:plugins:marketplace --check` | asserts the committed manifest matches a fresh generation                                                                                                                              |
+| `p:plugins:inventory`           | regenerates `plugins/stackgen/stacks/inventory.md` from the stacks tree, and asserts every bundle pin resolves to a pack at that version; `--check` asserts the committed file matches |
+| `p:plugins:shellcheck`          | `shellcheck -x` + `shfmt -d` over every shell file a pack ships — task libraries and `_scripts/*`, then `hooks/*.sh`                                                                   |
+| `p:plugins:npm-normalize-test`  | table-tests the pnpm pack's `npm-normalize.sh` through the system sed                                                                                                                  |
+| `pnpm vitest run`               | the `scripts/` and `installer/` suites                                                                                                                                                 |
 
-`plugins:marketplace --check`, `plugins:inventory --check` and then
-`plugins:check` run in that order — **freshness before validity**, in pre-commit
-and in `plugins.yml` alike — so a stale generated file fails as staleness rather
-than as a confusing downstream assertion.
+`p:plugins:marketplace --check`, `p:plugins:inventory --check` and then
+`p:plugins:check` run in that order — **freshness before validity**, in
+pre-commit and in `plugins.yml` alike — so a stale generated file fails as
+staleness rather than as a confusing downstream assertion.
 
-The `plugins:check` task is two readers, not one: the rules below, and then
+The `p:plugins:check` task is two readers, not one: the rules below, and then
 `claude plugin validate --strict` over the marketplace and each plugin when
 `claude` is on PATH — Claude's own view of the manifest, which the rules
 deliberately do not restate.
@@ -137,8 +137,8 @@ much smaller than the one it replaced: whole families of assertion became
 
     The walk is its own rather than the plugin file reader's, because every one
     of these paths runs through a dot segment the reader's glob does not descend
-    into. `plugins:check` is the only reader that sees any of it before it lands
-    in someone's repo.
+    into. `p:plugins:check` is the only reader that sees any of it before it
+    lands in someone's repo.
 12. **Retired vocabulary stated as live.** The recurrence class of every drift
     sweep: a token is renamed at its source of truth, the lineage records the
     rename, and a dozen other files keep using the old word as if nothing

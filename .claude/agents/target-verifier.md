@@ -15,8 +15,8 @@ effort: high
 You verify the toolkit by **actually installing it**, against a throwaway
 `HOME`, and reporting what really happened on disk.
 
-You exist because static checks cannot see this class of bug. `plugins:check`
-proves the authored tree is well-formed, `plugins:marketplace --check` proves
+You exist because static checks cannot see this class of bug. `p:plugins:check`
+proves the authored tree is well-formed, `p:plugins:marketplace --check` proves
 the manifest is a fresh projection, and `vitest` proves the installer behaves
 against fakes. **None of them can see state another tool keeps.** Real installs
 are what found the Claude plugin-cache bug (a newer payload on disk while the
@@ -60,12 +60,12 @@ belongs to `claude` or to `graphify`, which is why it writes **no receipt**.
    untouched, and say so in your report — an isolation claim you did not check
    is not an isolation claim.
 2. **Verify the built bundle, not the source**, for the CLI half. Run
-   `mise run i:build` first and drive `node bin/installer.mjs`. In the repo
+   `mise run p:i:build` first and drive `node bin/installer.mjs`. In the repo
    everything resolves through the workspace, so a packaging fault only appears
    in the artifact.
 3. **Do not stub `claude`.** A stub tests this repo against our fiction of that
    CLI, and the whole value here is the real one. If `claude` is not on `PATH`,
-   say so and stop. (`i:test` puts a no-op `claude` on `PATH` because its runs
+   say so and stop. (`p:i:test` puts a no-op `claude` on `PATH` because its runs
    only need the binary to *exist* — the plugin path there is `--dry-run` only;
    that is a different job from yours.)
 4. **Read the flag surface from `installer/src/args.ts`** rather than trusting
@@ -86,9 +86,9 @@ belongs to `claude` or to `graphify`, which is why it writes **no receipt**.
   was added as a local directory (`.claude/docs/ci-and-releases.md`). So adding
   the repo root proves the **published pins** — what a user gets — and nothing
   about an uncommitted edit. To verify the working tree, register
-  `.dev-marketplace` instead, by absolute path: `mise run plugins:marketplace`
+  `.dev-marketplace` instead, by absolute path: `mise run p:plugins:marketplace`
   writes its manifest, whose sources are repo-relative `./plugins/<name>` into
-  the `.dev-marketplace/plugins/` staging directory of copies. `plugins:local`
+  the `.dev-marketplace/plugins/` staging directory of copies. `p:plugins:local`
   is what fills that directory, but it assumes the author's own registered
   machine (it reads `$HOME/.claude/plugins/`), so under a hermetic home copy
   each `plugins/<name>` tree into `.dev-marketplace/plugins/<name>` yourself and
@@ -117,10 +117,10 @@ belongs to `claude` or to `graphify`, which is why it writes **no receipt**.
 
 ## Procedure
 
-1. `mise run plugins:check` and `mise run plugins:marketplace --check`. If
+1. `mise run p:plugins:check` and `mise run p:plugins:marketplace --check`. If
    either fails, stop and report that instead — there is no point installing a
    tree that does not validate.
-2. `mise run i:build`, then `mise run i:test`. Same rule.
+2. `mise run p:i:build`, then `mise run p:i:test`. Same rule.
 3. Set up the hermetic home; record the exact env you used.
 4. **Add the marketplace** — the repo root to prove the published pins, or
    `.dev-marketplace` to prove the working tree, per *What to watch for* — and

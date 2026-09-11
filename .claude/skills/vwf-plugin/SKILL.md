@@ -18,7 +18,7 @@ workflow: slash-invocable workflow skills, auto-applying doctrine skills, the
 subagents they delegate to, the shared doctrine in `assets/`, the guarded `rtk`
 hook, the two mempalace auto-save hooks, and two MCP servers. It names **no**
 technology — no stack templates, no language list; what each axis offers comes
-from a stack plugin behind the stack-adapter contract, and `plugins:check`'s
+from a stack plugin behind the stack-adapter contract, and `p:plugins:check`'s
 technology-free guard enforces it.
 
 **Each SKILL.md, agent file and asset is authoritative for its own behavior.**
@@ -47,7 +47,7 @@ reference is `site/src/content/docs/plugins/vwf.md`, published at
 
 vwf depends on exactly one plugin, `stackgen`, resolved from this marketplace —
 declared in `plugin.json` with `"marketplace": "virajp-plugins"`, which
-`plugins:check` asserts resolves. `devtools` was the other until it dissolved
+`p:plugins:check` asserts resolves. `devtools` was the other until it dissolved
 into stackgen. `mempalace` and `andrej-karpathy-skills` are **vendored** rather
 than depended on, with provenance under `vendor/`; `markdown` and `context7`
 were **absorbed**. The reasoning is [`dependencies.md`][de].
@@ -130,8 +130,9 @@ against released APIs and released entity schemas).
 Create `skills/<name>/SKILL.md` — no other registration is needed
 (auto-discovered by directory convention; this repo has no `commands/` dirs, a
 former command is a skill so one artifact serves both invocation paths). Then
-pick the invocation mode per the policy below, and run `mise run plugins:check`
-— strict-YAML frontmatter drops a skill **silently** when it fails to parse.
+pick the invocation mode per the policy below, and run
+`mise run p:plugins:check` — strict-YAML frontmatter drops a skill **silently**
+when it fails to parse.
 
 ### Invocation policy
 
@@ -225,4 +226,4 @@ rule. Delegate the sweep to `/vwf:docs-sync` (its surveyor agent reads the docs)
 rather than reading those files inline; that file is large enough that loading
 it costs the rest of the session. A behaviour change also bumps `version` in
 `plugin.json` (plain `X.Y.Z`) and regenerates the marketplace with
-`mise run plugins:marketplace`.
+`mise run p:plugins:marketplace`.
