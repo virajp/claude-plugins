@@ -130,7 +130,7 @@ while read -r _ path; do
   if [[ ! -d "${gitdir}" ]]; then
     print_newline
     print_header "${name}"
-    print_warn "  not initialised — run: mise run worktree:init"
+    print_warn "  not initialised — run: mise run setup:worktree"
     continue
   fi
   GIT=(--git-dir "${gitdir}")

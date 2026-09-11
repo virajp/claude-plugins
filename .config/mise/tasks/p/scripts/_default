@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+#MISE description="The scripts project's own tasks — none authored yet"
+#MISE hide=true
+#PLACEHOLDER
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/placeholder"
+
+placeholder_notice "p:scripts" "no project tasks yet"
