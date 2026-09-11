@@ -67,7 +67,7 @@ const LINK_RE = /\]\((\.{1,2}\/[^)\s#]+\.(?:md|ya?ml))(?:#[^)\s]*)?\)/g;
 const ROOT_REF_RE = /\$\{CLAUDE_PLUGIN_ROOT\}\/([A-Za-z0-9_./-]+)/g;
 /**
  * Loose semver, minus build metadata. Claude accepts a `+N` version, and the
- * dev marketplace uses exactly that for its staged copies (`plugins:local`) —
+ * dev marketplace uses exactly that for its staged copies (`p:plugins:local`) —
  * but a tracked manifest carrying one is that local counter leaking into what
  * an end-user install pins to.
  */
@@ -280,7 +280,7 @@ const PACK_HOOK_METADATA = /\.(?:ya?ml|json|md)$/;
 /**
  * The interpreters a shipped task may name. Closed on purpose: a task library
  * whose files disagree on language is one nobody can lint, and the shell gate
- * (`plugins:shellcheck`) picks its argument list by the same rule.
+ * (`p:plugins:shellcheck`) picks its argument list by the same rule.
  */
 const PACK_TASK_SHEBANGS = new Set([
   "#!/usr/bin/env bash",

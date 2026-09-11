@@ -42,8 +42,8 @@ cadence, so nothing cross-checks them.
 
 The tracked version is **plain semver, always** — the checker fails a manifest
 carrying build metadata. The `X.Y.Z+N` the authoring machine runs between
-releases is written by `mise run plugins:local` into the gitignored staged copy
-under `.dev-marketplace/plugins/`, never into `plugins/`: that is what lets
+releases is written by `mise run p:plugins:local` into the gitignored staged
+copy under `.dev-marketplace/plugins/`, never into `plugins/`: that is what lets
 `claude plugin update` re-copy an edit without a commit.
 
 ## `plugin.json` — the manifest

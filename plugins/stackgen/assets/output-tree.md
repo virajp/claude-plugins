@@ -157,10 +157,10 @@ repo's root — these entries and only these — and it has two tiers:
   `CONTRIBUTING.md`, `readme.md`, `fnox.toml`, `eslint.config.mjs`,
   `dprint.json`, `wrangler.jsonc`, `renovate.json`, and the directory
   `.github/` — **excluding `.github/workflows/`**. This is the tier
-  `plugins:check` enforces over a pack's `config/` root.
+  `p:plugins:check` enforces over a pack's `config/` root.
 - **What sits there because vwf writes it** — **vwf's — no pack lands
   them**: `CLAUDE.md`, fenced out below as `/vwf:setup`'s, with
-  `plugins:check` refusing a pack that ships one at the root; and
+  `p:plugins:check` refusing a pack that ships one at the root; and
   `mempalace.yaml`, which the mine looks for in the directory it is pointed
   at and nowhere else, so anywhere but the root is silently inert (vwf's own
   `memory.md`, "Repo config — `mempalace.yaml`").
@@ -213,7 +213,7 @@ error and updates no dependency.
 Being on that list is a ceiling, never a licence: `readme.md` is on it
 because a shaped repo has one, and **no pack may ship it** — it belongs to
 `/vwf:readme`. `CLAUDE.md` is on it in the second tier only: it is fenced
-out below, it is `/vwf:setup`'s, and `plugins:check` refuses a pack that
+out below, it is `/vwf:setup`'s, and `p:plugins:check` refuses a pack that
 ships one at the root. The rule reaches `wrangler.jsonc` unchanged:
 being on the list makes it landable, not standard, and the three Cloudflare
 deploy packs ship one (`workers-static-assets`, `workers-ssr`, `containers`).
@@ -231,7 +231,7 @@ The rules mirror the ones the other targets already have:
   landed and says the tasks will be absent — never a silent partial landing.
 - **Mode is preserved.** `.config/mise/tasks/**` must land executable (755) or
   `mise run <task>` fails as an *unknown task* rather than as a permission
-  error. `plugins:check` asserts the bit on the authored packs, because an
+  error. `p:plugins:check` asserts the bit on the authored packs, because an
   invisible exec bit has cleared every other gate in this repo before.
 
 **Composition order, since more than one component may write one tree.**

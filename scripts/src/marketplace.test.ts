@@ -34,7 +34,7 @@ const parsedDev = JSON.parse(generatedDev) as {
 
 describe("the generated marketplace manifest", () => {
   it("is byte-identical to the committed file", () => {
-    // The same assertion `plugins:marketplace --check` makes, and the reason
+    // The same assertion `p:plugins:marketplace --check` makes, and the reason
     // this generator can exist at all: the manifest is generated AND committed,
     // so nothing else notices when the two diverge. Pinned here as well as in
     // the task, because the task only runs where mise does.
@@ -195,7 +195,7 @@ describe("the local authoring manifest", () => {
     // Every dev `source` is `./plugins/<name>`, which resolves against the
     // marketplace root. A symlink to the authored tree is the retired shape:
     // it served the working tree under the tracked version, so `update` never
-    // saw an edit. `plugins:local` writes staged copies here under `X.Y.Z+N`.
+    // saw an edit. `p:plugins:local` writes staged copies here under `X.Y.Z+N`.
     const dir = join(repoRoot, DEV_MARKETPLACE_DIR, DEV_PLUGINS_DIR);
     expect(lstatSync(dir).isSymbolicLink()).toBe(false);
     expect(lstatSync(dir).isDirectory()).toBe(true);

@@ -11,7 +11,7 @@ You want this if you are developing the plugins. If you are using them, you want
 
 `.claude-plugin/marketplace.json` pins every plugin to a `<name>-v<version>`
 tag. That is exactly right for users: a merge to `main` ships nothing until
-`mise run plugins:release` cuts the tag, so unreleased work can live on
+`mise run p:plugins:release` cuts the tag, so unreleased work can live on
 `develop`. It is exactly wrong for the author, who needs the unreleased tree.
 One file cannot be both, so there are two — generated together, from the same
 plugin manifests, differing only in each entry's `source`.
@@ -19,10 +19,10 @@ plugin manifests, differing only in each entry's `source`.
 ## Setup, once per machine
 
 ```sh
-mise run plugins:marketplace                    # both manifests + the staging dir
+mise run p:plugins:marketplace                    # both manifests + the staging dir
 claude plugin marketplace remove virajp-plugins # if you have the published one
 claude plugin marketplace add ./.dev-marketplace
-mise run plugins:local                          # stage the plugins and install vwf
+mise run p:plugins:local                          # stage the plugins and install vwf
 ```
 
 `claude plugin list` should then read:
@@ -44,7 +44,7 @@ you which by the version it reports.
 ## After you change a plugin
 
 ```sh
-mise run plugins:local
+mise run p:plugins:local
 ```
 
 The install is a directory *copy* into
@@ -53,12 +53,12 @@ and `claude plugin update` compares versions only. With the source edited and
 the version unchanged it reports `✔ vwf is already at the latest version` and
 copies nothing — measured, not assumed. So the dev marketplace does not serve
 `plugins/` directly. Its sources point into `.dev-marketplace/plugins/`, the
-**staged copies** `plugins:local` writes: each plugin whose tree differs from
+**staged copies** `p:plugins:local` writes: each plugin whose tree differs from
 its staged copy is re-copied with its `plugin.json` version rewritten to
 **`X.Y.Z+N`** — the tracked version plus a build number that exists only here —
 then the manifests are regenerated, the marketplace refreshed, and
 `claude plugin update` runs and now sees a change. The tracked manifests stay
-plain semver, nothing is committed per iteration, and `plugins:check` fails a
+plain semver, nothing is committed per iteration, and `p:plugins:check` fails a
 tracked manifest that carries a `+N`.
 
 Three measured facts shape that design. The version has to be in the staged
@@ -68,14 +68,14 @@ old `.dev-marketplace/plugins` symlink to the tree could never work — it serve
 the tracked version. Claude compares versions as **strings**, so `+4` → `+5`
 registers as an update even though semver ranks them equal. And it writes the
 cache directory with the `+` as `-` (`vwf/X.Y.Z-1/`) **and reuses one it has
-seen before without clearing it** — so `plugins:local` takes `N` past the
+seen before without clearing it** — so `p:plugins:local` takes `N` past the
 installed number as well as the staged one, and removes a pre-existing cache
 directory for the version it is about to install.
 
 This is the
 [`vwf-edits-do-not-reach-the-running-tools`](../../docs/memory/gaps/2026-08-26-vwf-edits-do-not-reach-the-running-tools.md)
-gap. The dev marketplace does not close it; `plugins:local` makes the workaround
-one command.
+gap. The dev marketplace does not close it; `p:plugins:local` makes the
+workaround one command.
 
 Restart Claude Code afterwards — a plugin's skills are read at session start.
 
@@ -102,14 +102,14 @@ directory and is unaffected by which mode you are in.
   `{"source": "directory"|"local", "path": …}` object, and a parent-relative
   `../plugins/<name>` all fail with `source: Invalid input` — so the copies have
   to live *inside* `.dev-marketplace/`. A symlink to `../plugins` was the shape
-  until 2026-09-03; `plugins:marketplace` replaces one it finds and `--check`
+  until 2026-09-03; `p:plugins:marketplace` replaces one it finds and `--check`
   fails on it, because under it `update` never sees an edit. An empty staging
-  directory reports as plugins that are simply absent: run `plugins:local`.
+  directory reports as plugins that are simply absent: run `p:plugins:local`.
 - **The dev manifest is gitignored, and checked only once it exists.** Edit a
-  plugin manifest without re-running `plugins:marketplace` and the gate fails on
-  your machine — but CI, which never generates one, reports it as not
-  applicable. So a fresh clone needs `mise run plugins:marketplace` before the
+  plugin manifest without re-running `p:plugins:marketplace` and the gate fails
+  on your machine — but CI, which never generates one, reports it as not
+  applicable. So a fresh clone needs `mise run p:plugins:marketplace` before the
   `marketplace add` above, and that is the one setup step you cannot skip.
 - **Nothing here changes what users get.** The published manifest, its tags and
-  `plugins:release` are untouched; the dissolution or any other work still
+  `p:plugins:release` are untouched; the dissolution or any other work still
   reaches users only by merging to `main` and cutting the tag.

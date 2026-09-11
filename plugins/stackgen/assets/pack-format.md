@@ -91,7 +91,7 @@ stays out is a language manifest, a CI workflow, a **whole** editor file
 and CLAUDE.md — a pack contributes to the editor through the fragment
 below, never by shipping `.vscode/settings.json`. **Mode is preserved**:
 anything under `config/.config/mise/tasks/**` must be authored executable
-(755), which `plugins:check` asserts, because mise runs a task file directly
+(755), which `p:plugins:check` asserts, because mise runs a task file directly
 and reports a non-executable one as an unknown task.
 
 ### Editor fragments
@@ -259,7 +259,7 @@ which is the grain `stackgen-sync` acts at.
   pack's bump never churns the rest of its bundle.
 - **A bundle pins the pack's current `version`.** Every
   `<type>/<slug>@<version>` component must name an existing pack at that
-  exact version, or be `@generated`; `plugins:inventory` fails generation
+  exact version, or be `@generated`; `p:plugins:inventory` fails generation
   otherwise, rather than rendering a row for a composition nothing can
   copy. So bumping a pack means re-pinning every bundle that names it —
   the bundle is the recorded composition, and `stackgen-sync` diffs on
@@ -273,7 +273,7 @@ which is the grain `stackgen-sync` acts at.
   Name the asset by role ("stackgen's secrets contract") or state its rule
   inline; a sibling component's conventions are "the `<type>/<slug>`
   component's conventions, in this composition's template". A bare
-  `<type>/<slug>` ref is an identifier and is fine. `plugins:check`
+  `<type>/<slug>` ref is an identifier and is fine. `p:plugins:check`
   rule 13 enforces it. This file is an asset rather than a landed tier, so
   its own citations may keep the token.
 - **Structure follows the kind; the slice follows the type.** A pack

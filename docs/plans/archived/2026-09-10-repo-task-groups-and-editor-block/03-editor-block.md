@@ -52,6 +52,35 @@ The user: *"A unit does the merge per the documented algorithm"*.
    terminal.
 5. **`.vscode/launch.json`** — untouched (no pack ships a launch fragment).
 
+## Ruling on the wave-1 block (2026-09-11)
+
+The first pass composed the block correctly and left every hand key in place;
+the repo's linter then failed `.vscode/settings.json` with 54
+`json/no-duplicate-keys` errors — the algorithm's "hand key wins by later-key
+precedence" is a duplicate key, and this repo forbids those. The user ruled
+(index.md, decision 3 addendum). Apply it on top of the composed block already
+in the worktree:
+
+1. In the hand-authored section **below** the `// <<< vscode.d` marker, delete
+   every top-level key that also appears inside the block and whose value is
+   identical to the block's (52 keys). Delete the whole key — its comment lines
+   directly above it go with it only when they describe that key alone.
+2. `files.exclude` and `explorer.fileNesting.patterns` differ. Keep each as a
+   hand key, with its value the **union** of the block's entries and the hand
+   entries: for `files.exclude`, every glob from both, hand order then the
+   block-only globs appended; for `explorer.fileNesting.patterns`, every parent
+   from both, and for a parent in both the children unioned, sorted, and
+   comma-joined. Put `// eslint-disable-next-line json/no-duplicate-keys` on the
+   line directly above each of the two keys.
+3. Touch nothing inside the block, nothing in `.vscode/extensions.json`
+   (duplicates in a JSON array are not a linter rule), and not
+   `.config/linter.yaml`.
+4. Verify with the repo's own hook:
+   `mise x -- pre-commit run --config .config/pre-commit-config.yaml --files .vscode/settings.json`
+   → every hook Passed, Linter included. If the inline directive is **not**
+   honoured by the linter on this file, do not widen the exemption — return
+   `UNRESOLVED:` with the linter's exact output.
+
 ## Verification
 
 - `command ls .config/vscode.d/` → the four files.

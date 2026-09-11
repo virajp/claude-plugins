@@ -7,11 +7,11 @@
 # Tags whatever version `main` already carries, and pushes it.
 #
 # It does NOT bump and does NOT commit. `main` is merge-only — the version bump
-# is `mise run site:version` on `develop`, committed there and merged over like
-# any other change — so this task is the same shape as `plugins:release` and
-# `i:release`: verify, tag what is on main, push. Every release task answers
-# "release what has already landed" rather than "make a change and release it in
-# one move".
+# is `mise run p:site:version` on `develop`, committed there and merged over
+# like any other change — so this task is the same shape as `p:plugins:release`
+# and `p:i:release`: verify, tag what is on main, push. Every release task
+# answers "release what has already landed" rather than "make a change and
+# release it in one move".
 #
 # That split is what the `no-commit-to-branch` hook forces, and it is the better
 # shape anyway: a release task that commits has to be trusted to commit the
@@ -37,7 +37,7 @@ fi
 #    rather than here — which is a far more confusing place to learn it.
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 if [[ "${BRANCH}" != "${RELEASE_BRANCH}" ]]; then
-  print_error "On '${BRANCH}', not '${RELEASE_BRANCH}'. Bump with 'mise run site:version' on develop, commit, merge to ${RELEASE_BRANCH}, then run this."
+  print_error "On '${BRANCH}', not '${RELEASE_BRANCH}'. Bump with 'mise run p:site:version' on develop, commit, merge to ${RELEASE_BRANCH}, then run this."
   exit 1
 fi
 
@@ -54,12 +54,12 @@ TAG="site-v${VERSION}"
 #    out. Fetch first so "exists" means the remote's answer, not this checkout's.
 git fetch --tags --quiet origin
 if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
-  print_error "${TAG} already exists. Bump with 'mise run site:version' on develop, commit, and merge to ${RELEASE_BRANCH} first."
+  print_error "${TAG} already exists. Bump with 'mise run p:site:version' on develop, commit, and merge to ${RELEASE_BRANCH} first."
   exit 1
 fi
 
 # 4. The site gate must pass before anything is tagged.
-mise run site:check
+mise run p:site:check
 
 # 5. The annotated tag.
 git tag -a "${TAG}" -m "${TAG}"
@@ -87,7 +87,7 @@ fi
 # main BEFORE the tag, and this order is load-bearing: `site.yml` checks the
 # tagged commit is reachable from `origin/main` exactly as `release.yml` does,
 # so a tag that arrives first fails that gate until the branch catches up.
-# (`plugins:release` pushes tags alone because no plugin tag is checked for
+# (`p:plugins:release` pushes tags alone because no plugin tag is checked for
 # reachability.)
 print_header "Pushing ${RELEASE_BRANCH} and ${TAG} ..."
 git push origin "${RELEASE_BRANCH}"
@@ -119,7 +119,7 @@ if [[ -z "${RUN_ID}" || "${RUN_ID}" == "null" ]]; then
 fi
 
 # --exit-status makes `gh run watch` exit non-zero if the run fails, so `set -e`
-# fails this task — i.e. completing site:release means the pipeline succeeded.
+# fails this task — i.e. completing p:site:release means the pipeline succeeded.
 print_header "Watching site run ${RUN_ID} ..."
 gh run watch "${RUN_ID}" --exit-status
 

@@ -56,7 +56,7 @@ reachable in the type because a receipt on disk may still carry one; it simply
 no longer runs.
 
 `configKey` is the one that matters most in practice, because it is what gives a
-user their own setting back rather than an empty one. The shape `i:test` seeds
+user their own setting back rather than an empty one. The shape `p:i:test` seeds
 is the worked example: a `cursor.json` receipt records `~/.cursor/settings.json`
 → `virajp`, with the value that was there before that install as `previous`.
 Reverting writes that value back; it deletes the key only when `hadKey` says

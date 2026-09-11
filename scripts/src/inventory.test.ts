@@ -29,7 +29,7 @@ const generated = renderInventory(inventory);
 
 describe("the generated stackgen inventory", () => {
   it("is byte-identical to the committed file", () => {
-    // The same assertion `plugins:inventory --check` makes. Pinned here as well
+    // The same assertion `p:plugins:inventory --check` makes. Pinned here as well
     // as in the task because the task only runs where mise does, and a count
     // typed into prose is exactly the drift this file replaced.
     const committed = readFileSync(join(repoRoot, INVENTORY_PATH), "utf8");

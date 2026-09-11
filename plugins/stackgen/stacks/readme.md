@@ -269,7 +269,7 @@ TypeScript language bundle rather than a repo gate. See the `repo-gate` seam
 in `../assets/kinds.md`.
 
 **The inventory is [`inventory.md`](inventory.md)** — generated from this tree
-by `mise run plugins:inventory`, never typed by hand, and guarded by `--check`
+by `mise run p:plugins:inventory`, never typed by hand, and guarded by `--check`
 in pre-commit and CI. No curated plugin stands behind any pack any more, so
 the covered path is exactly this tree, and stackgen's standing value beyond it
 is the uncovered tail: `generated/<technology-slug>`.

@@ -82,8 +82,8 @@ therefore `/vwf:readme`, and vwf-only; that is intended.
 The dependency list is declared in **one** place —
 `plugins/vwf/.claude-plugin/plugin.json` — and the marketplace entry is
 generated from it, so the two can no longer drift. (They were once separate
-files kept in sync by hand, which is what `plugins:check` used to compare.) The
-checker now verifies each name resolves to a real plugin instead.
+files kept in sync by hand, which is what `p:plugins:check` used to compare.)
+The checker now verifies each name resolves to a real plugin instead.
 
 **`design-tools` is gone entirely, and vwf now names no design tool at all.**
 Its three import skills became vwf's own in Wave C — `/vwf:import-screens`,

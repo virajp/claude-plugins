@@ -84,7 +84,7 @@ worth knowing apart: `fetchGithubJson` attaches `$GITHUB_API_TOKEN` when set,
 ## The build split
 
 `installer/src/` is the source. `bin/installer.mjs` is the tsup bundle, it is
-**gitignored**, `mise run i:build` regenerates it, and **`bin/` is what npm
+**gitignored**, `mise run p:i:build` regenerates it, and **`bin/` is what npm
 publishes**.
 
 ```text
@@ -100,10 +100,10 @@ directly would raise `engines.node` from `>=18` to `>=22.18`. The externals
 rule, the ESM/CJS split and the rest of the packaging traps are in
 [packaging.md](https://github.com/virajp/claude-plugins/blob/main/.claude/docs/installer/packaging.md).
 
-`mise run i:test` bundles first and smoke-tests the **built artifact**, not the
-source, because a packaging mistake only shows up there. Its end-to-end section
-seeds a throwaway `HOME` with a **`cursor.json` legacy receipt** — one `file`
-entry and one `configKey` entry — and asserts three things about
+`mise run p:i:test` bundles first and smoke-tests the **built artifact**, not
+the source, because a packaging mistake only shows up there. Its end-to-end
+section seeds a throwaway `HOME` with a **`cursor.json` legacy receipt** — one
+`file` entry and one `configKey` entry — and asserts three things about
 `--uninstall --dry-run`: that the built bundle, resolving `HOME` and both XDG
 vars for real, **finds** it at the path it was written to; that it plans a
 **revert** rather than a delete; and that it **writes nothing**, leaving the
@@ -150,7 +150,7 @@ What users install is `main`, and `plugins.yml` validates `main` on every push.
 | `installer/src/progress.ts`        | the live step on stderr, off when stderr is not a TTY               |
 | `installer/src/config/json.ts`     | format-preserving JSON/JSONC edits, and `restoreJsonKey`            |
 | `scripts/src/`                     | repo tooling — the marketplace generator and the plugin checker     |
-| `installer/src/**/*.test.ts`       | vitest; `i:test` smoke-tests the **built** bundle, not the source   |
+| `installer/src/**/*.test.ts`       | vitest; `p:i:test` smoke-tests the **built** bundle, not the source |
 
 One placement rule that looks arbitrary and is not: `vitest.config.mts` collects
 only `{installer,scripts}/src/**/*.test.ts`, so a test file anywhere else is

@@ -50,8 +50,8 @@ here are an index, not a second copy.
   **latency and context strategy as much as a quality one**: read-heavy scans
   and mechanical writing run in a subagent so their file loads never enter the
   orchestrator's context, where every loaded line is re-processed on each later
-  turn. Each agent file states its own contract; `plugins:check` verifies these
-  names resolve, in both directions.
+  turn. Each agent file states its own contract; `p:plugins:check` verifies
+  these names resolve, in both directions.
 
   | Agent                                        | Role                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
   | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

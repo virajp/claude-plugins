@@ -19,7 +19,7 @@ repos:
     hooks:
       - id: npm-normalize-hook-test
         name: npm→pnpm/bun hook tests
-        entry: mise x -- mise run plugins:npm-normalize-test
+        entry: mise x -- mise run p:plugins:npm-normalize-test
         language: system
         pass_filenames: false
         files: ^plugins/stackgen/stacks/package-manager/pnpm/hooks/
@@ -34,7 +34,7 @@ repos:
       # side moving is the drift.
       - id: plugins-marketplace
         name: Marketplace manifest matches the plugin manifests
-        entry: mise x -- mise run plugins:marketplace --check
+        entry: mise x -- mise run p:plugins:marketplace --check
         language: system
         pass_filenames: false
         files: ^(plugins/|\.claude-plugin/)
@@ -45,14 +45,14 @@ repos:
       # inventory itself.
       - id: plugins-inventory
         name: stackgen inventory matches the stacks tree
-        entry: mise x -- mise run plugins:inventory --check
+        entry: mise x -- mise run p:plugins:inventory --check
         language: system
         pass_filenames: false
         files: ^plugins/stackgen/(stacks/|assets/kinds\.md)
         stages: [ pre-commit ]
       - id: plugins-check
         name: Static validation of the authored plugins/ tree
-        entry: mise x -- mise run plugins:check
+        entry: mise x -- mise run p:plugins:check
         language: system
         pass_filenames: false
         files: ^plugins/
@@ -68,7 +68,7 @@ repos:
       # malformed hook through, which is the defect that widened this gate.
       - id: plugins-shellcheck
         name: shellcheck and shfmt over every shell file a pack ships
-        entry: mise x -- mise run plugins:shellcheck
+        entry: mise x -- mise run p:plugins:shellcheck
         language: system
         pass_filenames: false
         files: ^plugins/[^/]+/stacks/[^/]+/[^/]+/(config|hooks)/
@@ -139,7 +139,7 @@ repos:
       #
       # Anything a pack ships as bytes belongs to the target's config, never to
       # this one. `hooks/` needs no exclusion — its scripts are `.sh`, which
-      # dprint does not format (`plugins:shellcheck` is their gate), and
+      # dprint does not format (`p:plugins:shellcheck` is their gate), and
       # `hooks.yaml` is a manifest this repo reads rather than a file it ships.
       # The linter below is not affected: it reports rule violations rather
       # than reformatting, and finds none across the payload tree.
@@ -162,15 +162,15 @@ repos:
         #
         # Three kinds: the vwf blueprint templates and example bundle (ignored in
         # linter.yaml, because OKF frontmatter reads as a second H1), the hook
-        # scripts, which are shell — `plugins:npm-normalize-test` is what actually
-        # tests those, through the system sed — and the site's Astro components,
-        # which the linter has no parser for (they are dprint's, via the markup
-        # plugin) and which linter.yaml already ignores, so passing them only
-        # produces the warnings that fail the run. site/public/ is copied
-        # verbatim into dist/ — SVG, PNG, ICO, the web manifest, robots, the
-        # social-preview render source, and _headers, which Cloudflare Workers
-        # Static Assets parses rather than serves — none of which it lints, and
-        # its HTML rewrite fights dprint's.
+        # scripts, which are shell — `p:plugins:npm-normalize-test` is what
+        # actually tests those, through the system sed — and the site's Astro
+        # components, which the linter has no parser for (they are dprint's, via
+        # the markup plugin) and which linter.yaml already ignores, so passing
+        # them only produces the warnings that fail the run. site/public/ is
+        # copied verbatim into dist/ — SVG, PNG, ICO, the web manifest, robots,
+        # the social-preview render source, and _headers, which Cloudflare
+        # Workers Static Assets parses rather than serves — none of which it
+        # lints, and its HTML rewrite fights dprint's.
         exclude: ^plugins/vwf/assets/(templates|examples)/|^site/public/|\.sh$|\.astro$
         language: system
         stages: [ pre-commit ]

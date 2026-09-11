@@ -142,7 +142,7 @@ most important rule here, and getting it wrong fails **silently**:
 entirely and blocks programmatic invocation — so a delegated call does not error.
 vwf simply cannot see the skill, and the menu comes back empty. A stack plugin
 whose skills are user-only is indistinguishable, at runtime, from one with no
-templates. `plugins:check` enforces it.
+templates. `p:plugins:check` enforces it.
 
 ### vwf preflights, because the failure mode is silence
 

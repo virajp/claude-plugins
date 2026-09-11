@@ -36,7 +36,7 @@ by installing `claude-status`.
 
 **`installer/src/` is the source; `bin/installer.mjs` is the tsup bundle, is
 gitignored, and is what npm publishes** — `package.json`'s `files` is `bin`
-alone, four files. `mise run i:build` regenerates it. Shipping
+alone, four files. `mise run p:i:build` regenerates it. Shipping
 `installer/src/*.ts` directly would raise `engines.node` from `>=18` to
 `>=22.18`, which is the whole reason the bundle exists.
 
@@ -114,7 +114,7 @@ Four rules:
   remove. A run that finds nothing has nothing to ask about, and failing it for
   want of a terminal would make the flag unusable in a script that is checking
   whether anything is left. `--dry-run` is the non-interactive path, and is what
-  `i:test` drives.
+  `p:i:test` drives.
 
 **This CLI does no debris cleanup, and adding some back is a design decision
 rather than a fix.** Every removal it performs is either owner-driven or
@@ -172,7 +172,7 @@ tokenless — `fetchGithubJson` attaches the token, `fetchJson` never does.
 
 ## Testing
 
-- `mise run i:test` bundles first and smoke-tests **`bin/installer.mjs`, not
+- `mise run p:i:test` bundles first and smoke-tests **`bin/installer.mjs`, not
   `installer/src/index.ts`** — a packaging mistake only shows up in the built
   artifact, because in the repo everything resolves through the workspace.
 - Its end-to-end section **seeds a `cursor.json` legacy receipt** into a
@@ -191,7 +191,7 @@ tokenless — `fetchGithubJson` attaches the token, `fetchJson` never does.
   *shell script* test lives at
   `installer/src/mempalace-checkpoint-script.test.ts` even though what it
   exercises is `plugins/`.
-- `claude` is stubbed in `i:test` only because the runs need it to *exist*;
+- `claude` is stubbed in `p:i:test` only because the runs need it to *exist*;
   nothing shells out to it — the plugin path is exercised as `--dry-run` only,
   which never spawns. Do not stub a tool to exercise its command sequence end to
   end — that tests this tool against our own fiction of its CLI. The install's
@@ -207,7 +207,7 @@ tokenless — `fetchGithubJson` attaches the token, `fetchJson` never does.
 ## Releasing and documenting
 
 `installer-v<version>` tags trigger `release.yml` → npm publish; the ritual is
-`/release`, and **`i:release` is never run without asking the user**.
+`/release`, and **`p:i:release` is never run without asking the user**.
 `release.yml`'s trigger surface stays untouched — npm allows one Trusted
 Publisher and validates the entry-point filename.
 

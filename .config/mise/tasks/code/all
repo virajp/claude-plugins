@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 #MISE description="Format, lint, scan all code"
 #MISE dir="."
 

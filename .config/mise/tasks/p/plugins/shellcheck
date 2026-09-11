@@ -60,7 +60,7 @@ for tool in shellcheck shfmt; do
   if ! command -v "$tool" >/dev/null 2>&1; then
     print_error "$tool is not on PATH"
     print_warn "It comes from .config/mise.dev.toml — run with MISE_ENV=dev, or"
-    print_warn "\`mise x shellcheck@latest shfmt@latest -- mise run plugins:shellcheck\`"
+    print_warn "\`mise x shellcheck@latest shfmt@latest -- mise run p:plugins:shellcheck\`"
     exit 1
   fi
 done
@@ -144,9 +144,9 @@ fi
 #                a `source` line appearing in one is a bug the follow mode would
 #                paper over rather than a path shellcheck needs help finding.
 #   no -s bash   the shebang decides. A hook declaring `#!/usr/bin/env sh` is
-#                claiming BSD/POSIX portability (`plugins:check` holds the line
-#                to a closed set of two), and forcing bash would wave through
-#                the exact bashisms that claim forbids.
+#                claiming BSD/POSIX portability (`p:plugins:check` holds the
+#                line to a closed set of two), and forcing bash would wave
+#                through the exact bashisms that claim forbids.
 #   no excludes  SC2034 and SC2154 are structurally false for the task library
 #                alone — a sourced colour library, and mise's injected `usage_*`
 #                variables. A standalone hook has neither, so an unused or

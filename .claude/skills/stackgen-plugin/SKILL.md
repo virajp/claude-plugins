@@ -35,7 +35,7 @@ restate a count or a rule that an asset below already owns.
 | `assets/ids.md`               | the **project-id slug** — the rule, its measured reason, and the four surfaces it fills     |
 | `assets/artifact-doctrine.md` | the **host rules** deciding whether a generated skill, agent or hook is valid at all        |
 | `assets/contracts/`           | the provider-neutral doctrine per capability or kind that instance packs cite and stay thin |
-| `stacks/inventory.md`         | **generated** — every pack, bundle and kind with counts; `mise run plugins:inventory`       |
+| `stacks/inventory.md`         | **generated** — every pack, bundle and kind with counts; `mise run p:plugins:inventory`     |
 | `stacks/readme.md`            | the narrative — which wave landed what, and why                                             |
 | `agents/`                     | `stackgen-skill-reviewer`, the generator's gate                                             |
 
@@ -122,7 +122,7 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   a fixed allowlist, whose doctrine is `assets/output-tree.md` and whose two
   tiers do not both reach the checker: the **landable** tier is
   `PACK_CONFIG_ROOT_FILES` in `scripts/src/check.ts`, enforced by
-  `plugins:check` rule 11, and beside it sits a second tier of root files
+  `p:plugins:check` rule 11, and beside it sits a second tier of root files
   **vwf** writes — `CLAUDE.md` and `mempalace.yaml` — which may sit at a shaped
   root and which no pack may land. `readme.md` is on the landable tier only
   because a shaped repo has one — **no pack may ship it** — and `renovate.json`
@@ -141,7 +141,7 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
 - **A landed file cites nothing by plugin path.** Everything under `skills/`,
   `agents/`, `rules/`, `hooks/` and `config/`, plus a pack's `conventions.md`
   and a bundle's body, is copied verbatim into a repo where **no plugin is
-  installed**, so `plugins:check` rule 13 refuses four forms in them: the
+  installed**, so `p:plugins:check` rule 13 refuses four forms in them: the
   literal `${CLAUDE_PLUGIN_ROOT}`, a bare `assets/…` path, a `../` climb leaving
   the tree the file lands in (only a file under `skills/` has one — it may still
   reach a sibling skill of the same pack, which lands beside it; an agent, a
@@ -153,7 +153,7 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
   component's conventions, in this composition's template". Never swap one path
   for another.
 - **The whole `config/` payload tier is checked before it ships.**
-  `plugins:check` rule 11 makes **seven** assertions: the exec bit and a known
+  `p:plugins:check` rule 11 makes **seven** assertions: the exec bit and a known
   shebang on every task file (mise reports a 644 task as an *unknown* one rather
   than a permission error) and on every `hooks/*.sh`; the **landable** tier of
   the root allowlist over the tier's top level — the vwf-owned tier never
@@ -164,9 +164,9 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
   `.config/pre-commit-config.yaml` does too — it is neither a fragment nor at
   the tier's root, so nothing parsed it until it was named; and that each
   `.config/vscode.d/*.jsonc` parses as JSONC carrying only the three keys.
-  `plugins:shellcheck` runs `shellcheck -x` and `shfmt -d` over the same shell,
-  in two groups — task libraries with the pack's `_scripts/` beside them, hooks
-  with no flags, since a hook lands alone and may declare `sh`.
+  `p:plugins:shellcheck` runs `shellcheck -x` and `shfmt -d` over the same
+  shell, in two groups — task libraries with the pack's `_scripts/` beside them,
+  hooks with no flags, since a hook lands alone and may declare `sh`.
 - **Never format a payload file with this repo's dprint config.** The tier is
   excluded from it on purpose: the target repo formats these files with the
   *shipped* config, which omits settings this repo sets, so formatting one here
@@ -182,8 +182,8 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
 - A generated artifact is **lazily hung and never line-capped** — a large one is
   decomposed into a router skill plus on-demand references, never trimmed.
 - The `vwf-stack-adapter` keyword in `plugin.json` is load-bearing:
-  `plugins:check` requires the menu + template pair on every plugin carrying it,
-  **and** the keyword on every plugin shipping either skill, so dropping one
+  `p:plugins:check` requires the menu + template pair on every plugin carrying
+  it, **and** the keyword on every plugin shipping either skill, so dropping one
   side cannot silently turn the rule off.
 - Both adapter skills are **skill-invoked**: `disable-model-invocation: false`
   so vwf can reach them by their constructed names, **and**
@@ -206,11 +206,11 @@ a materialization rather than discovered from a `hooks/hooks.json`:
   business in vwf.
 
 Both are still gated here, as payload rather than as hooks: rule 11 asserts each
-script's exec bit and its shebang, and `plugins:shellcheck` lints the body. What
-no rule reads is the `hooks.yaml` beside them — `checkHookScripts`, the older
-rule, follows only a plugin's own `hooks/hooks.json`, so the event and matcher a
-payload hook is wired to are asserted by nothing in this repo.
-`mise run plugins:npm-normalize-test` covers the normalizer's behaviour: it
+script's exec bit and its shebang, and `p:plugins:shellcheck` lints the body.
+What no rule reads is the `hooks.yaml` beside them — `checkHookScripts`, the
+older rule, follows only a plugin's own `hooks/hooks.json`, so the event and
+matcher a payload hook is wired to are asserted by nothing in this repo.
+`mise run p:plugins:npm-normalize-test` covers the normalizer's behaviour: it
 table-tests the script through the **system sed** for both package managers,
 each table in a temp dir seeded with the lockfile that selects pnpm or bun. Hook
 scripts must stay portable to macOS BSD `sed` — no `\s`, no `\b`.
@@ -221,8 +221,8 @@ Any change to stackgen's behaviour must reconcile `readme.md`, `CLAUDE.md` and
 `site/src/content/docs/plugins/stackgen.md` in the **same commit** — the repo's
 hard rule. Delegate the sweep to `/vwf:docs-sync`. A behaviour change also bumps
 `version` in `plugin.json` (plain `X.Y.Z`) and regenerates the marketplace with
-`mise run plugins:marketplace`. A new pack, bundle or kind regenerates
-`stacks/inventory.md` with `mise run plugins:inventory` — never type a count
+`mise run p:plugins:marketplace`. A new pack, bundle or kind regenerates
+`stacks/inventory.md` with `mise run p:plugins:inventory` — never type a count
 into prose; `--check` in pre-commit and CI fails a stale inventory, and the
 generator throws on a `kind` that `assets/kinds.md` does not define — and on a
 bundle component ref that is not `<type>/<slug>@<version>`, that names no

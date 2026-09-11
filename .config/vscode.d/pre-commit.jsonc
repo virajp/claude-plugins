@@ -1,0 +1,18 @@
+// Editor fragment — the local gate's contribution to the repo's editor
+// settings. `/vwf:init` merges every `.config/vscode.d/*.jsonc` into the two
+// editor files inside one marked block; a key written by hand after that block
+// wins.
+//
+// Nesting only. The gate has no editor extension worth recommending — it runs
+// on commit, not on save — and no setting: an editor that ran the hooks itself
+// would be a second definition of the gate, which is the one thing this pack's
+// conventions forbid.
+{
+  // Both files are under `.config/`, and the convention file is only ever read
+  // because the hook config wires it. Showing it as a child says so.
+  "nesting": {
+    "pre-commit-config.yaml": [
+      "git-conventional-commits.yaml",
+    ],
+  },
+}
