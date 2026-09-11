@@ -51,7 +51,7 @@
         "source": "git-subdir",
         "url": "https://github.com/virajp/claude-plugins.git",
         "path": "plugins/vwf",
-        "ref": "vwf-v19.15.0"
+        "ref": "vwf-v19.15.1"
       },
       "strict": true,
       "tags": [
@@ -73,7 +73,7 @@
         "git-workflow",
         "vwf-design-adapter"
       ],
-      "version": "19.15.0"
+      "version": "19.15.1"
     }
   ]
 }

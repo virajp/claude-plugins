@@ -101,7 +101,7 @@ used to be a role lives on as a platform.
 
 | Role       | What it is                     | Platforms                                                                  |
 | ---------- | ------------------------------ | -------------------------------------------------------------------------- |
-| `backend`  | Server-side, cloud-hosted      | `packages` `service` `worker`                                              |
+| `backend`  | Server-side, cloud-hosted      | `packages` `service` `worker` `webapp`                                     |
 | `frontend` | User-facing surfaces           | `packages` `site` `webapp` `desktop` `mobile` `tablet` `auto` `cli`        |
 | `data`     | Data and ML systems            | `packages` `data-lake` `analytics` `ingestion` `ml-platform`               |
 | `system`   | Infrastructure and tooling     | `packages` `iac` `plugin` `misc` `cicd` `cli`                              |
