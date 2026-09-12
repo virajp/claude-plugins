@@ -89,6 +89,26 @@ its old name is a broken repo that passes every check, so scan the task files,
 the manager's configuration layers, the gate configuration and any shell
 aliases for the old spelling and list each occurrence as its own rename line.
 
+**Two or more of the repo's own files can resolve to one destination path**,
+and the plan has to stay determinate when they do. A repo carrying two
+retired names the table maps to the same current one has two files wanting a
+path only one file can occupy, and "the last rename wins" is a guess made
+silently at apply time. That is the collision, and it is the only one: a
+**single** rename whose destination a landed pack ships is the ordinary case
+— the rename lands and passes 5 and 6 compare what arrives — and nothing here
+applies to it.
+
+Where two or more do contend, the destination is treated as what it is,
+**pack-owned**: the pack's file lands there as pass 6's **create**, and each
+contending repo file becomes one of pass 6's **replace-or-keep** rows
+instead, listed under the path it occupies now, with **no rename row for
+either**. The default on each is pass 6's own, read from that file's content
+— replace where it references a left-hand name of the legacy table, keep
+otherwise — since two files contending for a path says nothing about what is
+inside either of them. That way the path has exactly one writer, every
+contending file still gets its own decision in the plan, and nothing is
+applied on a guess.
+
 ### 4 — Shebangs
 
 Every shipped task file is bash. A task file whose shebang names a different
@@ -119,8 +139,10 @@ name this copy never defined fails the moment that task first prints.
 So the plan carries a **replace** row for the helper file — the pack's file
 over the repo's, applied on the same one consent as everything else — with a
 **sub-line for every function the repo's copy defines and the pack's does
-not**. Those are the retired names, and listing them is what lets the user
-read what disappears before saying yes rather than after.
+not**. Those are the names that leave the file, and listing them is what lets
+the user read what leaves before saying yes rather than after. Each one
+leaves by a route this pass names: a rewrite through the legacy table, or a
+body carried into the sidecar below.
 
 Each retired name then becomes **rewrite** rows: one per call site in a
 repo-owned task file, `old → new` at `file:line`, the new name read from the
@@ -129,8 +151,8 @@ same table pass 3 reads for task names, and the pack's for the same reason.
 The mapping is a fact about that library, so vwf's prose carries none of it.
 A rewrite replaces one token in place; nothing else on the line changes.
 
-A call the table carries **no row for** is neither deferred nor guessed at:
-the function **moves**. Every function the repo's own tasks call that the
+A function the table carries **no row for** is neither deferred nor guessed
+at: it **moves**. Every function the repo's helper file defines that the
 pack's library does not define and the table does not map is carried, whole,
 into `_scripts/local` — a repo-owned sidecar beside the pack's library, and
 the one file in that directory no pack ships, no pack declares and `init`
@@ -139,19 +161,28 @@ never replaces.
 **This reverses one line of a standing decision and leaves the rest of it
 standing.** The helper file is still replaced byte for byte, and a mapped
 call is still rewritten only through the pack's table — that is unchanged.
-What changes is the unmapped call: *move them to a repo-owned
+What changes is the unmapped name: *move them to a repo-owned
 `_scripts/local` sidecar*, rather than defer them. A name the table never
 grew a row for is usually a function this repo wrote for itself, and
 deferring it breaks a task the repo already had, for the sake of a name the
 pack was never going to define.
 
-**Derive the list, then extract it verbatim.** The list is every function
-name the repo's task files call, minus the names the pack's library defines,
-minus the left-hand names of the legacy table. For each name left, copy its
-**whole body** out of the repo's file as it stands before the replace, text
-unchanged — `init` moves a definition it already has in hand and authors
-nothing. A name on that list that the repo's file does not define either was
-a broken call before this run began: it goes to **Rewrites (flagged, not
+**Derive the list from what the old file defines, then extract it verbatim.**
+The list is every function the repo's helper file **defines**, minus the names
+the pack's library defines, minus the left-hand names of the legacy table —
+not the functions the repo's tasks happen to call. The two sets differ, and
+the difference is the point: a helper nothing calls today is still a helper
+somebody wrote, and a list derived from call sites drops it into the replace
+with nothing in the plan saying so. Deriving from definitions is a superset
+of deriving from calls, so it can only carry more across, never less. For
+each name left, copy its **whole body** out of the repo's file as it stands
+before the replace, text unchanged — `init` moves a definition it already has
+in hand and authors nothing.
+
+A **called** name that no file defines is the one case a definition list
+cannot see, and it is not a move: a call in a repo-owned task to a function
+neither the repo's helper, the pack's library nor the table accounts for was
+a broken call before this run began. It goes to **Rewrites (flagged, not
 applied)** with its file and its line, since there is no body to move and no
 row to rewrite it by.
 
@@ -166,7 +197,11 @@ Three kinds of row carry the move into the plan:
   `source` line for the sidecar directly after that file's existing `source`
   of the helper library — spelled the way that line already spells the
   library's path, so the sidecar is reached exactly the way the library is. A
-  task already sourcing it gains no second line.
+  task already sourcing it gains no second line, and a task that calls none
+  of the moved functions gains no line at all — the sidecar is sourced where
+  it is used. So the create's sub-lines and the `source` rows are counted
+  separately: a function moved because the old file defined it, with nothing
+  calling it yet, is one sub-line and no rewrite.
 - nothing in **Deferred**. Nothing is deferred on this account.
 
 A pack-owned task file the repo already carries byte for byte is untouched by
@@ -198,6 +233,11 @@ of the pack's legacy table**, and keep everywhere else. A file naming a
 retired thing is a file written against a vocabulary the library no longer
 has, and keeping it keeps the breakage; a file that differs only by edits
 somebody made on purpose is a decision, and the default respects it.
+
+A file that reaches this pass through **pass 3's collision rule** — its
+rename dropped because another of the repo's files contended for the same
+destination — is offered on exactly these terms, listed under the path it
+occupies now, its default read from its own content like any other.
 
 Each offered row carries a **three-line summary**, and the three lines are
 fixed: what the repo's version has that the pack's does not, what it lacks
@@ -363,8 +403,16 @@ this run cannot read.
 
 Derive the set the way pass 6 derives its creates — the paths the three
 baseline bundles declare, plus the secrets provider's — and take every task
-file the library carries that the set does not name. `_scripts/local` is
-never among them: it is pass 5's, and listing it twice reads as two files.
+file the library carries that the set does not name — but take it only
+once pass 3's renames are accounted for, in the same words pass 6 uses and
+for the same reason. A file the legacy table renames into the set is the
+set's, not the repo's, and so is one pass 3's collision rule left at its old
+path: both already carry a row of their own — a rename, or an offer — and
+listing either here as well reads as two files, one of them kept, when there
+is one. So the rule is the path the file **resolves to**, never the path it
+sits at: the set is what the bundles declare, and a file the table or that
+rule points into the set is inside it. `_scripts/local` is never among them
+either: it is pass 5's, and listing it twice reads the same way.
 
 **One shape earns a note, and a note is all it earns.** A repo-owned task in
 the `setup/` or `code/` group whose name the task-library contract's
@@ -431,13 +479,13 @@ settings the row claims survive the move, so the user reads them before the
 one consent rather than finding them in the report.
 
 A **replace** row carries sub-lines on the same principle: one for each
-function that disappears with the file being overwritten. The
-`_scripts/local` row carries them too — one per function moved into the
-sidecar, named, so the two lists are read side by side and every retired
-function is accounted for in exactly one of them. Every **rewrite** row is
-`old → new` at `file:line` — one row per call site, never one per name — so
-the user counts the call sites before the one consent as plainly as the
-files.
+function that leaves the file being overwritten. The `_scripts/local` row
+carries them too — one per function moved into the sidecar, named, so the
+two lists are read side by side and every function the replace removes is
+accounted for: as a rewrite through the legacy table, or as a body in the
+sidecar. Every **rewrite** row is `old → new` at `file:line` — one row per
+call site, never one per name — so the user counts the call sites before the
+one consent as plainly as the files.
 
 An **offered** row is the only kind with a decision in it. Each carries the
 path, the three-line summary of pass 6, and a **replace / keep** column

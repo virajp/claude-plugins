@@ -253,11 +253,12 @@ covers all of it.
 | [readme and licence](references/readme-and-license.md)         | both — the stub and the files     |
 
 **The existing-repo pipeline adopts rather than flattens**, and three rules
-carry that. A function the repo's tasks call that the pack's helper library
-does not define and its legacy table does not map is **moved**, whole, into a
-repo-owned `_scripts/local` sidecar — never deferred, and never guessed at. A
-task file no pack ships is **kept and listed**, with a note where it sits in a
-group the task-name contract reserves — `init` moves none of them. And a
+carry that. A function the repo's own helper library **defines** that the
+pack's does not and its legacy table does not map is **moved**, whole, into a
+repo-owned `_scripts/local` sidecar — never deferred, never guessed at, and
+never lost to the replace merely because nothing calls it yet. A task file no
+pack ships is **kept and listed**, with a note where it sits in a group the
+task-name contract reserves — `init` moves none of them. And a
 pack-owned file whose bytes have diverged is **offered**, replace or keep, one
 row in the same single plan, where a replace re-fills every marked position
 that file carries and a keep is recorded so it is not asked again.
