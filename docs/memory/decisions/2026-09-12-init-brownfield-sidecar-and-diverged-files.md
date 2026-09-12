@@ -4,7 +4,9 @@
 [`docs/plans/2026-09-12-init-brownfield/`](../../plans/2026-09-12-init-brownfield/index.md)
 · **Reverses** two standing rules of `init`'s existing-repo pipeline — the
 2026-09-10 helper decision's *unmapped call is deferred*, and the missing-files
-pass's *already owned, never overwritten*
+pass's *already owned, never overwritten* · **Amended** at the fixture gate the
+same day — the sidecar derives from definitions, and a rename collision has a
+ruling, both recorded under *Ruled at the fixture gate* below
 
 ## The problem
 
@@ -45,17 +47,23 @@ words:
 
 > Move them to a repo-owned `_scripts/local` sidecar.
 
-Every function the repo's tasks call that the pack's library does not define and
-the table does not map is carried, **whole and text-unchanged**, out of the
-repo's old helper file and into `_scripts/local` — repo-owned, shipped and
-declared by no pack, and the one file `init` writes that no pack marked. Each
-calling task gains a single `source` line for it directly after its existing
-source of the helper library, spelled the way that line already spells it. The
-plan carries one create for the sidecar, sub-lined per function moved, and one
-rewrite per calling task. A repo that already has the sidecar gets what it lacks
+Every function the repo's old helper library **defines** that the pack's does
+not define and the table does not map is carried, **whole and text-unchanged**,
+out of that file and into `_scripts/local` — repo-owned, shipped and declared by
+no pack, and the one file `init` writes that no pack marked. Each task that
+calls one gains a single `source` line for the sidecar directly after its
+existing source of the helper library, spelled the way that line already spells
+it; a task calling none of them gains no line. The plan carries one create for
+the sidecar, sub-lined per function moved, and one rewrite per calling task — so
+the two counts differ, and a function that moved with nothing calling it is one
+sub-line and no rewrite. A repo that already has the sidecar gets what it lacks
 appended, never duplicated. **Nothing is deferred on this account** — the one
 remaining flag is a call to a function nothing defines anywhere, which was a
 broken call before the run began and has no body to move.
+
+That the list is derived from **definitions** rather than from call sites is the
+amendment of 2026-09-12, recorded below; the original wording said *call*, and
+the difference is functions.
 
 The order is load-bearing: the sidecar is written **before** the helper file is
 replaced, because the bodies it copies exist in the tree only until the replace
@@ -67,6 +75,15 @@ A task file under the library that no landed pack ships is the repo's own. It is
 listed under `Repo-owned, kept` and **touched by nothing**: `init` does not move
 it, does not rename it and does not fold it into a group of its own choosing. A
 repo that wrote a task wrote it for a reason this run cannot read.
+
+The set is derived **once the rename pass is accounted for**, in the same words
+and for the same reason the diverged-files pass uses: the rule is the path a
+file *resolves to*, never the path it sits at. A file the legacy table renames
+into the set the bundles declare is the set's, not the repo's — and so is one
+the collision ruling below leaves at its old path. Both already carry a row of
+their own, a rename or an offer, and listing either here as well reads as two
+files, one of them kept, where there is one. `_scripts/local` is never among
+them either: it is the sidecar pass's, and listing it twice reads the same way.
 
 One shape earns a note, and a note is all it earns: a repo-owned task in the
 `setup/` or `code/` group whose name the task-library contract's mandatory set
@@ -85,15 +102,18 @@ words:
 
 > Offer replace-or-keep per file, replace re-fills the marked positions.
 
-Every such file is compared byte for byte once the renames are accounted for.
-Identical needs nothing. Different becomes one `Offered (replace / keep)` row in
-the **same single plan**, carrying a fixed three-line summary — what the repo's
-version adds, what it lacks, whether it references a retired name — and the
-default `init` computed: **replace** where the repo's file references any
-left-hand name of the legacy table, **keep** everywhere else. A file naming a
-retired thing is written against a vocabulary the library no longer has, and
-keeping it keeps the breakage; a file that differs only by deliberate edits is a
-decision, and the default respects it.
+Every such file is compared byte for byte once the renames are accounted for —
+the path it resolves to, never the path it sits at, and a file the collision
+ruling below leaves at its old path reaches this pass on exactly these terms,
+listed under the path it occupies now. Identical needs nothing. Different
+becomes one `Offered (replace / keep)` row in the **same single plan**, carrying
+a fixed three-line summary — what the repo's version adds, what it lacks,
+whether it references a retired name — and the default `init` computed:
+**replace** where the repo's file references any left-hand name of the legacy
+table, **keep** everywhere else. A file naming a retired thing is written
+against a vocabulary the library no longer has, and keeping it keeps the
+breakage; a file that differs only by deliberate edits is a decision, and the
+default respects it.
 
 Replace lands the pack's file and then re-fills every marked position it carries
 from the interview's confirmed answers, exactly as a fresh landing fills them —
@@ -173,6 +193,47 @@ Both are `drift`, neither is blocking, and both carry the same one remedy,
 scope, and no pack-owned file. `/vwf:setup`'s Step 0 cites all six by reference
 and restates none of them, so the two can never drift apart.
 
+### Ruled at the fixture gate — 2026-09-12
+
+Two rulings landed after the rest of this decision was written, when the
+95octane dry-run was read against it. Both are the user's, made at that gate.
+
+**The sidecar is derived from what the old helper *defines*.** The original
+wording derived it from what the repo's tasks *call*, and the dry-run showed
+what that costs: four helper functions nothing called yet, which the byte-for-
+byte replace would have removed with nothing in the plan saying so. A helper
+nothing calls today is still a helper somebody wrote. So the list became every
+function the repo's old helper file **defines**, minus the names the pack's
+library defines, minus the left-hand names of the legacy table. Deriving from
+definitions is a strict superset of deriving from calls, so the change can only
+carry more across, never less, and everything else about the sidecar stands
+unchanged. One case a definition list cannot see stays where it was: a call to a
+name no file defines anywhere is still flagged, not moved — there is no body.
+
+**Two or more repo files resolving to one destination is a collision, and the
+pack owns the destination.** A repo carrying two or more retired names the
+legacy table maps to the same current one has several files wanting a path only
+one can occupy, and *the last rename wins* is a guess made silently at apply
+time. 95octane is the case in hand: `setup/pnpm/upgrade` and `setup/deps/update`
+both resolve to `setup:deps:upgrade`, which the pack ships. The ruling: the
+destination is treated as **pack-owned** — the pack's file lands there as an
+ordinary create, and each contending repo file becomes one replace-or-keep row
+instead, listed under the path it occupies now, with **no rename row for
+either**. The default on each is read from that file's own content, replace
+where it references a retired name and keep otherwise, since two files
+contending for a path says nothing about what is inside either of them. The path
+then has exactly one writer, every contending file still gets its own decision
+in the single plan, and nothing is applied on a guess.
+
+The scope is narrow and deliberately so: a **single** rename whose destination a
+landed pack ships is the ordinary case, handled by the rename, sidecar and
+missing-files passes as they already were, and nothing here touches it.
+
+**This ruling is not in the manual, by choice.** It is a determinacy rule for a
+shape a handful of repos will ever hit, and stating it in the user-facing pages
+would cost every reader attention for a case almost none of them has. The record
+is here; the behaviour is in `init`'s own reference.
+
 ## The counts that moved
 
 `init`'s existing-repo survey is **eleven** passes; its plan is **ten** counted
@@ -185,7 +246,7 @@ saying otherwise every run is how a user stops reading the plan.
 
 Idempotence holds from both ends: a replaced file is byte-identical next time, a
 kept one is recorded, so neither is offered twice; and the sidecar's functions
-are no longer unmapped calls into a library that lacks them, but calls into a
+are no longer unmapped names in a library that lacks them, but definitions in a
 file the repo owns.
 
 ## The alternatives rejected
@@ -196,6 +257,14 @@ file the repo owns.
 - **Keep deferring the unmapped call.** It is the behaviour the user named as
   the defect: a reshape that breaks a working task and files the breakage under
   *Deferred*.
+- **A calls-only sidecar, with an uncalled function left to the replace** — or
+  listed as `Deferred`. The first loses a body with nothing in the plan saying
+  so; the second reports a loss it could simply have prevented, since the body
+  is in hand.
+- **Resolve a rename collision by letting the first table row win**, or by
+  flagging the whole thing `Deferred` and applying nothing. The first is the
+  silent guess the ruling exists to refuse; the second strands a repo on a shape
+  the pipeline can decide, since the pack already owns the destination.
 - **Move or rename a repo-only task automatically.** The contract can detect
   that a name is not one of its own; it cannot infer intent. `init` lists and
   notes; the user moves, in a commit of their own.

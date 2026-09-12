@@ -954,19 +954,24 @@ one yes rather than after. Nothing is translated on the spot: the mapping is
 read from the pack's legacy-name table, the same table the task-name check
 reads.
 
-**A call the table has no row for is not deferred — the function moves.** Every
-function your own tasks call that the pack's library does not define and its
+**A function the table has no row for is not deferred — it moves.** Every
+function your own helper library **defines** that the pack's does not and its
 table does not map is carried, whole and text-unchanged, into `_scripts/local`:
 a repo-owned sidecar beside the pack's library, the one file in that directory
-no pack ships, no pack declares and `init` never replaces. The plan carries one
-create for it, sub-lined with each function moved in, and one rewrite per task
-file that calls any of them, adding a single `source` line for the sidecar right
-after that file's existing source of the helper library. A repo that already has
-the sidecar gets the functions it lacks appended, never duplicated. A name
-nothing defines anywhere was a broken call before the run began, and that one is
-flagged rather than moved — there is no body to carry. It never asks per file,
-never writes before the yes, never touches application code, and never writes a
-language manifest, a lockfile or a CI workflow.
+no pack ships, no pack declares and `init` never replaces. The list is derived
+from what your file defines, not from what your tasks happen to call, so a
+helper nothing calls yet crosses over with the rest instead of disappearing into
+the replace unremarked. The plan carries one create for the sidecar, sub-lined
+with each function moved in, and one rewrite per task file that calls any of
+them, adding a single `source` line for the sidecar right after that file's
+existing source of the helper library — a task calling none of them gains no
+line, so a function that moved with nothing calling it is one sub-line and no
+rewrite. A repo that already has the sidecar gets the functions it lacks
+appended, never duplicated. A name your tasks call that nothing defines anywhere
+was a broken call before the run began, and that one is flagged rather than
+moved — there is no body to carry. It never asks per file, never writes before
+the yes, never touches application code, and never writes a language manifest, a
+lockfile or a CI workflow.
 
 **A pack-owned file whose bytes have diverged is offered, not skipped.** Every
 file a landed pack owns that your repo also has is compared byte for byte once
@@ -989,13 +994,18 @@ unconditionally, for the timing reason above.
 
 **Tasks you wrote yourself are kept and listed, never moved.** Every task file
 in the library that no landed pack ships is yours; `init` lists each under
-`Repo-owned, kept` and touches none of them. One shape earns a note and nothing
-more: a repo-owned task sitting in the `setup/` or `code/` group whose name the
-task-library contract's mandatory set does not carry is reported with one line
-saying those two groups are the contract's, and that the task's home is your own
-per-project group unless it is a gate every project shares. Moving it is your
-commit, not `init`'s — the contract can say a name is not one of its own, and
-cannot say what you meant by it.
+`Repo-owned, kept` and touches none of them. What counts is the path a file
+**resolves to** once the passes above are accounted for, never the path it sits
+at today: a file that resolves into the shipped set — by a legacy-table rename,
+or because `init` offers it at that destination — is the set's, not yours, and
+already carries a row of its own up there. Listing it here as well would read as
+two files, one of them kept, where there is one. One shape earns a note and
+nothing more: a repo-owned task sitting in the `setup/` or `code/` group whose
+name the task-library contract's mandatory set does not carry is reported with
+one line saying those two groups are the contract's, and that the task's home is
+your own per-project group unless it is a gate every project shares. Moving it
+is your commit, not `init`'s — the contract can say a name is not one of its
+own, and cannot say what you meant by it.
 
 **Your readme is moved, never rewritten.** `README.md` → `readme.md` is a move
 like any other in the plan — content untouched, applied with `git mv` so the

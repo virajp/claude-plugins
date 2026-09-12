@@ -788,11 +788,14 @@ The last nine rows are read for a second job. A repo whose shared helper file
 has drifted from the pack's is carrying a diverged copy of it, not a library of
 its own, so `/vwf:init` replaces that file and rewrites every call to a
 left-hand name into its right-hand one — one token per call site, nothing else
-on the line. A call to a name the table has no row for is never rewritten
-either: that function is one the repo wrote for itself, so `/vwf:init` moves it
-verbatim into a repo-owned `_scripts/local` sidecar this pack neither ships nor
-declares, and points the calling tasks at it. One of the nine is more than a
-rename: the red line became the error line, and an error line goes to stderr.
+on the line. A function the table has no row for is never rewritten either: it
+is one the repo wrote for itself, so `/vwf:init` moves it verbatim into a
+repo-owned `_scripts/local` sidecar this pack neither ships nor declares, and
+points the calling tasks at it. The set that moves is every function the repo's
+own copy **defines** that the pack's does not and the table does not map —
+derived from definitions, not from call sites, so one nothing calls yet crosses
+over too. One of the nine is more than a rename: the red line became the error
+line, and an error line goes to stderr.
 
 A repo still carrying a left-hand name is not broken, but nothing else in the
 toolkit will find it: vwf probes `setup:worktree`, the aggregators call
