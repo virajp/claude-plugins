@@ -6,7 +6,14 @@
   `.claude/skills/vwf-plugin/**`, `.claude/skills/stackgen-plugin/**`,
   `site/src/content/docs/**`,
   `docs/memory/decisions/2026-09-13-init-walks-the-members.md`, every
-  `DOCS FALSIFIED:` path the earlier units returned.
+  `DOCS FALSIFIED:` path the earlier units returned. **Widened at run time**
+  (prose and comments only, no executable line, no version):
+  `plugins/vwf/assets/vwf-config.md:110`;
+  `plugins/stackgen/assets/ids.md:65-66`;
+  `plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise.toml:99-101, 129`;
+  `plugins/stackgen/stacks/cloud-service/{containers,workers-ssr,workers-static-assets}/config/.config/mise/tasks/p/_project/deploy:11-13`
+  (ruling 19); `.claude/skills/vwf-plugin/references/skills-and-agents.md:38`;
+  `site/src/content/docs/plugins/vwf.md:880-882, 905-906, 984-991, 1049-1055, 1057-1061`.
 - **Model:** opus
 - **Read first:** `${CLAUDE_PLUGIN_ROOT}/skills/docs-sync/SKILL.md`; then the
   run's branch delta (`git diff develop...HEAD --stat`); then each file below at
@@ -108,8 +115,11 @@ the Goal:
 
 ## Guardrails
 
-- Do not edit any `plugins/**` file — every `DOCS FALSIFIED:` path under
-  `plugins/` is reported back as `UNRESOLVED:`, not fixed here.
+- Do not edit any `plugins/**` file **except the widened paths in Owns** — those
+  are prose or comment passages falsified by rulings 5 and the kept-file rule;
+  edit the passage, nothing else in the file, and keep a payload file's shipped
+  style (no formatter). Any other `plugins/` path is reported back as
+  `UNRESOLVED:`, not fixed here.
 - Do not touch version files or `.claude-plugin/marketplace.json` (U9).
 - Widening a table cell in `CLAUDE.md` or `readme.md` re-pads every row — let
   the formatter do it, never by hand.

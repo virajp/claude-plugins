@@ -4,7 +4,10 @@
 - **Depends on:** U8
 - **Owns:** `plugins/vwf/.claude-plugin/plugin.json`,
   `plugins/stackgen/.claude-plugin/plugin.json`, `site/package.json`,
-  `.claude-plugin/marketplace.json`
+  `.claude-plugin/marketplace.json`,
+  `plugins/stackgen/stacks/cloud-service/{containers,workers-ssr,workers-static-assets}/pack.yaml`,
+  `plugins/stackgen/stacks/bundles/{cloudflare-containers,cloudflare-workers-ssr,cloudflare-workers-static}.md`,
+  `plugins/stackgen/stacks/inventory.md` (ruling 19)
 - **Model:** opus
 - **Read first:** the three version files;
   `.claude/skills/release/SKILL.md:80-85` (the by-hand bump and the marketplace
@@ -26,6 +29,11 @@ Quoted from `index.md`'s Consent block:
 > Release site publicly — patch — `mise run p:site:version` (bare; patch is its
 > default; it refuses a dirty tree, so U9 runs it first), `1.1.7` → `1.1.8`
 
+> Release the three cloud-service packs — patch (ruling 19) —
+> `stacks/cloud-service/{containers,workers-ssr,workers-static-assets}/pack.yaml`,
+> `0.1.0` → `0.1.1`, the three bundle pins, `mise run p:plugins:inventory`; by
+> U9
+
 > This plan has **no release step**: the three versions are bumped by U9 and the
 > tags wait for a later session's `/release`.
 
@@ -37,10 +45,14 @@ Quoted from `index.md`'s Consent block:
 2. `plugins/vwf/.claude-plugin/plugin.json` — `"version": "19.19.0"` (one minor
    step from what it holds; skip 13 and 17 in any version line).
 3. `plugins/stackgen/.claude-plugin/plugin.json` — `"version": "1.8.1"`.
-4. `mise run p:plugins:marketplace` — regenerates
+4. Ruling 19: `version: 0.1.1` in each of the three cloud-service `pack.yaml`
+   files; the pin line `cloud-service/<name>@0.1.1` in
+   `bundles/cloudflare-containers.md`, `cloudflare-workers-ssr.md` and
+   `cloudflare-workers-static.md`; then `mise run p:plugins:inventory`.
+5. `mise run p:plugins:marketplace` — regenerates
    `.claude-plugin/marketplace.json` with both refs renamed. Confirm the two
    `source` refs read `vwf-v19.19.0` and `stackgen-v1.8.1`.
-5. Run the full wave gate and return its result.
+6. Run the full wave gate and return its result.
 
 ## Verification
 
@@ -60,8 +72,10 @@ mise run p:site:check
 
 - `grep -n '"version"' plugins/vwf/.claude-plugin/plugin.json plugins/stackgen/.claude-plugin/plugin.json site/package.json`
   shows `19.19.0`, `1.8.1`, `1.1.8`.
-- `git -C <worktree> status --short` after the gate shows only the four owned
-  files modified.
+- `grep -m1 version: plugins/stackgen/stacks/cloud-service/{containers,workers-ssr,workers-static-assets}/pack.yaml`
+  shows `0.1.1` three times, and `p:plugins:inventory --check` is green.
+- `git -C <worktree> status --short` after the gate shows only the owned files
+  modified.
 
 ## Guardrails
 
@@ -70,10 +84,11 @@ mise run p:site:check
 - The version is plain `X.Y.Z`; `p:plugins:check` fails one carrying build
   metadata.
 - Do not run `p:plugins:release`, `p:i:release` or `p:site:release`.
-- Do not touch any doc, skill or pack file.
+- Do not touch any doc, skill or pack file beyond the three `pack.yaml` lines
+  and the three pin lines ruling 19 names.
 - Delete with `rm`, never `git rm`. Stage nothing, commit nothing.
 
 ## Commit
 
-`ops: bump vwf 19.19.0, stackgen 1.8.1, site 1.1.8` — written by the
-orchestrator after the wave gate.
+`ops: bump vwf 19.19.0, stackgen 1.8.1, site 1.1.8, three cloud-service packs 0.1.1`
+— written by the orchestrator after the wave gate.

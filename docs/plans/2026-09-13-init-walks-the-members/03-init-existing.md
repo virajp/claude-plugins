@@ -31,6 +31,15 @@ Quoted from `index.md`:
 > **14** — `existing-repo.md`'s "gate configuration commits first, alone"
 > applies **per repo**, since each repo's pre-commit is its own.
 
+> **18** — Pass 1's scope is root **entries** — files and directories — and it
+> recognises, never lists, `.claude/` (the materializer's lockfile home this run
+> writes) and every resolved member path, beside `.gitmodules` and the editor
+> directory; pass 10 exempts the init-authored
+> `.config/mise/tasks/p/<id>/_default` slot exactly as it exempts
+> `_scripts/local`; pass 9 reports a marked position unfilled only when the
+> marker token is still present, never because the value equals the shipped
+> default.
+
 ## Edits
 
 1. **Opening** (`:1-10`): the three phases run across the resolved repo set —
@@ -67,6 +76,22 @@ Quoted from `index.md`:
    alone" (`:581-602`) applies **per repo** (ruling 14): say why — each repo's
    pre-commit is its own and runs its own hooks.
 7. **Report** (`:619-`): point at SKILL.md's per-repo shape; do not duplicate.
+8. **Resume edits — ruling 18.** Edits 1–7 are committed (`4a57960a`,
+   `c4aef86b`); do not redo them. Read the committed file and make exactly these
+   three changes so the fixture's step 6 reads nothing per section:
+   - **Pass 1**: state its scope as root *entries* (files and directories),
+     resolving the ambiguity the reviewer found between the pass's wording and
+     the "Two root entries" exemption. Extend that exemption to `.claude/` — the
+     materializer's lockfile home, written by this run — and to every resolved
+     member path in the base (the member work trees), on the same footing as
+     `.gitmodules`: recognised, never listed. Name no allowlist asset.
+   - **Pass 10**: exempt the init-authored `_default` slot
+     (`.config/mise/tasks/p/<id>/_default`, new-repo §7) exactly as
+     `_scripts/local` is exempt — it is init's own output, not a repo-owned
+     task, and is never listed as kept.
+   - **Pass 9**: a marked position is reported unfilled only when its marker
+     token is still present in the file; a value equal to the shipped default
+     (`MERGE_MODEL` `direct`) is filled, not unfilled.
 
 ## Verification
 
@@ -76,6 +101,10 @@ Quoted from `index.md`:
 - `grep -n "per repo" plugins/vwf/skills/init/references/existing-repo.md` hits
   in the Survey opening, the Plan, and the Apply.
 - `grep -n "surveyed after the clone" …/existing-repo.md` hits once.
+- Ruling 18: `grep -n '_default' …/existing-repo.md` hits in pass 10;
+  `grep -n
+  'marker' …/existing-repo.md` hits in pass 9; pass 1 names
+  `.claude/` and the member paths as recognised entries.
 
 ## Guardrails
 
