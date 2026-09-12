@@ -55,6 +55,24 @@ A root file matching **no** pack declaration and **not** on the allowlist is
 **reported, not moved**. It belongs to something outside this toolkit, and
 guessing a destination for it is how a tool stops finding its own config.
 
+**Two root entries are recognised and never listed at all**, and no run reports
+either:
+
+- **`.gitmodules`** — git's own file, on the same footing as `.git/`. It is not
+  configuration this toolkit places, it cannot be moved without breaking the
+  repository, and **every base repo with submodule members carries one**, so
+  reporting it would put a permanent finding in the plan of exactly the products
+  this pipeline now walks.
+- **The editor directory the fragment convention names** — `init` composes it
+  itself, out of the editor fragments the packs ship, per
+  [fragments and sections](fragments-and-sections.md). A directory this run
+  writes is not a stray a later pass discovers. The convention names it; this
+  file does not.
+
+Neither is a hole in the allowlist and neither is patched by editing it: the
+allowlist names what a **pack may land**, and these two are outside that
+question — one is git's, one is this command's own output.
+
 #### The move-and-shim case
 
 One shape needs saying because a naive move breaks it. Where a gate pack
@@ -240,17 +258,36 @@ is per repo and a member gets its own full configuration tree. Every file a
 bundle declares and that repo lacks is a **create**, listed with the bundle it
 comes from.
 
-A file the repo *has* and a pack also owns is **compared**, byte for byte,
-once pass 3's renames are accounted for. Identical, and it needs nothing.
-Different, and it is **offered** — one row, two outcomes, both decided in the
-plan and applied on the same single consent:
+A file the repo *has* and a pack also owns is **compared**, once pass 3's
+renames are accounted for — and what it is compared **against** is the
+materializer's lockfile, not the pack. Each `entries:` record carries a `hash:`,
+the content of that file as it stood when it landed here, **the marked positions
+already filled**. That is the only honest baseline: a file `init` itself filled
+never matches the pack's bytes again, so comparing against the pack would
+re-offer every filled file on every run and no shaped repo would ever produce an
+empty plan.
+
+- **The lockfile records the file** — compare what is on disk against that
+  record's `hash:`. Identical, and it needs nothing. Different, and it is
+  **offered**.
+- **The lockfile records nothing for it** — the repo acquired that file some
+  other way — compare against the **pack's** bytes instead, on exactly the same
+  terms. There is no landing to compare to.
+
+This is the question `/vwf:doctor`'s content-drift predicate asks, of the same
+record, so a file this pass leaves alone is a file doctor reports clean and
+neither can see a drift the other cannot.
+
+An offered file is one row, two outcomes, both decided in the plan and applied
+on the same single consent:
 
 - **replace** — the pack's file lands over the repo's, and every marked
   position that file carries is then filled from the confirmed answers to
   SKILL.md's questions, exactly as [new repo](new-repo.md) §The marked
   positions fills them on a fresh landing. That is what makes a replace safe
   on a file whose positions the repo had already filled: they are re-filled,
-  not lost.
+  not lost. The landing records the file's hash **once those fills have run**,
+  and that record is what the next run compares against.
 - **keep** — the file is untouched and the decision is recorded, so doctor
   does not report it again and the next reshape does not re-offer it.
 
@@ -739,13 +776,16 @@ changed** — a member joined the product, or one this machine lacked was cloned
 and that member's section is the whole of the work.
 
 A **replace is applied once**, and that is part of the same invariant: the
-second run reads a file byte-identical to the pack's, plans no row for it,
-and rewrites no call — the names it would have mapped are gone from the tree.
-An **offer is made once** for the same reason, from either end: a replaced
-file is identical to the pack's next time, and a kept one is recorded, so
-neither is offered again. The sidecar holds by the same rule — its functions
-are no longer unmapped calls into a library that lacks them, they are calls
-into a file the repo now owns.
+second run reads a file whose content matches the hash its landing recorded —
+the fills included — plans no row for it, and rewrites no call, since the names
+it would have mapped are gone from the tree. An **offer is made once** for the
+same reason, from either end: a replaced file matches its own record next time,
+and a kept one is recorded under `kept_files`, so neither is offered again.
+**A filled position is not drift**, and that is why pass 6 compares against the
+lockfile rather than the pack: the files `init` writes into are exactly the
+files a pack-bytes comparison would re-offer for ever. The sidecar holds by the
+same rule — its functions are no longer unmapped calls into a library that
+lacks them, they are calls into a file the repo now owns.
 
 The third and the fourth are not broken invariants. They are the re-run doctrine
 working: `init` is meant to be run again as the repo learns things about itself
