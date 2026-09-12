@@ -9,15 +9,39 @@ Three phases, in order and never interleaved: **survey**, **plan**, **apply**.
 The survey writes nothing. The plan is one document. The apply touches only
 what the survey listed.
 
+**All three run across the resolved repo set, not across one repo.** The survey
+runs its eleven passes **in each repo** that resolved to mode existing. The plan
+is still one document, printed once, with **one section per repo** — the base
+first, then each member in resolved order. The apply touches the repos in
+**members-then-base order**, so the base's gitlinks are current by the time it
+commits. A repo of the set that resolved to mode new takes the
+[new repo](new-repo.md) pipeline in its own section of that same document, under
+the same one consent; nothing about the set changes which pipeline a repo reads.
+
 ## Survey
 
-Read-only, and exhaustive before anything is printed. Eleven passes.
+Read-only, and exhaustive before anything is printed. Eleven passes, and they
+run **per repo**: every pass below reads, and reports on, the repo it is
+running in and no other. Where a pass needs something only the base carries,
+it says so.
+
+**An absent member is surveyed once its clone has run.** A member the resolution
+found and this machine does not have has nothing on disk to read, so its section
+opens with a **clone row** — the command the membership asset names for this
+product's linkage (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`, *An absent
+member*) — followed by the words *surveyed after the clone*. At apply time that
+member's clone runs first, then the eleven passes run inside it, then its rows
+print, and only then does its own apply proceed. **Nothing is written into an
+absent member before its survey has run**, which is the same rule every other
+repo gets — the survey is simply later in the wall clock, not skipped.
 
 ### 1 — Root files against the allowlist
 
-The hygiene doctrine closes the repository root to a fixed set, and the
-materializer enforces it as a ceiling. Every other configuration file at the
-root is a **move** into the configuration directory.
+The hygiene doctrine closes a repository root to a fixed set, and the
+materializer enforces it as a ceiling. The root this pass reads is **the root of
+the repo it is running in** — a member's own root, surveyed against the same
+ceiling as the base's. Every other configuration file at that root is a **move**
+into that repo's configuration directory.
 
 **Derive the rename map from the packs' own `config/` trees**, never from a
 list written here. For each landed or landable pack, the path its `config/`
@@ -210,8 +234,10 @@ the pack's library already.
 
 ### 6 — Missing files
 
-Diff the repo against what the three baseline bundles ship. Every file a
-bundle declares and the repo lacks is a **create**, listed with the bundle it
+Diff **the repo this pass is running in** against what the three baseline
+bundles ship — the same three bundles for every repo of the set, since the shape
+is per repo and a member gets its own full configuration tree. Every file a
+bundle declares and that repo lacks is a **create**, listed with the bundle it
 comes from.
 
 A file the repo *has* and a pack also owns is **compared**, byte for byte,
@@ -262,6 +288,12 @@ again by a later run, and `/vwf:doctor` reads the same record to skip the
 file. The reason travels with it, in the user's own words where they gave
 one.
 
+**One record for the product, and it is the base's.** A member carries no
+`.config/vwf.yaml` of its own — its file is the back-link, and the base's is the
+product's only one — so a keep inside a member is recorded there, keyed by the
+path relative to the base root with the member's path as its prefix
+(`backend/.config/…`), while a keep in the base keeps its plain spelling.
+
 **That key is the one thing `init` writes into `.config/vwf.yaml`, and `init`
 never creates the file.** The entry is written under the same single consent
 as everything else, merged into whatever the block already holds, and an
@@ -307,12 +339,13 @@ this command does.
 
 ### 9 — Per-project groups
 
-Resolve the project ids the way [new repo](new-repo.md) §7 does — resolution
-order, then slugification — and treat what comes out as the **proposal** it is.
+Resolve the project ids **of the repo this pass is running in** the way
+[new repo](new-repo.md) §7 does — resolution order, then slugification, the
+member case included — and treat what comes out as the **proposal** it is.
 SKILL.md's **question 2** shows every row with its source and takes a
 replacement, and it is asked before the plan is printed, so no row below is ever
 computed against an id the user is about to change. The ids this pass compares
-against are the **confirmed** ones.
+against are the **confirmed** ones, from this repo's own rows of that question.
 
 A per-project task group whose segment is **not** one of those ids is a
 **rename**, listed with the proposed destination — the group was named for
@@ -345,12 +378,15 @@ entirely.
 Groups that already match need nothing, and a project id with no group at all
 gets its `_default` slot as a create.
 
-The other marked positions of that same id list — the bootstrap aggregator's
-member flags, the shell aliases, and the repo-name key — are checked in the
-same pass. A position still carrying only the pack's commented template, on a
-repo that **has** members, is a create; one already carrying the right lines
-needs nothing. The repo-name key is a create wherever it still holds the
-pack's placeholder.
+The other marked positions are checked in the same pass, and two of them are
+**not** that id list's: the bootstrap aggregator's member flags and the shell
+aliases compare against the resolved **members** — one flag and one alias per
+member, per [new repo](new-repo.md) §7. A position still carrying only the
+pack's commented template, on a repo that **has** members, is a create; one
+already carrying exactly those lines needs nothing; one carrying lines named for
+anything else — the project ids an earlier run wrote there, most often — is a
+**rewrite**, with the lines on both sides listed. The repo-name key stays the id
+list's and is a create wherever it still holds the pack's placeholder.
 
 The environment block's other two positions are checked here too, and they are
 not the same kind of wait:
@@ -444,19 +480,30 @@ kind of wait, and the shipped comments say which is which:
   filling them means uncommenting them too; a filled line left commented is
   the same as no link.
 
-| The fill        | Its source                                                     | Fillable                | When it stays as shipped                       |
-| --------------- | -------------------------------------------------------------- | ----------------------- | ---------------------------------------------- |
-| commit scopes   | the project ids of pass 9, from the registry                   | on a re-run only        | no `.config/vwf.yaml`, or it names no projects |
-| the forge links | the origin remote's URL, read with `git remote get-url origin` | on any run with a remote | no origin remote                               |
+| The fill        | Its source                                              | Fillable                 | When it stays as shipped                            |
+| --------------- | ------------------------------------------------------- | ------------------------ | --------------------------------------------------- |
+| commit scopes   | the project ids of pass 9, from the base's registry     | on a re-run only         | no `.config/vwf.yaml` in the base, or it names none |
+| the forge links | this repo's own origin, via `git remote get-url origin` | on any run with a remote | no origin remote                                    |
+
+**The two fills read from different places, and only one of them is per repo.**
+The scope list has exactly one source for the whole product: the registry in the
+**base's** `.config/vwf.yaml`. A member carries no configuration of that kind —
+its file is the back-link the membership asset defines
+(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`) — so a member's scopes are the
+projects that one registry places in it, and a base with no registry leaves
+every repo's position as shipped. The forge links are genuinely **per repo**:
+each repo's own origin, read inside that repo, since a member has its own remote
+and filling its links from the base's would point every link in it at another
+repo's forge.
 
 Rules for both:
 
 - **The registry is the only scope source.** Ids resolved from directories or
   from the repo's own name are not scopes — a scope names a project somebody
   declared, and a directory that happens to exist is not a declaration. Where
-  the registry is absent, leave the position exactly as the pack ships it,
-  and say in the plan that the fill is waiting on `/vwf:architecture` and
-  `/vwf:setup`.
+  the base carries no registry, leave the position exactly as the pack ships it
+  — in **every** repo of the set — and say in the plan that the fill is waiting
+  on `/vwf:architecture` and `/vwf:setup`.
 - **Never delete the comment.** It is what a later run reads to find the
   position, and it is the record of where the values came from.
 - **Each fill is its own plan row**, `+ <what>` with its source named, so the
@@ -466,11 +513,24 @@ Rules for both:
 
 ## Plan
 
-One document, printed once, in ten sections. Each section opens with its
-count; each line is `old → new` for anything that moves or is renamed, `+
-path` for anything created, and a bare path with its reason for anything
-flagged. Print an empty section as `none` rather than omitting it — a missing
-section reads as an oversight, and the reader cannot tell which.
+One document, printed once, carrying **one section per repo** — the base first,
+then each member in resolved order. A repo's section opens with a heading naming
+it and the mode it resolved to:
+
+```text
+── <repo> ── (existing)
+```
+
+and under that heading come the ten sections, in full, for that repo. An absent
+member's heading carries its clone row and the survey note the Survey describes
+in place of them, since its ten sections do not exist until the clone has run.
+
+Each section opens with its count; each line is `old → new` for anything that
+moves or is renamed, `+ path` for anything created, and a bare path with its
+reason for anything flagged. Print an empty section as `none` rather than
+omitting it — a missing section reads as an oversight, and the reader cannot
+tell which. Every path is spelled relative to the repo the section belongs to;
+the heading is what says which repo that is.
 
 A move-and-shim row carries **sub-lines**: one for the key the move drops from
 the real configuration, and one for each exclusion the drop makes necessary,
@@ -507,20 +567,30 @@ Appends      <n>
 Merges       <n>
 ```
 
-Close with a single total, **counting only what would be applied** —
-`Repo-owned, kept` is outside it, and so is an offered row whose decision is
-keep. A plan whose total is **zero** is the idempotent case: say the repo is
-already shaped, print the report with those two lists still in it, and stop
-without asking anything. A repo whose only rows are files it owns and files
-it decided to keep is shaped, and saying otherwise every run is how a user
-stops reading the plan.
+Close **each repo's section** with that repo's total, **counting only what would
+be applied** — `Repo-owned, kept` is outside it, and so is an offered row whose
+decision is keep. Then close the document with one **product total**, the
+per-repo totals summed, so the user reads one number before the one consent.
+
+A **product** total of zero is the idempotent case: the document is still
+printed with a section per repo, each reading nothing, the skill says **the
+product is shaped**, and the report prints with those two lists still in it
+— then stop, without asking anything. A repo whose only rows are files it owns
+and files it decided to keep is shaped, and saying otherwise every run is how a
+user stops reading the plan. **One repo of the set reading nothing is not that
+case**: the plan is printed and the one question is still asked, because another
+repo has work, and a section reading nothing is how the user sees that the
+shaped repo was looked at rather than skipped.
 
 ## Consent
 
 **One question, two answers**: apply all of it, or stop. Not per file, not per
-section. The plan is a coherent reshaping — half of it applied leaves a repo
-where the task names moved and their callers did not, which is worse than
-either end state.
+section, and **not per repo** — one yes covers every repo's section, the clone
+rows included. The plan is a coherent reshaping — half of it applied leaves a
+repo where the task names moved and their callers did not, which is worse than
+either end state, and a product half of whose repos moved is the same failure
+one level up: the base's aggregator would name members whose libraries still
+answer to the old vocabulary.
 
 **Flipping an offered row is an amendment to the plan, not a third answer.**
 Each row of `Offered (replace / keep)` arrives carrying the default pass 6
@@ -537,7 +607,14 @@ run computes its defaults afresh.
 
 ## Apply
 
-In the plan's own order, and touching **nothing** the survey did not list.
+**Repo by repo, members first and the base last**, and inside a repo in the
+plan's own order, touching **nothing** the survey did not list. The order across
+repos is load-bearing for the same reason the order inside one is: a member's
+apply is what moves that member's commit, and the base's gitlinks are only
+current once every member has committed. A member cleared for cloning is cloned
+at the top of its own turn, surveyed, its rows printed, and only then applied; a
+repo of the set that resolved to mode new takes the [new repo](new-repo.md)
+pipeline in its turn, at the same point in the order.
 
 - **Moves** use `git mv`, so the rename is in the index and the history
   follows the file. The readme move is a move like any other.
@@ -560,8 +637,9 @@ In the plan's own order, and touching **nothing** the survey did not list.
 - **A kept file is not written to, at all.** The keep itself needs no write;
   only its **record** does, and the offered row's keep outcome is what lists
   it. Write that record **after every keep is settled and before the fill
-  pass** — one `enforcement.kept_files.<path>: { reason }` entry per kept
-  file in `.config/vwf.yaml`, merged into the block rather than replacing it.
+  pass** — one `enforcement.kept_files.<path>: { reason }` entry per kept file
+  in the **base's** `.config/vwf.yaml`, spelled as §6 says, merged into the
+  block rather than replacing it.
   Where that file does not exist, `init` does **not** create it: the keep
   stands and the record is the **Deferred** line §6 describes. Nothing about
   a kept file is applied here beyond leaving it alone.
@@ -587,6 +665,14 @@ commit — including the one that would have staged it. So a run that touched
 the gate's configuration has to close that file before it can commit anything
 else.
 
+**This happens once per repo, not once per run.** Each repo has its own gate
+configuration and its own hooks, wired into its own repository metadata, and a
+commit in a member runs the member's hooks against the member's working tree. So
+every repo this run touched the gate configuration of takes this commit first,
+in its own turn, before its own shaping commit. Doing it once for the run would
+leave every other repo's configuration modified-but-unstaged at the moment that
+repo came to commit, which is the abort this subsection exists to avoid.
+
 Where this run wrote, merged into or moved any of: the gate's configuration
 file, the commit-message gate's configuration, or anything under the fragment
 directory — stage **those paths only** and commit them first, on their own,
@@ -602,9 +688,12 @@ configuration is what the gate config invokes. Splitting them leaves a commit
 whose hooks read a file the next commit is still going to change.
 
 Then the rest, exactly as the new-repo pipeline's **git pass** describes it
-([new repo](new-repo.md) §11): the landing-model question, stage what this run
-wrote, one consent with three answers, the fixed shaping message, the branches,
-the push. Two differences, both from the fact that this repo already
+([new repo](new-repo.md) §11), which already reads across the resolved repos:
+the landing-model question and the three-answer commit question asked **once**
+for the whole run, each repo staging what this run wrote in it, the fixed
+shaping message per repo, the commits ordered members then base with the base's
+changed gitlinks staged into its own, the branches per repo, the push. Two
+differences, both from the fact that a repo taking this pipeline already
 existed:
 
 - The first commit here is **not** before hook wiring. That is why the gate
@@ -618,13 +707,18 @@ existed:
 
 ## Report
 
-The ten-section report and the two next-step lines from SKILL.md, filled from
-what was actually applied rather than from what was planned. A deferred
-materialization, a flagged rewrite, a call to a function nothing defines, a
-kept-file record on a repo that has no `.config/vwf.yaml` yet, and a
-reported-but-unmoved root file all belong in **Deferred**, each with its
-unlock. A call the legacy table could not map is **not** among them any more:
-pass 5 moves its function to the sidecar, and the run reports the move.
+**The report's shape is SKILL.md's** — the ten file sections repeated under one
+heading per repo with the base first, the git lines, and the two next-step lines
+— and it is stated there once. Read it there; nothing here restates it. What
+this pipeline settles is what goes in which section, filled from what was
+actually applied rather than from what was planned, and every line printed under
+the heading of the repo it happened in. A deferred materialization, a flagged
+rewrite, a call to a function nothing defines, a kept-file record on a product
+whose base has no `.config/vwf.yaml` yet, an absent member nobody could clone,
+and a reported-but-unmoved root file all belong in **Deferred**, each with its
+unlock and each naming the repo it belongs to. A call the legacy table could
+not map is **not** among them any more: pass 5 moves its function to the
+sidecar, and the run reports the move.
 
 `Files kept` names each offered file the user kept, with the reason recorded
 beside it, and `Tasks kept` lists every repo-owned task pass 10 found — with
@@ -635,11 +729,14 @@ left alone silently reads the same as a file nobody looked at.
 
 **The invariant, stated in the report itself, and stated with its scope:**
 running `init` again on a shaped repo produces an empty plan **for the same id
-source**. If a second run finds work, it is one of three things, and the report
-names which: the first run deferred something; a pack moved, which the
-adapter's re-sync command is for; or the **id source changed** — the repo grew
-a registry, so ids that came from directories or from the repo's own name now
-come from declarations, and pass 9's rename rows say so in those words.
+source**, and on a shaped product an empty section for **every** repo. If a
+second run finds work, it is one of four things, and the report names which: the
+first run deferred something; a pack moved, which the adapter's re-sync
+command is for; the **id source changed** — the repo grew a registry, so ids
+that came from directories or from the repo's own name now come from
+declarations, and pass 9's rename rows say so in those words; or **the set
+changed** — a member joined the product, or one this machine lacked was cloned,
+and that member's section is the whole of the work.
 
 A **replace is applied once**, and that is part of the same invariant: the
 second run reads a file byte-identical to the pack's, plans no row for it,
@@ -650,6 +747,7 @@ neither is offered again. The sidecar holds by the same rule — its functions
 are no longer unmapped calls into a library that lacks them, they are calls
 into a file the repo now owns.
 
-The third is not a broken invariant. It is the re-run doctrine working: `init`
-is meant to be run again as the repo learns things about itself, and the
-registry is the largest thing it learns.
+The third and the fourth are not broken invariants. They are the re-run doctrine
+working: `init` is meant to be run again as the repo learns things about itself
+— the registry is the largest thing it learns — and as the product changes shape
+around it.
