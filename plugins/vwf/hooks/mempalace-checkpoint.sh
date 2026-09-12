@@ -40,7 +40,7 @@ auto_save_enabled() {
   # dependency of this toolkit, and the only thing being looked for is a
   # two-key literal. A malformed config reads as enabled, which is the safe
   # direction — it saves too often rather than silently never.
-  if [ -f "$config" ] && tr -d ' \n\t' < "$config" |
+  if [ -f "$config" ] && tr -d ' \n\t' <"$config" |
     grep -q '"auto_save":false'; then
     return 1
   fi
@@ -49,6 +49,9 @@ auto_save_enabled() {
 
 # Pull one string field out of the payload without a JSON parser. Values here
 # are ids and booleans — no escapes, no nesting — so this stays honest.
+# Each of `,` `{` `}` maps to a newline below — the duplicate replacements are
+# deliberate, not a set-vs-word mistake.
+# shellcheck disable=SC2020
 field() {
   printf '%s' "$1" |
     tr ',{}' '\n\n\n' |
@@ -87,7 +90,7 @@ mkdir -p "$STATE_DIR" 2>/dev/null || exit 0
 COUNTER="$STATE_DIR/$(printf '%s' "$SESSION" | tr -c 'A-Za-z0-9._-' '_').count"
 
 if [ "${1:-}" = "--compact" ]; then
-  echo 0 > "$COUNTER" 2>/dev/null
+  echo 0 >"$COUNTER" 2>/dev/null
   speak "$COMPACT_REASON"
   exit 0
 fi
@@ -96,7 +99,7 @@ fi
 # finish. This is the loop guard, and it is why the counter resets here.
 case "$(field "$INPUT" stop_hook_active)" in
   true)
-    echo 0 > "$COUNTER" 2>/dev/null
+    echo 0 >"$COUNTER" 2>/dev/null
     exit 0
     ;;
 esac
@@ -109,10 +112,10 @@ esac
 count=$((count + 1))
 
 if [ "$count" -ge "$SAVE_INTERVAL" ]; then
-  echo 0 > "$COUNTER" 2>/dev/null
+  echo 0 >"$COUNTER" 2>/dev/null
   speak "$SAVE_REASON"
 else
-  echo "$count" > "$COUNTER" 2>/dev/null
+  echo "$count" >"$COUNTER" 2>/dev/null
 fi
 
 exit 0
