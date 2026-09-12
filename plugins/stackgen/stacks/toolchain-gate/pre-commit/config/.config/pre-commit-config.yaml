@@ -51,6 +51,46 @@ repos:
         pass_filenames: false
         always_run: true
 
+      # The three gate hooks below are deliberately tool-neutral: each names a
+      # task and nothing else. Which formatter, which linters and which
+      # scanners run is decided once, inside the task, where the pinned stack
+      # overlays it — so a repo customising a gate edits the task and both the
+      # hook and CI follow. A hook naming a tool would be a second definition
+      # that drifts.
+      #
+      # `code:format` comes first because it rewrites files: a linter reading
+      # the pre-format text reports positions that no longer exist by the time
+      # anyone reads the output. `code:sec` comes last because it is the only
+      # one that cannot fix what it finds.
+      - id: format
+        name: Format (mise run code:format)
+        description: The repo's formatters, run over the files being committed.
+          The task owns the tool list and its config paths; this hook only
+          passes it the staged files.
+        entry: mise x -- mise run code:format --fix
+        language: system
+        pass_filenames: true
+
+      - id: lint
+        name: Lint (mise run code:lint)
+        description: The repo's linters, run over the files being committed.
+          The task owns which linters exist for the pinned stack, and skips the
+          ones whose tool or config is absent.
+        entry: mise x -- mise run code:lint --fix
+        language: system
+        pass_filenames: true
+
+      - id: sec
+        name: Secrets (mise run code:sec --staged)
+        description: The secret scan, over what is staged rather than over the
+          tree. `--staged` is what selects that mode inside the task, which is
+          also why no filenames are passed — the task asks git, not pre-commit,
+          for the staged content.
+        entry: mise x -- mise run code:sec --staged
+        language: system
+        pass_filenames: false
+        always_run: true
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -122,66 +162,6 @@ repos:
         description: main is what consumers read, and it takes merges only.
           Merges are unaffected — git runs `pre-merge-commit` for those.
         args: ["--branch", "main"]
-
-  - repo: local
-    hooks:
-      - id: formatter
-        name: Formatter
-        description: The repo's one formatter, run over the files being
-          committed. `--config` is mandatory because the config lives under
-          `.config/`, which dprint does not discover on its own.
-        entry: mise x -- dprint fmt --config .config/dprint.json
-          --allow-no-files --log-level warn
-        language: system
-
-      - id: shellcheck
-        name: Lint shell scripts and the task library
-        description: Task files are the least reviewed code in a repo. `-x`
-          follows the sourced `_scripts/` libraries so they are analysed as
-          their callers actually see them. Scoped by `types:` rather than by
-          path — pre-commit identifies an extension-less task file as shell
-          from its shebang, and a `files:` narrowing here would AND with that
-          and silently stop checking every *.sh outside the tasks tree.
-        entry: mise x -- shellcheck -x
-        language: system
-        types: [shell]
-
-      - id: shfmt
-        name: Check shell formatting
-        description: The `-d` flag reports a diff and fails rather than
-          rewriting, so the formatting decision stays with whoever is
-          committing.
-        entry: mise x -- shfmt -d -i 2 -ci
-        language: system
-        types: [shell]
-
-      - id: actionlint
-        name: Lint GitHub workflows
-        description: A workflow usually only runs on a push or a tag, so a
-          mistake in one is normally found by cutting a release. This reads it
-          statically. Scoped by path, so it costs nothing in a repo with no
-          workflows.
-        entry: mise x -- actionlint
-        language: system
-        pass_filenames: false
-        files: ^\.github/workflows/.*\.ya?ml$
-
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.30.0
-    hooks:
-      - id: gitleaks-system
-        name: Check for secrets
-        description: The `-system` variant runs the gitleaks the toolchain
-          manager already pins, instead of building one from source into
-          pre-commit's own environment. It therefore needs gitleaks on PATH,
-          and errors loudly rather than passing quietly when it is missing.
-          `pass_filenames` is restated because upstream sets it on the `gitleaks`
-          id and not on this one — the entry is `gitleaks git --staged`, which
-          takes at most one positional argument, so with filenames appended any
-          commit touching two files dies on an arg-count error rather than
-          scanning.
-        args: [--config, .config/gitleaks.toml]
-        pass_filenames: false
 
   - repo: https://github.com/qoomon/git-conventional-commits
     rev: v2.9.0

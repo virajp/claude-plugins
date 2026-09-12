@@ -77,3 +77,71 @@ print_newline() { echo ""; }
 
 # Errors go to stderr, so a caller piping stdout into a report still sees them.
 print_error() { echo -e "${RED}${BOLD}$1${NORMAL}" >&2; }
+
+# The repo's members, one repo-relative path per line.
+#
+# Two sources, and which one answers depends on how the members are LINKED:
+#
+#   submodules  `.gitmodules` exists, so git already holds the list. Keeping a
+#               second copy of it in the config would only let the two disagree.
+#   siblings    no `.gitmodules`, so the list is `MEMBERS` — the marked position
+#               in `.config/mise.toml` that the orchestrator shaping this repo
+#               fills, space separated, each path relative to the repo root.
+#
+# Defined ONCE here rather than in each caller, which is the whole point: every
+# task that walks the members — `setup:all --all`, `code:worktrees` — walks the
+# same list, so a repo that changes how it links its members changes it in one
+# place. A single-project repo has neither source and this prints nothing but
+# blank output; every caller already skips empty lines.
+#
+# `$displaypath` is git's own variable and stays single-quoted so git, not this
+# shell, expands it.
+# shellcheck disable=SC2016
+members() {
+  if [ -f "${MISE_PROJECT_ROOT}/.gitmodules" ]; then
+    git -C "${MISE_PROJECT_ROOT}" submodule --quiet foreach --recursive 'echo $displaypath' 2>/dev/null || true
+  else
+    # Unquoted ON PURPOSE: the value is one space-separated string — TOML `[env]`
+    # values are strings, never arrays — and word splitting is what turns it back
+    # into a list.
+    # shellcheck disable=SC2086
+    printf '%s\n' ${MEMBERS:-}
+  fi
+}
+
+# The shell files in scope, one path per line: the paths given as arguments
+# filtered down to shell, or every TRACKED shell file when no argument is given.
+#
+# Defined here because both `code:format` (shfmt) and `code:lint` (shellcheck)
+# need the same answer, and an overlay that replaces either of those files still
+# gets it. `git ls-files` rather than a `find`, so nothing ignored is ever
+# rewritten. The shebang test is what catches the extension-less task files this
+# library lives among — the shell a repo most wants checked, and the only shell
+# with no `.sh` on the end.
+shell_files_in_scope() {
+  local candidates=()
+  if [ "$#" -gt 0 ]; then
+    candidates=("$@")
+  else
+    local tracked
+    while IFS= read -r tracked; do
+      if [ -n "${tracked}" ]; then
+        candidates+=("${tracked}")
+      fi
+    done < <(git -C "${MISE_PROJECT_ROOT}" ls-files 2>/dev/null || true)
+  fi
+
+  local candidate
+  for candidate in ${candidates[@]+"${candidates[@]}"}; do
+    [ -f "${candidate}" ] || continue
+    case "${candidate}" in
+      *.sh | *.bash)
+        printf '%s\n' "${candidate}"
+        continue
+        ;;
+    esac
+    if head -n 1 "${candidate}" 2>/dev/null | grep -qE '^#!.*[/ ](ba|da|k|z)?sh( |$)'; then
+      printf '%s\n' "${candidate}"
+    fi
+  done
+}

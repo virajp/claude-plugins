@@ -44,6 +44,14 @@ assembled from contributed fragments because stackgen's dispatch is
 copy-verbatim or generate, with nothing in between; a fragment layer would be a
 templating mechanism this plugin deliberately does not have.
 
+**Both tasks take an optional file list, and the empty case is the whole
+tree.** That is the whole pre-commit story for this pack: it ships **no
+fragment**, because the gate config's `format` and `lint` hooks call the two
+tasks with the staged files. dprint and the sorter narrow to what they are
+given; the house linter does not — its rules are cross-file, so it runs the
+whole tree either way, and every exclusion it needs lives in
+`.config/linter.yaml`.
+
 **Composition order, since more than one component writes this tree:**
 `toolchain-manager`, then `package-manager` / `language`, then `toolchain-gate`,
 then `app-framework` — a later component's file wins, recorded per file in the

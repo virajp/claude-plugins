@@ -1,20 +1,100 @@
+---
+# The local gate. Every hook here either calls a task from the repo's task
+# library or pins a third-party repo at a rev, so the command that runs on a
+# commit is the command that runs in CI.
+#
+# The config lives under `.config/` with the rest of the repo's tooling, which
+# pre-commit does not discover: every invocation carries
+# `--config .config/pre-commit-config.yaml`. `setup:precommit` installs the
+# hooks with that path baked in, so `git commit` needs no flag; `pre-commit run`
+# by hand still does.
+
+# 3.2.0 is where `commit`/`push` became `pre-commit`/`pre-push`, which is the
+# vocabulary this file uses. An older pre-commit silently treats these as
+# unknown stages and runs nothing.
+minimum_pre_commit_version: "3.2.0"
+
+# `commit-msg` is here for the conventional-commits hook. A hook type that is
+# not installed is not a hook that fails — it is a hook that never runs, and
+# nothing reports it.
 default_install_hook_types:
   - pre-commit
   - commit-msg
+
+# Stated once so each hook below only says what differs from it.
+default_stages: [ pre-commit ]
+
+# The exclusion set, stated once rather than per gate.
+#
+# graphify-out/ holds generated output. Some of it is tracked so the map is
+# shareable, but no hook may rewrite it: graphify writes those files without a
+# trailing newline, so end-of-file-fixer would "fix" every commit and the next
+# rebuild would undo it, forever. Regenerate with graphify, never format.
+#
+# In a repo that has never run graphify this pattern matches nothing, and the
+# manual `check-useless-excludes` audit at the bottom of this file will say so.
+# That is expected: the exclusion is a standing rule about a tree, not a claim
+# that the tree exists today. Add each further generated tree here — never a
+# second copy inside one hook.
+exclude: ^graphify-out/
 
 repos:
   - repo: local
     hooks:
       - id: git-config
-        name: Forbidden Local git-config
-        description: Prevents local .git/config from overriding global user and
-          signing settings.
+        name: Forbidden local git-config
+        description: Prevents a local .git/config from overriding global user
+          and signing settings — the override is invisible in a diff and the
+          symptom is unsigned commits from an address nobody recognises.
         entry: mise x -- mise run code:git-config --fix
         language: system
         pass_filenames: false
         always_run: true
-        stages: [ pre-commit ]
 
+      # The three gate hooks below are deliberately tool-neutral: each names a
+      # task and nothing else. Which formatter, which linters and which
+      # scanners run is decided once, inside the task, where the pinned stack
+      # overlays it — so a repo customising a gate edits the task and both the
+      # hook and CI follow. A hook naming a tool would be a second definition
+      # that drifts.
+      #
+      # `code:format` comes first because it rewrites files: a linter reading
+      # the pre-format text reports positions that no longer exist by the time
+      # anyone reads the output. `code:sec` comes last because it is the only
+      # one that cannot fix what it finds.
+      - id: format
+        name: Format (mise run code:format)
+        description: The repo's formatters, run over the files being committed.
+          The task owns the tool list and its config paths; this hook only
+          passes it the staged files.
+        entry: mise x -- mise run code:format --fix
+        language: system
+        pass_filenames: true
+
+      - id: lint
+        name: Lint (mise run code:lint)
+        description: The repo's linters, run over the files being committed.
+          The task owns which linters exist for the pinned stack, and skips the
+          ones whose tool or config is absent.
+        entry: mise x -- mise run code:lint --fix
+        language: system
+        pass_filenames: true
+
+      - id: sec
+        name: Secrets (mise run code:sec --staged)
+        description: The secret scan, over what is staged rather than over the
+          tree. `--staged` is what selects that mode inside the task, which is
+          also why no filenames are passed — the task asks git, not pre-commit,
+          for the staged content.
+        entry: mise x -- mise run code:sec --staged
+        language: system
+        pass_filenames: false
+        always_run: true
+
+  # This repo's OWN hooks, above the fragment marker at the bottom of the file.
+  # None of them is a gate tool — each runs a `p:plugins:*` task that validates
+  # or regenerates something only this repo has — so none of them belongs in
+  # `code:format`, `code:lint` or `code:sec`.
   - repo: local
     hooks:
       - id: npm-normalize-hook-test
@@ -23,7 +103,6 @@ repos:
         language: system
         pass_filenames: false
         files: ^plugins/stackgen/stacks/package-manager/pnpm/hooks/
-        stages: [ pre-commit ]
       # `plugins-build` and `render-clean` retired with the template layer: there
       # is one authored tree under `plugins/` and nothing renders, so there is no
       # staleness for them to catch — except in the one file that is still
@@ -38,7 +117,6 @@ repos:
         language: system
         pass_filenames: false
         files: ^(plugins/|\.claude-plugin/)
-        stages: [ pre-commit ]
       # The second generated-and-committed file: the stackgen pack, bundle and
       # kind inventory, rendered from the stacks tree so no count is ever typed
       # by hand. Fires on any stacks or kinds edit, and on a hand-edit of the
@@ -49,20 +127,19 @@ repos:
         language: system
         pass_filenames: false
         files: ^plugins/stackgen/(stacks/|assets/kinds\.md)
-        stages: [ pre-commit ]
       - id: plugins-check
         name: Static validation of the authored plugins/ tree
         entry: mise x -- mise run p:plugins:check
         language: system
         pass_filenames: false
         files: ^plugins/
-        stages: [ pre-commit ]
       # The shell half of the same idea. Neither the task files a pack ships
       # under `config/` nor the hook scripts it ships under `hooks/` are ever
       # run here — both are copied into someone else's repo and run there — so
       # nothing else between authoring and materialization ever parses them. The
-      # linter has no shell parser, and the `.sh` exclusion above keeps hook
-      # scripts out of its argument list entirely.
+      # `code:lint` gate above runs shellcheck over this repo's own shell, and
+      # `code:format` runs shfmt over it, but neither reaches a pack's payload:
+      # that tree is excluded from this repo's formatter on purpose.
       #
       # Both tiers are in the trigger: scoping it to `config/` alone let a
       # malformed hook through, which is the defect that widened this gate.
@@ -72,121 +149,120 @@ repos:
         language: system
         pass_filenames: false
         files: ^plugins/[^/]+/stacks/[^/]+/[^/]+/(config|hooks)/
-        stages: [ pre-commit ]
-      # Not a plugins check: the workflows are this repo's own, and a typo in
-      # one is only ever discovered by pushing it.
-      - id: actionlint
-        name: Lint GitHub Actions workflows
-        entry: mise x -- actionlint
-        language: system
-        files: ^\.github/workflows/
-        stages: [ pre-commit ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
-      # `main` is merge-only: work lands on `develop` and reaches `main` by a
-      # merge, which is what makes a release a deliberate act rather than a
-      # push. This is the local half of that; the GitHub `protected-branches`
-      # ruleset is the remote half, and blocks only force-push and deletion.
-      #
-      # It does NOT block merges. Git runs `pre-merge-commit` for a merge that
-      # commits on its own, and only `pre-commit` (this stage) for an ordinary
-      # commit — so `git merge develop` on `main` passes. A merge that stops on
-      # a CONFLICT is the exception: resolving it ends in a real `git commit`,
-      # which this blocks. Finish that merge from `develop` instead.
-      - id: no-commit-to-branch
-        name: No direct commits to main
-        args: [ "--branch", "main" ]
-        stages: [ pre-commit ]
-      - id: check-shebang-scripts-are-executable
-        name: Check that scripts with shebangs are executable
-        stages: [ pre-commit ]
-      - id: check-executables-have-shebangs
-        name: Check that executables have shebangs
-        stages: [ pre-commit ]
-      - id: check-merge-conflict
-        name: Check for merge conflicts
-        stages: [ pre-commit ]
-      - id: end-of-file-fixer
-        name: Ensure files end with a newline
-        stages: [ pre-commit ]
-      - id: trailing-whitespace
-        name: Remove trailing whitespace
-        stages: [ pre-commit ]
       - id: check-added-large-files
         name: Check for added large files (>1MB)
+        description: A binary committed by accident is cheap to refuse and
+          expensive to remove — it stays in history after the delete.
         args: [ "--maxkb=1024" ]
-        stages: [ pre-commit ]
+      - id: check-case-conflict
+        name: Check for case-conflicting filenames
+        description: Two paths differing only in case collide on macOS and
+          Windows checkouts, where one silently overwrites the other.
+      - id: check-illegal-windows-names
+        name: Check for filenames Windows cannot check out
+        description: A path named CON, AUX or carrying a reserved character
+          makes the whole clone fail on Windows, not just that file.
+      - id: check-executables-have-shebangs
+        name: Check that executables have shebangs
+        description: An executable with no shebang runs under whatever shell
+          the caller happens to have, which is how a bash script meets zsh.
+      - id: check-shebang-scripts-are-executable
+        name: Check that scripts with shebangs are executable
+        description: The other half of the same gate, and the one that bites
+          here — a task file landing 644 is reported by mise as an unknown
+          task rather than as a permission error.
+      - id: check-merge-conflict
+        name: Check for merge conflict markers
+        description: Conflict markers committed into a source file parse as
+          syntax errors somewhere far from the merge that caused them.
       - id: check-symlinks
         name: Check for broken symlinks
-        stages: [ pre-commit ]
+        description: A symlink to a path that no longer exists is a silent
+          nothing at read time rather than an error.
       - id: destroyed-symlinks
         name: Check for destroyed symlinks
-        stages: [ pre-commit ]
-
-  - repo: local
-    hooks:
-      # `dprint.json` excludes `plugins/*/stacks/*/*/config/` on top of the
-      # `plugins/**/*.md` exclusion it has always carried, and for the same
-      # reason: a pack's `config/` tree is PAYLOAD, not this repo's source.
-      # Every file in it is copied byte-for-byte into someone else's repo,
-      # where the gate pack's own `.config/dprint.json` is what formats it —
-      # and that config deliberately omits the `bracketSpacing`/`braceSpacing`
-      # this one sets. Formatting a payload here rewrites it to settings the
-      # target does not use, so a freshly initialised repo fails its own first
-      # hook run: `dprint fmt` rewrites four files it just materialized.
-      #
-      # Anything a pack ships as bytes belongs to the target's config, never to
-      # this one. `hooks/` needs no exclusion — its scripts are `.sh`, which
-      # dprint does not format (`p:plugins:shellcheck` is their gate), and
-      # `hooks.yaml` is a manifest this repo reads rather than a file it ships.
-      # The linter below is not affected: it reports rule violations rather
-      # than reformatting, and finds none across the payload tree.
-      - id: formatter
-        name: Formatter
-        entry: mise x -- dprint fmt --allow-no-files --log-level warn
-        exclude: (^|.*/)package\.json$
-        language: system
-        stages: [ pre-commit ]
-
-  - repo: local
-    hooks:
-      - id: linter
-        name: Linter
-        entry: mise x -- pnpm dlx @askviraj/linter --fix
-        # pre-commit passes staged paths explicitly, and the linter warns on every
-        # path it has no configuration for — enough warnings to fail the run. So
-        # anything it cannot lint must be kept out of the argument list, not merely
-        # ignored in .config/linter.yaml.
-        #
-        # Three kinds: the vwf blueprint templates and example bundle (ignored in
-        # linter.yaml, because OKF frontmatter reads as a second H1), the hook
-        # scripts, which are shell — `p:plugins:npm-normalize-test` is what
-        # actually tests those, through the system sed — and the site's Astro
-        # components, which the linter has no parser for (they are dprint's, via
-        # the markup plugin) and which linter.yaml already ignores, so passing
-        # them only produces the warnings that fail the run. site/public/ is
-        # copied verbatim into dist/ — SVG, PNG, ICO, the web manifest, robots,
-        # the social-preview render source, and _headers, which Cloudflare
-        # Workers Static Assets parses rather than serves — none of which it
-        # lints, and its HTML rewrite fights dprint's.
-        exclude: ^plugins/vwf/assets/(templates|examples)/|^site/public/|\.sh$|\.astro$
-        language: system
-        stages: [ pre-commit ]
-
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.30.0
-    hooks:
-      - id: gitleaks
-        name: Check for secrets
-        args: [ --config, .config/gitleaks.toml ]
-        stages: [ pre-commit ]
+        description: A symlink committed as a regular file containing its own
+          target path — what happens when a tool without symlink support
+          rewrites the tree.
+      - id: check-json
+        name: Check JSON syntax
+        description: Every config gate below reads a config file; an unparseable
+          one fails inside the tool with a message about the tool.
+        # The tsconfigs and the editor files are JSONC by design — comments and
+        # trailing commas, which TypeScript and VS Code both accept and a strict
+        # JSON parse does not. `p:plugins:check` parses the shipped ones as
+        # JSONC; these are this repo's own.
+        exclude: (^|/)tsconfig[^/]*\.json$|^\.vscode/
+      - id: check-toml
+        name: Check TOML syntax
+        description: Same reason as JSON, for the toolchain manager's config.
+      - id: check-yaml
+        name: Check YAML syntax
+        description: Same reason again, and it covers this file — a broken
+          hook config disables the gate rather than failing it.
+      - id: detect-private-key
+        name: Check for committed private keys
+        description: The secret scanner further down catches these too; this
+          one is free and runs first, so the common case fails immediately.
+      - id: end-of-file-fixer
+        name: Ensure files end with a newline
+        description: A missing final newline makes the next append show as a
+          two-line diff and breaks line-oriented tools mid-pipeline.
+      - id: trailing-whitespace
+        name: Remove trailing whitespace
+        description: Invisible in review and the cause of diffs nobody
+          authored when the next editor strips it.
+      - id: mixed-line-ending
+        name: Normalise line endings to LF
+        description: A CRLF file entering the tree rewrites whole-file diffs
+          for everyone else. `--fix=lf` settles it rather than reporting it.
+        args: [ "--fix=lf" ]
+      - id: no-commit-to-branch
+        name: Refuse a direct commit to main
+        description: main is what consumers read, and it takes merges only.
+          Merges are unaffected — git runs `pre-merge-commit` for those.
+        args: [ "--branch", "main" ]
 
   - repo: https://github.com/qoomon/git-conventional-commits
     rev: v2.9.0
     hooks:
       - id: conventional-commits
         name: Conventional Commits
+        description: The commit-msg gate. The release notes are generated from
+          these messages, so a type outside the convention is a change that
+          silently never appears in a changelog.
         args: [ "--config", ".config/git-conventional-commits.yaml" ]
         stages: [ commit-msg ]
+
+  # The config audit — deliberately `manual`, not a commit-stage gate.
+  #
+  # Both of these fail on a *correct* config in a young repo: check-hooks-apply
+  # reports any hook matching zero files, which is the normal state of the
+  # symlink, Windows-name and workflow hooks above until the repo grows one of
+  # each; check-useless-excludes reports the graphify-out/ exclusion for the
+  # same reason. Run them deliberately, when a hook is added or a scope is
+  # changed:
+  #
+  #   pre-commit run --config .config/pre-commit-config.yaml \
+  #     --hook-stage manual --all-files check-hooks-apply check-useless-excludes
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+        name: Audit — every hook matches at least one file
+        description: Catches a `files:` regex that stopped matching after a
+          rename, which is a gate that reports success while checking nothing.
+        stages: [ manual ]
+      - id: check-useless-excludes
+        name: Audit — every exclude matches at least one file
+        description: Catches an exclusion whose reason expired, which is the
+          failure mode nobody re-reads because it keeps working.
+        stages: [ manual ]
+
+# Fragments from `.config/pre-commit.d/*.yaml` are merged below this line by
+# `/vwf:init`, each between a `# >>> pre-commit.d/<name>.yaml` and a matching
+# `# <<< pre-commit.d/<name>.yaml` marker. A re-run replaces what is between a
+# pair; do not hand-edit there, and put a repo's own hooks above this line.

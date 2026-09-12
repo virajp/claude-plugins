@@ -114,6 +114,31 @@ DISABLE_TELEMETRY = 1
 # change to every repo that has one.
 REPO_NAME = "unfilled"
 
+# A MARKED POSITION. How a branch reaches its destination — `code:merge:develop`
+# and `code:merge:main` read it, and the branch model itself is the same under
+# both values:
+#
+#   direct  merge locally and push the destination branch
+#   pr      push the branch and open a pull request; nothing merges locally
+#
+# `direct` is the shipped default because it is what a repo with no reviewer
+# needs, and because it is what these tasks did before the setting existed. A
+# repo that gates landing on review sets `pr` and nothing else changes.
+MERGE_MODEL = "direct"
+
+# A MARKED POSITION. The repo's member projects, space separated, each path
+# relative to this repo's root — `MEMBERS = "backend frontend"`. It is what
+# `setup:all --all` recurses into and what `code:worktrees` walks.
+#
+# **Left EMPTY for a repo whose members are submodules**, which are read from
+# `.gitmodules` instead: git already holds that list, and a second copy of it
+# here would only let the two disagree. Empty is also the right value for a
+# single-project repo, which has no members at all.
+#
+# One string rather than a list: TOML `[env]` values are strings, so the words
+# are split by the task library rather than by the parser.
+MEMBERS = ""
+
 # Project-local binaries on PATH without a `<pm> exec` prefix. Shipped commented
 # because it is a claim about the stack: uncomment it when a package-manager
 # component lands and this repo actually has a `node_modules/.bin`.

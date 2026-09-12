@@ -84,36 +84,66 @@ Run them when a hook is added or a scope is changed. What they catch is a
 `files:` regex that stopped matching after a rename — a gate reporting success
 while checking nothing.
 
-## Local hooks call mise tasks
+## Every gate hook calls a task, and names no tool
 
-A repo-local hook should invoke the task, not the tool:
+A gate tool is configured in exactly one place — its mise task. The hook is a
+thin call to that task, so a repo customising a gate edits the task, and the
+hook, the terminal and CI all follow from the one edit. A hook that names a tool
+is a second definition of that gate: the two drift the first time one is
+touched, and the drift surfaces as CI failing what pre-commit passed.
+
+That is why the base config ships exactly three gate hooks, all tool-neutral:
 
 ```yaml
 - repo: local
   hooks:
-    - id: code-format
-      name: format
-      entry: mise x -- mise run code:format
+    - id: format
+      name: Format (mise run code:format)
+      entry: mise x -- mise run code:format --fix
+      language: system
+      pass_filenames: true
+
+    - id: lint
+      name: Lint (mise run code:lint)
+      entry: mise x -- mise run code:lint --fix
+      language: system
+      pass_filenames: true
+
+    - id: sec
+      name: Secrets (mise run code:sec --staged)
+      entry: mise x -- mise run code:sec --staged
       language: system
       pass_filenames: false
-      files: ^(src/|packages/)
-      stages: [ pre-commit ]
+      always_run: true
 ```
 
-`entry` names the **mise task** so the same command runs locally, in the hook,
-and in CI — one definition, three callers. A hook that inlines the tool
-invocation is a second copy that drifts from the task, and the drift shows up as
-CI failing what pre-commit passed.
+Which formatter, which linters and which scanners actually run is the pinned
+stack's business: each language, package-manager and gate pack overlays
+`code:format` and `code:lint` with its own tools, and every one of them skips
+silently when its binary or its config is absent. Nothing about that reaches
+this file.
+
+`--fix` is how `code:format` and `code:lint` are told to rewrite rather than
+report; `--staged` is how `code:sec` is told to scan the index rather than the
+tree. The staged filenames follow for the first two and not for the third,
+which asks git for its own scope.
 
 `mise x --` is what makes the hook work in a bare shell: pre-commit does not run
-under the developer's activated environment, so without it the tool is simply
-not on `PATH`.
+under the developer's activated environment, so without it `mise` — and the
+tools the task reaches for — are simply not on `PATH`.
+
+A pack fragment follows the same rule. If a pack needs a gate, it overlays the
+task; a fragment is for a check that is **not** a gate tool, such as `uv`'s
+lockfile freshness.
 
 ## Scope with `files:`, and honour hook ordering
 
 - **`files:` is a regex over paths**, and it is what keeps a commit touching one
   doc from running the whole gate. Scope each hook to what it actually
-  validates.
+  validates — **except** a hook that calls a gate task, which carries no
+  `files:` at all: the task is the thing that knows which paths each of its
+  tools owns, and a regex here would AND with that and silently stop checking
+  a tree the next overlay adds.
 - **`pass_filenames: false`** for any hook that operates on the repo as a whole
   (a build, a full-tree check). Otherwise pre-commit appends the changed file
   list to the command, which most task runners then treat as arguments.

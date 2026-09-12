@@ -5,6 +5,7 @@
 
 #USAGE flag "--debug" help="emit debug logs"
 #USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to format (default: the whole repo)"
 
 set -euo pipefail
 # helpers ships in the toolchain-manager pack, not this one, so there is no
@@ -16,6 +17,13 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # for every language in the repo — that does not stop mattering once JavaScript
 # arrives — and this pack adds the one thing dprint cannot do: `package.json`
 # key order, which is a convention rather than a format.
+#
+# This task is what the `format` pre-commit hook calls, which is why it takes an
+# optional file list: the hook passes the staged files, a person passes nothing
+# and gets the whole tree.
+
+files=()
+eval "files+=(${usage_files:-})"
 
 if [[ "${usage_debug:-false}" == "true" ]]; then
   log_level="debug"
@@ -23,14 +31,27 @@ else
   log_level="warn"
 fi
 
+# The sorter takes paths, so a file list narrows it to the manifests in scope;
+# with no list it takes the whole tree by glob.
+sort_targets=()
+if [ ${#files[@]} -gt 0 ]; then
+  for f in "${files[@]}"; do
+    case "${f}" in
+      package.json | */package.json) sort_targets+=("${f}") ;;
+    esac
+  done
+else
+  sort_targets=("**/package.json" --ignore "**/node_modules")
+fi
+
 # The sorter has no `--fix`: sorting is its default and `--check` is the
 # read-only mode, the inverse of dprint's pair.
-sort_args=("**/package.json" --ignore "**/node_modules")
 if [[ "${usage_fix:-false}" == "true" ]]; then
   action="fmt"
+  sort_args=()
 else
   action="check"
-  sort_args=(--check "${sort_args[@]}")
+  sort_args=(--check)
 fi
 
 print_header "Formatting files ..."
@@ -39,7 +60,35 @@ print_subheader "Formatting with dprint ..."
 dprint "${action}" \
   --config .config/dprint.json \
   --allow-no-files \
-  --log-level "${log_level}"
+  --log-level "${log_level}" \
+  ${files[@]+"${files[@]}"}
 
-print_subheader "Sorting package.json files ..."
-pnpm dlx sort-package-json "${sort_args[@]}"
+# The toolchain manager's shipped default, and an overlay keeps it: a commit
+# gets whatever this task does, so a tool that drops out of it stops running at
+# all. Silent when the binary is absent, and silent when nothing in scope is
+# shell. The flags match the ones the shell gate checks with, so formatting
+# here and checking there cannot disagree.
+if command -v shfmt >/dev/null 2>&1; then
+  shell_scope=()
+  while IFS= read -r shell_file; do
+    if [ -n "${shell_file}" ]; then
+      shell_scope+=("${shell_file}")
+    fi
+  done < <(shell_files_in_scope ${files[@]+"${files[@]}"})
+
+  if [ "${#shell_scope[@]}" -gt 0 ]; then
+    print_subheader "Formatting shell scripts ..."
+    if [ "${action}" = "fmt" ]; then
+      shfmt -w -i 2 -ci "${shell_scope[@]}"
+    else
+      # `-d` reports a diff and fails rather than rewriting, so a read-only run
+      # stays read-only.
+      shfmt -d -i 2 -ci "${shell_scope[@]}"
+    fi
+  fi
+fi
+
+if [ ${#sort_targets[@]} -gt 0 ]; then
+  print_subheader "Sorting package.json files ..."
+  pnpm dlx sort-package-json ${sort_args[@]+"${sort_args[@]}"} "${sort_targets[@]}"
+fi

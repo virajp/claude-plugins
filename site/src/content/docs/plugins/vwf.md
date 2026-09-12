@@ -956,11 +956,17 @@ since work flows from a feature branch or a worktree into `develop` and from
 `develop` into `main`. On an existing repo `init` creates whichever of the two
 is missing, from the one that is there. Both always end up present, because the
 repo's own merge tasks refuse a destination branch that does not exist locally.
-Then it asks **which branch the remote should default to**, with `develop`
-preselected, and runs a pack task for it — `setup:default-branch` — reporting
-only what that task reported, since whether it set the default or printed a
-command for you depends on what it found. `init` names no forge and inspects
-none.
+
+**The git pass opens by asking the landing model**, before it stages anything:
+`direct` — recommended, and what the toolchain pack ships — *merge locally and
+push*, or `pr` — *push the branch and open a pull request*. The answer is
+written literally to `MERGE_MODEL` in `.config/mise.toml`, so the file it writes
+is in what the same pass stages. **`init` never touches the remote's own
+settings.** It used to ask which branch the forge should default to and run a
+pack task for it; that task is gone, because setting a forge's default branch is
+a one-time act by whoever shapes the repo, not something a machine re-runs. The
+one line telling a maintainer to do it lives in the hygiene pack's
+`CONTRIBUTING.md`.
 
 On an existing repo one commit goes **first and alone**: the pre-commit
 configuration and the files it reads. A configuration file that is
@@ -973,10 +979,10 @@ protected-branch hook ships unchanged and never sees it.
 **Every run ends with the same report** — files written, files replaced, files
 moved, tasks renamed, calls rewritten, sections appended, fragments merged, and
 anything deferred with the thing that would unlock it, then a **git** section:
-branches created, the commit's short hash, what was pushed, and the forge task's
-own words verbatim. An empty section prints as `none`. Then two next-step lines,
-always both and neither of them run: `/vwf:readme` to fill the readme the stub
-only opens, and `/vwf:setup` to bring the repo into vwf's format.
+the landing model, branches created, the commit's short hash, and what was
+pushed. An empty section prints as `none`. Then two next-step lines, always both
+and neither of them run: `/vwf:readme` to fill the readme the stub only opens,
+and `/vwf:setup` to bring the repo into vwf's format.
 
 **When it runs again.** `init` is not a one-time bootstrap — it is what keeps a
 repo's *shape* in step with what the packs ship and with what the repo has since
@@ -1989,9 +1995,13 @@ Two details follow the task contract [`/vwf:init`](#vwfinit) lays down. The
 pre-commit gate runs **before staging**, over the working tree's changed files,
 so a fixup folds into the same commit instead of needing one of its own — the
 sequence is `code:precommit`, then stage, then commit. And landing runs through
-`code:merge:develop` / `code:merge:main` (renamed from `merge:*`), which push
-with `--follow-tags`; the explicit push step survives only in the manual
-fallback for a repo that has no such task.
+`code:merge:develop` / `code:merge:main` (renamed from `merge:*`), which obey
+the repo's `MERGE_MODEL`: under `direct` they merge locally and push with
+`--follow-tags`, under `pr` they push the branch and open a pull request and
+nothing merges locally. The skill reads the value before it offers the landing
+options, so the two choices read "Merge & push" on one repo and "Push & open PR"
+on another — it still names no forge; the task does. The explicit push step
+survives only in the manual fallback for a repo that has no such task.
 
 ## How it asks questions
 

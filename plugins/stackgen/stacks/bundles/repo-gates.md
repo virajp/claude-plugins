@@ -5,9 +5,9 @@ kind: repo-gate
 unconditional: true
 components:
 - toolchain-gate/dprint@1.0.1
-- toolchain-gate/gitleaks@1.0.0
+- toolchain-gate/gitleaks@1.1.0
 - toolchain-gate/grype@1.0.0
-- toolchain-gate/pre-commit@1.0.0
+- toolchain-gate/pre-commit@1.1.0
 ---
 
 # Repo — the four gates

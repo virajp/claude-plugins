@@ -86,6 +86,16 @@ DISABLE_TELEMETRY = 1
 # whose basename is the branch name inside a linked worktree.
 REPO_NAME = "unfilled"
 
+# A marked position: how code:merge:* lands a branch on THIS repo.
+#   direct = merge locally and push   |   pr = push and open a pull request
+MERGE_MODEL = "direct"
+
+# A marked position: this repo's member projects, as space-separated paths
+# relative to the repo root. Left empty when the members are submodules, which
+# `members()` reads from .gitmodules instead. A string, never an array — mise
+# env values are strings.
+MEMBERS = ""
+
 [tools]
 # Language RUNTIME only — the minimum to run/build the project anywhere. It
 # arrives with the language and package-manager components, not with this one.
@@ -99,6 +109,15 @@ description = "Initialize mise tasks"
 hide        = true
 run         = "find .config/mise/tasks/ -name '*' -type f -not -path '*/*.env' -exec chmod 755 {} \\;"
 ```
+
+**The base `[env]` carries three marked positions, and they are the only ones.**
+`REPO_NAME` is the repo's own id; `MERGE_MODEL` is how `code:merge:*` lands a
+branch here; `MEMBERS` is the member list for a product whose parts are linked
+as siblings rather than as submodules. Each ships with a working default, so an
+unfilled repo runs — `direct` is today's local merge, an empty `MEMBERS` means
+`members()` falls through to `.gitmodules` — and each is filled by the
+orchestrator rather than by hand. They sit in the **base** and not in
+`mise.dev.toml` because the tasks that read them run in the pipeline too.
 
 **`minimum_release_age` and `lockfile` are one policy, not two.** The freshness
 rule is *latest, but defer anything released in the last ten hours*, and the

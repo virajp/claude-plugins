@@ -38,15 +38,17 @@ add one rule, which silently becomes the entire scan. The pack ships the file
 with `[extend]` already in it so the first custom rule is an addition by
 construction.
 
-**Two invocations, two modes.** `code:sec` runs `gitleaks dir` over the working
-tree with `--config .config/gitleaks.toml --redact`; the history scan is
-`gitleaks git . --log-opts="--all"`, run once and deliberately, not on every
-commit. The pre-commit hook is the upstream `gitleaks-system` hook, which uses
-the binary the toolchain manager pins instead of building one into pre-commit's
-own environment, and scans the staged diff — `gitleaks git --pre-commit
---staged`. That entry takes at most one positional argument, so the hook must
-carry `pass_filenames: false`; upstream sets it on the `gitleaks` id and not on
-this one, and without it any commit touching two files dies on an arg count.
+**Three invocations, one task.** `code:sec` is the only thing that calls
+gitleaks. With no flag it runs `gitleaks dir .` over the working tree with
+`--config .config/gitleaks.toml --redact=50`; with `--staged` it runs
+`gitleaks git --staged` over the index instead and skips the vulnerability
+scanner; the history scan is `gitleaks git . --log-opts="--all"`, run once and
+deliberately, not on every commit. The pre-commit gate carries **no gitleaks
+hook of its own** — its `sec` hook is `mise run code:sec --staged`, so the
+commit gate and the task are the same configuration, and the binary is the one
+the toolchain manager pins rather than one built into pre-commit's environment.
+`pass_filenames: false` on that hook, because the index is a thing only git can
+enumerate.
 
 **Establishing a baseline on an existing repo.** Scan the history once, rotate
 everything real that it finds, then allowlist what remains **by fingerprint**,

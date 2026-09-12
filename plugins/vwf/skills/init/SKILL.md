@@ -48,7 +48,8 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
   ships *because no pack can know a repo's project ids, its name, its remote
   or which other packs landed beside it*: the bootstrap aggregator's member
   flags, the shell aliases, the per-project task groups, the repo-name key,
-  the commit gate's scope list and forge links, and the composed editor block.
+  the landing-model key and the member-path key, the commit gate's scope list
+  and forge links, and the composed editor block.
   Filling one is exactly `init`'s job and is not authoring pack content — what
   the rule forbids is inventing pack-owned content from scratch, at a path or
   a position no pack marked.
@@ -63,14 +64,15 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
 - **One consent, then apply.** The whole plan is presented once and applied on
   one yes. `init` never asks per file and never writes before the yes.
 - **The git pass is the one exception, and it is at the end.** `init` shapes a
-  tree and then closes it: it stages what this run wrote and asks **one
-  question with three answers** — commit, commit and push, leave it — commits
-  with a fixed `ops:` message when told to, creates whichever of `develop` and
-  `main` the branch model needs and the repo lacks, asks which branch the
-  remote forge should default to, and pushes **only** on the commit-and-push
-  answer. Push is a second decision inside one question, never an assumed
-  consequence of committing. History is never rewritten, nothing is
-  force-pushed, and no verification-skipping flag is ever passed. Both
+  tree and then closes it: it asks how work lands in this repo, stages what
+  this run wrote and asks **one question with three answers** — commit, commit
+  and push, leave it — commits with a fixed `ops:` message when told to,
+  creates whichever of `develop` and `main` the branch model needs and the
+  repo lacks, and pushes **only** on the commit-and-push answer. Push is a
+  second decision inside one question, never an assumed consequence of
+  committing, and the pass never reaches the remote's own settings. History is
+  never rewritten, nothing is force-pushed, and no verification-skipping flag
+  is ever passed. Both
   pipelines describe the pass; [new repo](references/new-repo.md) §11 is where
   it is written down.
 - **Idempotent, for the same id source.** A second run on a shaped repo
@@ -162,7 +164,10 @@ the other four are asked on any repo.
 
    What this question settles is what the plan shows and what §7 writes — the
    per-project task groups, the aggregator's member flags, the shell aliases
-   and `REPO_NAME`. Nothing downstream re-derives an id.
+   and `REPO_NAME`. Nothing downstream re-derives an id. The environment
+   block's other two marked positions are not this question's: `MEMBERS` is
+   filled from the registry's member list where the product has sibling
+   repositories, and `MERGE_MODEL` is asked in the git pass.
 3. **A one-line brief.** *New repo only.* What the repo is, in a sentence.
    **May be empty** — an empty brief writes a one-line stub, and `/vwf:readme`
    fills the rest.
@@ -240,16 +245,16 @@ Then a **git** section, from the pass that just ran — four lines, each `none`
 where nothing happened:
 
 ```text
+Landing model            <the value written>
 Branches created  <n>    <name>
 Commit                   <short hash> <the fixed message>   (or: not committed)
 Pushed            <n>    <branch> → origin
-Forge default            <what the task reported, verbatim>
 ```
 
-The forge line is the task's own words and never a paraphrase: whether the
-default was set or a command was printed for a human to run is the task's
-finding, and re-stating it here is how a printed command gets quietly reported
-as a completed change.
+There is no forge line, and its absence is the point: `init` never reaches the
+remote's own settings. Which branch a forge calls default is a one-time act
+somebody performs on the forge, and the hygiene pack's contribution guide is
+where that instruction lives.
 
 Then the two next-step lines, in this order and always both:
 

@@ -5,6 +5,7 @@
 
 #USAGE flag "--debug" help="emit debug logs"
 #USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to format (default: the whole repo)"
 
 set -euo pipefail
 # helpers ships in the toolchain-manager pack, not this one, so there is no
@@ -14,9 +15,20 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 # Overlays whatever the tiers below wrote — this pack is on the app-framework
 # axis, so it is last and wins. dprint keeps the repo's markdown, YAML and the
-# platform manifests; the SDK's own formatter takes `lib/`, which is the only
-# tree it should touch (the generated platform folders are the build's output,
-# not the project's source).
+# platform manifests; the SDK's own formatter and the import sorter take `lib/`,
+# which is the only tree they should touch (the generated platform folders are
+# the build's output, not the project's source).
+#
+# The import sorter is here rather than in `code:lint` because sorting imports
+# is a formatting act: it rewrites layout, and a lint gate that rewrites is a
+# gate that cannot be run read-only.
+#
+# This task is what the `format` pre-commit hook calls, which is why it takes an
+# optional file list: the hook passes the staged files, a person passes nothing
+# and gets the whole tree.
+
+files=()
+eval "files+=(${usage_files:-})"
 
 if [[ "${usage_debug:-false}" == "true" ]]; then
   log_level="debug"
@@ -24,14 +36,29 @@ else
   log_level="warn"
 fi
 
+# The SDK tools take paths, so a file list narrows them to the Dart sources in
+# scope; with no list they take `lib/` whole.
+dart_targets=()
+if [ ${#files[@]} -gt 0 ]; then
+  for f in "${files[@]}"; do
+    case "${f}" in
+      lib/*.dart) dart_targets+=("${f}") ;;
+    esac
+  done
+else
+  dart_targets=(lib/)
+fi
+
 # `dart format` has no check flag pair: it formats by default, and the read-only
-# mode is two flags rather than one.
-dart_args=(lib/)
+# mode is two flags rather than one. The import sorter's read-only mode is one.
+format_args=()
+sorter_args=()
 if [[ "${usage_fix:-false}" == "true" ]]; then
   action="fmt"
 else
   action="check"
-  dart_args=(--set-exit-if-changed --output none "${dart_args[@]}")
+  format_args=(--set-exit-if-changed --output none)
+  sorter_args=(--exit-if-changed)
 fi
 
 print_header "Formatting files ..."
@@ -40,7 +67,42 @@ print_subheader "Formatting with dprint ..."
 dprint "${action}" \
   --config .config/dprint.json \
   --allow-no-files \
-  --log-level "${log_level}"
+  --log-level "${log_level}" \
+  ${files[@]+"${files[@]}"}
 
-print_subheader "Formatting Dart sources ..."
-dart format "${dart_args[@]}"
+# The toolchain manager's shipped default, and an overlay keeps it: a commit
+# gets whatever this task does, so a tool that drops out of it stops running at
+# all. Silent when the binary is absent, and silent when nothing in scope is
+# shell. The flags match the ones the shell gate checks with, so formatting
+# here and checking there cannot disagree.
+if command -v shfmt >/dev/null 2>&1; then
+  shell_scope=()
+  while IFS= read -r shell_file; do
+    if [ -n "${shell_file}" ]; then
+      shell_scope+=("${shell_file}")
+    fi
+  done < <(shell_files_in_scope ${files[@]+"${files[@]}"})
+
+  if [ "${#shell_scope[@]}" -gt 0 ]; then
+    print_subheader "Formatting shell scripts ..."
+    if [ "${action}" = "fmt" ]; then
+      shfmt -w -i 2 -ci "${shell_scope[@]}"
+    else
+      # `-d` reports a diff and fails rather than rewriting, so a read-only run
+      # stays read-only.
+      shfmt -d -i 2 -ci "${shell_scope[@]}"
+    fi
+  fi
+fi
+
+if [ ${#dart_targets[@]} -gt 0 ]; then
+  print_subheader "Formatting Dart sources ..."
+  dart format ${format_args[@]+"${format_args[@]}"} "${dart_targets[@]}"
+
+  print_subheader "Sorting Dart imports ..."
+  if [ ${#files[@]} -gt 0 ]; then
+    dart run import_sorter:main ${sorter_args[@]+"${sorter_args[@]}"} "${dart_targets[@]}"
+  else
+    dart run import_sorter:main ${sorter_args[@]+"${sorter_args[@]}"}
+  fi
+fi

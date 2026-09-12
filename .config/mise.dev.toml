@@ -38,3 +38,4 @@ uv     = { version = "latest" }
 [shell_alias]
 precommit = "mise run code:precommit"
 setup     = "mise run setup:all"
+worktrees = "mise run code:worktrees"

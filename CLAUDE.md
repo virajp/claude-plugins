@@ -179,6 +179,13 @@ inventory and check in that order — freshness before validity:
   committed favicon set, by hand when the mark changes), **`p:site:version`**
   and **`p:site:release`**.
 
+Beside them the local gate runs **three tool-neutral hooks** — `format`, `lint`
+and `sec` — each of which calls a mise task (`code:format --fix`,
+`code:lint --fix`, `code:sec --staged`) rather than a tool. dprint, shfmt,
+shellcheck, actionlint, the house linter and gitleaks are configured **once**,
+inside those tasks; no hook names a binary. This repo takes the same shape the
+mise pack ships, so its own commits prove the hook-to-task path.
+
 What each rule asserts, and what the checker deliberately no longer checks, is
 in [`repo-shape.md`][repo].
 
@@ -197,9 +204,11 @@ in [`repo-shape.md`][repo].
 - `CLAUDE.md`, `installer/CLAUDE.md`, `site/CLAUDE.md` and `readme.md` **are**
   dprint-formatted, so widening one table cell re-pads every row.
   `plugins/**/*.md` is **not** formatted — match the surrounding fold width by
-  hand. `**/*.astro` **is** dprint's, via the markup plugin, and is excluded
-  from the linter and from its pre-commit argument list: the linter has no Astro
-  parser.
+  hand. `**/*.astro` **is** dprint's, via the markup plugin, and is ignored by
+  the linter in `.config/linter.yaml`: the linter has no Astro parser. There is
+  no pre-commit argument list to exclude it from any more — the `lint` hook
+  calls `code:lint`, which runs the house linter over the whole tree, so every
+  linter exclusion lives in `.config/linter.yaml` and nowhere else.
 - **`plugins/*/stacks/*/*/config/` is excluded whole, and the reason is not
   style.** That tree is **payload**: it is copied byte-for-byte into a target
   repo, where the gate pack's own dprint config formats it — and that config
@@ -237,7 +246,9 @@ gates, the hygiene files — from stackgen's three unconditional bundles, asks s
 questions (the second confirming every project id, its slug and the source the
 name came from, before any `p:<slug>:*` group, alias or `REPO_NAME` is written),
 and closes with a consent-gated git pass (the first commit, the `develop`/`main`
-pair, the forge default); `setup` then sets up **vwf** in it, and offers `init`
+pair, and the landing model it writes to `MERGE_MODEL` — it never touches the
+forge's own settings, which a maintainer sets once by hand per the hygiene
+pack's `CONTRIBUTING.md`); `setup` then sets up **vwf** in it, and offers `init`
 when the shape is **missing or drifted**, on the four baseline predicates
 `/vwf:doctor` owns. **Everything up to `blueprint` is done in full before
 planning** — `plan` hard-halts on a partial coverage stamp. The ad-hoc pair

@@ -8,9 +8,19 @@ hook that inlines its command is a second definition of that gate, and the two
 drift the first time one is edited — after which local and CI disagree and the
 gate is worse than absent, because it is trusted.
 
-**`files:` scopes every hook** so it fires only for what it validates. An
-unscoped hook runs the formatter over a commit that touched one YAML file, and a
-gate people wait on is a gate people bypass.
+**A gate tool is configured once, in its mise task, and the hook is a thin
+call.** The base config ships three tool-neutral gate hooks — `format`, `lint`
+and `sec` — whose entries are `code:format --fix`, `code:lint --fix` and
+`code:sec --staged` and which name no tool at all. Which formatter, linters and
+scanners run is the pinned stack's business, overlaid onto those tasks pack by
+pack. A repo customising a gate edits the task, and the hook, the terminal and
+CI follow from that one edit.
+
+**`files:` scopes every hook** so it fires only for what it validates — every
+hook except the three that call a gate task, which carry no `files:` because the
+task is what knows its own tools' paths. An unscoped hook otherwise runs the
+formatter over a commit that touched one YAML file, and a gate people wait on is
+a gate people bypass.
 
 **Revs are pinned and updated deliberately.** An unpinned rev means the gate's
 behaviour changes without a commit, and the change lands on whoever pulls next.

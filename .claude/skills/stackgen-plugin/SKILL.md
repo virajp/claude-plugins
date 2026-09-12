@@ -94,18 +94,21 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   component edits `mise.toml`; **(e)** a hook fragment at
   `.config/pre-commit.d/<pack>.yaml`, copied verbatim — **`/vwf:init` merges
   it**, nothing in stackgen edits the pre-commit config, which is what keeps a
-  fragment a fragment; **(f)** a deploy target's own config and its deploy task,
-  since 2026-09-05 — `cloud-service/workers-static-assets`, its `workers-ssr`
-  sibling and `cloud-service/containers` each ship `wrangler.jsonc` at the root
-  (the SSR and Containers ones both carrying `main`, the Containers one adding a
-  `containers` array, the Durable Object binding that addresses it and the
-  migration that declares the class) plus a
-  `.config/mise/tasks/p/_project/deploy` overlay, and the first two were the
-  first `cloud-provider`/`cloud-service` packs to ship a `config/` tree at all,
-  which is what put both types on the composition order (**last**, after
-  `capability-provider`); and, since 2026-09-06, **(g)** a pack's **editor
-  fragment** at `.config/vscode.d/<pack>.jsonc`, three keys only (`settings`,
-  `nesting`, `extensions`) — **`/vwf:init` composes them** into
+  fragment a fragment. A fragment is for a **non-gate** check only: since
+  2026-09-12 a gate tool is configured once, in a `code:*` task the base hooks
+  call, so a pack needing a gate overlays that task instead. Only
+  `package-manager/uv` still ships a fragment, for `uv lock --check`; **(f)** a
+  deploy target's own config and its deploy task, since 2026-09-05 —
+  `cloud-service/workers-static-assets`, its `workers-ssr` sibling and
+  `cloud-service/containers` each ship `wrangler.jsonc` at the root (the SSR and
+  Containers ones both carrying `main`, the Containers one adding a `containers`
+  array, the Durable Object binding that addresses it and the migration that
+  declares the class) plus a `.config/mise/tasks/p/_project/deploy` overlay, and
+  the first two were the first `cloud-provider`/`cloud-service` packs to ship a
+  `config/` tree at all, which is what put both types on the composition order
+  (**last**, after `capability-provider`); and, since 2026-09-06, **(g)** a
+  pack's **editor fragment** at `.config/vscode.d/<pack>.jsonc`, three keys only
+  (`settings`, `nesting`, `extensions`) — **`/vwf:init` composes them** into
   `.vscode/settings.json` and `.vscode/extensions.json`, which no pack ever
   ships whole and which the convention in `assets/pack-format.md` names (init
   itself never names an editor). The dprint gate's fragment is the one filename

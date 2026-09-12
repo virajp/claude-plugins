@@ -26,6 +26,14 @@ has a plugin for across the whole repo; ruff owns Python. The shipped
 `code/format` does exactly that, in that order — the same repo-gate-plus-
 language shape the node and flutter overlays have.
 
+**Both tasks take an optional file list, and the empty case is the whole
+tree.** That is the whole pre-commit story for this pack: it ships **no
+fragment**, because the gate config's `format` and `lint` hooks call the two
+tasks with the staged files. dprint and `ruff format` narrow to what they are
+given; `ruff check` stays whole-project either way, since its per-file settings
+resolve from the project root and a staged subset would answer differently from
+CI.
+
 **Composition order, when more than one component writes this tree:**
 `toolchain-manager`, then `package-manager` / `language`, then
 `toolchain-gate`, then `app-framework` — a later component's file wins, and

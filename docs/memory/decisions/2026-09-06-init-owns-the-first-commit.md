@@ -103,6 +103,11 @@ question is asked even where there is no remote, because the answer is a
 decision about the repository and re-asking after a remote appears is a question
 already answered.
 
+> **D17 superseded 2026-09-12** by
+> [`2026-09-12-task-library-configures-each-gate-once.md`](./2026-09-12-task-library-configures-each-gate-once.md)
+> — the task is gone and `init` asks no forge question; the hygiene pack's
+> `CONTRIBUTING.md` carries the by-hand line.
+
 **The merge predicate** (D21). `_scripts/merge` gains one predicate before the
 hook pass — the destination branch must exist locally — naming the two-branch
 model. Asked there rather than left to the checkout, so a repo whose branches

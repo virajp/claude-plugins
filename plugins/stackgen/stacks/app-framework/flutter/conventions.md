@@ -31,15 +31,23 @@ This pack ships a `config/.config/mise/tasks/` tree — `code/format`,
 own `.config/mise/tasks/` behind the materializer's config consent line.
 
 **It owns `code/format` and `code/lint` whole, not a fragment of each.**
-`code:format` runs **dprint first**, then `dart format`; `code:lint` runs the
-config linter, then `dart run dependency_validator`, then
-`dart analyze --fatal-infos`. One task file co-authored by the repo formatter
-and the SDK. The seam is ownership-plus-contract — this component writes the
-file, and the contract it honours is that the repo formatter goes first. It is
-written whole rather than assembled from contributed fragments because
-stackgen's dispatch is copy-verbatim or generate, with nothing in between; a
-fragment layer would be a templating mechanism this plugin deliberately does not
-have.
+`code:format` runs **dprint first**, then `dart format`, then the import sorter
+— sorting imports rewrites layout, so it is a formatting act and belongs on the
+side of the split that can be run read-only. `code:lint` runs the config linter,
+then `dart run dependency_validator`, then `dart analyze --fatal-infos`. One
+task file co-authored by the repo formatter and the SDK.
+
+**Both tasks take an optional file list, and the empty case is the whole tree.**
+That is the whole pre-commit story for this pack: it ships **no fragment**,
+because the gate config's `format` and `lint` hooks call the two tasks with the
+staged files. dprint, `dart format` and the import sorter narrow to what they
+are given; the config linter's cross-file rules, `dependency_validator` and
+`dart analyze` read more than a file list, so they stay whole-tree either way.
+The seam is ownership-plus-contract — this component writes the file, and the
+contract it honours is that the repo formatter goes first. It is written whole
+rather than assembled from contributed fragments because stackgen's dispatch is
+copy-verbatim or generate, with nothing in between; a fragment layer would be a
+templating mechanism this plugin deliberately does not have.
 
 **Composition order, since more than one component writes this tree:**
 `toolchain-manager`, then `package-manager` / `language`, then `toolchain-gate`,
