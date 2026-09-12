@@ -209,6 +209,13 @@ flag's own help text shape, and the alias's own left-hand and right-hand shape
 came from. The name each line carries is that member's confirmed slug, never a
 project id.
 
+**In a repo that kept the file carrying either position, write neither.** Every
+marked position this section fills sits in a pack-owned file, and a repo where
+that file was offered and **kept** is a repo whose file this run does not touch
+— [existing repo](existing-repo.md) states the rule once, and it governs all
+seven, not only the plugin task's two. The plan says which position is waiting
+on which keep, so the two rows read as one decision.
+
 **A repo with no members leaves both positions exactly as shipped** — a
 single-project repo, and a member repo that declares no members of its own,
 which is the ordinary case: membership is a base's to declare. There is no flag
@@ -405,8 +412,19 @@ Ask, in one round **and once for the whole product**, which way work lands:
 **`direct`** — recommended, and what the toolchain pack ships — *merge locally
 and push*; or **`pr`** — *push the branch and open a pull request*. Write the
 answer literally at the `MERGE_MODEL` marked position §7 described, **in every
-repo this run shapes** — each repo carries its own environment block, and each
-one's merge tasks read their own copy — and count it as a fill in each.
+repo whose environment-block file this run lands or replaces** — each repo
+carries its own block, and each one's merge tasks read their own copy — and
+count it as a fill in each.
+
+**A repo that kept that file keeps it whole**, and this pass does not reach into
+it. Where the existing-repo pipeline offered the environment-block file as a
+diverged pack file and the answer was **keep**, the position is not written:
+[existing repo](existing-repo.md)'s kept-file rule wins here exactly as it wins
+for the plugin task's two positions, and for the same reason — writing into a
+position of a file somebody chose to keep is the overwrite the keep declined.
+Say so on that repo's line in the report, naming the value the product chose and
+the file that was kept, so a reader sees one decision rather than a repo that
+silently landed on `direct`.
 
 It is asked here rather than as one of SKILL.md's numbered questions because it
 decides how work lands, which is what the rest of this pass is about; and it is
