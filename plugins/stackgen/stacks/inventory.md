@@ -45,7 +45,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `cloud-service/browser-rendering` | Cloudflare Browser Rendering | `cloud-provider` | backing | browser |  | 0.1.0 | Headless Chrome as a service — a Worker drives a real browser through a binding, or any caller hits a REST endpoint for content, screenshots, PDFs and structured scrapes, so the product renders, tests and crawls without running browsers of its own. |
 | `cloud-service/cloud-run` | Cloud Run · Artifact Registry | `cloud-provider` | deploy | compute |  | 0.1.0 | Serverless containers — scale to zero, no cluster to operate, one service per deployable project. The default compute target here, and the right answer until a workload genuinely does not fit it. |
 | `cloud-service/cloud-sql` | Cloud SQL for PostgreSQL | `cloud-provider` | backing | sql | relational-datastore | 0.1.0 | Managed relational Postgres — the answer when the data model has real relationships, when reporting queries matter, or when the product must stay portable off this provider. |
-| `cloud-service/containers` | Cloudflare Containers | `cloud-provider` | deploy | compute |  | 0.1.0 | A Docker image running beside a Worker and addressed through a Durable Object — the deploy target for a process that needs a real filesystem, a runtime the Workers sandbox cannot host, or more CPU than an invocation is allowed, while the Worker stays the front door. |
+| `cloud-service/containers` | Cloudflare Containers | `cloud-provider` | deploy | compute |  | 0.1.1 | A Docker image running beside a Worker and addressed through a Durable Object — the deploy target for a process that needs a real filesystem, a runtime the Workers sandbox cannot host, or more CPU than an invocation is allowed, while the Worker stays the front door. |
 | `cloud-service/d1` | Cloudflare D1 | `cloud-provider` | backing | sql | relational-datastore | 0.1.0 | A serverless SQLite database bound to a Worker — relational data with read replication, sized for a per-tenant or per-product dataset rather than for one monolith. |
 | `cloud-service/durable-objects` | Cloudflare Durable Objects | `cloud-provider` | backing | stateful-compute |  | 0.1.0 | Stateful serverless — one addressable object per id, single-threaded, with its own strongly consistent SQLite storage, alarms and WebSocket coordination; where state that must be correct per key lives, which is neither the cache nor the shared database. |
 | `cloud-service/email-service` | Cloudflare Email Service | `cloud-provider` | backing | messaging | email | 0.1.0 | Transactional email a Worker sends through a binding, and inbound mail routed back into a Worker — the product's own email provider on its own domain, with the bounce, SPF and DKIM records held at the zone. |
@@ -64,8 +64,8 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `cloud-service/secrets-store` | Cloudflare Secrets Store | `cloud-provider` | backing | secrets-manager |  | 0.1.0 | The account-level secrets a deployed Worker or Container reads at run time through a binding — the staging and production values, held once for the account and never in the repo, the laptop or a per-Worker secret list. |
 | `cloud-service/vectorize` | Cloudflare Vectorize | `cloud-provider` | backing | vector | search-index | 0.1.0 | A vector index bound to a Worker — similarity search over embeddings for retrieval, recommendation and classification, with namespace and metadata filtering, and the place a product's own embeddings live. |
 | `cloud-service/workers-ai` | Cloudflare Workers AI | `cloud-provider` | backing | inference |  | 0.1.0 | Serverless inference on a catalog of open models, reached from a Worker through a binding — text, embeddings, vision, speech — the product's inference provider when the model it needs is in the catalog and the request should not leave the edge to be answered. |
-| `cloud-service/workers-ssr` | Cloudflare Workers SSR | `cloud-provider` | deploy | compute |  | 0.1.0 | A Worker that runs a script in front of its own static assets — on-demand rendering at the edge, the prerendered files served by the platform, and one `wrangler deploy` for both. |
-| `cloud-service/workers-static-assets` | Cloudflare Workers Static Assets | `cloud-provider` | deploy | static-hosting |  | 0.1.0 | An assets-only Worker — the build output directory is the whole deployment. No script, no bindings, no server; the edge serves files and `wrangler deploy` uploads them. |
+| `cloud-service/workers-ssr` | Cloudflare Workers SSR | `cloud-provider` | deploy | compute |  | 0.1.1 | A Worker that runs a script in front of its own static assets — on-demand rendering at the edge, the prerendered files served by the platform, and one `wrangler deploy` for both. |
+| `cloud-service/workers-static-assets` | Cloudflare Workers Static Assets | `cloud-provider` | deploy | static-hosting |  | 0.1.1 | An assets-only Worker — the build output directory is the whole deployment. No script, no bindings, no server; the edge serves files and `wrangler deploy` uploads them. |
 | `cloud-service/workflows` | Cloudflare Workflows | `cloud-provider` | backing | orchestration | durable-workflows | 0.1.0 | Durable multi-step execution bound to a Worker — steps that retry, sleep for days and wait for an external event without holding compute, for a process that must finish once it has started. |
 | `cloud-service/zero-trust-access` | Cloudflare Zero Trust Access | `cloud-provider` | deploy | access |  | 0.1.0 | An identity-aware proxy in front of a project that must not be publicly reachable — an operator plane invisible to the internet rather than merely authenticated, whichever cloud actually hosts it. |
 | `datastore/postgres` | PostgreSQL | `database` | backing | sql | relational-datastore | 0.1.0 | The relational datastore that needs no cloud — open engine, managed equivalent everywhere, no lock-in beyond SQL itself. |
@@ -91,7 +91,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `toolchain-gate/pre-commit` | pre-commit | `repo-gate` | repo |  |  | 1.1.0 | The local gate, and the wiring that makes local and CI run the identical command. Ships .config/pre-commit-config.yaml and .config/git-conventional-commits.yaml. |
 | `toolchain-gate/ruff` | Ruff | `language-bundle` | repo |  |  | 0.2.0 | The lint and format gate for Python — one tool for both halves, run through the project's uv environment rather than a global install. |
 | `toolchain-gate/tsconfig` | tsconfig | `language-bundle` | project |  |  | 0.1.0 | The TypeScript compiler configuration — a strict shared base, per-project configs, the path alias and the emit variant. |
-| `toolchain-manager/mise` | mise | `toolchain-manager` | repo |  |  | 1.2.0 | The repo's toolchain manager — the .config/ five-file split selected by MISE_ENV, and the file-based task library everything else invokes, grouped into `setup:*` for bootstrap, `code:*` for gates and git, and `p:<project-id>:*` for a project's own commands. |
+| `toolchain-manager/mise` | mise | `toolchain-manager` | repo |  |  | 1.2.1 | The repo's toolchain manager — the .config/ five-file split selected by MISE_ENV, and the file-based task library everything else invokes, grouped into `setup:*` for bootstrap, `code:*` for gates and git, and `p:<project-id>:*` for a project's own commands. |
 
 ## Bundles
 
@@ -108,7 +108,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `cloudflare-ai-search` | Cloudflare AI Search | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/ai-search@0.1.0` |  |
 | `cloudflare-analytics-engine` | Cloudflare Analytics Engine | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/analytics-engine@0.1.0` |  |
 | `cloudflare-browser-rendering` | Cloudflare Browser Rendering | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/browser-rendering@0.1.0` |  |
-| `cloudflare-containers` | Cloudflare Containers | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/containers@0.1.0` |  |
+| `cloudflare-containers` | Cloudflare Containers | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/containers@0.1.1` |  |
 | `cloudflare-d1` | Cloudflare D1 | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/d1@0.1.0` |  |
 | `cloudflare-durable-objects` | Cloudflare Durable Objects | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/durable-objects@0.1.0` |  |
 | `cloudflare-email-service` | Cloudflare Email Service | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/email-service@0.1.0` |  |
@@ -122,8 +122,8 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `cloudflare-secrets-store` | Cloudflare Secrets Store | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/secrets-store@0.1.0` |  |
 | `cloudflare-vectorize` | Cloudflare Vectorize | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/vectorize@0.1.0` |  |
 | `cloudflare-workers-ai` | Cloudflare Workers AI | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/workers-ai@0.1.0` |  |
-| `cloudflare-workers-ssr` | Cloudflare Workers SSR | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/workers-ssr@0.1.0` |  |
-| `cloudflare-workers-static` | Cloudflare Workers Static Assets | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/workers-static-assets@0.1.0` |  |
+| `cloudflare-workers-ssr` | Cloudflare Workers SSR | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/workers-ssr@0.1.1` |  |
+| `cloudflare-workers-static` | Cloudflare Workers Static Assets | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/workers-static-assets@0.1.1` |  |
 | `cloudflare-workflows` | Cloudflare Workflows | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/workflows@0.1.0` |  |
 | `cloudflare-zero-trust` | Cloudflare Zero Trust Access | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/zero-trust-access@0.1.0` |  |
 | `container-generic` | OCI image · any container host | `deploy-target` | deploy | `deploy-target/container-image@0.1.0` |  |
@@ -136,7 +136,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `gcp-gke` | Google Cloud · GKE Autopilot · Artifact Registry | `cloud-provider` | deploy | `cloud-provider/gcp@0.1.0`, `cloud-service/gke@0.1.0` |  |
 | `github-actions` | GitHub Actions | `ci-system` | cicd | `ci-system/github-actions@0.2.0` |  |
 | `lovable` | Lovable | `design-tool` | design | `design-tool/lovable@0.1.0` |  |
-| `mise` | mise | `toolchain-manager` | repo | `toolchain-manager/mise@1.2.0` | yes |
+| `mise` | mise | `toolchain-manager` | repo | `toolchain-manager/mise@1.2.1` | yes |
 | `npm-package` | Package registry · npm | `deploy-target` | deploy | `deploy-target/npm-registry@generated` |  |
 | `oidc` | OIDC issuer | `capability-provider` | backing | `capability-provider/oidc@0.1.0` |  |
 | `otel-lgtm` | OpenTelemetry · Grafana OTel-LGTM | `capability-provider` | backing | `capability-provider/otel-lgtm@0.1.0` |  |

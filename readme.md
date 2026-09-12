@@ -109,9 +109,10 @@ Restart your agent afterward so the skills, hooks and MCP servers load, then run
 at install time — though see the [caveat](#caveats) on what it does and does not
 check. On a repo that has never been shaped — no `.config/` layout, no task
 library — run `/vwf:setup`: its Step 0 offers `init`, which lays down the config
-layout, the gates and the hygiene files the rest of the workflow assumes.
-`/vwf:setup reshape` runs that pass alone, and is what `/vwf:doctor` prints when
-a shaped repo has fallen behind.
+layout, the gates and the hygiene files the rest of the workflow assumes, in the
+base repo **and every member repo it has**, on one consent. `/vwf:setup reshape`
+runs that pass alone — across every member — and is what `/vwf:doctor` prints
+when a shaped repo has fallen behind.
 
 Once a repo **is** shaped, its own task library takes the plugin side over:
 `mise run setup:ai` registers or refreshes the marketplace and installs or
@@ -217,11 +218,12 @@ pass to `claude plugin install`.
 ### The workflow
 
 **[vwf](https://claude-plugins.virajp.dev/plugins/vwf/)** — the flagship. The
-`/vwf:` commands covering the whole arc: shape a bare repo into the standard
-layout, onboard it, pin the outcome contract, model the system, sweep a
-whole-product blueprint to complete coverage, plan one slice as a reviewable
-diff, execute it unattended behind one merge gate, verify the deploy, and route
-what production teaches you back to the document that fixes it. It carries
+`/vwf:` commands covering the whole arc: shape a bare repo — or a whole
+multi-repo product in one run — into the standard layout, onboard it, pin the
+outcome contract, model the system, sweep a whole-product blueprint to complete
+coverage, plan one slice as a reviewable diff, execute it unattended behind one
+merge gate, verify the deploy, and route what production teaches you back to the
+document that fixes it. It carries
 [cross-session memory](https://claude-plugins.virajp.dev/plugins/mempalace/), a
 knowledge-graph layer, session handoff and recall, the
 [Karpathy coding guidelines](https://claude-plugins.virajp.dev/plugins/karpathy-guidelines/),

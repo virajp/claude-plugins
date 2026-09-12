@@ -5,9 +5,11 @@
 
 #USAGE flag "--all" help="Also set up every member project"
 
-# One member flag per project is added here when this repo has members. The ids
-# come from the project registry when there is one, else the member directory
-# name — the same list `[shell_alias]` gets its `setup-<id>` aliases from:
+# One flag per MEMBER REPO is added here when this repo has members — each
+# submodule, or each path the `MEMBERS` list names — each flag named by that
+# member's own slug, never by a project id. It is the same list `[shell_alias]`
+# gets its `setup-<slug>` aliases from, and the orchestrator that shapes the
+# repo fills both from it:
 #
 #   #USAGE flag "--backend" help="Set up the backend project"
 #   #USAGE flag "--frontend" help="Set up the frontend project"

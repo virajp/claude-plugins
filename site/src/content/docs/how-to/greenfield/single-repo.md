@@ -72,12 +72,17 @@ requires** (a multi-select seeded by what is already registered on your machine,
 with *none* as the ordinary answer — `init` offers those rows minus the workflow
 plugin's own and its dependency's, since `setup:ai` installs those two either
 way), the licence, and a security contact — then shows **one plan** and applies
-it on one yes.
+it on one yes. Relay is one repo, so every one of those questions is a single
+row; on a product with member repos the same seven rounds simply carry a row per
+repo where the answer can differ.
 
-It closes with a git pass: it stages what it wrote and asks once whether to
-commit, commit and push, or leave it, creates `develop` and `main`, and asks
-which branch the remote should default to. Its report prints, and setup carries
-on with its own work.
+It closes with a git pass: it asks how work lands in this repo — `direct`, which
+merges locally and pushes, or `pr` — writes that answer to `MERGE_MODEL`, then
+stages what it wrote and asks once whether to commit, commit and push, or leave
+it, creating `develop` and `main` along the way. It never touches the forge's
+own settings: which branch the remote calls default is a one-time act a
+maintainer performs, and the hygiene pack's `CONTRIBUTING.md` carries the line
+for it. Its report prints, and setup carries on with its own work.
 
 **Then setup does its half.** A repo with no manifest, no source directories and
 no `docs/blueprint/` is *blank*, and setup treats it as such: it asks nothing

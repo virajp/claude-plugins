@@ -49,8 +49,9 @@ exception is `mise.local.lock`, the counterpart of the uncommitted
 
 **`REPO_NAME` is the repo's own id, and it is a literal.** The base `[env]`
 carries it as a marked position the orchestrator fills with the project's slug —
-the same token the `p:<id>:*` task group, `setup:all`'s member flags and the
-`setup-<id>` aliases use. It is never derived at load time: the obvious
+the same token the `p:<id>:*` task group uses. `setup:all`'s member flags and
+the `setup-<slug>` aliases take a different token: one per **member repo**, that
+member's own slug. It is never derived at load time: the obvious
 shorthand, the basename of the config root, is the **branch** name inside a
 linked worktree, so anything reading it would silently address a different repo
 depending on where you were standing. Aliases that vary only by repo — the agent

@@ -2,7 +2,7 @@ name: Cloudflare Workers Static Assets
 summary: An assets-only Worker — the build output directory is the whole
   deployment. No script, no bindings, no server; the edge serves files and
   `wrangler deploy` uploads them.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: static-hosting
 # `capability` is deliberately unset: `static-hosting` realizes no vwf

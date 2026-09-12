@@ -140,7 +140,7 @@ optional, and no reference restates a rule that lives above.
 
 | Sections                                                   | Reference                                                 | Covers                                                                                            |
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, an unknown language, framework/dependency drift per manifest, the six stack axes, a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, the recommended `rtk`, and the repo shape against its baseline — the adapter lockfile's pack versions, the registry ids behind the task groups, the commit scopes and the aliases, the two branches, the repo-name environment key, every pack-owned file's content against the hash the lockfile recorded, and the two marked positions beside it. **Blocking findings live here** |
+| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, an unknown language, framework/dependency drift per manifest, the six stack axes, a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, the recommended `rtk`, and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups and the commit scopes, the aggregator's member flags and aliases, the two branches, the repo-name environment key, every pack-owned file's content against the hash the lockfile recorded, and the two marked positions beside it. **Blocking findings live here** |
 | **6–7** — harness & health, memory config                  | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `mempalace.yaml` placement, wing/room contract and secret excludes, and the markdown mirror. **Blocking findings live here** |
 | **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, a graph per locally-present checkout, the refresh hook, staleness, the `.graphifyignore`. **Blocking findings live here** |
 
@@ -159,36 +159,38 @@ is what gates the release itself.
 
 ### 9. Report & persist
 
-One table, findings first, grouped by kind — **blocking** (something *mandatory*
-is absent or misplaced, or the stack is one no installed plugin defines:
-the graphify CLI, a graph missing from a locally-present checkout, an `iac`
-project inside another repo whose extraction the user has **not** declined on
-the record, `mise` and an **unknown** language — the last two **conditionally**,
-once a stack axis is pinned (§5, §3) — a `custom` template pin, a
-project whose template does not cover every platform it declares, a broken
-membership link (§1), an unwaived **critical** dependency advisory (the audit
-check), a misplaced / duplicated /
-missing `mempalace.yaml` or one carrying no secret excludes; callers must halt),
-**drift** (config and repo disagree — **including the whole repo-shape check
-against the baseline `/vwf:init` lays down** (§5): a pack version behind, a
-registry id with no task group, commit scope or alias, a missing `develop` or
-`main`, an unfilled repo-name key, a pack-owned file the repo edited away from
-the hash the lockfile recorded, an absent or invalid `MERGE_MODEL`, an absent
-or empty `MEMBERS` under siblings linkage. A repo behind its baseline still
-works, so none of those is ever blocking), **missing** (something declared has no
-install — including a **`B`**-kind capability a project declares that none of
-its `backing_template` pins provides, which is never blocking; §5),
-**unavailable** (nothing shipped here to install), **unknown**
-(no installed plugin declares it — blocking once the axis is pinned, listed
-separately so the remedy reads as *install or write the plugin*, never *install
-this one*), **degraded** (something optional is absent and a
-fallback is carrying the work, or the run simply costs more — a missing `rtk`,
-whose guarded hook no-ops (§5) — **or** a decision the user has not yet made or
-has declined on the record: an axis reading `unresolved`, whose dependent checks
-report `not checked — no stack resolved` (§§3–5), a declined graph build, and an
-`iac` extraction declined under
-`enforcement:`, each reported every run and never escalating back to blocking).
-Mark anything the §1 recall already carried as
+One table, findings first, grouped by kind — **blocking** (something
+*mandatory* is absent or misplaced, or the stack is one no installed plugin
+defines: the graphify CLI, a graph missing from a locally-present checkout, an
+`iac` project inside another repo whose extraction the user has **not**
+declined on the record, `mise` and an **unknown** language — the last two
+**conditionally**, once a stack axis is pinned (§5, §3) — a `custom` template
+pin, a project whose template does not cover every platform it declares, a
+broken membership link (§1), an unwaived **critical** dependency advisory (the
+audit check), a misplaced / duplicated / missing `mempalace.yaml` or one
+carrying no secret excludes; callers must halt), **drift** (config and repo
+disagree — **including the whole repo-shape check against the baseline
+`/vwf:init` lays down**, run **per repo — the base and each locally-present
+member** (§5): a pack version behind, a registry id with no task group or
+commit scope, a member with no aggregator flag or alias or a list still named
+from project ids, a missing `develop` or `main`, an unfilled repo-name key, a
+pack-owned file the repo edited away from the hash the lockfile recorded, an
+absent or invalid `MERGE_MODEL`, an absent or empty `MEMBERS` under siblings
+linkage. Each row is printed under the repo it was found in, and an **absent**
+member is a blind spot rather than a row. A repo behind its baseline still
+works, so none of those is ever blocking), **missing** (something declared has
+no install — including a **`B`**-kind capability a project declares that none
+of its `backing_template` pins provides, which is never blocking; §5),
+**unavailable** (nothing shipped here to install), **unknown** (no installed
+plugin declares it — blocking once the axis is pinned, listed separately so
+the remedy reads as *install or write the plugin*, never *install this one*),
+**degraded** (something optional is absent and a fallback is carrying the
+work, or the run simply costs more — a missing `rtk`, whose guarded hook
+no-ops (§5) — **or** a decision the user has not yet made or has declined on
+the record: an axis reading `unresolved`, whose dependent checks report `not
+checked — no stack resolved` (§§3–5), a declined graph build, and an `iac`
+extraction declined under `enforcement:`, each reported every run and never
+escalating back to blocking). Mark anything the §1 recall already carried as
 **known**, so a repeat run reads as a diff rather than a re-accusation. State
 the count of checks that passed rather than listing them.
 
@@ -202,14 +204,16 @@ Nudge plain `/vwf:setup` — the config-side door, never `reshape` — and stop
 there; a template doctor guessed would silently change what `plan` and
 `execute` read.
 
-**One remedy, printed once.** Every row of the repo-shape check (§5) shares the
-same remedy, so print `/vwf:setup reshape` a single time with the rows that led
-to it underneath — a list repeating one command per row reads as several
-problems when it is one re-run, and hides how much of the baseline has moved.
-That argument is what separates it from the config-side nudge above: plain
-`/vwf:setup` reconciles what the config declares, `reshape` reconciles the
-shape. It is not a remedy doctor applies: `reshape` is the door, and the
-consent to re-shape a repo is `/vwf:init`'s to take behind it.
+**One remedy, printed once.** Every row of the repo-shape check (§5) shares
+the same remedy — **across every repo**, since a reshape now walks the members
+and one re-run covers a member's drift as well as the base's — so print
+`/vwf:setup reshape` a single time with the rows that led to it underneath — a
+list repeating one command per row reads as several problems when it is one
+re-run, and hides how much of the baseline has moved. That argument is what
+separates it from the config-side nudge above: plain `/vwf:setup` reconciles
+what the config declares, `reshape` reconciles the shape. It is not a remedy
+doctor applies: `reshape` is the door, and the consent to re-shape a repo is
+`/vwf:init`'s to take behind it.
 
 **Persist.** File this run's findings to room `doctor` — one compressed line per
 finding per the memory asset's AAAK style, plus what was fixed if the user

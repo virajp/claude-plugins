@@ -52,6 +52,9 @@ gates, the hygiene files — is `/vwf:init`'s, not setup's. Step 0 only
 unconditional slugs `mise`, `repo-gates` and `repo-hygiene`, and offers init
 when any is missing — and makes the same offer when all three are recorded
 but the repo has fallen **behind its baseline**, on doctor's six predicates.
+On a multi-repo product both questions are asked of the base **and of every
+locally-present member**, and the one offer covers whichever of them came back
+unshaped or behind.
 Harness provisioning is the other half of the same story: it can need a stack
 to act against, and setup runs before `/vwf:architecture` has chosen one. Both
 therefore **defer** — neither halts the run, and neither continues silently.
@@ -167,8 +170,8 @@ four facts and acts on that delta alone.
   [environment bootstrap](environment-bootstrap.md). Names only, never a value.
 - **CLAUDE.md and the memory tree** exactly as on the blank path. The repo
   shape is not written here either — Step 0's shape check has already offered
-  `/vwf:init`, and an existing repo is exactly the case init surveys before it
-  changes anything.
+  `/vwf:init`, and **each existing repo in the product** is exactly the case
+  init surveys before it changes anything.
 
 ### The recommendations report
 

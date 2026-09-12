@@ -4,6 +4,11 @@ The three merge algorithms both pipelines share. All three are
 **re-runnable**: a second run over an already-merged file changes nothing,
 which is what makes the empty-plan invariant hold.
 
+All three run **per repo** — the base and every member the run resolved — each
+against that repo's own `.config/`, so every path below is relative to the
+repo being shaped, a member's fragments never reach the base's files, and the
+idempotency notes hold per repo.
+
 Both write files the packs own the *shape* of. `init` is the only thing that
 merges them, deliberately — a pack that edited a shared file would stop being
 a fragment, and two packs editing one file is a lost update nobody sees.
@@ -97,9 +102,9 @@ One pair per fragment, and the fragment's filename is what names them:
 
 ### The algorithm
 
-1. **Collect** every `.config/pre-commit.d/*.yaml`, sorted by filename. The
-   sort is what makes the merged file byte-stable across runs and across
-   machines.
+1. **Collect** every `.config/pre-commit.d/*.yaml` in this repo, sorted by
+   filename. The sort is what makes the merged file byte-stable across runs
+   and across machines.
 2. **For each fragment**, take its `repos:` entries and place them between its
    marker pair inside the gate config's top-level `repos:` list:
    - markers **present** → replace everything between them;
@@ -144,7 +149,7 @@ alone. Read the convention for every literal it uses.
 
 ### Inputs
 
-Every `.config/vscode.d/*.jsonc` present in the repo after the packs have
+Every `.config/vscode.d/*.jsonc` present in this repo after the packs have
 landed, taken in the **composition order the materializer documents** — the
 same order the packs themselves landed in, so a later pack's opinion wins
 where two disagree, exactly as it does for a shared file.

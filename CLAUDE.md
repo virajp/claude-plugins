@@ -241,23 +241,30 @@ The workflow runs `setup` → `product` → `architecture` → `design-system` �
 `init` is no longer a command in that line: since 2026-09-06 it is
 **skill-invoked**, hidden from the `/` menu and reached only from inside `setup`
 — Step 0's offer, or `/vwf:setup reshape`, which runs the shape pass alone.
-`init` shapes the **base repo** — the config layout, the task vocabulary, the
-gates, the hygiene files — from stackgen's three unconditional bundles, asks
-seven questions (the second confirming every project id, its slug and the source
-the name came from, before any `p:<slug>:*` group, alias or `REPO_NAME` is
-written; the fifth asking which agent plugins this repo requires, seeded by the
-plugin task's own inventory mode and written into that task's two marked
+`init` shapes the **base repo and every member repo the product has** — the
+config layout, the task vocabulary, the gates, the hygiene files — from
+stackgen's three unconditional bundles, resolving the members itself as the
+union of `.gitmodules` and the config's `members:` list, surveying all of them
+at once and applying **one plan with a section per repo on one consent**,
+members first so the base commits its gitlinks current. It asks seven questions
+(the second confirming every project id, its slug and the source the name came
+from, grouped by repo, before any `p:<slug>:*` group, alias or `REPO_NAME` is
+written; the fifth asking which agent plugins this product requires, seeded by
+the plugin task's own inventory mode and written into that task's two marked
 positions), and closes with a consent-gated git pass (the first commit, the
 `develop`/`main` pair, and the landing model it writes to `MERGE_MODEL` — it
 never touches the forge's own settings, which a maintainer sets once by hand per
-the hygiene pack's `CONTRIBUTING.md`). On an existing repo it **adopts rather
-than flattens**: an unmapped helper function moves to a repo-owned
-`_scripts/local` sidecar, a task no pack ships is kept and listed, and a
-pack-owned file whose bytes diverged is offered as replace-or-keep — a keep
-recorded under `enforcement.kept_files`, the one key `init` writes into
-`.config/vwf.yaml`. `setup` then sets up **vwf** in it, and offers `init` when
-the shape is **missing or drifted**, on the six baseline predicates
-`/vwf:doctor` owns. **Everything up to `blueprint` is done in full before
+the hygiene pack's `CONTRIBUTING.md`). The aggregator's member flags and the
+`setup-<slug>` aliases are named for the **member repos**, never for a project
+id. On an existing repo it **adopts rather than flattens**: an unmapped helper
+function moves to a repo-owned `_scripts/local` sidecar, a task no pack ships is
+kept and listed, and a pack-owned file whose bytes diverged is offered as
+replace-or-keep — a keep recorded under `enforcement.kept_files` in the
+**base's** `.config/vwf.yaml`, keyed by the member path as prefix, the one key
+`init` writes into `.config/vwf.yaml`. `setup` then sets up **vwf** in the base,
+and offers `init` once for the whole product when any repo's shape is **missing
+or drifted**, on the six baseline predicates `/vwf:doctor` owns and now
+evaluates per repo. **Everything up to `blueprint` is done in full before
 planning** — `plan` hard-halts on a partial coverage stamp. The ad-hoc pair
 `change-plan` → `change-execute` sits **beside** that line rather than in it: it
 plans and runs work with no blueprint slice behind it — tooling, CI, docs, a
@@ -392,8 +399,8 @@ same pins and finds nothing.
 `/vwf:doctor` — it is what reports a missing required binary, as a **blocking**
 finding. On a repo that has never been shaped, run `/vwf:setup` — its Step 0
 offers `init`, which lays down the config layout and the gates the rest of the
-workflow assumes, and `/vwf:setup reshape` runs that pass alone on a repo that
-has drifted.
+workflow assumes — in that repo and every member repo it has — and
+`/vwf:setup reshape` runs that pass alone on a product that has drifted.
 
 For **other agents** there is no marketplace and no rendered tree: point the
 tool at this repo and ask it to adapt the plugin. `readme.md`'s "Other tools"

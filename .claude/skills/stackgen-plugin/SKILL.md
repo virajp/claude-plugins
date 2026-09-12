@@ -26,18 +26,18 @@ packs.
 **Each asset is authoritative for its own subject.** This file is a map; do not
 restate a count or a rule that an asset below already owns.
 
-| Read                          | For                                                                                         |
-| ----------------------------- | ------------------------------------------------------------------------------------------- |
-| `assets/taxonomy.md`          | the closed component **types** and **categories**; capability tokens stay vwf's             |
-| `assets/kinds.md`             | the **kind vocabulary** — each kind a closed topic bar, one artifact per topic              |
-| `assets/pack-format.md`       | the shape of a pack: `<type>/<slug>/pack.yaml` + prose + optional skills/agents/`config/`   |
-| `assets/output-tree.md`       | where a materialization lands, the lockfile, the three targets outside `.claude/`           |
-| `assets/ids.md`               | the **project-id slug** — the rule, its measured reason, and the four surfaces it fills     |
-| `assets/artifact-doctrine.md` | the **host rules** deciding whether a generated skill, agent or hook is valid at all        |
-| `assets/contracts/`           | the provider-neutral doctrine per capability or kind that instance packs cite and stay thin |
-| `stacks/inventory.md`         | **generated** — every pack, bundle and kind with counts; `mise run p:plugins:inventory`     |
-| `stacks/readme.md`            | the narrative — which wave landed what, and why                                             |
-| `agents/`                     | `stackgen-skill-reviewer`, the generator's gate                                             |
+| Read                          | For                                                                                                                                                                         |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `assets/taxonomy.md`          | the closed component **types** and **categories**; capability tokens stay vwf's                                                                                             |
+| `assets/kinds.md`             | the **kind vocabulary** — each kind a closed topic bar, one artifact per topic                                                                                              |
+| `assets/pack-format.md`       | the shape of a pack: `<type>/<slug>/pack.yaml` + prose + optional skills/agents/`config/`                                                                                   |
+| `assets/output-tree.md`       | where a materialization lands, the lockfile, the three targets outside `.claude/`                                                                                           |
+| `assets/ids.md`               | the **project-id slug** — the rule, its measured reason, and the two surfaces it fills; the member flags and `setup-<slug>` aliases are named for member **repos**, not ids |
+| `assets/artifact-doctrine.md` | the **host rules** deciding whether a generated skill, agent or hook is valid at all                                                                                        |
+| `assets/contracts/`           | the provider-neutral doctrine per capability or kind that instance packs cite and stay thin                                                                                 |
+| `stacks/inventory.md`         | **generated** — every pack, bundle and kind with counts; `mise run p:plugins:inventory`                                                                                     |
+| `stacks/readme.md`            | the narrative — which wave landed what, and why                                                                                                                             |
+| `agents/`                     | `stackgen-skill-reviewer`, the generator's gate                                                                                                                             |
 
 The user-facing reference is `site/src/content/docs/plugins/stackgen.md`. The
 checker rules, the two mise gates and the authoring traps are the sibling
@@ -64,9 +64,11 @@ doctrine.
 
 `mise`, `repo-gates` and `repo-hygiene` are **unconditional** bundles: left out
 of the menu payload and fetched by `/vwf:init` at their fixed slugs, because a
-repo that has picked no stack still has to run its gates by name. `/vwf:setup`
-no longer fetches them — it checks the adapter's lockfile for all three and
-offers `/vwf:init` when one is missing, or when the shape has drifted from
+repo that has picked no stack still has to run its gates by name. `init` fetches
+them **per repo** — the base and every member repo it resolved, each landing its
+own lockfile — so a member is shaped on its own evidence. `/vwf:setup` no longer
+fetches them: it checks each repo's adapter lockfile for all three and offers
+`/vwf:init` when one is missing anywhere, or when any repo has drifted from
 doctor's baseline.
 
 ## Where it lands, and the consent tiers

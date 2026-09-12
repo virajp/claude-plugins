@@ -46,9 +46,12 @@ stack live, and it holds no product code — now or ever.
 Step 0 finds the empty repo unshaped and offers `init`; accept it. `init` shapes
 the base repo the same way it shapes any other
 ([`/vwf:init`](../../plugins/vwf.md#vwfinit)), git pass included — so the base
-repo leaves that run with a first commit, both branches and a landing model —
-and each member repo gets its own `init` run when it is created, since the shape
-is per repo, not per product.
+repo leaves that run with a first commit, both branches and a landing model. The
+base has no members yet, so this run shapes one repo. The **shape** is per repo
+— each member carries its own `.config/`, its own task library and its own gates
+— but the **run** is per product: once the members exist, one `init` from the
+base surveys and shapes all of them in one plan and on one yes, and a member
+added later is picked up by the next `/vwf:setup reshape`.
 
 The setup run is the spine's blank-repo bootstrap unchanged
 ([`/vwf:setup`](./single-repo.md#vwfsetup)): two questions, both proposed from
@@ -133,26 +136,36 @@ Then, from inside each one:
 /vwf:setup
 ```
 
-Adding a repo to a vwf product **is** a setup run from inside that repo, and its
-Step 0 offers `init` first because each member carries its own shape. Finding no
-config of its own, the run onboards it; base-repo resolution reaches
-Stallfront's config from there, so it acts on that one member's delta instead of
-re-onboarding the product. What it records is the membership in both directions
-— the base gains an entry naming the member, where it sits, the git URL to clone
-it from, and which registry projects live in it, and the member gains a small
-file naming the product and the way back to the base. Neither direction is
-decoration: the entry is what lets a command running in the base find code it
-does not contain, and the back-link is what stops a command running inside a
-member reporting a perfectly onboarded repo as un-onboarded. Where each one
-lives, and why both directions matter:
+Recording a repo's membership in a vwf product **is** a setup run from inside
+that repo. Finding no config of its own, the run onboards it; base-repo
+resolution reaches Stallfront's config from there, so it acts on that one
+member's delta instead of re-onboarding the product. What it records is the
+membership in both directions — the base gains an entry naming the member, where
+it sits, the git URL to clone it from, and which registry projects live in it,
+and the member gains a small file naming the product and the way back to the
+base. Neither direction is decoration: the entry is what lets a command running
+in the base find code it does not contain, and the back-link is what stops a
+command running inside a member reporting a perfectly onboarded repo as
+un-onboarded. Where each one lives, and why both directions matter:
 [Structure](../../plugins/vwf.md#structure).
+
+**The member's shape does not come from that run.** Step 0 inside a member reads
+the whole product — the base and every member present on this machine — and the
+`init` it offers resolves the base and runs from *there*, so accepting it shapes
+every repo that needs it, not the one you happened to be standing in. Whether
+you take the offer now or run `/vwf:setup reshape` once all three members exist,
+the result is the same single plan with a section per repo and one yes. Doing it
+once at the end is the cheaper order.
 
 What is deliberately **not** recorded is which members are cloned on this
 machine. That is per-developer state that changes daily, so it is detected on
 every run — a twenty-repo product with three cloned is a normal configuration,
-not a degraded one. Each member that *is* cloned gets its own `.graphifyignore`
-from that run, since the file is per checkout like the graph it narrows — see
-[Code intelligence](../../plugins/vwf.md#code-intelligence).
+not a degraded one. A member that is *not* cloned is not skipped by the shape
+pass either: `init` puts the clone command in its section of the plan, covered
+by the same one yes, and then surveys and shapes it in that same run; decline
+and nothing is cloned. Each member that *is* cloned gets its own
+`.graphifyignore` from that run, since the file is per checkout like the graph
+it narrows — see [Code intelligence](../../plugins/vwf.md#code-intelligence).
 
 Stallfront can now run a vwf command from any of its four checkouts and have it
 resolve the same product.
@@ -311,7 +324,10 @@ first of these surfaces at `/vwf:execute`:
   members through one helper, which reads `.gitmodules` where there is one and
   the `MEMBERS` value in `.config/mise.toml` otherwise — so under `siblings`
   that value is what `setup:all --all` and `code:worktrees` walk. `init` fills
-  it from the registry's member list; a submodule product leaves it empty.
+  it from the members it resolved; a submodule product leaves it exactly as
+  shipped. The **flags** beside it — `setup:all --api`, and the `setup-api`
+  alias — are one per member repo under either linkage, named for the member and
+  never for a project id.
 
 Neither answer is permanent — both are written uniformly enough that switching
 is a config edit rather than a second migration.
