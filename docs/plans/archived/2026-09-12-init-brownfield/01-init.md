@@ -110,6 +110,38 @@ each rule changes.
    read; edit only if a sentence contradicts the three rules (a greenfield repo
    has none of these cases). Otherwise untouched.
 
+## Resume 2 — the fixture-gate findings (2026-09-12)
+
+The 95octane dry-run failed one pass condition and found two more holes; the
+user ruled on both. Apply on top of the committed work (`49b2d203`):
+
+> **1 (amended).** The sidecar is derived from what the old helper *defines*:
+> every function the repo's old helper library defines, minus the names the
+> pack's `helpers` defines, minus the legacy table's left-hand names, is
+> extracted verbatim into `_scripts/local`. A superset of the calls-based
+> wording — an uncalled helper is never lost to the replace. Each task that
+> calls one still gains the `source` line; a task that calls none does not.
+
+> **9 (new).** When two legacy-table renames, or a rename and a pack create,
+> resolve to one path: the destination is pack-owned, so the pack's file lands
+> as a create, and each colliding repo file becomes one replace-or-keep row —
+> default replace when it references a retired name. Pass 10 accounts for pass
+> 3's renames before deriving the repo-only set, as pass 6 (`:183`) does.
+
+7. **`existing-repo.md`, the sidecar derivation (`:148-151`)** — rewrite from
+   *calls* to *defines* per the amended ruling; keep the "defined nowhere →
+   Rewrites (flagged, not applied)" rule for a *called* name no file defines.
+8. **`existing-repo.md`, pass 3 / pass 6** — the collision rule per decision 9,
+   stated once where renames resolve and cited from the offer pass.
+9. **`existing-repo.md`, pass 10 (`:364-366`)** — "once pass 3's renames are
+   accounted for", in the same words pass 6 uses.
+10. `SKILL.md` and `new-repo.md` — only if a sentence now contradicts 7–9.
+
+Verification adds: `grep -n 'defines' …/existing-repo.md` hits the sidecar
+derivation; `grep -n 'renames are accounted for' …/existing-repo.md` hits twice
+(pass 6 and pass 10); `grep -n 'one path' …/existing-repo.md` hits the collision
+rule.
+
 ## Verification
 
 - `grep -n '_scripts/local' plugins/vwf/skills/init/references/existing-repo.md plugins/vwf/skills/init/SKILL.md`
