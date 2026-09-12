@@ -11,7 +11,7 @@ what the survey listed.
 
 ## Survey
 
-Read-only, and exhaustive before anything is printed. Ten passes.
+Read-only, and exhaustive before anything is printed. Eleven passes.
 
 ### 1 — Root files against the allowlist
 
@@ -129,12 +129,45 @@ same table pass 3 reads for task names, and the pack's for the same reason.
 The mapping is a fact about that library, so vwf's prose carries none of it.
 A rewrite replaces one token in place; nothing else on the line changes.
 
-A call to a retired name the table carries **no row for** is flagged and
-never rewritten: listed with its file, its line and the name, and deferred
-with the unlock *add the row to the pack's legacy table, or rewrite the call
-by hand*. The replace still lands. That is the trade — one named task breaks
-loudly, rather than every task the pack creates breaking quietly against a
-library that never grew the names they call.
+A call the table carries **no row for** is neither deferred nor guessed at:
+the function **moves**. Every function the repo's own tasks call that the
+pack's library does not define and the table does not map is carried, whole,
+into `_scripts/local` — a repo-owned sidecar beside the pack's library, and
+the one file in that directory no pack ships, no pack declares and `init`
+never replaces.
+
+**This reverses one line of a standing decision and leaves the rest of it
+standing.** The helper file is still replaced byte for byte, and a mapped
+call is still rewritten only through the pack's table — that is unchanged.
+What changes is the unmapped call: *move them to a repo-owned
+`_scripts/local` sidecar*, rather than defer them. A name the table never
+grew a row for is usually a function this repo wrote for itself, and
+deferring it breaks a task the repo already had, for the sake of a name the
+pack was never going to define.
+
+**Derive the list, then extract it verbatim.** The list is every function
+name the repo's task files call, minus the names the pack's library defines,
+minus the left-hand names of the legacy table. For each name left, copy its
+**whole body** out of the repo's file as it stands before the replace, text
+unchanged — `init` moves a definition it already has in hand and authors
+nothing. A name on that list that the repo's file does not define either was
+a broken call before this run began: it goes to **Rewrites (flagged, not
+applied)** with its file and its line, since there is no body to move and no
+row to rewrite it by.
+
+Three kinds of row carry the move into the plan:
+
+- one **create** for `_scripts/local`, sub-lined with one row per function
+  moved into it, each named — on a repo that already has the sidecar it is a
+  **rewrite** of that file instead, and the functions it lacks are added at
+  the end of it. A function it already defines under the same name is left
+  alone; nothing is ever written into that file twice.
+- one **rewrite** per task file that calls any of them, adding a single
+  `source` line for the sidecar directly after that file's existing `source`
+  of the helper library — spelled the way that line already spells the
+  library's path, so the sidecar is reached exactly the way the library is. A
+  task already sourcing it gains no second line.
+- nothing in **Deferred**. Nothing is deferred on this account.
 
 A pack-owned task file the repo already carries byte for byte is untouched by
 any of this, and so is every file pass 6 creates: both are written against
@@ -146,18 +179,64 @@ Diff the repo against what the three baseline bundles ship. Every file a
 bundle declares and the repo lacks is a **create**, listed with the bundle it
 comes from.
 
-A file the repo *has* and a pack also owns is neither a create nor an
-overwrite — list it as **already owned**, and point at the adapter's own
-re-sync command, which shows the diff and takes its own consent. That command
-is **user-run by design**, so `init` names it and never invokes it: seeing a
-diff before accepting it is the whole reason it exists.
+A file the repo *has* and a pack also owns is **compared**, byte for byte,
+once pass 3's renames are accounted for. Identical, and it needs nothing.
+Different, and it is **offered** — one row, two outcomes, both decided in the
+plan and applied on the same single consent:
 
-**The helper library is the one exception, and pass 5 holds it.** Every task
+- **replace** — the pack's file lands over the repo's, and every marked
+  position that file carries is then filled from the confirmed answers to
+  SKILL.md's questions, exactly as [new repo](new-repo.md) §The marked
+  positions fills them on a fresh landing. That is what makes a replace safe
+  on a file whose positions the repo had already filled: they are re-filled,
+  not lost.
+- **keep** — the file is untouched and the decision is recorded, so doctor
+  does not report it again and the next reshape does not re-offer it.
+
+**The default is replace where the repo's file references any left-hand name
+of the pack's legacy table**, and keep everywhere else. A file naming a
+retired thing is a file written against a vocabulary the library no longer
+has, and keeping it keeps the breakage; a file that differs only by edits
+somebody made on purpose is a decision, and the default respects it.
+
+Each offered row carries a **three-line summary**, and the three lines are
+fixed: what the repo's version has that the pack's does not, what it lacks
+that the pack's has, and whether it references a retired name. Three lines
+are what a reader needs to flip a default. A full diff is what the adapter's
+own re-sync command is for — `init` still names that command and never
+invokes it, and it stays the way to review a file this run leaves alone.
+
+**This reverses the rule that stood here.** A pack-owned file the repo
+already had was *already owned* and was written to under no circumstance,
+deferred whole to that user-run command. It read as a safe default and was a
+hole instead: a diverged pack file was never reconciled, so the marked
+positions inside it were never reached, and a repo drifted from the library
+one file at a time with nothing reporting it. The per-file offer closes the
+hole and keeps the single consent.
+
+**Recording a kept file.** A keep is a settled decline, and it is recorded in
+`.config/vwf.yaml` under **`enforcement.kept_files`** — a map of
+`<path>: { reason: <one line> }`, each path spelled the way the
+materializer's lockfile names that file. A path recorded there is not offered
+again by a later run, and `/vwf:doctor` reads the same record to skip the
+file. The reason travels with it, in the user's own words where they gave
+one.
+
+**That key is the one thing `init` writes into `.config/vwf.yaml`, and `init`
+never creates the file.** The entry is written under the same single consent
+as everything else, merged into whatever the block already holds, and an
+absent `kept_files` block reads as empty. On a repo `/vwf:setup` has not
+reached there is no file to write into: the keep still applies — the file is
+left untouched — and the *record* becomes a **Deferred** line whose unlock is
+*run `/vwf:setup`, then `/vwf:setup reshape`*.
+
+**The helper library is the one file this pass never offers.** Every task
 file created here sources that library, so a kept copy missing a function the
 created scripts call is a repo that fails on its first print — a breakage
 this run causes and a later, user-run command would be too late to prevent.
-Pass 5 compares it and plans its replacement; nothing else in this pass
-changes.
+Pass 5 compares it and plans its replacement unconditionally: there is no
+keep row for it, and its retired names leave through pass 5's rewrites and
+its sidecar rather than through this pass's offer.
 
 ### 7 — Fragments and sections
 
@@ -264,13 +343,44 @@ position is a **rewrite** that removes it, and the plan says why:
 - Identical rows need nothing, and a **none** answer against a position that
   still holds only the template produces no row either.
 
-There is a standing gap here and it is deliberately not closed: a plugin task
-that differs from the pack's byte for byte is "already owned, never
-overwritten" by §6's rule, so its positions are never reached at all — how a
-diverged pack task is reconciled, and how its positions are re-derived, is the
-brownfield plan's to decide, not a rule to add here.
+**A plugin task that differs from the pack's byte for byte** is one of §6's
+offered files, and the offer is how its positions are reached at all. Offered
+**replace**, the pack's file lands and this pass fills both positions on it
+from question 5's confirmed answer, as a create. Offered **keep**, the file
+stays as the repo has it and neither position is touched: a kept file is kept
+whole, and writing into a position of a file somebody chose to keep is the
+overwrite the keep declined. The plan says which of the two each position's
+row is waiting on, so the two rows read as one decision rather than as a
+contradiction.
 
-### 10 — The gate-config fills
+### 10 — Repo-only tasks
+
+Every task file in the library that **no landed pack ships** is the repo's
+own. List each one as **repo-owned, kept**, and touch none of them: `init`
+does not move a repo's task, does not rename it and does not fold it into a
+group of its own choosing. A repo that wrote a task wrote it for a reason
+this run cannot read.
+
+Derive the set the way pass 6 derives its creates — the paths the three
+baseline bundles declare, plus the secrets provider's — and take every task
+file the library carries that the set does not name. `_scripts/local` is
+never among them: it is pass 5's, and listing it twice reads as two files.
+
+**One shape earns a note, and a note is all it earns.** A repo-owned task in
+the `setup/` or `code/` group whose name the task-library contract's
+**mandatory set** does not carry is reported with one line: those two groups
+are the contract's, reserved for the set it ships, and a task the contract
+does not name belongs in this repo's own per-project group unless it is a
+gate every project shares. The user moves it, in a commit of their own, or
+leaves it where it is — both are legitimate and neither is `init`'s to
+decide.
+
+The note goes in the plan and in the report, never as a rename row. A rename
+here would be exactly the guess the shebang pass refuses: the contract can
+say that a name is not one of its own, and cannot say what the repo meant by
+it.
+
+### 11 — The gate-config fills
 
 Two positions the commit gate's packs ship **marked, with a comment saying
 `init` fills them once the thing they read exists**. They are not the same
@@ -308,7 +418,7 @@ Rules for both:
 
 ## Plan
 
-One document, printed once, in eight sections. Each section opens with its
+One document, printed once, in ten sections. Each section opens with its
 count; each line is `old → new` for anything that moves or is renamed, `+
 path` for anything created, and a bare path with its reason for anything
 flagged. Print an empty section as `none` rather than omitting it — a missing
@@ -321,25 +431,41 @@ settings the row claims survive the move, so the user reads them before the
 one consent rather than finding them in the report.
 
 A **replace** row carries sub-lines on the same principle: one for each
-function that disappears with the file being overwritten. Every **rewrite**
-row is `old → new` at `file:line` — one row per call site, never one per
-name — so the user counts the call sites before the one consent as plainly as
-the files.
+function that disappears with the file being overwritten. The
+`_scripts/local` row carries them too — one per function moved into the
+sidecar, named, so the two lists are read side by side and every retired
+function is accounted for in exactly one of them. Every **rewrite** row is
+`old → new` at `file:line` — one row per call site, never one per name — so
+the user counts the call sites before the one consent as plainly as the
+files.
+
+An **offered** row is the only kind with a decision in it. Each carries the
+path, the three-line summary of pass 6, and a **replace / keep** column
+showing the default that pass computed — and each is a row the user may flip
+at the consent step below before answering. `Repo-owned, kept` is a list and
+nothing else: paths, with the contract note of pass 10 on the rows that earn
+one, and nothing in it is ever applied.
 
 ```text
 Moves        <n>
 Creates      <n>
 Replaces     <n>
+Offered (replace / keep)         <n>
 Renames      <n>
 Rewrites (applied)               <n>
 Rewrites (flagged, not applied)  <n>
+Repo-owned, kept                 <n>
 Appends      <n>
 Merges       <n>
 ```
 
-Close with a single total. A plan whose total is **zero** is the idempotent
-case: say the repo is already shaped, print the report, and stop without
-asking anything.
+Close with a single total, **counting only what would be applied** —
+`Repo-owned, kept` is outside it, and so is an offered row whose decision is
+keep. A plan whose total is **zero** is the idempotent case: say the repo is
+already shaped, print the report with those two lists still in it, and stop
+without asking anything. A repo whose only rows are files it owns and files
+it decided to keep is shaped, and saying otherwise every run is how a user
+stops reading the plan.
 
 ## Consent
 
@@ -348,8 +474,18 @@ section. The plan is a coherent reshaping — half of it applied leaves a repo
 where the task names moved and their callers did not, which is worse than
 either end state.
 
+**Flipping an offered row is an amendment to the plan, not a third answer.**
+Each row of `Offered (replace / keep)` arrives carrying the default pass 6
+computed, and before answering the user may name any of them and flip it.
+Doing so re-prints the whole plan with the new decisions in place, and the
+same one question follows it. So the consent stays single — one yes over one
+document — and the decision a user disagrees with is still theirs to change
+without answering twice about the rest. `init` never walks the rows asking.
+
 A stop is a clean exit. Print the plan again as the record of what was not
-done, and name `/vwf:setup reshape` as the way to revisit it.
+done, and name `/vwf:setup reshape` as the way to revisit it. A flipped
+default is not recorded anywhere by a stop: nothing was applied, so the next
+run computes its defaults afresh.
 
 ## Apply
 
@@ -362,7 +498,25 @@ In the plan's own order, and touching **nothing** the survey did not list.
   scratch. It does fill the positions a pack **marked** for it — the member
   flags, the shell aliases and the per-project slots of
   [new repo](new-repo.md) §7 — and those are creates like any other, listed
-  in the plan and applied here.
+  in the plan and applied here. `_scripts/local` is the one create that is
+  neither: no pack declares it, and every byte in it is carried out of the
+  repo's own helper file by pass 5. **Write it before that file is
+  replaced** — the bodies it holds exist in the tree only until the replace
+  lands, and a sidecar written afterwards has nothing to copy from.
+- **Replaced files land before the positions are filled**, and the order is
+  load-bearing. A marked position is filled *in the file that will still be
+  there afterwards* — fill first and the replace overwrites the fill, which
+  is the quiet way a run reports work it did not do. So: every replace and
+  every accepted **offered** row lands, and only then does the fill pass of
+  §9 and §11 run over the tree.
+- **A kept file is not written to, at all.** The keep itself needs no write;
+  only its **record** does, and the offered row's keep outcome is what lists
+  it. Write that record **after every keep is settled and before the fill
+  pass** — one `enforcement.kept_files.<path>: { reason }` entry per kept
+  file in `.config/vwf.yaml`, merged into the block rather than replacing it.
+  Where that file does not exist, `init` does **not** create it: the keep
+  stands and the record is the **Deferred** line §6 describes. Nothing about
+  a kept file is applied here beyond leaving it alone.
 - **Renames** rewrite the path for a task file, and rewrite the **text** for
   every caller. Use the editing tools for those rewrites — a stream editor's
   in-place flag is not portable across platforms, and the difference is a
@@ -416,11 +570,20 @@ existed:
 
 ## Report
 
-The eight-section report and the two next-step lines from SKILL.md, filled from
+The ten-section report and the two next-step lines from SKILL.md, filled from
 what was actually applied rather than from what was planned. A deferred
-materialization, a flagged rewrite, a call the legacy table could not map and
-a reported-but-unmoved root file all belong in **Deferred**, each with its
-unlock.
+materialization, a flagged rewrite, a call to a function nothing defines, a
+kept-file record on a repo that has no `.config/vwf.yaml` yet, and a
+reported-but-unmoved root file all belong in **Deferred**, each with its
+unlock. A call the legacy table could not map is **not** among them any more:
+pass 5 moves its function to the sidecar, and the run reports the move.
+
+`Files kept` names each offered file the user kept, with the reason recorded
+beside it, and `Tasks kept` lists every repo-owned task pass 10 found — with
+the contract note on the rows in the `setup/` or `code/` group whose name the
+mandatory set does not carry. Both are sections of things this run
+deliberately did **not** touch, which is exactly why they are printed: a file
+left alone silently reads the same as a file nobody looked at.
 
 **The invariant, stated in the report itself, and stated with its scope:**
 running `init` again on a shaped repo produces an empty plan **for the same id
@@ -433,6 +596,11 @@ come from declarations, and pass 9's rename rows say so in those words.
 A **replace is applied once**, and that is part of the same invariant: the
 second run reads a file byte-identical to the pack's, plans no row for it,
 and rewrites no call — the names it would have mapped are gone from the tree.
+An **offer is made once** for the same reason, from either end: a replaced
+file is identical to the pack's next time, and a kept one is recorded, so
+neither is offered again. The sidecar holds by the same rule — its functions
+are no longer unmapped calls into a library that lacks them, they are calls
+into a file the repo now owns.
 
 The third is not a broken invariant. It is the re-run doctrine working: `init`
 is meant to be run again as the repo learns things about itself, and the
