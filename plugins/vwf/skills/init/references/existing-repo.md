@@ -40,8 +40,11 @@ repo gets — the survey is simply later in the wall clock, not skipped.
 The hygiene doctrine closes a repository root to a fixed set, and the
 materializer enforces it as a ceiling. The root this pass reads is **the root of
 the repo it is running in** — a member's own root, surveyed against the same
-ceiling as the base's. Every other configuration file at that root is a **move**
-into that repo's configuration directory.
+ceiling as the base's — and what it reads there is every **entry**: files and
+directories alike, never files only. A directory at the root sits under the same
+ceiling a file does, which is why the exemptions below have to name directories
+by hand. Every other configuration file at that root is a **move** into that
+repo's configuration directory.
 
 **Derive the rename map from the packs' own `config/` trees**, never from a
 list written here. For each landed or landable pack, the path its `config/`
@@ -51,12 +54,12 @@ pass correct when a pack changes where its config lives; a hardcoded map here
 would go stale silently, which is the failure mode the whole tier exists to
 avoid.
 
-A root file matching **no** pack declaration and **not** on the allowlist is
-**reported, not moved**. It belongs to something outside this toolkit, and
+A root **entry** matching **no** pack declaration and **not** on the allowlist
+is **reported, not moved**. It belongs to something outside this toolkit, and
 guessing a destination for it is how a tool stops finding its own config.
 
-**Two root entries are recognised and never listed at all**, and no run reports
-either:
+**Four kinds of root entry are recognised and never listed at all**, and no
+run reports any of them:
 
 - **`.gitmodules`** — git's own file, on the same footing as `.git/`. It is not
   configuration this toolkit places, it cannot be moved without breaking the
@@ -68,10 +71,22 @@ either:
   [fragments and sections](fragments-and-sections.md). A directory this run
   writes is not a stray a later pass discovers. The convention names it; this
   file does not.
+- **`.claude/`** — the materializer's lockfile home, and a directory **this
+  run writes**, exactly like the editor one. Every shaped repo carries it by
+  definition: it is the evidence a later run reads to know the repo is shaped
+  at all, so a pass that listed it would report the shape as a breach of the
+  shape.
+- **Every resolved member path**, in the base — a member's work tree is a
+  directory at the base's root, and it is another repository, surveyed and
+  shaped in its own section of this same plan. There is no configuration
+  directory to move it into and nothing at the base to reconcile it against.
+  The paths come from the resolution that SKILL.md's Step 0 already ran, so
+  this pass has them in hand rather than guessing at a directory's nature.
 
-Neither is a hole in the allowlist and neither is patched by editing it: the
-allowlist names what a **pack may land**, and these two are outside that
-question — one is git's, one is this command's own output.
+None of them is a hole in the allowlist and none is patched by editing it: the
+allowlist names what a **pack may land**, and all four sit outside that
+question — one is git's, two are this command's own output, and the fourth is
+a repository of its own.
 
 #### The move-and-shim case
 
@@ -415,6 +430,28 @@ entirely.
 Groups that already match need nothing, and a project id with no group at all
 gets its `_default` slot as a create.
 
+**What makes a position unfilled is a marker the fill removes.** The packs
+mark a position in two ways, and only one of them leaves a later run a test it
+can apply:
+
+- The marker is **what the fill replaces** — a placeholder token standing in
+  for the value, or a commented-out template standing in for the lines to be
+  written. Filling the position takes it out of the file. Such a position is
+  unfilled exactly while that marker is still there, and **filled** the moment
+  it is gone, whatever replaced it.
+- The marker is a **comment beside a real, working value** the pack shipped on
+  purpose. That comment survives every fill, so it can never say whether the
+  fill happened — and the value is a usable setting rather than a hole. Such a
+  position is **filled from the moment the file landed**, and is never reported
+  unfilled, including where what it holds is exactly what the pack shipped.
+  Where a position of this kind does earn a row, what decides the row is
+  something this run resolved, never the marker.
+
+Never decide either by comparing a value against the one the pack ships. That
+is how the second run of a shaped repo reports its own first run's work: a user
+who answered the git pass wrote that answer deliberately, and a value
+comparison cannot tell it apart from a position nobody has ever touched.
+
 The other marked positions are checked in the same pass, and two of them are
 **not** that id list's: the bootstrap aggregator's member flags and the shell
 aliases compare against the resolved **members** — one flag and one alias per
@@ -431,12 +468,19 @@ not the same kind of wait:
 - **`MEMBERS`** is a create on a repo whose registry declares
   **sibling** members and whose position still carries the pack's shipped
   default — that is the one shape where the task library has no other source
-  for them. Under submodule linkage, and on a single-project repo, it is
-  correct as shipped and produces no row.
-- **`MERGE_MODEL` is never a create.** Unfilled means the shipped
-  value, which is the local one, and that is a working repo rather than a hole
-  — report it in the plan as *unfilled, defaults to `direct`* and leave it
-  alone. The git pass asks the question; a survey pass does not pre-empt it.
+  for them. It is the second kind of position above, so what decides this row
+  is the member list this run resolved and not an unfilled test: the pack
+  ships it with a working value and marks it in a comment. Under submodule
+  linkage, and on a single-project repo, it is correct as shipped and produces
+  no row.
+- **`MERGE_MODEL` is never a create, and never a row at all.** It is the second
+  kind too — the pack ships the local landing model as a real value under its
+  comment — so it is filled from the moment the file landed, and a survey pass
+  has nothing to say about it however it now reads. The git pass is what asks
+  the question and writes the answer, in every repo whose environment-block
+  file this run lands or replaces (per [new repo](new-repo.md) §11(a)); a
+  survey pass does not pre-empt it, and never reports the landing model a user
+  chose — or the shipped one they kept — as a hole.
 
 The plugin task's **two lists** are checked in the same pass, against the
 confirmed answer to SKILL.md's **question 5** — which is asked on an existing
@@ -486,6 +530,14 @@ is one. So the rule is the path the file **resolves to**, never the path it
 sits at: the set is what the bundles declare, and a file the table or that
 rule points into the set is inside it. `_scripts/local` is never among them
 either: it is pass 5's, and listing it twice reads the same way.
+
+**The `_default` slot is exempt on the same footing, and for a nearer reason:
+`init` writes it.** Pass 9 lists it as a create for a project id that has no
+group of its own, so it is this command's output rather than a task the repo
+authored — and no bundle declares it, because no bundle can: the id is this
+repo's. Left unexempted it would come back as repo-owned and kept on **every**
+run of a shaped repo, which is a permanent row for a file `init` itself put
+there.
 
 **One shape earns a note, and a note is all it earns.** A repo-owned task in
 the `setup/` or `code/` group whose name the task-library contract's
