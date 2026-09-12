@@ -233,6 +233,19 @@ repo that **has** members, is a create; one already carrying the right lines
 needs nothing. The repo-name key is a create wherever it still holds the
 pack's placeholder.
 
+The environment block's other two positions are checked here too, and they are
+not the same kind of wait:
+
+- **`MEMBERS`** is a create on a repo whose registry declares
+  **sibling** members and whose position still carries the pack's shipped
+  default — that is the one shape where the task library has no other source
+  for them. Under submodule linkage, and on a single-project repo, it is
+  correct as shipped and produces no row.
+- **`MERGE_MODEL` is never a create.** Unfilled means the shipped
+  value, which is the local one, and that is a working repo rather than a hole
+  — report it in the plan as *unfilled, defaults to `direct`* and leave it
+  alone. The git pass asks the question; a survey pass does not pre-empt it.
+
 ### 10 — The gate-config fills
 
 Two positions the commit gate's packs ship **marked, with a comment saying
@@ -363,9 +376,9 @@ configuration is what the gate config invokes. Splitting them leaves a commit
 whose hooks read a file the next commit is still going to change.
 
 Then the rest, exactly as the new-repo pipeline's **git pass** describes it
-([new repo](new-repo.md) §11): stage what this run wrote, one consent with
-three answers, the fixed shaping message, the branches, the forge-default
-question, the push. Two differences, both from the fact that this repo already
+([new repo](new-repo.md) §11): the landing-model question, stage what this run
+wrote, one consent with three answers, the fixed shaping message, the branches,
+the push. Two differences, both from the fact that this repo already
 existed:
 
 - The first commit here is **not** before hook wiring. That is why the gate
@@ -374,9 +387,8 @@ existed:
   that read a settled configuration.
 - The branch table's first row cannot apply — this repo has commits. Create
   `develop` from `main` where `develop` is missing, `main` from `develop`
-  where `main` is missing, and nothing where both exist. Then ask the same
-  forge-default question, with `develop` preselected, and run the same task —
-  `mise run setup:default-branch <answer>` — reporting only what it reported.
+  where `main` is missing, and nothing where both exist. Nothing after that
+  touches the remote's settings on this pipeline either.
 
 ## Report
 

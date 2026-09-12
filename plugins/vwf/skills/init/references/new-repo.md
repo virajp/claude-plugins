@@ -27,9 +27,11 @@ after the commit question, so the branch work reads against a tree this run has
 already written to.
 
 Report what was created and what was already there. The rest of the git work —
-staging, the commit, the branches, the forge default, the push — is §11, the
+the landing model, staging, the commit, the branches, the push — is §11, the
 git pass, and that step is the only other one in this pipeline that touches
-git.
+git. Nothing in either step reaches the remote's own settings: which branch a
+forge calls default is a one-time act somebody performs there, not a step a
+run repeats.
 
 ## 2 — The three baselines
 
@@ -137,8 +139,8 @@ them.
 
 ### The marked positions
 
-**Three**, and with the `_default` slot below they are the four things this
-section fills. Two are per-project and one is repo-level.
+**Five**, and with the `_default` slot below they are the six things this
+section fills. Two are per-project and three are repo-level.
 
 The toolchain pack ships the flag list and the alias list as **commented
 templates in place**, each with a note saying the ids come from the registry
@@ -170,6 +172,27 @@ launch aliases the user keeps — belong in the **user's own global
 configuration**, reading the value the repo publishes. They are not this
 pipeline's to write, and `init` never writes outside the target repo. What
 `init` owes is the value; what reads it is somebody else's file.
+
+**The fourth and fifth are repo-level too**, and the toolchain pack ships both
+as marked positions in that same environment block, each with a comment saying
+what it takes. Write both literally, by the same rule `REPO_NAME` follows.
+
+`MERGE_MODEL` is how work lands: the merge tasks read it, and the pack's
+comment names its two values — `direct`, the shipped one, which merges locally
+and pushes, and `pr`, which pushes the branch and opens a pull request instead.
+The value is **asked in §11**, inside the git pass, and written there before
+that step stages — it is not a numbered question, because it is a decision
+about landing and the git pass is where landing is decided. A repo whose
+position is left as shipped runs on `direct`.
+
+`MEMBERS` is the product's other repositories, as paths relative to the repo
+root, in the pack's own space-separated spelling. Fill it from the **registry's
+members list, and only where the product is multi-repo with sibling linkage**.
+Under submodule linkage the repo's own submodule declarations are what the task
+library reads, and a single-project repo has no members — in both cases the
+position stays exactly as shipped, for the same reason the member flags and the
+aliases do. The registry does not exist on a first run, so this is re-run work
+by construction.
 
 ### The `_default` slot
 
@@ -263,13 +286,29 @@ merge — meets a working tree it did not expect.
 
 Run it in this order.
 
-### (a) Stage exactly what this run wrote
+### (a) The landing model
+
+Ask, in one round, which way work lands in this repo: **`direct`** —
+recommended, and what the toolchain pack ships — *merge locally and push*; or
+**`pr`** — *push the branch and open a pull request*. Write the answer
+literally at the `MERGE_MODEL` marked position §7 described, and count it as a
+fill like any other.
+
+It is asked here rather than as one of SKILL.md's numbered questions because it
+decides how work lands, which is what the rest of this pass is about; and it is
+asked **before** (b) so the file it writes is in what (b) stages.
+
+`init` does not act on the answer. The merge tasks read it, and what `pr` mode
+does about opening the pull request is the pack's business — naming that is
+exactly the naming this skill's hard rules forbid.
+
+### (b) Stage exactly what this run wrote
 
 Every path in the run's own written / moved / renamed lists, and nothing else.
 Not `git add -A`: a repo that already had untracked work of its own does not
 get it swept into a commit whose message says the shape was laid down.
 
-### (b) One consent, three answers
+### (c) One consent, three answers
 
 Ask once, showing the **file count** and the **branch** first so the answer is
 given against facts rather than a promise:
@@ -303,7 +342,7 @@ is skipped, and the hook ships exactly as the pack wrote it. On an existing
 repo the hooks may already be wired, which is why that pipeline commits the
 gate configuration first and on its own.
 
-### (c) The branches
+### (d) The branches
 
 Only after the commit exists, because the whole reason §1 stopped at one
 branch is that a repository with no commit has nothing to branch from:
@@ -320,31 +359,14 @@ branch model, and it does not depend on which one a forge calls default: work
 flows from a feature branch or a worktree into `develop`, and from `develop`
 into `main`. A repo missing one of the two has merge tasks that cannot run.
 
-Where the answer at (b) was **leave it**, there is no commit to branch from on
+Where the answer at (c) was **leave it**, there is no commit to branch from on
 a fresh repository — record the branch work as a deferral with its unlock (the
 commit), and create nothing. On a repo that already had commits, create the
 missing branch anyway: it costs nothing and it is what the merge tasks need.
 
-### (d) The forge default
-
-Ask which branch should be the **default branch on the remote forge**, with
-`develop` preselected. Then run the toolchain pack's own task for it —
-`mise run setup:default-branch <answer>` — and **report only what the task
-reported.**
-
-The task decides what is possible: where it finds a forge CLI and a remote it
-sets the default; where it does not it prints the command a human can run.
-`init` never inspects the forge, never names one, and never chooses between
-CLIs — that knowledge is the pack's, and putting it here is exactly the naming
-this skill's hard rules forbid.
-
-Ask this even where there is no remote. The answer is a decision about the
-repository, the task's printed form is a usable record of it, and re-asking
-after a remote appears is a question the user has already answered.
-
 ### (e) The push
 
-Only where (b)'s answer was **commit and push** *and* an origin remote exists.
+Only where (c)'s answer was **commit and push** *and* an origin remote exists.
 Push `develop` and `main`, each with upstream tracking set, and report both.
 
 No remote and a push answer is not a failure: report it as a deferral whose
@@ -353,8 +375,8 @@ waiting.
 
 ### What the report carries
 
-Branches created, the commit's short hash, what was pushed, and the forge
-task's own words. That is the git section SKILL.md's report specifies.
+The landing model, branches created, the commit's short hash, and what was
+pushed. That is the git section SKILL.md's report specifies.
 
 ## 12 — The report
 
