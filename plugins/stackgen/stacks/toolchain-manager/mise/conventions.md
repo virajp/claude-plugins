@@ -94,12 +94,24 @@ a repo's whole toolchain enabled in every other window forever — and because
 pruning is only safe once it is scoped to one profile. Silent on a machine
 without the editor.
 
-**The forge's default branch is set by a task, not by a paragraph.**
-`setup:default-branch <branch>` uses whichever forge CLI recognizes this remote
-and prints the command when none does. It never fails and `setup:all` never
-calls it: it edits a remote, so it is run deliberately, once. It is also
-orthogonal to the merge tasks — work flows feature → `develop` → `main` whatever
-the forge calls default.
+**No task edits a remote's settings.** Setting the forge's default branch is a
+one-time act by whoever shapes the repo, not something a machine re-runs on every
+bootstrap, so the library carries no task for it and the repo's CONTRIBUTING stub
+names the command instead. It is orthogonal to the merge tasks in any case — work
+flows feature → `develop` → `main` whatever the forge calls default.
+
+**How a branch lands is the repo's setting, not the lander's.** `MERGE_MODEL` in
+the base `[env]` reads `direct` — merge locally and push — or `pr`, which pushes
+the branch and opens a pull request through whichever forge CLI is present, and
+merges nothing locally. A repo-level value rather than a flag, because which one
+applies follows from the repo's review policy and not from who is landing.
+
+**One configuration per tool, and the task is where it lives.** Every gate hook
+calls `mise run code:<gate>` rather than the tool, and the three gate tasks take
+an optional file list so the same task serves a per-file hook and a whole-tree
+run. A tool configured in both a task and a hook has two settings that drift in
+the direction nobody is looking — the commit rewriting a file `code:all` would
+have left alone. Customising a gate means editing the task.
 
 **Hooks run before staging, not after.** `code:precommit` runs the hooks over
 the working tree's changed files, so the rewrites they make fold into the commit

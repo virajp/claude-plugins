@@ -151,7 +151,13 @@ two differ in value and never in vocabulary.
   so a derived value would address a different repo depending on where you stood.
   Aliases that vary only by repo (the agent launchers) belong in the user's
   **global** config reading `$REPO_NAME`, not here: one definition, per-repo
-  values.
+  values. Two more marked positions sit beside it, both filled by the
+  orchestrator and both with a working default: **`MERGE_MODEL`**
+  (`direct` | `pr`) — whether `code:merge:*` merges locally and pushes, or
+  pushes and opens a pull request — and **`MEMBERS`**, the space-separated,
+  repo-relative paths of this repo's member projects, left empty when they are
+  submodules, which `members()` reads from `.gitmodules` instead. A string and
+  never an array: mise env values are strings.
 - `mise.dev.toml` `[env]` — the **development** values: verbose logging, local
   hosts, emulator endpoints, test credentials.
 - `mise.ci.toml` `[env]` — the CI and **production** values for those same keys.
@@ -220,11 +226,15 @@ different command.
   when missing, **uninstalled when no longer listed**. Per-repo, because a
   recommendation accepted globally never goes away and a global prune would take
   another repo's tools with it. Silent without the editor's CLI.
-- **`setup:default-branch <branch>` is not in `setup:all`.** It edits a remote
-  through whichever forge CLI recognizes it, prints the command when none does,
-  and never fails — so it is run deliberately, once, rather than on every
-  re-sync. What it sets is orthogonal to the merge tasks: work flows feature →
-  `develop` → `main` whatever the forge calls default.
+- **Every gate hook calls a task.** The hook config carries three tool-neutral
+  hooks — `format`, `lint`, `sec` — each running `mise x -- mise run code:<x>`,
+  which is why the three tasks take an optional file list. A repo customising a
+  gate edits the **task**; a tool named in both the task and a hook is a tool
+  configured twice, and the two copies drift.
+- **No task edits a remote's settings.** Setting the forge's default branch is a
+  one-time act by whoever shapes the repo, and the CONTRIBUTING stub names the
+  command; the library carries none. It is orthogonal to the merge tasks anyway:
+  work flows feature → `develop` → `main` whatever the forge calls default.
 - **Per-runtime CI workarounds live in `mise.ci.toml` alone.** The one that
   ships: for a **Node** project, set `node.gpg_verify = false` there. mise's
   bundled Node release-key gpg import fails on Linux CI runners ("no valid
