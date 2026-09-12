@@ -48,7 +48,7 @@ print_header "Setting up commit hooks ..."
 mise run setup:precommit
 
 print_header "Setting up AI tooling ..."
-mise run code:ai
+mise run setup:ai
 
 # Last, and after the hooks are wired: the editor is what the repo is used FROM
 # once everything that gates it is in place, and the task is silent on a machine

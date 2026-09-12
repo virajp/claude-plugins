@@ -11,9 +11,10 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 # The agent's own toolchain, reconciled the same way every other tool is.
 #
-# It sits under `code:` rather than `setup:` because it is not a bootstrap step
-# a machine passes once: the plugin set moves with the repo, and re-running this
-# is how a checkout catches up. `setup:all` calls it, and so can a human.
+# It is bootstrap and re-sync, which is what `setup:*` is for: the plugin set
+# moves with the repo and re-running this is how a checkout catches up, exactly
+# as `setup:deps:install` re-runs as the lockfile moves. `setup:all` calls it,
+# and so can a human.
 #
 # Claude Code itself is installed per MACHINE, not per repo — this task verifies
 # it is there and reconciles the plugin side, which is per repo.

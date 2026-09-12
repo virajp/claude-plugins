@@ -4,7 +4,7 @@ axis: repo
 kind: toolchain-manager
 unconditional: true
 components:
-- toolchain-manager/mise@1.0.0
+- toolchain-manager/mise@1.0.1
 ---
 
 # Repo — mise
