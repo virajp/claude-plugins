@@ -29,13 +29,16 @@ projects live in it, and `linkage:` records whether they are wired as submodules
 or are plain siblings. Since **format 16** an axis has a third state,
 `unresolved` — *not answered yet* — which is what lets a product be **defined**
 before a stack is chosen, and the deploy axis is a **list**, because a project
-may ship through more than one delivery mechanism. Since **blueprint-format 6**
-this file replaces the old stamp at `docs/blueprint/.vwf.yml`.
+may ship through more than one delivery mechanism. Since **format 18**
+`enforcement:` also records a **kept file** — a pack-owned file a reshape
+offered to replace and the user kept — so the decision is settled once and
+neither `/vwf:init` nor `/vwf:doctor` raises it again. Since **blueprint-format
+6** this file replaces the old stamp at `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 16)
+## Schema (config_format 18)
 
 ```yaml
-config_format: 16 # this file's own schema version — setup migrates it
+config_format: 18 # this file's own schema version — setup migrates it
 blueprint_format: 24 # the docs/blueprint format stamp
 
 product:
@@ -104,6 +107,7 @@ harness: # workspace-level capability inventory (see the harness contract)
 enforcement: # vwf's enforcement opt-outs
   # `structure:` was retired in format 19 and `stacks:` in format 10, for the same reason: both became MENUS (assets/topologies/ for structure; the stack menu is stackgen's, offered through the stack adapter), so no choice deviates from anything and none needs a waiver. A legacy `structure:` or `stacks:` block reads as drift — structure migrates into `topology` + `topology_reason`, stacks into projects.<name>.stack (its reason into `note`).
   rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (assets/standard-flows.md); baseline/<rule>[/<unit>] waives an engineering-baseline rule product-wide or scoped (assets/engineering-baseline.md; boundary-validation never product-wide); pipeline/<rule>[/<unit>] waives a delivery-pipeline rule (assets/delivery-pipeline.md)
+  kept_files: {} # FORMAT 18. <path>: { reason: <one line> } — a file the landed packs OWN that this repo kept over the pack's, written by `/vwf:init` (consented, in its single plan) when a reshape offered that file as replace-or-keep and the answer was keep. The path is spelled exactly as the lockfile names it. NOT a rule id and never under `rules:` — a path names no catalogued rule. Read by `init`, which never re-offers a recorded path, and by `/vwf:doctor`, whose content-drift check skips it; an absent block reads as empty, so a repo that has kept nothing records nothing
 
 pipeline: # bounded knobs — see the hard floor below
   coverage_target: 100 # default coverage gate (per-project override above)
@@ -192,7 +196,7 @@ at answering the question, never at installing something.
 | `projects.*`         | `setup` / `architecture` (`stack`, `design`, `cicd` — all elicited); `execute` reconcile                                                  | `plan`, `execute`, `doctor`, the verifiers, the design adapter (`design`) and the pinned CI system (`cicd`) — **never** `blueprint` or the reviewers, which must not see a stack |
 | `repo`               | `setup` / `architecture` (elicited)                                                                                                       | `doctor`, `plan`, `execute`                                                                                     |
 | `harness`            | `setup`; `execute` reconcile                                                                                                              | `plan` preflight, acceptance/ux verifiers, `verify`, `doctor`                                                   |
-| `enforcement`        | `setup` / `architecture` (consented)                                                                                                      | `setup`, `architecture`, `blueprint`, the reviewers                                                             |
+| `enforcement`        | `setup` / `architecture` (consented); `init` (`kept_files` only, consented in its single plan)                                            | `setup`, `architecture`, `blueprint`, the reviewers; `init` and `doctor` (`kept_files`)                         |
 | `pipeline`           | the user (hand-edited)                                                                                                                    | `execute`, and the external caps hook that delivers its resource-cap pause                                       |
 | `environments`       | `setup` / `verify` (confirmed)                                                                                                            | `verify`                                                                                                        |
 | `production_env`     | `setup` / `verify` (confirmed)                                                                                                            | `verify` (the release environment)                                                                              |
@@ -524,6 +528,19 @@ earlier than 65/90/80), never loosen.
   `docs/blueprint/` changes, which is the second config bump to ship without a
   paired blueprint bump, after `14`. Readers treat a scalar `deploy_template`, or
   a `deploy_template: n/a`, as `15` drift.
+
+- **`16 → 18` migration** (performed by `/vwf:setup`): **`enforcement:` gains
+  `kept_files:`, and nothing else moves.** Add `kept_files: {}` where the block
+  lacks it and rewrite the stamp. There is nothing to convert: no surface wrote
+  this key before 18, so every existing repo converges on an empty map, and an
+  absent block already reads as one — the edit exists so the key is visible in
+  the file a user hand-reads, not because a reader needs it.
+
+  **17 is never issued on this line either** — a repo stamped `17` is read as
+  `16` and migrated from here; the setup skill's `format-lineage` reference
+  carries that fact for both stamps. `blueprint_format` was **untouched** and
+  stayed **24**: nothing under `docs/blueprint/` changes, the third config bump
+  to ship without a paired blueprint bump, after `14` and `16`.
 
 - **`10 → 11` migration** (performed by `/vwf:setup`): stacks stop being
   *enforced with an escape hatch* and become a **menu**, and the flat

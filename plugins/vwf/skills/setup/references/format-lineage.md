@@ -15,17 +15,19 @@ registering as something unknown.
 
 ## What the stamps mean now
 
-`blueprint_format` (**24**) and `config_format` (**16**) are **drift
+`blueprint_format` (**24**) and `config_format` (**18**) are **drift
 detectors** and nothing else. `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md` compares
 a repo's stamps against the shipped integers and nudges
 `/vwf:setup`. Nothing selects a migration path by them any more,
 and there is no support window: a repo stamped `2` and a repo stamped `21`
 reconcile against the same current format, by the same algorithm, in one pass.
 
-Two blueprint integers were never issued — **13** and **17**. A repo whose
-`blueprint_format` reads 13 is treated as 12, and one reading 17 as 16. The two
-stamps are separate number lines and never comparable: `config_format` 13 is
-real.
+**Both lines skip 17, and the blueprint line also skips 13.** A repo whose
+`blueprint_format` reads 13 is treated as 12; one whose `blueprint_format` or
+`config_format` reads 17 is treated as **16** on that line — `config_format`
+went 16 → 18 when `enforcement.kept_files` arrived. The two stamps are separate
+number lines and never comparable, and 13 is skipped on one of them only:
+`config_format` 13 is real.
 
 ## The lineage table
 
@@ -116,6 +118,7 @@ must go through the rule below. Every other row is mechanical.
 | `projects.<name>.stack_reason` | `projects.<name>.stack.note`, carried verbatim | config-key | |
 | a flat **list** at `projects.<name>.stack` | the structured block — `template`, `languages`, `frameworks`, `dependencies`, split per `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md` | config-key | |
 | `enforcement.structure` | retired — `topology` plus `topology_reason` | config-key | |
+| no `enforcement.kept_files` block | `kept_files: {}` — the block format 18 introduced; nothing is retired and nothing converts, an absent block reading as empty | config-key | |
 | a flow id carrying a `<device>` segment, or missing its `<platform>` leaf | `<project>/<NNN>-<flow>/<platform>` | config-key | |
 | `environments` keys `dev`, `test`, `stage`, `prod` | `development`, `staging`, `production` — `test` has no single canonical partner; propose, never auto-fix | config-key | yes |
 | mempalace rooms `plans`, `decision` | `planning`, `decisions` | config-key | |
