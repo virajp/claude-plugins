@@ -17,6 +17,18 @@
 # It merges `--no-ff` on purpose. A fast-forward would leave `main` and
 # `develop` as the same commit with no record that a merge happened, and the
 # merge commit is what makes "what shipped" a question git can answer.
+#
+# **`MERGE_MODEL` chooses HOW the source reaches the destination, never
+# WHETHER.** The branch model above holds under both values, and every predicate
+# below runs under both:
+#
+#   direct  the default: merge locally and push the destination. A solo repo, or
+#           one whose review happens before the branch lands.
+#   pr      push the branch and open a pull request against the destination.
+#           Nothing merges locally; the forge is what merges.
+#
+# It is a marked position in `.config/mise.toml`, so the choice is the repo's
+# and this file names no forge until it has to open a request.
 
 set -euo pipefail
 # shellcheck source=/dev/null
@@ -79,6 +91,46 @@ precommit_safety_net() {
   print_ok
 }
 
+# The `pr` half of `MERGE_MODEL`: publish the branch and let the forge merge it.
+#
+# Nothing is checked out and no branch is merged, so the main-worktree hop the
+# direct path needs does not apply here — the one thing this changes locally is
+# the source branch's upstream.
+open_pull_request() {
+  local DESTINATION_BRANCH="$1"
+  local SOURCE_BRANCH="$2"
+
+  print_wait "Pushing ${SOURCE_BRANCH} to origin ... "
+  if ! git push --follow-tags -u origin "${SOURCE_BRANCH}" >/dev/null 2>&1; then
+    print_error "ERROR"
+    print_error "FAILED to push '${SOURCE_BRANCH}' to origin!"
+    exit 1
+  fi
+  print_ok
+
+  # `gh` is tried first when both are installed. Two forge CLIs on one machine is
+  # far more often a GitHub repo on a laptop that still has glab than the
+  # reverse, and the request has to be opened against ONE forge.
+  if command -v gh >/dev/null 2>&1; then
+    print_yellow "Opening a pull request into ${DESTINATION_BRANCH} ..."
+    gh pr create --base "${DESTINATION_BRANCH}" --head "${SOURCE_BRANCH}" --fill
+  elif command -v glab >/dev/null 2>&1; then
+    print_yellow "Opening a merge request into ${DESTINATION_BRANCH} ..."
+    glab mr create --target-branch "${DESTINATION_BRANCH}" --source-branch "${SOURCE_BRANCH}" --fill
+  else
+    # Not a failure. The branch is pushed, which was the part that needed a
+    # shell; opening the request is a click, and no forge CLI on PATH is the
+    # normal state of a machine whose forge has neither.
+    print_warn "No forge CLI on PATH — the branch is pushed, no request was opened."
+    print_yellow "  branch:      ${SOURCE_BRANCH}"
+    print_yellow "  destination: ${DESTINATION_BRANCH}"
+    print_yellow "Open the pull request on your forge."
+  fi
+
+  print_newline
+  print_success "Branch pushed — the merge happens on the forge."
+}
+
 # merge_to_destination_branch <destination> [<source>]
 #
 # <source> defaults to the branch you are standing on, which is the shape
@@ -90,6 +142,13 @@ merge_to_destination_branch() {
   local CURRENT_BRANCH
   CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
   local SOURCE_BRANCH="${2:-${CURRENT_BRANCH}}"
+
+  # `direct` is both the default and the behaviour every repo had before the
+  # setting existed, so an unset or unfilled `MERGE_MODEL` merges locally exactly
+  # as before. Anything that is not `pr` reads as `direct` rather than erroring:
+  # a typo in a config value should not stand between a branch and its merge.
+  local MERGE_MODE="${MERGE_MODEL:-direct}"
+  [ "${MERGE_MODE}" = "pr" ] || MERGE_MODE="direct"
 
   if [ "${SOURCE_BRANCH}" = "main" ]; then
     print_error "ERROR: merges FROM 'main' are not allowed."
@@ -174,18 +233,31 @@ merge_to_destination_branch() {
   # has never seen is one the pipeline has never built. Only the SOURCE branch is
   # asked — an unrelated local branch's unpushed work is not this merge's
   # business.
-  print_wait "Checking if any unpushed commits exist on ${SOURCE_BRANCH} ... "
-  if is_local_branch "${SOURCE_BRANCH}"; then
-    print_yellow "local branch"
-  elif has_unpushed_commits "${SOURCE_BRANCH}"; then
-    print_error "ERROR"
-    print_error "- Unpushed commits exist on '${SOURCE_BRANCH}', please push them and try again."
-    exit 1
-  else
-    print_ok
+  #
+  # Under `pr` the question does not arise: publishing the source branch is that
+  # path's FIRST act, so refusing unpushed commits would refuse the normal case —
+  # a branch committed a minute ago and not yet pushed anywhere.
+  if [ "${MERGE_MODE}" = "direct" ]; then
+    print_wait "Checking if any unpushed commits exist on ${SOURCE_BRANCH} ... "
+    if is_local_branch "${SOURCE_BRANCH}"; then
+      print_yellow "local branch"
+    elif has_unpushed_commits "${SOURCE_BRANCH}"; then
+      print_error "ERROR"
+      print_error "- Unpushed commits exist on '${SOURCE_BRANCH}', please push them and try again."
+      exit 1
+    else
+      print_ok
+    fi
   fi
 
   precommit_safety_net
+
+  # The fork. Everything above is the policy both models share; everything below
+  # is the local merge, which only `direct` performs.
+  if [ "${MERGE_MODE}" = "pr" ]; then
+    open_pull_request "${DESTINATION_BRANCH}" "${SOURCE_BRANCH}"
+    return 0
+  fi
 
   if [ "${IS_WORKTREE}" = true ]; then
     print_wait "Switching to main worktree at ${MAIN_WORKTREE_PATH} ... "

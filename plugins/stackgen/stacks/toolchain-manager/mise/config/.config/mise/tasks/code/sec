@@ -4,6 +4,8 @@
 #MISE dir="{{ config_root }}"
 
 #USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--staged" help="scan only what is staged, and skip the dependency scan"
+#USAGE arg "[files]" var=#true help="accepted for the gate's sake; both scanners read the tree"
 
 set -euo pipefail
 # shellcheck source=/dev/null
@@ -20,16 +22,42 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # The package manager's own advisory check is `setup:deps:audit`, a different
 # task on purpose: that one reports during setup, this one fails before a
 # commit. A gate component that pins different scanners overwrites this file.
+#
+# **This is also the repo's secret-scanning HOOK, which is what `--staged` is
+# for.** The pre-commit gate calls `code:sec --staged` rather than a scanner
+# binary, so the scanner and its config are configured once, here. In that mode
+# the scan is the staged diff and nothing else, and the dependency scan is
+# skipped outright: a vulnerable transitive dependency is not news a commit can
+# act on, and paying for the whole scan on every commit is how a gate gets
+# turned off.
 
 SECRETS_CONFIG="${MISE_PROJECT_ROOT}/.config/gitleaks.toml"
 VULN_CONFIG="${MISE_PROJECT_ROOT}/.config/grype.yaml"
 
+if [ "${usage_staged:-false}" = "true" ]; then
+  if command -v gitleaks >/dev/null 2>&1; then
+    print_wait "Scanning the staged changes for secrets ... "
+    if [ -f "${SECRETS_CONFIG}" ]; then
+      gitleaks git --staged --config "${SECRETS_CONFIG}" --redact=50
+    else
+      gitleaks git --staged --redact=50
+    fi
+    print_ok
+  else
+    print_warn "gitleaks is not on PATH — skipping the staged secret scan."
+  fi
+  exit 0
+fi
+
 if command -v gitleaks >/dev/null 2>&1; then
   print_wait "Scanning for committed secrets ... "
+  # The scanner takes a directory, so a file list narrows it only as far as a
+  # shared parent — with one given, the whole tree is scanned rather than
+  # guessing at that parent. The narrowed scan is `--staged`.
   if [ -f "${SECRETS_CONFIG}" ]; then
-    gitleaks dir . --config "${SECRETS_CONFIG}" --redact 50
+    gitleaks dir . --config "${SECRETS_CONFIG}" --redact=50
   else
-    gitleaks dir . --redact 50
+    gitleaks dir . --redact=50
   fi
   print_ok
 else

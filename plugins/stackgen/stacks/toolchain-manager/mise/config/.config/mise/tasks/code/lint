@@ -6,17 +6,76 @@
 
 #USAGE flag "--debug" help="emit debug logs"
 #USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to lint (default: the whole repo)"
 
 set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/placeholder"
 
-# A slot, unlike its siblings `code:format` and `code:sec`. Those two have
-# defaults that cost nothing — one formatter binary and two scanners that read
-# a directory, all of them stack-agnostic. Linting is not: every linter worth
-# running is a language's own, and the one this ecosystem uses for prose would
-# drag a package manager into a repo that holds only docs.
+# Half slot, half default — and the split is the point.
 #
-# So the name is the contract and the language pack brings the linter.
+# The LANGUAGE linter is a slot, unlike `code:format`'s formatter. Every linter
+# worth running is a language's own, and the one this ecosystem uses for prose
+# would drag a package manager into a repo that holds only docs. So the name is
+# the contract and the language pack brings the linter, and until one does the
+# placeholder notice below announces it.
+#
+# The two DEFAULTS above it are not language linters. shellcheck and actionlint
+# read the tree as a directory, the way dprint does — shell is in every repo
+# from this task library onward, and a workflow is checked statically or by
+# cutting a release to find out. Neither costs anything when its binary is
+# absent or nothing in scope is its file type.
+#
+# **This is also the repo's linting HOOK.** The pre-commit gate calls
+# `code:lint --fix <files>` rather than a linter binary, so every tool this repo
+# lints with is configured once, here. An overlay that replaces this file KEEPS
+# the file argument and KEEPS both defaults below: a commit gets whatever this
+# task does, and a tool that drops out of it stops running at all.
+
+files=()
+eval "files+=(${usage_files:-})"
+
+# The shell pass. `-x` follows the sourced `_scripts/` libraries, so they are
+# analysed the way their callers actually see them.
+if command -v shellcheck >/dev/null 2>&1; then
+  shell_scope=()
+  while IFS= read -r shell_file; do
+    if [ -n "${shell_file}" ]; then
+      shell_scope+=("${shell_file}")
+    fi
+  done < <(shell_files_in_scope ${files[@]+"${files[@]}"})
+
+  if [ "${#shell_scope[@]}" -gt 0 ]; then
+    shellcheck -x "${shell_scope[@]}"
+  fi
+fi
+
+# actionlint takes no file list worth narrowing — it wants the workflows — so
+# the scope is filtered to them and it is skipped when none is in scope. A repo
+# with no `.github/workflows` never runs it.
+if command -v actionlint >/dev/null 2>&1; then
+  workflow_scope=()
+  if [ "${#files[@]}" -gt 0 ]; then
+    for candidate in "${files[@]}"; do
+      case "${candidate}" in
+        .github/workflows/*.yml | .github/workflows/*.yaml)
+          if [ -f "${candidate}" ]; then
+            workflow_scope+=("${candidate}")
+          fi
+          ;;
+      esac
+    done
+  else
+    while IFS= read -r workflow; do
+      if [ -n "${workflow}" ]; then
+        workflow_scope+=("${workflow}")
+      fi
+    done < <(git -C "${MISE_PROJECT_ROOT}" ls-files '.github/workflows/*.yml' '.github/workflows/*.yaml' 2>/dev/null || true)
+  fi
+
+  if [ "${#workflow_scope[@]}" -gt 0 ]; then
+    actionlint "${workflow_scope[@]}"
+  fi
+fi
 
 placeholder_notice "code:lint" "no linter is pinned for this repo"

@@ -61,16 +61,12 @@ mise run setup:vscode
 # runs its OWN task library through `mise run --cd`, so a polyglot repo gets one
 # library per project rather than one library that knows every language.
 #
-# The generic member list is the repo's submodules. A repo whose members are
-# plain directories replaces the loop below with one `mise run --cd <path>` per
-# id, guarded by that id's flag.
-
-# `$displaypath` is git's own variable and stays single-quoted so git, not this
-# shell, expands it.
-# shellcheck disable=SC2016
-members() {
-  git -C "${MISE_PROJECT_ROOT}" submodule --quiet foreach --recursive 'echo $displaypath' 2>/dev/null || true
-}
+# The member list comes from `_scripts/helpers`' `members`, which answers for
+# either linkage — the repo's submodules, or the `MEMBERS` list in
+# `.config/mise.toml` — so this loop covers both and `code:worktrees` walks the
+# same members this does. A repo that wants a member set up on its OWN flag
+# rather than on `--all` adds one `mise run --cd <path>` per id beside the loop,
+# guarded by that id's flag.
 
 if [[ "${usage_all:-false}" == "true" ]]; then
   while read -r member; do
