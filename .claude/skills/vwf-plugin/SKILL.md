@@ -89,7 +89,7 @@ bootstrap**: its "when it runs again" doctrine names the moments, and
 `/vwf:doctor` has the drift finding that prints the one remedy,
 `/vwf:setup reshape`. `setup` is the Phase-0 bootstrapper — it onboards a repo
 (a Step-0 shape check that offers `/vwf:init` when any of the three slugs is
-missing **or** any of doctor's four baseline predicates fails, the `reshape`
+missing **or** any of doctor's six baseline predicates fails, the `reshape`
 argument forcing that offer and stopping once init returns, detect-or-ask
 topology via MCQ, consent-gated reconciliation into the `docs/blueprint/`
 format, the CLAUDE.md vwf section, the memory tree and `mempalace.yaml`, the

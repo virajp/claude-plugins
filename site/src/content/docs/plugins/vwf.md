@@ -908,19 +908,20 @@ rule waits on:
   is worse than none.
 
 **On an existing repo it surveys, plans, and applies on one consent.** The
-survey walks ten checks — root files against the allowlist, the readme's casing,
-task names against the pack's *legacy-name table*, task shebangs, the helper
-library's name and whether its contents still match the pack's, missing files,
-ignore sections and hook fragments, commit types, per-project task groups, and
-the positions the packs ship marked for it to fill — the gate configs, and the
-plugin task's two agent-plugin lists, which are compared row for row against
-question 5's confirmed answer, with both sides shown in the plan when they
-differ, since that is the one position a user may have hand-edited. Pass 1 has
-one case worth knowing: where a gate pack declares both a config under
-`.config/` and a two-line stand-in of the same name at the root — the stand-in
-existing because that tool's config discovery is root-only — your **real**
-config moves into `.config/` and the stand-in takes its place, with the plan
-saying the settings survive the move. Not every key does, and the plan says
+survey walks eleven checks — root files against the allowlist, the readme's
+casing, task names against the pack's *legacy-name table*, task shebangs, the
+helper library's name and whether its contents still match the pack's, the files
+a pack owns that the repo lacks or has changed, ignore sections and hook
+fragments, commit types, per-project task groups, the tasks the repo owns that
+no pack ships, and the positions the packs ship marked for it to fill — the gate
+configs, and the plugin task's two agent-plugin lists, which are compared row
+for row against question 5's confirmed answer, with both sides shown in the plan
+when they differ, since that is the one position a user may have hand-edited.
+Pass 1 has one case worth knowing: where a gate pack declares both a config
+under `.config/` and a two-line stand-in of the same name at the root — the
+stand-in existing because that tool's config discovery is root-only — your
+**real** config moves into `.config/` and the stand-in takes its place, with the
+plan saying the settings survive the move. Not every key does, and the plan says
 which: a gate pack's own skill names the key that is **not** inherited through
 the stand-in, where an extended file declaring it is a fatal diagnostic rather
 than a warning, so the move drops it. Dropping it **widens** what the gate
@@ -930,14 +931,16 @@ per **exclusion** the drop makes necessary, each naming the files that exclusion
 keeps out of the gate. Never a restored key, which puts the diagnostic back, and
 never after the fact: they are changes to the settings the row claims survive
 the move, so you read them before the one consent. The two are told apart by
-content, never by name. What comes back is **one plan**, in eight counted
-sections: moves, creates, replaces, renames, rewrites applied, appends, merges —
-all applied on a single yes — and `Rewrites (flagged, not applied)`, which is
-applied by nothing. A task file whose shebang names a shell other than bash goes
-there, listed with the shell-specific syntax it uses, and is **never**
-rewritten: auto-translating a shell script is how a working task becomes a
-subtly broken one, so it lands in the report's `Deferred` section for you to
-rewrite deliberately.
+content, never by name. What comes back is **one plan**, in ten counted
+sections: moves, creates, replaces, offered (replace / keep), renames, rewrites
+applied, appends and merges — all applied on a single yes — and two applied by
+nothing, `Rewrites (flagged, not applied)` and `Repo-owned, kept`. The single
+total counts only what would be applied, so a repo whose only rows are files it
+owns and files it chose to keep still reads as shaped. A task file whose shebang
+names a shell other than bash goes there, listed with the shell-specific syntax
+it uses, and is **never** rewritten: auto-translating a shell script is how a
+working task becomes a subtly broken one, so it lands in the report's `Deferred`
+section for you to rewrite deliberately.
 
 **The helper library is the one named exception**, and the reason it earns one
 is timing. A repo whose copy has drifted from the pack's is not carrying a
@@ -949,10 +952,50 @@ function that disappears along with it, and one **rewrite** row per call site of
 a retired name, `old → new` at its file and line, so you count them before the
 one yes rather than after. Nothing is translated on the spot: the mapping is
 read from the pack's legacy-name table, the same table the task-name check
-reads. A call to a name that table has no row for is flagged, never rewritten,
-and deferred with what would unlock it. It never asks per file, never writes
-before the yes, never touches application code, and never writes a language
-manifest, a lockfile or a CI workflow.
+reads.
+
+**A call the table has no row for is not deferred — the function moves.** Every
+function your own tasks call that the pack's library does not define and its
+table does not map is carried, whole and text-unchanged, into `_scripts/local`:
+a repo-owned sidecar beside the pack's library, the one file in that directory
+no pack ships, no pack declares and `init` never replaces. The plan carries one
+create for it, sub-lined with each function moved in, and one rewrite per task
+file that calls any of them, adding a single `source` line for the sidecar right
+after that file's existing source of the helper library. A repo that already has
+the sidecar gets the functions it lacks appended, never duplicated. A name
+nothing defines anywhere was a broken call before the run began, and that one is
+flagged rather than moved — there is no body to carry. It never asks per file,
+never writes before the yes, never touches application code, and never writes a
+language manifest, a lockfile or a CI workflow.
+
+**A pack-owned file whose bytes have diverged is offered, not skipped.** Every
+file a landed pack owns that your repo also has is compared byte for byte once
+the renames are accounted for. Identical needs nothing; different becomes one
+`Offered (replace / keep)` row carrying a three-line summary — what your version
+adds, what it lacks, and whether it references a retired name — and the default
+`init` computed. **Replace** lands the pack's file and re-fills every marked
+position it carries from your confirmed answers, which is what makes a replace
+safe on a file whose positions you had already filled. **Keep** leaves the file
+alone and records the decision under `enforcement.kept_files` in
+`.config/vwf.yaml`, so neither a later reshape nor `/vwf:doctor` raises it
+again. The default is replace where your file references a retired name and keep
+everywhere else, and you may flip any row before answering — flipping re-prints
+the whole plan with the new decisions and asks the same one question, so the
+consent stays single. That key is the only thing `init` writes into
+`.config/vwf.yaml`, and it never creates that file: on a repo `/vwf:setup` has
+not reached yet, the keep still applies and the *record* is a deferral. The
+helper library is the one file this never offers — pass 5 replaces it
+unconditionally, for the timing reason above.
+
+**Tasks you wrote yourself are kept and listed, never moved.** Every task file
+in the library that no landed pack ships is yours; `init` lists each under
+`Repo-owned, kept` and touches none of them. One shape earns a note and nothing
+more: a repo-owned task sitting in the `setup/` or `code/` group whose name the
+task-library contract's mandatory set does not carry is reported with one line
+saying those two groups are the contract's, and that the task's home is your own
+per-project group unless it is a gate every project shares. Moving it is your
+commit, not `init`'s — the contract can say a name is not one of its own, and
+cannot say what you meant by it.
 
 **Your readme is moved, never rewritten.** `README.md` → `readme.md` is a move
 like any other in the plan — content untouched, applied with `git mv` so the
@@ -1002,12 +1045,13 @@ precedes hook wiring by construction, which is also why the shipped
 protected-branch hook ships unchanged and never sees it.
 
 **Every run ends with the same report** — files written, files replaced, files
-moved, tasks renamed, calls rewritten, sections appended, fragments merged, and
-anything deferred with the thing that would unlock it, then a **git** section:
-the landing model, branches created, the commit's short hash, and what was
-pushed. An empty section prints as `none`. Then two next-step lines, always both
-and neither of them run: `/vwf:readme` to fill the readme the stub only opens,
-and `/vwf:setup` to bring the repo into vwf's format.
+kept, files moved, tasks renamed, tasks kept, calls rewritten, sections
+appended, fragments merged, and anything deferred with the thing that would
+unlock it, then a **git** section: the landing model, branches created, the
+commit's short hash, and what was pushed. An empty section prints as `none`.
+Then two next-step lines, always both and neither of them run: `/vwf:readme` to
+fill the readme the stub only opens, and `/vwf:setup` to bring the repo into
+vwf's format.
 
 **When it runs again.** `init` is not a one-time bootstrap — it is what keeps a
 repo's *shape* in step with what the packs ship and with what the repo has since
@@ -1018,13 +1062,22 @@ or a gate reads a config nobody filled. The way to ask for a re-run is
 which makes the commit gate's scope list fillable and may move a task group),
 **after a pack version moves**, **on a fresh clone that reports drift**, and
 **whenever `/vwf:doctor` says so**. Doctor's repo-shape check is what notices
-between runs: the pack versions the adapter's lockfile recorded against what it
-ships now, each registry id against its task group, commit scope and alias, both
-branches, and the repo-name key. Every one of those is `drift` and none is
-blocking — a repo behind its baseline is out of date, not broken — and all of
-them share one remedy, `/vwf:setup reshape`, printed once. A run that finds
-nothing costs one empty plan and says the repo is shaped, which is the answer
-rather than a wasted run.
+between runs, on six subjects: the pack versions the adapter's lockfile recorded
+against what it ships now, each registry id against its task group, commit scope
+and alias, both branches, the repo-name key, the **content** of every pack-owned
+file against the hash the lockfile recorded when it landed, and the two marked
+positions beside the repo-name key — `MERGE_MODEL`, and `MEMBERS` on a product
+whose projects are wired as plain siblings. A repo drifts by standing still and
+also by moving: a pack-owned file you edited in place is no longer the file the
+pack ships, and doctor says which of the two a row is, because re-landing fixes
+one and the other is a file somebody meant to change. A file you chose to keep
+is skipped, since that decision is already recorded. With no adapter lockfile
+the content check reports `not checked — no lockfile` rather than passing or
+crashing: a repo that landed nothing has nothing to have drifted from. Every one
+of these is `drift` and none is blocking — a repo behind its baseline is out of
+date, not broken — and all of them share one remedy, `/vwf:setup reshape`,
+printed once. A run that finds nothing costs one empty plan and says the repo is
+shaped, which is the answer rather than a wasted run.
 
 A second run on a shaped repo produces an **empty plan** and says so, **for the
 same id source**. The one legitimate exception is a run whose ids now come from
@@ -1040,23 +1093,26 @@ it after upgrading vwf to bring the tree back to the current format.
 **`/vwf:setup reshape` is the shape pass alone.** It skips the mode fork
 entirely: `init` runs — surveying, showing its one plan, taking its own consents
 — its report prints verbatim, and setup stops. No validation, no stamp, no
-doctor, no commit; a re-shape never touches `.config/vwf.yaml`, so a user who
-wants both runs `/vwf:setup` again afterwards. It is also the line `/vwf:doctor`
-prints for every repo-shape finding, so most runs of it arrive from a drift row.
+doctor, no commit; a re-shape writes exactly one key into `.config/vwf.yaml` —
+`enforcement.kept_files`, the record of a pack-owned file you chose to keep —
+and nothing else in it, so a user who wants both runs `/vwf:setup` again
+afterwards. It is also the line `/vwf:doctor` prints for every repo-shape
+finding, so most runs of it arrive from a drift row.
 
 **Step 0 begins with a shape check, before the mode fork**, and it asks two
 things. Is the shape *there* — the stack adapter's lockfile records all three
-unconditional slugs — and is it *current*, against the four repo-shape
-predicates `/vwf:doctor` owns (the pack versions the lockfile recorded, the
-registry ids behind the surfaces generated from them, the `develop`/`main` pair,
-and the repo-name environment key). Any slug missing, or any predicate failing,
-and setup says what is absent or behind and offers [`/vwf:init`](#vwfinit),
-which is what lays the shape down and what brings it forward. That seam is why
-`init` stays model-invocable — and it is hidden from the `/` menu, so this offer
-and `reshape` above are the only two ways it is reached. Declining is a recorded
-deferral, not a halt: the repo shape and the vwf format are two different
-things, and a repo can be onboarded into one without the other. Setup itself
-never materializes a bundle any more.
+unconditional slugs — and is it *current*, against the six repo-shape predicates
+`/vwf:doctor` owns (the pack versions the lockfile recorded, the registry ids
+behind the surfaces generated from them, the `develop`/`main` pair, the
+repo-name environment key, the bytes of the pack-owned files that landed, and
+the marked positions beside that key). Any slug missing, or any predicate
+failing, and setup says what is absent or behind and offers
+[`/vwf:init`](#vwfinit), which is what lays the shape down and what brings it
+forward. That seam is why `init` stays model-invocable — and it is hidden from
+the `/` menu, so this offer and `reshape` above are the only two ways it is
+reached. Declining is a recorded deferral, not a halt: the repo shape and the
+vwf format are two different things, and a repo can be onboarded into one
+without the other. Setup itself never materializes a bundle any more.
 
 **Step 0 resolves one of three entry paths**, once, from what is on disk, and
 nothing after it re-derives the mode:

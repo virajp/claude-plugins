@@ -81,13 +81,17 @@ into the existing `CLAUDE.md` (merged, not overwritten).
 The repo's own tooling is **not** in that plan. Before the mode fork, setup
 checks whether the repo is *shaped* — whether the toolchain config, the repo
 gates and the hygiene files are recorded as materialized, and whether what is
-there is still current against the four baseline predicates `/vwf:doctor` owns —
+there is still current against the six baseline predicates `/vwf:doctor` owns —
 and if anything is missing or behind it offers
 [`/vwf:init`](../../plugins/vwf.md#vwfinit), which is what lays them down and
 what brings them forward. Bookable has a `Makefile` and a hand-rolled CI script
 and no `.config/` layout, so the offer comes up; accepting runs init's
 existing-repo survey (which shows its own plan, and its own single consent)
-before setup carries on. Declining is recorded as a deferral, with
+before setup carries on. That survey adopts rather than flattens: a task
+Bookable wrote for itself is kept and listed, a helper function the pack's
+library has no name for moves into a repo-owned `_scripts/local` sidecar rather
+than breaking, and a file a pack owns whose bytes have diverged is offered to
+you as replace or keep. Declining is recorded as a deferral, with
 `/vwf:setup reshape` as the unlock, and the onboard continues — the repo shape
 and the vwf format are two different things.
 

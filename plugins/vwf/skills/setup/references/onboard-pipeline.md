@@ -51,7 +51,7 @@ gates, the hygiene files — is `/vwf:init`'s, not setup's. Step 0 only
 **checks** for it, reading the stack adapter's lockfile for the three
 unconditional slugs `mise`, `repo-gates` and `repo-hygiene`, and offers init
 when any is missing — and makes the same offer when all three are recorded
-but the repo has fallen **behind its baseline**, on doctor's four predicates.
+but the repo has fallen **behind its baseline**, on doctor's six predicates.
 Harness provisioning is the other half of the same story: it can need a stack
 to act against, and setup runs before `/vwf:architecture` has chosen one. Both
 therefore **defer** — neither halts the run, and neither continues silently.
