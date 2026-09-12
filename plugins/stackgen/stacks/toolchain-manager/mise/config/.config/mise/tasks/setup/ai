@@ -3,7 +3,8 @@
 #MISE description="Install and reconcile the AI tooling this repo expects"
 #MISE hide=true
 
-#USAGE flag "--project" help="Install this repo's plugins at project scope instead of user scope"
+#USAGE flag "--user" help="Install at user scope instead of this repo's project scope (rare)"
+#USAGE flag "--inventory" help="Print the marketplaces and plugins registered on this machine, one per line, and exit"
 
 set -euo pipefail
 # shellcheck source=/dev/null
@@ -18,6 +19,19 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 #
 # Claude Code itself is installed per MACHINE, not per repo — this task verifies
 # it is there and reconciles the plugin side, which is per repo.
+#
+# **Claude's own commands and nothing else.** No package runner, no wrapper CLI:
+# a wrapper hardcodes where the marketplace comes from, and a machine that
+# registered the same marketplace from somewhere else — a local checkout being
+# worked on, a fork — then gets a registration attempt that fails outright. The
+# rule here is check first, update what is registered, add only what is not, so
+# one task serves both kinds of machine without knowing which it is on.
+#
+# **Project scope by default.** The plugin set is the REPO's, so it belongs in
+# the repo's own plugin config where every collaborator gets the same one. A
+# user-scope plugin is the person's, follows them between repos, and is none of
+# this task's business — nothing here installs, updates or removes one. `--user`
+# exists for the rare repo that wants the other scope and flips every `--scope`.
 
 if ! command -v claude >/dev/null 2>&1; then
   print_warn "claude is not on PATH — skipping AI setup."
@@ -25,75 +39,169 @@ if ! command -v claude >/dev/null 2>&1; then
   exit 0
 fi
 
-# The baseline every repo gets: the workflow plugin, which pulls its own
-# dependencies from the same marketplace, installed through the toolkit's
-# installer CLI so the marketplace registration and the install are one
-# sequenced step rather than two commands that can disagree.
-#
-# Scope: user by default, because the workflow is the person's and follows them
-# between repos. `--project` puts it in this repo's own plugin config instead,
-# for a repo that wants every collaborator on the same set.
-if [[ "${usage_project:-false}" == "true" ]]; then
-  INSTALLER_ARGS=(--project vwf)
-else
-  INSTALLER_ARGS=(--all)
-fi
+# Project scope resolves against the working directory, so every `claude` call
+# below has to be made from the repo root rather than from wherever the caller
+# happened to be standing.
+cd "${MISE_PROJECT_ROOT}"
 
-print_subheader "Installing the workflow plugins ..."
-if command -v pnpx >/dev/null 2>&1; then
-  pnpx @virajp.dev/claude-plugins "${INSTALLER_ARGS[@]}"
-else
-  print_warn "pnpx is not on PATH — falling back to claude's own commands."
-  claude plugin marketplace add virajp/claude-plugins >/dev/null 2>&1 || true
-  claude plugin marketplace update virajp-plugins >/dev/null 2>&1 || true
-  if [[ "${usage_project:-false}" == "true" ]]; then
-    claude plugin install --scope project vwf@virajp-plugins >/dev/null
-  else
-    claude plugin install --scope user vwf@virajp-plugins >/dev/null
+MARKETPLACE="virajp-plugins"
+MARKETPLACE_SOURCE="virajp/claude-plugins"
+
+# Every registered marketplace as `<source-ref>|<name>`, one per line. The
+# source-ref is the field matching the kind: `repo` for a forge source, `path`
+# for a directory one. Rows are exactly what the two marked positions below
+# take, so `--inventory` output can be pasted back in unchanged.
+registered_marketplaces() {
+  claude plugin marketplace list --json |
+    jq -r '.[] | "\(.repo // .path // .source)|\(.name)"'
+}
+
+# Every installed plugin as `<name>@<marketplace>|<scope>`, one per line, across
+# every scope. `.id` is already the `<name>@<marketplace>` form the install and
+# update commands take.
+installed_plugins() {
+  claude plugin list --json | jq -r '.[] | "\(.id)|\(.scope)"'
+}
+
+# Whether a marketplace is registered under this NAME, whatever source it was
+# registered from. The name is what `marketplace update` takes and what a
+# plugin reference resolves through; the source is how this machine chose to
+# reach it and is deliberately not compared. Adding a name already registered
+# from a different source is a hard failure ("its network source differs"), so
+# this check is what keeps a machine pointed at a local checkout working.
+marketplace_registered() { # <name>
+  local names
+  names="$(registered_marketplaces | cut -d'|' -f2)"
+  grep -Fqx "$1" <<<"${names}"
+}
+
+plugin_installed() { # <name@marketplace> <scope>
+  local rows
+  rows="$(installed_plugins)"
+  grep -Fqx "$1|$2" <<<"${rows}"
+}
+
+# The machine's registrations, for an orchestrator shaping a repo to read. Rows
+# only, on stdout, so the caller can consume it without stripping anything —
+# every other printer in this file writes headers and colour around its output,
+# which is why none of them is used here.
+if [[ "${usage_inventory:-false}" == "true" ]]; then
+  marketplace_rows="$(registered_marketplaces)"
+  if [ -n "${marketplace_rows}" ]; then
+    grep -v "|${MARKETPLACE}$" <<<"${marketplace_rows}" || true
   fi
+  installed_plugins
+  exit 0
 fi
 
-# Any FURTHER marketplace this repo installs plugins from, one row per
-# marketplace as `<source>|<marketplace-name>`. The name is what that
-# marketplace's own manifest declares and what `marketplace update` takes; it is
-# not derivable from the source. Registering one already registered is a no-op,
-# so this stays idempotent. Empty for most repos.
+# A MARKED POSITION. Any FURTHER marketplace this repo installs plugins from,
+# one row per marketplace as `<source>|<marketplace-name>`. The name is what
+# that marketplace's own manifest declares and what `marketplace update` takes;
+# it is not derivable from the source. Empty for most repos.
+#
+# The rows come from the orchestrator shaping this repo: it runs
+# `mise run setup:ai --inventory`, offers what this machine already has, and
+# writes the confirmed rows here, one per line. Leave this comment in place —
+# it is how a later re-run knows to re-derive the list rather than guess at it.
+#
+#   EXTRA_MARKETPLACES=("acme/claude-plugins|acme-plugins")
 EXTRA_MARKETPLACES=()
 
-# Plugins from those marketplaces, as `<name>@<marketplace>`, installed at the
-# scope chosen above.
+# A MARKED POSITION. Plugins from those marketplaces, as `<name>@<marketplace>`,
+# installed at the scope chosen above. Filled from the same confirmed answer as
+# the list above, seeded by `--inventory`; leave the comment in place.
+#
+#   EXTRA_PLUGINS=("widget@acme-plugins")
 EXTRA_PLUGINS=()
 
-if [ ${#EXTRA_MARKETPLACES[@]} -gt 0 ]; then
-  print_subheader "Refreshing additional marketplaces ..."
-  for row in "${EXTRA_MARKETPLACES[@]}"; do
-    source_ref="${row%%|*}"
-    name="${row##*|}"
-    claude plugin marketplace add "${source_ref}" >/dev/null 2>&1 || true
-    claude plugin marketplace update "${name}" >/dev/null 2>&1 || true
-    print_yellow "- ${source_ref} (${name})"
-  done
-fi
+SCOPE="project"
+[[ "${usage_user:-false}" == "true" ]] && SCOPE="user"
 
-if [ ${#EXTRA_PLUGINS[@]} -gt 0 ]; then
-  SCOPE="user"
-  [[ "${usage_project:-false}" == "true" ]] && SCOPE="project"
-  print_subheader "Installing additional plugins ..."
-  for plugin in "${EXTRA_PLUGINS[@]}"; do
-    print_wait "- ${plugin} ... "
+# The marketplaces, before anything is installed from them. Registered under
+# this name already → refresh it from whatever source it was registered from;
+# not registered → add it. A failure here is fatal on purpose: every plugin step
+# after it resolves through one of these names, and "unknown marketplace"
+# repeated once per plugin says less than the one failure that caused it.
+#
+# The official marketplace is never named: it ships with Claude Code and is kept
+# current by the installer, so adding it is at best a no-op.
+print_subheader "Reconciling marketplaces ..."
+for row in "${MARKETPLACE_SOURCE}|${MARKETPLACE}" ${EXTRA_MARKETPLACES[@]+"${EXTRA_MARKETPLACES[@]}"}; do
+  source_ref="${row%%|*}"
+  name="${row##*|}"
+  if marketplace_registered "${name}"; then
+    claude plugin marketplace update "${name}" >/dev/null
+    print_yellow "- ${name}: updated"
+  else
+    claude plugin marketplace add "${source_ref}" >/dev/null
+    print_yellow "- ${name}: added from ${source_ref}"
+  fi
+done
+
+# The workflow plugin plus whatever the marked position above names. Its own
+# dependencies arrive with it from the same marketplace, so nothing they bring
+# is listed here — listing a dependency is how a repo ends up pinning one that
+# has since been dropped.
+REQUIRED=("vwf@${MARKETPLACE}")
+for plugin in ${EXTRA_PLUGINS[@]+"${EXTRA_PLUGINS[@]}"}; do
+  # `--inventory` reports every installed plugin, including the baseline, so a
+  # confirmed answer can repeat what is already required.
+  case " ${REQUIRED[*]} " in
+    *" ${plugin} "*) continue ;;
+  esac
+  REQUIRED+=("${plugin}")
+done
+
+# Install what is missing AT THIS SCOPE, update what is already there. A copy at
+# the other scope is not a substitute: the point of project scope is that the
+# repo's own settings declare the plugin, so a collaborator who never installed
+# it gets it from the checkout.
+print_subheader "Reconciling plugins at ${SCOPE} scope ..."
+for plugin in "${REQUIRED[@]}"; do
+  print_wait "- ${plugin} ... "
+  if plugin_installed "${plugin}" "${SCOPE}"; then
+    claude plugin update --scope "${SCOPE}" "${plugin}" >/dev/null
+  else
     claude plugin install --scope "${SCOPE}" "${plugin}" >/dev/null
-    print_ok
-  done
-fi
-
-print_subheader "Updating installed plugins ..."
-claude plugin update --all >/dev/null 2>&1 || true
+  fi
+  print_ok
+done
 
 # Drops plugins nothing references any more — including one that used to arrive
-# as a dependency and no longer does, which an update alone leaves enabled.
+# as a dependency and no longer does, which an update alone leaves enabled. This
+# scope only: pruning another scope would reach plugins this task never touched.
 print_subheader "Pruning plugins nothing references ..."
-for scope in user project local; do
-  claude plugin autoremove --scope "${scope}" --yes >/dev/null 2>&1 || true
-done
+claude plugin autoremove --scope "${SCOPE}" --yes >/dev/null
+
+# The code-intelligence tool the workflow plugin treats as mandatory — its own
+# entry gate reports a missing CLI or a missing graph as blocking, so a repo
+# with the plugin and no wiring has a plugin that refuses to run. Both commands
+# are idempotent, so this self-heals a wiring that has since been broken.
+if command -v graphify >/dev/null 2>&1; then
+  print_subheader "Wiring graphify ..."
+  graphify install --platform claude >/dev/null
+  print_yellow "- wired for claude"
+  # The second command attaches a post-commit hook, so it only means anything
+  # inside a work tree.
+  if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    graphify hook install >/dev/null
+    print_yellow "- post-commit hook installed"
+  else
+    print_yellow "- not inside a git repository — skipped the post-commit hook"
+  fi
+else
+  print_warn "graphify is not on PATH — skipping its wiring."
+  print_yellow "The workflow plugin reports this as blocking. Install it and re-run:"
+  print_yellow "  mise use -g pipx:graphifyy@latest"
+fi
+
+# The statusline is a per-MACHINE package like the CLI itself, not a plugin and
+# not this repo's to install. Hinted once when it is absent and never run: what
+# a person's terminal shows is their choice, and a task that installs it is a
+# task that reaches outside the repo it was run in.
+if ! command -v claude-status >/dev/null 2>&1; then
+  print_yellow "Optional: the statusline is a separate package —"
+  print_yellow "  brew install virajp/tap/claude-status"
+fi
 
 print_success "AI tooling reconciled."
