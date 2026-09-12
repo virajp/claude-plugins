@@ -27,9 +27,13 @@ disable-model-invocation: false
 - **Initialize** every new worktree with its mise bootstrap task (Step 2d), and
   **end** every worktree with full coverage — land the branch (plus any
   submodule work and pointer updates), then remove it (Step 4)
-- Use `merge` (not PRs) to land changes:
-  `mise x -- mise run code:merge:develop <branch>` or
-  `mise x -- mise run code:merge:main`
+- **How a branch lands is the repo's choice, not this skill's.** The repo's
+  `MERGE_MODEL` decides: `direct` (the default) merges the branch to the
+  destination and pushes, as it always has; `pr` pushes the branch and opens a
+  pull request instead, merging nothing locally. The two task names are the same
+  in both modes — `mise x -- mise run code:merge:develop <branch>` and
+  `mise x -- mise run code:merge:main`. Step 4 reads the mode before it offers
+  its options
 - **The merge tasks refuse a dirty tree** — untracked files, uncommitted
   changes, or unpushed commits on the branch each stop the merge before it
   touches git. That is not a nuisance: whatever is uncommitted at merge time is
@@ -70,7 +74,7 @@ needs neither.
 | Reference                                     | When to read                                                                                               |
 | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | [Worktree setup](references/worktree-setup.md) | **Step 2** — only when Step 1 concluded a worktree must be created (native tool, git fallback, submodules, mise init) |
-| [Landing a branch](references/landing.md)      | **Step 4** — only when the chosen post-commit action is one of the two merge options (submodule order, push, teardown, stale sweep) |
+| [Landing a branch](references/landing.md)      | **Step 4** — only when the chosen post-commit action is one of the two landing options (submodule order, push, the `pr` path, teardown, stale sweep) |
 
 ---
 
@@ -184,8 +188,20 @@ Common types: `feat`, `fix`, `refactor`, `wip`, `blueprint`, `test`, `ops`,
 it without asking: take that action and skip the prompt below. This is the only
 way the prompt is bypassed.
 
+**Read the landing mode before you ask.** What the merge tasks do is the repo's
+setting, so resolve it first — an absent or empty value means `direct`:
+
+```bash
+MERGE_MODEL=$(mise env -s bash 2>/dev/null \
+  | sed -n 's/^export MERGE_MODEL=//p' | tr -d '"')
+MERGE_MODEL=${MERGE_MODEL:-direct}
+```
+
 Otherwise, after a successful commit, ask the user to choose what to do next via
-`AskUserQuestion` with these three options:
+`AskUserQuestion` with these three options — the first is the same in both
+modes, the other two are worded by the mode you just read:
+
+**Under `direct`:**
 
 - **Commit only** — stop here; leave the worktree as-is for continued work.
 - **Merge, push & clean up** — merge to the default branch in the main worktree,
@@ -194,11 +210,29 @@ Otherwise, after a successful commit, ask the user to choose what to do next via
   worktree, push changes, but leave the additional worktree open for continued
   work.
 
-**On a merge conflict (either land sequence).** If a merge — the outer repo's or
-a submodule merge task — **conflicts**, do **not** resolve it autonomously.
-Abort the merge cleanly (`git merge --abort`, or the task's equivalent), leave
-the worktree **intact**, and report the conflicting files to the caller. Callers
-treat this as a **hard halt**.
+**Under `pr`:**
+
+- **Commit only** — stop here; leave the worktree as-is for continued work.
+- **Push & open PR & clean up** — push the branch and open a pull request, then
+  archive/delete the additional worktree.
+- **Push & open PR & keep worktree** — push the branch and open a pull request,
+  leaving the additional worktree open for continued work.
+
+Under `pr` the task pushes the branch, opens the pull request and **stops** —
+nothing is merged, and the change lands only when someone merges that pull
+request. So say plainly which you are doing: **clean up** removes the worktree
+while the pull request is still open, and **keep worktree** leaves it in place
+for review fixes, which is the safer default to suggest when the user has no
+preference.
+
+**On a merge conflict (either land sequence).** This applies under `direct`
+only, where a merge actually happens locally. If a merge — the outer repo's or a
+submodule merge task — **conflicts**, do **not** resolve it autonomously. Abort
+the merge cleanly (`git merge --abort`, or the task's equivalent), leave the
+worktree **intact**, and report the conflicting files to the caller. Callers
+treat this as a **hard halt**. Under `pr` nothing merges locally, so the outer
+repo cannot conflict here; a submodule that lands under its own `direct` mode
+still can, and the same hard halt applies to it.
 
 Execute the chosen action:
 
@@ -207,12 +241,13 @@ Execute the chosen action:
 Nothing further. Inform the user the commit is done and the worktree remains
 available.
 
-### Merge, push & clean up / Merge, push & keep worktree
+### The two landing options
 
 Read [Landing a branch](references/landing.md) and follow the sequence for the
-chosen option — submodules first, then the outer repo's pointers and merge, then
-push; **clean up** additionally removes this worktree and sweeps stale ones,
-**keep worktree** leaves it in place.
+chosen option — submodules first, then the outer repo's pointers and its merge
+task; under `direct` that task merges and pushes, under `pr` it pushes and opens
+the pull request. **Clean up** additionally removes this worktree and sweeps
+stale ones, **keep worktree** leaves it in place.
 
 ---
 
