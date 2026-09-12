@@ -57,13 +57,15 @@ Quoted from index.md:
 > (untouched; recorded per ruling 4). The default is replace when the repo's
 > file references any left-hand name of the legacy table; keep otherwise.
 
-> **4. Recording a kept file.** A kept file is recorded under `enforcement:` in
-> `.config/vwf.yaml` using the **existing** decline shape `assets/vwf-config.md`
-> defines for a settled decline, so doctor does not re-report it and a later
-> reshape does not re-offer it. If no existing shape fits, U1 and U2 return
-> `UNRESOLVED: a kept-file record needs a new
-> enforcement key and a config_format bump`
-> rather than adding one.
+> **4. Recording a kept file.** DECIDED 2026-09-12 by the user, after U1 and U2
+> both returned the fallback: the record is a **new key**,
+> `enforcement.kept_files:` — a map of `<path>: { reason: <one line> }`, the
+> path as the lockfile names it — and `config_format` bumps 16 → 18 (U6 owns the
+> schema, the lineage row and the migrate sentence). `init` writes the key,
+> consented in its single plan, and never creates `.config/vwf.yaml` — on a repo
+> `/vwf:setup` has not reached, the keep is applied and only the record is
+> Deferred with unlock "run `/vwf:setup`, then `/vwf:setup reshape`". `init` and
+> `doctor` read it; an absent block reads as empty.
 
 And the two reversals from index.md's Goal, verbatim, to quote in the text where
 each rule changes.
@@ -94,10 +96,13 @@ each rule changes.
    the sidecar rows, the repo-only list, the diverged rows with their
    replace/keep column; the consent step lets the user flip any diverged row's
    default; the apply order lands replaced files before the marked- position
-   fills; the report shows the three new sections. Ruling 4: the kept record —
-   read `assets/vwf-config.md`'s `enforcement:` block and use the decline shape
-   that fits; if none does, return UNRESOLVED and leave the keep outcome
-   described as "recorded under `enforcement:` (shape: see UNRESOLVED)".
+   fills; the report shows the three new sections. Ruling 4 (resume): the kept
+   record is `enforcement.kept_files.<path>: { reason }` in `.config/vwf.yaml` —
+   name that key wherever round 2 left "recorded as kept under `enforcement:`",
+   drop the "key is not settled here" paragraph and the Deferred record line,
+   and write the key in the apply order after the keep itself. Never create the
+   config file; the Deferred-with-unlock case stays only for a repo `/vwf:setup`
+   has not reached.
 5. **`SKILL.md`** — where the brownfield behaviour is summarised, three
    sentences: sidecar, repo-only kept, diverged offered. Update the "what init
    never does" list if it says "never overwrites a diverged pack file".
