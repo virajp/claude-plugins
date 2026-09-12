@@ -32,9 +32,9 @@ merges locally and pushes, and `pr` pushes the branch and opens a pull request
 instead, merging nothing.
 
 The forge's own default branch is set **by hand, once**, and no task re-runs it:
-`gh repo edit --default-branch main`, or
-`glab repo update --default-branch main` on GitLab. It stays `main` because that
-is the branch consumers resolve the marketplace against.
+`gh repo edit --default-branch main`, or `glab repo update --defaultBranch main`
+on GitLab. It stays `main` because that is the branch consumers resolve the
+marketplace against.
 
 ## Commits
 
