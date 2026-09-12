@@ -3,7 +3,7 @@ summary: The repo's toolchain manager — the .config/ five-file split selected
   by MISE_ENV, and the file-based task library everything else invokes, grouped
   into `setup:*` for bootstrap, `code:*` for gates and git, and
   `p:<project-id>:*` for a project's own commands.
-version: 1.1.0
+version: 1.2.0
 type: toolchain-manager
 kind: toolchain-manager
 axis: repo
