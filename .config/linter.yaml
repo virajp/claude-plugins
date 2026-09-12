@@ -17,6 +17,11 @@ ignores:
   # `.astro` is dprint's: the markup plugin formats it and the linter has no
   # Astro parser.
   - "site/**/*.astro"
+  # Copied verbatim into dist/ — SVG, PNG, ICO, the web manifest, robots, the
+  # social-preview render source, and `_headers`, which Cloudflare Workers
+  # Static Assets parses rather than serves. None of it is the linter's, and
+  # its HTML rewrite fights dprint's.
+  - "site/public/**"
 
 overrides:
   markdown:

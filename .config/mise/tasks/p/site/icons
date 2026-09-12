@@ -12,7 +12,7 @@ trap 'rm -rf "$TMP"' EXIT
 # The touch icon must be full-bleed: iOS masks the corners itself and paints
 # whatever is transparent black, so the rounded tile is squared off first.
 # BSD sed, so no -i.
-sed 's/rx="14"/rx="0"/' "$SRC" > "$TMP/square.svg"
+sed 's/rx="14"/rx="0"/' "$SRC" >"$TMP/square.svg"
 
 # sharp-cli and png-to-ico are one-off tools, never repo dependencies, and are
 # run from $TMP so nothing resolves against the workspace. --density renders the
@@ -49,14 +49,14 @@ render "$SRC" 48 ico-48
 # array and writes exactly those layers, so the package is installed into $TMP —
 # never into this repo — and driven by a one-line script.
 (
-  cd "$TMP" && pnpm init > /dev/null &&
-    pnpm add --silent png-to-ico@3 > /dev/null
+  cd "$TMP" && pnpm init >/dev/null &&
+    pnpm add --silent png-to-ico@3 >/dev/null
 )
 node --input-type=module -e "
   import pngToIco from '$TMP/node_modules/png-to-ico/index.js';
   const sizes = [16, 32, 48].map(s => '$TMP/out/ico-' + s + '.png');
   process.stdout.write(await pngToIco(sizes));
-" > "$TMP/favicon.ico"
+" >"$TMP/favicon.ico"
 
 mv "$TMP/out/icon-512.png" "$TMP/out/icon-192.png" \
   "$TMP/out/apple-touch-icon.png" "$TMP/favicon.ico" "$OUT/"

@@ -12,7 +12,7 @@ mise reshim
 
 # Run mise doctor
 print_header "Running mise doctor ..."
-mise doctor --quiet --silent > /dev/null
+mise doctor --quiet --silent >/dev/null
 
 # Install & upgrade mise
 print_header "Setting up MISE ..."

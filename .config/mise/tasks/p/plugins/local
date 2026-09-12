@@ -103,7 +103,7 @@ for dir in plugins/*/; do
 
   n_staged="$(build_of "$(manifest_version "${staged}")" "${base}")"
   n_installed="$(build_of "$(installed_version "${name}")" "${base}")"
-  next="${base}+$(( (n_staged > n_installed ? n_staged : n_installed) + 1 ))"
+  next="${base}+$(((n_staged > n_installed ? n_staged : n_installed) + 1))"
 
   rm -rf "${staged}"
   cp -R "${tree}" "${staged}"

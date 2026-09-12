@@ -19,11 +19,20 @@ cd "$MISE_PROJECT_ROOT"
 # what the materializer copies into a repo's .claude/hooks/.
 HOOK="plugins/stackgen/stacks/package-manager/pnpm/hooks/npm-normalize.sh"
 
-command -v jq >/dev/null 2>&1 || { print_error "jq is required to run the hook tests"; exit 1; }
-[[ -f "$HOOK" ]] || { print_error "Hook not found: $HOOK"; exit 1; }
+command -v jq >/dev/null 2>&1 || {
+  print_error "jq is required to run the hook tests"
+  exit 1
+}
+[[ -f "$HOOK" ]] || {
+  print_error "Hook not found: $HOOK"
+  exit 1
+}
 
 # Each case is "input command :: expected command". When expected == input the
 # hook must no-op (emit {}); otherwise it must rewrite to exactly expected.
+# The `$(...)` in a case is the literal text the hook must rewrite, not
+# something this script expands.
+# shellcheck disable=SC2016
 pnpm_cases=(
   'npx create-vite app :: pnpm dlx create-vite app'
   'npx -y cowsay hi :: pnpm dlx -y cowsay hi'
@@ -38,6 +47,7 @@ pnpm_cases=(
   'echo deploy-npm-pkg :: echo deploy-npm-pkg'
 )
 
+# shellcheck disable=SC2016
 bun_cases=(
   'npx create-vite app :: bunx create-vite app'
   'npx -y cowsay hi :: bunx -y cowsay hi'
@@ -66,7 +76,7 @@ run_table() {
   shift 2
   local sandbox input expected payload result updated actual
   sandbox=$(mktemp -d)
-  [[ -n "$marker" ]] && : > "$sandbox/$marker"
+  [[ -n "$marker" ]] && : >"$sandbox/$marker"
 
   print_yellow "  -- $label"
   for case in "$@"; do
@@ -83,8 +93,8 @@ run_table() {
       print_yellow "  ok   $input"
     else
       print_error "  FAIL [$label] $input"
-      print_warn  "       expected: $expected"
-      print_warn  "       actual:   $actual"
+      print_warn "       expected: $expected"
+      print_warn "       actual:   $actual"
       fail=1
     fi
   done

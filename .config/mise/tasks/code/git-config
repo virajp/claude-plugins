@@ -1,41 +1,39 @@
 #!/usr/bin/env bash
-#MISE description="Validate git-config"
-#MISE dir="."
 
-#USAGE flag "--fix" help="Remove forbidden configs from local git-config"
+#MISE description="Validate local git-config has no forbidden keys"
 
-set -e
+#USAGE flag "--fix" help="Remove forbidden keys from the local git-config"
+
+set -euo pipefail
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 print_wait "Validating git-config ... "
 
-FIXIT=${usage_fix:-false}
+FIXIT="${usage_fix:-false}"
 
-# Forbidden local git config settings
-FORBIDDEN="user\.name|user\.email|user\.signingkey|commit\.gpgsign|tag\.gpgsign|gpg\.format|gpg\.program|gpg\.ssh\.program";
+# Identity & signing keys must live in GLOBAL git-config, never per-repo local
+FORBIDDEN="user\.name|user\.email|user\.signingkey|commit\.gpgsign|tag\.gpgsign|gpg\.format|gpg\.program|gpg\.ssh\.program"
+LOCAL_CONFIG=$(git config --local --list | grep -E "^($FORBIDDEN)=" || true)
 
-# Forbidden configs that exists in git local config
-LOCAL_CONFIG=$(git config --local --list | grep -E "^($FORBIDDEN)=" || true);
-
-if [ ! -z "$LOCAL_CONFIG" ]; then
+if [ -n "$LOCAL_CONFIG" ]; then
   if [ "$FIXIT" = "true" ]; then
-    print_yellow "Fixing";
+    print_newline
     while IFS= read -r line; do
       key=${line%=*}
       print_wait "- removing $key ... "
-      git config unset --local $key
-      print_success "OK"
-    done <<< "$LOCAL_CONFIG"
+      git config --local --unset "$key"
+      print_ok
+    done <<<"$LOCAL_CONFIG"
     exit 0
   else
-    print_error "ERROR";
+    print_error "ERROR"
     while IFS= read -r line; do
-      print_yellow "- $line"
-    done <<< "$LOCAL_CONFIG"
-    # print_error "Please use \`mise run code:git-config --fix\` to remove them";
-    print_yellow "Please use \`mise run ${MISE_TASK_NAME} --fix\` to remove them";
-    exit 1;
+      print_warn "- $line"
+    done <<<"$LOCAL_CONFIG"
+    print_error "Please run \`mise run ${MISE_TASK_NAME:-code:git-config} --fix\` to remove them"
+    exit 1
   fi
 fi
 
-print_success "OK"
+print_ok

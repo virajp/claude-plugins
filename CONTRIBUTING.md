@@ -26,7 +26,15 @@ Three lines, and they do not vary with which branch the forge calls default:
 
 `mise run code:merge:develop` and `mise run code:merge:main` are the two moves.
 They run the gates over the whole tree before they touch anything, so a merge
-that would break the branch fails before it starts rather than after.
+that would break the branch fails before it starts rather than after. What they
+then do is `MERGE_MODEL` in `.config/mise.toml`: `direct` — this repo's value —
+merges locally and pushes, and `pr` pushes the branch and opens a pull request
+instead, merging nothing.
+
+The forge's own default branch is set **by hand, once**, and no task re-runs it:
+`gh repo edit --default-branch main`, or
+`glab repo update --default-branch main` on GitLab. It stays `main` because that
+is the branch consumers resolve the marketplace against.
 
 ## Commits
 
@@ -47,9 +55,11 @@ mise run code:sec         # secret and vulnerability scanning
 mise run code:precommit   # every hook, over the whole tree
 ```
 
-`code:precommit` is the one that matches what a merge will do. A hook that only
-runs on demand is marked as such in `.config/pre-commit-config.yaml`, and the
-comment beside it says why.
+The commit hooks call those same three tasks rather than the tools inside them,
+so a tool is configured in exactly one place: change `code:lint` and the hook,
+the merge gate and CI all follow. `code:precommit` is the one that matches what
+a merge will do. A hook that only runs on demand is marked as such in
+`.config/pre-commit-config.yaml`, and the comment beside it says why.
 
 ## Security
 
