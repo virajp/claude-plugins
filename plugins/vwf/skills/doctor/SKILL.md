@@ -140,7 +140,7 @@ optional, and no reference restates a rule that lives above.
 
 | Sections                                                   | Reference                                                 | Covers                                                                                            |
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, an unknown language, framework/dependency drift per manifest, the six stack axes, a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, the recommended `rtk`, and the repo shape against its baseline — the adapter lockfile's pack versions, the registry ids behind the task groups, the commit scopes and the aliases, the two branches, and the repo-name environment key. **Blocking findings live here** |
+| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, an unknown language, framework/dependency drift per manifest, the six stack axes, a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, the recommended `rtk`, and the repo shape against its baseline — the adapter lockfile's pack versions, the registry ids behind the task groups, the commit scopes and the aliases, the two branches, the repo-name environment key, every pack-owned file's content against the hash the lockfile recorded, and the two marked positions beside it. **Blocking findings live here** |
 | **6–7** — harness & health, memory config                  | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `mempalace.yaml` placement, wing/room contract and secret excludes, and the markdown mirror. **Blocking findings live here** |
 | **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, a graph per locally-present checkout, the refresh hook, staleness, the `.graphifyignore`. **Blocking findings live here** |
 
@@ -172,8 +172,10 @@ missing `mempalace.yaml` or one carrying no secret excludes; callers must halt),
 **drift** (config and repo disagree — **including the whole repo-shape check
 against the baseline `/vwf:init` lays down** (§5): a pack version behind, a
 registry id with no task group, commit scope or alias, a missing `develop` or
-`main`, an unfilled repo-name key. A repo behind its baseline still works, so
-none of those is ever blocking), **missing** (something declared has no
+`main`, an unfilled repo-name key, a pack-owned file the repo edited away from
+the hash the lockfile recorded, an absent or invalid `MERGE_MODEL`, an absent
+or empty `MEMBERS` under siblings linkage. A repo behind its baseline still
+works, so none of those is ever blocking), **missing** (something declared has no
 install — including a **`B`**-kind capability a project declares that none of
 its `backing_template` pins provides, which is never blocking; §5),
 **unavailable** (nothing shipped here to install), **unknown**

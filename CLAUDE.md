@@ -250,15 +250,20 @@ plugin task's own inventory mode and written into that task's two marked
 positions), and closes with a consent-gated git pass (the first commit, the
 `develop`/`main` pair, and the landing model it writes to `MERGE_MODEL` — it
 never touches the forge's own settings, which a maintainer sets once by hand per
-the hygiene pack's `CONTRIBUTING.md`); `setup` then sets up **vwf** in it, and
-offers `init` when the shape is **missing or drifted**, on the four baseline
-predicates `/vwf:doctor` owns. **Everything up to `blueprint` is done in full
-before planning** — `plan` hard-halts on a partial coverage stamp. The ad-hoc
-pair `change-plan` → `change-execute` sits **beside** that line rather than in
-it: it plans and runs work with no blueprint slice behind it — tooling, CI,
-docs, a refactor, a tree the blueprint does not describe — reads neither the
-blueprint nor the registry, and gates on the commands its own plan folder names.
-The ordering gates, the skill and agent tables, how to add a skill and pick its
+the hygiene pack's `CONTRIBUTING.md`). On an existing repo it **adopts rather
+than flattens**: an unmapped helper function moves to a repo-owned
+`_scripts/local` sidecar, a task no pack ships is kept and listed, and a
+pack-owned file whose bytes diverged is offered as replace-or-keep — a keep
+recorded under `enforcement.kept_files`, the one key `init` writes into
+`.config/vwf.yaml`. `setup` then sets up **vwf** in it, and offers `init` when
+the shape is **missing or drifted**, on the six baseline predicates
+`/vwf:doctor` owns. **Everything up to `blueprint` is done in full before
+planning** — `plan` hard-halts on a partial coverage stamp. The ad-hoc pair
+`change-plan` → `change-execute` sits **beside** that line rather than in it: it
+plans and runs work with no blueprint slice behind it — tooling, CI, docs, a
+refactor, a tree the blueprint does not describe — reads neither the blueprint
+nor the registry, and gates on the commands its own plan folder names. The
+ordering gates, the skill and agent tables, how to add a skill and pick its
 invocation mode, and the dependency reasoning are the [`vwf-plugin`][vwf] skill.
 
 ## The installer CLI

@@ -34,23 +34,27 @@ Quoted from index.md:
 > whose config reads `topology: multi-repo` with `linkage: siblings` → warning.
 > Each names `/vwf:setup reshape` as the remedy, per the one-remedy rule.
 
-> **4.** … If no existing shape fits, U1 and U2 return
-> `UNRESOLVED: a
-> kept-file record needs a new enforcement key and a config_format bump`
-> rather than adding one.
+> **4. Recording a kept file.** DECIDED 2026-09-12 by the user, after U1 and U2
+> both returned the fallback: the record is a **new key**,
+> `enforcement.kept_files:` — a map of `<path>: { reason: <one line> }`, the
+> path as the lockfile names it — and `config_format` bumps 16 → 18 (U6 owns the
+> schema, the lineage row and the migrate sentence). `init` writes the key,
+> consented in its single plan, and never creates `.config/vwf.yaml` — on a repo
+> `/vwf:setup` has not reached, the keep is applied and only the record is
+> Deferred with unlock "run `/vwf:setup`, then `/vwf:setup reshape`". `init` and
+> `doctor` read it; an absent block reads as empty.
 
 ## Edits
 
 1. **`stack-checks.md`** — after predicate (d) (`:290-294`), add **(e) content
    drift** per ruling 5: the set of paths (every file the locked packs'
    `config/` payloads ship, as the lockfile names the packs), the comparison,
-   the skip for a kept record (read the decline shape from `vwf-config.md`; if
-   none fits, write the predicate with "skips a file recorded as kept under
-   `enforcement:`" and return UNRESOLVED naming the shape), the "not checked —
-   no lockfile" outcome when `.claude/stackgen/lock.yaml` is absent (a
-   brownfield repo before its first reshape), and the single warning line. Then
-   **(f) the two positions** per ruling 6. Both cite `/vwf:setup reshape` as the
-   one remedy.
+   the skip for a kept record (resume: it is `enforcement.kept_files.<path>` in
+   `.config/vwf.yaml` — name that key where round 2 left "the same record `init`
+   writes"), the "not checked — no lockfile" outcome when
+   `.claude/stackgen/lock.yaml` is absent (a brownfield repo before its first
+   reshape), and the single warning line. Then **(f) the two positions** per
+   ruling 6. Both cite `/vwf:setup reshape` as the one remedy.
 2. **`SKILL.md`** — `:172-176` summary says six predicates; the one-remedy rule
    paragraph unchanged unless it enumerates the four.
 3. **`harness-and-memory.md`** — read; untouched unless it enumerates the

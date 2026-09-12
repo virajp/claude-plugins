@@ -236,9 +236,11 @@ Part of §5, and the one check that reads the **shape** `/vwf:init` lays down
 rather than what `.config/vwf.yaml` declares. A repo drifts from that baseline
 by standing still: the adapter's packs move, `/vwf:architecture` names projects
 that did not exist when the repo was shaped, and a fresh clone arrives with one
-branch. None of that stops the repo working, so **every finding here is
-`drift`, and none is blocking** — a repo behind its baseline is out of date,
-not broken. All four sub-checks carry the **same remedy, `/vwf:setup reshape`**,
+branch. It drifts by moving, too — a pack-owned file the repo edited in place
+is no longer the file the pack ships. None of that stops the repo working, so
+**every finding here is `drift`, and none is blocking** — a repo behind its
+baseline is out of date, not broken. All six sub-checks carry the **same
+remedy, `/vwf:setup reshape`**,
 which is why §9 prints that line once with the rows that led to it.
 
 **(a) Pack versions.** Read `.claude/stackgen/lock.yaml`, the adapter's
@@ -293,6 +295,68 @@ pack ships. Absent or still unfilled is a drift row, remedy
 `/vwf:setup reshape`: that key is what the user's own shell aliases read, so an
 unfilled one is quietly wrong everywhere it is used.
 
-Doctor **writes none of this** — no branch, no directory, no key, no scope.
-It reports the rows, gives `/vwf:setup reshape` once as the remedy, and stops
-there, as it does with every other structural change in this file.
+**(e) Content drift.** A pack-owned file is landed once and then lives in the
+repo, where anything may edit it; what it holds *today* is the question (a)
+does not ask. The lockfile answers it without re-reading the adapter: every
+`entries:` record carries a `hash:` — the content at the version this repo
+locked — so the check is a hash comparison against the file on disk. Take
+every record whose `path` lands **outside `.claude/`**, which is the `config/`
+tier: the tree `/vwf:init` shapes, and the one this section is about. A file
+whose content no longer matches its recorded hash is one drift row naming the
+path; a recorded path that no longer exists at all is the same row, worded
+**removed**.
+
+That comparison isolates exactly one thing — content drift is the **repo**
+having edited a file the pack owns. A pack that merely moved leaves the file
+still matching its landing hash and is (a)'s row instead, so the two never
+double-count; a path appearing under both is a repo edit *and* a version
+behind, which one reshape resolves together. Say which it is in the row,
+because the fixes differ in kind: (a) is picked up by re-landing, (e) is a
+file somebody meant to change.
+
+**A file the user chose to keep is skipped.** A diverged pack-owned file that
+`/vwf:init` offered as replace-or-keep and the user kept is recorded under
+`enforcement.kept_files.<path>` in `.config/vwf.yaml`, the path spelled as the
+lockfile names it — the same record `init` writes when it takes that answer,
+read here rather than a second one — and that record settles it. An absent
+`kept_files:` block reads as empty, so a repo that has kept nothing skips
+nothing. Reporting a kept file every run would re-accuse the user of a
+decision already made, which is the one difference from the declined `iac`
+extraction above: that cost is ongoing, this one is settled.
+
+**No lockfile at all → `not checked — no lockfile`**, said plainly and counted
+as neither a pass nor a drift row. A repo that has never been shaped landed
+nothing, so no file's content *can* have drifted from a record that does not
+exist; (a) already reports the absent lockfile as `missing`, and a second
+finding saying the same thing would read as two problems. Never infer the pack
+set from whatever happens to sit in `.config/` instead — anything not in the
+lockfile is not the adapter's, which is the rule the materialization itself
+lives by.
+
+**(f) The two marked positions beside `REPO_NAME`.** The same `[env]` block
+carries two more positions the toolchain pack ships marked. Each is read by a
+task rather than by vwf, so an unfilled one is wrong only where it is used —
+which is why it goes unnoticed until the day that task runs:
+
+- **`MERGE_MODEL`** — absent from the block, or holding anything other than
+  `direct` or `pr`, is one drift row. The merge tasks fall back to `direct`
+  when it is unset, so nothing breaks loudly; what breaks quietly is the repo
+  that meant `pr` and has been landing branches locally ever since.
+- **`MEMBERS`** — absent **or empty** on a product whose config reads
+  `topology: multi-repo` with `linkage: siblings` is one drift row. Under that
+  linkage the list is the only place the task library learns the member set,
+  so an empty one leaves `setup:all --all` and `code:worktrees` walking
+  nothing. Empty is **correct** everywhere else — submodule linkage reads
+  `.gitmodules`, and a single-project repo has no members — so this row is
+  never raised outside siblings linkage. It is not the §1 membership check and
+  does not replace it: that one compares `members:` against each member repo's
+  own file and is blocking; this one asks only whether the repo's own tasks
+  can see the same list.
+
+`.config/mise.toml` absent altogether is (d)'s row, already printed — (f) adds
+nothing to it.
+
+Doctor **writes none of this** — no branch, no directory, no key, no scope, and
+no pack-owned file. It reports the rows, gives `/vwf:setup reshape` once as the
+remedy, and stops there, as it does with every other structural change in this
+file.

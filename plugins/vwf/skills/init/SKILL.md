@@ -27,7 +27,9 @@ disable-model-invocation: false
 are a pair and neither does the other's job: everything a repository needs
 before it has a product — the config layout, the task vocabulary, the gates,
 the ignore set, a licence — is this command's, and everything about
-`docs/blueprint/`, `.config/vwf.yaml` and the memory tree stays `/vwf:setup`'s.
+`docs/blueprint/`, `.config/vwf.yaml` and the memory tree stays `/vwf:setup`'s
+— with one key excepted, `enforcement.kept_files`, which records a pack-owned
+file the user chose to keep and which only a reshape can know about.
 Run `init` first on a repo that has neither.
 
 Nothing here knows what the repo is written in, and that is the design. Every
@@ -54,6 +56,15 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
   Filling one is exactly `init`'s job and is not authoring pack content — what
   the rule forbids is inventing pack-owned content from scratch, at a path or
   a position no pack marked.
+  **One file is neither, and it is the only file**: the repo-owned
+  `_scripts/local` sidecar the existing-repo pipeline writes. No pack declares
+  it, no pack ships it and `init` never replaces it — and nothing in it is
+  authored, since every function it holds is carried verbatim out of the
+  repo's own helper file. It is a **move**, wearing a create's row. **One key
+  is neither either**: `enforcement.kept_files` in `.config/vwf.yaml`, where a
+  reshape records a pack-owned file the user chose to keep so it is never
+  re-offered. `init` writes that key into a file it never creates, and writes
+  nothing else in it.
 - **Never application code.** Not a source file, not a test, not a directory
   of either.
 - **Never a language manifest or a lockfile.** Those declare what the project
@@ -241,6 +252,17 @@ covers all of it.
 | [fragments and sections](references/fragments-and-sections.md) | both — the three merge algorithms |
 | [readme and licence](references/readme-and-license.md)         | both — the stub and the files     |
 
+**The existing-repo pipeline adopts rather than flattens**, and three rules
+carry that. A function the repo's own helper library **defines** that the
+pack's does not and its legacy table does not map is **moved**, whole, into a
+repo-owned `_scripts/local` sidecar — never deferred, never guessed at, and
+never lost to the replace merely because nothing calls it yet. A task file no
+pack ships is **kept and listed**, with a note where it sits in a group the
+task-name contract reserves — `init` moves none of them. And a
+pack-owned file whose bytes have diverged is **offered**, replace or keep, one
+row in the same single plan, where a replace re-fills every marked position
+that file carries and a keep is recorded so it is not asked again.
+
 Whichever pipeline runs, the same work happens in the same order at the end:
 the **fills** the packs marked — the project ids and their surfaces, the
 repo-name key, the commit gate's scopes and forge links where their sources
@@ -260,17 +282,20 @@ at all.
 
 ## The report
 
-Every run ends with the same report — eight file sections, then the git
+Every run ends with the same report — ten file sections, then the git
 section — each a count and its lines, and an empty section printed as `none`.
-A replace and a rewrite are counted only where they were applied; a call the
-pack's legacy table could not map is a `Deferred` line, with its unlock like
-any other:
+A replace and a rewrite are counted only where they were applied. The two
+`kept` sections count what this run deliberately left alone, which is why
+they are printed at all: a file nobody touched reads the same as a file
+nobody looked at.
 
 ```text
 Files written     <n>    + <path>            (one per line)
 Files replaced    <n>    <path>              (one per line)
+Files kept        <n>    <path> — <the reason recorded>
 Files moved       <n>    <old> → <new>
 Tasks renamed     <n>    <old> → <new>
+Tasks kept        <n>    <path>              (repo-owned; + the contract note)
 Calls rewritten   <n>    <file:line> <old> → <new>
 Sections appended <n>    <name>
 Fragments merged  <n>    <name>

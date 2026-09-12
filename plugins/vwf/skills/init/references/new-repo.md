@@ -404,7 +404,8 @@ pushed. That is the git section SKILL.md's report specifies.
 
 ## 12 — The report
 
-The eight-section report and the two next-step lines, exactly as SKILL.md
+The ten-section report and the two next-step lines, exactly as SKILL.md
 specifies. A new repo's report is mostly *files written*; *files replaced*,
-*files moved*, *tasks renamed* and *calls rewritten* all read `none`, which is
-the honest shape of a tree that had nothing to reconcile.
+*files kept*, *files moved*, *tasks renamed*, *tasks kept* and *calls
+rewritten* all read `none`, which is the honest shape of a tree that had
+nothing to reconcile.
