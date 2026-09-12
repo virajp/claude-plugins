@@ -49,7 +49,8 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
   or which other packs landed beside it*: the bootstrap aggregator's member
   flags, the shell aliases, the per-project task groups, the repo-name key,
   the landing-model key and the member-path key, the commit gate's scope list
-  and forge links, and the composed editor block.
+  and forge links, the plugin task's two agent-plugin lists, and the composed
+  editor block.
   Filling one is exactly `init`'s job and is not authoring pack content — what
   the rule forbids is inventing pack-owned content from scratch, at a path or
   a position no pack marked.
@@ -135,10 +136,10 @@ written here would record a decision nobody was asked for.
 
 ## The questions
 
-Six in all, each one round, MCQ where an option set exists, per
+Seven in all, each one round, MCQ where an option set exists, per
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`. Two of them — 1 and 3 — are
 asked on a **new repo only**, because an existing repo already answers them;
-the other four are asked on any repo.
+the other five are asked on any repo.
 
 1. **The repo name.** *New repo only.* Proposed from the target directory's
    basename.
@@ -187,9 +188,36 @@ the other four are asked on any repo.
    can detect, and it does not pretend to: the slot the packs left stays
    unfilled, announces itself, and is reported exactly as a **none** answer
    is reported.
-5. **The licence.** MIT, Apache-2.0, or none. The hygiene pack ships the two
+5. **The agent plugins this repo requires.** The task library ships one task
+   that reconciles them, and beyond the workflow's own — which that task
+   always installs, with whatever it depends on — no pack can know which
+   others a repo needs. So ask, **seeded by the machine itself**: run that
+   task's inventory mode, `setup:ai --inventory`, named by the task-name
+   contract like every other task `init` reaches for, and it prints the plugin
+   sources registered on this machine, one row each, then the plugins already
+   installed from any of them, one row each, and nothing else.
+
+   Offer those rows as a **multi-select** — the sources and the plugins in the
+   two groups the task printed them in — plus **none**, which is the ordinary
+   answer for a repo that needs nothing beyond the workflow. The rows are
+   shown verbatim, in the task's own order; `init` neither reorders them nor
+   proposes one of its own, and a row the user does not pick is simply not
+   written.
+
+   An inventory that prints nothing is not an error — it is an unshaped
+   machine, or one whose plugins all arrived with the workflow. Ask the
+   question anyway, with **none** as the only thing to pick, and say in the
+   question itself that the inventory came back empty — so the answer is
+   recorded rather than assumed, and a user who expected rows learns why
+   there are none.
+
+   What this question settles is what [new repo](references/new-repo.md) §7
+   writes into the plugin task's two marked positions. The workflow's own
+   plugin is never a row: the task installs it unconditionally, and listing it
+   here would make a fixed thing look optional.
+6. **The licence.** MIT, Apache-2.0, or none. The hygiene pack ships the two
    texts; **none** is a legible answer and writes no file.
-6. **The security-contact URL.** Defaulted to the origin remote's advisories
+7. **The security-contact URL.** Defaulted to the origin remote's advisories
    page where an origin exists. Declining writes no security file — a file
    naming a channel nobody watches is worse than none.
 

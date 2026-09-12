@@ -246,6 +246,26 @@ not the same kind of wait:
   — report it in the plan as *unfilled, defaults to `direct`* and leave it
   alone. The git pass asks the question; a survey pass does not pre-empt it.
 
+The plugin task's **two lists** are checked in the same pass, against the
+confirmed answer to SKILL.md's **question 5** — which is asked on an existing
+repo too, seeded by the same inventory the new-repo path uses:
+
+- A position still carrying **only** the pack's commented template, on a repo
+  whose answer was non-empty, is a **create**.
+- A position already carrying rows is **compared** with the confirmed answer,
+  row for row. Any difference — a row gained, a row lost, a row respelled — is
+  a **rewrite**, and the plan lists the rows on both sides, because this is
+  the one position whose existing content a user may have hand-edited and the
+  plan is where they get to see that before consenting.
+- Identical rows need nothing, and a **none** answer against a position that
+  still holds only the template produces no row either.
+
+There is a standing gap here and it is deliberately not closed: a plugin task
+that differs from the pack's byte for byte is "already owned, never
+overwritten" by §6's rule, so its positions are never reached at all — how a
+diverged pack task is reconciled, and how its positions are re-derived, is the
+brownfield plan's to decide, not a rule to add here.
+
 ### 10 — The gate-config fills
 
 Two positions the commit gate's packs ship **marked, with a comment saying
