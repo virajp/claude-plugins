@@ -124,6 +124,18 @@ never ones it was told.
    started somewhere other than the base. A run started inside a member
    therefore walks up and runs **from the base**, shaping the whole product
    rather than the one repo the user happened to stand in. Say which step hit.
+
+   **`init` takes one step's outcome differently, and it has to.** That
+   resolution ends by declaring a repo with no `.config/vwf.yaml` to be no vwf
+   repo at all — which is the right answer for every command that reads the
+   file and the wrong one here, because a repo that has never been shaped is
+   precisely what `init` exists for and that file is written *after* it, by
+   `/vwf:setup`. So: follow the asset's hops — the superproject walk and the
+   linked-worktree hop — and then, **where it would stop for want of that
+   file, take the repo those hops landed in as the base.** `init` never halts
+   for a missing `.config/vwf.yaml`; it halts only where the asset's hops
+   leave it outside a repository altogether. A base with no config simply has
+   no `members:` source, which Step 2 already handles.
 2. **The members.** Two sources, and the answer is their **union**: the paths
    `.gitmodules` declares, walked recursively so a member's own members are
    members too, and the `members:` list in `.config/vwf.yaml` — the key
@@ -142,9 +154,16 @@ never ones it was told.
    both sources and which one carries it, and **never shape that path** — it is
    a declaration the product has not settled, and settling it by picking a
    side would write a repo into the product on `init`'s own authority.
-3. **Presence.** A member is **present** when its resolved path exists and is
-   a git work tree, and that is detected every run and recorded nowhere — the
-   membership asset states why, and an absent member is handled below.
+3. **Presence.** A member is **present** when its resolved path exists **and
+   is the top level of its own work tree**: asking that path for its work
+   tree's top level — `rev-parse --show-toplevel`, run with that path as the
+   repository — answers the path itself. Anything else is **absent**, and
+   the empty directory is why the test has to be that exact: a clone made
+   without recursing leaves each member as a bare directory *inside* the
+   superproject's work tree, so the looser question "is this a work tree"
+   answers yes about a directory with nothing in it. Presence is detected
+   every run and recorded nowhere — the membership asset states why — and an
+   absent member is handled below.
 4. **The mode of each.** Apply the table below to **every present** resolved
    repo, on that repo's own markers. A base can resolve **existing** while a
    member resolves **new**, and each repo's section of the plan says which it
@@ -451,10 +470,19 @@ happened:
 ```text
 Landing model            <the value written>
 Branches created  <n>    <repo> <name>                      (one per repo)
-Commit                   <repo> <short hash> <the message>  (or: not committed)
+Commit                   <repo> <hash> <subject>; <hash> <subject>
 Pushed            <n>    <repo> <branch> → origin
 Gitlinks staged   <n>    <path>              (the base's, one per member)
 ```
+
+**A repo's `Commit` line names every commit the run made in that repo**, in
+the order they were made, each with its short hash and its subject — one line
+still, however many there were. An existing-mode repo makes **two**: the gate
+configuration commits first and alone, so the hooks the rest of the run trips
+are the ones the repo just accepted, and the shape commit follows. A new-mode
+repo makes one. A repo where the answer was **leave it** reads
+`not committed`, and a repo whose gate commit landed but whose shape commit
+did not is exactly the case a single hash would hide.
 
 There is no forge line, and its absence is the point: `init` never reaches the
 remote's own settings. Which branch a forge calls default is a one-time act
