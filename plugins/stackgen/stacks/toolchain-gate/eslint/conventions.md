@@ -20,9 +20,11 @@ identical gate.
 
 ## What this pack writes
 
-Four files. `.config/mise/tasks/code/lint` is the one task name the gate is
-reachable as, and `.config/pre-commit.d/eslint.yaml` is the fragment that wires
-it into the hook config.
+Three files. `.config/mise/tasks/code/lint` is the one task name the gate is
+reachable as, and it is the only place the linter is configured: this pack
+ships **no pre-commit fragment**, because the gate config's `lint` hook already
+calls `mise run code:lint --fix` with the staged files. The task
+takes an optional file list — empty means the whole tree.
 
 `.config/linter.yaml` is the linter's own config, shipped **empty of
 overrides**: the linter is zero-config without it, so the file exists to give a

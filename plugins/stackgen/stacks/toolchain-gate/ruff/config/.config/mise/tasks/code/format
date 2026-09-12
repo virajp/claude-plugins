@@ -5,6 +5,7 @@
 
 #USAGE flag "--debug" help="emit debug logs"
 #USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to format (default: the whole repo)"
 
 set -euo pipefail
 # helpers ships in the toolchain-manager pack, not this one, so there is no
@@ -19,6 +20,13 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 #
 # ruff runs through `uv run` rather than a global install so the version that
 # formats is the one the lockfile pins, which is also the one CI uses.
+#
+# This task is what the `format` pre-commit hook calls, which is why it takes an
+# optional file list: the hook passes the staged files, a person passes nothing
+# and gets the whole tree.
+
+files=()
+eval "files+=(${usage_files:-})"
 
 if [[ "${usage_debug:-false}" == "true" ]]; then
   log_level="debug"
@@ -34,13 +42,29 @@ else
   ruff_args=(--check)
 fi
 
+# ruff refuses a path that is not Python, so the list is filtered to what it
+# owns rather than handed over whole. An empty list is the whole project, `.`.
+ruff_targets=()
+if [ ${#files[@]} -gt 0 ]; then
+  for f in "${files[@]}"; do
+    case "${f}" in
+      *.py | *.pyi) ruff_targets+=("${f}") ;;
+    esac
+  done
+else
+  ruff_targets=(.)
+fi
+
 print_header "Formatting files ..."
 
 print_subheader "Formatting with dprint ..."
 dprint "${action}" \
   --config .config/dprint.json \
   --allow-no-files \
-  --log-level "${log_level}"
+  --log-level "${log_level}" \
+  ${files[@]+"${files[@]}"}
 
-print_subheader "Formatting Python sources ..."
-uv run ruff format ${ruff_args[@]+"${ruff_args[@]}"} .
+if [ ${#ruff_targets[@]} -gt 0 ]; then
+  print_subheader "Formatting Python sources ..."
+  uv run ruff format ${ruff_args[@]+"${ruff_args[@]}"} "${ruff_targets[@]}"
+fi
