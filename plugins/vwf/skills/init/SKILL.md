@@ -197,24 +197,32 @@ the other five are asked on any repo.
    sources registered on this machine, one row each, then the plugins already
    installed from any of them, one row each, and nothing else.
 
-   Offer those rows as a **multi-select** — the sources and the plugins in the
-   two groups the task printed them in — plus **none**, which is the ordinary
-   answer for a repo that needs nothing beyond the workflow. The rows are
-   shown verbatim, in the task's own order; `init` neither reorders them nor
-   proposes one of its own, and a row the user does not pick is simply not
+   **Drop two rows before offering anything.** The task prints *every*
+   installed plugin, so the workflow's own plugin and whatever it depends on
+   appear there like any other — and they are the two the task installs
+   unconditionally. `init` removes those rows from what it offers. They are
+   not a choice, and an MCQ that lists them either invites a user to deselect
+   something that gets installed regardless, or writes a row that duplicates
+   what the task already does.
+
+   Offer what is left as a **multi-select** — the sources and the plugins in
+   the two groups the task printed them in — plus **none**, which is the
+   ordinary answer for a repo that needs nothing beyond the workflow. The rows
+   are shown verbatim, in the task's own order; `init` neither reorders them
+   nor proposes one of its own, and a row the user does not pick is simply not
    written.
 
-   An inventory that prints nothing is not an error — it is an unshaped
-   machine, or one whose plugins all arrived with the workflow. Ask the
-   question anyway, with **none** as the only thing to pick, and say in the
-   question itself that the inventory came back empty — so the answer is
-   recorded rather than assumed, and a user who expected rows learns why
-   there are none.
+   An inventory that prints nothing, or whose every row was dropped, is not an
+   error — it is an unshaped machine, or one whose plugins all arrived with
+   the workflow. Ask the question anyway, with **none** as the only thing to
+   pick, and say in the question itself which of the two it was — so the
+   answer is recorded rather than assumed, and a user who expected rows
+   learns why there are none.
 
    What this question settles is what [new repo](references/new-repo.md) §7
-   writes into the plugin task's two marked positions. The workflow's own
-   plugin is never a row: the task installs it unconditionally, and listing it
-   here would make a fixed thing look optional.
+   writes into the plugin task's two marked positions — never the workflow's
+   own plugin or its dependency, which are dropped above and stay the task's
+   unconditional business.
 6. **The licence.** MIT, Apache-2.0, or none. The hygiene pack ships the two
    texts; **none** is a legible answer and writes no file.
 7. **The security-contact URL.** Defaulted to the origin remote's advisories

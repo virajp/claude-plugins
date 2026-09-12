@@ -210,9 +210,13 @@ already says.
 A **none** answer — including the one an empty inventory forces — leaves both
 positions exactly as shipped, for the same reason a single-project repo leaves
 the member flags alone: the template is what the next run fills, and deleting
-it costs that run its shape. The workflow's own plugin is never written at
-either position; the task installs it unconditionally, together with whatever
-it depends on.
+it costs that run its shape.
+
+The workflow's own plugin is never written at either position, and neither is
+whatever it depends on. The task installs both unconditionally, and its
+inventory prints them anyway, like every other installed plugin — question 5
+is where those two rows are **dropped**, before the question is even offered,
+so an answer cannot carry them here.
 
 ### The `_default` slot
 

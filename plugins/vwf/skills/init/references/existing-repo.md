@@ -248,7 +248,11 @@ not the same kind of wait:
 
 The plugin task's **two lists** are checked in the same pass, against the
 confirmed answer to SKILL.md's **question 5** — which is asked on an existing
-repo too, seeded by the same inventory the new-repo path uses:
+repo too, seeded by the same inventory the new-repo path uses, and with the
+same two rows dropped from it: the workflow's own plugin and whatever it
+depends on are the task's unconditional business and are never offered, so
+they never reach either position. A repo that already carries one of them at a
+position is a **rewrite** that removes it, and the plan says why:
 
 - A position still carrying **only** the pack's commented template, on a repo
   whose answer was non-empty, is a **create**.
