@@ -113,6 +113,13 @@ layout, the gates and the hygiene files the rest of the workflow assumes.
 `/vwf:setup reshape` runs that pass alone, and is what `/vwf:doctor` prints when
 a shaped repo has fallen behind.
 
+Once a repo **is** shaped, its own task library takes the plugin side over:
+`mise run setup:ai` registers or refreshes the marketplace and installs or
+updates the plugins that repo declares at **project** scope, driving Claude's
+own commands and no package runner. The command above is the one-shot a person
+runs on a machine; that is what a checkout re-runs, and what keeps every
+collaborator on the same plugin set.
+
 Scope is yours to choose: `--user` / `--project` on the wrapper, or
 `--scope project` on Claude's commands, keep a plugin to one repo instead of
 your user profile. Installing `vwf` is normally all you need, since `stackgen`

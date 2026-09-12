@@ -91,7 +91,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `toolchain-gate/pre-commit` | pre-commit | `repo-gate` | repo |  |  | 1.1.0 | The local gate, and the wiring that makes local and CI run the identical command. Ships .config/pre-commit-config.yaml and .config/git-conventional-commits.yaml. |
 | `toolchain-gate/ruff` | Ruff | `language-bundle` | repo |  |  | 0.2.0 | The lint and format gate for Python — one tool for both halves, run through the project's uv environment rather than a global install. |
 | `toolchain-gate/tsconfig` | tsconfig | `language-bundle` | project |  |  | 0.1.0 | The TypeScript compiler configuration — a strict shared base, per-project configs, the path alias and the emit variant. |
-| `toolchain-manager/mise` | mise | `toolchain-manager` | repo |  |  | 1.1.0 | The repo's toolchain manager — the .config/ five-file split selected by MISE_ENV, and the file-based task library everything else invokes, grouped into `setup:*` for bootstrap, `code:*` for gates and git, and `p:<project-id>:*` for a project's own commands. |
+| `toolchain-manager/mise` | mise | `toolchain-manager` | repo |  |  | 1.2.0 | The repo's toolchain manager — the .config/ five-file split selected by MISE_ENV, and the file-based task library everything else invokes, grouped into `setup:*` for bootstrap, `code:*` for gates and git, and `p:<project-id>:*` for a project's own commands. |
 
 ## Bundles
 
@@ -136,7 +136,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `gcp-gke` | Google Cloud · GKE Autopilot · Artifact Registry | `cloud-provider` | deploy | `cloud-provider/gcp@0.1.0`, `cloud-service/gke@0.1.0` |  |
 | `github-actions` | GitHub Actions | `ci-system` | cicd | `ci-system/github-actions@0.2.0` |  |
 | `lovable` | Lovable | `design-tool` | design | `design-tool/lovable@0.1.0` |  |
-| `mise` | mise | `toolchain-manager` | repo | `toolchain-manager/mise@1.1.0` | yes |
+| `mise` | mise | `toolchain-manager` | repo | `toolchain-manager/mise@1.2.0` | yes |
 | `npm-package` | Package registry · npm | `deploy-target` | deploy | `deploy-target/npm-registry@generated` |  |
 | `oidc` | OIDC issuer | `capability-provider` | backing | `capability-provider/oidc@0.1.0` |  |
 | `otel-lgtm` | OpenTelemetry · Grafana OTel-LGTM | `capability-provider` | backing | `capability-provider/otel-lgtm@0.1.0` |  |

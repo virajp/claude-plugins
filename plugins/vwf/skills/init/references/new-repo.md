@@ -4,7 +4,7 @@ Read this in mode **new** — a target with no configuration directory and no
 task library. Nothing here reads or moves a source file, so it is safe on a
 repository that has code but has never been shaped.
 
-The six questions in SKILL.md are already answered. Present the whole plan
+The seven questions in SKILL.md are already answered. Present the whole plan
 below, get **one** consent, then apply it in this order. The order is the
 contract: a step that runs early because it happens to be cheap produces a
 tree the next step has to undo.
@@ -139,8 +139,11 @@ them.
 
 ### The marked positions
 
-**Five**, and with the `_default` slot below they are the six things this
-section fills. Two are per-project and three are repo-level.
+**Seven**, and with the `_default` slot below they are the eight things this
+section fills. Two are per-project, three are repo-level, and the last two
+belong to the id list not at all — they are the plugin task's, filled from
+SKILL.md's **question 5**, and they are written here because this is the one
+section that fills a marked position.
 
 The toolchain pack ships the flag list and the alias list as **commented
 templates in place**, each with a note saying the ids come from the registry
@@ -193,6 +196,27 @@ library reads, and a single-project repo has no members — in both cases the
 position stays exactly as shipped, for the same reason the member flags and the
 aliases do. The registry does not exist on a first run, so this is re-run work
 by construction.
+
+**The sixth and seventh are the plugin task's two lists** — the further plugin
+sources a repo installs from, and the plugins it installs from them — shipped
+as commented templates in place like the flag and alias lists, each comment
+carrying its own row shape and saying the rows come from the confirmed answer
+to the plugin question. They take **question 5's confirmed rows, and only
+those**: write them one per line at each position, in the exact shape that
+position's comment shows, and leave the comment where it is so a later run can
+re-derive the list from the same question rather than from what the file
+already says.
+
+A **none** answer — including the one an empty inventory forces — leaves both
+positions exactly as shipped, for the same reason a single-project repo leaves
+the member flags alone: the template is what the next run fills, and deleting
+it costs that run its shape.
+
+The workflow's own plugin is never written at either position, and neither is
+whatever it depends on. The task installs both unconditionally, and its
+inventory prints them anyway, like every other installed plugin — question 5
+is where those two rows are **dropped**, before the question is even offered,
+so an answer cannot carry them here.
 
 ### The `_default` slot
 

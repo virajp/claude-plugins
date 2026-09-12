@@ -157,7 +157,13 @@ two differ in value and never in vocabulary.
   pushes and opens a pull request — and **`MEMBERS`**, the space-separated,
   repo-relative paths of this repo's member projects, left empty when they are
   submodules, which `members()` reads from `.gitmodules` instead. A string and
-  never an array: mise env values are strings.
+  never an array: mise env values are strings. **Two more marked positions sit
+  outside the TOML**, in `.config/mise/tasks/setup/ai`: `EXTRA_MARKETPLACES`
+  (rows `<source-ref>|<name>`) and `EXTRA_PLUGINS` (rows `<name>@<marketplace>`)
+  — the plugin marketplaces and plugins this repo requires beyond the toolkit's
+  own. Both default to empty, both are filled by the same orchestrator from a
+  confirmed answer seeded by `setup:ai`'s `--inventory` mode, and both keep
+  their template comment so a reshape can re-derive them.
 - `mise.dev.toml` `[env]` — the **development** values: verbose logging, local
   hosts, emulator endpoints, test credentials.
 - `mise.ci.toml` `[env]` — the CI and **production** values for those same keys.

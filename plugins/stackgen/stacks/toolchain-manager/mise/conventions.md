@@ -94,6 +94,12 @@ a repo's whole toolchain enabled in every other window forever — and because
 pruning is only safe once it is scoped to one profile. Silent on a machine
 without the editor.
 
+**The repo's agent plugins are the repo's, and a user's are theirs.**
+`setup:ai` installs and updates only what this repo requires, at **project**
+scope, so the declaration lives in the repo's own settings and nothing a machine
+chose globally is installed, updated or pruned; `--user` is the rare exception,
+and it is a flag rather than the default.
+
 **No task edits a remote's settings.** Setting the forge's default branch is a
 one-time act by whoever shapes the repo, not something a machine re-runs on
 every bootstrap, so the library carries no task for it and the repo's

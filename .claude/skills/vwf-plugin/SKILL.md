@@ -68,22 +68,25 @@ a repo can have either without the other. `init` materializes the three
 unconditional bundles through the stack adapter by the fixed slugs `mise`,
 `repo-gates` and `repo-hygiene`, fills the marked positions those packs leave it
 (the member flags, the shell aliases, the per-project groups, the repo-name key,
-`MERGE_MODEL` and `MEMBERS`, the commit gate's scopes and forge links), runs
-**three** merges — ignore sections, pre-commit fragments, editor fragments — and
-writes a two-line readme stub; it names no tool, and every file it lays down is
-a pack's. Before any of that it asks **six** questions, the second confirming
-every project id, the slug it resolves to and the source the name came from —
-nothing writes a `p:<slug>:*` group, a member flag, an alias or `REPO_NAME`
-until that list is accepted. It then closes with a **consent-gated git pass**:
-it asks the landing model and writes it to `MERGE_MODEL`, stages what the run
-wrote, asks one question with three answers (commit / commit and push / leave
-it), commits with a fixed `ops:` message, and creates whichever of `develop` and
-`main` the branch model needs. It **never reaches the remote's own settings** —
-setting a forge's default branch is a one-time act, not a task a machine
-re-runs, and the line telling a maintainer to do it lives in the hygiene pack's
-`CONTRIBUTING.md`, which may name `gh` and `glab` where vwf prose may not. Init
-is **not a one-time bootstrap**: its "when it runs again" doctrine names the
-moments, and `/vwf:doctor` has the drift finding that prints the one remedy,
+`MERGE_MODEL` and `MEMBERS`, the commit gate's scopes and forge links, and the
+plugin task's two agent-plugin lists), runs **three** merges — ignore sections,
+pre-commit fragments, editor fragments — and writes a two-line readme stub; it
+names no tool, and every file it lays down is a pack's. Before any of that it
+asks **seven** questions, the second confirming every project id, the slug it
+resolves to and the source the name came from — nothing writes a `p:<slug>:*`
+group, a member flag, an alias or `REPO_NAME` until that list is accepted — and
+the fifth asking which agent plugins this repo requires, seeded by running the
+plugin task's own inventory mode and written into those two lists. It then
+closes with a **consent-gated git pass**: it asks the landing model and writes
+it to `MERGE_MODEL`, stages what the run wrote, asks one question with three
+answers (commit / commit and push / leave it), commits with a fixed `ops:`
+message, and creates whichever of `develop` and `main` the branch model needs.
+It **never reaches the remote's own settings** — setting a forge's default
+branch is a one-time act, not a task a machine re-runs, and the line telling a
+maintainer to do it lives in the hygiene pack's `CONTRIBUTING.md`, which may
+name `gh` and `glab` where vwf prose may not. Init is **not a one-time
+bootstrap**: its "when it runs again" doctrine names the moments, and
+`/vwf:doctor` has the drift finding that prints the one remedy,
 `/vwf:setup reshape`. `setup` is the Phase-0 bootstrapper — it onboards a repo
 (a Step-0 shape check that offers `/vwf:init` when any of the three slugs is
 missing **or** any of doctor's four baseline predicates fails, the `reshape`

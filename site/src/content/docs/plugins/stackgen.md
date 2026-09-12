@@ -591,7 +591,33 @@ inside `code/*` and `setup/*` change with the tech stack.
   `setup:external:start`, `setup:deps:all`, `setup:precommit`, `setup:ai` and
   `setup:vscode` in order, and stays idempotent. `setup:ai` installs and
   reconciles the repo's agent plugins; it is bootstrap and re-sync like every
-  other step here, which is why it is a `setup:*` task and not a gate. `--all`
+  other step here, which is why it is a `setup:*` task and not a gate. It drives
+  **Claude's own `claude plugin` commands and nothing else** — no package
+  runner, no wrapper CLI — and it checks before it writes: a marketplace already
+  registered under a name is *updated*, whatever source it was registered from,
+  and only one that is absent is *added*. That one rule is what makes the task
+  behave identically on a machine pointed at the published marketplace and on
+  one pointed at a local checkout of it, which a wrapper with a hardcoded source
+  cannot do. Scope is **project** by default, because the plugin set is the
+  repo's: it installs or updates each required plugin at that scope, prunes with
+  `autoremove` at that scope alone, and never installs, updates or removes a
+  user-scope plugin — `--user` is the flag for the rare repo that wants the
+  other scope, and it flips every one of those. Two **marked positions** —
+  further marketplaces, and the plugins to install from them — carry whatever
+  the repo needs beyond the workflow plugin, which the task installs
+  unconditionally with its dependencies; `/vwf:init` fills them from one
+  confirmed answer, seeded by the task's own **`--inventory`** mode, which
+  prints what this machine already has — one line per registered marketplace
+  **other than the toolkit's own**, then one line per installed plugin with its
+  marketplace and its scope — and exits, printing nothing else on stdout. It is
+  a seed for the question, not a paste buffer: a marketplace row is already in
+  the shape its position takes, while a plugin row carries a trailing scope
+  field that position does not. After the plugins it wires **graphify** where
+  the CLI is on PATH (and says what to install where it is not, since vwf treats
+  a missing graph as blocking), and prints the statusline package's
+  `brew install` line as a hint when `claude-status` is absent — hinted, never
+  installed, because that is a per-machine package and not the repo's to place.
+  The official marketplace is never added: it ships with Claude Code. `--all`
   recurses into every **member**, which `_scripts/helpers`' `members()` answers
   for under either multi-repo linkage — the repo's submodules where
   `.gitmodules` exists, else the paths listed in the `MEMBERS` env value — and

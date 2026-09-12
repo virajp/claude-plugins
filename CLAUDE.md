@@ -242,21 +242,23 @@ The workflow runs `setup` → `product` → `architecture` → `design-system` �
 **skill-invoked**, hidden from the `/` menu and reached only from inside `setup`
 — Step 0's offer, or `/vwf:setup reshape`, which runs the shape pass alone.
 `init` shapes the **base repo** — the config layout, the task vocabulary, the
-gates, the hygiene files — from stackgen's three unconditional bundles, asks six
-questions (the second confirming every project id, its slug and the source the
-name came from, before any `p:<slug>:*` group, alias or `REPO_NAME` is written),
-and closes with a consent-gated git pass (the first commit, the `develop`/`main`
-pair, and the landing model it writes to `MERGE_MODEL` — it never touches the
-forge's own settings, which a maintainer sets once by hand per the hygiene
-pack's `CONTRIBUTING.md`); `setup` then sets up **vwf** in it, and offers `init`
-when the shape is **missing or drifted**, on the four baseline predicates
-`/vwf:doctor` owns. **Everything up to `blueprint` is done in full before
-planning** — `plan` hard-halts on a partial coverage stamp. The ad-hoc pair
-`change-plan` → `change-execute` sits **beside** that line rather than in it: it
-plans and runs work with no blueprint slice behind it — tooling, CI, docs, a
-refactor, a tree the blueprint does not describe — reads neither the blueprint
-nor the registry, and gates on the commands its own plan folder names. The
-ordering gates, the skill and agent tables, how to add a skill and pick its
+gates, the hygiene files — from stackgen's three unconditional bundles, asks
+seven questions (the second confirming every project id, its slug and the source
+the name came from, before any `p:<slug>:*` group, alias or `REPO_NAME` is
+written; the fifth asking which agent plugins this repo requires, seeded by the
+plugin task's own inventory mode and written into that task's two marked
+positions), and closes with a consent-gated git pass (the first commit, the
+`develop`/`main` pair, and the landing model it writes to `MERGE_MODEL` — it
+never touches the forge's own settings, which a maintainer sets once by hand per
+the hygiene pack's `CONTRIBUTING.md`); `setup` then sets up **vwf** in it, and
+offers `init` when the shape is **missing or drifted**, on the four baseline
+predicates `/vwf:doctor` owns. **Everything up to `blueprint` is done in full
+before planning** — `plan` hard-halts on a partial coverage stamp. The ad-hoc
+pair `change-plan` → `change-execute` sits **beside** that line rather than in
+it: it plans and runs work with no blueprint slice behind it — tooling, CI,
+docs, a refactor, a tree the blueprint does not describe — reads neither the
+blueprint nor the registry, and gates on the commands its own plan folder names.
+The ordering gates, the skill and agent tables, how to add a skill and pick its
 invocation mode, and the dependency reasoning are the [`vwf-plugin`][vwf] skill.
 
 ## The installer CLI
@@ -268,6 +270,12 @@ marketplace registration and plugin install commands, **graphify's wiring**, and
 receipt**. `installer/` is the source; `bin/` is the tsup output, is gitignored,
 and is what npm publishes. The statusline is a separate package
 (`claude-status`), not a plugin and not installed here.
+
+**It is the one-shot, not a repo's reconcile step.** A repo shaped by
+`/vwf:init` reconciles its own plugin set with the task library's `setup:ai`,
+which runs `claude plugin …` and no package runner — so a machine that
+registered `virajp-plugins` from `./.dev-marketplace` is served by the same task
+as one that registered it from the forge. Nothing calls this CLI from a task.
 
 Everything else — the flag surface, the legacy-receipt reader, the interactive
 uninstall, the GitHub token rule, testing — is [`installer/CLAUDE.md`][icl]; the
@@ -357,6 +365,14 @@ uninstall it by hand** (`claude plugin uninstall devtools`): an update simply
 stops listing it as a dependency, leaving it enabled and its stale skills
 shadowing the stackgen packs they moved into. The reasoning is
 [`dependencies.md`](.claude/skills/vwf-plugin/references/dependencies.md).
+
+**On a repo that has been shaped, the reconcile step is the repo's own.**
+`mise run setup:ai` — the task library's, and this repo runs the same one —
+registers or refreshes `virajp-plugins` and installs or updates the plugins the
+repo requires at **project** scope, through `claude plugin …` and nothing else.
+It is idempotent, it never touches a user-scope plugin, and it works unchanged
+on a machine registered from `./.dev-marketplace`. The installer above is the
+one-shot for a person; this is what a checkout re-runs.
 
 Upgrading is `claude plugin marketplace update virajp-plugins` then
 `claude plugin update <name>`. The **manifest** is served from this repo's

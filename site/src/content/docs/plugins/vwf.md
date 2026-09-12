@@ -35,9 +35,16 @@ vwf enforces at its own entry gate. Installing outside a git repo works too:
 `graphify install` still runs, and its repo-scoped post-commit hook is skipped
 automatically (with a note).
 
+A repo shaped by [`/vwf:init`](#vwfinit) does not need that one-shot at all: its
+task library carries `setup:ai`, which registers the marketplace, installs the
+plugins the repo declares at **project** scope, wires graphify the same way, and
+runs on every checkout. The full description is
+[stackgen's task library](./stackgen.md#the-task-library).
+
 Separately, `brew install virajp/tap/claude-status` installs the statusline —
-and with it the caps hook that delivers `/vwf:execute`'s resource-cap pause. See
-[/vwf:execute](#vwfexecute).
+and with it the caps hook that delivers `/vwf:execute`'s resource-cap pause.
+`setup:ai` prints that line as a hint when the package is absent, and never
+installs it. See [/vwf:execute](#vwfexecute).
 
 Restart Claude Code afterward so the commands, hooks, and dependencies load.
 
@@ -864,11 +871,11 @@ and a licence but no configuration layout has never been shaped, and nothing in
 the new pipeline touches source. Shaping a *different* repository means running
 `/vwf:setup` there.
 
-**Six questions, each one round**, asked *before* the plan so one yes covers all
-of it. Two on a new repo only — the repo name (proposed from the directory) and
-a one-line brief, which may be empty. Four on any repo, listed in order — the
-first of them is question 2 overall, and it is the one this section's slug rule
-waits on:
+**Seven questions, each one round**, asked *before* the plan so one yes covers
+all of it. Two on a new repo only — the repo name (proposed from the directory)
+and a one-line brief, which may be empty. Five on any repo, listed in order —
+the first of them is question 2 overall, and it is the one this section's slug
+rule waits on:
 
 - **The ids, confirmed** — one list, the repo's own name first and then a row
   per project init will write a task group for, each row showing the **name**
@@ -881,6 +888,20 @@ waits on:
   group, not a member flag, not an alias, not `REPO_NAME`.
 - **The secrets provider** — the adapter's own menu, filtered to capability
   providers, plus *none — decide later*.
+- **The agent plugins this repo requires** — a multi-select, seeded by the
+  machine itself. `init` runs the plugin task's inventory mode, which prints the
+  plugin sources registered on this machine — every one **except the toolkit's
+  own**, which the task always reconciles — and then the plugins already
+  installed from any of them, one row each. Those rows are offered as the task
+  printed them, in its order, **minus two**: the workflow plugin's own row and
+  its dependency's, which `init` drops because the task installs both
+  unconditionally and listing a fixed thing makes it look optional. *None* sits
+  alongside them, and is the ordinary answer for a repo that needs nothing
+  beyond the workflow. What you pick is written into that task's two marked
+  positions, so `setup:ai` installs it on every checkout. An inventory that
+  comes back empty is not an error: the question is still asked, with *none* as
+  the only thing to pick and the empty result stated in the question, so the
+  answer is recorded rather than assumed.
 - **The licence** — MIT, Apache-2.0 or none.
 - **The security-contact URL** — defaulted to the origin's advisories page;
   declining writes no security file, since one naming a channel nobody watches
@@ -891,28 +912,32 @@ survey walks ten checks — root files against the allowlist, the readme's casin
 task names against the pack's *legacy-name table*, task shebangs, the helper
 library's name and whether its contents still match the pack's, missing files,
 ignore sections and hook fragments, commit types, per-project task groups, and
-the gate-config positions the packs ship marked for it to fill. Pass 1 has one
-case worth knowing: where a gate pack declares both a config under `.config/`
-and a two-line stand-in of the same name at the root — the stand-in existing
-because that tool's config discovery is root-only — your **real** config moves
-into `.config/` and the stand-in takes its place, with the plan saying the
-settings survive the move. Not every key does, and the plan says which: a gate
-pack's own skill names the key that is **not** inherited through the stand-in,
-where an extended file declaring it is a fatal diagnostic rather than a warning,
-so the move drops it. Dropping it **widens** what the gate covers, since the
-pack's own pinned plugin list is then what defines the file set. So the move row
-carries **sub-lines** — one for the dropped key, and one per **exclusion** the
-drop makes necessary, each naming the files that exclusion keeps out of the
-gate. Never a restored key, which puts the diagnostic back, and never after the
-fact: they are changes to the settings the row claims survive the move, so you
-read them before the one consent. The two are told apart by content, never by
-name. What comes back is **one plan**, in eight counted sections: moves,
-creates, replaces, renames, rewrites applied, appends, merges — all applied on a
-single yes — and `Rewrites (flagged, not applied)`, which is applied by nothing.
-A task file whose shebang names a shell other than bash goes there, listed with
-the shell-specific syntax it uses, and is **never** rewritten: auto-translating
-a shell script is how a working task becomes a subtly broken one, so it lands in
-the report's `Deferred` section for you to rewrite deliberately.
+the positions the packs ship marked for it to fill — the gate configs, and the
+plugin task's two agent-plugin lists, which are compared row for row against
+question 5's confirmed answer, with both sides shown in the plan when they
+differ, since that is the one position a user may have hand-edited. Pass 1 has
+one case worth knowing: where a gate pack declares both a config under
+`.config/` and a two-line stand-in of the same name at the root — the stand-in
+existing because that tool's config discovery is root-only — your **real**
+config moves into `.config/` and the stand-in takes its place, with the plan
+saying the settings survive the move. Not every key does, and the plan says
+which: a gate pack's own skill names the key that is **not** inherited through
+the stand-in, where an extended file declaring it is a fatal diagnostic rather
+than a warning, so the move drops it. Dropping it **widens** what the gate
+covers, since the pack's own pinned plugin list is then what defines the file
+set. So the move row carries **sub-lines** — one for the dropped key, and one
+per **exclusion** the drop makes necessary, each naming the files that exclusion
+keeps out of the gate. Never a restored key, which puts the diagnostic back, and
+never after the fact: they are changes to the settings the row claims survive
+the move, so you read them before the one consent. The two are told apart by
+content, never by name. What comes back is **one plan**, in eight counted
+sections: moves, creates, replaces, renames, rewrites applied, appends, merges —
+all applied on a single yes — and `Rewrites (flagged, not applied)`, which is
+applied by nothing. A task file whose shebang names a shell other than bash goes
+there, listed with the shell-specific syntax it uses, and is **never**
+rewritten: auto-translating a shell script is how a working task becomes a
+subtly broken one, so it lands in the report's `Deferred` section for you to
+rewrite deliberately.
 
 **The helper library is the one named exception**, and the reason it earns one
 is timing. A repo whose copy has drifted from the pack's is not carrying a
