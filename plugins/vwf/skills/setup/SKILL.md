@@ -83,15 +83,17 @@ First, is the shape **there**: the stack adapter's lockfile records all three
 unconditional repo slugs — `mise`, `repo-gates` and `repo-hygiene`
 (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). Named exactly, never
 constructed: a slug assembled from configuration is one that can silently
-resolve to nothing. Second, is it **current**: the four predicates under **"The
+resolve to nothing. Second, is it **current**: the six predicates under **"The
 repo shape against its baseline"** in `/vwf:doctor`'s stack-checks reference,
-on their four subjects — the pack versions the adapter lockfile records
+on their six subjects — the pack versions the adapter lockfile records
 against what the adapter ships now, the registry's project ids behind the
-surfaces generated from them, the `develop`/`main` pair, and the toolchain
-manager's repo-name environment key. Read the artifacts that section reads
-and evaluate them **by it**: the predicates are doctor's and are deliberately
-not restated here, so the two can never drift apart. All three slugs recorded
-and all four predicates holding — say so in one line and read on.
+surfaces generated from them, the `develop`/`main` pair, the toolchain
+manager's repo-name environment key, the bytes of the pack-owned files the
+packs landed, and the marked positions init fills in that same environment
+block. Read the artifacts that section reads and evaluate them **by it**: the
+predicates are doctor's and are deliberately not restated here, so the two can
+never drift apart. All three slugs recorded and all six predicates holding —
+say so in one line and read on.
 
 **Otherwise the repo needs init, and setup offers it.** Any of the three slugs
 missing, the repo is **unshaped**: say what is absent. Any predicate failing,
