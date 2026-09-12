@@ -151,6 +151,7 @@ until someone reads two tasks side by side.
 | `setup:deps:all`                                      | `cleanup → install → upgrade → outdated → audit`                            |
 | `setup:deps:{install,cleanup,upgrade,outdated,audit}` | **slots** — the package manager's verbs; `install` honours `--frozen`       |
 | `setup:precommit`                                     | autoupdate, unset `core.hooksPath`, install the hooks                       |
+| `setup:ai`                                            | install and reconcile this repo's agent plugins                             |
 | `setup:vscode`                                        | reconcile the repo's editor profile with its recommended extensions        |
 | `setup:default-branch <branch>`                       | set the default branch on the remote through whichever forge CLI is here   |
 | `setup:worktree`                                      | the lighter sibling a fresh worktree runs                                   |
@@ -164,10 +165,9 @@ until someone reads two tasks side by side.
 | `code:merge:develop <branch>`                         | merge a feature branch into `develop` and push                              |
 | `code:merge:main`                                     | merge `develop` into `main` and push                                        |
 | `code:count`                                          | lines of tracked text, grouped by extension, plus a total                   |
-| `code:ai`                                             | install and reconcile this repo's agent plugins                             |
 
-`code:all` is the one-command gate. `precommit`, `git-config`, `merge:*`,
-`count` and `ai` are not in it — they are wired into the hooks, into
+`code:all` is the one-command gate. `precommit`, `git-config`, `merge:*` and
+`count` are not in it — they are wired into the hooks, into
 `setup:all`, or run by hand. `setup:default-branch` is the one `setup:*` member
 `setup:all` does **not** call: it edits a remote, so it is run deliberately,
 once, by whoever shapes the repo.
@@ -248,7 +248,7 @@ setup:all  (--all recurses into every member)
   ├─ setup:external:start  # local services                        (SLOT)
   ├─ setup:deps:all        # the package manager's five verbs      (SLOTS)
   ├─ setup:precommit       # autoupdate + install the hooks        (common)
-  ├─ code:ai               # install and reconcile agent plugins   (common)
+  ├─ setup:ai              # install and reconcile agent plugins   (common)
   ├─ setup:vscode          # the repo's editor profile            (common)
   └─ <each member>         # only with --all
 ```
@@ -523,7 +523,6 @@ the user rather than rewritten.
 | `worktree:init`                                     | → `setup:worktree`    | it is a bootstrap step; `worktree:` was a group of one                   |
 | `merge:develop`, `merge:main`                       | → `code:merge:*`      | a merge is something a change runs through, like the gates               |
 | `setup:pnpm:*`, `setup:uv:*`, `setup:app:*`         | → `setup:deps:*`      | the task path carried the tool's name, so the contract differed per stack |
-| `setup:ai`                                          | → `code:ai`           | it is re-run as the plugin set moves, not once per machine               |
 | `setup:doppler`                                     | → `setup:secrets`     | same reason as `setup:deps:*` — the provider is a choice, the slot is not |
 | `setup:deps:{start,stop,pull}`                      | → `setup:external:*`  | services a product runs against are not its package manager             |
 | `setup:deps:update`                                 | → `setup:deps:upgrade` | "update" read as both install-and-refresh; the verbs are now separate    |

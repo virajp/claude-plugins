@@ -544,7 +544,7 @@ Every repo ships the same mandatory set. The contract — helpers,
 inside `code/*` and `setup/*` change with the tech stack.
 
 - **`code/*` — what a change runs through.** `code/format`, `code/lint`,
-  `code/sec`, `code/precommit`, `code/git-config`, `code/worktrees`, `code/ai`,
+  `code/sec`, `code/precommit`, `code/git-config`, `code/worktrees`,
   `code/count`, `code/merge/develop`, `code/merge/main`, and the `code/all`
   aggregator (`format` → `lint` → `sec`). `code:all` is the one-command gate;
   `precommit` and `git-config` are wired into the pre-commit hooks and `setup`,
@@ -567,10 +567,12 @@ inside `code/*` and `setup/*` change with the tech stack.
   gates.)
 - **`setup/*` — bootstrap & upgrade.** `setup:all` is the entrypoint — run it on
   clone and to re-sync. It calls `setup:mise`, `setup:secrets`,
-  `setup:external:start`, `setup:deps:all`, `setup:precommit`, `code:ai` and
-  `setup:vscode` in order, and stays idempotent. `--all` recurses into every git
-  submodule, and one `--<project-id>` flag per member is generated from the
-  repo's own project ids. Alias it as `setup`.
+  `setup:external:start`, `setup:deps:all`, `setup:precommit`, `setup:ai` and
+  `setup:vscode` in order, and stays idempotent. `setup:ai` installs and
+  reconciles the repo's agent plugins; it is bootstrap and re-sync like every
+  other step here, which is why it is a `setup:*` task and not a gate. `--all`
+  recurses into every git submodule, and one `--<project-id>` flag per member is
+  generated from the repo's own project ids. Alias it as `setup`.
 - **`setup/vscode` — the repo's editor profile**, and `setup:all`'s last step.
   It reads the recommendation ids out of the editor file `/vwf:init` composed
   from every pack's fragment and makes a profile named `$REPO_NAME` match:
@@ -702,7 +704,6 @@ table lives with the pack and vwf's own prose names no tool.
 | `worktree:init`                             | `setup:worktree`     |
 | `merge:develop`, `merge:main`               | `code:merge:*`       |
 | `setup:pnpm:*`, `setup:uv:*`, `setup:app:*` | `setup:deps:*`       |
-| `setup:ai`                                  | `code:ai`            |
 | `setup:doppler`                             | `setup:secrets`      |
 | `setup:deps:{start,stop,pull}`              | `setup:external:*`   |
 | `setup:deps:update`                         | `setup:deps:upgrade` |

@@ -13,6 +13,6 @@ print_header "Linter setup ..."
 pnpm dlx @askviraj/linter@latest --init
 
 mise run setup:precommit
-mise run code:ai
+mise run setup:ai
 
 print_header "Setup complete!"
