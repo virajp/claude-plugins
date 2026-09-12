@@ -90,7 +90,7 @@ REPO_NAME = "unfilled"
 #   direct = merge locally and push   |   pr = push and open a pull request
 MERGE_MODEL = "direct"
 
-# A marked position: this repo's member projects, as space-separated paths
+# A marked position: this repo's member repos, as space-separated paths
 # relative to the repo root. Left empty when the members are submodules, which
 # `members()` reads from .gitmodules instead. A string, never an array — mise
 # env values are strings.
@@ -163,7 +163,7 @@ taplo      = { version = "latest" }
 setup     = "mise run setup:all"
 precommit = "mise run code:precommit"
 worktrees = "mise run code:worktrees"
-# One per member project, when this repo has members:
+# One per member repo, named by that member's slug, when this repo has members:
 # setup-backend  = "mise run setup:all --backend"
 # setup-frontend = "mise run setup:all --frontend"
 
@@ -183,8 +183,9 @@ PRE_COMMIT_HOME = "$HOME/.cache/pre-commit"
 **`[shell_alias]` lives here and nowhere else.** Aliases need `mise activate`,
 which is a human's shell — CI never loads this file, so nothing in the pipeline
 may depend on one. The three shipped aliases are the three commands typed most;
-the member aliases are generated from the same id list `setup:all`'s flags and
-the `p:<id>:*` task group use.
+the `setup-<slug>` aliases are generated from this repo's **member repos** —
+each submodule, or each path `MEMBERS` names — the same list `setup:all`'s
+member flags come from, and not the project ids the `p:<id>:*` group uses.
 
 **No secret-manager tool here.** The pinned capability provider ships its own
 `[tools]` entry in `.config/mise/conf.d/<provider>.toml`, so swapping providers

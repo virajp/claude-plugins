@@ -144,7 +144,7 @@ until someone reads two tasks side by side.
 
 | Task                                                  | Does                                                                        |
 | ----------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `setup:all [--all] [--<id>…]`                         | the bootstrap orchestrator — the order below; `--<id>` per member           |
+| `setup:all [--all] [--<slug>…]`                       | the bootstrap orchestrator — the order below; `--<slug>` per member         |
 | `setup:mise`                                          | reshim, doctor, install, upgrade; formatter plugins and the linter if present |
 | `setup:secrets`                                       | **slot** — the pinned secret manager's setup                                |
 | `setup:external:{start,stop,pull}`                    | **slots** — local services; each a no-op outside a dev shell                |
@@ -276,9 +276,12 @@ clean machine is a step that breaks the second run.
 
 ### Member flags
 
-A repo with members — submodules, or projects the registry names — gets **one
-flag per member** on top of `--all`, and the ids come from the same list the
-`p:` group uses (see below):
+A repo with members — each submodule, or each path `MEMBERS` names — gets **one
+flag per member repo** on top of `--all`, each named by that member's own slug.
+The flags come from the **member list**, never from the project ids the `p:`
+group uses (see below): a repo's projects and its members are two different
+lists, and a repo with three projects in one tree and no members gets no flags
+at all:
 
 ```bash
 #USAGE flag "--all" help="Also set up every member project"
@@ -289,9 +292,9 @@ flag per member** on top of `--all`, and the ids come from the same list the
 Each member runs its **own** task library through `mise run --cd <path>
 setup:all`, so a polyglot repo gets one library per project rather than one
 library that knows every language. The short forms live in `[shell_alias]`, one
-`setup-<id>` per member. **A single-project repo has no members and therefore no
-flags beyond `--all`**, which is then a no-op — left in place because a caller
-passes it without knowing the repo's shape.
+`setup-<slug>` per member repo — the same list again. **A repo with no members
+therefore has no flags beyond `--all`**, which is then a no-op — left in place
+because a caller passes it without knowing the repo's shape.
 
 **The member *list* is one function, `members()` in `_scripts/helpers`**, and
 every task that walks members calls it — `setup:all --all` and `code:worktrees`
@@ -566,14 +569,18 @@ of what this project *is*, and that no contract can name in advance.
    not `p:app:build`. A repo that later becomes a member keeps working, and a
    task name never has to be re-learned because the repo grew.
 
-Whichever of the three the name comes from, four surfaces — `REPO_NAME` in
-`.config/mise.toml`'s `[env]`, the `p:<id>:*` group, the member flag and the
-`setup-<id>` alias — carry one identical project-id token, which `/vwf:init`
-derives, shows and has you confirm before any of them is written. A mismatch
-between any two is a defect, and this library never derives the id itself.
+Whichever of the three the name comes from, two surfaces — `REPO_NAME` in
+`.config/mise.toml`'s `[env]` and the `p:<id>:*` group — carry one identical
+project-id token, which `/vwf:init` derives, shows and has you confirm before
+either is written. A mismatch between the two is a defect, and this library
+never derives the id itself.
 
-Every id is the same one `setup:all`'s member flags and the `setup-<id>` shell
-aliases use. One list, four surfaces.
+**`setup:all`'s member flags and the `setup-<slug>` aliases are not on that
+list.** They are named for this repo's **member repos** — each submodule, or
+each path `MEMBERS` gives — one flag and one alias per member, whatever ids the
+projects inside that member carry. The two lists coincide only in the case that
+made them easy to confuse: a product whose every member holds exactly one
+project named after it.
 
 **Every project gets a `_default` slot.** No pack can know a project's commands,
 so `/vwf:init` creates `p/<id>/_default` as a `#PLACEHOLDER` that prints "no

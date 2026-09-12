@@ -107,8 +107,8 @@ variant is loaded.
   worktrees = "mise run code:worktrees"
   ```
 
-  plus one `setup-<project-id>` per member project, generated from the same id
-  list `setup:all`'s flags and the `p:<id>:*` task group use.
+  plus one `setup-<slug>` per **member repo**, from the same list `setup:all`'s
+  member flags come from — this repo's members, never its project ids.
 - **`mise.ci.toml`** — `locked = true`, so the pipeline installs from the
   tracked lockfiles and fails rather than resolving; the deployed runtime's env
   values; and any per-runtime CI workaround (topic 5). **Never a secret.**
@@ -144,18 +144,20 @@ two differ in value and never in vocabulary.
 
 - `mise.toml` `[env]` — only what is identical everywhere (`DISABLE_TELEMETRY`),
   plus **`REPO_NAME`**: a marked position the orchestrator fills with this repo's
-  project id — the same token the `p:<id>:*` group, the member flags and the
-  `setup-<id>` aliases carry, derived once by `/vwf:init`, shown and confirmed
-  before any of the four is written. **A literal, never derived at load time** —
-  the basename of the config root is the *branch* name inside a linked worktree,
-  so a derived value would address a different repo depending on where you stood.
+  project id — the same token the `p:<id>:*` group carries, derived once by
+  `/vwf:init`, shown and confirmed before either is written. `setup:all`'s
+  member flags and the `setup-<slug>` aliases are a **different** list: one per
+  **member repo**, named by that member's own slug, never by a project id.
+  `REPO_NAME` is **a literal, never derived at load time** — the basename of the
+  config root is the *branch* name inside a linked worktree, so a derived value
+  would address a different repo depending on where you stood.
   Aliases that vary only by repo (the agent launchers) belong in the user's
   **global** config reading `$REPO_NAME`, not here: one definition, per-repo
   values. Two more marked positions sit beside it, both filled by the
   orchestrator and both with a working default: **`MERGE_MODEL`**
   (`direct` | `pr`) — whether `code:merge:*` merges locally and pushes, or
   pushes and opens a pull request — and **`MEMBERS`**, the space-separated,
-  repo-relative paths of this repo's member projects, left empty when they are
+  repo-relative paths of this repo's member repos, left empty when they are
   submodules, which `members()` reads from `.gitmodules` instead. A string and
   never an array: mise env values are strings. **Two more marked positions sit
   outside the TOML**, in `.config/mise/tasks/setup/ai`: `EXTRA_MARKETPLACES`
