@@ -151,7 +151,7 @@ until someone reads two tasks side by side.
 | `setup:deps:all`                                      | `cleanup → install → upgrade → outdated → audit`                            |
 | `setup:deps:{install,cleanup,upgrade,outdated,audit}` | **slots** — the package manager's verbs; `install` honours `--frozen`       |
 | `setup:precommit`                                     | autoupdate, unset `core.hooksPath`, install the hooks                       |
-| `setup:ai`                                            | install and reconcile this repo's agent plugins                             |
+| `setup:ai [--user] [--inventory]`                     | install and update the repo's required plugins at project scope             |
 | `setup:vscode`                                        | reconcile the repo's editor profile with its recommended extensions        |
 | `setup:worktree`                                      | the lighter sibling a fresh worktree runs                                   |
 | `code:all [--fix] [--debug]`                          | the one-command gate: `format → lint → sec`                                 |
@@ -349,6 +349,44 @@ dev shell rather than failing.
 
 `setup:all` calls `start`, so one bootstrap leaves a developer able to run the
 product. A repo with no external services leaves the three slots as shipped.
+
+### `setup:ai` — the repo's agent plugins
+
+Installs and updates the plugins **this repo** requires, through the agent CLI's
+own plugin commands and nothing else — no package-manager one-shot. The required
+set is the toolkit's own workflow plugin plus the rows of one marked position,
+`EXTRA_PLUGINS`. The other, `EXTRA_MARKETPLACES`, holds **marketplaces**: they
+are registered in their own pass before any install and are never installed as
+plugins. A plugin that arrives as another's declared dependency is never listed
+either, because the CLI resolves it.
+
+**Project scope, and the exception is a flag.** Every install, update and prune
+runs `--scope project`, so the repo's own settings file is what declares the
+plugins and a machine's user-scope choices are left alone. `--user` flips every
+scope for the rare repo that genuinely wants them global. A plugin already
+enabled at user scope is still installed at project scope: the point is the
+declaration in the repo, not the presence on the machine.
+
+**Two modes must both survive, and the difference is invisible to the task.** A
+marketplace may be registered from a remote repository or from a local directory
+— a toolkit author runs the second so they can use what they are editing. So the
+task **asks what is registered** and branches: a marketplace already registered
+under the name it wants is **updated**, never re-added, whatever source it
+resolves from; only an unregistered one is added. Re-adding a name whose
+registered source differs is an error, not a no-op, which is exactly the failure
+this branch exists to avoid. The same rule covers every extra marketplace the
+repo names.
+
+**`--inventory` is for the orchestrator, not for a human.** It prints what this
+machine already has — one line per registered marketplace other than the
+toolkit's own, then one line per installed plugin with its marketplace and scope
+— and exits, printing nothing else on stdout. That is the seed for the question
+`/vwf:init` asks before it fills the two marked positions; it installs nothing.
+
+Two smaller obligations close the task: the **knowledge-graph tool** is wired
+when it is on `PATH` and merely hinted at when it is not, and a **statusline**
+package is only ever hinted at, never installed — it is a per-machine choice
+made with the machine's own package manager.
 
 ### `setup:vscode` — the repo's editor profile
 

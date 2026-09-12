@@ -110,14 +110,30 @@ hide        = true
 run         = "find .config/mise/tasks/ -name '*' -type f -not -path '*/*.env' -exec chmod 755 {} \\;"
 ```
 
-**The base `[env]` carries three marked positions, and they are the only ones.**
-`REPO_NAME` is the repo's own id; `MERGE_MODEL` is how `code:merge:*` lands a
-branch here; `MEMBERS` is the member list for a product whose parts are linked
-as siblings rather than as submodules. Each ships with a working default, so an
-unfilled repo runs — `direct` is today's local merge, an empty `MEMBERS` means
-`members()` falls through to `.gitmodules` — and each is filled by the
-orchestrator rather than by hand. They sit in the **base** and not in
-`mise.dev.toml` because the tasks that read them run in the pipeline too.
+**The base `[env]` carries three marked positions, and they are the only ones
+in any of the five files.** `REPO_NAME` is the repo's own id; `MERGE_MODEL` is
+how `code:merge:*` lands a branch here; `MEMBERS` is the member list for a
+product whose parts are linked as siblings rather than as submodules. Each ships
+with a working default, so an unfilled repo runs — `direct` is today's local
+merge, an empty `MEMBERS` means `members()` falls through to `.gitmodules` — and
+each is filled by the orchestrator rather than by hand. They sit in the **base**
+and not in `mise.dev.toml` because the tasks that read them run in the pipeline
+too.
+
+**Two more marked positions sit outside the TOML**, in the task library rather
+than the config: `EXTRA_MARKETPLACES` and `EXTRA_PLUGINS` in
+`.config/mise/tasks/setup/ai`. They are arrays, one row per line, filled by the
+same orchestrator, from a confirmed answer seeded by the task's own
+`--inventory` run:
+
+| Position             | Row shape                   | Is                                  |
+| -------------------- | --------------------------- | ----------------------------------- |
+| `EXTRA_MARKETPLACES` | `<source-ref>\|<name>`      | a marketplace beyond the toolkit's  |
+| `EXTRA_PLUGINS`      | `<name>@<marketplace>`      | a plugin this repo requires         |
+
+Both default to empty — a repo that needs only the toolkit's own plugin fills
+neither — and both keep their template comment in place after filling, so a
+later reshape can re-derive them.
 
 **`minimum_release_age` and `lockfile` are one policy, not two.** The freshness
 rule is *latest, but defer anything released in the last ten hours*, and the
