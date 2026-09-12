@@ -70,6 +70,31 @@ dprint "${action}" \
   --log-level "${log_level}" \
   ${files[@]+"${files[@]}"}
 
+# The toolchain manager's shipped default, and an overlay keeps it: a commit
+# gets whatever this task does, so a tool that drops out of it stops running at
+# all. Silent when the binary is absent, and silent when nothing in scope is
+# shell. The flags match the ones the shell gate checks with, so formatting
+# here and checking there cannot disagree.
+if command -v shfmt >/dev/null 2>&1; then
+  shell_scope=()
+  while IFS= read -r shell_file; do
+    if [ -n "${shell_file}" ]; then
+      shell_scope+=("${shell_file}")
+    fi
+  done < <(shell_files_in_scope ${files[@]+"${files[@]}"})
+
+  if [ "${#shell_scope[@]}" -gt 0 ]; then
+    print_subheader "Formatting shell scripts ..."
+    if [ "${action}" = "fmt" ]; then
+      shfmt -w -i 2 -ci "${shell_scope[@]}"
+    else
+      # `-d` reports a diff and fails rather than rewriting, so a read-only run
+      # stays read-only.
+      shfmt -d -i 2 -ci "${shell_scope[@]}"
+    fi
+  fi
+fi
+
 if [ ${#dart_targets[@]} -gt 0 ]; then
   print_subheader "Formatting Dart sources ..."
   dart format ${format_args[@]+"${format_args[@]}"} "${dart_targets[@]}"
