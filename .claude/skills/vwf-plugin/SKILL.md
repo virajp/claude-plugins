@@ -63,51 +63,66 @@ plans and runs work with no blueprint slice behind it, reads neither the
 blueprint nor the registry, and gates on the commands its own plan folder names.
 `init` is not a command on that line: since 2026-09-06 it is **skill-invoked**
 and runs inside setup's Step 0, or alone via `/vwf:setup reshape`. `init` shapes
-the **base repo** and `setup` sets up **vwf** in it — two different things, and
-a repo can have either without the other. `init` materializes the three
-unconditional bundles through the stack adapter by the fixed slugs `mise`,
-`repo-gates` and `repo-hygiene`, fills the marked positions those packs leave it
-(the member flags, the shell aliases, the per-project groups, the repo-name key,
+the **base repo and every member repo the product has** and `setup` sets up
+**vwf** in the base — two different things, and a repo can have either without
+the other. It resolves that set itself and takes no argument: the base per the
+membership asset (so a run started inside a member walks up and shapes the
+product), the members as the **union** of `.gitmodules` walked recursively and
+the config's `members:` list, deduped on realpath, with a path in only one of
+two present sources reported as a disagreement and never shaped, and an absent
+member offered a **clone row inside the same plan**. Mode resolves per repo on
+that repo's own markers, there is **one plan with a section per repo and one
+consent**, and the apply order is members first so the base commits its gitlinks
+current. `init` materializes the three unconditional bundles through the stack
+adapter by the fixed slugs `mise`, `repo-gates` and `repo-hygiene` — per repo,
+each with its own lockfile — fills the marked positions those packs leave it
+(the member flags and their aliases, named for the **member repos** and never
+from a project id; the per-project groups and their aliases; the repo-name key,
 `MERGE_MODEL` and `MEMBERS`, the commit gate's scopes and forge links, and the
 plugin task's two agent-plugin lists), runs **three** merges — ignore sections,
 pre-commit fragments, editor fragments — and writes a two-line readme stub; it
 names no tool, and every file it lays down is a pack's. Before any of that it
-asks **seven** questions, the second confirming every project id, the slug it
-resolves to and the source the name came from — nothing writes a `p:<slug>:*`
-group, a member flag, an alias or `REPO_NAME` until that list is accepted — and
-the fifth asking which agent plugins this repo requires, seeded by running the
-plugin task's own inventory mode and written into those two lists. It then
-closes with a **consent-gated git pass**: it asks the landing model and writes
-it to `MERGE_MODEL`, stages what the run wrote, asks one question with three
-answers (commit / commit and push / leave it), commits with a fixed `ops:`
-message, and creates whichever of `develop` and `main` the branch model needs.
-It **never reaches the remote's own settings** — setting a forge's default
-branch is a one-time act, not a task a machine re-runs, and the line telling a
-maintainer to do it lives in the hygiene pack's `CONTRIBUTING.md`, which may
-name `gh` and `glab` where vwf prose may not. Init is **not a one-time
-bootstrap**: its "when it runs again" doctrine names the moments, and
-`/vwf:doctor` has the drift finding that prints the one remedy,
-`/vwf:setup reshape`. `setup` is the Phase-0 bootstrapper — it onboards a repo
-(a Step-0 shape check that offers `/vwf:init` when any of the three slugs is
-missing **or** any of doctor's six baseline predicates fails, the `reshape`
-argument forcing that offer and stopping once init returns, detect-or-ask
-topology via MCQ, consent-gated reconciliation into the `docs/blueprint/`
-format, the CLAUDE.md vwf section, the memory tree and `mempalace.yaml`, the
-`environment.md` bootstrap) and is **re-runnable**: re-running *is* the resume
-mechanism, since Step 0 re-resolves the mode from what is on disk and a
-conforming repo resolves to `current`. **It runs none of the foundations** — it
-ends by printing the chain and offering to start `/vwf:product`, because each of
-those commands resolves its own mode and reports what it did, which a gate
-inside setup could only guess at on their behalf. `product.md` (the Phase −1
-outcome contract, type `vwf-product`, gated by the `product-reviewer`) and
-`architecture` (the registry) are both unconditionally required before
-`blueprint` — every **flow's** Purpose must `Serves:`-link a product goal anchor
-(entities trace to goals transitively via their `Used by:` flow links), which
-the `blueprint-reviewer` verifies and the minimalism check traces to.
-`design-system` is a second foundation, **required once the registry has a UI
-project** (some project declares a **screen platform**): `blueprint` halts on a
-flow with a Screens surface if `docs/blueprint/design-system.md` is missing.
-`environment.md` (the per-project env-var/secret catalog, type
+asks **seven** questions — one round each for the whole product, a per-repo
+answer showing as a row inside its single round — the second confirming every
+project id, the slug it resolves to and the source the name came from, grouped
+by repo: nothing writes a `p:<slug>:*` group, its alias or `REPO_NAME` until
+that list is accepted. The fifth asks which agent plugins this product requires,
+seeded by running the plugin task's own inventory mode and written into those
+two lists; 4 and 5 are answered once for every repo, 2, 6 and 7 carry a row per
+repo, and 1 and 3 a row per repo that resolved **new**. It then closes with a
+**consent-gated git pass**, whose two questions are asked once and applied to
+every repo: it asks the landing model and writes it to `MERGE_MODEL`, stages
+what the run wrote, asks one question with three answers (commit / commit and
+push / leave it), commits with a fixed `ops:` message — the members first, then
+the base with the moved **gitlinks** staged — and creates whichever of `develop`
+and `main` the branch model needs, per repo. It **never reaches the remote's own
+settings** — setting a forge's default branch is a one-time act, not a task a
+machine re-runs, and the line telling a maintainer to do it lives in the hygiene
+pack's `CONTRIBUTING.md`, which may name `gh` and `glab` where vwf prose may
+not. Init is **not a one-time bootstrap**: its "when it runs again" doctrine
+names the moments, and `/vwf:doctor` has the drift finding that prints the one
+remedy, `/vwf:setup reshape`. `setup` is the Phase-0 bootstrapper — it onboards
+a repo (a Step-0 shape check, run over **every repo in the product** — the base
+and every locally-present member — that offers `/vwf:init` once when any of the
+three slugs is missing **or** any of doctor's six baseline predicates fails in
+any of them, the `reshape` argument forcing that offer and stopping once init
+returns, detect-or-ask topology via MCQ, consent-gated reconciliation into the
+`docs/blueprint/` format, the CLAUDE.md vwf section, the memory tree and
+`mempalace.yaml`, the `environment.md` bootstrap) and is **re-runnable**:
+re-running *is* the resume mechanism, since Step 0 re-resolves the mode from
+what is on disk and a conforming repo resolves to `current`. **It runs none of
+the foundations** — it ends by printing the chain and offering to start
+`/vwf:product`, because each of those commands resolves its own mode and reports
+what it did, which a gate inside setup could only guess at on their behalf.
+`product.md` (the Phase −1 outcome contract, type `vwf-product`, gated by the
+`product-reviewer`) and `architecture` (the registry) are both unconditionally
+required before `blueprint` — every **flow's** Purpose must `Serves:`-link a
+product goal anchor (entities trace to goals transitively via their `Used by:`
+flow links), which the `blueprint-reviewer` verifies and the minimalism check
+traces to. `design-system` is a second foundation, **required once the registry
+has a UI project** (some project declares a **screen platform**): `blueprint`
+halts on a flow with a Screens surface if `docs/blueprint/design-system.md` is
+missing. `environment.md` (the per-project env-var/secret catalog, type
 `vwf-environment`) is a third foundation, **required once the registry declares
 an external integration or a secrets-manager `config`** — `setup` bootstraps it
 from the repo's existing env-var/secret usage (names only, never values) and

@@ -9,8 +9,10 @@
 #
 # `_project` is a MARKED POSITION, not a task group. The command that pins this
 # stack renames the directory to the project's registry id, so this becomes
-# `p/<id>/deploy` and runs as `p:<id>:deploy` — the same id `setup:all`'s member
-# flags and the `setup-<id>` shell aliases use.
+# `p/<id>/deploy` and runs as `p:<id>:deploy` — the same id the repo's own
+# `REPO_NAME` carries where that project is the repo itself. (`setup:all`'s
+# member flags and the `setup-<slug>` shell aliases are named for member REPOS,
+# never for a project id.)
 #
 # The underscore is doing two jobs. `config/_<name>/` at the TOP of a pack's
 # config tier is pack-private and never copied; this is nested well below that,

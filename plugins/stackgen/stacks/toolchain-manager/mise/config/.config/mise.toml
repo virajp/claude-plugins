@@ -97,8 +97,9 @@ DISABLE_TELEMETRY = 1
 # with the repo's project id: the name lowercased, every run of characters
 # outside [a-z0-9] replaced by a single "-", leading and trailing "-" trimmed.
 # So `virajp.dev` becomes `virajp-dev`. It is the same token the `p:<id>:*` task
-# group, `setup:all`'s member flags and the `setup-<id>` aliases carry, and the
-# rule and its reasons are stackgen's `assets/ids.md`.
+# group carries — `setup:all`'s member flags and the `setup-<slug>` aliases are
+# named for the MEMBER REPOS instead, never for a project id — and the rule and
+# its reasons are stackgen's `assets/ids.md`.
 #
 # **It is a literal, and it is never derived at load time.** The obvious
 # shorthand — reading the basename of the config root — is wrong in a linked
@@ -126,7 +127,7 @@ REPO_NAME = "unfilled"
 # repo that gates landing on review sets `pr` and nothing else changes.
 MERGE_MODEL = "direct"
 
-# A MARKED POSITION. The repo's member projects, space separated, each path
+# A MARKED POSITION. The repo's member repos, space separated, each path
 # relative to this repo's root — `MEMBERS = "backend frontend"`. It is what
 # `setup:all --all` recurses into and what `code:worktrees` walks.
 #

@@ -397,7 +397,11 @@ in `.config/vwf.yaml` for any of them — nothing was chosen, so there is no
 choice to record — and the landing goes in `lock.yaml` like any other
 materialization. All three slugs present in that lockfile is what "this repo is
 shaped" means: `/vwf:setup` no longer fetches them, it checks for exactly that
-and offers `/vwf:init` when one is missing — or when the shape has drifted.
+and offers `/vwf:init` when one is missing — or when the shape has drifted. On a
+multi-repo product it checks **every repo**, the base and every member present
+on this machine, and one repo missing a slug or behind its baseline is enough to
+make the offer; `init` then fetches the three into every repo it resolved, each
+with its own lockfile.
 
 They are unconditional because a repo that has picked no stack yet still needs a
 formatter, a secret scanner, a vulnerability scanner, an ignore set, and a way
@@ -621,9 +625,10 @@ inside `code/*` and `setup/*` change with the tech stack.
   recurses into every **member**, which `_scripts/helpers`' `members()` answers
   for under either multi-repo linkage — the repo's submodules where
   `.gitmodules` exists, else the paths listed in the `MEMBERS` env value — and
-  one `--<project-id>` flag per member is generated from the repo's own project
-  ids. `code:worktrees` reads the same helper, so the two never disagree about
-  what a member is. Alias it as `setup`.
+  one `--<slug>` flag per **member repo** is generated from that same list,
+  named for the member and never for a project id: a member holding three
+  projects is still one flag. `code:worktrees` reads the same helper, so the two
+  never disagree about what a member is. Alias it as `setup`.
 - **`setup/vscode` — the repo's editor profile**, and `setup:all`'s last step.
   It reads the recommendation ids out of the editor file `/vwf:init` composed
   from every pack's fragment and makes a profile named `$REPO_NAME` match:
@@ -717,12 +722,15 @@ became the first cloud pack to ship a `config/` tree at all;
 `cloud-service/workers-ssr` and `cloud-service/containers` followed with the
 same pair.
 
-**What no pack can know, and `/vwf:init` fills.** It is more than two things,
-and each is a commented slot a pack ships **in place**, never a file init
-authors from scratch:
+**What no pack can know, and `/vwf:init` fills** — in the base repo and in every
+member repo it resolved, each from that repo's own answers. It is more than two
+things, and each is a commented slot a pack ships **in place**, never a file
+init authors from scratch:
 
-- the bootstrap aggregator's **member flags** and the **shell aliases**, both
-  generated from the repo's project ids;
+- the bootstrap aggregator's **member flags** and the `setup-<slug>` **shell
+  aliases** beside them, both one per **member repo** and named for the member,
+  never from a project id — what they widen a run to is another repository. A
+  reshape rewrites a list an earlier version generated from project ids;
 - the **per-project `p:<id>:*` groups**, scaffolded as a `_default` placeholder
   per project — the one file init authors rather than copies, because no pack
   can know a project's name;
@@ -731,27 +739,30 @@ authors from scratch:
   linked worktree's config root is named for the branch, so a derived value
   would change identity every time somebody cut one. The per-repo launch aliases
   that read it live in your own global configuration — init publishes the value
-  and never writes outside the repo;
+  and never writes outside the repos it resolved;
 - **`MERGE_MODEL`**, beside it in the same `[env]` block: `direct` or `pr`, the
   landing model the merge tasks read, asked inside init's git pass. Unset reads
   as `direct`, so an unfilled repo behaves as it always did;
 - **`MEMBERS`**, beside those two: the product's other repositories as
-  space-separated paths relative to the repo root, filled from the registry's
-  member list. A submodule product leaves it empty — `.gitmodules` answers
-  instead;
+  space-separated paths relative to the repo root, filled from the members init
+  resolved where the linkage is **siblings**. A submodule product leaves it
+  exactly as shipped — `.gitmodules` answers instead;
 - the commit gate's **scope list**, from the project registry, which is why it
   is re-run work by construction: the registry does not exist when init first
   shapes a repo, so the empty list a first run leaves is the correct state;
 - the commit gate's **forge links**, from the origin remote — fillable on *any*
   run that has one, first included.
 
-Every id above is **slugged** first, by a rule the adapter's `assets/ids.md`
+Every name above is **slugged** first, by a rule the adapter's `assets/ids.md`
 owns: lowercased, runs outside the slug alphabet collapsed to a single `-`, ends
-trimmed. The reason is measured rather than stylistic — the task runner reads a
-per-project group's directory name as the task's *last* segment once the
-`_default` slot collapses into it, and strips what looks like an extension from
-that segment, so an id carrying a dot silently loses everything after it and the
-task the repo shows you is not the task it has.
+trimmed. That asset governs the **project id** — the `p:<id>:*` group and
+`REPO_NAME` are the two surfaces it fills — and a member's name takes the same
+spelling rule on its way into a flag or an alias. The reason is measured rather
+than stylistic — the task runner reads a per-project group's directory name as
+the task's *last* segment once the `_default` slot collapses into it, and strips
+what looks like an extension from that segment, so an id carrying a dot silently
+loses everything after it and the task the repo shows you is not the task it
+has.
 
 A pack can still contribute **one task** to a project's group without knowing
 its name: a `config/` tree's `.config/mise/tasks/p/_project/` directory is

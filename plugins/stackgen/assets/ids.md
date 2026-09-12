@@ -62,9 +62,14 @@ the id is derived once and then carried, never re-derived per surface.
 | Surface                        | Shape                        |
 | ------------------------------ | ---------------------------- |
 | The per-project task group     | `p/<id>/`, run as `p:<id>:…` |
-| The member flag on `setup:all` | `--<id>`                     |
-| The setup alias                | `setup-<id>`                 |
 | The repo's own environment key | `REPO_NAME = "<id>"`         |
+
+Two, and no more. The bootstrap aggregator's **member flags** and the
+`setup-<slug>` **aliases** beside them look like a third and a fourth and
+are not: they are one per **member repo**, named for the member, because
+what they widen a run to is another repository. A member holding three
+projects is still one flag. So a project id never reaches them, and this
+rule is not what names them.
 
 `REPO_NAME` carries the **slug**, never the raw name. It is the toolchain
 manager pack's marked position, and everything reading it — a launcher
@@ -77,8 +82,7 @@ Two, and only two:
 
 - **The orchestrator that resolves ids** — whatever shapes the repo
   derives the id when it resolves a project's name, writes it into the
-  task group, the flags, the aliases and `REPO_NAME`, and reports the id
-  it used.
+  task group and `REPO_NAME`, and reports the id it used.
 - **The materializer**, when it renames a pack's `p/_project/` marked
   position to the project this stack is being pinned for
   (`${CLAUDE_PLUGIN_ROOT}/skills/stackgen-stack-template/references/materializer.md`).
