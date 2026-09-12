@@ -2,7 +2,7 @@ name: pre-commit
 summary: The local gate, and the wiring that makes local and CI run the
   identical command. Ships .config/pre-commit-config.yaml and
   .config/git-conventional-commits.yaml.
-version: 1.0.0
+version: 1.1.0
 type: toolchain-gate
 kind: repo-gate
 axis: repo

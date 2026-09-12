@@ -1,7 +1,7 @@
 name: Ruff
 summary: The lint and format gate for Python — one tool for both halves, run
   through the project's uv environment rather than a global install.
-version: 0.1.0
+version: 0.2.0
 type: toolchain-gate
 kind: language-bundle
 axis: repo
