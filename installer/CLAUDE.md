@@ -19,7 +19,12 @@ wires graphify, and removes what the toolkit put on a machine.
   tag). It never edits Claude's settings itself. What stays deliberately cut is
   everything thicker than that: the copied payload, the adapters, the
   `requires:` gate, and any receipt for a plugin install — Claude's settings are
-  the record, and `--uninstall` reads them live.
+  the record, and `--uninstall` reads them live. **Nothing in a shaped repo
+  calls this**: since 2026-09-12 the task library's `setup:ai` drives those same
+  `claude plugin` commands itself, at project scope, so a repo reconciles its
+  own plugin set without a package runner and without this CLI's hardcoded
+  marketplace source. This is the one-shot a person runs; that is what a
+  checkout re-runs.
 - **graphify's wiring** — `graphify install` + `hook install`.
 - **`--uninstall`** — interactive; see below.
 

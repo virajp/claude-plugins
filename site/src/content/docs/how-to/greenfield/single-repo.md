@@ -64,11 +64,15 @@ On an empty repo `init` resolves to its **new** pipeline and shapes the repo
 before anything else runs: the config layout, the toolchain manager's five-file
 split, the task library grouped `setup:*` / `code:*` / `p:*`, the four repo
 gates with their configs and hook fragments, the hygiene files, and the licence
-Relay chose. It asks six questions in one round each — the repo name and a
+Relay chose. It asks seven questions in one round each — the repo name and a
 one-line brief (both proposed or skippable), the ids it will write task groups
 and aliases for (each shown with its slug and where the name came from, yours to
-replace), which provider holds Relay's secrets, the licence, and a security
-contact — then shows **one plan** and applies it on one yes.
+replace), which provider holds Relay's secrets, which **agent plugins this repo
+requires** (a multi-select seeded by what is already registered on your machine,
+with *none* as the ordinary answer — `init` offers those rows minus the workflow
+plugin's own and its dependency's, since `setup:ai` installs those two either
+way), the licence, and a security contact — then shows **one plan** and applies
+it on one yes.
 
 It closes with a git pass: it stages what it wrote and asks once whether to
 commit, commit and push, or leave it, creates `develop` and `main`, and asks
