@@ -18,8 +18,9 @@ vwf_registry: 2
 #
 # `web` here declares `webapp` — the browser-delivered application, calling the
 # api project. A project publishing its own API alongside its own UI declares
-# `[service, webapp]`, which is what `fullstack` used to mean and what an
-# operator back-office is (that plus the `operator-rbac` capability).
+# `[service, webapp]` under the `backend` role — `webapp` sits in that role's
+# list too — which is what `fullstack` used to mean and what an operator
+# back-office is (that plus the `operator-rbac` capability).
 #
 # The platforms are what everything downstream keys on: `webapp` is a SCREEN
 # platform, so `web` gets the design-system mandate, the standard flows, and one

@@ -69,14 +69,17 @@ are what vwf branches on; the role is an index, never a gate.
 
 | Role | Platforms |
 | --- | --- |
-| `backend` | `packages` `service` `worker` |
+| `backend` | `packages` `service` `worker` `webapp` |
 | `frontend` | `packages` `site` `webapp` `desktop` `mobile` `tablet` `auto` `cli` |
 | `data` | `packages` `data-lake` `analytics` `ingestion` `ml-platform` |
 | `system` | `packages` `iac` `plugin` `misc` `cicd` `cli` |
 
 `packages` is available under every role; the role names the primary consumer
 domain. A package consumed by both the API and the web app is a judgment call —
-**ask**, never guess.
+**ask**, never guess. `webapp` sits under `backend` too, for one shape only: a
+deployable publishing an API and serving its own UI from the same origin —
+`backend` / `[service, webapp]`, the retired `fullstack`. A browser app that
+calls *another* project's API stays `frontend`.
 
 **A role is named by who consumes the project's output**, never by where its
 code sits or what it is written in:

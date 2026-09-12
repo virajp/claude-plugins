@@ -580,8 +580,9 @@ framework — and a backing template is now one capability rather than a vendor
 bundle, so `postgres` + `oidc` + `otel-lgtm` + `temporal`, each a stackgen
 bundle, is a completely vendor-free path through vwf.
 
-An operator back-office is `platforms: [service, webapp]` plus the
-`operator-rbac` capability, and picks whichever project template serves both of
+An operator back-office is `backend` / `platforms: [service, webapp]` plus the
+`operator-rbac` capability (`webapp` sits under `backend` as well as `frontend`
+for exactly this shape), and picks whichever project template serves both of
 those platforms at once. A project shipping through a store rather than to a
 deploy target (`mobile`, `tablet`, `desktop`, `auto`) records `[]` on the deploy
 axis, as does an `iac` project — it *is* the deploy path. A `cli` project pins
@@ -718,10 +719,10 @@ project's `cicd` axis — [`stackgen`](./stackgen.md)'s
 `contracts/release-trigger.md` and its `ci-system` pack.
 
 The **operator back-office** deserves a note. Since format 22 it is not its own
-role: it is `platforms: [service, webapp]` plus the `operator-rbac` capability —
-a single app serving both the operator API and an embedded UI, and the **sole
-holder of admin capabilities** (the public `service` exposes no admin routes).
-The capability, not a type name, is what marks it.
+role: it is `backend` / `platforms: [service, webapp]` plus the `operator-rbac`
+capability — a single app serving both the operator API and an embedded UI, and
+the **sole holder of admin capabilities** (the public `service` exposes no admin
+routes). The capability, not a type name, is what marks it.
 
 The full stack docs ship inside each **stack plugin** under its own `stacks/`
 tree — never in vwf — and drive what `/vwf:setup` and `/vwf:architecture`

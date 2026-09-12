@@ -31,13 +31,17 @@ projects:
     # Platforms are what vwf branches on — every mandate below keys on them,
     # never on the role.
     #
-    #   backend   packages service worker
+    #   backend   packages service worker webapp
     #   frontend  packages site webapp desktop mobile tablet auto cli
     #   data      packages data-lake analytics ingestion ml-platform
     #   system    packages iac plugin misc cicd cli
     #
     # `packages` is available under EVERY role; the role names the primary
-    # consumer domain. A single codebase shipping several surfaces declares
+    # consumer domain. `webapp` sits under `backend` as well as `frontend` for
+    # the same reason `cli` sits under two: a deployable that publishes an API
+    # and serves its own UI from the same origin is a backend whose UI rides
+    # along, so it types as `backend` / `[service, webapp]` without leaving
+    # its role's list. A single codebase shipping several surfaces declares
     # them all — a Flutter project is one project with four platforms, not
     # four projects.
     platforms: [ <platform>, <...> ]
@@ -85,8 +89,8 @@ projects:
 #     a later effort; until it exists, absence of coverage is by design and not
 #     a hole the surveyor reports.
 #
-# An operator back-office is not its own platform: it is `[service, webapp]`
-# plus the `operator-rbac` capability.
+# An operator back-office is not its own platform: it is `backend` /
+# `[service, webapp]` plus the `operator-rbac` capability.
 #
 # On-disk recognition: skills/setup/references/topology-detection.md
 
