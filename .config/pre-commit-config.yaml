@@ -192,6 +192,11 @@ repos:
         name: Check JSON syntax
         description: Every config gate below reads a config file; an unparseable
           one fails inside the tool with a message about the tool.
+        # The tsconfigs and the editor files are JSONC by design — comments and
+        # trailing commas, which TypeScript and VS Code both accept and a strict
+        # JSON parse does not. `p:plugins:check` parses the shipped ones as
+        # JSONC; these are this repo's own.
+        exclude: (^|/)tsconfig[^/]*\.json$|^\.vscode/
       - id: check-toml
         name: Check TOML syntax
         description: Same reason as JSON, for the toolchain manager's config.
