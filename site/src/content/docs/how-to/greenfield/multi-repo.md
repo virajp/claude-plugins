@@ -46,7 +46,7 @@ stack live, and it holds no product code — now or ever.
 Step 0 finds the empty repo unshaped and offers `init`; accept it. `init` shapes
 the base repo the same way it shapes any other
 ([`/vwf:init`](../../plugins/vwf.md#vwfinit)), git pass included — so the base
-repo leaves that run with a first commit, both branches and a forge default —
+repo leaves that run with a first commit, both branches and a landing model —
 and each member repo gets its own `init` run when it is created, since the shape
 is per repo, not per product.
 
@@ -307,6 +307,11 @@ first of these surfaces at `/vwf:execute`:
 - **Per-checkout tooling multiplies.** Memory and code intelligence follow the
   checkout, so siblings means one mempalace config per repo, all naming the same
   wing, where submodule linkage keeps one at the base.
+- **The member paths go in `MEMBERS`.** The base repo's task library finds its
+  members through one helper, which reads `.gitmodules` where there is one and
+  the `MEMBERS` value in `.config/mise.toml` otherwise — so under `siblings`
+  that value is what `setup:all --all` and `code:worktrees` walk. `init` fills
+  it from the registry's member list; a submodule product leaves it empty.
 
 Neither answer is permanent — both are written uniformly enough that switching
 is a config edit rather than a second migration.

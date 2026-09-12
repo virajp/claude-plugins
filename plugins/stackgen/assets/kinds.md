@@ -293,11 +293,14 @@ bundle, each with its own allowlist.
   `.config/dprint.json`, `.config/gitleaks.toml`, `.config/grype.yaml`,
   `.config/pre-commit-config.yaml` and `.config/git-conventional-commits.yaml`
   — through the `config/` tier
-  (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). A gate also contributes
-  its hook fragment, `.config/pre-commit.d/<pack>.yaml`, which the
-  materializer copies verbatim and `/vwf:init` merges. Shipping the doctrine
+  (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). Shipping the doctrine
   without the file it describes was the earlier line, and it left every repo
-  hand-writing the config the skill assumes.
+  hand-writing the config the skill assumes. A gate ships **no hook
+  fragment**: the gate config's `format`, `lint` and `sec` hooks call the
+  `code:*` tasks, so a gate tool is configured once, in the task, and a pack
+  needing a gate overlays that task. `.config/pre-commit.d/<pack>.yaml` — copied
+  verbatim, merged by `/vwf:init` — is for a **non-gate** check, such as
+  `package-manager/uv`'s `uv lock --check`.
 - **Scope**: what each gate must catch, what it must not scan, and how a
   finding is answered. Never the language's lint rules — those are the
   language bundle's. Never CI system syntax — that is the reserved

@@ -95,10 +95,11 @@ pruning is only safe once it is scoped to one profile. Silent on a machine
 without the editor.
 
 **No task edits a remote's settings.** Setting the forge's default branch is a
-one-time act by whoever shapes the repo, not something a machine re-runs on every
-bootstrap, so the library carries no task for it and the repo's CONTRIBUTING stub
-names the command instead. It is orthogonal to the merge tasks in any case — work
-flows feature → `develop` → `main` whatever the forge calls default.
+one-time act by whoever shapes the repo, not something a machine re-runs on
+every bootstrap, so the library carries no task for it and the repo's
+CONTRIBUTING stub names the command instead. It is orthogonal to the merge tasks
+in any case — work flows feature → `develop` → `main` whatever the forge calls
+default.
 
 **How a branch lands is the repo's setting, not the lander's.** `MERGE_MODEL` in
 the base `[env]` reads `direct` — merge locally and push — or `pr`, which pushes

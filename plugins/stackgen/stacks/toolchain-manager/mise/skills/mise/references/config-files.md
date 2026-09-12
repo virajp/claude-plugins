@@ -112,8 +112,8 @@ run         = "find .config/mise/tasks/ -name '*' -type f -not -path '*/*.env' -
 
 **The base `[env]` carries three marked positions, and they are the only ones.**
 `REPO_NAME` is the repo's own id; `MERGE_MODEL` is how `code:merge:*` lands a
-branch here; `MEMBERS` is the member list for a product whose parts are linked as
-siblings rather than as submodules. Each ships with a working default, so an
+branch here; `MEMBERS` is the member list for a product whose parts are linked
+as siblings rather than as submodules. Each ships with a working default, so an
 unfilled repo runs — `direct` is today's local merge, an empty `MEMBERS` means
 `members()` falls through to `.gitmodules` — and each is filled by the
 orchestrator rather than by hand. They sit in the **base** and not in

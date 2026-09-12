@@ -339,13 +339,16 @@ that ships a linter and says nothing about the editor ships a linter whose
 editor integration nobody turns on.
 
 Two files inside the fence are written **whole** by no pack, and both are
-composed by `/vwf:init`. The **pre-commit config**: each pack contributes a
-`pre-commit.d/` fragment, and init concatenates them between markers. The **two
-editor files**: init deep-merges every `vscode.d/` fragment's `settings`, unions
-the `nesting` children per parent and the `extensions` list, and writes one
-marked block **first** in each file, so a key you add after it wins by ordinary
-later-key precedence and survives a second merge byte-for-byte. Nothing in
-stackgen edits either composed file, which is what keeps a fragment a fragment.
+composed by `/vwf:init`. The **pre-commit config**: a pack may contribute a
+`pre-commit.d/` fragment, and init concatenates them between markers — though a
+fragment is for a **non-gate** check only, since every gate tool is now reached
+through a `code:*` task the base config already calls, and only
+`package-manager/uv` still ships one. The **two editor files**: init deep-merges
+every `vscode.d/` fragment's `settings`, unions the `nesting` children per
+parent and the `extensions` list, and writes one marked block **first** in each
+file, so a key you add after it wins by ordinary later-key precedence and
+survives a second merge byte-for-byte. Nothing in stackgen edits either composed
+file, which is what keeps a fragment a fragment.
 
 One root file is a **shim** rather than a config: `dprint.json`, whose entire
 content is `{ "extends": ".config/dprint.json" }`. That formatter's config
@@ -410,11 +413,13 @@ runs them. Nothing there is language-specific — ESLint is JS/TS-only, so it is
 topic of the TypeScript language bundle rather than a repo gate. Getting that
 backwards is how a polyglot repo ends up with three secret scanners, one per
 language. Each of those four packs now ships **its own config file** under
-`.config/`, a `pre-commit.d/` fragment where it contributes a hook, and a
-`vscode.d/` editor fragment. The formatter also ships the root `dprint.json`
-shim described above, and the JS/TS linter gate — a language-bundle topic rather
-than a repo gate — ships `.config/linter.yaml`, the config it had always invoked
-and never supplied.
+`.config/` and a `vscode.d/` editor fragment. None of them ships a
+`pre-commit.d/` fragment any more: the gate config carries three tool-neutral
+hooks — `format`, `lint`, `sec` — that call `code:format`, `code:lint` and
+`code:sec`, and each tool is configured once, inside the task. The formatter
+also ships the root `dprint.json` shim described above, and the JS/TS linter
+gate — a language-bundle topic rather than a repo gate — ships
+`.config/linter.yaml`, the config it had always invoked and never supplied.
 
 **`repo-hygiene`** is the newest kind on the repo axis, beside `repo-gate`,
 `toolchain-manager` and `workspace`. Its single pack ships the files every repo
@@ -548,8 +553,14 @@ inside `code/*` and `setup/*` change with the tech stack.
   `code/count`, `code/merge/develop`, `code/merge/main`, and the `code/all`
   aggregator (`format` → `lint` → `sec`). `code:all` is the one-command gate;
   `precommit` and `git-config` are wired into the pre-commit hooks and `setup`,
-  not into `code:all`. `code:sec` needs scanners from `mise.dev.toml` — run it
-  under the dev toolchain (`MISE_ENV=dev`). `code:count` is a size reading
+  not into `code:all`. The three gate tasks take an **optional file list** —
+  `code:format [--fix] [files...]`, `code:lint [--fix] [files...]`,
+  `code:sec [--staged]` — empty meaning the whole tree, and the pre-commit hooks
+  call **them** rather than the tools they wrap: `format` and `lint` pass the
+  staged filenames, `sec` passes `--staged` and lets gitleaks read the index. A
+  repo customising a gate edits the task, never the hook, so every tool is
+  configured exactly once. `code:sec` needs scanners from `mise.dev.toml` — run
+  it under the dev toolchain (`MISE_ENV=dev`). `code:count` is a size reading
   rather than a metric: lines of **tracked** text grouped by extension, which is
   the whole ignore story for free — no build output, no vendored tree, and no
   second exclusion list to keep in step with `.gitignore`.
@@ -558,21 +569,35 @@ inside `code/*` and `setup/*` change with the tech stack.
   refuses a **destination branch that does not exist locally** — naming the
   two-branch model, asked up front so a repo whose branches were never laid out
   fails in one command instead of after the whole-tree hook pass with nothing
-  restored — refuses an unclean tree, runs the pre-commit safety net and **fails
-  if it changed anything**, then hops to the main worktree, `git merge --no-ff`
-  and `git push --follow-tags`. `code:merge:main` is the same sequence with one
-  extra predicate: the source must be `develop`, with nothing unpushed. A
-  conflict leaves the tree mid-merge on purpose. (These were `merge:develop` and
-  `merge:main`; a merge is one more thing a change runs through, like the
-  gates.)
+  restored — refuses an unclean tree, and runs the pre-commit safety net,
+  **failing if it changed anything**. `code:merge:main` is the same sequence
+  with one extra predicate: the source must be `develop`. A conflict leaves the
+  tree mid-merge on purpose. (These were `merge:develop` and `merge:main`; a
+  merge is one more thing a change runs through, like the gates.)
+- **`MERGE_MODEL` — what "land it" means on this repo.** What the merge tasks do
+  *after* the predicates is a repo-level value in `mise.toml`'s `[env]`, a
+  marked position `/vwf:init` fills, read as `direct` when unset. Under
+  **`direct`** the task hops to the main worktree, checks out the destination,
+  `git merge --no-ff` and `git push --follow-tags` — today's behaviour, and the
+  one mode that also refuses unpushed commits on the source. Under **`pr`**
+  nothing merges locally: the task pushes the branch with `--follow-tags` and
+  opens a pull request through whichever forge CLI is on PATH (`gh` first, then
+  `glab`), printing the branch and one "open the request on your forge" line
+  where neither is. A repo-level value rather than a flag, because which one
+  applies is a property of the repo's review policy, not of the person landing
+  the change.
 - **`setup/*` — bootstrap & upgrade.** `setup:all` is the entrypoint — run it on
   clone and to re-sync. It calls `setup:mise`, `setup:secrets`,
   `setup:external:start`, `setup:deps:all`, `setup:precommit`, `setup:ai` and
   `setup:vscode` in order, and stays idempotent. `setup:ai` installs and
   reconciles the repo's agent plugins; it is bootstrap and re-sync like every
   other step here, which is why it is a `setup:*` task and not a gate. `--all`
-  recurses into every git submodule, and one `--<project-id>` flag per member is
-  generated from the repo's own project ids. Alias it as `setup`.
+  recurses into every **member**, which `_scripts/helpers`' `members()` answers
+  for under either multi-repo linkage — the repo's submodules where
+  `.gitmodules` exists, else the paths listed in the `MEMBERS` env value — and
+  one `--<project-id>` flag per member is generated from the repo's own project
+  ids. `code:worktrees` reads the same helper, so the two never disagree about
+  what a member is. Alias it as `setup`.
 - **`setup/vscode` — the repo's editor profile**, and `setup:all`'s last step.
   It reads the recommendation ids out of the editor file `/vwf:init` composed
   from every pack's fragment and makes a profile named `$REPO_NAME` match:
@@ -585,14 +610,15 @@ inside `code/*` and `setup/*` change with the tech stack.
   create-the-profile command and the share-settings step and exits 0: the
   profile flag combines with the install, uninstall and list flags only once the
   profile exists, and none of the three creates it.
-- **`setup/default-branch <branch>` — the forge's default.**
-  `setup:default-branch` is the one `setup:*` member `setup:all` does **not**
-  call, because it edits a remote. It sets the default through whichever forge
-  CLI it finds and prints the command where it finds none, and it never fails:
-  no remote yet is the ordinary first-day case, and a contributor without the
-  CLI still needs the one line to run. `/vwf:init` runs it once, with the answer
-  to its forge-default question. It is orthogonal to the merge tasks — work
-  flows feature → `develop` → `main` whichever branch the forge calls default.
+- **Nothing in the set edits a remote's settings.** There was a
+  `setup:default-branch` once; it is gone. Setting the forge's default branch is
+  a one-time act by whoever shapes the repo, not a task a machine re-runs, so
+  the library carries no task for it and `/vwf:init` never reaches the remote.
+  The `repo-hygiene` pack's `CONTRIBUTING.md` carries the one line instead —
+  `gh repo edit --default-branch <branch>` or
+  `glab repo update --defaultBranch <branch>`. It is orthogonal to the merge
+  tasks either way: work flows feature → `develop` → `main` whichever branch the
+  forge calls default.
 - **`setup/deps/*` — the package manager, and only that.** Five verbs, all five
   slots: `cleanup`, `install` (which honours `--frozen`, the lockfile-strict
   mode CI uses), `upgrade`, `outdated`, `audit`. `setup:deps:all` runs them in
@@ -617,7 +643,13 @@ inside `code/*` and `setup/*` change with the tech stack.
   `code/format` and `code/sec` are the exceptions with real defaults — the
   formatter over the repo's markdown, and the secret and vulnerability scanners
   the gates bundle installs — because every repo has markdown and dependencies
-  from the first commit.
+  from the first commit. `code/lint` is the half-case: it keeps the marker for
+  the language linter nobody has pinned, and still ships **shellcheck** and
+  **actionlint** as defaults, as `code/format` ships **shfmt** beside dprint.
+  The line is what the tool reads: one that walks the tree by extension gets a
+  default, one that needs a pinned language toolchain stays a slot. An overlay
+  inherits both the argument surface and those defaults — it adds its linter, it
+  does not drop them.
 - **`_scripts/helpers`, plus siblings.** The `_scripts/` directory is
   underscore-prefixed, so mise treats it as **not a task**. `helpers` is the
   shared shell library (colors plus `print_header` / `print_subheader` /
@@ -674,6 +706,13 @@ authors from scratch:
   would change identity every time somebody cut one. The per-repo launch aliases
   that read it live in your own global configuration — init publishes the value
   and never writes outside the repo;
+- **`MERGE_MODEL`**, beside it in the same `[env]` block: `direct` or `pr`, the
+  landing model the merge tasks read, asked inside init's git pass. Unset reads
+  as `direct`, so an unfilled repo behaves as it always did;
+- **`MEMBERS`**, beside those two: the product's other repositories as
+  space-separated paths relative to the repo root, filled from the registry's
+  member list. A submodule product leaves it empty — `.gitmodules` answers
+  instead;
 - the commit gate's **scope list**, from the project registry, which is why it
   is re-run work by construction: the registry does not exist when init first
   shapes a repo, so the empty list a first run leaves is the correct state;

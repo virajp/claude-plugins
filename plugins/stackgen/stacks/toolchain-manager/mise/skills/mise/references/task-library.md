@@ -404,21 +404,21 @@ carries three tool-neutral hooks and no fourth:
 | `sec`    | `mise x -- mise run code:sec --staged` | nothing — the index  |
 
 That is why the three tasks take a file list: a hook is per-file by nature and a
-task is whole-tree by default, and `[files]...` is the one argument that lets the
-same task serve both callers. `code:sec` is the exception that proves it —
+task is whole-tree by default, and `[files]...` is the one argument that lets
+the same task serve both callers. `code:sec` is the exception that proves it —
 `--staged` scans the *index*, which is a thing only git can enumerate, so the
 hook passes no filenames at all.
 
 **A repo customising a gate edits the task, never the hook.** A tool named in
-both places is a tool configured twice, and the two copies drift in the direction
-nobody is looking: the hook run rewrites a file the whole-tree task would have
-left alone, or `code:all` passes on something the commit refuses. One
+both places is a tool configured twice, and the two copies drift in the
+direction nobody is looking: the hook run rewrites a file the whole-tree task
+would have left alone, or `code:all` passes on something the commit refuses. One
 configuration per tool, and the task is where it lives — which also means
 `mise run code:format` and the commit that follows it can never disagree.
 
 **A tool that is not in a task is not in a hook.** shellcheck, shfmt and
-actionlint were direct hooks once; they are shipped defaults inside `code:format`
-and `code:lint` now, for exactly this reason.
+actionlint were direct hooks once; they are shipped defaults inside
+`code:format` and `code:lint` now, for exactly this reason.
 
 ### The pre-commit ordering, which is the point
 
@@ -490,13 +490,14 @@ where neither is, it prints the branch, the destination and one line telling you
 to open the request on your forge, then stops successfully. `code:merge:main`
 under `pr` opens `develop` → `main` rather than merging it.
 
-**The destination-branch-exists predicate still runs under `pr`.** A pull request
-aimed at a branch that does not exist fails later and reads worse than the one
-command that would have said so.
+**The destination-branch-exists predicate still runs under `pr`.** A pull
+request aimed at a branch that does not exist fails later and reads worse than
+the one command that would have said so.
 
-A repo-level value and not a flag, because which one applies is a property of the
-repo — its review policy, its branch protection — and not of the person landing
-the change. A flag would let two people on the same repo land differently.
+A repo-level value and not a flag, because which one applies is a property of
+the repo — its review policy, its branch protection — and not of the person
+landing the change. A flag would let two people on the same repo land
+differently.
 
 ### `code:count` — a size reading
 

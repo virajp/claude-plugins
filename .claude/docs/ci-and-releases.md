@@ -10,8 +10,10 @@ resolves env variants):
 - `.config/mise.dev.toml` — loaded when `MISE_ENV=dev` (the maintainer's machine
   has this exported): the full dev toolchain (doppler, pre-commit, dprint,
   taplo, gitleaks, grype, actionlint, shellcheck, shfmt, jq, python, uv) + shell
-  aliases. `shellcheck` and `shfmt` are `p:plugins:shellcheck`'s two binaries,
-  and the CI layer declares them too.
+  aliases. `shellcheck` and `shfmt` are `p:plugins:shellcheck`'s two binaries —
+  and, since the gate hooks call tasks, `code:lint`'s and `code:format`'s
+  shipped defaults over this repo's own shell too. The CI layer declares them as
+  well.
 - `.config/mise.ci.toml` — loaded when `MISE_ENV=ci` (the workflows set this):
   CI-only tools/settings. It declares `shellcheck` and `shfmt` for
   `p:plugins:shellcheck`, and sets `node.gpg_verify = false` to work around a

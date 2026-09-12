@@ -40,7 +40,8 @@ knows, and both gates would keep reporting green. Precedence, highest first:
 
 ```sh
 mise run code:sec                    # grype + gitleaks over the working tree
-gitleaks dir . --config .config/gitleaks.toml --redact    # working tree
+mise run code:sec --staged           # the index only; what the `sec` hook runs
+gitleaks dir . --config .config/gitleaks.toml --redact=50  # working tree
 gitleaks git . --log-opts="--all"    # the whole history, once
 ```
 
@@ -48,18 +49,20 @@ gitleaks git . --log-opts="--all"    # the whole history, once
 prints the secret it found has published it a second time, into CI logs that are
 usually more widely readable than the repo.
 
-The pre-commit hook is upstream's **`gitleaks-system`**, not `gitleaks`. The
-plain id builds gitleaks from source into pre-commit's own environment; the
-`-system` variant runs the binary the toolchain manager already pins, so the
-commit gate and `code:sec` are the same build. The cost is that it needs
-gitleaks on `PATH` — which it announces as an error rather than as a pass.
+**The pre-commit gate has no gitleaks hook.** It once carried upstream's
+`gitleaks-system`; now its `sec` hook is `mise x -- mise run code:sec --staged`,
+so the commit gate and `code:sec` are not merely the same build — they are the
+same configuration, in one file. A tool named in a task and in a hook is a tool
+configured twice, and the two copies drift where nobody is looking.
 
-Its entry is `gitleaks git --pre-commit --redact --staged --verbose`, which
-takes at most one positional argument, so the hook declares
-**`pass_filenames: false`**. Upstream sets that on the `gitleaks` id and omits
-it here, and pre-commit's default is to append the staged filenames: without
-the line, every commit touching two or more files fails with
-`accepts at most 1 arg(s)` and nothing is scanned.
+That hook declares **`pass_filenames: false`**: `--staged` scans the *index*,
+which is a thing only git can enumerate, so there is nothing useful to pass. It
+is also what stops pre-commit appending the staged filenames to an entry that
+takes at most one positional argument, which is how every commit touching two
+or more files used to fail with `accepts at most 1 arg(s)`.
+
+`code:sec --staged` needs gitleaks on `PATH`; it warns and continues where the
+binary is absent, exactly as the tree scan does.
 
 ## A hit is a credential to rotate
 

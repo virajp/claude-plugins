@@ -117,10 +117,14 @@ marketplace, inventory and check in that order — freshness before validity
 stay untouched — npm allows one Trusted Publisher and validates the entry-point
 filename — and never in `site.yml`, which runs the website's own gate):
 
-Pre-commit also runs **`actionlint`** over `^\.github/workflows/`, which is not
-on this list because it is not a mise task and checks nothing under `plugins/`:
-the workflows are this repo's own, and a typo in one is otherwise discovered
-only by pushing it.
+Pre-commit also runs the repo's three tool-neutral gate hooks, none of which is
+on this list because none is a `p:` task: `format` and `lint` call
+`mise run code:format --fix` and `mise run code:lint --fix` with the staged
+files, `sec` calls `mise run code:sec --staged`. Every gate tool is inside those
+tasks and nowhere else — dprint and shfmt in `code:format`, shellcheck,
+actionlint and the house linter in `code:lint`, gitleaks in `code:sec`. That is
+where **`actionlint`** over `.github/workflows/` now lives: the workflows are
+this repo's own, and a typo in one is otherwise discovered only by pushing it.
 
 - **`p:plugins:marketplace`** — generates **both** marketplace manifests from
   the 2 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →

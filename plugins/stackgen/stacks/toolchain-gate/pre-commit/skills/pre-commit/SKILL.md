@@ -140,10 +140,10 @@ lockfile freshness.
 
 - **`files:` is a regex over paths**, and it is what keeps a commit touching one
   doc from running the whole gate. Scope each hook to what it actually
-  validates — **except** a hook that calls a gate task, which carries no `files:`
-  at all: the task is the thing that knows which paths each of its tools owns,
-  and a regex here would AND with that and silently stop checking a tree the
-  next overlay adds.
+  validates — **except** a hook that calls a gate task, which carries no
+  `files:` at all: the task is the thing that knows which paths each of its
+  tools owns, and a regex here would AND with that and silently stop checking
+  a tree the next overlay adds.
 - **`pass_filenames: false`** for any hook that operates on the repo as a whole
   (a build, a full-tree check). Otherwise pre-commit appends the changed file
   list to the command, which most task runners then treat as arguments.
