@@ -14,7 +14,7 @@ plan split, to be confirmed at each plan's interview.
 | B03 | `/vwf:backlog` skill — a prioritised to-do list beside the blueprint    | A     | P1       | done    |
 | B04 | `init`: split `REPO_NAME` (folder name) from the `p:<id>:*` group id    | B     | P1       | planned |
 | B05 | `/vwf:feedback` — post-build change intake from user feedback           | C     | P2       | planned |
-| B06 | Audit logs as an independent, access-controlled capability              | D     | P2       | open    |
+| B06 | Audit logs as an independent, access-controlled capability              | D     | P2       | planned |
 | B07 | Stylesheet axis for web frontends: `tailwindcss` and `stylex`           | E     | P2       | open    |
 | B08 | SEO, OpenGraph and favicons for sites and webapps                       | E     | P2       | open    |
 | B09 | `notion` MCP server config                                              | F     | P3       | open    |
@@ -97,6 +97,8 @@ independent capability outside observability: a stackgen `capability-provider`
 pack with a category of its own, the blueprint contract it implies, and the
 console access rule. The existing `product-foundations/references/audit-logs.md`
 is the contract's starting point.
+
+Planned in: `docs/plans/2026-09-14-audit-capability/`
 
 ### B07 — stylesheet options for web frontends
 

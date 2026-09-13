@@ -1,7 +1,7 @@
 ---
 type: vwf-change-plan
 title: REPO_NAME is the folder, the task group is the project
-requires: [ docs/plans/2026-09-13-vwf-process ]
+requires: [ docs/plans/archived/2026-09-13-vwf-process ]
 backlog: [ B04 ]
 ---
 

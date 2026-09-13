@@ -2,7 +2,7 @@
 type: vwf-change-plan
 title: feedback — the shape-change kind, build state, a named unit, a product
   note
-requires: [ docs/plans/2026-09-13-vwf-process ]
+requires: [ docs/plans/archived/2026-09-13-vwf-process ]
 backlog: [ B05 ]
 ---
 

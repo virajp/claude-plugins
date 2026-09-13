@@ -1,0 +1,348 @@
+---
+type: vwf-change-plan
+title: audit as an independent capability — the audit-store token, the
+  contract, two provider packs
+requires: [ docs/plans/archived/2026-09-13-vwf-process ]
+backlog: [ B06 ]
+---
+
+# Plan — audit as an independent capability — the audit-store token, the contract, two provider packs (2026-09-14)
+
+## Status
+
+**APPROVED** 2026-09-14 by the user, after self-review.
+
+## Consent
+
+| Action                                            | Granted                                                                                                                                                                       |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Merge to the integration branch and push on green | yes                                                                                                                                                                           |
+| After landing: `mise run p:plugins:local`         | run                                                                                                                                                                           |
+| After landing: `/release`                         | ask                                                                                                                                                                           |
+| Release vwf publicly                              | minor — `plugins/vwf/.claude-plugin/plugin.json`, the next minor above the value the tree holds when U7 runs, never a 13 or 17 component; by editing the `version` field      |
+| Release stackgen publicly                         | minor — `plugins/stackgen/.claude-plugin/plugin.json`, the next minor above the value the tree holds when U7 runs, never a 13 or 17 component; by editing the `version` field |
+| Release the two new packs                         | `0.1.0` each — `audit-store-d1` and `audit-store-postgres`, pinned by their bundles, `mise run p:plugins:inventory`; by U4's and U5's commits                                 |
+| Release site publicly                             | patch — `mise run p:site:version` (bare; patch is its default; it refuses a dirty tree, so U7 runs it first)                                                                  |
+| Release installer publicly                        | none — untouched                                                                                                                                                              |
+
+**A release recorded here is intent, not authorisation.** Every release step is
+an `ask` step: the run stops once, reports what it would ship, and waits. A
+`run` step publishes nothing and cuts no tag; where one stages something this
+session already loaded, it is picked up only by a **restarted** session.
+
+## Goal
+
+After this lands, audit is an independent, pinnable capability, outside
+observability. vwf mints the backing token **`audit-store`** (kind B) beside the
+foundation token `audit-log` (kind F): the first is the append-only,
+access-controlled store a project pins on its backing axis, the second is what
+is recorded, the read surface and the retention. The audit foundation expands
+into a **standard entity `audit-event`** and a **standard operator flow
+`audit-history`** in the console project, whose Authorization column carries the
+access rule — operators read, the compliance role alone for events that
+reference retained post-deletion data. stackgen gains the **`audit`** category
+under `capability-provider`, its contract, and two per-stack provider packs,
+**`audit-store-d1`** and **`audit-store-postgres`**, each riding an existing
+datastore pack and claiming `capability: audit-store`. The observability
+contract no longer claims audit's transport. Accepting the audit foundation
+makes the console project declare `audit-store`, so doctor reports a missing
+provider.
+
+No reversal. The framing is the 2026-09-13 backlog request (B06): "Observability
+collects logs, metrics and telemetry. However, there's a need to store AuditLogs
+and these can contain sensitive data so it must be secured and accessible to
+ONLY authorised people. Usually part of `console` project where authorised
+people can access it. We need provision for that as independent capability
+(outside observability ideally)". The per-stack shape is the user's 2026-09-14
+answer: "There will be different stores depending on the stack".
+
+## Facts the survey established
+
+**Two audit vocabularies today, unreconciled.** The foundation token
+`audit: privileged-destructive` in the registry's `cross_cutting:` block
+(`plugins/vwf/skills/product-foundations/references/audit-logs.md:5–6`; template
+`plugins/vwf/assets/templates/registry.yaml:106–113`) and the per-project
+capability token `audit-log`, kind **F** — "product foundation, nothing to pin"
+— at `plugins/vwf/assets/capability-vocabulary.md:40–41`. Kinds table `:18–22`;
+groups `:27–41` (`operator-rbac` F `:34`, `distributed-tracing` B `:40`); only B
+is pinnable `:59–60`; doctor's finding is non-blocking `:62–73`;
+publisher/consumer rule `:75–96`; prose nouns `:111–124` (no noun for audit).
+Both tokens sit side by side in the example registry
+(`plugins/vwf/assets/examples/blueprint/registry.yaml:44, 63`).
+
+**The coupling to remove.**
+`plugins/stackgen/assets/contracts/observability.md:8–9` claims "the transport
+half of `audit-log`". Nothing else couples them; the boundary sentence lives
+only in `audit-logs.md:3–5`.
+
+**The foundation reference** (`product-foundations/references/audit-logs.md`):
+Default contract `:8` — scope `:10–14`, event shape `:15–18`, append-only
+`:19–21`, structurally unavoidable `:22–24`, read surface `:25–27`, PII
+`:28–29`; Elicit per product `:31` — storage `:39–40` ("a dedicated append-only
+collection/table in the primary datastore; elicit if … an external/immutable
+store"), retention `:41`, customer self-view `:42`; Blueprint expansion
+`:44–50`. Checklist row `product-foundations/SKILL.md:41`; thirteen foundations,
+five core `:19–33, 37–51`. Compliance role `references/users.md:14–18`.
+
+**Blueprint expansion today.** A `conventions.md#audit` anchor
+(`plugins/vwf/assets/templates/conventions.md:56`), an `Audit-recorded` column
+on every flow's Trigger & Actors table and `(audit-recorded)` step markers
+(`assets/templates/flow.md:70–88`;
+`skills/blueprint-authoring/references/flow-contract.md:51–56, 147–152`), the
+foundations bullet in `skills/blueprint/SKILL.md:267–276`, and the reviewer
+lines `agents/blueprint-reviewer.md:82, 139`. No entity, flow or API. Standard
+flows live in `plugins/vwf/assets/standard-flows.md` (`operator-rbac` ⇒ `signin`
+mandatory at `:78–84`, needs `home` `:97–98`); the surveyor maps capabilities to
+required flows at `agents/blueprint-surveyor.md:80–81`. No "standard entity"
+concept exists; the example blueprint's entities are `customer` and `order`.
+
+**Architecture.** 3b registry: capabilities offered from the vocabulary asset by
+domain group, kinds B/F/P (`skills/architecture/SKILL.md:130–138`); console rule
+"no console, no fullstack" → `[service, webapp]` + `operator-rbac` (`:189–192`;
+`agents/architecture-writer.md:133–135`;
+`references/derive-from-product.md:24`); 3c cross-cutting table `:260–267` and
+the foundations walk `:269–288`, answers written to `cross_cutting:` by the
+writer (`agents/architecture-writer.md:33–37`). The console "typically carries
+auth, datastore, RBAC, audit"
+(`skills/setup/references/workspace-structure.md:97–102`). Security reviewer
+treats bypass of the operator-rbac project's audit wrapping as a surface
+(`agents/execute-security-reviewer.md:28–41`).
+
+**The pin.** `.config/vwf.yaml`
+`projects.<name>.stack.backing_template:
+[<slug>, …]`, one slug per capability
+(`assets/vwf-config.md:75–77`;
+`skills/architecture/references/stack-menu.md:16, 32–35`); the template payload
+carries `capabilities:` derived from the components' `capability` tokens
+(`plugins/stackgen/skills/stackgen-stack-template/SKILL.md:87–88`); doctor §5
+matches declared B tokens against it
+(`skills/doctor/references/stack-checks.md:171–192`).
+
+**stackgen.** Taxonomy `plugins/stackgen/assets/taxonomy.md`: type definition
+`:67–70`; the closed `capability-provider` list `:103–104` — `identity`,
+`telemetry`, `workflow`, `secrets-manager`; the capability seam `:114–127`;
+categories with no token `:129–137`; extension rule `:8–11`; category doctrine
+lives once at `assets/contracts/<area>.md` `:218–229`. `assets/kinds.md:624–694`
+— the kind's output (contract plus one instance component `:626–632`), axis
+`backing` `:640`, harness `:649–654`, the six topics `:659–694` (pick and trade,
+contract satisfaction, the constraint that bites, integration and access shape,
+cost shape, local stack), reviewer bar `:1023–1026`. Pack format
+`assets/pack-format.md:19–37` (layout), `:150–174` (`pack.yaml` schema;
+`capability` singular `:156`), `:192–234` (bundle shape), `:260–266` (exact
+pin), `:283–289`. The five packs: `otel-lgtm` (category `telemetry`, capability
+`distributed-tracing`, harness `local_stack: stack:up`, no `config/`,
+`skills/otel-lgtm/{SKILL.md, references/{pick-and-trade,
+contract-satisfaction, cardinality, access-shape, cost-shape, local-stack}.md}`
+— **the template**), `temporal`, `oidc`, `doppler` (capability unset, config
+overlay), `fnox` (`harness: n/a`, hook). Bundles `stacks/bundles/<slug>.md`
+(`otel-lgtm.md:1–12` shape: frontmatter `name`, `axis`, `kind`, `components`,
+then a heading and one paragraph). The datastore packs to ride:
+`cloud-service/d1` (`0.1.0`, capability `relational-datastore`, bundle
+`cloudflare-d1.md`) and `datastore/postgres` (`0.1.0`, `relational-datastore`,
+bundle `postgres.md`). Analytics Engine
+(`cloud-service/analytics-engine/pack.yaml`, capability unset) — its
+`pick-and-trade.md:65, 74` declines billing-grade counts (sampled) and data that
+must outlive three months (fixed retention). Contracts today: `datastore`,
+`identity`, `local-stack`, `object-storage`, `observability`, `orchestration`,
+`release-trigger`, `secrets`. Precedent for a new category: commit `3baaaefc`
+(`secrets-manager`) touched taxonomy, kinds, a new contract, `local-stack.md`,
+packs, bundles, `stacks/readme.md`, the manifest, docs.
+
+**Menu, landing, generators, checker.** The menu is one entry per bundle
+(`skills/stackgen-stack-menu/SKILL.md:28–46`), product-independent. A capability
+pack lands its template entry, skills and citations
+(`skills/stackgen-stack-template/references/materializer.md:28–37`); nothing
+lands `stack:up`. `scripts/src/inventory.ts` reads packs from the tree, category
+and capability verbatim (`:121–151, 143–144`), asserts bundle pins against
+versions (`:312–345`); tests compute counts from disk. No checker rule reads
+`pack.yaml`'s category — a typo lands silently. Rule 4 strict frontmatter on
+pack skills (`check.ts:660–698`), rule 13 landed citations (`:860–935`).
+`p:plugins:shellcheck` visits no file in a pack without shell.
+
+**Enumerations to reconcile.** `plugins/stackgen/stacks/inventory.md`
+(generated: `:10` counts, `:23` the capability-provider row, `:34–38`);
+`plugins/stackgen/stacks/readme.md:11–14, 130–134`; `taxonomy.md:129–132`;
+`site/src/content/docs/plugins/stackgen.md:36–60` (category prose), `:150`,
+`:193`; `site/src/content/docs/plugins/vwf.md:589–598` (backing example),
+`:747–750` (console rule), `:1374–1377`, `:2427–2439` (thirteen foundations,
+names audit's default);
+`.claude/skills/vwf-plugin/references/skills-and-agents.md:88`,
+`references/assets.md:16`, `references/docs-tree.md:45`, `SKILL.md:55, 122–137`;
+`.claude/skills/stackgen-plugin/SKILL.md:39, 116`; `.claude/docs/plugins.md:13`;
+`readme.md:273–277`. `CLAUDE.md` enumerates neither foundations nor packs.
+
+**Gates and versions.** The nine wave-gate lines; no `.config/vwf.yaml` here;
+commit types `ops`, `docs`, `merge`, `feat`, `fix`, `refactor`, no scopes.
+`plugins/**/*.md` is not dprint-formatted; `CLAUDE.md`, `readme.md`,
+`.claude/**` and the site docs are. `pack.yaml`, its bundle pin and
+`stacks/inventory.md` must land in one commit (the inventory hook fires on
+`stacks/**`).
+
+**Recall.** The 2026-09-06 decision doc on categories: closed per type, minted
+in one edit to the taxonomy, capability tokens are vwf's. Parked since
+2026-09-06: a checker rule validating `category` against the taxonomy.
+
+## Assumed decisions — confirm or override at review
+
+| #  | Decision            | Ruling                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Rejected                                       | Unit       |
+| -- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- | ---------- |
+| 1  | Token seam          | Mint `audit-store` as kind **B** in the vocabulary's governance group; `audit-log` stays **F** as the product-side half (what is recorded, the read surface, retention). Both entries state the split. Prose noun for `audit-store`: "audit store". (User, MCQ.)                                                                                                                                                                                                                                 | reclassify `audit-log` to B                    | U1         |
+| 2  | Realizations        | One `capability-provider` pack per store under a new category **`audit`**, each riding an existing datastore pack and claiming `capability: audit-store`. First two: `audit-store-d1` (rides `cloud-service/d1`) and `audit-store-postgres` (rides `datastore/postgres`), each `0.1.0` with its own bundle. (User, MCQ; "There will be different stores depending on the stack".)                                                                                                                | one agnostic pack; a list-valued `capability:` | U3, U4, U5 |
+| 3  | Analytics Engine    | Declined as an audit store, in the contract, citing the pack's own trade: fixed retention and sampled totals against an audit log's completeness and legal-basis retention.                                                                                                                                                                                                                                                                                                                      | a third pack                                   | U3         |
+| 4  | Contract            | `audit-event` is a standard entity: actor (id and class), action, target (entity and id), timestamp, outcome, reason, trace id; append-only, retention purge the only removal; ids not PII. `audit-history` is a standard operator flow in the console project, mandatory once the audit foundation is accepted; Authorization: operator roles read; the compliance role alone for events referencing retained post-deletion data. The surveyor treats both as coverage conditions. (User, MCQ.) | today's anchor and columns only                | U2         |
+| 5  | Standard entities   | A new asset `plugins/vwf/assets/standard-entities.md`, the first entry `audit-event`, cited beside `standard-flows.md` wherever the blueprint skill and the surveyor cite that one.                                                                                                                                                                                                                                                                                                              | an entry inside `standard-flows.md`            | U2         |
+| 6  | Pack shape          | Doctrine and the six-topic references only, modelled on `otel-lgtm`; no `config/` payload. The append-only schema, the insert-only role and the console-only read grants are described; the target repo's plan writes the migration. Harness `local_stack: n/a` with the reason — the datastore pack's own local stack serves.                                                                                                                                                                   | shipping a migration file                      | U4, U5     |
+| 7  | Observability       | `contracts/observability.md:8–9` drops the audit-transport sentence and points at the audit contract by role.                                                                                                                                                                                                                                                                                                                                                                                    | leaving both claims                            | U3         |
+| 8  | Architecture        | Accepting the audit foundation in 3c makes the console project (the `operator-rbac` holder) declare `audit-store` in its `capabilities:`; doctor's provider check then reports a missing pin as its existing non-blocking finding.                                                                                                                                                                                                                                                               | leaving the declaration to the user            | U1         |
+| 9  | Inventory ownership | Each pack unit regenerates and owns `stacks/inventory.md`, so U4 and U5 run in consecutive waves.                                                                                                                                                                                                                                                                                                                                                                                                | one unit for both packs                        | U4, U5     |
+| 10 | Research            | The pack units read the current D1 and Postgres documentation through the Context7 tools before writing grants, roles and append-only patterns; never from training knowledge.                                                                                                                                                                                                                                                                                                                   | training knowledge                             | U4, U5     |
+| 11 | Ordering            | `requires: [docs/plans/archived/2026-09-13-vwf-process]`.                                                                                                                                                                                                                                                                                                                                                                                                                                        | concurrent                                     | —          |
+| 12 | Wording             | The phrase for the category and the contract is "audit"; the store is "the audit store"; the foundation stays "audit logs". No file says "audit trail".                                                                                                                                                                                                                                                                                                                                          | mixed nouns                                    | all        |
+
+## New dependencies
+
+none
+
+## Units
+
+| Id | Wave | Unit file                                          | Owns                                                                                                                                                                                                                                                                                                                 | Depends on | Status  | Commit |
+| -- | ---- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
+| U1 | 1    | [01-vwf-vocabulary.md](01-vwf-vocabulary.md)       | `plugins/vwf/assets/capability-vocabulary.md`, `plugins/vwf/skills/product-foundations/references/audit-logs.md`, `plugins/vwf/skills/product-foundations/SKILL.md`, `plugins/vwf/skills/architecture/SKILL.md`, `plugins/vwf/assets/templates/registry.yaml`, `plugins/vwf/assets/examples/blueprint/registry.yaml` | —          | pending |        |
+| U2 | 1    | [02-vwf-contract.md](02-vwf-contract.md)           | `plugins/vwf/assets/standard-flows.md`, `plugins/vwf/assets/standard-entities.md` (new), `plugins/vwf/skills/blueprint/SKILL.md`, `plugins/vwf/agents/blueprint-surveyor.md`, `plugins/vwf/skills/blueprint-authoring/references/flow-contract.md`, `plugins/vwf/assets/templates/conventions.md`                    | —          | pending |        |
+| U3 | 1    | [03-stackgen-category.md](03-stackgen-category.md) | `plugins/stackgen/assets/taxonomy.md`, `plugins/stackgen/assets/kinds.md`, `plugins/stackgen/assets/contracts/audit.md` (new), `plugins/stackgen/assets/contracts/observability.md`, `plugins/stackgen/stacks/readme.md`                                                                                             | —          | pending |        |
+| U4 | 1    | [04-pack-d1.md](04-pack-d1.md)                     | `plugins/stackgen/stacks/capability-provider/audit-store-d1/**` (new), `plugins/stackgen/stacks/bundles/audit-store-d1.md` (new), `plugins/stackgen/stacks/inventory.md`                                                                                                                                             | —          | pending |        |
+| U5 | 2    | [05-pack-postgres.md](05-pack-postgres.md)         | `plugins/stackgen/stacks/capability-provider/audit-store-postgres/**` (new), `plugins/stackgen/stacks/bundles/audit-store-postgres.md` (new), `plugins/stackgen/stacks/inventory.md`                                                                                                                                 | U4         | pending |        |
+| U6 | 3    | [06-docs.md](06-docs.md)                           | `readme.md`, `CLAUDE.md`, `.claude/**`, `site/src/content/docs/**`, `docs/backlog.md`, `docs/memory/decisions/2026-09-14-audit-capability.md` (new)                                                                                                                                                                  | U1–U5      | pending |        |
+| U7 | 4    | [07-gates-and-bump.md](07-gates-and-bump.md)       | `plugins/vwf/.claude-plugin/plugin.json`, `plugins/stackgen/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`                                                                                                                                                                      | U6         | pending |        |
+
+Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
+`skipped`.
+
+## Shared-file rule
+
+| File                                                               | Why it collides                                                 | Owner                      |
+| ------------------------------------------------------------------ | --------------------------------------------------------------- | -------------------------- |
+| the two plugin manifests, `site/package.json`                      | several units bumping one version is a lost update              | U7 only                    |
+| `.claude-plugin/marketplace.json`                                  | generated; regenerating mid-wave races                          | U7 only                    |
+| `plugins/stackgen/stacks/inventory.md`                             | generated with the pack pins; must land with them in one commit | U4 in wave 1, U5 in wave 2 |
+| `readme.md`, `CLAUDE.md`, `.claude/**`, `site/src/content/docs/**` | n units editing one doc                                         | U6 only                    |
+| `docs/backlog.md`                                                  | the backlog skill's; this run's exception                       | U6 only                    |
+| `plugins/stackgen/assets/contracts/local-stack.md`                 | the precedent touched it; this plan's packs add no local stack  | nobody                     |
+| `plugins/vwf/skills/doctor/**`                                     | the provider check already covers a B token; unchanged          | nobody                     |
+
+## Waves
+
+- **Wave 1 — U1, U2, U3, U4.** Four disjoint trees: vwf's vocabulary and
+  foundation side; vwf's blueprint contract side; stackgen's taxonomy and
+  contracts; the first pack with the inventory. U4 needs U3's category to be
+  *right* but not to be on disk — it writes `category: audit` from this file.
+- **Wave 2 — U5.** The second pack, after U4's inventory commit.
+- **Wave 3 — U6.** Docs, over the branch delta plus the survey's list.
+- **Wave 4 — U7.** The bumps, the marketplace generator, the full gate.
+
+## Wave gate
+
+```text
+mise run p:plugins:marketplace -- --check
+mise run p:plugins:inventory -- --check
+mise run p:plugins:check
+mise run p:plugins:shellcheck
+mise run p:plugins:npm-normalize-test
+pnpm vitest run
+pnpm exec tsc --noEmit -p installer
+pnpm exec tsc --noEmit -p scripts
+mise run p:site:check
+```
+
+Plus the wave review, plus every report read for `UNRESOLVED:`. Every line is
+green before wave 1. `p:plugins:inventory -- --check` is expected red on the
+wave-1 tree until U4's commit regenerates it — the orchestrator commits U4 with
+the regenerated inventory before re-running the gate, per the shared-file rule.
+
+## After landing
+
+| Step                       | Mode | Notes                                                                                                                                                                          |
+| -------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `mise run p:plugins:local` | run  | Stages vwf and stackgen into the dev marketplace and updates this machine's install. Publishes nothing, cuts no tag. A **restarted** session is what loads the staged plugins. |
+| `/release`                 | ask  | Cuts the vwf, stackgen and site tags per the consent block. The run stops once and asks first.                                                                                 |
+
+## Gates the orchestrator keeps
+
+- **The six-topic bar.** After wave 2, each new pack directory holds
+  `pack.yaml`, `conventions.md`, `skills/<slug>/SKILL.md` and six files under
+  `skills/<slug>/references/` — `pick-and-trade.md`, `contract-satisfaction.md`,
+  one constraint file, `access-shape.md`, `cost-shape.md`, `local-stack.md`;
+  `command ls` proves it.
+- **The token everywhere.**
+  `command grep -rln "audit-store" plugins/vwf/assets/capability-vocabulary.md plugins/stackgen/assets/taxonomy.md plugins/stackgen/assets/contracts/audit.md plugins/stackgen/stacks/capability-provider/audit-store-d1/pack.yaml plugins/stackgen/stacks/capability-provider/audit-store-postgres/pack.yaml`
+  lists all five.
+- **The coupling gone.**
+  `command grep -n "audit" plugins/stackgen/assets/contracts/observability.md`
+  shows only a pointer to the audit contract, no transport claim.
+- **The menu resolves.**
+  `command ls plugins/stackgen/stacks/bundles/ | command grep audit-store` lists
+  two bundles, and `p:plugins:inventory -- --check` is green.
+- **Rule 13.**
+  `command grep -rn "CLAUDE_PLUGIN_ROOT\|assets/contracts" plugins/stackgen/stacks/capability-provider/audit-store-*`
+  is empty — the packs cite the contract by role.
+
+## Unit contract
+
+Every unit prompt carries, in order: its ruling quoted from this file, its owned
+paths plus "touch nothing outside this list", the facts section, the shared-file
+rule, and the return block below. A unit never bumps a version, never runs a
+generator, never edits a doc, never adds a dependency this file does not list,
+never commits. A unit deletes with plain `rm`, never `git rm` — it stages
+nothing. Exception, stated here so it is not a `GAP:`: U4 and U5 each run
+`mise run p:plugins:inventory`, because a new pack's pin and the inventory must
+land in one commit.
+
+A unit returns exactly this block and nothing else — no file contents, no diff:
+
+    CHANGED: <path> — <one line>            (one per file)
+    DECIDED: <what> — <why>                 (choices made inside scope, or none)
+    DOCS FALSIFIED: <path> — <passage>      (reported, never edited; or none)
+    GAP: <what the plan left unspecified and the assumption taken>   (or none)
+    UNRESOLVED: <the ruling needed>         (or none)
+
+A `GAP:` is a hole in the plan the unit could proceed past on a stated
+assumption; it is recorded and the run continues. An `UNRESOLVED:` is a ruling
+the unit could not proceed without; it blocks the unit and its dependents.
+
+## Out of scope
+
+- **An Analytics Engine audit pack** — decision 3.
+- **A Firestore or document-store realization** — parked; the first two stores
+  are relational.
+- **A dedicated immutable store** (write-once object storage, an event store) —
+  parked.
+- **A `config/` payload or migration file in either pack** — decision 6.
+- **Doctor changes** — the provider check already covers a B token.
+- **The checker validating `category` against the taxonomy** — carried parked
+  since 2026-09-06; this plan adds one more token it would catch.
+- **Group A's, B's and C's files** — this plan requires A and touches none of
+  the change-plan, init, feedback or product trees.
+
+## Parked
+
+- **`audit-store-firestore`** — the document-datastore realization, once a
+  product on Firestore needs it; same shape as the two here.
+- **An immutable-store pack** — write-once object storage with object lock, or
+  an append-only event store, for products whose legal basis needs
+  tamper-evidence beyond database grants.
+- **A checker rule validating `pack.yaml`'s `category` against the taxonomy** —
+  carried from the 2026-09-06 plans; now five categories under
+  `capability-provider`.
+- **Customer self-view of their own audit events** — the foundation keeps it off
+  by default (`audit-logs.md:42`); a flow for it is a product decision.
+
+## Run log
+
+| Wave | Unit | Model | Round | Outcome | Detail | Commit |
+| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+
+## Launch
+
+Run in a fresh session:
+
+/vwf:change-execute docs/plans/2026-09-14-audit-capability
