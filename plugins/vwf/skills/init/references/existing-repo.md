@@ -407,10 +407,11 @@ thing a task acts on.
 **Say which kind of rename it is.** There are two, and calling them the same
 thing misleads:
 
-- The group's segment is the value a **previous id source** resolved to — the
-  repo's own name, or a directory — and the id now resolves from the
+- The group's segment is the value a **previous id source** resolved to — a
+  directory, a type token, or, on a repo shaped before the repo's own name
+  stopped being a source, that name — and the id now resolves from the
   registry. The row reads
-  `id source changed: <old> → <new> (repo name → registry)`, naming both
+  `id source changed: <old> → <new> (<old source> → registry)`, naming both
   sources. Nothing moved and nothing was wrong; the repo grew a registry
   between the two runs, which is exactly what the re-run doctrine expects.
 - The segment matches no id under any source. That is an ordinary rename, and
@@ -429,6 +430,25 @@ entirely.
 
 Groups that already match need nothing, and a project id with no group at all
 gets its `_default` slot as a create.
+
+**The repo-name key is compared here too, and against a different thing.** It
+is not on the id list — it takes this repo's **folder name, slugified**, the
+basename of its main checkout. Read that name, slugify it by the same asset,
+and compare it with what the key holds:
+
+- The key still carries the pack's placeholder: a **create**, filled with the
+  folder slug.
+- The key holds the folder slug already: no row.
+- The key holds anything else — most often a project id an earlier run wrote
+  there, or the old folder name after a rename: a **replace** row reading
+  `repo-name key: <old> → <new>`, counted with the other marked-position
+  rewrites and applied on the same one consent as everything else in the plan.
+  Show both values; the whole point of the row is that a name the user has seen
+  before is going away.
+
+Never silently rewrite it, and never leave it to `/vwf:doctor` alone: the
+launch aliases in the user's own global configuration read this value, so a key
+naming a folder that no longer exists fails somewhere `init` cannot see.
 
 **What makes a position unfilled is a marker the fill removes.** The packs
 mark a position in two ways, and only one of them leaves a later run a test it
@@ -459,8 +479,9 @@ member, per [new repo](new-repo.md) §7. A position still carrying only the
 pack's commented template, on a repo that **has** members, is a create; one
 already carrying exactly those lines needs nothing; one carrying lines named for
 anything else — the project ids an earlier run wrote there, most often — is a
-**rewrite**, with the lines on both sides listed. The repo-name key stays the id
-list's and is a create wherever it still holds the pack's placeholder.
+**rewrite**, with the lines on both sides listed. The **repo-name key** is on
+neither list: it is compared against this repo's folder slug, by the rule pass
+9 states above.
 
 The environment block's other two positions are checked here too, and they are
 not the same kind of wait:
@@ -555,13 +576,19 @@ it.
 
 ### 11 — The gate-config fills
 
-Two positions the commit gate's packs ship **marked, with a comment saying
-`init` fills them once the thing they read exists**. They are not the same
-kind of wait, and the shipped comments say which is which:
+Two positions the commit gate's packs ship **marked, with a comment naming
+what `init` fills them from**. Only one of them is a wait: the commit-scope
+list is filled on every run, the first included, from the ids question 2
+confirmed, while the forge links wait on the repo having a remote. The
+shipped comments say which is which:
 
-- **The scope list is re-run work by construction.** Its source is the
-  registry, which does not exist when `init` first shapes a repo, so the empty
-  list a first run leaves is the correct state and not an unfinished one.
+- **The scope list takes the ids question 2 confirmed**, on any run and the
+  first one included. Where the base carries a registry those are its ids,
+  which is the ordinary re-run case. Where it carries none, they are the ids
+  that question confirmed for this repo from its other sources — a user who
+  was shown every row and accepted it has declared the list, which is the
+  thing a scope needs. A registry is where a proposal may be read from, never
+  a condition on the fill.
 - **The forge links fill on *any* run where the repo has a remote** — the
   first one included, since a cloned or already-pushed repo has one from the
   start. Only a repo with no remote yet keeps them as shipped, and the next
@@ -571,28 +598,30 @@ kind of wait, and the shipped comments say which is which:
 
 | The fill        | Its source                                              | Fillable                 | When it stays as shipped                            |
 | --------------- | ------------------------------------------------------- | ------------------------ | --------------------------------------------------- |
-| commit scopes   | the project ids of pass 9, from the base's registry     | on a re-run only         | no `.config/vwf.yaml` in the base, or it names none |
+| commit scopes   | the project ids of pass 9, as question 2 confirmed them | on any run               | question 2 confirmed no id for this repo            |
 | the forge links | this repo's own origin, via `git remote get-url origin` | on any run with a remote | no origin remote                                    |
 
-**The two fills read from different places, and only one of them is per repo.**
-The scope list has exactly one source for the whole product: the registry in the
-**base's** `.config/vwf.yaml`. A member carries no configuration of that kind —
-its file is the back-link the membership asset defines
-(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`) — so a member's scopes are the
-projects that one registry places in it, and a base with no registry leaves
-every repo's position as shipped. The forge links are genuinely **per repo**:
-each repo's own origin, read inside that repo, since a member has its own remote
-and filling its links from the base's would point every link in it at another
-repo's forge.
+**The two fills read from different places.** The scope list takes a repo's
+**own** confirmed ids — the rows question 2 showed under that repo's heading —
+and where the base carries a registry, that registry is what those rows resolved
+from for every repo in the set: a member carries no configuration of that kind,
+its file being the back-link the membership asset defines
+(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`), so a member's scopes are the
+projects that one registry places in it. The forge links are genuinely **per
+repo**: each repo's own origin, read inside that repo, since a member has its
+own remote and filling its links from the base's would point every link in it
+at another repo's forge.
 
 Rules for both:
 
-- **The registry is the only scope source.** Ids resolved from directories or
-  from the repo's own name are not scopes — a scope names a project somebody
-  declared, and a directory that happens to exist is not a declaration. Where
-  the base carries no registry, leave the position exactly as the pack ships it
-  — in **every** repo of the set — and say in the plan that the fill is waiting
-  on `/vwf:architecture` and `/vwf:setup`.
+- **The confirmed ids are the only scope source.** A scope names a project
+  somebody declared, so nothing `init` merely *inferred* reaches this position
+  — never a directory listing on its own, and never the repo's name, which is
+  not a project at all and is no longer an id source anywhere. What makes the
+  ids declarable is question 2: every row was shown with its source and
+  accepted or replaced. Where that question confirmed no id for a repo, leave
+  the position exactly as the pack ships it and say in the plan that the fill
+  is waiting on `/vwf:architecture` and `/vwf:setup`.
 - **Never delete the comment.** It is what a later run reads to find the
   position, and it is the record of where the values came from.
 - **Each fill is its own plan row**, `+ <what>` with its source named, so the
@@ -819,13 +848,16 @@ left alone silently reads the same as a file nobody looked at.
 **The invariant, stated in the report itself, and stated with its scope:**
 running `init` again on a shaped repo produces an empty plan **for the same id
 source**, and on a shaped product an empty section for **every** repo. If a
-second run finds work, it is one of four things, and the report names which: the
+second run finds work, it is one of five things, and the report names which: the
 first run deferred something; a pack moved, which the adapter's re-sync
 command is for; the **id source changed** — the repo grew a registry, so ids
-that came from directories or from the repo's own name now come from
-declarations, and pass 9's rename rows say so in those words; or **the set
-changed** — a member joined the product, or one this machine lacked was cloned,
-and that member's section is the whole of the work.
+that came from directories or from a type token now come from declarations,
+and pass 9's rename rows say so in those words; the **repo-name key no longer
+matches the folder** — the folder was renamed, or the key was written by a run
+from before the key took the folder name — which is pass 9's one replace row
+and nothing else; or **the set changed** — a member joined the product, or one
+this machine lacked was cloned, and that member's section is the whole of the
+work.
 
 A **replace is applied once**, and that is part of the same invariant: the
 second run reads a file whose content matches the hash its landing recorded —

@@ -260,24 +260,54 @@ round. Two of them — 1 and 3 — are asked for the repos that resolved to mode
 are asked whatever the modes are.
 
 1. **The repo name.** *Mode-new repos only.* Asked in one round listing every
-   repo that resolved to **new**, each proposed from that repo's own directory
-   basename. A run where no repo resolved new skips it.
+   repo that resolved to **new**, each proposed from that repo's **folder
+   name** — the basename of its **main checkout**, which on a run started in a
+   linked worktree is the parent of that repo's common git directory
+   (`rev-parse --git-common-dir`) and never the worktree's own directory, since
+   that one is named for a branch. A run where no repo resolved new skips it.
+
+   **What this question settles is `REPO_NAME`.** The answer, slugified by the
+   stack adapter's `assets/ids.md` exactly as question 2's replacements are, is
+   what that repo's repo-name key receives — written **literally**, never
+   derived at read time. Each repo's key takes **its own** folder name: a
+   member names the member's folder, never the base's. No project id reaches
+   this key, and no answer here reaches a task group.
 2. **The ids, confirmed.** The one question asked before a single `p:<slug>:*`
-   task group, shell alias or repo-name key is written, in any repo. Show one
-   list, **grouped by repo** — the base's group first, then one per member in
-   the resolved order — and inside each group put that repo's **own row**
-   first, then one row per project `init` will create a task group for *in
-   that repo*. Give each row three things: the **name** as the repo spells it,
-   the **id** that name slugifies to, and the **source** the name came from,
-   in the words [new repo](references/new-repo.md) §7 resolves them by: the
-   registry, a sub-project directory, or the repo's own name. A member's own
-   row names **the member's name** as its source. Say on each repo's own row
-   that its id is what **that repo's** `REPO_NAME` receives.
+   task group or its commit scope is written, in any repo. Show one list,
+   **grouped by repo** — the base's group first, then one per member in the
+   resolved order — and inside each group one row per project `init` will
+   create a task group for *in that repo*. Give each row three things: the
+   **name** as the repo spells it, the **id** that name slugifies to, and the
+   **source** the name came from, in the words
+   [new repo](references/new-repo.md) §7 resolves them by: the registry, a
+   sub-project directory, or the project's **type**.
+
+   **The type source is a choice, not a reading.** Where a repo has neither a
+   registry nor sub-project directories, there is no name in the tree to
+   propose from — the repo's own name was the old answer and it is the wrong
+   one, since a task group names what a task acts **on**. So ask, per project
+   in that repo and inside this same round, which **platform token** is that
+   project's primary surface — `service`, `worker`, `webapp`, `site`, `cli`,
+   `iac` and the rest — and propose the token it picks as the id. The options
+   are the closed per-role platform lists
+   `${CLAUDE_PLUGIN_ROOT}/assets/templates/registry.yaml` carries, narrowed to
+   the project's role where a registry names one and offered as their union
+   where nothing does, plus a free **other** the user types. Offer **only** the
+   tokens that asset lists. A spelling the vocabulary has **retired** —
+   `console` among them — is on no list and is never offered; setup's
+   `references/format-lineage.md` is where each retired spelling is recorded
+   against what replaced it, and a user who wants one types it as **other**.
+
+   **Two projects in one repo that pick the same token** are proposed as
+   `<token>-<directory-slug>` each, both rows shown that way — an id is a
+   directory name in the task library, and two groups cannot be one directory.
+   Across repos there is no collision to resolve: each repo's task library is
+   its own.
 
    **A member's projects come from the base first.** Where the base config's
    `members:` list declares that member's `projects`, those are its projects;
-   otherwise that member's own sub-project directories; otherwise the member's
-   own name, exactly as a single-project repo resolves. The order is the same
+   otherwise that member's own sub-project directories; otherwise the type
+   question above, asked for the member's one project. The order is the same
    declaration-before-detection order §7 already uses, applied one repo down.
 
    Naming the source is the point of showing the list: a row a user disagrees
@@ -292,16 +322,20 @@ are asked whatever the modes are.
    rule here.
 
    What this question settles is what the plan shows and what §7 writes in
-   each repo — the per-project task groups, their shell aliases and that
-   repo's `REPO_NAME`. Nothing downstream re-derives an id. Three things in
-   the environment block are **not** this question's. The bootstrap
-   aggregator's **member flags** and the aliases that shorten them come from
-   the resolved **member repos**, one of each per member, never from a project
-   id — they widen the run to another repo, which is what a member is.
-   `MEMBERS` is filled from the resolved members where the linkage is
-   siblings, and stays exactly as shipped where the repo's own submodule
-   declarations are what the task library reads. And `MERGE_MODEL` is asked in
-   the git pass.
+   each repo — the per-project task groups and, on **every** run including
+   the first, the commit gate's scopes, one per confirmed id. A registry,
+   where the repo has one, is only where this question's proposal was read
+   from; the scopes take the ids it confirmed either way, and a repo with no
+   registry fills them on its first run like any other. Nothing downstream
+   re-derives an id. Four things are **not** this question's. The
+   **repo-name key** is question 1's: it takes the repo's folder name,
+   slugified, and no row of this list reaches it. The bootstrap aggregator's
+   **member flags** and the aliases that shorten them come from the resolved
+   **member repos**, one of each per member, never from a project id — they
+   widen the run to another repo, which is what a member is. `MEMBERS` is
+   filled from the resolved members where the linkage is siblings, and stays
+   exactly as shipped where the repo's own submodule declarations are what
+   the task library reads. And `MERGE_MODEL` is asked in the git pass.
 3. **A one-line brief.** *Mode-new repos only.* What the repo is, in a
    sentence — one row per repo that resolved to **new**, in the same round
    question 1 listed them in. **May be empty** — an empty brief writes a
@@ -413,11 +447,12 @@ that file carries and a keep is recorded so it is not asked again.
 
 Whichever pipeline runs, the same work happens in the same order at the end of
 each repo: the **fills** the packs marked — the project ids and their
-surfaces, the repo-name key, the commit gate's scopes and forge links where
-their sources exist — then the **three merges** (ignore sections, hook
-fragments, editor fragments), then the **git pass**, whose questions were
-asked once for the run and whose commit is that repo's own. The report comes
-last, once, when every repo is done.
+surfaces, the repo-name key from question 1's folder name, the commit gate's
+scopes from those same confirmed ids and its forge links where a remote exists
+— then the **three merges** (ignore sections, hook fragments, editor
+fragments), then the **git pass**, whose questions were asked once for the run
+and whose commit is that repo's own. The report comes last, once, when every
+repo is done.
 
 Both pipelines materialize the same three baselines. They are fetched by the
 **fixed slugs** `mise`, `repo-gates` and `repo-hygiene` — fixed, never
@@ -516,9 +551,16 @@ schedule of events rather than on a symptom, and the way to ask for one is
 
 - **After the registry exists.** `/vwf:architecture` declares the projects and
   `/vwf:setup` writes the config that names them. That is the moment the
-  project ids gain their real source, the commit gate's scope list becomes
-  fillable, and a per-project task group may need to move. The run reports it
-  as an **id source changed**, and it is expected work rather than drift.
+  project ids gain their real source, so a per-project task group may need to
+  move and the commit gate's scope list — already filled from the ids the first
+  run confirmed — may need to move with it. The run reports it as an **id
+  source changed**, and it is expected work rather than drift. The
+  repo-name key does not move with it: its source is the repo's folder name,
+  which a registry says nothing about.
+- **After a repo's folder is renamed.** The repo-name key is written literally,
+  so a rename leaves it naming the old folder and the launch aliases that read
+  it pointing at a name nobody uses. The run offers the new value as a replace
+  row and changes nothing else.
 - **After a stack pack's version moves.** New files, new fragments, new marked
   positions. The plan shows what the repo lacks; the adapter's own re-sync
   command is what shows a diff for a file the repo already has.
@@ -534,8 +576,9 @@ schedule of events rather than on a symptom, and the way to ask for one is
   a re-run.
 - **Whenever `/vwf:doctor` says so.** Doctor is what notices the drift between
   a run: adapter lockfile against installed packs, registry ids against the
-  scope list and the task groups, a missing branch. Its finding prints
-  `/vwf:setup reshape`, once, as the one remedy for every shape row.
+  scope list and the task groups, the repo-name key against the folder, a
+  missing branch. Its finding prints `/vwf:setup reshape`, once, as the one
+  remedy for every shape row.
 
 A run that finds nothing costs one empty plan and says the repo is shaped —
 which is the answer, not a wasted run. On a product, that empty plan still
