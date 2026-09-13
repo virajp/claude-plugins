@@ -238,6 +238,16 @@ ships **no default and no recommended template**, and **every project gets a
 written `stack` block**, because that block is what `/vwf:doctor` checks the
 repo against and it cannot check what was never recorded.
 
+**You record the decision, and only the decision.** What this step writes is a
+slug — or `unresolved` where the user defers — into
+`projects.<name>.stack.template` in `.config/vwf.yaml`. Nothing is materialized
+here: no template is landed, no adapter is asked for one, and no repo tree is
+touched by the pick. The repo a pin will be materialized **into** is the member
+whose `members:` entry lists this project — the membership asset
+(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`); a project no member lists is
+the base repo's. Landing it there, once per (repo, slug), is `/vwf:setup`'s
+materialize pass — which Step 7 hands off to.
+
 The stack never reaches `docs/blueprint/`. That is not a convention the authors
 have to keep — it is what the registry's shape enforces, and it is why a flow
 doc naming a vendor is a reviewer failure.
@@ -331,6 +341,9 @@ per-project `design` (screen-platform projects) and `cicd` keys and the repo-lev
 `repo.stack`. The writer never touches config, and never sees a stack — that
 separation is what keeps the blueprint vendor-free.
 
+Writing those keys is the **whole** of what this command does about the stack.
+Materialization is `/vwf:setup`'s, per Step 3b; Step 7 invokes it.
+
 ---
 
 ## Step 6 — Sync-Verify (inline)
@@ -408,12 +421,29 @@ The parent pipeline commits via /vwf:git-workflow; do not double-commit.
 
 **Otherwise (standalone invocation):** commit via `/vwf:git-workflow`.
 
-Commit message format — use `docs(architecture):` prefix, imperative mood,
-lowercase, under 72 characters:
+Commit message format — a **bare `docs:`** prefix, no scope, imperative mood,
+lowercase, under 72 characters, with the subject naming architecture:
 
 ```text
-docs(architecture): create system architecture doc
-docs(architecture): add worker project to registry
-docs(architecture): update service capabilities — add realtime-location
-docs(architecture): reconcile registry after ride entity launch
+docs: architecture — create system architecture doc
+docs: architecture — add worker project to registry
+docs: architecture — update service capabilities, add realtime-location
+docs: architecture — reconcile registry after ride entity launch
 ```
+
+**Then hand off to `/vwf:setup`.** After the commit lands, invoke `/vwf:setup`
+in-session — the Skill tool, the way `/vwf:setup` invokes `/vwf:init` — and
+continue once it returns. The reason is Step 3b's: this command records pins and
+materializes nothing, so every slug just decided is still a decision with no
+artifact behind it, and setup's materialize pass is what lands each one, per
+(repo, slug), in the repo the project belongs to. Setup also re-stamps, which is
+why running it after a config write rather than before is the useful order.
+
+Setup is **idempotent on a repo it just stamped**: a run that finds every pinned
+axis already materialized and both stamps current proposes no landing and
+rewrites nothing, so the handoff costs a pass and never a second consent. Under
+`multi-repo` it reaches every member, so one invocation covers the whole product
+however many repos the pins spread across.
+
+Skip the handoff in the sub-step case above — the parent pipeline owns what
+runs next, exactly as it owns the commit.

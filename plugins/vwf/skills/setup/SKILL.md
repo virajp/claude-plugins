@@ -18,7 +18,10 @@ disable-model-invocation: true
 Bring any repo — new, existing, or written against an older vwf format — into
 the shape the rest of the workflow reads. `setup` is the Phase-0 bootstrapper of
 `setup → product → architecture → design-system → blueprint → plan → execute`,
-and the only vwf command that onboards.
+and the only vwf command that onboards. It is also where a **pinned** stack is
+materialized: `/vwf:architecture` decides the slug, setup lands it, and **the
+materialize pass runs in every mode** — which is why `/vwf:architecture` comes
+back here when it is done.
 
 **The mode is resolved once, in Step 0, and never re-derived.** Everything after
 it branches on the named mode. There is no progress key and no resume state:
@@ -35,6 +38,7 @@ Read the one the step needs, not all of them.
 
 | Reference                                                      | Read it when                                                       |
 | -------------------------------------------------------------- | -------------------------------------------------------------------- |
+| [materialize pass](references/materialize.md)                  | every mode — landing the pinned stacks, and the absent axes        |
 | [onboard pipeline](references/onboard-pipeline.md)             | mode `onboard` — both sub-paths                                    |
 | [migrate pipeline](references/migrate-pipeline.md)             | mode `migrate`, and an old tree found under `onboard`              |
 | [topology detection](references/topology-detection.md)         | detecting or confirming topology, roles, platforms, stacks         |
@@ -159,9 +163,33 @@ pipeline once detection is confirmed. The two are one reconciliation at
 different elicitation depths — onboard elicits every decision, migrate carries
 most forward and maps the renames.
 
-**`current` reports and exits.** Name both stamps, say the repo is current, and
-print the chain below. Nothing re-walks the repo: that is
-`/vwf:doctor`'s job, and saying so is the whole report.
+**`current` reports and exits — after the materialize pass.** Name both stamps,
+say the repo is current, run [the materialize pass](#the-materialize-pass)
+below on the config already there, and print the chain with that pass's report.
+Nothing else re-walks the repo: that is `/vwf:doctor`'s job, and saying so is
+the whole report.
+
+## The materialize pass
+
+**Architecture decides; setup pins.** A slug on a stack axis is a decision
+`/vwf:architecture` made and wrote; landing it is setup's, and the pass that
+does it is [materialize](references/materialize.md) — read it there, in full,
+rather than reconstructing it here.
+
+It runs **once per run, in every mode**, on a `.config/vwf.yaml` that is
+already current: in `onboard` and `migrate` between the spine's steps 2 and 3
+below, and in `current` before that mode's report. `current` is not an
+exception to be optimized away — a repo `/vwf:architecture` has just written
+pins into resolves to exactly that mode, and skipping the pass there is
+skipping the whole handoff.
+
+In one paragraph, so a reader knows what the reference will say: setup groups
+the axes holding a slug the target repo's adapter lockfile does not name,
+dedupes by slug per repo, and invokes the adapter once per `(repo, slug)`,
+each landing behind the **adapter's own** consent line. A declined landing
+leaves the pin untouched and is reported. An `unresolved` axis is skipped
+silently. An **absent** axis is written `unresolved` and the run continues — a
+slug is never rewritten.
 
 ## The shared spine
 
@@ -180,6 +208,11 @@ point, since a stamp written before validation describes a tree nothing checked:
    write each member's `.config/vwf-membership.yaml`, per
    `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`; which members are on this machine is
    detected every run and never recorded.
+
+   **Then run [the materialize pass](#the-materialize-pass)**, before step 3 —
+   the config it reads and writes is the one just written, and a stack that
+   landed here is a stack the doctor gate below no longer reports as missing.
+
 3. **Run /vwf:doctor** over the repo — it checks the config just written
    against what the repo actually is. setup **records** what it reports and does
    not gate on most of it: a missing LSP plugin or an unbuilt harness capability
@@ -194,6 +227,17 @@ point, since a stamp written before validation describes a tree nothing checked:
    (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`), and never invent a template to
    get past it.
 
+   **A declined landing is the expected way to reach "pinned, not
+   materialized".** That finding is blocking, so it halts here and reverts the
+   stamp like any other — the honest outcome of a repo whose stack the user
+   chose not to land, with the pin left for `/vwf:setup` to offer again. A
+   decline in mode `current` never reaches this step at all: that mode reports
+   and exits with no stamp to revert, so the block is what `/vwf:doctor`
+   reports on demand and what the next spine run halts on. An `unresolved` axis
+   is the opposite case and **never** blocks: it is a degradation doctor
+   reports every run, and setup names its unlock (`/vwf:architecture`) and
+   finishes.
+
    **Two exceptions.** A **declined graph build** is a settled choice, not an
    unmet mandate — note it as a degradation and finish. A **declined `iac`
    extraction** recorded under `enforcement:` is the same: the finding stays, as
@@ -201,7 +245,7 @@ point, since a stamp written before validation describes a tree nothing checked:
    `/vwf:execute` halts on it.
 4. **Approval gate & commit.** Summarize everything created and updated, plus
    the recommendations, and wait for approval. On approval commit via
-   `/vwf:git-workflow` with a `chore(vwf):` or `docs:` message.
+   `/vwf:git-workflow` with an `ops:` or `docs:` message.
 5. **The graph offer.** Per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`, `setup` is the
    **only** vwf command that builds graphs. After the commit, if
    `graphify-out/graph.json` is missing and the CLI is on `PATH`, offer —
@@ -220,6 +264,12 @@ point, since a stamp written before validation describes a tree nothing checked:
    `/vwf:product` now. **setup runs none of them** — each
    resolves its own mode and reports what it did, which a gate here can only
    guess at on their behalf.
+
+   **`/vwf:architecture` comes back here when it is done** — it invokes
+   `/vwf:setup` in-session at the end of its own run, so the pins it just
+   decided are materialized by the pass above without the user remembering a
+   second command. Printing the chain is still what this step does; the return
+   trip is architecture's, not a gate here.
 
 ## Recommendations, never moves
 

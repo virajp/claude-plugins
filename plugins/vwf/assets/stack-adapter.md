@@ -127,6 +127,27 @@ plugin ignores them; a **generating** adapter (the materialized-template
 variant below) requires them, and halts by contract when they are missing
 rather than substituting general knowledge.
 
+**The target repo.** A `-stack-template` invocation may carry one more optional
+line beside the catalog paths, in the same payload style:
+
+```yaml
+repo: <path> # OPTIONAL — relative to the BASE repo root
+```
+
+The value is the **member's `path`**, and vwf is what resolves it: the member
+whose `projects:` list contains the project being materialized for — the
+`members:` list of `.config/vwf.yaml`, per the membership asset
+(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`). A project no member lists lives
+in the base repo. **Absent means the current repo**, which is the whole answer
+under `repo` and `monorepo` topology. Under `topology: multi-repo` **every vwf
+caller passes it** — a member's materialization lands in that member's own
+tree and is recorded in **that** repo's lockfile, never the base's, so two
+members pinning the same slug each get their own copies rather than one shared
+set nobody's checkout contains.
+
+The argument itself is unchanged: it stays `<slug>`, and a second positional was
+rejected precisely so a caller that does not know about repos keeps working.
+
 **Why the name repeats the plugin.** OpenCode installs skills into one flat
 namespace, so two plugins declaring `stack-menu` would overwrite each other;
 Claude Code namespaces a skill by its plugin, so a bare name need only be unique
@@ -263,6 +284,12 @@ it the same way:
 2. **Dedupe by (plugin, slug) and fetch each once**, calling
    `/<plugin>:<plugin>-stack-template <slug>`. A monorepo whose projects share a
    repo template fetches it once, not once per project.
+
+   **Under `multi-repo`, pass `repo:` and dedupe per (plugin, repo, slug)**
+   instead. The target repo is where a materialized template's committed copy
+   lives, so the fetch reads it from **that** repo's `.claude/` tree; two
+   members pinning the same slug hold two independent materializations, and
+   resolving one for both hands a project prose its own repo does not contain.
 3. **Resolve once per run, before the work starts**, and pass the result down to
    every subagent that needs it. Re-fetching per element or per step would
    re-pay the call for prose that cannot change mid-run.
@@ -302,9 +329,12 @@ side of the contract is three rules:
   `-stack-template` call returns the committed payload from the repo — so
   `plan`'s and `execute`'s conventions resolution behaves exactly as
   *Resolving the conventions* states, with no research, network, or write on
-  their clock. Materialization itself happens once, interactively, when the
-  pin is first made; a pin whose materialization was declined is
-  **unmaterialized**, and the fetch says so rather than generating silently.
+  their clock. Materialization itself happens once **per (repo, slug)**,
+  interactively, in **`/vwf:setup`'s materialize pass** — after
+  `/vwf:architecture` has recorded the pin. Architecture decides; setup lands
+  the decision, in the repo the pin belongs to. A pin whose materialization was
+  declined is **unmaterialized**, and the fetch says so rather than generating
+  silently — `/vwf:setup` offers it again on its next run.
   That is not the `unresolved` axis state above and must not be recorded as one:
   the axis *was* answered, and what is missing is the artifact, not the decision.
 - **The menu may carry one open entry.** A materializing adapter's menu may

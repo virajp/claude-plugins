@@ -156,6 +156,11 @@ Each of these is a genuine stop, and each is explained where it is enforced.
   an old repo halts here, since free-text pins have been retired and a language
   nothing claims counts as unknown.
   [Stack templates](../../plugins/vwf.md#stack-templates)
+- **A pin whose template was never landed is blocking too**, reported as
+  *pinned, not materialized* rather than as an unknown language — the state an
+  old repo is in when its pins predate materialization altogether. Setup's
+  [materialize pass](../../plugins/vwf.md#the-materialize-pass) offers the
+  landing in the same run; declining it is what leaves the block standing.
 - **A workflow command halts before you ever reach setup** when the operation
   needs an artifact the old format lacks — a blueprint sweep reaching a flow
   with screens and no design system is the common one.

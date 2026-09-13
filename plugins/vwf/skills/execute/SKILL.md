@@ -305,16 +305,28 @@ silently if mempalace is unavailable.
    `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md` — deduped by slug, **once
    for the whole run**, here rather than per step. The config block names the
    templates; the prose is what the code is actually written to, and every stage
-   below that touches code is passed it. **Two different halts live here.** An
-   axis reading `unresolved` halts at that asset's step 1, before any fetch —
-   the axis was deferred, so there is no prose to resolve; name the project and
-   the axis and point at `/vwf:architecture`. A failed fetch halts for the
-   opposite reason: the preflight already proved each pin resolves, so a failure
-   now is the plugin being unreachable. Report them distinguishably — a question
-   nobody answered is not a plugin that broke — and note that `/vwf:doctor` will
-   not have caught the first, since it reports deferral as a degradation by
-   design. Either way, code written to conventions nobody read is the thing this
-   whole gate exists to prevent.
+   below that touches code is passed it.
+
+   **Under `multi-repo`, the fetch carries `repo: <path>`** — that asset's
+   *The target repo* line, naming the member whose `members:` entry lists the
+   project (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`). Step 2 above already
+   resolved which repo each project is of; **hand that resolution to the fetch**
+   rather than dropping it, under both linkages — under `siblings` it is the
+   worktree's own repo, under `submodule` the member's path inside the base.
+   A materialized template lives in the repo it was landed in, so a fetch that
+   omits the repo reads the base's `.claude/` tree for a member's project and
+   finds the wrong prose or none. Dedupe per (repo, slug).
+
+   **Two different halts live here.** An axis reading `unresolved` halts at
+   that asset's step 1, before any fetch — the axis was deferred, so there is
+   no prose to resolve; name the project and the axis and point at
+   `/vwf:architecture`. A failed fetch halts for the opposite reason: the
+   preflight already proved each pin resolves, so a failure now is the plugin
+   being unreachable. Report them distinguishably — a question nobody answered
+   is not a plugin that broke — and note that `/vwf:doctor` will not have
+   caught the first, since it reports deferral as a degradation by design.
+   Either way, code written to conventions nobody read is the thing this whole
+   gate exists to prevent.
 4. **Dependency order.** Read the plan's "Delta — ordered steps", build the
    dependency order, and record the sequence you will execute. **Open the run
    journal** in mempalace (room `runs`, drawer `<plan>`) with that ordered

@@ -71,7 +71,7 @@ repo: # REPO-level tooling, the counterpart to a project's stack. One block per 
 projects: # per-project REALIZATION + nuances — no role/path keys, ever (those describe the system: registry.yaml)
   <project-name>:
     stack: # the CONCRETE technology, structured. Lives here (never registry.yaml) so the blueprint is structurally incapable of naming a vendor. Written for EVERY project, always — an absent block is drift, not "the default", because /vwf:doctor cannot check what was never recorded
-      template: project/<slug> # the PROJECT-axis template, from an INSTALLED stack plugin, or `unresolved` (format 16 — deferred, see The three axis states). NOT a default: /vwf:architecture presents the menu and the user picks. `custom` was RETIRED in format 14 — the menu is the whole vocabulary, and a platform nothing fits halts rather than recording free text. Format 15 dropped the `<role>/` path segment: a template declares the platforms it serves in its own frontmatter (one template can serve several — a Flutter template covers mobile+tablet+desktop+webapp), which a directory name cannot express. The pin must COVER every platform this project declares in the registry
+      template: project/<slug> # the PROJECT-axis template, from an INSTALLED stack plugin, or `unresolved` (format 16 — deferred, see The three axis states). NOT a default: /vwf:architecture presents the menu and the user picks. `custom` was RETIRED in format 14 — the menu is the whole vocabulary, and a platform nothing fits halts rather than recording free text. Format 15 dropped the `<role>/` path segment: a template declares the platforms it serves in its own frontmatter (one template can serve several — a Flutter template covers mobile+tablet+desktop+webapp+auto), which a directory name cannot express. The pin must COVER every platform this project declares in the registry
       backing_template: [
         <slug>,
       ] # the BACKING axis, PER PROJECT since format 13 (was one product-wide `backing:` block). A LIST: one slug per capability the project needs — datastore, identity, queue, object storage, telemetry sink. `[]` when the project talks to no backing service at all (a `packages` platform, or a client app talking only to a `service`, usually does not). `unresolved` — the bare scalar, never an element — when the axis is deferred
@@ -162,11 +162,21 @@ precisely the state format 16 exists to make visible. The scalar axes
 axis and every repo a repo axis, so their only two states are pinned and
 deferred.
 
-**`unresolved` only ever arrives from an `/vwf:architecture` run**, which offers
-deferral alongside the menu entries and says what would unlock the axis. No
-migration writes it, and nothing infers it from an absent key — an absent `stack`
-block is still drift, exactly as before, because absence records nothing about
-whether anyone was asked.
+**A pin is decided in one command and materialized in another.**
+`/vwf:architecture` writes the slug and materializes nothing; `/vwf:setup`'s
+materialize pass lands it, once per (repo, slug), in the repo the project
+belongs to. So a pinned axis whose repo holds no materialized entry is not a
+fourth state — it is a pin with a missing artifact, which is `/vwf:doctor`'s
+**pinned, not materialized** finding.
+
+**`unresolved` arrives from an `/vwf:architecture` run**, which offers deferral
+alongside the menu entries and says what would unlock the axis, **or from
+`/vwf:setup`**, which writes it on a project or repo axis it finds **absent** on
+a repo architecture has not run on — so the stamp can be written and the chain
+can carry on rather than stopping at a question nobody has been asked yet. No
+migration writes it. What setup fills is the **absence** and only the absence: a
+pinned slug is never rewritten, and an absent axis records nothing about whether
+anyone was asked, which is exactly why deferring it beats leaving it out.
 
 **Where it is tolerated, and where it is not.** Defining the product runs to
 completion with every axis deferred; building it does not.
@@ -175,7 +185,7 @@ completion with every axis deferred; building it does not.
 | ---------------------------------------------- | ------------------------------------------------------------------------------ |
 | `product`, `architecture`, `blueprint`, `design-system`, and every doc surface | unaffected — none of them reads a stack                       |
 | `doctor`                                       | a **degradation**, reported every run; the checks that depend on that axis report `not checked — no stack resolved`, never a blocking finding |
-| `setup`                                        | records what it could not provision and names the unlock; never halts on it     |
+| `setup`                                        | writes `unresolved` on an **absent** axis, materializes every **pinned** one in its target repo, records what it could not provision and names the unlock; never halts on a deferred axis |
 | `plan`, `execute`                              | **halt**, naming the axis and the project and pointing at `/vwf:architecture`   |
 
 The halt at `plan`/`execute` is not a policy choice — it falls out of

@@ -74,7 +74,7 @@ it.
    generated sections, is reported as canvas upkeep (the user re-pastes). This
    fold is the **one edit import makes itself** — a prompts-tree artifact, never
    a blueprint doc — committed via `/vwf:git-workflow`
-   (`docs(prompts): fold canvas conventions`).
+   (`docs: fold canvas conventions`).
 6. **Route — never edit here.**
    - **Accepted deltas** → hand each touched flow's verdict list to
      `/vwf:blueprint <flow>` as that pass's input: the pass applies them under

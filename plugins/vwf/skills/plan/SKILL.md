@@ -175,6 +175,15 @@ command settles — where a file goes, what a test looks like, which existing
 shape to extend — are answered by that prose. Sizing steps without it is
 guessing at a layout the repo already has an opinion about.
 
+**Under `topology: multi-repo`, pass the target repo with each fetch.** Each
+project's pins were materialized into *its own* repo, so the invocation carries
+the `repo: <path>` line that asset's *The target repo* defines — the member
+whose `members:` entry lists that project, per the membership asset
+(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`); a project no member lists is
+the base's. The dedupe still holds, now per (repo, slug) rather than per slug:
+two members on the same slug are two materializations, and resolving one for
+both would size steps against prose the other repo does not contain.
+
 Once per chain rather than per element, because every element of a chain sits in
 the same few projects and the prose cannot change between them. Hold the result
 for §§3–7.
@@ -351,6 +360,6 @@ skip silently if mempalace is unavailable.
 
 ### 9. Commit (git-workflow)
 
-After each approval, commit that plan via `/vwf:git-workflow`. Use a
-`blueprint(plan):` or `docs(plan):` message. Keep the worktree **local**. Do not
-run raw git here.
+After each approval, commit that plan via `/vwf:git-workflow`. Use a bare
+`docs:` message — no scope — with the subject naming the plan, e.g.
+`docs: plan — <slice>`. Keep the worktree **local**. Do not run raw git here.

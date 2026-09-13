@@ -17,11 +17,13 @@ paths:
 plugin left — vwf's one dependency. It implements vwf's stack-adapter contract:
 `skills/stackgen-stack-menu` returns the stack options as a vwf menu payload,
 `skills/stackgen-stack-template` returns one stack as a template payload, and
-both are called by `/vwf:architecture`, `/vwf:setup`, `/vwf:plan` and
-`/vwf:execute` rather than by users. `skills/stackgen-sync` is the one user-only
-skill: the explicit, lockfile-diffed re-sync. Since `devtools` dissolved into
-it, stackgen also carries the repo's own toolchain manager and gate doctrine as
-packs.
+both are called by vwf rather than by users — the menu by `/vwf:architecture`
+and `/vwf:setup`, the template by `/vwf:setup` (whose materialize pass lands a
+first pin), `/vwf:plan` and `/vwf:execute` (pure conventions reads).
+`/vwf:architecture` decides a pin and materializes nothing.
+`skills/stackgen-sync` is the one user-only skill: the explicit, lockfile-diffed
+re-sync. Since `devtools` dissolved into it, stackgen also carries the repo's
+own toolchain manager and gate doctrine as packs.
 
 **Each asset is authoritative for its own subject.** This file is a map; do not
 restate a count or a rule that an asset below already owns.
@@ -67,9 +69,12 @@ of the menu payload and fetched by `/vwf:init` at their fixed slugs, because a
 repo that has picked no stack still has to run its gates by name. `init` fetches
 them **per repo** — the base and every member repo it resolved, each landing its
 own lockfile — so a member is shaped on its own evidence. `/vwf:setup` no longer
-fetches them: it checks each repo's adapter lockfile for all three and offers
-`/vwf:init` when one is missing anywhere, or when any repo has drifted from
-doctor's baseline.
+fetches **those three**: it checks each repo's adapter lockfile for all of them
+and offers `/vwf:init` when one is missing anywhere, or when any repo has
+drifted from doctor's baseline. What setup *does* fetch is every **pinned** axis
+— its materialize pass invokes `-stack-template` once per `(repo, slug)`, with
+the `repo:` line naming the member — which is the one landing path
+`/vwf:architecture` no longer takes.
 
 ## Where it lands, and the consent tiers
 
@@ -197,7 +202,12 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
   explicit `false` rather than the mere absence of `true` — absence states
   nothing about the thing vwf depends on. `stackgen-stack-template` keeps its
   `argument-hint`; it costs nothing on a hidden skill and documents the one
-  argument the caller passes.
+  argument the caller passes — still `<slug>` alone. The **target repo** is not
+  a second argument: it arrives as one optional `repo: <path>` line beside the
+  principles-catalog paths, the member's path relative to the base repo root,
+  absent meaning the current repo. The materializer writes there and keeps that
+  repo's own `.claude/stackgen/lock.yaml`, so two members pinning the same slug
+  hold two independent materializations.
 
 ## Two scripts that are not plugin hooks
 

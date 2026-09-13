@@ -202,4 +202,4 @@ project) routes through `/vwf:architecture` — never a by-hand registry edit.
 Summarize what was imported/changed and wait for explicit approval. Then pin
 `design.design_system_id` in `.config/vwf.yaml` (confirmed, never silently) and
 hand **all** git actions to `/vwf:git-workflow` — the pin rides the same commit.
-Use a `blueprint(design-system):` or `docs(design-system):` message.
+Use a bare `docs:` message whose subject names the design system.

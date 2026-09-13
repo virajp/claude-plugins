@@ -30,7 +30,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 
 | Component | Name | Kind | Axis | Category | Capability | Version | Summary |
 | --------- | ---- | ---- | ---- | -------- | ---------- | ------- | ------- |
-| `app-framework/flutter` | Flutter | `app-framework` | project | cross-platform-ui |  | 0.2.0 | The cross-platform app SDK that owns the manifest, the build and the project layout — one codebase across mobile, tablet, desktop and web. |
+| `app-framework/flutter` | Flutter | `app-framework` | project | cross-platform-ui |  | 0.3.0 | The cross-platform app SDK that owns the manifest, the build and the project layout — one codebase across mobile, tablet, desktop, web and in-car through the native edge. |
 | `capability-provider/doppler` | Doppler | `capability-provider` | backing | secrets-manager |  | 1.0.0 | A vendor holds the secrets and the CLI injects them at the process boundary — onboarding is an org invite, and no key is ever distributed. |
 | `capability-provider/fnox` | fnox | `capability-provider` | backing | secrets-manager |  | 1.0.0 | The local-first secrets manager — you hold them, encrypted into git or referenced in your own cloud, and onboarding is a public key plus a re-encrypt. |
 | `capability-provider/oidc` | OIDC issuer | `capability-provider` | backing | identity | third-party-auth | 0.1.0 | Identity as an open protocol rather than a product — any issuer speaking OpenID Connect, self-hosted or managed. |
@@ -127,7 +127,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `cloudflare-workflows` | Cloudflare Workflows | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/workflows@0.1.0` |  |
 | `cloudflare-zero-trust` | Cloudflare Zero Trust Access | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/zero-trust-access@0.1.0` |  |
 | `container-generic` | OCI image · any container host | `deploy-target` | deploy | `deploy-target/container-image@0.1.0` |  |
-| `dart-flutter` | Dart · Flutter | `app-framework` | project | `app-framework/flutter@0.2.0`, `package-manager/pub@0.1.0`, `toolchain-gate/analysis-options@0.1.0` |  |
+| `dart-flutter` | Dart · Flutter | `app-framework` | project | `app-framework/flutter@0.3.0`, `package-manager/pub@0.1.0`, `toolchain-gate/analysis-options@0.1.0` |  |
 | `doppler` | Doppler | `capability-provider` | backing | `capability-provider/doppler@1.0.0` |  |
 | `fnox` | fnox | `capability-provider` | backing | `capability-provider/fnox@1.0.0` |  |
 | `gcp-cloud-run` | Google Cloud · Cloud Run · Artifact Registry | `cloud-provider` | deploy | `cloud-provider/gcp@0.1.0`, `cloud-service/cloud-run@0.1.0` |  |

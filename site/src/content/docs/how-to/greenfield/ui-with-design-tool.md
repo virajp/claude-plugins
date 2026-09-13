@@ -78,9 +78,9 @@ the derive-and-correct shape. Two of Centwise's answers are the delta:
   [stackgen](../../plugins/stackgen.md).
 
 On the stack menu Centwise pins `dart-flutter` on the project axis — the
-stackgen bundle serving mobile, tablet, desktop and webapp from one codebase
-([stack templates](../../plugins/vwf.md#stack-templates)). The other axes work
-as in the spine's
+stackgen bundle serving mobile, tablet, desktop, webapp and the car from one
+codebase ([stack templates](../../plugins/vwf.md#stack-templates)). The other
+axes work as in the spine's
 [stack pins, one axis at a time](./single-repo.md#stack-pins-one-axis-at-a-time),
 and the thirteen-foundation walk is unchanged from
 [the thirteen foundations](./single-repo.md#the-thirteen-foundations).

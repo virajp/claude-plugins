@@ -110,19 +110,30 @@ returns, detect-or-ask topology via MCQ, consent-gated reconciliation into the
 `docs/blueprint/` format, the CLAUDE.md vwf section, the memory tree and
 `mempalace.yaml`, the `environment.md` bootstrap) and is **re-runnable**:
 re-running *is* the resume mechanism, since Step 0 re-resolves the mode from
-what is on disk and a conforming repo resolves to `current`. **It runs none of
-the foundations** — it ends by printing the chain and offering to start
-`/vwf:product`, because each of those commands resolves its own mode and reports
-what it did, which a gate inside setup could only guess at on their behalf.
-`product.md` (the Phase −1 outcome contract, type `vwf-product`, gated by the
-`product-reviewer`) and `architecture` (the registry) are both unconditionally
-required before `blueprint` — every **flow's** Purpose must `Serves:`-link a
-product goal anchor (entities trace to goals transitively via their `Used by:`
-flow links), which the `blueprint-reviewer` verifies and the minimalism check
-traces to. `design-system` is a second foundation, **required once the registry
-has a UI project** (some project declares a **screen platform**): `blueprint`
-halts on a flow with a Screens surface if `docs/blueprint/design-system.md` is
-missing. `environment.md` (the per-project env-var/secret catalog, type
+what is on disk and a conforming repo resolves to `current`. Setup is also where
+a **pinned** stack is landed: **architecture decides, setup pins.** Its
+**materialize pass** runs once per run in every mode — `current` included, which
+is the mode a repo architecture just wrote pins into resolves to — grouping the
+axes holding a slug the target repo's adapter lockfile does not name, deduping
+by slug per repo, and invoking `-stack-template` once per `(repo, slug)` with
+the contract's `repo:` line; an **absent** axis is written `unresolved` and a
+pinned slug is never rewritten. On the spine it runs before the doctor gate, and
+a declined landing is the expected way to reach doctor's blocking *pinned, not
+materialized*. **It runs none of the foundations** — it ends by printing the
+chain and offering to start `/vwf:product`, because each of those commands
+resolves its own mode and reports what it did, which a gate inside setup could
+only guess at on their behalf. The one return trip is `/vwf:architecture`'s,
+which invokes `/vwf:setup` in-session after its own commit so the pins it just
+recorded get materialized. `product.md` (the Phase −1 outcome contract, type
+`vwf-product`, gated by the `product-reviewer`) and `architecture` (the
+registry) are both unconditionally required before `blueprint` — every
+**flow's** Purpose must `Serves:`-link a product goal anchor (entities trace to
+goals transitively via their `Used by:` flow links), which the
+`blueprint-reviewer` verifies and the minimalism check traces to.
+`design-system` is a second foundation, **required once the registry has a UI
+project** (some project declares a **screen platform**): `blueprint` halts on a
+flow with a Screens surface if `docs/blueprint/design-system.md` is missing.
+`environment.md` (the per-project env-var/secret catalog, type
 `vwf-environment`) is a third foundation, **required once the registry declares
 an external integration or a secrets-manager `config`** — `setup` bootstraps it
 from the repo's existing env-var/secret usage (names only, never values) and

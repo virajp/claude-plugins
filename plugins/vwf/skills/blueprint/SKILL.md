@@ -532,8 +532,8 @@ line is contract is not a hole, and must never hold the stamp hostage.
 
 After approval, hand **all** git actions to `/vwf:git-workflow` — it owns
 worktree isolation and the commit (the stamp change rides the same commit). Use
-a `blueprint(<flow|entity>):` or `docs(blueprint):` message. Do not run raw git
-here.
+a bare `docs:` message with the flow or entity named in the subject. Do not run
+raw git here.
 
 **Chain forward.** When the sweep ends with `coverage: complete`, offer to
 continue straight into `/vwf:plan` for the highest-priority slice (from the

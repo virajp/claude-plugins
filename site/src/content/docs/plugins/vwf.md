@@ -284,6 +284,7 @@ flowchart TD
     P e2@-. "visual language changed (UI)" .-> DS["/vwf:design-system"]:::user
     P --> B["/vwf:blueprint — after any foundation change<br/>(sweeps back to whole-product coverage, re-stamps it)"]:::user
     A --> B
+    A e11@-. "invokes setup to materialize the pins it recorded" .-> S
     DS --> B
     B e8@-. "screens reviewed in-pass; batch re-render" .-> M["/vwf:mockups — batch tool<br/>(local HTML mockups in docs/scratchpad)"]:::user
     B e9@-. "design-first screens" .-> SC["/vwf:screens<br/>(prompt → canvas → import)"]:::user
@@ -304,6 +305,7 @@ flowchart TD
     e5@{ animate: true }
     e6@{ animate: true }
     e7@{ animate: true }
+    e11@{ animate: true }
     e9@{ animate: true }
     e10@{ animate: true }
     e8@{ animate: true }
@@ -313,8 +315,11 @@ flowchart TD
 
 (`setup` **prints** the chain `product` → `architecture` → `design-system` →
 `blueprint` and offers to start the first one; it runs none of them, because
-each resolves its own mode and reports what it did. Blue marks who prompts them.
-Fully internal machinery never appears in the flow: `/vwf:git-workflow` is
+each resolves its own mode and reports what it did. The one arrow back into
+`setup` is `architecture`'s own: having recorded the stack pins and materialized
+nothing, it invokes setup in-session so
+[the materialize pass](#the-materialize-pass) lands them. Blue marks who prompts
+them. Fully internal machinery never appears in the flow: `/vwf:git-workflow` is
 invoked by the other commands for every git action, `/vwf:docs-sync` closes
 every run that changes reality (and is yours to run after ad-hoc work), the five
 execute subagents and the reviewer subagents run inside their commands, and
@@ -566,7 +571,7 @@ nothing, or talks to no backing service.
 
 **Project-axis templates.** A template declares **which platforms it serves**,
 and that list is what the menu filters on. One template routinely covers
-several: an app framework can build four surfaces from one codebase, and a
+several: an app framework can build five surfaces from one codebase, and a
 full-stack template serves an API and its own UI — what the retired `fullstack`
 role meant. **Your pin must cover every platform your project declares**, which
 `/vwf:doctor` checks. Which templates exist, and what each is made of, is the
@@ -611,7 +616,11 @@ A template reaches vwf as a **payload**, never as a file: its stack facts
 template admits — Flutter's Kotlin and Swift) and its **conventions** prose,
 carrying the layout, testing and deployment rules. How a stack plugin stores
 that template is its own business. Picking one fills those facts into
-`.config/vwf.yaml`; you can then customize any of them.
+`.config/vwf.yaml`; you can then customize any of them. **Picking is
+`/vwf:architecture`'s and landing is `/vwf:setup`'s** — architecture records the
+slug and materializes nothing, then invokes setup, whose materialize pass asks
+the plugin for the template once per (repo, slug) and lands it in the repo that
+project belongs to.
 
 Only the axes land in the config — the conventions prose stays with the plugin,
 and `/vwf:plan` and `/vwf:execute` fetch it when they run: deduped by template
@@ -654,6 +663,15 @@ a language whose pin carries that template's emitted `language_facts` (LSP
 provision, mise tool, manifest) is *known* — doctor verifies against the facts
 instead of a language plugin. A token with neither stays blocking; nothing about
 the escape re-opens free text.
+
+That landing happens in **`/vwf:setup`'s materialize pass**, once per (repo,
+slug), never at the moment the pin is made — so a freshly recorded pin is
+expected to sit unmaterialized until setup runs, which is the handoff working
+rather than a gap. A pin whose landing you **declined**, or a repo setup has not
+re-run on since, is doctor's own finding: **pinned, not materialized —
+`/vwf:setup` materializes it**, blocking while the pin stands, one row per
+project rather than one per language, and never confused with `unresolved`. The
+axis was answered; what is missing is the artifact.
 
 Adding a stack option means adding a template file **to a plugin**, never to
 vwf. One entry per type today is a starting point, not a default.
@@ -1227,7 +1245,9 @@ from the `/` menu, so this offer and `reshape` above are the only two ways it is
 reached. An **absent** member is a blind spot, never a finding. Declining is a
 recorded deferral, not a halt: the repo shape and the vwf format are two
 different things, and a repo can be onboarded into one without the other. Setup
-itself never materializes a bundle any more.
+itself never materializes one of the **three unconditional** bundles any more —
+that is `init`'s. The **pinned** stacks are a different matter, and they are
+setup's: see [the materialize pass](#the-materialize-pass) below.
 
 **Step 0 resolves one of three entry paths**, once, from what is on disk, and
 nothing after it re-derives the mode:
@@ -1258,16 +1278,17 @@ linkage; project roles and platforms; stacks) and confirms it with you via MCQ,
 then produces a **dry-run plan** of every doc to scaffold or reconcile. On a
 new/empty repo it applies the workspace structure as the default and elicits
 each project's stack from the [template menu](#stack-templates) — a platform no
-installed plugin has a template for leaves that axis unrecorded for
-`/vwf:architecture` to settle rather than halting the run. `setup` never writes
-`unresolved` itself; that value only ever comes from an `/vwf:architecture` run
-that offered the axis. It also writes the product's **one** `mempalace.yaml`, at
-the repo root — one wing, the seven rooms vwf's memory protocol uses, and a
-secret denylist behind `.gitignore` — mining the whole tree including
-submodules, and consolidating away any config it finds in `.config/` or a
-submodule root (mining reads the config only from the directory it is pointed
-at, so a stray one is silently inert rather than merely wrong). Nothing is
-written until you approve; it works in a worktree, never deletes, and **never
+installed plugin has a template for leaves that axis for `/vwf:architecture` to
+settle rather than halting the run. An axis setup finds **absent** on a repo
+architecture has not run on is written `unresolved` and the run carries on: the
+one case in which setup writes that value, and it fills an absence only — a
+pinned slug is never rewritten. It also writes the product's **one**
+`mempalace.yaml`, at the repo root — one wing, the seven rooms vwf's memory
+protocol uses, and a secret denylist behind `.gitignore` — mining the whole tree
+including submodules, and consolidating away any config it finds in `.config/`
+or a submodule root (mining reads the config only from the directory it is
+pointed at, so a stray one is silently inert rather than merely wrong). Nothing
+is written until you approve; it works in a worktree, never deletes, and **never
 moves a source file** — a layout that differs from its topology's grouping, and
 an `iac` project sitting in another project's repo, both end the run as written
 recommendations rather than as moves. It merges a vwf section into your
@@ -1281,6 +1302,30 @@ versions, harness inventory, enforcement opt-outs, and per-project nuances (a
 coverage-target override, a non-conventional health path) — so a later run
 detects drift, and every command knows how vwf operates in this repo (pipeline
 knobs, verify environments, the mempalace wing).
+
+#### The materialize pass
+
+**Architecture decides; setup pins.** A slug on a stack axis is a decision
+`/vwf:architecture` made and wrote, and landing it is setup's — which is why
+architecture invokes `/vwf:setup` at the end of its own run rather than leaving
+you a command to remember. The pass runs **once per run, in every mode**,
+`current` included: a repo architecture has just written pins into resolves to
+exactly that mode, so skipping it there would skip the whole handoff.
+
+It groups the axes holding a slug the target repo's adapter lockfile does not
+name, dedupes by slug per repo, and asks the stack plugin for each one — the
+invocation carrying `repo: <path>`, the member whose `projects:` list holds that
+project, so a member's materialization lands in **that** member's tree and its
+own lockfile, never the base's. Two members pinning the same slug each get their
+own copies. Every landing sits behind the plugin's own consent line; a landing
+you decline leaves the pin untouched and is reported, an `unresolved` axis is
+skipped silently, and an absent axis is written `unresolved` as above. On the
+spine the pass runs before the doctor gate, so a stack that lands here is one
+the gate no longer reports as missing — and a decline is the expected way to
+reach doctor's blocking **pinned, not materialized**, which halts the spine and
+reverts the stamp like any other. In mode `current` there is no stamp to revert:
+the block is what `/vwf:doctor` reports on demand and what the next spine run
+stops on.
 
 **The ordering of the shared spine is the point:** validate the bundle, *then*
 write the config, *then* run `/vwf:doctor` against it — a stamp written before
@@ -1345,6 +1390,15 @@ interview as before, and a screen platform is never assumed — it makes the
 design system mandatory, so each one is confirmed explicitly. With no
 `product.md` either, it recommends `/vwf:product` first and offers the interview
 as the fallback.
+
+**It records the pin and lands nothing.** The stack question ends with a slug in
+`.config/vwf.yaml`; no template is fetched, no repo tree is touched. When the
+run is done and committed it **invokes `/vwf:setup` in-session**, whose
+[materialize pass](#the-materialize-pass) lands each slug once per (repo, slug)
+in the repo that project belongs to — so on a multi-repo product one invocation
+covers every member the pins spread across. Setup is idempotent on a repo it
+just stamped, so a run that finds everything already landed proposes nothing and
+costs a pass, never a second consent.
 
 This is the one doc that *does* name technologies and infrastructure — the
 blueprint deliberately doesn't.

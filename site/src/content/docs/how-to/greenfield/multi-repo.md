@@ -109,6 +109,12 @@ Stallfront's corrections:
   it describes a checkout, so in a multi-repo product each member answers it for
   itself rather than the product answering once
   ([stack pins, one axis at a time](./single-repo.md#stack-pins-one-axis-at-a-time)).
+  Those rounds record slugs and land nothing: `/vwf:architecture` invokes
+  `/vwf:setup` when it is done, and setup's
+  [materialize pass](../../plugins/vwf.md#the-materialize-pass) lands each pin
+  in the **member repo** whose `projects:` list holds that project — `api`'s
+  template into `api/`, `web`'s into `web/`, each with its own lockfile, one
+  landing per (repo, slug). One invocation covers all three.
 - **Foundations** — the same thirteen-concern walk, with the same guidance:
   [the thirteen foundations](./single-repo.md#the-thirteen-foundations).
 

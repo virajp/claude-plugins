@@ -377,8 +377,13 @@ where it is enforced.
 
 - **Setup halts and reverts its own stamp on a blocking `/vwf:doctor` finding**
   — a language no installed stack plugin declares is the one an
-  otherwise-onboarded repo reaches.
+  otherwise-onboarded repo reaches most often.
   [`/vwf:setup`](../../plugins/vwf.md#vwfsetup)
+- **A pin whose template was never landed is blocking too**, reported as
+  *pinned, not materialized* rather than as an unknown language. On this journey
+  it is reached by declining a landing in setup's
+  [materialize pass](../../plugins/vwf.md#the-materialize-pass); the pin stays
+  untouched and the block stands until a later `/vwf:setup` lands it.
 - **A stack axis or platform with nothing fitting on the menu never takes a
   free-text pin.** The axis can be deferred as `unresolved` instead — recorded
   as not yet decided, with `/vwf:doctor` naming it every run until it is.

@@ -128,9 +128,10 @@ problem, a goal added/retired, a re-ranked priority — delegate to
 what-this-is claims are reconciled with the updated product doc before
 committing. Relay its report: what was synced, or `docs: nothing contradicted`.
 
-Commit via `/vwf:git-workflow` with a `blueprint(product):` message, e.g.:
+Commit via `/vwf:git-workflow` with a bare `docs:` message whose subject names
+the product doc, e.g.:
 
 ```text
-blueprint(product): create product doc — problem, goals, slice priority
-blueprint(product): re-rank slices after checkout launch
+docs: create product doc — problem, goals, slice priority
+docs: product — re-rank slices after checkout launch
 ```

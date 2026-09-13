@@ -384,9 +384,12 @@ composition), and the body is the `conventions:` prose `plan` sizes against and
 vwf's stack vocabulary: a language no shipped bundle covers is still *known*
 when its pin carries these facts.
 
-In a multi-repo product the target repo defaults to the current one; name a
-member repo to materialize there instead. Each repo gets independent copies and
-its own lockfile.
+In a multi-repo product the target repo defaults to the current one; the caller
+names a member repo to materialize there instead, as one optional `repo: <path>`
+line beside the principles-catalog paths — the member's path relative to the
+base repo root. vwf is what resolves it, and under `topology: multi-repo` every
+vwf caller passes it. Each repo gets independent copies and its own lockfile, so
+two members pinning the same slug hold two independent materializations.
 
 ## The repo baseline — mise, the gates and the hygiene files
 
@@ -814,12 +817,12 @@ toolkit will find it: vwf probes `setup:worktree`, the aggregators call
 
 ## Skills and the agent
 
-| Name                      | Kind                   | Does                                                                                                                                                                                                                                                    |
-| ------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `stackgen-stack-menu`     | adapter, skill-invoked | The packs + the one open `generate` entry, as a vwf menu payload. Answers the same in every product                                                                                                                                                     |
-| `stackgen-stack-template` | adapter, skill-invoked | The dispatch: materialized entry → pure read; a first pin resolves the bundle's composition and dispatches **per component** — packs copied, uncovered components generated — landing once behind one consent gate. Unknown slug → error, never a guess |
-| `stackgen-sync`           | user-only              | The explicit re-sync, **per component**: lockfile-anchored diff against current component packs, regeneration offered per generated component, the delta presented for consent. Repo edits never overwritten by default                                 |
-| `stackgen-skill-reviewer` | subagent               | The stateless trust gate on generation: catalog fidelity, the **when-not-to-apply** checks, citations that resolve and support, honest emitted facts, **kind conformance**, and **topic-bar coverage** against the composition                          |
+| Name                      | Kind                   | Does                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stackgen-stack-menu`     | adapter, skill-invoked | The packs + the one open `generate` entry, as a vwf menu payload. Answers the same in every product                                                                                                                                                                                                                                                         |
+| `stackgen-stack-template` | adapter, skill-invoked | The dispatch: materialized entry → pure read; a first pin — which arrives from `/vwf:setup`'s materialize pass — resolves the bundle's composition and dispatches **per component**, packs copied and uncovered components generated, landing once behind one consent gate in the repo the optional `repo:` line names. Unknown slug → error, never a guess |
+| `stackgen-sync`           | user-only              | The explicit re-sync, **per component**: lockfile-anchored diff against current component packs, regeneration offered per generated component, the delta presented for consent. Repo edits never overwritten by default                                                                                                                                     |
+| `stackgen-skill-reviewer` | subagent               | The stateless trust gate on generation: catalog fidelity, the **when-not-to-apply** checks, citations that resolve and support, honest emitted facts, **kind conformance**, and **topic-bar coverage** against the composition                                                                                                                              |
 
 **"skill-invoked" is two frontmatter keys, not one.** The two adapter skills
 carry `disable-model-invocation: false`, so vwf can reach them by their
