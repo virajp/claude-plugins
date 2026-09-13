@@ -379,8 +379,45 @@ locked — so the check is a hash comparison against the file on disk. Take
 every record whose `path` lands **outside `.claude/`**, which is the `config/`
 tier: the tree `/vwf:init` shapes, and the one this section is about. A file
 whose content no longer matches its recorded hash is one drift row naming the
-path; a recorded path that no longer exists at all is the same row, worded
-**removed**.
+path, once the second test below confirms it; a recorded path that no longer
+exists at all is the same row, worded **removed**, and takes no second test.
+
+The hash comparison stays the first and cheapest test, and a match ends it: a
+file matching its record raises nothing and nothing further is read. **A
+mismatch takes one more test before a row is written**, because a hash says
+two contents differ and says nothing about *where*. Reconstruct what the file
+would hold if the only divergence were a marked position's value: take the
+pack's shipped payload for that path at the version the record's `source:`
+pins, splice into it the repo file's **current** value at **every marked
+position init's `new-repo.md` enumerates**, each marked in the pack's payload
+by its `MARKED POSITION` comment block — owned by another predicate or not —
+and hash that. Equal to the file on disk, and the whole divergence lies inside
+those positions: **not** drift under (e), and no row here. Unequal, and it is
+drift under (e), reported exactly as above. A filled position is the shaped
+state, not a repo edit, which is the whole reason for the second test.
+
+**A marked position is where a repo-specific value lives, so a value sitting
+in one is never (e)'s finding** — owned or not. A position another predicate
+owns still gets that predicate's row and nothing more: (d)'s repo-name key,
+(f)'s `MERGE_MODEL` and `MEMBERS`, (b)'s member flag list and alias list each
+report the value they found there. A position **no** predicate owns — the
+plugin task's two agent-plugin lists, the `_default` slot, any other a pack
+ships — is a value the repo set, and nothing reports it at all. Splicing by
+what the pack **marks** rather than by what a predicate **owns** is what makes
+a mixed file tractable: `.config/mise.toml` carries the repo-name key and
+`MEMBERS` beside positions no predicate reads, and splicing only the owned
+half would leave the rest diverging and report the whole file as content
+drift.
+
+**A record whose `source:` is `generated` has no pack payload** to reconstruct
+from, so there is nothing to splice: the second test is skipped, and test 1's
+mismatch is (e)'s row exactly as it was before this test existed.
+
+This is `/vwf:init`'s existing-repo pass 6 asking the same question of the
+same record on the same terms — the same two tests over the same set of
+positions — which is what keeps the two agreeing: a file that pass leaves
+alone is a file this predicate reports clean, and nothing is reported here
+that a reshape would not offer to fix.
 
 That comparison isolates exactly one thing — content drift is the **repo**
 having edited a file the pack owns. A pack that merely moved leaves the file
