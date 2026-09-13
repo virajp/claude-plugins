@@ -220,6 +220,13 @@ SKILL.md's **question 1** — and the last two are the plugin task's, filled fro
 SKILL.md's **question 5**, and they are written here because this is the one
 section that fills a marked position.
 
+**The pack's payload is where each one is marked**, by a comment and nothing
+else: a `MARKED POSITION` block above the value, for the five that sit in the
+toolchain manager's config and task files, and the commented template itself
+for the flag and alias lists, which stands where those lines go. There is no
+marker syntax a tool could enumerate, so the set is exactly the positions this
+section lists — read it from here, never from the payload.
+
 The toolchain pack ships the flag list and the alias list as **commented
 templates in place**, each with a note saying the names come from the registry
 or the member directories — that is, from the members. Those comments are the
@@ -233,12 +240,22 @@ flag's own help text shape, and the alias's own left-hand and right-hand shape
 came from. The name each line carries is that member's own slug, as those
 comments describe it, never a project id.
 
-**In a repo that kept the file carrying either position, write neither.** Every
-marked position this section fills sits in a pack-owned file, and a repo where
-that file was offered and **kept** is a repo whose file this run does not touch
-— [existing repo](existing-repo.md) states the rule once, and it governs all
-seven, not only the plugin task's two. The plan says which position is waiting
-on which keep, so the two rows read as one decision.
+**A keep on the file carrying a position does not stop the fill.** Every marked
+position this section fills sits in a pack-owned file, and where the
+existing-repo pipeline offered that file and the answer was **keep**, the
+repo's own content stays and the position is written anyway: a keep covers the
+content somebody customised, never a marked position's value, which these fills
+own in either pipeline. [existing repo](existing-repo.md) §6 states that once,
+together with the second test that keeps it consistent — on a hash mismatch it
+splices the repo's current values, at every position this section enumerates
+that the file carries, into the pack's payload, and a file diverging only
+inside them is never offered. That splice reaches all seven; the fill on a kept
+file governs **six** of them, and not only the plugin task's two. `MERGE_MODEL`
+is the seventh, and it is §11(a)'s: the git pass writes it only in a repo whose
+environment-block file this run lands or replaces, so a kept file keeps the
+value that position already holds. Being spliced like the rest is what stops §6
+reading that value as content; no survey pass owns it, so no pass shows a row
+for it either.
 
 **A repo with no members leaves both positions exactly as shipped** — a
 single-project repo, and a member repo that declares no members of its own,
@@ -285,7 +302,10 @@ path that did not come out of the resolution is not made one by being nearby.
 
 **The fourth and fifth are repo-level too**, and the toolchain pack ships both
 as marked positions in that same environment block, each with a comment saying
-what it takes. Write both literally, by the same rule `REPO_NAME` follows.
+what it takes. `MEMBERS` is written here, literally, by the same rule
+`REPO_NAME` follows. `MERGE_MODEL` is **not written by this section at all**:
+§11(a) asks for it inside the git pass and writes it there, in every repo whose
+environment-block file this run lands or replaces and nowhere else.
 
 `MERGE_MODEL` is how work lands: the merge tasks read it, and the pack's
 comment names its two values — `direct`, the shipped one, which merges locally
@@ -447,15 +467,15 @@ repo whose environment-block file this run lands or replaces** — each repo
 carries its own block, and each one's merge tasks read their own copy — and
 count it as a fill in each.
 
-**A repo that kept that file keeps it whole**, and this pass does not reach into
-it. Where the existing-repo pipeline offered the environment-block file as a
-diverged pack file and the answer was **keep**, the position is not written:
-[existing repo](existing-repo.md)'s kept-file rule wins here exactly as it wins
-for the plugin task's two positions, and for the same reason — writing into a
-position of a file somebody chose to keep is the overwrite the keep declined.
-Say so on that repo's line in the report, naming the value the product chose and
-the file that was kept, so a reader sees one decision rather than a repo that
-silently landed on `direct`.
+**A repo that kept that file keeps the value that position holds**, and what
+decides that is the kind of position it is, not the keep. The landing model is a
+real, working value under its comment — filled from the moment the file landed,
+as [existing repo](existing-repo.md) §9 says of that kind — so it is written
+where this run **lands or replaces** the environment-block file and nowhere
+else, and a kept file is neither. The file's other two positions — `REPO_NAME`
+and `MEMBERS` — are a different matter: §7 fills those, keep or no keep. Say so on that repo's line in the report, naming the value the
+product chose and the file that was kept, so a reader sees one decision rather
+than a repo that silently landed on `direct`.
 
 It is asked here rather than as one of SKILL.md's numbered questions because it
 decides how work lands, which is what the rest of this pass is about; and it is

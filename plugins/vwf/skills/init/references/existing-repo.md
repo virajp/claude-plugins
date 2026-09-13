@@ -290,8 +290,52 @@ empty plan.
   terms. There is no landing to compare to.
 
 This is the question `/vwf:doctor`'s content-drift predicate asks, of the same
-record, so a file this pass leaves alone is a file doctor reports clean and
-neither can see a drift the other cannot.
+record, by the same two tests and over the same set of marked positions — so
+predicate (e) and this pass agree on what is content, and a file this pass
+leaves alone is a file doctor reports clean.
+
+**A marked position's value is not content drift, and a second test is what
+separates the two.** The hash comparison above is the first test and the cheap
+one: a match ends it and raises no row. On a **mismatch**, run this before
+offering the file:
+
+- Take the **pack's** shipped payload for that file, at the version the
+  lockfile pins — the stack adapter's pack, reachable from the plugin.
+- Splice into it the repo file's **current** value at **every position
+  [new repo](new-repo.md) §7 enumerates that the file carries**, owned or not,
+  reading each value the way that position's own comment describes it.
+- Hash the result, and compare it with the repo file's hash.
+
+**Equal**, and the repo file is the pack's file with nothing changed outside
+those positions — the divergence lies wholly inside them, this pass raises **no
+row**, and where a survey pass owns one of them that pass is what shows the
+change. **Unequal**, and content diverged: the replace-or-keep row below,
+exactly as before.
+
+**Every marked position is spliced, and ownership decides only who shows the
+change.** A marked position is by definition where a repo-specific value lives,
+so a value sitting in one is never content drift for this pass, whether or not
+some pass reads it. The positions a pass does own it shows: **§9** owns the
+repo-name key, the bootstrap aggregator's member flags, the shell aliases,
+`MEMBERS`, and the plugin task's two agent-plugin lists; **§11** owns the commit
+gate's scope list and its forge links. One edit is then one row, and it is the
+owning pass's row — a `repo-name key: <old> → <new>` replace row is the whole of
+what a user sees when that key is the only thing that moved, never that row plus
+an offer of the file it sits in.
+
+**A position no pass owns is spliced on exactly the same terms and produces no
+row at all** — `MERGE_MODEL`, and any position a pack marks later that no pass
+reads. It is a value the repo set, so there is nothing for this pass to offer
+and no survey row to show; the git pass still writes `MERGE_MODEL` wherever this
+run lands or replaces the environment-block file, per §11(a), exactly as before.
+That is what lets one `[env]` block carry `REPO_NAME` and `MEMBERS` beside
+`MERGE_MODEL` and still reconstruct equal — a folder rename on a repo running
+`pr` is §9's replace row and nothing else.
+
+**A record whose `source:` is `generated` has no pack payload**, so there is
+nothing to splice into: the second test is **skipped**, and test 1's mismatch
+stands on its own as content drift, offered on the replace-or-keep terms below
+like any other.
 
 An offered file is one row, two outcomes, both decided in the plan and applied
 on the same single consent:
@@ -303,8 +347,11 @@ on the same single consent:
   on a file whose positions the repo had already filled: they are re-filled,
   not lost. The landing records the file's hash **once those fills have run**,
   and that record is what the next run compares against.
-- **keep** — the file is untouched and the decision is recorded, so doctor
-  does not report it again and the next reshape does not re-offer it.
+- **keep** — the file's own content is untouched and the decision is
+  recorded, so doctor does not report it again and the next reshape does not
+  re-offer it. A keep covers the content the repo customised; it never covers
+  a marked position's value, which the fill passes own in this pipeline as in
+  any other and write on this run whichever way the offer was answered.
 
 **The default is replace where the repo's file references any left-hand name
 of the pack's legacy table**, and keep everywhere else. A file naming a
@@ -521,15 +568,16 @@ position is a **rewrite** that removes it, and the plan says why:
 - Identical rows need nothing, and a **none** answer against a position that
   still holds only the template produces no row either.
 
-**A plugin task that differs from the pack's byte for byte** is one of §6's
-offered files, and the offer is how its positions are reached at all. Offered
-**replace**, the pack's file lands and this pass fills both positions on it
-from question 5's confirmed answer, as a create. Offered **keep**, the file
-stays as the repo has it and neither position is touched: a kept file is kept
-whole, and writing into a position of a file somebody chose to keep is the
-overwrite the keep declined. The plan says which of the two each position's
-row is waiting on, so the two rows read as one decision rather than as a
-contradiction.
+**A plugin task whose content differs from the pack's** is one of §6's offered
+files. Offered **replace**, the pack's file lands and this pass fills both
+positions on it from question 5's confirmed answer, as a create. Offered
+**keep**, the repo's file stays and this pass fills both positions in it all
+the same: the keep covers the content somebody customised, never a position
+the pack marked for `init` to answer. A file whose *only* difference from the
+record is what those two positions hold was never offered at all — §6's second
+test splices them out, this pass owning and showing both — so the rows below are
+what a user sees either way, and the plan says which file each one is written
+into.
 
 ### 10 — Repo-only tasks
 
@@ -752,15 +800,17 @@ pipeline in its turn, at the same point in the order.
   is the quiet way a run reports work it did not do. So: every replace and
   every accepted **offered** row lands, and only then does the fill pass of
   §9 and §11 run over the tree.
-- **A kept file is not written to, at all.** The keep itself needs no write;
-  only its **record** does, and the offered row's keep outcome is what lists
+- **A kept file keeps its content, and the fill pass still reaches the marked
+  positions inside it.** The keep itself needs no write; only its **record**
+  does, and the offered row's keep outcome is what lists
   it. Write that record **after every keep is settled and before the fill
   pass** — one `enforcement.kept_files.<path>: { reason }` entry per kept file
   in the **base's** `.config/vwf.yaml`, spelled as §6 says, merged into the
   block rather than replacing it.
   Where that file does not exist, `init` does **not** create it: the keep
-  stands and the record is the **Deferred** line §6 describes. Nothing about
-  a kept file is applied here beyond leaving it alone.
+  stands and the record is the **Deferred** line §6 describes. Beyond that
+  record and the fills §9 and §11 own, nothing about a kept file is applied
+  here.
 - **Renames** rewrite the path for a task file, and rewrite the **text** for
   every caller. Use the editing tools for those rewrites — a stream editor's
   in-place flag is not portable across platforms, and the difference is a

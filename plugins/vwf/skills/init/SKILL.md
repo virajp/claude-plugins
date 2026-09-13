@@ -441,9 +441,19 @@ repo-owned `_scripts/local` sidecar — never deferred, never guessed at, and
 never lost to the replace merely because nothing calls it yet. A task file no
 pack ships is **kept and listed**, with a note where it sits in a group the
 task-name contract reserves — `init` moves none of them. And a
-pack-owned file whose bytes have diverged is **offered**, replace or keep, one
-row in the same single plan, where a replace re-fills every marked position
-that file carries and a keep is recorded so it is not asked again.
+pack-owned file whose **content** has diverged is **offered**, replace or keep,
+one row in the same single plan, where a replace re-fills every marked position
+that file carries and a keep is recorded so it is not asked again — a keep
+covering the content the repo customised and never a marked position's value,
+which the fills own either way. **What counts as diverged is two tests**: the
+file's hash against the lockfile's record, and, on a mismatch, the pack's
+payload with the repo's current values spliced in at **every** position
+[new repo](references/new-repo.md) §7 enumerates that the file carries, owned
+or not. A file diverging only inside those positions
+is not offered at all — where a pass owns one it shows the row, and where none
+does, as with `MERGE_MODEL`, there is simply no row. A record sourced
+`generated` has no payload to splice into, so the second test is skipped and
+the mismatch stands.
 
 Whichever pipeline runs, the same work happens in the same order at the end of
 each repo: the **fills** the packs marked — the project ids and their
