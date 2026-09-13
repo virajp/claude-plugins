@@ -51,6 +51,14 @@ Asked whether the five other called-by-a-skill command skills should hide too,
 the user ruled: *"Limit to init, stackgen-stack-menu, stackgen-stack-template
 only"*.
 
+> **Two details superseded by
+> [`2026-09-14-repo-name-is-the-folder.md`](./2026-09-14-repo-name-is-the-folder.md).**
+> The list no longer opens with the repo's own row — the repo is question 1's,
+> which names its folder and is what fills `REPO_NAME`. And `REPO_NAME` is no
+> longer among the things withheld until this answer: it takes question 1's
+> folder name, slugified, while what this question still gates is the
+> `p:<slug>:*` group and the commit scopes.
+
 **The sixth question.** `init` now asks six, and the second is the ids. One
 list: the repo's own name first, then a row per project it will write a task
 group for, each row carrying three things — the **name** the repo spells, the

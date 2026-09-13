@@ -46,6 +46,13 @@ alphabet collapsed to a single `-`, leading and trailing separators trimmed. So
 and the task library's `p:<id>:*` section does the same. Nothing re-derives the
 rule, and nothing re-derives the reason.
 
+> **Superseded on this point by
+> [`2026-09-14-repo-name-is-the-folder.md`](./2026-09-14-repo-name-is-the-folder.md).**
+> `REPO_NAME` is no longer a surface the project id reaches: it takes the repo's
+> **folder name, slugified** — the basename of its main checkout — and the two
+> tokens are independent. The slug rule below, and the measured reason for it,
+> are unchanged and apply to both.
+
 **Four surfaces** take the slugged id, not three: the per-project task groups
 (`p/<slug>/`), the bootstrap aggregator's member flags, the `setup-<id>` shell
 aliases, and — new — `REPO_NAME`, the toolchain manager's environment key, which

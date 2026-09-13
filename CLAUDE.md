@@ -252,37 +252,39 @@ stackgen's three unconditional bundles, resolving the members itself as the
 union of `.gitmodules` and the config's `members:` list, surveying all of them
 at once and applying **one plan with a section per repo on one consent**,
 members first so the base commits its gitlinks current. It asks seven questions
-(the second confirming every project id, its slug and the source the name came
-from, grouped by repo, before any `p:<slug>:*` group, alias or `REPO_NAME` is
-written; the fifth asking which agent plugins this product requires, seeded by
-the plugin task's own inventory mode and written into that task's two marked
-positions), and closes with a consent-gated git pass (the first commit, the
-`develop`/`main` pair, and the landing model it writes to `MERGE_MODEL` — it
-never touches the forge's own settings, which a maintainer sets once by hand per
-the hygiene pack's `CONTRIBUTING.md`). The aggregator's member flags and the
-`setup-<slug>` aliases are named for the **member repos**, never for a project
-id. On an existing repo it **adopts rather than flattens**: an unmapped helper
-function moves to a repo-owned `_scripts/local` sidecar, a task no pack ships is
-kept and listed, and a pack-owned file whose bytes diverged is offered as
-replace-or-keep — a keep recorded under `enforcement.kept_files` in the
-**base's** `.config/vwf.yaml`, keyed by the member path as prefix, the one key
-`init` writes into `.config/vwf.yaml`. `setup` then sets up **vwf** in the base,
-and offers `init` once for the whole product when any repo's shape is **missing
-or drifted**, on the six baseline predicates `/vwf:doctor` owns and now
-evaluates per repo. **Architecture decides the stack and setup pins it**:
-architecture records a slug and materializes nothing, then invokes `/vwf:setup`
-in-session, whose **materialize pass** — every mode, once per `(repo, slug)`,
-carrying the contract's `repo:` line — lands each pinned template in the member
-repo that project belongs to, writes `unresolved` on an axis it finds absent,
-and never rewrites a pin. A pin nobody landed is `/vwf:doctor`'s blocking
-*pinned, not materialized*. **Everything up to `blueprint` is done in full
-before planning** — `plan` hard-halts on a partial coverage stamp. The ad-hoc
-pair `change-plan` → `change-execute` sits **beside** that line rather than in
-it: it plans and runs work with no blueprint slice behind it — tooling, CI,
-docs, a refactor, a tree the blueprint does not describe — reads neither the
-blueprint nor the registry, and gates on the commands its own plan folder names.
-The ordering gates, the skill and agent tables, how to add a skill and pick its
-invocation mode, and the dependency reasoning are the [`vwf-plugin`][vwf] skill.
+(the first naming each new repo's folder, which is what fills `REPO_NAME`; the
+second confirming every project id, its slug and the source the name came from —
+the registry, a sub-project directory, or the project's platform token — grouped
+by repo, before any `p:<slug>:*` group or commit scope is written; the fifth
+asking which agent plugins this product requires, seeded by the plugin task's
+own inventory mode and written into that task's two marked positions), and
+closes with a consent-gated git pass (the first commit, the `develop`/`main`
+pair, and the landing model it writes to `MERGE_MODEL` — it never touches the
+forge's own settings, which a maintainer sets once by hand per the hygiene
+pack's `CONTRIBUTING.md`). The aggregator's member flags and the `setup-<slug>`
+aliases are named for the **member repos**, never for a project id. On an
+existing repo it **adopts rather than flattens**: an unmapped helper function
+moves to a repo-owned `_scripts/local` sidecar, a task no pack ships is kept and
+listed, and a pack-owned file whose bytes diverged is offered as replace-or-keep
+— a keep recorded under `enforcement.kept_files` in the **base's**
+`.config/vwf.yaml`, keyed by the member path as prefix, the one key `init`
+writes into `.config/vwf.yaml`. `setup` then sets up **vwf** in the base, and
+offers `init` once for the whole product when any repo's shape is **missing or
+drifted**, on the six baseline predicates `/vwf:doctor` owns and now evaluates
+per repo. **Architecture decides the stack and setup pins it**: architecture
+records a slug and materializes nothing, then invokes `/vwf:setup` in-session,
+whose **materialize pass** — every mode, once per `(repo, slug)`, carrying the
+contract's `repo:` line — lands each pinned template in the member repo that
+project belongs to, writes `unresolved` on an axis it finds absent, and never
+rewrites a pin. A pin nobody landed is `/vwf:doctor`'s blocking *pinned, not
+materialized*. **Everything up to `blueprint` is done in full before planning**
+— `plan` hard-halts on a partial coverage stamp. The ad-hoc pair `change-plan` →
+`change-execute` sits **beside** that line rather than in it: it plans and runs
+work with no blueprint slice behind it — tooling, CI, docs, a refactor, a tree
+the blueprint does not describe — reads neither the blueprint nor the registry,
+and gates on the commands its own plan folder names. The ordering gates, the
+skill and agent tables, how to add a skill and pick its invocation mode, and the
+dependency reasoning are the [`vwf-plugin`][vwf] skill.
 
 ## The installer CLI
 

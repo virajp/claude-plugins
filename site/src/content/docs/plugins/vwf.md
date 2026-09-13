@@ -881,18 +881,29 @@ byte-for-byte. `init` never names the editor; the fragment convention names the
 target, and a pack task is what installs the recommended extensions into a
 per-repo profile.
 
-**Project ids are slugged**, and each repo's own name with them. The resolved id
-— from the registry, a sub-directory, or the repo's name, and for a member from
-the base config's `members[].projects` first — is lowercased, runs outside the
-slug alphabet collapse to a single `-`, and the ends are trimmed, so `My.App`
-becomes `my-app`. That is not cosmetic: the task runner reads a per-project
-group's directory name as the task's *last* segment and strips what looks like a
-file extension from it, so an id carrying a dot silently loses everything after
-it. The same slug fills two surfaces in the repo that owns the project — the
-task group and its alias, and `REPO_NAME`, the repo-level environment key your
-own shell aliases can read. `REPO_NAME` is written **literally** and never
-derived from the directory: a linked worktree's config root is named for the
-branch.
+**One slug rule, two independent tokens.** The rule is the same for both — the
+name is lowercased, runs outside the slug alphabet collapse to a single `-`, and
+the ends are trimmed, so `My.App` becomes `my-app`. That is not cosmetic: the
+task runner reads a per-project group's directory name as the task's *last*
+segment and strips what looks like a file extension from it, so a token carrying
+a dot silently loses everything after it. What differs is what each token is
+derived from, and where it lands:
+
+- **A project's id** — from the registry, a sub-project directory, or the
+  project's own platform token (`service`, `worker`, `webapp`, `site`, `cli`,
+  `iac`, …), and for a member from the base config's `members[].projects` first.
+  It names the `p:<id>:*` task group and its alias, and it is what the commit
+  gate's scope list holds.
+- **A repo's name** — from the basename of that repo's **main checkout**
+  directory, and nothing else. It fills `REPO_NAME`, the repo-level environment
+  key your own shell aliases can read. A member repo names its own folder, never
+  the base's.
+
+The two never have to agree, and nothing reads one to infer the other: a
+single-project repo whose folder happens to spell its project id is a
+coincidence. `REPO_NAME` is written **literally** and never derived at read
+time: a linked worktree's directory is named for the branch, so a derived value
+would address a different repo depending on where you were standing.
 
 **The bootstrap aggregator's member flags and their `setup-<slug>` aliases are a
 different list.** They are one per **member repo**, named for the member, never
@@ -936,25 +947,36 @@ section of the plan says which it got.
 all of it. **A round is one round for the whole product**, however many repos
 resolved: a question whose answer differs per repo shows one row per repo inside
 its single round, and never becomes a second round. Two are asked for the repos
-that came out **new** only — the repo name (proposed from that repo's directory)
-and a one-line brief, which may be empty, each listing one row per new repo.
-Five are asked whatever the modes are, listed in order — the first of them is
-question 2 overall, and it is the one this section's slug rule waits on:
+that came out **new** only — the repo name (proposed from the basename of that
+repo's **main checkout**, and the one thing that fills `REPO_NAME`) and a
+one-line brief, which may be empty, each listing one row per new repo. Five are
+asked whatever the modes are, listed in order — the first of them is question 2
+overall, and it is the one this section's slug rule waits on:
 
 - **The ids, confirmed** — one list, **grouped by repo**: the base's group
-  first, then one per member in the resolved order, and inside each group that
-  repo's own row first and then a row per project init will write a task group
-  for *in that repo*. Each row shows the **name** the repo spells, the **id** it
-  slugifies to, and the **source** that name came from (the registry, a
-  sub-project directory, or the repo's own name — and for a member's projects,
-  the base config's `members[].projects` ahead of those). Naming the source is
-  the point: a row you disagree with is usually a row whose source you did not
+  first, then one per member in the resolved order, and inside each group a row
+  per project init will write a task group for *in that repo*. Each row shows
+  the **name** the repo spells, the **id** it slugifies to, and the **source**
+  that name came from (the registry, a sub-project directory, or the project's
+  **type** — and for a member's projects, the base config's `members[].projects`
+  ahead of those). The type source is a choice rather than a reading: where a
+  repo has neither a registry nor sub-project directories there is no name in
+  the tree to propose from, so this same round asks which **platform token**
+  each project's primary surface is — `service`, `worker`, `webapp`, `site`,
+  `cli`, `iac` and the rest, offered as the closed per-role list plus a free
+  *other* you type — and proposes the token it picks. Two projects in one repo
+  that pick the same token are proposed as `<token>-<directory-slug>` each,
+  since an id is a directory name in the task library. Naming the source is the
+  point: a row you disagree with is usually a row whose source you did not
   expect. Accept the list, or type a replacement for any row — a replacement is
   slugged by the same rule and shown once more only if slugging changed it.
   Nothing is written in any repo until this is answered: not a `p:<slug>:*`
-  group, not its alias, not `REPO_NAME`. The aggregator's member flags and the
-  `setup-<slug>` aliases are **not** this question's — they come from the
-  resolved member repos.
+  group, not its alias, not a commit scope — and the scopes are filled on
+  **every** run, the first included, one per confirmed id, a registry being only
+  where the proposal was read from. `REPO_NAME` is **not** this question's; it
+  is question 1's, taking the repo's folder name. The aggregator's member flags
+  and the `setup-<slug>` aliases are not this question's either — they come from
+  the resolved member repos.
 - **The secrets provider** — the adapter's own menu, filtered to capability
   providers, plus *none — decide later*. Answered **once** and written into
   every repo: a product keeps its secrets in one place, and a member on a
@@ -1175,34 +1197,35 @@ learned about itself, and drift there is silent until the day a task is missing
 or a gate reads a config nobody filled. The way to ask for a re-run is
 `/vwf:setup reshape`, and it is owed **after the registry exists**
 (`/vwf:architecture` and `/vwf:setup` give the project ids their real source,
-which makes the commit gate's scope list fillable and may move a task group),
-**after a pack version moves**, **after a member is added, removed or cloned on
-a machine that lacked it** (a new member has never been shaped at all, and the
-base's own fills move with the set — the aggregator's flags and their aliases
-are one per member), **on a fresh clone that reports drift**, and **whenever
-`/vwf:doctor` says so**. Doctor's repo-shape check is what notices between runs,
-on six subjects: the pack versions the adapter's lockfile recorded against what
-it ships now, each registry id against its task group and commit scope, both
-branches, the repo-name key, the **content** of every pack-owned file against
-the hash the lockfile recorded when it landed, and the two marked positions
-beside the repo-name key — `MERGE_MODEL`, and `MEMBERS` on a product whose
-members are wired as plain siblings. **All six run per repo** — the base and
-every locally-present member, resolved the way `init` resolves them — with every
-row printed under the repo it was found in and one remedy for the whole product,
-since `reshape` walks the members too. A member this machine does not carry is a
-blind spot rather than a finding, reading `not present, not checked`. Beside the
-id check sits its counterpart on the base alone, comparing the aggregator's
-member flags and `setup-<slug>` aliases against the resolved member set — a
-member with no flag is a row, and so is a flag named from a project id. A repo
-drifts by standing still and also by moving: a pack-owned file you edited in
-place is no longer the file the pack ships, and doctor says which of the two a
-row is, because re-landing fixes one and the other is a file somebody meant to
-change. A file you chose to keep is skipped, since that decision is already
-recorded. With no adapter lockfile the content check reports
-`not checked — no lockfile` rather than passing or crashing: a repo that landed
-nothing has nothing to have drifted from. Every one of these is `drift` and none
-is blocking — a repo behind its baseline is out of date, not broken — and all of
-them share one remedy, `/vwf:setup reshape`, printed once.
+which may move a task group and the commit scope beside it), **after a pack
+version moves**, **after a member is added, removed or cloned on a machine that
+lacked it** (a new member has never been shaped at all, and the base's own fills
+move with the set — the aggregator's flags and their aliases are one per
+member), **on a fresh clone that reports drift**, and **whenever `/vwf:doctor`
+says so**. Doctor's repo-shape check is what notices between runs, on six
+subjects: the pack versions the adapter's lockfile recorded against what it
+ships now, each registry id against its task group and commit scope, both
+branches, the repo-name key against that repo's own **folder name, slugified**,
+the **content** of every pack-owned file against the hash the lockfile recorded
+when it landed, and the two marked positions beside the repo-name key —
+`MERGE_MODEL`, and `MEMBERS` on a product whose members are wired as plain
+siblings. **All six run per repo** — the base and every locally-present member,
+resolved the way `init` resolves them — with every row printed under the repo it
+was found in and one remedy for the whole product, since `reshape` walks the
+members too. A member this machine does not carry is a blind spot rather than a
+finding, reading `not present, not checked`. Beside the id check sits its
+counterpart on the base alone, comparing the aggregator's member flags and
+`setup-<slug>` aliases against the resolved member set — a member with no flag
+is a row, and so is a flag named from a project id. A repo drifts by standing
+still and also by moving: a pack-owned file you edited in place is no longer the
+file the pack ships, and doctor says which of the two a row is, because
+re-landing fixes one and the other is a file somebody meant to change. A file
+you chose to keep is skipped, since that decision is already recorded. With no
+adapter lockfile the content check reports `not checked — no lockfile` rather
+than passing or crashing: a repo that landed nothing has nothing to have drifted
+from. Every one of these is `drift` and none is blocking — a repo behind its
+baseline is out of date, not broken — and all of them share one remedy,
+`/vwf:setup reshape`, printed once.
 
 A second run on a shaped **product** produces an **empty plan** and says so,
 **for the same id source** — and that empty plan still carries a section per
