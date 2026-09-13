@@ -19,6 +19,7 @@
 
 set -e
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/local"
 
 cd "$MISE_PROJECT_ROOT"
 
@@ -41,13 +42,23 @@ if [[ "${BRANCH}" != "${RELEASE_BRANCH}" ]]; then
 fi
 
 VERSION="$(node -p "require('./package.json').version")"
+
+# 3. 13 and 17 are never issued as a version component, and `p:i:version` skips
+#    past one rather than land on it — so a tree carrying one was hand-edited.
+#    Refuse before the tag name is built: a tag is the one artefact nobody can
+#    take back, and users resolve it forever.
+if version_forbidden "${VERSION}"; then
+  print_error "Refusing to tag ${VERSION}: 13 and 17 are never issued as a version component. Bump past it with 'mise run p:i:version' on develop."
+  exit 1
+fi
+
 # Namespaced: every tag in this repo says what it releases. Plugins tag as
 # `<name>-v<version>` and the marketplace manifest pins each entry to one, so a
 # bare `v*` tag family would collide — GitHub's tag globs match any character
 # but `/`, which made `v*` match `vwf-v19.9.0`.
 TAG="installer-v${VERSION}"
 
-# 3. The tag must not already exist. If it does, package.json was never bumped
+# 4. The tag must not already exist. If it does, package.json was never bumped
 #    for this release — the commit to tag is not the one that is checked out.
 #    Fetch first so "exists" means the remote's answer, not this checkout's.
 git fetch --tags --quiet origin
@@ -56,15 +67,15 @@ if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
   exit 1
 fi
 
-# 4. Tests must pass before anything is tagged.
+# 5. Tests must pass before anything is tagged.
 mise run p:i:test
 
-# 5. The annotated tag.
+# 6. The annotated tag.
 git tag -a "${TAG}" -m "${TAG}"
 
 print_header "Created ${TAG}."
 
-# 6. With --ci (e.g. from deps-update.yml) this stops here — tag only. The
+# 7. With --ci (e.g. from deps-update.yml) this stops here — tag only. The
 #    calling workflow pushes and delegates publishing to release.yml, so it must
 #    NOT also push/watch from here.
 if [[ "${usage_ci:-false}" == "true" ]]; then
@@ -72,7 +83,7 @@ if [[ "${usage_ci:-false}" == "true" ]]; then
   exit 0
 fi
 
-# 7. Interactive release: push and watch the publish pipeline. `gh` must be
+# 8. Interactive release: push and watch the publish pipeline. `gh` must be
 #    present and authenticated — we never push a tag we cannot then watch.
 if ! command -v gh >/dev/null 2>&1; then
   print_error "gh (GitHub CLI) is required to push and watch the release. Install: brew install gh"
@@ -91,7 +102,7 @@ print_header "Pushing ${RELEASE_BRANCH} and ${TAG} ..."
 git push origin "${RELEASE_BRANCH}"
 git push origin "${TAG}"
 
-# 8. Watch the publish pipeline to completion so this task's exit status reflects
+# 9. Watch the publish pipeline to completion so this task's exit status reflects
 #    the release result. Poll until the tag's run appears (it is the release.yml
 #    run whose head commit is this release commit), then follow it.
 RELEASE_SHA="$(git rev-parse HEAD)"
