@@ -13,7 +13,7 @@ plan split, to be confirmed at each plan's interview.
 | B02 | Version rule: no `13` or `17` anywhere in any version, enforced         | A     | P1       | planned |
 | B03 | `/vwf:backlog` skill — a prioritised to-do list beside the blueprint    | A     | P1       | planned |
 | B04 | `init`: split `REPO_NAME` (folder name) from the `p:<id>:*` group id    | B     | P1       | planned |
-| B05 | `/vwf:feedback` — post-build change intake from user feedback           | C     | P2       | open    |
+| B05 | `/vwf:feedback` — post-build change intake from user feedback           | C     | P2       | planned |
 | B06 | Audit logs as an independent, access-controlled capability              | D     | P2       | open    |
 | B07 | Stylesheet axis for web frontends: `tailwindcss` and `stylex`           | E     | P2       | open    |
 | B08 | SEO, OpenGraph and favicons for sites and webapps                       | E     | P2       | open    |
@@ -85,6 +85,8 @@ Used once the product is built, to make changes as per user feedback. The
 shipped `feedback` skill classifies and routes production feedback into
 blueprint, product, design-system, postmortem or change-plan. Plan interview
 decides what the request adds beyond that.
+
+Planned in: `docs/plans/2026-09-14-feedback-gaps/`
 
 ### B06 — audit logs as an independent capability
 
