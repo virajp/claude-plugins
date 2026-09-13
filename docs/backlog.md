@@ -12,7 +12,7 @@ plan split, to be confirmed at each plan's interview.
 | B01 | `/vwf:change-plan` commits and pushes the plan folder when it hands off | A     | P1       | planned |
 | B02 | Version rule: no `13` or `17` anywhere in any version, enforced         | A     | P1       | planned |
 | B03 | `/vwf:backlog` skill — a prioritised to-do list beside the blueprint    | A     | P1       | planned |
-| B04 | `init`: split `REPO_NAME` (folder name) from the `p:<id>:*` group id    | B     | P1       | open    |
+| B04 | `init`: split `REPO_NAME` (folder name) from the `p:<id>:*` group id    | B     | P1       | planned |
 | B05 | `/vwf:feedback` — post-build change intake from user feedback           | C     | P2       | open    |
 | B06 | Audit logs as an independent, access-controlled capability              | D     | P2       | open    |
 | B07 | Stylesheet axis for web frontends: `tailwindcss` and `stylex`           | E     | P2       | open    |
@@ -76,6 +76,8 @@ differ: `REPO_NAME` is the folder name (`95octane`), while the group id is per
 project and recommended to be the project type (`service`, `worker`, `console`).
 Separate them in `init`'s question 2, the mise pack's marked positions and
 conventions, and `doctor`'s checks.
+
+Planned in: `docs/plans/2026-09-14-repo-name-split/`
 
 ### B05 — `/vwf:feedback`
 
