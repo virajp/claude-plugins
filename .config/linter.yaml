@@ -6,6 +6,9 @@ version: 1
 
 ignores:
   - "**/archived/**"
+  # The gitignored render surface — mockups and design-tool exports reviewed in
+  # a browser, never committed, and not ours to style.
+  - "docs/scratchpad/**"
   # tsup's bundle of installer/. Build output, gitignored, and not ours to style —
   # esbuild emits empty catch blocks and keeps unused helpers from bundled deps.
   # The source it is built from is linted.
