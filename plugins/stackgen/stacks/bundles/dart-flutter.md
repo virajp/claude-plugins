@@ -3,7 +3,7 @@ name: Dart · Flutter
 axis: project
 kind: app-framework
 components:
-- app-framework/flutter@0.2.0
+- app-framework/flutter@0.3.0
 - package-manager/pub@0.1.0
 - toolchain-gate/analysis-options@0.1.0
 platforms:
@@ -11,19 +11,29 @@ platforms:
 - tablet
 - desktop
 - webapp
+- auto
 ---
 
-# mobile · tablet · desktop · webapp — Dart · Flutter
+# mobile · tablet · desktop · webapp · auto — Dart · Flutter
 
 The client app: **Dart · [Flutter](https://flutter.dev)**, a
 single-package repo (mobile apps are never monorepos) living as its own
 repo — a multi-repo member — and shipping through the app stores.
 
-**One template, four platforms.** Flutter builds phone, tablet, desktop and web
-from one codebase, so a project on this template declares whichever of
-`mobile`, `tablet`, `desktop` and `webapp` it actually ships — as **one**
-project with several platforms, never one project per surface. This is the case
-the pre-format-22 single-`role` keying could not express.
+**One template, five platforms.** Flutter builds phone, tablet, desktop, web
+and — through the native edge — the car, all from one codebase, so a project on
+this template declares whichever of `mobile`, `tablet`, `desktop`, `webapp` and
+`auto` it actually ships — as **one** project with several platforms, never one
+project per surface. This is the case the pre-format-22 single-`role` keying
+could not express.
+
+**`auto` is not a fifth Flutter build target.** There is no `flutter build
+carplay`: the in-car surface is the *same mobile binary*, reaching CarPlay and
+Android Auto through the `swift` and `kotlin` `platform-edge` languages this
+pack already declares — CarPlay templates are Swift under `ios/Runner/`,
+Android Auto is Kotlin driven over a MethodChannel. Nothing new is provisioned
+for it. So `auto` is only ever declared **alongside** `mobile`, never alone,
+and never as its own project.
 
 ## Stack
 

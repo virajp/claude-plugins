@@ -42,8 +42,8 @@ projects:
     # and serves its own UI from the same origin is a backend whose UI rides
     # along, so it types as `backend` / `[service, webapp]` without leaving
     # its role's list. A single codebase shipping several surfaces declares
-    # them all — a Flutter project is one project with four platforms, not
-    # four projects.
+    # them all — a Flutter project is one project with five platforms
+    # (`mobile`, `tablet`, `desktop`, `webapp`, `auto`), not five projects.
     platforms: [ <platform>, <...> ]
     path: <repo-or-directory>
     capabilities: [ <capability>, <...> ] # assets/capability-vocabulary.md

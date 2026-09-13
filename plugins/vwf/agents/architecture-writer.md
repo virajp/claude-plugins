@@ -113,10 +113,10 @@ order. `cli` is a stated row rather than a fall-through: a command surface has
 no data shape, and `module` is the unit that accepts `schema.yaml: N/A`.
 
 **A project may declare several platforms, and usually should.** One Flutter
-codebase shipping phone, tablet, desktop and web is **one** project with
-`platforms: [mobile, tablet, desktop, webapp]` — never four. Flows are keyed on
-project name, so splitting it would triplicate every flow doc. Only split when
-the codebases are genuinely separate.
+codebase shipping phone, tablet, desktop, web and the car is **one** project
+with `platforms: [mobile, tablet, desktop, webapp, auto]` — never five. Flows
+are keyed on project name, so splitting it would triplicate every flow doc.
+Only split when the codebases are genuinely separate.
 
 **Owning an API contract is the `service` platform.** A project declaring
 `service` **requires** `apis/<project>.openapi.yaml` and a health endpoint. A

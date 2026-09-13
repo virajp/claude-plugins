@@ -3,10 +3,11 @@
 ## When it is the answer
 
 **When one team must ship the same product to several surfaces.** This is the
-whole case: mobile, tablet, desktop and web from one codebase, with one language
-and one set of tests. The alternative is a team per platform, and the cost is
-not just headcount — it is every feature being specified, built, reviewed and
-debugged two or three times, drifting a little each round.
+whole case: mobile, tablet, desktop, web and in-car (`auto`) through the native
+edge, from one codebase, with one language and one set of tests. The
+alternative is a team per platform, and the cost is not just headcount — it is
+every feature being specified, built, reviewed and debugged two or three times,
+drifting a little each round.
 
 **When the UI is the product's own.** Flutter renders its own widgets rather
 than mapping onto platform controls, so a designed interface looks the same

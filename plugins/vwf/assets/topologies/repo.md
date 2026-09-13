@@ -27,8 +27,8 @@ my-product/
 Exactly **one** project in `registry.yaml`, carrying whatever `role` and
 `platforms` fit. `depends_on` is always empty — there is nothing else in the
 product to depend on. One project may still declare several platforms: a single
-codebase shipping mobile, desktop and web is one project with four platforms,
-and stays a single repo.
+codebase shipping mobile, tablet, desktop, web and `auto` is one project with
+five platforms, and stays a single repo.
 
 **Except `iac`.** A project with `platforms: [iac]` is never that one project's
 neighbour: it is its own repo, always. A single-repo product that provisions its

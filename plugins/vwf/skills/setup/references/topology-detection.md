@@ -96,9 +96,9 @@ their consumers differ — which is why the role is an index and the platforms a
 what anything branches on.
 
 **One project may declare several platforms.** A single Flutter codebase
-shipping mobile, tablet, desktop and web is **one** project with four platforms,
-not four projects — flows are keyed on project name, so splitting it would
-triplicate every flow doc.
+shipping mobile, tablet, desktop, web and `auto` is **one** project with five
+platforms, not five projects — flows are keyed on project name, so splitting it
+would triplicate every flow doc.
 
 What each platform obliges:
 
