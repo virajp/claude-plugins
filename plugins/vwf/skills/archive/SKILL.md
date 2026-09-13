@@ -26,14 +26,15 @@ Everything below applies to both unless a step says otherwise.
 
 ## Doc Paths
 
-| Doc          | Path                                                |
-| ------------ | --------------------------------------------------- |
-| Plan index   | `docs/plans/index.md` (base repo)                   |
-| Active plans | `<target-repo>/docs/plans/`                         |
-| Change plan  | `<target-repo>/docs/plans/<date>-<name>/index.md`   |
-| Gap-report   | `<target-repo>/docs/plans/<plan>.gap-report.md`     |
-| Archived     | `<target-repo>/docs/plans/archived/`                |
-| Membership   | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`        |
+| Doc          | Path                                                      |
+| ------------ | --------------------------------------------------------- |
+| Plan index   | `docs/plans/index.md` (base repo)                         |
+| Active plans | `<target-repo>/docs/plans/`                               |
+| Change plan  | `<target-repo>/docs/plans/<date>-<name>/index.md`         |
+| Gap-report   | `<target-repo>/docs/plans/<plan>.gap-report.md`           |
+| Archived     | `<target-repo>/docs/plans/archived/`                      |
+| Backlog      | `docs/backlog.md` (base repo) — closed via `/vwf:backlog` |
+| Membership   | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`              |
 
 ---
 
@@ -127,6 +128,14 @@ Consent block.
 **`docs/plans/index.md` is never touched for a folder.** Change plans are not
 listed there, by decision, and archive is not the command that starts listing
 them. A folder leaves no row behind, so there is no stale row to fix.
+
+**Close the backlog items.** Either shape may carry a `backlog:` frontmatter
+list. For every id on it whose row in `docs/backlog.md` does not yet read
+`done`, invoke `/vwf:backlog done <ids>` — a plan can reach `archived/` without
+having landed through the command that would have closed them, and a retired
+plan leaving an item `planned` forever is the row nobody comes back to. Never
+edit `docs/backlog.md` here: `/vwf:backlog` is its only writer, and §4's commit
+carries what it wrote.
 
 **Guard collisions.** Before each move, check the destination does **not**
 already exist. On a collision, suffix the archived name (e.g. `-2`) or ask the
