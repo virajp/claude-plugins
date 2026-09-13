@@ -1,11 +1,13 @@
-# Project ids
+# Project ids and repo names
 
-A repo names its projects, and those names reach places that are not
-prose: a task group, a flag, a shell alias, an environment variable. Each
-of those has a grammar, and a name that reads fine in a registry can be
-silently mangled by one of them. This file is the single rule that turns a
-project's name into the **id** every one of those surfaces uses, so the
-same token means the same project everywhere.
+A repo names its projects, and it has a name of its own. Both reach
+places that are not prose: a task group, a flag, a shell alias, an
+environment variable. Each of those has a grammar, and a name that reads
+fine in a registry can be silently mangled by one of them. This file is
+the single **slug rule** that turns a name into a token those surfaces
+accept — and it has two applications: a project's **id**, and a repo's
+**name**. One rule, two things it is applied to, and the two are
+independent of each other.
 
 ## The rule
 
@@ -57,12 +59,12 @@ characters:
 One rule ahead of all three is cheaper than three escapes, and it is why
 the id is derived once and then carried, never re-derived per surface.
 
-## Where the id lands
+## Where the two tokens land
 
-| Surface                        | Shape                        |
-| ------------------------------ | ---------------------------- |
-| The per-project task group     | `p/<id>/`, run as `p:<id>:…` |
-| The repo's own environment key | `REPO_NAME = "<id>"`         |
+| Token              | Slugged from               | Lands in                                            |
+| ------------------ | -------------------------- | --------------------------------------------------- |
+| The **project id** | the project's name         | `p/<id>/`, run as `p:<id>:…`, and the commit scopes |
+| The **repo name**  | the main checkout's folder | `REPO_NAME = "<slug>"`                              |
 
 Two, and no more. The bootstrap aggregator's **member flags** and the
 `setup-<slug>` **aliases** beside them look like a third and a fourth and
@@ -71,18 +73,29 @@ what they widen a run to is another repository. A member holding three
 projects is still one flag. So a project id never reaches them, and this
 rule is not what names them.
 
-`REPO_NAME` carries the **slug**, never the raw name. It is the toolchain
-manager pack's marked position, and everything reading it — a launcher
-alias, a per-repo editor profile — gets the same token the task group
-uses, which is the whole point of deriving the id once.
+Both carry the **slug**, never the raw name, and the two are
+**independent**. `REPO_NAME` is the toolchain manager pack's marked
+position and takes the repo's folder name, slugified — never a project
+id; the `p:<id>:*` group takes the project id. A single-project repo
+whose folder happens to spell its project id is a coincidence, not a
+rule, and nothing may read one to infer the other.
+
+The folder is the **main checkout's**, and the value is written
+literally. A linked worktree's directory is named after the branch, so a
+`REPO_NAME` derived at load time would address a different repo depending
+on where you were standing — and everything reading it, a launcher alias
+or a per-repo editor profile, would follow it there. A member repo names
+its own folder, never the base's.
 
 ## Who applies it
 
 Two, and only two:
 
-- **The orchestrator that resolves ids** — whatever shapes the repo
-  derives the id when it resolves a project's name, writes it into the
-  task group and `REPO_NAME`, and reports the id it used.
+- **The orchestrator that shapes the repo** — it derives each project's
+  id from that project's name and writes it into the task group and the
+  commit-scope list, derives the repo's slug from its main checkout's
+  folder name and writes it into `REPO_NAME`, and reports both tokens it
+  used.
 - **The materializer**, when it renames a pack's `p/_project/` marked
   position to the project this stack is being pinned for
   (`${CLAUDE_PLUGIN_ROOT}/skills/stackgen-stack-template/references/materializer.md`).

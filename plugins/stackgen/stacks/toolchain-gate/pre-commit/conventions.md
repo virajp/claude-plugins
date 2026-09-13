@@ -56,11 +56,13 @@ carries nesting alone — the gate runs on commit, so it contributes no setting
 and recommends no extension.
 
 **Two positions in the convention file are marked for `/vwf:init` to fill, and
-the comments say when.** `commitScopes` is filled on a **re-run**, once the
-project registry exists — empty is the correct first-run state. The changelog
-links are filled on **any** run where the repo has a remote. Both were claimed
-unconditionally before 2026-09-06 and neither was implemented; the claims now
-match what init does.
+the comments say when.** `commitScopes` is filled on **every** run, the first
+one included, with the project ids init's second question confirmed — one scope
+per project, each the same id that project's `p:<id>:*` task group takes. A
+project registry, where the repo has one, is where that proposal came from, not
+a precondition for filling the list: the empty list this pack ships is its
+marked position, never a first-run state init leaves behind. The changelog
+links are filled on **any** run where the repo has a remote.
 
 The convention file lives in **this** pack rather than beside the release task
 that also reads it, because the hook is what enforces it: a convention nothing

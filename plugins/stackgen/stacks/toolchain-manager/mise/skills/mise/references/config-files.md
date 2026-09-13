@@ -81,9 +81,10 @@ python.uv_venv_auto = "create|source"
 # Only what is identical in every environment.
 DISABLE_TELEMETRY = 1
 
-# A marked position: the orchestrator fills it with this repo's project id (the
-# slug `assets/ids.md` defines). A LITERAL — never derived from the config root,
-# whose basename is the branch name inside a linked worktree.
+# A marked position: the orchestrator fills it with this repo's folder name,
+# slugified (the slug rule `assets/ids.md` defines) — not a project id. A
+# LITERAL — never derived from the config root, whose basename is the branch
+# name inside a linked worktree.
 REPO_NAME = "unfilled"
 
 # A marked position: how code:merge:* lands a branch on THIS repo.
@@ -111,7 +112,8 @@ run         = "find .config/mise/tasks/ -name '*' -type f -not -path '*/*.env' -
 ```
 
 **The base `[env]` carries three marked positions, and they are the only ones
-in any of the five files.** `REPO_NAME` is the repo's own id; `MERGE_MODEL` is
+in any of the five files.** `REPO_NAME` is the repo's folder name, slugified —
+never a project id, which is the `p:<id>:*` group's token; `MERGE_MODEL` is
 how `code:merge:*` lands a branch here; `MEMBERS` is the member list for a
 product whose parts are linked as siblings rather than as submodules. Each ships
 with a working default, so an unfilled repo runs — `direct` is today's local

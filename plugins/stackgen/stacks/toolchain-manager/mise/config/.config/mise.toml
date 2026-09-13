@@ -94,12 +94,13 @@ task.disable_spec_from_run_scripts = true
 DISABLE_TELEMETRY = 1
 
 # A MARKED POSITION. The orchestrator that shapes this repo replaces "unfilled"
-# with the repo's project id: the name lowercased, every run of characters
-# outside [a-z0-9] replaced by a single "-", leading and trailing "-" trimmed.
-# So `virajp.dev` becomes `virajp-dev`. It is the same token the `p:<id>:*` task
-# group carries — `setup:all`'s member flags and the `setup-<slug>` aliases are
-# named for the MEMBER REPOS instead, never for a project id — and the rule and
-# its reasons are stackgen's `assets/ids.md`.
+# with this repo's FOLDER NAME, slugified: the name of the main checkout's own
+# directory, lowercased, every run of characters outside [a-z0-9] replaced by a
+# single "-", leading and trailing "-" trimmed. So a checkout in `virajp.dev/`
+# becomes `virajp-dev`. It is NOT a project id — the `p:<id>:*` task group
+# carries that, and the two are independent; `setup:all`'s member flags and the
+# `setup-<slug>` aliases carry a third token, the MEMBER REPOS' own slugs. The
+# slug rule and its reasons are stackgen's `assets/ids.md`.
 #
 # **It is a literal, and it is never derived at load time.** The obvious
 # shorthand — reading the basename of the config root — is wrong in a linked
