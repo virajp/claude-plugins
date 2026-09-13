@@ -25,6 +25,7 @@
 
 set -euo pipefail
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/local"
 
 cd "$MISE_PROJECT_ROOT"
 
@@ -63,8 +64,16 @@ mapfile -t REFS < <(node -p "
 git fetch --tags --quiet origin
 
 TO_TAG=()
+FORBIDDEN=()
 for ref in "${REFS[@]}"; do
   if ! git rev-parse -q --verify "refs/tags/${ref}" >/dev/null; then
+    # 13 and 17 are never issued as a version component. Only the refs this run
+    # would NEWLY cut are checked — a `<name>-v<version>` already out there
+    # predates the rule, and unpublishing it is not on offer. The version is
+    # everything after the last `-v`, the shape the ref is derived in.
+    if version_forbidden "${ref##*-v}"; then
+      FORBIDDEN+=("${ref}")
+    fi
     TO_TAG+=("${ref}")
     continue
   fi
@@ -77,6 +86,14 @@ for ref in "${REFS[@]}"; do
     print_warn "${ref} already exists at ${tagged:0:8}, not HEAD — bump that plugin's version instead of reusing the tag."
   fi
 done
+
+# The whole run is refused, not just the offending entry: the tags are pushed
+# together so a partial release is not a state anyone has to reason about, and
+# that argument cuts the same way here.
+if [[ "${#FORBIDDEN[@]}" -gt 0 ]]; then
+  print_error "Refusing to release ${FORBIDDEN[*]}: 13 and 17 are never issued as a version component. Bump that plugin's manifest past it, regenerate the marketplace manifest, and land it on ${RELEASE_BRANCH} first."
+  exit 1
+fi
 
 if [[ "${#TO_TAG[@]}" -eq 0 ]]; then
   print_success "Every plugin ref already has its tag — nothing to release."

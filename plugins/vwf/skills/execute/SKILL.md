@@ -71,18 +71,19 @@ the pause rules — never migrate autonomously.
 
 ## Doc Paths
 
-| Doc           | Path                                                      |
-| ------------- | --------------------------------------------------------- |
-| Plan          | `<target-repo>/docs/plans/<plan>.md`                      |
-| Plan index    | `docs/plans/index.md` (base repo)                         |
-| Membership    | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`              |
-| Registry      | `docs/blueprint/registry.yaml`                            |
-| Flow (slice)  | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`    |
-| Entity        | `docs/blueprint/entities/<entity>/` (`index.md` + schema) |
-| API contract  | `docs/blueprint/apis/<project>.openapi.yaml`              |
-| Released APIs | `docs/blueprint/apis/released/`                           |
-| Conventions   | `docs/blueprint/conventions.md`                           |
-| Environment   | `docs/blueprint/environment.md`                           |
+| Doc           | Path                                                           |
+| ------------- | -------------------------------------------------------------- |
+| Plan          | `<target-repo>/docs/plans/<plan>.md`                           |
+| Plan index    | `docs/plans/index.md` (base repo)                              |
+| Membership    | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                   |
+| Registry      | `docs/blueprint/registry.yaml`                                 |
+| Flow (slice)  | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`         |
+| Entity        | `docs/blueprint/entities/<entity>/` (`index.md` + schema)      |
+| API contract  | `docs/blueprint/apis/<project>.openapi.yaml`                   |
+| Released APIs | `docs/blueprint/apis/released/`                                |
+| Conventions   | `docs/blueprint/conventions.md`                                |
+| Environment   | `docs/blueprint/environment.md`                                |
+| Backlog       | `docs/backlog.md` (base repo) — marked done via `/vwf:backlog` |
 
 ## References
 
@@ -154,6 +155,9 @@ section**.
   *non-blocking* gap never stops the run. An *isolated blocking* gap (the step
   can't proceed without a human decision, but other steps can) → skip that step
   **and its dependents**, document, continue.
+- **The backlog is never edited here.** `docs/backlog.md` has one writer,
+  `/vwf:backlog`; this command only calls it at the final gate with the plan's
+  `backlog:` ids, and no step, subagent or reconcile pass touches the file.
 - **All git via `/vwf:git-workflow`.** Never run raw git. On **every** mid-run
   invocation, pass git-workflow these declared preferences so it never prompts:
   **isolate without asking** (its Step 1) and **commit only — do not prompt,
@@ -445,8 +449,9 @@ valid thing to approve, an undisclosed one is not.
 
 Then wait.
 
-- **Approve** → hand off to `/vwf:git-workflow` for the merge/push sequence
-  behind its own approval gate.
+- **Approve** → when the plan doc's `backlog:` names ids, first invoke
+  `/vwf:backlog done <ids>` so its edit lands with the run; then hand off to
+  `/vwf:git-workflow` for the merge/push sequence behind its own approval gate.
 - **Fix first** → the user names what to address → loop the affected steps back
   through the pipeline (code, then review + security concurrently; re-verify
   acceptance/ux if touched), then re-present the gate.

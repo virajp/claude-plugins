@@ -41,7 +41,12 @@ are independent by design; a plugin may hold skills versioned on their own
 cadence, so nothing cross-checks them.
 
 The tracked version is **plain semver, always** — the checker fails a manifest
-carrying build metadata. The `X.Y.Z+N` the authoring machine runs between
+carrying build metadata — and it never issues **13 or 17 as a component**, which
+the same rule refuses (`1.13.0`, `17.0.0`, `2.1.17`; `1.130.0` and `113.0.0`
+merely contain the digits and pass). The rule holds for every version line this
+repo maintains, `config_format` and `blueprint_format` included, so a bump that
+would land on one goes one further: `19.12.0` minor becomes `19.14.0`. Versions
+issued before the rule stand. The `X.Y.Z+N` the authoring machine runs between
 releases is written by `mise run p:plugins:local` into the gitignored staged
 copy under `.dev-marketplace/plugins/`, never into `plugins/`: that is what lets
 `claude plugin update` re-copy an edit without a commit.

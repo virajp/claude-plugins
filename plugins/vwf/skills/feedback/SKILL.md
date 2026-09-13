@@ -18,7 +18,8 @@ disable-model-invocation: false
 
 Production is the strongest reviewer vwf has. This command takes what it says —
 a bug report, a metric reading, a user complaint, a feature idea — and routes it
-to where it gets **fixed**, not to a backlog. One intake at a time; every routed
+to where it gets **fixed** now, rather than onto a list to wait — work that
+cannot be picked up now is `/vwf:backlog`'s. One intake at a time; every routed
 item lands in a durable doc, so nothing depends on memory being up.
 
 ## Canvas harvest (`/vwf:feedback canvas`)

@@ -229,10 +229,13 @@ knowledge-graph layer, session handoff and recall, the
 [Karpathy coding guidelines](https://claude-plugins.virajp.dev/plugins/karpathy-guidelines/),
 and the Markdown and Context7 docs surfaces it absorbed. Beside that arc it
 carries an ad-hoc pair — `/vwf:change-plan` plans work with no blueprint slice
-behind it (tooling, CI, docs, a refactor) into a plan folder, and
-`/vwf:change-execute` runs that folder unattended in a fresh session. It names
-**no** technology — no language, no framework, no cloud — which is what lets the
-rest of this list exist. `vwf@virajp-plugins`
+behind it (tooling, CI, docs, a refactor) into a plan folder, which it commits
+and pushes at hand-off so the fresh session can see it, and
+`/vwf:change-execute` runs that folder unattended in that session. Beside both
+sits `/vwf:backlog`, the sole writer of `docs/backlog.md` — the prioritised list
+of work that cannot be picked up now, which every planning and landing command
+calls to move an item. It names **no** technology — no language, no framework,
+no cloud — which is what lets the rest of this list exist. `vwf@virajp-plugins`
 
 ### Tooling, design and delivery
 

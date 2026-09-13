@@ -48,6 +48,7 @@ it. When a planning decision is genuinely open, elicit it following the
 | Plan           | `<target-repo>/docs/plans/<date>-<time>-<slice>.md` — **the repo whose code it changes** |
 | Plan index     | `docs/plans/index.md` (base repo) — one row per plan: plan, target repo, status      |
 | Plan template  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan.md`                                    |
+| Backlog        | `docs/backlog.md` (base repo) — read at §2; marked planned via `/vwf:backlog`       |
 | Membership     | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                                        |
 
 ## References
@@ -91,7 +92,11 @@ is missing).
 **Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior
 decisions and plan rationale for this slice (rooms `decisions`, `planning`)
 before computing anything — build on them, don't re-derive resolved choices.
-Skip silently if mempalace is unavailable.
+Skip silently if mempalace is unavailable. Read the **base repo's**
+`docs/backlog.md` too, when the product has one — the backlog is product-level
+and lives there, whichever member this slice will land in. A slice that is
+already a backlog item carries its id into §7's `backlog:` frontmatter, so the
+item is marked planned rather than planned twice.
 
 Derive the slice's dependency graph from the blueprint's typed links:
 
@@ -310,6 +315,11 @@ Write `docs/plans/<date>-<time>-<slice>.md` from the plan template, following
 and `requires:` in particular), the chain position, TDD-ordered steps, and the
 verbatim acceptance-criteria transcription.
 
+**`backlog:`.** The frontmatter also carries a `backlog:` list — the ids of the
+`docs/backlog.md` items §2's recall matched to this element. Write it empty when
+the slice came from nowhere in the backlog; an empty or absent list means the
+plan covers no backlog item, and §9 then calls nothing.
+
 **Dark exposure.** A plan doc may declare `exposure: dark` for its slice — the
 slice ships behind a **release flag** in the runtime-settings document (per the
 runtime-settings foundation: same schema/cache/audit path, no new
@@ -363,3 +373,9 @@ skip silently if mempalace is unavailable.
 After each approval, commit that plan via `/vwf:git-workflow`. Use a bare
 `docs:` message — no scope — with the subject naming the plan, e.g.
 `docs: plan — <slice>`. Keep the worktree **local**. Do not run raw git here.
+
+Then, when the plan's `backlog:` names ids, invoke
+`/vwf:backlog planned <ids> <plan path>` and commit its edit through
+`/vwf:git-workflow` with the same bare `docs:` shape. **Never edit
+`docs/backlog.md` here** — `/vwf:backlog` is the only skill that writes it; this
+one just tells it which items are now planned and where.

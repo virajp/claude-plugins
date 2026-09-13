@@ -109,8 +109,9 @@ export function check(repoRoot: string): Finding[] {
  * published `$schema`, so the editor and the client validate its shape already;
  * reintroducing a zod package to restate that would put the drift back that the
  * cutover removed. What is asserted here is narrower and repo-specific: the four
- * values `scripts/src/marketplace.ts` reads, plus the name↔directory agreement
- * no schema can see.
+ * values `scripts/src/marketplace.ts` reads, the name↔directory agreement no
+ * schema can see, and the two things the version itself must be — plain semver,
+ * and free of a 13 or 17 component.
  */
 function checkManifest(plugin: Plugin): Finding[] {
   const findings: Finding[] = [];
@@ -134,6 +135,18 @@ function checkManifest(plugin: Plugin): Finding[] {
       } is not plain semver — it `
         + `is what an end-user install pins to, and a +N build number belongs `
         + `only to the staged dev copy`,
+    );
+  }
+  // 13 and 17 are never issued, on any version line this repo maintains. Only a
+  // whole component counts — `1.130.0` and `113.0.0` are fine. The prerelease
+  // suffix `SEMVER_RE` allows comes off first, so `1.0.17-rc.1` is caught too.
+  // Reached only when the assertion above passed, so the split is safe.
+  else if (
+    m.version.replace(/-.*$/, "").split(".").some(n => n === "13" || n === "17")
+  ) {
+    at(
+      `plugin.json version ${JSON.stringify(m.version)} has a 13 or 17 `
+        + `component — those integers are never issued`,
     );
   }
 

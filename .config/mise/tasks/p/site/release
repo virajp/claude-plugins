@@ -20,6 +20,7 @@
 
 set -e
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/local"
 
 cd "$MISE_PROJECT_ROOT"
 
@@ -42,6 +43,16 @@ if [[ "${BRANCH}" != "${RELEASE_BRANCH}" ]]; then
 fi
 
 VERSION="$(node -p "require('./site/package.json').version")"
+
+# 3. 13 and 17 are never issued as a version component, and `p:site:version`
+#    skips past one rather than land on it — so a tree carrying one was
+#    hand-edited. Refuse before the tag name is built: a tag is the one artefact
+#    nobody can take back, and users resolve it forever.
+if version_forbidden "${VERSION}"; then
+  print_error "Refusing to tag ${VERSION}: 13 and 17 are never issued as a version component. Bump past it with 'mise run p:site:version' on develop."
+  exit 1
+fi
+
 # Namespaced: every tag in this repo says what it releases. Plugins tag as
 # `<name>-v<version>` and the marketplace manifest pins each entry to one, and
 # the installer tags as `installer-v<version>`, so a bare `v*` tag family would
@@ -49,7 +60,7 @@ VERSION="$(node -p "require('./site/package.json').version")"
 # match `vwf-v19.9.0`. `site-v*` is the third family.
 TAG="site-v${VERSION}"
 
-# 3. The tag must not already exist. If it does, site/package.json was never
+# 4. The tag must not already exist. If it does, site/package.json was never
 #    bumped for this release — the commit to tag is not the one that is checked
 #    out. Fetch first so "exists" means the remote's answer, not this checkout's.
 git fetch --tags --quiet origin
@@ -58,22 +69,22 @@ if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
   exit 1
 fi
 
-# 4. The site gate must pass before anything is tagged.
+# 5. The site gate must pass before anything is tagged.
 mise run p:site:check
 
-# 5. The annotated tag.
+# 6. The annotated tag.
 git tag -a "${TAG}" -m "${TAG}"
 
 print_header "Created ${TAG}."
 
-# 6. With --ci this stops here — tag only. The calling workflow pushes and
+# 7. With --ci this stops here — tag only. The calling workflow pushes and
 #    delegates deploying to site.yml, so it must NOT also push/watch from here.
 if [[ "${usage_ci:-false}" == "true" ]]; then
   print_header "CI mode (--ci) — stopping after the tag; the workflow handles push + deploy."
   exit 0
 fi
 
-# 7. Interactive release: push and watch the deploy pipeline. `gh` must be
+# 8. Interactive release: push and watch the deploy pipeline. `gh` must be
 #    present and authenticated — we never push a tag we cannot then watch.
 if ! command -v gh >/dev/null 2>&1; then
   print_error "gh (GitHub CLI) is required to push and watch the release. Install: brew install gh"
@@ -93,7 +104,7 @@ print_header "Pushing ${RELEASE_BRANCH} and ${TAG} ..."
 git push origin "${RELEASE_BRANCH}"
 git push origin "${TAG}"
 
-# 8. Watch the deploy pipeline to completion so this task's exit status reflects
+# 9. Watch the deploy pipeline to completion so this task's exit status reflects
 #    the release result. Poll until the tag's run appears, then follow it.
 #    Match on the ref, not the commit: the `main` push and the tag push share
 #    one SHA and both start a site.yml run, but only the tag's run deploys —

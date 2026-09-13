@@ -40,7 +40,12 @@ folders `<date>-<name>/`, each an `index.md` plus one file per unit and
 deliberately **never** listed in that index; `/vwf:archive` retires **either**
 shape — a flat file with its index row, or a folder moved whole with only its
 Status line rewritten and no row to fix — and `/vwf:change-execute` archives its
-own folder at landing, everything into `archived/`), `docs/runbooks/`
+own folder at landing, everything into `archived/`), `docs/backlog.md` (the
+product's prioritised list of work that cannot be picked up now — a table plus
+one `### Bnn` section per item, **product-level and in the base repo only**,
+beside `docs/plans/index.md`; `/vwf:backlog` is its sole writer and
+`change-plan`, `plan`, `change-execute`, `execute` and `archive` call it with
+the ids their plan's `backlog:` frontmatter carries), `docs/runbooks/`
 (per-project operational runbooks plus `postmortems.md`, seeded by the
 incident-response foundation and appended to by `/vwf:feedback incident`), and
 `docs/prompts/` (`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design
@@ -91,9 +96,16 @@ history here** — what each past format changed is git's job; a second narrativ
 copy is precisely the drift the density doctrine warns about, and it was 105
 lines of this file before format 16. The *current* shape is what this section
 describes throughout; the paired `config_format` (currently **18**, the bump
-that added `enforcement.kept_files`; **17 was never issued on either line**) is
-described under `assets/vwf-config.md`, and its own `N → N+1` deltas do still
-live there — state-based reconciliation replaced the **blueprint** ladder only.
+that added `enforcement.kept_files`) is described under `assets/vwf-config.md`,
+and its own `N → N+1` deltas do still live there — state-based reconciliation
+replaced the **blueprint** ladder only. **Neither line issues 13 or 17.** From
+`config_format` 18 and `blueprint_format` 24 onward a bump steps past both
+integers — the same rule a plugin version and this repo's package versions obey
+— so `config_format` went 16 → 18 when `enforcement.kept_files` arrived. Stamps
+issued before the rule stand and are read by the history, not by the rule:
+`config_format` 13 is real, and `blueprint_format` 13 is not. The lineage table
+in `skills/setup/references/format-lineage.md` is where that history lives.
+
 The two stamps are separate number lines, which have now drifted apart in both
 directions: `14`, `16` and `18` shipped without a blueprint bump (the first
 closed the stack menu; the second gave each stack axis its `unresolved` state

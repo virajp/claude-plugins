@@ -37,8 +37,10 @@ plan's launch line says it and this skill trusts it.
 
 ### 1. Resolve and refuse early
 
-Resolve `$ARGUMENTS` to `<folder>/index.md`. Read the frontmatter and the
-**Status**, **Consent**, **Units** and **Run log** blocks. Then:
+Resolve `$ARGUMENTS` to `<folder>/index.md`. Read the frontmatter — including
+its `backlog:` list, the ids §7 hands to `/vwf:backlog`, empty or absent when
+the plan covers no backlog item — and the **Status**, **Consent**, **Units** and
+**Run log** blocks. Then:
 
 - Status `DRAFT` → stop: "not approved; run /vwf:change-plan to finish it".
 - Status `COMPLETE` → stop: nothing to do.
@@ -51,10 +53,15 @@ Resolve `$ARGUMENTS` to `<folder>/index.md`. Read the frontmatter and the
   still reads the same `UNRESOLVED:`, stop and say which ruling is missing.
 - Status `APPROVED` → a fresh run.
 
-Set the status to `RUNNING` with the timestamp. The plan folder is edited in the
-worktree only and committed with each wave, so a session that dies still leaves
-a legible plan on the branch — never in the main checkout, which would dirty the
-integration branch.
+Set the status to `RUNNING` with the timestamp. The folder arrives
+**already committed** on the integration branch — `/vwf:change-plan` commits and
+pushes it at hand-off — so the worktree §2 cuts sees it from its first commit.
+A folder that is not on that branch is refused, not swept into a wave commit:
+stop and say to run `/vwf:change-plan` again on it, or to commit and push it by
+hand, then re-launch. From there the plan folder is edited in the worktree only
+and committed with each wave, so a session that dies still leaves a legible plan
+on the branch — never in the main checkout, which would dirty the integration
+branch.
 
 ### 2. One worktree for the whole run
 
@@ -163,8 +170,11 @@ notice and the run stops here with the status set to `BLOCKED`.
 ### 7. Land
 
 With every unit `green` and every orchestrator gate passed, move the folder to
-`docs/plans/archived/`, set Status to `COMPLETE` with the date and the commit
-list, and commit as one final `docs:` commit. Then read the Consent block:
+`docs/plans/archived/` and set Status to `COMPLETE` with the date and the commit
+list. Then, when index.md's `backlog:` names ids, invoke
+`/vwf:backlog done <ids>` — that skill is the only writer of `docs/backlog.md`,
+and its edit rides the same commit. Commit all of it as one final `docs:`
+commit. Then read the Consent block:
 
 - **Merge to the integration branch and push on green: yes** →
   `vwf:git-workflow` step 4, *merge, push & clean up*. A merge conflict is a
@@ -248,6 +258,8 @@ which is run and reported, never asked about.
   integration branch
 - Treats a `run` step as an `ask` step's consent, or lets it stand in for what
   nobody has authorised
+- Edits `docs/backlog.md` itself, or lets a unit do it — `/vwf:backlog` owns
+  that file, and §7 calls it
 - Runs a gate the plan's *Wave gate* section does not name, or skips one it does
 - Picks up an item from *Out of scope* or *Parked*, however adjacent
 - Reports the run from recollection when the run log exists

@@ -22,12 +22,16 @@ a repo's stamps against the shipped integers and nudges
 and there is no support window: a repo stamped `2` and a repo stamped `21`
 reconcile against the same current format, by the same algorithm, in one pass.
 
-**Both lines skip 17, and the blueprint line also skips 13.** A repo whose
-`blueprint_format` reads 13 is treated as 12; one whose `blueprint_format` or
-`config_format` reads 17 is treated as **16** on that line — `config_format`
+**Neither line issues 13 or 17 any more.** From `config_format` **18** and
+`blueprint_format` **24** onward the rule stands for both stamps: a bump steps
+past 13 and past 17, so neither integer is ever stamped again. The history the
+rule inherited is uneven, and an old stamp is read by the history rather than
+by the rule — `config_format` 13 **is real** and was issued, so a repo stamped
+13 on that line is stamped 13; `blueprint_format` 13 was skipped, so a repo
+reading 13 there is treated as 12; and 17 was never issued on either line, so a
+repo reading 17 on either is treated as **16**, which is why `config_format`
 went 16 → 18 when `enforcement.kept_files` arrived. The two stamps are separate
-number lines and never comparable, and 13 is skipped on one of them only:
-`config_format` 13 is real.
+number lines and never comparable.
 
 ## The lineage table
 

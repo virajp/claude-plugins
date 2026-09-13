@@ -249,7 +249,12 @@ earlier than 65/90/80), never loosen.
   therefore carries **no `config_format` bump of its own**: recognising a state
   that was always reachable adds nothing to this schema.
 - `config_format` versions this file's own schema; bump it (with a migration
-  note here) when a key's shape changes.
+  note here) when a key's shape changes. **A bump never lands on 13 or 17** —
+  those two integers are never issued on any vwf version line, this stamp,
+  `blueprint_format` and a plugin version alike, so a bump that would land on
+  13 goes to 14 and one that would land on 17 goes to 18, as `config_format`
+  itself did at 16 → 18. Stamps issued before the rule stand: `config_format`
+  13 is real.
 - **`1 → 2` migration** (performed by `/vwf:setup`): rename
   `pipeline.autopilot_caps` → `pipeline.execute_caps` (same shape and
   semantics); the caps hook reads both names during the transition.

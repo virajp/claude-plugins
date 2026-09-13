@@ -5,10 +5,12 @@ description: Turn an ad-hoc change request — work outside the blueprint — in
   unattended in a fresh session. Recall and survey the repo, split a request
   that is really several plans, interview the user one question at a time until
   the checklist is discharged, present the shape behind a hard gate, agree the
-  wave gate, the after-landing steps and the release intent, record consent, and
-  write index.md plus one file per subagent unit. Run when the user wants to
-  plan a change that is not a blueprint slice — tooling, docs, CI, a refactor, a
-  tree the blueprint does not describe; a blueprint slice is /vwf:plan.
+  wave gate, the after-landing steps and the release intent, record consent,
+  write index.md plus one file per subagent unit, mark the backlog items it
+  covers planned, and commit and push the folder so the fresh session sees it.
+  Run when the user wants to plan a change that is not a blueprint slice —
+  tooling, docs, CI, a refactor, a tree the blueprint does not describe; a
+  blueprint slice is /vwf:plan.
 argument-hint: "[what to plan]"
 model: opus
 effort: high
@@ -44,6 +46,13 @@ each subagent reads. Nothing lives in conversation.
   directory — reading its *Out of scope*, its *Parked* list and its *Run log*:
   the request is often one of those items coming due, and a gap the last run
   surfaced is a fact
+- the base repo's `docs/backlog.md` — the product's backlog, the prioritised
+  list of work that cannot be picked up now, which `/vwf:backlog` maintains and
+  keeps in the base repo alone, beside the base's `docs/plans/` — when the
+  product has one. A session in a member repo reads the base's file, never a
+  file of its own. The request is often one of its items; note every id it
+  covers, so the plan's frontmatter can carry them. Reading the file is this
+  skill's business; editing it never is — `/vwf:backlog` is its sole writer
 - the mempalace rooms `planning`, `decisions` and `gaps` for this repo's wing,
   when the server is up; **skip silently** when it is not. Resolve the wing and
   apply the two-store rules from `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` — do
@@ -181,7 +190,9 @@ what was decided, so the next attempt can recall it. Only approve continues.
 [the template](references/plan-template.md): `index.md` plus one `NN-<unit>.md`
 per unit. The template's sections are all required; the frontmatter, the consent
 block, the unit table, the wave gate, the after-landing list and the run log
-have a fixed shape because `/vwf:change-execute` parses and rewrites them.
+have a fixed shape because `/vwf:change-execute` parses and rewrites them. The
+frontmatter's `backlog:` list names the ids recalled in §1 that this plan
+covers, or is empty.
 
 Rules the plan must obey, learned from the plans that came before:
 
@@ -226,9 +237,29 @@ Re-read the folder with fresh eyes before handing it off, and fix inline:
 
 ### 8. Hand off
 
-Set the status to `APPROVED` with the date; until then it is `DRAFT` and
-`/vwf:change-execute` refuses it. Then end with exactly this, and nothing after
-it:
+In this order.
+
+1. **Set the status** to `APPROVED` with the date; until then it is `DRAFT` and
+   `/vwf:change-execute` refuses it.
+2. **Mark the backlog items planned.** When the frontmatter's `backlog:` list
+   names ids, invoke `/vwf:backlog planned <ids> <folder>` — that skill edits
+   the file; this one never does.
+3. **Commit and push the folder** through `vwf:git-workflow`, invoked with
+   these declared preferences, so it asks nothing:
+   - **work in place on the current branch, no worktree** — its Step 1 "if
+     declined" path. Say why: the fresh session's worktree is cut from the
+     integration branch, so it can see the folder only once the folder is
+     committed there; a folder still untracked at hand-off gets swept into some
+     later wave's commit
+   - **stage exactly the plan folder**, plus `docs/backlog.md` when step 2
+     changed it, and nothing else
+   - **commit** with type `docs` and the message
+     `docs: change plan — <name> — approved, awaiting execution`
+   - **push to the branch's upstream** after the commit, setting the upstream
+     when the branch has none. The approve in §5 is the explicit request
+     git-workflow's push rule wants; do not ask again
+
+Then end with exactly this, and nothing after it:
 
 ```text
 Run in a fresh session:
@@ -246,3 +277,5 @@ is the survey and the interview, and the run should carry none of it.
 - Asks two things in one turn, or asks what the repo already answers
 - Records a release or landing consent it did not explicitly ask for
 - Writes a plan whose unit prompts depend on this conversation
+- Pushes anywhere but the branch it stands on, and merges nothing
+- Edits `docs/backlog.md` itself — it calls `/vwf:backlog`, which owns the file

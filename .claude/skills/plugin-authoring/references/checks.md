@@ -37,8 +37,15 @@ Each is something no format and no type can state. The checker is deliberately
 much smaller than the one it replaced: whole families of assertion became
 *unrepresentable* rather than merely unchecked.
 
-1. **Manifest name ↔ directory.** A plugin whose `name` disagrees with its
-   directory installs under one and is referenced by the other.
+1. **Manifest name ↔ directory, and the version.** A plugin whose `name`
+   disagrees with its directory installs under one and is referenced by the
+   other. The same rule asserts the two things the `version` must be: **plain
+   semver** — a tracked manifest carrying the `+N` the dev marketplace stages is
+   a manifest nobody regenerated — and **free of a 13 or 17 component**, since
+   those two integers are never issued on any version line this repo maintains.
+   The component is what counts, not the digits: `1.13.0`, `17.0.0` and `2.1.17`
+   fail, `1.130.0` and `113.0.0` pass, and a prerelease suffix comes off before
+   the split so `1.0.17-rc.1` fails too.
 2. **Dependency resolution.** Every `dependencies[].name` resolves to a plugin
    in this marketplace, with `"marketplace": "virajp-plugins"`. The marketplace
    entry is generated from the manifest, so the two can no longer disagree —

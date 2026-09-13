@@ -7,6 +7,7 @@
 
 set -e
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/local"
 
 cd "$MISE_PROJECT_ROOT"
 
@@ -23,4 +24,26 @@ print_header "Bumping ${LEVEL} version ..."
 pnpm version "${LEVEL}" --no-git-tag-version
 
 VERSION="$(node -p "require('./package.json').version")"
+
+# 13 and 17 are never issued as a version component, so a bump that lands on one
+# bumps again at the SAME level until it does not — `1.1.12` patched is
+# `1.1.14`, `1.12.0` minored is `1.14.0`. Skipping rather than refusing is what
+# keeps `deps-update.yml`'s unattended monthly run from stalling on a number.
+#
+# The cap is not decoration: bumping patch never clears a forbidden MINOR, so a
+# tree hand-edited to `1.13.5` would loop forever rewriting package.json — in CI,
+# unattended. Ten is far past any legitimate run, which skips once.
+ATTEMPTS=0
+while version_forbidden "${VERSION}"; do
+  ATTEMPTS=$((ATTEMPTS + 1))
+  if [[ "${ATTEMPTS}" -gt 10 ]]; then
+    print_error "Still at ${VERSION} after ${ATTEMPTS} ${LEVEL} bumps. A forbidden component this level cannot reach — set the version by hand."
+    exit 1
+  fi
+  SKIPPED="${VERSION}"
+  pnpm version "${LEVEL}" --no-git-tag-version >/dev/null
+  VERSION="$(node -p "require('./package.json').version")"
+  version_skip_note "${SKIPPED}" "${VERSION}"
+done
+
 print_header "Version is now ${VERSION} — commit package.json to record it."

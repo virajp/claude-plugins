@@ -46,10 +46,11 @@ only its build output), so their context can sit in place.
 Each row below is loaded **on demand** — follow the link when you need more than
 the summary here. The `.claude/skills/` rows also auto-apply the moment you edit
 the tree they govern; `release` is a slash command; a change to this repo is
-planned with `/vwf:change-plan` and run, in a fresh session, with
-`/vwf:change-execute <folder>` — each plan folder carries this repo's gate
-lines, `mise run p:plugins:local` as a `run` step and `/release` as an `ask`
-step.
+planned with `/vwf:change-plan`, which **commits and pushes the approved
+folder** on the branch it was planned on, and run, in a fresh session, with
+`/vwf:change-execute <folder>`, which refuses a folder that is not on that
+branch — each plan folder carries this repo's gate lines,
+`mise run p:plugins:local` as a `run` step and `/release` as an `ask` step.
 
 | Read                                                         | For                                                                                                                                                                                                                      |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -147,8 +148,12 @@ inventory and check in that order — freshness before validity:
   bundle whose `<type>/<slug>@<version>` pin is malformed, names no pack, or
   pins a version that pack no longer carries — `@generated` refs name no pack by
   design and are skipped.
-- **`p:plugins:check`** — validates the authored tree, thirteen rules. Rule 11
-  is the widest: it walks a stackgen pack's whole `config/` payload tier — seven
+- **`p:plugins:check`** — validates the authored tree, thirteen rules. Rule 1
+  covers the manifest: `name` agreeing with the directory, and the `version`
+  being plain semver **and** free of a 13 or 17 component — those two integers
+  are never issued on any version line this repo maintains, and it is the
+  component that counts, so `1.13.0` fails where `1.130.0` passes. Rule 11 is
+  the widest: it walks a stackgen pack's whole `config/` payload tier — seven
   assertions. Exec bit and shebang on every task file, exec bit and shebang on
   every shipped hook script, the `config/` root against the **landable** tier of
   the hygiene allowlist (whose two allowed directories are `.config/` and
@@ -320,6 +325,16 @@ A tracked plugin version is always plain `X.Y.Z` — `p:plugins:check` fails one
 carrying build metadata. The `X.Y.Z+N` the authoring machine runs between
 releases exists only in the gitignored staged copies `mise run p:plugins:local`
 writes, so `claude plugin update` sees each edit without a commit.
+
+**13 and 17 are never issued as a version component** — the two plugin
+manifests, the installer, the site, `config_format`, `blueprint_format` alike.
+`p:plugins:check` refuses such a manifest; `p:i:version` and `p:site:version`
+**skip past** the number (bumping again at the same level and printing what they
+skipped, capped at ten attempts since a patch bump never clears a forbidden
+minor); all three release tasks **refuse** to tag one. The guard is two
+functions in `.config/mise/tasks/_scripts/local`, this repo's own sidecar beside
+the pack-owned `helpers`, which no pack file may source. Versions issued before
+the rule stand, and the `+N` staging counter is not a component.
 
 **A release is two stages, and only the second reaches anyone else.** Local
 first — `mise run p:plugins:local` stages the changed plugins into the dev
