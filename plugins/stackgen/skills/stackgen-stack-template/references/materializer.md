@@ -182,8 +182,12 @@ to a repo, and every write it makes is consent-gated and committed once.
    every path, created or conflicting, and (for generation) the reviewer's
    clean verdict — and ask before writing anything. The user may deselect
    artifacts; the template entry itself is not deselectable (it is what the
-   pin means). Declined → nothing is written, the pin stays unresolved, and
-   the caller is told so.
+   pin means). Declined → **nothing is written at all**, the caller's pin
+   is left exactly as it was — this skill never rewrites a pin, and a
+   decline is not a downgrade — and the caller is told the slug is pinned
+   but not materialized. Reporting the decline is the caller's, and the
+   repo's unmaterialized state is what `/vwf:doctor` reports until a later
+   run lands it.
 
    **Hook wiring is its own consent line.** A hook script is a file (the
    list above); the `hooks` entry that wires it lives in
