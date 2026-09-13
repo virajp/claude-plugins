@@ -95,6 +95,17 @@ worktree is named for its branch. A value that is not that folder's slug is a
 drift row, remedied by `/vwf:setup reshape`, which shows it as init's
 `repo-name key: <old> → <new>` replace row and applies it on the one consent.
 
+**A marked position's value is not content drift, which decision 5 forces.** For
+that one row to be the whole of what a user sees, init's existing-repo pass 6
+and doctor's predicate (e) both take **two tests**: the file's hash against the
+lock, and, on a mismatch, a splice of the repo's current value at every marked
+position into the pack's payload at the pinned version. Equal, and the
+divergence lies wholly inside those positions — no pass-6 offer and no (e) row,
+only the owning pass's row. A record sourced `generated` has no payload to
+splice into, so the second test is skipped. The same consequence makes a
+**keep** cover content alone: the fills still reach the positions inside a kept
+file.
+
 **Five packs moved for prose alone**, so that doctor does not report unexplained
 content drift on every shaped repo: the toolchain-manager `mise` pack `1.2.1` →
 `1.2.2`, the three cloud-service packs `containers`, `workers-ssr` and

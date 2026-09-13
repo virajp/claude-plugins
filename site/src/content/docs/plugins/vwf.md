@@ -1082,17 +1082,26 @@ moved — there is no body to carry. It never asks per file, never writes before
 the yes, never touches application code, and never writes a language manifest, a
 lockfile or a CI workflow.
 
-**A pack-owned file whose bytes have diverged is offered, not skipped.** Every
-file a landed pack owns that your repo also has is compared byte for byte once
-the renames are accounted for. Identical needs nothing; different becomes one
+**A pack-owned file whose content has diverged is offered, not skipped.** Every
+file a landed pack owns that your repo also has is compared with the pack's once
+the renames are accounted for. That comparison is **two tests**: the file's hash
+against the one the lockfile recorded, and — only on a mismatch — a second pass
+that takes the pack's shipped payload at the pinned version, splices your file's
+**current** value into every marked position that file carries, and hashes the
+result. Equal, and the whole difference lies inside those positions: **no offer
+at all**, and where a survey pass owns one of them that pass shows the change
+instead — a folder rename is a `repo-name key: <old> → <new>` replace row and
+nothing else. Unequal, and the content really did diverge: one
 `Offered (replace / keep)` row carrying a three-line summary — what your version
 adds, what it lacks, and whether it references a retired name — and the default
 `init` computed. **Replace** lands the pack's file and re-fills every marked
 position it carries from your confirmed answers, which is what makes a replace
-safe on a file whose positions you had already filled. **Keep** leaves the file
-alone and records the decision under `enforcement.kept_files` in the **base's**
-`.config/vwf.yaml`, so neither a later reshape nor `/vwf:doctor` raises it
-again. There is one such record for the whole product, because a member carries
+safe on a file whose positions you had already filled. **Keep** leaves your
+file's own content alone and records the decision under `enforcement.kept_files`
+in the **base's** `.config/vwf.yaml`, so neither a later reshape nor
+`/vwf:doctor` raises it again — the keep covers the content you customised,
+never a marked position's value, which the fill passes write on this run either
+way. There is one such record for the whole product, because a member carries
 only its back-link and no config of its own: a keep taken inside a member is
 keyed by its **base-relative** path — the member's path as prefix, then the path
 inside it — while a keep on the base's own file is the same rule with an empty
@@ -1207,25 +1216,27 @@ subjects: the pack versions the adapter's lockfile recorded against what it
 ships now, each registry id against its task group and commit scope, both
 branches, the repo-name key against that repo's own **folder name, slugified**,
 the **content** of every pack-owned file against the hash the lockfile recorded
-when it landed, and the two marked positions beside the repo-name key —
-`MERGE_MODEL`, and `MEMBERS` on a product whose members are wired as plain
-siblings. **All six run per repo** — the base and every locally-present member,
-resolved the way `init` resolves them — with every row printed under the repo it
-was found in and one remedy for the whole product, since `reshape` walks the
-members too. A member this machine does not carry is a blind spot rather than a
-finding, reading `not present, not checked`. Beside the id check sits its
-counterpart on the base alone, comparing the aggregator's member flags and
-`setup-<slug>` aliases against the resolved member set — a member with no flag
-is a row, and so is a flag named from a project id. A repo drifts by standing
-still and also by moving: a pack-owned file you edited in place is no longer the
-file the pack ships, and doctor says which of the two a row is, because
-re-landing fixes one and the other is a file somebody meant to change. A file
-you chose to keep is skipped, since that decision is already recorded. With no
-adapter lockfile the content check reports `not checked — no lockfile` rather
-than passing or crashing: a repo that landed nothing has nothing to have drifted
-from. Every one of these is `drift` and none is blocking — a repo behind its
-baseline is out of date, not broken — and all of them share one remedy,
-`/vwf:setup reshape`, printed once.
+when it landed — a mismatch re-tested with every marked position spliced out
+before it counts as a row, on init's own two tests, so a filled position is the
+shaped state and never a finding here — and the two marked positions beside the
+repo-name key — `MERGE_MODEL`, and `MEMBERS` on a product whose members are
+wired as plain siblings. **All six run per repo** — the base and every
+locally-present member, resolved the way `init` resolves them — with every row
+printed under the repo it was found in and one remedy for the whole product,
+since `reshape` walks the members too. A member this machine does not carry is a
+blind spot rather than a finding, reading `not present, not checked`. Beside the
+id check sits its counterpart on the base alone, comparing the aggregator's
+member flags and `setup-<slug>` aliases against the resolved member set — a
+member with no flag is a row, and so is a flag named from a project id. A repo
+drifts by standing still and also by moving: a pack-owned file you edited in
+place is no longer the file the pack ships, and doctor says which of the two a
+row is, because re-landing fixes one and the other is a file somebody meant to
+change. A file you chose to keep is skipped, since that decision is already
+recorded. With no adapter lockfile the content check reports
+`not checked — no lockfile` rather than passing or crashing: a repo that landed
+nothing has nothing to have drifted from. Every one of these is `drift` and none
+is blocking — a repo behind its baseline is out of date, not broken — and all of
+them share one remedy, `/vwf:setup reshape`, printed once.
 
 A second run on a shaped **product** produces an **empty plan** and says so,
 **for the same id source** — and that empty plan still carries a section per
@@ -1259,22 +1270,23 @@ present on this machine, the same set `/vwf:doctor` evaluates. Is the shape
 slugs — and is it *current*, against the six repo-shape predicates `/vwf:doctor`
 owns, evaluated on that repo's own artifacts (the pack versions the lockfile
 recorded, the registry ids behind the surfaces generated from them, the
-`develop`/`main` pair, the repo-name environment key, the bytes of the
-pack-owned files that landed, and the marked positions beside that key). Any
-slug missing in any repo, or any predicate failing in any repo, and setup says
-which repos are absent or behind and what each showed, and offers
-[`/vwf:init`](#vwfinit) **once for the whole product** — a base that is current
-while one member is behind is still an offer, because the shape is per repo and
-the product is shaped only when all of them are. `init` is what lays the shape
-down and what brings it forward, and it surveys and shapes every repo in one run
-of its own. That seam is why `init` stays model-invocable — and it is hidden
-from the `/` menu, so this offer and `reshape` above are the only two ways it is
-reached. An **absent** member is a blind spot, never a finding. Declining is a
-recorded deferral, not a halt: the repo shape and the vwf format are two
-different things, and a repo can be onboarded into one without the other. Setup
-itself never materializes one of the **three unconditional** bundles any more —
-that is `init`'s. The **pinned** stacks are a different matter, and they are
-setup's: see [the materialize pass](#the-materialize-pass) below.
+`develop`/`main` pair, the repo-name environment key, the content of the
+pack-owned files that landed — against the lock, marked positions spliced out —
+and the marked positions beside that key). Any slug missing in any repo, or any
+predicate failing in any repo, and setup says which repos are absent or behind
+and what each showed, and offers [`/vwf:init`](#vwfinit) **once for the whole
+product** — a base that is current while one member is behind is still an offer,
+because the shape is per repo and the product is shaped only when all of them
+are. `init` is what lays the shape down and what brings it forward, and it
+surveys and shapes every repo in one run of its own. That seam is why `init`
+stays model-invocable — and it is hidden from the `/` menu, so this offer and
+`reshape` above are the only two ways it is reached. An **absent** member is a
+blind spot, never a finding. Declining is a recorded deferral, not a halt: the
+repo shape and the vwf format are two different things, and a repo can be
+onboarded into one without the other. Setup itself never materializes one of the
+**three unconditional** bundles any more — that is `init`'s. The **pinned**
+stacks are a different matter, and they are setup's: see
+[the materialize pass](#the-materialize-pass) below.
 
 **Step 0 resolves one of three entry paths**, once, from what is on disk, and
 nothing after it re-derives the mode:
