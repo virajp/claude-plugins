@@ -176,8 +176,10 @@ Work from the **repository root**.
 - Lowercase, imperative mood, under 72 characters, no trailing period
 - Scope is optional — omit when the change spans multiple areas
 
-Common types: `feat`, `fix`, `refactor`, `wip`, `blueprint`, `test`, `ops`,
-`docs`, `merge`
+Common types: `feat`, `fix`, `perf`, `refactor`, `revert`, `test`, `ops`,
+`docs`, `merge`, `wip`
+
+A specification or a design document is `docs` — there is no `blueprint` type.
 
 ---
 

@@ -137,7 +137,7 @@ fails, halt and report — do not delete or overwrite.
 ### 4. Report, commit & mark archived
 
 Report the moved paths. Commit the move via `/vwf:git-workflow` (a
-`docs(plan): archive <slice>` message); all git actions go through
+`docs: archive plan <slice>` message); all git actions go through
 /vwf:git-workflow. Then, if mempalace is available, mark the plan's run journal
 (room `runs`, drawer `<plan>`) **archived** (`mempalace_update_drawer`); skip
 silently otherwise.

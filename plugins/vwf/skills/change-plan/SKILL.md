@@ -70,7 +70,7 @@ map, for the request in `$ARGUMENTS`:
   the repo has one, else whatever its commit-message gate reads — so every unit
   file's `## Commit` line carries a type, and a scope, that gate accepts. A repo
   with no convention file takes git-workflow's common types: `feat`, `fix`,
-  `refactor`, `wip`, `blueprint`, `test`, `ops`, `docs`, `merge`
+  `perf`, `refactor`, `revert`, `test`, `ops`, `docs`, `merge`, `wip`
 - when the request retires or renames a name, the name itself, grepped across
   every tree the repo has — `.claude/`, `installer/`, `site/src/content/docs/`,
   `plugins/`, the root docs. Every hit is a passage the change falsifies, and

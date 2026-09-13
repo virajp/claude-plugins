@@ -90,6 +90,6 @@ Components blocks, never left for the canvas to decide.
    they set it as that canvas project's CLAUDE.md. Never push anything via the
    design tool's MCP, never `put_conversation`, never run a brief.
 5. **Commit** the prompt + conventions files via `/vwf:git-workflow`
-   (`docs(prompts): screens brief for <flow>`).
+   (`docs: screens brief for <flow>`).
 6. **Stop.** The canvas session is the user's — iterate as long as needed; when
    satisfied, run `/vwf:screens import <flow>`.

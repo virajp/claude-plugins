@@ -153,8 +153,8 @@ incidents to room `problems`, readings and routing decisions to room
 `decisions`. Skip silently if mempalace
 is down — the doc edits from step 2 are the durable record.
 
-Commit any doc edits via `/vwf:git-workflow` (`docs:` or `blueprint(...)`
-message). If the user accepted a fixing command, hand off to it now.
+Commit any doc edits via `/vwf:git-workflow` (a bare `docs:` message). If the
+user accepted a fixing command, hand off to it now.
 
 ## Metric readings appendix (product.md)
 
