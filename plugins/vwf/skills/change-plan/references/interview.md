@@ -73,7 +73,11 @@ idiomatic answer given the repo, do not ask — state it and move on.
     `none` / `patch` / `minor` / `major`, together with the command that bumps
     the version. Record every answer including "not this time". Note in the same
     breath that this is **intent, not authorisation**: every release is an `ask`
-    step, and `/vwf:change-execute` stops once and asks before running it.
+    step, and `/vwf:change-execute` stops once and asks before running it. A
+    bump that would land on a component equal to 13 or 17 goes one further —
+    `x.12.0` minor becomes `x.14.0`, `x.y.16` patch becomes `x.y.18`; those two
+    integers are never issued on any version line, and the consent row names the
+    version the bump actually reaches.
 
 ## F. Parked
 
@@ -84,5 +88,6 @@ conversation.
 ## G. The gate
 
 18. **Present the shape** per SKILL.md §5 and ask once: approve, revise or
-    abandon. Only an explicit approve writes the folder, and only a later
-    explicit yes after self-review sets the status to `APPROVED`.
+    abandon. Only an explicit approve writes the folder — and the hand-off
+    commits and pushes it — and only a later explicit yes after self-review sets
+    the status to `APPROVED`.
