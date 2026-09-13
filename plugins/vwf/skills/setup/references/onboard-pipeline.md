@@ -69,13 +69,18 @@ stack-shaped, which is the honest state of a repo nobody has described a
 product for yet. The repo shape is not one of those: nothing about it waits on
 a stack, which is why the offer is worth making here rather than postponing it.
 
-**setup never writes `unresolved`.** That value arrives only from an
-`/vwf:architecture` run, which offered the axis and had it deferred
-(`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states"); setup
-writing it would claim a question was asked and postponed when it was never
-asked. An axis setup could not settle is left **absent** — the same
-structure-pending state as every other key it declines to invent — and named in
-what it could not provision.
+**setup writes `unresolved` on an axis it finds absent**, and nowhere else. An
+absent stack axis records nothing at all — not that the question is open, not
+that anyone was asked — so the pipeline hands it to [the materialize
+pass](materialize.md), which writes the bare scalar `unresolved` and names
+`/vwf:architecture` as what replaces it with a slug
+(`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states"). The
+deferral is then visible to every surface that reads the config instead of
+hiding inside a missing key.
+
+**A slug is never rewritten.** Not by this path and not by the materialize
+pass: an axis already pinned is an answered question, and a pin the adapter has
+not yet materialized is what that pass **lands**, never what it downgrades.
 
 ## Code — detect, then confirm
 
@@ -104,6 +109,8 @@ Per [topology detection](topology-detection.md):
 1. **Manifest → candidate templates.** Each project directory's manifest
    narrows the project-axis templates the installed stack plugins offer, asked
    for by contracted name per `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`.
+   This is a **menu read**, never a materialization: what a confirmed pin lands
+   is [the materialize pass](materialize.md)'s, after the config is written.
 2. **Template → platforms.** A candidate declares the `platforms:` it serves, so
    the shortlist proposes the project's platform list rather than asking for it
    cold. Check it against the platforms-by-evidence rows — what the directory
@@ -122,9 +129,11 @@ with the evidence that produced it — and let the user correct it. Two things a
 mandatory, and a `packages` project's role, because the same package consumed
 from two sides is a judgment call. A platform no installed plugin ships a
 template for is **never** a free-text pin — the menu is the whole vocabulary.
-It is no longer a halt either: leave that project's axis unrecorded, name what
-would supply it, and let `/vwf:architecture` settle it, per
-[the deferral rule](#the-shape-check-defers-rather-than-halting).
+It is no longer a halt either: record that project's axis as `unresolved`, name
+what would supply it, and let `/vwf:architecture` settle it, per
+[the deferral rule](#the-shape-check-defers-rather-than-halting). Whatever
+**is** already a slug — here or from an earlier architecture run — is landed by
+[the materialize pass](materialize.md) once the config is written.
 
 ### Multi-repo takes two more questions, in order
 
