@@ -46,6 +46,22 @@ decides a pin rather than landing it.
 
 ## 3. Languages — LSP and toolchain
 
+**Before the token walk, once per project.** A project whose `template` is a
+slug, whose adapter is a **materializing** one, and whose target repo carries
+no materialized entry for that slug in its `.claude/stackgen/lock.yaml` is
+**pinned, not materialized — `/vwf:setup` materializes it**: raise that
+finding, name the repo in it, and **skip the token walk for that project**.
+The languages it would check come from the payload the repo lacks, so every
+token would otherwise be reported as a stack vwf has no template for when the
+template is pinned and merely absent from disk — they are not unknown there,
+they are **unread**. It is **blocking**, on the third row of the table above,
+and its remedy is that one line: one finding per project, never one per
+token. Resolve the target repo as the member whose `projects:` list holds
+this project, at that member's `path` relative to the base root; a project no
+member claims lives in the current repo. A project carrying `languages: []`
+is reached here exactly as one carrying tokens is: what this state is read
+from is the pin and the lockfile, never the token list.
+
 For each project, for each token in `stack.languages`, resolve its row in the
 stack vocabulary. A project whose `template` reads `unresolved` records
 `languages: []` — the one legal empty — so there is nothing to resolve and the
@@ -57,11 +73,8 @@ whole section reports `not checked — no stack resolved` for it:
   available in this marketplace* and move on. **No installed plugin declares
   the token, but the project's pin resolves to a materialized template whose
   payload carries `language_facts` for it** (the materialized escape,
-  `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`) — read from the
-  **target repo's** own committed `.claude/` tree, never the base's on a
-  product that has members: the repo is the member whose `projects:` list
-  holds this project, at that member's `path` relative to the base root, and a
-  project no member claims lives in the current repo → the language is
+  `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`) — read from the **target
+  repo's** own `.claude/` tree, resolved as the gate above → the language is
   **known**: verify against those facts instead — the LSP per how the facts say
   it is provided, the mise tool and manifest per the fact values, `n/a`
   accepted silently as an answer. **A token declared only under a template's
@@ -71,18 +84,7 @@ whole section reports `not checked — no stack resolved` for it:
   **unverified** rather than passing. Known-but-unverified is an honest third
   answer, and quietly reporting it as a pass would be the drift this check
   exists to catch. **No installed plugin declares the
-  token and no materialized facts cover it** → check one state first. When
-  this project's `template` is a **slug**, the adapter that offers it is a
-  **materializing** one, and the target repo resolved just above carries no
-  materialized entry for that slug in its `.claude/stackgen/lock.yaml`, report
-  **pinned, not materialized — `/vwf:setup` materializes it** *instead of*
-  unknown language, and name the repo in the finding. The languages are not
-  unknown there, they are **unread**: the payload that would carry their facts
-  was never landed, so every token this project declares would otherwise be
-  reported as a stack vwf has no template for when the template is pinned and
-  merely absent from disk. It is **blocking**, on the third row of the table
-  above, and its remedy is that one line — no install, and no second finding
-  per token. Otherwise → report **unknown language**.
+  token and no materialized facts cover it** → report **unknown language**.
   **Blocking once this project's `template` is pinned**: nothing else can be
   checked for the token, and a stack vwf has no template for is one it cannot
   plan or build against. **A degradation while that `template` reads
