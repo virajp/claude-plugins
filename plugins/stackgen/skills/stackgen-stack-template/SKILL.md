@@ -1,10 +1,11 @@
 ---
 name: stackgen-stack-template
 description: Return one stackgen stack as a vwf template payload — reading the
-  materialized entry from the repo's .claude/ tree, or, on a first pin,
+  materialized entry from the target repo's .claude/ tree, or, on a first pin,
   resolving the bundle's composition and dispatching per component (shipped
   pack components copied, uncovered components generated) behind a consent
-  gate. Invoked by /vwf:architecture, /vwf:setup, /vwf:plan and /vwf:execute —
+  gate. Invoked by /vwf:setup, which materializes a first pin, and by
+  /vwf:plan and /vwf:execute, which fetch an already-materialized entry —
   not a general-purpose skill.
 argument-hint: "<slug>"
 disable-model-invocation: false
@@ -29,11 +30,13 @@ packs by copy, uncovered components by generation. Materialization is
 ## Resolution order
 
 1. **Materialized already?** Read `.claude/stackgen/templates/<slug>.md` at
-   the repo root (in a worktree, the tree is part of the checkout like any
-   committed file). If it exists: return the payload below, filled from its
-   frontmatter with the body as `conventions:`. **Stop — never regenerate,
-   never diff.** Drift against packs is `/stackgen:stackgen-sync`'s job, on
-   the user's clock — and it acts per component.
+   the root of the target repo — the one the invocation's `repo:` line
+   names, else the current one (in a worktree, the tree is part of the
+   checkout like any committed file). If it exists: return the payload
+   below, filled from its frontmatter with the body as `conventions:`.
+   **Stop — never regenerate, never diff.** Drift against packs is
+   `/stackgen:stackgen-sync`'s job, on the user's clock — and it acts per
+   component.
 2. **A first pin? Read the recorded composition.** The slug names a **bundle
    file**, `${CLAUDE_PLUGIN_ROOT}/stacks/bundles/<slug>.md`. Its frontmatter
    already lists every component as a `<type>/<slug>@<version|generated>`
@@ -106,7 +109,9 @@ check real.
 - **Dispatch is per component; landing is per bundle.** Pack-or-generate is
   decided component by component — a covered language never regenerates
   because its framework is uncovered — but the user consents to one landing
-  set and gets one commit, never a drip of gates.
+  set and gets one commit, never a drip of gates. A caller landing several
+  slugs in one repo invokes this skill once per slug, and gets one consent
+  and one commit per slug.
 - **Structure follows the kind; the slice follows the type.** Every
   composition declares a kind (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`) and
   each component ships the structural slice its type owns within it
@@ -136,10 +141,17 @@ check real.
   (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). It is payload a reader
   picks from — the licence texts are the case — so landing the directory
   would answer a question the user was about to be asked.
-- **The target repo is the current one by default.** In a multi-repo
-  product the caller may name a member repo; each repo gets its own
-  independent copies and its own lockfile — never one repo's copies pasted
-  around.
+- **The target repo is the current one by default**, and a caller names
+  another one way: a single optional `repo: <path>` line passed into the
+  invocation beside the catalog paths, in the same payload style the vwf
+  stack-adapter contract's delegation protocol uses for those — a path
+  relative to the current repo's root. The argument itself stays
+  `<slug>`; there is no second positional. When the line is present every
+  read of `.claude/stackgen/…` in steps 1–3, every write the materializer
+  makes, and the lockfile it keeps
+  (`<repo>/.claude/stackgen/lock.yaml`) resolve under that path; absent
+  means the current repo. Each repo gets its own independent copies and
+  its own lockfile — never one repo's copies pasted around.
 - **The caller may pass context; this skill never reaches for another
   plugin's files.** vwf passes the principles-catalog paths into the
   invocation (the design-adapter payload style). If a generation run needs

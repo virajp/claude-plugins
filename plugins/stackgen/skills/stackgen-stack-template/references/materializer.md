@@ -11,8 +11,10 @@ to a repo, and every write it makes is consent-gated and committed once.
   output for that component (an in-memory pack in the same shape —
   `pack.yaml` fields including the classification, conventions prose,
   artifacts).
-- The target repo root — the current repo by default; in a multi-repo
-  product the caller may have named a member repo instead.
+- The target repo root — the current repo by default, or the repo the
+  invocation's `repo: <path>` line names, a path relative to the current
+  repo's root. Every write below, and the lockfile, resolve under that
+  root: read "the repo" throughout as that repo.
 
 ## Steps
 
@@ -163,7 +165,9 @@ to a repo, and every write it makes is consent-gated and committed once.
    outside the repo, handled at its own consent line in step 3b.
 
 2. **Collision check, against the lockfile.** Any target path that exists
-   but is **not** in `.claude/stackgen/lock.yaml` is the repo's own — a
+   but is **not** in the target repo's own
+   `.claude/stackgen/lock.yaml` — never a sibling repo's — is that
+   repo's own file: a
    conflict listed for the user to resolve, never a write. Anything not in
    the lockfile is not stackgen's to touch.
 
@@ -272,6 +276,13 @@ to a repo, and every write it makes is consent-gated and committed once.
    git-workflow skill when present; plain `git add <paths>` + a conventional
    commit otherwise — never `git add -A`). The commit is what makes the
    output repo-owned: collaborators pull files, not a plugin obligation.
+
+   **The commit is made in the target repo, and in no other.** Where that
+   repo is a submodule of the caller's base repo, the gitlink the commit
+   moves is left **unstaged for the caller** — say so in the return. The
+   materializer never commits in two repos: a base-repo commit is the
+   caller's own git pass, and making one here would land a gitlink the
+   user never saw in a plan.
 
    **Preserve the mode when writing a `config/` file, and record it.**
    Everything under `.config/mise/tasks/**` lands **executable (755)**.
