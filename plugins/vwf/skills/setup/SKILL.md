@@ -109,12 +109,13 @@ repo shape against its baseline"** in `/vwf:doctor`'s stack-checks reference,
 evaluated **per repo** on that repo's own artifacts — the pack versions the
 adapter lockfile records against what the adapter ships now, the registry's
 project ids behind the surfaces generated from them, the `develop`/`main` pair,
-the toolchain manager's repo-name environment key, the bytes of the pack-owned
-files the packs landed, and the marked positions init fills in that same
-environment block. Read the artifacts that section reads and evaluate them **by
-it**: the predicates are doctor's and are deliberately not restated here, so the
-two can never drift apart. Every repo recording all three slugs and holding all
-six predicates — say so in one line, naming the repos checked, and read on.
+the toolchain manager's repo-name key against the repo's folder, the bytes of
+the pack-owned files the packs landed, and the marked positions init fills in
+that same environment block. Read the artifacts that section reads and
+evaluate them **by it**: the predicates are doctor's and are deliberately not
+restated here, so the two can never drift apart. Every repo recording all
+three slugs and holding all six predicates — say so in one line, naming the
+repos checked, and read on.
 
 **Otherwise some repo needs init, and setup offers it — once, for the whole
 product.** Any of the three slugs missing in a repo, that repo is **unshaped**:

@@ -355,11 +355,21 @@ and reports one row saying that, not two — and a member is its own repository,
 so a base carrying both branches says nothing about the member beside it.
 
 **(d) The environment key.** In each repo, that repo's own `.config/mise.toml`
-sets `REPO_NAME`, and its value is **that** repo's own slug rather than the
-marked position the toolchain pack ships — a member names itself, never the
-base. Absent or still unfilled is a drift row, remedy `/vwf:setup reshape`:
-that key is what the user's own shell aliases read, so an unfilled one is
-quietly wrong everywhere it is used.
+sets `REPO_NAME`, and its value is **that repo's folder name, slugified** —
+the basename of that repo's **main checkout** directory, run through the
+adapter's `assets/ids.md`. It is not a project id and never has to match one:
+the `p/<slug>/` groups (b) reads are named for the projects, this key for the
+folder they sit in. A member names its **own** folder, never the base's.
+
+Read the folder from the **main checkout**, not from the working directory: a
+linked worktree's directory is named for its branch, so resolve the common
+git dir — `git rev-parse --path-format=absolute --git-common-dir` — and take
+the basename of the directory holding it. Absent, or still holding the marked
+position the toolchain pack ships, is a drift row; so is a value that is not
+that folder's slug. Both carry the same remedy, `/vwf:setup reshape`, which
+shows the change as init's `repo-name key: <old> → <new>` replace row and
+applies it on the one consent. That key is what the user's own shell aliases
+read, so a wrong one is quietly wrong everywhere it is used.
 
 **(e) Content drift.** A pack-owned file is landed once and then lives in the
 repo, where anything may edit it; what it holds *today* is the question (a)
