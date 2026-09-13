@@ -57,16 +57,21 @@ in this table, are only ever read.
   user runs it. This matches the installer CLI's own rule and keeps doctor safe
   to run anywhere — and it is why §8 never triggers a graph build, which is a
   long LLM-driven job reserved for `/vwf:setup`.
-- **Unavailable ≠ missing ≠ unknown.** A language with no LSP shipped in this
-  marketplace is reported as *unavailable* with no suggested command; only a
-  language that *has* a plugin and isn't installed is a *missing* finding.
-  Both presuppose an installed plugin **declares** the language. One that no
-  plugin declares at all is *unknown*, and unknown is **blocking once that
-  project's `template` is pinned** — vwf's stack menu is closed to what the
-  installed plugins define
+- **Unavailable ≠ missing ≠ unknown ≠ not materialized.** A language with no
+  LSP shipped in this marketplace is reported as *unavailable* with no
+  suggested command; only a language that *has* a plugin and isn't installed
+  is a *missing* finding. Both presuppose an installed plugin **declares** the
+  language. One that no plugin declares at all is *unknown*, and unknown is
+  **blocking once that project's `template` is pinned** — vwf's stack menu is
+  closed to what the installed plugins define
   (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`). While the project axis
   reads `unresolved` it is a **degradation** instead: the plugin that would
-  claim the token is exactly what has not been chosen yet.
+  claim the token is exactly what has not been chosen yet. And a pin whose
+  adapter materializes but never landed the payload in its target repo is
+  *not materialized* — the decision exists and the artifact does not, which
+  is blocking on the pin and remedied by `/vwf:setup`, whose materialize pass
+  lands it, never by `/vwf:architecture`, which would only re-decide a pin
+  that is already answered (§3).
 - **Never halt.** Doctor always finishes and reports, even when everything is
   broken — a mandate is expressed as a **blocking finding**, never as doctor
   stopping early. Callers decide what a finding means: `setup`, `plan` and
@@ -164,7 +169,9 @@ One table, findings first, grouped by kind — **blocking** (something
 defines: the graphify CLI, a graph missing from a locally-present checkout, an
 `iac` project inside another repo whose extraction the user has **not**
 declined on the record, `mise` and an **unknown** language — the last two
-**conditionally**, once a stack axis is pinned (§5, §3) — a `custom` template
+**conditionally**, once a stack axis is pinned (§5, §3) — a project whose
+pinned template its adapter never **materialized** in that project's target
+repo (§3) — the pin is an answer and the payload absent, a `custom` template
 pin, a project whose template does not cover every platform it declares, a
 broken membership link (§1), an unwaived **critical** dependency advisory (the
 audit check), a misplaced / duplicated / missing `mempalace.yaml` or one
@@ -184,7 +191,13 @@ of its `backing_template` pins provides, which is never blocking; §5),
 **unavailable** (nothing shipped here to install), **unknown** (no installed
 plugin declares it — blocking once the axis is pinned, listed separately so
 the remedy reads as *install or write the plugin*, never *install this one*),
-**degraded** (something optional is absent and a fallback is carrying the
+**pinned, not materialized** (§3's neighbour to that one and never folded
+into it: the token *is* declared, by a template the adapter would have landed
+here and did not, so the remedy is the one line `/vwf:setup` — its
+materialize pass, never `/vwf:architecture` — and the row is one per project
+rather than one per token, reached only after a declined landing or on a repo
+setup has not re-run on, and blocking while the pin stands), **degraded**
+(something optional is absent and a fallback is carrying the
 work, or the run simply costs more — a missing `rtk`, whose guarded hook
 no-ops (§5) — **or** a decision the user has not yet made or has declined on
 the record: an axis reading `unresolved`, whose dependent checks report `not
