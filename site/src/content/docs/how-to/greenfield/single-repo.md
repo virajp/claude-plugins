@@ -356,6 +356,13 @@ your technology, and list them in the product's `stacks:` roster, before you
 reach `/vwf:architecture` — or the menu is short and you will pin something you
 did not want. [Stack templates](../../plugins/vwf.md#stack-templates).
 
+**Answering the menu records a slug and lands nothing.** When
+`/vwf:architecture` is done it invokes `/vwf:setup` for you, and setup's
+[materialize pass](../../plugins/vwf.md#the-materialize-pass) is what asks
+`stackgen` for each pinned template and lands it in your repo, one consent per
+pin. Decline a landing and the pin stays, but `/vwf:doctor` reports it as
+**pinned, not materialized** — blocking — until a later `/vwf:setup` lands it.
+
 ### The thirteen foundations
 
 `/vwf:architecture` walks thirteen concerns every product eventually hits, each

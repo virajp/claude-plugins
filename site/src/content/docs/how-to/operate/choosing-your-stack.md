@@ -42,8 +42,10 @@ conventions — is [stack templates](../../plugins/vwf.md#stack-templates).
 covering bundle on its menu cannot be pinned and therefore cannot be planned.
 stackgen's `language/typescript` bundle and its framework components cover
 TypeScript and JavaScript; `app-framework/flutter` covers Dart and Flutter and
-serves `mobile`, `tablet`, `desktop` and `webapp` from a single codebase.
-Anything else takes the **generate** entry — see below.
+serves `mobile`, `tablet`, `desktop`, `webapp` and `auto` from a single codebase
+— `auto` being the same mobile binary reaching CarPlay and Android Auto through
+the pack's Swift and Kotlin edge, so it is declared alongside `mobile` and never
+alone. Anything else takes the **generate** entry — see below.
 
 **A `site` project picks between four Astro bundles**, all on the one
 `framework/astro` pack, all carrying React for islands, differing by how a page
