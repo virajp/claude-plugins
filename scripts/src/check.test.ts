@@ -119,6 +119,42 @@ describe("the manifest", () => {
     ]);
   });
 
+  it("flags a version with a 13 or 17 component", () => {
+    // Neither integer is ever issued on a version line this repo maintains, so
+    // a manifest carrying one as a whole component is refused.
+    const root = tree({
+      alpha: {
+        manifest: { name: "alpha", version: "1.13.0", description: "x" },
+      },
+      beta: { manifest: { name: "beta", version: "17.0.0", description: "x" } },
+      gamma: {
+        manifest: { name: "gamma", version: "2.1.17", description: "x" },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("version \"1.13.0\" has a 13 or 17 component"),
+      expect.stringContaining("version \"17.0.0\" has a 13 or 17 component"),
+      expect.stringContaining("version \"2.1.17\" has a 13 or 17 component"),
+    ]);
+  });
+
+  it("leaves a version that merely contains the digits alone", () => {
+    // Only a whole component counts — the rule is about the integer issued, not
+    // about the digits appearing in the string.
+    const root = tree({
+      alpha: {
+        manifest: { name: "alpha", version: "1.130.0", description: "x" },
+      },
+      beta: {
+        manifest: { name: "beta", version: "113.0.0", description: "x" },
+      },
+      gamma: {
+        manifest: { name: "gamma", version: "19.21.0", description: "x" },
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
+
   it("flags an empty description", () => {
     const root = tree({
       alpha: {
