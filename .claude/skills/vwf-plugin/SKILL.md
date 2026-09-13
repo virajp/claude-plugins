@@ -186,7 +186,10 @@ anything delegates to it, user-only when nothing does.
 The change pair is the one place the rule is applied by hand rather than read
 off the delegation graph. `change-execute` is **user only**: it must run in a
 session that has done nothing else, which no caller can guarantee, and nothing
-delegates to it — the plan's own launch line is the invocation. `change-plan` is
+delegates to it — the plan's own launch line is the invocation, and the folder
+that line names arrives **already committed and pushed** on the integration
+branch, because `change-plan` commits it at hand-off; a folder that is not on
+that branch is refused rather than swept into a wave commit. `change-plan` is
 **user and model**, and the seam that reasoning reserved is now live:
 `/vwf:feedback`'s *not a blueprint gap* route calls it by name, which marking it
 user-only would have made a silent no-op.
@@ -257,5 +260,7 @@ Any change to vwf's behaviour must reconcile `readme.md`, `CLAUDE.md` and
 rule. Delegate the sweep to `/vwf:docs-sync` (its surveyor agent reads the docs)
 rather than reading those files inline; that file is large enough that loading
 it costs the rest of the session. A behaviour change also bumps `version` in
-`plugin.json` (plain `X.Y.Z`) and regenerates the marketplace with
-`mise run p:plugins:marketplace`.
+`plugin.json` (plain `X.Y.Z`, and never onto a **13 or 17 component** — those
+two integers are never issued on any version line, so `19.12.0` minor goes to
+`19.14.0`; `p:plugins:check` refuses the manifest otherwise) and regenerates the
+marketplace with `mise run p:plugins:marketplace`.

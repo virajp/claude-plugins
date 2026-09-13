@@ -59,12 +59,15 @@ without ever being forced into a flow it does not fit.
 ```
 
 The first thing it does is **read before it asks**. It looks through
-`docs/memory/decisions/`, the last archived plan that touched the same tree, and
-the memory palace's `planning`, `decisions` and `gaps` rooms. This matters more
-than it sounds: Relay's release-notes request turns out to be sitting in the
-*Parked* list of the plan that set up its CI six weeks earlier, together with
-the reason it was deferred. That is a fact the interview now does not have to
-re-derive, and a decision it will not accidentally reverse in silence.
+`docs/memory/decisions/`, the last archived plan that touched the same tree, the
+base repo's [`docs/backlog.md`](../../plugins/vwf.md#vwfbacklog) if the product
+keeps one — the request is often an item already on it, and the ids it covers go
+into the plan's `backlog:` frontmatter — and the memory palace's `planning`,
+`decisions` and `gaps` rooms. This matters more than it sounds: Relay's
+release-notes request turns out to be sitting in the *Parked* list of the plan
+that set up its CI six weeks earlier, together with the reason it was deferred.
+That is a fact the interview now does not have to re-derive, and a decision it
+will not accidentally reverse in silence.
 
 Then it surveys — concurrent `Explore` subagents that return `file:line`
 conclusions rather than file contents, so the session stays small enough to hold
@@ -132,8 +135,16 @@ them run concurrently without fighting over a file.
 
 Then: **approve**, **revise** or **abandon**. Abandoning leaves nothing on disk
 except a one-line note the next attempt can recall. Approving writes
-`docs/plans/2026-09-08-ci-release-notes/` — an `index.md` plus one file per unit
-— and ends with a launch line.
+`docs/plans/2026-09-08-ci-release-notes/` — an `index.md` plus one file per
+unit.
+
+Then it finishes the hand-off for you. Any backlog item the plan covers is
+marked `planned` with this folder as its path, and the folder itself is
+**committed and pushed on the branch you are on** — in place, no worktree,
+nothing merged. That is not housekeeping: the next step runs in a worktree cut
+from the integration branch, and it can only see a folder that is already
+committed there. A folder left untracked ends up swept into some later commit of
+the run instead. Only then does it print the launch line.
 
 It does not start executing, and that is deliberate.
 
@@ -149,6 +160,10 @@ The fresh session is the whole point: the planning session's context was a
 survey and an interview, and none of it should ride along into the run. The
 skill is user-only for the same reason — nothing else can promise you a clean
 window.
+
+It refuses a folder that is not committed on the integration branch, which after
+a normal approval it always is. If you wrote or moved one by hand, commit and
+push it first — or re-run `/vwf:change-plan` on it — then re-launch.
 
 From there you are not needed. It creates one worktree, runs the plan's gate
 once as a preflight (a red line here is the branch's problem, not the plan's,
@@ -177,9 +192,10 @@ took — including every unit whose owned paths the run widened, with the findin
 that widened them (read these) — the review findings that survived the cap, the
 gate results, and the worktree path.
 
-If everything is green it archives the folder to `docs/plans/archived/`, lands
-per the consent you recorded, runs the after-landing `run` steps and reports
-each one, and then asks **one** question naming the `ask` steps in order.
+If everything is green it archives the folder to `docs/plans/archived/`, marks
+every backlog item the plan covered `done`, lands per the consent you recorded,
+runs the after-landing `run` steps and reports each one, and then asks **one**
+question naming the `ask` steps in order.
 
 "Not yet" is offered as an equal option, not a fallback — everything that
 reaches only your machine has already happened, and where a step staged
@@ -213,8 +229,9 @@ yourself.
 A plan you decide **not** to run at all is retired the same way a completed one
 is: [`/vwf:archive <folder>`](../../plugins/vwf.md#vwfarchive) moves the whole
 folder into `docs/plans/archived/` and marks its Status as archived-and-not-run,
-naming what it was before. Nothing is deleted, and the next plan's recall still
-reads it.
+naming what it was before — and marks every backlog item the folder still has
+open `done`, so nothing is left waiting on a plan that will not run. Nothing is
+deleted, and the next plan's recall still reads it.
 
 ## What this pair will not do for you
 

@@ -155,41 +155,44 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   task makes, run by pre-commit and `plugins.yml`, and `inventory.test.ts` pins
   it in vitest too.
 - **`p:plugins:check`** — validates the authored tree. Thirteen rules: manifest
-  name↔dir; dependencies resolving within the marketplace; hook scripts existing
-  and executable; **a pack's `config/` payload tier being materializable as-is**
-  (seven assertions in one rule: exec bit *and* a known shebang on every file
-  under `config/.config/mise/tasks/**`, because mise reports a 644 task as an
-  *unknown* one rather than a permission error and execs the file directly; the
-  same two on every `hooks/*.sh`, which the host execs from a bare path in
-  `settings.json`; the tier's root against the **landable** tier of the hygiene
-  allowlist, whose two allowed **directories** are `.config/` and `.github/` and
-  whose sibling tier — the root files vwf writes, `CLAUDE.md` and
-  `mempalace.yaml` — no pack may land; a **CI workflow refused inside
-  `.github/`**, since a pack names the task CI runs and never the workflow;
-  every `config/.config/pre-commit.d/*.yaml` parsing with a top-level `repos:`
-  list, since `/vwf:init` concatenates them into a file no pack owns; the gate
-  pack's **whole** `config/.config/pre-commit-config.yaml` parsing on the same
-  terms, from the base end, since it is neither a fragment nor at the tier's
-  root and nothing reached it before; and every
-  `config/.config/vscode.d/*.jsonc` parsing as JSONC with only the three keys
-  `settings`, `nesting` and `extensions`, since init composes them into an
-  editor file no pack owns and a fourth key is dropped without a word);
-  **strict-YAML frontmatter** (every skill and agent a plugin ships, and every
-  `stacks/*/*/skills/*/SKILL.md` and `stacks/*/*/agents/*.md` a pack ships — the
-  larger half, and the half that actually lands in a user's repo; a pack's
-  `rules/*.md` is out, frontmatter being optional there); relative links under
-  `assets/examples/**`; **root-relative reference resolution** (every such
-  reference resolves inside the plugin that wrote it — in the files a pack
-  **lands** the rule stands aside, because rule 13 owns those on stricter terms
-  and one bad reference should be one finding); **agent cross-reference
-  resolution** in both directions (every role-shaped `` `token` `` in a plugin's
-  own prose names a real agent, and every declared agent is referenced at least
-  once — the two directions cover each other on a rename); the vwf
-  design-adapter contract (all **three** import skills present and
-  model-invocable); the vwf **stack-adapter** contract (both
-  `<plugin>-stack-menu` and `<plugin>-stack-template` present, each carrying an
-  explicit `disable-model-invocation: false` **and** a `user-invocable: false` —
-  an adapter is vwf's to call, not a user's to type — on every plugin keyworded
+  name↔dir **plus the two things the version itself must be** — plain semver,
+  and free of a 13 or 17 component, those two integers never being issued on any
+  version line this repo maintains; dependencies resolving within the
+  marketplace; hook scripts existing and executable; **a pack's `config/`
+  payload tier being materializable as-is** (seven assertions in one rule: exec
+  bit *and* a known shebang on every file under `config/.config/mise/tasks/**`,
+  because mise reports a 644 task as an *unknown* one rather than a permission
+  error and execs the file directly; the same two on every `hooks/*.sh`, which
+  the host execs from a bare path in `settings.json`; the tier's root against
+  the **landable** tier of the hygiene allowlist, whose two allowed
+  **directories** are `.config/` and `.github/` and whose sibling tier — the
+  root files vwf writes, `CLAUDE.md` and `mempalace.yaml` — no pack may land; a
+  **CI workflow refused inside `.github/`**, since a pack names the task CI runs
+  and never the workflow; every `config/.config/pre-commit.d/*.yaml` parsing
+  with a top-level `repos:` list, since `/vwf:init` concatenates them into a
+  file no pack owns; the gate pack's **whole**
+  `config/.config/pre-commit-config.yaml` parsing on the same terms, from the
+  base end, since it is neither a fragment nor at the tier's root and nothing
+  reached it before; and every `config/.config/vscode.d/*.jsonc` parsing as
+  JSONC with only the three keys `settings`, `nesting` and `extensions`, since
+  init composes them into an editor file no pack owns and a fourth key is
+  dropped without a word); **strict-YAML frontmatter** (every skill and agent a
+  plugin ships, and every `stacks/*/*/skills/*/SKILL.md` and
+  `stacks/*/*/agents/*.md` a pack ships — the larger half, and the half that
+  actually lands in a user's repo; a pack's `rules/*.md` is out, frontmatter
+  being optional there); relative links under `assets/examples/**`;
+  **root-relative reference resolution** (every such reference resolves inside
+  the plugin that wrote it — in the files a pack **lands** the rule stands
+  aside, because rule 13 owns those on stricter terms and one bad reference
+  should be one finding); **agent cross-reference resolution** in both
+  directions (every role-shaped `` `token` `` in a plugin's own prose names a
+  real agent, and every declared agent is referenced at least once — the two
+  directions cover each other on a rename); the vwf design-adapter contract (all
+  **three** import skills present and model-invocable); the vwf
+  **stack-adapter** contract (both `<plugin>-stack-menu` and
+  `<plugin>-stack-template` present, each carrying an explicit
+  `disable-model-invocation: false` **and** a `user-invocable: false` — an
+  adapter is vwf's to call, not a user's to type — on every plugin keyworded
   `vwf-stack-adapter`, **and** the keyword declared by every plugin shipping
   either skill — the same two-directions-cover-each-other idiom, since
   `stackgen` is now the only adapter left and dropping that one keyword would
@@ -250,9 +253,24 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   carries exactly one markdown alternate link to a file that exists),
   `p:site:icons` (rasterizes the committed favicon set from
   `public/brand/vwf-favicon.svg`, run by hand when the mark changes and part of
-  no gate), `p:site:version` (bumps `site/package.json`, no tag) and
-  `p:site:release` (tags `site-v<version>` from `main` and watches `site.yml`).
-  None of them runs in `plugins.yml` or in pre-commit — `site.yml` owns them.
+  no gate), `p:site:version` (bumps `site/package.json`, no tag, **skipping past
+  a 13 or 17 component** — it bumps again at the same level and prints what it
+  skipped, so `1.1.12` patched is `1.1.14`; capped at ten attempts, because a
+  patch bump never clears a forbidden *minor* and the loop would otherwise run
+  unattended forever) and `p:site:release` (tags `site-v<version>` from `main`
+  and watches `site.yml`, **refusing** a version that carries such a component
+  before the tag name is built). None of them runs in `plugins.yml` or in
+  pre-commit — `site.yml` owns them.
+
+The 13/17 guard itself is two functions — `version_forbidden` and
+`version_skip_note` — in **`.config/mise/tasks/_scripts/local`**, this repo's
+own sidecar beside the pack-owned `_scripts/helpers`. Five tasks source it on
+the line after they source `helpers`: `p:i:version` and `p:site:version` to
+skip, `p:i:release`, `p:site:release` and `p:plugins:release` to refuse. The
+split is the same one `/vwf:init` writes into a shaped repo — `helpers` is the
+pack's and is replaced on every reshape, the sidecar is the repo's and never is
+— and nothing a pack lands may source it. It carries a shebang and the exec bit,
+or the repo's own shell gate does not see it.
 
 `p:plugins:check` is deliberately much smaller than the checker it replaced, and
 smaller again than the Python task before that. Whole families of assertion

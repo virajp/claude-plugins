@@ -59,7 +59,10 @@ its staged copy is re-copied with its `plugin.json` version rewritten to
 then the manifests are regenerated, the marketplace refreshed, and
 `claude plugin update` runs and now sees a change. The tracked manifests stay
 plain semver, nothing is committed per iteration, and `p:plugins:check` fails a
-tracked manifest that carries a `+N`.
+tracked manifest that carries a `+N` — or one whose version has a 13 or 17
+component, which is never issued. The `+N` is a build counter, not a component,
+so staging `19.13.0+4` is not a thing that can happen: the tracked `19.13.0` it
+would be staged from never passes the checker in the first place.
 
 Three measured facts shape that design. The version has to be in the staged
 `plugin.json`, not the marketplace entry: for a directory source Claude reads

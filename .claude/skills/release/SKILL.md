@@ -90,6 +90,16 @@ runs between releases exists only in the gitignored staged copies
 `p:plugins:local` writes, and `p:plugins:check` fails a manifest that carries
 one.
 
+**13 and 17 are never issued as a version component**, on any version line this
+repo maintains — a plugin manifest, the installer, the site, `config_format`,
+`blueprint_format`. `p:plugins:check` refuses a manifest whose version has one
+(`1.13.0`, `17.0.0`, `2.1.17`; `1.130.0` and `113.0.0` are ordinary versions
+that merely contain the digits), and `p:plugins:release` refuses the **whole**
+run when any ref it would newly cut carries one — refs already tagged predate
+the rule and stay. A manifest is bumped by hand, so bump it past the number:
+`19.12.0` minor goes to `19.14.0`. The `+N` staging counter is not a component
+and never trips it.
+
 `p:plugins:release` tags only the plugins whose ref has no tag yet, so a plugin
 whose version did not move is skipped and its entry stays byte-identical — that
 is what makes releases per-plugin. It refuses to run off `main`, on a dirty
@@ -120,6 +130,11 @@ git add package.json && mise x -- git commit -m "ops: bump installer to X.Y.Z"
 # merge develop → main
 ```
 
+`p:i:version` **skips past 13 and 17 by itself**: a bump that would land on one
+bumps again at the same level and says so, so `1.1.12` patched is `1.1.14`. Read
+the version the task prints rather than the one you expected, and use that in
+the commit message.
+
 ### 2. Cut the tag
 
 ```sh
@@ -127,12 +142,13 @@ git add package.json && mise x -- git commit -m "ops: bump installer to X.Y.Z"
 mise run p:i:release
 ```
 
-It requires a clean tree **and `main`**, refuses if `installer-vX.Y.Z` already
-exists (which means `package.json` was never bumped for this release), runs
-`p:i:test`, creates the annotated tag, then — interactively — pushes **`main`
-first and the tag second** and watches the `release.yml` run with
-`gh run watch --exit-status`, so the task only succeeds if the publish pipeline
-does. It needs `gh` installed and authenticated.
+It requires a clean tree **and `main`**, refuses a version carrying a 13 or 17
+component (which means the tree was hand-edited past `p:i:version`), refuses if
+`installer-vX.Y.Z` already exists (which means `package.json` was never bumped
+for this release), runs `p:i:test`, creates the annotated tag, then —
+interactively — pushes **`main` first and the tag second** and watches the
+`release.yml` run with `gh run watch --exit-status`, so the task only succeeds
+if the publish pipeline does. It needs `gh` installed and authenticated.
 
 The push order is load-bearing: `release.yml` checks the tagged commit is
 reachable from `origin/main`, so a tag arriving before the branch fails that
@@ -174,6 +190,9 @@ git add site/package.json && mise x -- git commit -m "ops: bump site to X.Y.Z"
 # merge develop → main
 ```
 
+`p:site:version` skips past 13 and 17 the same way `p:i:version` does, and says
+which version it skipped — take the version it prints, not the next number.
+
 ### 2. Cut the tag
 
 ```sh
@@ -181,8 +200,9 @@ git add site/package.json && mise x -- git commit -m "ops: bump site to X.Y.Z"
 mise run p:site:release
 ```
 
-It requires a clean tree **and `main`**, refuses if `site-vX.Y.Z` already exists
-(which means `site/package.json` was never bumped for this release), runs
+It requires a clean tree **and `main`**, refuses a version carrying a 13 or 17
+component, refuses if `site-vX.Y.Z` already exists (which means
+`site/package.json` was never bumped for this release), runs
 `mise run p:site:check`, creates the annotated tag, then — interactively —
 pushes **`main` first and the tag second** and watches the `site.yml` run with
 `gh run watch --exit-status`, so the task only succeeds if the deploy does. The

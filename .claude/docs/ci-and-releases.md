@@ -58,9 +58,12 @@ still push directly.
 That is why **no release task commits**: `p:i:release`, `p:plugins:release` and
 `p:site:release` all tag what has already landed on `main`, and the version bump
 is an ordinary `develop` commit (`p:i:version` for the installer,
-`p:site:version` for the website, the plugin manifest by hand). A release task
-that commits has to be trusted to commit the right thing; one that only tags can
-be checked against what is already reviewed.
+`p:site:version` for the website, the plugin manifest by hand). The two version
+tasks **skip past 13 and 17** rather than land on one, bumping again at the same
+level and printing what they skipped, so `1.1.12` patched is `1.1.14`; all three
+release tasks **refuse** to tag a version carrying such a component, before the
+tag name is built. A release task that commits has to be trusted to commit the
+right thing; one that only tags can be checked against what is already reviewed.
 
 The branch alone would not hold anything back, though, because a merge to `main`
 is what publishes. What decouples the two is that **every plugin is pinned to
@@ -81,9 +84,14 @@ runs it as the plan's after-landing `run` step and the author's next
 reaches users, and it is the one `CLAUDE.md`'s hard rule guards.
 
 The tracked version is always plain `X.Y.Z` — `p:plugins:check` fails a manifest
-carrying build metadata. The `X.Y.Z+N` the authoring machine runs between
-releases lives only in the gitignored staged copies `p:plugins:local` writes
-(`dev-marketplace.md`), so no iteration touches git.
+carrying build metadata, and fails one whose version has a **13 or 17
+component** (`1.13.0`, `17.0.0`, `2.1.17`; `1.130.0` and `113.0.0` merely
+contain the digits and are fine). Those two integers are never issued on any
+version line this repo maintains — the plugin manifests, the installer, the
+site, `config_format`, `blueprint_format`. The `X.Y.Z+N` the authoring machine
+runs between releases lives only in the gitignored staged copies
+`p:plugins:local` writes (`dev-marketplace.md`), so no iteration touches git,
+and the `+N` is not a component.
 
 `p:plugins:release` tags **only** the plugins whose ref has no tag yet, which is
 what makes releases per-plugin: a plugin whose version did not move already has
@@ -258,20 +266,20 @@ the tag *is* the release, and users move on
 `claude plugin marketplace update virajp-plugins`.
 
 **The installer**: `mise run p:i:version` on `develop` (`--minor`/`--major` to
-choose the bump), commit, merge to `main`, then `mise run p:i:release` there —
-it tags, pushes `main` before the tag (`release.yml` checks reachability), and
-watches the publish. Then a GitHub Release for the tag: every `installer-vX.Y.Z`
-tag carries one, so a missing Release means a missed step. Prefer releasing via
-CI over the local `p:i:publish`, so every version keeps the strongest npm trust
-level.
+choose the bump; it skips past 13 and 17, so commit the version it prints),
+commit, merge to `main`, then `mise run p:i:release` there — it tags, pushes
+`main` before the tag (`release.yml` checks reachability), and watches the
+publish. Then a GitHub Release for the tag: every `installer-vX.Y.Z` tag carries
+one, so a missing Release means a missed step. Prefer releasing via CI over the
+local `p:i:publish`, so every version keeps the strongest npm trust level.
 
-**The website**: `mise run p:site:version` on `develop`, commit, merge to
-`main`, then `mise run p:site:release` there — it runs the site gate, tags,
-pushes `main` before the tag (`site.yml` checks reachability the same way
-`release.yml` does), and watches the deploy run. Then a GitHub Release for the
-tag, as for the installer. When plugins, installer and site release together,
-cut them from the same `main` merge in that order — plugins, installer, site —
-each with its own note.
+**The website**: `mise run p:site:version` on `develop` (it skips past 13 and 17
+too), commit, merge to `main`, then `mise run p:site:release` there — it runs
+the site gate, tags, pushes `main` before the tag (`site.yml` checks
+reachability the same way `release.yml` does), and watches the deploy run. Then
+a GitHub Release for the tag, as for the installer. When plugins, installer and
+site release together, cut them from the same `main` merge in that order —
+plugins, installer, site — each with its own note.
 
 **Ask the user before running any of them.**
 
