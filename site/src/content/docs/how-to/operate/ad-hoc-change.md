@@ -45,7 +45,7 @@ Two folders for one landing is how you get two merge conflicts.
 
 You do not always have to make that call yourself.
 [`/vwf:feedback`](../../plugins/vwf.md#vwffeedback) asks the same question of
-every report it takes, and one of its seven classes is *not a blueprint gap* —
+every report it takes, and one of its eight classes is *not a blueprint gap* —
 which hands the report here, verbatim, with the reason it was ruled outside the
 blueprint. So a production report about tooling or docs reaches `change-plan`
 without ever being forced into a flow it does not fit.
