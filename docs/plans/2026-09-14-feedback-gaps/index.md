@@ -168,12 +168,12 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                                    | Owns                                                                                                                                             | Depends on | Status  | Commit   |
-| -- | ---- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------- | -------- |
-| U1 | 1    | [01-feedback.md](01-feedback.md)             | `plugins/vwf/skills/feedback/SKILL.md`                                                                                                           | —          | green   | e2cf104f |
-| U2 | 1    | [02-product.md](02-product.md)               | `plugins/vwf/skills/product/SKILL.md`                                                                                                            | —          | green   | 85343b1a |
-| U3 | 2    | [03-docs.md](03-docs.md)                     | `readme.md`, `CLAUDE.md`, `.claude/**`, `site/src/content/docs/**`, `docs/backlog.md`, `docs/memory/decisions/2026-09-14-feedback-gaps.md` (new) | U1, U2     | green   | d2516578 |
-| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md) | `plugins/vwf/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`                                                 | U3         | pending |          |
+| Id | Wave | Unit file                                    | Owns                                                                                                                                             | Depends on | Status | Commit   |
+| -- | ---- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------ | -------- |
+| U1 | 1    | [01-feedback.md](01-feedback.md)             | `plugins/vwf/skills/feedback/SKILL.md`                                                                                                           | —          | green  | e2cf104f |
+| U2 | 1    | [02-product.md](02-product.md)               | `plugins/vwf/skills/product/SKILL.md`                                                                                                            | —          | green  | 85343b1a |
+| U3 | 2    | [03-docs.md](03-docs.md)                     | `readme.md`, `CLAUDE.md`, `.claude/**`, `site/src/content/docs/**`, `docs/backlog.md`, `docs/memory/decisions/2026-09-14-feedback-gaps.md` (new) | U1, U2     | green  | d2516578 |
+| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md) | `plugins/vwf/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`                                                 | U3         | green  |          |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -290,6 +290,8 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | 2    | R2        | opus  | 1     | findings(2) | `vwf.md:2055` "The eight routes:" introduces seven bullets; `production-feedback-loop.md:179` feature-idea path line drops the blueprint hop in the product-first case. CONTRACT clean; RULINGS clean; edit 6 no-op confirmed                                                                                                                                                                   | —        |
 | 2    | U3        | opus  | 2     | green       | R2's two findings fixed: "The routes:"; feature-idea path line carries the blueprint hop in both branches. `p:site:check` green                                                                                                                                                                                                                                                                 | d2516578 |
 | 2    | R2        | opus  | 2     | pass        | both fixes verified; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                                                                                              | —        |
+| 3    | U4        | opus  | 1     | green       | vwf 19.25.0→19.26.0, site 1.1.16→1.1.18 (skipped 1.1.17), marketplace regenerated (`vwf-v19.26.0`). GAP: `claude plugin validate --strict` lists no skills on this CLI (same as the 2026-09-13 run) — substituted `p:plugins:check` (36 skills) plus frontmatter `name:` lines                                                                                                                  | —        |
+| 3    | R3        | opus  | 1     | pass        | three Owns paths only; bumps per consent; marketplace diff is the vwf ref + version lines. CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                        | —        |
 
 ## Launch
 
