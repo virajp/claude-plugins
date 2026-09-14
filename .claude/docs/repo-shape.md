@@ -254,23 +254,28 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   `p:site:icons` (rasterizes the committed favicon set from
   `public/brand/vwf-favicon.svg`, run by hand when the mark changes and part of
   no gate), `p:site:version` (bumps `site/package.json`, no tag, **skipping past
-  a 13 or 17 component** — it bumps again at the same level and prints what it
-  skipped, so `1.1.12` patched is `1.1.14`; capped at ten attempts, because a
-  patch bump never clears a forbidden *minor* and the loop would otherwise run
-  unattended forever) and `p:site:release` (tags `site-v<version>` from `main`
-  and watches `site.yml`, **refusing** a version that carries such a component
-  before the tag name is built). None of them runs in `plugins.yml` or in
-  pre-commit — `site.yml` owns them.
+  a 13 or 17 component** — it computes the target first, stepping the bumped
+  component past the number, writes it in one call and prints what it skipped,
+  so `1.1.12` patched is `1.1.14`; it refuses before writing anything when the
+  level it was given cannot reach the forbidden component, as a patch bump never
+  clears a forbidden *minor*) and `p:site:release` (tags `site-v<version>` from
+  `main` and watches `site.yml`, **refusing** a version that carries such a
+  component before the tag name is built). None of them runs in `plugins.yml` or
+  in pre-commit — `site.yml` owns them.
 
-The 13/17 guard itself is two functions — `version_forbidden` and
-`version_skip_note` — in **`.config/mise/tasks/_scripts/local`**, this repo's
-own sidecar beside the pack-owned `_scripts/helpers`. Five tasks source it on
-the line after they source `helpers`: `p:i:version` and `p:site:version` to
-skip, `p:i:release`, `p:site:release` and `p:plugins:release` to refuse. The
-split is the same one `/vwf:init` writes into a shaped repo — `helpers` is the
-pack's and is replaced on every reshape, the sidecar is the repo's and never is
-— and nothing a pack lands may source it. It carries a shebang and the exec bit,
-or the repo's own shell gate does not see it.
+The 13/17 guard itself is four functions — `version_forbidden`,
+`version_skip_note`, `version_bump` and `version_next` — in
+**`.config/mise/tasks/_scripts/local`**, this repo's own sidecar beside the
+pack-owned `_scripts/helpers`. `version_bump LEVEL CURRENT` prints the plain
+result of the level; `version_next LEVEL CURRENT` prints that same result
+stepped past a forbidden component, and exits 1 without printing when the level
+it was given can never reach one. Five tasks source the sidecar on the line
+after they source `helpers`: `p:i:version` and `p:site:version` to skip,
+`p:i:release`, `p:site:release` and `p:plugins:release` to refuse. The split is
+the same one `/vwf:init` writes into a shaped repo — `helpers` is the pack's and
+is replaced on every reshape, the sidecar is the repo's and never is — and
+nothing a pack lands may source it. It carries a shebang and the exec bit, or
+the repo's own shell gate does not see it.
 
 `p:plugins:check` is deliberately much smaller than the checker it replaced, and
 smaller again than the Python task before that. Whole families of assertion

@@ -583,7 +583,7 @@ nothing, or talks to no backing service.
 
 **Project-axis templates.** A template declares **which platforms it serves**,
 and that list is what the menu filters on. One template routinely covers
-several: an app framework can build five surfaces from one codebase, and a
+several: an app framework can build four surfaces from one codebase, and a
 full-stack template serves an API and its own UI — what the retired `fullstack`
 role meant. **Your pin must cover every platform your project declares**, which
 `/vwf:doctor` checks. Which templates exist, and what each is made of, is the

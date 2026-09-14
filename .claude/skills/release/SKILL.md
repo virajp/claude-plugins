@@ -130,10 +130,10 @@ git add package.json && mise x -- git commit -m "ops: bump installer to X.Y.Z"
 # merge develop → main
 ```
 
-`p:i:version` **skips past 13 and 17 by itself**: a bump that would land on one
-bumps again at the same level and says so, so `1.1.12` patched is `1.1.14`. Read
-the version the task prints rather than the one you expected, and use that in
-the commit message.
+`p:i:version` **skips past 13 and 17 by itself**: it computes the target before
+it writes anything, stepping the bumped component past the number and saying so,
+so `1.1.12` patched is `1.1.14`. Read the version the task prints rather than
+the one you expected, and use that in the commit message.
 
 ### 2. Cut the tag
 
