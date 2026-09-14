@@ -217,11 +217,12 @@ to a repo, and every write it makes is consent-gated and committed once.
 
    **MCP wiring is its own consent line too**, on the same terms. A
    component that needs a server declares it as `mcp_servers:` in its
-   `pack.yaml` (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) — the
-   `design-tool` packs are the case that needs it — and those entries are
-   written into the **project's `.mcp.json`**, never a plugin manifest.
-   Present the exact server keys as a separate, individually skippable
-   item. A consented edit **merges, never owns**: only the keys stackgen
+   `pack.yaml` (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) —
+   `design-tool/claude-design` and `capability-provider/notion` are
+   the two that do today — and those entries are written into the
+   **project's `.mcp.json`**, never a plugin manifest. Present the
+   exact server keys as a separate, individually skippable item. A
+   consented edit **merges, never owns**: only the keys stackgen
    added are written, and they are recorded under the lockfile's
    `mcp_servers` so sync and removal touch nothing else. Declined leaves
    the component's skills landed and says the tool will be unreachable —

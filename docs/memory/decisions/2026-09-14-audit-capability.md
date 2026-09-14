@@ -159,8 +159,8 @@ enforces with grants it has and the other with a binding it holds alone.
   declared-but-unpinned `audit-store` reports with no new code.
 - **A `config/` payload or a migration in either pack** — decision 6.
 - **A checker rule validating `pack.yaml`'s `category` against the taxonomy** —
-  carried parked since 2026-09-06; there are now five categories it would catch
-  a typo in.
+  carried parked since 2026-09-06; there are now six categories it would catch a
+  typo in.
 
 ### Parked
 
