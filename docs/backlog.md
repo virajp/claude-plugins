@@ -19,7 +19,7 @@ plan split, to be confirmed at each plan's interview.
 | B08 | SEO, OpenGraph and favicons for sites and webapps                       | E     | P2       | planned |
 | B09 | `notion` MCP server config                                              | F     | P3       | planned |
 | B10 | `stack-reputation` skill — vet every stack stackgen recommends          | G     | P2       | planned |
-| B11 | Claude Code terminal as the default design tool, via `taste-skill`      | H     | P2       | open    |
+| B11 | Claude Code terminal as the default design tool, via `taste-skill`      | H     | P2       | planned |
 
 ## Groups
 
@@ -146,3 +146,7 @@ served by a local webserver so the user opens a browser, selects elements and
 enters comments, and edits are made from those. Touches the design axis,
 `design-system`, `screens`, `mockups`, `import-*` adapters and
 `feedback canvas`.
+
+Planned in: `docs/plans/2026-09-14-terminal-design-tool/` (the pack, the
+default, the logo) and `docs/plans/2026-09-14-design-review-loop/` (screens, the
+review server, the comment round)
