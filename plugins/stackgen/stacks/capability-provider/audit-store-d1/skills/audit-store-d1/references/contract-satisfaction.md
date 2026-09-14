@@ -113,8 +113,8 @@ Three things make it the *one* path rather than a second delete:
 - **The trigger of clause 2 admits exactly one delete** — rows past their
   retention date, and nothing wider. A trigger that admits any delete has
   re-opened the clause.
-- **The purge writes its own record first**, naming the window it applied and
-  the count it removed.
+- **The purge writes its own record once the run has completed**, naming the
+  window it applied and the count it removed.
 - **Time Travel is not this.** It restores the whole database to a point inside
   a 30-day window; it is recovery, and using it against an audit database would
   rewind the record itself. Where an archive tier is wanted, the export path is

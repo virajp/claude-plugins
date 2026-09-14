@@ -11,10 +11,11 @@ shape. No dollar figures: they age badly and are wrong per region anyway.
 
 Almost nothing else in a product looks like this.
 
-- **Writes are proportional to privileged actions**, not to traffic. The audit
-  contract's default scope is operator actions plus destructive mutations, so
-  the write rate is roughly the rate at which humans do consequential things —
-  small, and bounded by how many operators there are.
+- **Writes are proportional to privileged actions**, not to traffic. What is
+  recorded is vwf's `audit-log` product foundation's decision, which the audit
+  contract defers to; its default scope is operator actions plus destructive
+  mutations, so the write rate is roughly the rate at which humans do
+  consequential things — small, and bounded by how many operators there are.
 - **Reads are rare and human-paced.** A handful of operators, a few queries each
   per incident.
 - **Storage grows monotonically until the purge runs**, and never otherwise.

@@ -16,8 +16,10 @@ queried today bills only its bytes. That is what makes "give audit its own
 database" a design decision rather than a budget conversation, and it is the
 single largest reason this pack exists at all: on most managed relational
 services isolation-by-database is expensive enough that teams put audit in a
-table instead, which is exactly the compromise the audit contract is trying to
-prevent.
+table instead — and a table beside the product's data is reachable by every
+code path that already reaches that data, which leaves the contract's
+insert-only, no-update-no-delete and console-only-read clauses with nothing
+but code review behind them.
 
 **When the read surface is one console and the queries are narrow.** Operator
 history is filtered by actor, by target and by time window, paged, and read by
