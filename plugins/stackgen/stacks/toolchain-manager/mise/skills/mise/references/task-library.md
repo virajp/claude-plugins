@@ -565,15 +565,17 @@ of what this project *is*, and that no contract can name in advance.
 
 1. the project's **registry id**, where `.config/vwf.yaml` names one;
 2. otherwise the **sub-project directory name**;
-3. for a single-project repo, the **repo's own name** — `p:claude-status:build`,
-   not `p:app:build`. A repo that later becomes a member keeps working, and a
-   task name never has to be re-learned because the repo grew.
+3. otherwise the project's **primary platform token** — `service`, `worker`,
+   `webapp`, `site`, `cli`, `iac` — as the repo-shaping orchestrator proposes
+   it, so the group says what the project *is*: `p:service:build`, not
+   `p:app:build`. A repo that later becomes a member keeps working, and a task
+   name never has to be re-learned because the repo grew.
 
-Whichever of the three the name comes from, two surfaces — `REPO_NAME` in
-`.config/mise.toml`'s `[env]` and the `p:<id>:*` group — carry one identical
-project-id token, which `/vwf:init` derives, shows and has you confirm before
-either is written. A mismatch between the two is a defect, and this library
-never derives the id itself.
+**Two surfaces, two tokens.** The `p:<id>:*` group carries the **project id**;
+`REPO_NAME` in `.config/mise.toml`'s `[env]` carries the **repo's folder name,
+slugified**. They are independent — a single-project repo whose folder spells
+its project id is a coincidence, not a rule — and the orchestrator shows and
+has you confirm each before it is written. This library derives neither itself.
 
 **`setup:all`'s member flags and the `setup-<slug>` aliases are not on that
 list.** They are named for this repo's **member repos** — each submodule, or

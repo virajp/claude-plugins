@@ -64,10 +64,14 @@ On an empty repo `init` resolves to its **new** pipeline and shapes the repo
 before anything else runs: the config layout, the toolchain manager's five-file
 split, the task library grouped `setup:*` / `code:*` / `p:*`, the four repo
 gates with their configs and hook fragments, the hygiene files, and the licence
-Relay chose. It asks seven questions in one round each — the repo name and a
-one-line brief (both proposed or skippable), the ids it will write task groups
-and aliases for (each shown with its slug and where the name came from, yours to
-replace), which provider holds Relay's secrets, which **agent plugins this repo
+Relay chose. It asks seven questions in one round each — the repo name, proposed
+from this repo's own folder name and the one thing that fills `REPO_NAME`, and a
+one-line brief (both proposed or skippable); the ids it will write task groups
+and commit scopes for, each shown with its slug and where the name came from and
+yours to replace — with no registry and no sub-project directories yet, Relay's
+one project is proposed from its **platform token**, which you pick from the
+closed list (`service`, `worker`, `webapp`, `site`, `cli`, `iac`, …) or type as
+*other*; which provider holds Relay's secrets, which **agent plugins this repo
 requires** (a multi-select seeded by what is already registered on your machine,
 with *none* as the ordinary answer — `init` offers those rows minus the workflow
 plugin's own and its dependency's, since `setup:ai` installs those two either

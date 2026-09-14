@@ -47,17 +47,19 @@ pinned in `mise.toml` would add `.config/mise.lock` beside it. The single
 exception is `mise.local.lock`, the counterpart of the uncommitted
 `mise.local.toml`, which the hygiene component already ignores.
 
-**`REPO_NAME` is the repo's own id, and it is a literal.** The base `[env]`
-carries it as a marked position the orchestrator fills with the project's slug —
-the same token the `p:<id>:*` task group uses. `setup:all`'s member flags and
-the `setup-<slug>` aliases take a different token: one per **member repo**, that
-member's own slug. It is never derived at load time: the obvious
-shorthand, the basename of the config root, is the **branch** name inside a
-linked worktree, so anything reading it would silently address a different repo
-depending on where you were standing. Aliases that vary only by repo — the agent
-launchers are the case — live in the user's **global** config and read
-`$REPO_NAME`, so one definition serves every repo and changing the launcher is
-not a change to every repo that has one.
+**`REPO_NAME` is the repo's folder name, slugified, and it is a literal.** The
+base `[env]` carries it as a marked position the orchestrator fills with the
+slug of the repo's own main-checkout directory — **not** a project id, which is
+what the `p:<id>:*` task group carries instead. The two tokens are independent,
+and a single-project repo whose folder spells its project id is a coincidence.
+`setup:all`'s member flags and the `setup-<slug>` aliases take a third: one per
+**member repo**, that member's own slug. It is never derived at load time: the
+obvious shorthand, the basename of the config root, is the **branch** name
+inside a linked worktree, so anything reading it would silently address a
+different repo depending on where you were standing. Aliases that vary only by
+repo — the agent launchers are the case — live in the user's **global** config
+and read `$REPO_NAME`, so one definition serves every repo and changing the
+launcher is not a change to every repo that has one.
 
 **Environment names are shared; values are split.** Development and production
 override the *same* keys rather than each inventing their own — the difference

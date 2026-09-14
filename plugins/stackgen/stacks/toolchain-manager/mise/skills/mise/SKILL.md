@@ -144,10 +144,11 @@ two differ in value and never in vocabulary.
 
 - `mise.toml` `[env]` — only what is identical everywhere (`DISABLE_TELEMETRY`),
   plus **`REPO_NAME`**: a marked position the orchestrator fills with this repo's
-  project id — the same token the `p:<id>:*` group carries, derived once by
-  `/vwf:init`, shown and confirmed before either is written. `setup:all`'s
-  member flags and the `setup-<slug>` aliases are a **different** list: one per
-  **member repo**, named by that member's own slug, never by a project id.
+  **folder name, slugified** — the main checkout's own directory, proposed by
+  `/vwf:init`'s first question, shown and confirmed before it is written. It is
+  **not** a project id: the `p:<id>:*` group carries that, and the two tokens
+  are independent. `setup:all`'s member flags and the `setup-<slug>` aliases are
+  a **third** list: one per **member repo**, named by that member's own slug.
   `REPO_NAME` is **a literal, never derived at load time** — the basename of the
   config root is the *branch* name inside a linked worktree, so a derived value
   would address a different repo depending on where you stood.

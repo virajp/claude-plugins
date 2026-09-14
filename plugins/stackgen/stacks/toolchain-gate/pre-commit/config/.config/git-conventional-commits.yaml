@@ -27,11 +27,12 @@ convention:
   # MARKED POSITION — one scope per sub-project, so a reader can tell which
   # part of the repo a commit touched without opening it.
   #
-  # `/vwf:init` fills this on a re-run, from the project registry — and only
-  # then, because the registry does not exist yet when init first shapes a
-  # repo. So the empty list below is the correct first-run state, not an
-  # unfinished one: a single-project repo leaves it empty and uses no scope,
-  # and a repo that grows sub-projects gets them here the next time init runs.
+  # `/vwf:init` fills this on EVERY run, the first one included, with the
+  # project ids its second question confirmed — one scope per project, each
+  # the same id that project's `p:<id>:*` task group takes. A project
+  # registry, where the repo has one, is where that proposal came from, not
+  # a precondition for filling the list: the empty list below is what this
+  # pack ships, never a first-run state init leaves behind.
   # ---------------------------------------------------------------------
   #
   # A scope that stops existing stays listed with a comment saying so —

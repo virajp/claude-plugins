@@ -252,19 +252,25 @@ stackgen's three unconditional bundles, resolving the members itself as the
 union of `.gitmodules` and the config's `members:` list, surveying all of them
 at once and applying **one plan with a section per repo on one consent**,
 members first so the base commits its gitlinks current. It asks seven questions
-(the second confirming every project id, its slug and the source the name came
-from, grouped by repo, before any `p:<slug>:*` group, alias or `REPO_NAME` is
-written; the fifth asking which agent plugins this product requires, seeded by
-the plugin task's own inventory mode and written into that task's two marked
-positions), and closes with a consent-gated git pass (the first commit, the
-`develop`/`main` pair, and the landing model it writes to `MERGE_MODEL` — it
-never touches the forge's own settings, which a maintainer sets once by hand per
-the hygiene pack's `CONTRIBUTING.md`). The aggregator's member flags and the
-`setup-<slug>` aliases are named for the **member repos**, never for a project
-id. On an existing repo it **adopts rather than flattens**: an unmapped helper
-function moves to a repo-owned `_scripts/local` sidecar, a task no pack ships is
-kept and listed, and a pack-owned file whose bytes diverged is offered as
-replace-or-keep — a keep recorded under `enforcement.kept_files` in the
+(the first naming each new repo's folder, which is what fills `REPO_NAME`; the
+second confirming every project id, its slug and the source the name came from —
+the registry, a sub-project directory, or the project's platform token — grouped
+by repo, before any `p:<slug>:*` group or commit scope is written; the fifth
+asking which agent plugins this product requires, seeded by the plugin task's
+own inventory mode and written into that task's two marked positions), and
+closes with a consent-gated git pass (the first commit, the `develop`/`main`
+pair, and the landing model it writes to `MERGE_MODEL` — it never touches the
+forge's own settings, which a maintainer sets once by hand per the hygiene
+pack's `CONTRIBUTING.md`). The aggregator's member flags and the `setup-<slug>`
+aliases are named for the **member repos**, never for a project id. On an
+existing repo it **adopts rather than flattens**: an unmapped helper function
+moves to a repo-owned `_scripts/local` sidecar, a task no pack ships is kept and
+listed, and a pack-owned file whose **content** diverged is offered as
+replace-or-keep — content being what survives two tests, the hash against the
+lock and then a splice of every marked position's current value into the pack's
+payload, so a file diverging only inside those positions is never offered and
+the owning pass shows the change instead. A keep covers that content and never a
+marked position's value, and is recorded under `enforcement.kept_files` in the
 **base's** `.config/vwf.yaml`, keyed by the member path as prefix, the one key
 `init` writes into `.config/vwf.yaml`. `setup` then sets up **vwf** in the base,
 and offers `init` once for the whole product when any repo's shape is **missing

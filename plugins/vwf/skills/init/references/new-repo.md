@@ -118,7 +118,7 @@ Merge every fragment the landed packs dropped into the gate config, per
 first merge, so every fragment present is appended; the algorithm is the same
 one a re-run uses.
 
-## 7 — The project ids, and the three things they fill
+## 7 — The project ids, the repo name, and the positions they fill
 
 Resolve the project ids **for the repo this pass is running in**, in this order
 of preference.
@@ -128,7 +128,9 @@ On the **base**:
 1. the **registry ids** in `.config/vwf.yaml`, where the file exists and names
    projects;
 2. otherwise each **sub-project directory** name;
-3. otherwise, for a single-project repo, the **repo's own name**.
+3. otherwise the project's **type** — the platform token SKILL.md's question 2
+   asks for, per project, from the closed per-role lists
+   `${CLAUDE_PLUGIN_ROOT}/assets/templates/registry.yaml` carries.
 
 On a **member**, the same three steps, with the first one reading a hop out —
 the list that knows which projects live in a member is the base's:
@@ -136,11 +138,23 @@ the list that knows which projects live in a member is the base's:
 1. the **`projects:` list on this member's entry** in the base's
    `.config/vwf.yaml`, where that file exists and declares one;
 2. otherwise each **sub-project directory** name inside the member;
-3. otherwise, for a single-project member, the **member's own name**.
+3. otherwise the same **type** question, asked for that member's project.
 
-Each repo resolves its own ids and fills its own positions from them — its task
-groups, and its own `REPO_NAME`. The base's project list is never reused for a
-member: two repos in one product share a blueprint, not a task vocabulary.
+**The repo's own name is not a source, on either list.** It was the third step
+until 2026-09-14 and it named the wrong thing: a task group's segment says what
+a task acts **on**, and the repo is where the task lives, not what it operates
+on. The repo's name has exactly one surface now — `REPO_NAME`, from question
+1's folder name — and it reaches no task group.
+
+**Two projects in one repo resolving to the same token** are proposed as
+`<token>-<directory-slug>` each. A group's segment is a directory name in the
+task library, so two groups cannot share one; across repos there is nothing to
+resolve, since each repo's task library is its own.
+
+Each repo resolves its own ids and fills its own task groups from them. Its
+`REPO_NAME` comes from question 1's folder name and from nothing on this list.
+The base's project list is never reused for a member: two repos in one product
+share a blueprint, not a task vocabulary.
 
 **Source 1 is live only on a re-run**, on either list — and it is the same file
 both times. `.config/vwf.yaml` is written by `/vwf:setup`, which runs *after*
@@ -163,19 +177,28 @@ are the second reason. Read the asset; never re-derive the rule here.
 
 **Then confirm, before anything is written.** The resolution order and the
 slugification above are how `init` *proposes* this list, and a proposal is all
-they are: SKILL.md's **question 2** shows every row — grouped by repo, each
-repo's own row first, and each row carrying the name, the slug and which source
-the name came from — and takes a replacement for any of them, slugified by the
-same asset. The ids that reach the surfaces below are the ones that question
+they are: SKILL.md's **question 2** shows every row — grouped by repo, one row
+per project, each carrying the name, the slug and which source the name came
+from — and takes a replacement for any of them, slugified by the same asset.
+The ids that reach the surfaces below are the ones that question
 **confirmed**, carried from the answer. Nothing here re-derives them, and
 nothing downstream re-derives them either.
 
-**Two lists fill three surfaces, and they are not the same list.** The
-per-project task groups and `REPO_NAME` take the **project ids** resolved above,
-for the repo being shaped. The bootstrap aggregator's **member flags** and the
-**shell aliases** that shorten them take the **member repos** — one flag and one
-alias each, in the resolved order, named by the slug question 2 confirmed for
-that member.
+**Three lists fill three surfaces, and no two of them are the same list.** The
+per-project **task groups** — and, on **every** run, the first one included,
+the commit gate's **scopes** — take the **project ids** resolved above, for the
+repo being shaped. A registry, where the repo has one, is where the proposal
+those ids came from was read; it is not a condition on the scope fill, which
+takes whatever question 2 confirmed either way — the fill itself is stated
+once, for both pipelines, in [existing repo](existing-repo.md) §11. `REPO_NAME`
+takes the repo's **folder name**, slugified, as question 1 confirmed it — one
+value per repo, on no list at all. The bootstrap aggregator's **member flags**
+and the **shell aliases** that shorten them take the **member repos** — one
+flag and one alias each, in the resolved order, each named by that member's
+own slug. Where that slug comes from is the pack's to say, not this section's:
+its **task-library reference** states both positions come from the member list
+and never from the project ids the `p:` group uses, and the shipped comments
+at those positions name the member directories as where the names come from.
 
 They are different lists because those two positions widen the scope to a
 **repo**, not to a project: the flag makes the aggregator recurse into a member
@@ -191,10 +214,18 @@ resolved**, at the top of the run, and nothing here re-resolves them.
 ### The marked positions
 
 **Seven**, and with the `_default` slot below they are the eight things this
-section fills. Two are **per member repo**, three are repo-level, and the last
-two belong to the id list not at all — they are the plugin task's, filled from
+section fills. Only the `_default` slot comes from the id list. Two are **per
+member repo**, three are repo-level — the repo-name key among them, filled from
+SKILL.md's **question 1** — and the last two are the plugin task's, filled from
 SKILL.md's **question 5**, and they are written here because this is the one
 section that fills a marked position.
+
+**The pack's payload is where each one is marked**, by a comment and nothing
+else: a `MARKED POSITION` block above the value, for the five that sit in the
+toolchain manager's config and task files, and the commented template itself
+for the flag and alias lists, which stands where those lines go. There is no
+marker syntax a tool could enumerate, so the set is exactly the positions this
+section lists — read it from here, never from the payload.
 
 The toolchain pack ships the flag list and the alias list as **commented
 templates in place**, each with a note saying the names come from the registry
@@ -206,15 +237,25 @@ Write the real lines at those two positions, **one per resolved member repo**,
 in the resolved order, copying the commented example's spelling exactly — the
 flag's own help text shape, and the alias's own left-hand and right-hand shape
 — and leave the surrounding comment in place as the record of where the list
-came from. The name each line carries is that member's confirmed slug, never a
-project id.
+came from. The name each line carries is that member's own slug, as those
+comments describe it, never a project id.
 
-**In a repo that kept the file carrying either position, write neither.** Every
-marked position this section fills sits in a pack-owned file, and a repo where
-that file was offered and **kept** is a repo whose file this run does not touch
-— [existing repo](existing-repo.md) states the rule once, and it governs all
-seven, not only the plugin task's two. The plan says which position is waiting
-on which keep, so the two rows read as one decision.
+**A keep on the file carrying a position does not stop the fill.** Every marked
+position this section fills sits in a pack-owned file, and where the
+existing-repo pipeline offered that file and the answer was **keep**, the
+repo's own content stays and the position is written anyway: a keep covers the
+content somebody customised, never a marked position's value, which these fills
+own in either pipeline. [existing repo](existing-repo.md) §6 states that once,
+together with the second test that keeps it consistent — on a hash mismatch it
+splices the repo's current values, at every position this section enumerates
+that the file carries, into the pack's payload, and a file diverging only
+inside them is never offered. That splice reaches all seven; the fill on a kept
+file governs **six** of them, and not only the plugin task's two. `MERGE_MODEL`
+is the seventh, and it is §11(a)'s: the git pass writes it only in a repo whose
+environment-block file this run lands or replaces, so a kept file keeps the
+value that position already holds. Being spliced like the rest is what stops §6
+reading that value as content; no survey pass owns it, so no pass shows a row
+for it either.
 
 **A repo with no members leaves both positions exactly as shipped** — a
 single-project repo, and a member repo that declares no members of its own,
@@ -232,13 +273,20 @@ a fill row would read as a position that had been sitting as shipped, and the
 one thing a user needs to see here is that lines they have seen before are
 going away.
 
-**The third is the repo's own name**, `REPO_NAME`, a marked position in the
-toolchain manager's environment block. It takes the **repo** slug **as question
-2 confirmed it** — the name question 1 proposed, slugified, then accepted or
-replaced on that list's first row — and it is written **literally**, never
-derived at read time from the directory the config sits in: a linked
-worktree's config root is named for the branch, so a derived value would
-change identity every time somebody cut one.
+**The third is the repo's folder name**, `REPO_NAME`, a marked position in the
+toolchain manager's environment block. It takes **this repo's folder name,
+slugified** — the basename of its main checkout, proposed by SKILL.md's
+**question 1**, then accepted or replaced there — and it is written
+**literally**, never derived at read time from the directory the config sits
+in: a linked worktree's config root is named for the branch, so a derived value
+would change identity every time somebody cut one. That is also why the
+proposal reads the **main checkout's** basename rather than the working
+directory's.
+
+**No project id reaches this key**, and the two are routinely different: a repo
+whose folder is `acme-shop` and whose one project is a service carries
+`REPO_NAME = "acme-shop"` beside a `p/service/` group. Each repo fills its own
+key from its own folder — a member names the member, never the base.
 
 That key exists because the things that vary only by repo — the per-repo
 launch aliases the user keeps — belong in the **user's own global
@@ -254,7 +302,10 @@ path that did not come out of the resolution is not made one by being nearby.
 
 **The fourth and fifth are repo-level too**, and the toolchain pack ships both
 as marked positions in that same environment block, each with a comment saying
-what it takes. Write both literally, by the same rule `REPO_NAME` follows.
+what it takes. `MEMBERS` is written here, literally, by the same rule
+`REPO_NAME` follows. `MERGE_MODEL` is **not written by this section at all**:
+§11(a) asks for it inside the git pass and writes it there, in every repo whose
+environment-block file this run lands or replaces and nowhere else.
 
 `MERGE_MODEL` is how work lands: the merge tasks read it, and the pack's
 comment names its two values — `direct`, the shipped one, which merges locally
@@ -416,15 +467,15 @@ repo whose environment-block file this run lands or replaces** — each repo
 carries its own block, and each one's merge tasks read their own copy — and
 count it as a fill in each.
 
-**A repo that kept that file keeps it whole**, and this pass does not reach into
-it. Where the existing-repo pipeline offered the environment-block file as a
-diverged pack file and the answer was **keep**, the position is not written:
-[existing repo](existing-repo.md)'s kept-file rule wins here exactly as it wins
-for the plugin task's two positions, and for the same reason — writing into a
-position of a file somebody chose to keep is the overwrite the keep declined.
-Say so on that repo's line in the report, naming the value the product chose and
-the file that was kept, so a reader sees one decision rather than a repo that
-silently landed on `direct`.
+**A repo that kept that file keeps the value that position holds**, and what
+decides that is the kind of position it is, not the keep. The landing model is a
+real, working value under its comment — filled from the moment the file landed,
+as [existing repo](existing-repo.md) §9 says of that kind — so it is written
+where this run **lands or replaces** the environment-block file and nowhere
+else, and a kept file is neither. The file's other two positions — `REPO_NAME`
+and `MEMBERS` — are a different matter: §7 fills those, keep or no keep. Say so on that repo's line in the report, naming the value the
+product chose and the file that was kept, so a reader sees one decision rather
+than a repo that silently landed on `direct`.
 
 It is asked here rather than as one of SKILL.md's numbered questions because it
 decides how work lands, which is what the rest of this pass is about; and it is

@@ -70,6 +70,12 @@ product on `init`'s own authority.
 it got. The eleven existing-repo passes and the ten counted plan sections repeat
 per repo; each section carries its own total and the document a product total.
 
+> **Two details superseded by
+> [`2026-09-14-repo-name-is-the-folder.md`](./2026-09-14-repo-name-is-the-folder.md).**
+> Question 2 no longer shows each repo's own row — the repo is question 1's —
+> and a member project with no declaration and no sub-directory is now proposed
+> from its **platform token**, not from the member's own name.
+
 **Seven questions, still seven rounds.** A round is one round for the **whole
 product**: a question whose answer differs per repo shows one row per repo
 inside its single round and never becomes a second round. Questions 2 (the ids,
@@ -81,6 +87,13 @@ the plugin inventory is the machine's rather than a repo's; 1 and 3 carry a row
 per repo that resolved **new**. A member's projects come from the base config's
 `members[].projects` first, then that member's own sub-directories, then its own
 name.
+
+> **Superseded on one point by
+> [`2026-09-14-repo-name-is-the-folder.md`](./2026-09-14-repo-name-is-the-folder.md).**
+> The last sentence of this paragraph — "The project id keeps exactly two
+> surfaces: the `p:<id>:*` task group and `REPO_NAME`" — no longer holds.
+> `REPO_NAME` takes the repo's folder name, slugified; the project id names the
+> task group and the commit scopes. Everything else in this paragraph stands.
 
 **The member flags and the `setup-<slug>` aliases stop being id surfaces.** The
 bootstrap aggregator's flags and the shell aliases beside them are one per

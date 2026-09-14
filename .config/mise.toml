@@ -23,11 +23,14 @@ pnpm        = { version = "latest" }
 _.path = { path = "node_modules/.bin", tools = true }
 
 # A MARKED POSITION. The orchestrator that shapes this repo replaces "unfilled"
-# with the repo's project id: the name lowercased, every run of characters
-# outside [a-z0-9] replaced by a single "-", leading and trailing "-" trimmed.
-# So `virajp.dev` becomes `virajp-dev`. It is the same token the `p:<id>:*` task
-# group, `setup:all`'s member flags and the `setup-<id>` aliases carry, and the
-# rule and its reasons are stackgen's `assets/ids.md`.
+# with the repo's folder name, slugified: the basename of the MAIN CHECKOUT
+# directory lowercased, every run of characters outside [a-z0-9] replaced by a
+# single "-", leading and trailing "-" trimmed. So a checkout in `virajp.dev`
+# becomes `virajp-dev`, and a member repo carries its own folder, never the
+# base's. It is NOT the token a `p:<id>:*` task group carries — those groups are
+# named for the repo's PROJECT IDS — and `setup:all`'s member flags and the
+# `setup-<slug>` aliases are named for the MEMBER REPOS. One slug rule, two
+# applications: stackgen's `assets/ids.md`.
 #
 # **It is a literal, and it is never derived at load time.** The obvious
 # shorthand — reading the basename of the config root — is wrong in a linked

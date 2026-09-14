@@ -93,10 +93,11 @@ with a section per repo, and takes one consent for all of it) before setup
 carries on. That survey adopts rather than flattens: a task Bookable wrote for
 itself is kept and listed, a helper function the pack's library has no name for
 moves into a repo-owned `_scripts/local` sidecar rather than breaking, and a
-file a pack owns whose bytes have diverged is offered to you as replace or keep.
-Declining is recorded as a deferral, with `/vwf:setup reshape` as the unlock,
-and the onboard continues — the repo shape and the vwf format are two different
-things.
+file a pack owns whose **content** has diverged is offered to you as replace or
+keep — a file differing only inside the positions `init` fills is not an offer
+at all. Declining is recorded as a deferral, with `/vwf:setup reshape` as the
+unlock, and the onboard continues — the repo shape and the vwf format are two
+different things.
 
 Two brownfield-only items appear in that plan. **Harness detection** records
 which verification capabilities the repo can already run: Bookable's `dev` task

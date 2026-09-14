@@ -77,33 +77,38 @@ current. `init` materializes the three unconditional bundles through the stack
 adapter by the fixed slugs `mise`, `repo-gates` and `repo-hygiene` — per repo,
 each with its own lockfile — fills the marked positions those packs leave it
 (the member flags and their aliases, named for the **member repos** and never
-from a project id; the per-project groups and their aliases; the repo-name key,
-`MERGE_MODEL` and `MEMBERS`, the commit gate's scopes and forge links, and the
-plugin task's two agent-plugin lists), runs **three** merges — ignore sections,
-pre-commit fragments, editor fragments — and writes a two-line readme stub; it
-names no tool, and every file it lays down is a pack's. Before any of that it
-asks **seven** questions — one round each for the whole product, a per-repo
-answer showing as a row inside its single round — the second confirming every
-project id, the slug it resolves to and the source the name came from, grouped
-by repo: nothing writes a `p:<slug>:*` group, its alias or `REPO_NAME` until
-that list is accepted. The fifth asks which agent plugins this product requires,
-seeded by running the plugin task's own inventory mode and written into those
-two lists; 4 and 5 are answered once for every repo, 2, 6 and 7 carry a row per
-repo, and 1 and 3 a row per repo that resolved **new**. It then closes with a
-**consent-gated git pass**, whose two questions are asked once and applied to
-every repo: it asks the landing model and writes it to `MERGE_MODEL`, stages
-what the run wrote, asks one question with three answers (commit / commit and
-push / leave it), commits with a fixed `ops:` message — the members first, then
-the base with the moved **gitlinks** staged — and creates whichever of `develop`
-and `main` the branch model needs, per repo. It **never reaches the remote's own
-settings** — setting a forge's default branch is a one-time act, not a task a
-machine re-runs, and the line telling a maintainer to do it lives in the hygiene
-pack's `CONTRIBUTING.md`, which may name `gh` and `glab` where vwf prose may
-not. Init is **not a one-time bootstrap**: its "when it runs again" doctrine
-names the moments, and `/vwf:doctor` has the drift finding that prints the one
-remedy, `/vwf:setup reshape`. `setup` is the Phase-0 bootstrapper — it onboards
-a repo (a Step-0 shape check, run over **every repo in the product** — the base
-and every locally-present member — that offers `/vwf:init` once when any of the
+from a project id; the per-project groups, their aliases and the commit gate's
+scopes, all three from the project ids; the repo-name key, from that repo's own
+main-checkout folder name slugified and never from a project id; `MERGE_MODEL`,
+`MEMBERS` and the forge links, and the plugin task's two agent-plugin lists),
+runs **three** merges — ignore sections, pre-commit fragments, editor fragments
+— and writes a two-line readme stub; it names no tool, and every file it lays
+down is a pack's. Before any of that it asks **seven** questions — one round
+each for the whole product, a per-repo answer showing as a row inside its single
+round — the first naming each new repo's folder, which is the one thing that
+fills `REPO_NAME`, and the second confirming every project id, the slug it
+resolves to and the source the name came from — the registry, a sub-project
+directory, or the project's platform token — grouped by repo: nothing writes a
+`p:<slug>:*` group, its alias or a commit scope until that list is accepted, and
+the scopes are filled on **every** run, the first included, one per confirmed
+id. The fifth asks which agent plugins this product requires, seeded by running
+the plugin task's own inventory mode and written into those two lists; 4 and 5
+are answered once for every repo, 2, 6 and 7 carry a row per repo, and 1 and 3 a
+row per repo that resolved **new**. It then closes with a **consent-gated git
+pass**, whose two questions are asked once and applied to every repo: it asks
+the landing model and writes it to `MERGE_MODEL`, stages what the run wrote,
+asks one question with three answers (commit / commit and push / leave it),
+commits with a fixed `ops:` message — the members first, then the base with the
+moved **gitlinks** staged — and creates whichever of `develop` and `main` the
+branch model needs, per repo. It **never reaches the remote's own settings** —
+setting a forge's default branch is a one-time act, not a task a machine
+re-runs, and the line telling a maintainer to do it lives in the hygiene pack's
+`CONTRIBUTING.md`, which may name `gh` and `glab` where vwf prose may not. Init
+is **not a one-time bootstrap**: its "when it runs again" doctrine names the
+moments, and `/vwf:doctor` has the drift finding that prints the one remedy,
+`/vwf:setup reshape`. `setup` is the Phase-0 bootstrapper — it onboards a repo
+(a Step-0 shape check, run over **every repo in the product** — the base and
+every locally-present member — that offers `/vwf:init` once when any of the
 three slugs is missing **or** any of doctor's six baseline predicates fails in
 any of them, the `reshape` argument forcing that offer and stopping once init
 returns, detect-or-ask topology via MCQ, consent-gated reconciliation into the

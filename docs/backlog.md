@@ -12,7 +12,7 @@ plan split, to be confirmed at each plan's interview.
 | B01 | `/vwf:change-plan` commits and pushes the plan folder when it hands off | A     | P1       | done    |
 | B02 | Version rule: no version component equal to `13` or `17`, enforced      | A     | P1       | done    |
 | B03 | `/vwf:backlog` skill — a prioritised to-do list beside the blueprint    | A     | P1       | done    |
-| B04 | `init`: split `REPO_NAME` (folder name) from the `p:<id>:*` group id    | B     | P1       | planned |
+| B04 | `init`: split `REPO_NAME` (folder name) from the `p:<id>:*` group id    | B     | P1       | done    |
 | B05 | `/vwf:feedback` — post-build change intake from user feedback           | C     | P2       | planned |
 | B06 | Audit logs as an independent, access-controlled capability              | D     | P2       | planned |
 | B07 | Stylesheet axis for web frontends: `tailwindcss` and `stylex`           | E     | P2       | open    |

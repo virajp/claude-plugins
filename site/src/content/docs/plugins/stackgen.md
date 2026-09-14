@@ -738,11 +738,13 @@ init authors from scratch:
   per project — the one file init authors rather than copies, because no pack
   can know a project's name;
 - **`REPO_NAME`**, the toolchain manager's environment key. It carries the
-  repo's own slug and is written **literally, never derived** at read time: a
-  linked worktree's config root is named for the branch, so a derived value
-  would change identity every time somebody cut one. The per-repo launch aliases
-  that read it live in your own global configuration — init publishes the value
-  and never writes outside the repos it resolved;
+  repo's **folder name, slugified** — the basename of that repo's main checkout,
+  never a project id — and is written **literally, never derived** at read time:
+  a linked worktree's directory is named for the branch, so a derived value
+  would change identity every time somebody cut one. A member repo names its own
+  folder, never the base's. The per-repo launch aliases that read it live in
+  your own global configuration — init publishes the value and never writes
+  outside the repos it resolved;
 - **`MERGE_MODEL`**, beside it in the same `[env]` block: `direct` or `pr`, the
   landing model the merge tasks read, asked inside init's git pass. Unset reads
   as `direct`, so an unfilled repo behaves as it always did;
@@ -750,22 +752,25 @@ init authors from scratch:
   space-separated paths relative to the repo root, filled from the members init
   resolved where the linkage is **siblings**. A submodule product leaves it
   exactly as shipped — `.gitmodules` answers instead;
-- the commit gate's **scope list**, from the project registry, which is why it
-  is re-run work by construction: the registry does not exist when init first
-  shapes a repo, so the empty list a first run leaves is the correct state;
+- the commit gate's **scope list**, one scope per project id — filled on *any*
+  run, the first included, from the ids init's second question confirmed. A
+  project registry, where the repo has one, is only where those ids were
+  proposed from; it is never a precondition, so a repo with no registry fills
+  the list on its first run like any other;
 - the commit gate's **forge links**, from the origin remote — fillable on *any*
   run that has one, first included.
 
 Every name above is **slugged** first, by a rule the adapter's `assets/ids.md`
 owns: lowercased, runs outside the slug alphabet collapsed to a single `-`, ends
-trimmed. That asset governs the **project id** — the `p:<id>:*` group and
-`REPO_NAME` are the two surfaces it fills — and a member's name takes the same
-spelling rule on its way into a flag or an alias. The reason is measured rather
-than stylistic — the task runner reads a per-project group's directory name as
-the task's *last* segment once the `_default` slot collapses into it, and strips
-what looks like an extension from that segment, so an id carrying a dot silently
-loses everything after it and the task the repo shows you is not the task it
-has.
+trimmed. That asset carries one rule with two independent applications — a
+project's **id**, which names the `p:<id>:*` group and fills the scope list, and
+a repo's **name**, which fills `REPO_NAME` from the main checkout's folder — and
+a member's name takes the same spelling rule on its way into a flag or an alias.
+The reason is measured rather than stylistic — the task runner reads a
+per-project group's directory name as the task's *last* segment once the
+`_default` slot collapses into it, and strips what looks like an extension from
+that segment, so an id carrying a dot silently loses everything after it and the
+task the repo shows you is not the task it has.
 
 A pack can still contribute **one task** to a project's group without knowing
 its name: a `config/` tree's `.config/mise/tasks/p/_project/` directory is
