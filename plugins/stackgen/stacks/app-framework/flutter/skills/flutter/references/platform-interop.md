@@ -8,7 +8,7 @@
 - Binding to Native C/C++ Code (FFI)
 - Implementing Platform Channels & Pigeon
 - Hosting Native Platform Views
-- Integrating Web Content & Wasm
+- The web target, and why it is not here
 - Workflows
 
 ## Core Concepts & Terminology
@@ -112,30 +112,18 @@ appropriate one:
 - *Limitation:* `ShaderMask` and `ColorFiltered` widgets cannot be applied to
   iOS Platform Views.
 
-## Integrating Web Content & Wasm
+## The web target, and why it is not here
 
-Flutter Web supports compiling to WebAssembly (Wasm) for improved performance
-and multi-threading.
+**This pack does not target the web**, so there is no web build to wire, no
+Wasm compilation step, and no `package:web` / `dart:js_interop` layer to
+maintain. A product with a web surface pins a web stack for it — a `site` or
+web-application project of its own — and that project carries its own interop
+story. See [pick & trade](pick-and-trade.md).
 
-### Wasm Compilation
-
-- Compile to Wasm using: `flutter build web --wasm`.
-- **Server Configuration:** To enable multi-threading, configure your HTTP
-  server to emit the following headers:
-  - `Cross-Origin-Embedder-Policy: credentialless` (or `require-corp`)
-  - `Cross-Origin-Opener-Policy: same-origin`
-- *Limitation:* WasmGC is not currently supported on iOS browsers (WebKit
-  limitation). Flutter will automatically fall back to JavaScript if WasmGC is
-  unavailable.
-
-### Web Interop
-
-- **If writing new web-specific code:** Strictly use `package:web` and
-  `dart:js_interop`.
-- **Do NOT use:** `dart:html`, `dart:js`, or `package:js`. These are
-  incompatible with Wasm compilation.
-- **Embedding HTML:** Use `HtmlElementView.fromTagName` to inject arbitrary HTML
-  elements (like `<video>`) into the Flutter Web DOM.
+What remains in scope on every platform this pack does cover is **web content
+embedded inside the app** — a `WebView` hosted as a platform view, which is a
+platform-view concern, wired in [WebView](integrations/webview.md), not a web
+build target.
 
 ---
 
