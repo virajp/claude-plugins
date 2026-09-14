@@ -3,7 +3,7 @@ type: vwf-change-plan
 title: stack reputation — a verdict on every name stackgen generates, and a
   skill anyone can point at a package
 requires:
-  - docs/plans/2026-09-14-notion-workspace
+  - docs/plans/archived/2026-09-14-notion-workspace
 backlog: [ B10 ]
 ---
 

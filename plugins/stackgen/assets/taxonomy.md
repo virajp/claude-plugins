@@ -66,8 +66,8 @@ The closed list. A component is exactly one of:
 - **`queue`** — a standalone queue or event bus.
 - **`capability-provider`** — the flavour half of a vwf capability that
   belongs to no cloud and is not a datastore: an identity issuer, a
-  telemetry sink, a workflow engine, a secrets manager, an audit store.
-  Its **category** says which.
+  telemetry sink, a workflow engine, a secrets manager, an audit store, a
+  knowledge workspace. Its **category** says which.
 - **`ci-system`** — one continuous-integration system: where its workflows
   live, how it is triggered, and how it installs a toolchain. One component
   per system, never per workflow.
@@ -110,7 +110,9 @@ and its components leave `category` unset.
 - **`datastore`**: `sql` / `document` / `graph` / `vector` / `key-value` /
   `in-memory`
 - **`capability-provider`**: `identity` / `telemetry` / `workflow` /
-  `secrets-manager` / `audit`
+  `secrets-manager` / `audit` / `workspace` — the last being the team's
+  knowledge workspace, where the docs, specs and tickets live and which the
+  agent reads, searches and writes.
 - **`app-framework`**: `cross-platform-ui` / `native-ui`
 - **`stylesheet`**: `utility` / `compile-time` / `plain` — the three ways
   the token mapping can be paid for. `utility` generates classes from a
@@ -143,12 +145,18 @@ whichever channel token the service actually is — `email`,
 Some categories have **no capability token today** — `cdn`,
 `secrets-manager`, `access`, `static-hosting`, `stateful-compute`,
 `database-proxy`, `ingestion`, `analytics`, `inference`, `ai-gateway`,
-`retrieval`, `browser`, `media` and `realtime`. That is a known vwf-side
-gap, not a taxonomy error: the component leaves `capability` unset, and
-nothing here mints a token to fill the hole — minting capabilities is
-vwf's move. It is also why a category can exist here before vwf has
-decided whether every product must have one: the taxonomy classifies what
-a component *is*, never whether it is required.
+`retrieval`, `browser`, `media`, `realtime` and `workspace`. That is a
+known vwf-side gap, not a taxonomy error: the component leaves
+`capability` unset, and nothing here mints a token to fill the hole —
+minting capabilities is vwf's move. It is also why a category can exist
+here before vwf has decided whether every product must have one: the
+taxonomy classifies what a component *is*, never whether it is required.
+
+`workspace` is on that list for a reason of its own rather than a pending
+vwf decision. The workspace is the **agent's** knowledge source, not the
+product's runtime — no blueprint capability is waiting on it, so there is
+no seam for architecture to elicit and nothing here asks for a token. Its
+neutral contract is `contracts/workspace.md`.
 
 Fourteen `cloud-service` tokens and one `framework` token (`agent-sdk`)
 were minted on 2026-09-06 for the Cloudflare developer platform.
@@ -250,8 +258,17 @@ tokens it realizes, or that its category has none yet (`contracts/secrets.md`
 is the first of those). That is what lets two providers in one category be
 compared against the same clauses instead of against each other's marketing.
 
-The newest is `contracts/audit.md`, the `audit` category's, realizing vwf's
-`audit-store` token. It sits deliberately beside `contracts/observability.md`
+The newest is `contracts/workspace.md`, the `workspace` category's, and the
+third to realize no vwf token at all after `contracts/secrets.md` and
+`contracts/web-head.md` — the workspace is the agent's knowledge source
+rather than anything a blueprint picks, so what the contract states is how
+the agent **reaches** it and what it may read and write, never what the
+product depends on.
+
+Before it came `contracts/web-head.md`, what any web framework pack must
+realize for a project the outside world reaches; and before that
+`contracts/audit.md`, the `audit` category's, realizing vwf's
+`audit-store` token. Audit sits deliberately beside `contracts/observability.md`
 rather than inside it: telemetry answers *what the system did*, an audit store
 answers *which actor is accountable*, and the observability contract no longer
 claims any part of the second.

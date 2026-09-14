@@ -169,6 +169,24 @@ to the realization: the D1 pack states plainly that it cannot write atomically
 with the act and so writes the event first, over-reporting under a monitor. The
 contract's realizations table is where that comparison lives.
 
+**Workspace — `capability-provider/`, category `workspace`:** `notion`, the
+first provider of a category minted for something no blueprint chooses. The
+workspace is where the team's docs, specs and tickets live, and it is the
+**agent's** knowledge source rather than anything the product runs against —
+so the category realizes no vwf token and none is pending, which its neutral
+contract `../assets/contracts/workspace.md` states in its opening lines
+instead of leaving the reader to infer a gap.
+
+What the pack lands is **wiring and nothing else**: an `mcp_servers:` entry
+the materializer writes into the repo's own `.mcp.json` behind its own
+consent line, the second pack to use that door after `claude-design`. That
+is the whole scope — no vwf step reads a workspace today. The contract's
+work is therefore the permission shape rather than an availability one: the
+person authenticates and not the repository, the agent's reach stops where
+that person's does, writes need the person to ask in the session, and a
+declined consent line leaves the skills landed and **says** the tool is
+unreachable rather than returning an empty search.
+
 **Stylesheet — `stylesheet/`, kind `stylesheet`:** `tailwindcss`, `stylex`
 and `plain-css`, the first three packs of a type and a kind minted together
 on 2026-09-14 for vwf's seventh axis. The kind exists because vwf names no

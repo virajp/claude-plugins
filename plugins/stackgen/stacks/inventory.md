@@ -7,7 +7,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 `../assets/kinds.md`. The narrative — which wave landed what, and why — is
 [`readme.md`](readme.md); the shape of a pack is `../assets/pack-format.md`.
 
-**67 packs, 63 bundles, 13 kinds.**
+**68 packs, 64 bundles, 13 kinds.**
 
 ## Kinds
 
@@ -20,7 +20,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `toolchain-manager` | 1 | 1 |
 | `repo-hygiene` | 1 | 1 |
 | `workspace` | 0 | 3 |
-| `capability-provider` | 7 | 7 |
+| `capability-provider` | 8 | 8 |
 | `ci-system` | 1 | 1 |
 | `app-framework` | 3 | 1 |
 | `deploy-target` | 1 | 2 |
@@ -36,6 +36,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `capability-provider/audit-store-postgres` | Audit store · PostgreSQL | `capability-provider` | backing | audit | audit-store | 0.1.0 | An isolated, append-only audit schema inside the product's own PostgreSQL — insert-only to the application's role, readable by the console's reader role under policy, and removable only by the retention purge. |
 | `capability-provider/doppler` | Doppler | `capability-provider` | backing | secrets-manager |  | 1.0.0 | A vendor holds the secrets and the CLI injects them at the process boundary — onboarding is an org invite, and no key is ever distributed. |
 | `capability-provider/fnox` | fnox | `capability-provider` | backing | secrets-manager |  | 1.0.0 | The local-first secrets manager — you hold them, encrypted into git or referenced in your own cloud, and onboarding is a public key plus a re-encrypt. |
+| `capability-provider/notion` | Notion | `capability-provider` | backing | workspace |  | 0.1.0 | The workspace a team already writes in — its docs, specs and tickets reached by the agent through one hosted server the person authorises once. |
 | `capability-provider/oidc` | OIDC issuer | `capability-provider` | backing | identity | third-party-auth | 0.1.0 | Identity as an open protocol rather than a product — any issuer speaking OpenID Connect, self-hosted or managed. |
 | `capability-provider/otel-lgtm` | OpenTelemetry · Grafana OTel-LGTM | `capability-provider` | backing | telemetry | distributed-tracing | 0.1.0 | The telemetry sink that needs no cloud — the product exports OTLP and an LGTM stack terminates it, run wherever the product runs. |
 | `capability-provider/temporal` | Temporal | `capability-provider` | backing | workflow | durable-workflows | 0.1.0 | Durable execution that needs no cloud — a workflow is ordinary code whose progress is persisted, so a crash, a deploy or a week-long wait resumes where it stopped. |
@@ -145,6 +146,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `github-actions` | GitHub Actions | `ci-system` | cicd | `ci-system/github-actions@0.2.0` |  |
 | `lovable` | Lovable | `design-tool` | design | `design-tool/lovable@0.1.0` |  |
 | `mise` | mise | `toolchain-manager` | repo | `toolchain-manager/mise@1.2.2` | yes |
+| `notion` | Notion | `capability-provider` | backing | `capability-provider/notion@0.1.0` |  |
 | `npm-package` | Package registry · npm | `deploy-target` | deploy | `deploy-target/npm-registry@generated` |  |
 | `oidc` | OIDC issuer | `capability-provider` | backing | `capability-provider/oidc@0.1.0` |  |
 | `otel-lgtm` | OpenTelemetry · Grafana OTel-LGTM | `capability-provider` | backing | `capability-provider/otel-lgtm@0.1.0` |  |

@@ -54,8 +54,10 @@ The taxonomy splits at the existing seam: **capability tokens stay vwf's**
 never learns what an ORM is; stackgen never redefines a capability — several
 categories, `cdn` and `access` among them, leave their capability token
 deliberately unset until vwf defines one, because a category classifies what a
-component *is*, never whether a product must have one. Which categories those
-are is
+component *is*, never whether a product must have one. `workspace` is unset for
+a reason of its own rather than a pending decision — it is the agent's knowledge
+source, not the product's runtime, so no capability is waiting on it. Which
+categories those are is
 [`assets/taxonomy.md`](https://github.com/virajp/claude-plugins/blob/main/plugins/stackgen/assets/taxonomy.md)'s
 to say. Categories make components substitutable answers to one blueprint
 capability, which is what lets stack menus become category-filtered queries
@@ -110,7 +112,7 @@ sitemap, and the icon task. Astro's conventions restate it by role and cite
 nothing by path, which is what lets a framework pack that does not exist yet
 satisfy the same bar. It sits beside the other cross-pack contracts —
 `datastore`, `identity`, `local-stack`, `object-storage`, `observability`,
-`orchestration`, `release-trigger`, `secrets` and `audit`.
+`orchestration`, `release-trigger`, `secrets`, `audit` and `workspace`.
 
 **The build output is a named fact.** The `framework/astro` pack's conventions
 carry a fixed `## Build output` heading stating that the build writes `./dist` —
@@ -222,11 +224,24 @@ a fourth output target so one could write a repo's own config files. A third
 kind, `repo-hygiene`, followed when that target widened to cover every gate's
 config and the hygiene files, and `/vwf:init` arrived to lay them down.
 
-The newest category is **`audit`**, under `capability-provider`, minted on
-2026-09-14 for vwf's `audit-store` token — the append-only, access-controlled
-store the operator console reads. It is deliberately *not* part of
-observability: telemetry answers what the system did and may sample, drop and
-expire; an audit store may do none of those, so it gets its own neutral contract
+The newest category is **`workspace`**, under `capability-provider`, minted on
+2026-09-14 — and the first minted for something no blueprint chooses. The
+workspace is where a team's docs, specs and tickets live, and it is the
+**agent's** knowledge source rather than anything the product runs against, so
+it realizes no vwf capability token and none is pending. Its neutral contract
+(`assets/contracts/workspace.md`) states a permission shape rather than an
+availability one: the person authenticates and not the repository, the agent's
+reach stops where that person's does, and a write needs the person to ask for it
+in the session. One pack realizes it — `notion` — and what it lands is **wiring
+and nothing else**: an `mcp_servers:` entry the materializer writes into the
+repo's own `.mcp.json` behind its own consent line, the second pack to use that
+door after `claude-design`.
+
+Before it came **`audit`**, under the same kind and minted the same day for
+vwf's `audit-store` token — the append-only, access-controlled store the
+operator console reads. It is deliberately *not* part of observability:
+telemetry answers what the system did and may sample, drop and expire; an audit
+store may do none of those, so it gets its own neutral contract
 (`assets/contracts/audit.md`) and `assets/contracts/observability.md` dropped
 the half-claim it used to carry, leaving a trace id as the only thing the two
 share. Two packs realize it — `audit-store-d1` and `audit-store-postgres` — and

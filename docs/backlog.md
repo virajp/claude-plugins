@@ -17,7 +17,7 @@ plan split, to be confirmed at each plan's interview.
 | B06 | Audit logs as an independent, access-controlled capability              | D     | P2       | done    |
 | B07 | Stylesheet axis for web frontends: `tailwindcss` and `stylex`           | E     | P2       | done    |
 | B08 | SEO, OpenGraph and favicons for sites and webapps                       | E     | P2       | done    |
-| B09 | `notion` MCP server config                                              | F     | P3       | planned |
+| B09 | `notion` MCP server config                                              | F     | P3       | done    |
 | B10 | `stack-reputation` skill — vet every stack stackgen recommends          | G     | P2       | planned |
 | B11 | Claude Code terminal as the default design tool, via `taste-skill`      | H     | P2       | planned |
 
@@ -125,7 +125,7 @@ Add a `notion` MCP server config. Today MCP servers live in vwf's manifest
 into the project's `.mcp.json` behind consent). Decide which of the two shapes
 notion takes.
 
-Planned in: `docs/plans/2026-09-14-notion-workspace/`
+Planned in: `docs/plans/archived/2026-09-14-notion-workspace/`
 
 ### B10 — `stack-reputation` skill
 

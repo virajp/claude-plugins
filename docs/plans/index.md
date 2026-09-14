@@ -12,13 +12,10 @@ vwf's index today lists flat cycle plans only.
 | Folder                                                                        | Plan                                                                                                                                | Status   | Requires                          | Backlog |
 | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------- | ------- |
 | [`2026-09-14-feedback-gaps`](2026-09-14-feedback-gaps/index.md)               | feedback — the shape-change kind, build state, a named unit, a product note                                                         | APPROVED | —                                 | B05     |
-| [`2026-09-14-notion-workspace`](2026-09-14-notion-workspace/index.md)         | notion workspace — a workspace category, its contract, and the notion capability-provider pack                                      | RUNNING  | —                                 | B09     |
-| [`2026-09-14-stack-reputation`](2026-09-14-stack-reputation/index.md)         | stack reputation — a verdict on every name stackgen generates, and a skill anyone can point at a package                            | APPROVED | `2026-09-14-notion-workspace`     | B10     |
+| [`2026-09-14-stack-reputation`](2026-09-14-stack-reputation/index.md)         | stack reputation — a verdict on every name stackgen generates, and a skill anyone can point at a package                            | APPROVED | —                                 | B10     |
 | [`2026-09-14-terminal-design-tool`](2026-09-14-terminal-design-tool/index.md) | terminal design tool — the claude-code design-tool pack, the default on the design axis, and the logo in the design-system contract | APPROVED | `2026-09-14-stack-reputation`     | B11     |
 | [`2026-09-14-design-review-loop`](2026-09-14-design-review-loop/index.md)     | design review loop — screens in the canvas, a review server from the repo, comments applied in session                              | APPROVED | `2026-09-14-terminal-design-tool` | B11     |
 
 `Requires` names only plans not yet archived; a requirement already under
-`archived/` is satisfied. `notion-workspace` is running in
-`.worktrees/2026-09-14-notion-workspace` (as of 2026-09-14, all four units
-pending, nothing committed on its branch yet); `feedback-gaps` can start now;
-the other three run in the order listed once `notion-workspace` lands.
+`archived/` is satisfied. `feedback-gaps` can start now; the other three run in
+the order listed.

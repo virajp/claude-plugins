@@ -1,0 +1,20 @@
+name: Notion
+summary: The workspace a team already writes in — its docs, specs and tickets
+  reached by the agent through one hosted server the person authorises once.
+version: 0.1.0
+type: capability-provider
+category: workspace
+# `capability` is deliberately unset: `workspace` realizes no vwf capability
+# token, and unlike `secrets-manager` that is settled rather than pending —
+# the component taxonomy says why. Minting capabilities is vwf's move.
+kind: capability-provider
+axis: backing
+harness:
+  local_stack:
+    task: n/a
+    mechanism: >-
+      Hosted-only — there is no engine to compose, and nothing the product runs reaches it. The seam is that every vwf step works from the repo's own docs, which is also the fake
+mcp_servers: # written into the project's .mcp.json behind tier-2 consent
+  notion:
+    type: http
+    url: https://mcp.notion.com/mcp
