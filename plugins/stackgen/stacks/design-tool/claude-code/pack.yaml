@@ -1,0 +1,13 @@
+name: Claude Code
+summary: The terminal you already work in — the design system and the logo
+  are authored in session, into a canvas directory the repo commits.
+version: 0.1.0
+type: design-tool
+kind: design-tool
+axis: design
+# The bundle slug IS the projects.<name>.design token, so the pin and the
+# config key are one value rather than two that can disagree.
+# A design tool satisfies no harness capability: nothing is booted or probed.
+harness: n/a
+# No server key: the host is the tool, and the canvas is a directory in the
+# repo. Nothing is written into .mcp.json for this pack.

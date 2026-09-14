@@ -185,6 +185,33 @@ system and reconstruct it from what they generated. It must be recorded, because
 the freshness guarantee differs: a stored system is authoritative until changed,
 a derived one is a snapshot of one moment.
 
+### The optional `brand:` block
+
+A tool that also holds the product's **logo** returns it as one more top-level
+block, after the fields above. The block is **optional**: a tool with no brand
+concept **omits it entirely** — never a `brand:` full of nulls, which
+`/vwf:design-system` would read as a logo nobody could resolve. When present,
+vwf writes the doc's **Brand** section from it and elicits nothing for it; when
+absent, the section is deleted and brand is never asked for in text.
+
+```yaml
+brand:
+  logo: <repo-relative path to the source file; SVG expected>
+  variants: # every form the tool holds — mark, wordmark, lockup, mono, dark, …
+    - { name: <variant>, path: <repo-relative path>, use: <one line — where it goes> }
+  clear_space: <rule in the logo's own units, e.g. "the mark's cap height on every side">
+  min_size: # per variant, where the tool states one
+    - { variant: <name>, value: <e.g. 24px on screen, 8mm in print> }
+  rules: [ <one line each — what never happens to the mark> ]
+```
+
+**Every path is relative to the repo root**, never absolute and never a URL —
+the doc is an offline contract, and a path only the tool's host can resolve is
+a broken reference the moment the repo is cloned. `logo` names the one source
+every variant derives from; a tool that holds variants but no single source
+returns `logo: null` with a `rules` line saying so, rather than promoting one
+variant to source.
+
 ## Payload 3 — conversations
 
 Returned by `/vwf:import-conversations <project>`, one call
@@ -222,7 +249,7 @@ This is the one payload that may legitimately come back empty-handed, and the
 distinction is load-bearing in **both** directions:
 
 - `n/a` means *this tool has no such surface* — vwf reports it plainly and stops.
-  It is not a gap, not a finding, and nothing to fix. Only one of the three
+  It is not a gap, not a finding, and nothing to fix. Only one of the four
   supported tokens has a review conversation at all, so this is the common
   answer rather than the rare one.
 - `ERROR:` means *the surface exists and could not be read* — unreachable,
@@ -258,7 +285,8 @@ plugin and not a new vwf code path. vwf changes not at all.
    `design-import-conversations`, each stating how to read that tool and fill
    its payload. A tool with no review surface **still gets the third**; it
    returns `harvested: n/a` with the reason, which is what keeps *unsupported*
-   distinguishable from *unimplemented*.
+   distinguishable from *unimplemented*. The design-system payload's `brand:`
+   block is the one optional part: a tool that holds no logo leaves it out.
 2. Add a bundle on the `design` axis whose **slug is the tool token** the
    project config will hold, so the menu pick and the config key are one value.
 3. All three must be **model-invocable**. A user-only one is invisible to vwf

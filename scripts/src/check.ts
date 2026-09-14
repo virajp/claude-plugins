@@ -94,6 +94,7 @@ export function check(repoRoot: string): Finding[] {
 
   findings.push(...checkDesignAdapters(plugins));
   findings.push(...checkStackAdapters(plugins));
+  findings.push(...checkBundleDefaults(plugins));
   findings.push(...checkVwfIsTechnologyFree(plugins));
   return findings;
 }
@@ -1255,6 +1256,82 @@ function checkStackAdapters(plugins: readonly Plugin[]): Finding[] {
             + `\`/\` menu offers a skill that answers only a program`,
         });
       }
+    }
+  }
+  return findings;
+}
+
+/**
+ * At most one default bundle per axis.
+ *
+ * A bundle's frontmatter may carry `default: true`, which the stack menu passes
+ * through and vwf's architecture menu preselects. Two bundles on one axis both
+ * flagged fail nowhere: the menu preselects whichever it met first, which is
+ * the bundle directory's sort order — a silent nondeterminism that a rename
+ * flips. A non-boolean value (`default: "true"`, `default: yes`) is the other
+ * silent case — the menu passes the key through as data and the preselect rule
+ * asks for boolean `true`, so a string never preselects and nobody is told.
+ *
+ * The frontmatter is parsed with the same reader the inventory generator uses,
+ * so a bundle this rule reads is a bundle the inventory reads.
+ */
+function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
+  const findings: Finding[] = [];
+
+  for (const plugin of plugins) {
+    const flagged = new Map<string, string[]>();
+
+    for (const file of plugin.files) {
+      if (!/^stacks\/bundles\/[^/]+\.md$/.test(file.path)) {
+        continue;
+      }
+      const block = frontmatterBlock(readText(file.absolute));
+      if (block === null) {
+        continue;
+      }
+      let doc: unknown;
+      try {
+        doc = parseYaml(block);
+      }
+      catch {
+        continue; // rule 4's finding, not this one's
+      }
+      if (typeof doc !== "object" || doc === null) {
+        continue;
+      }
+      const { axis, default: value } = doc as Record<string, unknown>;
+      if (value === undefined) {
+        continue;
+      }
+      if (value !== true && value !== false) {
+        findings.push({
+          scope: `${plugin.dir}:${file.path}`,
+          message: `bundle \`default\` is ${
+            JSON.stringify(value)
+          }, not a boolean — the menu preselects on \`default: true\` alone, `
+            + `so any other spelling never preselects and reports nothing`,
+        });
+        continue;
+      }
+      if (value !== true) {
+        continue;
+      }
+      const key = typeof axis === "string" ? axis : "";
+      flagged.set(key, [...(flagged.get(key) ?? []), file.path]);
+    }
+
+    for (const [axis, paths] of flagged) {
+      if (paths.length < 2) {
+        continue;
+      }
+      findings.push({
+        scope: plugin.dir,
+        message: `${paths.length} bundles on the \`${axis}\` axis carry `
+          + `\`default: true\` — ${
+            paths.map(p => `"${p}"`).join(", ")
+          } — the menu preselects one entry per axis, and two flagged is `
+          + `whichever sorts first rather than a choice`,
+      });
     }
   }
   return findings;

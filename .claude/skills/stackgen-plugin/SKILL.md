@@ -90,6 +90,18 @@ drifted from doctor's baseline. What setup *does* fetch is every **pinned** axis
 the `repo:` line naming the member — which is the one landing path
 `/vwf:architecture` no longer takes.
 
+A bundle's frontmatter may also carry **`default: true`**, since 2026-09-15:
+`stackgen-stack-menu` copies it onto that entry of its payload and computes
+none, and vwf's architecture menu preselects whichever entry carries it —
+highlighted, never assumed, naming no tool. At most one bundle per axis, never
+an unconditional one; `p:plugins:check` rule 14 refuses a second. The one
+flagged today is `design-tool`'s `claude-code` — the terminal itself as a design
+tool, the fourth of that kind beside `claude-design`, `lovable` and `stitch`,
+and the first with a **file canvas**: a committed `docs/design/<project>/` its
+three import skills read as files, plus a fourth, user-invocable
+`design-session` skill that writes it. It declares `taste-skill@taste-skill` as
+the plugin a product pinning it must add at init's fifth question.
+
 ## Where it lands, and the consent tiers
 
 Both paths land **directly in the repo's committed `.claude/` tree** — output

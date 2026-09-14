@@ -3,7 +3,7 @@ type: vwf-change-plan
 title: design review loop — screens in the canvas, a review server from the
   repo, comments applied in session
 requires:
-  - docs/plans/2026-09-14-terminal-design-tool
+  - docs/plans/archived/2026-09-14-terminal-design-tool
 backlog: [ B11 ]
 ---
 

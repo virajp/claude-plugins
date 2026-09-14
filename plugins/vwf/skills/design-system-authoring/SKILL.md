@@ -38,6 +38,7 @@ library, CSS framework, or design file — that mapping is realization (`plan`).
 | [Motion](references/motion.md)                                           | Duration/easing tokens, motion principles, reduced-motion             |
 | [Accessibility](references/accessibility.md)                             | The committed accessibility standard (the gate)                       |
 | [Components & anti-patterns](references/components-and-anti-patterns.md) | Global component behaviors and what to avoid                          |
+| [Brand](references/brand.md)                                             | The logo — import-only; required when the payload carries `brand:`  |
 | [Terminal UX](references/terminal-ux.md)                                 | CLI/TUI conventions — required when a project declares platform `cli` |
 | [Checklist](references/checklist.md)                                     | Pre-delivery gate for the design-system doc                           |
 

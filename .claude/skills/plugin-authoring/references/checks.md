@@ -31,7 +31,7 @@ invisible to every other check, and the committed file keeps advertising the old
 version. It is the surviving fragment of the retired `plugins:render-clean`,
 narrowed to the one file that still has the problem.
 
-## The thirteen rules
+## The fourteen rules
 
 Each is something no format and no type can state. The checker is deliberately
 much smaller than the one it replaced: whole families of assertion became
@@ -189,6 +189,19 @@ much smaller than the one it replaced: whole families of assertion became
     The blanking keeps the line numbers true, which is the finding's whole
     value. The fix is never another path: name the asset by role ("stackgen's
     secrets contract"), or state inline the rule it carries.
+14. **At most one default bundle per axis.** A bundle's frontmatter may carry
+    `default: true`; the stack menu passes it through on that entry and vwf's
+    architecture menu preselects whichever entry carries it, as a generic rule
+    that names no tool. So across `stacks/bundles/*.md`, grouped by `axis`, at
+    most one bundle is flagged — two is not an error anywhere downstream, it is
+    whichever sorts first, a nondeterminism a rename flips silently. The value
+    must also be boolean: the preselect asks for `true` and nothing else, so a
+    string `"true"` or a YAML `yes` never preselects and reports nothing. The
+    finding for two names every flagged file on that axis; the finding for a
+    non-boolean names the one file. It does not check that any bundle carries
+    the flag — zero flagged is green, since an axis with no default is what
+    every axis was before the flag existed — and it does not check that the
+    flagged bundle's components resolve, which `p:plugins:inventory` owns.
 
 ### The plugin-root trap (rules 6 and 13)
 

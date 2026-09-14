@@ -939,6 +939,20 @@ resolves to nothing silently.
   would return nothing and be indistinguishable from a design nobody authored.
   This is the single most important ruling in the kind.
 
+**A file canvas is admitted beside the hosted ones.** A design tool's source
+of truth need not be a server: it may be a **committed directory** in the
+target repo, by convention `docs/design/<project>/`, that the three import
+skills read as files instead of calling an API — the design system in the
+shape the tool authors it, the brand assets, and whatever screens the tool
+lays down. Such a pack may ship **one extra, user-invocable authoring skill**
+that runs the design session and writes that canvas; it is the tool's
+authoring surface, which is the tool's to own and vwf's never to be. The
+three fixed adapter names, their payloads and their model-invocability are
+unchanged by the variant and are what the checker asserts — it counts the
+three, not the fourth. Topic 4 answers for the directory rather than an API
+(no credentials, nothing to log), and topic 5 names the files and folders an
+import must find rather than pages and frames.
+
 ### The topic bar
 
 A closed list of five topics, one artifact per topic. Topic 5 is conditional.

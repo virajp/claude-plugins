@@ -1086,6 +1086,60 @@ describe("the stack-adapter contract", () => {
   });
 });
 
+describe("bundle defaults", () => {
+  // A bundle's `default: true` is what the architecture menu preselects. Two on
+  // one axis is silent nondeterminism — whichever sorts first wins — and a
+  // string `"true"` never preselects at all, so both directions are pinned.
+  const bundle = (axis: string, extra = "") =>
+    `---\nname: X\naxis: ${axis}\nkind: k\n${extra}components:\n- k/x@1.0.0\n---\n\nprose\n`;
+
+  const bundles = (files: Record<string, string>) => ({
+    stackgen: {
+      files: Object.fromEntries(
+        Object
+          .entries(files)
+          .map(([slug, text]) => [`stacks/bundles/${slug}.md`, text]),
+      ),
+    },
+  });
+
+  it("accepts a tree where no bundle carries the flag", () => {
+    const root = tree(bundles({ a: bundle("design"), b: bundle("design") }));
+    expect(check(root)).toEqual([]);
+  });
+
+  it("accepts one flagged bundle per axis", () => {
+    const root = tree(bundles({
+      a: bundle("design", "default: true\n"),
+      b: bundle("design"),
+      c: bundle("cicd", "default: true\n"),
+    }));
+    expect(check(root)).toEqual([]);
+  });
+
+  it("flags two bundles on one axis both carrying default: true", () => {
+    const root = tree(bundles({
+      a: bundle("design", "default: true\n"),
+      b: bundle("design", "default: true\n"),
+      c: bundle("cicd", "default: true\n"),
+    }));
+    const found = messages(check(root));
+    expect(found).toHaveLength(1);
+    expect(found[0]).toContain("2 bundles on the `design` axis");
+    expect(found[0]).toContain("\"stacks/bundles/a.md\"");
+    expect(found[0]).toContain("\"stacks/bundles/b.md\"");
+  });
+
+  it("flags a default that is not a boolean", () => {
+    const root = tree(bundles({ a: bundle("design", "default: \"true\"\n") }));
+    expect(messages(check(root))).toEqual([
+      "bundle `default` is \"true\", not a boolean — the menu preselects on "
+      + "`default: true` alone, so any other spelling never preselects and "
+      + "reports nothing",
+    ]);
+  });
+});
+
 describe("the technology-free vwf guard", () => {
   const vwf = (files: Record<string, string>) => ({ vwf: { files } });
 

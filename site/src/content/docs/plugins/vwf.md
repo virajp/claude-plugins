@@ -559,6 +559,16 @@ designed in another. On the `design`, `cicd` and `stylesheet` axes — the three
 config key are one value rather than two that can disagree. Only `repo` stays
 per repo; it describes the checkout, not a project.
 
+**vwf ships no default, but it honours one the plugin declares.** A menu entry
+may arrive flagged `default: true` — set in the stack plugin's own bundle, never
+inferred by vwf — and that entry is what the round **preselects**: highlighted,
+never assumed, with every other entry still offered and the user still picking.
+At most one entry per axis carries it; where none does, the round preselects the
+previous project's answer on that axis, and nothing before that. The flag is
+menu state only — it reaches no config key, and a pin made by accepting it is
+indistinguishable from one made by picking the same entry. Today the one flagged
+entry is stackgen's terminal design tool on the `design` axis.
+
 **The `stylesheet` axis is conditional.** Added in `config_format` **19**, it is
 asked only of a project whose registry entry declares a `site` or a `webapp`
 platform, and it is asked **after** that project's design round: the design
@@ -1490,6 +1500,14 @@ library, CSS framework, or design file. Every flow's Screens reference it;
 public web surface also gets a **Brand assets** section here — the favicon
 source mark, the social preview and the theme colour, each named by role and
 supplied by the product, never a file path or a size the realization picks.
+Distinct from it is the optional **Brand** section — the logo itself: its
+repo-relative source file, every variant with its path and use (mark, wordmark,
+lockup, mono, dark), the clear-space rule, the minimum sizes, and what may never
+be done to the mark. It is **import-only**: written when the adapter's payload
+carries a `brand:` block — a tool that holds the product's logo returns one —
+and deleted otherwise, never elicited in text on either path, because a logo is
+a file the design tool holds rather than a decision an interview can produce.
+The reviewer checks it only when the payload carried one.
 
 **Drift is one-way.** The canvas is the source; the doc is its distillation.
 Change the design system in the design tool and re-run the import — the doc is
@@ -2674,8 +2692,8 @@ reachable by hand as `/vwf:karpathy-guidelines`):
   `docs/blueprint/` edit (and on `docs/plans/` for frontmatter/link hygiene).
 - **`design-system-authoring`** — the UX/visual-contract doctrine (semantic
   tokens, typography, spacing, motion, accessibility, component behaviors,
-  anti-patterns, and Terminal UX for products that ship a CLI) behind
-  `/vwf:design-system`.
+  anti-patterns, Brand when the imported payload carries a logo, and Terminal UX
+  for products that ship a CLI) behind `/vwf:design-system`.
 - **`rest-api-design`** — technology-agnostic REST API principles (versioning,
   error formats, pagination, auth, OpenAPI), applied whenever the blueprint or
   plan touches an API surface.
