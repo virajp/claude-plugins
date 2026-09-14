@@ -105,8 +105,11 @@ Stallfront's corrections:
 - **Stacks** — three project-axis rounds rather than one, since the axis is per
   project: `typescript-effect-hono` for `api`, `typescript-hono-refine` for
   `web`, `typescript-pulumi` for `infra`, plus `postgres` on `api`'s backing
-  axis. The **repo** axis is the one that behaves differently from the spine —
-  it describes a checkout, so in a multi-repo product each member answers it for
+  axis. The **stylesheet** axis is asked of `web` alone — it is the only one of
+  the three declaring `webapp` — which is the conditional axis behaving exactly
+  like the per-project ones: asked where it applies, absent where it does not.
+  The **repo** axis is the one that behaves differently from the spine — it
+  describes a checkout, so in a multi-repo product each member answers it for
   itself rather than the product answering once
   ([stack pins, one axis at a time](./single-repo.md#stack-pins-one-axis-at-a-time)).
   Those rounds record slugs and land nothing: `/vwf:architecture` invokes

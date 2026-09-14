@@ -28,18 +28,18 @@ own toolchain manager and gate doctrine as packs.
 **Each asset is authoritative for its own subject.** This file is a map; do not
 restate a count or a rule that an asset below already owns.
 
-| Read                          | For                                                                                                                                                                                                                                                     |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `assets/taxonomy.md`          | the closed component **types** and **categories**; capability tokens stay vwf's                                                                                                                                                                         |
-| `assets/kinds.md`             | the **kind vocabulary** — each kind a closed topic bar, one artifact per topic                                                                                                                                                                          |
-| `assets/pack-format.md`       | the shape of a pack: `<type>/<slug>/pack.yaml` + prose + optional skills/agents/`config/`                                                                                                                                                               |
-| `assets/output-tree.md`       | where a materialization lands, the lockfile, the three targets outside `.claude/`                                                                                                                                                                       |
-| `assets/ids.md`               | one **slug rule**, two independent tokens: a project's **id** (`p:<id>/` and the commit scopes) and a repo's **name** (`REPO_NAME`, the checkout folder); flags name member **repos**                                                                   |
-| `assets/artifact-doctrine.md` | the **host rules** deciding whether a generated skill, agent or hook is valid at all                                                                                                                                                                    |
-| `assets/contracts/`           | the provider-neutral doctrine per capability or kind that instance packs cite and stay thin; the newest is `contracts/audit.md`, the `audit` category's, realizing vwf's `audit-store` and deliberately beside `observability.md` rather than inside it |
-| `stacks/inventory.md`         | **generated** — every pack, bundle and kind with counts; `mise run p:plugins:inventory`                                                                                                                                                                 |
-| `stacks/readme.md`            | the narrative — which wave landed what, and why                                                                                                                                                                                                         |
-| `agents/`                     | `stackgen-skill-reviewer`, the generator's gate                                                                                                                                                                                                         |
+| Read                          | For                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `assets/taxonomy.md`          | the closed component **types** and **categories**; capability tokens stay vwf's                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `assets/kinds.md`             | the **kind vocabulary** — each kind a closed topic bar, one artifact per topic                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `assets/pack-format.md`       | the shape of a pack: `<type>/<slug>/pack.yaml` + prose + optional skills/agents/`config/`                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `assets/output-tree.md`       | where a materialization lands, the lockfile, the three targets outside `.claude/`                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `assets/ids.md`               | one **slug rule**, two independent tokens: a project's **id** (`p:<id>/` and the commit scopes) and a repo's **name** (`REPO_NAME`, the checkout folder); flags name member **repos**                                                                                                                                                                                                                                                                                                                                 |
+| `assets/artifact-doctrine.md` | the **host rules** deciding whether a generated skill, agent or hook is valid at all                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `assets/contracts/`           | the provider-neutral doctrine per capability or kind that instance packs cite and stay thin; the newest is `contracts/web-head.md`, which states what **any** web framework pack — shipped or generated — realizes for a project declaring `site`, or `webapp` with `seo`: the head set, the icon sizes, the manifest, robots and sitemap, and the icon task. Before it, `contracts/audit.md`, the `audit` category's, realizing vwf's `audit-store` and deliberately beside `observability.md` rather than inside it |
+| `stacks/inventory.md`         | **generated** — every pack, bundle and kind with counts; `mise run p:plugins:inventory`                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `stacks/readme.md`            | the narrative — which wave landed what, and why                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `agents/`                     | `stackgen-skill-reviewer`, the generator's gate                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 The user-facing reference is `site/src/content/docs/plugins/stackgen.md`. The
 checker rules, the two mise gates and the authoring traps are the sibling
@@ -91,7 +91,7 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   generated `lspServers` entry **must** carry an `extensionToLanguage` map;
 - a pack's own **`config/` tree**, mirroring the repo root, for the repo config
   a component genuinely owns — **mode preserved**, so a task file lands 755.
-  Seven kinds of entry: **(a)** the toolchain manager's own config and its task
+  Eight kinds of entry: **(a)** the toolchain manager's own config and its task
   library (`.config/mise*.toml`, `.config/mise/tasks/**`); **(b)** a gate's own
   config (`.config/dprint.json`, `.config/pre-commit-config.yaml`,
   `.config/gitleaks.toml`, `.config/grype.yaml`, …); **(c)** the hygiene files
@@ -113,24 +113,30 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   declares the class) plus a `.config/mise/tasks/p/_project/deploy` overlay, and
   the first two were the first `cloud-provider`/`cloud-service` packs to ship a
   `config/` tree at all, which is what put both types on the composition order
-  (**last**, after `capability-provider`); and, since 2026-09-06, **(g)** a
-  pack's **editor fragment** at `.config/vscode.d/<pack>.jsonc`, three keys only
-  (`settings`, `nesting`, `extensions`) — **`/vwf:init` composes them** into
-  `.vscode/settings.json` and `.vscode/extensions.json`, which no pack ever
-  ships whole and which the convention in `assets/pack-format.md` names (init
-  itself never names an editor). The dprint gate's fragment is the one filename
-  exception, `dprint-editor.jsonc`: dprint discovers any `dprint.jsonc` below
-  the root as a sub-directory config, and one with no `plugins` array makes a
-  bare `dprint check` exit 13. Note the second underscore rule:
-  `config/_<name>/` at the top of the tier is pack-private and never copied, but
-  nested deeper `p/_project/` is a **marked position**, copied and renamed to
-  the pinned project's id — **slugged** per `assets/ids.md`, which owns that
-  rule and the measured reason for it. Still fenced out: `package.json`, any
-  language manifest or lockfile, a **whole** editor file, and CI workflows — the
-  last of those refused *inside* `.github/`, which is otherwise an allowlisted
-  root directory beside `.config/`. What lands at the repo **root** is capped by
-  a fixed allowlist, whose doctrine is `assets/output-tree.md` and whose two
-  tiers do not both reach the checker: the **landable** tier is
+  (**last**, after `capability-provider`); **(g)** a **project task a framework
+  pack owns**, since 2026-09-14 — the same `p/_project/` marked position and the
+  same rename, landed from the **project** axis rather than the deploy one:
+  `framework/astro` ships an `icons` overlay there, which rasterizes the favicon
+  set from the product's mark. The position is shared on purpose, so a pack
+  adding a file to it names a task no other pack in the same bundle already
+  ships; and, since 2026-09-06, **(h)** a pack's **editor fragment** at
+  `.config/vscode.d/<pack>.jsonc`, three keys only (`settings`, `nesting`,
+  `extensions`) — **`/vwf:init` composes them** into `.vscode/settings.json` and
+  `.vscode/extensions.json`, which no pack ever ships whole and which the
+  convention in `assets/pack-format.md` names (init itself never names an
+  editor). The dprint gate's fragment is the one filename exception,
+  `dprint-editor.jsonc`: dprint discovers any `dprint.jsonc` below the root as a
+  sub-directory config, and one with no `plugins` array makes a bare
+  `dprint check` exit 13. Note the second underscore rule: `config/_<name>/` at
+  the top of the tier is pack-private and never copied, but nested deeper
+  `p/_project/` is a **marked position**, copied and renamed to the pinned
+  project's id — **slugged** per `assets/ids.md`, which owns that rule and the
+  measured reason for it. Still fenced out: `package.json`, any language
+  manifest or lockfile, a **whole** editor file, and CI workflows — the last of
+  those refused *inside* `.github/`, which is otherwise an allowlisted root
+  directory beside `.config/`. What lands at the repo **root** is capped by a
+  fixed allowlist, whose doctrine is `assets/output-tree.md` and whose two tiers
+  do not both reach the checker: the **landable** tier is
   `PACK_CONFIG_ROOT_FILES` in `scripts/src/check.ts`, enforced by
   `p:plugins:check` rule 11, and beside it sits a second tier of root files
   **vwf** writes — `CLAUDE.md` and `mempalace.yaml` — which may sit at a shaped

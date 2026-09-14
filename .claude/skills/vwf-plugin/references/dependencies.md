@@ -11,9 +11,9 @@ marketplace itself**, so installing `vwf` needs no other marketplace registered.
 It is authored here.
 
 **`stackgen` is a dependency because without it the stack menu is empty.** The
-six stack axes are closed to what the installed stack plugins declare, and since
-`config_format` 14 there is no *other (describe)* escape. Since 16 that is no
-longer a dead end — the user can defer the axis as `unresolved` and keep
+seven stack axes are closed to what the installed stack plugins declare, and
+since `config_format` 14 there is no *other (describe)* escape. Since 16 that is
+no longer a dead end — the user can defer the axis as `unresolved` and keep
 defining the product — but deferral only moves the wall: `plan` and `execute`
 halt on an unresolved axis, so with no stack plugin installed nothing can be
 built. The `devtools` plugin's adapter retired in Wave C, which left vwf

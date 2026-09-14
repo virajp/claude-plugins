@@ -169,23 +169,39 @@ to the realization: the D1 pack states plainly that it cannot write atomically
 with the act and so writes the event first, over-reporting under a monitor. The
 contract's realizations table is where that comparison lives.
 
-**The two tool axes, and the stranded pack that forced them.** `design:` and
-`cicd:` began as per-project config keys outside the stack axes rather than
-axes of their own, and the bundle menu was the only door a template could come
-through — so `ci-system/github-actions`
-landed in Wave C and **nothing could ever materialize it**. Not an error;
-invisible. The `design` and `cicd` axes close that door, and their bundle slug
-**is** the config token, so the menu pick and the config key are one value rather
-than two that can disagree.
+**Stylesheet — `stylesheet/`, kind `stylesheet`:** `tailwindcss`, `stylex`
+and `plain-css`, the first three packs of a type and a kind minted together
+on 2026-09-14 for vwf's seventh axis. The kind exists because vwf names no
+stylesheet approach and must not: a design system is a contract — token
+values, scales and behaviours — and the file those values actually live in is
+realization. Until the kind existed the only homes for that realization were
+a framework pack, which would make every Astro project style the same way, or
+a second bundle per framework, which the four-modes-four-bundles decision had
+already refused. Each pack ships `conventions.md`, a paths-scoped doctrine
+skill and a **required** `tokens.md` — the one topic nothing else in the tree
+carries — and none of them ships a token value or names a component library.
+Like `design-tool`, none ships a `config/` tier: the single integration hook
+each needs is named by role and made by `/vwf:execute` in the framework's own
+config file.
+
+**The three tool axes, and the stranded pack that forced the first two.**
+`design:` and `cicd:` began as per-project config keys outside the stack axes
+rather than axes of their own, and the bundle menu was the only door a
+template could come through — so `ci-system/github-actions` landed in Wave C
+and **nothing could ever materialize it**. Not an error; invisible. The
+`design` and `cicd` axes close that door, and `stylesheet` was minted as one
+from the start. On all three the bundle slug **is** the config token, so the
+menu pick and the config key are one value rather than two that can disagree.
 
 **Bundles — `bundles/`, the recorded compositions users actually pick.** Every
-curated option survives the merge — the eight TypeScript ones, the Flutter app,
-the provider-neutral container deploy and the Claude Code plugin template, the
-four Wave D added on the two tool axes, the `secrets-manager` pair above, and
-the five Wave E added for the two clouds. Each names its components as refs,
+curated option survives the merge — the eight TypeScript ones, the Flutter
+app, the provider-neutral container deploy and the Claude Code plugin
+template, the four Wave D added on what were then the two tool axes, the three
+the stylesheet axis added to them, the `secrets-manager` pair above, and the
+five Wave E added for the two clouds. Each names its components as refs,
 mixing shipped packs (copied verbatim) with `@generated` ones (researched on
-first fetch) — which is the dispatch rule working at bundle scale rather than a
-gap.
+first fetch) — which is the dispatch rule working at bundle scale rather than
+a gap.
 
 A component answers *what is TypeScript*; a bundle answers *what is a
 TypeScript service*. The menu lists bundles only — offering bare components

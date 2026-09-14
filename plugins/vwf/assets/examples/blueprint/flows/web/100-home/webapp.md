@@ -32,3 +32,20 @@ Flow contract: [Home](./index.md)
 | Recent orders (list)    | Up to five most recent orders, newest first; row click → Order detail (120a, cancel-refund) |
 | Empty state (info)      | Shown when the customer has no orders yet; invites them to start shopping                   |
 | History error (banner)  | Shown when `getOrder` fails; offers retry and never blocks the checkout route               |
+
+### 100a — home metadata
+
+| Field       | Value                                                                    |
+| ----------- | ------------------------------------------------------------------------ |
+| title       | Example Shop — order from independent retailers                          |
+| description | Browse your cart and recent orders, and check out in one sitting.        |
+| index       | yes                                                                      |
+| image       | default                                                                  |
+
+<!-- One Metadata block per Screens row, on a site/webapp platform file only
+     (format 25). `web` declares the `seo` capability, so all four fields are
+     pinned; a webapp without it would pin `title` alone. Product-wide values —
+     site name, default description, handle, locale, organisation — are
+     ../../../conventions.md#web-metadata, and `default` is the social preview
+     named in the design system's Brand assets. The home screen is the one page
+     here offered to search. -->

@@ -174,7 +174,10 @@ installed stack plugins offer. Relay pins `typescript-hono-refine` on the
 project axis (it is the template that serves `service` and `webapp` from one
 codebase), `postgres` on the backing axis and `container-generic` on the deploy
 axis, both from `stackgen`. The repo axis is answered once for the checkout
-rather than per project. What each axis means and why they never merge:
+rather than per project. Because `relay` declares `webapp`, one more round
+follows its design round — the **stylesheet** axis, where Relay pins
+`tailwindcss`; a project declaring neither `site` nor `webapp` is never asked.
+What each axis means and why they never merge:
 [stack templates](../../plugins/vwf.md#stack-templates).
 
 Last comes the product-foundations walk — thirteen concerns; the eight elective

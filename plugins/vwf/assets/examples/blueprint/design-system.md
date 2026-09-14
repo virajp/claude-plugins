@@ -8,7 +8,7 @@ status: reviewed
 
 # Design System
 
-<!-- Conformance example (blueprint-format 24). A minimal, code-independent visual
+<!-- Conformance example (blueprint-format 25). A minimal, code-independent visual
      contract: semantic token VALUES and scales, never a component library, CSS
      framework, or design file. Every blueprint Screens section references this. -->
 
@@ -51,6 +51,19 @@ Families: heading `Inter`-class humanist sans / body same / mono for ids.
 - Easing tokens: `standard cubic-bezier(0.2, 0, 0, 1)`.
 - Principles: motion confirms a state change; never decorative.
 - Reduced-motion: honor `prefers-reduced-motion` — cross-fade, no translation.
+
+## Brand assets
+
+<!-- Present because `web` declares the `webapp` platform with the `seo`
+     capability. Each asset is named by ROLE and described — never a file path,
+     never a size the realization picks. -->
+
+- Favicon source mark: the shop's monogram as one square vector drawing, drawn
+  edge to edge on a transparent field; the whole rasterized set comes from it.
+  It does not sit on a rounded tile, so the touch icon squares its corners.
+- Social preview: the storefront wordmark centred on `surface`, 1280×640, alt
+  text "Example Shop — order from independent retailers".
+- Theme colour: the `surface` role, resolved per colour scheme.
 
 ## Accessibility Standard
 

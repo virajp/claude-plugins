@@ -16,17 +16,20 @@ actors, steps, diagram, jobs, acceptance; no screens) beside one
 **`<platform>.md` per implemented platform** (`mobile`/`tablet`/`desktop`/
 `auto`/`site`/`webapp`) carrying that platform's Screens (rows coded
 `<NNN><letter>`, codes **shared across platform files**, each with its
-per-screen Components block); a non-UI flow is `index.md` alone, as is a `cli`
-project's — the seventh platform is a terminal surface with no screens, so it
-takes no platform file and never reaches the canvas, mockups or the scratchpad,
-and a cli-only project is exempt from the standard-flows mandates. Numbers are
-**designated** — `100` is always `home`, `010` splash / `020` signin / `030`
-recover-account / `040` onboarding, `110`–`890` product flows, `910`–`950` the
-account and audit screens — on one number line per project. `flows/index.md` is
-the catalog (per-project sections, numeric order, a Platforms column) +
-inter-service contracts; **one entity folder per entity** — `entities/<entity>/`
-holding exactly `index.md` + `schema.yaml` — with `entities/index.md` the
-catalog + product-wide erDiagram; and the API contracts
+per-screen Components block, and — on `site`/`webapp` alone, since
+`blueprint_format` 25 — a per-screen **Metadata** block headed by the row's
+code: `title`, `description`, `index` and `image`, with a `webapp` whose project
+does not declare `seo` pinning `title` alone); a non-UI flow is `index.md`
+alone, as is a `cli` project's — the seventh platform is a terminal surface with
+no screens, so it takes no platform file and never reaches the canvas, mockups
+or the scratchpad, and a cli-only project is exempt from the standard-flows
+mandates. Numbers are **designated** — `100` is always `home`, `010` splash /
+`020` signin / `030` recover-account / `040` onboarding, `110`–`890` product
+flows, `910`–`950` the account and audit screens — on one number line per
+project. `flows/index.md` is the catalog (per-project sections, numeric order, a
+Platforms column) + inter-service contracts; **one entity folder per entity** —
+`entities/<entity>/` holding exactly `index.md` + `schema.yaml` — with
+`entities/index.md` the catalog + product-wide erDiagram; and the API contracts
 `apis/<project>.openapi.yaml` — one per API-publishing project, one declaring
 the `service` platform — plus the frozen `apis/released/` snapshots, which a
 `service` with no co-declared screen platform alone gets (a `[service, webapp]`
@@ -95,9 +98,9 @@ window: any stamp reconciles to the shipped one. **Do not restate the per-format
 history here** — what each past format changed is git's job; a second narrative
 copy is precisely the drift the density doctrine warns about, and it was 105
 lines of this file before format 16. The *current* shape is what this section
-describes throughout; the paired `config_format` (currently **18**, the bump
-that added `enforcement.kept_files`) is described under `assets/vwf-config.md`,
-and its own `N → N+1` deltas do still live there — state-based reconciliation
+describes throughout; the paired `config_format` (currently **19**, the bump
+that added the `stylesheet` axis) is described under `assets/vwf-config.md`, and
+its own `N → N+1` deltas do still live there — state-based reconciliation
 replaced the **blueprint** ladder only. **Neither line issues 13 or 17.** From
 `config_format` 18 and `blueprint_format` 24 onward a bump steps past both
 integers — the same rule a plugin version and this repo's package versions obey
@@ -116,4 +119,8 @@ pin and `ui:` key both depend on the platform vocabulary, so a repo on one but
 not the other is a state neither migration expects. `23` and `24` each then
 shipped alone and purely additively: the first lifts the blueprint-coverage
 exemption for the `plugin` platform, retires no spelling, and needs no config
-key.
+key. `19`/`25` then shipped **together** again, and for the same kind of reason
+the earlier pairs did: the `stylesheet` axis is a config key and the per-screen
+`Metadata` block is a blueprint section, but the choice and the contract arrived
+in one change, so a repo on one but not the other is a state neither side
+expects.
