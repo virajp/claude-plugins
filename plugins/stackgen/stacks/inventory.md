@@ -7,7 +7,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 `../assets/kinds.md`. The narrative — which wave landed what, and why — is
 [`readme.md`](readme.md); the shape of a pack is `../assets/pack-format.md`.
 
-**62 packs, 58 bundles, 12 kinds.**
+**64 packs, 60 bundles, 12 kinds.**
 
 ## Kinds
 
@@ -20,7 +20,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `toolchain-manager` | 1 | 1 |
 | `repo-hygiene` | 1 | 1 |
 | `workspace` | 0 | 3 |
-| `capability-provider` | 5 | 5 |
+| `capability-provider` | 7 | 7 |
 | `ci-system` | 1 | 1 |
 | `app-framework` | 3 | 1 |
 | `deploy-target` | 1 | 2 |
@@ -31,6 +31,8 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | Component | Name | Kind | Axis | Category | Capability | Version | Summary |
 | --------- | ---- | ---- | ---- | -------- | ---------- | ------- | ------- |
 | `app-framework/flutter` | Flutter | `app-framework` | project | cross-platform-ui |  | 0.3.0 | The cross-platform app SDK that owns the manifest, the build and the project layout — one codebase across mobile, tablet, desktop, web and in-car through the native edge. |
+| `capability-provider/audit-store-d1` | Audit store · Cloudflare D1 | `capability-provider` | backing | audit | audit-store | 0.1.0 | An isolated, append-only audit dataset in a D1 database of its own — written through one seam and read only by the console Worker that holds the binding. |
+| `capability-provider/audit-store-postgres` | Audit store · PostgreSQL | `capability-provider` | backing | audit | audit-store | 0.1.0 | An isolated, append-only audit schema inside the product's own PostgreSQL — insert-only to the application's role, readable by the console's reader role under policy, and removable only by the retention purge. |
 | `capability-provider/doppler` | Doppler | `capability-provider` | backing | secrets-manager |  | 1.0.0 | A vendor holds the secrets and the CLI injects them at the process boundary — onboarding is an org invite, and no key is ever distributed. |
 | `capability-provider/fnox` | fnox | `capability-provider` | backing | secrets-manager |  | 1.0.0 | The local-first secrets manager — you hold them, encrypted into git or referenced in your own cloud, and onboarding is a public key plus a re-encrypt. |
 | `capability-provider/oidc` | OIDC issuer | `capability-provider` | backing | identity | third-party-auth | 0.1.0 | Identity as an open protocol rather than a product — any issuer speaking OpenID Connect, self-hosted or managed. |
@@ -101,6 +103,8 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `astro-hybrid` | Astro (Hybrid) | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.2.0`, `toolchain-gate/tsconfig@0.1.0`, `toolchain-gate/eslint@0.2.0`, `framework/astro@0.1.0`, `framework/react@generated`, `framework/effect@0.1.0` |  |
 | `astro-ssg` | Astro (SSG) | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.2.0`, `toolchain-gate/tsconfig@0.1.0`, `toolchain-gate/eslint@0.2.0`, `framework/astro@0.1.0`, `framework/react@generated` |  |
 | `astro-ssr` | Astro (SSR) | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.2.0`, `toolchain-gate/tsconfig@0.1.0`, `toolchain-gate/eslint@0.2.0`, `framework/astro@0.1.0`, `framework/react@generated`, `framework/effect@0.1.0` |  |
+| `audit-store-d1` | Audit store · Cloudflare D1 | `capability-provider` | backing | `capability-provider/audit-store-d1@0.1.0` |  |
+| `audit-store-postgres` | Audit store · PostgreSQL | `capability-provider` | backing | `capability-provider/audit-store-postgres@0.1.0` |  |
 | `bun` | bun · workspaces | `workspace` | repo | `package-manager/bun@generated` |  |
 | `claude-code-plugin` | Claude Code plugin | `language-bundle` | project | `language/markdown@0.1.0`, `language/bash@0.1.0` |  |
 | `claude-design` | Claude Design | `design-tool` | design | `design-tool/claude-design@0.1.0` |  |

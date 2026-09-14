@@ -143,8 +143,8 @@ scan never lands in your context. Pass it **paths and name lists, not
 contents**: the `docs/blueprint/` root, the goal-anchor list (names only), the
 product doc's slice priority, the registry `projects:` block, the current
 `blueprint.remaining` list, and any `enforcement.rules` waivers with a
-`standard-flows/` prefix. It returns `COVERAGE:` plus the ordered `WORKLIST:` —
-consume that as given.
+`standard-flows/` or `standard-entities/` prefix. It returns `COVERAGE:` plus
+the ordered `WORKLIST:` — consume that as given.
 
 Whole-product coverage holds when, all at once:
 
@@ -164,6 +164,12 @@ Whole-product coverage holds when, all at once:
   `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` (conditional slugs resolved
   from the registry's auth capabilities; waivers in `enforcement.rules`
   honored);
+- every project declaring the **`audit-store`** capability carries the standard
+  operator flow `audit-history` per
+  `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` **and** the standard entity
+  `audit-event` per `${CLAUDE_PLUGIN_ROOT}/assets/standard-entities.md`
+  (waivers in `enforcement.rules` honored — `standard-flows/<project>/<slug>`
+  and `standard-entities/<project>/<slug>`);
 - the whole-product **coherence review** (§8) returned `NO GAPS` since the last
   content change.
 
@@ -272,8 +278,13 @@ Blueprint-specific notes layered on the protocol:
   triggers, **sync/async classification per mutating step with worker-vs-service
   placement** decided on the flow's Background Jobs table (apply the placement
   rule; MCQ only when both placements are defensible), and the runtime-settings
-  keys the flow reads. Foundations expand into existing sections — never new
-  mandatory structure.
+  keys the flow reads. The **audit** foundation reaches past the anchor and the
+  markers: it obliges the standard entity `audit-event`
+  (`${CLAUDE_PLUGIN_ROOT}/assets/standard-entities.md`) and the standard
+  operator flow `audit-history`
+  (`${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`), both in the console
+  project — units of the ordinary kind, authored and reviewed like any other.
+  Foundations expand into existing sections — never new mandatory structure.
 - **Engineering baseline (never re-elicited):** the defaults in
   `${CLAUDE_PLUGIN_ROOT}/assets/engineering-baseline.md` are settled — do not
   ask about write versioning, boundary validation, idempotency, error shape,
@@ -285,11 +296,11 @@ Blueprint-specific notes layered on the protocol:
 - **Standard slugs, numbers & screen names:** when the journey being elicited
   matches an entry in `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` (splash,
   signin, recover-account, onboarding, home, profile, settings, notifications,
-  delete-account), the flow takes that exact slug **and its designated number**
-  — never a synonym, never another number (`home` is always `100`). Its
-  **primary screen takes the flow's slug** too: the `home` flow's main screen is
-  named `home`, never "Dashboard" or "Main Feed". Secondary screens stay
-  free-named.
+  delete-account, audit-history), the flow takes that exact slug **and its
+  designated number** — never a synonym, never another number (`home` is always
+  `100`). Its **primary screen takes the flow's slug** too: the `home` flow's
+  main screen is named `home`, never "Dashboard" or "Main Feed". Secondary
+  screens stay free-named.
 - **Approaches (protocol §5):** where a flow, data-model, or API shape has
   competing designs (e.g. embed vs reference, sync vs async surface), present
   the options before committing.

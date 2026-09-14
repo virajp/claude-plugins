@@ -47,9 +47,9 @@ orchestrator passes both. Verify the contract and every platform file:
 - [ ] **Designated number** — a standard-flow slug carries its designated number
       (`010` splash, `020` signin, `030` recover-account, `040` onboarding,
       `100` home, `910` profile, `920` settings, `930` notifications, `940`
-      delete-account); a product flow sits in `110`–`890`. Where the
-      orchestrator passed a matching waiver, a standard slug at another
-      number — or a product flow outside its band — is **not** a gap;
+      delete-account, `950` audit-history); a product flow sits in `110`–`890`.
+      Where the orchestrator passed a matching waiver, a standard slug at
+      another number — or a product flow outside its band — is **not** a gap;
       without one it is.
 - [ ] **Platforms table** — a screen-platform project's flow carries one row per
       `<platform>.md` on disk, each a resolving link, each platform declared by

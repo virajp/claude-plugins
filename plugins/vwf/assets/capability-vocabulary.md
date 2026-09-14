@@ -37,10 +37,10 @@ the ambiguity this table exists to remove.
 - **Web rendering:** `ssr` **P**, `ssg` **P**, `cms-content` **B**, `seo` **P**
 - **Mobile:** `offline-first` **P**, `deep-linking` **P**,
   `device-permissions` **P**
-- **Observability & governance:** `distributed-tracing` **B**, `audit-log`
-  **F**, `rate-limiting` **F**, `runtime-settings` **F**
+- **Observability & governance:** `distributed-tracing` **B**, `audit-store`
+  **B**, `audit-log` **F**, `rate-limiting` **F**, `runtime-settings` **F**
 
-Three classifications are worth their reasoning, since each looks like the
+Four classifications are worth their reasoning, since each looks like the
 neighbouring kind:
 
 - **`custom-claims-rbac` and `operator-rbac` are `F`, while `third-party-auth`
@@ -55,6 +55,18 @@ neighbouring kind:
   is the product's own code. Which wire protocol carries it is the backing
   template's answer, never vwf's, which is why the slug is
   `telemetry-to-<sink>`.
+- **`audit-store` is `B` and `audit-log` is `F` — two halves of one subject.**
+  `audit-store` is the append-only, access-controlled store audit events land
+  in: the console project pins it on the backing axis, and it is read by that
+  project alone. `audit-log` is the product-side half — what is recorded, the
+  read surface, and how long it is kept — the product's own code, with nothing
+  to pin; its store is `audit-store`. The split is the one
+  `distributed-tracing` already makes under observability: there the sink is
+  the pin and the instrumentation is the contract, here the store is the pin
+  and the recording is the contract. Audit is an **independent capability, not
+  a part of observability**: traces answer what happened in the system, audit
+  answers which actor is accountable, and the store's access rules are the
+  reason it is pinned separately rather than folded into the telemetry sink.
 
 **Only `B` tokens are pinnable.** Asking which template provides `rate-limiting`
 or `ssr` is a category error, and the check below relies on that.
@@ -122,6 +134,7 @@ somewhere it should not have, and is a reviewer failure.
 | `payments-subscriptions`                     | the payment provider / the store |
 | `maps-navigation`                            | the maps provider                |
 | `distributed-tracing`                        | telemetry                        |
+| `audit-store`                                | the audit store                  |
 
 ## Nouns for things that are not capabilities
 

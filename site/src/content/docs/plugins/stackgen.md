@@ -176,6 +176,19 @@ a fourth output target so one could write a repo's own config files. A third
 kind, `repo-hygiene`, followed when that target widened to cover every gate's
 config and the hygiene files, and `/vwf:init` arrived to lay them down.
 
+The newest category is **`audit`**, under `capability-provider`, minted on
+2026-09-14 for vwf's `audit-store` token — the append-only, access-controlled
+store the operator console reads. It is deliberately *not* part of
+observability: telemetry answers what the system did and may sample, drop and
+expire; an audit store may do none of those, so it gets its own neutral contract
+(`assets/contracts/audit.md`) and `assets/contracts/observability.md` dropped
+the half-claim it used to carry, leaving a trace id as the only thing the two
+share. Two packs realize it — `audit-store-d1` and `audit-store-postgres` — and
+each **rides a datastore pack the product already runs** rather than composing
+an engine of its own, so neither ships a migration and both declare
+`local_stack: n/a`. What separates them is where the invariants are enforced:
+real grants on one side, the code path holding the only binding on the other.
+
 **stackgen is now the only stack plugin.** Its packs are the covered path, and
 the menu keeps its open `generate` entry for the rest — the stack you use that
 nobody wrote a pack for.

@@ -102,7 +102,7 @@ must go through the rule below. Every other row is mechanical.
 | an entity's `Actors & Actions` section | retired — actors are the owning flow's Trigger & Actors | retirement | |
 | ungrouped, unnumbered flow folders | `flows/<project>/<NNN>-<flow>/`, gap-numbered by 10 | numbering | |
 | numbers assigned per device subgroup | one number line per project | numbering | |
-| any number on a standard flow | its designated number (`010`/`020`/`030`/`040`, `100`, `910`–`940`); everything else into `110`–`890`, existing order preserved | numbering | |
+| any number on a standard flow | its designated number (`010`/`020`/`030`/`040`, `100`, `910`–`950`); everything else into `110`–`890`, existing order preserved | numbering | |
 | a screen code carrying the old flow number (`010a`) | re-coded to the new number (`100a`), letters and order kept | numbering | |
 | a synonym flow slug (`login`, `dashboard`, …) | the standard slug in `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` | numbering | yes |
 | a standard flow's primary screen name (`Dashboard`) | the flow's slug (`home`) | numbering | yes |

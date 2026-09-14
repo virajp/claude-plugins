@@ -90,7 +90,9 @@ projects:
 #     a hole the surveyor reports.
 #
 # An operator back-office is not its own platform: it is `backend` /
-# `[service, webapp]` plus the `operator-rbac` capability.
+# `[service, webapp]` plus the `operator-rbac` capability — and, once the audit
+# foundation is accepted, `audit-store` too: the console is where the audit
+# store is pinned and the only project that reads it.
 #
 # On-disk recognition: skills/setup/references/topology-detection.md
 

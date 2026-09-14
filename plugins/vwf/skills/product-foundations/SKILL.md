@@ -38,7 +38,7 @@ reference points at the reference-stack docs for the 95octane realization.
 | -------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------- |
 | Users & operators (Core) | Two user classes; document-based RBAC; claims for account-status only  | [users](references/users.md)                               |
 | Observability (Core) | Vendor-neutral telemetry, all three signals, trace-correlated logs        | [observability](references/observability.md)               |
-| Audit logs           | Append-only record of privileged + destructive actions                     | [audit-logs](references/audit-logs.md)                     |
+| Audit logs           | Privileged + destructive → `audit-store`, `audit-event`, `audit-history`   | [audit-logs](references/audit-logs.md)                     |
 | Change logs          | Keep-a-Changelog source of truth → fastlane store metadata                 | [change-logs](references/change-logs.md)                   |
 | Background processes | Sync/async per action; durable → worker, ephemeral → service               | [background-processes](references/background-processes.md) |
 | Data retention & PII | Delete by default; pseudonymised legal-basis retention; no PII in logs     | [data-retention](references/data-retention.md)             |

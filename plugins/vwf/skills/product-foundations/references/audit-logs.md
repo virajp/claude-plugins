@@ -22,9 +22,9 @@ human/actor is accountable"). Cross-cutting token:
 - **Structurally unavoidable**: privileged mutations pass through an audit layer
   so it is impossible to mutate without an event (the console reference-stack's
   `AuditLogService` pattern) — audit is not a per-endpoint courtesy call.
-- **Read surface**: audit events are visible to operators in the console
-  (moderation history per user/target); events referencing retained
-  post-deletion data are compliance-role only.
+- **Read surface**: the standard operator flow `audit-history`, in the console
+  project — moderation history per user/target, readable by operator roles;
+  events referencing retained post-deletion data are compliance-role only.
 - **PII discipline**: events reference ids, never copy personal data into the
   event body.
 
@@ -36,15 +36,26 @@ This foundation is the least built-out in the reference implementation
 - The event list: walk each flow's Trigger & Actors rows and steps and mark
   which are audit-recorded (all operator actions + destructive steps by
   default).
-- Storage: the default is a dedicated append-only collection/table in the
-  primary datastore; elicit if the product needs an external/immutable store.
+- Storage: this foundation decides only that audit events are stored
+  append-only, access-controlled, and apart from the product's ordinary reads.
+  Which store, and whether it is an isolated schema inside the product's own
+  database or a separate database of the same engine, belongs to the
+  `audit-store` capability the console project pins on its backing axis — the
+  backing half of the pair, held apart from this foundation on purpose; the
+  realization decides it and states its trade, because the access boundary each
+  engine can enforce differs. Elicit if the product needs an external/immutable
+  store.
 - Retention period per event class (ties into the data-retention table).
 - Whether customers get a self-view ("account activity") — off by default.
 
 ## Blueprint expansion
 
 - `conventions.md#audit` holds the contract (scope, event shape, storage,
-  access); each flow's Trigger & Actors rows and steps carry audit markers; the
-  operator flows' Screens include the moderation-history read surface.
+  access); each flow's Trigger & Actors rows and steps carry audit markers.
   Audit-worthy async work (purges, merges) also names its audit event in the
   flow's Background Jobs.
+- The event shape becomes the **standard entity `audit-event`**, and the read
+  surface the **standard operator flow `audit-history`** in the console
+  project. Both are mandatory once this foundation is accepted, and both are
+  coverage conditions the blueprint surveyor checks — neither is restated in a
+  flow doc, which links the anchor as any other contract does.

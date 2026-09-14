@@ -26,8 +26,9 @@ implementation: none # none | partial | complete — written by the pipeline onl
      standard-flows asset: 010 splash, 020 signin, 030 recover-account,
      040 onboarding, 100 home (the anchor, every product), 110–890 product
      flows (gap-numbered by 10), 910 profile, 920 settings, 930 notifications,
-     940 delete-account. One number line per project — a flow folder covers
-     every platform, so numbers never repeat within a project.
+     940 delete-account, 950 audit-history. One number line per project — a
+     flow folder covers every platform, so numbers never repeat within a
+     project.
 
      Flows are the PRIMARY blueprint unit: the goal-traceability spine runs
      product goal → flow → entity/API/screen. See the blueprint-authoring

@@ -5,9 +5,13 @@ without naming one. The provider packs under `stacks/capability-provider/` say h
 particular sink satisfies it; a cloud plugin's managed flavour says the same for
 its own.
 
-Capability tokens realized here: `distributed-tracing`, and the transport half
-of `audit-log`. Blueprint prose calls all of this **telemetry** — never the
-product name.
+Capability tokens realized here: `distributed-tracing`. Blueprint prose calls
+all of this **telemetry** — never the product name.
+
+An audit store is **not** a telemetry backend: it is its own category, with its
+own contract (`contracts/audit.md`), and the trace id is the only link between
+the two — an audit event carries one so an investigation can cross over, and
+nothing else is shared.
 
 ## The requirement that outranks every other
 

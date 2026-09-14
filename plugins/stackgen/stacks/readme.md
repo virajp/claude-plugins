@@ -149,6 +149,26 @@ The since-dissolved `devtools` plugin lost its `doppler` skill in the same
 landing — the second pack to retire its source skill on arrival. That plugin
 dissolved into this one entirely; nothing named `devtools` ships any more.
 
+**Audit — `capability-provider/`, category `audit`:** `audit-store-d1` and
+`audit-store-postgres`, the third pair to land in a category rather than one
+instance. The category was minted for vwf's `audit-store` token — the
+append-only, access-controlled store the operator console reads — which is
+**not** the telemetry sink and never was: their neutral contract
+`../assets/contracts/audit.md` draws that line, and
+`../assets/contracts/observability.md` dropped the half-claim it used to carry,
+leaving a trace id as the only thing the two share.
+
+Each pack **rides an existing datastore pack** rather than composing an engine
+of its own — `cloud-service/d1` and `datastore/postgres` — because that is the
+engine the product already runs and already operates. So neither ships a
+`config/` tier or a migration, and both declare `local_stack: n/a`: the ridden
+pack's local stack is already theirs. What separates them is **where the
+invariants are enforced** — real grants in one, the code path holding the only
+binding in the other — and how each orders the write, which the contract leaves
+to the realization: the D1 pack states plainly that it cannot write atomically
+with the act and so writes the event first, over-reporting under a monitor. The
+contract's realizations table is where that comparison lives.
+
 **The two tool axes, and the stranded pack that forced them.** `design:` and
 `cicd:` began as per-project config keys outside the stack axes rather than
 axes of their own, and the bundle menu was the only door a template could come

@@ -187,7 +187,7 @@ Last comes the product-foundations walk — thirteen concerns; the eight electiv
 ones take one accept / adapt / not-applicable question each, the five core ones
 accept / adapt / defer — listed with a worked set of answers under
 [the thirteen foundations](../greenfield/single-repo.md#the-thirteen-foundations).
-Answer for the product you have. Bookable already writes an audit trail for
+Answer for the product you have. Bookable already writes an audit log for
 booking cancellations, so accepting that foundation records a contract the
 blueprint then describes; the fact that the code exists shows up later as an
 empty delta, not as a reason to skip the question.

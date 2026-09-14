@@ -21,9 +21,9 @@ project's — the seventh platform is a terminal surface with no screens, so it
 takes no platform file and never reaches the canvas, mockups or the scratchpad,
 and a cli-only project is exempt from the standard-flows mandates. Numbers are
 **designated** — `100` is always `home`, `010` splash / `020` signin / `030`
-recover-account / `040` onboarding, `110`–`890` product flows, `910`–`940` the
-account screens — on one number line per project. `flows/index.md` is the
-catalog (per-project sections, numeric order, a Platforms column) +
+recover-account / `040` onboarding, `110`–`890` product flows, `910`–`950` the
+account and audit screens — on one number line per project. `flows/index.md` is
+the catalog (per-project sections, numeric order, a Platforms column) +
 inter-service contracts; **one entity folder per entity** — `entities/<entity>/`
 holding exactly `index.md` + `schema.yaml` — with `entities/index.md` the
 catalog + product-wide erDiagram; and the API contracts
