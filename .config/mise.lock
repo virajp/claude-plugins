@@ -10,12 +10,30 @@ specifiers = ["latest"]
 [tools.node.options]
 compile = "false"
 
+[tools.node."platforms.macos-arm64"]
+checksum = "sha256:974b6d5fb2fc7c33ff2354db0902b4e91c2de01ec8acc6de48e543c97e18c9e1"
+url = "https://nodejs.org/dist/v26.8.2/node-v26.8.2-darwin-arm64.tar.gz"
+
 [[tools.osv-scanner]]
 version = "2.5.1"
 backend = "aqua:google/osv-scanner"
 specifiers = ["latest"]
 
+[tools.osv-scanner."platforms.macos-arm64"]
+checksum = "sha256:75c44d6332f892a1e56286f4105a98ed751ae28d215ca0a8b65cc00d84103054"
+url = "https://github.com/google/osv-scanner/releases/download/v2.5.1/osv-scanner_darwin_arm64"
+url_api = "https://api.github.com/repos/google/osv-scanner/releases/assets/517615384"
+
+[tools.osv-scanner."platforms.macos-arm64".provenance.slsa]
+url = "https://github.com/google/osv-scanner/releases/download/v2.5.1/multiple.intoto.jsonl"
+
 [[tools.pnpm]]
 version = "12.4.1"
 backend = "aqua:pnpm/pnpm"
 specifiers = ["latest"]
+
+[tools.pnpm."platforms.macos-arm64"]
+checksum = "sha256:432fd151c10477630cf5c9f41209c2a7b75ac6dce7b2533a459519daf8954c52"
+url = "https://github.com/pnpm/pnpm/releases/download/v12.4.1/pnpm-darwin-arm64.tar.gz"
+url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/555427216"
+provenance = "github-attestations"
