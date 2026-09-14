@@ -15,7 +15,11 @@ backlog: [ B09 ]
 **COMPLETE** 2026-09-14. Worktree `.worktrees/2026-09-14-notion-workspace`,
 branch `2026-09-14-notion-workspace`. Every unit green, every wave gate and
 orchestrator gate green. Commits: `8d57fdaa` (U1), `4a7ec74e` (U2), `ec25b9ac`
-(U3), `85e21924` (U4), plus the run-log commits `2644417d` and `ec6c574b`.
+(U3), `85e21924` (U4), plus the run-log commits `2644417d` and `ec6c574b`. The
+merge to `develop` first conflicted in `docs/plans/index.md` alone: `cfe8d989`
+marked this plan running on `develop` while it ran, where the landing commit
+removes the row. The user chose the archived state; `develop` was merged into
+the branch at `1c19061a` and the full gate re-run green on the merged tree.
 
 ## Consent
 
