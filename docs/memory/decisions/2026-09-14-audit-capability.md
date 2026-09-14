@@ -1,7 +1,7 @@
 # Decision — audit is its own capability: `audit-store`, the `audit` category, per-stack provider packs
 
 **Date** 2026-09-14 · **Branch** `2026-09-14-audit-capability` · **Plan**
-[`docs/plans/2026-09-14-audit-capability/`](../../plans/2026-09-14-audit-capability/index.md)
+[`docs/plans/2026-09-14-audit-capability/`](../../plans/archived/2026-09-14-audit-capability/index.md)
 · **Extends**
 [`2026-09-06-cloud-service-categories-for-twenty-cloudflare-services.md`](./2026-09-06-cloud-service-categories-for-twenty-cloudflare-services.md)'s
 category rule · **Backlog** B06
