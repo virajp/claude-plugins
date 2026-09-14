@@ -374,7 +374,7 @@ docs/
 │   │   ├── index.md             # flow catalog (per-project sections) + inter-service contracts
 │   │   └── <project>/           # one group per registry project owning the journeys
 │   │       └── <NNN>-<flow>/    # NNN designated: 100 = home, 010/020/030/040 entry,
-│   │           │                #   110–890 product, 910–940 account screens
+│   │           │                #   110–890 product, 910–950 account and audit screens
 │   │           ├── index.md     # the PLATFORM-AGNOSTIC contract: trigger, actors,
 │   │           │                #   steps, jobs, sequence diagram, acceptance
 │   │           └── <platform>.md # one per implemented platform (mobile, tablet,
@@ -592,8 +592,11 @@ welded into one document, so picking `service` because you wanted Hono silently
 also bought you Firestore, Firebase Auth, Temporal and Cloud Run — none of it
 declared. Now a project template names no vendor and a backing template names no
 framework — and a backing template is now one capability rather than a vendor
-bundle, so `postgres` + `oidc` + `otel-lgtm` + `temporal`, each a stackgen
-bundle, is a completely vendor-free path through vwf.
+bundle, so `postgres` + `oidc` + `otel-lgtm` + `temporal` +
+`audit-store-postgres`, each a stackgen bundle, is a completely vendor-free path
+through vwf. That last one is the shape to notice: an audit store is its own
+capability (`audit-store`), pinned beside the datastore rather than folded into
+it or into the telemetry sink.
 
 An operator back-office is `backend` / `platforms: [service, webapp]` plus the
 `operator-rbac` capability (`webapp` sits under `backend` as well as `frontend`
@@ -750,7 +753,10 @@ The **operator back-office** deserves a note. Since format 22 it is not its own
 role: it is `backend` / `platforms: [service, webapp]` plus the `operator-rbac`
 capability — a single app serving both the operator API and an embedded UI, and
 the **sole holder of admin capabilities** (the public `service` exposes no admin
-routes). The capability, not a type name, is what marks it.
+routes). The capability, not a type name, is what marks it. It is also where the
+**audit store** lands: accepting the audit foundation adds `audit-store` to this
+project's capabilities, because the console is the only thing that reads audit
+records.
 
 The full stack docs ship inside each **stack plugin** under its own `stacks/`
 tree — never in vwf — and drive what `/vwf:setup` and `/vwf:architecture`
@@ -1485,12 +1491,13 @@ Maintain the desired end state of the **whole product**. A run is a **sweep**:
 it derives a coverage worklist (every product goal served by a flow, every flow
 reviewed, every entity/schema/API operation a flow references authored and
 reviewed, every registry surface represented, every UI project carrying its
-**mandatory standard flows** — see below) and works through it **flow by flow**
-until whole-product coverage holds and a **whole-product coherence review**
-passes — then stamps `blueprint.coverage: complete` in `.config/vwf.yaml`.
-`plan` refuses to run until that stamp is complete, so a half-blueprinted
-product can't leak gaps into code. Stopping early is fine — the stamp records
-what remains, and the next run picks it up.
+**mandatory standard flows** and every `audit-store` project its **standard
+entities** — see below) and works through it **flow by flow** until
+whole-product coverage holds and a **whole-product coherence review** passes —
+then stamps `blueprint.coverage: complete` in `.config/vwf.yaml`. `plan` refuses
+to run until that stamp is complete, so a half-blueprinted product can't leak
+gaps into code. Stopping early is fine — the stamp records what remains, and the
+next run picks it up.
 
 ```text
 /vwf:blueprint                # sweep from the top of the worklist
@@ -1499,20 +1506,32 @@ what remains, and the next run picks it up.
 
 **Standard flows.** UI projects carry a canonical flow vocabulary with exact
 slugs — `splash`, `signin`, `home`, `onboarding`, `settings`, `notifications`,
-`profile`, `delete-account`, `recover-account` — with per-role mandates: a
-project on a device platform (`mobile`/`tablet`/`desktop`/`auto`) must have
-`splash` and `home`; one on a browser platform (`site`/`webapp`) must have
-`home` (`splash` optional). A project with no screen platform — `cli`-only or
-`plugin`-only — is exempt: the standard slugs are screen journeys a terminal
+`profile`, `delete-account`, `recover-account`, `audit-history` — with per-role
+mandates: a project on a device platform (`mobile`/`tablet`/`desktop`/`auto`)
+must have `splash` and `home`; one on a browser platform (`site`/`webapp`) must
+have `home` (`splash` optional). A project with no screen platform — `cli`-only
+or `plugin`-only — is exempt: the standard slugs are screen journeys a terminal
 tool or an extension has no equivalent for. A project whose registry entry
 carries an **Auth & identity capability** must additionally have `signin` — and
 with it `profile`, `delete-account`, and `recover-account` (an account you can
-sign into can be viewed, recovered, and deleted). A missing mandatory standard
-flow is a coverage hole like any other — waivable per flow under
-`enforcement.rules` in `.config/vwf.yaml`, with a reason, never re-asked. The
-slugs are exact: a `login` or `account` flow whose journey matches is proposed
-for a consent-gated rename (links, catalogs, and canvas join keys move
-together), never renamed silently.
+sign into can be viewed, recovered, and deleted). A project declaring the
+**`audit-store` capability** — which is what accepting the audit foundation
+writes onto the console — must additionally have `audit-history`, the operator
+read surface over the audit record. A missing mandatory standard flow is a
+coverage hole like any other — waivable per flow under `enforcement.rules` in
+`.config/vwf.yaml`, with a reason, never re-asked. The slugs are exact: a
+`login` or `account` flow whose journey matches is proposed for a consent-gated
+rename (links, catalogs, and canvas join keys move together), never renamed
+silently.
+
+**Standard entities** are the same idea one level down: an entity every product
+owes once the foundation or capability that triggers it is accepted. There is
+one today — **`audit-event`**, obliged by the audit foundation and signalled per
+project by `audit-store` — carrying its field floor, its append-only rule and
+its ids-never-PII rule. It is authored like any other entity and reviewed
+against the same bar; standard only means the contract starts filled in rather
+than blank. A missing one is a coverage hole, waivable per entity under
+`enforcement.rules` exactly as a standard flow is.
 
 Flows live **grouped by the registry project that owns the journey**, and a flow
 folder holds two kinds of file: **`index.md`** — the platform-agnostic contract
@@ -1545,6 +1564,7 @@ plugins from one project — a sweep nobody completes.
 100 home          ← the anchor: every UI project, always
 110 … 890         ← the product's own journeys, gap-numbered by 10
 910 profile · 920 settings · 930 notifications · 940 delete-account
+950 audit-history ← the console's, once the audit foundation is accepted
 ```
 
 So `home` is `100` in every product you ever blueprint, and its screens are
@@ -2567,13 +2587,15 @@ reachable by hand as `/vwf:karpathy-guidelines`):
   data retention & PII, notifications, runtime settings, rate limiting,
   reliability targets, disaster recovery & backup, cost guardrails, and incident
   response. Each ships with an opinionated default (e.g. audit logs are
-  append-only over privileged and destructive actions; durable work goes to a
-  worker, ephemeral to a service). `architecture` walks the checklist — accept /
-  adapt / skip for the eight elective ones, accept / adapt / defer for the five
-  **core** ones (users & operators, observability, reliability targets, DR &
-  backup, incident response), whose deferral records a `deferred-preprod` token
-  `/vwf:plan` and `/vwf:verify production` treat as blocking — and `blueprint`
-  expands the accepted ones into contracts.
+  append-only over privileged and destructive actions, expanding into the
+  `audit-event` standard entity, the `audit-history` operator flow and an
+  `audit-store` pin on the console; durable work goes to a worker, ephemeral to
+  a service). `architecture` walks the checklist — accept / adapt / skip for the
+  eight elective ones, accept / adapt / defer for the five **core** ones (users
+  & operators, observability, reliability targets, DR & backup, incident
+  response), whose deferral records a `deferred-preprod` token `/vwf:plan` and
+  `/vwf:verify production` treat as blocking — and `blueprint` expands the
+  accepted ones into contracts.
 - **`blueprint-authoring`** — the contract-vs-realization line (what belongs in
   the blueprint vs `plan`), the **density** bars (per-doc budgets, the delete
   test, the anti-patterns that inflate a contract), and the per-surface

@@ -27,14 +27,15 @@ parts of those pages you need to read.
 
 A stack is composed from six templates that never merge and never outrank each
 other: **project** (language, framework, source layout), **backing** (datastore,
-identity, queue, storage), **deploy** (build artifact and host), **design** (the
-design tool) and **cicd** (the CI system) — each pinned per project — and
-**repo** (package manager, task runner, workspace), pinned once for the
-checkout. That independence is why picking a web framework buys you no database
-and no cloud, and it is why the pin list below reads as roughly one decision per
-axis you hold an opinion about. The contract behind it — the covering rule, what
-a template payload carries, how `plan` and `execute` resolve a template's
-conventions — is [stack templates](../../plugins/vwf.md#stack-templates).
+identity, queue, storage, the audit store), **deploy** (build artifact and
+host), **design** (the design tool) and **cicd** (the CI system) — each pinned
+per project — and **repo** (package manager, task runner, workspace), pinned
+once for the checkout. That independence is why picking a web framework buys you
+no database and no cloud, and it is why the pin list below reads as roughly one
+decision per axis you hold an opinion about. The contract behind it — the
+covering rule, what a template payload carries, how `plan` and `execute` resolve
+a template's conventions — is
+[stack templates](../../plugins/vwf.md#stack-templates).
 
 ## What answers each axis
 
@@ -80,16 +81,19 @@ for identity, `otel-lgtm` for observability, `temporal` for orchestration,
 `doppler` and `fnox` for secrets. Those two are the **developer-machine and CI**
 providers; the runtime secrets a deployed Worker or Container reads in staging
 and production are a backing pin of their own, Cloudflare's being
-`cloudflare-secrets-store`, and a repo pins both. Managed: a cloud's own
-services — `gcp` bringing Firestore, Cloud SQL and the Firebase services, and
-`cloudflare` bringing Workers KV, R2, D1, Hyperdrive, Vectorize, Pipelines,
-Analytics Engine, Durable Objects, Workflows, Queues, Workers AI, AI Gateway, AI
-Search, Browser Rendering, Images, Realtime, Email Service and Secrets Store.
-Each managed service is its own bundle, so they are pinned side by side rather
-than chosen between. Object storage is the one to know about — **it has no
-vendor-free provider by design**, because every object store belongs to a cloud,
-so its contract states the requirement and points at whichever cloud you have
-pinned rather than offering a neutral one.
+`cloudflare-secrets-store`, and a repo pins both. The **audit store** is the one
+capability whose providers ride the datastore you already pinned rather than
+composing an engine of their own — `audit-store-postgres` on Postgres,
+`audit-store-d1` on D1 — so it is a pin you make beside the datastore, never
+instead of it. Managed: a cloud's own services — `gcp` bringing Firestore, Cloud
+SQL and the Firebase services, and `cloudflare` bringing Workers KV, R2, D1,
+Hyperdrive, Vectorize, Pipelines, Analytics Engine, Durable Objects, Workflows,
+Queues, Workers AI, AI Gateway, AI Search, Browser Rendering, Images, Realtime,
+Email Service and Secrets Store. Each managed service is its own bundle, so they
+are pinned side by side rather than chosen between. Object storage is the one to
+know about — **it has no vendor-free provider by design**, because every object
+store belongs to a cloud, so its contract states the requirement and points at
+whichever cloud you have pinned rather than offering a neutral one.
 
 **The deploy axis has a provider-neutral default that is a real answer**, not a
 placeholder: `deploy-target/container-image` is an OCI image on any registry and
