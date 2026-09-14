@@ -66,7 +66,7 @@ repo's own skills, docs, agents and worktrees. None of them is `plugins/`.
 Setup and the refresh loop — `mise run p:plugins:local`, and the three measured
 CLI facts that shape it — are [`dev-marketplace.md`](dev-marketplace.md).
 
-> **Authoring one:** the thirteen checker rules, the invocation frontmatter, the
+> **Authoring one:** the fourteen checker rules, the invocation frontmatter, the
 > plugin-root trap and the dprint exclusion live in
 > `.claude/skills/plugin-authoring/`, which auto-applies while you edit
 > `plugins/`.
@@ -154,7 +154,7 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   design and are skipped. **`--check`** is the same byte compare the marketplace
   task makes, run by pre-commit and `plugins.yml`, and `inventory.test.ts` pins
   it in vitest too.
-- **`p:plugins:check`** — validates the authored tree. Thirteen rules: manifest
+- **`p:plugins:check`** — validates the authored tree. Fourteen rules: manifest
   name↔dir **plus the two things the version itself must be** — plain semver,
   and free of a 13 or 17 component, those two integers never being issued on any
   version line this repo maintains; dependencies resolving within the
@@ -206,8 +206,13 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   a `../` climb leaving the tree the file lands in, and a path into a sibling
   pack are each refused; a bare `<type>/<slug>` ref is the identifier vocabulary
   and stays legal, and the last three forms read `.md` only, with fenced blocks
-  blanked to their own line count). Those last two are the rules that report a
-  **line number**, being the two that fire on a sentence rather than a file.
+  blanked to their own line count); and **at most one default bundle per axis**
+  (across `stacks/bundles/*.md`, grouped by `axis`, at most one frontmatter
+  carries `default: true` — the entry vwf's architecture menu preselects — and
+  the value is boolean; two flagged is a preselection decided by file order, and
+  the finding names both). The retired-vocabulary and plugin-path rules are the
+  two that report a **line number**, being the two that fire on a sentence
+  rather than a file.
 
   Two of those are worth the extra sentence. The technology-free guard bans vwf
   naming a concrete technology **only where the mention prescribes**, which is

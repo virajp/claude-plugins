@@ -249,7 +249,7 @@ This is the one payload that may legitimately come back empty-handed, and the
 distinction is load-bearing in **both** directions:
 
 - `n/a` means *this tool has no such surface* — vwf reports it plainly and stops.
-  It is not a gap, not a finding, and nothing to fix. Only one of the three
+  It is not a gap, not a finding, and nothing to fix. Only one of the four
   supported tokens has a review conversation at all, so this is the common
   answer rather than the rare one.
 - `ERROR:` means *the surface exists and could not be read* — unreachable,

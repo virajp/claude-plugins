@@ -62,7 +62,7 @@ branch — each plan folder carries this repo's gate lines,
 | [`site/CLAUDE.md`][scl]                                      | the website — the tree, the link rule, the gate, the release model, the design source, traps                                                                                                                             |
 | [`.claude/skills/vwf-plugin/`][vwf]                          | vwf's own shape — skills, agents, assets, hooks, adding a skill, the docs tree it maintains                                                                                                                              |
 | [`.claude/skills/stackgen-plugin/`][sg]                      | stackgen's own shape — the dispatch rule, packs and bundles, where output lands, consent                                                                                                                                 |
-| [`.claude/skills/plugin-authoring/`][auth]                   | the thirteen checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions                                                                                                                          |
+| [`.claude/skills/plugin-authoring/`][auth]                   | the fourteen checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions                                                                                                                          |
 | [`.claude/skills/release/`][rel]                             | the release ritual, the note format, the CI facts that make a failed publish legible                                                                                                                                     |
 | [`site/src/content/docs/plugins/vwf.md#vwfchange-plan`][chg] | planning a change to this repo with the vwf pair — the interview, the folder; running it is [`#vwfchange-execute`][chge] — waves, the gate, after-landing steps; the how-to is [`how-to/operate/ad-hoc-change.md`][chgh] |
 
@@ -148,7 +148,7 @@ inventory and check in that order — freshness before validity:
   bundle whose `<type>/<slug>@<version>` pin is malformed, names no pack, or
   pins a version that pack no longer carries — `@generated` refs name no pack by
   design and are skipped.
-- **`p:plugins:check`** — validates the authored tree, thirteen rules. Rule 1
+- **`p:plugins:check`** — validates the authored tree, fourteen rules. Rule 1
   covers the manifest: `name` agreeing with the directory, and the `version`
   being plain semver **and** free of a 13 or 17 component — those two integers
   are never issued on any version line this repo maintains, and it is the
@@ -162,11 +162,14 @@ inventory and check in that order — freshness before validity:
   `.github/`, every `pre-commit.d/*.yaml` parsing with a top-level `repos:`
   list, the gate pack's whole `pre-commit-config.yaml` parsing on the same
   terms, and every `vscode.d/*.jsonc` parsing as JSONC with only the three keys
-  `/vwf:init` composes. Rule 13 is the newest: it refuses a plugin-relative
-  citation in anything a pack **lands** — the token, a bare `assets/…` path, a
-  `../` climb out of the tree the file lands in, or a path into a sibling pack —
-  since that file is copied into a repo with no plugin, where each resolves to
-  nothing silently.
+  `/vwf:init` composes. Rule 13 refuses a plugin-relative citation in anything a
+  pack **lands** — the token, a bare `assets/…` path, a `../` climb out of the
+  tree the file lands in, or a path into a sibling pack — since that file is
+  copied into a repo with no plugin, where each resolves to nothing silently.
+  Rule 14 is the newest: across `stacks/bundles/*.md`, at most one bundle per
+  axis carries `default: true` — the entry vwf's architecture menu preselects —
+  and the value is boolean; two flagged on one axis is a preselection decided by
+  file order, and the finding names both files.
 - **`p:plugins:shellcheck`** — the shell gate over everything a pack ships as
   shell: `shellcheck -x` plus `shfmt -d` over the pack task libraries and their
   `_scripts/*`, and a second pass over `hooks/*.sh` with no flags, since a hook
