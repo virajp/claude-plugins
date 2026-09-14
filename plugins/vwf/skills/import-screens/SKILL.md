@@ -8,7 +8,7 @@ argument-hint: "<flow> <platform>"
 user-invocable: false
 disable-model-invocation: false
 model: sonnet
-effort: high
+effort: medium
 ---
 
 # import-screens — the design adapter

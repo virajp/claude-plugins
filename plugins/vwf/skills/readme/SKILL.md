@@ -9,7 +9,7 @@ description: Create or update the repository's README — scan the codebase and
   skill.
 argument-hint: "[target-dir]"
 model: sonnet
-effort: high
+effort: medium
 disable-model-invocation: false
 ---
 

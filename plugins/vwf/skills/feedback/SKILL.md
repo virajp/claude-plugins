@@ -10,7 +10,7 @@ description: The front door for production feedback — a bug, a metric reading,
   design adapter, into the same routes. Durable even when mempalace is down.
 argument-hint: "[the feedback — paste a bug report, metric, or complaint | incident <what happened> | canvas]"
 model: sonnet
-effort: high
+effort: medium
 disable-model-invocation: false
 ---
 

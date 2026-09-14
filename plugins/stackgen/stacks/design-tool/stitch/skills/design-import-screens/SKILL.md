@@ -6,7 +6,7 @@ description: Read a flow's designed screens back from Google Stitch and return t
 license: MIT
 disable-model-invocation: false
 model: sonnet
-effort: high
+effort: medium
 ---
 
 # design-import-screens — Google Stitch

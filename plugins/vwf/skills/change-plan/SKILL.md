@@ -13,7 +13,7 @@ description: Turn an ad-hoc change request — work outside the blueprint — in
   blueprint slice is /vwf:plan.
 argument-hint: "[what to plan]"
 model: opus
-effort: high
+effort: medium
 disable-model-invocation: false
 ---
 

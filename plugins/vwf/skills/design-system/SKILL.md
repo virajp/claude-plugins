@@ -12,7 +12,7 @@ description: Import the product's design system from the configured design tool
   takes the text-only path and elicits Terminal UX directly.
 argument-hint: "[design-system id — omit to let the adapter resolve it]"
 model: sonnet
-effort: high
+effort: medium
 disable-model-invocation: false
 ---
 

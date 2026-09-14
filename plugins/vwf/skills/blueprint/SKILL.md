@@ -10,7 +10,7 @@ description: Maintain the always-current, full-product blueprint under
   /vwf:plan halts without a complete stamp.
 argument-hint: "[flow | entity]"
 model: opus
-effort: high
+effort: medium
 disable-model-invocation: false
 ---
 

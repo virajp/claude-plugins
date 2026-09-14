@@ -58,7 +58,8 @@ From index.md's assumed decisions, verbatim:
 > **10.** `change-execute`: user-only (`disable-model-invocation: true`) — it
 > must start a fresh session, which only the user can guarantee.
 
-> **11.** Both `model: opus`, `effort: high`, as every other vwf workflow skill.
+> **11.** Both `model: opus`, `effort: medium`, as every other vwf workflow
+> skill.
 
 > **14.** No bare `npm` (or any other `TOOL_TOKENS` entry) outside a fence; no
 > backticked `target-verifier`. […]
@@ -83,7 +84,7 @@ From index.md's assumed decisions, verbatim:
    reconciled and versions bumped by the fixed final units, land per consent,
    the after-landing steps, stop once before any `ask` step); last clause —
    "Invoke as `/vwf:change-execute <plan-folder>` in a session that has done
-   nothing else". `argument-hint` stays. `model: opus`, `effort: high`,
+   nothing else". `argument-hint` stays. `model: opus`, `effort: medium`,
    `disable-model-invocation: true`. Drop `allowed-tools` (the user-only
    `archive/SKILL.md:1-10` is the shape). Strict YAML.
 3. **Opener (`:16-25`).** `/create-plan` → `/vwf:change-plan`; the rest stays.
@@ -176,7 +177,7 @@ From index.md's assumed decisions, verbatim:
 - `grep -rn 'target-verifier\|docs-reconciler\|claude-status\|plugins:\|site:\|i:release\|i:version\|dev-marketplace\|user mode\|create-plan\|execute-plan' plugins/vwf/skills/change-execute`
   → nothing (`/vwf:change-plan` and `/vwf:change-execute` hits are fine).
 - `grep -c '^disable-model-invocation: true$' plugins/vwf/skills/change-execute/SKILL.md`
-  → `1`; `grep -c '^model: opus$'` → `1`; `grep -c '^effort: high$'` → `1`.
+  → `1`; `grep -c '^model: opus$'` → `1`; `grep -c '^effort: medium$'` → `1`.
 - `grep -n 'After landing' plugins/vwf/skills/change-execute/SKILL.md` — the
   section name matches U1's template heading byte for byte.
 - `grep -n 'docs/plans/archived' plugins/vwf/skills/change-execute/SKILL.md` →

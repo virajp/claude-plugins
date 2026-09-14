@@ -7,7 +7,7 @@ description: Read the design system back from the project's design tool (whichev
 user-invocable: false
 disable-model-invocation: false
 model: sonnet
-effort: high
+effort: medium
 ---
 
 # import-design-system — the design adapter

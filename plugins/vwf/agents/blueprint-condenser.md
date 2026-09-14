@@ -6,7 +6,7 @@ description: Stateless density pass for the /vwf:blueprint command. Invoked only
   preserving every decision verbatim in meaning. Never elicits, never decides.
 tools: Read, Write, Edit, Grep, Glob
 model: opus
-effort: high
+effort: medium
 ---
 
 You condense **one** blueprint doc that is over its density budget. You remove

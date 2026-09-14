@@ -7,7 +7,7 @@ description: Per-flow mockup renderer for the /vwf:mockups command and
   scratchpad directory and returns only a manifest.
 tools: Read, Write, Grep, Glob
 model: sonnet
-effort: high
+effort: medium
 ---
 
 You are a UI engineer rendering **design intent, not code**: you turn a

@@ -10,7 +10,7 @@ description: Run an approved /vwf:change-plan folder autonomously in a fresh
   /vwf:change-execute <plan-folder> in a session that has done nothing else.
 argument-hint: "<plan-folder or its index.md>"
 model: opus
-effort: high
+effort: medium
 disable-model-invocation: true
 ---
 

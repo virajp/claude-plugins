@@ -61,7 +61,7 @@ plan (`2026-09-10-vwf-feedback-archive-import`) landed that as the seventh kind.
 
 **The skill today** (`plugins/vwf/skills/feedback/SKILL.md`, 171 lines, no
 `references/`). Frontmatter 1–15: `argument-hint` at 11, `model: sonnet` 12,
-`effort: high` 13, `disable-model-invocation: false` 14. Intro 17–22 — line 21
+`effort: medium` 13, `disable-model-invocation: false` 14. Intro 17–22 — line 21
 says "routes it to where it gets **fixed**, not to a backlog" (group A's U2
 rewrites that sentence; edit what is on disk). Canvas harvest 24–68. §1
 Understand and classify 72–94: reads `product.md`, skims plausible flow and

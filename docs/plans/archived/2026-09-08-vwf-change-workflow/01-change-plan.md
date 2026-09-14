@@ -69,7 +69,8 @@ From index.md's assumed decisions, verbatim:
 > **10.** `change-plan`: user **and** model (`disable-model-invocation: false`,
 > no `user-invocable`).
 
-> **11.** Both `model: opus`, `effort: high`, as every other vwf workflow skill.
+> **11.** Both `model: opus`, `effort: medium`, as every other vwf workflow
+> skill.
 
 > **12.** change-plan's recall reads `docs/memory/decisions/`, the last archived
 > plan touching the same tree (folder or flat file), and the mempalace rooms
@@ -105,7 +106,7 @@ From index.md's assumed decisions, verbatim:
    blueprint — into a plan folder `/vwf:change-execute` runs unattended in a
    fresh session, and the last says when to run it (the user wants to plan a
    change that is not a blueprint slice; a blueprint slice is `/vwf:plan`). Keep
-   `argument-hint: "[what to plan]"`. Set `model: opus`, `effort: high`,
+   `argument-hint: "[what to plan]"`. Set `model: opus`, `effort: medium`,
    `disable-model-invocation: false`. Drop `allowed-tools` unless another vwf
    workflow skill of the same weight carries one (`plan/SKILL.md:1-15` does
    not). Strict YAML: quote any value containing a colon; no tabs.
@@ -212,7 +213,7 @@ From index.md's assumed decisions, verbatim:
 - `grep -n '^## After landing' plugins/vwf/skills/change-plan/references/plan-template.md`
   → one hit, inside the index.md fence, after `## Wave gate`.
 - `grep -c '^disable-model-invocation: false$' plugins/vwf/skills/change-plan/SKILL.md`
-  → `1`; `grep -c '^model: opus$'` → `1`; `grep -c '^effort: high$'` → `1`.
+  → `1`; `grep -c '^model: opus$'` → `1`; `grep -c '^effort: medium$'` → `1`.
 - `command diff <(sed -n 64,94p .claude/skills/create-plan/SKILL.md) <(sed -n '/^### 2. Scope check/,/^### 4/p' plugins/vwf/skills/change-plan/SKILL.md)`
   — differences are only the edits above; the generic passages survived the
   copy.

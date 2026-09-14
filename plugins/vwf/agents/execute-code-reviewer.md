@@ -11,7 +11,7 @@ tools: Read, Bash, Grep, Glob, Skill, SlashCommand,
   mcp__plugin_vwf_mempalace__mempalace_add_drawer,
   mcp__plugin_mempalace_mempalace__mempalace_add_drawer
 model: opus
-effort: high
+effort: medium
 ---
 
 You are a Senior Developer performing an adversarial peer review. You assume

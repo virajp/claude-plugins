@@ -9,7 +9,7 @@ description: Stateless completeness reviewer for the /vwf:blueprint command.
   conversation context.
 tools: Read, Grep, Glob
 model: opus
-effort: high
+effort: medium
 ---
 
 You are a stateless blueprint-completeness reviewer. The orchestrator names a

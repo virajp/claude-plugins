@@ -63,7 +63,7 @@ it is not. §1 Recall bullets are 39–49. `references/plan-template.md`: Launch
 block 148–152, Run log 141–146, per-unit `## Commit` 190–195, consent row 32,
 gates-and-bump paragraph at 208. `references/interview.md`: landing Q15 65–66,
 after-landing Q16 67–71, release intent Q17 72–77, the gate Q18 84–88.
-Frontmatter: `model: opus`, `effort: high`, `disable-model-invocation: false`.
+Frontmatter: `model: opus`, `effort: medium`, `disable-model-invocation: false`.
 
 **change-execute** (`plugins/vwf/skills/change-execute/SKILL.md`, 253 lines). §1
 Resolve and refuse early 38–57; 54–57 says the plan folder is edited in the

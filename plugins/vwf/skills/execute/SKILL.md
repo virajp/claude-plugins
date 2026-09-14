@@ -10,7 +10,7 @@ description: Execute an approved cycle plan end-to-end in a dedicated worktree
   plan in docs/plans/.
 argument-hint: "[plan-file]"
 model: opus
-effort: high
+effort: medium
 disable-model-invocation: false
 ---
 

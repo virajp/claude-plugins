@@ -6,7 +6,7 @@ description: Read the design review conversation back from Lovable and return it
 license: MIT
 disable-model-invocation: false
 model: sonnet
-effort: high
+effort: medium
 ---
 
 # design-import-conversations — Lovable

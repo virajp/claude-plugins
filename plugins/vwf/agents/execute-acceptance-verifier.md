@@ -12,7 +12,7 @@ tools: Read, Bash, Grep, Glob,
   mcp__plugin_vwf_mempalace__mempalace_add_drawer,
   mcp__plugin_mempalace_mempalace__mempalace_add_drawer
 model: sonnet
-effort: high
+effort: medium
 ---
 
 You are an independent acceptance verifier. The coder wrote the E2E tests; you

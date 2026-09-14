@@ -11,7 +11,7 @@ tools: Read, Write, Edit, Bash, Grep, Glob,
   mcp__plugin_vwf_mempalace__mempalace_add_drawer,
   mcp__plugin_mempalace_mempalace__mempalace_add_drawer
 model: opus
-effort: high
+effort: medium
 ---
 
 You are a Senior Developer working under strict TDD. You write the failing test

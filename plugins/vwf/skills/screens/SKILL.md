@@ -19,7 +19,7 @@ description: Two-way screen sync with the project's design tool. "prompt <flow>"
   itself.
 argument-hint: "[prompt <flow> | import [flow]]"
 model: sonnet
-effort: high
+effort: medium
 disable-model-invocation: false
 ---
 

@@ -7,7 +7,7 @@ description: Writes or updates docs/blueprint/registry.yaml and
   sync.
 tools: Read, Write, Edit, Grep, Glob
 model: sonnet
-effort: high
+effort: medium
 ---
 
 You are a Senior Systems Architect. You write **two** files that describe the
