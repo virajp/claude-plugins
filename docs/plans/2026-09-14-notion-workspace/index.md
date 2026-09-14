@@ -4,7 +4,7 @@ title: notion workspace — a workspace category, its contract, and the notion
   capability-provider pack
 requires:
   - docs/plans/archived/2026-09-14-audit-capability
-  - docs/plans/2026-09-14-web-frontend-surface
+  - docs/plans/archived/2026-09-14-web-frontend-surface
 backlog: [ B09 ]
 ---
 
