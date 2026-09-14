@@ -192,9 +192,10 @@ adopting it.
   to grep, and says so. `decisions`, `planning`, `gaps` and `problems` are
   committed; `handoff`, `doctor` and `runs` are gitignored, being one
   developer's state rather than the team's.
-- **Leans on review engines.** `execute`'s code- and security-review stages run
-  on the `/code-review` and `/security-review` engines, falling back to their
-  own manual review dimensions when an engine is unavailable.
+- **Leans on review engines.** `execute` runs the `/code-review` and
+  `/security-review` engines itself, once the coder returns, and hands their
+  findings to the code- and security-review stages; a reviewer falls back to its
+  own manual review dimensions when its engine is unavailable.
 
 **Fit**
 
@@ -1886,17 +1887,19 @@ What it does, by rule:
   time, and the next unblocked plan is offered as each one lands.
 - **Whole plan, dependencies first.** Implements every step, ordered so
   prerequisites land before dependents.
-- **Full pipeline each step.** `code → review → security`, looping findings back
-  to code. **Security findings are always fixed**, and so is any
-  **breaking-released-API finding** (a change that would break a contract frozen
-  under `apis/released/` — cap-exempt, never downgraded to a gap); other
-  **code-review findings loop up to 4 rounds**, after which any residual is
-  recorded as a gap — the blueprint/plan wasn't thorough enough. After **all**
-  steps, one `acceptance + ux` pass runs (E2E criteria + rendered-UI review),
-  with the same 4-round cap. `acceptance` runs when the slice touches a flow
-  with acceptance criteria; `ux` when it changes screens in a UI project (web
-  gets the full screenshot review; Flutter a code-level pass) — each skip
-  explicit, never silent.
+- **Full pipeline each step.** `code → engines → review ‖ security` — the
+  orchestrator runs the `/code-review` and `/security-review` engines itself and
+  hands each reviewer its engine's output — looping findings back to code, the
+  engines re-run before every round. **Security findings are always fixed**, and
+  so is any **breaking-released-API finding** (a change that would break a
+  contract frozen under `apis/released/` — cap-exempt, never downgraded to a
+  gap); other **code-review findings loop up to 4 rounds**, after which any
+  residual is recorded as a gap — the blueprint/plan wasn't thorough enough.
+  After **all** steps, one `acceptance + ux` pass runs (E2E criteria +
+  rendered-UI review), with the same 4-round cap. `acceptance` runs when the
+  slice touches a flow with acceptance criteria; `ux` when it changes screens in
+  a UI project (web gets the full screenshot review; Flutter a code-level pass)
+  — each skip explicit, never silent.
 - **Loops stop when they stop converging.** A round cap bounds how long a fix
   loop runs, but it can't tell *converging slowly* from *not converging at all*.
   Every finding loop also runs under a **convergence guard**: a round that
@@ -1929,7 +1932,7 @@ don't cover that is irreversible.
 
 ```mermaid
 flowchart TD
-    P["per step: code → review → security<br/>(findings loop back, no human gates)"] --> AX["acceptance (E2E) + ux (rendered)<br/>once, after all steps"]
+    P["per step: code → engines → review ‖ security<br/>(findings loop back, no human gates)"] --> AX["acceptance (E2E) + ux (rendered)<br/>once, after all steps"]
     AX --> RC["reconcile — registry, environment, harness stamp,<br/>human docs, implementation stamps"]
     RC --> G{"final gate — you review<br/>the run + gap list"}
     G -->|approve| M["merge (git-workflow)"]

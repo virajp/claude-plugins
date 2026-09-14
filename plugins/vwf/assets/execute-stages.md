@@ -7,19 +7,24 @@ stages **are**.
 
 ## Stages
 
-| Stage      | What             | Model  | Subagent                      | Runs                     |
-| ---------- | ---------------- | ------ | ----------------------------- | ------------------------ |
-| code       | Write Code (TDD) | opus   | `execute-coder`               | per step                 |
-| review     | Code Review      | opus   | `execute-code-reviewer`       | per step, ‖ `security`   |
-| security   | Security Review  | opus   | `execute-security-reviewer`   | per step, ‖ `review`     |
-| acceptance | Acceptance (E2E) | sonnet | `execute-acceptance-verifier` | once, after all steps    |
-| ux         | UX Conformance   | opus   | `execute-ux-reviewer`         | once, after `acceptance` |
+| Stage      | What             | Model  | Subagent                      | Runs                                              |
+| ---------- | ---------------- | ------ | ----------------------------- | ------------------------------------------------- |
+| code       | Write Code (TDD) | opus   | `execute-coder`               | per step                                          |
+| review     | Code Review      | opus   | `execute-code-reviewer`       | per step, ‖ `security`, after `/code-review`      |
+| security   | Security Review  | opus   | `execute-security-reviewer`   | per step, ‖ `review`, after `/security-review`    |
+| acceptance | Acceptance (E2E) | sonnet | `execute-acceptance-verifier` | once, after all steps                             |
+| ux         | UX Conformance   | opus   | `execute-ux-reviewer`         | once, after `acceptance`                          |
 
 `review` and `security` are **independent read-only passes over the same diff**
-— neither reads the other's output. Dispatch both in a single message so they
-run concurrently, and merge their findings into **one** loop-back to `code`.
-Their gating is unchanged and stays per-stage (security and `[breaking-api]`
-always fixed; other review findings capped).
+— neither reads the other's output. Their engines run first, and the
+orchestrator runs them: after the coder returns, invoke `/code-review` (high
+effort) and `/security-review` in one message, wait on each with `TaskOutput`
+(blocking, up to 30 minutes from invocation; an engine that errors or times out
+is stopped with `TaskStop` and counted unavailable, reason kept), and only then
+dispatch both reviewers in a single message so they run concurrently, each
+handed its engine's output in its prompt. Merge their findings into **one**
+loop-back to `code`. Their gating is unchanged and stays per-stage (security
+and `[breaking-api]` always fixed; other review findings capped).
 
 `acceptance` and `ux` run **once per cycle**, after **all** steps, back to back
 so one boot of the local stack serves both. Each is conditional — skipped
@@ -54,8 +59,11 @@ Per-stage dispatch contract:
   stack** the coder got — block and `conventions:` prose both; a reviewer holding
   less than the coder cannot tell a convention breach from a style preference).
   It reviews the code adversarially against the **plan, the blueprint,
-  `conventions.md`, and the resolved stack**, using `/code-review` as its engine. When the plan touches a service's
-  API surface, also pass the **living contract**
+  `conventions.md`, and the resolved stack**. The dispatch prompt **ends with a
+  section headed `## Engine`** holding either the `/code-review` output
+  verbatim or the single line `ENGINE: unavailable — <reason>`; the reviewer
+  runs no engine itself and returns exactly one block. When the plan touches a
+  service's API surface, also pass the **living contract**
   (`docs/blueprint/apis/<project>.openapi.yaml`) and the **latest released
   snapshot** (highest semver under `docs/blueprint/apis/released/`, when one
   exists) — the reviewer's released-contract compatibility dimension checks the
@@ -65,10 +73,11 @@ Per-stage dispatch contract:
   the terse findings block plus a recall tag.
 - **security** — dispatch `execute-security-reviewer` (pass the wing, plus the
   **slice** and **round number** for its recall tag). It threat-models the
-  changes against the project's declared **capabilities** in the registry, using
-  `/security-review` as its engine, rating findings by exploitability and
-  impact. It files its full findings to mempalace (room `problems`) and returns
-  the terse findings block plus a recall tag.
+  changes against the project's declared **capabilities** in the registry,
+  rating findings by exploitability and impact. The dispatch prompt ends with
+  the same `## Engine` section the review contract states, holding the
+  `/security-review` output. It files its full findings to mempalace (room
+  `problems`) and returns the terse findings block plus a recall tag.
 - **acceptance** — dispatch `execute-acceptance-verifier` (pass the plan's
   "Acceptance criteria (from blueprint)" section with each criterion's source
   flow, the registry, the wing, and the **slice** and **round number**). It
