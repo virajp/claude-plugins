@@ -55,7 +55,9 @@ never narrate the change.
    `docs/memory/decisions/2026-09-14-flutter-does-not-cover-webapp.md` in the
    pattern file's shape: date, branch, what it reverses (the five-platform
    coverage in vwf's assets and the Flutter pack; the `pick-and-trade.md`
-   argument), what was decided before, what changed, why (a `webapp` is a
+   argument; the widening recorded at
+   `docs/memory/decisions/2026-09-13-consumer-gaps.md:53-55`, which this doc
+   cites by path), what was decided before, what changed, why (a `webapp` is a
    stylesheet-axis project on a web stack; Flutter's web target shares none of
    that stack; the cover check already refuses the pairing once the list
    narrows), what it costs (a product that declared `webapp` on a Flutter
