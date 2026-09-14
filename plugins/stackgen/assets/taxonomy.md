@@ -66,8 +66,8 @@ The closed list. A component is exactly one of:
 - **`queue`** — a standalone queue or event bus.
 - **`capability-provider`** — the flavour half of a vwf capability that
   belongs to no cloud and is not a datastore: an identity issuer, a
-  telemetry sink, a workflow engine, a secrets manager. Its **category**
-  says which.
+  telemetry sink, a workflow engine, a secrets manager, an audit store.
+  Its **category** says which.
 - **`ci-system`** — one continuous-integration system: where its workflows
   live, how it is triggered, and how it installs a toolchain. One component
   per system, never per workflow.
@@ -101,7 +101,7 @@ and its components leave `category` unset.
 - **`datastore`**: `sql` / `document` / `graph` / `vector` / `key-value` /
   `in-memory`
 - **`capability-provider`**: `identity` / `telemetry` / `workflow` /
-  `secrets-manager`
+  `secrets-manager` / `audit`
 - **`app-framework`**: `cross-platform-ui` / `native-ui`
 
 A name appearing as both a type and a category is deliberate, not a
@@ -227,6 +227,12 @@ The contracts are **capability-neutral by construction** — each states what
 tokens it realizes, or that its category has none yet (`contracts/secrets.md`
 is the first of those). That is what lets two providers in one category be
 compared against the same clauses instead of against each other's marketing.
+
+The newest is `contracts/audit.md`, the `audit` category's, realizing vwf's
+`audit-store` token. It sits deliberately beside `contracts/observability.md`
+rather than inside it: telemetry answers *what the system did*, an audit store
+answers *which actor is accountable*, and the observability contract no longer
+claims any part of the second.
 
 Two files there are **not** capability contracts, and each is marked as such
 in its own opening line. `contracts/local-stack.md` states the mechanism
