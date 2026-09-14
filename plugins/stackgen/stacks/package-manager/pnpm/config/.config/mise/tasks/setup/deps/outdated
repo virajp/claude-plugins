@@ -13,4 +13,4 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # normal state of a healthy repo, so the exit status is swallowed. The report is
 # the output.
 
-pnpm outdated --color --aggregate-output --recursive --long --depth 0 || true
+pnpm outdated --color --aggregate-output --recursive --long || true
