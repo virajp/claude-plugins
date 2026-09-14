@@ -86,7 +86,7 @@ shipped `feedback` skill classifies and routes production feedback into
 blueprint, product, design-system, postmortem or change-plan. Plan interview
 decides what the request adds beyond that.
 
-Planned in: `docs/plans/2026-09-14-feedback-gaps/`
+Planned in: `docs/plans/archived/2026-09-14-feedback-gaps/`
 
 ### B06 — audit logs as an independent capability
 

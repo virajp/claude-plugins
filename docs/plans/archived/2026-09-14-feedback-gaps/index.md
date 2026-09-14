@@ -10,8 +10,9 @@ backlog: [ B05 ]
 
 ## Status
 
-**RUNNING** 2026-09-14 — worktree `.worktrees/2026-09-14-feedback-gaps`, branch
-`2026-09-14-feedback-gaps`.
+**COMPLETE** 2026-09-14. Commits on `2026-09-14-feedback-gaps`, in order:
+`e2cf104f` (U1), `85343b1a` (U2), `d2516578` (U3), `7ab90d1b` (plan log),
+`8245bf0a` (U4), plus the archive commit.
 
 ## Consent
 
