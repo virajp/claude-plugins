@@ -232,6 +232,15 @@ project declares a screen platform),
 flow has UI but no design system. Run `/vwf:design-system` first." Screens
 reference the design system; they never re-decide visual language.
 
+**Metadata gate (format 25).** Every Screens row on a `site` platform file also
+carries a **Metadata block** — `title`, `description`, `index`, `image`. A
+`webapp` platform file carries the full block when its registry project
+declares the `seo` capability, and pins `title` alone when it does not; no other
+screen platform takes a block at all. Elicit the four values alongside the
+screen itself, and the product-wide defaults **once** — the text into
+`conventions.md`'s `#web-metadata` anchor, the favicon mark, social preview and
+theme colour into the design system's Brand assets — never repeated per screen.
+
 ### 3. Interactive elicitation (orchestrator)
 
 **Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior
@@ -330,7 +339,8 @@ stand.
   and the platform set), the contract decisions (purpose and goal anchors,
   trigger & actors, ordered steps with actors/entities/`operationId`s, jobs,
   acceptance criteria) **and, per platform, that platform's screens** with their
-  shared `<NNN><letter>` codes, Components blocks, and deviations, plus the
+  shared `<NNN><letter>` codes, Components blocks, Metadata blocks (`site` and
+  `webapp` only), and deviations, plus the
   relevant `conventions.md` anchors and registry block. It writes `index.md`,
   **one `<platform>.md` per platform**, and the `flows/index.md` catalog row. A
   **new** standard flow takes its **designated** number; a product flow takes

@@ -107,6 +107,25 @@ displays (text, info, error surfaces, buttons, inputs, lists, media), each with
 its rules — visibility/enable conditions, what activating it does, and
 contract-pinned content (see the [UI/UX contract](./ui-ux-contract.md)).
 
+**Metadata per screen (format 25).** On a `site` or `webapp` platform file each
+Screens row carries, beside its Components block, one **Metadata block** headed
+by the row's code, pinning four fields: `title` — what the page calls itself,
+and what a shared link to it announces; `description` — the one-sentence
+summary a search result or a link preview reads; `index: yes | no` — whether
+the page is offered to search and listed in the product's public index of
+pages; and `image: default | <slot>` — the picture a shared link shows, where
+`default` names the product-wide social preview and a `<slot>` names art this
+screen supplies of its own. A `webapp` whose project does **not** declare the
+`seo` capability pins `title` alone; the other three are omitted, since nothing
+outside the product reads them. Every other screen platform (`mobile`,
+`tablet`, `desktop`, `auto`) carries no block at all. The product-wide values
+each page inherits — site name, default description, the social handle, the
+locale, the organisation facts — are **never** repeated per screen: they are
+`conventions.md#web-metadata`, and the visual assets behind them (the favicon
+mark, the social preview, the theme colour) are the design system's brand
+assets. The block is a contract on what the page *says about itself*, never on
+markup: no tag names, no framework, no file paths.
+
 **Home rule.** Every screen is defined in exactly **one** flow — its home
 journey. Another flow that touches the same screen **links the home flow's row**
 rather than redefining it, so a screen has one authoritative contract. The

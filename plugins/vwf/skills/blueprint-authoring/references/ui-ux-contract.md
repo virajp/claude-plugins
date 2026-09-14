@@ -40,6 +40,15 @@ Pin per screen / surface (each has more than one reasonable answer):
   live or on refresh (the UX expectation, not the transport).
 - **Content** — error messages, empty-state copy, and CTA labels where the
   wording is a product decision.
+- **Metadata** (`site` and `webapp` screens only — the Metadata block, format
+  25; see the [flow-contract](./flow-contract.md)) — what the page says about
+  itself: its `title`, its `description`, whether it is offered to search
+  (`index`), and the picture a shared link shows (`image`). The picture and the
+  product's mark are **not** re-decided here: the social preview and the
+  favicon mark are the design system's **brand assets**, and a screen writes
+  `image: <slot>` only when it genuinely has art of its own — otherwise
+  `image: default`. Wording is a product decision and belongs here; the tags
+  that carry it are realization.
 - **In-car screens** (screens in a flow's `auto.md` platform file — the in-car
   take is a platform file of the same flow, never a separate flow; see the
   [flow-contract](./flow-contract.md)) — per in-car screen: the OS **template**
