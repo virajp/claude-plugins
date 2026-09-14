@@ -25,6 +25,12 @@ the composition's single consent gate and landing. Generation is
   topic is thin — and both the thinness and every supplement are disclosed,
   per topic, in the citations file (step 3): the output says what it could
   not verify rather than padding.
+- **The sources `stackgen-reputation` names must be reachable.** Step 4
+  vets every concrete name the component emits through that skill, and a
+  source it cannot reach yields an `UNRESOLVED:` row, never an inferred
+  verdict. Unreachable → **halt**, on the same terms as Context7: a name
+  landed unvetted is exactly the plausible-but-unchecked artifact the
+  check exists to prevent.
 
 ## Pipeline
 
@@ -95,17 +101,35 @@ the composition's single consent gate and landing. Generation is
    generation never writes a config file or a manifest itself, and
    stackgen holds no registry of servers, per
    `${CLAUDE_PLUGIN_ROOT}/assets/artifact-doctrine.md` §5.
+
+   **Then vet every name, once the declared names are final.** List every
+   concrete third-party name the component emits — its `mise_tool`
+   entries, every runner-invoked tool in its harness tasks (`dlx`, `npx`,
+   `uv run --with`, `uvx`), every `mcp_servers:` / `user_mcp_servers:`
+   command, every action reference, every image reference — each written
+   with its ecosystem prefix, `npm:`, `pypi:`, `pub:`, `action:`
+   (owner/repo) or `image:` (registry/repo); the generator always writes
+   the prefix, never a bare name. Invoke `stackgen-reputation` with that
+   list, one argument per name. It returns a verdict table, one row per
+   name reading `pass`, `warn` or `block`. **A `block` row halts this
+   component here**: report the table, ask the user to name the
+   replacement, and check the replacement before the step resumes. The
+   generator never swaps a name silently — a swap is a new recommendation,
+   and it is the user's. `warn` rows travel with the table to the dry-run
+   consent gate. An `UNRESOLVED:` row halts the same way a Context7 outage
+   does (the preconditions above): a name whose sources could not be
+   reached is never landed on an inferred verdict.
 5. **The reviewer gate.** Dispatch the `stackgen-skill-reviewer` agent per
    generated component — stateless: it gets the catalog paths, the
    declared kind and the component's classification, the detected stack,
-   the generated artifacts, and the citation list; it returns `NO GAPS` or
-   a numbered gap list. Loop generation on the gaps until clean — under
-   the **convergence guard**: reviewer rounds are capped, **default 4**,
-   mirroring vwf's execute-stage rule, because a reviewer and a generator
-   can trade findings forever. It is a **gate**: when the cap is reached
-   with gaps still open, stop looping and report the residual gaps to the
-   user — a run that cannot come clean is never landed quietly, and never
-   iterated indefinitely either.
+   the generated artifacts, the citation list, and the verdict table from
+   step 4; it returns `NO GAPS` or a numbered gap list. Loop generation on
+   the gaps until clean — under the **convergence guard**: reviewer rounds
+   are capped, **default 4**, mirroring vwf's execute-stage rule, because
+   a reviewer and a generator can trade findings forever. It is a
+   **gate**: when the cap is reached with gaps still open, stop looping
+   and report the residual gaps to the user — a run that cannot come clean
+   is never landed quietly, and never iterated indefinitely either.
 6. **Materialize.** Hand the clean component to
    [the materializer](materializer.md) alongside the composition's
    pack-sourced components — its dry-run consent gate is where the user

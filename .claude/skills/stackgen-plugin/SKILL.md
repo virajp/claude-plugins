@@ -22,8 +22,14 @@ and `/vwf:setup`, the template by `/vwf:setup` (whose materialize pass lands a
 first pin), `/vwf:plan` and `/vwf:execute` (pure conventions reads).
 `/vwf:architecture` decides a pin and materializes nothing.
 `skills/stackgen-sync` is the one user-only skill: the explicit, lockfile-diffed
-re-sync. Since `devtools` dissolved into it, stackgen also carries the repo's
-own toolchain manager and gate doctrine as packs.
+re-sync. `skills/stackgen-reputation` is the one skill invocable **both** ways —
+`disable-model-invocation: false` and no `user-invocable` line — so the
+generator can call it over every concrete third-party name a generated component
+emits, and a person can run `/stackgen:stackgen-reputation <ecosystem>:<name> …`
+on a name before typing it anywhere; it returns `pass`, `warn` or `block` per
+name from public read APIs over `WebFetch`, and is the only network stackgen
+touches beyond Context7. Since `devtools` dissolved into it, stackgen also
+carries the repo's own toolchain manager and gate doctrine as packs.
 
 **Each asset is authoritative for its own subject.** This file is a map; do not
 restate a count or a rule that an asset below already owns.
@@ -55,9 +61,17 @@ pins, stackgen resolves its composition and dispatches **per component**:
 1. A component a shipped **pack** covers is **copied verbatim** from `stacks/`.
 2. An uncovered component is **generated**: resolve the kind and its topic bar →
    detect the real stack → one Context7 research pass per topic → instantiate
-   vwf's principles catalog with citations → the `stackgen-skill-reviewer` gate,
-   capped at **four rounds**, after which residuals are reported rather than
-   looped. Context7 unreachable → **halt, never guess**.
+   vwf's principles catalog with citations → at assemble, every concrete
+   third-party name the component emits (packages, runner-invoked tools,
+   actions, images) through `stackgen-reputation`, a `block` halting the
+   component with the verdict table until the user names a replacement, never a
+   silent swap → the `stackgen-skill-reviewer` gate, capped at **four rounds**,
+   after which residuals are reported rather than looped; its tenth check reads
+   the verdict table it is handed — every name has a row, none reads `block` —
+   and it stays offline. Context7 or a reputation source unreachable → **halt,
+   never guess**. The verdict table is shown whole beside the reviewer's verdict
+   at the dry-run consent gate; a template read-back (`/vwf:plan`,
+   `/vwf:execute`) never re-checks.
 
 Mixed compositions are the ordinary case, with one consent and one landing per
 bundle, so a later re-sync can act on one component alone. Packs are **assets,
@@ -206,14 +220,17 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
   `user-invocable: false` so neither spends a `/` menu slot on a skill that
   answers only a program. Rule 9 asserts both literal lines, and asserts the
   explicit `false` rather than the mere absence of `true` — absence states
-  nothing about the thing vwf depends on. `stackgen-stack-template` keeps its
-  `argument-hint`; it costs nothing on a hidden skill and documents the one
-  argument the caller passes — still `<slug>` alone. The **target repo** is not
-  a second argument: it arrives as one optional `repo: <path>` line beside the
-  principles-catalog paths, the member's path relative to the base repo root,
-  absent meaning the current repo. The materializer writes there and keeps that
-  repo's own `.claude/stackgen/lock.yaml`, so two members pinning the same slug
-  hold two independent materializations.
+  nothing about the thing vwf depends on. `stackgen-reputation` is the third
+  shape — `disable-model-invocation: false` with **no** `user-invocable` line —
+  so the generator reaches it and it still takes a `/` menu slot; rule 9 keys
+  off the two adapter names only and does not read it. `stackgen-stack-template`
+  keeps its `argument-hint`; it costs nothing on a hidden skill and documents
+  the one argument the caller passes — still `<slug>` alone. The **target repo**
+  is not a second argument: it arrives as one optional `repo: <path>` line
+  beside the principles-catalog paths, the member's path relative to the base
+  repo root, absent meaning the current repo. The materializer writes there and
+  keeps that repo's own `.claude/stackgen/lock.yaml`, so two members pinning the
+  same slug hold two independent materializations.
 
 ## Two scripts that are not plugin hooks
 

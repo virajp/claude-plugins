@@ -165,11 +165,12 @@ itself healthy. See [stack templates](../../plugins/vwf.md#stack-templates).
 
 What keeps that from being a wall is stackgen's one open entry. A stack no pack
 covers is **generated** — researched topic by topic against current
-documentation, instantiated from vwf's principles catalog, gated by a reviewer
-agent and your explicit consent, and landed in your repo's `.claude/` tree as
-plain committed files. So the practical question is not "is my stack supported"
-but "is it covered by a pack or generated", and the difference you feel is one
-consent prompt and a slower first pin.
+documentation, instantiated from vwf's principles catalog, every third-party
+name it emits vetted for reputation (a `block` halts until you name a
+replacement), gated by a reviewer agent and your explicit consent, and landed in
+your repo's `.claude/` tree as plain committed files. So the practical question
+is not "is my stack supported" but "is it covered by a pack or generated", and
+the difference you feel is one consent prompt and a slower first pin.
 
 ## Worked mappings
 

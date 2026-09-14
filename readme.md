@@ -246,15 +246,21 @@ each one resolves on its own: a component a shipped **pack** covers is copied
 verbatim; an uncovered one is **generated** — researched via Context7 topic by
 topic, instantiated against vwf's principles catalog, gated by a reviewer agent
 and your explicit consent, so a covered language never regenerates because its
-framework is new. Both paths land mostly in the repo's committed `.claude/` tree
-— skills, agents, hooks and rules only, shaped by a closed kind vocabulary whose
-per-kind **topic bar** fixes what the output must cover and how deep, recorded
-in a lockfile per component — so most of the result is plain files your
-collaborators get with a `git pull` and no plugin install. Two things cannot be
-repo files, and each carries its own consent line rather than riding the
-landing: an MCP server goes into the project's `.mcp.json`, and a **language
-server** is a plugin-manifest feature no project file can express at all, so
-stackgen writes one small local plugin on your machine — at the fixed path
+framework is new. Every concrete third-party name a generated component emits —
+a package, a runner-invoked tool, a GitHub Action, a container image — is vetted
+first by `stackgen-reputation` against public registry, advisory and scorecard
+data, one verdict per name (`pass`, `warn`, `block`); a `block` halts that
+component until you name a replacement, and the same skill is yours to run on
+any name as `/stackgen:stackgen-reputation <ecosystem>:<name> …`. Both paths
+land mostly in the repo's committed `.claude/` tree — skills, agents, hooks and
+rules only, shaped by a closed kind vocabulary whose per-kind **topic bar**
+fixes what the output must cover and how deep, recorded in a lockfile per
+component — so most of the result is plain files your collaborators get with a
+`git pull` and no plugin install. Two things cannot be repo files, and each
+carries its own consent line rather than riding the landing: an MCP server goes
+into the project's `.mcp.json`, and a **language server** is a plugin-manifest
+feature no project file can express at all, so stackgen writes one small local
+plugin on your machine — at the fixed path
 `~/.claude/plugins/local/stackgen-lsp/`, holding the union across the repos you
 have materialized from — and **prints the two registration commands for you to
 run rather than running them itself**. That one is user-scoped and your

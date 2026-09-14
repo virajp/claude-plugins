@@ -87,10 +87,13 @@ user's clock.
    has no pack to diff against; offer to re-run the generator for that
    component alone (the pipeline in `/stackgen:stackgen-stack-template`'s
    references — fresh research against its recorded citations, reviewer
-   gate included) and diff its output against the repo's copy. Skip any
-   component the user declines — regeneration costs research and review; it
-   is an offer, not a default, and taking one component never forces
-   another.
+   gate included) and diff its output against the repo's copy. A
+   regenerated component goes through the generator and so through its
+   `stackgen-reputation` check: every concrete name it emits is re-checked
+   at regeneration, a name that passed at first generation included, and
+   a `block` halts the component the same way. Skip any component the
+   user declines — regeneration costs research and review; it is an
+   offer, not a default, and taking one component never forces another.
 
 4. **Diff the local plugin, if the lockfile has one.** No `local_plugin`
    block → skip this step entirely; this repo has never written to the

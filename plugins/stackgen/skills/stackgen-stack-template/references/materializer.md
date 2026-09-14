@@ -180,14 +180,25 @@ to a repo, and every write it makes is consent-gated and committed once.
 
 3. **The dry-run consent gate.** Present the full landing set as a plan —
    every path, created or conflicting, and (for generation) the reviewer's
-   clean verdict — and ask before writing anything. The user may deselect
-   artifacts; the template entry itself is not deselectable (it is what the
-   pin means). Declined → **nothing is written at all**, the caller's pin
-   is left exactly as it was — this skill never rewrites a pin, and a
-   decline is not a downgrade — and the caller is told the slug is pinned
-   but not materialized. Reporting the decline is the caller's, and the
-   repo's unmaterialized state is what `/vwf:doctor` reports until a later
-   run lands it.
+   clean verdict beside the **reputation table** — and ask before writing
+   anything. The user may deselect artifacts; the template entry itself is
+   not deselectable (it is what the pin means). Declined → **nothing is
+   written at all**, the caller's pin is left exactly as it was — this
+   skill never rewrites a pin, and a decline is not a downgrade — and the
+   caller is told the slug is pinned but not materialized. Reporting the
+   decline is the caller's, and the repo's unmaterialized state is what
+   `/vwf:doctor` reports until a later run lands it.
+
+   **The reputation table is shown whole.** The generator vetted every
+   concrete third-party name the component emits through
+   `stackgen-reputation` ([the generator](generator.md), step 4); show
+   every row, and call each `warn` row out in one line of its own — the
+   name, the signal, and its source — so the user consents to a warned
+   name knowingly rather than by scrolling past it. **A gate never shows a
+   `block` row**: a block halted the component upstream, before anything
+   reached this plan, and the user picked the replacement there. A `block`
+   row that does reach the gate is a defect in the pipeline to report,
+   never a choice to offer — halt and say so.
 
    **Hook wiring is its own consent line.** A hook script is a file (the
    list above); the `hooks` entry that wires it lives in
