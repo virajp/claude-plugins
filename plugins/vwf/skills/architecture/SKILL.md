@@ -245,9 +245,11 @@ tokens are the contract and the stylesheet is how they are realized, so the
 order is not arbitrary. The menus, what each axis records, and the
 recording rules are in [the stack menu](references/stack-menu.md) — read it
 before eliciting any of them. Two rules hold whatever the answers are: vwf
-ships **no default and no recommended template**, and **every project gets a
-written `stack` block**, because that block is what `/vwf:doctor` checks the
-repo against and it cannot check what was never recorded.
+ships **no default and no recommended template** — the one preselection it
+honours is an entry the adapter's menu payload flags `default: true`, which is
+highlighted, never assumed — and **every project gets a written `stack`
+block**, because that block is what `/vwf:doctor` checks the repo against and
+it cannot check what was never recorded.
 
 **You record the decision, and only the decision.** What this step writes is a
 slug — or `unresolved` where the user defers — into

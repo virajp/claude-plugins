@@ -55,6 +55,14 @@ the product — it is a question about `api`, or about `website`:
   `webapp` platform, and **after** that project's design round. A project
   declaring neither is not asked and records no key.
 
+**What is preselected, in order.** On every round the highlighted option is:
+the menu entry carrying **`default: true`** when one does — the flag is the
+adapter's, passed through in its menu payload, at most one per axis
+(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`, "The menu payload"); else the
+**previous project's answer** on that axis; else nothing. Preselected means
+highlighted, never assumed — the user still picks, every other entry stays
+offered, and the flag reaches no config key.
+
 **Offer the previous project's answer as the default on the next.** Most
 products do run every project on one cloud, and re-asking from scratch per
 project would be tedious for the common case — but the answer is recorded per
@@ -109,6 +117,11 @@ token the config key holds, so recording the pick *is* writing the key. There is
 one value and no second spelling to drift against — which is the whole reason
 they are axes rather than free text.
 
+**Preselection is the same rule as everywhere else.** An entry the adapter
+flagged `default: true` is highlighted first; the previous project's answer
+next; nothing otherwise. The menu stays closed either way — a flagged entry is
+one of the adapter's entries, not a new door.
+
 **Never name a tool here.** The options come from the menu; this file lists
 none, and vwf learns nothing about what any of them mean. `design` is read by
 the design adapter, whose contract is
@@ -148,9 +161,10 @@ Record all of it in `.config/vwf.yaml` per the vwf-config asset. **Always write
 the project block**, for every project: it is what `/vwf:doctor` checks the repo
 against, and it cannot check what was never recorded.
 
-vwf ships no default and marks no template recommended. Picking a project
-template fills its four frontmatter axes, and a `languages` token is whatever the
-stack plugin owning that language declares.
+vwf ships no default and marks no template recommended: the one preselection it
+honours is the adapter's `default: true` (above), which it never infers and
+never records. Picking a project template fills its four frontmatter axes, and a
+`languages` token is whatever the stack plugin owning that language declares.
 
 **The menu is the whole answer — there is no *other (describe)*.** Every axis
 must resolve to a template an installed plugin ships, and every `languages` token

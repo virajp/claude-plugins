@@ -184,11 +184,22 @@ templates:
     platforms: [ <platform> ] # PROJECT AXIS ONLY — which registry platforms this template serves
     name: <display name> # what the menu shows
     summary: <one line> # why you would pick it
+    default: true # OPTIONAL — at most one entry per axis; vwf preselects it
 ```
 
 vwf renders the union of every configured plugin's menu, grouped by axis and
 (for the project axis) filtered to the **platforms** being decided. It never
 reads a template file.
+
+**`default: true` is the adapter's to set, and vwf never infers one.** An
+entry carrying it is what the menu **preselects** on its axis — highlighted, not
+assumed: the user still picks, and every other entry stays offered. At most one
+entry per axis carries it; a second is the adapter's defect, not a tie for vwf
+to break. An adapter that emits none leaves its axes with no preselection,
+exactly as before the flag existed, and the *previous project's answer* rule in
+the architecture skill still applies on the later projects. The flag is menu
+state only: it reaches no config key and no template payload, and a pin made by
+accepting it is indistinguishable from one made by picking the same entry.
 
 **`platforms:` is a list, and that is the point.** Since blueprint format 22 a
 project declares one `role` and one or more platforms, and a single template
