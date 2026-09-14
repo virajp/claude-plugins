@@ -3,7 +3,7 @@ type: vwf-change-plan
 title: terminal design tool — the claude-code design-tool pack, the default on
   the design axis, and the logo in the design-system contract
 requires:
-  - docs/plans/2026-09-14-stack-reputation
+  - docs/plans/archived/2026-09-14-stack-reputation
 backlog: [ B11 ]
 ---
 

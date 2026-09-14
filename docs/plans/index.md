@@ -11,9 +11,8 @@ vwf's index today lists flat cycle plans only.
 
 | Folder                                                                        | Plan                                                                                                                                | Status   | Requires                          | Backlog |
 | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------- | ------- |
-| [`2026-09-14-stack-reputation`](2026-09-14-stack-reputation/index.md)         | stack reputation — a verdict on every name stackgen generates, and a skill anyone can point at a package                            | APPROVED | —                                 | B10     |
-| [`2026-09-14-terminal-design-tool`](2026-09-14-terminal-design-tool/index.md) | terminal design tool — the claude-code design-tool pack, the default on the design axis, and the logo in the design-system contract | APPROVED | `2026-09-14-stack-reputation`     | B11     |
+| [`2026-09-14-terminal-design-tool`](2026-09-14-terminal-design-tool/index.md) | terminal design tool — the claude-code design-tool pack, the default on the design axis, and the logo in the design-system contract | APPROVED | —                                 | B11     |
 | [`2026-09-14-design-review-loop`](2026-09-14-design-review-loop/index.md)     | design review loop — screens in the canvas, a review server from the repo, comments applied in session                              | APPROVED | `2026-09-14-terminal-design-tool` | B11     |
 
 `Requires` names only plans not yet archived; a requirement already under
-`archived/` is satisfied. The three run in the order listed.
+`archived/` is satisfied. The two run in the order listed.
