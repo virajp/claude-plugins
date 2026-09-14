@@ -355,4 +355,10 @@ the fresh session's worktree — cut from the integration branch — can see it.
 
 Run in a fresh session:
 
-/vwf:change-execute docs/plans/2026-09-14-terminal-design-tool
+/vwf:change-execute docs/plans/2026-09-14-terminal-design-tool | 3 | U6 | opus |
+1 | green | thirteen→fourteen in CLAUDE.md, repo-shape.md, vwf-plugin SKILL.md;
+stackgen-plugin, readme, site vwf.md/stackgen.md/ui-with-design-tool.md updated;
+design-adapter.md:252 three→four only. DECIDED: .claude/docs/plugins.md and
+vwf-plugin design-axis passages had no live target; design-adapter.md:46 "two of
+the three" left as history; ran code:format --fix on dprint files | 72e630 | | 3
+| R3 | opus | 1 | pass | no findings; contract clean, rulings clean | — |
