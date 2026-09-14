@@ -69,6 +69,23 @@ Families: heading / body / mono — named, with intent.
 Global patterns: buttons, inputs/forms, overlays, feedback, empty/loading/error,
 navigation.
 
+## Brand
+
+<!-- Required when the imported design-system payload carries a `brand:` block;
+     delete this section otherwise — it is never elicited in text. Written
+     verbatim in meaning from the payload; every path is relative to the repo
+     root. See the design-system-authoring skill's brand reference. -->
+
+- Logo source: `<repo-relative path>`
+- Variants:
+
+| Variant | Path | Use |
+| ------- | ---- | --- |
+
+- Clear space:
+- Minimum sizes (per variant):
+- Rules (what never happens to the mark — mono, dark, distortion, recolor):
+
 ## Terminal UX
 
 <!-- Required when any registry project declares platform `cli` in

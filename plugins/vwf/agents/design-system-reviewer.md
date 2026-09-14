@@ -43,6 +43,13 @@ Verify, for the design-system doc under review:
 - [ ] Global component behaviors defined for buttons, inputs/forms, overlays,
       feedback, and empty/loading/error states.
 - [ ] Anti-patterns listed.
+- [ ] **Brand** (only when the orchestrator says the imported payload carried a
+      `brand:` block, or the section's own comment says so): a repo-relative
+      logo source (or `null` with a rule explaining why), at least one variant
+      with a path and a use, a clear-space rule, a minimum size, and a mono or
+      dark rule — all present, every path repo-relative; skip this item
+      entirely when the source carried no brand — an absent Brand section is
+      never a gap then.
 - [ ] **Terminal UX** (only when the orchestrator says a project declares
       platform `cli`): output formatting (human/machine modes, stdout vs
       stderr), color semantics by role with a no-color rule, progress
