@@ -203,6 +203,7 @@ kind: <bundle kind> # assets/kinds.md
 platforms: [ <platform> ] # project axis only
 artifact: <token> # deploy axis only
 unconditional: true # omitted by every bundle a user picks — see below
+default: true # optional — what vwf preselects; one per axis — see below
 components:
   - <type>/<slug>@<version> # a shipped pack, at its current version
   - <type>/<slug>@generated # no pack covers it — generated on first fetch
@@ -223,6 +224,18 @@ bundle declares one `kind` and these are three: `mise` (`toolchain-manager`),
 them is recorded in `.config/vwf.yaml` — nothing was chosen — only in
 `lock.yaml`, which is also what tells a caller whether the repo is shaped at
 all: all three slugs present, or not shaped.
+
+**`default: true` marks the menu entry vwf preselects on that axis.** It is
+optional and boolean, and it changes nothing about what the bundle is — only
+which entry the architecture menu highlights before the user answers, so a
+product that has no opinion lands on it and one that does picks another.
+`stackgen-stack-menu` copies the key onto that entry of its payload and onto
+no other; vwf preselects whichever entry carries it, by the key alone,
+naming no tool. **At most one bundle per axis carries it** — two would be a
+preselection decided by file order, which is silent nondeterminism, and the
+checker refuses the tree, naming both files. It is **never set on an
+`unconditional` bundle**: that bundle is not in the menu, so there is
+nothing to preselect.
 
 **A `@generated` ref is a first-class outcome, not a gap.** A bundle may mix
 copied and generated components freely: the covered ones land verbatim, the

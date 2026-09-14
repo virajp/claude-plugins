@@ -44,6 +44,13 @@ comparison. Choosing is the user's job and presenting the choice is vwf's.
    **Never list bare components.** `stacks/<type>/<slug>/pack.yaml` files are
    the parts a bundle composes, not options — offering them would ask the user
    to assemble a stack rather than choose one.
+
+   **Copy `default: true` from the bundle, never compute it.** An entry
+   carries the key exactly when its bundle file's frontmatter does, and omits
+   it otherwise — vwf preselects whichever entry carries it, and this skill
+   has no opinion of its own about which bundle that should be. At most one
+   bundle per axis may carry it; that is the checker's to refuse, not this
+   skill's to resolve.
 2. Return the payload below. The `generate` block is present on **every**
    answer — it is the open entry, and it is what makes an empty pack list read
    as a decision rather than a fault.
@@ -64,6 +71,7 @@ templates:
     platforms: [ <platform> ] # project axis only
     name: <display name>
     summary: <one line>
+    default: true # only when the bundle frontmatter carries it — omitted otherwise
 generate:
   pin: generated/<technology-slug>
   axes: [ project, backing, deploy, repo, design, cicd, stylesheet ]

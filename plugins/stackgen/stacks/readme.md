@@ -119,6 +119,13 @@ delegates to — `design-import-screens`, `design-import-design-system`,
 tool anywhere, and the technology-free guard's allowlist got **smaller**, which
 is the intended direction whenever an exception stops feeling arguable.
 
+A fourth tool is the **terminal itself**, with a file canvas: its source of
+truth is a committed directory under the target repo's `docs/`, its adapters
+read files rather than call a server, and it ships one extra user-invocable
+skill that runs the design session. The bundle whose frontmatter carries
+`default: true` is the entry vwf's architecture menu preselects on the axis —
+at most one per axis, which the checker enforces.
+
 `claude-design` also declares an MCP server, which the materializer writes into
 the project's own `.mcp.json` behind its own consent line. That is the charter
 change Wave D made deliberately (`../assets/output-tree.md`): a curated registry
