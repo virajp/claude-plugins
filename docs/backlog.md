@@ -15,8 +15,8 @@ plan split, to be confirmed at each plan's interview.
 | B04 | `init`: split `REPO_NAME` (folder name) from the `p:<id>:*` group id    | B     | P1       | done    |
 | B05 | `/vwf:feedback` — post-build change intake from user feedback           | C     | P2       | planned |
 | B06 | Audit logs as an independent, access-controlled capability              | D     | P2       | planned |
-| B07 | Stylesheet axis for web frontends: `tailwindcss` and `stylex`           | E     | P2       | open    |
-| B08 | SEO, OpenGraph and favicons for sites and webapps                       | E     | P2       | open    |
+| B07 | Stylesheet axis for web frontends: `tailwindcss` and `stylex`           | E     | P2       | planned |
+| B08 | SEO, OpenGraph and favicons for sites and webapps                       | E     | P2       | planned |
 | B09 | `notion` MCP server config                                              | F     | P3       | open    |
 | B10 | `stack-reputation` skill — vet every stack stackgen recommends          | G     | P2       | open    |
 | B11 | Claude Code terminal as the default design tool, via `taste-skill`      | H     | P2       | open    |
@@ -107,12 +107,16 @@ Any web-based frontend (webapp or site) can pick a stylesheet approach. Offer
 component of the `app-framework` packs, how the design-system tokens map into
 each, and how `doctor` checks the pick.
 
+Planned in: `docs/plans/2026-09-14-web-frontend-surface/`
+
 ### B08 — SEO, OpenGraph and favicons
 
 Every website, and webapp where it applies, ships SEO metadata, OpenGraph tags
 and a favicon set. The site in this repo already does both by hand
 (`2026-09-05-site-seo-and-markdown`, `p:site:icons`); lift that into what the
 frontend packs land and what the blueprint's screen contract pins.
+
+Planned in: `docs/plans/2026-09-14-web-frontend-surface/`
 
 ### B09 — `notion` MCP server config
 
