@@ -10,16 +10,14 @@ backlog: [ B06 ]
 
 ## Status
 
-**COMPLETE on the branch; merge to `develop` BLOCKED** 2026-09-14. Every unit
-green, every gate green, all eleven commits on `2026-09-14-audit-capability`;
-worktree `.worktrees/2026-09-14-audit-capability`. The merge to `develop`
-conflicts in `docs/backlog.md` alone: two change-plan sessions landed on
-`develop` while this ran (`d24e0003` web-frontend-surface, `312af5e7`
-notion-workspace) and set B07, B08 and B09 to `planned`, where this branch set
-B06 to `done` and left those three at `open`. The rows are disjoint, so the
-resolution is the union — but a merge conflict is a hard halt and is not
-resolved autonomously. Approved 2026-09-14 by the user, after self-review.
-Commits on `2026-09-14-audit-capability`, in order:
+**COMPLETE** 2026-09-14. Every unit green, every gate green. The merge to
+`develop` first conflicted in `docs/backlog.md` alone: two change-plan sessions
+landed on `develop` while this ran (`d24e0003` web-frontend-surface, `312af5e7`
+notion-workspace) and set B07-B10 to `planned`, where this branch set B06 to
+`done`. The rows were disjoint; the user chose the union, `develop` was merged
+into the branch, the table was resolved losing nothing from either side, and the
+full gate re-run green on the merged tree. Approved 2026-09-14 by the user,
+after self-review. Commits on `2026-09-14-audit-capability`, in order:
 
 | Commit     | Unit | Subject                                                                                                          |
 | ---------- | ---- | ---------------------------------------------------------------------------------------------------------------- |
