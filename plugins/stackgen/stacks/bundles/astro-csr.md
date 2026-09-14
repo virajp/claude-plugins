@@ -7,7 +7,7 @@ components:
 - package-manager/pnpm@0.2.0
 - toolchain-gate/tsconfig@0.1.0
 - toolchain-gate/eslint@0.2.0
-- framework/astro@0.1.0
+- framework/astro@0.2.0
 - framework/react@generated
 platforms:
 - site
@@ -69,9 +69,10 @@ are their own axes.
   Astro's own, ordered before the React plugin, and a generated
   `routeTree.gen.ts` in the tree. Code-based routing needs no plugin and avoids
   both. Pick one router and keep it; the two are not layered.
-- **UI**: the repo's call. The shadcn-style set [`astro-ssr`](astro-ssr.md)
-  names — Radix UI primitives with Tailwind CSS — is one good option here and
-  not a decision this bundle makes.
+- **UI**: the repo's call. The unstyled-primitives set
+  [`astro-ssr`](astro-ssr.md) names is one good option here and not a decision
+  this bundle makes. How any of it is styled is the project's `stylesheet` pin,
+  an axis of its own.
 - **Layout**: `src/pages/` (the shell and the catch-all only), `src/app/` (the
   router, its routes and their loaders), `src/components/`, `src/lib/` (the API
   client and pure helpers).
