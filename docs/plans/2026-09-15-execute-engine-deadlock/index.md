@@ -10,7 +10,10 @@ backlog: []
 
 ## Status
 
-**APPROVED** 2026-09-15 by the user, after self-review.
+**RUNNING** since 2026-09-15 — worktree
+`.worktrees/2026-09-15-execute-engine-deadlock`, branch
+`2026-09-15-execute-engine-deadlock`. Approved 2026-09-15 by the user, after
+self-review.
 
 ## Consent
 
@@ -181,12 +184,12 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                                            | Owns                                                                                                           | Depends on | Status  | Commit |
-| -- | ---- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-reviewer-agents.md](01-reviewer-agents.md)       | `plugins/vwf/agents/execute-code-reviewer.md`, `plugins/vwf/agents/execute-security-reviewer.md`               | —          | pending |        |
-| U2 | 1    | [02-orchestrator-stage.md](02-orchestrator-stage.md) | `plugins/vwf/skills/execute/SKILL.md`, `plugins/vwf/assets/execute-stages.md`, `plugins/vwf/assets/memory.md`  | —          | pending |        |
-| U3 | 2    | [03-docs.md](03-docs.md)                             | `readme.md`, `CLAUDE.md`, `.claude/**`, `site/src/content/docs/**`                                             | U1, U2     | pending |        |
-| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md)         | `plugins/vwf/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json` (regenerated) | U3         | pending |        |
+| Id | Wave | Unit file                                            | Owns                                                                                                           | Depends on | Status  | Commit   |
+| -- | ---- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
+| U1 | 1    | [01-reviewer-agents.md](01-reviewer-agents.md)       | `plugins/vwf/agents/execute-code-reviewer.md`, `plugins/vwf/agents/execute-security-reviewer.md`               | —          | green   | 87884cfd |
+| U2 | 1    | [02-orchestrator-stage.md](02-orchestrator-stage.md) | `plugins/vwf/skills/execute/SKILL.md`, `plugins/vwf/assets/execute-stages.md`, `plugins/vwf/assets/memory.md`  | —          | green   | 6d430029 |
+| U3 | 2    | [03-docs.md](03-docs.md)                             | `readme.md`, `CLAUDE.md`, `.claude/**`, `site/src/content/docs/**`                                             | U1, U2     | green   | 0804ff94 |
+| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md)         | `plugins/vwf/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json` (regenerated) | U3         | pending |          |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -300,8 +303,19 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                                             | Commit   |
+| ---- | --------- | ----- | ----- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 0    | preflight | —     | 1     | green       | all nine gate lines green on the integration branch                                                                                                                                                                                                                                                                                                | —        |
+| 1    | U1        | opus  | 1     | returned    | DECIDED: fallback `ENGINE` line keeps its exact text, reason appended in prose; step 2's "dimension `/code-review` does not cover" and "do not paste output" rule left verbatim (name, not invoke). GAP: none                                                                                                                                      | 87884cfd |
+| 1    | U2        | opus  | 1     | returned    | DECIDED: stage-table "Runs" column widened, rows re-padded by hand. DOCS FALSIFIED: vwf.md:195-197, :1889-1894, skills-and-agents.md:69-70 (all already listed for U3). GAP: none                                                                                                                                                                  | 6d430029 |
+| 1    | R1        | opus  | 1     | findings(2) | SKILL.md:105 [U2] fold broken at 101 chars; execute-code-reviewer.md:32-34 + security:31-34 [U1] RULINGS — `ENGINE` line verbatim with "carrying the reason given" but no stated home for the reason; not-supplied indistinguishable from failure. TRACE: pass — both blocks reached, no user input, no SendMessage, no skill invoked by an agent  |          |
+| 1    | U1        | opus  | 2     | returned    | fallback line is now `ENGINE: unavailable — <reason>` in step 1 and the block; fixed suffix gone. DECIDED: block comment names the `## Engine` section, not the skill                                                                                                                                                                              | 87884cfd |
+| 1    | U2        | opus  | 2     | returned    | re-folded the Pipeline paragraph at 80; no other over-80 line added                                                                                                                                                                                                                                                                                | 6d430029 |
+| 1    | R1        | opus  | 2     | pass        | FINDINGS: 0; CONTRACT clean; TRACE unchanged. RULINGS residual, contested: the fallback suffix `manual dimensions only` became `<reason>` — orchestrator-directed to close round 1, since the contract's "keeps its current vocabulary" and "the return line says so" could not both hold; `ENGINE: unavailable —` kept, nothing parses the suffix |          |
+| 2    | U3        | opus  | 1     | returned    | DECIDED: mermaid node vwf.md:1932 edited too (same `code → review → security` string); agent rows gained one hand-off clause each; docs-sync surveyor: FINDINGS none, readme/how-tos/vwf.md:168-177,205-210,325 confirmed true. GAP: none                                                                                                          | 0804ff94 |
+| 2    | R2        | opus  | 1     | findings(1) | skills-and-agents.md:69-70 [U3] rule 2 — dangling "it" in both reviewer rows; fact right, alignment intact. CONTRACT clean; RULINGS clean                                                                                                                                                                                                          |          |
+| 2    | U3        | opus  | 2     | returned    | rows 69-70 reworded ("runs and hands over under `## Engine`"), width re-padded                                                                                                                                                                                                                                                                     | 0804ff94 |
+| 2    | R2        | opus  | 2     | pass        | FINDINGS: 0; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                                                         |          |
 
 ## Launch
 
