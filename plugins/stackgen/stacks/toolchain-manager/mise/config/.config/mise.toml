@@ -44,9 +44,18 @@ status.missing_tools = "always"
 # a same-day fix reachable without taking the first minutes of a release.
 minimum_release_age = "10h"
 
-# Lockfile management: set to false to avoid creating or using a lockfile.
-# There's some side effect with `uv` if this is set to `true`
-lockfile = false
+# Record every resolved version in a lockfile, which IS committed. That is what
+# makes "latest" reproducible: humans move the lockfile forward deliberately
+# (`mise upgrade`), and the pipeline installs from it (see mise.ci.toml).
+#
+# **One lockfile per config file that declares tools, named after that file's
+# stem.** `mise install` writes `mise.dev.lock` beside `mise.dev.toml`, and would
+# write `mise.lock` beside this file the moment `[tools]` below stops being
+# empty. With the split as shipped — an empty base and the dev tools — the only
+# file produced is `.config/mise.dev.lock`. All of them are tracked; only
+# `mise.local.lock`, the counterpart of the uncommitted `mise.local.toml`, is
+# ignored.
+lockfile = true
 
 # Interleave task output rather than buffering per task. Applies when `raw` is
 # off; with `raw = true` above, mise streams straight through and this is inert
