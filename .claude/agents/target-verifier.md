@@ -7,7 +7,6 @@ description: Real-install verifier — proves the marketplace and the installer
   and what survived an uninstall. Pass what changed; no conversation context.
 tools: Bash, Read, Grep, Glob
 model: opus
-effort: medium
 ---
 
 # target-verifier
