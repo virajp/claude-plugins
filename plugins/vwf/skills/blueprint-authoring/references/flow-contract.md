@@ -53,7 +53,11 @@ Background Jobs if the registry has no worker.
   authorization contract formerly on the entity's Actors & Actions surface;
   per-operation auth also lives in the OpenAPI contract's `security`. Mark
   operator and destructive triggers audit-recorded (the product-foundations
-  baseline).
+  baseline). A `yes` in **Audit-recorded** means one `audit-event` is written
+  when that trigger fires — the standard entity at
+  `${CLAUDE_PLUGIN_ROOT}/assets/standard-entities.md`, whose fields and
+  append-only rules are the contract; the same reading applies to an
+  `(audit-recorded)` step marker.
 - **Steps** — ordered, each naming its actor, the action, and the entity/service
   touched as a **resolving markdown link**. An API-backed step names the
   operation as an `operationId` defined in

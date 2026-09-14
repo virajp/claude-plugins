@@ -55,6 +55,12 @@ to the relevant anchors rather than repeating.
 
 ## Audit {#audit}
 
+<!-- Scope, storage and access only. The event shape is NOT restated here — it
+     is the audit-event entity's contract
+     ([audit-event](entities/audit-event/index.md), schema.yaml authoritative);
+     this anchor links it and holds what is recorded, who may read it, and how
+     long it is kept. -->
+
 ## Notifications {#notifications}
 
 ## Background processes {#background}
