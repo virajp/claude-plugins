@@ -777,7 +777,7 @@ record.
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/vwf:init`                    | Internal — shape the base repo **and every member repo** (config layout, task library, gates, hygiene files, a licence); reached only through `/vwf:setup`      |
 | `/vwf:setup [reshape]`         | Onboard/migrate a repo into vwf's format; `reshape` runs the repo-shape pass alone, across every member (re-runnable)                                           |
-| `/vwf:product`                 | The Phase −1 outcome contract — problem, users, goals, slice priority                                                                                           |
+| `/vwf:product [note]`          | The Phase −1 outcome contract — problem, users, goals, slice priority; an optional feedback note seeds the update questions                                     |
 | `/vwf:architecture`            | Bootstrap or update the system shape + Project Registry                                                                                                         |
 | `/vwf:design-system`           | Import the product's design system from its design tool into the contract (mandatory once UI exists)                                                            |
 | `/vwf:blueprint [flow]`        | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                                                                    |
@@ -1416,7 +1416,11 @@ reviewer rejects a flow no goal justifies; entities trace to goals through the
 flows that use them), and `/vwf:feedback` logs metric readings against it. It's
 not a one-time doc — re-run it on **every product change**: adding, updating, or
 retiring a feature/goal, a pivot, or a re-rank (update mode asks only about the
-delta). Retired goals reconcile their inbound links, never dangle.
+delta). An optional argument is a **feedback note** — how `/vwf:feedback`'s
+feature-idea route hands over, as `/vwf:product <note>` — which update mode
+quotes in its first question and uses to decide which deltas to ask about first;
+create mode ignores it. Retired goals reconcile their inbound links, never
+dangle.
 
 ### /vwf:architecture
 
@@ -2027,12 +2031,30 @@ code change that would break the released contract like a security finding.
 ### /vwf:feedback
 
 The front door for what production teaches you. Paste a bug report, a metric
-reading, or a user complaint; it classifies and routes it to where it gets
+reading, a user complaint, or a want that needs a new project or capability
+before any flow can describe it; it classifies and routes it to where it gets
 **fixed** now, rather than onto a list to wait. Feedback and the
 [backlog](#vwfbacklog) are opposite cases: feedback is being worked on, and may
 change `product.md`, the blueprint or the architecture before following the
 `plan` → `execute` line; the backlog is what nobody is working on yet. Nothing
-an intake produces becomes a backlog row. The routes:
+an intake produces becomes a backlog row.
+
+Once classified, and before it offers anything, feedback prints one **build
+state** line:
+
+```text
+Build state: <none/partial/complete>; contract: <unreleased/released>
+```
+
+The first value is the owning flow's or entity's `implementation:` stamp; the
+second is whether `docs/blueprint/apis/released/` holds a snapshot for what the
+report touches. A kind with no owning flow or entity (a metric reading, a shape
+change, an incident, a not-a-blueprint-gap) prints `n/a` for both. When the
+contract is released, the route says so: the fix is additive-only, or expand and
+contract — blueprint's released-contract guard and plan's delta checks decide;
+feedback only says so. Every route then closes with the **remaining path** in
+one line — `then /vwf:plan <slice>`, `then /vwf:execute` — so you see the whole
+way to production before the single hand-off. The routes:
 
 - **Behavior bug / blueprint hole** → gap + a `/vwf:plan` / `/vwf:blueprint`
   offer (deferred items land in the owning flow doc's Open Questions, so nothing
@@ -2043,8 +2065,19 @@ an intake produces becomes a backlog row. The routes:
   / re-scope as the agenda.
 - **UX issue** → recorded at the exact screen/state, with a `/vwf:design-system`
   or `/vwf:blueprint` offer.
-- **Feature idea** → `/vwf:product` first (which goal does it serve?), then the
-  normal pipeline — never straight to code.
+- **Feature idea** → never straight to code, and always to a **named unit**: an
+  idea an existing flow or entity can absorb → `/vwf:blueprint <unit>`; an idea
+  that implies a goal `product.md` does not serve → `/vwf:product <note>` first,
+  handing the report over as the note that seeds the update questions, then
+  `/vwf:blueprint <unit>` for the unit the new goal's slice names; then
+  `/vwf:plan`, then `/vwf:execute`.
+- **Shape change** — the fix needs a new project, a changed stack pin, a new
+  capability or a cross-cutting foundation before any flow can be written →
+  `/vwf:architecture`, handed the report's substance as the delta its update
+  mode asks about; architecture hands to `/vwf:setup`'s materialize pass itself.
+  A report whose shape change is incidental stays a blueprint hole and reaches
+  architecture through blueprint's own sub-step. Deferred, it is one line under
+  `## Open Questions` in `docs/blueprint/architecture.md`.
 - **Incident** (`/vwf:feedback incident <what happened>`) → filed to memory as a
   problem with a postmortem stub appended to `docs/runbooks/postmortems.md`;
   each action item goes back through the classifier as its own intake.
@@ -2059,6 +2092,7 @@ an intake produces becomes a backlog row. The routes:
 
 ```text
 /vwf:feedback "cancelled order #1043 was refunded twice"
+/vwf:feedback "enterprise customers want SSO — there is no identity project"
 /vwf:feedback canvas    # harvest the design review conversation
 ```
 

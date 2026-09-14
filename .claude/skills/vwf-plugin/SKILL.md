@@ -57,7 +57,7 @@ were **absorbed**. The reasoning is [`dependencies.md`][de].
 The workflow is
 `setup → product → architecture → design-system → blueprint → plan → execute`,
 with `verify` (post-deploy) and `feedback` (production intake) closing the loop
-back into `product`/`blueprint`/`plan`. The pair `change-plan` →
+back into `product`/`architecture`/`blueprint`/`plan`. The pair `change-plan` →
 `change-execute` sits **beside** that workflow line and never joins it — it
 plans and runs work with no blueprint slice behind it, reads neither the
 blueprint nor the registry, and gates on the commands its own plan folder names.

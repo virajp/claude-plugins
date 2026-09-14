@@ -10,7 +10,9 @@ backlog: [ B05 ]
 
 ## Status
 
-**APPROVED** 2026-09-14 by the user, after self-review.
+**COMPLETE** 2026-09-14. Commits on `2026-09-14-feedback-gaps`, in order:
+`e2cf104f` (U1), `85343b1a` (U2), `d2516578` (U3), `7ab90d1b` (plan log),
+`8245bf0a` (U4), plus the archive commit.
 
 ## Consent
 
@@ -167,12 +169,12 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                                    | Owns                                                                                                                                             | Depends on | Status  | Commit |
-| -- | ---- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------- | ------ |
-| U1 | 1    | [01-feedback.md](01-feedback.md)             | `plugins/vwf/skills/feedback/SKILL.md`                                                                                                           | —          | pending |        |
-| U2 | 1    | [02-product.md](02-product.md)               | `plugins/vwf/skills/product/SKILL.md`                                                                                                            | —          | pending |        |
-| U3 | 2    | [03-docs.md](03-docs.md)                     | `readme.md`, `CLAUDE.md`, `.claude/**`, `site/src/content/docs/**`, `docs/backlog.md`, `docs/memory/decisions/2026-09-14-feedback-gaps.md` (new) | U1, U2     | pending |        |
-| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md) | `plugins/vwf/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`                                                 | U3         | pending |        |
+| Id | Wave | Unit file                                    | Owns                                                                                                                                             | Depends on | Status | Commit   |
+| -- | ---- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------ | -------- |
+| U1 | 1    | [01-feedback.md](01-feedback.md)             | `plugins/vwf/skills/feedback/SKILL.md`                                                                                                           | —          | green  | e2cf104f |
+| U2 | 1    | [02-product.md](02-product.md)               | `plugins/vwf/skills/product/SKILL.md`                                                                                                            | —          | green  | 85343b1a |
+| U3 | 2    | [03-docs.md](03-docs.md)                     | `readme.md`, `CLAUDE.md`, `.claude/**`, `site/src/content/docs/**`, `docs/backlog.md`, `docs/memory/decisions/2026-09-14-feedback-gaps.md` (new) | U1, U2     | green  | d2516578 |
+| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md) | `plugins/vwf/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`                                                 | U3         | green  |          |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -275,8 +277,22 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                                                                                          | Commit   |
+| ---- | --------- | ----- | ----- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 0    | preflight | —     | —     | green       | all nine gate lines green on `develop` at `8b3f9faf`                                                                                                                                                                                                                                                                                                                                            | —        |
+| 1    | U1        | opus  | 1     | green       | DECIDED: kinds table widened to keep one row per kind; the `n/a` case phrased as "the same line with `n/a` in place of both values" so `Build state:` hits once. DOCS FALSIFIED: none beyond the survey's list. GAP: edit 3's literal `Build state: n/a` vs the orchestrator gate's single hit — phrased in prose, meaning unchanged                                                            | —        |
+| 1    | U2        | opus  | 1     | green       | DECIDED: feedback-note paragraph as its own bold-led paragraph in Step 2, not inside the update bullet. DOCS FALSIFIED: `site/src/content/docs/plugins/vwf.md:773` product row hint. GAP: none                                                                                                                                                                                                  | 85343b1a |
+| 1    | R1        | opus  | 1     | findings(5) | :117 n/a set widened beyond edit 3; :135 bug route cites only plan's delta checks; :181 architecture.md has no open-questions heading in the template (ruling-level, nobody owns); :87 kinds table 157 cols; docs `production-feedback-loop.md:146` + `vwf.md:2046` falsified by decision 4 → U3. CONTRACT clean; RULINGS: U1 minor departures from decision 3; U2 hint sanctioned by unit file | —        |
+| 1    | U1        | opus  | 2     | green       | R1's four findings fixed: n/a set restored to edit 3; bug route cites blueprint's guard and plan's delta checks; shape-change deferral under an `## Open questions` heading created when absent; signal cell shortened, table 88 cols. GAP: architecture template has no open-questions heading — assumed appended at the end when absent, template untouched                                   | —        |
+| 1    | R1        | opus  | 2     | findings(3) | :117 "every other kind reads the stamp" undefined for shape change and not-a-blueprint-gap; :186 heading casing `## Open questions` vs the templates' `## Open Questions`; :187 fold. CONTRACT clean; RULINGS clean. Guard: 5→3, no resurfacing — second round allowed                                                                                                                          | —        |
+| 1    | U1        | opus  | 3     | green       | R1's three round-2 findings fixed: n/a rule names the four kinds with no owning unit; `## Open Questions` casing; shape-change bullet refolded to 80. GAP unchanged                                                                                                                                                                                                                             | —        |
+| 1    | R1        | opus  | 3     | findings(1) | contested (cap reached): `feedback/SKILL.md:118` line breaks at 58 cols mid-paragraph, cosmetic. CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                  | —        |
+| 2    | U3        | opus  | 1     | green       | DECIDED: `readme.md`/`CLAUDE.md` untouched — their intake sentences enumerate no kinds; manual's Relay feature-idea example routes to `/vwf:blueprint task`. Docs-sync applied; production-feedback-loop gains a step 6 (shape change). GAP: `code:format` re-padded the plan index (orchestrator's, not reverted)                                                                              | —        |
+| 2    | R2        | opus  | 1     | findings(2) | `vwf.md:2055` "The eight routes:" introduces seven bullets; `production-feedback-loop.md:179` feature-idea path line drops the blueprint hop in the product-first case. CONTRACT clean; RULINGS clean; edit 6 no-op confirmed                                                                                                                                                                   | —        |
+| 2    | U3        | opus  | 2     | green       | R2's two findings fixed: "The routes:"; feature-idea path line carries the blueprint hop in both branches. `p:site:check` green                                                                                                                                                                                                                                                                 | d2516578 |
+| 2    | R2        | opus  | 2     | pass        | both fixes verified; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                                                                                              | —        |
+| 3    | U4        | opus  | 1     | green       | vwf 19.25.0→19.26.0, site 1.1.16→1.1.18 (skipped 1.1.17), marketplace regenerated (`vwf-v19.26.0`). GAP: `claude plugin validate --strict` lists no skills on this CLI (same as the 2026-09-13 run) — substituted `p:plugins:check` (36 skills) plus frontmatter `name:` lines                                                                                                                  | —        |
+| 3    | R3        | opus  | 1     | pass        | three Owns paths only; bumps per consent; marketplace diff is the vwf ref + version lines. CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                        | —        |
 
 ## Launch
 
