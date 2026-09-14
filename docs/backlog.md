@@ -47,7 +47,7 @@ push to `develop` or the current branch, before the hand-off line. Today the
 skill writes the folder and stops; the plan reaches the fresh session only if
 the user commits by hand.
 
-Planned in: `docs/plans/2026-09-13-vwf-process/`
+Planned in: `docs/plans/archived/2026-09-13-vwf-process/`
 
 ### B02 — version rule: never 13 or 17
 
@@ -58,7 +58,7 @@ enforced nowhere. Program it: the checker (`p:plugins:check`) refuses such a
 manifest version, the release and version tasks refuse to cut one, and the
 skills that bump a format stamp state the rule.
 
-Planned in: `docs/plans/2026-09-13-vwf-process/`
+Planned in: `docs/plans/archived/2026-09-13-vwf-process/`
 
 ### B03 — `/vwf:backlog` skill
 
@@ -67,7 +67,7 @@ carries a priority that decides what is picked first. Adds, lists, reprioritises
 and closes entries; `/vwf:change-plan` and `/vwf:plan` can read it for the next
 item. This file is the seed and the first consumer.
 
-Planned in: `docs/plans/2026-09-13-vwf-process/`
+Planned in: `docs/plans/archived/2026-09-13-vwf-process/`
 
 ### B04 — split `REPO_NAME` from the task-group id
 
@@ -77,7 +77,7 @@ project and recommended to be the project type (`service`, `worker`, `console`).
 Separate them in `init`'s question 2, the mise pack's marked positions and
 conventions, and `doctor`'s checks.
 
-Planned in: `docs/plans/2026-09-14-repo-name-split/`
+Planned in: `docs/plans/archived/2026-09-14-repo-name-split/`
 
 ### B05 — `/vwf:feedback`
 
@@ -98,7 +98,7 @@ pack with a category of its own, the blueprint contract it implies, and the
 console access rule. The existing `product-foundations/references/audit-logs.md`
 is the contract's starting point.
 
-Planned in: `docs/plans/2026-09-14-audit-capability/`
+Planned in: `docs/plans/archived/2026-09-14-audit-capability/`
 
 ### B07 — stylesheet options for web frontends
 
