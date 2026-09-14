@@ -6,7 +6,6 @@ description: Read the design system back from Lovable and return it as a vwf des
 license: MIT
 disable-model-invocation: false
 model: sonnet
-effort: medium
 ---
 
 # design-import-design-system — Lovable

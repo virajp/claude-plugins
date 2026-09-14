@@ -10,7 +10,7 @@ description: Produce reviewable cycle plans as diffs for one slice of the
   /vwf:doctor blocking finding across the chain's projects.
 argument-hint: "[flow/<name> | entity/<name> | <name>]"
 model: opus
-effort: medium
+
 disable-model-invocation: false
 ---
 

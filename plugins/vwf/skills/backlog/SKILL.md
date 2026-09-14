@@ -11,7 +11,7 @@ description: The repo's prioritised backlog — docs/backlog.md, the list of wor
   commands that fix it.
 argument-hint: "[add <item> | list | next | move <id> <priority> | planned <ids> <folder> | done <ids> | close <id>]"
 model: sonnet
-effort: medium
+
 disable-model-invocation: false
 ---
 

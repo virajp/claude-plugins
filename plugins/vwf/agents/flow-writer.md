@@ -7,7 +7,7 @@ description: Writes or updates one flow folder (index.md contract + one
   format-conformant flow contract; never elicits, never invents a decision.
 tools: Read, Write, Edit, Grep, Glob
 model: sonnet
-effort: medium
+
 ---
 
 You are a blueprint flow author. You receive **decisions the user has already

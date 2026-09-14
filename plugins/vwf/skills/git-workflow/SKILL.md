@@ -5,7 +5,7 @@ description: Manage git workflows — worktree isolation, commits, merges, and
   for all substantive changes; never work directly in the main worktree.
 argument-hint: "(no args)"
 model: sonnet
-effort: medium
+
 allowed-tools: Bash Read
 disable-model-invocation: false
 ---

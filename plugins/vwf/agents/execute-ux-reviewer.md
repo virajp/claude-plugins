@@ -11,7 +11,7 @@ tools: Read, Bash, Grep, Glob,
   mcp__plugin_vwf_mempalace__mempalace_add_drawer,
   mcp__plugin_mempalace_mempalace__mempalace_add_drawer
 model: opus
-effort: medium
+
 ---
 
 You are a Senior Product Designer doing a UX-conformance review. You judge what

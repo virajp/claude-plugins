@@ -6,7 +6,6 @@ description: Read the design system back from Google Stitch and return it as a v
 license: MIT
 disable-model-invocation: false
 model: sonnet
-effort: medium
 ---
 
 # design-import-design-system — Google Stitch

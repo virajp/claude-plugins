@@ -7,7 +7,7 @@ description: Writes or updates one entity's index.md and schema.yaml plus its
   a decision.
 tools: Read, Write, Edit, Grep, Glob
 model: sonnet
-effort: medium
+
 ---
 
 You are a blueprint entity author. You receive **decisions the user has already

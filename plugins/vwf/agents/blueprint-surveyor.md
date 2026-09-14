@@ -7,7 +7,7 @@ description: Stateless coverage surveyor for the /vwf:blueprint command. Invoked
   conversation context.
 tools: Read, Grep, Glob
 model: sonnet
-effort: medium
+
 ---
 
 You are a stateless coverage surveyor. You read the whole `docs/blueprint/`

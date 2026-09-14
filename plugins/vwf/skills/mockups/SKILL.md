@@ -7,7 +7,7 @@ description: Render the blueprint's screens as self-contained static HTML
   never contract; never pushed to the design tool, never committed.
 argument-hint: "[flow, e.g. checkout — omit to sweep all screens]"
 model: sonnet
-effort: medium
+
 disable-model-invocation: true
 ---
 

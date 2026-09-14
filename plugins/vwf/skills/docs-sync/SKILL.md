@@ -7,7 +7,7 @@ description: Reconcile the repo's human-facing docs — README, CLAUDE.md, docs/
   commit range, or let it scope to the current branch's delta.
 argument-hint: "[<commit-range>]"
 model: sonnet
-effort: medium
+
 disable-model-invocation: false
 ---
 

@@ -8,7 +8,6 @@ description: Stateless reviewer gate for stackgen's generation pipeline.
   generated artifacts, and the citation list — no conversation context.
 tools: Read, Grep, Glob
 model: opus
-effort: medium
 ---
 
 You are the stateless reviewer gate for stackgen's generated stack artifacts.

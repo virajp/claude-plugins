@@ -7,7 +7,7 @@ description: Create or update docs/blueprint/registry.yaml — the
   evidence quoted and corrected by MCQ; the interview is the fallback.
 argument-hint: "(no args; detects create vs update)"
 model: sonnet
-effort: medium
+
 disable-model-invocation: false
 ---
 

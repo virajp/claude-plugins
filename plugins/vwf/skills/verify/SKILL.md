@@ -9,7 +9,7 @@ description: Verify a deployed environment against the blueprint —
   through the feedback machinery.
 argument-hint: "[environment, e.g. staging]"
 model: sonnet
-effort: medium
+
 disable-model-invocation: true
 ---
 

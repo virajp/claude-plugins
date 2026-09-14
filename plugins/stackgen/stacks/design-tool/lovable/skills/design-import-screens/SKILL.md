@@ -6,7 +6,6 @@ description: Read a flow's designed screens back from Lovable and return them as
 license: MIT
 disable-model-invocation: false
 model: sonnet
-effort: medium
 ---
 
 # design-import-screens — Lovable

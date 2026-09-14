@@ -9,7 +9,7 @@ description: Check that the repo actually matches what .config/vwf.yaml declares
   any time the repo and the config might have drifted apart.
 argument-hint: "[project ...]"
 model: sonnet
-effort: medium
+
 disable-model-invocation: false
 ---
 

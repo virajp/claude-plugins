@@ -9,7 +9,7 @@ description: Capture the current session as a handoff document and file it to
   automatically. Use when the context window grows beyond ~60%.
 argument-hint: "[<name> | next]"
 model: sonnet
-effort: medium
+
 disable-model-invocation: false
 ---
 

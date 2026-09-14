@@ -9,7 +9,7 @@ description: Bring a repo into vwf's format and keep it there. Step 0 resolves
   pass alone.
 argument-hint: "[reshape]"
 model: sonnet
-effort: medium
+
 disable-model-invocation: true
 ---
 

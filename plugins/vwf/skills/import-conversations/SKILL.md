@@ -7,7 +7,7 @@ description: Read the design review conversation back from a project's design
 user-invocable: false
 disable-model-invocation: false
 model: sonnet
-effort: medium
+
 ---
 
 # import-conversations — the design adapter

@@ -6,7 +6,7 @@ description: Create or update docs/blueprint/product.md — the problem, target
   foundation; blueprint halts without it.
 argument-hint: "[feedback note — optional; seeds the update questions]"
 model: opus
-effort: medium
+
 disable-model-invocation: false
 ---
 

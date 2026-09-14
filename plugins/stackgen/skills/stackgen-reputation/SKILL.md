@@ -9,7 +9,6 @@ description: Vet a third-party name — an npm, PyPI or pub.dev package, a
 argument-hint: "<ecosystem>:<name> …"
 disable-model-invocation: false
 model: sonnet
-effort: medium
 ---
 
 # stackgen-reputation

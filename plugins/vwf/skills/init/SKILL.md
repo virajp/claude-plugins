@@ -9,7 +9,7 @@ description: Bootstrap a new repo, or reshape an existing one and every member
   packs and writes no tool config of its own. Invoked by /vwf:setup — its Step 0
   offer, or /vwf:setup reshape — and never typed by a user.
 model: sonnet
-effort: medium
+
 user-invocable: false
 disable-model-invocation: false
 ---

@@ -6,7 +6,6 @@ description: Read a flow's designed screens back from Claude Design and return t
 license: MIT
 disable-model-invocation: false
 model: sonnet
-effort: medium
 ---
 
 # design-import-screens — Claude Design
