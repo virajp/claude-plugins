@@ -18,7 +18,7 @@ plan split, to be confirmed at each plan's interview.
 | B07 | Stylesheet axis for web frontends: `tailwindcss` and `stylex`           | E     | P2       | planned |
 | B08 | SEO, OpenGraph and favicons for sites and webapps                       | E     | P2       | planned |
 | B09 | `notion` MCP server config                                              | F     | P3       | planned |
-| B10 | `stack-reputation` skill — vet every stack stackgen recommends          | G     | P2       | open    |
+| B10 | `stack-reputation` skill — vet every stack stackgen recommends          | G     | P2       | planned |
 | B11 | Claude Code terminal as the default design tool, via `taste-skill`      | H     | P2       | open    |
 
 ## Groups
@@ -134,6 +134,8 @@ package, action or image it names, so a malicious or typosquatted package is
 never recommended. Defines the signals (registry age, downloads, maintainers,
 advisories, provenance), the sources, and where in the stack-menu and template
 flow it runs.
+
+Planned in: `docs/plans/2026-09-14-stack-reputation/`
 
 ### B11 — Claude Code terminal as the default design tool
 
