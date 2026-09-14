@@ -154,8 +154,8 @@ version: <semver — what sync diffs against, per component>
 type: <component type> # assets/taxonomy.md
 category: <token> # required where the type has categories
 capability: <token> # the vwf capability realized — where one applies
-kind: language-bundle | database | cloud-provider | repo-gate | toolchain-manager | repo-hygiene | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool # the bundle kind it composes into (assets/kinds.md)
-axis: project | backing | deploy | repo | design | cicd # omitted by cloud-provider components, which compose into both a backing- and a deploy-axis bundle; each bundle naming one declares its own
+kind: language-bundle | database | cloud-provider | repo-gate | toolchain-manager | repo-hygiene | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool | stylesheet # the bundle kind it composes into (assets/kinds.md)
+axis: project | backing | deploy | repo | design | cicd | stylesheet # omitted by cloud-provider components, which compose into both a backing- and a deploy-axis bundle; each bundle naming one declares its own
 platforms: [ <platform> ] # language components only — the bundle root
 languages: # language and app-framework components only
   - token: <language token>
@@ -198,7 +198,7 @@ decides alone.
 
 ```yaml
 name: <display name>
-axis: project | backing | deploy | repo | design | cicd
+axis: project | backing | deploy | repo | design | cicd | stylesheet
 kind: <bundle kind> # assets/kinds.md
 platforms: [ <platform> ] # project axis only
 artifact: <token> # deploy axis only
@@ -230,6 +230,15 @@ uncovered ones run the generation pipeline on first fetch, and the lockfile
 records which was which per component. That mixing is the dispatch rule
 working at bundle scale.
 
+**A `stylesheet` component and its bundle take neither `platforms:` nor
+`languages:`**, and the absence is a ruling rather than an omission.
+`platforms:` is the `project` axis's, and vwf's condition on the stylesheet
+axis — asked of a project declaring `site` or `webapp` — lives in vwf's own
+rules, so repeating it here as a platform list would make one answer read as
+several. `languages:` belongs to the components that bring a language, and a
+stylesheet approach brings none: it is authored inside whatever the project
+already writes.
+
 **No bundle directory exists**, which is what keeps a bundle a composition
 rather than a fourth kind of artifact tree.
 
@@ -241,9 +250,10 @@ A bundle is the composition rooted per kind
 `toolchain-gate` components; a Cloud-Bundle a `cloud-provider` + its
 `cloud-service`s; a Datastore-Bundle category doctrine + an instance
 component; a Deploy-Bundle one `deploy-target` component alone; a
-Design-Bundle one `design-tool` component alone, and a CI-Bundle one
-`ci-system` — the two **tool axes**, whose bundle slug is the tool token the
-project config already holds. No bundle directory exists anywhere: the materializer folds the
+Design-Bundle one `design-tool` component alone, a CI-Bundle one
+`ci-system`, and a Stylesheet-Bundle one `stylesheet` component — the three
+**tool axes**, whose bundle slug is the token the project config already
+holds. No bundle directory exists anywhere: the materializer folds the
 resolved composition into **one** `.claude/stackgen/templates/<slug>.md` —
 the vwf payload as frontmatter, including the `components:` refs
 (`<type>/<slug>@<version>`, or `@generated`), with the components'

@@ -74,8 +74,8 @@ Return **only** this, filled from `.claude/stackgen/templates/<slug>.md`:
 
 ```yaml
 slug: <the requested slug>
-axis: project | backing | deploy | repo | design | cicd
-kind: language-bundle | database | cloud-provider | repo-gate | toolchain-manager | repo-hygiene | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool # assets/kinds.md
+axis: project | backing | deploy | repo | design | cicd | stylesheet
+kind: language-bundle | database | cloud-provider | repo-gate | toolchain-manager | repo-hygiene | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool | stylesheet # assets/kinds.md
 components: # the bundle's composition — the per-component dispatch record
   - <type>/<slug>@<pack version> # pack-sourced
   - <type>/<slug>@generated # generated
@@ -117,6 +117,17 @@ check real.
   each component ships the structural slice its type owns within it
   (`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`) — the run never invents a
   structure.
+- **A `stylesheet` bundle is doctrine and nothing else.** Its one component
+  ships a `conventions.md` and a paths-scoped skill and **no `config/` tier**,
+  so the landing is the ordinary one — the conventions fold into the template
+  entry, the skill copies into the repo's `.claude/skills/`, the lockfile
+  records the component and the slug — and there is no repo config file to
+  consent to on top. What the approach needs wired into the host framework (a
+  build plugin, an entry stylesheet import) is **not landed here**: the
+  doctrine names it by role and `/vwf:execute` makes the edit in the project's
+  own config, because that edit is framework-specific and this component does
+  not know which framework it was pinned beside. A config file that guessed
+  would overwrite the framework pack's.
 - **A landing is not confined to `.claude/`.** A component may also declare
   repo config files in a `config/` tree that mirrors the **repo root** —
   `config/.config/mise/tasks/code/format` lands at

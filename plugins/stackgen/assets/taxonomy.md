@@ -83,6 +83,15 @@ The closed list. A component is exactly one of:
   into anything, which is why it is its own type: it sits beside a stack
   rather than inside one, and two projects on the same stack routinely use
   different ones.
+- **`stylesheet`** — how a web frontend's styles are authored, and how the
+  design system's semantic tokens become CSS: a utility framework, a
+  compile-time CSS-in-JS system, or plain custom properties. Selected by
+  the project's `stylesheet:` pin rather than composed into a framework,
+  for the same reason `design-tool` is its own type — two projects on the
+  same framework routinely author styles differently, and the framework
+  pack must not decide it for them. Pinned per project, and asked only of
+  a project declaring a `site` or `webapp` platform. Composes into a
+  Stylesheet-Bundle.
 
 ## Categories
 
@@ -103,6 +112,11 @@ and its components leave `category` unset.
 - **`capability-provider`**: `identity` / `telemetry` / `workflow` /
   `secrets-manager` / `audit`
 - **`app-framework`**: `cross-platform-ui` / `native-ui`
+- **`stylesheet`**: `utility` / `compile-time` / `plain` — the three ways
+  the token mapping can be paid for. `utility` generates classes from a
+  token block; `compile-time` compiles authored style objects to atomic
+  CSS at build; `plain` writes custom properties and hand-authored rules
+  with no build step of its own.
 
 A name appearing as both a type and a category is deliberate, not a
 collision: `kafka` is type `queue` (a standalone component); a provider's
@@ -180,10 +194,18 @@ A bundle is rooted per kind (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`):
   fence rather than a pairing.
 - A **Design-Bundle** is exactly one `design-tool` component, standing alone
   like a Deploy-Bundle, on the **`design`** axis.
+- A **Stylesheet-Bundle** is exactly one `stylesheet` component, standing
+  alone like a Design-Bundle, on the **`stylesheet`** axis. There is no
+  second half for the same reason: there is no category above "how styles
+  are authored" to write doctrine at, and what keeps the single component
+  honest is its kind's scope fence. It carries **no `platforms:`** — the
+  axis is asked only of a `site` or `webapp` project, which is vwf's
+  condition rather than a property of the bundle, and listing platforms
+  here would make the same pack read as a different answer per platform.
 
-Those last two share a property nothing else here has, and it is what makes the
-**tool axes** (`design`, `cicd`) cheap: **the bundle slug is the tool token the
-project config already holds**. Picking from the menu and writing
+Those last three share a property nothing else here has, and it is what makes
+the **tool axes** (`design`, `cicd`, `stylesheet`) cheap: **the bundle slug is
+the token the project config already holds**. Picking from the menu and writing
 `projects.<name>.design` are one act rather than two that can disagree. They
 exist because a template no menu can offer is not an error — it is invisible,
 which is how a CI-system pack shipped that nothing could ever materialize.
