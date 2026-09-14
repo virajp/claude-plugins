@@ -193,7 +193,7 @@ reads a template file.
 **`platforms:` is a list, and that is the point.** Since blueprint format 22 a
 project declares one `role` and one or more platforms, and a single template
 routinely serves several of them: one Flutter template covers `mobile`,
-`tablet`, `desktop` and `webapp` from one codebase; one server template covers
+`tablet`, `desktop` and `auto` from one codebase; one server template covers
 `service` and `webapp` — what the retired `fullstack` role meant. The previous
 contract keyed a template on a single `role`, stored in three places (the
 directory name, the frontmatter and this payload), and could not express either

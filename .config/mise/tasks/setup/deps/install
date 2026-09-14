@@ -1,19 +1,24 @@
 #!/usr/bin/env bash
-#MISE description="Install dependencies"
 
-set -e
+#MISE description="Install dependencies from the lockfile"
+#MISE hide=true
+
+#USAGE flag "--frozen" help="fail rather than write the lockfile"
+
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-# Cleanup before upgrade
-mise run setup:deps:cleanup
+# Fills the `setup:deps:install` slot. `--frozen` is the contract's name for
+# "the lockfile is the input, not the output" — the mode a fresh worktree and CI
+# both want, and the one that turns a stale lockfile into a failure instead of a
+# silent rewrite.
 
-# Upgrade pnpm to the latest version & install dependencies
-mise run setup:deps:upgrade
+install_args=(--aggregate-output --child-concurrency 10 --network-concurrency 10 --recursive)
+if [[ "${usage_frozen:-false}" == "true" ]]; then
+  install_args+=(--frozen-lockfile)
+fi
 
-# Check for outdated packages after upgrade
-mise run setup:deps:outdated
-
-# Run audit after upgrade
-mise run setup:deps:audit
-
-print_header "Installation complete!"
+pnpm install "${install_args[@]}"

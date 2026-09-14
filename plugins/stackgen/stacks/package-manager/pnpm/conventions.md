@@ -32,8 +32,9 @@ Declining the settings entry leaves the script landed and inert.
 ## The task library this pack owns
 
 This pack ships a `config/.config/mise/tasks/` tree — `code/format`,
-`code/lint`, and `setup/deps/{install,outdated,audit,cleanup}` — landing at the
-repo's own `.config/mise/tasks/` behind the materializer's config consent line.
+`code/lint`, and `setup/deps/{install,outdated,audit,upgrade,cleanup}` — landing
+at the repo's own `.config/mise/tasks/` behind the materializer's config consent
+line.
 
 **It owns `code/format` and `code/lint` whole, not a fragment of each.**
 `code:format` runs **dprint first**, then `pnpm dlx sort-package-json`: one task
@@ -59,13 +60,14 @@ lockfile. So this pack's `code/format` replaces the `toolchain-manager`
 baseline's, and a `toolchain-gate` or `app-framework` component's would replace
 this one's.
 
-**The `setup/deps/*` verbs are `install`, `outdated`, `audit` and `cleanup` —
-and deliberately not `upgrade`.** `install` is `pnpm install --recursive`,
-because a workspace install that stops at the root leaves the repo half
-resolved. `cleanup` deletes `dist`, `node_modules`, the lockfile and
-`*.tsbuildinfo`, then prunes the store — a store left behind makes the next
-install look clean when it is replaying. The optional verbs are **probed by
-name**, so a missing file is itself the answer: no `upgrade` here means this
-manager has no such verb, not that the choice is still pending.
+**The `setup/deps/*` verbs are `install`, `outdated`, `audit`, `upgrade` and
+`cleanup` — all five slots.** `install` is `pnpm install --recursive`, because a
+workspace install that stops at the root leaves the repo half resolved.
+`cleanup` deletes `dist`, `node_modules` and `*.tsbuildinfo`, then prunes the
+store — a store left behind makes the next install look clean when it is
+replaying — and deliberately leaves the lockfile alone: the lockfile is an input
+a human reviews, and moving it forward is `upgrade`'s job. The optional verbs
+are **probed by name**, so a missing file is itself the answer: a manager that
+ships no `upgrade` has no such verb, not a choice still pending.
 
 Full judgment: the `pnpm` skill's references.

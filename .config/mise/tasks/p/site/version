@@ -20,30 +20,26 @@ else
 fi
 
 print_header "Bumping ${LEVEL} version ..."
+
+CURRENT="$(node -p "require('./package.json').version")"
+
+# 13 and 17 are never issued as a version component, so the target is computed
+# BEFORE anything is written: `version_bump` is the plain result of the level and
+# `version_next` is that result stepped past a forbidden component at the SAME
+# level — `1.1.12` patched is `1.1.14`, `1.12.0` minored is `1.14.0`.
+#
+# Computing first is what keeps this to ONE write. pnpm implements `version`
+# natively and refuses a dirty tree, so bumping and then bumping again to step a
+# number fails on the second call and leaves the forbidden version on disk.
+PLAIN="$(version_bump "${LEVEL}" "${CURRENT}")"
+VERSION="$(version_next "${LEVEL}" "${CURRENT}")"
+
 # --no-git-tag-version: only edit site/package.json; the change is committed by
 # hand.
-pnpm version "${LEVEL}" --no-git-tag-version
+pnpm version "${VERSION}" --no-git-tag-version
 
-VERSION="$(node -p "require('./package.json').version")"
-
-# 13 and 17 are never issued as a version component, so a bump that lands on one
-# bumps again at the SAME level until it does not — `1.1.12` patched is
-# `1.1.14`, `1.12.0` minored is `1.14.0`.
-#
-# The cap is not decoration: bumping patch never clears a forbidden MINOR, so a
-# tree hand-edited to `1.13.5` would loop forever rewriting site/package.json.
-# Ten is far past any legitimate run, which skips once.
-ATTEMPTS=0
-while version_forbidden "${VERSION}"; do
-  ATTEMPTS=$((ATTEMPTS + 1))
-  if [[ "${ATTEMPTS}" -gt 10 ]]; then
-    print_error "Still at ${VERSION} after ${ATTEMPTS} ${LEVEL} bumps. A forbidden component this level cannot reach — set the version by hand."
-    exit 1
-  fi
-  SKIPPED="${VERSION}"
-  pnpm version "${LEVEL}" --no-git-tag-version >/dev/null
-  VERSION="$(node -p "require('./package.json').version")"
-  version_skip_note "${SKIPPED}" "${VERSION}"
-done
+if [[ "${VERSION}" != "${PLAIN}" ]]; then
+  version_skip_note "${PLAIN}" "${VERSION}"
+fi
 
 print_header "Version is now ${VERSION} — commit site/package.json to record it."

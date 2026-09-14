@@ -46,10 +46,13 @@ contract behind it — the covering rule, what a template payload carries, how
 covering bundle on its menu cannot be pinned and therefore cannot be planned.
 stackgen's `language/typescript` bundle and its framework components cover
 TypeScript and JavaScript; `app-framework/flutter` covers Dart and Flutter and
-serves `mobile`, `tablet`, `desktop`, `webapp` and `auto` from a single codebase
-— `auto` being the same mobile binary reaching CarPlay and Android Auto through
-the pack's Swift and Kotlin edge, so it is declared alongside `mobile` and never
-alone. Anything else takes the **generate** entry — see below.
+serves `mobile`, `tablet`, `desktop` and `auto` from a single codebase — `auto`
+being the same mobile binary reaching CarPlay and Android Auto through the
+pack's Swift and Kotlin edge, so it is declared alongside `mobile` and never
+alone. It does **not** serve `webapp`: the web output is a canvas-rendered
+application rather than a document, so a product with a web surface pins a web
+stack for it, as a `site` or `webapp` project of its own beside the app.
+Anything else takes the **generate** entry — see below.
 
 **A `site` project picks between four Astro bundles**, all on the one
 `framework/astro` pack, all carrying React for islands, differing by how a page

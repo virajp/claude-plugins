@@ -335,12 +335,14 @@ writes, so `claude plugin update` sees each edit without a commit.
 **13 and 17 are never issued as a version component** — the two plugin
 manifests, the installer, the site, `config_format`, `blueprint_format` alike.
 `p:plugins:check` refuses such a manifest; `p:i:version` and `p:site:version`
-**skip past** the number (bumping again at the same level and printing what they
-skipped, capped at ten attempts since a patch bump never clears a forbidden
-minor); all three release tasks **refuse** to tag one. The guard is two
-functions in `.config/mise/tasks/_scripts/local`, this repo's own sidecar beside
-the pack-owned `helpers`, which no pack file may source. Versions issued before
-the rule stand, and the `+N` staging counter is not a component.
+**skip past** the number — each computes its target first, stepping the bumped
+component past a 13 or 17, then writes it in a single `pnpm version` call and
+prints what it skipped, refusing before it writes anything when the level it was
+given cannot reach the forbidden component; all three release tasks **refuse**
+to tag one. The guard is four functions in `.config/mise/tasks/_scripts/local`,
+this repo's own sidecar beside the pack-owned `helpers`, which no pack file may
+source. Versions issued before the rule stand, and the `+N` staging counter is
+not a component.
 
 **A release is two stages, and only the second reaches anyone else.** Local
 first — `mise run p:plugins:local` stages the changed plugins into the dev

@@ -31,7 +31,6 @@ fi
 
 print_subheader "Configuring the SDK ..."
 flutter config --disable-analytics
-flutter config --enable-web
 flutter config --enable-ios
 flutter config --enable-android
 dart --disable-analytics

@@ -59,11 +59,12 @@ That is why **no release task commits**: `p:i:release`, `p:plugins:release` and
 `p:site:release` all tag what has already landed on `main`, and the version bump
 is an ordinary `develop` commit (`p:i:version` for the installer,
 `p:site:version` for the website, the plugin manifest by hand). The two version
-tasks **skip past 13 and 17** rather than land on one, bumping again at the same
-level and printing what they skipped, so `1.1.12` patched is `1.1.14`; all three
-release tasks **refuse** to tag a version carrying such a component, before the
-tag name is built. A release task that commits has to be trusted to commit the
-right thing; one that only tags can be checked against what is already reviewed.
+tasks **skip past 13 and 17** rather than land on one, computing the target
+before they write it — the bumped component stepped past the number — and
+printing what they skipped, so `1.1.12` patched is `1.1.14`; all three release
+tasks **refuse** to tag a version carrying such a component, before the tag name
+is built. A release task that commits has to be trusted to commit the right
+thing; one that only tags can be checked against what is already reviewed.
 
 The branch alone would not hold anything back, though, because a merge to `main`
 is what publishes. What decouples the two is that **every plugin is pinned to

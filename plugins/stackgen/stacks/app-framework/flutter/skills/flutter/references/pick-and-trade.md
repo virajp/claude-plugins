@@ -3,7 +3,7 @@
 ## When it is the answer
 
 **When one team must ship the same product to several surfaces.** This is the
-whole case: mobile, tablet, desktop, web and in-car (`auto`) through the native
+whole case: mobile, tablet, desktop and in-car (`auto`) through the native
 edge, from one codebase, with one language and one set of tests. The
 alternative is a team per platform, and the cost is not just headcount — it is
 every feature being specified, built, reviewed and debugged two or three times,
@@ -35,11 +35,12 @@ There is a floor below which a Flutter binary does not go — see
 [performance & size](performance.md) — and for markets where install size is
 decisive, that floor may be the deciding constraint.
 
-**When the target is primarily the web.** Flutter builds for web, and the output
-is a canvas-rendered application rather than a document: text selection, SEO and
-initial load behave unlike a web framework's. For a content site this is the
-wrong tool; for an app that also has a web surface it is often an acceptable
-trade — and it belongs in the blueprint as a stated one.
+**When there is a web surface at all.** This pack does not target the web.
+Flutter can build for it, but the output is a canvas-rendered application
+rather than a document: text selection, SEO and initial load behave unlike a
+web framework's. So a product with a web surface pins a web stack for it — a
+`site` or web-application project of its own, beside this one — rather than
+stretching this template over a surface it does not serve.
 
 ## The trade nobody states up front
 

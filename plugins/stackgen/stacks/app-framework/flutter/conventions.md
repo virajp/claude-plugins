@@ -16,8 +16,10 @@ never committed. App-specific native code goes to the host application, shared
 native code goes into a plugin.
 
 **One codebase, several surfaces.** A project declares whichever of `mobile`,
-`tablet`, `desktop` and `webapp` it ships — one project with several platforms,
-never one project per surface.
+`tablet`, `desktop` and `auto` it ships — one project with several platforms,
+never one project per surface. **A web surface is not offered by this pack** —
+it is a `site` or web-application project on a web stack of its own, which
+carries its own stylesheet pin.
 
 **Single-package, always.** A Flutter app is never a monorepo.
 
