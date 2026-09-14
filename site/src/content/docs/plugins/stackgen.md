@@ -176,11 +176,17 @@ Given a bundle a project pins, stackgen resolves its composition and dispatches
    first template fetch runs the pipeline for each uncovered component: resolve
    the **kind** and its topic bar → detect the real stack (manifests + the
    graphify graph) → one Context7 research pass per bar topic → instantiate
-   vwf's principles catalog with citations → the `stackgen-skill-reviewer` gate
+   vwf's principles catalog with citations → vet every concrete third-party name
+   the component emits — packages, runner-invoked tools, GitHub Actions,
+   container images — through `stackgen-reputation`, one verdict per name
+   (`pass`, `warn`, `block`); a **`block` halts that component** with the
+   verdict table and you name the replacement, which is checked in turn — the
+   generator never swaps a name silently → the `stackgen-skill-reviewer` gate
    (capped at **four rounds**, after which residuals are reported rather than
-   looped forever) → the same materialized tree. Context7 unreachable → **halt,
-   never guess**. When the bundle root itself is uncovered, the pin is
-   `generated/<technology-slug>`.
+   looped forever) → the same materialized tree, the verdict table shown whole
+   beside the reviewer's verdict at the dry-run consent gate. Context7 or a
+   reputation source unreachable → **halt, never guess**. When the bundle root
+   itself is uncovered, the pin is `generated/<technology-slug>`.
 
 Mixed compositions are the ordinary case — a covered language beside an
 uncovered framework copies the language's packs and generates only the
@@ -904,12 +910,13 @@ toolkit will find it: vwf probes `setup:worktree`, the aggregators call
 
 ## Skills and the agent
 
-| Name                      | Kind                   | Does                                                                                                                                                                                                                                                                                                                                                        |
-| ------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `stackgen-stack-menu`     | adapter, skill-invoked | The packs + the one open `generate` entry, as a vwf menu payload. Answers the same in every product                                                                                                                                                                                                                                                         |
-| `stackgen-stack-template` | adapter, skill-invoked | The dispatch: materialized entry → pure read; a first pin — which arrives from `/vwf:setup`'s materialize pass — resolves the bundle's composition and dispatches **per component**, packs copied and uncovered components generated, landing once behind one consent gate in the repo the optional `repo:` line names. Unknown slug → error, never a guess |
-| `stackgen-sync`           | user-only              | The explicit re-sync, **per component**: lockfile-anchored diff against current component packs, regeneration offered per generated component, the delta presented for consent. Repo edits never overwritten by default                                                                                                                                     |
-| `stackgen-skill-reviewer` | subagent               | The stateless trust gate on generation: catalog fidelity, the **when-not-to-apply** checks, citations that resolve and support, honest emitted facts, **kind conformance**, and **topic-bar coverage** against the composition                                                                                                                              |
+| Name                      | Kind                   | Does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stackgen-stack-menu`     | adapter, skill-invoked | The packs + the one open `generate` entry, as a vwf menu payload. Answers the same in every product                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `stackgen-stack-template` | adapter, skill-invoked | The dispatch: materialized entry → pure read; a first pin — which arrives from `/vwf:setup`'s materialize pass — resolves the bundle's composition and dispatches **per component**, packs copied and uncovered components generated, landing once behind one consent gate in the repo the optional `repo:` line names. Unknown slug → error, never a guess                                                                                                                                                                                                                                               |
+| `stackgen-sync`           | user-only              | The explicit re-sync, **per component**: lockfile-anchored diff against current component packs, regeneration offered per generated component, the delta presented for consent. Repo edits never overwritten by default                                                                                                                                                                                                                                                                                                                                                                                   |
+| `stackgen-reputation`     | user **and** model     | A verdict on every name it is given — `/stackgen:stackgen-reputation <ecosystem>:<name> …`, the prefix one of `npm:`, `pypi:`, `pub:`, `action:` (owner/repo) or `image:` (registry/repo), an optional version or ref (`npm:left-pad@1.3.0`, `action:actions/checkout@v4`, `image:docker.io/library/nginx:1.27`) pinning what the advisory check runs against — one row per name reading `pass`, `warn` or `block`, with the signals that decided it, from public read APIs. The generator calls it over every concrete name a generated component emits; you call it on a name before typing it anywhere |
+| `stackgen-skill-reviewer` | subagent               | The stateless trust gate on generation: catalog fidelity, the **when-not-to-apply** checks, citations that resolve and support, honest emitted facts, **kind conformance**, **topic-bar coverage** against the composition, and every emitted name carrying a verdict-table row that does not read `block` — read off the table it is handed, never looked up                                                                                                                                                                                                                                             |
 
 **"skill-invoked" is two frontmatter keys, not one.** The two adapter skills
 carry `disable-model-invocation: false`, so vwf can reach them by their
@@ -918,11 +925,14 @@ your `/` menu: an adapter answers in a payload shape only vwf reads, and there
 is nothing for a user to do with it. Both keys are part of the adapter contract,
 not a preference: `disable-model-invocation: true` would make vwf's call a
 silent no-op rather than an error, and leaving the skills user-invocable spends
-two menu slots on skills that answer only a program.
+two menu slots on skills that answer only a program. `stackgen-reputation` is
+the third shape: the first key and **no** `user-invocable` line, so the
+generator reaches it programmatically and it still appears in your `/` menu —
+the one stackgen skill invocable both ways.
 
 ## Trust: how a generated skill earns its place
 
-A generated artifact is only as good as its checks, so every one passes four
+A generated artifact is only as good as its checks, so every one passes five
 before it lands:
 
 1. **The catalog.** Each judgment instantiates a principles-catalog entry (vwf's
@@ -949,17 +959,36 @@ before it lands:
    frontmatter bar is not the generator's alone: stackgen's own repo gate parses
    every **shipped** pack skill and pack agent under a strict parser too, so a
    curated pack is held to what a generated one is.
-4. **The reviewer + you.** The `stackgen-skill-reviewer` agent returns `NO GAPS`
+4. **The names.** Every concrete third-party name the component emits — a
+   package a `mise_tool` entry or a runner-invoked task names, a command an MCP
+   server entry spawns, a GitHub Action, a container image — gets a verdict from
+   `stackgen-reputation` before the dry-run gate shows it: `pass`, `warn` or
+   `block`, decided by thresholds written in the skill's `references/signals.md`
+   rather than judged on the spot — among them: absent from its registry, first
+   published under 30 days ago, an unpatched critical or high advisory on the
+   version to be pinned, a near-name of a far more downloaded package,
+   deprecated or archived → `block`; one maintainer, bottom-tier downloads, no
+   provenance, a low Scorecard → `warn`. A `block` halts the component with the
+   table; you name the replacement, and it is checked in turn — never a silent
+   swap. A source the skill cannot reach is `UNRESOLVED`, never an inferred
+   verdict, and halts like an unreachable Context7. Shipped packs are outside
+   the check: their names were curated by hand.
+5. **The reviewer + you.** The `stackgen-skill-reviewer` agent returns `NO GAPS`
    or a numbered list — checking the kind's **topic-bar coverage**, artifact
-   validity and the content — and generation loops under a convergence guard of
-   **four rounds**, after which residuals are reported rather than looped
-   forever or landed quietly; then the materializer shows the full landing set
-   as a dry-run plan and writes nothing without your approval.
+   validity, the content, and that every emitted name has a row in the verdict
+   table it is handed with none reading `block` (it looks nothing up itself) —
+   and generation loops under a convergence guard of **four rounds**, after
+   which residuals are reported rather than looped forever or landed quietly;
+   then the materializer shows the full landing set as a dry-run plan, the
+   verdict table whole beside the reviewer's verdict with each `warn` row called
+   out on its own line, and writes nothing without your approval.
 
 ## Caveats
 
-- **Generation needs Context7 and the catalog.** Missing either is a halt with
-  its name, not a degraded run.
+- **Generation needs Context7, the catalog, and the reputation sources.**
+  Missing any is a halt with its name, not a degraded run — a name whose
+  registry or advisory source could not be reached is never landed on a guessed
+  verdict.
 - **Drift is a feature with a viewport.** Your repo's copies may diverge from an
   upgraded pack by design; `/stackgen:stackgen-sync` is where the divergence
   becomes a diff you decide about.
