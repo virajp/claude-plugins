@@ -17,7 +17,9 @@ entries), the declared **kind** and its definition (stackgen's
 `assets/kinds.md`), stackgen's host **artifact doctrine**
 (`assets/artifact-doctrine.md`), the detected-stack summary the run recorded,
 the generated artifacts (the template payload fields, the conventions prose,
-any generated skills/agents/rules), and the citation list. No conversation
+any generated skills/agents/rules), the citation list, and the **verdict
+table** the generator's `stackgen-reputation` check returned — one row per
+concrete third-party name, reading `pass`, `warn` or `block`. No conversation
 context, no repo code beyond that summary — context bleed makes a reviewer
 agree with the generator, and agreement is not your job.
 
@@ -96,3 +98,12 @@ edits. You never write files.
    silently at run time**, which is why they are checked here and nowhere
    downstream — a landed artifact that never fires looks exactly like one
    that fired and had nothing to say.
+10. **Every name has a verdict.** Grep the generated component for every
+    concrete third-party name it emits — `mise_tool` entries, runner-invoked
+    tools in harness tasks (`dlx`, `npx`, `uv run --with`, `uvx`),
+    `mcp_servers:` / `user_mcp_servers:` commands, action references, image
+    references — and look each one up in the verdict table you were handed.
+    A name with no row is a gap; a row reading `block` is a gap. You do
+    **no lookup of your own** — no registry, no network, nothing beyond the
+    table: the verdicts are the generator's to obtain and yours only to
+    reconcile against what the artifact actually names.

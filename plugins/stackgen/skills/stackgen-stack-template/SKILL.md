@@ -57,12 +57,14 @@ packs by copy, uncovered components by generation. Materialization is
    [the materializer](references/materializer.md). An uncovered component
    is a generation — read [the generator](references/generator.md):
    research, catalog instantiation, the `stackgen-skill-reviewer` gate, per
-   component. The whole composition then lands **once** through the
-   materializer — one dry-run plan, one consent, one commit — with the
-   template entry recording the bundle as `components:` refs and the
-   lockfile recording every landing per component, so a later re-sync can
-   act on one component alone. Return the payload from the freshly
-   materialized entry.
+   component. Generation vets every concrete third-party name it emits
+   through `stackgen-reputation` and halts on a `block` — the user names
+   the replacement, never the generator. The whole composition then lands
+   **once** through the materializer — one dry-run plan, one consent, one
+   commit — with the template entry recording the bundle as `components:`
+   refs and the lockfile recording every landing per component, so a later
+   re-sync can act on one component alone. Return the payload from the
+   freshly materialized entry.
 4. **Anything else is an error, not a guess.** Name the packs that do exist
    and the `generated/<technology-slug>` form. Never answer an unknown slug
    from general knowledge — a template this plugin has not materialized is a
@@ -106,6 +108,9 @@ check real.
 - **Reads are cheap and pure.** Steps 2–3 run at most once per slug per repo;
   every later fetch is step 1 — a file read. `plan` and `execute` fetch
   conventions mid-run and must never trigger research, network, or a write.
+  The reputation check belongs to generation — where a name is first
+  emitted — and never to a read: a materialized entry is returned as it
+  was landed, with no re-check.
 - **Dispatch is per component; landing is per bundle.** Pack-or-generate is
   decided component by component — a covered language never regenerates
   because its framework is uncovered — but the user consents to one landing
