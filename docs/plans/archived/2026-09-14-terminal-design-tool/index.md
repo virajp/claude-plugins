@@ -11,10 +11,11 @@ backlog: [ B11 ]
 
 ## Status
 
-**RUNNING** 2026-09-15 by /vwf:change-execute. Worktree
-`.worktrees/2026-09-14-terminal-design-tool`, branch
-`2026-09-14-terminal-design-tool`. Approved 2026-09-14 by the user, after
-self-review.
+**COMPLETE** 2026-09-15. Worktree `.worktrees/2026-09-14-terminal-design-tool`,
+branch `2026-09-14-terminal-design-tool`. Commits e080514e, 97d5931e, 26cb5f71,
+689b1fa2 (wave 1), 49b6deba (wave 2), 72e630ab (wave 3), ccd68961 (wave 4), plus
+the run-log commits. B11 stays `open` per ruling 10 — it is marked `planned`
+only when H2 is planned. Approved 2026-09-14 by the user, after self-review.
 
 ## Consent
 
@@ -197,7 +198,7 @@ repo's `setup:ai`; nothing here adds it to this repo or to vwf's manifest.
 | U4 | 1    | [04-checker.md](04-checker.md)               | `scripts/src/check.ts`, `scripts/src/check.test.ts`, `.claude/skills/plugin-authoring/references/checks.md`                                                                                                                                                                                                                                                                                                         | —          | green   | 689b1f |
 | U5 | 2    | [05-pack.md](05-pack.md)                     | `plugins/stackgen/stacks/design-tool/claude-code/**` (new), `plugins/stackgen/stacks/bundles/claude-code.md` (new), `plugins/stackgen/stacks/inventory.md`                                                                                                                                                                                                                                                          | U1, U3     | green   | 49b6de |
 | U6 | 3    | [06-docs.md](06-docs.md)                     | `readme.md`, `CLAUDE.md`, `.claude/**` except `.claude/skills/plugin-authoring/references/checks.md`, `site/src/content/docs/**`, `plugins/vwf/assets/design-adapter.md` (widened at run time, R2: the "one of the three supported tokens" passage only)                                                                                                                                                            | U1–U5      | pending |        |
-| U7 | 4    | [07-gates-and-bump.md](07-gates-and-bump.md) | `plugins/vwf/.claude-plugin/plugin.json`, `plugins/stackgen/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`                                                                                                                                                                                                                                                                     | U6         | pending |        |
+| U7 | 4    | [07-gates-and-bump.md](07-gates-and-bump.md) | `plugins/vwf/.claude-plugin/plugin.json`, `plugins/stackgen/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`                                                                                                                                                                                                                                                                     | U6         | green   | ccd689 |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -361,4 +362,10 @@ stackgen-plugin, readme, site vwf.md/stackgen.md/ui-with-design-tool.md updated;
 design-adapter.md:252 three→four only. DECIDED: .claude/docs/plugins.md and
 vwf-plugin design-axis passages had no live target; design-adapter.md:46 "two of
 the three" left as history; ran code:format --fix on dprint files | 72e630 | | 3
-| R3 | opus | 1 | pass | no findings; contract clean, rulings clean | — |
+| R3 | opus | 1 | pass | no findings; contract clean, rulings clean | — | | 4 |
+U7 | opus | 1 | green | site 1.1.18→1.1.19 (p:site:version bare, no commit), vwf
+19.26.0→19.27.0, stackgen 1.15.0→1.16.0, marketplace regenerated. GAP: vwf
+tool-name grep has two pre-existing hits (plugin.json $schema URL, mempalace
+SKILL.md:132 agent_name) — not the design-tool token, treated as green | ccd689
+| | 4 | R4 | opus | 1 | pass | no findings; contract clean, rulings clean; wave
+gate and all six orchestrator gates green | — |
