@@ -21,15 +21,14 @@ semantics in `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`:
 | `system`   | `packages`, `iac`, `plugin`, `misc`, `cicd`, `cli`                           |
 
 **A project may declare several.** One Flutter codebase shipping phone, tablet,
-desktop, web and the car is **one** project with `platforms: [mobile, tablet,
-desktop, webapp, auto]` — not five projects. Flows are keyed on project name,
-so splitting it would triplicate every flow doc. Likewise a server that
-publishes an API and serves its own UI is `backend` / `platforms: [service,
-webapp]`, which is what the retired `fullstack` role meant. `webapp` sits under
-`backend` as well as `frontend` for exactly that project, the way `cli` sits
-under two roles: the deployable is a backend whose UI rides along on the same
-origin, and typing it `frontend` would claim a role its API-first purpose does
-not have.
+desktop and the car is **one** project with `platforms: [mobile, tablet,
+desktop, auto]` — not four projects. Flows are keyed on project name, so
+splitting it would triplicate every flow doc. Likewise a server that publishes
+an API and serves its own UI is `backend` / `platforms: [service, webapp]`,
+which is what the retired `fullstack` role meant. `webapp` sits under `backend`
+as well as `frontend` for exactly that project, the way `cli` sits under two
+roles: the deployable is a backend whose UI rides along on the same origin, and
+typing it `frontend` would claim a role its API-first purpose does not have.
 
 Ask once per project whether the app must run in-car, and offer **`auto`**
 (CarPlay and Android Auto together) only where it makes sense — and only to a
