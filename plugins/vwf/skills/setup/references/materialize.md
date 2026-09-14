@@ -32,7 +32,8 @@ to read.
 
 - **`.config/vwf.yaml`** — `topology`, `linkage`, `members:`, and every stack
   axis: each `projects.<name>.stack.template`, `backing_template` and
-  `deploy_template`, plus `repo.stack.template`
+  `deploy_template`, plus `repo.stack.template` and, since `config_format` 19,
+  each `projects.<name>.stylesheet`
   (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states").
 - **Each repo's adapter lockfile** — `.claude/stackgen/lock.yaml`, the
   materialization record. Read the **slugs** its `entries:` carry and nothing
@@ -130,8 +131,14 @@ stack is a repo the rest of the workflow cannot build in, and
 
 After the landings, every stack axis that is **absent** — no
 `projects.<name>.stack.template`, no `backing_template`, no `deploy_template`,
-no `repo.stack.template` — is written as the bare scalar `unresolved`, and the
-run continues.
+no `repo.stack.template`, and no `projects.<name>.stylesheet` **on a project
+whose registry entry declares a `site` or a `webapp` platform** — is written as
+the bare scalar `unresolved`, and the run continues.
+
+The `stylesheet` axis is the one with a condition on it, and the condition is
+what keeps it honest: on a project declaring neither of those two platforms the
+axis **does not apply**, so an absent key is correct and writing `unresolved`
+there would invent a question nobody has to answer.
 
 **Absent means a missing key in a block that exists**, never a missing block. A
 config with no `projects:` and no `repo:` at all is the **structure-pending**

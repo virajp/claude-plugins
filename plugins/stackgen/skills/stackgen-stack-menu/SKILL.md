@@ -66,8 +66,8 @@ templates:
     summary: <one line>
 generate:
   pin: generated/<technology-slug>
-  axes: [ project, backing, deploy, repo, design, cicd ]
-  kinds: [ language-bundle, database, cloud-provider, repo-gate, capability-provider, ci-system, app-framework, deploy-target, design-tool ] # the generatable kinds
+  axes: [ project, backing, deploy, repo, design, cicd, stylesheet ]
+  kinds: [ language-bundle, database, cloud-provider, repo-gate, capability-provider, ci-system, app-framework, deploy-target, design-tool, stylesheet ] # the generatable kinds
   summary: Generate principles-grounded skills and conventions for any stack
     no pack covers. Explicit, reviewed, consent-gated — never a silent run.
 ```
@@ -100,6 +100,16 @@ condition above stops holding.
 in it is `unconditional: true` — **return `templates: []`** with the same
 `note` and `generate` block — the open entry is what makes an empty list read as a
 decision rather than a fault.
+
+**The `stylesheet` axis answers like every other axis, and filters on
+nothing.** Every `axis: stylesheet` bundle is an entry, the `generate` block
+carries the open door, and vwf offers *defer this axis* the way it does on the
+technology axes — a deferral is recorded `unresolved` and elicited again later.
+vwf asks the round only of a project declaring a `site` or `webapp` platform,
+and **that condition is vwf's, not this skill's**: filtering here would mean
+reading the registry, which the rules below forbid, and for exactly this
+reason — a menu that varied by repo would be a second place for the platform
+condition to live, and two places for one rule is how they disagree.
 
 **A bundle whose components are partly `@generated` is listed normally**, with
 no warning and no asterisk. Mixing copied and generated components is the

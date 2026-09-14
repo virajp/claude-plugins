@@ -7,7 +7,7 @@ components:
 - package-manager/pnpm@0.2.0
 - toolchain-gate/tsconfig@0.1.0
 - toolchain-gate/eslint@0.2.0
-- framework/astro@0.1.0
+- framework/astro@0.2.0
 - framework/react@generated
 - framework/effect@0.1.0
 platforms:
@@ -42,8 +42,11 @@ are their own axes.
   API endpoints); React via `@astrojs/react` only where interactivity demands
   it. The **adapter follows the deploy pairing**, not the other way round: see
   Deploy below.
-- **UI**: shadcn-style components — Radix UI primitives + Tailwind CSS with
-  `class-variance-authority`/`clsx`/`tailwind-merge`, icons via `lucide-react`.
+- **UI**: unstyled, accessible primitives — the Radix-style set — composed into
+  the repo's own components, with icons from one icon set. **How those
+  components are styled is the project's `stylesheet` pin**, not this bundle's:
+  it is a separate axis, asked of every `site` and `webapp`, and two projects on
+  this bundle routinely answer it differently.
 - **Effect in SSR**: a shared `AppLayer` (the common package's aggregate
   services layer merged with the telemetry layer over a fetch HTTP client);
   pages and endpoints run Effect programs against it.

@@ -40,6 +40,17 @@ the ambiguity this table exists to remove.
 - **Observability & governance:** `distributed-tracing` **B**, `audit-store`
   **B**, `audit-log` **F**, `rate-limiting` **F**, `runtime-settings` **F**
 
+**What `seo` settles.** It stays **P** — a property of how the project is built
+— and it is the switch on a `webapp`. A `webapp` declaring it addresses an
+audience outside the product, so it carries the discovery and sharing surface:
+a description, a canonical address, what a search engine and a link preview
+read, whether the page is offered to search, and a public index of pages. Its
+screens pin the full **Metadata block** (title, description, `index`, `image`);
+a `webapp` that does not declare it pins `title` alone. A project declaring the
+`site` platform carries all of it **without** declaring `seo` — a site is
+public by definition, so the token adds nothing there. What every such project
+carries regardless of `seo` is the product's mark and the name it calls itself.
+
 Four classifications are worth their reasoning, since each looks like the
 neighbouring kind:
 

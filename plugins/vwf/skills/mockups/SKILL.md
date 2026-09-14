@@ -100,7 +100,8 @@ must not over-promise). Skip silently if mempalace is unavailable.
 For each in-scope **flow platform**, dispatch a **fresh `mockup-generator`
 subagent** (stateless and independent, so dispatch them all in a single message
 to run concurrently) with: that platform file's Screens table + Components +
-deviations, the design-system doc(s), its **absolute render-target dir**, and
+Metadata blocks (`site` and `webapp` only) + deviations, the design-system
+doc(s), its **absolute render-target dir**, and
 the flow + platform names. The generator owns the file spec (filenames,
 self-containment rules), overwrites the dir's contents in place, and returns
 **only a manifest** (one line per file: `path | screen | state`) — the HTML

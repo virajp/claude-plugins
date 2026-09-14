@@ -123,6 +123,17 @@ orchestrator passes both. Verify the contract and every platform file:
       rule contradicting the row's States or the flow's steps is a gap; a
       component-library name, CSS, or pixel value in a block is a
       code-independence gap.
+- [ ] **Metadata blocks** (format 25) match the platform. On a `site` platform
+      file every Screens row has one, headed by its code, pinning `title`,
+      `description`, `index` (`yes`/`no`) and `image` (`default` or a named
+      slot). On a `webapp` file the same holds when the registry block shows the
+      project declaring the `seo` capability; without `seo` the block pins
+      `title` and nothing else, and a `description`, `index` or `image` line is
+      a gap. On any other platform file a Metadata block at all is a gap. A
+      missing block, a missing field, a product-wide value restated per screen
+      (site name, default description, social handle, locale) instead of
+      referenced at `conventions.md#web-metadata`, or a tag name, file path or
+      framework inside a block, is a gap.
 - [ ] Every background-job row lists trigger, timer/retry, activities, and
       on-failure; each mutating step's sync/async classification is decided (a
       job or an explicit synchronous statement), not left open.

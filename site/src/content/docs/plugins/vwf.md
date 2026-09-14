@@ -100,7 +100,7 @@ dependency until it dissolved into `stackgen`; if your machine still has it,
 enabled, shadowing the stackgen packs its skills moved into.
 
 `stackgen` is a dependency because vwf's stack menu is the union of what the
-installed stack plugins declare, and the six axes carry no *other (describe)*
+installed stack plugins declare, and the seven axes carry no *other (describe)*
 option — so with no stack plugin present, `/vwf:architecture` asks a question
 you cannot answer. Having it installed costs nothing if you are not ready to
 choose a stack: stackgen acts only when an axis is pinned.
@@ -379,7 +379,8 @@ docs/
 │   │           │                #   steps, jobs, sequence diagram, acceptance
 │   │           └── <platform>.md # one per implemented platform (mobile, tablet,
 │   │                            #   desktop, web, auto) — screens (coded rows +
-│   │                            #   per-screen components blocks) only
+│   │                            #   per-screen components blocks), plus a
+│   │                            #   per-screen Metadata block on site/webapp
 │   ├── entities/                # the supporting data contracts
 │   │   ├── index.md             # entity catalog + product-wide ER diagram
 │   │   └── <entity>/            # index.md (lifecycle, relationships, invariants)
@@ -526,39 +527,47 @@ postponement rather than a dead end: vwf names the three ways forward (install
 the plugin that has one, write it, or **defer the axis** as `unresolved`) rather
 than coming back quietly short.
 
-A stack is composed from **six independent axes** — you answer each one, and
+A stack is composed from **seven independent axes** — you answer each one, and
 they never merge because they never overlap. `project` and `repo` take a single
 template; `backing` and `deploy` take a **list**, one entry per capability and
 one per delivery mechanism (`deploy_template` became a list in `config_format`
 **16**, because a project routinely publishes to a package registry *and* ships
 a container image):
 
-| Axis        | Scope       | Takes                                                                                      |
-| ----------- | ----------- | ------------------------------------------------------------------------------------------ |
-| **project** | per project | one template, filtered by the platforms the project declares — see below                   |
-| **backing** | per project | a list — one entry per capability the project talks to (datastore, identity, telemetry, …) |
-| **deploy**  | per project | a list — one entry per delivery mechanism the project ships through                        |
-| **repo**    | per repo    | one template describing the checkout — its package manager and workspace layout            |
-| **design**  | per project | one design tool — the slug *is* the config value                                           |
-| **cicd**    | per project | one CI system — the slug *is* the config value                                             |
+| Axis           | Scope       | Takes                                                                                                          |
+| -------------- | ----------- | -------------------------------------------------------------------------------------------------------------- |
+| **project**    | per project | one template, filtered by the platforms the project declares — see below                                       |
+| **backing**    | per project | a list — one entry per capability the project talks to (datastore, identity, telemetry, …)                     |
+| **deploy**     | per project | a list — one entry per delivery mechanism the project ships through                                            |
+| **repo**       | per repo    | one template describing the checkout — its package manager and workspace layout                                |
+| **design**     | per project | one design tool — the slug *is* the config value                                                               |
+| **cicd**       | per project | one CI system — the slug *is* the config value                                                                 |
+| **stylesheet** | per project | one stylesheet approach — the slug *is* the config value; asked only of a project declaring `site` or `webapp` |
 
 **No slug appears in that table on purpose.** The roster is not vwf's to state:
 the menu is the union of what your **installed** stack plugins declare, so it
 changes with what you install, and `/vwf:architecture` is what enumerates it for
 your repo. Today [stackgen](./stackgen.md) is the only stack plugin, and it
-carries all six axes — the general-purpose set, the managed backing and deploy
+carries all seven axes — the general-purpose set, the managed backing and deploy
 services of each cloud it packs, and a generator for whatever no pack covers.
 
 Since `config_format` **13** every axis but `repo` is pinned **per project**, so
 a product can host its site on Cloudflare, its API on GCP and its worker
 somewhere else again — and design its app in one tool while its website is
-designed in another. On the `design` and `cicd` axes the slug **is** the config
-value, so the menu pick and the config key are one value rather than two that
-can disagree. Only `repo` stays per repo; it describes the checkout, not a
-project.
+designed in another. On the `design`, `cicd` and `stylesheet` axes — the three
+**tool axes** — the slug **is** the config value, so the menu pick and the
+config key are one value rather than two that can disagree. Only `repo` stays
+per repo; it describes the checkout, not a project.
+
+**The `stylesheet` axis is conditional.** Added in `config_format` **19**, it is
+asked only of a project whose registry entry declares a `site` or a `webapp`
+platform, and it is asked **after** that project's design round: the design
+system's semantic tokens are the contract and the stylesheet is how they are
+realized, so the order is the dependency rather than a preference. A project
+declaring neither platform is never asked and records no key at all.
 
 **An axis can also be left unanswered.** Since `config_format` **16** any of the
-six may read `unresolved` — deferred, not decided — which is the line between
+seven may read `unresolved` — deferred, not decided — which is the line between
 *defining* a product and *building* one. `/vwf:product`, `/vwf:architecture`,
 `/vwf:blueprint`, `/vwf:design-system` and every other doc surface run to
 completion with no stack chosen at all; `/vwf:doctor` reports the deferral as a
@@ -581,18 +590,18 @@ role meant. **Your pin must cover every platform your project declares**, which
 stack plugin's answer — [stackgen](./stackgen.md) states the set it ships.
 
 **Templates ship in a stack plugin, never in vwf.** vwf has no `stacks/` tree at
-all: it owns the six axes, the platform vocabulary a template declares against,
-and the two adapter skill names it reaches a plugin through. So a product gets
-whichever menu its installed plugins add up to, and one that installs nothing
-sees an empty one.
+all: it owns the seven axes, the platform vocabulary a template declares
+against, and the two adapter skill names it reaches a plugin through. So a
+product gets whichever menu its installed plugins add up to, and one that
+installs nothing sees an empty one.
 
 **Why the split matters.** The same Hono + Effect service runs against Firebase
-or Postgres, on Cloud Run or any container host. Before format 19 all three were
-welded into one document, so picking `service` because you wanted Hono silently
-also bought you Firestore, Firebase Auth, Temporal and Cloud Run — none of it
-declared. Now a project template names no vendor and a backing template names no
-framework — and a backing template is now one capability rather than a vendor
-bundle, so `postgres` + `oidc` + `otel-lgtm` + `temporal` +
+or Postgres, on Cloud Run or any container host. Before `blueprint_format` 19
+all three were welded into one document, so picking `service` because you wanted
+Hono silently also bought you Firestore, Firebase Auth, Temporal and Cloud Run —
+none of it declared. Now a project template names no vendor and a backing
+template names no framework — and a backing template is now one capability
+rather than a vendor bundle, so `postgres` + `oidc` + `otel-lgtm` + `temporal` +
 `audit-store-postgres`, each a stackgen bundle, is a completely vendor-free path
 through vwf. That last one is the shape to notice: an audit store is its own
 capability (`audit-store`), pinned beside the datastore rather than folded into
@@ -1414,12 +1423,14 @@ delta). Retired goals reconcile their inbound links, never dangle.
 Run this **after `product`**. It elicits your system's shape — projects, their
 types, how they interconnect, where they deploy — records each project's stack
 by presenting the [stack templates](#stack-templates) for its type as a menu
-(one round per project, and the menu is the whole vocabulary — nothing fitting
-leaves three ways forward, none of them a free-text pin; the answer lands as a
-structured block in `.config/vwf.yaml`), walks the **product-foundations
-checklist** (see [vwf skills](#vwf-skills) — one accept/adapt/skip question per
-elective foundation and accept/adapt/defer per core one, recorded as
-cross-cutting tokens), and writes **both** `docs/blueprint/registry.yaml` — the
+(one round per axis per project — including the **stylesheet** round, run after
+that project's design round and only for a project declaring `site` or `webapp`
+— and the menu is the whole vocabulary: nothing fitting leaves three ways
+forward, none of them a free-text pin; the answer lands as a structured block in
+`.config/vwf.yaml`), walks the **product-foundations checklist** (see
+[vwf skills](#vwf-skills) — one accept/adapt/skip question per elective
+foundation and accept/adapt/defer per core one, recorded as cross-cutting
+tokens), and writes **both** `docs/blueprint/registry.yaml` — the
 machine-readable registry every other command depends on — and
 `docs/blueprint/architecture.md`, its prose view with a system-shape mermaid
 diagram kept in sync with it. Re-run it any time the topology changes; it asks
@@ -1471,7 +1482,10 @@ the **Terminal UX** section when a project declares platform `cli`), runs the
 in `.config/vwf.yaml` (**universal**: one per product). Like the blueprint, the
 doc stays code-independent: token *values* and *scales*, never the component
 library, CSS framework, or design file. Every flow's Screens reference it;
-`blueprint` halts on a flow with screens until it exists.
+`blueprint` halts on a flow with screens until it exists. A product with a
+public web surface also gets a **Brand assets** section here — the favicon
+source mark, the social preview and the theme colour, each named by role and
+supplied by the product, never a file path or a size the realization picks.
 
 **Drift is one-way.** The canvas is the source; the doc is its distillation.
 Change the design system in the design tool and re-run the import — the doc is
@@ -1595,6 +1609,26 @@ criteria — then derives what the flow stands on: each referenced entity
 operations it names (per-service OpenAPI contracts under `apis/`), the flow
 catalog, and the product-wide ER diagram. Screens point at the design system;
 `conventions.md` picks up any cross-cutting decision raised.
+
+**A web surface also says what it is to the outside.** Since `blueprint_format`
+**25** every Screens row on a `site` or `webapp` platform file carries a
+**Metadata block** headed by the row's code — `title`, `description`, `index`
+(whether the page is offered to search and listed in the product's public page
+index) and `image` (the picture a shared link shows, `default` or a slot of the
+screen's own). A `webapp` pins all four only when its registry entry declares
+the `seo` capability; without it, `title` alone. A `site` carries the full set
+always — a site is public by definition. Mobile, tablet, desktop and `auto`
+platform files carry no such block at all: those surfaces state nothing about
+themselves to anyone outside the product.
+
+The **product-wide** half of that lives in two places, never repeated per
+screen: the text facts — site name, the default description a page falls back
+to, the social handle, the content locale and what the organisation states about
+itself — under `conventions.md`'s `#web-metadata` anchor, and the **visual**
+assets — the favicon source mark, the 1280×640 social preview and the theme
+colour as a token role — under the design system's **Brand assets** section.
+Both sections are present only when some project declares `site`, or `webapp`
+with `seo`, and are omitted entirely otherwise.
 
 **You see every screen before you approve it.** A flow pass that authored or
 changed Screens **gates on a render & review**: the pass renders that flow's

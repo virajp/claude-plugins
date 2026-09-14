@@ -85,6 +85,39 @@ Flow contract: [<Flow name>](./index.md)
      here rather than re-deriving the component set. Code-independent: kinds
      and behavior only — never component-library names, CSS, or pixels. -->
 
+### `<code>` — `<Screen>` metadata
+
+| Field       | Value |
+| ----------- | ----- |
+| title       |       |
+| description |       |
+| index       |       |
+| image       |       |
+
+<!-- One Metadata block per Screens row, headed by the row's Code — on a `site`
+     or `webapp` platform file ONLY (format 25). Delete the whole block on
+     mobile/tablet/desktop/auto: those surfaces state nothing about themselves
+     to the outside.
+
+     title       = what the page calls itself, and what a shared link announces.
+     description = the one-sentence summary a search result or link preview
+                   reads.
+     index       = yes | no — whether the page is offered to search and listed
+                   in the product's public index of pages.
+     image       = default | <slot> — the picture a shared link shows.
+                   `default` is the product-wide social preview named in the
+                   design system's Brand assets; a <slot> names art this screen
+                   supplies of its own.
+
+     A `webapp` whose project does NOT declare the `seo` capability pins `title`
+     alone — delete the other three rows.
+
+     Product-wide values are NOT repeated here: site name, default description,
+     social handle, locale and the organisation facts are conventions.md's
+     #web-metadata anchor, and the favicon mark, social preview and theme colour
+     are the design system's Brand assets. Code-independent: what the page says
+     about itself, never the tags that carry it. -->
+
 ## Platform deviations
 
 <!-- Only what genuinely differs on this platform: navigation/input idiom,

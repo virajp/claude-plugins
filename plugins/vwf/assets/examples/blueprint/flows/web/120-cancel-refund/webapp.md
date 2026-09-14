@@ -31,3 +31,16 @@ Flow contract: [Order cancellation & refund](./index.md)
 | Confirmation overlay  | Confirm → `cancelOrder`; states the refund is issued to the original payment method; dismissible   |
 | Refund status (info)  | Shown after cancellation: refunded, or visibly failed/pending when the provider is down            |
 | Load error (banner)   | Shown when `getOrder` fails; offers retry                                                          |
+
+### 120a — Order detail metadata
+
+| Field       | Value                                                                |
+| ----------- | -------------------------------------------------------------------- |
+| title       | Order {id}                                                           |
+| description | The items, total and current state of one order, with cancellation.  |
+| index       | no                                                                   |
+| image       | default                                                              |
+
+<!-- The title interpolates the route's `{id}` — a per-instance page states
+     which instance it is. Behind a session and per-customer, so `index: no`.
+     Product-wide values are ../../../conventions.md#web-metadata. -->

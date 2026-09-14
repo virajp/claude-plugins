@@ -77,6 +77,8 @@ Copy these through **verbatim in meaning**, at any length:
 - invariants, authorization rows, audit-recorded markers
 - the Guarantees table's cells
 - screen codes, Components blocks, and their rules
+- Metadata blocks and every field in them — a pinned title, description,
+  `index` or `image` is a decision, never commentary
 - every markdown link (the OKF edges) and the frontmatter block
 - `UNRESOLVED:` / `TODO` markers, and Open Questions that genuinely block
 

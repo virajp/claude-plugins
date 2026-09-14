@@ -147,6 +147,13 @@ started as:
   not a task group. A deploy stack that names the task CI must run and then
   leaves both that task and the config it reads to be typed by hand is the
   failure (b) describes, one axis up.
+- **(g) A project task a framework pack owns** — the same `p/_project/`
+  marked position, renamed the same way, landed from the **project** axis
+  rather than the deploy one: `framework/astro` ships an `icons` overlay
+  there, which rasterizes the favicon set from the product's mark. The
+  position is shared on purpose — a project has one task group, and two
+  packs contributing a file each into it is how it fills up — so a pack
+  adding one names a task no other pack in the same bundle already ships.
 
 **The root allowlist** is the hygiene doctrine's, and the materializer
 enforces it as a ceiling. It is the list of what may **sit** at a shaped
@@ -274,7 +281,10 @@ every repo to hand-write the file the doctrine describes, which is the
 failure the tier exists to prevent. Row (f) is that one opening reaching the
 cloud types later the same day, when the first `cloud-service` pack shipped a
 `config/` tree: a deploy target that ships its doctrine and not its config
-leaves the repo hand-writing that file too.
+leaves the repo hand-writing that file too. Row (g) is the same argument
+arriving on the **project** axis: a framework whose doctrine names a task the
+repo must have, and then ships no task, has described a command rather than
+given one.
 
 Four things stay **outside** the fence, and they are the whole of it:
 

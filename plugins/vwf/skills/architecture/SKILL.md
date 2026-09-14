@@ -235,10 +235,14 @@ CLI/TUI question are in
 step, for every project.
 
 **The stack is a menu — elicited, and it lives in config, not the registry.** It
-is composed from **six independent axes** (project / backing / deploy / design /
-cicd per project, repo per repo), each elicited as its own round; the `design`
-and `cicd` pins are the per-project keys of the same name, since on those two
-axes the slug *is* the config value. The menus, what each axis records, and the
+is composed from **seven independent axes** (project / backing / deploy /
+design / cicd / stylesheet per project, repo per repo), each elicited as its own
+round; the `design`, `cicd` and `stylesheet` pins are the per-project keys of
+the same name, since on those three axes the slug *is* the config value. The
+stylesheet round runs **only for a project whose registry entry declares a
+`site` or a `webapp` platform**, and it runs **after** the design round — the
+tokens are the contract and the stylesheet is how they are realized, so the
+order is not arbitrary. The menus, what each axis records, and the
 recording rules are in [the stack menu](references/stack-menu.md) — read it
 before eliciting any of them. Two rules hold whatever the answers are: vwf
 ships **no default and no recommended template**, and **every project gets a

@@ -178,7 +178,10 @@ Bookable's registry lands as three projects, `apps/api`, `apps/web` and
 `packages/shared`, with `apps/api` carrying the capabilities its flows imply.
 The stack axes are the one part the derivation only *narrows*: for whatever the
 recorded pins do not already settle, it filters what the closed menu offers and
-the menu still answers. Why the axes never merge:
+the menu still answers. `apps/web` declares `webapp`, so it also takes the
+**stylesheet** round — asked after its design round, recording the approach the
+existing styles already use, or `unresolved` while that is being decided.
+`apps/api` and `packages/shared` are never asked. Why the axes never merge:
 [stack templates](../../plugins/vwf.md#stack-templates), and the practical
 consequence at install time is in
 [stack pins, one axis at a time](../greenfield/single-repo.md#stack-pins-one-axis-at-a-time).

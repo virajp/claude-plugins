@@ -64,28 +64,30 @@ exactly what has not been chosen yet. The moment the project axis is pinned, the
 rule reverts: unknown is **blocking**, and `setup` and `execute` halt on it. The
 severity follows the pin, never the calendar.
 
-## The six axes
+## The seven axes
 
-A stack is **composed from six independent templates** — `project | backing |
-deploy | repo | design | cicd` — not one monolith. Each axis answers a different
-question, and a project's `.config/vwf.yaml` answers each one (the first four in
-its `stack` block, the two tool axes as `design` and `cicd` pins):
+A stack is **composed from seven independent templates** — `project | backing |
+deploy | repo | design | cicd | stylesheet` — not one monolith. Each axis answers
+a different question, and a project's `.config/vwf.yaml` answers each one (the
+first four in its `stack` block, the three tool axes as `design`, `cicd` and
+`stylesheet` pins):
 
-| Axis        | Scope       | Cardinality           | Owns                                                    |
-| ----------- | ----------- | --------------------- | ------------------------------------------------------- |
-| **project** | per project | one                   | Language, framework, source layout, testing             |
-| **backing** | per project | a list (one per capability) | Datastore, identity, queue, storage, the local stack |
-| **deploy**  | per project | a list (one per delivery mechanism, since `config_format` 16) | Build artifact, release pipeline, hosting, environments |
-| **repo**    | per repo    | one                   | Package manager, task runner, lint/format, workspace    |
-| **design**  | per project | one                   | The design tool and its adapter, for screen platforms   |
-| **cicd**    | per project | one                   | The CI system that builds and releases the project      |
+| Axis           | Scope       | Cardinality           | Owns                                                    |
+| -------------- | ----------- | --------------------- | ------------------------------------------------------- |
+| **project**    | per project | one                   | Language, framework, source layout, testing             |
+| **backing**    | per project | a list (one per capability) | Datastore, identity, queue, storage, the local stack    |
+| **deploy**     | per project | a list (one per delivery mechanism, since `config_format` 16) | Build artifact, release pipeline, hosting, environments |
+| **repo**       | per repo    | one                   | Package manager, task runner, lint/format, workspace    |
+| **design**     | per project | one                   | The design tool and its adapter, for screen platforms   |
+| **cicd**       | per project | one                   | The CI system that builds and releases the project      |
+| **stylesheet** | per project | one                   | The stylesheet approach and how the design-system tokens are realized, for `site` and `webapp` platforms |
 
 The templates themselves live in the **stack plugins**, never in vwf
 (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). Since config_format 13 every
 axis but `repo` is pinned **per project** — a product may run its site on one
 cloud and its API on another.
 
-**An axis may also be unanswered.** Since `config_format` 16 any of the six may
+**An axis may also be unanswered.** Since `config_format` 16 any of the seven may
 read `unresolved` — deferred rather than decided
 (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states"). The
 axes stay independent under deferral too: one may be pinned while the other

@@ -8,7 +8,8 @@ never needs this file.
    (`git check-ignore -q docs/scratchpad`; if not, append `docs/scratchpad/` to
    `.gitignore` — the line rides this pass's commit). Dispatch a fresh
    `mockup-generator` subagent **per platform file** the pass touched (that
-   platform's Screens table + Components blocks + deviations, the design-system
+   platform's Screens table + Components blocks + Metadata blocks (`site` and
+   `webapp` only) + deviations, the design-system
    doc(s), and its render dir
    `docs/scratchpad/<project>/<NNN>-<flow>/<platform>/` — overwritten in place;
    dispatch them in a single message to run concurrently) — the default view

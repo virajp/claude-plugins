@@ -39,3 +39,28 @@ Flow contract: [Place order](./index.md)
 | Order list          | One row per order, newest first; row click → Order detail (120a, cancel-refund) |
 | Empty state (info)  | Shown before the first order; invites the customer to start shopping            |
 | Load error (banner) | Shown when `getOrder` fails; offers retry                                       |
+
+### 110a — Checkout metadata
+
+| Field       | Value                                                             |
+| ----------- | ----------------------------------------------------------------- |
+| title       | Checkout                                                          |
+| description | Review your cart, pay, and place the order.                       |
+| index       | no                                                                |
+| image       | default                                                           |
+
+### 110b — Order history metadata
+
+| Field       | Value                                                             |
+| ----------- | ----------------------------------------------------------------- |
+| title       | Your orders                                                       |
+| description | Every order you have placed, newest first, with its true state.   |
+| index       | no                                                                |
+| image       | default                                                           |
+
+<!-- Both screens sit behind a session, so neither is offered to search or
+     listed in the sitemap — `index: no` is the decision, not an omission. They
+     still carry a title and description: a shared link and a browser tab
+     announce the page whether or not a crawler may read it. Product-wide
+     values — the site name among them — are
+     ../../../conventions.md#web-metadata, never restated in a title here. -->

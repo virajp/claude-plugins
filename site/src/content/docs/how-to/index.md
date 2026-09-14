@@ -60,7 +60,7 @@ product's journey diverges, so read the spine first and keep it open alongside.
   it.
 - **[Decide which stack your product pins](./operate/choosing-your-stack.md)** —
   vwf names no technology, so every concrete option comes from a `stackgen`
-  bundle. Which bundle answers each of the six axes, decided **before**
+  bundle. Which bundle answers each of the seven axes, decided **before**
   `/vwf:architecture`, with a reason for each pin.
 - **[Change something the blueprint does not describe](./operate/ad-hoc-change.md)**
   — the work that is not a flow: CI, tooling, a docs tree, a refactor that moves

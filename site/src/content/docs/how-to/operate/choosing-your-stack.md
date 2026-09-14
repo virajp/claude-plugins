@@ -1,6 +1,6 @@
 ---
 title: "Decide which stack your product pins"
-description: "Decide which stackgen bundle each of your product's six axes pins, and why, before it reaches /vwf:architecture."
+description: "Decide which stackgen bundle each of your product's seven axes pins, and why, before it reaches /vwf:architecture."
 order: 1
 ---
 
@@ -9,7 +9,7 @@ technology: vwf names no language, no framework and no cloud, so every concrete
 option you are ever offered comes from `stackgen`. That plugin arrives as vwf's
 dependency, so there is no install decision left to make — but there is still a
 decision, and it is now one axis at a time rather than one plugin at a time.
-This guide is that decision: which **bundle** each of your product's six axes
+This guide is that decision: which **bundle** each of your product's seven axes
 pins, and why, **before** it reaches `/vwf:architecture`. At the end you have a
 pin list you can defend.
 
@@ -25,16 +25,19 @@ parts of those pages you need to read.
 
 ## The axes in one minute
 
-A stack is composed from six templates that never merge and never outrank each
+A stack is composed from seven templates that never merge and never outrank each
 other: **project** (language, framework, source layout), **backing** (datastore,
 identity, queue, storage, the audit store), **deploy** (build artifact and
-host), **design** (the design tool) and **cicd** (the CI system) — each pinned
-per project — and **repo** (package manager, task runner, workspace), pinned
-once for the checkout. That independence is why picking a web framework buys you
-no database and no cloud, and it is why the pin list below reads as roughly one
-decision per axis you hold an opinion about. The contract behind it — the
-covering rule, what a template payload carries, how `plan` and `execute` resolve
-a template's conventions — is
+host), **design** (the design tool), **cicd** (the CI system) and **stylesheet**
+(how a web frontend's styles are authored) — each pinned per project — and
+**repo** (package manager, task runner, workspace), pinned once for the
+checkout. Five of the seven are asked of every project; `stylesheet` is asked
+only of one declaring a `site` or a `webapp` platform, and `repo` is answered
+once for the checkout rather than per project. That independence is why picking
+a web framework buys you no database and no cloud, and it is why the pin list
+below reads as roughly one decision per axis you hold an opinion about. The
+contract behind it — the covering rule, what a template payload carries, how
+`plan` and `execute` resolve a template's conventions — is
 [stack templates](../../plugins/vwf.md#stack-templates).
 
 ## What answers each axis
@@ -56,7 +59,11 @@ prerendered by default with the routes that must read a request opting out one
 by one; `astro-csr` serves one shell page and lets a client-only island own
 everything after the first paint. A page with no island ships no JavaScript in
 any of them. (`astro-ssr` was `typescript-astro-react` before 2026-09-06 — a pin
-on the old slug has to be re-pointed.)
+on the old slug has to be re-pointed.) All four also carry the pack's **head
+doctrine** — the title, description, canonical address, social tags, favicon
+links, manifest, robots and sitemap a public page owes the outside — and land an
+`icons` task that rasterizes the whole favicon set from your one source mark.
+Nothing to decide there: it is the same for all four.
 
 **An agent is a project, not a capability bolted onto one.**
 `typescript-cloudflare-agents` is the project-axis answer for a TypeScript
@@ -116,6 +123,23 @@ pinned **instead of** `cloudflare-workers-ssr`, never beside it.
 `zero-trust-access` composes with a host rather than replacing one — a private
 plane in front of a project that must not be publicly reachable, whichever cloud
 hosts it.
+
+**The stylesheet axis is asked only where there are styles to author.** A
+project declaring `site` or `webapp` gets one more round, after its design
+round, and picks between three: `tailwindcss` — utility classes generated from a
+token block, the fastest to write and the one with a ceiling on stylesheet
+growth, paid for in markup that carries the styling and in nothing being
+type-checked; `stylex` — typed style objects compiled to atomic CSS at build, so
+a misspelled token role is a type error rather than a blank element, paid for in
+a build step, a bundler plugin that has to be registered in the right order, and
+the most lock-in of the three; and `plain-css` — the design system's roles as
+custom properties in one module with rules in cascade layers, no build step and
+no lock-in at all, paid for in nothing checking anything and no deduplication.
+The design system is **not** consulted in this round: the tokens are the
+contract whatever the answer is, and the stylesheet is only how they get written
+down — which is why deferring it costs the doc surfaces nothing. Anything else
+takes the same **generate** entry every axis has. A service, a CLI, a native app
+or an `iac` project is never asked and records no key.
 
 **The repo axis** is the package manager and workspace layout: `pnpm-workspace`,
 `pnpm-turbo`, or `bun`. A single-package repo pins no workspace bundle — that is

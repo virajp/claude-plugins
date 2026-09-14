@@ -41,11 +41,13 @@ category vocabularies are closed, in `assets/taxonomy.md`, extended
 deliberately.
 
 **Bundles** are recorded compositions of component refs —
-`<type>/<slug>@<version>`, or `@generated` — never directories. Three bundle
+`<type>/<slug>@<version>`, or `@generated` — never directories. Four bundle
 shapes exist today: a Language-Bundle is the composition rooted at a language
 component (language + package manager + framework components + toolchain gates);
 a Cloud-Bundle is provider + service components; a Datastore-Bundle is
-category-level doctrine + an instance component.
+category-level doctrine + an instance component; and the standing-alone shape —
+a Deploy-, Design- or **Stylesheet-Bundle**, exactly one component with no
+second half.
 
 The taxonomy splits at the existing seam: **capability tokens stay vwf's**
 (`capability-vocabulary.md`); the finer **category taxonomy is stackgen's**. vwf
@@ -86,6 +88,30 @@ the pack's doctrine carries and each bundle pins one. **A page with no island
 ships no JavaScript**, which is why React rides along in all four rather than
 splitting the menu into with- and without-React pairs.
 
+**Every one of the four ships the head.** Since `framework/astro` **0.2.0** the
+pack's conventions carry a fixed `## Head` section — the title and description a
+page states about itself, the canonical address, the OpenGraph and card set, the
+favicon links and the manifest, `robots.txt` and the sitemap — and it lands one
+file: a `p/_project/icons` task that rasterizes the whole favicon set from the
+product's single source mark, installing its tools one-off rather than adding a
+dependency. That is the first `config/` payload the Astro pack has ever shipped.
+What it renders comes from the blueprint: each screen's Metadata block, the
+product-wide text under `conventions.md`'s `#web-metadata` anchor, and the
+design system's Brand assets. The `public/` files themselves — `robots.txt`, the
+manifest, the rasterized icons, the social image — are written by `/vwf:execute`
+from that doctrine, not landed by the pack.
+
+**The doctrine above the pack is a contract.**
+[`assets/contracts/web-head.md`](https://github.com/virajp/claude-plugins/blob/main/plugins/stackgen/assets/contracts/web-head.md)
+states, provider-neutrally, what **any** web framework pack — shipped or
+generated — must realize for a project declaring `site`, or `webapp` with the
+`seo` capability: the head set, the icon sizes, the manifest, robots and
+sitemap, and the icon task. Astro's conventions restate it by role and cite
+nothing by path, which is what lets a framework pack that does not exist yet
+satisfy the same bar. It sits beside the other cross-pack contracts —
+`datastore`, `identity`, `local-stack`, `object-storage`, `observability`,
+`orchestration`, `release-trigger`, `secrets` and `audit`.
+
 **The build output is a named fact.** The `framework/astro` pack's conventions
 carry a fixed `## Build output` heading stating that the build writes `./dist` —
 Astro's `outDir` default — and that a deploy pack may rely on it. The two
@@ -113,6 +139,26 @@ names its pairing in prose and a project still pins the two axes separately.
 > `.config/vwf.yaml` and re-run `/vwf:doctor`. "TypeScript" left the display
 > names because every one of the four pins the TypeScript language component
 > anyway.
+
+### Three stylesheet packs, on an axis of their own
+
+How a web frontend's styles are authored is a **pin**, not something the
+framework pack decides — so `astro-ssg` and an `astro-ssg-tailwind` sibling
+never had to exist. Three packs answer the `stylesheet` axis, each its own
+one-component bundle whose slug is the `projects.<name>.stylesheet` token:
+
+| Bundle        | Is                                                                                   | Costs                                                                                                    |
+| ------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `tailwindcss` | utility classes generated from a token block, every style written at the call site   | markup carries the styling, nothing is type-checked, and the v4 line's CSS-first config reads no JS file |
+| `stylex`      | typed style objects in the component's own language, compiled to atomic CSS at build | a build step and a bundler plugin registered in the right order; the most locked-in of the three         |
+| `plain-css`   | the design system's roles as custom properties in one token module, rules in layers  | nothing checks anything, there is no deduplication, and the project must name a browser baseline         |
+
+Each pack's `tokens.md` is required by the kind, because the mapping from the
+design system's semantic roles to something a component can reference is the one
+topic nothing else in the tree carries. None of them ships token **values** — a
+pack shipping a palette would have replaced the product's contract with a
+default — and none of them names a component library. An approach none of the
+three covers takes the same `generate` door every other axis has.
 
 ## The dispatch rule
 
@@ -189,6 +235,13 @@ an engine of its own, so neither ships a migration and both declare
 `local_stack: n/a`. What separates them is where the invariants are enforced:
 real grants on one side, the code path holding the only binding on the other.
 
+The newest **type** and the newest **kind** are both `stylesheet`, minted the
+same day for an axis vwf had not had before — with three categories of their own
+(`utility`, `compile-time`, `plain`, the three ways the token mapping can be
+paid for) and three packs filling them at once. It is the first kind whose
+single required artifact is named by the kind itself: every pack in it ships a
+`tokens.md`.
+
 **stackgen is now the only stack plugin.** Its packs are the covered path, and
 the menu keeps its open `generate` entry for the rest — the stack you use that
 nobody wrote a pack for.
@@ -213,13 +266,14 @@ in shape while only content varies:
 | `app-framework`       | project                | rooted at the SDK that owns the manifest and build, carrying its languages as members with a `role` — one `primary`, any number of `platform-edge` (archetype: the `app-framework/flutter` bundle)                                                                                                                                                                                                                                                                                  |
 | `deploy-target`       | deploy                 | **one component, standing alone** — the only bundle with no second half. A **6-topic bar** covering pick & trade, the artifact, hygiene, promotion, config/secrets and health. Its discipline is a scope fence: the pipeline, the cloud and the local stack each belong to a kind that already owns them                                                                                                                                                                            |
 | `design-tool`         | design                 | one component, standing alone — a **5-topic bar** on the three imports, reach & credentials, and the naming contract. Lands three skills at **fixed names** in the repo's `.claude/`, all mandatorily model-invocable, because a user-only one is invisible to vwf rather than a smaller feature                                                                                                                                                                                    |
+| `stylesheet`          | stylesheet             | one component, standing alone — a **7-topic bar** on tokens, authoring, theming, responsive, the single integration hook, performance and (conditionally) testing. `tokens.md` is required of every pack in the kind: the mapping from the design system's semantic roles to something a component can reference is the one topic nothing else in the tree carries                                                                                                                  |
 
-Every kind in that table is defined; no reservations are outstanding. Two of the
-six axes — `design` and `cicd` — are **tool axes**, where the bundle slug is the
-token the project config already holds, so picking from the menu and writing the
-config key are one act. Kinds compose through vwf's capability vocabulary — a
-language bundle says "the datastore", never a database by name — so each stays
-independently re-syncable.
+Every kind in that table is defined; no reservations are outstanding. Three of
+the seven axes — `design`, `cicd` and `stylesheet` — are **tool axes**, where
+the bundle slug is the token the project config already holds, so picking from
+the menu and writing the config key are one act. Kinds compose through vwf's
+capability vocabulary — a language bundle says "the datastore", never a database
+by name — so each stays independently re-syncable.
 
 Each kind's structure **is a topic bar**: a closed list of topics the output
 must cover, one artifact per topic, lazy-loaded — a reference behind a lean

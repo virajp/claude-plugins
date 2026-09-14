@@ -15,7 +15,7 @@ registering as something unknown.
 
 ## What the stamps mean now
 
-`blueprint_format` (**24**) and `config_format` (**18**) are **drift
+`blueprint_format` (**25**) and `config_format` (**19**) are **drift
 detectors** and nothing else. `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md` compares
 a repo's stamps against the shipped integers and nudges
 `/vwf:setup`. Nothing selects a migration path by them any more,
@@ -126,6 +126,8 @@ must go through the rule below. Every other row is mechanical.
 | a flow id carrying a `<device>` segment, or missing its `<platform>` leaf | `<project>/<NNN>-<flow>/<platform>` | config-key | |
 | `environments` keys `dev`, `test`, `stage`, `prod` | `development`, `staging`, `production` — `test` has no single canonical partner; propose, never auto-fix | config-key | yes |
 | mempalace rooms `plans`, `decision` | `planning`, `decisions` | config-key | |
+| no `projects.<name>.stylesheet` on a project declaring a `site` or `webapp` platform | `stylesheet: unresolved` — the axis `config_format` 19 introduced; nothing converts, the key is written so the deferred decision is visible. A project declaring neither platform takes no key | config-key | |
+| a Screens row on a `site`/`webapp` platform file with no `Metadata` block | the block, `blueprint_format` 25 — propose per row: `title` from the Screen cell, `description` empty, `index: yes` for `site` and `no` for `webapp`, `image: default`; never auto-fix | doc-section | |
 
 Two notes the table cannot carry. **vwf ships no stack templates**: a
 `project/<slug>` pin resolves through a stack plugin
