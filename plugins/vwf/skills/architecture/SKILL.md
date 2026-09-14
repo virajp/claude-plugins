@@ -294,6 +294,14 @@ production-blocking exception rather than a silent skip. On an update run,
 walk only foundations not yet decided — never re-litigate a recorded
 selection.
 
+**Accepting audit pins a store.** Audit is the one foundation on that walk with
+a backing half. When it is accepted or adapted, add `audit-store` to the
+`capabilities:` of the console project — the one carrying `operator-rbac` — as
+well as recording the `audit:` cross-cutting token: the token says what is
+recorded, the capability says where it lands. It is a `B` token, so a console
+that declares it and pins nothing is `/vwf:doctor` §5's existing non-blocking
+finding, not a halt here.
+
 **Metrics cross-check.** After the walk, when `docs/blueprint/product.md`
 exists, check its goals' `Measured via:` lines against the observability
 decision: a product that deferred observability (`observability:
