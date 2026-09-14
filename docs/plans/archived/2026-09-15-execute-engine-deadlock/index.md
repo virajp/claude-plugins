@@ -10,8 +10,8 @@ backlog: []
 
 ## Status
 
-**RUNNING** since 2026-09-15 — worktree
-`.worktrees/2026-09-15-execute-engine-deadlock`, branch
+**COMPLETE** 2026-09-15 — commits `87884cfd` (U1), `6d430029` (U2), `0804ff94`
+(U3), `39496a3f` (run log), `e11197e0` (U4); branch
 `2026-09-15-execute-engine-deadlock`. Approved 2026-09-15 by the user, after
 self-review.
 
@@ -184,12 +184,12 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                                            | Owns                                                                                                           | Depends on | Status  | Commit   |
-| -- | ---- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
-| U1 | 1    | [01-reviewer-agents.md](01-reviewer-agents.md)       | `plugins/vwf/agents/execute-code-reviewer.md`, `plugins/vwf/agents/execute-security-reviewer.md`               | —          | green   | 87884cfd |
-| U2 | 1    | [02-orchestrator-stage.md](02-orchestrator-stage.md) | `plugins/vwf/skills/execute/SKILL.md`, `plugins/vwf/assets/execute-stages.md`, `plugins/vwf/assets/memory.md`  | —          | green   | 6d430029 |
-| U3 | 2    | [03-docs.md](03-docs.md)                             | `readme.md`, `CLAUDE.md`, `.claude/**`, `site/src/content/docs/**`                                             | U1, U2     | green   | 0804ff94 |
-| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md)         | `plugins/vwf/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json` (regenerated) | U3         | pending |          |
+| Id | Wave | Unit file                                            | Owns                                                                                                           | Depends on | Status | Commit   |
+| -- | ---- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------- | ------ | -------- |
+| U1 | 1    | [01-reviewer-agents.md](01-reviewer-agents.md)       | `plugins/vwf/agents/execute-code-reviewer.md`, `plugins/vwf/agents/execute-security-reviewer.md`               | —          | green  | 87884cfd |
+| U2 | 1    | [02-orchestrator-stage.md](02-orchestrator-stage.md) | `plugins/vwf/skills/execute/SKILL.md`, `plugins/vwf/assets/execute-stages.md`, `plugins/vwf/assets/memory.md`  | —          | green  | 6d430029 |
+| U3 | 2    | [03-docs.md](03-docs.md)                             | `readme.md`, `CLAUDE.md`, `.claude/**`, `site/src/content/docs/**`                                             | U1, U2     | green  | 0804ff94 |
+| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md)         | `plugins/vwf/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json` (regenerated) | U3         | green  | e11197e0 |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -316,6 +316,8 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | 2    | R2        | opus  | 1     | findings(1) | skills-and-agents.md:69-70 [U3] rule 2 — dangling "it" in both reviewer rows; fact right, alignment intact. CONTRACT clean; RULINGS clean                                                                                                                                                                                                          |          |
 | 2    | U3        | opus  | 2     | returned    | rows 69-70 reworded ("runs and hands over under `## Engine`"), width re-padded                                                                                                                                                                                                                                                                     | 0804ff94 |
 | 2    | R2        | opus  | 2     | pass        | FINDINGS: 0; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                                                         |          |
+| 3    | U4        | opus  | 1     | returned    | site 1.1.19 → 1.1.20 via `p:site:version`; vwf 19.27.0 → 19.27.1; marketplace regenerated (vwf ref only). DECIDED: `p:site:version` neither commits nor tags. All nine gate lines green. GAP: none                                                                                                                                                 | e11197e0 |
+| 3    | R3        | opus  | 1     | pass        | FINDINGS: 0; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                                                         |          |
 
 ## Launch
 
