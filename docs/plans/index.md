@@ -9,9 +9,10 @@ This file is written by hand today; making `/vwf:change-plan`,
 `/vwf:change-execute` and `/vwf:archive` maintain it is a later change, since
 vwf's index today lists flat cycle plans only.
 
-| Folder                                                                    | Plan                                                                                                   | Status   | Requires                                   | Backlog |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | -------- | ------------------------------------------ | ------- |
-| [`2026-09-14-design-review-loop`](2026-09-14-design-review-loop/index.md) | design review loop — screens in the canvas, a review server from the repo, comments applied in session | APPROVED | `archived/2026-09-14-terminal-design-tool` | B11     |
+| Folder                                                                              | Plan                                                                                                               | Status   | Requires                                   | Backlog |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | -------- | ------------------------------------------ | ------- |
+| [`2026-09-14-design-review-loop`](2026-09-14-design-review-loop/index.md)           | design review loop — screens in the canvas, a review server from the repo, comments applied in session             | APPROVED | `archived/2026-09-14-terminal-design-tool` | B11     |
+| [`2026-09-15-execute-engine-deadlock`](2026-09-15-execute-engine-deadlock/index.md) | execute engine deadlock — the orchestrator runs the review engines and hands their output to single-turn reviewers | APPROVED | —                                          | —       |
 
 `Requires` names only plans not yet archived; a requirement already under
-`archived/` is satisfied. The two run in the order listed.
+`archived/` is satisfied. The two are independent and may run in either order.
