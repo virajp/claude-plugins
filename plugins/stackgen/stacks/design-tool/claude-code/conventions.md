@@ -14,14 +14,57 @@ docs/design/<project>/
     logo.svg            the one source every variant derives from
     <variant>.svg       mark, wordmark, lockup, mono, dark — as authored
     README.md           clear space, minimum sizes, the rules
+  screens/
+    <flow>--<platform>/
+      <CODE>.html       one self-contained page per pinned screen code
+      index--<platform>.html
+                        the prototype: the happy path, linked in order
+  comments/
+    <flow>--<platform>.yaml
+                        the review comments, one list per flow page
 ```
 
 The canvas is **committed and reviewed like any other doc**. It is the
 tool's own record, and it is what the import skills read — it is never
 `docs/blueprint/design-system.md`, which stays vwf's import and is written
-only by `/vwf:design-system`. Screens and review comments join the canvas in a
-later release; until then the screens import reports no screens and the
-conversations import answers `harvested: n/a`.
+only by `/vwf:design-system`.
+
+**Screens** mirror vwf's naming contract: the directory is the page
+(`<flow>--<platform>`, `<flow>` being the numbered folder under
+`docs/blueprint/flows/<project>/`), each `<CODE>.html` is a frame named by its
+pinned screen code, and `index--<platform>.html` is the stitch. A page is
+self-contained — inline style from the design system's tokens, the logo by
+relative path, no script — and marks its non-default states as
+`data-state` sections rather than extra files.
+
+**Comments** are a YAML list, one item per remark the reviewer left:
+
+```yaml
+- id: <short unique id>
+  screen: <CODE>              the screen file the comment sits on
+  selector: <css selector>    the element clicked
+  text: <what the reviewer wrote>
+  status: open | applied
+  created_at: <ISO 8601, UTC>
+  applied_at: <ISO 8601, UTC, or null while open>
+```
+
+**The review loop**, in four lines:
+
+1. `/design-session screens <flow>` authors the pages from the brief
+   `/vwf:screens prompt <flow>` wrote.
+2. `/design-session review <flow>` serves them from the repo, prints a URL,
+   and waits; the reviewer clicks, comments, presses **Done**.
+3. The session applies every `open` comment to its screen, marks it
+   `applied`, and lists what changed.
+4. `/vwf:screens import <flow>` diffs the reviewed screens against the
+   contract; `/vwf:feedback canvas` sees whatever is still `open`.
+
+**Loopback only.** The review server binds `127.0.0.1` on an ephemeral port,
+serves only the canvas directory, carries no auth and no TLS — a surface for
+one person on one machine, never a deployment. It needs `node`, which the
+repo's toolchain manager provides (`mise use node` where the stack does not
+already carry it).
 
 **The plugin this pack requires.** Authoring runs through the `taste-skill`
 plugin's design skills, so a product pinning this tool adds
@@ -45,4 +88,5 @@ The three import skills land at **fixed names** in the repo's own
 and `design-import-conversations`. vwf invokes those names; it never
 constructs one from configuration, and it never learns which tool answered.
 The fourth skill, `design-session`, is the tool's authoring surface — the one
-a user invokes — and vwf never calls it.
+a user invokes — and vwf never calls it. Its `scripts/serve.mjs` lands beside
+it, a single-file Node program with no dependencies.
