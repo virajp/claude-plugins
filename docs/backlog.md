@@ -7,19 +7,19 @@ archived under `docs/plans/archived/`. Priority is `P1` (pick first) to `P3`.
 Captured 2026-09-13 from a single request; the grouping below is the proposed
 plan split, to be confirmed at each plan's interview.
 
-| Id  | Item                                                                    | Group | Priority | Status  |
-| --- | ----------------------------------------------------------------------- | ----- | -------- | ------- |
-| B01 | `/vwf:change-plan` commits and pushes the plan folder when it hands off | A     | P1       | done    |
-| B02 | Version rule: no version component equal to `13` or `17`, enforced      | A     | P1       | done    |
-| B03 | `/vwf:backlog` skill — a prioritised to-do list beside the blueprint    | A     | P1       | done    |
-| B04 | `init`: split `REPO_NAME` (folder name) from the `p:<id>:*` group id    | B     | P1       | done    |
-| B05 | `/vwf:feedback` — post-build change intake from user feedback           | C     | P2       | done    |
-| B06 | Audit logs as an independent, access-controlled capability              | D     | P2       | done    |
-| B07 | Stylesheet axis for web frontends: `tailwindcss` and `stylex`           | E     | P2       | done    |
-| B08 | SEO, OpenGraph and favicons for sites and webapps                       | E     | P2       | done    |
-| B09 | `notion` MCP server config                                              | F     | P3       | done    |
-| B10 | `stack-reputation` skill — vet every stack stackgen recommends          | G     | P2       | done    |
-| B11 | Claude Code terminal as the default design tool, via `taste-skill`      | H     | P2       | planned |
+| Id  | Item                                                                    | Group | Priority | Status |
+| --- | ----------------------------------------------------------------------- | ----- | -------- | ------ |
+| B01 | `/vwf:change-plan` commits and pushes the plan folder when it hands off | A     | P1       | done   |
+| B02 | Version rule: no version component equal to `13` or `17`, enforced      | A     | P1       | done   |
+| B03 | `/vwf:backlog` skill — a prioritised to-do list beside the blueprint    | A     | P1       | done   |
+| B04 | `init`: split `REPO_NAME` (folder name) from the `p:<id>:*` group id    | B     | P1       | done   |
+| B05 | `/vwf:feedback` — post-build change intake from user feedback           | C     | P2       | done   |
+| B06 | Audit logs as an independent, access-controlled capability              | D     | P2       | done   |
+| B07 | Stylesheet axis for web frontends: `tailwindcss` and `stylex`           | E     | P2       | done   |
+| B08 | SEO, OpenGraph and favicons for sites and webapps                       | E     | P2       | done   |
+| B09 | `notion` MCP server config                                              | F     | P3       | done   |
+| B10 | `stack-reputation` skill — vet every stack stackgen recommends          | G     | P2       | done   |
+| B11 | Claude Code terminal as the default design tool, via `taste-skill`      | H     | P2       | done   |
 
 ## Groups
 
@@ -147,6 +147,6 @@ enters comments, and edits are made from those. Touches the design axis,
 `design-system`, `screens`, `mockups`, `import-*` adapters and
 `feedback canvas`.
 
-Planned in: `docs/plans/2026-09-14-terminal-design-tool/` (the pack, the
-default, the logo) and `docs/plans/2026-09-14-design-review-loop/` (screens, the
-review server, the comment round)
+Planned in: `docs/plans/archived/2026-09-14-terminal-design-tool/` (the pack,
+the default, the logo) and `docs/plans/archived/2026-09-14-design-review-loop/`
+(screens, the review server, the comment round)
