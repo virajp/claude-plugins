@@ -1,23 +1,27 @@
 # The Stack Menu & the Per-Project Config Keys
 
-Read this at step 3b, once the registry rows are settled and the stack, `design`
-and `cicd` keys are the next thing to elicit. An update run that touches no
-project's technology never needs it.
+Read this at step 3b, once the registry rows are settled and the stack,
+`design`, `cicd` and `stylesheet` keys are the next thing to elicit. An update
+run that touches no project's technology never needs it.
 
 ## The stack is a menu — elicited, and it lives in config, not the registry
 
-Since format 19 a stack is composed from **six independent axes**
-(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md` holds the enum), each its own
-menu:
+A stack is composed from **independent axes** — six of them since **format 19**,
+the format that introduced axes at all, and **seven since `config_format` 19**,
+which added `stylesheet`. The two nineteens are **different version lines**, not
+one number: the first is the blueprint-side format this file has always cited,
+the second is `.config/vwf.yaml`'s own stamp. The enum lives in
+`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`. Each axis is its own menu:
 
-| Axis        | Scope       | Menu                    | Recorded as                              |
-| ----------- | ----------- | ----------------------- | ---------------------------------------- |
-| **project** | per project | project-axis entries    | `projects.<name>.stack.template`         |
-| **backing** | per project | backing-axis entries    | `projects.<name>.stack.backing_template` |
-| **deploy**  | per project | deploy-axis entries     | `projects.<name>.stack.deploy_template`  |
-| **repo**    | per repo    | repo-axis entries       | `repo.stack.template`                    |
-| **design**  | per project | design-axis entries     | `projects.<name>.design`                 |
-| **cicd**    | per project | cicd-axis entries       | `projects.<name>.cicd`                   |
+| Axis           | Scope       | Menu                    | Recorded as                              |
+| -------------- | ----------- | ----------------------- | ---------------------------------------- |
+| **project**    | per project | project-axis entries    | `projects.<name>.stack.template`         |
+| **backing**    | per project | backing-axis entries    | `projects.<name>.stack.backing_template` |
+| **deploy**     | per project | deploy-axis entries     | `projects.<name>.stack.deploy_template`  |
+| **repo**       | per repo    | repo-axis entries       | `repo.stack.template`                    |
+| **design**     | per project | design-axis entries     | `projects.<name>.design`                 |
+| **cicd**       | per project | cicd-axis entries       | `projects.<name>.cicd`                   |
+| **stylesheet** | per project | stylesheet-axis entries | `projects.<name>.stylesheet`             |
 
 Elicit each as its **own** round (per `assets/elicitation.md` — one decision),
 and per §3a of that protocol **every question names the project it decides**.
@@ -47,6 +51,9 @@ the product — it is a question about `api`, or about `website`:
   a screen platform). A project with no screen platform is not asked.
 - **cicd** — once per project, for a project the pipeline builds. Ask once and
   offer the same answer for the rest; in a monorepo they will all match.
+- **stylesheet** — once per project, for a project declaring a `site` or a
+  `webapp` platform, and **after** that project's design round. A project
+  declaring neither is not asked and records no key.
 
 **Offer the previous project's answer as the default on the next.** Most
 products do run every project on one cloud, and re-asking from scratch per
@@ -56,8 +63,9 @@ collapse the recorded values back into a shared pin.
 
 ## Every stack round also offers *defer this axis*
 
-Alongside the menu entries, each of the project, backing, deploy and repo
-rounds offers one more option: **defer this axis**, recorded as `unresolved`
+Alongside the menu entries, each of the project, backing, deploy, repo and
+stylesheet rounds offers one more option: **defer this axis**, recorded as
+`unresolved`
 (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states"). It is
 not the retired *other (describe)* returning — that recorded a stack vwf had no
 template for; this records no stack at all, out loud. Defining the product runs
@@ -86,13 +94,15 @@ been chosen. Never carry tokens forward against an unresolved project axis.
 axes that read `unresolved`; the ones already pinned are settled, and are not
 re-litigated.
 
-## The two tool axes record into their own keys
+## The three tool axes record into their own keys
 
-`design` and `cicd` are ordinary axes at the menu — closed to what the installed
-plugins ship, no *other (describe)* option — but they record into
-`projects.<name>.design` and `projects.<name>.cicd` rather than into the
+`design`, `cicd` and `stylesheet` are ordinary axes at the menu — closed to what
+the installed plugins ship, no *other (describe)* option — but they record into
+`projects.<name>.design`, `projects.<name>.cicd` and
+`projects.<name>.stylesheet` rather than into the
 `stack` block, because they are chosen independently of a project's stack: two
-projects on the same stack routinely use different design tools.
+projects on the same stack routinely use different design tools, and two sites
+on the same framework routinely write their styles differently.
 
 **The slug is the value.** A menu entry on these axes takes as its slug the very
 token the config key holds, so recording the pick *is* writing the key. There is
@@ -108,6 +118,29 @@ implements the delivery-pipeline contract vwf states and never implements.
 The axes are orthogonal by construction — a project template never names a
 vendor, a backing template never names a framework — so there is nothing to
 merge and no precedence to resolve.
+
+## The stylesheet round
+
+Asked **only of a project whose registry entry declares a `site` or a `webapp`
+platform**. Every other project — a service, a CLI, a native app, an `iac`
+project — is not asked, and records no `stylesheet` key at all.
+
+**The menu entries are the installed stack plugin's stylesheet-axis bundles**,
+like every other axis. This file names no approach, and vwf learns nothing about
+what any of them mean beyond the slug it records.
+
+**The design system is not consulted here.** The semantic tokens, the type
+scale, the spacing ramp and the motion rules are the **contract**, and they live
+in `docs/blueprint/design-system.md` whatever the answer to this round is. The
+stylesheet is the **realization** of that contract — how those tokens become
+something a stylesheet can apply — which is why the pick belongs to config
+rather than to the blueprint, and why it changes nothing a screen has already
+been designed against. Run this round after the design round for that reason:
+what is being chosen is how an already-settled contract gets written down.
+
+**Record the slug, or `unresolved` when deferred.** A deferred stylesheet axis
+costs the doc surfaces nothing and stops `/vwf:plan` and `/vwf:execute` on that
+project's web surface, the same as any other deferred axis.
 
 ## Recording it
 

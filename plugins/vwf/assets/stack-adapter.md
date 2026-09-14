@@ -12,7 +12,7 @@ This is the same shape as the design-adapter contract
 
 | vwf owns (abstract)                                                 | A stack plugin owns (concrete)                              |
 | ------------------------------------------------------------------- | ----------------------------------------------------------- |
-| The **six axes** (`project` / `backing` / `deploy` / `design` / `cicd` per project, `repo` per repo) | Which templates exist on each axis             |
+| The **seven axes** (`project` / `backing` / `deploy` / `design` / `cicd` / `stylesheet` per project, `repo` per repo) | Which templates exist on each axis |
 | The **template frontmatter contract** (`stack-vocabulary.md`)       | The templates themselves                                    |
 | The **platform** vocabulary a project template declares             | Which platforms it offers a template for                    |
 | Harness **capability names** (`dev`, `e2e_local`, `screenshots`, …) | What *satisfies* each one — the tool, the task, the command |
@@ -180,7 +180,7 @@ Returned by `-stack-menu`. One entry per template the plugin offers:
 plugin: <name>
 templates:
   - slug: <kebab> # unique within the plugin
-    axis: project | backing | deploy | repo | design | cicd
+    axis: project | backing | deploy | repo | design | cicd | stylesheet
     platforms: [ <platform> ] # PROJECT AXIS ONLY — which registry platforms this template serves
     name: <display name> # what the menu shows
     summary: <one line> # why you would pick it
@@ -210,27 +210,42 @@ single-role pin had nothing to check.
 **A template's own directory is not the source.** A template's platforms come
 from its payload, not from any directory.
 
-### The two tool axes — `design` and `cicd`
+### The three tool axes — `design`, `cicd` and `stylesheet`
 
-Added after a stranded pack made the gap visible: a CI-system template existed
-that **no menu could offer**, because CI is chosen by a per-project config key
-rather than by a stack pin, and the menu is the only door a template can come
-through. A template nothing can offer is not an error — it is invisible, which
-is why it shipped unnoticed.
+The first two were added after a stranded pack made the gap visible: a
+CI-system template existed that **no menu could offer**, because CI is chosen by
+a per-project config key rather than by a stack pin, and the menu is the only
+door a template can come through. A template nothing can offer is not an error —
+it is invisible, which is why it shipped unnoticed. `stylesheet` joined them at
+`config_format` 19, on the same reasoning: how a web surface's styles are
+written is a per-project choice, not a property of the framework template, and
+a menu is the only way to offer it.
 
-These two axes close that door, making six axes in all. They differ from the
-other four in one respect worth stating, because it is what keeps them cheap:
+These three axes close that door, making seven axes in all. They differ from
+the other four in one respect worth stating, because it is what keeps them
+cheap:
 
-**The slug *is* the config value.** `projects.<name>.design` and
-`projects.<name>.cicd` already hold a tool token — `claude-design`,
-`github-actions` — and a menu entry on these axes takes that same token as its
-slug. So there is exactly one value, written once, and no second spelling to
-drift against. `/vwf:doctor` reports a pin resolving to no menu entry the same
-way it reports any other unresolvable pin.
+**The slug *is* the config value.** `projects.<name>.design`,
+`projects.<name>.cicd` and `projects.<name>.stylesheet` already hold a tool
+token — `claude-design`, `github-actions` — and a menu entry on these axes takes
+that same token as its slug. So there is exactly one value, written once, and no
+second spelling to drift against. `/vwf:doctor` reports a pin resolving to no
+menu entry the same way it reports any other unresolvable pin.
 
-Neither axis takes `platforms:`. `design` is required for a project declaring
-any **screen** platform and absent otherwise (the same condition the config key
-already states); `cicd` is required for a project the pipeline builds.
+None of the three takes `platforms:`. `design` is required for a project
+declaring any **screen** platform and absent otherwise (the same condition the
+config key already states); `cicd` is required for a project the pipeline
+builds.
+
+`stylesheet` takes no `platforms:` either. It is required for a project
+declaring a `site` or `webapp` platform and absent otherwise, and its value is
+the menu entry's slug. Unlike `design`, its menu also offers *defer this axis*,
+recorded as `unresolved` — the stylesheet is a choice a product may reasonably
+postpone past the design system, and the deferral is written down rather than
+left as a missing key. What the pinned entry materializes is **doctrine only** —
+a `conventions.md` and a skill, the way a `project`-axis framework component
+does — with no adapter skills of its own; the integration edits a framework
+needs are made from that doctrine, not landed by the pin.
 
 **`design` is where the design adapter's per-tool knowledge now comes from.**
 vwf still names no tool: the adapter contract
@@ -245,7 +260,7 @@ Returned by `-stack-template <slug>` once the user picks. Carries what
 
 ```yaml
 slug: <kebab>
-axis: project | backing | deploy | repo | design | cicd
+axis: project | backing | deploy | repo | design | cicd | stylesheet
 languages: [ <token> ] # open; the plugin owning the language defines its facts
 optional_languages: []
 frameworks: [] # open, lowercase-kebab

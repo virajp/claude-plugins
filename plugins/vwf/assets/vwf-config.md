@@ -12,7 +12,7 @@ product that is realization rather than description: each project's **stack**.
 That lives here precisely so no blueprint-authoring or reviewing surface can
 reach it, which is what makes a vendor name in a blueprint doc structurally
 impossible rather than merely discouraged. Since **format 11** the stack is
-**structured** — a template selection plus the six axes `/vwf:doctor` checks
+**structured** — a template selection plus the seven axes `/vwf:doctor` checks
 the repo against — and is written for **every** project, always. Since
 **format 13** every technology choice is **per project**: the backing and deploy
 axes, the design tool and the CI tool all live under `projects.<name>`, because
@@ -35,11 +35,11 @@ offered to replace and the user kept — so the decision is settled once and
 neither `/vwf:init` nor `/vwf:doctor` raises it again. Since **blueprint-format
 6** this file replaces the old stamp at `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 18)
+## Schema (config_format 19)
 
 ```yaml
-config_format: 18 # this file's own schema version — setup migrates it
-blueprint_format: 24 # the docs/blueprint format stamp
+config_format: 19 # this file's own schema version — setup migrates it
+blueprint_format: 25 # the docs/blueprint format stamp
 
 product:
   name: <product-name> # display name; the default mempalace wing
@@ -89,6 +89,7 @@ projects: # per-project REALIZATION + nuances — no role/path keys, ever (those
     # NO `platforms:` key — a project's implemented surfaces are a system-shape fact and live in docs/blueprint/registry.yaml, the single source (format 19). Config carries realization: the stack and the design pins
     design: <tool-token> # the DESIGN TOOL for this project's surfaces. Per project since format 13 (was one product-wide `design.tool`): a product may design its website in one tool and its app in another. Since Wave D it is a pin on the DESIGN AXIS and the value is that menu entry's SLUG — one value, not a token plus a separate pin, so nothing can drift. vwf never constructs a skill name from it: the pin materializes three fixed-name adapters into the repo's own .claude/ (assets/design-adapter.md). Required for a project declaring any SCREEN platform, absent for every other project
     cicd: <tool> # the CI SYSTEM that builds and releases this project. Per project since format 13, so a product whose projects ship through different pipelines can say so. Since Wave D it is a pin on the CICD AXIS, the value being that menu entry's slug — which is what finally made a CI template reachable at all, the menu having been the only door and no CI entry having existed. vwf owns the delivery-pipeline CONTRACT (assets/delivery-pipeline.md) and never the mechanism. In a monorepo every project repeats the same value — accepted, since the key's scope follows the other three rather than inventing a fourth scoping rule
+    stylesheet: <slug> # the STYLESHEET approach for this project's web surfaces, and how the design system's semantic tokens are realized in it. Per project, like every other technology key since format 13. A pin on the STYLESHEET AXIS (`config_format` 19 — NOT the blueprint format 19 the neighbouring comments cite), the value being that menu entry's SLUG — one value, written once, nothing to drift against. Required for a project declaring a `site` or `webapp` platform, absent for every other project, the same shape `design`'s screen-platform condition takes. `unresolved` when deferred (see The three axis states) — the stylesheet round offers *defer this axis*, and the key is written so the postponed decision is visible rather than missing. vwf names NO approach here or anywhere: the menu is the installed stack plugin's, and what the pin materializes is doctrine — a conventions doc and a skill — never a landed config file
     coverage_target: <int> # per-project override of pipeline.coverage_target
     harness:
       health: </path or
@@ -138,9 +139,10 @@ docs_sync:
 ## The three axis states
 
 Every stack axis — `projects.<name>.stack.template`, `backing_template`,
-`deploy_template`, and `repo.stack.template` — is in exactly one of **three**
-states since format 16. Until then there were two, and the missing one is what
-forced a user with no stack plugin installed to answer an unanswerable question:
+`deploy_template`, `repo.stack.template`, and, since `config_format` 19,
+`projects.<name>.stylesheet` — is in exactly one of **three** states since
+format 16. Until then there were two, and the missing one is what forced a user
+with no stack plugin installed to answer an unanswerable question:
 
 | State                          | Spelling                                    | Means                                                   |
 | ------------------------------ | ------------------------------------------- | ------------------------------------------------------- |
@@ -158,9 +160,12 @@ looked, and this project ships through nothing / talks to no backing service* �
 and it is complete. `unresolved` is the absence of a decision. Collapsing them
 would make an unanswered axis indistinguishable from a finished one, which is
 precisely the state format 16 exists to make visible. The scalar axes
-(`template`, `repo.stack.template`) have no `[]`: every project has a project
-axis and every repo a repo axis, so their only two states are pinned and
-deferred.
+(`template`, `repo.stack.template`, `stylesheet`) have no `[]`: every project
+has a project axis, every repo a repo axis, and a project with a `site` or
+`webapp` platform a stylesheet axis, so their only two states are pinned and
+deferred. A project declaring neither of those platforms carries no `stylesheet`
+key at all — absence there is the key not applying, which is why `[]` would say
+nothing.
 
 **A pin is decided in one command and materialized in another.**
 `/vwf:architecture` writes the slug and materializes nothing; `/vwf:setup`'s
@@ -556,6 +561,39 @@ earlier than 65/90/80), never loosen.
   carries that fact for both stamps. `blueprint_format` was **untouched** and
   stayed **24**: nothing under `docs/blueprint/` changes, the third config bump
   to ship without a paired blueprint bump, after `14` and `16`.
+
+- **`18 → 19` migration** (performed by `/vwf:setup`): **a seventh axis —
+  `projects.<name>.stylesheet` — and nothing else moves.** For every project
+  whose **registry** declares a `site` or a `webapp` platform and whose config
+  lacks the key, write **`stylesheet: unresolved`**. A project declaring neither
+  gets **no key**: the axis does not apply to it, and an absent key is how that
+  is spelled — `unresolved` there would assert a postponed decision nobody has
+  to make.
+
+  Nothing converts, because nothing existed to convert: no surface wrote a
+  stylesheet choice before 19. The key is written rather than left absent so the
+  **deferred** decision is visible in the file a user hand-reads, and so the
+  three surfaces that care agree on what they are looking at — the materialize
+  pass skips an `unresolved` axis silently, `/vwf:doctor` reports it as a
+  deferred axis rather than as a missing key, and `/vwf:architecture` elicits it
+  on its next run. No existing pin is rewritten.
+
+  **Neither 13 nor 17 is in play on this bump**, and the rule that produced
+  `16 → 18` still stands: those two integers are never issued on this stamp,
+  `blueprint_format`, or any other vwf version line, so a future bump that would
+  land on either goes past it.
+
+  `blueprint_format` **moves with it, 24 → 25**, because the choice and the
+  contract arrived together. Under `25`, a Screens row on a `site` or `webapp`
+  platform file gains a **`Metadata` block** headed by the row's code, with four
+  fields:
+  `title` (the `<title>` and the OpenGraph title), `description`, `index`
+  (`yes` or `no` — robots meta and sitemap inclusion), and `image` (`default`,
+  the product-wide social preview, or a named slot). A `webapp` that does not
+  declare the `seo` capability pins `title` alone. Readers treat a Screens row
+  on one of those platform files with **no `Metadata` block** as `24` drift; the
+  block is **proposed per row** and **never auto-filled** — the setup skill's
+  `format-lineage` reference carries what each field is proposed as.
 
 - **`10 → 11` migration** (performed by `/vwf:setup`): stacks stop being
   *enforced with an escape hatch* and become a **menu**, and the flat
