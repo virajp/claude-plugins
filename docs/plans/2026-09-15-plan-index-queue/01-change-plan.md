@@ -117,7 +117,7 @@ adding depending on the dependencies."
 ## Verification
 
 - `mise run p:plugins:check` green.
-- `command grep -n 'run / ask\|`run`step\|run — executed' plugins/vwf/skills/change-plan -r`
+- `command grep -rn 'run / ask\|run step\|run — executed' plugins/vwf/skills/change-plan`
   returns nothing.
 - `command grep -c 'plan-index.md' plugins/vwf/skills/change-plan/SKILL.md` ≥ 2
   (recall and hand-off).

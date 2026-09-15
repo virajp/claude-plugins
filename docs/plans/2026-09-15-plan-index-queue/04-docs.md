@@ -94,7 +94,7 @@ never restate differently.
 - `mise run p:site:check` green.
 - `mise run p:plugins:check` green.
 - `mise run code:precommit` green.
-- `command grep -rn 'never listed\|not listed there\|`run`step\|run step' .claude/skills/vwf-plugin site/src/content/docs readme.md CLAUDE.md`
+- `command grep -rn 'never listed\|not listed there\|run step' .claude/skills/vwf-plugin site/src/content/docs readme.md CLAUDE.md`
   — every remaining hit is read and is not about change plans or after-landing
   steps.
 - `command grep -n 'change-execute next' site/src/content/docs/plugins/vwf.md site/src/content/docs/how-to/operate/ad-hoc-change.md CLAUDE.md`
@@ -114,7 +114,7 @@ never restate differently.
 - `site/src/content/docs/**` links are checked by `p:site:check`: a new anchor
   you cite must exist.
 - Never end a table cell in a bare asterisk; no escaped backticks inside code
-  spans; no code span starting with `##`.
+  spans; no code span that begins with a markdown heading marker.
 - Delete with `rm`, never `git rm`.
 
 ## Commit

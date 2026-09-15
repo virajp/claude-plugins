@@ -9,8 +9,9 @@ This file is written by hand today; making `/vwf:change-plan`,
 `/vwf:change-execute` and `/vwf:archive` maintain it is a later change, since
 vwf's index today lists flat cycle plans only.
 
-| Folder | Plan | Status | Requires | Backlog |
-| ------ | ---- | ------ | -------- | ------- |
+| Folder                                   | Plan                                                                                         | Priority | Status   | Requires | Backlog |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------- | -------- | -------- | -------- | ------- |
+| `docs/plans/2026-09-15-plan-index-queue` | plan index queue — `docs/plans/index.md` as the change-plan queue, and `change-execute next` | 10       | APPROVED | —        | —       |
 
 `Requires` names only plans not yet archived; a requirement already under
-`archived/` is satisfied. Nothing is in flight: every folder has landed.
+`archived/` is satisfied.

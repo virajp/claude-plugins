@@ -167,7 +167,7 @@ situation."
 ## Verification
 
 - `mise run p:plugins:check` green.
-- `command grep -n '`run`step\|run steps execute\|unprompted' plugins/vwf/skills/change-execute -r`
+- `command grep -rn 'run step\|run steps execute\|unprompted' plugins/vwf/skills/change-execute`
   returns nothing.
 - `command grep -c 'queue.md' plugins/vwf/skills/change-execute/SKILL.md` ≥ 2.
 - `command grep -n 'pull --rebase\|rebase --abort\|reset --soft HEAD~1\|stash push -u\|stash pop\|pull --ff-only' plugins/vwf/skills/change-execute/references/queue.md`

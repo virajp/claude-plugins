@@ -10,8 +10,7 @@ backlog: []
 
 ## Status
 
-**DRAFT** — folder written 2026-09-15; self-review, the index row and the
-approval commit are still to do.
+**APPROVED** 2026-09-15 by the user.
 
 ## Consent
 
