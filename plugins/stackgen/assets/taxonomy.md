@@ -100,7 +100,8 @@ and its components leave `category` unset.
 
 - **`framework`**: `webserver` / `orm` / `otel-sdk` / `testing` /
   `meta-framework` / `ui-library` / `cli` / `iac` / `workflow-sdk` /
-  `agent-sdk`
+  `agent-sdk` / `document` (a hand-authored page tree; the build, if any,
+  is a bundler, not a framework)
 - **`cloud-service`**: `compute` / `sql` / `document` / `queue` /
   `object-storage` / `cdn` / `static-hosting` / `access` / `identity` /
   `messaging` / `key-value` / `stateful-compute` / `orchestration` /

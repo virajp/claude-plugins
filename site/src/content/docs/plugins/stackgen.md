@@ -67,7 +67,7 @@ knowledge; instance components cite it and stay thin.
 ### Four bundles on one pack — the Astro example
 
 The clearest worked example of "bundles are compositions, not directories" is
-the `site` platform. Four bundles serve it, all pinning the one
+the `site` platform. Four Astro bundles serve it, all pinning the one
 `framework/astro` pack and all carrying React for islands, and they differ by
 which of Astro's two `output` values is set and whether an adapter is present.
 `astro-ssg` carries `default: true`, so a `site` project's round preselects it;
@@ -84,6 +84,28 @@ the other three are picked deliberately:
 SSR with prerendering flipped and its on-demand routes cite the SSR bundle's
 server doctrine rather than restating it. SSG and CSR have no server, so neither
 does.
+
+**The `site` platform's fifth entry is not Astro at all.** `html`, on the
+`framework/html` pack, is a hand-authored HTML5 page tree with plain CSS and
+ES-module JavaScript — no framework, no components, no content model. Vite
+serves it in development and `vite build` writes `./dist`; a repo that wants its
+tree served byte-for-byte replaces the build with
+`cp -R src/. dist/ && cp -R public/. dist/` and keeps Vite for the dev server
+alone, at the cost of hashing, minification, `.ts` scripts and any stylesheet
+approach that needs a build plugin. `html-validate` over `src/**/*.html` is its
+`test`. It carries no `default:` flag — `astro-ssg` stays what the round
+preselects — and its category is `document`, a token minted for it: the build is
+a bundler, not a framework. Pick it over `astro-ssg` when the site is a handful
+of pages someone writes by hand, needs no content collections and no islands; a
+blog, a changelog, documentation past a page or two, anything in Markdown, or
+anything wanting a per-route rendering mode is one of the Astro bundles. With no
+layout file, the web-head contract's layout clause is met per page: every page
+carries the full head set as a checklist, the sitemap and `robots.txt` are
+hand-authored under `public/`, and the site origin is one exported constant in
+`vite.config.ts` that a review checks the hand-typed canonicals against. The
+stylesheet axis is answered as for any site, with one rule: `plain-css` needs
+nothing, `tailwindcss` uses its Vite plugin under the default build and its CLI
+under the copy-only opt-out, and `stylex` needs the Vite build.
 
 There is no output-mode field on a bundle and no per-project setting: Astro has
 exactly two `output` values (`hybrid` was removed in Astro 5 and merged into
@@ -126,7 +148,9 @@ the project axis and the deploy axis a written contract instead of a
 coincidence. (`cloud-service/containers`, the third Cloudflare deploy pack,
 ships no `assets` block at all: what it publishes is an image.) A repo that
 changes `outDir` has changed that contract and has to change its deploy
-configuration in the same commit; nothing detects the mismatch.
+configuration in the same commit; nothing detects the mismatch. The
+`framework/html` pack carries the same heading, stating the same `./dist`, so
+the deploy packs' citation holds for a site on either pack.
 
 **Which deploy each pairs with.** SSG and CSR name `cloudflare-workers-static`,
 the bundle they were built for — CSR flipping the host's not-found handling to
@@ -213,14 +237,18 @@ The retirement wave then took the four that were left — `typescript`, `flutter
 ordering is the no-skill-lost rule: a pack is the destination that must exist
 *before* a plugin retires, never a replacement the moment it lands.
 
-Three **framework** packs ship today, `effect`, `astro` and `cloudflare-agents`;
-every other framework a bundle names is a `@generated` ref, which is the
+Four **framework** packs ship today, `effect`, `astro`, `cloudflare-agents` and
+`html`; every other framework a bundle names is a `@generated` ref, which is the
 generated path working as designed rather than a gap. `framework/astro` arrived
 on 2026-09-06 as the second, and it is the pack all four bundles in
 [the Astro example](#four-bundles-on-one-pack--the-astro-example) pin.
 `framework/cloudflare-agents` arrived on 2026-09-06 as the third — the
 Cloudflare Agents SDK, whose `Agent` class compiles to a Durable Object — and it
-is the pack the `typescript-cloudflare-agents` bundle pins.
+is the pack the `typescript-cloudflare-agents` bundle pins. `framework/html`
+arrived on 2026-09-15 as the fourth, under a category minted for it, `document`
+— a hand-authored page tree whose build, if any, is a bundler rather than a
+framework — and it is the pack the `html` bundle pins, the `site` platform's one
+entry beside the four Astro ones.
 
 The `devtools` plugin then dissolved into stackgen and was deleted, closing the
 marketplace at two plugins. Its mise doctrine and its file-based task library

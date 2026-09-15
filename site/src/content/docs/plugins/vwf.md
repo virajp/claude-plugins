@@ -573,7 +573,8 @@ round preselects the previous project's answer on that axis, and nothing before
 that. The flag is menu state only — it reaches no config key, and a pin made by
 accepting it is indistinguishable from one made by picking the same entry. Today
 two entries are flagged: stackgen's terminal design tool on the `design` axis,
-and its static Astro bundle on the `project` axis for `site` projects alone.
+and its static Astro bundle on the `project` axis for `site` projects alone —
+highlighted above the other three Astro bundles and the plain `html` one.
 
 **The `stylesheet` axis is conditional.** Added in `config_format` **19**, it is
 asked only of a project whose registry entry declares a `site` or a `webapp`

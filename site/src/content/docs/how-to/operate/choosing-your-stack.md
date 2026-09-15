@@ -54,21 +54,35 @@ application rather than a document, so a product with a web surface pins a web
 stack for it, as a `site` or `webapp` project of its own beside the app.
 Anything else takes the **generate** entry — see below.
 
-**A `site` project picks between four Astro bundles**, all on the one
-`framework/astro` pack, all carrying React for islands, differing by how a page
-is rendered: `astro-ssg` builds every route at build time with no adapter;
-`astro-ssr` renders every route per request behind an adapter; `astro-hybrid` is
-prerendered by default with the routes that must read a request opting out one
-by one; `astro-csr` serves one shell page and lets a client-only island own
-everything after the first paint. A page with no island ships no JavaScript in
-any of them. The round preselects `astro-ssg` — highlighted, never assumed; the
-other three stay offered and you pick past it when a page must read its request.
-(`astro-ssr` was `typescript-astro-react` before 2026-09-06 — a pin on the old
-slug has to be re-pointed.) All four also carry the pack's **head doctrine** —
-the title, description, canonical address, social tags, favicon links, manifest,
-robots and sitemap a public page owes the outside — and land an `icons` task
-that rasterizes the whole favicon set from your one source mark. Nothing to
-decide there: it is the same for all four.
+**A `site` project picks between five entries** — four Astro bundles and `html`.
+The Astro four sit on the one `framework/astro` pack, all carrying React for
+islands, differing by how a page is rendered: `astro-ssg` builds every route at
+build time with no adapter; `astro-ssr` renders every route per request behind
+an adapter; `astro-hybrid` is prerendered by default with the routes that must
+read a request opting out one by one; `astro-csr` serves one shell page and lets
+a client-only island own everything after the first paint. A page with no island
+ships no JavaScript in any of them. The round preselects `astro-ssg` —
+highlighted, never assumed; the other three stay offered and you pick past it
+when a page must read its request. (`astro-ssr` was `typescript-astro-react`
+before 2026-09-06 — a pin on the old slug has to be re-pointed.) All four also
+carry the pack's **head doctrine** — the title, description, canonical address,
+social tags, favicon links, manifest, robots and sitemap a public page owes the
+outside — and land an `icons` task that rasterizes the whole favicon set from
+your one source mark. Nothing to decide there: it is the same for all four.
+
+**`html` is the fifth entry, and it is not Astro.** Pick it when the site is a
+handful of pages you write by hand — a landing page, a personal site — with no
+content collections and no islands: every page is a complete HTML5 document with
+plain CSS and one ES module, Vite serves the tree in development and
+`vite build` writes `./dist`, and `html-validate` over `src/**/*.html` is the
+`test`. A repo that wants its tree served byte-for-byte swaps the build for
+`cp -R src/. dist/ && cp -R public/. dist/`, giving up hashing, minification,
+`.ts` scripts and any stylesheet approach that needs a build plugin
+(`tailwindcss` falls back to its CLI; `stylex` needs the Vite build). There is
+no layout, so each page carries its full head as a checklist, the sitemap and
+`robots.txt` are hand-authored under `public/`, and the same `icons` task lands.
+A blog, a changelog, docs past a page or two, anything in Markdown, or anything
+that wants a per-route rendering mode is one of the Astro bundles instead.
 
 **An agent is a project, not a capability bolted onto one.**
 `typescript-cloudflare-agents` is the project-axis answer for a TypeScript
