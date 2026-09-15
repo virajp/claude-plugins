@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+
+#MISE description="Rasterize the favicon set from public/brand/favicon.svg"
+#MISE dir="{{ config_root }}"
+
+# THIS FILE SHIPS UNDER `p/_project/` AND MUST BE RENAMED.
+#
+# `_project` is a MARKED POSITION, not a task group. The command that pins this
+# stack renames the directory to the project's id, so this becomes
+# `p/<id>/icons` and runs as `p:<id>:icons`, where `<id>` is THE PROJECT'S ID
+# — the group the materializer names when it lands this file. `REPO_NAME` is a
+# different token, the repo's own folder name, and nothing here reads it.
+# (`setup:all`'s member flags and the `setup-<slug>` shell aliases are a third,
+# named for member REPOS, never for a project id.)
+#
+# The underscore is doing two jobs. `config/_<name>/` at the TOP of a pack's
+# config tier is pack-private and never copied; this is nested well below that,
+# so the materializer does copy it. But mise ignores a task directory whose name
+# starts with an underscore — the same rule that keeps `_scripts/` out of
+# `mise tasks` — so an unrenamed copy is INERT rather than a task called
+# `p:_project:icons`. Forgetting the rename loses the task; it never writes into
+# the wrong project.
+
+set -euo pipefail
+
+# The id is READ FROM THE DIRECTORY NAME rather than written into the file, so
+# the rename above is the only edit the pinning command has to make and the two
+# can never disagree.
+project_id="$(basename "$(dirname "${BASH_SOURCE[0]}")")"
+
+# The project's own directory, located by the one file this task cannot run
+# without. A monorepo member sits at `<id>/`; a single-package repo IS the
+# project, so its `public/` is at the root. Those two are the whole search:
+# guessing further would mean writing an icon set into whichever directory
+# happened to match, and a wrong favicon is discovered by a user rather than by
+# a build.
+MARK="public/brand/favicon.svg"
+if [[ -f "${project_id}/${MARK}" ]]; then
+  PROJECT="$PWD/${project_id}"
+elif [[ -f "${MARK}" ]]; then
+  PROJECT="$PWD"
+else
+  echo "No favicon source for ${project_id}." >&2
+  echo "Looked for ${project_id}/${MARK} and ${MARK}, from the repo root." >&2
+  echo "The mark is a brand asset the product supplies; put it at one of those." >&2
+  exit 1
+fi
+
+SRC="$PROJECT/${MARK}"
+OUT="$PROJECT/public"
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+# The touch icon must be full-bleed: iOS masks the corners itself and paints
+# whatever is transparent black, so the rounded tile is squared off first. The
+# radius is ZEROED rather than matched by value, since every mark rounds its
+# corners by a different amount.
+#
+# Zeroed ONLY inside a `<rect>` tag. There, rx and ry are the corner rounding,
+# and squaring them is the whole point; on an `<ellipse>` the same two
+# attributes ARE the shape, and an ellipse whose radii are zeroed — or dropped
+# — renders nothing, which is a BLANK home-screen icon rather than a square
+# one. The distinction is per ELEMENT and not per line: a minified mark is one
+# line holding every shape it has, so a line-scoped edit hits both meanings at
+# once. That is why this walks the `<rect>` tags in node rather than reaching
+# for sed, which cannot scope a substitution to a tag.
+# The `$1` and `$2` below are the replacement's capture refs and belong to the
+# regex, not to the shell — the quoting is the point.
+# shellcheck disable=SC2016
+MARK_SVG="$SRC" SQUARE_SVG="$TMP/square.svg" node --input-type=module -e '
+  import { readFileSync, writeFileSync } from "node:fs";
+  const svg = readFileSync(process.env.MARK_SVG, "utf8");
+  writeFileSync(
+    process.env.SQUARE_SVG,
+    svg.replace(/<rect\b[^>]*>/g, tag =>
+      tag.replace(/(\s)(r[xy])="[^"]*"/g, "$1$2=\"0\"")),
+  );
+'
+
+# sharp-cli and png-to-ico are one-off tools, never repo dependencies, and are
+# run from $TMP so nothing resolves against the workspace. --density renders the
+# SVG large enough that every size is a downscale, never an enlargement.
+mkdir -p "$TMP/stage" "$TMP/out"
+
+# sharp-cli names its output after its input and demands an output directory, so
+# each size is staged under the stem it should be written as.
+render() {
+  local svg="$1" size="$2" stem="$3"
+  cp "$svg" "$TMP/stage/$stem.svg"
+  (cd "$TMP" && pnpx sharp-cli@6 \
+    --input "stage/$stem.svg" \
+    --output "out" \
+    --density 1200 \
+    --format png \
+    resize "$size" "$size" --fit contain --background "rgba(0,0,0,0)")
+}
+
+render "$SRC" 512 icon-512
+render "$SRC" 192 icon-192
+render "$TMP/square.svg" 180 apple-touch-icon
+render "$SRC" 16 ico-16
+render "$SRC" 32 ico-32
+render "$SRC" 48 ico-48
+
+# The obvious command — `pnpx png-to-ico@3 ico-16.png ico-32.png ico-48.png` —
+# cannot produce the 16/32/48 ICO it looks like it produces: png-to-ico's bin
+# passes only `argv._[0]` to the library, so the 32 and 48 arguments are
+# dropped, and the single-path branch upscales that one PNG to 256 and emits
+# 48/32/16/256 — four layers, all resampled from the 16 px input. `pnpm dlx
+# --package=png-to-ico@3 node -e …` does not help either: the dlx directory is
+# not on node's resolution path, so the import fails. The library entry takes an
+# array and writes exactly those layers, so the package is installed into $TMP —
+# never into this repo — and driven by a one-line script.
+(
+  cd "$TMP" && pnpm init >/dev/null &&
+    pnpm add --silent png-to-ico@3 >/dev/null
+)
+node --input-type=module -e "
+  import pngToIco from '$TMP/node_modules/png-to-ico/index.js';
+  const sizes = [16, 32, 48].map(s => '$TMP/out/ico-' + s + '.png');
+  process.stdout.write(await pngToIco(sizes));
+" >"$TMP/favicon.ico"
+
+mv "$TMP/out/icon-512.png" "$TMP/out/icon-192.png" \
+  "$TMP/out/apple-touch-icon.png" "$TMP/favicon.ico" "$OUT/"
+
+ls -l "$OUT/favicon.ico" "$OUT/apple-touch-icon.png" "$OUT/icon-192.png" \
+  "$OUT/icon-512.png"
