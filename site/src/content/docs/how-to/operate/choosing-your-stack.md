@@ -61,12 +61,14 @@ is rendered: `astro-ssg` builds every route at build time with no adapter;
 prerendered by default with the routes that must read a request opting out one
 by one; `astro-csr` serves one shell page and lets a client-only island own
 everything after the first paint. A page with no island ships no JavaScript in
-any of them. (`astro-ssr` was `typescript-astro-react` before 2026-09-06 — a pin
-on the old slug has to be re-pointed.) All four also carry the pack's **head
-doctrine** — the title, description, canonical address, social tags, favicon
-links, manifest, robots and sitemap a public page owes the outside — and land an
-`icons` task that rasterizes the whole favicon set from your one source mark.
-Nothing to decide there: it is the same for all four.
+any of them. The round preselects `astro-ssg` — highlighted, never assumed; the
+other three stay offered and you pick past it when a page must read its request.
+(`astro-ssr` was `typescript-astro-react` before 2026-09-06 — a pin on the old
+slug has to be re-pointed.) All four also carry the pack's **head doctrine** —
+the title, description, canonical address, social tags, favicon links, manifest,
+robots and sitemap a public page owes the outside — and land an `icons` task
+that rasterizes the whole favicon set from your one source mark. Nothing to
+decide there: it is the same for all four.
 
 **An agent is a project, not a capability bolted onto one.**
 `typescript-cloudflare-agents` is the project-axis answer for a TypeScript

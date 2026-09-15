@@ -564,11 +564,16 @@ per repo; it describes the checkout, not a project.
 may arrive flagged `default: true` — set in the stack plugin's own bundle, never
 inferred by vwf — and that entry is what the round **preselects**: highlighted,
 never assumed, with every other entry still offered and the user still picking.
-At most one entry per axis carries it; where none does, the round preselects the
-previous project's answer on that axis, and nothing before that. The flag is
-menu state only — it reaches no config key, and a pin made by accepting it is
-indistinguishable from one made by picking the same entry. Today the one flagged
-entry is stackgen's terminal design tool on the `design` axis.
+At most one entry per axis **per platform** carries it — two flagged entries on
+one axis are the plugin's defect when either serves every platform or their
+platform lists overlap — and the round preselects the one flagged entry among
+the entries it offers, after filtering by the project's platforms, so a flag on
+an entry the round does not offer highlights nothing there. Where none does, the
+round preselects the previous project's answer on that axis, and nothing before
+that. The flag is menu state only — it reaches no config key, and a pin made by
+accepting it is indistinguishable from one made by picking the same entry. Today
+two entries are flagged: stackgen's terminal design tool on the `design` axis,
+and its static Astro bundle on the `project` axis for `site` projects alone.
 
 **The `stylesheet` axis is conditional.** Added in `config_format` **19**, it is
 asked only of a project whose registry entry declares a `site` or a `webapp`

@@ -167,9 +167,13 @@ inventory and check in that order — freshness before validity:
   tree the file lands in, or a path into a sibling pack — since that file is
   copied into a repo with no plugin, where each resolves to nothing silently.
   Rule 14 is the newest: across `stacks/bundles/*.md`, at most one bundle per
-  axis carries `default: true` — the entry vwf's architecture menu preselects —
-  and the value is boolean; two flagged on one axis is a preselection decided by
-  file order, and the finding names both files.
+  axis **per platform** carries `default: true` — the entry vwf's architecture
+  menu preselects on a round — and the value is boolean. Two flagged bundles on
+  one axis conflict when either declares no `platforms:` list (it is offered on
+  every round of the axis) or their lists intersect; that is a preselection
+  decided by file order, and the finding names both files plus the platform they
+  share, or the one that declares no list. Disjoint platform lists are fine —
+  one default per platform.
 - **`p:plugins:shellcheck`** — the shell gate over everything a pack ships as
   shell: `shellcheck -x` plus `shfmt -d` over the pack task libraries and their
   `_scripts/*`, and a second pass over `hooks/*.sh` with no flags, since a hook
