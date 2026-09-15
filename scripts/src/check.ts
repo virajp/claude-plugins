@@ -1262,15 +1262,21 @@ function checkStackAdapters(plugins: readonly Plugin[]): Finding[] {
 }
 
 /**
- * At most one default bundle per axis.
+ * At most one default bundle per (axis, platform).
  *
  * A bundle's frontmatter may carry `default: true`, which the stack menu passes
- * through and vwf's architecture menu preselects. Two bundles on one axis both
- * flagged fail nowhere: the menu preselects whichever it met first, which is
- * the bundle directory's sort order — a silent nondeterminism that a rename
- * flips. A non-boolean value (`default: "true"`, `default: yes`) is the other
- * silent case — the menu passes the key through as data and the preselect rule
- * asks for boolean `true`, so a string never preselects and nobody is told.
+ * through and vwf's architecture menu preselects among the entries it offers
+ * on a round — a list it has already filtered by the project's platforms. Two
+ * flagged bundles on one axis conflict when either declares no `platforms:`
+ * list (it is offered on every round of the axis) or their platform lists
+ * intersect (both are offered on the shared platform's round). A conflict fails
+ * nowhere: the menu preselects whichever it met first, which is the bundle
+ * directory's sort order — a silent nondeterminism that a rename flips. An axis
+ * whose flagged bundles all declare disjoint platforms carries one default per
+ * platform. A non-boolean value (`default: "true"`, `default: yes`) is the
+ * other silent case — the menu passes the key through as data and the
+ * preselect rule asks for boolean `true`, so a string never preselects and
+ * nobody is told.
  *
  * The frontmatter is parsed with the same reader the inventory generator uses,
  * so a bundle this rule reads is a bundle the inventory reads.
@@ -1279,7 +1285,10 @@ function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
   const findings: Finding[] = [];
 
   for (const plugin of plugins) {
-    const flagged = new Map<string, string[]>();
+    const flagged = new Map<
+      string,
+      { path: string; platforms: string[] | null; }[]
+    >();
 
     for (const file of plugin.files) {
       if (!/^stacks\/bundles\/[^/]+\.md$/.test(file.path)) {
@@ -1299,7 +1308,10 @@ function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
       if (typeof doc !== "object" || doc === null) {
         continue;
       }
-      const { axis, default: value } = doc as Record<string, unknown>;
+      const { axis, default: value, platforms } = doc as Record<
+        string,
+        unknown
+      >;
       if (value === undefined) {
         continue;
       }
@@ -1317,20 +1329,47 @@ function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
         continue;
       }
       const key = typeof axis === "string" ? axis : "";
-      flagged.set(key, [...(flagged.get(key) ?? []), file.path]);
+      // An absent or empty list is "offered on every round of the axis".
+      const declared = Array.isArray(platforms)
+        ? platforms.filter((p): p is string => typeof p === "string")
+        : [];
+      flagged.set(key, [
+        ...(flagged.get(key) ?? []),
+        { path: file.path, platforms: declared.length > 0 ? declared : null },
+      ]);
     }
 
-    for (const [axis, paths] of flagged) {
-      if (paths.length < 2) {
-        continue;
-      }
-      findings.push({
-        scope: plugin.dir,
-        message: `${paths.length} bundles on the \`${axis}\` axis carry `
-          + `\`default: true\` — ${
-            paths.map(p => `"${p}"`).join(", ")
-          } — the menu preselects one entry per axis, and two flagged is `
-          + `whichever sorts first rather than a choice`,
+    for (const [axis, entries] of flagged) {
+      entries.forEach((a, i) => {
+        for (const b of entries.slice(i + 1)) {
+          const pair = `"${a.path}" and "${b.path}"`;
+          if (a.platforms === null || b.platforms === null) {
+            const bare = a.platforms === null ? a : b;
+            findings.push({
+              scope: plugin.dir,
+              message: `${pair} both carry \`default: true\` on the `
+                + `\`${axis}\` axis, and "${bare.path}" declares no `
+                + `\`platforms:\` list, so it is offered on every round of `
+                + `the axis — the menu preselects one entry per round, and two `
+                + `flagged is whichever sorts first rather than a choice`,
+            });
+            continue;
+          }
+          const theirs = b.platforms;
+          const shared = a.platforms.filter(p => theirs.includes(p));
+          if (shared.length === 0) {
+            continue;
+          }
+          findings.push({
+            scope: plugin.dir,
+            message: `${pair} both carry \`default: true\` on the `
+              + `\`${axis}\` axis and share the platform${
+                shared.length > 1 ? "s" : ""
+              } ${shared.map(p => `\`${p}\``).join(", ")} — the menu `
+              + `preselects one entry per round, and two flagged is whichever `
+              + `sorts first rather than a choice`,
+          });
+        }
       });
     }
   }
