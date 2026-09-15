@@ -13,6 +13,5 @@ the next runnable plan.
 
 ## Change plans
 
-| Folder                                   | Plan                                                                                         | Priority | Status   | Requires | Backlog |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------- | -------- | -------- | -------- | ------- |
-| `docs/plans/2026-09-15-plan-index-queue` | plan index queue — `docs/plans/index.md` as the change-plan queue, and `change-execute next` | 10       | APPROVED | —        | —       |
+| Folder | Plan | Priority | Status | Requires | Backlog |
+| ------ | ---- | -------- | ------ | -------- | ------- |
