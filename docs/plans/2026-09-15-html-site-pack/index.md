@@ -2,7 +2,7 @@
 type: vwf-change-plan
 title: html site pack — a plain HTML5+CSS+JS static site beside Astro
 requires:
-  - docs/plans/2026-09-15-default-per-platform
+  - docs/plans/archived/2026-09-15-default-per-platform
 backlog: []
 ---
 
