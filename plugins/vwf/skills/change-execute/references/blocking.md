@@ -39,7 +39,9 @@ agent died>; U<c>, U<d> skipped (depend on U<a>)`
 plus the worktree path.
 
 The Units table and the Run log carry the same facts per unit; the status line
-is the summary a reader sees first.
+is the summary a reader sees first. The plan's row in the base repo's
+`docs/plans/index.md` is **not** updated on a block or a pause — it stays
+`RUNNING`, the claim this session holds, and carries none of this detail.
 
 ## Resume
 
@@ -47,17 +49,23 @@ A re-run against `BLOCKED` or `RUNNING`:
 
 1. Confirm the worktree in the status line exists. If it does not, the run
    cannot resume — say so and stop; the user decides whether to start over from
-   `APPROVED`.
-2. Confirm the ruling each `unresolved` unit asked for is now in its unit file
+   `APPROVED`. Starting over means resetting the folder's Status **and** its
+   index row to `APPROVED` by hand, the row in a commit on the integration
+   branch — that reset is what lets a named run, or `next`, claim the plan
+   afresh; nothing takes a `RUNNING` row otherwise.
+2. The index row stays `RUNNING` through the resume and is not touched. A row
+   found reading `APPROVED` is a hand reset, and §1 claims it again before
+   continuing.
+3. Confirm the ruling each `unresolved` unit asked for is now in its unit file
    or the decisions table. If the status line's `UNRESOLVED:` text still
    describes an unanswered question, stop and name it.
-3. **The worktree is authoritative.** For every unit marked `green`, check its
+4. **The worktree is authoritative.** For every unit marked `green`, check its
    commit exists on the branch. A `green` unit whose commit is absent is reset
    to `pending` and re-run — the plan's table can be ahead of what landed if a
    session died between the report and the commit, and the committed tree is
    ground truth.
-4. Reset `unresolved`, `failed` and `skipped` units to `pending`.
-5. Re-run the preflight, then continue from the first wave with a pending unit.
+5. Reset `unresolved`, `failed` and `skipped` units to `pending`.
+6. Re-run the preflight, then continue from the first wave with a pending unit.
    Run-log rows from the earlier attempt stay; new rows are appended with the
    round numbering continued, so the final report shows the whole history.
 
