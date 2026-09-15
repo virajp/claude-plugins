@@ -46,7 +46,7 @@ it. When a planning decision is genuinely open, elicit it following the
 | API contract   | `docs/blueprint/apis/<project>.openapi.yaml`                                        |
 | Released APIs  | `docs/blueprint/apis/released/`                                                     |
 | Plan           | `<target-repo>/docs/plans/<date>-<time>-<slice>.md` — **the repo whose code it changes** |
-| Plan index     | `docs/plans/index.md` (base repo) — one row per plan: plan, target repo, status      |
+| Plan index     | `docs/plans/index.md` (base repo) — its cycle-plan table, one row per plan: plan, target repo, status (`${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`) |
 | Plan template  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan.md`                                    |
 | Backlog        | `docs/backlog.md` (base repo) — read at §2; marked planned via `/vwf:backlog`       |
 | Membership     | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                                        |
@@ -334,11 +334,12 @@ per `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`. A chain spanning two members a
 produces one plan per element, so each simply lands in its own repo; a plan is
 never split across repos.
 
-Then **append a row to `docs/plans/index.md` in the base repo** — the plan's
-filename, its target repo, and its status. That index is the only place the
-product's plans are visible as a set, and it is what
-`/vwf:archive` and `/vwf:execute` read to find a
-plan without walking every member.
+Then **append a row to the cycle-plan table of `docs/plans/index.md` in the
+base repo** — the plan's filename, its target repo, and its status
+(`${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`; the file's other table is the
+change-plan queue, which this skill never edits). That index is the only place
+the product's plans are visible as a set, and it is what `/vwf:archive` and
+`/vwf:execute` read to find a plan without walking every member.
 
 **The dependency gate does not move.** `execute` halts until every `requires:`
 plan's `covers:` docs read `implementation: complete`, and those stamps live in

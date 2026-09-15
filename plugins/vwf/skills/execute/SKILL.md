@@ -40,10 +40,12 @@ Halt if no approved plan exists: "No approved plan found. Run
 list them and ask which single plan to run (one plan per run).
 
 **Finding the plan.** A plan lives in **the repo whose code it changes**, and
-`docs/plans/index.md` in the base repo lists every one with its target repo
-(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`). Read the index rather than walking the
-members — under `multi-repo` most of them are not on this machine, so a walk
-would report the product's plans as a function of what happens to be cloned.
+the cycle-plan table of `docs/plans/index.md` in the base repo lists every one
+with its target repo (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`; the file's
+shape is `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`). Read the index rather
+than walking the members — under `multi-repo` most of them are not on this
+machine, so a walk would report the product's plans as a function of what
+happens to be cloned.
 
 **Halt if the target repo is absent.** Offer the consent-gated clone first; on
 decline, **stop**. Unlike `plan` and `doctor`, there is no honest partial
@@ -76,7 +78,7 @@ the pause rules — never migrate autonomously.
 | Doc           | Path                                                           |
 | ------------- | -------------------------------------------------------------- |
 | Plan          | `<target-repo>/docs/plans/<plan>.md`                           |
-| Plan index    | `docs/plans/index.md` (base repo)                              |
+| Plan index    | `docs/plans/index.md` (base repo) — its cycle-plan table       |
 | Membership    | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                   |
 | Registry      | `docs/blueprint/registry.yaml`                                 |
 | Flow (slice)  | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`         |

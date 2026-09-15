@@ -144,8 +144,9 @@ genuinely changes — the usual reason to decline is "not right now".
 **A plan lives in the repo whose code it changes.** In a `repo` or `monorepo`
 topology that is the base repo, so the rule costs nothing and needs no
 configuration; in `multi-repo` it is the member. The base keeps a thin index at
-`docs/plans/index.md` — one row per plan, naming the plan, its target repo, and
-its status.
+`docs/plans/index.md` — the cycle-plan table, one row per plan naming the plan,
+its target repo and its status, and the change-plan queue, per
+`assets/plan-index.md`.
 
 Two things follow that are worth knowing before implementing against this:
 

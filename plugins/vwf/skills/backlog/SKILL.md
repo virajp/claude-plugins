@@ -31,7 +31,8 @@ row. A backlog row is the thing nobody is working on yet.
 
 ## The file
 
-`docs/backlog.md`, in the base repo's `docs/`, beside `docs/plans/index.md`.
+`docs/backlog.md`, in the base repo's `docs/`, beside `docs/plans/index.md`
+(the plan index — `assets/plan-index.md`).
 The backlog is **product-level**: one file for the whole product, never one per
 member repo — a caller running in a member addresses the base's file. This skill
 is the only writer of it.
