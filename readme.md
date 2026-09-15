@@ -230,12 +230,15 @@ knowledge-graph layer, session handoff and recall, the
 and the Markdown and Context7 docs surfaces it absorbed. Beside that arc it
 carries an ad-hoc pair — `/vwf:change-plan` plans work with no blueprint slice
 behind it (tooling, CI, docs, a refactor) into a plan folder, which it commits
-and pushes at hand-off so the fresh session can see it, and
-`/vwf:change-execute` runs that folder unattended in that session. Beside both
-sits `/vwf:backlog`, the sole writer of `docs/backlog.md` — the prioritised list
-of work that cannot be picked up now, which every planning and landing command
-calls to move an item. It names **no** technology — no language, no framework,
-no cloud — which is what lets the rest of this list exist. `vwf@virajp-plugins`
+and pushes at hand-off — with a row in `docs/plans/index.md`'s change-plan queue
+— so the fresh session can see it, and `/vwf:change-execute` runs that folder
+unattended in that session, or `/vwf:change-execute next` picks the runnable
+plan with the lowest `Priority` value from that queue and runs it, asking before
+every after-landing step. Beside both sits `/vwf:backlog`, the sole writer of
+`docs/backlog.md` — the prioritised list of work that cannot be picked up now,
+which every planning and landing command calls to move an item. It names **no**
+technology — no language, no framework, no cloud — which is what lets the rest
+of this list exist. `vwf@virajp-plugins`
 
 ### Tooling, design and delivery
 
