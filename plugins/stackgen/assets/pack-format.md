@@ -203,7 +203,7 @@ kind: <bundle kind> # assets/kinds.md
 platforms: [ <platform> ] # project axis only
 artifact: <token> # deploy axis only
 unconditional: true # omitted by every bundle a user picks — see below
-default: true # optional — what vwf preselects; one per axis — see below
+default: true # optional — what vwf preselects; one per axis per platform
 components:
   - <type>/<slug>@<version> # a shipped pack, at its current version
   - <type>/<slug>@generated # no pack covers it — generated on first fetch
@@ -229,13 +229,18 @@ all: all three slugs present, or not shaped.
 optional and boolean, and it changes nothing about what the bundle is — only
 which entry the architecture menu highlights before the user answers, so a
 product that has no opinion lands on it and one that does picks another.
-`stackgen-stack-menu` copies the key onto that entry of its payload and onto
-no other; vwf preselects whichever entry carries it, by the key alone,
-naming no tool. **At most one bundle per axis carries it** — two would be a
-preselection decided by file order, which is silent nondeterminism, and the
-checker refuses the tree, naming both files. It is **never set on an
-`unconditional` bundle**: that bundle is not in the menu, so there is
-nothing to preselect.
+`stackgen-stack-menu` copies the key onto every entry whose bundle carries
+it and onto no other; vwf preselects the one flagged entry among those it
+offers on the round, by the key alone, naming no tool. **At most one bundle
+per axis carries it per platform** — a bundle declaring no `platforms:` list
+covers every platform on its axis, so two flagged bundles conflict exactly
+when either declares no list or their lists intersect. Two that overlap on a
+platform would be a preselection decided by file order, which is silent
+nondeterminism, and the checker refuses the tree, naming both files and the
+platform they share. An axis whose flagged bundles all declare platforms
+may therefore carry one flagged bundle per platform, and a round filtered to
+one platform sees exactly one. It is **never set on an `unconditional`
+bundle**: that bundle is not in the menu, so there is nothing to preselect.
 
 **A `@generated` ref is a first-class outcome, not a gap.** A bundle may mix
 copied and generated components freely: the covered ones land verbatim, the
