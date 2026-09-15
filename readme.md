@@ -291,16 +291,18 @@ by `notion` — the place a team's docs, specs and tickets already live, wired f
 the agent to reach through one hosted MCP server the person authorises once, and
 nothing more: no part of the product runs against it. The newest **design tool**
 is the terminal itself — the `claude-code` pack, which vwf's architecture menu
-preselects on the design axis: the design system and the logo are authored in
-session, through the `taste-skill` plugin a product pinning it declares, into a
-committed `docs/design/<project>/` that vwf imports like any hosted canvas.
-stackgen is now the only stack plugin: its packs are the covered path, its
-generator the uncovered tail. A `vwf` dependency, because vwf's stack menu is
-the union of what the installed stack plugins offer — with none present it comes
-back empty, and the axes carry no free-text escape. You can defer an axis and
-keep defining the product, but `/vwf:plan` and `/vwf:execute` halt until it is
-answered. Having it installed commits you to nothing; it acts only once an axis
-is pinned. `stackgen@virajp-plugins`
+preselects on the design axis: the design system, the logo and a flow's screens
+are authored in session, through the `taste-skill` plugin a product pinning it
+declares, into a committed `docs/design/<project>/` that vwf imports like any
+hosted canvas, and reviewed in a browser served from the repo on loopback — you
+click, comment, press Done, and the session applies the comments. stackgen is
+now the only stack plugin: its packs are the covered path, its generator the
+uncovered tail. A `vwf` dependency, because vwf's stack menu is the union of
+what the installed stack plugins offer — with none present it comes back empty,
+and the axes carry no free-text escape. You can defer an axis and keep defining
+the product, but `/vwf:plan` and `/vwf:execute` halt until it is answered.
+Having it installed commits you to nothing; it acts only once an axis is pinned.
+`stackgen@virajp-plugins`
 
 Every plugin above is authored here. Nothing in this marketplace is re-listed
 from another repo any more: the last one that was — the Karpathy coding

@@ -266,23 +266,37 @@ single required artifact is named by the kind itself: every pack in it ships a
 The newest **design tool** is the terminal itself — `claude-code`, the fourth
 `design-tool` pack beside `claude-design`, `lovable` and `stitch`, and the first
 with a **file canvas**: there is no hosted server, no key and nothing written
-into `.mcp.json`. The design system and the logo are authored in session,
-through the `taste-skill` plugin's design skills, into a committed
+into `.mcp.json`. The design system, the logo and a flow's screens are authored
+in session, through the `taste-skill` plugin's design skills, into a committed
 `docs/design/<project>/` — `design-system.md` in the shape that plugin authors,
-`brand/logo.svg` and its variants — which the three fixed import skills read as
+`brand/logo.svg` and its variants, `screens/<flow>--<platform>/<CODE>.html` one
+per pinned screen code with a stitched `index--<platform>.html`, and
+`comments/<flow>--<platform>.yaml` — which the three fixed import skills read as
 files. The pack ships a fourth, **user-invocable** skill beside them,
-`design-session`, which runs that authoring session; vwf never calls it. It
-declares `taste-skill@taste-skill` as the plugin a product pinning it must add
-at init's fifth question, so the repo's `setup:ai` installs it at project scope,
-and every skill that needs it halts with one plain sentence when it is absent.
-Until a later release lands screens and review comments on the canvas, the
-screens import halts naming the reason and the conversations import answers
-`harvested: n/a`. Its bundle is the first to carry **`default: true`** — the
-optional frontmatter key that marks the entry vwf's architecture menu preselects
-on that axis, highlighted and never assumed, so a product with no opinion on its
-design tool lands here and one with an opinion picks another. The menu skill
-copies the key onto that entry and computes none; at most one bundle per axis
-carries it, and `p:plugins:check` refuses a second, naming both files.
+`design-session`, which runs those sessions; vwf never calls it. It declares
+`taste-skill@taste-skill` as the plugin a product pinning it must add at init's
+fifth question, so the repo's `setup:ai` installs it at project scope, and every
+skill that needs it halts with one plain sentence when it is absent.
+
+The review loop is four lines. `/design-session screens <flow>` authors the
+pages from the brief `/vwf:screens prompt <flow>` wrote.
+`/design-session review <flow>` serves them from the repo — a single-file Node
+script with no dependencies, bound to `127.0.0.1` on an ephemeral port, no auth
+and no TLS, a surface for one person on one machine — prints
+`URL: http://127.0.0.1:<port>/screens/<flow>--<platform>/index--<platform>.html`,
+and waits while you click an element, leave a comment and press **Done**. The
+session then applies every `open` comment to its screen, marks it `applied`, and
+lists what changed. `/vwf:screens import <flow>` diffs the reviewed screens
+against the contract, and `/vwf:feedback canvas` sees whatever is still `open`.
+The comments are **committed**: one YAML list per flow page, each item
+`{ id, screen, selector, text, status, created_at, applied_at }` with
+`applied_at: null` while open. Its bundle is the first to carry
+**`default: true`** — the optional frontmatter key that marks the entry vwf's
+architecture menu preselects on that axis, highlighted and never assumed, so a
+product with no opinion on its design tool lands here and one with an opinion
+picks another. The menu skill copies the key onto that entry and computes none;
+at most one bundle per axis carries it, and `p:plugins:check` refuses a second,
+naming both files.
 
 **stackgen is now the only stack plugin.** Its packs are the covered path, and
 the menu keeps its open `generate` entry for the rest — the stack you use that

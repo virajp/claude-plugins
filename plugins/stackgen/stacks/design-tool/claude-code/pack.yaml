@@ -1,7 +1,8 @@
 name: Claude Code
-summary: The terminal you already work in — the design system and the logo
-  are authored in session, into a canvas directory the repo commits.
-version: 0.1.0
+summary: The terminal you already work in — the design system, the logo and
+  a flow's screens are authored in session into a canvas directory the repo
+  commits, and reviewed in a browser served from the repo on loopback.
+version: 0.2.0
 type: design-tool
 kind: design-tool
 axis: design
