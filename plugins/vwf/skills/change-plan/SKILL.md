@@ -7,7 +7,8 @@ description: Turn an ad-hoc change request — work outside the blueprint — in
   the checklist is discharged, present the shape behind a hard gate, agree the
   wave gate, the after-landing steps and the release intent, record consent,
   write index.md plus one file per subagent unit, mark the backlog items it
-  covers planned, and commit and push the folder so the fresh session sees it.
+  covers planned, add its row to the plan index with a derived priority, and
+  commit and push the folder so the fresh session sees it.
   Run when the user wants to plan a change that is not a blueprint slice —
   tooling, docs, CI, a refactor, a tree the blueprint does not describe; a
   blueprint slice is /vwf:plan.
@@ -53,6 +54,13 @@ each subagent reads. Nothing lives in conversation.
   file of its own. The request is often one of its items; note every id it
   covers, so the plan's frontmatter can carry them. Reading the file is this
   skill's business; editing it never is — `/vwf:backlog` is its sole writer
+- the base repo's `docs/plans/index.md` — the plan index, whose change-plan
+  table is where the active change plans, their statuses and their priorities
+  live; `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md` is the shape. Like the
+  backlog it is the base's file alone, read from a member repo and never
+  duplicated there. The `Priority` column of the rows a new plan will require
+  is what §5's derived priority stands on. Reading the file is this skill's
+  business; the only edit it ever makes is the one row §8 appends
 - the mempalace rooms `planning`, `decisions` and `gaps` for this repo's wing,
   when the server is up; **skip silently** when it is not. Resolve the wing and
   apply the two-store rules from `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` — do
@@ -143,13 +151,11 @@ runner and no harness stamp records `none` — say plainly, in that case, that t
 run has no automated gate and the wave review is the only check.
 
 **(b) After landing.** Propose the ordered steps that follow a consented
-landing, each marked one of two modes, and confirm each:
-
-- `run` — executed unprompted after the landing. It must publish nothing, cut no
-  tag, and reach no one but this machine. A local staging step is the usual
-  example; where a step stages something the session already loaded, say plainly
-  that it is picked up only by a **restarted** session.
-- `ask` — the run stops once and asks before it. Every release step is `ask`.
+landing, and confirm each. Every step has one mode, `ask`: the run stops once
+and asks before it — a local staging step and a release step alike. Nothing
+after the landing runs unprompted. Where a step stages something the session
+already loaded, say plainly that it is picked up only by a **restarted**
+session.
 
 Empty is a valid answer. These become `index.md`'s **After landing** section.
 
@@ -176,7 +182,12 @@ their weight and confirmed one at a time:
 4. every new third-party dependency any unit introduces: package, what for,
    which unit. The gate is where the user consents to a dependency; a unit never
    adds one the plan does not name
-5. the wave gate, the after-landing steps and the gates the orchestrator keeps
+5. the wave gate, the after-landing steps, the gates the orchestrator keeps —
+   and the **derived priority**, stated as a fact with the arithmetic that
+   produced it: `10 + max` over the `Priority` column of every unarchived
+   `requires:` row in the plan index, naming the row it stands on, or
+   "requires nothing active → 10". It is never asked; the one thing that
+   changes it is a required plan the user names here that the interview missed
 6. the consent block and the release intent
 7. the parked list
 
@@ -207,6 +218,10 @@ Rules the plan must obey, learned from the plans that came before:
   paths.
 - **Gate deltas are units.** A change that needs a new or altered check, test,
   or task plans that as an owned edit, never as "update the gates".
+- **`requires:` names a folder by its basename.** A required plan is written as
+  its `docs/plans/<date>-<name>` path as planned, and is matched — by
+  `/vwf:change-execute` and by the plan index — on the basename alone, so the
+  line is never re-pointed when the folder moves to `docs/plans/archived/`.
 - **The two last units are fixed:** the **docs unit**, which runs
   `vwf:docs-sync` over the run's branch delta
   (`${CLAUDE_PLUGIN_ROOT}/skills/docs-sync/SKILL.md`) and applies its findings
@@ -233,6 +248,8 @@ Re-read the folder with fresh eyes before handing it off, and fix inline:
 - every hit of the retired-name grep sits inside some unit's *Owns*, and every
   `## Commit` line's type is one the repo's convention file allows
 - every `requires:` plan exists and is not `DRAFT`
+- the derived priority equals `10 + max` over the `Priority` column of every
+  unarchived `requires:` row in the plan index, or `10` when it requires none
 - the launch line names this folder
 
 ### 8. Hand off
@@ -241,18 +258,28 @@ In this order.
 
 1. **Set the status** to `APPROVED` with the date; until then it is `DRAFT` and
    `/vwf:change-execute` refuses it.
-2. **Mark the backlog items planned.** When the frontmatter's `backlog:` list
+2. **Add the index row.** Append one row to the change-plan table of the base
+   repo's `docs/plans/index.md`, per
+   `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`: `Folder` the plan folder path
+   relative to the repo root, `Plan` the title, `Priority` the integer §5
+   derived, `Status` `APPROVED`, `Requires` the basenames of its `requires:`
+   entries or `—`, `Backlog` its `backlog:` ids or `—`. When the file has no
+   change-plan table yet, write the file's whole shape from the asset first,
+   then append. This is the one edit this skill makes to that file — every
+   other row is `/vwf:change-execute`'s or `/vwf:archive`'s.
+3. **Mark the backlog items planned.** When the frontmatter's `backlog:` list
    names ids, invoke `/vwf:backlog planned <ids> <folder>` — that skill edits
    the file; this one never does.
-3. **Commit and push the folder** through `vwf:git-workflow`, invoked with
+4. **Commit and push the folder** through `vwf:git-workflow`, invoked with
    these declared preferences, so it asks nothing:
    - **work in place on the current branch, no worktree** — its Step 1 "if
      declined" path. Say why: the fresh session's worktree is cut from the
      integration branch, so it can see the folder only once the folder is
      committed there; a folder still untracked at hand-off gets swept into some
-     later wave's commit
-   - **stage exactly the plan folder**, plus `docs/backlog.md` when step 2
-     changed it, and nothing else
+     later wave's commit. The index row rides the same commit for the same
+     reason — it is a direct commit on the branch, never a worktree's
+   - **stage exactly the plan folder**, `docs/plans/index.md`, plus
+     `docs/backlog.md` when step 3 changed it, and nothing else
    - **commit** with type `docs` and the message
      `docs: change plan — <name> — approved, awaiting execution`
    - **push to the branch's upstream** after the commit, setting the upstream
@@ -265,6 +292,10 @@ Then end with exactly this, and nothing after it:
 Run in a fresh session:
 
 /vwf:change-execute docs/plans/<date>-<name>
+
+or let the queue pick it, by priority:
+
+/vwf:change-execute next
 ```
 
 Do not start executing. The fresh session is the point — this session's context
@@ -279,3 +310,5 @@ is the survey and the interview, and the run should carry none of it.
 - Writes a plan whose unit prompts depend on this conversation
 - Pushes anywhere but the branch it stands on, and merges nothing
 - Edits `docs/backlog.md` itself — it calls `/vwf:backlog`, which owns the file
+- Edits any row of `docs/plans/index.md` but the one it appends — statuses are
+  `/vwf:change-execute`'s and `/vwf:archive`'s

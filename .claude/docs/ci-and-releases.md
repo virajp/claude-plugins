@@ -78,11 +78,12 @@ merge develop → main
 mise run p:plugins:release                                 → creates + pushes the tags
 ```
 
-The third line is the **local half** of a release and needs no consent: it
-publishes nothing, commits nothing and cuts no tag, so `/vwf:change-execute`
-runs it as the plan's after-landing `run` step and the author's next
-**restarted** session is on the plugin that just landed. Only the last line
-reaches users, and it is the one `CLAUDE.md`'s hard rule guards.
+The third line is the **local half** of a release: it publishes nothing, commits
+nothing and cuts no tag. `/vwf:change-execute` offers it as the plan's
+after-landing `ask` step — it stops once and asks before every after-landing
+step, since the `run` mode is retired — and the author's next **restarted**
+session is on the plugin that just landed. Only the last line reaches users, and
+it is the one `CLAUDE.md`'s hard rule guards.
 
 The tracked version is always plain `X.Y.Z` — `p:plugins:check` fails a manifest
 carrying build metadata, and fails one whose version has a **13 or 17

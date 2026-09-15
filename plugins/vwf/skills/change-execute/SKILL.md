@@ -1,14 +1,17 @@
 ---
 name: change-execute
 description: Run an approved /vwf:change-plan folder autonomously in a fresh
-  session — preflight, one worktree, subagent units in waves, a wave review
-  with a capped finding loop, the plan's own gate between waves, a commit per
-  green unit, a run log the final report renders, docs reconciled and versions
-  bumped by the fixed final units, then land per the plan's recorded consent,
-  run the after-landing steps, and stop once before any ask step. Blocks only
-  what a missing ruling blocks and resumes from its last green unit. Invoke as
-  /vwf:change-execute <plan-folder> in a session that has done nothing else.
-argument-hint: "<plan-folder or its index.md>"
+  session — claim its row in the base repo's docs/plans/index.md, preflight,
+  one worktree, subagent units in waves, a wave review with a capped finding
+  loop, the plan's own gate between waves, a commit per green unit, a run log
+  the final report renders, docs reconciled and versions bumped by the fixed
+  final units, then land per the plan's recorded consent, mark the row
+  complete, and stop once before every after-landing step. "next" reads that
+  index alone and picks the runnable plan of highest priority, safely beside
+  another session's run. Blocks only what a missing ruling blocks and resumes
+  from its last green unit. Invoke as /vwf:change-execute <plan-folder> or
+  /vwf:change-execute next in a session that has done nothing else.
+argument-hint: "<plan-folder, its index.md, or next>"
 model: opus
 
 disable-model-invocation: true
@@ -26,42 +29,93 @@ of the reports.
 Run it in a session that has done nothing else. It cannot check that, so the
 plan's launch line says it and this skill trusts it.
 
+There are two ways in. A **named folder** runs that plan. **`next`** reads the
+change-plan table of the base repo's `docs/plans/index.md` — the queue
+`/vwf:change-plan` adds a row to at every hand-off — and picks the runnable plan
+of highest priority, then runs it exactly as if it had been named. Both take the
+same procedure from §2 on; §1 is where they differ. The index is what makes
+`next` safe while another session is already running a plan: a run claims its
+row with a pushed commit before it cuts a worktree, and a claim that loses the
+push re-reads and re-picks, per [the plan queue](references/queue.md).
+
 ## References
 
-| Reference                                     | When to read                                                     |
-| --------------------------------------------- | ---------------------------------------------------------------- |
-| [The wave review](references/wave-review.md)  | §4 step 3 — the reviewer prompt, the finding loop, the guard     |
-| [Blocking and resume](references/blocking.md) | §5 — what a failure skips, what it blocks, how a re-run picks up |
+| Reference                                     | When to read                                                                    |
+| --------------------------------------------- | ------------------------------------------------------------------------------- |
+| [The plan queue](references/queue.md)         | §1 and §7 — reading the index at the tip, the claim, the landing row, the sweep |
+| [The wave review](references/wave-review.md)  | §4 step 3 — the reviewer prompt, the finding loop, the guard                    |
+| [Blocking and resume](references/blocking.md) | §5 — what a failure skips, what it blocks, how a re-run picks up                |
 
 ## Procedure
 
 ### 1. Resolve and refuse early
 
+**`next`.** When `$ARGUMENTS` is `next`, run *Reading the queue* in
+[the plan queue](references/queue.md). On a pick, print the folder taken and its
+`Priority`, and every other `APPROVED` row with why it was not taken — a lower
+priority, or the requirement it waits on. Ask no confirmation: the session is
+meant to run unattended. Then continue below as if that folder had been named.
+Nothing runnable → stop with the message that procedure prints: each `APPROVED`
+row and what it waits on, or that the table is absent or empty.
+
 Resolve `$ARGUMENTS` to `<folder>/index.md`. Read the frontmatter — including
 its `backlog:` list, the ids §7 hands to `/vwf:backlog`, empty or absent when
 the plan covers no backlog item — and the **Status**, **Consent**, **Units** and
-**Run log** blocks. Then:
+**Run log** blocks. Then read the folder's **row** in the change-plan table of
+the base repo's `docs/plans/index.md`, at the integration branch's tip, the way
+[the plan queue](references/queue.md) reads it. Then:
 
 - Status `DRAFT` → stop: "not approved; run /vwf:change-plan to finish it".
 - Status `COMPLETE` → stop: nothing to do.
-- Any `requires:` folder whose status is not `COMPLETE` → stop, name it: "run
-  /vwf:change-execute <that folder> first". No override.
+- Any `requires:` entry that does not resolve to a `COMPLETE` row, or to a
+  folder under `docs/plans/archived/` with no row — the queue rule, matched by
+  basename → stop, name it: "run /vwf:change-execute <that folder> first" when
+  it is `APPROVED`, "another session is running <that folder>; wait for it to
+  land" when it is `RUNNING`, or "<entry> is neither in the plan index nor
+  archived; fix the `requires:` line by hand" when it resolves to nothing. No
+  override.
+- Status `APPROVED` with no row at all → stop: "not in the plan index; re-run
+  `/vwf:change-plan`'s hand-off, or add the row by hand".
+- Status `APPROVED` with a `RUNNING` row → a claim another session holds. Stop
+  and name it: the row is resumed only by the session that holds it, or claimed
+  afresh after a hand reset of the row to `APPROVED`, committed on the
+  integration branch.
 - Status `BLOCKED` or `RUNNING` → a **resume**, per
   [blocking and resume](references/blocking.md): the worktree named in the
   status line exists, and the run starts at the first unit that is not `green`.
   The ruling a block asked for must now be in the plan — if the status line
-  still reads the same `UNRESOLVED:`, stop and say which ruling is missing.
-- Status `APPROVED` → a fresh run.
+  still reads the same `UNRESOLVED:`, stop and say which ruling is missing. The
+  row is expected to read `RUNNING` already, and is left alone; a row reading
+  `APPROVED` is a hand reset, and the run claims it again below.
+- Status `APPROVED` with an `APPROVED` row → a fresh run.
 
-Set the status to `RUNNING` with the timestamp. The folder arrives
-**already committed** on the integration branch — `/vwf:change-plan` commits and
-pushes it at hand-off — so the worktree §2 cuts sees it from its first commit.
-A folder that is not on that branch is refused, not swept into a wave commit:
-stop and say to run `/vwf:change-plan` again on it, or to commit and push it by
-hand, then re-launch. From there the plan folder is edited in the worktree only
-and committed with each wave, so a session that dies still leaves a legible plan
-on the branch — never in the main checkout, which would dirty the integration
-branch.
+The folder arrives **already committed** on the integration branch —
+`/vwf:change-plan` commits and pushes it at hand-off — so the worktree §2 cuts
+sees it from its first commit. A folder that is not on that branch is refused,
+not swept into a wave commit: stop and say to run `/vwf:change-plan` again on
+it, or to commit and push it by hand, then re-launch.
+
+**Claim the row.** Before the worktree is cut, and before the folder's own
+Status is touched, run *Writing a row* in [the plan queue](references/queue.md)
+with the row set to `RUNNING` — the commit
+`docs: plan queue — <folder> running`, pushed on the integration branch. This
+is the **one** edit the run makes in the main checkout, and it is made there on
+purpose: the pushed row is what another session's `next` reads, so a claim that
+lived only on the run branch would claim nothing; and the run branch must never
+carry `docs/plans/index.md`, or two plans landing in parallel would conflict on
+it. A rejected push is handled inside that procedure — a clean rebase pushes
+again; a conflict on the same row means the plan was claimed first, and the run
+re-picks (`next`) or stops (a named folder). A resume whose row already reads
+`RUNNING` skips this step.
+
+Set the folder's status to `RUNNING` with the timestamp. From there the plan
+folder is edited in the worktree only and committed with each wave, so a
+session that dies still leaves a legible plan on the branch — never in the main
+checkout, which would dirty the integration branch — the one exception being
+the index row above, which is committed and pushed in the main checkout and
+never edited in the worktree. The row does not change on a pause or a block:
+the index carries `APPROVED`, `RUNNING` or `COMPLETE` only, and the folder's
+status line keeps the run detail.
 
 ### 2. One worktree for the whole run
 
@@ -162,7 +216,7 @@ the account that survived. Present:
 - the review findings that survived the cap, marked `contested`
 - the wave gate and orchestrator gate results
 - the versions bumped and the worktree path
-- each after-landing `run` step and its outcome, once §7a has run
+- each after-landing step and its outcome, once §8 has run
 
 If any unit is `skipped`, `failed` or `unresolved`, this report is the block
 notice and the run stops here with the status set to `BLOCKED`.
@@ -178,52 +232,55 @@ commit. Then read the Consent block:
 
 - **Merge to the integration branch and push on green: yes** →
   `vwf:git-workflow` step 4, *merge, push & clean up*. A merge conflict is a
-  hard halt: abort, keep the worktree, set `BLOCKED`, report the files.
+  hard halt: abort, keep the worktree, set `BLOCKED`, report the files. When
+  step 4 returns from the merge and push, run *Writing a row* in
+  [the plan queue](references/queue.md) with the row set to `COMPLETE`, its
+  `Folder` cell pointing at `docs/plans/archived/<basename>`, and the sweep —
+  every `COMPLETE` row no `APPROVED` or `RUNNING` row's `Requires` still names
+  is removed. That is the commit `docs: plan queue — <folder> complete`, on the
+  integration branch, in the main checkout; a rejected push re-applies the same
+  row until it lands, and never re-picks.
 - **no** → stop with the worktree path and the branch name, and say the branch
-  is ready to land. Ask nothing further.
+  is ready to land. Say too that the index row stays `RUNNING` until the hand
+  merge is followed by a hand edit of the row to `COMPLETE`, or by
+  `/vwf:archive <folder>`, which applies the same rule. Ask nothing further.
 
-### 7a. After landing — the `run` steps
+### 8. After landing — every step is an `ask`, and the run stops once before each
 
-Read index.md's **After landing** table and execute every step whose *Mode* is
-`run`, in order, from the repo root the landing left behind: the main checkout
+Read index.md's **After landing** table. Every step in it is an `ask`: before
+each, in order, the run stops once, reports what the step would do in the
+step's own terms, and waits; a yes authorises exactly that step and nothing
+else. A step whose *Mode* reads `run` in an older folder is read as `ask` — the
+mode that let a plan pre-authorise a step at approval time is retired, and
+nothing recorded there authorises anything now. An empty table, or `none`,
+skips this section and is said in one clause.
+
+The steps run from the repo root the landing left behind: the main checkout
 when the branch merged, the worktree when it did not — and when the landing was
 **not** consented, only those steps whose *Notes* say they may run from the
-worktree. An empty table, or `none`, skips this step and is said in one clause.
+worktree are offered. The orchestrator runs them, never a unit — a step may
+mutate the machine rather than the tree under review, and a unit never reaches
+outside the worktree. It is asked in the moment even though the plan recorded
+the intent: consent written at approval is intent, and this is precisely where
+a run reaches past the tree under review.
 
-The orchestrator runs them, never a unit — a `run` step may mutate the machine
-rather than the tree under review, and a unit never reaches outside the
-worktree. None of them is gated on a prompt: the plan recorded each as
-publishing nothing and cutting no tag, which is what `run` means.
+**Offer waiting as the equal option, not the fallback.** Where a step stages
+something, it is exercised only in a restarted session — so "not yet, I want to
+look first" is the answer the two-stage shape exists to make easy. Say that the
+table names the remaining steps whenever the user comes back to them.
 
-Each step is reported with its outcome, never asked about:
+Each step taken is reported with its outcome:
 
 - **Ran.** Say what it did in the step's own terms. A step whose *Notes* say a
   **restarted** session is needed for its effect is reported with that sentence
   — this session already loaded what the step replaced.
-- **Exited non-zero.** Report the failure verbatim, continue with the remaining
-  steps, and never work around it. A step that refuses is usually a fact about
-  the machine rather than a failure of the run, and the plan named that step,
-  not a substitute for it.
+- **Exited non-zero.** Report the failure verbatim, offer the remaining steps,
+  and never work around it. A step that refuses is usually a fact about the
+  machine rather than a failure of the run, and the plan named that step, not a
+  substitute for it.
 
-### 8. The `ask` steps — always stop once
-
-If index.md's **After landing** table carries any step whose *Mode* is `ask`,
-and the landing merged and pushed, ask **one** question naming every `ask` step
-in order: run them now? A yes authorises exactly those steps, in that order, and
-nothing else; each outcome is reported as §7a reports a `run` step. It is asked
-in the moment even though the plan recorded the intent — consent written at
-approval is intent, and an `ask` step is precisely what the plan marked as
-reaching past this machine.
-
-**Offer waiting as the equal option, not the fallback.** §7a has already run
-everything that reaches only this machine, and where a step staged something,
-it is exercised only in a restarted session — so "not yet, I want to run it
-first" is the answer the two-stage shape exists to make easy. Say what §7a
-already did, and that the table names the remaining steps whenever the user
-comes back to them.
-
-If the landing was not consented, there is nothing to run past this machine yet;
-say so in the final line and stop.
+If the landing was not consented and no step may run from the worktree, there
+is nothing to offer yet; say so in the final line and stop.
 
 ## Resource caps
 
@@ -231,7 +288,8 @@ A session cannot measure its own context; the signal arrives as an injected cap
 directive from an external hook. On that directive, or on any sign the context
 is being compacted mid-wave: finish writing the run-log rows for every report
 already in hand, commit the units that are green, set Status to
-`RUNNING — paused at wave <n> for context`, and stop with the launch line. A
+`RUNNING — paused at wave <n> for context`, and stop with the launch line. The
+index row stays `RUNNING` — a pause is the folder's detail, not the queue's. A
 re-run resumes per [blocking and resume](references/blocking.md); units in
 flight are re-run from their prompt, since the worktree is the tie-break.
 
@@ -239,25 +297,29 @@ flight are re-run from their prompt, since the worktree is the tie-break.
 
 The plan is approved and every ruling is in the folder. The run does **not**
 pause to re-ask a ruling, confirm a file scope, report progress between waves,
-ask whether to continue after a green gate, ask before a commit, or ask what to
-do about a `GAP:` — a gap is recorded and the stated assumption stands until the
-final report. It pauses for an inherited red preflight, a merge conflict, a
-resource cap, and the `ask` steps' one question. Everything else is recorded in
-the run log and answered at the end — including every after-landing `run` step,
-which is run and reported, never asked about.
+ask whether to continue after a green gate, ask before a commit, ask before the
+claim or the landing row, or ask what to do about a `GAP:` — a gap is recorded
+and the stated assumption stands until the final report. It pauses for an
+inherited red preflight, a merge conflict, a resource cap, and once before each
+after-landing step. Everything else is recorded in the run log and answered at
+the end.
 
 ## What this skill never does
 
 - Reads a unit's owned files itself, or does a unit's work inline because it
   looks small
 - Dispatches a wave whose predecessor is not green or explicitly skipped
-- Runs a generator or bumps a version outside the gates-and-bump unit — an
-  after-landing `run` step is the one exception, and it is the orchestrator's
-  because it may write outside the worktree
-- Runs an `ask` step without the in-the-moment yes, or merges past the
-  integration branch
-- Treats a `run` step as an `ask` step's consent, or lets it stand in for what
-  nobody has authorised
+- Runs a generator or bumps a version outside the gates-and-bump unit — a
+  consented after-landing step is the one exception, and it is the
+  orchestrator's because it may write outside the worktree
+- Runs an after-landing step without asking — without the in-the-moment yes for
+  that step — or merges past the integration branch
+- Treats a `run` mode in an older folder, or the consent recorded at approval,
+  as a step's authorisation
+- Edits `docs/plans/index.md` from inside the worktree, or edits any row but its
+  own plan's and the `COMPLETE` sweep the landing applies
+- Takes a `RUNNING` row, however stale — a hand reset to `APPROVED` is the only
+  release
 - Edits `docs/backlog.md` itself, or lets a unit do it — `/vwf:backlog` owns
   that file, and §7 calls it
 - Runs a gate the plan's *Wave gate* section does not name, or skips one it does

@@ -16,11 +16,11 @@ Move completed plans out of the active set. **Never delete** — archive.
 Two shapes are archived, and they are not the same object:
 
 - a **flat cycle plan** — `docs/plans/<plan>.md`, written by `/vwf:plan`, listed
-  as a row in `docs/plans/index.md`;
+  as a row in the cycle-plan table of `docs/plans/index.md`;
 - a **change-plan folder** — `docs/plans/<date>-<name>/`, written by
   `/vwf:change-plan`, recognised by an `index.md` whose frontmatter reads
-  `type: vwf-change-plan`. It is **never** listed in `docs/plans/index.md`, and
-  archiving it does not start listing it.
+  `type: vwf-change-plan`. It is listed in the change-plan table of
+  `docs/plans/index.md`, per `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`.
 
 Everything below applies to both unless a step says otherwise.
 
@@ -35,6 +35,7 @@ Everything below applies to both unless a step says otherwise.
 | Archived     | `<target-repo>/docs/plans/archived/`                      |
 | Backlog      | `docs/backlog.md` (base repo) — closed via `/vwf:backlog` |
 | Membership   | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`              |
+| Index shape  | `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`              |
 
 ---
 
@@ -54,12 +55,14 @@ Everything below applies to both unless a step says otherwise.
     `multi-repo` most are not on this machine, so a walk would list the
     product's plans as a function of what happens to be cloned
     (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`);
-  - the **folders** under `docs/plans/` — these are *not* in the index and never
-    will be, so they are listed by walking that one directory: every
-    `<date>-<name>/index.md` reading `type: vwf-change-plan` whose Status is not
-    `RUNNING`. A `RUNNING` folder belongs to a live `/vwf:change-execute` run
-    and is not offered. The walk is safe here because a change plan is written
-    in the repo it is run from — it is not a product-wide view.
+  - the **folders** from the change-plan table of the same file — every
+    `APPROVED` row is offered; a `RUNNING` row belongs to a live
+    `/vwf:change-execute` run, so it is shown marked *in flight* and left out of
+    the offer. Then, since a change plan is written in the repo it is run from,
+    glance at the folders directly under `docs/plans/` of the current repo:
+    any `<date>-<name>/index.md` reading `type: vwf-change-plan` with no row
+    is listed as **unindexed**, so a hand-made folder is still visible and can
+    be archived.
 - **A plan is archived in its own repo.** If the target repo is not present,
   offer the consent-gated clone; on decline, skip that plan and say so — moving
   a file in a repo you do not have is not something to fake.
@@ -88,8 +91,11 @@ Skip the run-journal check silently if mempalace is unavailable.
 **For a folder**, read `requires:` and `covers:` from its `index.md` — the same
 two checks, on the same terms, so a folder another non-archived plan `requires:`
 is warned on exactly as a flat plan would be. A folder's `requires:` names other
-plan folders, and a non-archived one is any still sitting directly under
-`docs/plans/`. Two of the checks do not apply: a folder has no companion
+plan folders by **basename** — `docs/plans/X` and `docs/plans/archived/X` name
+the same plan, and no skill ever re-points a `requires:` line — and a
+non-archived one is any `APPROVED` or `RUNNING` row of the change-plan table,
+or any folder still sitting directly under `docs/plans/`. Two of the checks do
+not apply: a folder has no companion
 gap-report, and its unfinished work lives in its own **Run log** and **Parked**
 sections rather than a "Gaps surfaced during execution" one. Its completion
 signal is the Status heading: `COMPLETE` means the run landed; anything else —
@@ -125,9 +131,16 @@ Then rewrite **only the Status block** of the moved `index.md`:
 Nothing else in the folder changes — not a unit file, not the run log, not the
 Consent block.
 
-**`docs/plans/index.md` is never touched for a folder.** Change plans are not
-listed there, by decision, and archive is not the command that starts listing
-them. A folder leaves no row behind, so there is no stale row to fix.
+Then **apply the landing edit to the folder's row** in the change-plan table of
+the base repo's `docs/plans/index.md`, the same edit `/vwf:change-execute`
+makes when a run lands (`${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`): set the
+row's Status to `COMPLETE` and its `Folder` to the archived path, then run the
+sweep — remove every `COMPLETE` row that no `APPROVED` or `RUNNING` row's
+`Requires` names. The index edit rides the archive's own commit (§4). A folder
+with no row gets none — archiving does not start listing it. The index is
+edited on the integration branch, in the main checkout, when the archive runs
+there; archiving from inside a worktree moves the folder only and leaves the
+row for that branch's landing to fix, since the index never rides a run branch.
 
 **Close the backlog items.** Either shape may carry a `backlog:` frontmatter
 list. For every id on it whose row in `docs/backlog.md` does not yet read

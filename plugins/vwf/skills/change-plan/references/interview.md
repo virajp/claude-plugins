@@ -46,30 +46,35 @@ idiomatic answer given the repo, do not ask — state it and move on.
 11. **Model per unit.** Default is `opus`, written explicitly into every unit
     file's `Model:` line. A unit the user wants on a stronger or cheaper tier
     records that tier instead; `inherit` means the session's model.
+12. **Priority.** Stated, never asked: `10 + max` over the `Priority` column of
+    every unarchived `requires:` row in the base repo's `docs/plans/index.md`,
+    or `10` when the plan requires none of them. Say which row it stands on.
+    The user may name a required plan the interview missed, which changes the
+    arithmetic — nothing else does.
 
 ## D. Gates and docs
 
-12. **Gate deltas.** Which check, test, or task must change or be added so the
+13. **Gate deltas.** Which check, test, or task must change or be added so the
     new behaviour is asserted, and which existing gate the change will break
     until it is adjusted. Each is an owned edit in a unit.
-13. **Verification the orchestrator keeps.** Anything a diff cannot prove — a
+14. **Verification the orchestrator keeps.** Anything a diff cannot prove — a
     real install, a scratch-repo run, a smoke test. Name it, name its pass
     condition.
-14. **Docs the change falsifies.** Confirm the survey's list, including every
+15. **Docs the change falsifies.** Confirm the survey's list, including every
     hit of the retired-name grep — a hit with no owner is a unit-table row to
     add now, not a `DOCS FALSIFIED:` line to discover at run time. The docs unit
     reconciles exactly these plus whatever `vwf:docs-sync` finds.
 
 ## E. Consent
 
-15. **Landing.** May a fully green run merge to the integration branch and push
+16. **Landing.** May a fully green run merge to the integration branch and push
     without a further prompt? Default when unanswered is **no**.
-16. **After-landing steps.** Walk the steps proposed in SKILL.md §4(b) one at a
-    time; each is confirmed as `run`, `ask`, or dropped. A `run` step must
-    publish nothing and cut no tag — if it does either, it is `ask`. Where a
-    step stages something this session already loaded, say that a **restarted**
-    session is what picks it up. No steps at all is a valid answer.
-17. **Release intent, per affected project.** Release to users or not, and
+17. **After-landing steps.** Walk the steps proposed in SKILL.md §4(b) one at a
+    time; each is confirmed as `ask` or dropped — the run stops once and asks
+    before every step it keeps. Where a step stages something this session
+    already loaded, say that a **restarted** session is what picks it up. No
+    steps at all is a valid answer.
+18. **Release intent, per affected project.** Release to users or not, and
     `none` / `patch` / `minor` / `major`, together with the command that bumps
     the version. Record every answer including "not this time". Note in the same
     breath that this is **intent, not authorisation**: every release is an `ask`
@@ -87,7 +92,7 @@ conversation.
 
 ## G. The gate
 
-18. **Present the shape** per SKILL.md §5 and ask once: approve, revise or
+19. **Present the shape** per SKILL.md §5 and ask once: approve, revise or
     abandon. Only an explicit approve writes the folder — and the hand-off
     commits and pushes it — and only a later explicit yes after self-review sets
     the status to `APPROVED`.

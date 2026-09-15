@@ -47,10 +47,15 @@ Each row below is loaded **on demand** — follow the link when you need more th
 the summary here. The `.claude/skills/` rows also auto-apply the moment you edit
 the tree they govern; `release` is a slash command; a change to this repo is
 planned with `/vwf:change-plan`, which **commits and pushes the approved
-folder** on the branch it was planned on, and run, in a fresh session, with
-`/vwf:change-execute <folder>`, which refuses a folder that is not on that
-branch — each plan folder carries this repo's gate lines,
-`mise run p:plugins:local` as a `run` step and `/release` as an `ask` step.
+folder** on the branch it was planned on together with its row in
+`docs/plans/index.md`'s change-plan table, and run, in a fresh session, with
+`/vwf:change-execute <folder>` — or `/vwf:change-execute next`, which reads that
+table alone and picks the runnable plan with the lowest `Priority` value — which
+refuses a folder that is not on that branch, claims the row `RUNNING` with a
+pushed commit before it cuts a worktree, and marks it `COMPLETE` once the merge
+lands — each plan folder carries this repo's gate lines, and
+`mise run p:plugins:local` and `/release` as `ask` steps: every after-landing
+step is asked for in the moment; the `run` mode is retired.
 
 | Read                                                         | For                                                                                                                                                                                                                      |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -354,9 +359,10 @@ not a component.
 **A release is two stages, and only the second reaches anyone else.** Local
 first — `mise run p:plugins:local` stages the changed plugins into the dev
 marketplace and updates this machine's install, publishing nothing and cutting
-no tag, so `/vwf:change-execute` runs it as the plan's after-landing `run` step
-and a staged plugin loads in the next **restarted** session. Public second — the
-tags.
+no tag, so `/vwf:change-execute` offers it as the plan's first after-landing
+`ask` step — stopping once and asking before it, as before every after-landing
+step — and a staged plugin loads in the next **restarted** session. Public
+second — the tags.
 
 **Ask the user before running `p:plugins:release`, `p:i:release` or
 `p:site:release`.**

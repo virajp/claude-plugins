@@ -48,8 +48,9 @@ unguarded. Either give the new family a `-v` or widen
 is `mise run p:plugins:local`: it copies each changed plugin into the gitignored
 dev marketplace under `X.Y.Z+N` and updates this machine's install, so the
 author runs the plugin they are about to publish. It commits nothing, pushes
-nothing and cuts no tag; `/vwf:change-execute` runs it as the plan's
-after-landing `run` step, and a hand-made change reaches it the same way.
+nothing and cuts no tag; `/vwf:change-execute` offers it as the plan's
+after-landing `ask` step, stopping once before it, and a hand-made change
+reaches it the same way.
 
 So, before `p:plugins:release`, confirm the plugin being tagged has been staged
 and actually exercised — in a **restarted** session, since skills are read at

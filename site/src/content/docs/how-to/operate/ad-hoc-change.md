@@ -12,9 +12,11 @@ through `/vwf:plan` would mean inventing a slice to hang it on.
 
 That work has its own pair:
 **[`/vwf:change-plan`](../../plugins/vwf.md#vwfchange-plan)** writes a plan
-folder, and **[`/vwf:change-execute`](../../plugins/vwf.md#vwfchange-execute)**
-runs it unattended in a fresh session. They sit beside the chain rather than in
-it, and they read neither the blueprint nor the architecture registry.
+folder and queues it in `docs/plans/index.md`, and
+**[`/vwf:change-execute`](../../plugins/vwf.md#vwfchange-execute)** runs it
+unattended in a fresh session — by name, or `next` to take the queue's pick.
+They sit beside the chain rather than in it, and they read neither the blueprint
+nor the architecture registry.
 
 The worked example picks up **Relay**, the team task manager from
 [start a product from an empty repo](../greenfield/single-repo.md), some months
@@ -108,10 +110,10 @@ are worth answering carefully:
   landed does not belong here. That one goes in the unit's own verification. If
   the repo has no task runner and no stamp, the answer is `none`, and the plan
   says plainly that the wave review is then the only gate.
-- **The after-landing steps.** What happens once the branch is in. Each is
-  marked `run` — done unprompted, publishes nothing, cuts no tag, reaches nobody
-  but this machine — or `ask`, where the run stops and asks first. Every release
-  step is `ask`. An empty list is a perfectly good answer.
+- **The after-landing steps.** What happens once the branch is in. Every one is
+  an `ask`: the run stops and asks before it, whether it stages something on
+  your machine or ships a release. Nothing runs unprompted after the landing. An
+  empty list is a perfectly good answer.
 - **The release intent.** Per project the change touches: does a user see a
   difference, and what command ships it. Recorded as `none`, `patch`, `minor` or
   `major`. Relay's answer is `none` — CI plumbing, no user-visible change — so
@@ -138,13 +140,17 @@ except a one-line note the next attempt can recall. Approving writes
 `docs/plans/2026-09-08-ci-release-notes/` — an `index.md` plus one file per
 unit.
 
-Then it finishes the hand-off for you. Any backlog item the plan covers is
-marked `planned` with this folder as its path, and the folder itself is
-**committed and pushed on the branch you are on** — in place, no worktree,
-nothing merged. That is not housekeeping: the next step runs in a worktree cut
-from the integration branch, and it can only see a folder that is already
-committed there. A folder left untracked ends up swept into some later commit of
-the run instead. Only then does it print the launch line.
+Then it finishes the hand-off for you. A row for the plan is appended to the
+change-plan table of `docs/plans/index.md` — the queue — reading `APPROVED`,
+with a **priority** it works out rather than asks: `10` for a plan that requires
+nothing still active, `10` more than the highest `Priority` value among the
+plans it requires otherwise, so a chain runs in order. Any backlog item the plan
+covers is marked `planned` with this folder as its path, and the folder, the
+index and the backlog are **committed and pushed on the branch you are on** — in
+place, no worktree, nothing merged. That is not housekeeping: the next step runs
+in a worktree cut from the integration branch, and it can only see a folder that
+is already committed there. A folder left untracked ends up swept into some
+later commit of the run instead. Only then does it print the launch line.
 
 It does not start executing, and that is deliberate.
 
@@ -156,6 +162,18 @@ Open a new session, `/clear` or a new window, and paste the launch line:
 /vwf:change-execute docs/plans/2026-09-08-ci-release-notes
 ```
 
+or, when you would rather the queue decide:
+
+```text
+/vwf:change-execute next
+```
+
+`next` reads the change-plan table and takes the `APPROVED` row of lowest
+priority whose requirements have all landed, tells you which it took and why the
+others were passed over, and runs it as if you had named it. With Relay's one
+plan in the queue the two lines do the same thing; with several, `next` is how a
+chain runs in order without you typing each folder.
+
 The fresh session is the whole point: the planning session's context was a
 survey and an interview, and none of it should ride along into the run. The
 skill is user-only for the same reason — nothing else can promise you a clean
@@ -164,6 +182,17 @@ window.
 It refuses a folder that is not committed on the integration branch, which after
 a normal approval it always is. If you wrote or moved one by hand, commit and
 push it first — or re-run `/vwf:change-plan` on it — then re-launch.
+
+The first thing it does is **claim the plan**: the row in `docs/plans/index.md`
+is set to `RUNNING` in a commit pushed on the integration branch, before any
+worktree exists. That pushed row is what makes a second session safe: another
+`/vwf:change-execute next` running at the same time sees the row taken and picks
+something else, and if two sessions race for the same row, the push that lands
+second is rejected, so that session re-reads the queue and re-picks — or, for a
+named folder, stops and tells you another session has it. A `RUNNING` row is
+never taken over, however long it has sat there; if the session that claimed it
+is gone, set the row back to `APPROVED` by hand in a commit on the integration
+branch, and the plan is runnable again.
 
 From there you are not needed. It creates one worktree, runs the plan's gate
 once as a preflight (a red line here is the branch's problem, not the plan's,
@@ -193,14 +222,17 @@ that widened them (read these) — the review findings that survived the cap, th
 gate results, and the worktree path.
 
 If everything is green it archives the folder to `docs/plans/archived/`, marks
-every backlog item the plan covered `done`, lands per the consent you recorded,
-runs the after-landing `run` steps and reports each one, and then asks **one**
-question naming the `ask` steps in order.
+every backlog item the plan covered `done`, and lands per the consent you
+recorded. Once the merge is in, one more commit on the integration branch sets
+the plan's row to `COMPLETE`, pointing at the archived folder, and drops every
+`COMPLETE` row that no waiting plan still requires — the queue only ever holds
+what is waiting, running, or still needed. Then it walks the after-landing
+steps, stopping **once before each** to say what the step would do and wait for
+your yes — that yes covers that step and nothing else.
 
-"Not yet" is offered as an equal option, not a fallback — everything that
-reaches only your machine has already happened, and where a step staged
+"Not yet" is offered as an equal option, not a fallback — where a step stages
 something, only a **restarted** session will pick it up. Coming back to the
-`ask` steps tomorrow is a normal ending, and the table still names them.
+remaining steps tomorrow is a normal ending, and the table still names them.
 
 ## When it stops early
 
@@ -229,9 +261,10 @@ yourself.
 A plan you decide **not** to run at all is retired the same way a completed one
 is: [`/vwf:archive <folder>`](../../plugins/vwf.md#vwfarchive) moves the whole
 folder into `docs/plans/archived/` and marks its Status as archived-and-not-run,
-naming what it was before — and marks every backlog item the folder still has
-open `done`, so nothing is left waiting on a plan that will not run. Nothing is
-deleted, and the next plan's recall still reads it.
+naming what it was before — gives its row in `docs/plans/index.md` the same
+`COMPLETE`-and-sweep edit a landing would — and marks every backlog item the
+folder still has open `done`, so nothing is left waiting on a plan that will not
+run. Nothing is deleted, and the next plan's recall still reads it.
 
 ## What this pair will not do for you
 
