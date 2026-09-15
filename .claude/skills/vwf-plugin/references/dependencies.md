@@ -11,9 +11,9 @@ marketplace itself**, so installing `vwf` needs no other marketplace registered.
 It is authored here.
 
 **`stackgen` is a dependency because without it the stack menu is empty.** The
-six stack axes are closed to what the installed stack plugins declare, and since
-`config_format` 14 there is no *other (describe)* escape. Since 16 that is no
-longer a dead end — the user can defer the axis as `unresolved` and keep
+seven stack axes are closed to what the installed stack plugins declare, and
+since `config_format` 14 there is no *other (describe)* escape. Since 16 that is
+no longer a dead end — the user can defer the axis as `unresolved` and keep
 defining the product — but deferral only moves the wall: `plan` and `execute`
 halt on an unresolved axis, so with no stack plugin installed nothing can be
 built. The `devtools` plugin's adapter retired in Wave C, which left vwf
@@ -28,21 +28,32 @@ plugins: vwf **vendored** their skills. That is the one place third-party code
 is vendored into this repo, and it buys something a dependency could not — see
 The memory layer and The vendored guidelines below.
 
-**stackgen is load-bearing at `init` too, not only at `architecture`.**
-`/vwf:init` materializes three **unconditional** bundles through the stack
-adapter, by the fixed slugs `mise`, `repo-gates` and `repo-hygiene` — the
-toolchain manager and the repo gates the `devtools` plugin used to scaffold,
-plus the hygiene files that had no home at all. Fixed rather than constructed,
-because a name assembled from configuration can silently resolve to nothing,
-which is the same failure a skill vwf cannot see already has. With no stack
-adapter installed, `init` **halts** with the install command rather than
-printing an empty plan that reads like an already-shaped repo. `/vwf:setup` no
-longer fetches any of them: it checks the adapter's lockfile for all three — and
-the shape against doctor's four baseline predicates — and offers `/vwf:init`,
+**stackgen is load-bearing at `init` and at `setup`, not only at
+`architecture`.** `/vwf:init` materializes three **unconditional** bundles
+through the stack adapter, by the fixed slugs `mise`, `repo-gates` and
+`repo-hygiene` — the toolchain manager and the repo gates the `devtools` plugin
+used to scaffold, plus the hygiene files that had no home at all. Fixed rather
+than constructed, because a name assembled from configuration can silently
+resolve to nothing, which is the same failure a skill vwf cannot see already
+has. With no stack adapter installed, `init` **halts** with the install command
+rather than printing an empty plan that reads like an already-shaped repo. The
+three land **per repo** — the base and every member `init` resolved, each
+recording its own lockfile — so a member is shaped on its own evidence.
+`/vwf:setup` no longer fetches any of them: it checks **each repo's** adapter
+lockfile for all three — and each repo's shape against doctor's six baseline
+predicates — and offers `/vwf:init` once when any of them is missing or behind,
 which is why `init` is model-invocable and, being hidden from the `/` menu,
 reached no other way. Note that `mise` legitimately appears in two different
 meanings: the **bundle** slug stackgen materializes, and the **binary** `mise`,
 which is a mandate `/vwf:doctor` blocks on once a stack axis is pinned.
+
+Setup is the third site, and the one that grew: since the consumer-gaps work
+`/vwf:architecture` records a pin and materializes nothing, and **`/vwf:setup`'s
+materialize pass** is what invokes `-stack-template` for every pinned axis, once
+per `(repo, slug)`, in the repo the project belongs to. So the adapter is
+reached from `init` (three fixed slugs), from `setup` (every pinned axis) and
+from `plan`/`execute` (pure conventions reads) — `architecture` reaches only
+`-stack-menu`.
 
 **Required binaries are no longer gated at install time.** A plugin used to
 declare `requires:`, and the CLI computed the union over the dependency-expanded
@@ -82,8 +93,8 @@ therefore `/vwf:readme`, and vwf-only; that is intended.
 The dependency list is declared in **one** place —
 `plugins/vwf/.claude-plugin/plugin.json` — and the marketplace entry is
 generated from it, so the two can no longer drift. (They were once separate
-files kept in sync by hand, which is what `plugins:check` used to compare.) The
-checker now verifies each name resolves to a real plugin instead.
+files kept in sync by hand, which is what `p:plugins:check` used to compare.)
+The checker now verifies each name resolves to a real plugin instead.
 
 **`design-tools` is gone entirely, and vwf now names no design tool at all.**
 Its three import skills became vwf's own in Wave C — `/vwf:import-screens`,

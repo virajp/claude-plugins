@@ -5,9 +5,11 @@
 
 #USAGE flag "--all" help="Also set up every member project"
 
-# One member flag per project is added here when this repo has members. The ids
-# come from the project registry when there is one, else the member directory
-# name — the same list `[shell_alias]` gets its `setup-<id>` aliases from:
+# One flag per MEMBER REPO is added here when this repo has members — each
+# submodule, or each path the `MEMBERS` list names — each flag named by that
+# member's own slug, never by a project id. It is the same list `[shell_alias]`
+# gets its `setup-<slug>` aliases from, and the orchestrator that shapes the
+# repo fills both from it:
 #
 #   #USAGE flag "--backend" help="Set up the backend project"
 #   #USAGE flag "--frontend" help="Set up the frontend project"
@@ -48,7 +50,7 @@ print_header "Setting up commit hooks ..."
 mise run setup:precommit
 
 print_header "Setting up AI tooling ..."
-mise run code:ai
+mise run setup:ai
 
 # Last, and after the hooks are wired: the editor is what the repo is used FROM
 # once everything that gates it is in place, and the task is silent on a machine
@@ -61,16 +63,12 @@ mise run setup:vscode
 # runs its OWN task library through `mise run --cd`, so a polyglot repo gets one
 # library per project rather than one library that knows every language.
 #
-# The generic member list is the repo's submodules. A repo whose members are
-# plain directories replaces the loop below with one `mise run --cd <path>` per
-# id, guarded by that id's flag.
-
-# `$displaypath` is git's own variable and stays single-quoted so git, not this
-# shell, expands it.
-# shellcheck disable=SC2016
-members() {
-  git -C "${MISE_PROJECT_ROOT}" submodule --quiet foreach --recursive 'echo $displaypath' 2>/dev/null || true
-}
+# The member list comes from `_scripts/helpers`' `members`, which answers for
+# either linkage — the repo's submodules, or the `MEMBERS` list in
+# `.config/mise.toml` — so this loop covers both and `code:worktrees` walks the
+# same members this does. A repo that wants a member set up on its OWN flag
+# rather than on `--all` adds one `mise run --cd <path>` per id beside the loop,
+# guarded by that id's flag.
 
 if [[ "${usage_all:-false}" == "true" ]]; then
   while read -r member; do

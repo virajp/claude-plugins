@@ -81,15 +81,23 @@ into the existing `CLAUDE.md` (merged, not overwritten).
 The repo's own tooling is **not** in that plan. Before the mode fork, setup
 checks whether the repo is *shaped* — whether the toolchain config, the repo
 gates and the hygiene files are recorded as materialized, and whether what is
-there is still current against the four baseline predicates `/vwf:doctor` owns —
-and if anything is missing or behind it offers
-[`/vwf:init`](../../plugins/vwf.md#vwfinit), which is what lays them down and
-what brings them forward. Bookable has a `Makefile` and a hand-rolled CI script
-and no `.config/` layout, so the offer comes up; accepting runs init's
-existing-repo survey (which shows its own plan, and its own single consent)
-before setup carries on. Declining is recorded as a deferral, with
-`/vwf:setup reshape` as the unlock, and the onboard continues — the repo shape
-and the vwf format are two different things.
+there is still current against the six baseline predicates `/vwf:doctor` owns —
+and it asks both of those of **every repo in the product**: the base and every
+member present on this machine, each read on its own artifacts. If anything is
+missing or behind in any of them it offers
+[`/vwf:init`](../../plugins/vwf.md#vwfinit) once, naming which repos showed
+what. `init` is what lays them down and what brings them forward. Bookable has a
+`Makefile` and a hand-rolled CI script and no `.config/` layout, so the offer
+comes up; accepting runs init's existing-repo survey (which shows **one** plan,
+with a section per repo, and takes one consent for all of it) before setup
+carries on. That survey adopts rather than flattens: a task Bookable wrote for
+itself is kept and listed, a helper function the pack's library has no name for
+moves into a repo-owned `_scripts/local` sidecar rather than breaking, and a
+file a pack owns whose **content** has diverged is offered to you as replace or
+keep — a file differing only inside the positions `init` fills is not an offer
+at all. Declining is recorded as a deferral, with `/vwf:setup reshape` as the
+unlock, and the onboard continues — the repo shape and the vwf format are two
+different things.
 
 Two brownfield-only items appear in that plan. **Harness detection** records
 which verification capabilities the repo can already run: Bookable's `dev` task
@@ -170,7 +178,10 @@ Bookable's registry lands as three projects, `apps/api`, `apps/web` and
 `packages/shared`, with `apps/api` carrying the capabilities its flows imply.
 The stack axes are the one part the derivation only *narrows*: for whatever the
 recorded pins do not already settle, it filters what the closed menu offers and
-the menu still answers. Why the axes never merge:
+the menu still answers. `apps/web` declares `webapp`, so it also takes the
+**stylesheet** round — asked after its design round, recording the approach the
+existing styles already use, or `unresolved` while that is being decided.
+`apps/api` and `packages/shared` are never asked. Why the axes never merge:
 [stack templates](../../plugins/vwf.md#stack-templates), and the practical
 consequence at install time is in
 [stack pins, one axis at a time](../greenfield/single-repo.md#stack-pins-one-axis-at-a-time).
@@ -179,7 +190,7 @@ Last comes the product-foundations walk — thirteen concerns; the eight electiv
 ones take one accept / adapt / not-applicable question each, the five core ones
 accept / adapt / defer — listed with a worked set of answers under
 [the thirteen foundations](../greenfield/single-repo.md#the-thirteen-foundations).
-Answer for the product you have. Bookable already writes an audit trail for
+Answer for the product you have. Bookable already writes an audit log for
 booking cancellations, so accepting that foundation records a contract the
 blueprint then describes; the fact that the code exists shows up later as an
 empty delta, not as a reason to skip the question.
@@ -370,8 +381,13 @@ where it is enforced.
 
 - **Setup halts and reverts its own stamp on a blocking `/vwf:doctor` finding**
   — a language no installed stack plugin declares is the one an
-  otherwise-onboarded repo reaches.
+  otherwise-onboarded repo reaches most often.
   [`/vwf:setup`](../../plugins/vwf.md#vwfsetup)
+- **A pin whose template was never landed is blocking too**, reported as
+  *pinned, not materialized* rather than as an unknown language. On this journey
+  it is reached by declining a landing in setup's
+  [materialize pass](../../plugins/vwf.md#the-materialize-pass); the pin stays
+  untouched and the block stands until a later `/vwf:setup` lands it.
 - **A stack axis or platform with nothing fitting on the menu never takes a
   free-text pin.** The axis can be deferred as `unresolved` instead — recorded
   as not yet decided, with `/vwf:doctor` naming it every run until it is.

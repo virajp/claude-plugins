@@ -72,7 +72,9 @@ Measured against a proven static Astro site, not asserted:
 
 - **`site` must be set.** Sitemap generation and canonical URLs are built from
   it. Without it a static build silently emits no sitemap and no canonical —
-  no error, no warning, just an absent file nobody looks for.
+  no error, no warning, just an absent file nobody looks for. It is the one
+  value the `## Head` section below cannot do without, and the head is the
+  reason it is not optional.
 - **`trailingSlash` is chosen to match the host**, not to taste. A static host
   that redirects the bare form to the slashed one (the common default) makes
   `"always"` the shape where an internal link never takes a redirect; a host
@@ -88,10 +90,59 @@ Measured against a proven static Astro site, not asserted:
   in the build task, writing into the output directory. It is not an Astro
   integration and does not run at request time.
 
+## Head
+
+**One layout owns the head**, and every page passes it values — the title,
+the one-sentence description, whether the page is offered to search, and
+which picture a shared link shows. Those four are the per-screen contract the
+blueprint pins; the layout declares them as props and decides none of them.
+A second layout emitting its own tags is the failure this rule exists for: a
+page whose description was written into its own markup is invisible to
+everything that would check it.
+
+Which pages get the full set is not Astro's decision. A site-shaped project
+ships all of it; an application-shaped one ships the icons, the manifest and
+the title unconditionally, and the search-facing half only when the project
+declares that it means to be found. What the set contains — the canonical,
+the icon links, the OpenGraph and twitter tags, the locale, the theme colour,
+the JSON-LD with every `<` escaped — is the web-head contract, stated for
+every framework rather than for this one.
+
+Astro's own half of it:
+
+- **The canonical is built, never typed.** `new URL(Astro.url.pathname,
+  Astro.site)` is the whole of it, which is why `site` is mandatory above.
+  Set `trailingSlash` before the first page ships: the canonical carries
+  whichever form the config produces, and changing it later republishes every
+  URL the product has.
+- **The sitemap is the sitemap integration's**, and its `filter` is where a
+  page pinned as not-indexed is excluded. The `<meta name="robots">` on the
+  page is the other half, and neither alone is enough — a noindex page listed
+  in the sitemap is an invitation followed by a refusal.
+- **Static files live under `public/`**: the SVG mark, the rasterized icon
+  set, the ICO, the web app manifest, `robots.txt` naming the sitemap by
+  absolute URL, and the social-preview image. They carry the product's own
+  name, colours and art, so the workflow writes them from the contract rather
+  than a pack landing them.
+- **The JSON-LD is inlined deliberately.** Serialize each block, escape every
+  `<`, and emit it with `is:inline` and `set:html` — Astro must not process a
+  script it did not author, and the escape is what keeps a product name
+  containing an angle bracket from closing the element.
+- **The icons task** is the pack's one landed file: it rasterizes the whole
+  set from `public/brand/favicon.svg` with one-off tools and lands under the
+  project's own task group. It is run by hand when the mark changes, never in
+  a gate and never in the build.
+
+Depth — the tag order this settles on, the escaping, and how `trailingSlash`
+interacts with the canonical — is the `head` reference.
+
 ## What this component does not decide
 
-The UI kit; the deploy target (the deploy-axis pin decides it, and the adapter
-follows from it); the value of `site`; the content model's schemas. It decides
-how Astro is used, never whether Astro is the answer.
+The UI kit; **how styles are authored** — that is the project's own
+`stylesheet` pin, a separate axis, and two projects on Astro routinely answer
+it differently; the deploy target (the deploy-axis pin decides it, and the
+adapter follows from it); the value of `site`; the words in the head; the
+content model's schemas. It decides how Astro is used, never whether Astro is
+the answer.
 
 Full judgment: the `astro` skill's references.

@@ -4,9 +4,9 @@ description: Create or update docs/blueprint/product.md — the problem, target
   users,
   success metrics, and slice priority the whole blueprint serves. The Phase −1
   foundation; blueprint halts without it.
-argument-hint: "(no args; detects create vs update)"
+argument-hint: "[feedback note — optional; seeds the update questions]"
 model: opus
-effort: high
+
 disable-model-invocation: false
 ---
 
@@ -45,7 +45,15 @@ Read `docs/blueprint/product.md`.
   Do not re-elicit everything. Read the **Metric readings** appendix (if
   `/vwf:feedback` has been logging readings): a metric missing its target is a
   first-class re-rank prompt — raise it before asking anything else.
-- **Absent → create mode.** Run the full elicitation below.
+- **Absent → create mode.** Run the full elicitation below. An argument is
+  ignored in create mode; the interview starts from nothing.
+
+**Feedback note (update mode).** An argument, when given, is a feedback note —
+usually handed over by `/vwf:feedback`'s feature-idea route as
+`/vwf:product <note>`. Quote it verbatim in the first question of the update
+interview, and let it seed which deltas are asked first — a pivot, a new or
+retired goal, a metric change, a re-rank. It does not displace the Metric
+readings appendix, which is still read first.
 
 **Format check.** Run the preflight in
 `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`; on drift, **nudge** `/vwf:setup`
@@ -128,9 +136,10 @@ problem, a goal added/retired, a re-ranked priority — delegate to
 what-this-is claims are reconciled with the updated product doc before
 committing. Relay its report: what was synced, or `docs: nothing contradicted`.
 
-Commit via `/vwf:git-workflow` with a `blueprint(product):` message, e.g.:
+Commit via `/vwf:git-workflow` with a bare `docs:` message whose subject names
+the product doc, e.g.:
 
 ```text
-blueprint(product): create product doc — problem, goals, slice priority
-blueprint(product): re-rank slices after checkout launch
+docs: create product doc — problem, goals, slice priority
+docs: product — re-rank slices after checkout launch
 ```

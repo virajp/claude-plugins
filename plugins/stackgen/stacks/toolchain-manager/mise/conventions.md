@@ -47,16 +47,19 @@ pinned in `mise.toml` would add `.config/mise.lock` beside it. The single
 exception is `mise.local.lock`, the counterpart of the uncommitted
 `mise.local.toml`, which the hygiene component already ignores.
 
-**`REPO_NAME` is the repo's own id, and it is a literal.** The base `[env]`
-carries it as a marked position the orchestrator fills with the project's slug —
-the same token the `p:<id>:*` task group, `setup:all`'s member flags and the
-`setup-<id>` aliases use. It is never derived at load time: the obvious
-shorthand, the basename of the config root, is the **branch** name inside a
-linked worktree, so anything reading it would silently address a different repo
-depending on where you were standing. Aliases that vary only by repo — the agent
-launchers are the case — live in the user's **global** config and read
-`$REPO_NAME`, so one definition serves every repo and changing the launcher is
-not a change to every repo that has one.
+**`REPO_NAME` is the repo's folder name, slugified, and it is a literal.** The
+base `[env]` carries it as a marked position the orchestrator fills with the
+slug of the repo's own main-checkout directory — **not** a project id, which is
+what the `p:<id>:*` task group carries instead. The two tokens are independent,
+and a single-project repo whose folder spells its project id is a coincidence.
+`setup:all`'s member flags and the `setup-<slug>` aliases take a third: one per
+**member repo**, that member's own slug. It is never derived at load time: the
+obvious shorthand, the basename of the config root, is the **branch** name
+inside a linked worktree, so anything reading it would silently address a
+different repo depending on where you were standing. Aliases that vary only by
+repo — the agent launchers are the case — live in the user's **global** config
+and read `$REPO_NAME`, so one definition serves every repo and changing the
+launcher is not a change to every repo that has one.
 
 **Environment names are shared; values are split.** Development and production
 override the *same* keys rather than each inventing their own — the difference
@@ -94,12 +97,31 @@ a repo's whole toolchain enabled in every other window forever — and because
 pruning is only safe once it is scoped to one profile. Silent on a machine
 without the editor.
 
-**The forge's default branch is set by a task, not by a paragraph.**
-`setup:default-branch <branch>` uses whichever forge CLI recognizes this remote
-and prints the command when none does. It never fails and `setup:all` never
-calls it: it edits a remote, so it is run deliberately, once. It is also
-orthogonal to the merge tasks — work flows feature → `develop` → `main` whatever
-the forge calls default.
+**The repo's agent plugins are the repo's, and a user's are theirs.**
+`setup:ai` installs and updates only what this repo requires, at **project**
+scope, so the declaration lives in the repo's own settings and nothing a machine
+chose globally is installed, updated or pruned; `--user` is the rare exception,
+and it is a flag rather than the default.
+
+**No task edits a remote's settings.** Setting the forge's default branch is a
+one-time act by whoever shapes the repo, not something a machine re-runs on
+every bootstrap, so the library carries no task for it and the repo's
+CONTRIBUTING stub names the command instead. It is orthogonal to the merge tasks
+in any case — work flows feature → `develop` → `main` whatever the forge calls
+default.
+
+**How a branch lands is the repo's setting, not the lander's.** `MERGE_MODEL` in
+the base `[env]` reads `direct` — merge locally and push — or `pr`, which pushes
+the branch and opens a pull request through whichever forge CLI is present, and
+merges nothing locally. A repo-level value rather than a flag, because which one
+applies follows from the repo's review policy and not from who is landing.
+
+**One configuration per tool, and the task is where it lives.** Every gate hook
+calls `mise run code:<gate>` rather than the tool, and the three gate tasks take
+an optional file list so the same task serves a per-file hook and a whole-tree
+run. A tool configured in both a task and a hook has two settings that drift in
+the direction nobody is looking — the commit rewriting a file `code:all` would
+have left alone. Customising a gate means editing the task.
 
 **Hooks run before staging, not after.** `code:precommit` runs the hooks over
 the working tree's changed files, so the rewrites they make fold into the commit

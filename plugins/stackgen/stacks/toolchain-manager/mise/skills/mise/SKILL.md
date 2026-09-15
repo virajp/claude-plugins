@@ -107,8 +107,8 @@ variant is loaded.
   worktrees = "mise run code:worktrees"
   ```
 
-  plus one `setup-<project-id>` per member project, generated from the same id
-  list `setup:all`'s flags and the `p:<id>:*` task group use.
+  plus one `setup-<slug>` per **member repo**, from the same list `setup:all`'s
+  member flags come from — this repo's members, never its project ids.
 - **`mise.ci.toml`** — `locked = true`, so the pipeline installs from the
   tracked lockfiles and fails rather than resolving; the deployed runtime's env
   values; and any per-runtime CI workaround (topic 5). **Never a secret.**
@@ -144,14 +144,29 @@ two differ in value and never in vocabulary.
 
 - `mise.toml` `[env]` — only what is identical everywhere (`DISABLE_TELEMETRY`),
   plus **`REPO_NAME`**: a marked position the orchestrator fills with this repo's
-  project id — the same token the `p:<id>:*` group, the member flags and the
-  `setup-<id>` aliases carry, derived once by `/vwf:init`, shown and confirmed
-  before any of the four is written. **A literal, never derived at load time** —
-  the basename of the config root is the *branch* name inside a linked worktree,
-  so a derived value would address a different repo depending on where you stood.
+  **folder name, slugified** — the main checkout's own directory, proposed by
+  `/vwf:init`'s first question, shown and confirmed before it is written. It is
+  **not** a project id: the `p:<id>:*` group carries that, and the two tokens
+  are independent. `setup:all`'s member flags and the `setup-<slug>` aliases are
+  a **third** list: one per **member repo**, named by that member's own slug.
+  `REPO_NAME` is **a literal, never derived at load time** — the basename of the
+  config root is the *branch* name inside a linked worktree, so a derived value
+  would address a different repo depending on where you stood.
   Aliases that vary only by repo (the agent launchers) belong in the user's
   **global** config reading `$REPO_NAME`, not here: one definition, per-repo
-  values.
+  values. Two more marked positions sit beside it, both filled by the
+  orchestrator and both with a working default: **`MERGE_MODEL`**
+  (`direct` | `pr`) — whether `code:merge:*` merges locally and pushes, or
+  pushes and opens a pull request — and **`MEMBERS`**, the space-separated,
+  repo-relative paths of this repo's member repos, left empty when they are
+  submodules, which `members()` reads from `.gitmodules` instead. A string and
+  never an array: mise env values are strings. **Two more marked positions sit
+  outside the TOML**, in `.config/mise/tasks/setup/ai`: `EXTRA_MARKETPLACES`
+  (rows `<source-ref>|<name>`) and `EXTRA_PLUGINS` (rows `<name>@<marketplace>`)
+  — the plugin marketplaces and plugins this repo requires beyond the toolkit's
+  own. Both default to empty, both are filled by the same orchestrator from a
+  confirmed answer seeded by `setup:ai`'s `--inventory` mode, and both keep
+  their template comment so a reshape can re-derive them.
 - `mise.dev.toml` `[env]` — the **development** values: verbose logging, local
   hosts, emulator endpoints, test credentials.
 - `mise.ci.toml` `[env]` — the CI and **production** values for those same keys.
@@ -220,11 +235,15 @@ different command.
   when missing, **uninstalled when no longer listed**. Per-repo, because a
   recommendation accepted globally never goes away and a global prune would take
   another repo's tools with it. Silent without the editor's CLI.
-- **`setup:default-branch <branch>` is not in `setup:all`.** It edits a remote
-  through whichever forge CLI recognizes it, prints the command when none does,
-  and never fails — so it is run deliberately, once, rather than on every
-  re-sync. What it sets is orthogonal to the merge tasks: work flows feature →
-  `develop` → `main` whatever the forge calls default.
+- **Every gate hook calls a task.** The hook config carries three tool-neutral
+  hooks — `format`, `lint`, `sec` — each running `mise x -- mise run code:<x>`,
+  which is why the three tasks take an optional file list. A repo customising a
+  gate edits the **task**; a tool named in both the task and a hook is a tool
+  configured twice, and the two copies drift.
+- **No task edits a remote's settings.** Setting the forge's default branch is a
+  one-time act by whoever shapes the repo, and the CONTRIBUTING stub names the
+  command; the library carries none. It is orthogonal to the merge tasks anyway:
+  work flows feature → `develop` → `main` whatever the forge calls default.
 - **Per-runtime CI workarounds live in `mise.ci.toml` alone.** The one that
   ships: for a **Node** project, set `node.gpg_verify = false` there. mise's
   bundled Node release-key gpg import fails on Linux CI runners ("no valid

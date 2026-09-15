@@ -6,7 +6,10 @@ vocabulary**, and the **screen-naming rule**. Shared by `/vwf:blueprint`
 `/vwf:screens` and `/vwf:mockups` (platform resolution), `/vwf:architecture`
 (the registry's `platforms:` values), and the blueprint-authoring
 **flow-contract** reference. Keep this the single source of truth; the surfaces
-read it rather than carrying their own copy.
+read it rather than carrying their own copy. Its sibling
+`${CLAUDE_PLUGIN_ROOT}/assets/standard-entities.md` does the same job for the
+**data contracts** a foundation or capability obliges — this file names the
+journeys, that one names the entities.
 
 Three rules ride on it:
 
@@ -29,12 +32,12 @@ Three rules ride on it:
 One number line **per registry project** — a flow folder covers every platform,
 so a number is never reused within a project. Three digits, four bands:
 
-| Band               | Range       | Contents                                                                                       |
-| ------------------ | ----------- | ---------------------------------------------------------------------------------------------- |
-| **Entry**          | `010`–`090` | `010` splash · `020` signin · `030` recover-account · `040` onboarding · `050`–`090` free      |
-| **Anchor**         | `100`       | **`home`** — the center of the app; every screen-platform project, always                      |
-| **Product**        | `110`–`890` | The product's own journeys, gap-numbered by 10 (`110`, `120`, …)                               |
-| **Account/system** | `900`–`990` | `910` profile · `920` settings · `930` notifications · `940` delete-account · `950`–`990` free |
+| Band               | Range       | Contents                                                                                                             |
+| ------------------ | ----------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Entry**          | `010`–`090` | `010` splash · `020` signin · `030` recover-account · `040` onboarding · `050`–`090` free                            |
+| **Anchor**         | `100`       | **`home`** — the center of the app; every screen-platform project, always                                            |
+| **Product**        | `110`–`890` | The product's own journeys, gap-numbered by 10 (`110`, `120`, …)                                                     |
+| **Account/system** | `900`–`990` | `910` profile · `920` settings · `930` notifications · `940` delete-account · `950` audit-history · `960`–`990` free |
 
 Notes:
 
@@ -44,7 +47,7 @@ Notes:
   the user is known. A product that onboards pre-auth (value-prop screens before
   signing in) moves it into the free entry range below `020` and records the
   number waiver; the number states execution order.
-- **Free ranges** (`050`–`090`, `950`–`990`) take product-specific journeys that
+- **Free ranges** (`050`–`090`, `960`–`990`) take product-specific journeys that
   genuinely belong in that band — an age gate or force-update check before home,
   a data-export request beside the account screens.
 - **Gap numbering** applies inside the product band: an insert takes a number
@@ -57,17 +60,18 @@ Notes:
 it declares at least one **screen platform**; which column applies is decided by
 *which* screen platforms it declares.
 
-| Slug              | device platforms<br>`mobile` `tablet` `desktop` `auto` | browser platforms<br>`site` `webapp` | Mandate                                                     |
-| ----------------- | ---------------- | ------------- | ----------------------------------------------------------- |
-| `splash`          | **mandatory**    | optional      | —                                                           |
-| `signin`          | conditional      | conditional   | required when the project has an Auth & identity capability |
-| `recover-account` | conditional      | conditional   | required with `signin`                                      |
-| `onboarding`      | optional         | optional      | —                                                           |
-| `home`            | **mandatory**    | **mandatory** | every project declaring a screen platform                   |
-| `profile`         | conditional      | conditional   | required with `signin`                                      |
-| `settings`        | optional         | optional      | —                                                           |
-| `notifications`   | optional         | optional      | —                                                           |
-| `delete-account`  | conditional      | conditional   | required with `signin`                                      |
+| Slug              | device platforms<br>`mobile` `tablet` `desktop` `auto` | browser platforms<br>`site` `webapp` | Mandate                                                         |
+| ----------------- | ---------------- | ------------- | --------------------------------------------------------------- |
+| `splash`          | **mandatory**    | optional      | —                                                               |
+| `signin`          | conditional      | conditional   | required when the project has an Auth & identity capability     |
+| `recover-account` | conditional      | conditional   | required with `signin`                                          |
+| `onboarding`      | optional         | optional      | —                                                               |
+| `home`            | **mandatory**    | **mandatory** | every project declaring a screen platform                       |
+| `profile`         | conditional      | conditional   | required with `signin`                                          |
+| `settings`        | optional         | optional      | —                                                               |
+| `notifications`   | optional         | optional      | —                                                               |
+| `delete-account`  | conditional      | conditional   | required with `signin`                                          |
+| `audit-history`   | conditional      | conditional   | required when the project declares the `audit-store` capability |
 
 A project declaring **both** kinds — a Flutter codebase shipping `mobile` and
 `webapp`, say — takes the **device** column: it has a splash frame to gate on at
@@ -86,6 +90,13 @@ platform files carry it.
   are required exactly when `signin` is (an account that can be signed into can
   be viewed, recovered, and deleted — the last two are the product-foundations
   data-retention baseline surfacing as journeys).
+- **conditional (audit)** — `audit-history` is required when the project
+  declares the **`audit-store`** capability in the registry, which is what
+  accepting the audit foundation writes onto the console project. The registry
+  is the signal here too: the console with an `audit-store` capability and no
+  `audit-history` flow is a coverage hole; an `audit-history` flow in a project
+  that declares no `audit-store` means the registry is missing the capability —
+  reconcile via `/vwf:architecture`, never by deleting the flow.
 - **optional** — a product decision. When the sweep authors a journey matching
   one of these, it takes the standard slug and number; the sweep never proposes
   them unprompted.
@@ -112,6 +123,30 @@ per skill, command or hook, named for what it does, `index.md` alone, never
 reaching the canvas, mockups or the scratchpad, and with no standard-flow
 mandates. Screenless does not mean uncovered: the bar it is held to is
 `${CLAUDE_PLUGIN_ROOT}/skills/blueprint-authoring/references/plugin-contract.md`.
+
+### The `audit-history` entry
+
+`audit-history` is the operator's read surface over the `audit-event` standard
+entity (`${CLAUDE_PLUGIN_ROOT}/assets/standard-entities.md`), and the only flow
+that reads it without an authorization entry of its own.
+
+- **Trigger** — the audit foundation accepted or adapted; the per-project signal
+  is the `audit-store` capability.
+- **Project** — the console, the `operator-rbac` holder. Being
+  `[service, webapp]` it is a browser-column project, so it already owes `home`
+  and `signin`.
+- **Actors** — the operator roles, and the compliance role.
+- **Authorization** — operator roles read; the **compliance role alone** for
+  events referencing data retained past its subject's deletion. Reading the
+  audit history is itself a privileged action, so its own Trigger & Actors rows
+  are audit-recorded.
+- **Screens, at minimum** — a filterable list over `audit-event` (by actor, by
+  target, by action, by time window) and one event's detail. The primary screen
+  takes the flow's slug, per the screen-naming rule below.
+- **What it never does** — it edits nothing and deletes nothing; retention purge
+  is the data-retention foundation's flow, not this one. An export is allowed
+  only as a step that is itself audit-recorded — a new event, never a silent
+  read.
 
 ## The platform vocabulary
 
@@ -168,9 +203,10 @@ is a platform file of the same flow, so the auto take on `100-home` is
 A **standard flow's primary screen takes the flow's slug**: the `home` flow's
 main screen is named `home` — never "Dashboard", "Main Feed", or "Landing"; the
 `signin` flow's is `signin`, and so on for `profile`, `settings`,
-`notifications`, `splash`, `onboarding`, `recover-account`, `delete-account`.
-Secondary screens inside those flows are free-named (`profile-edit`,
-`settings-privacy`). The reviewers enforce this exactly like the flow slugs.
+`notifications`, `splash`, `onboarding`, `recover-account`, `delete-account`,
+`audit-history`. Secondary screens inside those flows are free-named
+(`profile-edit`, `settings-privacy`). The reviewers enforce this exactly like
+the flow slugs.
 
 Screen **codes** are shared across a flow's platform files — `100a` is one
 screen concept wherever it appears; a platform that lacks it omits the row, and
@@ -191,6 +227,7 @@ When a flow's slug is not standard but its journey plausibly is, treat these as
 | `profile`         | `account`, `my-account`                                                |
 | `delete-account`  | `account-deletion`, `close-account`                                    |
 | `recover-account` | `forgot-password`, `password-reset`, `account-recovery`                |
+| `audit-history`   | `audit-log`, `activity-log`, `moderation-history`                      |
 
 A synonym match is a proposal, not a verdict — `dashboard` may be a genuinely
 different journey from `home`; the user decides. A confirmed rename routes

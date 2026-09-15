@@ -72,18 +72,20 @@ twice.
 
 | File            | Is                                                            |
 | --------------- | ------------------------------------------------------------- |
-| `helpers`       | the print vocabulary — sourced by every task, always          |
+| `helpers`       | the print vocabulary, `members()`, `shell_files_in_scope()`   |
 | `helpers.mjs`   | the same vocabulary for Node tasks                            |
 | `placeholder`   | what an unfilled slot prints                                  |
 | `checks`        | the git predicates the merge tasks ask                        |
 | `merge`         | the merge procedure both `code:merge:*` tasks run             |
 | `<name>.env`    | a repo-specific value file, sourced rather than executed      |
 
-`helpers`, `helpers.mjs` and `placeholder` ship with this pack; `checks` and
-`merge` ship with it too, because the merge tasks are part of the contract. A
-repo that grows a library of its own adds a sibling here rather than a directory
-— `_scripts/helpers/` would make `helpers` a path and every `source` line in the
-repo wrong at once.
+Every task sources `helpers`. It, `helpers.mjs` and `placeholder` ship with this
+pack; `checks` and `merge` ship with it too, because the merge tasks are part of
+the contract. A repo that grows a library of its own adds a sibling here rather
+than a directory — `_scripts/helpers/` would make `helpers` a path and every
+`source` line in the repo wrong at once. A repo already carrying an older
+`helpers` of its own is not a sibling but a diverged copy of this one, and the
+legacy table below is what maps its vocabulary onto this one.
 
 ### The print vocabulary
 
@@ -142,33 +144,37 @@ until someone reads two tasks side by side.
 
 | Task                                                  | Does                                                                        |
 | ----------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `setup:all [--all] [--<id>…]`                         | the bootstrap orchestrator — the order below; `--<id>` per member           |
+| `setup:all [--all] [--<slug>…]`                       | the bootstrap orchestrator — the order below; `--<slug>` per member         |
 | `setup:mise`                                          | reshim, doctor, install, upgrade; formatter plugins and the linter if present |
 | `setup:secrets`                                       | **slot** — the pinned secret manager's setup                                |
 | `setup:external:{start,stop,pull}`                    | **slots** — local services; each a no-op outside a dev shell                |
 | `setup:deps:all`                                      | `cleanup → install → upgrade → outdated → audit`                            |
 | `setup:deps:{install,cleanup,upgrade,outdated,audit}` | **slots** — the package manager's verbs; `install` honours `--frozen`       |
 | `setup:precommit`                                     | autoupdate, unset `core.hooksPath`, install the hooks                       |
+| `setup:ai [--user] [--inventory]`                     | install and update the repo's required plugins at project scope             |
 | `setup:vscode`                                        | reconcile the repo's editor profile with its recommended extensions        |
-| `setup:default-branch <branch>`                       | set the default branch on the remote through whichever forge CLI is here   |
 | `setup:worktree`                                      | the lighter sibling a fresh worktree runs                                   |
 | `code:all [--fix] [--debug]`                          | the one-command gate: `format → lint → sec`                                 |
-| `code:format [--fix]`                                 | format or check; ships a real default                                       |
-| `code:lint [--fix]`                                   | **slot** — the language's linter                                            |
-| `code:sec`                                            | secret scan and vulnerability scan over the tree; ships a real default      |
+| `code:format [--fix] [files...]`                      | format or check the files given, else the tree; the `format` hook calls it  |
+| `code:lint [--fix] [files...]`                        | **slot** — the linter; ships shellcheck/actionlint; `lint` hook calls it    |
+| `code:sec [--staged] [files...]`                      | secret and vulnerability scan; the `sec` hook calls it with `--staged`      |
 | `code:precommit [--all]`                              | run the hooks over what you changed, **before** you stage                   |
 | `code:git-config [--fix]`                             | reject identity and signing keys in the local git-config                    |
 | `code:worktrees`                                      | list worktrees across the repo and its members                              |
-| `code:merge:develop <branch>`                         | merge a feature branch into `develop` and push                              |
-| `code:merge:main`                                     | merge `develop` into `main` and push                                        |
+| `code:merge:develop <branch>`                         | merge a branch into `develop`, or open a pull request — `MERGE_MODEL`       |
+| `code:merge:main`                                     | merge `develop` into `main`, or open a pull request — `MERGE_MODEL`         |
 | `code:count`                                          | lines of tracked text, grouped by extension, plus a total                   |
-| `code:ai`                                             | install and reconcile this repo's agent plugins                             |
 
-`code:all` is the one-command gate. `precommit`, `git-config`, `merge:*`,
-`count` and `ai` are not in it — they are wired into the hooks, into
-`setup:all`, or run by hand. `setup:default-branch` is the one `setup:*` member
-`setup:all` does **not** call: it edits a remote, so it is run deliberately,
-once, by whoever shapes the repo.
+`code:all` is the one-command gate. `precommit`, `git-config`, `merge:*` and
+`count` are not in it — they are wired into the hooks, into
+`setup:all`, or run by hand. `setup:all` calls every other `setup:*` task except
+`setup:worktree`, which is the fresh-worktree sibling and not part of the
+bootstrap order.
+
+**Nothing in this set edits a remote's settings.** Setting the forge's default
+branch is a one-time act by whoever shapes the repo, not a task a machine
+re-runs, so the library does not carry one; the repo's CONTRIBUTING stub names
+the command.
 
 ## Slots and their placeholders
 
@@ -189,11 +195,24 @@ at the same path, marker and all gone. Nothing edits a placeholder in place, and
 nothing fills one by hand: a repo that has picked no stack is *supposed* to see
 the placeholder output.
 
-**Formatting and security scanning have defaults; linting does not.** That looks
-inconsistent and is deliberate. One formatter binary and two scanners that read
-the repo as a *directory* say something true about a repo holding nothing but
-markdown. Every linter worth running belongs to a language, and the one this
-ecosystem uses for prose would drag a package manager into a docs-only repo.
+**An overlay inherits the slot's argument surface, and its shipped defaults.** A
+gate task that takes a file list keeps `#USAGE arg "[files]..."` when it is
+overwritten — the hook passes filenames to whatever landed, and an overlay that
+dropped the argument would gate the whole tree on every commit. `code:lint` adds
+a second obligation: the two defaults it ships — `shellcheck` over the shell
+files in scope, `actionlint` over the workflows in scope, each silent when its
+binary is absent — run **before** the placeholder notice and are not the
+language linter's to remove. An overlay replaces the notice, never them.
+
+**A tool that reads the repo as a *directory* ships as a default; a tool that
+belongs to a language does not.** That is the whole rule, and it is why
+`code:format` ships dprint and shfmt, `code:sec` ships both scanners, and
+`code:lint` ships shellcheck and actionlint yet is still a slot. Each of those
+says something true about a repo holding nothing but markdown, shell and
+workflows. The **language** linter is the part nobody can guess: every one worth
+running belongs to a language, and the one this ecosystem uses for prose would
+drag a package manager into a docs-only repo. So `code:lint` is a slot whose
+placeholder notice is the unfilled half, not the whole task.
 
 ## `setup/*` — bootstrap & upgrade
 
@@ -246,7 +265,7 @@ setup:all  (--all recurses into every member)
   ├─ setup:external:start  # local services                        (SLOT)
   ├─ setup:deps:all        # the package manager's five verbs      (SLOTS)
   ├─ setup:precommit       # autoupdate + install the hooks        (common)
-  ├─ code:ai               # install and reconcile agent plugins   (common)
+  ├─ setup:ai              # install and reconcile agent plugins   (common)
   ├─ setup:vscode          # the repo's editor profile            (common)
   └─ <each member>         # only with --all
 ```
@@ -257,9 +276,12 @@ clean machine is a step that breaks the second run.
 
 ### Member flags
 
-A repo with members — submodules, or projects the registry names — gets **one
-flag per member** on top of `--all`, and the ids come from the same list the
-`p:` group uses (see below):
+A repo with members — each submodule, or each path `MEMBERS` names — gets **one
+flag per member repo** on top of `--all`, each named by that member's own slug.
+The flags come from the **member list**, never from the project ids the `p:`
+group uses (see below): a repo's projects and its members are two different
+lists, and a repo with three projects in one tree and no members gets no flags
+at all:
 
 ```bash
 #USAGE flag "--all" help="Also set up every member project"
@@ -270,9 +292,18 @@ flag per member** on top of `--all`, and the ids come from the same list the
 Each member runs its **own** task library through `mise run --cd <path>
 setup:all`, so a polyglot repo gets one library per project rather than one
 library that knows every language. The short forms live in `[shell_alias]`, one
-`setup-<id>` per member. **A single-project repo has no members and therefore no
-flags beyond `--all`**, which is then a no-op — left in place because a caller
-passes it without knowing the repo's shape.
+`setup-<slug>` per member repo — the same list again. **A repo with no members
+therefore has no flags beyond `--all`**, which is then a no-op — left in place
+because a caller passes it without knowing the repo's shape.
+
+**The member *list* is one function, `members()` in `_scripts/helpers`**, and
+every task that walks members calls it — `setup:all --all` and `code:worktrees`
+today. It answers from whichever linkage this repo uses: `.gitmodules` when the
+members are submodules, and otherwise the words of **`MEMBERS`**, the marked
+position in `mise.toml`'s `[env]` that the orchestrator fills with each member's
+repo-relative path. One function, so a product linked as siblings rather than as
+submodules is found by every caller at once instead of by the one that happened
+to learn the second linkage.
 
 ### `setup/deps/*` — the package manager, and only that
 
@@ -322,6 +353,44 @@ dev shell rather than failing.
 `setup:all` calls `start`, so one bootstrap leaves a developer able to run the
 product. A repo with no external services leaves the three slots as shipped.
 
+### `setup:ai` — the repo's agent plugins
+
+Installs and updates the plugins **this repo** requires, through the agent CLI's
+own plugin commands and nothing else — no package-manager one-shot. The required
+set is the toolkit's own workflow plugin plus the rows of one marked position,
+`EXTRA_PLUGINS`. The other, `EXTRA_MARKETPLACES`, holds **marketplaces**: they
+are registered in their own pass before any install and are never installed as
+plugins. A plugin that arrives as another's declared dependency is never listed
+either, because the CLI resolves it.
+
+**Project scope, and the exception is a flag.** Every install, update and prune
+runs `--scope project`, so the repo's own settings file is what declares the
+plugins and a machine's user-scope choices are left alone. `--user` flips every
+scope for the rare repo that genuinely wants them global. A plugin already
+enabled at user scope is still installed at project scope: the point is the
+declaration in the repo, not the presence on the machine.
+
+**Two modes must both survive, and the difference is invisible to the task.** A
+marketplace may be registered from a remote repository or from a local directory
+— a toolkit author runs the second so they can use what they are editing. So the
+task **asks what is registered** and branches: a marketplace already registered
+under the name it wants is **updated**, never re-added, whatever source it
+resolves from; only an unregistered one is added. Re-adding a name whose
+registered source differs is an error, not a no-op, which is exactly the failure
+this branch exists to avoid. The same rule covers every extra marketplace the
+repo names.
+
+**`--inventory` is for the orchestrator, not for a human.** It prints what this
+machine already has — one line per registered marketplace other than the
+toolkit's own, then one line per installed plugin with its marketplace and scope
+— and exits, printing nothing else on stdout. That is the seed for the question
+`/vwf:init` asks before it fills the two marked positions; it installs nothing.
+
+Two smaller obligations close the task: the **knowledge-graph tool** is wired
+when it is on `PATH` and merely hinted at when it is not, and a **statusline**
+package is only ever hinted at, never installed — it is a per-machine choice
+made with the machine's own package manager.
+
 ### `setup:vscode` — the repo's editor profile
 
 `setup:all`'s last step, and silent on a machine without the editor. It reads
@@ -346,23 +415,6 @@ under it creates the profile and records the association, after which every
 later open uses it. The task detects the sentinel, prints that one-time command
 plus the share-settings-with-Default step, and exits 0.
 
-### `setup:default-branch <branch>` — the forge's default
-
-The one setting in the branch model that is not in the repo: what a clone lands
-on and what a pull request targets. It is **orthogonal to the merge tasks** —
-work flows feature → `develop` → `main` whichever branch the forge calls
-default — and this only makes the forge agree with the repo's choice.
-
-It sets it where it can and prints the command where it cannot, and it never
-fails: no `origin` yet is the ordinary first-day case, and a contributor whose
-forge CLI is missing still needs the one line to run. The probe is
-`<cli> repo view` rather than the CLI merely being installed, because both are
-commonly present on a machine that hosts elsewhere and only `view` answers for a
-remote the tool actually recognizes.
-
-**`setup:all` does not call it** — it edits a remote, so it is run deliberately,
-once, by whoever shapes the repo.
-
 ### `setup:worktree` — the lighter sibling
 
 Members checked out, tools installed, secrets set up, `setup:deps:install
@@ -380,6 +432,34 @@ worktree ran first.
 so a repo without it silently takes the slower path.
 
 ## `code/*` — the gates and the git operations
+
+### The hooks call the tasks
+
+**Every gate hook runs a task, never a tool.** The gate component's hook config
+carries three tool-neutral hooks and no fourth:
+
+| Hook id  | Entry                                  | Passes               |
+| -------- | -------------------------------------- | -------------------- |
+| `format` | `mise x -- mise run code:format --fix` | the staged filenames |
+| `lint`   | `mise x -- mise run code:lint --fix`   | the staged filenames |
+| `sec`    | `mise x -- mise run code:sec --staged` | nothing — the index  |
+
+That is why the three tasks take a file list: a hook is per-file by nature and a
+task is whole-tree by default, and `[files]...` is the one argument that lets
+the same task serve both callers. `code:sec` is the exception that proves it —
+`--staged` scans the *index*, which is a thing only git can enumerate, so the
+hook passes no filenames at all.
+
+**A repo customising a gate edits the task, never the hook.** A tool named in
+both places is a tool configured twice, and the two copies drift in the
+direction nobody is looking: the hook run rewrites a file the whole-tree task
+would have left alone, or `code:all` passes on something the commit refuses. One
+configuration per tool, and the task is where it lives — which also means
+`mise run code:format` and the commit that follows it can never disagree.
+
+**A tool that is not in a task is not in a hook.** shellcheck, shfmt and
+actionlint were direct hooks once; they are shipped defaults inside
+`code:format` and `code:lint` now, for exactly this reason.
 
 ### The pre-commit ordering, which is the point
 
@@ -415,10 +495,13 @@ from anywhere but `develop`; refuse a branch merging into itself; refuse when
 you are already standing on the destination; **refuse when the destination
 branch does not exist locally**, naming the two-branch model — asked here rather
 than left to the checkout, so a repo whose branches were never laid out fails in
-one command instead of after the whole-tree hook pass; then no untracked files, no
-uncommitted changes, no unpushed commits, then the hook safety net. Only after
-all of that does it touch git — hop to the main worktree if this is a linked
-one, check out the destination, pull with tags, `git merge --no-ff --no-edit`,
+one command instead of after the whole-tree hook pass; then no untracked files
+and no uncommitted changes, and — under `direct` alone — no unpushed commits on
+the source branch, a question `pr` never asks because publishing that branch is
+its first act; then the hook safety net. Only after all of that does it touch
+git, and what it does then is `MERGE_MODEL`'s to say — under `direct`, hop to
+the main worktree if this is a linked one, check out the destination, pull with
+tags, `git merge --no-ff --no-edit`,
 `git push --follow-tags`, and return to where it started.
 
 **A conflict leaves the tree mid-merge on purpose.** Aborting would discard the
@@ -428,6 +511,34 @@ is a judgement call a task cannot make.
 `--no-ff` is also on purpose: a fast-forward would leave the two branches as the
 same commit with no record that a merge happened, and the merge commit is what
 makes "what shipped" a question git can answer.
+
+#### `MERGE_MODEL` — what "land it" means on this repo
+
+Every predicate above runs under both values but one: the unpushed-commits check
+is `direct`'s alone. What happens *after* them is not shared at all, and
+**`MERGE_MODEL`** in `mise.toml`'s `[env]` is the one value that says which — a
+marked position the orchestrator fills, read as `direct` when it is unset or
+empty, so a repo nobody filled behaves exactly as described above:
+
+| Value    | After the predicates                                                     |
+| -------- | ------------------------------------------------------------------------ |
+| `direct` | check out the destination, `git merge --no-ff`, `git push --follow-tags` |
+| `pr`     | `git push --follow-tags -u origin <branch>`, then open a pull request    |
+
+Under `pr` **nothing merges locally**. The task pushes the branch and opens the
+request through whichever forge CLI is on PATH — `gh` first, then `glab` — and
+where neither is, it prints the branch, the destination and one line telling you
+to open the request on your forge, then stops successfully. `code:merge:main`
+under `pr` opens `develop` → `main` rather than merging it.
+
+**The destination-branch-exists predicate still runs under `pr`.** A pull
+request aimed at a branch that does not exist fails later and reads worse than
+the one command that would have said so.
+
+A repo-level value and not a flag, because which one applies is a property of
+the repo — its review policy, its branch protection — and not of the person
+landing the change. A flag would let two people on the same repo land
+differently.
 
 ### `code:count` — a size reading
 
@@ -454,18 +565,24 @@ of what this project *is*, and that no contract can name in advance.
 
 1. the project's **registry id**, where `.config/vwf.yaml` names one;
 2. otherwise the **sub-project directory name**;
-3. for a single-project repo, the **repo's own name** — `p:claude-status:build`,
-   not `p:app:build`. A repo that later becomes a member keeps working, and a
-   task name never has to be re-learned because the repo grew.
+3. otherwise the project's **primary platform token** — `service`, `worker`,
+   `webapp`, `site`, `cli`, `iac` — as the repo-shaping orchestrator proposes
+   it, so the group says what the project *is*: `p:service:build`, not
+   `p:app:build`. A repo that later becomes a member keeps working, and a task
+   name never has to be re-learned because the repo grew.
 
-Whichever of the three the name comes from, four surfaces — `REPO_NAME` in
-`.config/mise.toml`'s `[env]`, the `p:<id>:*` group, the member flag and the
-`setup-<id>` alias — carry one identical project-id token, which `/vwf:init`
-derives, shows and has you confirm before any of them is written. A mismatch
-between any two is a defect, and this library never derives the id itself.
+**Two surfaces, two tokens.** The `p:<id>:*` group carries the **project id**;
+`REPO_NAME` in `.config/mise.toml`'s `[env]` carries the **repo's folder name,
+slugified**. They are independent — a single-project repo whose folder spells
+its project id is a coincidence, not a rule — and the orchestrator shows and
+has you confirm each before it is written. This library derives neither itself.
 
-Every id is the same one `setup:all`'s member flags and the `setup-<id>` shell
-aliases use. One list, four surfaces.
+**`setup:all`'s member flags and the `setup-<slug>` aliases are not on that
+list.** They are named for this repo's **member repos** — each submodule, or
+each path `MEMBERS` gives — one flag and one alias per member, whatever ids the
+projects inside that member carry. The two lists coincide only in the case that
+made them easy to confuse: a product whose every member holds exactly one
+project named after it.
 
 **Every project gets a `_default` slot.** No pack can know a project's commands,
 so `/vwf:init` creates `p/<id>/_default` as a `#PLACEHOLDER` that prints "no
@@ -511,17 +628,30 @@ to bottom: no old name appears on the left twice, but a name a row *produces*
 can be a later row's left-hand side — `setup:pnpm:update` becomes
 `setup:deps:update`, then `setup:deps:upgrade`.
 
+The `print_*` rows are how a repo's own tasks are rewritten when a diverged
+`_scripts/helpers` is replaced by this pack's: every call to a left-hand name
+becomes its right-hand one, and a call to a name with no row here is flagged for
+the user rather than rewritten.
+
 | Was                                                | Is now                | Why it moved                                                             |
 | -------------------------------------------------- | --------------------- | ------------------------------------------------------------------------ |
 | `worktree:init`                                     | → `setup:worktree`    | it is a bootstrap step; `worktree:` was a group of one                   |
 | `merge:develop`, `merge:main`                       | → `code:merge:*`      | a merge is something a change runs through, like the gates               |
 | `setup:pnpm:*`, `setup:uv:*`, `setup:app:*`         | → `setup:deps:*`      | the task path carried the tool's name, so the contract differed per stack |
-| `setup:ai`                                          | → `code:ai`           | it is re-run as the plugin set moves, not once per machine               |
 | `setup:doppler`                                     | → `setup:secrets`     | same reason as `setup:deps:*` — the provider is a choice, the slot is not |
 | `setup:deps:{start,stop,pull}`                      | → `setup:external:*`  | services a product runs against are not its package manager             |
 | `setup:deps:update`                                 | → `setup:deps:upgrade` | "update" read as both install-and-refresh; the verbs are now separate    |
 | `_scripts/_helpers`                                 | → `_scripts/helpers`  | `_scripts/` already says library; the second underscore says it twice    |
 | `_scripts/_checks`                                  | → `_scripts/checks`   | same reason — and it is a separate library, not part of `helpers`        |
+| `print_normal`                                      | → `print_yellow`      | the vocabulary has no uncoloured line; a plain yellow one is the nearest |
+| `print_normal_wait`                                 | → `print_wait`        | the `_wait` variants collapsed — an in-progress line has one colour      |
+| `print_green`                                       | → `print_success`     | a task says what happened, not what colour it said it in                 |
+| `print_green_wait`                                  | → `print_wait`        | same collapse; the green belonged to the `print_ok` that closes the line |
+| `print_yellow_wait`                                 | → `print_wait`        | it was already the colour `print_wait` prints, under a second name       |
+| `print_red`                                         | → `print_error`       | role-named now — and the line moves to stderr, where a failure belongs   |
+| `print_red_wait`                                    | → `print_wait`        | same collapse; the failure that follows is `print_error`'s to print      |
+| `print_header_wait`                                 | → `print_header`      | a header opens a section, and a section is not an in-progress step       |
+| `print_subheader_wait`                              | → `print_subheader`   | same reason — the rule and the title are the whole of a subheader        |
 
 A repo still carrying a left-hand name is not broken, but nothing else in the
 toolkit will find it: vwf probes `setup:worktree`, the aggregators call

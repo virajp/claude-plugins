@@ -4,7 +4,7 @@ axis: deploy
 kind: cloud-provider
 components:
 - cloud-provider/cloudflare@0.1.0
-- cloud-service/containers@0.1.0
+- cloud-service/containers@0.1.2
 artifact: container-image
 ---
 

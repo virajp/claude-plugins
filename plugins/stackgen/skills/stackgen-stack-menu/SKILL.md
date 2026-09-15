@@ -44,6 +44,17 @@ comparison. Choosing is the user's job and presenting the choice is vwf's.
    **Never list bare components.** `stacks/<type>/<slug>/pack.yaml` files are
    the parts a bundle composes, not options — offering them would ask the user
    to assemble a stack rather than choose one.
+
+   **Copy `default: true` from the bundle, never compute it.** An entry
+   carries the key exactly when its bundle file's frontmatter does, and omits
+   it otherwise — vwf preselects whichever entry carries it, and this skill
+   has no opinion of its own about which bundle that should be. More than one
+   entry on an axis may carry it when their `platforms` differ — one per axis
+   per platform, where a bundle declaring no `platforms:` covers every
+   platform on its axis; which of them a round highlights is vwf's per-round
+   rule, applied after it has filtered the entries by the project's
+   platforms, not this skill's. Two overlapping on a platform is the
+   checker's to refuse, not this skill's to resolve.
 2. Return the payload below. The `generate` block is present on **every**
    answer — it is the open entry, and it is what makes an empty pack list read
    as a decision rather than a fault.
@@ -64,10 +75,11 @@ templates:
     platforms: [ <platform> ] # project axis only
     name: <display name>
     summary: <one line>
+    default: true # only when the bundle frontmatter carries it — omitted otherwise
 generate:
   pin: generated/<technology-slug>
-  axes: [ project, backing, deploy, repo, design, cicd ]
-  kinds: [ language-bundle, database, cloud-provider, repo-gate, capability-provider, ci-system, app-framework, deploy-target, design-tool ] # the generatable kinds
+  axes: [ project, backing, deploy, repo, design, cicd, stylesheet ]
+  kinds: [ language-bundle, database, cloud-provider, repo-gate, capability-provider, ci-system, app-framework, deploy-target, design-tool, stylesheet ] # the generatable kinds
   summary: Generate principles-grounded skills and conventions for any stack
     no pack covers. Explicit, reviewed, consent-gated — never a silent run.
 ```
@@ -100,6 +112,16 @@ condition above stops holding.
 in it is `unconditional: true` — **return `templates: []`** with the same
 `note` and `generate` block — the open entry is what makes an empty list read as a
 decision rather than a fault.
+
+**The `stylesheet` axis answers like every other axis, and filters on
+nothing.** Every `axis: stylesheet` bundle is an entry, the `generate` block
+carries the open door, and vwf offers *defer this axis* the way it does on the
+technology axes — a deferral is recorded `unresolved` and elicited again later.
+vwf asks the round only of a project declaring a `site` or `webapp` platform,
+and **that condition is vwf's, not this skill's**: filtering here would mean
+reading the registry, which the rules below forbid, and for exactly this
+reason — a menu that varied by repo would be a second place for the platform
+condition to live, and two places for one rule is how they disagree.
 
 **A bundle whose components are partly `@generated` is listed normally**, with
 no warning and no asterisk. Mixing copied and generated components is the

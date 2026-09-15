@@ -30,11 +30,37 @@ and `execute` on day one:
 | ---------------------- | ------------------------------------------------------------ | ---------------------------------------------------- |
 | **unknown language** (§3) | that project's `template` is **pinned**                     | that project's `template` reads `unresolved`         |
 | **missing `mise`** (§5)   | any axis in the repo is pinned, or any harness capability is claimed | no axis is pinned anywhere and no capability is claimed |
+| **pinned, not materialized** (§3) | that project's `template` is a slug, the adapter materializes, and the target repo's `.claude/stackgen/lock.yaml` does not name the slug | never — the axis was answered |
 
 The severity follows the pin, never the calendar — the moment an axis is
 answered, the finding reverts to blocking on the next run.
 
+The third row is the one that is **not** conditional on `unresolved`, and it
+sits here because it is the state most easily mistaken for it: the axis *was*
+answered, and what is missing is the artifact rather than the decision
+(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`, "The materialized-template
+variant"). It is reached only after a landing the user declined, or on a repo
+`/vwf:setup` has not re-run on since the pin was made. Its remedy is
+`/vwf:setup` — the materialize pass — and never `/vwf:architecture`, which
+decides a pin rather than landing it.
+
 ## 3. Languages — LSP and toolchain
+
+**Before the token walk, once per project.** A project whose `template` is a
+slug, whose adapter is a **materializing** one, and whose target repo carries
+no materialized entry for that slug in its `.claude/stackgen/lock.yaml` is
+**pinned, not materialized — `/vwf:setup` materializes it**: raise that
+finding, name the repo in it, and **skip the token walk for that project**.
+The languages it would check come from the payload the repo lacks, so every
+token would otherwise be reported as a stack vwf has no template for when the
+template is pinned and merely absent from disk — they are not unknown there,
+they are **unread**. It is **blocking**, on the third row of the table above,
+and its remedy is that one line: one finding per project, never one per
+token. Resolve the target repo as the member whose `projects:` list holds
+this project, at that member's `path` relative to the base root; a project no
+member claims lives in the current repo. A project carrying `languages: []`
+is reached here exactly as one carrying tokens is: what this state is read
+from is the pin and the lockfile, never the token list.
 
 For each project, for each token in `stack.languages`, resolve its row in the
 stack vocabulary. A project whose `template` reads `unresolved` records
@@ -47,7 +73,8 @@ whole section reports `not checked — no stack resolved` for it:
   available in this marketplace* and move on. **No installed plugin declares
   the token, but the project's pin resolves to a materialized template whose
   payload carries `language_facts` for it** (the materialized escape,
-  `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`) → the language is
+  `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`) — read from the **target
+  repo's** own `.claude/` tree, resolved as the gate above → the language is
   **known**: verify against those facts instead — the LSP per how the facts say
   it is provided, the mise tool and manifest per the fact values, `n/a`
   accepted silently as an answer. **A token declared only under a template's
@@ -100,15 +127,19 @@ the truth and the config is what needs updating.
 
 ## 5. Repo tooling
 
-**The six stack axes.** Since format 19 a stack is composed from independent
-axes — `project`, `backing`, `deploy`, `repo`, `design` and `cicd`
+**The seven stack axes.** Since format 19 a stack is composed from independent
+axes — `project`, `backing`, `deploy`, `repo`, `design`, `cicd` and, since
+`config_format` 19, `stylesheet`
 (`assets/stack-adapter.md` holds the enum) — and every one but `repo` is **per
 project** (the three technology axes since format 13). Check each pin resolves
 to a template an installed stack plugin actually offers:
 `projects.<name>.stack.template` (project axis), each entry of
 `projects.<name>.stack.backing_template`, `projects.<name>.stack.deploy_template`,
-`repo.stack.template`, and the `projects.<name>.design` and
-`projects.<name>.cicd` pins, whose slug is the config value itself. A pin naming
+`repo.stack.template`, the `projects.<name>.design` and
+`projects.<name>.cicd` pins, whose slug is the config value itself, and
+`projects.<name>.stylesheet`, whose slug is likewise the config value and which
+is **required only for a project declaring a `site` or a `webapp` platform** —
+on any other project the key's absence is correct and is not a finding. A pin naming
 a template that isn't there is **drift** — usually a template renamed under the
 user's feet, or a stack plugin that was never installed. An axis reading
 `unresolved` is not a pin: report the degradation above and resolve nothing. A
@@ -236,63 +267,223 @@ Part of §5, and the one check that reads the **shape** `/vwf:init` lays down
 rather than what `.config/vwf.yaml` declares. A repo drifts from that baseline
 by standing still: the adapter's packs move, `/vwf:architecture` names projects
 that did not exist when the repo was shaped, and a fresh clone arrives with one
-branch. None of that stops the repo working, so **every finding here is
-`drift`, and none is blocking** — a repo behind its baseline is out of date,
-not broken. All four sub-checks carry the **same remedy, `/vwf:setup reshape`**,
+branch. It drifts by moving, too — a pack-owned file the repo edited in place
+is no longer the file the pack ships. None of that stops the repo working, so
+**every finding here is `drift`, and none is blocking** — a repo behind its
+baseline is out of date, not broken. All six sub-checks carry the **same
+remedy, `/vwf:setup reshape`**,
 which is why §9 prints that line once with the rows that led to it.
 
-**(a) Pack versions.** Read `.claude/stackgen/lock.yaml`, the adapter's
-materialization record — its `-sync` skill owns the file, and this check reads
-one thing out of it: the `entries:` list. Each entry names the component it
-landed for and a `source:` of the form `pack/<type>/<slug>@<version>`; an entry
-sourced `generated` carries no version and is skipped, as is everything outside
-`entries:`. Compare each recorded version against the version the adapter ships
-**now** for that ref, and resolve "now" from the adapter rather than by
-guessing: the `-stack-template` payload for a pinned template carries the same
+**The six run per repo** — the base and every **locally-present** member,
+resolved the way `/vwf:init`'s **Step 0** resolves them: the paths
+`.gitmodules` declares union the `members:` list the config carries, deduped
+on realpath. That step owns the rule and it is not restated here; a path only
+one of the two sources names where both exist is the disagreement `init`
+refuses to shape, and this check does not walk into it either. Every finding
+is printed **under the repo it was found in**, so a row says which repo before
+it says what drifted, and the remedy stays one line for the whole product —
+`reshape` walks the members too, so one re-run covers every row under every
+heading.
+
+**An absent member is a blind spot, not a finding.** A member this machine
+does not carry is said in §5's output as `<member> — not present, not checked`
+and nothing more: it is the blind spot the membership contract already
+recorded (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`), and a drift row about
+a repo the user declined to clone would describe a shape nobody here can read.
+
+**(a) Pack versions.** Read each repo's **own** `.claude/stackgen/lock.yaml`,
+the adapter's materialization record — its `-sync` skill owns the file, and
+this check reads one thing out of it: the `entries:` list. Each entry names
+the component it landed for and a `source:` of the form
+`pack/<type>/<slug>@<version>`; an entry sourced `generated` carries no
+version and is skipped, as is everything outside `entries:`. Compare each
+recorded version against the version the adapter ships **now** for that ref,
+and resolve "now" from the adapter rather than by guessing: the
+`-stack-template` payload for a pinned template carries the same
 `<type>/<slug>@<version>` composition refs, so a component named there is read
 off the payload. A component no pinned template names is read from
 `stacks/<type>/<slug>/pack.yaml` inside the installed adapter plugin's own
 tree, located from `claude plugin list` the way this section locates `mise` —
 vwf's own plugin-root token names vwf and can never spell another plugin's
-root. A recorded version **older** than the shipped one is one drift row naming
-the component and both versions. A **newer** recorded version is not a finding
-here: the adapter went backwards, which is the sync skill's conversation, not
-doctor's. **No lockfile at all** is `missing` rather than drift, with the same
-remedy — the shape was never laid down here.
+root. A recorded version **older** than the shipped one is one drift row
+naming the component and both versions. A **newer** recorded version is not a
+finding here: the adapter went backwards, which is the sync skill's
+conversation, not doctor's. **No lockfile at all** on the base is `missing`
+rather than drift, with the same remedy — the shape was never laid down here.
+A **member** with no lockfile is not a second `missing` row: it reads `not
+checked — no lockfile` under that member, which says the same thing once, and
+the product's one `reshape` is what lands it there.
 
-**(b) Project ids.** Every registry project has an id, and three surfaces are
-generated from it. Slugify each id per the adapter's `assets/ids.md` — the rule
-lives there and is not restated here — and check that:
+**(b) Project ids.** Every project has an id, and two surfaces in the repo
+that owns it are generated from it. Take **the ids that repo owns** — the base
+its own, a member the `projects:` list on its entry where the base's config
+declares one, and otherwise what init's own **§7** resolves, in
+`${CLAUDE_PLUGIN_ROOT}/skills/init/references/new-repo.md` — that section owns
+the source order and this one does not restate it. Slugify each id per the
+adapter's `assets/ids.md` — that rule lives there and is not restated here
+either — and check, **in the repo the id belongs to**, that:
 
 - a task directory `.config/mise/tasks/p/<slug>/` exists;
 - the slug appears in `.config/git-conventional-commits.yaml`'s `commitScopes`.
   An **empty** list is not a miss: a single-project repo is meant to leave it
-  empty and use no scope, and the shipped config says so;
-- when — and only when — `.config/mise.dev.toml` carries `[shell_alias]`
-  entries of the `setup-<id>` form, one of them names this slug. A repo whose
-  aliases were never laid down is not drifting from them.
+  empty and use no scope, and the shipped config says so.
 
-Each miss is one drift row naming the project, the surface, and the slug that
-was expected. The reverse direction is a row too: a sub-directory of
+Each miss is one drift row naming the repo, the project, the surface, and the
+slug that was expected. The reverse direction is a row too: a sub-directory of
 `.config/mise/tasks/p/` whose segment matches no registry slug is drift worded
 **"id source changed: `<dir>` is not a registry id"** — the expected state once
 `/vwf:architecture` first writes ids into a repo that was shaped before it, and
 a rename a re-run performs. It is never "a pack moved", and never a reason to
 suspect the adapter.
 
-**(c) Branches.** `git show-ref --verify --quiet refs/heads/develop`, and the
-same for `refs/heads/main`. Either one missing is a drift row: work flows from
-a feature branch or a worktree to `develop`, and from `develop` to `main`, and
-the repo's own merge tasks refuse a destination branch that does not exist
-locally. Remedy `/vwf:setup reshape`, which creates the missing branch. A repo
-with no commit yet has neither branch and reports one row saying that, not two.
+**The aggregator's member flags and its aliases are a different list, and it
+is not this one.** The base's bootstrap aggregator carries one member flag per
+**member repo**, and `.config/mise.dev.toml` carries one `setup-<member>`
+alias beside each — both named for the members, never for a project id. That
+split is stated in the same **§7** cited above, and it is why a member holding
+three projects is still one flag. Compare the two lists on the **base**
+against the member set this check resolved: a resolved member with no flag, or
+none with an alias where the alias block exists at all, is one drift row; a
+flag or an alias named for a **project id** on a product that has members is a
+drift row worded **"named from project ids"**, which one reshape rewrites. A
+repo whose alias block was never laid down is not drifting from it, exactly as
+above.
 
-**(d) The environment key.** `.config/mise.toml` sets `REPO_NAME`, and its
-value is this repo's own slug rather than the marked position the toolchain
-pack ships. Absent or still unfilled is a drift row, remedy
-`/vwf:setup reshape`: that key is what the user's own shell aliases read, so an
-unfilled one is quietly wrong everywhere it is used.
+**(c) Branches.** In **each** repo, ask that repo for `refs/heads/develop` —
+`git show-ref --verify --quiet` — and the same for `refs/heads/main`. Either
+one missing is a drift row: work flows from a feature branch or a worktree to
+`develop`, and from `develop` to `main`, and the repo's own merge tasks refuse
+a destination branch that does not exist locally. Remedy `/vwf:setup reshape`,
+which creates the missing branch. A repo with no commit yet has neither branch
+and reports one row saying that, not two — and a member is its own repository,
+so a base carrying both branches says nothing about the member beside it.
 
-Doctor **writes none of this** — no branch, no directory, no key, no scope.
-It reports the rows, gives `/vwf:setup reshape` once as the remedy, and stops
-there, as it does with every other structural change in this file.
+**(d) The environment key.** In each repo, that repo's own `.config/mise.toml`
+sets `REPO_NAME`, and its value is **that repo's folder name, slugified** —
+the basename of that repo's **main checkout** directory, run through the
+adapter's `assets/ids.md`. It is not a project id and never has to match one:
+the `p/<slug>/` groups (b) reads are named for the projects, this key for the
+folder they sit in. A member names its **own** folder, never the base's.
+
+Read the folder from the **main checkout**, not from the working directory: a
+linked worktree's directory is named for its branch, so resolve the common
+git dir — `git rev-parse --path-format=absolute --git-common-dir` — and take
+the basename of the directory holding it. Absent, or still holding the marked
+position the toolchain pack ships, is a drift row; so is a value that is not
+that folder's slug. Both carry the same remedy, `/vwf:setup reshape`, which
+shows the change as init's `repo-name key: <old> → <new>` replace row and
+applies it on the one consent. That key is what the user's own shell aliases
+read, so a wrong one is quietly wrong everywhere it is used.
+
+**(e) Content drift.** A pack-owned file is landed once and then lives in the
+repo, where anything may edit it; what it holds *today* is the question (a)
+does not ask. The lockfile answers it without re-reading the adapter: every
+`entries:` record carries a `hash:` — the content at the version this repo
+locked — so the check is a hash comparison against the file on disk. Take
+every record whose `path` lands **outside `.claude/`**, which is the `config/`
+tier: the tree `/vwf:init` shapes, and the one this section is about. A file
+whose content no longer matches its recorded hash is one drift row naming the
+path, once the second test below confirms it; a recorded path that no longer
+exists at all is the same row, worded **removed**, and takes no second test.
+
+The hash comparison stays the first and cheapest test, and a match ends it: a
+file matching its record raises nothing and nothing further is read. **A
+mismatch takes one more test before a row is written**, because a hash says
+two contents differ and says nothing about *where*. Reconstruct what the file
+would hold if the only divergence were a marked position's value: take the
+pack's shipped payload for that path at the version the record's `source:`
+pins, splice into it the repo file's **current** value at **every marked
+position init's `new-repo.md` enumerates**, each marked in the pack's payload
+by its `MARKED POSITION` comment block — owned by another predicate or not —
+and hash that. Equal to the file on disk, and the whole divergence lies inside
+those positions: **not** drift under (e), and no row here. Unequal, and it is
+drift under (e), reported exactly as above. A filled position is the shaped
+state, not a repo edit, which is the whole reason for the second test.
+
+**A marked position is where a repo-specific value lives, so a value sitting
+in one is never (e)'s finding** — owned or not. A position another predicate
+owns still gets that predicate's row and nothing more: (d)'s repo-name key,
+(f)'s `MERGE_MODEL` and `MEMBERS`, (b)'s member flag list and alias list each
+report the value they found there. A position **no** predicate owns — the
+plugin task's two agent-plugin lists, the `_default` slot, any other a pack
+ships — is a value the repo set, and nothing reports it at all. Splicing by
+what the pack **marks** rather than by what a predicate **owns** is what makes
+a mixed file tractable: `.config/mise.toml` carries the repo-name key and
+`MEMBERS` beside positions no predicate reads, and splicing only the owned
+half would leave the rest diverging and report the whole file as content
+drift.
+
+**A record whose `source:` is `generated` has no pack payload** to reconstruct
+from, so there is nothing to splice: the second test is skipped, and test 1's
+mismatch is (e)'s row exactly as it was before this test existed.
+
+This is `/vwf:init`'s existing-repo pass 6 asking the same question of the
+same record on the same terms — the same two tests over the same set of
+positions — which is what keeps the two agreeing: a file that pass leaves
+alone is a file this predicate reports clean, and nothing is reported here
+that a reshape would not offer to fix.
+
+That comparison isolates exactly one thing — content drift is the **repo**
+having edited a file the pack owns. A pack that merely moved leaves the file
+still matching its landing hash and is (a)'s row instead, so the two never
+double-count; a path appearing under both is a repo edit *and* a version
+behind, which one reshape resolves together. Say which it is in the row,
+because the fixes differ in kind: (a) is picked up by re-landing, (e) is a
+file somebody meant to change.
+
+**A file the user chose to keep is skipped.** A diverged pack-owned file that
+`/vwf:init` offered as replace-or-keep and the user kept is recorded under
+`enforcement.kept_files.<path>` — the same record `init` writes when it takes
+that answer, read here rather than a second one — and that record settles it.
+**The record lives in the base's `.config/vwf.yaml`, for every repo.** A
+member carries only its back-link and no config of its own, so a keep taken
+inside a member is keyed by the **base-relative** path: the member's path as
+prefix, then the path the lockfile names inside it. So this sub-check reads
+the base's one block whichever repo it is evaluating, and matches a member's
+file by that prefixed key — on the base's own files the key is the lockfile's
+spelling unprefixed, which is the same rule with an empty prefix. An absent
+`kept_files:` block reads as empty, so a repo that has kept nothing skips
+nothing. Reporting a kept file every run would re-accuse the user of a
+decision already made, which is the one difference from the declined `iac`
+extraction above: that cost is ongoing, this one is settled.
+
+**No lockfile at all → `not checked — no lockfile`**, said plainly and counted
+as neither a pass nor a drift row. A repo that has never been shaped landed
+nothing, so no file's content *can* have drifted from a record that does not
+exist; (a) already reports the absent lockfile as `missing`, and a second
+finding saying the same thing would read as two problems. Never infer the pack
+set from whatever happens to sit in `.config/` instead — anything not in the
+lockfile is not the adapter's, which is the rule the materialization itself
+lives by.
+
+**(f) The two marked positions beside `REPO_NAME`.** The same `[env]` block
+carries two more positions the toolchain pack ships marked. `MERGE_MODEL` is
+read in **each** repo, from that repo's own block; `MEMBERS` is read on the
+**base alone**, since a member declares no members of its own unless it
+carries its own `.gitmodules`, in which case it is a base in its turn and this
+check reaches it as one. Each is read by a task rather than by vwf, so an
+unfilled one is wrong only where it is used — which is why it goes unnoticed
+until the day that task runs:
+
+- **`MERGE_MODEL`** — absent from the block, or holding anything other than
+  `direct` or `pr`, is one drift row. The merge tasks fall back to `direct`
+  when it is unset, so nothing breaks loudly; what breaks quietly is the repo
+  that meant `pr` and has been landing branches locally ever since.
+- **`MEMBERS`** — absent **or empty** on a product whose config reads
+  `topology: multi-repo` with `linkage: siblings` is one drift row. Under that
+  linkage the list is the only place the task library learns the member set,
+  so an empty one leaves `setup:all --all` and `code:worktrees` walking
+  nothing. Empty is **correct** everywhere else — submodule linkage reads
+  `.gitmodules`, and a single-project repo has no members — so this row is
+  never raised outside siblings linkage. It is not the §1 membership check and
+  does not replace it: that one compares `members:` against each member repo's
+  own file and is blocking; this one asks only whether the repo's own tasks
+  can see the same list.
+
+`.config/mise.toml` absent altogether is (d)'s row for that repo, already
+printed — (f) adds nothing to it.
+
+Doctor **writes none of this** — no branch, no directory, no key, no scope, and
+no pack-owned file. It reports the rows, gives `/vwf:setup reshape` once as the
+remedy, and stops there, as it does with every other structural change in this
+file.

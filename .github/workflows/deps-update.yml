@@ -69,8 +69,8 @@ jobs:
         run: osv-scanner scan source --lockfile=pnpm-lock.yaml
 
       # The refresh and the bump are ordinary develop commits; main receives them
-      # by merge. `i:release` no longer bumps or commits — it tags what main
-      # already carries — so the bump is `i:version` here, exactly as a human
+      # by merge. `p:i:release` no longer bumps or commits — it tags what main
+      # already carries — so the bump is `p:i:version` here, exactly as a human
       # would run it.
       - name: Cut a patch release (commit on develop, merge to main, tag)
         id: release
@@ -82,7 +82,7 @@ jobs:
           git add pnpm-lock.yaml package.json
           mise x -- git commit -m "ops(deps): monthly dependency refresh"
 
-          mise run i:version
+          mise run p:i:version
           version="$(node -p "require('./package.json').version")"
           git add package.json
           mise x -- git commit -m "ops: bump installer to ${version}"
@@ -96,10 +96,10 @@ jobs:
           git merge --no-edit develop
           git push origin main
 
-          # Tag only — i:release verifies the branch, runs i:test and stops
+          # Tag only — p:i:release verifies the branch, runs p:i:test and stops
           # before pushing, because this job owns the push and the dispatch.
-          mise run i:release --ci
-          # Must match the tag i:release just created, and release.yml's
+          mise run p:i:release --ci
+          # Must match the tag p:i:release just created, and release.yml's
           # `installer-v*` filter. Plugin releases use `<name>-v<version>` and
           # never come through here.
           tag="installer-v${version}"

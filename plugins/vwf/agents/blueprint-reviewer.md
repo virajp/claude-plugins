@@ -9,7 +9,7 @@ description: Stateless completeness reviewer for the /vwf:blueprint command.
   conversation context.
 tools: Read, Grep, Glob
 model: opus
-effort: high
+
 ---
 
 You are a stateless blueprint-completeness reviewer. The orchestrator names a
@@ -47,9 +47,10 @@ orchestrator passes both. Verify the contract and every platform file:
 - [ ] **Designated number** — a standard-flow slug carries its designated number
       (`010` splash, `020` signin, `030` recover-account, `040` onboarding,
       `100` home, `910` profile, `920` settings, `930` notifications, `940`
-      delete-account); a product flow sits in `110`–`890`. A standard slug at
-      another number, or a product flow outside its band, is a gap unless the
-      orchestrator passed a matching waiver.
+      delete-account, `950` audit-history); a product flow sits in `110`–`890`.
+      Where the orchestrator passed a matching waiver, a standard slug at
+      another number — or a product flow outside its band — is **not** a gap;
+      without one it is.
 - [ ] **Platforms table** — a screen-platform project's flow carries one row per
       `<platform>.md` on disk, each a resolving link, each platform declared by
       the registry project, each from the vocabulary (`mobile` / `tablet` /
@@ -90,9 +91,9 @@ orchestrator passes both. Verify the contract and every platform file:
       idempotency.
 - [ ] A **Guarantees** table states consistency, on-failure behaviour,
       idempotency, and a **Load & latency** cell for every step group; none
-      implied but unlisted. A Load & latency cell is complete whether it states
-      a peak rate + p95 budget or carries the default token
-      (`default — per conventions#reliability`) — only a missing cell is a gap.
+      implied but unlisted. **Only a missing cell is a gap**: a cell that
+      states a peak rate and a p95 budget, or that carries the default token
+      (`default — per conventions#reliability`), is complete.
       Separate `## Consistency boundary` / `## Failure handling` /
       `## Idempotency` sections are pre-format-16 drift — flag them for
       merging.
@@ -122,6 +123,17 @@ orchestrator passes both. Verify the contract and every platform file:
       rule contradicting the row's States or the flow's steps is a gap; a
       component-library name, CSS, or pixel value in a block is a
       code-independence gap.
+- [ ] **Metadata blocks** (format 25) match the platform. On a `site` platform
+      file every Screens row has one, headed by its code, pinning `title`,
+      `description`, `index` (`yes`/`no`) and `image` (`default` or a named
+      slot). On a `webapp` file the same holds when the registry block shows the
+      project declaring the `seo` capability; without `seo` the block pins
+      `title` and nothing else, and a `description`, `index` or `image` line is
+      a gap. On any other platform file a Metadata block at all is a gap. A
+      missing block, a missing field, a product-wide value restated per screen
+      (site name, default description, social handle, locale) instead of
+      referenced at `conventions.md#web-metadata`, or a tag name, file path or
+      framework inside a block, is a gap.
 - [ ] Every background-job row lists trigger, timer/retry, activities, and
       on-failure; each mutating step's sync/async classification is decided (a
       job or an explicit synchronous statement), not left open.
@@ -231,8 +243,10 @@ The doc is `docs/blueprint/entities/<entity>/` — **always** `index.md` +
       is **complete** (the engineering baseline's optimistic-versioning rule
       covers it). A deviation from a baseline rule must state its reason on the
       doc **and** name a scoped `enforcement.rules` waiver
-      (`baseline/<rule>/<unit>`) — a deviation note without its waiver, or a
-      waiver the orchestrator passed with no matching doc note, is a gap.
+      (`baseline/<rule>/<unit>`). A deviation note with a matching waiver, and
+      a waiver with a matching doc note, are both complete. A deviation note
+      **without** its waiver is a gap, and so is a waiver the orchestrator
+      passed with no matching doc note.
 - [ ] Every cross-cutting reference resolves to a real `conventions.md` anchor,
       written as a markdown link.
 - [ ] **OKF frontmatter** present and complete on `index.md`:

@@ -3,9 +3,14 @@
 The files a repository carries whatever it is written in. All of them are the
 hygiene pack's; `init` places them, fills the three placeholders, and stops.
 
+Everything here is **per repo**: one run shapes the base and every member, and
+each repo takes its own row's answer and writes its own files at its own root.
+A row's answer never reaches a repo other than the one it names.
+
 ## The readme
 
-**A new repo gets a two-line stub and nothing more:**
+**Every repo that resolved to mode new gets a two-line stub at its own root,
+and nothing more:**
 
 ```markdown
 # <repo name>
@@ -13,10 +18,11 @@ hygiene pack's; `init` places them, fills the three placeholders, and stops.
 <the one-line brief>
 ```
 
-Both lines come from the two questions the new-repo path asks — question 1 the
-name, question 3 the brief. An **empty brief** writes the H1 alone — an honest
-empty file beats an invented sentence about a product nobody has described
-yet.
+Both lines come from that repo's own answers to the two questions the new-repo
+path asks — question 1 the name, question 3 the brief, each asked for every
+repo that resolved to mode new and for no other. An **empty brief** writes the
+H1 alone — an honest empty file beats an invented sentence about a product
+nobody has described yet.
 
 Then **name `/vwf:readme`** in the report as the command that fills the rest.
 It writes the title, the project list, the architecture diagram, the setup
@@ -25,36 +31,47 @@ something in it. Running it against a stub is the wrong order.
 
 **An existing readme is never rewritten.** It is moved to the lowercase
 filename, content untouched, as the existing-repo pipeline's second survey
-pass lists it. `init` writes a stub only where there is no readme at all.
+pass lists it. `init` writes a stub only where there is no readme at all — a
+member that already carries one is left as it is, exactly as the base is.
 
 ## The licence
 
-Question 5's answer, one of three:
+Question 6 is **one round with one row per repo**, and each repo takes its own
+row's answer, one of three:
 
 - **MIT** or **Apache-2.0** — copy that one text from the hygiene pack's
-  licence catalogue to `LICENSE` at the repo root, filling `<YEAR>` and
+  licence catalogue to `LICENSE` at **that repo's** root, filling `<YEAR>` and
   `<HOLDER>`.
-- **none** — write no file. That is a legible answer, and it is not the same
-  as a licence a tool picked on the author's behalf.
+- **none** on a row — write no file in that repo. That is a legible answer,
+  and it is not the same as a licence a tool picked on the author's behalf.
+
+**A repo that already carries a licence file is listed as kept, never
+replaced** — the licence a repository already declares is a decision somebody
+made, and a row's answer is what a repo with no licence gets rather than a
+rewrite of one that is there.
 
 The catalogue directory is **pack-private** and never lands in a repo: the
 materializer skips it, and `init` reads one file out of it. A repo ends up
 with `LICENSE`, never with the catalogue.
 
+Both placeholders are resolved **per repo**, from that repo's own answers.
 `<YEAR>` is the current year — the year the licence is first applied, not a
 range, and not something a later run updates. `<HOLDER>` is `git config
-user.name`, confirmed in the plan before applying; where git has no configured
-name, ask for it once rather than writing an empty holder.
+user.name` read in the repo being written, confirmed in that repo's section of
+the plan before applying; where git has no configured name, ask for it once
+rather than writing an empty holder.
 
 ## The security contact
 
-Question 6's answer fills `<REPO_URL>` in the hygiene pack's security file —
-the origin remote's web URL, no trailing slash, with the advisories page as
-the proposed default.
+Question 7 is **one round with one row per repo**, and each row's answer fills
+`<REPO_URL>` in the hygiene pack's security file for that repo — **that
+repo's** origin remote's web URL, no trailing slash, with the advisories page
+as the proposed default. A repo with no origin of its own gets no default and
+is asked on its row like any other.
 
-**Declining writes no file.** A repository with no private channel to point at
-is better off with none than with one naming a channel nobody watches, and
-that is the pack's own rule rather than a preference here.
+**Declining a row writes no file in that repo.** A repository with no private
+channel to point at is better off with none than with one naming a channel
+nobody watches, and that is the pack's own rule rather than a preference here.
 
 ## Copied as-is
 

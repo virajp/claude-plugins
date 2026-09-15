@@ -24,7 +24,10 @@ Four sources define it, and none of them is a history:
    entry. Judge the tree as it stands; do not ask how it got there. The root
    `.graphifyignore` is part of the current shape too — absent, or missing the
    vwf-standard excludes (`${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`), is one entry
-   like any other.
+   like any other. A config whose `enforcement:` block lacks `kept_files:` is
+   one entry as well: it gains `kept_files: {}` and the stamp is rewritten with
+   the rest, with no content to migrate, since nothing wrote that key before
+   `config_format` 18.
 2. **Resolve every unrecognised spelling through
    [format lineage](format-lineage.md)** before recording it as a gap. A tree
    written against an older format is usually *correct for that format* and

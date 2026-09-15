@@ -9,7 +9,7 @@ description: Bring a repo into vwf's format and keep it there. Step 0 resolves
   pass alone.
 argument-hint: "[reshape]"
 model: sonnet
-effort: high
+
 disable-model-invocation: true
 ---
 
@@ -18,7 +18,10 @@ disable-model-invocation: true
 Bring any repo — new, existing, or written against an older vwf format — into
 the shape the rest of the workflow reads. `setup` is the Phase-0 bootstrapper of
 `setup → product → architecture → design-system → blueprint → plan → execute`,
-and the only vwf command that onboards.
+and the only vwf command that onboards. It is also where a **pinned** stack is
+materialized: `/vwf:architecture` decides the slug, setup lands it, and **the
+materialize pass runs in every mode** — which is why `/vwf:architecture` comes
+back here when it is done.
 
 **The mode is resolved once, in Step 0, and never re-derived.** Everything after
 it branches on the named mode. There is no progress key and no resume state:
@@ -35,6 +38,7 @@ Read the one the step needs, not all of them.
 
 | Reference                                                      | Read it when                                                       |
 | -------------------------------------------------------------- | -------------------------------------------------------------------- |
+| [materialize pass](references/materialize.md)                  | every mode — landing the pinned stacks, and the absent axes        |
 | [onboard pipeline](references/onboard-pipeline.md)             | mode `onboard` — both sub-paths                                    |
 | [migrate pipeline](references/migrate-pipeline.md)             | mode `migrate`, and an old tree found under `onboard`              |
 | [topology detection](references/topology-detection.md)         | detecting or confirming topology, roles, platforms, stacks         |
@@ -58,7 +62,9 @@ Read the one the step needs, not all of them.
   and task library, the repo gates, the hygiene files — is `/vwf:init`'s. Setup
   checks for it and offers init; it never materializes a bundle itself. Setup
   is also the **only** way init is reached — Step 0's offer, or `reshape` —
-  since init is hidden from the `/` menu. **Never write a README by hand**
+  since init is hidden from the `/` menu. On a multi-repo product the shape is
+  **per repo**, and one init run reaches them all, so setup checks every repo
+  and still offers init once. **Never write a README by hand**
   either — `/vwf:readme` owns it, and setup only names it in the chain.
 - **Idempotent.** A migrate run reconciles only what drifted; a conforming tree
   yields an empty plan, and Step 0 routes it to `current` before that.
@@ -66,11 +72,18 @@ Read the one the step needs, not all of them.
 ## The `reshape` argument — the shape pass, alone
 
 `$ARGUMENTS` carries at most one word. With `reshape`, setup **skips the
-detection below entirely**: invoke `/vwf:init` — which surveys, shows its one
-plan and takes its own consents — print init's report verbatim, and **stop**.
-No mode fork, no validation, no stamp, no doctor, no commit; a re-shape never
-touches `.config/vwf.yaml`, because the spine below is a setup run's, and a
-user who wants both runs `/vwf:setup` again afterwards.
+detection below entirely**: invoke `/vwf:init` — which surveys **the base and
+every member**, shows its one plan and takes its own consents — print init's
+report verbatim, and **stop**. No mode fork, no validation, no stamp, no
+doctor, no commit; a re-shape never touches `.config/vwf.yaml`, because the
+spine below is a setup run's, and a user who wants both runs `/vwf:setup` again
+afterwards.
+
+A run of `/vwf:setup reshape` started **inside a member** is not a reshape of
+that member alone. init resolves the base per the membership asset
+(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`) and runs from there, so what
+gets reshaped is the product — the base and every member — whichever repo the
+user happened to be standing in.
 
 `/vwf:setup reshape` is the line `/vwf:doctor` prints for every repo-shape
 finding, so most runs of it arrive from a drift row and should act on exactly
@@ -78,34 +91,51 @@ what that row named.
 
 ## Step 0 — Resolve the mode
 
-**The shape check comes first, before the mode fork**, and it asks two things.
-First, is the shape **there**: the stack adapter's lockfile records all three
-unconditional repo slugs — `mise`, `repo-gates` and `repo-hygiene`
-(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). Named exactly, never
-constructed: a slug assembled from configuration is one that can silently
-resolve to nothing. Second, is it **current**: the four predicates under **"The
-repo shape against its baseline"** in `/vwf:doctor`'s stack-checks reference,
-on their four subjects — the pack versions the adapter lockfile records
-against what the adapter ships now, the registry's project ids behind the
-surfaces generated from them, the `develop`/`main` pair, and the toolchain
-manager's repo-name environment key. Read the artifacts that section reads
-and evaluate them **by it**: the predicates are doctor's and are deliberately
-not restated here, so the two can never drift apart. All three slugs recorded
-and all four predicates holding — say so in one line and read on.
+**The shape check comes first, before the mode fork**, and on a multi-repo
+product it asks its two questions of **every repo in the product**. Resolve the
+base per `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`, and take with it every
+member that base declares and that is present on this machine — the same set
+`/vwf:doctor` evaluates. A run started inside a member therefore checks the
+product rather than the one repo it is standing in, and an **absent** member is
+a blind spot, never a finding. On a single-repo product the set is one repo and
+everything below reads as it always did.
 
-**Otherwise the repo needs init, and setup offers it.** Any of the three slugs
-missing, the repo is **unshaped**: say what is absent. Any predicate failing,
-the repo is **behind its baseline**: name which, in the words doctor's rows
-use. Both reach the same offer — init is what lays the shape down and what
-brings it forward — and on a yes invoke `/vwf:init` and continue once it
-returns. init is **skill-invoked**: hidden from the `/` menu and called from
-here alone, so this offer and `reshape` above are the only two ways it is
-reached. A **decline** is a recorded deferral on the terms in
-[the onboard pipeline](references/onboard-pipeline.md), named with its unlock
-(`/vwf:setup reshape`, run whenever), and the run continues to the mode table.
-setup never materializes a bundle itself and never halts on an unshaped or
-drifted repo: the repo shape and the vwf format are two different things, and a
-repo can be onboarded into one without the other.
+First, is the shape **there**: in **each** repo of that set, the stack adapter's
+lockfile records all three unconditional repo slugs — `mise`, `repo-gates` and
+`repo-hygiene` (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). Named exactly,
+never constructed: a slug assembled from configuration is one that can silently
+resolve to nothing. Second, is it **current**: the six predicates under **"The
+repo shape against its baseline"** in `/vwf:doctor`'s stack-checks reference,
+evaluated **per repo** on that repo's own artifacts — the pack versions the
+adapter lockfile records against what the adapter ships now, the registry's
+project ids behind the surfaces generated from them, the `develop`/`main` pair,
+the toolchain manager's repo-name key against the repo's folder, the bytes of
+the pack-owned files the packs landed against the lock, marked positions
+spliced out, and the marked positions init fills in that same environment
+block. Read the artifacts that section reads and
+evaluate them **by it**: the predicates are doctor's and are deliberately not
+restated here, so the two can never drift apart. Every repo recording all
+three slugs and holding all six predicates — say so in one line, naming the
+repos checked, and read on.
+
+**Otherwise some repo needs init, and setup offers it — once, for the whole
+product.** Any of the three slugs missing in a repo, that repo is **unshaped**:
+say what is absent. Any predicate failing in a repo, that repo is **behind its
+baseline**: name which, in the words doctor's rows use. The offer fires when
+**any** repo in the set is unshaped or behind, and it names **which repos** and
+what each of them showed — a base that is current while one member is behind is
+still an offer, because the shape is per repo and the product is shaped only
+when all of them are. Both causes reach the same offer — init is what lays the
+shape down and what brings it forward — and on a yes invoke `/vwf:init`, which
+surveys the base and every member and shapes them in one run of its own, and
+continue once it returns. init is **skill-invoked**: hidden from the `/` menu
+and called from here alone, so this offer and `reshape` above are the
+only two ways it is reached. A **decline** is a recorded deferral on the terms
+in [the onboard pipeline](references/onboard-pipeline.md), named with its
+unlock (`/vwf:setup reshape`, run whenever), and the run continues to the mode
+table. setup never materializes a bundle itself and never halts on an unshaped
+or drifted repo: the repo shape and the vwf format are two different things,
+and a repo can be onboarded into one without the other.
 
 Read `.config/vwf.yaml`, then compare its `blueprint_format` and `config_format`
 against the shipped integers (`${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`, and the
@@ -135,9 +165,33 @@ pipeline once detection is confirmed. The two are one reconciliation at
 different elicitation depths — onboard elicits every decision, migrate carries
 most forward and maps the renames.
 
-**`current` reports and exits.** Name both stamps, say the repo is current, and
-print the chain below. Nothing re-walks the repo: that is
-`/vwf:doctor`'s job, and saying so is the whole report.
+**`current` reports and exits — after the materialize pass.** Name both stamps,
+say the repo is current, run [the materialize pass](#the-materialize-pass)
+below on the config already there, and print the chain with that pass's report.
+Nothing else re-walks the repo: that is `/vwf:doctor`'s job, and saying so is
+the whole report.
+
+## The materialize pass
+
+**Architecture decides; setup pins.** A slug on a stack axis is a decision
+`/vwf:architecture` made and wrote; landing it is setup's, and the pass that
+does it is [materialize](references/materialize.md) — read it there, in full,
+rather than reconstructing it here.
+
+It runs **once per run, in every mode**, on a `.config/vwf.yaml` that is
+already current: in `onboard` and `migrate` between the spine's steps 2 and 3
+below, and in `current` before that mode's report. `current` is not an
+exception to be optimized away — a repo `/vwf:architecture` has just written
+pins into resolves to exactly that mode, and skipping the pass there is
+skipping the whole handoff.
+
+In one paragraph, so a reader knows what the reference will say: setup groups
+the axes holding a slug the target repo's adapter lockfile does not name,
+dedupes by slug per repo, and invokes the adapter once per `(repo, slug)`,
+each landing behind the **adapter's own** consent line. A declined landing
+leaves the pin untouched and is reported. An `unresolved` axis is skipped
+silently. An **absent** axis is written `unresolved` and the run continues — a
+slug is never rewritten.
 
 ## The shared spine
 
@@ -156,6 +210,11 @@ point, since a stamp written before validation describes a tree nothing checked:
    write each member's `.config/vwf-membership.yaml`, per
    `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`; which members are on this machine is
    detected every run and never recorded.
+
+   **Then run [the materialize pass](#the-materialize-pass)**, before step 3 —
+   the config it reads and writes is the one just written, and a stack that
+   landed here is a stack the doctor gate below no longer reports as missing.
+
 3. **Run /vwf:doctor** over the repo — it checks the config just written
    against what the repo actually is. setup **records** what it reports and does
    not gate on most of it: a missing LSP plugin or an unbuilt harness capability
@@ -170,6 +229,17 @@ point, since a stamp written before validation describes a tree nothing checked:
    (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`), and never invent a template to
    get past it.
 
+   **A declined landing is the expected way to reach "pinned, not
+   materialized".** That finding is blocking, so it halts here and reverts the
+   stamp like any other — the honest outcome of a repo whose stack the user
+   chose not to land, with the pin left for `/vwf:setup` to offer again. A
+   decline in mode `current` never reaches this step at all: that mode reports
+   and exits with no stamp to revert, so the block is what `/vwf:doctor`
+   reports on demand and what the next spine run halts on. An `unresolved` axis
+   is the opposite case and **never** blocks: it is a degradation doctor
+   reports every run, and setup names its unlock (`/vwf:architecture`) and
+   finishes.
+
    **Two exceptions.** A **declined graph build** is a settled choice, not an
    unmet mandate — note it as a degradation and finish. A **declined `iac`
    extraction** recorded under `enforcement:` is the same: the finding stays, as
@@ -177,7 +247,7 @@ point, since a stamp written before validation describes a tree nothing checked:
    `/vwf:execute` halts on it.
 4. **Approval gate & commit.** Summarize everything created and updated, plus
    the recommendations, and wait for approval. On approval commit via
-   `/vwf:git-workflow` with a `chore(vwf):` or `docs:` message.
+   `/vwf:git-workflow` with an `ops:` or `docs:` message.
 5. **The graph offer.** Per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`, `setup` is the
    **only** vwf command that builds graphs. After the commit, if
    `graphify-out/graph.json` is missing and the CLI is on `PATH`, offer —
@@ -196,6 +266,12 @@ point, since a stamp written before validation describes a tree nothing checked:
    `/vwf:product` now. **setup runs none of them** — each
    resolves its own mode and reports what it did, which a gate here can only
    guess at on their behalf.
+
+   **`/vwf:architecture` comes back here when it is done** — it invokes
+   `/vwf:setup` in-session at the end of its own run, so the pins it just
+   decided are materialized by the pass above without the user remembering a
+   second command. Printing the chain is still what this step does; the return
+   trip is architecture's, not a gate here.
 
 ## Recommendations, never moves
 

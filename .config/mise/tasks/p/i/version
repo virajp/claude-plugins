@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+#MISE description="Bump the installer package version (no git tag)"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--minor" help="bump the minor version (default: patch)"
+#USAGE flag "--major" help="bump the major version (default: patch)"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/local"
+
+cd "$MISE_PROJECT_ROOT"
+
+if [[ "${usage_major:-false}" == "true" ]]; then
+  LEVEL="major"
+elif [[ "${usage_minor:-false}" == "true" ]]; then
+  LEVEL="minor"
+else
+  LEVEL="patch"
+fi
+
+print_header "Bumping ${LEVEL} version ..."
+
+CURRENT="$(node -p "require('./package.json').version")"
+
+# 13 and 17 are never issued as a version component, so the target is computed
+# BEFORE anything is written: `version_bump` is the plain result of the level and
+# `version_next` is that result stepped past a forbidden component at the SAME
+# level — `1.1.12` patched is `1.1.14`, `1.12.0` minored is `1.14.0`. Skipping
+# rather than refusing is what keeps `deps-update.yml`'s unattended monthly run
+# from stalling on a number.
+#
+# Computing first is what keeps this to ONE write. pnpm implements `version`
+# natively and refuses a dirty tree, so bumping and then bumping again to step a
+# number fails on the second call — unattended, in CI — and leaves the forbidden
+# version on disk.
+PLAIN="$(version_bump "${LEVEL}" "${CURRENT}")"
+VERSION="$(version_next "${LEVEL}" "${CURRENT}")"
+
+# --no-git-tag-version: only edit package.json; the change is committed by hand.
+pnpm version "${VERSION}" --no-git-tag-version
+
+if [[ "${VERSION}" != "${PLAIN}" ]]; then
+  version_skip_note "${PLAIN}" "${VERSION}"
+fi
+
+print_header "Version is now ${VERSION} — commit package.json to record it."

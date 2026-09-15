@@ -13,7 +13,7 @@ tree diagram is [`CLAUDE.md`](../../CLAUDE.md)'s and is not repeated here.
 **Two files are generated**, both projections of the same 2 plugin manifests and
 differing in exactly one field per entry — `source`. Only the **published** one
 is committed, so what users install is inspectable and diffable;
-`plugins:marketplace --check` asserts it matches a fresh generation.
+`p:plugins:marketplace --check` asserts it matches a fresh generation.
 
 `.claude-plugin/marketplace.json` is the **published** one, and it lives at the
 repo **root** because that is where Claude looks when this repo is added as a
@@ -23,16 +23,16 @@ which is what lets unreleased work sit on `develop`.
 `.dev-marketplace/.claude-plugin/marketplace.json` is **local authoring only**,
 **gitignored**, and never published. Every `source` is a repo-relative
 `./plugins/<name>`, resolved into the `.dev-marketplace/plugins/` staging
-directory the same run creates and `plugins:local` fills with `X.Y.Z+N` copies,
-so the authoring machine runs the working tree rather than the last release. It
-exists because this repo ships a workflow plugin whose author could not
-otherwise run the unreleased version of it.
+directory the same run creates and `p:plugins:local` fills with `X.Y.Z+N`
+copies, so the authoring machine runs the working tree rather than the last
+release. It exists because this repo ships a workflow plugin whose author could
+not otherwise run the unreleased version of it.
 
 **It is gitignored rather than committed**, which was the reverse of the plan's
 D1. Committing it would buy a fresh clone one command, at the price of a second
 file in the tree declaring the marketplace name `virajp-plugins` on the branch
 users read — a footgun that outweighs the convenience, since regenerating is
-`mise run plugins:marketplace`. The consequence is that `--check` has to tell
+`mise run p:plugins:marketplace`. The consequence is that `--check` has to tell
 **absent** (normal in CI and in a fresh clone) apart from **present but stale**
 (a real bug on a machine that uses it), which is what `MANIFESTS`'s `tracked`
 flag is for.
@@ -63,10 +63,10 @@ Note the three neighbours that read confusingly: `.claude-plugin/` is the
 published manifest, `.dev-marketplace/` is the local one, and `.claude/` is this
 repo's own skills, docs, agents and worktrees. None of them is `plugins/`.
 
-Setup and the refresh loop — `mise run plugins:local`, and the three measured
+Setup and the refresh loop — `mise run p:plugins:local`, and the three measured
 CLI facts that shape it — are [`dev-marketplace.md`](dev-marketplace.md).
 
-> **Authoring one:** the thirteen checker rules, the invocation frontmatter, the
+> **Authoring one:** the fourteen checker rules, the invocation frontmatter, the
 > plugin-root trap and the dprint exclusion live in
 > `.claude/skills/plugin-authoring/`, which auto-applies while you edit
 > `plugins/`.
@@ -117,13 +117,17 @@ marketplace, inventory and check in that order — freshness before validity
 stay untouched — npm allows one Trusted Publisher and validates the entry-point
 filename — and never in `site.yml`, which runs the website's own gate):
 
-Pre-commit also runs **`actionlint`** over `^\.github/workflows/`, which is not
-on this list because it is not a mise task and checks nothing under `plugins/`:
-the workflows are this repo's own, and a typo in one is otherwise discovered
-only by pushing it.
+Pre-commit also runs the repo's three tool-neutral gate hooks, none of which is
+on this list because none is a `p:` task: `format` and `lint` call
+`mise run code:format --fix` and `mise run code:lint --fix` with the staged
+files, `sec` calls `mise run code:sec --staged`. Every gate tool is inside those
+tasks and nowhere else — dprint and shfmt in `code:format`, shellcheck,
+actionlint and the house linter in `code:lint`, gitleaks in `code:sec`. That is
+where **`actionlint`** over `.github/workflows/` now lives: the workflows are
+this repo's own, and a typo in one is otherwise discovered only by pushing it.
 
-- **`plugins:marketplace`** — generates **both** marketplace manifests from the
-  2 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →
+- **`p:plugins:marketplace`** — generates **both** marketplace manifests from
+  the 2 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →
   `tags` and supplying what no manifest holds: the marketplace header, and the
   per-entry `category`, `strict` and `source`. It also creates the
   `.dev-marketplace/plugins/` staging directory the dev sources resolve into.
@@ -137,7 +141,7 @@ only by pushing it.
   narrowed down to. **There is no `--dev` flag**: both are written together
   because a flag is one more thing to forget, and a stale dev manifest fails as
   a plugin quietly serving yesterday's tree.
-- **`plugins:inventory`** — generates `plugins/stackgen/stacks/inventory.md`
+- **`p:plugins:inventory`** — generates `plugins/stackgen/stacks/inventory.md`
   from the stacks tree: every `<type>/<slug>/pack.yaml`, every bundle
   frontmatter, and the kind headings in `assets/kinds.md`. It exists because the
   pack, bundle and kind counts were typed into four prose files and drifted; the
@@ -150,40 +154,45 @@ only by pushing it.
   design and are skipped. **`--check`** is the same byte compare the marketplace
   task makes, run by pre-commit and `plugins.yml`, and `inventory.test.ts` pins
   it in vitest too.
-- **`plugins:check`** — validates the authored tree. Thirteen rules: manifest
-  name↔dir; dependencies resolving within the marketplace; hook scripts existing
-  and executable; **a pack's `config/` payload tier being materializable as-is**
-  (seven assertions in one rule: exec bit *and* a known shebang on every file
-  under `config/.config/mise/tasks/**`, because mise reports a 644 task as an
-  *unknown* one rather than a permission error and execs the file directly; the
-  same two on every `hooks/*.sh`, which the host execs from a bare path in
-  `settings.json`; the tier's root against the hygiene allowlist, whose two
-  allowed **directories** are `.config/` and `.github/`; a **CI workflow refused
-  inside `.github/`**, since a pack names the task CI runs and never the
-  workflow; every `config/.config/pre-commit.d/*.yaml` parsing with a top-level
-  `repos:` list, since `/vwf:init` concatenates them into a file no pack owns;
-  the gate pack's **whole** `config/.config/pre-commit-config.yaml` parsing on
-  the same terms, from the base end, since it is neither a fragment nor at the
-  tier's root and nothing reached it before; and every
-  `config/.config/vscode.d/*.jsonc` parsing as JSONC with only the three keys
-  `settings`, `nesting` and `extensions`, since init composes them into an
-  editor file no pack owns and a fourth key is dropped without a word);
-  **strict-YAML frontmatter** (every skill and agent a plugin ships, and every
-  `stacks/*/*/skills/*/SKILL.md` and `stacks/*/*/agents/*.md` a pack ships — the
-  larger half, and the half that actually lands in a user's repo; a pack's
-  `rules/*.md` is out, frontmatter being optional there); relative links under
-  `assets/examples/**`; **root-relative reference resolution** (every such
-  reference resolves inside the plugin that wrote it — in the files a pack
-  **lands** the rule stands aside, because rule 13 owns those on stricter terms
-  and one bad reference should be one finding); **agent cross-reference
-  resolution** in both directions (every role-shaped `` `token` `` in a plugin's
-  own prose names a real agent, and every declared agent is referenced at least
-  once — the two directions cover each other on a rename); the vwf
-  design-adapter contract (all **three** import skills present and
-  model-invocable); the vwf **stack-adapter** contract (both
-  `<plugin>-stack-menu` and `<plugin>-stack-template` present, each carrying an
-  explicit `disable-model-invocation: false` **and** a `user-invocable: false` —
-  an adapter is vwf's to call, not a user's to type — on every plugin keyworded
+- **`p:plugins:check`** — validates the authored tree. Fourteen rules: manifest
+  name↔dir **plus the two things the version itself must be** — plain semver,
+  and free of a 13 or 17 component, those two integers never being issued on any
+  version line this repo maintains; dependencies resolving within the
+  marketplace; hook scripts existing and executable; **a pack's `config/`
+  payload tier being materializable as-is** (seven assertions in one rule: exec
+  bit *and* a known shebang on every file under `config/.config/mise/tasks/**`,
+  because mise reports a 644 task as an *unknown* one rather than a permission
+  error and execs the file directly; the same two on every `hooks/*.sh`, which
+  the host execs from a bare path in `settings.json`; the tier's root against
+  the **landable** tier of the hygiene allowlist, whose two allowed
+  **directories** are `.config/` and `.github/` and whose sibling tier — the
+  root files vwf writes, `CLAUDE.md` and `mempalace.yaml` — no pack may land; a
+  **CI workflow refused inside `.github/`**, since a pack names the task CI runs
+  and never the workflow; every `config/.config/pre-commit.d/*.yaml` parsing
+  with a top-level `repos:` list, since `/vwf:init` concatenates them into a
+  file no pack owns; the gate pack's **whole**
+  `config/.config/pre-commit-config.yaml` parsing on the same terms, from the
+  base end, since it is neither a fragment nor at the tier's root and nothing
+  reached it before; and every `config/.config/vscode.d/*.jsonc` parsing as
+  JSONC with only the three keys `settings`, `nesting` and `extensions`, since
+  init composes them into an editor file no pack owns and a fourth key is
+  dropped without a word); **strict-YAML frontmatter** (every skill and agent a
+  plugin ships, and every `stacks/*/*/skills/*/SKILL.md` and
+  `stacks/*/*/agents/*.md` a pack ships — the larger half, and the half that
+  actually lands in a user's repo; a pack's `rules/*.md` is out, frontmatter
+  being optional there); relative links under `assets/examples/**`;
+  **root-relative reference resolution** (every such reference resolves inside
+  the plugin that wrote it — in the files a pack **lands** the rule stands
+  aside, because rule 13 owns those on stricter terms and one bad reference
+  should be one finding); **agent cross-reference resolution** in both
+  directions (every role-shaped `` `token` `` in a plugin's own prose names a
+  real agent, and every declared agent is referenced at least once — the two
+  directions cover each other on a rename); the vwf design-adapter contract (all
+  **three** import skills present and model-invocable); the vwf
+  **stack-adapter** contract (both `<plugin>-stack-menu` and
+  `<plugin>-stack-template` present, each carrying an explicit
+  `disable-model-invocation: false` **and** a `user-invocable: false` — an
+  adapter is vwf's to call, not a user's to type — on every plugin keyworded
   `vwf-stack-adapter`, **and** the keyword declared by every plugin shipping
   either skill — the same two-directions-cover-each-other idiom, since
   `stackgen` is now the only adapter left and dropping that one keyword would
@@ -197,8 +206,15 @@ only by pushing it.
   a `../` climb leaving the tree the file lands in, and a path into a sibling
   pack are each refused; a bare `<type>/<slug>` ref is the identifier vocabulary
   and stays legal, and the last three forms read `.md` only, with fenced blocks
-  blanked to their own line count). Those last two are the rules that report a
-  **line number**, being the two that fire on a sentence rather than a file.
+  blanked to their own line count); and **at most one default bundle per axis
+  per platform** (across `stacks/bundles/*.md`, grouped by `axis`, two
+  frontmatters carrying `default: true` — the entry vwf's architecture menu
+  preselects on a round — conflict when either declares no `platforms:` list or
+  their lists intersect, and the value is boolean; a conflict is a preselection
+  decided by file order, and the finding names both files plus the platform they
+  share, or the one that declares no list). The retired-vocabulary and
+  plugin-path rules are the two that report a **line number**, being the two
+  that fire on a sentence rather than a file.
 
   Two of those are worth the extra sentence. The technology-free guard bans vwf
   naming a concrete technology **only where the mention prescribes**, which is
@@ -210,7 +226,7 @@ only by pushing it.
   pointing at vwf's `delivery-pipeline.md` resolved to nothing at runtime. Both
   are in `.claude/skills/plugin-authoring/references/checks.md`, along with the
   eight rules that retired.
-- **`plugins:shellcheck`** — the shell gate over everything a pack ships as
+- **`p:plugins:shellcheck`** — the shell gate over everything a pack ships as
   shell, in **two groups with different arguments**. The task libraries and
   their `_scripts/*` run with `-x` and a source path, `-s bash`, and SC2034 /
   SC2154 disabled — right for files that source a colour library and read mise's
@@ -221,7 +237,7 @@ only by pushing it.
   over both. Its flags must agree with what the mise pack's own gate ships — a
   mismatch here rewrites a payload file into something the target repo rejects,
   which is how it first went wrong.
-- **`plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
+- **`p:plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed (the BSD-sed portability guarantee), for **both**
   package managers: each table runs in a temp dir seeded with the lockfile that
   selects pnpm or bun, so resolution is exercised alongside the rewrite. It runs
@@ -233,22 +249,42 @@ only by pushing it.
 - **`tsc --noEmit`** per TypeScript project — `installer/` and `scripts/`.
   Nothing emits, so `tsc` is only ever a checker, and there are no project
   references to walk.
-- **`site:*`** — the website's family, all under `.config/mise/tasks/site/` and
-  all run from `site/`: `site:dev` (the Astro dev server), `site:build`
-  (`astro build` then `pagefind --site dist`), `site:check` (the gate:
-  `astro check`, `site:build`, then `scripts/check-links.ts` in two passes —
+- **`p:site:*`** — the website's family, all under `.config/mise/tasks/p/site/`
+  and all run from `site/`: `p:site:dev` (the Astro dev server), `p:site:build`
+  (`astro build` then `pagefind --site dist`), `p:site:check` (the gate:
+  `astro check`, `p:site:build`, then `scripts/check-links.ts` in two passes —
   over `dist/**/*.html`, asserting every internal href resolves to a built file
   and every `#fragment` to an id in its target, and over the markdown mirror the
   build also emits, asserting every absolute site URL in `dist/**/*.md`,
   `llms.txt` and `llms-full.txt` resolves the same way and that each docs page
   carries exactly one markdown alternate link to a file that exists),
-  `site:icons` (rasterizes the committed favicon set from
+  `p:site:icons` (rasterizes the committed favicon set from
   `public/brand/vwf-favicon.svg`, run by hand when the mark changes and part of
-  no gate), `site:version` (bumps `site/package.json`, no tag) and
-  `site:release` (tags `site-v<version>` from `main` and watches `site.yml`).
-  None of them runs in `plugins.yml` or in pre-commit — `site.yml` owns them.
+  no gate), `p:site:version` (bumps `site/package.json`, no tag, **skipping past
+  a 13 or 17 component** — it computes the target first, stepping the bumped
+  component past the number, writes it in one call and prints what it skipped,
+  so `1.1.12` patched is `1.1.14`; it refuses before writing anything when the
+  level it was given cannot reach the forbidden component, as a patch bump never
+  clears a forbidden *minor*) and `p:site:release` (tags `site-v<version>` from
+  `main` and watches `site.yml`, **refusing** a version that carries such a
+  component before the tag name is built). None of them runs in `plugins.yml` or
+  in pre-commit — `site.yml` owns them.
 
-`plugins:check` is deliberately much smaller than the checker it replaced, and
+The 13/17 guard itself is four functions — `version_forbidden`,
+`version_skip_note`, `version_bump` and `version_next` — in
+**`.config/mise/tasks/_scripts/local`**, this repo's own sidecar beside the
+pack-owned `_scripts/helpers`. `version_bump LEVEL CURRENT` prints the plain
+result of the level; `version_next LEVEL CURRENT` prints that same result
+stepped past a forbidden component, and exits 1 without printing when the level
+it was given can never reach one. Five tasks source the sidecar on the line
+after they source `helpers`: `p:i:version` and `p:site:version` to skip,
+`p:i:release`, `p:site:release` and `p:plugins:release` to refuse. The split is
+the same one `/vwf:init` writes into a shaped repo — `helpers` is the pack's and
+is replaced on every reshape, the sidecar is the repo's and never is — and
+nothing a pack lands may source it. It carries a shebang and the exec bit, or
+the repo's own shell gate does not see it.
+
+`p:plugins:check` is deliberately much smaller than the checker it replaced, and
 smaller again than the Python task before that. Whole families of assertion
 became *unrepresentable* rather than merely unchecked — the two dependency lists
 kept identical by hand, marketplace registration in both directions, skill

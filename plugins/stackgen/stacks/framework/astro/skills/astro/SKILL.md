@@ -35,5 +35,6 @@ one a project is; read the per-mode reference once it is decided.
 | A prerendered site with some request-time routes | [Hybrid](references/hybrid.md) |
 | A browser-routed application in an Astro shell | [CSR](references/csr.md) |
 | Routes, content collections, markdown, `src/` layout | [Content and routing](references/content-and-routing.md) |
+| The head — title, description, canonical, icons, sitemap, JSON-LD | [Head](references/head.md) |
 | Anything about `dist/` — deploy, post-build steps | [Build output](references/build-output.md) |
 | Writing or wiring tests | [Testing](references/testing.md) |

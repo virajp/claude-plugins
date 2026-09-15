@@ -7,7 +7,7 @@ description: Create or update docs/blueprint/registry.yaml — the
   evidence quoted and corrected by MCQ; the interview is the fallback.
 argument-hint: "(no args; detects create vs update)"
 model: sonnet
-effort: high
+
 disable-model-invocation: false
 ---
 
@@ -160,6 +160,13 @@ a time, gathering for each:
 | `doc_unit`     | MCQ: `entity` / `page` / `module` (default by platforms)                             |
 | `platforms`    | Multi-select from the role's closed list — **every** project, see Platforms below    |
 
+**Propose the project's primary platform token as its `name`.** Where that
+token — `service`, `worker`, `webapp`, `site`, `cli`, `iac`, … — is unique
+within the repo the project lives in, offer it as the id; on a repo already
+shaped, seed the ids instead from the `p/<id>/` groups that repo already
+carries under `.config/mise/tasks/`, so a re-run of `/vwf:init` reports no
+"id source changed".
+
 Since format 16 the registry has **no `stack` field**: the concrete technology
 is realization, recorded in `.config/vwf.yaml` (see the stack menu below). The
 registry describes what the system *is*; config records what it is *built with*.
@@ -228,15 +235,32 @@ CLI/TUI question are in
 step, for every project.
 
 **The stack is a menu — elicited, and it lives in config, not the registry.** It
-is composed from **six independent axes** (project / backing / deploy / design /
-cicd per project, repo per repo), each elicited as its own round; the `design`
-and `cicd` pins are the per-project keys of the same name, since on those two
-axes the slug *is* the config value. The menus, what each axis records, and the
+is composed from **seven independent axes** (project / backing / deploy /
+design / cicd / stylesheet per project, repo per repo), each elicited as its own
+round; the `design`, `cicd` and `stylesheet` pins are the per-project keys of
+the same name, since on those three axes the slug *is* the config value. The
+stylesheet round runs **only for a project whose registry entry declares a
+`site` or a `webapp` platform**, and it runs **after** the design round — the
+tokens are the contract and the stylesheet is how they are realized, so the
+order is not arbitrary. The menus, what each axis records, and the
 recording rules are in [the stack menu](references/stack-menu.md) — read it
 before eliciting any of them. Two rules hold whatever the answers are: vwf
-ships **no default and no recommended template**, and **every project gets a
-written `stack` block**, because that block is what `/vwf:doctor` checks the
-repo against and it cannot check what was never recorded.
+ships **no default and no recommended template** — the one preselection it
+honours is an entry the adapter's menu payload flags `default: true`, among the
+entries offered on that round, which is highlighted, never assumed — and
+**every project gets a written `stack` block**, because that block is what
+`/vwf:doctor` checks the repo against and it cannot check what was never
+recorded.
+
+**You record the decision, and only the decision.** What this step writes is a
+slug — or `unresolved` where the user defers — into
+`projects.<name>.stack.template` in `.config/vwf.yaml`. Nothing is materialized
+here: no template is landed, no adapter is asked for one, and no repo tree is
+touched by the pick. The repo a pin will be materialized **into** is the member
+whose `members:` entry lists this project — the membership asset
+(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`); a project no member lists is
+the base repo's. Landing it there, once per (repo, slug), is `/vwf:setup`'s
+materialize pass — which Step 7 hands off to.
 
 The stack never reaches `docs/blueprint/`. That is not a convention the authors
 have to keep — it is what the registry's shape enforces, and it is why a flow
@@ -276,6 +300,14 @@ defaults, not enforced standards, but a core deferral is a recorded,
 production-blocking exception rather than a silent skip. On an update run,
 walk only foundations not yet decided — never re-litigate a recorded
 selection.
+
+**Accepting audit pins a store.** Audit is the one foundation on that walk with
+a backing half. When it is accepted or adapted, add `audit-store` to the
+`capabilities:` of the console project — the one carrying `operator-rbac` — as
+well as recording the `audit:` cross-cutting token: the token says what is
+recorded, the capability says where it lands. It is a `B` token, so a console
+that declares it and pins nothing is `/vwf:doctor` §5's existing non-blocking
+finding, not a halt here.
 
 **Metrics cross-check.** After the walk, when `docs/blueprint/product.md`
 exists, check its goals' `Measured via:` lines against the observability
@@ -331,6 +363,9 @@ per-project `design` (screen-platform projects) and `cicd` keys and the repo-lev
 `repo.stack`. The writer never touches config, and never sees a stack — that
 separation is what keeps the blueprint vendor-free.
 
+Writing those keys is the **whole** of what this command does about the stack.
+Materialization is `/vwf:setup`'s, per Step 3b; Step 7 invokes it.
+
 ---
 
 ## Step 6 — Sync-Verify (inline)
@@ -375,8 +410,10 @@ Once the writes are confirmed, read both yourself. Check:
   template one ships (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`). A token or pin
   outside that is a **halt**, not a recorded value, and `template: custom` is
   retired. A flat list, an absent block, or a legacy `enforcement.stacks` block
-  is drift — migrate it. Every `enforcement.rules` entry names a known rule and
-  carries a reason.
+  is drift — migrate it. Every entry **under `enforcement.rules`** names a known
+  rule and carries a reason. That is the only child of `enforcement:` this check
+  reads: `kept_files` is keyed by path rather than by rule id, is `/vwf:init`'s
+  to write, and is not checked here.
 - No dependency cycle: the `depends_on` edges form a DAG.
 
 **On a finding:** surface it to the user, ask for the missing information, then
@@ -406,12 +443,29 @@ The parent pipeline commits via /vwf:git-workflow; do not double-commit.
 
 **Otherwise (standalone invocation):** commit via `/vwf:git-workflow`.
 
-Commit message format — use `docs(architecture):` prefix, imperative mood,
-lowercase, under 72 characters:
+Commit message format — a **bare `docs:`** prefix, no scope, imperative mood,
+lowercase, under 72 characters, with the subject naming architecture:
 
 ```text
-docs(architecture): create system architecture doc
-docs(architecture): add worker project to registry
-docs(architecture): update service capabilities — add realtime-location
-docs(architecture): reconcile registry after ride entity launch
+docs: architecture — create system architecture doc
+docs: architecture — add worker project to registry
+docs: architecture — update service capabilities, add realtime-location
+docs: architecture — reconcile registry after ride entity launch
 ```
+
+**Then hand off to `/vwf:setup`.** After the commit lands, invoke `/vwf:setup`
+in-session — the Skill tool, the way `/vwf:setup` invokes `/vwf:init` — and
+continue once it returns. The reason is Step 3b's: this command records pins and
+materializes nothing, so every slug just decided is still a decision with no
+artifact behind it, and setup's materialize pass is what lands each one, per
+(repo, slug), in the repo the project belongs to. Setup also re-stamps, which is
+why running it after a config write rather than before is the useful order.
+
+Setup is **idempotent on a repo it just stamped**: a run that finds every pinned
+axis already materialized and both stamps current proposes no landing and
+rewrites nothing, so the handoff costs a pass and never a second consent. Under
+`multi-repo` it reaches every member, so one invocation covers the whole product
+however many repos the pins spread across.
+
+Skip the handoff in the sub-step case above — the parent pipeline owns what
+runs next, exactly as it owns the commit.

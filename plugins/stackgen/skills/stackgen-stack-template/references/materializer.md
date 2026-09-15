@@ -11,8 +11,10 @@ to a repo, and every write it makes is consent-gated and committed once.
   output for that component (an in-memory pack in the same shape —
   `pack.yaml` fields including the classification, conventions prose,
   artifacts).
-- The target repo root — the current repo by default; in a multi-repo
-  product the caller may have named a member repo instead.
+- The target repo root — the current repo by default, or the repo the
+  invocation's `repo: <path>` line names, a path relative to the current
+  repo's root. Every write below, and the lockfile, resolve under that
+  root: read "the repo" throughout as that repo.
 
 ## Steps
 
@@ -69,27 +71,34 @@ to a repo, and every write it makes is consent-gated and committed once.
        costs the task and never publishes one under a name nobody meant.
        The lockfile records the **landed** path, not the authored one.
      - **A root path must be on the allowlist.** Only `.gitignore`,
-       `.editorconfig`, `.gitattributes`, `LICENSE`, `SECURITY.md`,
-       `readme.md`, `CLAUDE.md`, `fnox.toml`, `eslint.config.mjs`,
-       `wrangler.jsonc`, `dprint.json`, `.npmrc`, `CONTRIBUTING.md`,
-       `.graphifyignore`, `.github/` — never `.github/workflows/` — and a
-       language-mandated manifest or lockfile may land at the repo root
-       (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). Any other root
-       path in a `config/` tree is a **pack authoring error**: halt the
-       landing set, name the pack and the path, and write nothing. This is
-       the materializer's own assertion because a pack author is the only
-       one who can fix it and the plan is the last place anyone would read
-       it. `readme.md` and `CLAUDE.md` are on the list because a shaped
-       repo has them, not because a pack may ship them — no pack may, and
-       CLAUDE.md is separately out of scope below. `wrangler.jsonc` is on
-       it because the deploy tool that reads it discovers its config only
-       at the root, and the three Cloudflare deploy packs ship one
-       (`workers-static-assets`, `workers-ssr`, `containers`).
+       `.graphifyignore`, `.editorconfig`, `.gitattributes`, `.npmrc`,
+       `LICENSE`, `SECURITY.md`, `CONTRIBUTING.md`, `readme.md`,
+       `fnox.toml`, `eslint.config.mjs`, `dprint.json`, `wrangler.jsonc`,
+       `renovate.json` and the directory `.github/` — never
+       `.github/workflows/` — may land at the repo root
+       (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). That doctrine's
+       list is what may **sit** at a shaped root, and it has a second tier
+       nothing here ever lands: `CLAUDE.md` and `mempalace.yaml` are
+       vwf's, so a pack shipping either is refused like any other
+       unallowlisted path. A language's manifests and lockfiles are not on
+       the list at all. Any other root path in a `config/` tree is a
+       **pack authoring error**: halt the landing set, name the pack and
+       the path, and write nothing. This is the materializer's own
+       assertion because a pack author is the only one who can fix it and
+       the plan is the last place anyone would read it. `readme.md` is on
+       the landable tier because a shaped repo has one, not because a pack
+       may ship it — no pack may, and `CLAUDE.md` is separately out of
+       scope below. `wrangler.jsonc` is on it because the deploy tool that
+       reads it discovers its config only at the root, and the three
+       Cloudflare deploy packs ship one (`workers-static-assets`,
+       `workers-ssr`, `containers`).
        The five that joined on 2026-09-06 are there for that one reason
        too — the tool reading each discovers it at the root and cannot be
-       pointed elsewhere — and `dprint.json` is a **shim** whose only
-       content is `extends` into `.config/`, exactly as
-       `eslint.config.mjs` is.
+       pointed elsewhere — as is `renovate.json`, which joined on
+       2026-09-10 because Renovate's config discovery reaches the root,
+       `.github/` and `.gitlab/` and never `.config/`. `dprint.json` is a
+       **shim** whose only content is `extends` into `.config/`, exactly
+       as `eslint.config.mjs` is.
      - **A `.config/pre-commit.d/<pack>.yaml` fragment lands as a file and
        stops there.** It is an ordinary landing-set member with an
        ordinary lockfile entry; merging the fragments into
@@ -156,7 +165,9 @@ to a repo, and every write it makes is consent-gated and committed once.
    outside the repo, handled at its own consent line in step 3b.
 
 2. **Collision check, against the lockfile.** Any target path that exists
-   but is **not** in `.claude/stackgen/lock.yaml` is the repo's own — a
+   but is **not** in the target repo's own
+   `.claude/stackgen/lock.yaml` — never a sibling repo's — is that
+   repo's own file: a
    conflict listed for the user to resolve, never a write. Anything not in
    the lockfile is not stackgen's to touch.
 
@@ -169,10 +180,25 @@ to a repo, and every write it makes is consent-gated and committed once.
 
 3. **The dry-run consent gate.** Present the full landing set as a plan —
    every path, created or conflicting, and (for generation) the reviewer's
-   clean verdict — and ask before writing anything. The user may deselect
-   artifacts; the template entry itself is not deselectable (it is what the
-   pin means). Declined → nothing is written, the pin stays unresolved, and
-   the caller is told so.
+   clean verdict beside the **reputation table** — and ask before writing
+   anything. The user may deselect artifacts; the template entry itself is
+   not deselectable (it is what the pin means). Declined → **nothing is
+   written at all**, the caller's pin is left exactly as it was — this
+   skill never rewrites a pin, and a decline is not a downgrade — and the
+   caller is told the slug is pinned but not materialized. Reporting the
+   decline is the caller's, and the repo's unmaterialized state is what
+   `/vwf:doctor` reports until a later run lands it.
+
+   **The reputation table is shown whole.** The generator vetted every
+   concrete third-party name the component emits through
+   `stackgen-reputation` ([the generator](generator.md), step 4); show
+   every row, and call each `warn` row out in one line of its own — the
+   name, the signal, and its source — so the user consents to a warned
+   name knowingly rather than by scrolling past it. **A gate never shows a
+   `block` row**: a block halted the component upstream, before anything
+   reached this plan, and the user picked the replacement there. A `block`
+   row that does reach the gate is a defect in the pipeline to report,
+   never a choice to offer — halt and say so.
 
    **Hook wiring is its own consent line.** A hook script is a file (the
    list above); the `hooks` entry that wires it lives in
@@ -202,11 +228,12 @@ to a repo, and every write it makes is consent-gated and committed once.
 
    **MCP wiring is its own consent line too**, on the same terms. A
    component that needs a server declares it as `mcp_servers:` in its
-   `pack.yaml` (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) — the
-   `design-tool` packs are the case that needs it — and those entries are
-   written into the **project's `.mcp.json`**, never a plugin manifest.
-   Present the exact server keys as a separate, individually skippable
-   item. A consented edit **merges, never owns**: only the keys stackgen
+   `pack.yaml` (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) —
+   `design-tool/claude-design` and `capability-provider/notion` are
+   the two that do today — and those entries are written into the
+   **project's `.mcp.json`**, never a plugin manifest. Present the
+   exact server keys as a separate, individually skippable item. A
+   consented edit **merges, never owns**: only the keys stackgen
    added are written, and they are recorded under the lockfile's
    `mcp_servers` so sync and removal touch nothing else. Declined leaves
    the component's skills landed and says the tool will be unreachable —
@@ -265,6 +292,13 @@ to a repo, and every write it makes is consent-gated and committed once.
    git-workflow skill when present; plain `git add <paths>` + a conventional
    commit otherwise — never `git add -A`). The commit is what makes the
    output repo-owned: collaborators pull files, not a plugin obligation.
+
+   **The commit is made in the target repo, and in no other.** Where that
+   repo is a submodule of the caller's base repo, the gitlink the commit
+   moves is left **unstaged for the caller** — say so in the return. The
+   materializer never commits in two repos: a base-repo commit is the
+   caller's own git pass, and making one here would land a gitlink the
+   user never saw in a plan.
 
    **Preserve the mode when writing a `config/` file, and record it.**
    Everything under `.config/mise/tasks/**` lands **executable (755)**.

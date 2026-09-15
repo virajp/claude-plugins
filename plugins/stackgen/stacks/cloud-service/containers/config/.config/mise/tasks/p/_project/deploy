@@ -8,9 +8,12 @@
 # THIS FILE SHIPS UNDER `p/_project/` AND MUST BE RENAMED.
 #
 # `_project` is a MARKED POSITION, not a task group. The command that pins this
-# stack renames the directory to the project's registry id, so this becomes
-# `p/<id>/deploy` and runs as `p:<id>:deploy` — the same id `setup:all`'s member
-# flags and the `setup-<id>` shell aliases use.
+# stack renames the directory to the project's id, so this becomes
+# `p/<id>/deploy` and runs as `p:<id>:deploy`, where `<id>` is THE PROJECT'S ID
+# — the group the materializer names when it lands this file. `REPO_NAME` is a
+# different token, the repo's own folder name, and nothing here reads it.
+# (`setup:all`'s member flags and the `setup-<slug>` shell aliases are a third,
+# named for member REPOS, never for a project id.)
 #
 # The underscore is doing two jobs. `config/_<name>/` at the TOP of a pack's
 # config tier is pack-private and never copied; this is nested well below that,

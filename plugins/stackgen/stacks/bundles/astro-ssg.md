@@ -2,12 +2,13 @@
 name: Astro (SSG)
 axis: project
 kind: language-bundle
+default: true
 components:
 - language/typescript@0.1.0
-- package-manager/pnpm@0.1.0
+- package-manager/pnpm@0.2.1
 - toolchain-gate/tsconfig@0.1.0
-- toolchain-gate/eslint@0.1.0
-- framework/astro@0.1.0
+- toolchain-gate/eslint@0.2.0
+- framework/astro@0.2.0
 - framework/react@generated
 platforms:
 - site
@@ -25,7 +26,8 @@ browser, at the cost of that call being public; a project that owns an API
 contract is `fullstack`, and one that must read the request before it can
 answer is [`astro-hybrid`](astro-hybrid.md) or [`astro-ssr`](astro-ssr.md)
 instead. An app whose state lives in the browser behind one shell page is
-[`astro-csr`](astro-csr.md).
+[`astro-csr`](astro-csr.md). This bundle is the entry a `site` project's
+architecture round preselects; its three siblings are picked deliberately.
 
 **What Astro is, and how its modes differ, is the `framework/astro` pack's
 doctrine** — this bundle does not restate it. What the bundle pins is the mode:

@@ -2,8 +2,8 @@
 
 ## Rules
 
-- ALWAYS ask user before running an `i:release`, `plugins:release` or
-  `site:release` task
+- ALWAYS ask user before running a `p:i:release`, `p:plugins:release` or
+  `p:site:release` task
 - **Docs ship with the change.** Any change to plugin behavior must reconcile
   `readme.md`, this file, and the manual under `site/src/content/docs/` in the
   same commit — stale docs are more harmful than no docs
@@ -37,7 +37,7 @@ project-specific fact there, not here:
 
 The two plugin homes are path-scoped skills rather than nested CLAUDE.md files
 on purpose: `plugins/<name>/` is the installed shape, so a file there ships to
-every user and is scanned by `plugins:check`'s prose rules. The installer and
+every user and is scanned by `p:plugins:check`'s prose rules. The installer and
 site trees are not shipped (npm publishes `bin/` alone, and the site deploys
 only its build output), so their context can sit in place.
 
@@ -46,9 +46,11 @@ only its build output), so their context can sit in place.
 Each row below is loaded **on demand** — follow the link when you need more than
 the summary here. The `.claude/skills/` rows also auto-apply the moment you edit
 the tree they govern; `release` is a slash command; a change to this repo is
-planned with `/vwf:change-plan` and run, in a fresh session, with
-`/vwf:change-execute <folder>` — each plan folder carries this repo's gate
-lines, `mise run plugins:local` as a `run` step and `/release` as an `ask` step.
+planned with `/vwf:change-plan`, which **commits and pushes the approved
+folder** on the branch it was planned on, and run, in a fresh session, with
+`/vwf:change-execute <folder>`, which refuses a folder that is not on that
+branch — each plan folder carries this repo's gate lines,
+`mise run p:plugins:local` as a `run` step and `/release` as an `ask` step.
 
 | Read                                                         | For                                                                                                                                                                                                                      |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -60,7 +62,7 @@ lines, `mise run plugins:local` as a `run` step and `/release` as an `ask` step.
 | [`site/CLAUDE.md`][scl]                                      | the website — the tree, the link rule, the gate, the release model, the design source, traps                                                                                                                             |
 | [`.claude/skills/vwf-plugin/`][vwf]                          | vwf's own shape — skills, agents, assets, hooks, adding a skill, the docs tree it maintains                                                                                                                              |
 | [`.claude/skills/stackgen-plugin/`][sg]                      | stackgen's own shape — the dispatch rule, packs and bundles, where output lands, consent                                                                                                                                 |
-| [`.claude/skills/plugin-authoring/`][auth]                   | the thirteen checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions                                                                                                                          |
+| [`.claude/skills/plugin-authoring/`][auth]                   | the fourteen checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions                                                                                                                          |
 | [`.claude/skills/release/`][rel]                             | the release ritual, the note format, the CI facts that make a failed publish legible                                                                                                                                     |
 | [`site/src/content/docs/plugins/vwf.md#vwfchange-plan`][chg] | planning a change to this repo with the vwf pair — the interview, the folder; running it is [`#vwfchange-execute`][chge] — waves, the gate, after-landing steps; the how-to is [`how-to/operate/ad-hoc-change.md`][chgh] |
 
@@ -108,10 +110,10 @@ site/dist/                 gitignored build output — deployed on a site-v* tag
 **Two files are generated**, both projections of the same 2 plugin manifests and
 differing in exactly one field per entry — `source`:
 
-| File                                               | Is                                                                                                                                                                                                                |
-| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.claude-plugin/marketplace.json`                  | **published** — what users read from `main`. `git-subdir` at a per-plugin tag, so a merge ships nothing until `plugins:release` cuts it                                                                           |
-| `.dev-marketplace/.claude-plugin/marketplace.json` | **local authoring only**, gitignored and never published. Repo-relative sources into `.dev-marketplace/plugins/`, the staged copies `plugins:local` writes under `X.Y.Z+N`, so this machine runs the working tree |
+| File                                               | Is                                                                                                                                                                                                                  |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.claude-plugin/marketplace.json`                  | **published** — what users read from `main`. `git-subdir` at a per-plugin tag, so a merge ships nothing until `p:plugins:release` cuts it                                                                           |
+| `.dev-marketplace/.claude-plugin/marketplace.json` | **local authoring only**, gitignored and never published. Repo-relative sources into `.dev-marketplace/plugins/`, the staged copies `p:plugins:local` writes under `X.Y.Z+N`, so this machine runs the working tree |
 
 The dev marketplace is what lets the toolkit be **used before it is published**
 — without it, the author runs the last release and a plugin edited today reaches
@@ -136,44 +138,65 @@ trigger surface must stay untouched, and never in `site.yml`, which is the
 website's); the first five also run locally via pre-commit, with marketplace,
 inventory and check in that order — freshness before validity:
 
-- **`plugins:marketplace`** — generates **both** marketplace manifests from the
-  2 plugin manifests, plus the `.dev-marketplace/plugins/` staging directory the
-  dev sources resolve into; **`--check`** fails if the committed file differs,
-  or if that path is the retired symlink.
-- **`plugins:inventory`** — generates `plugins/stackgen/stacks/inventory.md`
+- **`p:plugins:marketplace`** — generates **both** marketplace manifests from
+  the 2 plugin manifests, plus the `.dev-marketplace/plugins/` staging directory
+  the dev sources resolve into; **`--check`** fails if the committed file
+  differs, or if that path is the retired symlink.
+- **`p:plugins:inventory`** — generates `plugins/stackgen/stacks/inventory.md`
   from the stacks tree, so no pack, bundle or kind count is ever typed by hand;
   **`--check`** fails if the committed file differs. Generation itself fails a
   bundle whose `<type>/<slug>@<version>` pin is malformed, names no pack, or
   pins a version that pack no longer carries — `@generated` refs name no pack by
   design and are skipped.
-- **`plugins:check`** — validates the authored tree, thirteen rules. Rule 11 is
+- **`p:plugins:check`** — validates the authored tree, fourteen rules. Rule 1
+  covers the manifest: `name` agreeing with the directory, and the `version`
+  being plain semver **and** free of a 13 or 17 component — those two integers
+  are never issued on any version line this repo maintains, and it is the
+  component that counts, so `1.13.0` fails where `1.130.0` passes. Rule 11 is
   the widest: it walks a stackgen pack's whole `config/` payload tier — seven
   assertions. Exec bit and shebang on every task file, exec bit and shebang on
-  every shipped hook script, the `config/` root against the hygiene allowlist
-  (whose two allowed directories are `.config/` and `.github/`), a CI workflow
-  **refused** inside `.github/`, every `pre-commit.d/*.yaml` parsing with a
-  top-level `repos:` list, the gate pack's whole `pre-commit-config.yaml`
-  parsing on the same terms, and every `vscode.d/*.jsonc` parsing as JSONC with
-  only the three keys `/vwf:init` composes. Rule 13 is the newest: it refuses a
-  plugin-relative citation in anything a pack **lands** — the token, a bare
-  `assets/…` path, a `../` climb out of the tree the file lands in, or a path
-  into a sibling pack — since that file is copied into a repo with no plugin,
-  where each resolves to nothing silently.
-- **`plugins:shellcheck`** — the shell gate over everything a pack ships as
+  every shipped hook script, the `config/` root against the **landable** tier of
+  the hygiene allowlist (whose two allowed directories are `.config/` and
+  `.github/`; the list's other tier is the root files vwf writes, which may sit
+  at a shaped root and which no pack may land), a CI workflow **refused** inside
+  `.github/`, every `pre-commit.d/*.yaml` parsing with a top-level `repos:`
+  list, the gate pack's whole `pre-commit-config.yaml` parsing on the same
+  terms, and every `vscode.d/*.jsonc` parsing as JSONC with only the three keys
+  `/vwf:init` composes. Rule 13 refuses a plugin-relative citation in anything a
+  pack **lands** — the token, a bare `assets/…` path, a `../` climb out of the
+  tree the file lands in, or a path into a sibling pack — since that file is
+  copied into a repo with no plugin, where each resolves to nothing silently.
+  Rule 14 is the newest: across `stacks/bundles/*.md`, at most one bundle per
+  axis **per platform** carries `default: true` — the entry vwf's architecture
+  menu preselects on a round — and the value is boolean. Two flagged bundles on
+  one axis conflict when either declares no `platforms:` list (it is offered on
+  every round of the axis) or their lists intersect; that is a preselection
+  decided by file order, and the finding names both files plus the platform they
+  share, or the one that declares no list. Disjoint platform lists are fine —
+  one default per platform.
+- **`p:plugins:shellcheck`** — the shell gate over everything a pack ships as
   shell: `shellcheck -x` plus `shfmt -d` over the pack task libraries and their
   `_scripts/*`, and a second pass over `hooks/*.sh` with no flags, since a hook
   lands without its helper library beside it and may declare `sh`.
-- **`plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
+- **`p:plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed, for both package managers.
 - **`vitest run`** — the `scripts/` and `installer/` suites.
 - **`tsc --noEmit`** per TypeScript project — `installer/` and `scripts/`.
-- **`site:check`** — the website's gate: `astro check`, `site:build` (Astro plus
-  the pagefind index), then the link checker over `site/dist/**/*.html` and the
-  markdown mirror it also emits (`dist/**/*.md`, `llms.txt`, `llms-full.txt`,
-  plus each page's markdown alternate link). Runs in `site.yml`, not
-  `plugins.yml`, and not in pre-commit. Beside it: **`site:dev`**,
-  **`site:build`**, **`site:icons`** (rasterizes the committed favicon set, by
-  hand when the mark changes), **`site:version`** and **`site:release`**.
+- **`p:site:check`** — the website's gate: `astro check`, `p:site:build` (Astro
+  plus the pagefind index), then the link checker over `site/dist/**/*.html` and
+  the markdown mirror it also emits (`dist/**/*.md`, `llms.txt`,
+  `llms-full.txt`, plus each page's markdown alternate link). Runs in
+  `site.yml`, not `plugins.yml`, and not in pre-commit. Beside it:
+  **`p:site:dev`**, **`p:site:build`**, **`p:site:icons`** (rasterizes the
+  committed favicon set, by hand when the mark changes), **`p:site:version`**
+  and **`p:site:release`**.
+
+Beside them the local gate runs **three tool-neutral hooks** — `format`, `lint`
+and `sec` — each of which calls a mise task (`code:format --fix`,
+`code:lint --fix`, `code:sec --staged`) rather than a tool. dprint, shfmt,
+shellcheck, actionlint, the house linter and gitleaks are configured **once**,
+inside those tasks; no hook names a binary. This repo takes the same shape the
+mise pack ships, so its own commits prove the hook-to-task path.
 
 What each rule asserts, and what the checker deliberately no longer checks, is
 in [`repo-shape.md`][repo].
@@ -184,7 +207,7 @@ in [`repo-shape.md`][repo].
   `site/dist/`, `site/.astro/` and the per-package `dist/` are gitignored. The
   published manifest is meant to be diffed in review; a bundle diff is noise,
   and a second committed file declaring the marketplace name `virajp-plugins` is
-  a footgun on the branch users read. So `plugins:marketplace --check` reports
+  a footgun on the branch users read. So `p:plugins:marketplace --check` reports
   an **absent** dev manifest as not applicable — the normal state in CI and in a
   fresh clone — and a **present but stale** one as a failure.
 - **`claude plugin marketplace add` needs a path that looks like one.**
@@ -193,9 +216,11 @@ in [`repo-shape.md`][repo].
 - `CLAUDE.md`, `installer/CLAUDE.md`, `site/CLAUDE.md` and `readme.md` **are**
   dprint-formatted, so widening one table cell re-pads every row.
   `plugins/**/*.md` is **not** formatted — match the surrounding fold width by
-  hand. `**/*.astro` **is** dprint's, via the markup plugin, and is excluded
-  from the linter and from its pre-commit argument list: the linter has no Astro
-  parser.
+  hand. `**/*.astro` **is** dprint's, via the markup plugin, and is ignored by
+  the linter in `.config/linter.yaml`: the linter has no Astro parser. There is
+  no pre-commit argument list to exclude it from any more — the `lint` hook
+  calls `code:lint`, which runs the house linter over the whole tree, so every
+  linter exclusion lives in `.config/linter.yaml` and nowhere else.
 - **`plugins/*/stacks/*/*/config/` is excluded whole, and the reason is not
   style.** That tree is **payload**: it is copied byte-for-byte into a target
   repo, where the gate pack's own dprint config formats it — and that config
@@ -228,20 +253,48 @@ The workflow runs `setup` → `product` → `architecture` → `design-system` �
 `init` is no longer a command in that line: since 2026-09-06 it is
 **skill-invoked**, hidden from the `/` menu and reached only from inside `setup`
 — Step 0's offer, or `/vwf:setup reshape`, which runs the shape pass alone.
-`init` shapes the **base repo** — the config layout, the task vocabulary, the
-gates, the hygiene files — from stackgen's three unconditional bundles, asks six
-questions (the second confirming every project id, its slug and the source the
-name came from, before any `p:<slug>:*` group, alias or `REPO_NAME` is written),
-and closes with a consent-gated git pass (the first commit, the `develop`/`main`
-pair, the forge default); `setup` then sets up **vwf** in it, and offers `init`
-when the shape is **missing or drifted**, on the four baseline predicates
-`/vwf:doctor` owns. **Everything up to `blueprint` is done in full before
-planning** — `plan` hard-halts on a partial coverage stamp. The ad-hoc pair
-`change-plan` → `change-execute` sits **beside** that line rather than in it: it
-plans and runs work with no blueprint slice behind it — tooling, CI, docs, a
-refactor, a tree the blueprint does not describe — reads neither the blueprint
-nor the registry, and gates on the commands its own plan folder names. The
-ordering gates, the skill and agent tables, how to add a skill and pick its
+`init` shapes the **base repo and every member repo the product has** — the
+config layout, the task vocabulary, the gates, the hygiene files — from
+stackgen's three unconditional bundles, resolving the members itself as the
+union of `.gitmodules` and the config's `members:` list, surveying all of them
+at once and applying **one plan with a section per repo on one consent**,
+members first so the base commits its gitlinks current. It asks seven questions
+(the first naming each new repo's folder, which is what fills `REPO_NAME`; the
+second confirming every project id, its slug and the source the name came from —
+the registry, a sub-project directory, or the project's platform token — grouped
+by repo, before any `p:<slug>:*` group or commit scope is written; the fifth
+asking which agent plugins this product requires, seeded by the plugin task's
+own inventory mode and written into that task's two marked positions), and
+closes with a consent-gated git pass (the first commit, the `develop`/`main`
+pair, and the landing model it writes to `MERGE_MODEL` — it never touches the
+forge's own settings, which a maintainer sets once by hand per the hygiene
+pack's `CONTRIBUTING.md`). The aggregator's member flags and the `setup-<slug>`
+aliases are named for the **member repos**, never for a project id. On an
+existing repo it **adopts rather than flattens**: an unmapped helper function
+moves to a repo-owned `_scripts/local` sidecar, a task no pack ships is kept and
+listed, and a pack-owned file whose **content** diverged is offered as
+replace-or-keep — content being what survives two tests, the hash against the
+lock and then a splice of every marked position's current value into the pack's
+payload, so a file diverging only inside those positions is never offered and
+the owning pass shows the change instead. A keep covers that content and never a
+marked position's value, and is recorded under `enforcement.kept_files` in the
+**base's** `.config/vwf.yaml`, keyed by the member path as prefix, the one key
+`init` writes into `.config/vwf.yaml`. `setup` then sets up **vwf** in the base,
+and offers `init` once for the whole product when any repo's shape is **missing
+or drifted**, on the six baseline predicates `/vwf:doctor` owns and now
+evaluates per repo. **Architecture decides the stack and setup pins it**:
+architecture records a slug and materializes nothing, then invokes `/vwf:setup`
+in-session, whose **materialize pass** — every mode, once per `(repo, slug)`,
+carrying the contract's `repo:` line — lands each pinned template in the member
+repo that project belongs to, writes `unresolved` on an axis it finds absent,
+and never rewrites a pin. A pin nobody landed is `/vwf:doctor`'s blocking
+*pinned, not materialized*. **Everything up to `blueprint` is done in full
+before planning** — `plan` hard-halts on a partial coverage stamp. The ad-hoc
+pair `change-plan` → `change-execute` sits **beside** that line rather than in
+it: it plans and runs work with no blueprint slice behind it — tooling, CI,
+docs, a refactor, a tree the blueprint does not describe — reads neither the
+blueprint nor the registry, and gates on the commands its own plan folder names.
+The ordering gates, the skill and agent tables, how to add a skill and pick its
 invocation mode, and the dependency reasoning are the [`vwf-plugin`][vwf] skill.
 
 ## The installer CLI
@@ -253,6 +306,12 @@ marketplace registration and plugin install commands, **graphify's wiring**, and
 receipt**. `installer/` is the source; `bin/` is the tsup output, is gitignored,
 and is what npm publishes. The statusline is a separate package
 (`claude-status`), not a plugin and not installed here.
+
+**It is the one-shot, not a repo's reconcile step.** A repo shaped by
+`/vwf:init` reconciles its own plugin set with the task library's `setup:ai`,
+which runs `claude plugin …` and no package runner — so a machine that
+registered `virajp-plugins` from `./.dev-marketplace` is served by the same task
+as one that registered it from the forge. Nothing calls this CLI from a task.
 
 Everything else — the flag surface, the legacy-receipt reader, the interactive
 uninstall, the GitHub token rule, testing — is [`installer/CLAUDE.md`][icl]; the
@@ -275,20 +334,32 @@ decouples **merged** from **released**. Three tag families, all namespaced:
 | `installer-v<version>` | `@virajp.dev/claude-plugins` | `release.yml` → npm publish    |
 | `site-v<version>`      | the website                  | `site.yml` → `wrangler deploy` |
 
-A tracked plugin version is always plain `X.Y.Z` — `plugins:check` fails one
+A tracked plugin version is always plain `X.Y.Z` — `p:plugins:check` fails one
 carrying build metadata. The `X.Y.Z+N` the authoring machine runs between
-releases exists only in the gitignored staged copies `mise run plugins:local`
+releases exists only in the gitignored staged copies `mise run p:plugins:local`
 writes, so `claude plugin update` sees each edit without a commit.
 
+**13 and 17 are never issued as a version component** — the two plugin
+manifests, the installer, the site, `config_format`, `blueprint_format` alike.
+`p:plugins:check` refuses such a manifest; `p:i:version` and `p:site:version`
+**skip past** the number — each computes its target first, stepping the bumped
+component past a 13 or 17, then writes it in a single `pnpm version` call and
+prints what it skipped, refusing before it writes anything when the level it was
+given cannot reach the forbidden component; all three release tasks **refuse**
+to tag one. The guard is four functions in `.config/mise/tasks/_scripts/local`,
+this repo's own sidecar beside the pack-owned `helpers`, which no pack file may
+source. Versions issued before the rule stand, and the `+N` staging counter is
+not a component.
+
 **A release is two stages, and only the second reaches anyone else.** Local
-first — `mise run plugins:local` stages the changed plugins into the dev
+first — `mise run p:plugins:local` stages the changed plugins into the dev
 marketplace and updates this machine's install, publishing nothing and cutting
 no tag, so `/vwf:change-execute` runs it as the plan's after-landing `run` step
 and a staged plugin loads in the next **restarted** session. Public second — the
 tags.
 
-**Ask the user before running `plugins:release`, `i:release` or
-`site:release`.**
+**Ask the user before running `p:plugins:release`, `p:i:release` or
+`p:site:release`.**
 
 The mise environment split, the four workflows and why `deps-update.yml`
 dispatches rather than calls `release.yml`, the supply-chain settings and the
@@ -309,7 +380,7 @@ per-event verdict shape — are the [`plugin-authoring`][auth] skill's.
 1. Create `plugins/<name>/.claude-plugin/plugin.json` with `name`, `version`
    (what an install pins to; plain `X.Y.Z`, bumped to ship changes) and
    `description`.
-2. Run `mise run plugins:marketplace` and stage the result.
+2. Run `mise run p:plugins:marketplace` and stage the result.
 3. Give it a home: a path-scoped skill under `.claude/skills/<name>-plugin/`,
    and a row in the two tables above.
 
@@ -343,21 +414,29 @@ stops listing it as a dependency, leaving it enabled and its stale skills
 shadowing the stackgen packs they moved into. The reasoning is
 [`dependencies.md`](.claude/skills/vwf-plugin/references/dependencies.md).
 
+**On a repo that has been shaped, the reconcile step is the repo's own.**
+`mise run setup:ai` — the task library's, and this repo runs the same one —
+registers or refreshes `virajp-plugins` and installs or updates the plugins the
+repo requires at **project** scope, through `claude plugin …` and nothing else.
+It is idempotent, it never touches a user-scope plugin, and it works unchanged
+on a machine registered from `./.dev-marketplace`. The installer above is the
+one-shot for a person; this is what a checkout re-runs.
+
 Upgrading is `claude plugin marketplace update virajp-plugins` then
 `claude plugin update <name>`. The **manifest** is served from this repo's
 `main`, which `plugins.yml` validates on every push; each plugin's **content**
 comes from the `<name>-v<version>` tag that manifest pins it to. So a merge to
 `main` no longer reaches users — only a tag does, which is what
-`mise run plugins:release` cuts. The `marketplace update` step is what picks up
-new refs, and it is not optional: without it `plugin update` re-reads the same
-pins and finds nothing.
+`mise run p:plugins:release` cuts. The `marketplace update` step is what picks
+up new refs, and it is not optional: without it `plugin update` re-reads the
+same pins and finds nothing.
 
 **Nothing is gated at install time**, so the first thing to run afterwards is
 `/vwf:doctor` — it is what reports a missing required binary, as a **blocking**
 finding. On a repo that has never been shaped, run `/vwf:setup` — its Step 0
 offers `init`, which lays down the config layout and the gates the rest of the
-workflow assumes, and `/vwf:setup reshape` runs that pass alone on a repo that
-has drifted.
+workflow assumes — in that repo and every member repo it has — and
+`/vwf:setup reshape` runs that pass alone on a product that has drifted.
 
 For **other agents** there is no marketplace and no rendered tree: point the
 tool at this repo and ask it to adapt the plugin. `readme.md`'s "Other tools"

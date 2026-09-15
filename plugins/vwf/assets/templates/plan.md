@@ -7,6 +7,7 @@ covers: [
   docs/blueprint/flows/<project>/<NNN>-<flow>/index.md,
 ] # the blueprint doc(s) this plan implements — one, except for a dependency cycle planned together
 requires: [] # plan filenames (docs/plans/...) that must be executed & merged first — direct prerequisites only
+backlog: [] # docs/backlog.md item ids this plan covers — empty or absent means none
 # optional, standardized: timestamp: <ISO 8601>  owner  resource  tags
 ---
 

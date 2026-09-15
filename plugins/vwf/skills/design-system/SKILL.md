@@ -12,7 +12,7 @@ description: Import the product's design system from the configured design tool
   takes the text-only path and elicits Terminal UX directly.
 argument-hint: "[design-system id — omit to let the adapter resolve it]"
 model: sonnet
-effort: high
+
 disable-model-invocation: false
 ---
 
@@ -49,7 +49,7 @@ canvas and re-running this skill, never by publishing the doc back.
 
 Doctrine: the **design-system-authoring** skill (foundations, color-tokens,
 typography, layout-and-spacing, motion, accessibility,
-components-and-anti-patterns, terminal-ux, checklist).
+components-and-anti-patterns, brand, terminal-ux, checklist).
 
 ---
 
@@ -125,10 +125,10 @@ never as a fallback when an adapter is missing for a product that has some.
 **Skipped on the text-only path** — there is no payload to import; §5 elicits
 every section instead.
 
-Invoke `/<tool>:<tool>-import-design-system` and parse its reply as a
-**design-system payload** per the adapter contract. Everything downstream is
-vwf's job: you write `docs/blueprint/design-system.md` from the payload, gated
-by the `design-system-reviewer` — the adapter never touches a blueprint doc.
+Invoke `/vwf:import-design-system` and parse its reply as a **design-system
+payload** per the adapter contract. Everything downstream is vwf's job: you
+write `docs/blueprint/design-system.md` from the payload, gated by the
+`design-system-reviewer` — the adapter never touches a blueprint doc.
 
 **Record `source.derived`.** When the adapter reports `derived: true`, it
 reconstructed the tokens from generated code rather than reading a stored design
@@ -146,6 +146,15 @@ Map the payload onto the template's sections: semantic token values, type &
 spacing scales, motion, accessibility, component behaviors, anti-patterns.
 **Contract vs realization** holds — values and scales, never the component
 library or CSS framework the payload may mention.
+
+**Brand is import-only.** When the payload carries a `brand:` block, write the
+template's **Brand** section from it verbatim in meaning — the logo source, every
+variant with its path and use, the clear-space rule, the minimum sizes, the
+rules — with every path kept **relative to the repo root** as the adapter
+returned it (design-system-authoring's brand reference). When the payload has
+no `brand:`, **delete the section and elicit nothing**: brand is never
+text-elicited, on the adapter path or the text-only one, because a logo is a
+file the design tool holds, not a decision an interview can produce.
 
 **On the text-only path there is no payload**, so every section is elicited
 here per `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`, starting with **Terminal
@@ -174,7 +183,8 @@ frontmatter.
 
 Self-review against the design-system-authoring checklist first. Then loop:
 dispatch a **fresh** `design-system-reviewer` (stateless) with only the written
-doc (all files of the folder form; tell it whether a `cli` platform exists).
+doc (all files of the folder form; tell it whether a `cli` platform exists,
+and whether the payload carried `brand:`).
 **Gaps** → a decision hole is elicited and fixed in the doc; a *visual* gap is
 tool-side rework — the user iterates in their design tool, then re-import the
 affected sections. **`NO GAPS`** → `status: reviewed`. Convergence guard: pause
@@ -202,4 +212,4 @@ project) routes through `/vwf:architecture` — never a by-hand registry edit.
 Summarize what was imported/changed and wait for explicit approval. Then pin
 `design.design_system_id` in `.config/vwf.yaml` (confirmed, never silently) and
 hand **all** git actions to `/vwf:git-workflow` — the pin rides the same commit.
-Use a `blueprint(design-system):` or `docs(design-system):` message.
+Use a bare `docs:` message whose subject names the design system.

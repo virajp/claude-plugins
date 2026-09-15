@@ -8,7 +8,7 @@ description: Stateless whole-product coherence reviewer for the /vwf:blueprint
   doc-name lists, apis file list) — no conversation context.
 tools: Read, Grep, Glob
 model: opus
-effort: high
+
 ---
 
 You are a stateless whole-product coherence reviewer — the cross-doc pass the

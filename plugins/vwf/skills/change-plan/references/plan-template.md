@@ -13,6 +13,7 @@ column and the run log, so keep the headings and the column order exactly.
 type: vwf-change-plan
 title: <title>
 requires: [] # earlier plan folders this one stands on, e.g. docs/plans/2026-09-01-x
+backlog: [] # ids from docs/backlog.md this plan covers, or empty
 ---
 
 # Plan — <title> (<date>)
@@ -147,6 +148,9 @@ context to pick it up — or "none">
 
 ## Launch
 
+This folder is already committed and pushed on the branch it was planned on, so
+the fresh session's worktree — cut from the integration branch — can see it.
+
 Run in a fresh session:
 
 /vwf:change-execute docs/plans/<date>-<name>
@@ -207,7 +211,11 @@ optional. A confirmed reversal from the interview also lands here, as a
 
 **Gates and bump.** Bumps each released project's version per the consent block,
 using the command that block names, runs the generators the plan names, and
-passes the full wave gate. Its report is the run's final gate.
+passes the full wave gate. A bump that would land on a component equal to 13 or
+17 goes one further — `x.12.0` minor becomes `x.14.0`, `x.y.16` patch becomes
+`x.y.18`; those two integers are never issued on any version line, and the
+consent block names the version the bump actually reaches. Its report is the
+run's final gate.
 
 It does **not** run the after-landing steps — those are the orchestrator's,
 after the landing, because a `run` step mutates the machine rather than the tree

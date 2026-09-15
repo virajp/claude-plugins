@@ -10,7 +10,7 @@ status: reviewed
 Cross-cutting decisions referenced by entity docs. Defined once; entity docs
 link to the relevant anchors rather than repeating.
 
-<!-- Conformance example (blueprint-format 24). Only the anchors the example
+<!-- Conformance example (blueprint-format 25). Only the anchors the example
      entities reference are filled; a real conventions.md carries every
      system-wide concern the architecture registry declares. -->
 
@@ -84,6 +84,23 @@ scale at year 1: ~2,000 monthly shoppers, ~5 req/s aggregate peak. Error-budget
 stance: a burned budget pauses feature releases for reliability work until the
 SLO recovers. Flow Guarantees cells reading `default — per
 conventions#reliability` inherit these numbers.
+
+## Web metadata {#web-metadata}
+
+<!-- Present because `web` declares the `webapp` platform with the `seo`
+     capability. The product-wide text every page inherits; the per-screen
+     values are the Metadata block on each webapp.md, and the visual assets are
+     the design system's Brand assets. -->
+
+- Site name: Example Shop.
+- Default description: "Order from independent retailers and track every order
+  to a settled state." — used by any page whose Metadata block leaves
+  `description` empty.
+- Social handle to credit: `@exampleshop`.
+- Content locale: `en-GB`.
+- Organisation facts: legal name "Example Shop Ltd"; the logo by role is the
+  design system's favicon source mark; the canonical home address is the
+  storefront root, which the Home screen's route (`/`) resolves to.
 
 ## Config {#config}
 

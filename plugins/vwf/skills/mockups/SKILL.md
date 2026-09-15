@@ -7,7 +7,7 @@ description: Render the blueprint's screens as self-contained static HTML
   never contract; never pushed to the design tool, never committed.
 argument-hint: "[flow, e.g. checkout — omit to sweep all screens]"
 model: sonnet
-effort: medium
+
 disable-model-invocation: true
 ---
 
@@ -71,7 +71,7 @@ command consumes are missing — then tell the user to run `/vwf:setup` and stop
 Before any write, verify `docs/scratchpad/` is gitignored:
 `git check-ignore -q docs/scratchpad`. If it is not, append `docs/scratchpad/`
 to the repo's `.gitignore` and commit that one line via `/vwf:git-workflow`
-(`chore(vwf): gitignore docs/scratchpad`), then proceed. Rendered mockups must
+(`ops: gitignore docs/scratchpad`), then proceed. Rendered mockups must
 never become committable.
 
 ### 2. Resolve scope
@@ -100,7 +100,8 @@ must not over-promise). Skip silently if mempalace is unavailable.
 For each in-scope **flow platform**, dispatch a **fresh `mockup-generator`
 subagent** (stateless and independent, so dispatch them all in a single message
 to run concurrently) with: that platform file's Screens table + Components +
-deviations, the design-system doc(s), its **absolute render-target dir**, and
+Metadata blocks (`site` and `webapp` only) + deviations, the design-system
+doc(s), its **absolute render-target dir**, and
 the flow + platform names. The generator owns the file spec (filenames,
 self-containment rules), overwrites the dir's contents in place, and returns
 **only a manifest** (one line per file: `path | screen | state`) — the HTML
@@ -136,5 +137,5 @@ unavailable.
 scratchpad tree is gitignored. The single exception is a changed
 `.config/vwf.yaml` (the `flows_rendered` stamp, or the one-time `.gitignore`
 line from §1): hand that to `/vwf:git-workflow` with a
-`chore(vwf): stamp rendered flows` message. When nothing in the config changed,
+`ops: stamp rendered flows` message. When nothing in the config changed,
 touch no git state at all.

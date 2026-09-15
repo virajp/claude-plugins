@@ -7,7 +7,7 @@ description: Writes or updates one flow folder (index.md contract + one
   format-conformant flow contract; never elicits, never invents a decision.
 tools: Read, Write, Edit, Grep, Glob
 model: sonnet
-effort: high
+
 ---
 
 You are a blueprint flow author. You receive **decisions the user has already
@@ -44,7 +44,8 @@ Do not read the other references; they cover surfaces that are not yours.
 - **Elicited decisions** — purpose, the goal anchor(s) to `Serves:`-link,
   trigger & actors, ordered steps with actors/entities/`operationId`s,
   background jobs, acceptance criteria — and **per platform**, that platform's
-  screens with their shared codes, Components blocks, and deviations.
+  screens with their shared codes, Components blocks, Metadata blocks (`site`
+  and `webapp` only), and deviations.
 - **Context** — the relevant `conventions.md` anchors and the registry block.
   The registry carries **no stack**: never name a language, framework, database,
   cloud, or vendor in a flow doc — use the prose noun from
@@ -79,8 +80,16 @@ Do not read the other references; they cover surfaces that are not yours.
    matching the filename; the mandatory `Flow contract: [<name>](./index.md)`
    link; the Screens table with each row's `<NNN><letter>` code and its
    **Components block** (each displayed element with its visibility/enable
-   conditions, what activating it does, and contract-pinned content); Platform
-   deviations where the orchestrator passed any. **Codes are shared across
+   conditions, what activating it does, and contract-pinned content); on a
+   `site` or `webapp` file, each row's **Metadata block** (format 25) headed by
+   the same code — `title`, `description`, `index`, `image` on a `site` and on
+   a `webapp` whose project declares `seo`, `title` alone on a `webapp` that
+   does not. Write only the values the orchestrator passed: **never invent a
+   description, a title or an image slot**, and never restate a product-wide
+   value (site name, default description, social handle, locale) that belongs to
+   `conventions.md#web-metadata`. A value you were not given comes back under
+   `UNRESOLVED:`. Then Platform deviations where the orchestrator passed any.
+   **Codes are shared across
    platform files** — use exactly the code the orchestrator assigned per screen
    concept; never re-letter per platform.
 3. **The catalog row** — update this flow's row in its project's section of

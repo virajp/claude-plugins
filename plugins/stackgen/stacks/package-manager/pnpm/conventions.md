@@ -32,8 +32,9 @@ Declining the settings entry leaves the script landed and inert.
 ## The task library this pack owns
 
 This pack ships a `config/.config/mise/tasks/` tree — `code/format`,
-`code/lint`, and `setup/deps/{install,outdated,audit,cleanup}` — landing at the
-repo's own `.config/mise/tasks/` behind the materializer's config consent line.
+`code/lint`, and `setup/deps/{install,outdated,audit,upgrade,cleanup}` — landing
+at the repo's own `.config/mise/tasks/` behind the materializer's config consent
+line.
 
 **It owns `code/format` and `code/lint` whole, not a fragment of each.**
 `code:format` runs **dprint first**, then `pnpm dlx sort-package-json`: one task
@@ -44,6 +45,14 @@ assembled from contributed fragments because stackgen's dispatch is
 copy-verbatim or generate, with nothing in between; a fragment layer would be a
 templating mechanism this plugin deliberately does not have.
 
+**Both tasks take an optional file list, and the empty case is the whole
+tree.** That is the whole pre-commit story for this pack: it ships **no
+fragment**, because the gate config's `format` and `lint` hooks call the two
+tasks with the staged files. dprint and the sorter narrow to what they are
+given; the house linter does not — its rules are cross-file, so it runs the
+whole tree either way, and every exclusion it needs lives in
+`.config/linter.yaml`.
+
 **Composition order, since more than one component writes this tree:**
 `toolchain-manager`, then `package-manager` / `language`, then `toolchain-gate`,
 then `app-framework` — a later component's file wins, recorded per file in the
@@ -51,13 +60,14 @@ lockfile. So this pack's `code/format` replaces the `toolchain-manager`
 baseline's, and a `toolchain-gate` or `app-framework` component's would replace
 this one's.
 
-**The `setup/deps/*` verbs are `install`, `outdated`, `audit` and `cleanup` —
-and deliberately not `upgrade`.** `install` is `pnpm install --recursive`,
-because a workspace install that stops at the root leaves the repo half
-resolved. `cleanup` deletes `dist`, `node_modules`, the lockfile and
-`*.tsbuildinfo`, then prunes the store — a store left behind makes the next
-install look clean when it is replaying. The optional verbs are **probed by
-name**, so a missing file is itself the answer: no `upgrade` here means this
-manager has no such verb, not that the choice is still pending.
+**The `setup/deps/*` verbs are `install`, `outdated`, `audit`, `upgrade` and
+`cleanup` — all five slots.** `install` is `pnpm install --recursive`, because a
+workspace install that stops at the root leaves the repo half resolved.
+`cleanup` deletes `dist`, `node_modules` and `*.tsbuildinfo`, then prunes the
+store — a store left behind makes the next install look clean when it is
+replaying — and deliberately leaves the lockfile alone: the lockfile is an input
+a human reviews, and moving it forward is `upgrade`'s job. The optional verbs
+are **probed by name**, so a missing file is itself the answer: a manager that
+ships no `upgrade` has no such verb, not a choice still pending.
 
 Full judgment: the `pnpm` skill's references.

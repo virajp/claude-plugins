@@ -6,7 +6,6 @@ description: Render a web UI slice's changed screens and run an accessibility
   general-purpose skill.
 disable-model-invocation: false
 model: sonnet
-effort: medium
 ---
 
 # ux-gate

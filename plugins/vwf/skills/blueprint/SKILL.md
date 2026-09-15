@@ -10,7 +10,7 @@ description: Maintain the always-current, full-product blueprint under
   /vwf:plan halts without a complete stamp.
 argument-hint: "[flow | entity]"
 model: opus
-effort: high
+
 disable-model-invocation: false
 ---
 
@@ -143,8 +143,8 @@ scan never lands in your context. Pass it **paths and name lists, not
 contents**: the `docs/blueprint/` root, the goal-anchor list (names only), the
 product doc's slice priority, the registry `projects:` block, the current
 `blueprint.remaining` list, and any `enforcement.rules` waivers with a
-`standard-flows/` prefix. It returns `COVERAGE:` plus the ordered `WORKLIST:` —
-consume that as given.
+`standard-flows/` or `standard-entities/` prefix. It returns `COVERAGE:` plus
+the ordered `WORKLIST:` — consume that as given.
 
 Whole-product coverage holds when, all at once:
 
@@ -164,6 +164,12 @@ Whole-product coverage holds when, all at once:
   `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` (conditional slugs resolved
   from the registry's auth capabilities; waivers in `enforcement.rules`
   honored);
+- every project declaring the **`audit-store`** capability carries the standard
+  operator flow `audit-history` per
+  `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` **and** the standard entity
+  `audit-event` per `${CLAUDE_PLUGIN_ROOT}/assets/standard-entities.md`
+  (waivers in `enforcement.rules` honored — `standard-flows/<project>/<slug>`
+  and `standard-entities/<project>/<slug>`);
 - the whole-product **coherence review** (§8) returned `NO GAPS` since the last
   content change.
 
@@ -226,6 +232,15 @@ project declares a screen platform),
 flow has UI but no design system. Run `/vwf:design-system` first." Screens
 reference the design system; they never re-decide visual language.
 
+**Metadata gate (format 25).** Every Screens row on a `site` platform file also
+carries a **Metadata block** — `title`, `description`, `index`, `image`. A
+`webapp` platform file carries the full block when its registry project
+declares the `seo` capability, and pins `title` alone when it does not; no other
+screen platform takes a block at all. Elicit the four values alongside the
+screen itself, and the product-wide defaults **once** — the text into
+`conventions.md`'s `#web-metadata` anchor, the favicon mark, social preview and
+theme colour into the design system's Brand assets — never repeated per screen.
+
 ### 3. Interactive elicitation (orchestrator)
 
 **Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior
@@ -272,8 +287,13 @@ Blueprint-specific notes layered on the protocol:
   triggers, **sync/async classification per mutating step with worker-vs-service
   placement** decided on the flow's Background Jobs table (apply the placement
   rule; MCQ only when both placements are defensible), and the runtime-settings
-  keys the flow reads. Foundations expand into existing sections — never new
-  mandatory structure.
+  keys the flow reads. The **audit** foundation reaches past the anchor and the
+  markers: it obliges the standard entity `audit-event`
+  (`${CLAUDE_PLUGIN_ROOT}/assets/standard-entities.md`) and the standard
+  operator flow `audit-history`
+  (`${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`), both in the console
+  project — units of the ordinary kind, authored and reviewed like any other.
+  Foundations expand into existing sections — never new mandatory structure.
 - **Engineering baseline (never re-elicited):** the defaults in
   `${CLAUDE_PLUGIN_ROOT}/assets/engineering-baseline.md` are settled — do not
   ask about write versioning, boundary validation, idempotency, error shape,
@@ -285,11 +305,11 @@ Blueprint-specific notes layered on the protocol:
 - **Standard slugs, numbers & screen names:** when the journey being elicited
   matches an entry in `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` (splash,
   signin, recover-account, onboarding, home, profile, settings, notifications,
-  delete-account), the flow takes that exact slug **and its designated number**
-  — never a synonym, never another number (`home` is always `100`). Its
-  **primary screen takes the flow's slug** too: the `home` flow's main screen is
-  named `home`, never "Dashboard" or "Main Feed". Secondary screens stay
-  free-named.
+  delete-account, audit-history), the flow takes that exact slug **and its
+  designated number** — never a synonym, never another number (`home` is always
+  `100`). Its **primary screen takes the flow's slug** too: the `home` flow's
+  main screen is named `home`, never "Dashboard" or "Main Feed". Secondary
+  screens stay free-named.
 - **Approaches (protocol §5):** where a flow, data-model, or API shape has
   competing designs (e.g. embed vs reference, sync vs async surface), present
   the options before committing.
@@ -319,7 +339,8 @@ stand.
   and the platform set), the contract decisions (purpose and goal anchors,
   trigger & actors, ordered steps with actors/entities/`operationId`s, jobs,
   acceptance criteria) **and, per platform, that platform's screens** with their
-  shared `<NNN><letter>` codes, Components blocks, and deviations, plus the
+  shared `<NNN><letter>` codes, Components blocks, Metadata blocks (`site` and
+  `webapp` only), and deviations, plus the
   relevant `conventions.md` anchors and registry block. It writes `index.md`,
   **one `<platform>.md` per platform**, and the `flows/index.md` catalog row. A
   **new** standard flow takes its **designated** number; a product flow takes
@@ -532,8 +553,8 @@ line is contract is not a hole, and must never hold the stamp hostage.
 
 After approval, hand **all** git actions to `/vwf:git-workflow` — it owns
 worktree isolation and the commit (the stamp change rides the same commit). Use
-a `blueprint(<flow|entity>):` or `docs(blueprint):` message. Do not run raw git
-here.
+a bare `docs:` message with the flow or entity named in the subject. Do not run
+raw git here.
 
 **Chain forward.** When the sweep ends with `coverage: complete`, offer to
 continue straight into `/vwf:plan` for the highest-priority slice (from the

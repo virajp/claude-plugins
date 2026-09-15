@@ -15,17 +15,23 @@ registering as something unknown.
 
 ## What the stamps mean now
 
-`blueprint_format` (**24**) and `config_format` (**16**) are **drift
+`blueprint_format` (**25**) and `config_format` (**19**) are **drift
 detectors** and nothing else. `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md` compares
 a repo's stamps against the shipped integers and nudges
 `/vwf:setup`. Nothing selects a migration path by them any more,
 and there is no support window: a repo stamped `2` and a repo stamped `21`
 reconcile against the same current format, by the same algorithm, in one pass.
 
-Two blueprint integers were never issued — **13** and **17**. A repo whose
-`blueprint_format` reads 13 is treated as 12, and one reading 17 as 16. The two
-stamps are separate number lines and never comparable: `config_format` 13 is
-real.
+**Neither line issues 13 or 17 any more.** From `config_format` **18** and
+`blueprint_format` **24** onward the rule stands for both stamps: a bump steps
+past 13 and past 17, so neither integer is ever stamped again. The history the
+rule inherited is uneven, and an old stamp is read by the history rather than
+by the rule — `config_format` 13 **is real** and was issued, so a repo stamped
+13 on that line is stamped 13; `blueprint_format` 13 was skipped, so a repo
+reading 13 there is treated as 12; and 17 was never issued on either line, so a
+repo reading 17 on either is treated as **16**, which is why `config_format`
+went 16 → 18 when `enforcement.kept_files` arrived. The two stamps are separate
+number lines and never comparable.
 
 ## The lineage table
 
@@ -96,7 +102,7 @@ must go through the rule below. Every other row is mechanical.
 | an entity's `Actors & Actions` section | retired — actors are the owning flow's Trigger & Actors | retirement | |
 | ungrouped, unnumbered flow folders | `flows/<project>/<NNN>-<flow>/`, gap-numbered by 10 | numbering | |
 | numbers assigned per device subgroup | one number line per project | numbering | |
-| any number on a standard flow | its designated number (`010`/`020`/`030`/`040`, `100`, `910`–`940`); everything else into `110`–`890`, existing order preserved | numbering | |
+| any number on a standard flow | its designated number (`010`/`020`/`030`/`040`, `100`, `910`–`950`); everything else into `110`–`890`, existing order preserved | numbering | |
 | a screen code carrying the old flow number (`010a`) | re-coded to the new number (`100a`), letters and order kept | numbering | |
 | a synonym flow slug (`login`, `dashboard`, …) | the standard slug in `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` | numbering | yes |
 | a standard flow's primary screen name (`Dashboard`) | the flow's slug (`home`) | numbering | yes |
@@ -116,9 +122,12 @@ must go through the rule below. Every other row is mechanical.
 | `projects.<name>.stack_reason` | `projects.<name>.stack.note`, carried verbatim | config-key | |
 | a flat **list** at `projects.<name>.stack` | the structured block — `template`, `languages`, `frameworks`, `dependencies`, split per `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md` | config-key | |
 | `enforcement.structure` | retired — `topology` plus `topology_reason` | config-key | |
+| no `enforcement.kept_files` block | `kept_files: {}` — the block format 18 introduced; nothing is retired and nothing converts, an absent block reading as empty | config-key | |
 | a flow id carrying a `<device>` segment, or missing its `<platform>` leaf | `<project>/<NNN>-<flow>/<platform>` | config-key | |
 | `environments` keys `dev`, `test`, `stage`, `prod` | `development`, `staging`, `production` — `test` has no single canonical partner; propose, never auto-fix | config-key | yes |
 | mempalace rooms `plans`, `decision` | `planning`, `decisions` | config-key | |
+| no `projects.<name>.stylesheet` on a project declaring a `site` or `webapp` platform | `stylesheet: unresolved` — the axis `config_format` 19 introduced; nothing converts, the key is written so the deferred decision is visible. A project declaring neither platform takes no key | config-key | |
+| a Screens row on a `site`/`webapp` platform file with no `Metadata` block | the block, `blueprint_format` 25 — propose per row: `title` from the Screen cell, `description` empty, `index: yes` for `site` and `no` for `webapp`, `image: default`; never auto-fix | doc-section | |
 
 Two notes the table cannot carry. **vwf ships no stack templates**: a
 `project/<slug>` pin resolves through a stack plugin

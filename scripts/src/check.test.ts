@@ -103,7 +103,7 @@ describe("the manifest", () => {
   });
 
   it("flags a missing, non-semver, or build-metadata version", () => {
-    // `1.0.0+3` is the staged dev copy's shape (`plugins:local`); tracked, it
+    // `1.0.0+3` is the staged dev copy's shape (`p:plugins:local`); tracked, it
     // is that local counter leaking into what an install pins to.
     const root = tree({
       alpha: { manifest: { name: "alpha", version: "1.0", description: "x" } },
@@ -117,6 +117,42 @@ describe("the manifest", () => {
       expect.stringContaining("version undefined is not plain semver"),
       expect.stringContaining("version \"1.0.0+3\" is not plain semver"),
     ]);
+  });
+
+  it("flags a version with a 13 or 17 component", () => {
+    // Neither integer is ever issued on a version line this repo maintains, so
+    // a manifest carrying one as a whole component is refused.
+    const root = tree({
+      alpha: {
+        manifest: { name: "alpha", version: "1.13.0", description: "x" },
+      },
+      beta: { manifest: { name: "beta", version: "17.0.0", description: "x" } },
+      gamma: {
+        manifest: { name: "gamma", version: "2.1.17", description: "x" },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("version \"1.13.0\" has a 13 or 17 component"),
+      expect.stringContaining("version \"17.0.0\" has a 13 or 17 component"),
+      expect.stringContaining("version \"2.1.17\" has a 13 or 17 component"),
+    ]);
+  });
+
+  it("leaves a version that merely contains the digits alone", () => {
+    // Only a whole component counts — the rule is about the integer issued, not
+    // about the digits appearing in the string.
+    const root = tree({
+      alpha: {
+        manifest: { name: "alpha", version: "1.130.0", description: "x" },
+      },
+      beta: {
+        manifest: { name: "beta", version: "113.0.0", description: "x" },
+      },
+      gamma: {
+        manifest: { name: "gamma", version: "19.21.0", description: "x" },
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
   });
 
   it("flags an empty description", () => {
@@ -356,6 +392,43 @@ describe("the pack config tier", () => {
     // root; the widening is that one name, not the class of deploy configs.
     const root = tree({
       alpha: { files: { [`${pack}/netlify.toml`]: "[build]\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("unallowlisted root entry"),
+    ]);
+  });
+
+  it("accepts a Renovate config at the config/ tier root", () => {
+    // Renovate discovers its config at the repo root, in `.github/` or in
+    // `.gitlab/`; one under `.config/` is read by nothing and reports no error.
+    const root = tree({
+      alpha: {
+        files: {
+          [`${pack}/renovate.json`]:
+            "{ \"extends\": [\"config:best-practices\"] }\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a root file vwf owns — CLAUDE.md", () => {
+    // `CLAUDE.md` may sit at a shaped root, but `/vwf:setup` writes it. The
+    // doctrine's list names it in its second tier; the checker's landable tier
+    // does not, so a pack shipping one is refused.
+    const root = tree({
+      alpha: { files: { [`${pack}/CLAUDE.md`]: "# Repo\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("unallowlisted root entry"),
+    ]);
+  });
+
+  it("flags a root file vwf owns — mempalace.yaml", () => {
+    // Same tier, same reasoning: the mine reads it at the root and nowhere
+    // else, and `/vwf:setup` is what writes it.
+    const root = tree({
+      alpha: { files: { [`${pack}/mempalace.yaml`]: "wing: alpha\n" } },
     });
     expect(messages(check(root))).toEqual([
       expect.stringContaining("unallowlisted root entry"),
@@ -1010,6 +1083,98 @@ describe("the stack-adapter contract", () => {
     // Keyword and both skills gone together is a deliberate retirement — which
     // is exactly what `gcp` and `cloudflare` did — and stays clean.
     expect(check(tree({ stackgen: {} }))).toEqual([]);
+  });
+});
+
+describe("bundle defaults", () => {
+  // A bundle's `default: true` is what the architecture menu preselects among
+  // the entries it offers on a round, a list already filtered by the project's
+  // platforms. Two flagged on one axis conflict when either declares no
+  // platforms or their lists intersect — silent nondeterminism, whichever
+  // sorts first wins — and a string `"true"` never preselects at all, so both
+  // directions are pinned.
+  const bundle = (axis: string, extra = "", platforms: string[] = []) =>
+    `---\nname: X\naxis: ${axis}\nkind: k\n${extra}${
+      platforms.length > 0
+        ? `platforms:\n${platforms.map(p => `- ${p}\n`).join("")}`
+        : ""
+    }components:\n- k/x@1.0.0\n---\n\nprose\n`;
+
+  const bundles = (files: Record<string, string>) => ({
+    stackgen: {
+      files: Object.fromEntries(
+        Object
+          .entries(files)
+          .map(([slug, text]) => [`stacks/bundles/${slug}.md`, text]),
+      ),
+    },
+  });
+
+  it("accepts a tree where no bundle carries the flag", () => {
+    const root = tree(bundles({ a: bundle("design"), b: bundle("design") }));
+    expect(check(root)).toEqual([]);
+  });
+
+  it("passes two flagged bundles on distinct axes", () => {
+    const root = tree(bundles({
+      a: bundle("design", "default: true\n"),
+      b: bundle("design"),
+      c: bundle("cicd", "default: true\n"),
+    }));
+    expect(check(root)).toEqual([]);
+  });
+
+  it("flags two flagged bundles on one axis when neither declares platforms", () => {
+    const root = tree(bundles({
+      a: bundle("design", "default: true\n"),
+      b: bundle("design", "default: true\n"),
+      c: bundle("cicd", "default: true\n"),
+    }));
+    const found = messages(check(root));
+    expect(found).toHaveLength(1);
+    expect(found[0]).toContain("on the `design` axis");
+    expect(found[0]).toContain("\"stacks/bundles/a.md\"");
+    expect(found[0]).toContain("\"stacks/bundles/b.md\"");
+    expect(found[0]).toContain("declares no `platforms:` list");
+  });
+
+  it("passes two flagged bundles on one axis with disjoint platforms", () => {
+    const root = tree(bundles({
+      a: bundle("project", "default: true\n", ["site"]),
+      b: bundle("project", "default: true\n", ["backend"]),
+    }));
+    expect(check(root)).toEqual([]);
+  });
+
+  it("flags two flagged bundles on one axis when platforms intersect, or one declares none", () => {
+    const shared = messages(check(tree(bundles({
+      a: bundle("project", "default: true\n", ["site", "webapp"]),
+      b: bundle("project", "default: true\n", ["webapp"]),
+    }))));
+    expect(shared).toHaveLength(1);
+    expect(shared[0]).toContain("on the `project` axis");
+    expect(shared[0]).toContain("\"stacks/bundles/a.md\"");
+    expect(shared[0]).toContain("\"stacks/bundles/b.md\"");
+    expect(shared[0]).toContain("share the platform `webapp`");
+    expect(shared[0]).not.toContain("`site`");
+
+    const bare = messages(check(tree(bundles({
+      a: bundle("project", "default: true\n", ["site"]),
+      b: bundle("project", "default: true\n"),
+    }))));
+    expect(bare).toHaveLength(1);
+    expect(bare[0]).toContain(
+      "\"stacks/bundles/b.md\" declares no `platforms:` list",
+    );
+  });
+
+  it("flags a default that is not a boolean", () => {
+    const root = tree(bundles({ a: bundle("design", "default: \"true\"\n") }));
+    expect(messages(check(root))).toEqual([
+      "bundle `default` is \"true\", not a boolean — the menu preselects on "
+      + "`default: true` alone, so any other spelling never preselects and "
+      + "reports nothing",
+    ]);
   });
 });
 

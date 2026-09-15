@@ -53,8 +53,8 @@ transition animations (`MaterialPageRoute` or `CupertinoPageRoute`).
 
 ## Implementing Declarative Navigation
 
-For apps requiring deep linking, web URL support, or complex routing, implement
-the `Router` API via a declarative routing package like `go_router`.
+For apps requiring deep linking or complex routing, implement the `Router` API
+via a declarative routing package like `go_router`.
 
 - Switch from `MaterialApp` to `MaterialApp.router`.
 - Define a router configuration that parses route paths and configures the
@@ -99,7 +99,7 @@ Use this conditional workflow when setting up app-wide routing:
 
 - [ ] **If** the app is simple and requires no deep linking:
   - [ ] Use standard `MaterialApp` and `Navigator.push()`.
-- [ ] **If** the app requires deep linking, web support, or complex flows:
+- [ ] **If** the app requires deep linking or complex flows:
   - [ ] Add the `go_router` package.
   - [ ] Change `MaterialApp` to `MaterialApp.router`.
   - [ ] Define the `GoRouter` configuration with all top-level routes.

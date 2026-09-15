@@ -67,7 +67,7 @@ const LINK_RE = /\]\((\.{1,2}\/[^)\s#]+\.(?:md|ya?ml))(?:#[^)\s]*)?\)/g;
 const ROOT_REF_RE = /\$\{CLAUDE_PLUGIN_ROOT\}\/([A-Za-z0-9_./-]+)/g;
 /**
  * Loose semver, minus build metadata. Claude accepts a `+N` version, and the
- * dev marketplace uses exactly that for its staged copies (`plugins:local`) —
+ * dev marketplace uses exactly that for its staged copies (`p:plugins:local`) —
  * but a tracked manifest carrying one is that local counter leaking into what
  * an end-user install pins to.
  */
@@ -94,6 +94,7 @@ export function check(repoRoot: string): Finding[] {
 
   findings.push(...checkDesignAdapters(plugins));
   findings.push(...checkStackAdapters(plugins));
+  findings.push(...checkBundleDefaults(plugins));
   findings.push(...checkVwfIsTechnologyFree(plugins));
   return findings;
 }
@@ -109,8 +110,9 @@ export function check(repoRoot: string): Finding[] {
  * published `$schema`, so the editor and the client validate its shape already;
  * reintroducing a zod package to restate that would put the drift back that the
  * cutover removed. What is asserted here is narrower and repo-specific: the four
- * values `scripts/src/marketplace.ts` reads, plus the name↔directory agreement
- * no schema can see.
+ * values `scripts/src/marketplace.ts` reads, the name↔directory agreement no
+ * schema can see, and the two things the version itself must be — plain semver,
+ * and free of a 13 or 17 component.
  */
 function checkManifest(plugin: Plugin): Finding[] {
   const findings: Finding[] = [];
@@ -134,6 +136,18 @@ function checkManifest(plugin: Plugin): Finding[] {
       } is not plain semver — it `
         + `is what an end-user install pins to, and a +N build number belongs `
         + `only to the staged dev copy`,
+    );
+  }
+  // 13 and 17 are never issued, on any version line this repo maintains. Only a
+  // whole component counts — `1.130.0` and `113.0.0` are fine. The prerelease
+  // suffix `SEMVER_RE` allows comes off first, so `1.0.17-rc.1` is caught too.
+  // Reached only when the assertion above passed, so the split is safe.
+  else if (
+    m.version.replace(/-.*$/, "").split(".").some(n => n === "13" || n === "17")
+  ) {
+    at(
+      `plugin.json version ${JSON.stringify(m.version)} has a 13 or 17 `
+        + `component — those integers are never issued`,
     );
   }
 
@@ -280,7 +294,7 @@ const PACK_HOOK_METADATA = /\.(?:ya?ml|json|md)$/;
 /**
  * The interpreters a shipped task may name. Closed on purpose: a task library
  * whose files disagree on language is one nobody can lint, and the shell gate
- * (`plugins:shellcheck`) picks its argument list by the same rule.
+ * (`p:plugins:shellcheck`) picks its argument list by the same rule.
  */
 const PACK_TASK_SHEBANGS = new Set([
   "#!/usr/bin/env bash",
@@ -311,6 +325,11 @@ const PACK_HOOK_SHEBANGS = new Set([
  * list of files a tool or a host *cannot* be told to look elsewhere for, plus
  * the two humans read first. Anything else arriving here is a pack quietly
  * widening the root of every repo it materializes into.
+ *
+ * This is the **landable** tier of the doctrine's root allowlist
+ * (`stackgen/assets/output-tree.md`). That list has a second tier — the root
+ * files *vwf* writes, `CLAUDE.md` and `mempalace.yaml` — which is deliberately
+ * absent here: they may sit at a shaped root, and no pack may land them.
  */
 const PACK_CONFIG_ROOT_FILES = new Set([
   ".editorconfig",
@@ -329,6 +348,9 @@ const PACK_CONFIG_ROOT_FILES = new Set([
   "eslint.config.mjs",
   "fnox.toml",
   "readme.md",
+  // Renovate discovers its config at the repo root, in `.github/` or in
+  // `.gitlab/` — never under `.config/`, where one would be silently inert.
+  "renovate.json",
   // wrangler discovers its config only at the repo root, so a `static-hosting`
   // pack shipping a deploy target has nowhere else to put it.
   "wrangler.jsonc",
@@ -1234,6 +1256,121 @@ function checkStackAdapters(plugins: readonly Plugin[]): Finding[] {
             + `\`/\` menu offers a skill that answers only a program`,
         });
       }
+    }
+  }
+  return findings;
+}
+
+/**
+ * At most one default bundle per (axis, platform).
+ *
+ * A bundle's frontmatter may carry `default: true`, which the stack menu passes
+ * through and vwf's architecture menu preselects among the entries it offers
+ * on a round — a list it has already filtered by the project's platforms. Two
+ * flagged bundles on one axis conflict when either declares no `platforms:`
+ * list (it is offered on every round of the axis) or their platform lists
+ * intersect (both are offered on the shared platform's round). A conflict fails
+ * nowhere: the menu preselects whichever it met first, which is the bundle
+ * directory's sort order — a silent nondeterminism that a rename flips. An axis
+ * whose flagged bundles all declare disjoint platforms carries one default per
+ * platform. A non-boolean value (`default: "true"`, `default: yes`) is the
+ * other silent case — the menu passes the key through as data and the
+ * preselect rule asks for boolean `true`, so a string never preselects and
+ * nobody is told.
+ *
+ * The frontmatter is parsed with the same reader the inventory generator uses,
+ * so a bundle this rule reads is a bundle the inventory reads.
+ */
+function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
+  const findings: Finding[] = [];
+
+  for (const plugin of plugins) {
+    const flagged = new Map<
+      string,
+      { path: string; platforms: string[] | null; }[]
+    >();
+
+    for (const file of plugin.files) {
+      if (!/^stacks\/bundles\/[^/]+\.md$/.test(file.path)) {
+        continue;
+      }
+      const block = frontmatterBlock(readText(file.absolute));
+      if (block === null) {
+        continue;
+      }
+      let doc: unknown;
+      try {
+        doc = parseYaml(block);
+      }
+      catch {
+        continue; // rule 4's finding, not this one's
+      }
+      if (typeof doc !== "object" || doc === null) {
+        continue;
+      }
+      const { axis, default: value, platforms } = doc as Record<
+        string,
+        unknown
+      >;
+      if (value === undefined) {
+        continue;
+      }
+      if (value !== true && value !== false) {
+        findings.push({
+          scope: `${plugin.dir}:${file.path}`,
+          message: `bundle \`default\` is ${
+            JSON.stringify(value)
+          }, not a boolean — the menu preselects on \`default: true\` alone, `
+            + `so any other spelling never preselects and reports nothing`,
+        });
+        continue;
+      }
+      if (value !== true) {
+        continue;
+      }
+      const key = typeof axis === "string" ? axis : "";
+      // An absent or empty list is "offered on every round of the axis".
+      const declared = Array.isArray(platforms)
+        ? platforms.filter((p): p is string => typeof p === "string")
+        : [];
+      flagged.set(key, [
+        ...(flagged.get(key) ?? []),
+        { path: file.path, platforms: declared.length > 0 ? declared : null },
+      ]);
+    }
+
+    for (const [axis, entries] of flagged) {
+      entries.forEach((a, i) => {
+        for (const b of entries.slice(i + 1)) {
+          const pair = `"${a.path}" and "${b.path}"`;
+          if (a.platforms === null || b.platforms === null) {
+            const bare = a.platforms === null ? a : b;
+            findings.push({
+              scope: plugin.dir,
+              message: `${pair} both carry \`default: true\` on the `
+                + `\`${axis}\` axis, and "${bare.path}" declares no `
+                + `\`platforms:\` list, so it is offered on every round of `
+                + `the axis — the menu preselects one entry per round, and two `
+                + `flagged is whichever sorts first rather than a choice`,
+            });
+            continue;
+          }
+          const theirs = b.platforms;
+          const shared = a.platforms.filter(p => theirs.includes(p));
+          if (shared.length === 0) {
+            continue;
+          }
+          findings.push({
+            scope: plugin.dir,
+            message: `${pair} both carry \`default: true\` on the `
+              + `\`${axis}\` axis and share the platform${
+                shared.length > 1 ? "s" : ""
+              } ${shared.map(p => `\`${p}\``).join(", ")} — the menu `
+              + `preselects one entry per round, and two flagged is whichever `
+              + `sorts first rather than a choice`,
+          });
+        }
+      });
     }
   }
   return findings;

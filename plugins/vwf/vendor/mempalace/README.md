@@ -76,7 +76,7 @@ the Step 0 setup pointer and the server-down unhappy path — now point at the
 
 One word, in `mempalace-recall`: the adjective describing time-ordered
 knowledge graphs was replaced with "time-aware". That adjective is spelled
-exactly like one of the orchestration engines in `plugins:check`'s
+exactly like one of the orchestration engines in `p:plugins:check`'s
 no-tool-names guard, which cannot tell the two apart. The alternative was a
 third entry in `TOOL_NAME_EXCEPTIONS`, a list kept deliberately narrow —
 weakening a real guard to protect an incidental English word is the wrong
@@ -94,5 +94,6 @@ drift detectable, so it is the one edit that must not be skipped.
 
 The coupling that does survive is the **MCP tool names** the skills instruct
 the model to call. Those are upstream's API, and a rename there makes the prose
-wrong in a way no gate here can catch — `plugins:check` validates frontmatter
-and links, not whether a named tool exists. Everything else is prose.
+wrong in a way no gate here can catch — `p:plugins:check` validates
+frontmatter and links, not whether a named tool exists. Everything else is
+prose.

@@ -6,7 +6,6 @@ description: Read the design review conversation back from Claude Design and ret
 license: MIT
 disable-model-invocation: false
 model: sonnet
-effort: high
 ---
 
 # design-import-conversations — Claude Design

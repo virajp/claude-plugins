@@ -101,7 +101,7 @@ staged locally, none tagged. `develop` is at `d3abc802`, clean.
 
 - `SKILL.md` (257 lines). Frontmatter `:1-13`: `name`, `description` (`:3-8`),
   `argument-hint: "[--new | --existing] [target-dir]"` (`:9`), `model: sonnet`,
-  `effort: high`, `disable-model-invocation: false` (`:12`). **There is no
+  `effort: medium`, `disable-model-invocation: false` (`:12`). **There is no
   `user-invocable` key.** Hard rules `:32`; Step 0 mode table `:76-87` (detects
   new vs existing without the flag); the five questions `:123-158` — "Five in
   all" at `:125`, question 1 (repo name, proposed from the target directory's

@@ -9,4 +9,9 @@ set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-pnpm audit --reporter=summary
+# Advisory, and deliberately not a gate. `pnpm audit` reads a registry advisory
+# feed that moves under the repo without any lockfile change, and a gate that
+# can start failing on an unchanged tree is not one a commit can be held to. The
+# blocking supply-chain check is `code:sec`, which runs pinned tools.
+
+pnpm audit || true

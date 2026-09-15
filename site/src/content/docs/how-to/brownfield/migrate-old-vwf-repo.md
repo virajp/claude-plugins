@@ -66,6 +66,19 @@ move, never as a question. The root `.graphifyignore` is part of the current
 shape too: Jotter has none, so the standard excludes land in the plan as one
 entry like any other.
 
+Two lineage rows are about the newest formats rather than about old spellings,
+and they behave differently from each other. `config_format` **19** added the
+`stylesheet` axis, so Jotter's project — which turns out to publish its own API
+from a browser surface — gains `stylesheet: unresolved`: nothing is converted,
+the key is written so the deferred decision is **visible**, and
+`/vwf:architecture` elicits it on its next run. A project declaring neither
+`site` nor `webapp` takes no key at all. `blueprint_format` **25** added the
+per-screen `Metadata` block on `site`/`webapp` platform files, and that one is
+**proposed, never auto-filled**: setup offers one block per Screens row — the
+title taken from the Screen cell, an empty description, `index: yes` for a
+`site` and `no` for a `webapp`, `image: default` — and you fill in what the
+pages actually say.
+
 ### 3. Confirm the spellings that fan out
 
 A few retired names map to more than one current name, and vwf picks none of
@@ -156,6 +169,11 @@ Each of these is a genuine stop, and each is explained where it is enforced.
   an old repo halts here, since free-text pins have been retired and a language
   nothing claims counts as unknown.
   [Stack templates](../../plugins/vwf.md#stack-templates)
+- **A pin whose template was never landed is blocking too**, reported as
+  *pinned, not materialized* rather than as an unknown language — the state an
+  old repo is in when its pins predate materialization altogether. Setup's
+  [materialize pass](../../plugins/vwf.md#the-materialize-pass) offers the
+  landing in the same run; declining it is what leaves the block standing.
 - **A workflow command halts before you ever reach setup** when the operation
   needs an artifact the old format lacks — a blueprint sweep reaching a flow
   with screens and no design system is the common one.

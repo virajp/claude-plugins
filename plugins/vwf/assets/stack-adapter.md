@@ -12,7 +12,7 @@ This is the same shape as the design-adapter contract
 
 | vwf owns (abstract)                                                 | A stack plugin owns (concrete)                              |
 | ------------------------------------------------------------------- | ----------------------------------------------------------- |
-| The **six axes** (`project` / `backing` / `deploy` / `design` / `cicd` per project, `repo` per repo) | Which templates exist on each axis             |
+| The **seven axes** (`project` / `backing` / `deploy` / `design` / `cicd` / `stylesheet` per project, `repo` per repo) | Which templates exist on each axis |
 | The **template frontmatter contract** (`stack-vocabulary.md`)       | The templates themselves                                    |
 | The **platform** vocabulary a project template declares             | Which platforms it offers a template for                    |
 | Harness **capability names** (`dev`, `e2e_local`, `screenshots`, …) | What *satisfies* each one — the tool, the task, the command |
@@ -127,6 +127,27 @@ plugin ignores them; a **generating** adapter (the materialized-template
 variant below) requires them, and halts by contract when they are missing
 rather than substituting general knowledge.
 
+**The target repo.** A `-stack-template` invocation may carry one more optional
+line beside the catalog paths, in the same payload style:
+
+```yaml
+repo: <path> # OPTIONAL — relative to the BASE repo root
+```
+
+The value is the **member's `path`**, and vwf is what resolves it: the member
+whose `projects:` list contains the project being materialized for — the
+`members:` list of `.config/vwf.yaml`, per the membership asset
+(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`). A project no member lists lives
+in the base repo. **Absent means the current repo**, which is the whole answer
+under `repo` and `monorepo` topology. Under `topology: multi-repo` **every vwf
+caller passes it** — a member's materialization lands in that member's own
+tree and is recorded in **that** repo's lockfile, never the base's, so two
+members pinning the same slug each get their own copies rather than one shared
+set nobody's checkout contains.
+
+The argument itself is unchanged: it stays `<slug>`, and a second positional was
+rejected precisely so a caller that does not know about repos keeps working.
+
 **Why the name repeats the plugin.** OpenCode installs skills into one flat
 namespace, so two plugins declaring `stack-menu` would overwrite each other;
 Claude Code namespaces a skill by its plugin, so a bare name need only be unique
@@ -142,7 +163,7 @@ most important rule here, and getting it wrong fails **silently**:
 entirely and blocks programmatic invocation — so a delegated call does not error.
 vwf simply cannot see the skill, and the menu comes back empty. A stack plugin
 whose skills are user-only is indistinguishable, at runtime, from one with no
-templates. `plugins:check` enforces it.
+templates. `p:plugins:check` enforces it.
 
 ### vwf preflights, because the failure mode is silence
 
@@ -159,20 +180,37 @@ Returned by `-stack-menu`. One entry per template the plugin offers:
 plugin: <name>
 templates:
   - slug: <kebab> # unique within the plugin
-    axis: project | backing | deploy | repo | design | cicd
+    axis: project | backing | deploy | repo | design | cicd | stylesheet
     platforms: [ <platform> ] # PROJECT AXIS ONLY — which registry platforms this template serves
     name: <display name> # what the menu shows
     summary: <one line> # why you would pick it
+    default: true # OPTIONAL — at most one entry per axis per platform; vwf preselects the one it offers
 ```
 
 vwf renders the union of every configured plugin's menu, grouped by axis and
 (for the project axis) filtered to the **platforms** being decided. It never
 reads a template file.
 
+**`default: true` is the adapter's to set, and vwf never infers one.** An
+entry carrying it is what the menu **preselects** on its axis — highlighted, not
+assumed: the user still picks, and every other entry stays offered. At most one
+entry per axis **per platform** carries it: two flagged entries on one axis
+conflict when either declares no `platforms:` list — such an entry covers the
+whole axis — or their platform lists intersect, and that conflict is the
+adapter's defect, not a tie for vwf to break. vwf preselects the one flagged
+entry **among the entries it offers on a round** — the list already filtered to
+the platforms being decided — so a flag on an entry filtered out of the round
+highlights nothing there. An adapter that emits none leaves its axes with no
+preselection, exactly as before the flag existed, and the *previous project's
+answer* rule in the architecture skill still applies on the later projects. The
+flag is menu state only: it reaches no config key and no template payload, and
+a pin made by accepting it is indistinguishable from one made by picking the
+same entry.
+
 **`platforms:` is a list, and that is the point.** Since blueprint format 22 a
 project declares one `role` and one or more platforms, and a single template
 routinely serves several of them: one Flutter template covers `mobile`,
-`tablet`, `desktop` and `webapp` from one codebase; one server template covers
+`tablet`, `desktop` and `auto` from one codebase; one server template covers
 `service` and `webapp` — what the retired `fullstack` role meant. The previous
 contract keyed a template on a single `role`, stored in three places (the
 directory name, the frontmatter and this payload), and could not express either
@@ -189,27 +227,42 @@ single-role pin had nothing to check.
 **A template's own directory is not the source.** A template's platforms come
 from its payload, not from any directory.
 
-### The two tool axes — `design` and `cicd`
+### The three tool axes — `design`, `cicd` and `stylesheet`
 
-Added after a stranded pack made the gap visible: a CI-system template existed
-that **no menu could offer**, because CI is chosen by a per-project config key
-rather than by a stack pin, and the menu is the only door a template can come
-through. A template nothing can offer is not an error — it is invisible, which
-is why it shipped unnoticed.
+The first two were added after a stranded pack made the gap visible: a
+CI-system template existed that **no menu could offer**, because CI is chosen by
+a per-project config key rather than by a stack pin, and the menu is the only
+door a template can come through. A template nothing can offer is not an error —
+it is invisible, which is why it shipped unnoticed. `stylesheet` joined them at
+`config_format` 19, on the same reasoning: how a web surface's styles are
+written is a per-project choice, not a property of the framework template, and
+a menu is the only way to offer it.
 
-These two axes close that door, making six axes in all. They differ from the
-other four in one respect worth stating, because it is what keeps them cheap:
+These three axes close that door, making seven axes in all. They differ from
+the other four in one respect worth stating, because it is what keeps them
+cheap:
 
-**The slug *is* the config value.** `projects.<name>.design` and
-`projects.<name>.cicd` already hold a tool token — `claude-design`,
-`github-actions` — and a menu entry on these axes takes that same token as its
-slug. So there is exactly one value, written once, and no second spelling to
-drift against. `/vwf:doctor` reports a pin resolving to no menu entry the same
-way it reports any other unresolvable pin.
+**The slug *is* the config value.** `projects.<name>.design`,
+`projects.<name>.cicd` and `projects.<name>.stylesheet` already hold a tool
+token — `claude-design`, `github-actions` — and a menu entry on these axes takes
+that same token as its slug. So there is exactly one value, written once, and no
+second spelling to drift against. `/vwf:doctor` reports a pin resolving to no
+menu entry the same way it reports any other unresolvable pin.
 
-Neither axis takes `platforms:`. `design` is required for a project declaring
-any **screen** platform and absent otherwise (the same condition the config key
-already states); `cicd` is required for a project the pipeline builds.
+None of the three takes `platforms:`. `design` is required for a project
+declaring any **screen** platform and absent otherwise (the same condition the
+config key already states); `cicd` is required for a project the pipeline
+builds.
+
+`stylesheet` takes no `platforms:` either. It is required for a project
+declaring a `site` or `webapp` platform and absent otherwise, and its value is
+the menu entry's slug. Unlike `design`, its menu also offers *defer this axis*,
+recorded as `unresolved` — the stylesheet is a choice a product may reasonably
+postpone past the design system, and the deferral is written down rather than
+left as a missing key. What the pinned entry materializes is **doctrine only** —
+a `conventions.md` and a skill, the way a `project`-axis framework component
+does — with no adapter skills of its own; the integration edits a framework
+needs are made from that doctrine, not landed by the pin.
 
 **`design` is where the design adapter's per-tool knowledge now comes from.**
 vwf still names no tool: the adapter contract
@@ -224,7 +277,7 @@ Returned by `-stack-template <slug>` once the user picks. Carries what
 
 ```yaml
 slug: <kebab>
-axis: project | backing | deploy | repo | design | cicd
+axis: project | backing | deploy | repo | design | cicd | stylesheet
 languages: [ <token> ] # open; the plugin owning the language defines its facts
 optional_languages: []
 frameworks: [] # open, lowercase-kebab
@@ -263,6 +316,12 @@ it the same way:
 2. **Dedupe by (plugin, slug) and fetch each once**, calling
    `/<plugin>:<plugin>-stack-template <slug>`. A monorepo whose projects share a
    repo template fetches it once, not once per project.
+
+   **Under `multi-repo`, pass `repo:` and dedupe per (plugin, repo, slug)**
+   instead. The target repo is where a materialized template's committed copy
+   lives, so the fetch reads it from **that** repo's `.claude/` tree; two
+   members pinning the same slug hold two independent materializations, and
+   resolving one for both hands a project prose its own repo does not contain.
 3. **Resolve once per run, before the work starts**, and pass the result down to
    every subagent that needs it. Re-fetching per element or per step would
    re-pay the call for prose that cannot change mid-run.
@@ -302,9 +361,12 @@ side of the contract is three rules:
   `-stack-template` call returns the committed payload from the repo — so
   `plan`'s and `execute`'s conventions resolution behaves exactly as
   *Resolving the conventions* states, with no research, network, or write on
-  their clock. Materialization itself happens once, interactively, when the
-  pin is first made; a pin whose materialization was declined is
-  **unmaterialized**, and the fetch says so rather than generating silently.
+  their clock. Materialization itself happens once **per (repo, slug)**,
+  interactively, in **`/vwf:setup`'s materialize pass** — after
+  `/vwf:architecture` has recorded the pin. Architecture decides; setup lands
+  the decision, in the repo the pin belongs to. A pin whose materialization was
+  declined is **unmaterialized**, and the fetch says so rather than generating
+  silently — `/vwf:setup` offers it again on its next run.
   That is not the `unresolved` axis state above and must not be recorded as one:
   the axis *was* answered, and what is missing is the artifact, not the decision.
 - **The menu may carry one open entry.** A materializing adapter's menu may

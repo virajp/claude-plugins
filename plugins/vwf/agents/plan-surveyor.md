@@ -7,7 +7,7 @@ description: Stateless desired-vs-actual surveyor for the /vwf:plan command.
   code, tests, or plan docs.
 tools: Read, Bash, Grep, Glob
 model: sonnet
-effort: high
+
 ---
 
 You are a stateless codebase surveyor. Given **one blueprint slice**, you

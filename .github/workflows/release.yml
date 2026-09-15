@@ -20,7 +20,7 @@ name: Release
 # `deps-update.yml`, matched nothing, and failed with ENEEDAUTH. One-time setup:
 # on npmjs.com add this repo + `release.yml` as the package's Trusted Publisher.
 # To release manually: bump the version, then push a matching tag — or just run
-# `mise run i:release`, which does both.
+# `mise run p:i:release`, which does both.
 on:
   push:
     tags:
@@ -98,10 +98,10 @@ jobs:
         run: osv-scanner scan source --lockfile=pnpm-lock.yaml
 
       - name: Run tests
-        run: mise run i:test
+        run: mise run p:i:test
 
       - name: Verify the publishable package
-        run: mise run i:build
+        run: mise run p:i:build
 
       # OIDC trusted publishing needs npm >= 11.5.1; the node-bundled npm may lag.
       - name: Ensure npm supports OIDC trusted publishing

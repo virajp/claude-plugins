@@ -109,9 +109,17 @@ Restart your agent afterward so the skills, hooks and MCP servers load, then run
 at install time — though see the [caveat](#caveats) on what it does and does not
 check. On a repo that has never been shaped — no `.config/` layout, no task
 library — run `/vwf:setup`: its Step 0 offers `init`, which lays down the config
-layout, the gates and the hygiene files the rest of the workflow assumes.
-`/vwf:setup reshape` runs that pass alone, and is what `/vwf:doctor` prints when
-a shaped repo has fallen behind.
+layout, the gates and the hygiene files the rest of the workflow assumes, in the
+base repo **and every member repo it has**, on one consent. `/vwf:setup reshape`
+runs that pass alone — across every member — and is what `/vwf:doctor` prints
+when a shaped repo has fallen behind.
+
+Once a repo **is** shaped, its own task library takes the plugin side over:
+`mise run setup:ai` registers or refreshes the marketplace and installs or
+updates the plugins that repo declares at **project** scope, driving Claude's
+own commands and no package runner. The command above is the one-shot a person
+runs on a machine; that is what a checkout re-runs, and what keeps every
+collaborator on the same plugin set.
 
 Scope is yours to choose: `--user` / `--project` on the wrapper, or
 `--scope project` on Claude's commands, keep a plugin to one repo instead of
@@ -210,20 +218,24 @@ pass to `claude plugin install`.
 ### The workflow
 
 **[vwf](https://claude-plugins.virajp.dev/plugins/vwf/)** — the flagship. The
-`/vwf:` commands covering the whole arc: shape a bare repo into the standard
-layout, onboard it, pin the outcome contract, model the system, sweep a
-whole-product blueprint to complete coverage, plan one slice as a reviewable
-diff, execute it unattended behind one merge gate, verify the deploy, and route
-what production teaches you back to the document that fixes it. It carries
+`/vwf:` commands covering the whole arc: shape a bare repo — or a whole
+multi-repo product in one run — into the standard layout, onboard it, pin the
+outcome contract, model the system, sweep a whole-product blueprint to complete
+coverage, plan one slice as a reviewable diff, execute it unattended behind one
+merge gate, verify the deploy, and route what production teaches you back to the
+document that fixes it. It carries
 [cross-session memory](https://claude-plugins.virajp.dev/plugins/mempalace/), a
 knowledge-graph layer, session handoff and recall, the
 [Karpathy coding guidelines](https://claude-plugins.virajp.dev/plugins/karpathy-guidelines/),
 and the Markdown and Context7 docs surfaces it absorbed. Beside that arc it
 carries an ad-hoc pair — `/vwf:change-plan` plans work with no blueprint slice
-behind it (tooling, CI, docs, a refactor) into a plan folder, and
-`/vwf:change-execute` runs that folder unattended in a fresh session. It names
-**no** technology — no language, no framework, no cloud — which is what lets the
-rest of this list exist. `vwf@virajp-plugins`
+behind it (tooling, CI, docs, a refactor) into a plan folder, which it commits
+and pushes at hand-off so the fresh session can see it, and
+`/vwf:change-execute` runs that folder unattended in that session. Beside both
+sits `/vwf:backlog`, the sole writer of `docs/backlog.md` — the prioritised list
+of work that cannot be picked up now, which every planning and landing command
+calls to move an item. It names **no** technology — no language, no framework,
+no cloud — which is what lets the rest of this list exist. `vwf@virajp-plugins`
 
 ### Tooling, design and delivery
 
@@ -234,15 +246,21 @@ each one resolves on its own: a component a shipped **pack** covers is copied
 verbatim; an uncovered one is **generated** — researched via Context7 topic by
 topic, instantiated against vwf's principles catalog, gated by a reviewer agent
 and your explicit consent, so a covered language never regenerates because its
-framework is new. Both paths land mostly in the repo's committed `.claude/` tree
-— skills, agents, hooks and rules only, shaped by a closed kind vocabulary whose
-per-kind **topic bar** fixes what the output must cover and how deep, recorded
-in a lockfile per component — so most of the result is plain files your
-collaborators get with a `git pull` and no plugin install. Two things cannot be
-repo files, and each carries its own consent line rather than riding the
-landing: an MCP server goes into the project's `.mcp.json`, and a **language
-server** is a plugin-manifest feature no project file can express at all, so
-stackgen writes one small local plugin on your machine — at the fixed path
+framework is new. Every concrete third-party name a generated component emits —
+a package, a runner-invoked tool, a GitHub Action, a container image — is vetted
+first by `stackgen-reputation` against public registry, advisory and scorecard
+data, one verdict per name (`pass`, `warn`, `block`); a `block` halts that
+component until you name a replacement, and the same skill is yours to run on
+any name as `/stackgen:stackgen-reputation <ecosystem>:<name> …`. Both paths
+land mostly in the repo's committed `.claude/` tree — skills, agents, hooks and
+rules only, shaped by a closed kind vocabulary whose per-kind **topic bar**
+fixes what the output must cover and how deep, recorded in a lockfile per
+component — so most of the result is plain files your collaborators get with a
+`git pull` and no plugin install. Two things cannot be repo files, and each
+carries its own consent line rather than riding the landing: an MCP server goes
+into the project's `.mcp.json`, and a **language server** is a plugin-manifest
+feature no project file can express at all, so stackgen writes one small local
+plugin on your machine — at the fixed path
 `~/.claude/plugins/local/stackgen-lsp/`, holding the union across the repos you
 have materialized from — and **prints the two registration commands for you to
 run rather than running them itself**. That one is user-scoped and your
@@ -255,23 +273,36 @@ subtraction, dropping only the keys your repo's lockfile recorded. A pack may
 also declare **repo config files** it owns — the mise config and the file-based
 task library everything else runs through, each gate's own config, the hygiene
 files, a provider's environment fragment, a deploy target's own root config and
-the deploy task beside it, and the two fragments `/vwf:init` merges: the
-pre-commit one, and the per-pack editor fragment — on the same merges-never-owns
-terms, behind their own consent line, and capped by a fixed allowlist of what
-may sit at a repo's root. Language manifests, CI workflow files and a **whole**
-editor file stay outside that fence: the first two declare what the project
-*is*, the third is composed from every pack's slice and belongs to no single
-one, and no pack decides any of them. The packs, bundles and kinds that ship are
-inventoried in [`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md),
-generated from the tree itself; the newest kind is `repo-hygiene`, joining
-`toolchain-manager` and `workspace`, which arrived when the `devtools` plugin
-dissolved into stackgen. stackgen is now the only stack plugin: its packs are
-the covered path, its generator the uncovered tail. A `vwf` dependency, because
-vwf's stack menu is the union of what the installed stack plugins offer — with
-none present it comes back empty, and the axes carry no free-text escape. You
-can defer an axis and keep defining the product, but `/vwf:plan` and
-`/vwf:execute` halt until it is answered. Having it installed commits you to
-nothing; it acts only once an axis is pinned. `stackgen@virajp-plugins`
+the deploy task beside it, a project task a framework pack owns — the Astro
+pack's favicon rasterizer is the first — and the two fragments `/vwf:init`
+merges: the pre-commit one, and the per-pack editor fragment — on the same
+merges-never-owns terms, behind their own consent line, and capped by a fixed
+allowlist of what may sit at a repo's root. Language manifests, CI workflow
+files and a **whole** editor file stay outside that fence: the first two declare
+what the project *is*, the third is composed from every pack's slice and belongs
+to no single one, and no pack decides any of them. The packs, bundles and kinds
+that ship are inventoried in
+[`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md), generated from
+the tree itself; the newest kind is `stylesheet`, the one that answers vwf's
+seventh axis — how a web frontend's styles are authored, with `tailwindcss`,
+`stylex` and `plain-css` filling it and the design system's tokens staying the
+contract each of them realizes. The newest **category** is `workspace`, filled
+by `notion` — the place a team's docs, specs and tickets already live, wired for
+the agent to reach through one hosted MCP server the person authorises once, and
+nothing more: no part of the product runs against it. The newest **design tool**
+is the terminal itself — the `claude-code` pack, which vwf's architecture menu
+preselects on the design axis: the design system, the logo and a flow's screens
+are authored in session, through the `taste-skill` plugin a product pinning it
+declares, into a committed `docs/design/<project>/` that vwf imports like any
+hosted canvas, and reviewed in a browser served from the repo on loopback — you
+click, comment, press Done, and the session applies the comments. stackgen is
+now the only stack plugin: its packs are the covered path, its generator the
+uncovered tail. A `vwf` dependency, because vwf's stack menu is the union of
+what the installed stack plugins offer — with none present it comes back empty,
+and the axes carry no free-text escape. You can defer an axis and keep defining
+the product, but `/vwf:plan` and `/vwf:execute` halt until it is answered.
+Having it installed commits you to nothing; it acts only once an axis is pinned.
+`stackgen@virajp-plugins`
 
 Every plugin above is authored here. Nothing in this marketplace is re-listed
 from another repo any more: the last one that was — the Karpathy coding

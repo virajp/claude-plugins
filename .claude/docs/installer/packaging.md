@@ -92,5 +92,5 @@ on every push.
 The bad-merge window that used to ride along with that is closed: each entry's
 `source` is a `git-subdir` pinned to a `<name>-v<version>` tag, so what a merge
 changes is the *pin*, and the content users get moves only when
-`mise run plugins:release` cuts the tag. Work can now land on `develop` and sit
-on `main` without reaching anyone.
+`mise run p:plugins:release` cuts the tag. Work can now land on `develop` and
+sit on `main` without reaching anyone.

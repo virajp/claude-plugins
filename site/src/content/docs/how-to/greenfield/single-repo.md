@@ -64,16 +64,29 @@ On an empty repo `init` resolves to its **new** pipeline and shapes the repo
 before anything else runs: the config layout, the toolchain manager's five-file
 split, the task library grouped `setup:*` / `code:*` / `p:*`, the four repo
 gates with their configs and hook fragments, the hygiene files, and the licence
-Relay chose. It asks six questions in one round each — the repo name and a
-one-line brief (both proposed or skippable), the ids it will write task groups
-and aliases for (each shown with its slug and where the name came from, yours to
-replace), which provider holds Relay's secrets, the licence, and a security
-contact — then shows **one plan** and applies it on one yes.
+Relay chose. It asks seven questions in one round each — the repo name, proposed
+from this repo's own folder name and the one thing that fills `REPO_NAME`, and a
+one-line brief (both proposed or skippable); the ids it will write task groups
+and commit scopes for, each shown with its slug and where the name came from and
+yours to replace — with no registry and no sub-project directories yet, Relay's
+one project is proposed from its **platform token**, which you pick from the
+closed list (`service`, `worker`, `webapp`, `site`, `cli`, `iac`, …) or type as
+*other*; which provider holds Relay's secrets, which **agent plugins this repo
+requires** (a multi-select seeded by what is already registered on your machine,
+with *none* as the ordinary answer — `init` offers those rows minus the workflow
+plugin's own and its dependency's, since `setup:ai` installs those two either
+way), the licence, and a security contact — then shows **one plan** and applies
+it on one yes. Relay is one repo, so every one of those questions is a single
+row; on a product with member repos the same seven rounds simply carry a row per
+repo where the answer can differ.
 
-It closes with a git pass: it stages what it wrote and asks once whether to
-commit, commit and push, or leave it, creates `develop` and `main`, and asks
-which branch the remote should default to. Its report prints, and setup carries
-on with its own work.
+It closes with a git pass: it asks how work lands in this repo — `direct`, which
+merges locally and pushes, or `pr` — writes that answer to `MERGE_MODEL`, then
+stages what it wrote and asks once whether to commit, commit and push, or leave
+it, creating `develop` and `main` along the way. It never touches the forge's
+own settings: which branch the remote calls default is a one-time act a
+maintainer performs, and the hygiene pack's `CONTRIBUTING.md` carries the line
+for it. Its report prints, and setup carries on with its own work.
 
 **Then setup does its half.** A repo with no manifest, no source directories and
 no `docs/blueprint/` is *blank*, and setup treats it as such: it asks nothing
@@ -161,7 +174,10 @@ installed stack plugins offer. Relay pins `typescript-hono-refine` on the
 project axis (it is the template that serves `service` and `webapp` from one
 codebase), `postgres` on the backing axis and `container-generic` on the deploy
 axis, both from `stackgen`. The repo axis is answered once for the checkout
-rather than per project. What each axis means and why they never merge:
+rather than per project. Because `relay` declares `webapp`, one more round
+follows its design round — the **stylesheet** axis, where Relay pins
+`tailwindcss`; a project declaring neither `site` nor `webapp` is never asked.
+What each axis means and why they never merge:
 [stack templates](../../plugins/vwf.md#stack-templates).
 
 Last comes the product-foundations walk — thirteen concerns; the eight elective
@@ -346,6 +362,13 @@ The practical consequence, and it has two halves: install the plugins that own
 your technology, and list them in the product's `stacks:` roster, before you
 reach `/vwf:architecture` — or the menu is short and you will pin something you
 did not want. [Stack templates](../../plugins/vwf.md#stack-templates).
+
+**Answering the menu records a slug and lands nothing.** When
+`/vwf:architecture` is done it invokes `/vwf:setup` for you, and setup's
+[materialize pass](../../plugins/vwf.md#the-materialize-pass) is what asks
+`stackgen` for each pinned template and lands it in your repo, one consent per
+pin. Decline a landing and the pin stays, but `/vwf:doctor` reports it as
+**pinned, not materialized** — blocking — until a later `/vwf:setup` lands it.
 
 ### The thirteen foundations
 

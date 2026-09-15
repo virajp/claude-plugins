@@ -49,14 +49,19 @@ edit.
 
 ## Running it
 
-In a mise repo, run through the task library — the tasks add the wrappers and
-target the whole tree:
+In a mise repo, run through the task library — the tasks add the wrappers, and
+take an optional file list whose empty case is the whole tree. That is also how
+the pre-commit `lint` hook reaches the linter: it calls the task with the staged
+files, so there is no second place the linter is configured. The linter itself
+reads the whole tree either way — its rules are cross-file — so the list only
+narrows the task's shell and workflow gates.
 
 ```sh
 mise run code:format          # dprint check (verify) + sort-package-json --check
 mise run code:format --fix    # dprint fmt (apply) + sort-package-json
-mise run code:lint            # pnpm dlx @askviraj/linter
+mise run code:lint            # pnpm dlx @askviraj/linter, whole tree
 mise run code:lint --fix      # apply the linter's auto-fixes
+mise run code:lint src/a.ts   # narrows the shell/workflow gates only
 mise run code:all             # aggregate: format → lint → sec
 ```
 

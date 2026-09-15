@@ -72,15 +72,19 @@ the derive-and-correct shape. Two of Centwise's answers are the delta:
   flows the blueprint mandates, that screens land in `mobile.md` files, and
   which toolchain checks the built screens in step 9.
 - **Design tool** — `claude-design`, asked once per project that declares a
-  screen platform and recorded against that project. It is a bundle slug, and
-  the slug *is* the config token, so pinning it and writing the key are one act.
-  A product with two UI projects can answer it twice with two different tools:
-  [stackgen](../../plugins/stackgen.md).
+  screen platform and recorded against that project. The menu preselects
+  `claude-code`, the terminal itself, so Centwise picks past it. It is a bundle
+  slug, and the slug *is* the config token, so pinning it and writing the key
+  are one act. A product with two UI projects can answer it twice with two
+  different tools: [stackgen](../../plugins/stackgen.md).
 
 On the stack menu Centwise pins `dart-flutter` on the project axis — the
-stackgen bundle serving mobile, tablet, desktop and webapp from one codebase
-([stack templates](../../plugins/vwf.md#stack-templates)). The other axes work
-as in the spine's
+stackgen bundle serving mobile, tablet, desktop and the car from one codebase,
+and deliberately not the web
+([stack templates](../../plugins/vwf.md#stack-templates)). The **stylesheet**
+axis is the one round Centwise never sees: it is asked only of a project
+declaring a `site` or a `webapp` platform, and absent otherwise — Centwise
+declares `mobile` alone. The other axes work as in the spine's
 [stack pins, one axis at a time](./single-repo.md#stack-pins-one-axis-at-a-time),
 and the thirteen-foundation walk is unchanged from
 [the thirteen foundations](./single-repo.md#the-thirteen-foundations).
@@ -246,8 +250,10 @@ feedback, rather than through any tool-specific call. See
 
 The choice is recorded per registry project, so a product with a marketing site
 and a phone app can answer it twice. The tokens the adapter supports today are
-`claude-design`, `lovable` and `stitch`, and they differ in two ways that matter
-downstream.
+`claude-code`, `claude-design`, `lovable` and `stitch` — the first is the
+terminal itself, with a committed `docs/design/<project>/` directory as its
+canvas, and the one the menu preselects — and they differ in two ways that
+matter downstream.
 
 The first is whether the tool **stores** a design system or the adapter has to
 reconstruct one from what the tool generated. A stored system is authoritative
@@ -260,8 +266,9 @@ screens without codes rather than guessing, and you match them by hand.
 
 Support for a tool is a `design-tool` pack inside `stackgen`, not a vwf change
 and not a new plugin — so "my tool isn't listed" is a small contribution, not a
-fork. Three ship today: `claude-design`, `lovable` and `stitch`. What each reads
-and how each authenticates: [stackgen](../../plugins/stackgen.md).
+fork. Four ship today: `claude-code`, `claude-design`, `lovable` and `stitch`.
+What each reads and how each authenticates:
+[stackgen](../../plugins/stackgen.md).
 
 ### Design first, or review the renders
 

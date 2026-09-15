@@ -39,7 +39,7 @@ scripts/dist/
 # Build output: tsup bundles installer/ into bin/, and bin/ is what npm publishes.
 # Not committed — unlike the authored plugins/ tree and the marketplace manifest
 # generated from it, which are meant to be read and diffed. A bundle diff is
-# noise, and `i:build` regenerates it before every publish.
+# noise, and `p:i:build` regenerates it before every publish.
 bin/
 
 # The Astro build output and its generated type cache. `site.yml` rebuilds both,
@@ -64,10 +64,10 @@ docs/memory/runs/
 .cursor/
 
 # The authoring machine's develop-tracking marketplace, written by
-# `mise run plugins:marketplace` alongside the published manifest. One machine's
-# local state: it exists so the author can run the working tree rather than the
-# last release. Untracked because a second file in the tree declaring the
-# marketplace name `virajp-plugins` is a footgun on the branch users read, and
-# because regenerating it is one command. `--check` reports it absent rather
-# than failing — see `.claude/docs/dev-marketplace.md`.
+# `mise run p:plugins:marketplace` alongside the published manifest. One
+# machine's local state: it exists so the author can run the working tree rather
+# than the last release. Untracked because a second file in the tree declaring
+# the marketplace name `virajp-plugins` is a footgun on the branch users read,
+# and because regenerating it is one command. `--check` reports it absent
+# rather than failing — see `.claude/docs/dev-marketplace.md`.
 .dev-marketplace/

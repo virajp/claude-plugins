@@ -1,14 +1,15 @@
 ---
 name: init
-description: Bootstrap a new repo, or reshape an existing one, to the standard
-  layout — every tool config under .config/, the toolchain manager's file split
-  and its task library, the repo gates, the hygiene files and a secrets provider
-  — materialized from the stack adapter's three unconditional bundles. Surveys,
-  shows one plan, applies on one consent. Stack-agnostic; it orchestrates the
+description: Bootstrap a new repo, or reshape an existing one and every member
+  repo it has, to the standard layout — every tool config under .config/, the
+  toolchain manager's file split and its task library, the repo gates, the
+  hygiene files and a secrets provider — materialized from the stack adapter's
+  three unconditional bundles. Surveys the whole product, shows one plan with a
+  section per repo, applies on one consent. Stack-agnostic; it orchestrates the
   packs and writes no tool config of its own. Invoked by /vwf:setup — its Step 0
   offer, or /vwf:setup reshape — and never typed by a user.
 model: sonnet
-effort: high
+
 user-invocable: false
 disable-model-invocation: false
 ---
@@ -23,11 +24,14 @@ disable-model-invocation: false
 > only caller: its Step 0 offers `init` when the repo shape is missing or has
 > drifted, and `/vwf:setup reshape` forces that offer.
 
-`init` sets up the **base repo**; `/vwf:setup` sets up **vwf** in it. The two
+`init` sets up the **base repo and every member repo the product has**;
+`/vwf:setup` sets up **vwf** in the base. The two
 are a pair and neither does the other's job: everything a repository needs
 before it has a product — the config layout, the task vocabulary, the gates,
 the ignore set, a licence — is this command's, and everything about
-`docs/blueprint/`, `.config/vwf.yaml` and the memory tree stays `/vwf:setup`'s.
+`docs/blueprint/`, `.config/vwf.yaml` and the memory tree stays `/vwf:setup`'s
+— with one key excepted, `enforcement.kept_files`, which records a pack-owned
+file the user chose to keep and which only a reshape can know about.
 Run `init` first on a repo that has neither.
 
 Nothing here knows what the repo is written in, and that is the design. Every
@@ -41,17 +45,33 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
 ## Hard rules
 
 - **Writes only what a pack declares, plus the fills those packs leave for
-  it.** There are two kinds of fill and the distinction is the whole rule.
+  it — in each of the repos Step 0 resolved.** Those repos are the whole of
+  its reach: `init` never writes outside the repos it **resolved** as the base
+  and its members, and a member that sits beside the base rather than inside
+  it is still one of them. Within each repo the rule is the same one, applied
+  to that repo's own tree. There are two kinds of fill and the distinction is
+  the whole rule.
   **Placeholders** — `<REPO_URL>`, `<YEAR>` and `<HOLDER>` — are values a pack
   templated into a file it ships; the hygiene pack's conventions are
   authoritative for them. **Marked positions** are the commented slots a pack
   ships *because no pack can know a repo's project ids, its name, its remote
   or which other packs landed beside it*: the bootstrap aggregator's member
   flags, the shell aliases, the per-project task groups, the repo-name key,
-  the commit gate's scope list and forge links, and the composed editor block.
+  the landing-model key and the member-path key, the commit gate's scope list
+  and forge links, the plugin task's two agent-plugin lists, and the composed
+  editor block.
   Filling one is exactly `init`'s job and is not authoring pack content — what
   the rule forbids is inventing pack-owned content from scratch, at a path or
   a position no pack marked.
+  **One file is neither, and it is the only file**: the repo-owned
+  `_scripts/local` sidecar the existing-repo pipeline writes. No pack declares
+  it, no pack ships it and `init` never replaces it — and nothing in it is
+  authored, since every function it holds is carried verbatim out of the
+  repo's own helper file. It is a **move**, wearing a create's row. **One key
+  is neither either**: `enforcement.kept_files` in `.config/vwf.yaml`, where a
+  reshape records a pack-owned file the user chose to keep so it is never
+  re-offered. `init` writes that key into a file it never creates, and writes
+  nothing else in it.
 - **Never application code.** Not a source file, not a test, not a directory
   of either.
 - **Never a language manifest or a lockfile.** Those declare what the project
@@ -63,34 +83,96 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
 - **One consent, then apply.** The whole plan is presented once and applied on
   one yes. `init` never asks per file and never writes before the yes.
 - **The git pass is the one exception, and it is at the end.** `init` shapes a
-  tree and then closes it: it stages what this run wrote and asks **one
-  question with three answers** — commit, commit and push, leave it — commits
-  with a fixed `ops:` message when told to, creates whichever of `develop` and
-  `main` the branch model needs and the repo lacks, asks which branch the
-  remote forge should default to, and pushes **only** on the commit-and-push
-  answer. Push is a second decision inside one question, never an assumed
-  consequence of committing. History is never rewritten, nothing is
-  force-pushed, and no verification-skipping flag is ever passed. Both
+  tree and then closes it: it asks how work lands in this product, stages what
+  this run wrote and asks **one question with three answers** — commit, commit
+  and push, leave it — commits with a fixed `ops:` message when told to,
+  creates whichever of `develop` and `main` the branch model needs and the
+  repo lacks, and pushes **only** on the commit-and-push answer. Both
+  questions are asked **once** and applied to every resolved repo: the members
+  commit first, and the base then commits the run's files **plus** the moved
+  gitlinks, which it deliberately stages so the base's record of its members
+  is not left a commit behind. Push is a
+  second decision inside one question, never an assumed consequence of
+  committing, and the pass never reaches the remote's own settings. History is
+  never rewritten, nothing is force-pushed, and no verification-skipping flag
+  is ever passed. Both
   pipelines describe the pass; [new repo](references/new-repo.md) §11 is where
   it is written down.
-- **Idempotent, for the same id source.** A second run on a shaped repo
-  produces an **empty plan** and says so. Every step below is written to be
-  re-runnable. The one legitimate exception is a run whose **project ids now
-  come from a different source** — a registry the repo did not have before —
-  which the existing-repo pipeline reports in those words.
+- **Idempotent, for the same id source.** A second run on a shaped **product**
+  produces an **empty plan** — one section per repo, each reading nothing —
+  and says the product is shaped. Every step below is written to be
+  re-runnable, and a file replaced on one run is identical to the pack's on
+  the next, so it is replaced once. The one legitimate exception is a run
+  whose **project ids now come from a different source** — a registry the
+  repo did not have before — which the existing-repo pipeline reports in
+  those words, per repo.
 - **A decline is a deferral, never a halt.** Materialization is consent-gated;
   a declined write is recorded and named with its unlock — run
   `/vwf:setup reshape` — exactly as `/vwf:setup`'s tooling step already defers.
 
-## Step 0 — Resolve the mode
+## Step 0 — Resolve the repos, then the mode of each
 
-The target is the repository the caller is already in: `init` takes no
-arguments, reads no flag and never operates on another directory. Shaping a
-different repository means running `/vwf:setup` there.
+The repository the caller is already in is not the target; it is the way in.
+`init` shapes a **product**, which is one **base repo** and every **member
+repo** that base declares, and it resolves that set itself: it still takes no
+arguments and reads no flag, so the repos it shapes are the ones it resolved,
+never ones it was told.
 
-Detect the mode from the target itself:
+1. **The base.** Resolve it per
+   `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`'s five steps — the asset owns
+   them and they are not restated here — including what it does about a run
+   started somewhere other than the base. A run started inside a member
+   therefore walks up and runs **from the base**, shaping the whole product
+   rather than the one repo the user happened to stand in. Say which step hit.
 
-| The target                                                | Mode         |
+   **`init` takes one step's outcome differently, and it has to.** That
+   resolution ends by declaring a repo with no `.config/vwf.yaml` to be no vwf
+   repo at all — which is the right answer for every command that reads the
+   file and the wrong one here, because a repo that has never been shaped is
+   precisely what `init` exists for and that file is written *after* it, by
+   `/vwf:setup`. So: follow the asset's hops — the superproject walk and the
+   linked-worktree hop — and then, **where it would stop for want of that
+   file, take the repo those hops landed in as the base.** `init` never halts
+   for a missing `.config/vwf.yaml`; it halts only where the asset's hops
+   leave it outside a repository altogether. A base with no config simply has
+   no `members:` source, which Step 2 already handles.
+2. **The members.** Two sources, and the answer is their **union**: the paths
+   `.gitmodules` declares, walked recursively so a member's own members are
+   members too, and the `members:` list in `.config/vwf.yaml` — the key
+   `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` owns. **Dedupe on realpath**,
+   since the same repo is reachable by more than one spelling of its path.
+
+   **A source that does not exist is not a disagreement.** Where only one of
+   the two is present — the usual case, a submodule product with no
+   `members:` key yet, or a sibling product with no `.gitmodules` — that
+   source's list **is** the member set, whole, and every path in it is
+   shaped. Requiring a second declaration nobody wrote would shape nothing on
+   the products this exists for.
+
+   Only where **both** sources are present does a path in one and not the
+   other become a **membership disagreement**: report it in the plan, name
+   both sources and which one carries it, and **never shape that path** — it is
+   a declaration the product has not settled, and settling it by picking a
+   side would write a repo into the product on `init`'s own authority.
+3. **Presence.** A member is **present** when its resolved path exists **and
+   is the top level of its own work tree**: asking that path for its work
+   tree's top level — `rev-parse --show-toplevel`, run with that path as the
+   repository — answers the path itself. Anything else is **absent**, and
+   the empty directory is why the test has to be that exact: a clone made
+   without recursing leaves each member as a bare directory *inside* the
+   superproject's work tree, so the looser question "is this a work tree"
+   answers yes about a directory with nothing in it. Presence is detected
+   every run and recorded nowhere — the membership asset states why — and an
+   absent member is handled below.
+4. **The mode of each.** Apply the table below to **every present** resolved
+   repo, on that repo's own markers. A base can resolve **existing** while a
+   member resolves **new**, and each repo's section of the plan says which it
+   got. An absent member has no markers to read yet; its mode resolves with
+   its survey, after the clone below.
+
+Detect a repo's mode from that repo itself:
+
+| The repo                                                  | Mode         |
 | --------------------------------------------------------- | ------------ |
 | no `.config/` directory **and** no task-library directory | **new**      |
 | anything else                                             | **existing** |
@@ -101,7 +183,45 @@ new is right — nothing in the **new** pipeline touches source. The moment
 either marker is present, some earlier shaping exists and the survey is the
 honest path.
 
-Say which mode resolved and why, in one line, before doing anything else.
+Say the **resolved set** in one line before doing anything else: the base, then
+each member with `present` or `absent`, and each repo's mode with the marker
+that decided it.
+
+### An absent member
+
+A member that resolved but is not on this machine is neither a halt nor a
+reason to skip it. What follows is `init`'s **own** handling, stated here in
+full. `${CLAUDE_PLUGIN_ROOT}/assets/membership.md` splits the commands that
+need a member's **code** from the ones that do not, and `init` is named in
+neither list — it does not read a member's code, it **shapes** one. So that
+asset is cited below for exactly one thing, the two clone commands, which it
+owns.
+
+**`init` makes no separate offer.** The clone is a **row in the plan**,
+covered by the same one yes as everything else, so an absent member is not a
+second question in front of the one consent. The row is the command the
+asset spells for the linkage in force — `git submodule update --init <path>`
+under submodule linkage, `git clone <url> <path>` under siblings — followed
+by *then survey and shape it*.
+
+An absent member's section holds that clone row **first** and then reads
+*surveyed after the clone*: nothing can be surveyed in a directory that is not
+there yet. That survey runs at **apply** time, immediately after the clone and
+before any write into that repo, and its rows are printed then — so the run's
+output still accounts for every row, in the order it happened, even though the
+plan could not.
+
+**On a decline, nothing is cloned.** The clone rows sit inside the one plan,
+so the one no that stops the plan stops them too: no directory is created, no
+working tree anywhere is touched, and the member is exactly as absent
+afterwards as it was before. The decline is recorded nowhere — the next run
+asks again, because the usual reason to decline is *not right now*, and that
+expires.
+
+A member with **no clone source** — no url recorded under siblings, none
+declared under submodules — gets no row at all. It is listed under
+**Deferred**, unlock: add the clone source. Shaping it is not possible and
+inventing a source for it would be a guess at somebody's remote.
 
 ## Which plugin the adapter resolves to
 
@@ -131,21 +251,64 @@ written here would record a decision nobody was asked for.
 
 ## The questions
 
-Six in all, each one round, MCQ where an option set exists, per
-`${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`. Two of them — 1 and 3 — are
-asked on a **new repo only**, because an existing repo already answers them;
-the other four are asked on any repo.
+Seven in all, each one round, MCQ where an option set exists, per
+`${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`. **A round is one round for the
+whole product**, however many repos resolved: a question that differs per repo
+shows one row per repo inside its single round, and never becomes a second
+round. Two of them — 1 and 3 — are asked for the repos that resolved to mode
+**new** only, because an existing repo already answers them; the other five
+are asked whatever the modes are.
 
-1. **The repo name.** *New repo only.* Proposed from the target directory's
-   basename.
+1. **The repo name.** *Mode-new repos only.* Asked in one round listing every
+   repo that resolved to **new**, each proposed from that repo's **folder
+   name** — the basename of its **main checkout**, which on a run started in a
+   linked worktree is the parent of that repo's common git directory
+   (`rev-parse --git-common-dir`) and never the worktree's own directory, since
+   that one is named for a branch. A run where no repo resolved new skips it.
+
+   **What this question settles is `REPO_NAME`.** The answer, slugified by the
+   stack adapter's `assets/ids.md` exactly as question 2's replacements are, is
+   what that repo's repo-name key receives — written **literally**, never
+   derived at read time. Each repo's key takes **its own** folder name: a
+   member names the member's folder, never the base's. No project id reaches
+   this key, and no answer here reaches a task group.
 2. **The ids, confirmed.** The one question asked before a single `p:<slug>:*`
-   task group, member flag, shell alias or repo-name key is written. Show one
-   list — the repo's own name first, then one row per project `init` will
-   create a task group for — and give each row three things: the **name** as
-   the repo spells it, the **id** that name slugifies to, and the **source**
-   the name came from, in the words [new repo](references/new-repo.md) §7
-   resolves them by: the registry, a sub-project directory, or the repo's own
-   name. Say on the repo's row that its id is what `REPO_NAME` receives.
+   task group or its commit scope is written, in any repo. Show one list,
+   **grouped by repo** — the base's group first, then one per member in the
+   resolved order — and inside each group one row per project `init` will
+   create a task group for *in that repo*. Give each row three things: the
+   **name** as the repo spells it, the **id** that name slugifies to, and the
+   **source** the name came from, in the words
+   [new repo](references/new-repo.md) §7 resolves them by: the registry, a
+   sub-project directory, or the project's **type**.
+
+   **The type source is a choice, not a reading.** Where a repo has neither a
+   registry nor sub-project directories, there is no name in the tree to
+   propose from — the repo's own name was the old answer and it is the wrong
+   one, since a task group names what a task acts **on**. So ask, per project
+   in that repo and inside this same round, which **platform token** is that
+   project's primary surface — `service`, `worker`, `webapp`, `site`, `cli`,
+   `iac` and the rest — and propose the token it picks as the id. The options
+   are the closed per-role platform lists
+   `${CLAUDE_PLUGIN_ROOT}/assets/templates/registry.yaml` carries, narrowed to
+   the project's role where a registry names one and offered as their union
+   where nothing does, plus a free **other** the user types. Offer **only** the
+   tokens that asset lists. A spelling the vocabulary has **retired** —
+   `console` among them — is on no list and is never offered; setup's
+   `references/format-lineage.md` is where each retired spelling is recorded
+   against what replaced it, and a user who wants one types it as **other**.
+
+   **Two projects in one repo that pick the same token** are proposed as
+   `<token>-<directory-slug>` each, both rows shown that way — an id is a
+   directory name in the task library, and two groups cannot be one directory.
+   Across repos there is no collision to resolve: each repo's task library is
+   its own.
+
+   **A member's projects come from the base first.** Where the base config's
+   `members:` list declares that member's `projects`, those are its projects;
+   otherwise that member's own sub-project directories; otherwise the type
+   question above, asked for the member's one project. The order is the same
+   declaration-before-detection order §7 already uses, applied one repo down.
 
    Naming the source is the point of showing the list: a row a user disagrees
    with is usually a row whose source they did not expect, and the source is
@@ -158,20 +321,36 @@ the other four are asked on any repo.
    is already its own slug is taken silently. Read the asset; never restate the
    rule here.
 
-   What this question settles is what the plan shows and what §7 writes — the
-   per-project task groups, the aggregator's member flags, the shell aliases
-   and `REPO_NAME`. Nothing downstream re-derives an id.
-3. **A one-line brief.** *New repo only.* What the repo is, in a sentence.
-   **May be empty** — an empty brief writes a one-line stub, and `/vwf:readme`
-   fills the rest.
-4. **The secrets provider.** Fetch the adapter's menu once
+   What this question settles is what the plan shows and what §7 writes in
+   each repo — the per-project task groups and, on **every** run including
+   the first, the commit gate's scopes, one per confirmed id. A registry,
+   where the repo has one, is only where this question's proposal was read
+   from; the scopes take the ids it confirmed either way, and a repo with no
+   registry fills them on its first run like any other. Nothing downstream
+   re-derives an id. Four things are **not** this question's. The
+   **repo-name key** is question 1's: it takes the repo's folder name,
+   slugified, and no row of this list reaches it. The bootstrap aggregator's
+   **member flags** and the aliases that shorten them come from the resolved
+   **member repos**, one of each per member, never from a project id — they
+   widen the run to another repo, which is what a member is. `MEMBERS` is
+   filled from the resolved members where the linkage is siblings, and stays
+   exactly as shipped where the repo's own submodule declarations are what
+   the task library reads. And `MERGE_MODEL` is asked in the git pass.
+3. **A one-line brief.** *Mode-new repos only.* What the repo is, in a
+   sentence — one row per repo that resolved to **new**, in the same round
+   question 1 listed them in. **May be empty** — an empty brief writes a
+   one-line stub, and `/vwf:readme` fills the rest.
+4. **The secrets provider.** Answered **once** and written into every repo: a
+   product keeps its secrets in one place, and a member on a different
+   provider is a decision nobody made by answering this. Fetch the adapter's
+   menu once
    (`/<plugin>:<plugin>-stack-menu`) and **filter** it to the entries on the
    backing axis whose kind is *capability provider*. Those two fields are
    what the payload actually carries; it has no field meaning *secrets*, and
    that kind covers capabilities that have nothing to do with them. So the
    filter narrows and the **question** decides: offer the filtered set in the
    menu's own order, plus **none — decide later**, and ask which of them
-   **holds this repo's secrets** — naming the capability in the question is
+   **holds this product's secrets** — naming the capability in the question is
    what a wrong entry cannot satisfy. The options are the adapter's bundle
    list, never a name written here: `init` presents what the menu carries and
    never proposes a default of its own.
@@ -180,16 +359,73 @@ the other four are asked on any repo.
    can detect, and it does not pretend to: the slot the packs left stays
    unfilled, announces itself, and is reported exactly as a **none** answer
    is reported.
-5. **The licence.** MIT, Apache-2.0, or none. The hygiene pack ships the two
-   texts; **none** is a legible answer and writes no file.
-6. **The security-contact URL.** Defaulted to the origin remote's advisories
-   page where an origin exists. Declining writes no security file — a file
-   naming a channel nobody watches is worse than none.
+5. **The agent plugins this product requires.** Answered **once** and written
+   into every repo, for the same reason question 4 is: the inventory it is
+   seeded from is the **machine's**, not a repo's, so asking per repo would
+   offer the same rows again and invite a difference nobody wants.
+   The task library ships one task that reconciles them, and beyond the
+   workflow's own — which that task always installs, with whatever it depends
+   on — no pack can know which others a repo needs. So ask, **seeded by the
+   machine itself**: run that
+   task's inventory mode, `setup:ai --inventory`, named by the task-name
+   contract like every other task `init` reaches for, and it prints the plugin
+   sources registered on this machine, one row each, then the plugins already
+   installed from any of them, one row each, and nothing else.
+
+   **Drop two rows before offering anything.** The task prints *every*
+   installed plugin, so the workflow's own plugin and whatever it depends on
+   appear there like any other — and they are the two the task installs
+   unconditionally. `init` removes those rows from what it offers. They are
+   not a choice, and an MCQ that lists them either invites a user to deselect
+   something that gets installed regardless, or writes a row that duplicates
+   what the task already does.
+
+   Offer what is left as a **multi-select** — the sources and the plugins in
+   the two groups the task printed them in — plus **none**, which is the
+   ordinary answer for a repo that needs nothing beyond the workflow. The rows
+   are shown verbatim, in the task's own order; `init` neither reorders them
+   nor proposes one of its own, and a row the user does not pick is simply not
+   written.
+
+   An inventory that prints nothing, or whose every row was dropped, is not an
+   error — it is an unshaped machine, or one whose plugins all arrived with
+   the workflow. Ask the question anyway, with **none** as the only thing to
+   pick, and say in the question itself which of the two it was — so the
+   answer is recorded rather than assumed, and a user who expected rows
+   learns why there are none.
+
+   What this question settles is what [new repo](references/new-repo.md) §7
+   writes into the plugin task's two marked positions — never the workflow's
+   own plugin or its dependency, which are dropped above and stay the task's
+   unconditional business.
+6. **The licence.** MIT, Apache-2.0, or none — **one row per repo** in the one
+   round, because a licence is a file a repo carries and members are licensed
+   separately often enough that assuming otherwise writes the wrong text into
+   somebody's repo. The hygiene pack ships the two texts; **none** is a
+   legible answer and writes no file, in that repo or in any other.
+7. **The security-contact URL.** **One row per repo** in the one round, each
+   defaulted to **that repo's own** origin remote's advisories page where that
+   repo has an origin, and to nothing where it does not. Declining a row
+   writes no security file in that repo — a file naming a channel nobody
+   watches is worse than none — and declining one row says nothing about the
+   others.
 
 Ask them **before** presenting the plan, so the plan is complete and one yes
 covers all of it.
 
 ## The pipelines
+
+Both pipelines run **per repo** — every resolved repo takes the one its own
+mode selected, so a single run may execute both — and they run **members
+first, the base last**, so the base commits with its record of the members
+already current.
+
+Whichever each repo takes, there is **one plan and one consent for the run**:
+each repo contributes a **section** to that plan, the base's first and then
+each member's in the resolved order, and the single yes covers all of them.
+Two plans would be two chances to stop halfway, which is exactly the state the
+one-consent rule exists to prevent — one repo renamed into the contract while
+its neighbours still call the old names.
 
 | Read                                                           | When                              |
 | -------------------------------------------------------------- | --------------------------------- |
@@ -198,11 +434,35 @@ covers all of it.
 | [fragments and sections](references/fragments-and-sections.md) | both — the three merge algorithms |
 | [readme and licence](references/readme-and-license.md)         | both — the stub and the files     |
 
-Whichever pipeline runs, the same work happens in the same order at the end:
-the **fills** the packs marked — the project ids and their surfaces, the
-repo-name key, the commit gate's scopes and forge links where their sources
-exist — then the **three merges** (ignore sections, hook fragments, editor
-fragments), then the **git pass**, then the report.
+**The existing-repo pipeline adopts rather than flattens**, and three rules
+carry that. A function the repo's own helper library **defines** that the
+pack's does not and its legacy table does not map is **moved**, whole, into a
+repo-owned `_scripts/local` sidecar — never deferred, never guessed at, and
+never lost to the replace merely because nothing calls it yet. A task file no
+pack ships is **kept and listed**, with a note where it sits in a group the
+task-name contract reserves — `init` moves none of them. And a
+pack-owned file whose **content** has diverged is **offered**, replace or keep,
+one row in the same single plan, where a replace re-fills every marked position
+that file carries and a keep is recorded so it is not asked again — a keep
+covering the content the repo customised and never a marked position's value,
+which the fills own either way. **What counts as diverged is two tests**: the
+file's hash against the lockfile's record, and, on a mismatch, the pack's
+payload with the repo's current values spliced in at **every** position
+[new repo](references/new-repo.md) §7 enumerates that the file carries, owned
+or not. A file diverging only inside those positions
+is not offered at all — where a pass owns one it shows the row, and where none
+does, as with `MERGE_MODEL`, there is simply no row. A record sourced
+`generated` has no payload to splice into, so the second test is skipped and
+the mismatch stands.
+
+Whichever pipeline runs, the same work happens in the same order at the end of
+each repo: the **fills** the packs marked — the project ids and their
+surfaces, the repo-name key from question 1's folder name, the commit gate's
+scopes from those same confirmed ids and its forge links where a remote exists
+— then the **three merges** (ignore sections, hook fragments, editor
+fragments), then the **git pass**, whose questions were asked once for the run
+and whose commit is that repo's own. The report comes last, once, when every
+repo is done.
 
 Both pipelines materialize the same three baselines. They are fetched by the
 **fixed slugs** `mise`, `repo-gates` and `repo-hygiene` — fixed, never
@@ -211,38 +471,68 @@ resolve to nothing, which is the rule the `ux-gate` and design-adapter seams
 already follow. The secrets provider is fetched by whichever slug the user
 picked at question 4.
 
-Their landing is consent-gated by the materializer, and their presence in its
-lockfile is what tells a later run — or `/vwf:setup` — that the repo is shaped
-at all.
+Their landing is consent-gated by the materializer, and their presence in a
+lockfile is what tells a later run — or `/vwf:setup` — that a repo is shaped
+at all. **The lockfile is per repo**, like everything else a pack lands: each
+member carries its own, so a member is shaped or not on its own evidence and
+the base's lockfile never speaks for it.
 
 ## The report
 
-Every run ends with the same report — six file sections, then the git section
-— each a count and its lines, and an empty section printed as `none`:
+Every run ends with the same report — the ten file sections, then one git
+section for the whole run — each a count and its lines, and an empty section
+printed as `none`. A replace and a rewrite are counted only where they were
+applied. The two `kept` sections count what this run deliberately left alone,
+which is why they are printed at all: a file nobody touched reads the same as
+a file nobody looked at.
+
+**The ten file sections repeat under one heading per repo**, the base first
+and then each member by its path, and every count is that repo's own — a run
+over four repos prints forty sections. Nothing is totalled across repos: a
+count a reader cannot attribute to a tree is a count they cannot check.
 
 ```text
+── <repo> ──
 Files written     <n>    + <path>            (one per line)
+Files replaced    <n>    <path>              (one per line)
+Files kept        <n>    <path> — <the reason recorded>
 Files moved       <n>    <old> → <new>
 Tasks renamed     <n>    <old> → <new>
+Tasks kept        <n>    <path>              (repo-owned; + the contract note)
+Calls rewritten   <n>    <file:line> <old> → <new>
 Sections appended <n>    <name>
 Fragments merged  <n>    <name>
 Deferred          <n>    <what> — unlock: <what would let it happen>
 ```
 
-Then a **git** section, from the pass that just ran — four lines, each `none`
-where nothing happened:
+Then a **git** section, from the pass that just ran — printed **once for the
+run**, since the pass asked its questions once. The landing model is one line
+because one answer was written everywhere; branches, the commit and the push
+are **one line per repo**, in apply order — the members, then the base; and
+the last line is the base's alone. Every line reads `none` where nothing
+happened:
 
 ```text
-Branches created  <n>    <name>
-Commit                   <short hash> <the fixed message>   (or: not committed)
-Pushed            <n>    <branch> → origin
-Forge default            <what the task reported, verbatim>
+Landing model            <the value written>
+Branches created  <n>    <repo> <name>                      (one per repo)
+Commit                   <repo> <hash> <subject>; <hash> <subject>
+Pushed            <n>    <repo> <branch> → origin
+Gitlinks staged   <n>    <path>              (the base's, one per member)
 ```
 
-The forge line is the task's own words and never a paraphrase: whether the
-default was set or a command was printed for a human to run is the task's
-finding, and re-stating it here is how a printed command gets quietly reported
-as a completed change.
+**A repo's `Commit` line names every commit the run made in that repo**, in
+the order they were made, each with its short hash and its subject — one line
+still, however many there were. An existing-mode repo makes **two**: the gate
+configuration commits first and alone, so the hooks the rest of the run trips
+are the ones the repo just accepted, and the shape commit follows. A new-mode
+repo makes one. A repo where the answer was **leave it** reads
+`not committed`, and a repo whose gate commit landed but whose shape commit
+did not is exactly the case a single hash would hide.
+
+There is no forge line, and its absence is the point: `init` never reaches the
+remote's own settings. Which branch a forge calls default is a one-time act
+somebody performs on the forge, and the hygiene pack's contribution guide is
+where that instruction lives.
 
 Then the two next-step lines, in this order and always both:
 
@@ -271,23 +561,40 @@ schedule of events rather than on a symptom, and the way to ask for one is
 
 - **After the registry exists.** `/vwf:architecture` declares the projects and
   `/vwf:setup` writes the config that names them. That is the moment the
-  project ids gain their real source, the commit gate's scope list becomes
-  fillable, and a per-project task group may need to move. The run reports it
-  as an **id source changed**, and it is expected work rather than drift.
+  project ids gain their real source, so a per-project task group may need to
+  move and the commit gate's scope list — already filled from the ids the first
+  run confirmed — may need to move with it. The run reports it as an **id
+  source changed**, and it is expected work rather than drift. The
+  repo-name key does not move with it: its source is the repo's folder name,
+  which a registry says nothing about.
+- **After a repo's folder is renamed.** The repo-name key is written literally,
+  so a rename leaves it naming the old folder and the launch aliases that read
+  it pointing at a name nobody uses. The run offers the new value as a replace
+  row and changes nothing else.
 - **After a stack pack's version moves.** New files, new fragments, new marked
   positions. The plan shows what the repo lacks; the adapter's own re-sync
   command is what shows a diff for a file the repo already has.
+- **After a member is added or removed** — or after a member is **cloned** on
+  a machine that lacked it. A new member has never been shaped at all, and a
+  machine that has just gained one holds a repo the last run could only record
+  as absent. The base's own fills move too: the aggregator's member flags and
+  their aliases are one per member, so the set changing is work for the base
+  as well as for the member.
 - **On a fresh clone that reports drift.** Anything the previous run
   **deferred** — an offline ignore section, a missing toolchain binary, a
   declined materialization — is still deferred in the clone, and its unlock is
   a re-run.
 - **Whenever `/vwf:doctor` says so.** Doctor is what notices the drift between
   a run: adapter lockfile against installed packs, registry ids against the
-  scope list and the task groups, a missing branch. Its finding prints
-  `/vwf:setup reshape`, once, as the one remedy for every shape row.
+  scope list and the task groups, the repo-name key against the folder, a
+  missing branch. Its finding prints `/vwf:setup reshape`, once, as the one
+  remedy for every shape row.
 
 A run that finds nothing costs one empty plan and says the repo is shaped —
-which is the answer, not a wasted run.
+which is the answer, not a wasted run. On a product, that empty plan still
+carries **a section per repo**, each reading nothing, and the run says the
+**product** is shaped: a plan that named only the base would leave a reader
+unable to tell a member that was checked from a member that was skipped.
 
 Every one of those moments reaches `init` through the same door. `/vwf:setup`'s
 Step 0 offers `init` whenever the repo shape is **missing or drifted**, so a

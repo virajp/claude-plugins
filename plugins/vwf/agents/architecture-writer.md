@@ -7,7 +7,6 @@ description: Writes or updates docs/blueprint/registry.yaml and
   sync.
 tools: Read, Write, Edit, Grep, Glob
 model: sonnet
-effort: high
 ---
 
 You are a Senior Systems Architect. You write **two** files that describe the
@@ -101,7 +100,7 @@ used to be a role lives on as a platform.
 
 | Role       | What it is                     | Platforms                                                                  |
 | ---------- | ------------------------------ | -------------------------------------------------------------------------- |
-| `backend`  | Server-side, cloud-hosted      | `packages` `service` `worker`                                              |
+| `backend`  | Server-side, cloud-hosted      | `packages` `service` `worker` `webapp`                                     |
 | `frontend` | User-facing surfaces           | `packages` `site` `webapp` `desktop` `mobile` `tablet` `auto` `cli`        |
 | `data`     | Data and ML systems            | `packages` `data-lake` `analytics` `ingestion` `ml-platform`               |
 | `system`   | Infrastructure and tooling     | `packages` `iac` `plugin` `misc` `cicd` `cli`                              |
@@ -113,8 +112,8 @@ order. `cli` is a stated row rather than a fall-through: a command surface has
 no data shape, and `module` is the unit that accepts `schema.yaml: N/A`.
 
 **A project may declare several platforms, and usually should.** One Flutter
-codebase shipping phone, tablet, desktop and web is **one** project with
-`platforms: [mobile, tablet, desktop, webapp]` — never four. Flows are keyed on
+codebase shipping phone, tablet, desktop and the car is **one** project with
+`platforms: [mobile, tablet, desktop, auto]` — never four. Flows are keyed on
 project name, so splitting it would triplicate every flow doc. Only split when
 the codebases are genuinely separate.
 

@@ -1,0 +1,181 @@
+#!/usr/bin/env bash
+
+#MISE description="This repo's own helper functions for mise tasks"
+#MISE hide=true
+
+# The repo-owned sidecar beside the pack's `helpers` library: every function
+# here is THIS repo's, none of it ships in a stackgen pack, and `/vwf:init`
+# never replaces it. Tasks source it on the line after they source `helpers`,
+# spelled the same way, so the sidecar is reached exactly the way the library
+# is. Nothing landed into a target repo may source it — a repo that gets the
+# task library gets `helpers` and its own sidecar, not this one.
+#
+# Guarded and `readonly`-free for the same reason `helpers` is: a task sources
+# it, and so may a library that task sources.
+if [ -n "${MISE_LOCAL_SOURCED:-}" ]; then
+  return 0
+fi
+MISE_LOCAL_SOURCED=1
+
+# True when any component of the given version is exactly 13 or 17.
+#
+# The rule: this repo never issues 13 or 17 in any version line it maintains —
+# the two plugin manifests, the installer and site packages, `config_format`,
+# `blueprint_format`. It is about the COMPONENT, not the digits: `1.13.0`,
+# `17.0.0` and `2.1.17` are refused, while `1.130.0` and `113.0.0` are ordinary
+# versions that merely contain the characters.
+#
+# Takes `v1.13.0-rc.1+build.4` as readily as `1.13.0`: the leading `v`, the
+# build metadata and the prerelease are stripped, in that order, before the
+# split. Build metadata goes first because semver puts it last — `X.Y.Z-pre+b`
+# — so cutting at `-` first would leave a `+b` tail on the prerelease.
+#
+# `p:plugins:local`'s `X.Y.Z+N` staging counter is therefore NOT a component and
+# never trips this.
+version_forbidden() {
+  local version="${1:-}"
+  version="${version#v}"
+  version="${version%%+*}"
+  version="${version%%-*}"
+
+  local component
+  # Splitting on `.` is the whole point of the unquoted expansion below, and the
+  # local IFS is what scopes it to this function.
+  local IFS='.'
+  # shellcheck disable=SC2086
+  for component in ${version}; do
+    if [ "${component}" = "13" ] || [ "${component}" = "17" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Print the plain result of applying one bump level to one version.
+#
+# The arithmetic a package manager would do, done here instead, because the
+# target has to be KNOWN before anything is written to disk: pnpm's own `version`
+# refuses to run on a tree it has already dirtied, so a task that bumps and then
+# bumps again to step a forbidden number fails on the second call and leaves the
+# forbidden version behind. One computed target, one write.
+#
+# Takes the same decorated input `version_forbidden` does — the leading `v`, the
+# build metadata and the prerelease are stripped, in that order — and refuses
+# anything that is not three plain integers, since that is the only shape this
+# repo's version lines ever carry. `10#` on every component so a hand-written
+# `1.08.0` is arithmetic rather than a bad octal digit.
+version_bump() {
+  local level="${1:-}"
+  local original="${2:-}"
+
+  local version="${original#v}"
+  version="${version%%+*}"
+  version="${version%%-*}"
+
+  local major minor patch count
+  # The unquoted expansion is the split, and the local IFS is what scopes it.
+  local IFS='.'
+  # shellcheck disable=SC2086
+  set -- ${version}
+  IFS=' '
+  count="$#"
+  major="${1:-}"
+  minor="${2:-}"
+  patch="${3:-}"
+
+  local component
+  for component in "${major}" "${minor}" "${patch}"; do
+    case "${component}" in
+      '' | *[!0-9]*)
+        print_error "Cannot bump '${original}': expected a plain X.Y.Z version."
+        return 1
+        ;;
+    esac
+  done
+  if [ "${count}" -ne 3 ]; then
+    print_error "Cannot bump '${original}': expected a plain X.Y.Z version."
+    return 1
+  fi
+
+  case "${level}" in
+    major)
+      major=$((10#${major} + 1))
+      minor=0
+      patch=0
+      ;;
+    minor)
+      minor=$((10#${minor} + 1))
+      patch=0
+      ;;
+    patch)
+      patch=$((10#${patch} + 1))
+      ;;
+    *)
+      print_error "Unknown bump level '${level}': expected major, minor or patch."
+      return 1
+      ;;
+  esac
+
+  printf '%s.%s.%s\n' "${major}" "${minor}" "${patch}"
+}
+
+# Print the bumped version, stepped past any forbidden component.
+#
+# The skip is the SAME level applied again — `1.1.12` patched is `1.1.14`,
+# `1.12.0` minored is `1.14.0` — so it only ever moves the component the caller
+# asked for. Which is also why a level that cannot reach the forbidden component
+# is refused up front rather than looped over: patch bumps never clear a
+# forbidden MINOR, so a tree hand-edited to `1.13.5` has no patch release. That
+# check replaces the attempt cap the loop-and-rewrite shape needed — nothing is
+# written while this runs, so the failure costs nothing.
+version_next() {
+  local level="${1:-}"
+  local original="${2:-}"
+
+  local next
+  next="$(version_bump "${level}" "${original}")" || return 1
+
+  local major minor patch
+  local IFS='.'
+  # shellcheck disable=SC2086
+  set -- ${next}
+  IFS=' '
+  major="${1}"
+  minor="${2}"
+  patch="${3}"
+
+  case "${level}" in
+    patch)
+      if version_forbidden "${major}.${minor}.0"; then
+        print_error "A patch bump of ${original} cannot clear the forbidden component in ${major}.${minor} — set the version by hand."
+        return 1
+      fi
+      ;;
+    minor)
+      if version_forbidden "${major}.0.0"; then
+        print_error "A minor bump of ${original} cannot clear the forbidden major ${major} — set the version by hand."
+        return 1
+      fi
+      ;;
+  esac
+
+  while version_forbidden "${major}.${minor}.${patch}"; do
+    case "${level}" in
+      major) major=$((major + 1)) ;;
+      minor) minor=$((minor + 1)) ;;
+      patch) patch=$((patch + 1)) ;;
+    esac
+  done
+
+  printf '%s.%s.%s\n' "${major}" "${minor}" "${patch}"
+}
+
+# Report one skipped version, through the shared warn printer.
+#
+# Printed rather than swallowed because a bump that lands somewhere other than
+# the obvious next number is exactly the thing a person re-reads the scrollback
+# for: `1.1.12` bumped by patch reads as `1.1.13` to everyone until this line
+# says otherwise.
+version_skip_note() {
+  print_warn "Skipped ${1} — 13 and 17 are never issued as a version component. The version is now ${2}."
+}

@@ -5,7 +5,6 @@ description: Run a Flutter UI slice's visual and accessibility checks, returning
   for a project whose stack this pack owns — not a general-purpose skill.
 disable-model-invocation: false
 model: sonnet
-effort: medium
 ---
 
 # ux-gate

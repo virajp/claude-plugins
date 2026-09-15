@@ -50,14 +50,10 @@ report() {
   print_newline
 }
 
-# The repo's members, one relative path per line. `$displaypath` is git's own
-# variable and stays single-quoted so git, not this shell, expands it.
-# shellcheck disable=SC2016
-members() {
-  git -C "${MISE_PROJECT_ROOT}" submodule --quiet foreach --recursive 'echo $displaypath' 2>/dev/null || true
-}
-
 report "${MISE_PROJECT_ROOT}" "$(basename "${MISE_PROJECT_ROOT}")"
+
+# `members` comes from `_scripts/helpers`, so this task sees whichever linkage
+# the repo uses — submodules, or the `MEMBERS` list — without knowing which.
 
 while read -r member; do
   [ -n "$member" ] || continue

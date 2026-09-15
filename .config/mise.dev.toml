@@ -4,7 +4,6 @@
 
 [settings]
 # Only relevant to the python/uv dev tools below.
-pipx.uvx            = true
 python.compile      = false
 python.uv_venv_auto = "create|source"
 
@@ -21,8 +20,8 @@ taplo  = { version = "latest" }
 gitleaks = { version = "latest" }
 grype    = { version = "latest" }
 
-# Shell gates — `plugins:shellcheck` lints and format-checks every shell file a
-# stackgen pack ships: the task library under `config/.config/mise/tasks/` and
+# Shell gates — `p:plugins:shellcheck` lints and format-checks every shell file
+# a stackgen pack ships: the task library under `config/.config/mise/tasks/` and
 # the hook scripts under `hooks/`. And actionlint the workflows. Those files are
 # executed in someone else's repo, where nothing else ever reads them, so this
 # is the only place a bad one is caught.
@@ -36,7 +35,6 @@ python = { version = "latest" }
 uv     = { version = "latest" }
 
 [shell_alias]
-be-setup  = "mise run --cd ../backend setup:all"
-fe-setup  = "mise run --cd ../frontend setup:all"
 precommit = "mise run code:precommit"
 setup     = "mise run setup:all"
+worktrees = "mise run code:worktrees"

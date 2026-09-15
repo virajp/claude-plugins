@@ -69,14 +69,17 @@ are what vwf branches on; the role is an index, never a gate.
 
 | Role | Platforms |
 | --- | --- |
-| `backend` | `packages` `service` `worker` |
+| `backend` | `packages` `service` `worker` `webapp` |
 | `frontend` | `packages` `site` `webapp` `desktop` `mobile` `tablet` `auto` `cli` |
 | `data` | `packages` `data-lake` `analytics` `ingestion` `ml-platform` |
 | `system` | `packages` `iac` `plugin` `misc` `cicd` `cli` |
 
 `packages` is available under every role; the role names the primary consumer
 domain. A package consumed by both the API and the web app is a judgment call —
-**ask**, never guess.
+**ask**, never guess. `webapp` sits under `backend` too, for one shape only: a
+deployable publishing an API and serving its own UI from the same origin —
+`backend` / `[service, webapp]`, the retired `fullstack`. A browser app that
+calls *another* project's API stays `frontend`.
 
 **A role is named by who consumes the project's output**, never by where its
 code sits or what it is written in:
@@ -93,9 +96,9 @@ their consumers differ — which is why the role is an index and the platforms a
 what anything branches on.
 
 **One project may declare several platforms.** A single Flutter codebase
-shipping mobile, tablet, desktop and web is **one** project with four platforms,
-not four projects — flows are keyed on project name, so splitting it would
-triplicate every flow doc.
+shipping mobile, tablet, desktop and `auto` is **one** project with four
+platforms, not four projects — flows are keyed on project name, so splitting it
+would triplicate every flow doc.
 
 What each platform obliges:
 

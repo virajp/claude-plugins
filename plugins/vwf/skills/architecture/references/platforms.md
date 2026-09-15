@@ -15,23 +15,29 @@ semantics in `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`:
 
 | Role       | Offer                                                                        |
 | ---------- | ---------------------------------------------------------------------------- |
-| `backend`  | `packages`, `service`, `worker`                                              |
+| `backend`  | `packages`, `service`, `worker`, `webapp`                                    |
 | `frontend` | `packages`, `site`, `webapp`, `desktop`, `mobile`, `tablet`, `auto`, `cli`   |
 | `data`     | `packages`, `data-lake`, `analytics`, `ingestion`, `ml-platform`             |
 | `system`   | `packages`, `iac`, `plugin`, `misc`, `cicd`, `cli`                           |
 
 **A project may declare several.** One Flutter codebase shipping phone, tablet,
-desktop and web is **one** project with `platforms: [mobile, tablet, desktop,
-webapp]` — not four projects. Flows are keyed on project name, so splitting it
-would triplicate every flow doc. Likewise a server that publishes an API and
-serves its own UI is `platforms: [service, webapp]`, which is what the retired
-`fullstack` role meant.
+desktop and the car is **one** project with `platforms: [mobile, tablet,
+desktop, auto]` — not four projects. Flows are keyed on project name, so
+splitting it would triplicate every flow doc. Likewise a server that publishes
+an API and serves its own UI is `backend` / `platforms: [service, webapp]`,
+which is what the retired `fullstack` role meant. `webapp` sits under `backend`
+as well as `frontend` for exactly that project, the way `cli` sits under two
+roles: the deployable is a backend whose UI rides along on the same origin, and
+typing it `frontend` would claim a role its API-first purpose does not have.
 
 Ask once per project whether the app must run in-car, and offer **`auto`**
-(CarPlay and Android Auto together) only where it makes sense. A native client
-that talks to *another* project's API is its own project, not a platform of that
-one — the test is whether it is a separate codebase, not whether it is a
-separate surface.
+(CarPlay and Android Auto together) only where it makes sense — and only to a
+project that already declares `mobile`, since the in-car surface rides the
+mobile binary rather than shipping one of its own: `auto` is declared
+**alongside** `mobile`, never alone, and never as its own project. A native
+client that talks to *another* project's API is its own project, not a platform
+of that one — the test is whether it is a separate codebase, not whether it is
+a separate surface.
 
 The vocabulary names form factors, not vendors — `mobile` already hides
 iOS/Android, so `auto` hides CarPlay/Android Auto the same way.

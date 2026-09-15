@@ -293,11 +293,14 @@ bundle, each with its own allowlist.
   `.config/dprint.json`, `.config/gitleaks.toml`, `.config/grype.yaml`,
   `.config/pre-commit-config.yaml` and `.config/git-conventional-commits.yaml`
   — through the `config/` tier
-  (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). A gate also contributes
-  its hook fragment, `.config/pre-commit.d/<pack>.yaml`, which the
-  materializer copies verbatim and `/vwf:init` merges. Shipping the doctrine
+  (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). Shipping the doctrine
   without the file it describes was the earlier line, and it left every repo
-  hand-writing the config the skill assumes.
+  hand-writing the config the skill assumes. A gate ships **no hook
+  fragment**: the gate config's `format`, `lint` and `sec` hooks call the
+  `code:*` tasks, so a gate tool is configured once, in the task, and a pack
+  needing a gate overlays that task. `.config/pre-commit.d/<pack>.yaml` — copied
+  verbatim, merged by `/vwf:init` — is for a **non-gate** check, such as
+  `package-manager/uv`'s `uv lock --check`.
 - **Scope**: what each gate must catch, what it must not scan, and how a
   finding is answered. Never the language's lint rules — those are the
   language bundle's. Never CI system syntax — that is the reserved
@@ -460,7 +463,8 @@ person looking for either would have found neither.
   shape `repo-gate` takes and for the same reason. One paths-scoped skill,
   bound to the files it governs; there is no reference tier, because the
   judgment here is a screen and the rest is the files themselves.
-- **What it writes**: the root files and `.config/renovate.json`, through
+- **What it writes**: the root files, `renovate.json` among them — at the
+  root, as Renovate's config discovery never reaches `.config/` — through
   the `config/` tier (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). It is
   the kind the **root allowlist** belongs to — the doctrine of what may sit
   at a repo root at all — which every other kind's `config/` tree is then
@@ -625,7 +629,7 @@ the neutral capability contract under `assets/contracts/` — plus one
 **instance component** (`type: capability-provider`) that realizes it. Same
 two halves as `database`, for the capabilities that are neither a datastore
 nor one cloud's service: an identity issuer, a telemetry sink, a workflow
-engine, a secrets manager.
+engine, a secrets manager, an audit store.
 
 All six bar topics belong to the instance component. The contract is what
 the instance **cites, never restates** — that seam is what lets two
@@ -935,6 +939,20 @@ resolves to nothing silently.
   would return nothing and be indistinguishable from a design nobody authored.
   This is the single most important ruling in the kind.
 
+**A file canvas is admitted beside the hosted ones.** A design tool's source
+of truth need not be a server: it may be a **committed directory** in the
+target repo, by convention `docs/design/<project>/`, that the three import
+skills read as files instead of calling an API — the design system in the
+shape the tool authors it, the brand assets, and whatever screens the tool
+lays down. Such a pack may ship **one extra, user-invocable authoring skill**
+that runs the design session and writes that canvas; it is the tool's
+authoring surface, which is the tool's to own and vwf's never to be. The
+three fixed adapter names, their payloads and their model-invocability are
+unchanged by the variant and are what the checker asserts — it counts the
+three, not the fourth. Topic 4 answers for the directory rather than an API
+(no credentials, nothing to log), and topic 5 names the files and folders an
+import must find rather than pages and frames.
+
 ### The topic bar
 
 A closed list of five topics, one artifact per topic. Topic 5 is conditional.
@@ -956,6 +974,101 @@ A closed list of five topics, one artifact per topic. Topic 5 is conditional.
 5. **Naming contract** — the page and frame naming this tool needs so an
    import can find anything, mirroring what `/vwf:screens prompt` commissions.
    *(conditional — `n/a` for a tool with no canvas)*
+
+## `stylesheet` — the approach a web frontend's styles are authored in
+
+The output is a **Stylesheet-Bundle**
+(`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): one `stylesheet` component,
+standing alone.
+
+This kind exists because vwf **names no stylesheet approach** and must not. A
+vwf design system is a contract — semantic token *values*, scales and
+behaviours, code-independent by construction — and the file those values
+actually live in is realization. Something has to own that realization, and
+until this kind existed the only places it could sit were a framework pack (so
+every Astro project would style the same way) or a second bundle per framework
+(so `astro-ssg` and `astro-ssg-tailwind` would differ by one choice, which the
+four-modes-four-bundles decision already refused). The kind is what lets the
+choice be a **pin** instead.
+
+The seam it sits on is therefore sharp in both directions: the design system
+says `color.text.muted` is a value, and this kind says how that role becomes
+something a component can reference. Neither may cross — a pack that invents a
+token role has authored design, and a design system naming a `@theme` block
+has authored code.
+
+- **Axis**: `stylesheet`. The bundle slug **is** the
+  `projects.<name>.stylesheet` token, so the pin and the config key are one
+  value. vwf asks the axis only of a project declaring a `site` or `webapp`
+  platform; that condition is vwf's, and no bundle here filters on it.
+- **Structure**: the **topic bar** below, hung per the kind-general rule — a
+  paths-scoped doctrine skill per approach, scoped to the file globs the
+  approach actually owns, plus one reference per topic whose judgment exceeds
+  a screen. **`tokens.md` is required of every pack in this kind**, because
+  the token mapping is the one topic nothing else in the tree carries.
+- **Scope**: how styles are authored, where they live, and how the design
+  system's tokens are realized in this approach. **Never** the token values
+  themselves — those are the product's design system, and a pack shipping a
+  palette has replaced the contract with a default. **Never** which component
+  library is used; a UI kit is a `framework`/`ui-library` component and it
+  consumes this realization rather than supplying it. **Never** the framework's
+  own build configuration beyond the one hook this approach needs — the
+  framework pack owns its config file, and this kind states what gets added to
+  it by role. **Never** the head, the metadata or the favicon set; those are
+  the web-head contract's.
+- **Facts & harness**: `n/a` throughout. A stylesheet approach satisfies no
+  harness capability — nothing about it is booted, stood up or probed. Where
+  it ships a lint or visual gate, that gate is a task the repo's gate bundle
+  runs, named here and owned there.
+- **Invocation**: the doctrine skill **paths-scoped and
+  `user-invocable: false`**, never model-invocable-on-request. This doctrine
+  applies while a stylesheet or a component's styles are being written, which
+  is a moment the model is already in rather than one it would think to ask
+  about; a router nobody invokes is doctrine nobody reads.
+
+### The topic bar
+
+A closed list of seven topics, one artifact per topic, each individually
+researched and cited against the version line the pack names. Topic 7 is
+conditional; a conditional that does not apply is recorded `n/a`, never
+silently absent.
+
+1. **Tokens** — how each class of design-system token is realized: colour
+   roles with their light and dark values, the type scale, the spacing scale,
+   radius, elevation, motion durations and easings, and the breakpoints. This
+   is the topic the kind exists for, and it is the one that must answer for
+   **every** class the contract defines rather than the convenient ones. Where
+   the approach cannot express a class natively, say so and say what carries
+   it instead — a silent omission is a token that resolves to nothing in the
+   browser.
+2. **Authoring** — where a style lives relative to the thing it styles:
+   colocated with the component, in a global sheet, or in a token module the
+   rest imports. The file layout and the naming, and what a reviewer should
+   refuse.
+3. **Theming** — how the light/dark pair is switched, and by what: a media
+   query, an attribute on a root element, or an explicit theme applied to a
+   subtree. The rule that the switch is chosen once per product rather than
+   per component belongs here, and so does what a server-rendered page must do
+   to avoid painting the wrong theme first.
+4. **Responsive** — how the breakpoints from the design system are written in
+   this approach, and the direction the styles cascade (mobile-first or not).
+   A breakpoint invented at a call site rather than taken from the scale is
+   the failure this topic prevents.
+5. **Integration** — the single hook this approach needs in the host
+   framework, named **by role**: the build or bundler plugin and where it is
+   registered, the entry stylesheet and where it is imported, and the order
+   constraints that make the difference between working and silently unstyled.
+   A generated framework instantiates this topic rather than reading a
+   framework-specific recipe here.
+6. **Performance** — what reaches the browser and why: generated versus
+   authored CSS, atomic output and its deduplication, cascade layers,
+   extraction at build versus a runtime, and the size behaviour as the product
+   grows. A claim here is measured or cited, never asserted.
+7. **Testing** — what a gate can assert about styles in this approach: the
+   lint rules the approach ships, the type-level checks it makes possible, and
+   what only a visual comparison can catch. *(conditional — `n/a` for an
+   approach shipping no checker of its own, where the repo's gate bundle
+   covers it)*
 
 ## Reserved kinds (defined at their merge wave, not before)
 
@@ -986,7 +1099,7 @@ verifies the artifact against its declared kind: every structural element
 the kind requires is present (a `database` output without a `local_stack`
 mechanism is a gap), nothing outside the kind's scope crept in (a language
 bundle naming a database is a gap), and each skill's invocation mode matches
-the kind's ruling. For all twelve kinds the structural checklist **is the
+the kind's ruling. For all thirteen kinds the structural checklist **is the
 topic bar** — every non-`n/a` topic covered by the composition, each
 artifact inside the depth sizing. For `database` the composition is the
 instance component alone, and citing rather than restating the category
@@ -1031,4 +1144,9 @@ mechanics appearing here is a gap, because each belongs to a kind that
 already owns it. For `design-tool` the composition is the one component, and
 two checks carry the kind: all three import skills present (a missing one is
 silently unavailable to vwf, not a smaller feature), and every one of them
-model-invocable.
+model-invocable. For `stylesheet` the composition is the one component alone,
+and two checks carry the kind: **topic 1 answering for every token class the
+design-system contract defines** — a mapping that covers colour and spacing and
+goes quiet on elevation or motion is a gap, not a shorter answer — and any
+**token value** appearing in the pack at all, which is the design system's to
+hold and a default here would quietly become the product's.

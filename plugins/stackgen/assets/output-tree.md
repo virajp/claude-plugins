@@ -127,7 +127,8 @@ started as:
   configures it is doctrine about a gate nobody has.
 - **(c) The hygiene files a repo carries whatever its stack is** —
   `.gitignore`, `.editorconfig`, `.gitattributes`, `SECURITY.md`, `LICENSE`,
-  and `.config/renovate.json`. Everything landing at the **repo root** is on
+  and `renovate.json` — at the root, since Renovate's config discovery
+  never reaches `.config/`. Everything landing at the **repo root** is on
   the fixed allowlist below; everything else goes under `.config/`.
 - **(d) Environment fragments a provider contributes** —
   `.config/mise/conf.d/<pack>.toml`, which the manager auto-loads, so a
@@ -146,20 +147,42 @@ started as:
   not a task group. A deploy stack that names the task CI must run and then
   leaves both that task and the config it reads to be typed by hand is the
   failure (b) describes, one axis up.
+- **(g) A project task a framework pack owns** — the same `p/_project/`
+  marked position, renamed the same way, landed from the **project** axis
+  rather than the deploy one: `framework/astro` ships an `icons` overlay
+  there, which rasterizes the favicon set from the product's mark. The
+  position is shared on purpose — a project has one task group, and two
+  packs contributing a file each into it is how it fills up — so a pack
+  adding one names a task no other pack in the same bundle already ships.
 
 **The root allowlist** is the hygiene doctrine's, and the materializer
-enforces it as a ceiling. These files, and only these, may sit at a shaped
-repo's root: `.gitignore`, `.graphifyignore`, `.editorconfig`,
-`.gitattributes`, `.npmrc`, `LICENSE`, `SECURITY.md`, `CONTRIBUTING.md`,
-`readme.md`, `fnox.toml`, `eslint.config.mjs`, `dprint.json`,
-`wrangler.jsonc`, and the directory `.github/` — **excluding
-`.github/workflows/`**. A language's manifests and lockfiles are **not**
-on it: a manifest is fenced out below, as it always was, and a lockfile is
-the manifest's shadow. A `config/` tree landing a root path that is not on
-this list is a **pack authoring error**: the materializer refuses it and
-reports it, rather than quietly adding one more dotfile to a place the
-doctrine says is closed. Everything else a pack configures lives under
-`.config/`.
+enforces it as a ceiling. It is the list of what may **sit** at a shaped
+repo's root — these entries and only these — and it has two tiers:
+
+- **What a pack may land**: `.gitignore`, `.graphifyignore`,
+  `.editorconfig`, `.gitattributes`, `.npmrc`, `LICENSE`, `SECURITY.md`,
+  `CONTRIBUTING.md`, `readme.md`, `fnox.toml`, `eslint.config.mjs`,
+  `dprint.json`, `wrangler.jsonc`, `renovate.json`, and the directory
+  `.github/` — **excluding `.github/workflows/`**. This is the tier
+  `p:plugins:check` enforces over a pack's `config/` root.
+- **What sits there because vwf writes it** — **vwf's — no pack lands
+  them**: `CLAUDE.md`, fenced out below as `/vwf:setup`'s, with
+  `p:plugins:check` refusing a pack that ships one at the root; and
+  `mempalace.yaml`, which the mine looks for in the directory it is pointed
+  at and nowhere else, so anywhere but the root is silently inert (vwf's own
+  `memory.md`, "Repo config — `mempalace.yaml`").
+
+The second tier is on the list because `/vwf:init`'s pass 1 reports any
+root file the list does not name, and a rule beats a judgment: without
+these two entries, every shaped repo's own `CLAUDE.md` and `mempalace.yaml`
+read as findings that a person has to know to wave through.
+
+A language's manifests and lockfiles are **not** on it: a manifest is
+fenced out below, as it always was, and a lockfile is the manifest's
+shadow. A `config/` tree landing a root path that is not on this list is a
+**pack authoring error**: the materializer refuses it and reports it,
+rather than quietly adding one more dotfile to a place the doctrine says is
+closed. Everything else a pack configures lives under `.config/`.
 
 **Why each of the five added on 2026-09-06 is at the root**, and the answer
 is the same shape every time — the tool that reads it discovers it there
@@ -188,11 +211,17 @@ at the repo root leaves a pack two ways to ship one — the root file, or
 `--config` on every invocation any caller might type — and a flag every
 caller has to remember is the worse of the two.
 
+`renovate.json` joined on 2026-09-10, and the reason is the shape above
+once more: Renovate discovers its config at the repo root, in `.github/`
+or in `.gitlab/`, and nowhere else — a file under `.config/` is read by
+nothing, so a pack shipping one there ships an inert file that reports no
+error and updates no dependency.
+
 Being on that list is a ceiling, never a licence: `readme.md` is on it
 because a shaped repo has one, and **no pack may ship it** — it belongs to
-`/vwf:readme`. `CLAUDE.md` is not on the list at all: it is fenced out
-below, it is `/vwf:setup`'s, and `plugins:check` refuses a pack that ships
-one at the root. The rule reaches `wrangler.jsonc` unchanged:
+`/vwf:readme`. `CLAUDE.md` is on it in the second tier only: it is fenced
+out below, it is `/vwf:setup`'s, and `p:plugins:check` refuses a pack that
+ships one at the root. The rule reaches `wrangler.jsonc` unchanged:
 being on the list makes it landable, not standard, and the three Cloudflare
 deploy packs ship one (`workers-static-assets`, `workers-ssr`, `containers`).
 
@@ -209,7 +238,7 @@ The rules mirror the ones the other targets already have:
   landed and says the tasks will be absent — never a silent partial landing.
 - **Mode is preserved.** `.config/mise/tasks/**` must land executable (755) or
   `mise run <task>` fails as an *unknown task* rather than as a permission
-  error. `plugins:check` asserts the bit on the authored packs, because an
+  error. `p:plugins:check` asserts the bit on the authored packs, because an
   invisible exec bit has cleared every other gate in this repo before.
 
 **Composition order, since more than one component may write one tree.**
@@ -252,7 +281,10 @@ every repo to hand-write the file the doctrine describes, which is the
 failure the tier exists to prevent. Row (f) is that one opening reaching the
 cloud types later the same day, when the first `cloud-service` pack shipped a
 `config/` tree: a deploy target that ships its doctrine and not its config
-leaves the repo hand-writing that file too.
+leaves the repo hand-writing that file too. Row (g) is the same argument
+arriving on the **project** axis: a framework whose doctrine names a task the
+repo must have, and then ships no task, has described a command rather than
+given one.
 
 Four things stay **outside** the fence, and they are the whole of it:
 

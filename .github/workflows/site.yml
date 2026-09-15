@@ -9,13 +9,13 @@ name: Site
 # publishes nothing to npm and holds no id-token permission.
 #
 # Two jobs, two roles:
-#   - `build`  — the gate. Runs `mise run site:check` (type-check, build, search
-#                index, link check) on every PR and push to develop/main that
-#                touches site/, and on every `site-v*` tag.
+#   - `build`  — the gate. Runs `mise run p:site:check` (type-check, build,
+#                search index, link check) on every PR and push to develop/main
+#                that touches site/, and on every `site-v*` tag.
 #   - `deploy` — the release. Runs only on a pushed `site-v*` tag, after `build`,
 #                and only once the tag is proven to match site/package.json and
 #                to be reachable from main. A merge to main ships nothing until
-#                `mise run site:release` cuts the tag.
+#                `mise run p:site:release` cuts the tag.
 #
 # The tag family is namespaced like the other two (`<plugin>-v*`,
 # `installer-v*`): GitHub's tag globs match any character except `/`, so a bare
@@ -65,7 +65,7 @@ jobs:
       # The site gate: `astro check`, `astro build`, `pagefind --site dist`, then
       # the link checker over dist/**/*.html.
       - name: Type-check, build and link-check the site
-        run: mise run site:check
+        run: mise run p:site:check
 
       # Only a tag build is deployed, so only a tag build is kept: `deploy`
       # ships exactly the tree the gate checked rather than rebuilding it.

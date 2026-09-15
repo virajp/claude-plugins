@@ -22,10 +22,10 @@ question. A pass that only edits an existing doc in place does not need it.
   `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`: `010` splash, `020` signin,
   `030` recover-account, `040` onboarding, **`100` home** (the anchor, every UI
   project), `110`–`890` product flows (gap-numbered by 10), `910` profile, `920`
-  settings, `930` notifications, `940` delete-account. The folder name
-  (`<NNN>-<flow>`) is the join key. `flows/index.md` is the thin catalog — one
-  section per project, rows in numeric order with a Platforms column — plus the
-  cross-flow contracts.
+  settings, `930` notifications, `940` delete-account, `950` audit-history. The
+  folder name (`<NNN>-<flow>`) is the join key. `flows/index.md` is the thin
+  catalog — one section per project, rows in numeric order with a Platforms
+  column — plus the cross-flow contracts.
 - **Entity** — `docs/blueprint/entities/<entity>/`: always exactly `index.md`
   (lifecycle, relationships, invariants, concurrency) + `schema.yaml` (the
   authoritative data model). `entities/index.md` is the catalog plus the

@@ -12,7 +12,7 @@ product that is realization rather than description: each project's **stack**.
 That lives here precisely so no blueprint-authoring or reviewing surface can
 reach it, which is what makes a vendor name in a blueprint doc structurally
 impossible rather than merely discouraged. Since **format 11** the stack is
-**structured** — a template selection plus the six axes `/vwf:doctor` checks
+**structured** — a template selection plus the seven axes `/vwf:doctor` checks
 the repo against — and is written for **every** project, always. Since
 **format 13** every technology choice is **per project**: the backing and deploy
 axes, the design tool and the CI tool all live under `projects.<name>`, because
@@ -29,14 +29,17 @@ projects live in it, and `linkage:` records whether they are wired as submodules
 or are plain siblings. Since **format 16** an axis has a third state,
 `unresolved` — *not answered yet* — which is what lets a product be **defined**
 before a stack is chosen, and the deploy axis is a **list**, because a project
-may ship through more than one delivery mechanism. Since **blueprint-format 6**
-this file replaces the old stamp at `docs/blueprint/.vwf.yml`.
+may ship through more than one delivery mechanism. Since **format 18**
+`enforcement:` also records a **kept file** — a pack-owned file a reshape
+offered to replace and the user kept — so the decision is settled once and
+neither `/vwf:init` nor `/vwf:doctor` raises it again. Since **blueprint-format
+6** this file replaces the old stamp at `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 16)
+## Schema (config_format 19)
 
 ```yaml
-config_format: 16 # this file's own schema version — setup migrates it
-blueprint_format: 24 # the docs/blueprint format stamp
+config_format: 19 # this file's own schema version — setup migrates it
+blueprint_format: 25 # the docs/blueprint format stamp
 
 product:
   name: <product-name> # display name; the default mempalace wing
@@ -68,7 +71,7 @@ repo: # REPO-level tooling, the counterpart to a project's stack. One block per 
 projects: # per-project REALIZATION + nuances — no role/path keys, ever (those describe the system: registry.yaml)
   <project-name>:
     stack: # the CONCRETE technology, structured. Lives here (never registry.yaml) so the blueprint is structurally incapable of naming a vendor. Written for EVERY project, always — an absent block is drift, not "the default", because /vwf:doctor cannot check what was never recorded
-      template: project/<slug> # the PROJECT-axis template, from an INSTALLED stack plugin, or `unresolved` (format 16 — deferred, see The three axis states). NOT a default: /vwf:architecture presents the menu and the user picks. `custom` was RETIRED in format 14 — the menu is the whole vocabulary, and a platform nothing fits halts rather than recording free text. Format 15 dropped the `<role>/` path segment: a template declares the platforms it serves in its own frontmatter (one template can serve several — a Flutter template covers mobile+tablet+desktop+webapp), which a directory name cannot express. The pin must COVER every platform this project declares in the registry
+      template: project/<slug> # the PROJECT-axis template, from an INSTALLED stack plugin, or `unresolved` (format 16 — deferred, see The three axis states). NOT a default: /vwf:architecture presents the menu and the user picks. `custom` was RETIRED in format 14 — the menu is the whole vocabulary, and a platform nothing fits halts rather than recording free text. Format 15 dropped the `<role>/` path segment: a template declares the platforms it serves in its own frontmatter (one template can serve several — a Flutter template covers mobile+tablet+desktop+auto), which a directory name cannot express. The pin must COVER every platform this project declares in the registry
       backing_template: [
         <slug>,
       ] # the BACKING axis, PER PROJECT since format 13 (was one product-wide `backing:` block). A LIST: one slug per capability the project needs — datastore, identity, queue, object storage, telemetry sink. `[]` when the project talks to no backing service at all (a `packages` platform, or a client app talking only to a `service`, usually does not). `unresolved` — the bare scalar, never an element — when the axis is deferred
@@ -86,6 +89,7 @@ projects: # per-project REALIZATION + nuances — no role/path keys, ever (those
     # NO `platforms:` key — a project's implemented surfaces are a system-shape fact and live in docs/blueprint/registry.yaml, the single source (format 19). Config carries realization: the stack and the design pins
     design: <tool-token> # the DESIGN TOOL for this project's surfaces. Per project since format 13 (was one product-wide `design.tool`): a product may design its website in one tool and its app in another. Since Wave D it is a pin on the DESIGN AXIS and the value is that menu entry's SLUG — one value, not a token plus a separate pin, so nothing can drift. vwf never constructs a skill name from it: the pin materializes three fixed-name adapters into the repo's own .claude/ (assets/design-adapter.md). Required for a project declaring any SCREEN platform, absent for every other project
     cicd: <tool> # the CI SYSTEM that builds and releases this project. Per project since format 13, so a product whose projects ship through different pipelines can say so. Since Wave D it is a pin on the CICD AXIS, the value being that menu entry's slug — which is what finally made a CI template reachable at all, the menu having been the only door and no CI entry having existed. vwf owns the delivery-pipeline CONTRACT (assets/delivery-pipeline.md) and never the mechanism. In a monorepo every project repeats the same value — accepted, since the key's scope follows the other three rather than inventing a fourth scoping rule
+    stylesheet: <slug> # the STYLESHEET approach for this project's web surfaces, and how the design system's semantic tokens are realized in it. Per project, like every other technology key since format 13. A pin on the STYLESHEET AXIS (`config_format` 19 — NOT the blueprint format 19 the neighbouring comments cite), the value being that menu entry's SLUG — one value, written once, nothing to drift against. Required for a project declaring a `site` or `webapp` platform, absent for every other project, the same shape `design`'s screen-platform condition takes. `unresolved` when deferred (see The three axis states) — the stylesheet round offers *defer this axis*, and the key is written so the postponed decision is visible rather than missing. vwf names NO approach here or anywhere: the menu is the installed stack plugin's, and what the pin materializes is doctrine — a conventions doc and a skill — never a landed config file
     coverage_target: <int> # per-project override of pipeline.coverage_target
     harness:
       health: </path or
@@ -103,7 +107,8 @@ harness: # workspace-level capability inventory (see the harness contract)
 
 enforcement: # vwf's enforcement opt-outs
   # `structure:` was retired in format 19 and `stacks:` in format 10, for the same reason: both became MENUS (assets/topologies/ for structure; the stack menu is stackgen's, offered through the stack adapter), so no choice deviates from anything and none needs a waiver. A legacy `structure:` or `stacks:` block reads as drift — structure migrates into `topology` + `topology_reason`, stacks into projects.<name>.stack (its reason into `note`).
-  rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (assets/standard-flows.md); baseline/<rule>[/<unit>] waives an engineering-baseline rule product-wide or scoped (assets/engineering-baseline.md; boundary-validation never product-wide); pipeline/<rule>[/<unit>] waives a delivery-pipeline rule (assets/delivery-pipeline.md)
+  rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (assets/standard-flows.md); standard-entities/<project>/<slug> waives a mandatory standard entity (assets/standard-entities.md); baseline/<rule>[/<unit>] waives an engineering-baseline rule product-wide or scoped (assets/engineering-baseline.md; boundary-validation never product-wide); pipeline/<rule>[/<unit>] waives a delivery-pipeline rule (assets/delivery-pipeline.md)
+  kept_files: {} # FORMAT 18. <path>: { reason: <one line> } — a file the landed packs OWN that this repo kept over the pack's, written by `/vwf:init` (consented, in its single plan) when a reshape offered that file as replace-or-keep and the answer was keep. The path is BASE-RELATIVE: a file the base owns is spelled exactly as its lockfile names it, and a file inside a member repo takes that member's path as prefix followed by the path the member's own lockfile names — this one block on the base records every repo's keeps, since a member carries only its back-link and no `.config/vwf.yaml` of its own. NOT a rule id and never under `rules:` — a path names no catalogued rule. Read by `init`, which never re-offers a recorded path, and by `/vwf:doctor`, whose content-drift check skips it; an absent block reads as empty, so a repo that has kept nothing records nothing
 
 pipeline: # bounded knobs — see the hard floor below
   coverage_target: 100 # default coverage gate (per-project override above)
@@ -134,9 +139,10 @@ docs_sync:
 ## The three axis states
 
 Every stack axis — `projects.<name>.stack.template`, `backing_template`,
-`deploy_template`, and `repo.stack.template` — is in exactly one of **three**
-states since format 16. Until then there were two, and the missing one is what
-forced a user with no stack plugin installed to answer an unanswerable question:
+`deploy_template`, `repo.stack.template`, and, since `config_format` 19,
+`projects.<name>.stylesheet` — is in exactly one of **three** states since
+format 16. Until then there were two, and the missing one is what forced a user
+with no stack plugin installed to answer an unanswerable question:
 
 | State                          | Spelling                                    | Means                                                   |
 | ------------------------------ | ------------------------------------------- | ------------------------------------------------------- |
@@ -154,15 +160,28 @@ looked, and this project ships through nothing / talks to no backing service* �
 and it is complete. `unresolved` is the absence of a decision. Collapsing them
 would make an unanswered axis indistinguishable from a finished one, which is
 precisely the state format 16 exists to make visible. The scalar axes
-(`template`, `repo.stack.template`) have no `[]`: every project has a project
-axis and every repo a repo axis, so their only two states are pinned and
-deferred.
+(`template`, `repo.stack.template`, `stylesheet`) have no `[]`: every project
+has a project axis, every repo a repo axis, and a project with a `site` or
+`webapp` platform a stylesheet axis, so their only two states are pinned and
+deferred. A project declaring neither of those platforms carries no `stylesheet`
+key at all — absence there is the key not applying, which is why `[]` would say
+nothing.
 
-**`unresolved` only ever arrives from an `/vwf:architecture` run**, which offers
-deferral alongside the menu entries and says what would unlock the axis. No
-migration writes it, and nothing infers it from an absent key — an absent `stack`
-block is still drift, exactly as before, because absence records nothing about
-whether anyone was asked.
+**A pin is decided in one command and materialized in another.**
+`/vwf:architecture` writes the slug and materializes nothing; `/vwf:setup`'s
+materialize pass lands it, once per (repo, slug), in the repo the project
+belongs to. So a pinned axis whose repo holds no materialized entry is not a
+fourth state — it is a pin with a missing artifact, which is `/vwf:doctor`'s
+**pinned, not materialized** finding.
+
+**`unresolved` arrives from an `/vwf:architecture` run**, which offers deferral
+alongside the menu entries and says what would unlock the axis, **or from
+`/vwf:setup`**, which writes it on a project or repo axis it finds **absent** on
+a repo architecture has not run on — so the stamp can be written and the chain
+can carry on rather than stopping at a question nobody has been asked yet. No
+migration writes it. What setup fills is the **absence** and only the absence: a
+pinned slug is never rewritten, and an absent axis records nothing about whether
+anyone was asked, which is exactly why deferring it beats leaving it out.
 
 **Where it is tolerated, and where it is not.** Defining the product runs to
 completion with every axis deferred; building it does not.
@@ -171,7 +190,7 @@ completion with every axis deferred; building it does not.
 | ---------------------------------------------- | ------------------------------------------------------------------------------ |
 | `product`, `architecture`, `blueprint`, `design-system`, and every doc surface | unaffected — none of them reads a stack                       |
 | `doctor`                                       | a **degradation**, reported every run; the checks that depend on that axis report `not checked — no stack resolved`, never a blocking finding |
-| `setup`                                        | records what it could not provision and names the unlock; never halts on it     |
+| `setup`                                        | writes `unresolved` on an **absent** axis, materializes every **pinned** one in its target repo, records what it could not provision and names the unlock; never halts on a deferred axis |
 | `plan`, `execute`                              | **halt**, naming the axis and the project and pointing at `/vwf:architecture`   |
 
 The halt at `plan`/`execute` is not a policy choice — it falls out of
@@ -192,7 +211,7 @@ at answering the question, never at installing something.
 | `projects.*`         | `setup` / `architecture` (`stack`, `design`, `cicd` — all elicited); `execute` reconcile                                                  | `plan`, `execute`, `doctor`, the verifiers, the design adapter (`design`) and the pinned CI system (`cicd`) — **never** `blueprint` or the reviewers, which must not see a stack |
 | `repo`               | `setup` / `architecture` (elicited)                                                                                                       | `doctor`, `plan`, `execute`                                                                                     |
 | `harness`            | `setup`; `execute` reconcile                                                                                                              | `plan` preflight, acceptance/ux verifiers, `verify`, `doctor`                                                   |
-| `enforcement`        | `setup` / `architecture` (consented)                                                                                                      | `setup`, `architecture`, `blueprint`, the reviewers                                                             |
+| `enforcement`        | `setup` / `architecture` (consented); `init` (`kept_files` only, consented in its single plan)                                            | `setup`, `architecture`, `blueprint`, the reviewers; `init` and `doctor` (`kept_files`)                         |
 | `pipeline`           | the user (hand-edited)                                                                                                                    | `execute`, and the external caps hook that delivers its resource-cap pause                                       |
 | `environments`       | `setup` / `verify` (confirmed)                                                                                                            | `verify`                                                                                                        |
 | `production_env`     | `setup` / `verify` (confirmed)                                                                                                            | `verify` (the release environment)                                                                              |
@@ -235,7 +254,12 @@ earlier than 65/90/80), never loosen.
   therefore carries **no `config_format` bump of its own**: recognising a state
   that was always reachable adds nothing to this schema.
 - `config_format` versions this file's own schema; bump it (with a migration
-  note here) when a key's shape changes.
+  note here) when a key's shape changes. **A bump never lands on 13 or 17** —
+  those two integers are never issued on any vwf version line, this stamp,
+  `blueprint_format` and a plugin version alike, so a bump that would land on
+  13 goes to 14 and one that would land on 17 goes to 18, as `config_format`
+  itself did at 16 → 18. Stamps issued before the rule stand: `config_format`
+  13 is real.
 - **`1 → 2` migration** (performed by `/vwf:setup`): rename
   `pipeline.autopilot_caps` → `pipeline.execute_caps` (same shape and
   semantics); the caps hook reads both names during the transition.
@@ -524,6 +548,52 @@ earlier than 65/90/80), never loosen.
   `docs/blueprint/` changes, which is the second config bump to ship without a
   paired blueprint bump, after `14`. Readers treat a scalar `deploy_template`, or
   a `deploy_template: n/a`, as `15` drift.
+
+- **`16 → 18` migration** (performed by `/vwf:setup`): **`enforcement:` gains
+  `kept_files:`, and nothing else moves.** Add `kept_files: {}` where the block
+  lacks it and rewrite the stamp. There is nothing to convert: no surface wrote
+  this key before 18, so every existing repo converges on an empty map, and an
+  absent block already reads as one — the edit exists so the key is visible in
+  the file a user hand-reads, not because a reader needs it.
+
+  **17 is never issued on this line either** — a repo stamped `17` is read as
+  `16` and migrated from here; the setup skill's `format-lineage` reference
+  carries that fact for both stamps. `blueprint_format` was **untouched** and
+  stayed **24**: nothing under `docs/blueprint/` changes, the third config bump
+  to ship without a paired blueprint bump, after `14` and `16`.
+
+- **`18 → 19` migration** (performed by `/vwf:setup`): **a seventh axis —
+  `projects.<name>.stylesheet` — and nothing else moves.** For every project
+  whose **registry** declares a `site` or a `webapp` platform and whose config
+  lacks the key, write **`stylesheet: unresolved`**. A project declaring neither
+  gets **no key**: the axis does not apply to it, and an absent key is how that
+  is spelled — `unresolved` there would assert a postponed decision nobody has
+  to make.
+
+  Nothing converts, because nothing existed to convert: no surface wrote a
+  stylesheet choice before 19. The key is written rather than left absent so the
+  **deferred** decision is visible in the file a user hand-reads, and so the
+  three surfaces that care agree on what they are looking at — the materialize
+  pass skips an `unresolved` axis silently, `/vwf:doctor` reports it as a
+  deferred axis rather than as a missing key, and `/vwf:architecture` elicits it
+  on its next run. No existing pin is rewritten.
+
+  **Neither 13 nor 17 is in play on this bump**, and the rule that produced
+  `16 → 18` still stands: those two integers are never issued on this stamp,
+  `blueprint_format`, or any other vwf version line, so a future bump that would
+  land on either goes past it.
+
+  `blueprint_format` **moves with it, 24 → 25**, because the choice and the
+  contract arrived together. Under `25`, a Screens row on a `site` or `webapp`
+  platform file gains a **`Metadata` block** headed by the row's code, with four
+  fields:
+  `title` (the `<title>` and the OpenGraph title), `description`, `index`
+  (`yes` or `no` — robots meta and sitemap inclusion), and `image` (`default`,
+  the product-wide social preview, or a named slot). A `webapp` that does not
+  declare the `seo` capability pins `title` alone. Readers treat a Screens row
+  on one of those platform files with **no `Metadata` block** as `24` drift; the
+  block is **proposed per row** and **never auto-filled** — the setup skill's
+  `format-lineage` reference carries what each field is proposed as.
 
 - **`10 → 11` migration** (performed by `/vwf:setup`): stacks stop being
   *enforced with an escape hatch* and become a **menu**, and the flat

@@ -8,9 +8,19 @@ hook that inlines its command is a second definition of that gate, and the two
 drift the first time one is edited — after which local and CI disagree and the
 gate is worse than absent, because it is trusted.
 
-**`files:` scopes every hook** so it fires only for what it validates. An
-unscoped hook runs the formatter over a commit that touched one YAML file, and a
-gate people wait on is a gate people bypass.
+**A gate tool is configured once, in its mise task, and the hook is a thin
+call.** The base config ships three tool-neutral gate hooks — `format`, `lint`
+and `sec` — whose entries are `code:format --fix`, `code:lint --fix` and
+`code:sec --staged` and which name no tool at all. Which formatter, linters and
+scanners run is the pinned stack's business, overlaid onto those tasks pack by
+pack. A repo customising a gate edits the task, and the hook, the terminal and
+CI follow from that one edit.
+
+**`files:` scopes every hook** so it fires only for what it validates — every
+hook except the three that call a gate task, which carry no `files:` because the
+task is what knows its own tools' paths. An unscoped hook otherwise runs the
+formatter over a commit that touched one YAML file, and a gate people wait on is
+a gate people bypass.
 
 **Revs are pinned and updated deliberately.** An unpinned rev means the gate's
 behaviour changes without a commit, and the change lands on whoever pulls next.
@@ -46,11 +56,13 @@ carries nesting alone — the gate runs on commit, so it contributes no setting
 and recommends no extension.
 
 **Two positions in the convention file are marked for `/vwf:init` to fill, and
-the comments say when.** `commitScopes` is filled on a **re-run**, once the
-project registry exists — empty is the correct first-run state. The changelog
-links are filled on **any** run where the repo has a remote. Both were claimed
-unconditionally before 2026-09-06 and neither was implemented; the claims now
-match what init does.
+the comments say when.** `commitScopes` is filled on **every** run, the first
+one included, with the project ids init's second question confirmed — one scope
+per project, each the same id that project's `p:<id>:*` task group takes. A
+project registry, where the repo has one, is where that proposal came from, not
+a precondition for filling the list: the empty list this pack ships is its
+marked position, never a first-run state init leaves behind. The changelog
+links are filled on **any** run where the repo has a remote.
 
 The convention file lives in **this** pack rather than beside the release task
 that also reads it, because the hook is what enforces it: a convention nothing

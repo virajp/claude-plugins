@@ -1,6 +1,6 @@
 ---
 title: "Decide which stack your product pins"
-description: "Decide which stackgen bundle each of your product's six axes pins, and why, before it reaches /vwf:architecture."
+description: "Decide which stackgen bundle each of your product's seven axes pins, and why, before it reaches /vwf:architecture."
 order: 1
 ---
 
@@ -9,7 +9,7 @@ technology: vwf names no language, no framework and no cloud, so every concrete
 option you are ever offered comes from `stackgen`. That plugin arrives as vwf's
 dependency, so there is no install decision left to make — but there is still a
 decision, and it is now one axis at a time rather than one plugin at a time.
-This guide is that decision: which **bundle** each of your product's six axes
+This guide is that decision: which **bundle** each of your product's seven axes
 pins, and why, **before** it reaches `/vwf:architecture`. At the end you have a
 pin list you can defend.
 
@@ -25,16 +25,20 @@ parts of those pages you need to read.
 
 ## The axes in one minute
 
-A stack is composed from six templates that never merge and never outrank each
+A stack is composed from seven templates that never merge and never outrank each
 other: **project** (language, framework, source layout), **backing** (datastore,
-identity, queue, storage), **deploy** (build artifact and host), **design** (the
-design tool) and **cicd** (the CI system) — each pinned per project — and
+identity, queue, storage, the audit store), **deploy** (build artifact and
+host), **design** (the design tool), **cicd** (the CI system) and **stylesheet**
+(how a web frontend's styles are authored) — each pinned per project — and
 **repo** (package manager, task runner, workspace), pinned once for the
-checkout. That independence is why picking a web framework buys you no database
-and no cloud, and it is why the pin list below reads as roughly one decision per
-axis you hold an opinion about. The contract behind it — the covering rule, what
-a template payload carries, how `plan` and `execute` resolve a template's
-conventions — is [stack templates](../../plugins/vwf.md#stack-templates).
+checkout. Five of the seven are asked of every project; `stylesheet` is asked
+only of one declaring a `site` or a `webapp` platform, and `repo` is answered
+once for the checkout rather than per project. That independence is why picking
+a web framework buys you no database and no cloud, and it is why the pin list
+below reads as roughly one decision per axis you hold an opinion about. The
+contract behind it — the covering rule, what a template payload carries, how
+`plan` and `execute` resolve a template's conventions — is
+[stack templates](../../plugins/vwf.md#stack-templates).
 
 ## What answers each axis
 
@@ -42,7 +46,12 @@ conventions — is [stack templates](../../plugins/vwf.md#stack-templates).
 covering bundle on its menu cannot be pinned and therefore cannot be planned.
 stackgen's `language/typescript` bundle and its framework components cover
 TypeScript and JavaScript; `app-framework/flutter` covers Dart and Flutter and
-serves `mobile`, `tablet`, `desktop` and `webapp` from a single codebase.
+serves `mobile`, `tablet`, `desktop` and `auto` from a single codebase — `auto`
+being the same mobile binary reaching CarPlay and Android Auto through the
+pack's Swift and Kotlin edge, so it is declared alongside `mobile` and never
+alone. It does **not** serve `webapp`: the web output is a canvas-rendered
+application rather than a document, so a product with a web surface pins a web
+stack for it, as a `site` or `webapp` project of its own beside the app.
 Anything else takes the **generate** entry — see below.
 
 **A `site` project picks between four Astro bundles**, all on the one
@@ -52,13 +61,21 @@ is rendered: `astro-ssg` builds every route at build time with no adapter;
 prerendered by default with the routes that must read a request opting out one
 by one; `astro-csr` serves one shell page and lets a client-only island own
 everything after the first paint. A page with no island ships no JavaScript in
-any of them. (`astro-ssr` was `typescript-astro-react` before 2026-09-06 — a pin
-on the old slug has to be re-pointed.)
+any of them. The round preselects `astro-ssg` — highlighted, never assumed; the
+other three stay offered and you pick past it when a page must read its request.
+(`astro-ssr` was `typescript-astro-react` before 2026-09-06 — a pin on the old
+slug has to be re-pointed.) All four also carry the pack's **head doctrine** —
+the title, description, canonical address, social tags, favicon links, manifest,
+robots and sitemap a public page owes the outside — and land an `icons` task
+that rasterizes the whole favicon set from your one source mark. Nothing to
+decide there: it is the same for all four.
 
 **An agent is a project, not a capability bolted onto one.**
 `typescript-cloudflare-agents` is the project-axis answer for a TypeScript
 service whose unit of design is an addressable, stateful object that persists
 what it knows, schedules its own work and holds live connections to its clients.
+Effect runs inside that class on the SDK's terms — one runtime rebuilt per wake,
+its layers holding `this`, never disposed, since hibernation has no stop hook.
 Its framework component compiles to a Durable Object, so the bundle says it
 pairs with a deploy pin — `cloudflare-workers-ssr`, the Worker the class is
 exported from, or `cloudflare-containers` where the compute is an image beside
@@ -76,7 +93,14 @@ for identity, `otel-lgtm` for observability, `temporal` for orchestration,
 `doppler` and `fnox` for secrets. Those two are the **developer-machine and CI**
 providers; the runtime secrets a deployed Worker or Container reads in staging
 and production are a backing pin of their own, Cloudflare's being
-`cloudflare-secrets-store`, and a repo pins both. Managed: a cloud's own
+`cloudflare-secrets-store`, and a repo pins both. The **audit store** is the one
+capability whose providers ride the datastore you already pinned rather than
+composing an engine of their own — `audit-store-postgres` on Postgres,
+`audit-store-d1` on D1 — so it is a pin you make beside the datastore, never
+instead of it. The **workspace** is the odd one on this axis: `notion` pins the
+place your team's docs, specs and tickets already live, and what it lands is the
+wiring that lets the agent reach them — no part of the product runs against it,
+which is why the category realizes no capability at all. Managed: a cloud's own
 services — `gcp` bringing Firestore, Cloud SQL and the Firebase services, and
 `cloudflare` bringing Workers KV, R2, D1, Hyperdrive, Vectorize, Pipelines,
 Analytics Engine, Durable Objects, Workflows, Queues, Workers AI, AI Gateway, AI
@@ -109,6 +133,23 @@ pinned **instead of** `cloudflare-workers-ssr`, never beside it.
 plane in front of a project that must not be publicly reachable, whichever cloud
 hosts it.
 
+**The stylesheet axis is asked only where there are styles to author.** A
+project declaring `site` or `webapp` gets one more round, after its design
+round, and picks between three: `tailwindcss` — utility classes generated from a
+token block, the fastest to write and the one with a ceiling on stylesheet
+growth, paid for in markup that carries the styling and in nothing being
+type-checked; `stylex` — typed style objects compiled to atomic CSS at build, so
+a misspelled token role is a type error rather than a blank element, paid for in
+a build step, a bundler plugin that has to be registered in the right order, and
+the most lock-in of the three; and `plain-css` — the design system's roles as
+custom properties in one module with rules in cascade layers, no build step and
+no lock-in at all, paid for in nothing checking anything and no deduplication.
+The design system is **not** consulted in this round: the tokens are the
+contract whatever the answer is, and the stylesheet is only how they get written
+down — which is why deferring it costs the doc surfaces nothing. Anything else
+takes the same **generate** entry every axis has. A service, a CLI, a native app
+or an `iac` project is never asked and records no key.
+
 **The repo axis** is the package manager and workspace layout: `pnpm-workspace`,
 `pnpm-turbo`, or `bun`. A single-package repo pins no workspace bundle — that is
 the kind's edge, not a gap — and a Flutter checkout's `pub` is a pack inside the
@@ -126,11 +167,12 @@ itself healthy. See [stack templates](../../plugins/vwf.md#stack-templates).
 
 What keeps that from being a wall is stackgen's one open entry. A stack no pack
 covers is **generated** — researched topic by topic against current
-documentation, instantiated from vwf's principles catalog, gated by a reviewer
-agent and your explicit consent, and landed in your repo's `.claude/` tree as
-plain committed files. So the practical question is not "is my stack supported"
-but "is it covered by a pack or generated", and the difference you feel is one
-consent prompt and a slower first pin.
+documentation, instantiated from vwf's principles catalog, every third-party
+name it emits vetted for reputation (a `block` halts until you name a
+replacement), gated by a reviewer agent and your explicit consent, and landed in
+your repo's `.claude/` tree as plain committed files. So the practical question
+is not "is my stack supported" but "is it covered by a pack or generated", and
+the difference you feel is one consent prompt and a slower first pin.
 
 ## Worked mappings
 

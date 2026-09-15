@@ -8,7 +8,7 @@ description: Retrieve a handoff document from mempalace (wing=<project>,
   session that exceeded ~60% context.
 argument-hint: "[<name> | next]"
 model: haiku
-effort: medium
+
 disable-model-invocation: true
 ---
 

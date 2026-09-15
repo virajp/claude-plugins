@@ -1,0 +1,36 @@
+// Editor fragment — the toolchain manager's contribution to the repo's editor
+// settings. `/vwf:init` merges every `.config/vscode.d/*.jsonc` into the two
+// editor files inside one marked block; a key written by hand after that block
+// wins. Nothing here names the editor by path — the convention does that.
+//
+// Scope: only the files and the one tool this pack ships. TOML editor keys are
+// the dprint gate's — it ships the taplo config that decides them — and the
+// exclude lists, the ignore-file nesting and the editor-wide baseline are the
+// hygiene fragment's. A pack that claims a neighbour's keys is a pack whose
+// contribution cannot be removed by removing it.
+{
+  "extensions": [
+    // Surfaces the task library in the editor and reads the `.config/` split,
+    // so `mise tasks` and the `[tools]` pins are visible without a terminal.
+    // The only extension this component has an opinion about.
+    "hverlin.mise-vscode",
+  ],
+
+  // The split is five config files and their lockfiles, all named after one
+  // base. Nesting them under it is what keeps `.config/` readable — otherwise
+  // the environment variants and the generated locks sit as six siblings of
+  // equal weight and the base is no longer obviously the base.
+  //
+  // There is one lockfile per config file that declares tools, named after
+  // that file's stem: `mise.dev.lock` with the shipped split, and `mise.lock`
+  // as well the moment the base pins a runtime. The base's own lock is listed
+  // literally because it matches no `mise.*.lock` glob — the glob needs a
+  // middle segment the base does not have.
+  "nesting": {
+    "mise.toml": [
+      "mise.*.toml",
+      "mise.*.lock",
+      "mise.lock",
+    ],
+  },
+}

@@ -1,26 +1,26 @@
 # The checks
 
-What `plugins:check` asserts, why each rule cannot be replaced by a type or a
+What `p:plugins:check` asserts, why each rule cannot be replaced by a type or a
 format, and the one generated file that needs a freshness gate of its own.
 
 ## The gates
 
-| Task                          | Does                                                                                                                                                                                   |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `plugins:check`               | validates the authored tree; non-zero on any finding                                                                                                                                   |
-| `plugins:marketplace`         | regenerates both marketplace manifests from the 2 plugin manifests, plus the `.dev-marketplace/plugins/` staging dir                                                                   |
-| `plugins:marketplace --check` | asserts the committed manifest matches a fresh generation                                                                                                                              |
-| `plugins:inventory`           | regenerates `plugins/stackgen/stacks/inventory.md` from the stacks tree, and asserts every bundle pin resolves to a pack at that version; `--check` asserts the committed file matches |
-| `plugins:shellcheck`          | `shellcheck -x` + `shfmt -d` over every shell file a pack ships — task libraries and `_scripts/*`, then `hooks/*.sh`                                                                   |
-| `plugins:npm-normalize-test`  | table-tests the pnpm pack's `npm-normalize.sh` through the system sed                                                                                                                  |
-| `pnpm vitest run`             | the `scripts/` and `installer/` suites                                                                                                                                                 |
+| Task                            | Does                                                                                                                                                                                   |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `p:plugins:check`               | validates the authored tree; non-zero on any finding                                                                                                                                   |
+| `p:plugins:marketplace`         | regenerates both marketplace manifests from the 2 plugin manifests, plus the `.dev-marketplace/plugins/` staging dir                                                                   |
+| `p:plugins:marketplace --check` | asserts the committed manifest matches a fresh generation                                                                                                                              |
+| `p:plugins:inventory`           | regenerates `plugins/stackgen/stacks/inventory.md` from the stacks tree, and asserts every bundle pin resolves to a pack at that version; `--check` asserts the committed file matches |
+| `p:plugins:shellcheck`          | `shellcheck -x` + `shfmt -d` over every shell file a pack ships — task libraries and `_scripts/*`, then `hooks/*.sh`                                                                   |
+| `p:plugins:npm-normalize-test`  | table-tests the pnpm pack's `npm-normalize.sh` through the system sed                                                                                                                  |
+| `pnpm vitest run`               | the `scripts/` and `installer/` suites                                                                                                                                                 |
 
-`plugins:marketplace --check`, `plugins:inventory --check` and then
-`plugins:check` run in that order — **freshness before validity**, in pre-commit
-and in `plugins.yml` alike — so a stale generated file fails as staleness rather
-than as a confusing downstream assertion.
+`p:plugins:marketplace --check`, `p:plugins:inventory --check` and then
+`p:plugins:check` run in that order — **freshness before validity**, in
+pre-commit and in `plugins.yml` alike — so a stale generated file fails as
+staleness rather than as a confusing downstream assertion.
 
-The `plugins:check` task is two readers, not one: the rules below, and then
+The `p:plugins:check` task is two readers, not one: the rules below, and then
 `claude plugin validate --strict` over the marketplace and each plugin when
 `claude` is on PATH — Claude's own view of the manifest, which the rules
 deliberately do not restate.
@@ -31,14 +31,21 @@ invisible to every other check, and the committed file keeps advertising the old
 version. It is the surviving fragment of the retired `plugins:render-clean`,
 narrowed to the one file that still has the problem.
 
-## The thirteen rules
+## The fourteen rules
 
 Each is something no format and no type can state. The checker is deliberately
 much smaller than the one it replaced: whole families of assertion became
 *unrepresentable* rather than merely unchecked.
 
-1. **Manifest name ↔ directory.** A plugin whose `name` disagrees with its
-   directory installs under one and is referenced by the other.
+1. **Manifest name ↔ directory, and the version.** A plugin whose `name`
+   disagrees with its directory installs under one and is referenced by the
+   other. The same rule asserts the two things the `version` must be: **plain
+   semver** — a tracked manifest carrying the `+N` the dev marketplace stages is
+   a manifest nobody regenerated — and **free of a 13 or 17 component**, since
+   those two integers are never issued on any version line this repo maintains.
+   The component is what counts, not the digits: `1.13.0`, `17.0.0` and `2.1.17`
+   fail, `1.130.0` and `113.0.0` pass, and a prerelease suffix comes off before
+   the split so `1.0.17-rc.1` fails too.
 2. **Dependency resolution.** Every `dependencies[].name` resolves to a plugin
    in this marketplace, with `"marketplace": "virajp-plugins"`. The marketplace
    entry is generated from the manifest, so the two can no longer disagree —
@@ -137,8 +144,8 @@ much smaller than the one it replaced: whole families of assertion became
 
     The walk is its own rather than the plugin file reader's, because every one
     of these paths runs through a dot segment the reader's glob does not descend
-    into. `plugins:check` is the only reader that sees any of it before it lands
-    in someone's repo.
+    into. `p:plugins:check` is the only reader that sees any of it before it
+    lands in someone's repo.
 12. **Retired vocabulary stated as live.** The recurrence class of every drift
     sweep: a token is renamed at its source of truth, the lineage records the
     rename, and a dozen other files keep using the old word as if nothing
@@ -182,6 +189,25 @@ much smaller than the one it replaced: whole families of assertion became
     The blanking keeps the line numbers true, which is the finding's whole
     value. The fix is never another path: name the asset by role ("stackgen's
     secrets contract"), or state inline the rule it carries.
+14. **At most one default bundle per axis per platform.** A bundle's frontmatter
+    may carry `default: true`; the stack menu passes it through on every entry
+    whose bundle carries it, and vwf's architecture menu preselects the one
+    flagged entry among those it offers on a round — a list it has already
+    filtered by the project's platforms — as a generic rule that names no tool.
+    So across `stacks/bundles/*.md`, grouped by `axis`, two flagged bundles
+    conflict when either declares no `platforms:` list (an absent or empty list
+    means it is offered on every round of the axis) or their platform lists
+    intersect — a conflict is not an error anywhere downstream, it is whichever
+    sorts first, a nondeterminism a rename flips silently. An axis whose flagged
+    bundles all declare disjoint platforms carries one default per platform. The
+    value must also be boolean: the preselect asks for `true` and nothing else,
+    so a string `"true"` or a YAML `yes` never preselects and reports nothing.
+    The finding for a conflict names the pair and the platform(s) they share, or
+    the file that declares no list; the finding for a non-boolean names the one
+    file. It does not check that any bundle carries the flag — zero flagged is
+    green, since an axis with no default is what every axis was before the flag
+    existed — and it does not check that the flagged bundle's components
+    resolve, which `p:plugins:inventory` owns.
 
 ### The plugin-root trap (rules 6 and 13)
 

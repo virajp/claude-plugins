@@ -81,10 +81,21 @@ python.uv_venv_auto = "create|source"
 # Only what is identical in every environment.
 DISABLE_TELEMETRY = 1
 
-# A marked position: the orchestrator fills it with this repo's project id (the
-# slug `assets/ids.md` defines). A LITERAL — never derived from the config root,
-# whose basename is the branch name inside a linked worktree.
+# A marked position: the orchestrator fills it with this repo's folder name,
+# slugified (the slug rule `assets/ids.md` defines) — not a project id. A
+# LITERAL — never derived from the config root, whose basename is the branch
+# name inside a linked worktree.
 REPO_NAME = "unfilled"
+
+# A marked position: how code:merge:* lands a branch on THIS repo.
+#   direct = merge locally and push   |   pr = push and open a pull request
+MERGE_MODEL = "direct"
+
+# A marked position: this repo's member repos, as space-separated paths
+# relative to the repo root. Left empty when the members are submodules, which
+# `members()` reads from .gitmodules instead. A string, never an array — mise
+# env values are strings.
+MEMBERS = ""
 
 [tools]
 # Language RUNTIME only — the minimum to run/build the project anywhere. It
@@ -99,6 +110,32 @@ description = "Initialize mise tasks"
 hide        = true
 run         = "find .config/mise/tasks/ -name '*' -type f -not -path '*/*.env' -exec chmod 755 {} \\;"
 ```
+
+**The base `[env]` carries three marked positions, and they are the only ones
+in any of the five files.** `REPO_NAME` is the repo's folder name, slugified —
+never a project id, which is the `p:<id>:*` group's token; `MERGE_MODEL` is
+how `code:merge:*` lands a branch here; `MEMBERS` is the member list for a
+product whose parts are linked as siblings rather than as submodules. Each ships
+with a working default, so an unfilled repo runs — `direct` is today's local
+merge, an empty `MEMBERS` means `members()` falls through to `.gitmodules` — and
+each is filled by the orchestrator rather than by hand. They sit in the **base**
+and not in `mise.dev.toml` because the tasks that read them run in the pipeline
+too.
+
+**Two more marked positions sit outside the TOML**, in the task library rather
+than the config: `EXTRA_MARKETPLACES` and `EXTRA_PLUGINS` in
+`.config/mise/tasks/setup/ai`. They are arrays, one row per line, filled by the
+same orchestrator, from a confirmed answer seeded by the task's own
+`--inventory` run:
+
+| Position             | Row shape                   | Is                                  |
+| -------------------- | --------------------------- | ----------------------------------- |
+| `EXTRA_MARKETPLACES` | `<source-ref>\|<name>`      | a marketplace beyond the toolkit's  |
+| `EXTRA_PLUGINS`      | `<name>@<marketplace>`      | a plugin this repo requires         |
+
+Both default to empty — a repo that needs only the toolkit's own plugin fills
+neither — and both keep their template comment in place after filling, so a
+later reshape can re-derive them.
 
 **`minimum_release_age` and `lockfile` are one policy, not two.** The freshness
 rule is *latest, but defer anything released in the last ten hours*, and the
@@ -128,7 +165,7 @@ taplo      = { version = "latest" }
 setup     = "mise run setup:all"
 precommit = "mise run code:precommit"
 worktrees = "mise run code:worktrees"
-# One per member project, when this repo has members:
+# One per member repo, named by that member's slug, when this repo has members:
 # setup-backend  = "mise run setup:all --backend"
 # setup-frontend = "mise run setup:all --frontend"
 
@@ -148,8 +185,9 @@ PRE_COMMIT_HOME = "$HOME/.cache/pre-commit"
 **`[shell_alias]` lives here and nowhere else.** Aliases need `mise activate`,
 which is a human's shell — CI never loads this file, so nothing in the pipeline
 may depend on one. The three shipped aliases are the three commands typed most;
-the member aliases are generated from the same id list `setup:all`'s flags and
-the `p:<id>:*` task group use.
+the `setup-<slug>` aliases are generated from this repo's **member repos** —
+each submodule, or each path `MEMBERS` names — the same list `setup:all`'s
+member flags come from, and not the project ids the `p:<id>:*` group uses.
 
 **No secret-manager tool here.** The pinned capability provider ships its own
 `[tools]` entry in `.config/mise/conf.d/<provider>.toml`, so swapping providers

@@ -16,6 +16,10 @@ The gate for `design-system.md`. The doc passes only when:
 - [ ] Global component behaviors defined for buttons, inputs/forms, overlays,
       feedback, and empty/loading/error states.
 - [ ] Anti-patterns listed.
+- [ ] Brand (only when the imported payload carried a `brand:` block): a
+      repo-relative logo source, at least one variant with path and use, clear
+      space, a minimum size, a mono or dark rule — all pinned; never a gap when
+      the source carried no brand.
 - [ ] Terminal UX (only when a project declares platform `cli` in
       `registry.yaml`): output formatting, color semantics + no-color rule,
       progress conventions, error shape + exit codes, help/naming — all pinned.

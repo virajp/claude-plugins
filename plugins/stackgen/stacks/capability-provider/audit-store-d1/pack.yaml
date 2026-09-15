@@ -1,0 +1,19 @@
+name: Audit store · Cloudflare D1
+summary: An isolated, append-only audit dataset in a D1 database of its own —
+  written through one seam and read only by the console Worker that holds the
+  binding.
+version: 0.1.0
+type: capability-provider
+category: audit
+capability: audit-store
+kind: capability-provider
+axis: backing
+harness:
+  local_stack:
+    task: n/a
+    mechanism: >-
+      n/a — the datastore pack's own local stack serves. `wrangler dev` hands the
+      Worker a local database behind the same binding name the audit database has
+      in production, and the `cloud-service/d1` component declares that mechanism;
+      this pack composes no engine of its own, so a second local stack here would
+      be a duplicate nobody runs

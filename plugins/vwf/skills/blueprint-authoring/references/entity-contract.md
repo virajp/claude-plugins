@@ -12,6 +12,11 @@ files, and its behavior in context lives on the **flows** that use it.
 Fill every applicable section to the **no-two-reasonable-answers** bar. Spend
 the precision budget on `schema.yaml`.
 
+**A standard entity starts from a shipped floor.** A slug in the
+standard-entities vocabulary (`${CLAUDE_PLUGIN_ROOT}/assets/standard-entities.md`)
+— `audit-event` today — is authored exactly like any other entity, but the fields,
+states and rules stated there are a floor: add to them, never drop one.
+
 ## The slimmed entity sections (`index.md`)
 
 - **Purpose** — one paragraph: what it is and why it exists, no implementation

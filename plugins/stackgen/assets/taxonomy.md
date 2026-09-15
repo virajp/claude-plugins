@@ -66,8 +66,8 @@ The closed list. A component is exactly one of:
 - **`queue`** — a standalone queue or event bus.
 - **`capability-provider`** — the flavour half of a vwf capability that
   belongs to no cloud and is not a datastore: an identity issuer, a
-  telemetry sink, a workflow engine, a secrets manager. Its **category**
-  says which.
+  telemetry sink, a workflow engine, a secrets manager, an audit store, a
+  knowledge workspace. Its **category** says which.
 - **`ci-system`** — one continuous-integration system: where its workflows
   live, how it is triggered, and how it installs a toolchain. One component
   per system, never per workflow.
@@ -83,6 +83,15 @@ The closed list. A component is exactly one of:
   into anything, which is why it is its own type: it sits beside a stack
   rather than inside one, and two projects on the same stack routinely use
   different ones.
+- **`stylesheet`** — how a web frontend's styles are authored, and how the
+  design system's semantic tokens become CSS: a utility framework, a
+  compile-time CSS-in-JS system, or plain custom properties. Selected by
+  the project's `stylesheet:` pin rather than composed into a framework,
+  for the same reason `design-tool` is its own type — two projects on the
+  same framework routinely author styles differently, and the framework
+  pack must not decide it for them. Pinned per project, and asked only of
+  a project declaring a `site` or `webapp` platform. Composes into a
+  Stylesheet-Bundle.
 
 ## Categories
 
@@ -101,8 +110,15 @@ and its components leave `category` unset.
 - **`datastore`**: `sql` / `document` / `graph` / `vector` / `key-value` /
   `in-memory`
 - **`capability-provider`**: `identity` / `telemetry` / `workflow` /
-  `secrets-manager`
+  `secrets-manager` / `audit` / `workspace` — the last being the team's
+  knowledge workspace, where the docs, specs and tickets live and which the
+  agent reads, searches and writes.
 - **`app-framework`**: `cross-platform-ui` / `native-ui`
+- **`stylesheet`**: `utility` / `compile-time` / `plain` — the three ways
+  the token mapping can be paid for. `utility` generates classes from a
+  token block; `compile-time` compiles authored style objects to atomic
+  CSS at build; `plain` writes custom properties and hand-authored rules
+  with no build step of its own.
 
 A name appearing as both a type and a category is deliberate, not a
 collision: `kafka` is type `queue` (a standalone component); a provider's
@@ -129,12 +145,18 @@ whichever channel token the service actually is — `email`,
 Some categories have **no capability token today** — `cdn`,
 `secrets-manager`, `access`, `static-hosting`, `stateful-compute`,
 `database-proxy`, `ingestion`, `analytics`, `inference`, `ai-gateway`,
-`retrieval`, `browser`, `media` and `realtime`. That is a known vwf-side
-gap, not a taxonomy error: the component leaves `capability` unset, and
-nothing here mints a token to fill the hole — minting capabilities is
-vwf's move. It is also why a category can exist here before vwf has
-decided whether every product must have one: the taxonomy classifies what
-a component *is*, never whether it is required.
+`retrieval`, `browser`, `media`, `realtime` and `workspace`. That is a
+known vwf-side gap, not a taxonomy error: the component leaves
+`capability` unset, and nothing here mints a token to fill the hole —
+minting capabilities is vwf's move. It is also why a category can exist
+here before vwf has decided whether every product must have one: the
+taxonomy classifies what a component *is*, never whether it is required.
+
+`workspace` is on that list for a reason of its own rather than a pending
+vwf decision. The workspace is the **agent's** knowledge source, not the
+product's runtime — no blueprint capability is waiting on it, so there is
+no seam for architecture to elicit and nothing here asks for a token. Its
+neutral contract is `contracts/workspace.md`.
 
 Fourteen `cloud-service` tokens and one `framework` token (`agent-sdk`)
 were minted on 2026-09-06 for the Cloudflare developer platform.
@@ -180,10 +202,18 @@ A bundle is rooted per kind (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`):
   fence rather than a pairing.
 - A **Design-Bundle** is exactly one `design-tool` component, standing alone
   like a Deploy-Bundle, on the **`design`** axis.
+- A **Stylesheet-Bundle** is exactly one `stylesheet` component, standing
+  alone like a Design-Bundle, on the **`stylesheet`** axis. There is no
+  second half for the same reason: there is no category above "how styles
+  are authored" to write doctrine at, and what keeps the single component
+  honest is its kind's scope fence. It carries **no `platforms:`** — the
+  axis is asked only of a `site` or `webapp` project, which is vwf's
+  condition rather than a property of the bundle, and listing platforms
+  here would make the same pack read as a different answer per platform.
 
-Those last two share a property nothing else here has, and it is what makes the
-**tool axes** (`design`, `cicd`) cheap: **the bundle slug is the tool token the
-project config already holds**. Picking from the menu and writing
+Those last three share a property nothing else here has, and it is what makes
+the **tool axes** (`design`, `cicd`, `stylesheet`) cheap: **the bundle slug is
+the token the project config already holds**. Picking from the menu and writing
 `projects.<name>.design` are one act rather than two that can disagree. They
 exist because a template no menu can offer is not an error — it is invisible,
 which is how a CI-system pack shipped that nothing could ever materialize.
@@ -227,6 +257,21 @@ The contracts are **capability-neutral by construction** — each states what
 tokens it realizes, or that its category has none yet (`contracts/secrets.md`
 is the first of those). That is what lets two providers in one category be
 compared against the same clauses instead of against each other's marketing.
+
+The newest is `contracts/workspace.md`, the `workspace` category's, and the
+third to realize no vwf token at all after `contracts/secrets.md` and
+`contracts/web-head.md` — the workspace is the agent's knowledge source
+rather than anything a blueprint picks, so what the contract states is how
+the agent **reaches** it and what it may read and write, never what the
+product depends on.
+
+Before it came `contracts/web-head.md`, what any web framework pack must
+realize for a project the outside world reaches; and before that
+`contracts/audit.md`, the `audit` category's, realizing vwf's
+`audit-store` token. Audit sits deliberately beside `contracts/observability.md`
+rather than inside it: telemetry answers *what the system did*, an audit store
+answers *which actor is accountable*, and the observability contract no longer
+claims any part of the second.
 
 Two files there are **not** capability contracts, and each is marked as such
 in its own opening line. `contracts/local-stack.md` states the mechanism

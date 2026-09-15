@@ -26,7 +26,14 @@ Three lines, and they do not vary with which branch the forge calls default:
 
 `mise run code:merge:develop` and `mise run code:merge:main` are the two moves.
 They run the gates over the whole tree before they touch anything, so a merge
-that would break the branch fails before it starts rather than after.
+that would break the branch fails before it starts rather than after. What they
+then do is `MERGE_MODEL` in `.config/mise.toml`: `direct` merges locally and
+pushes, `pr` pushes the branch and opens a pull request instead, merging
+nothing.
+
+The forge's own default branch is set **by hand, once**, and no task re-runs it:
+`gh repo edit --default-branch <branch>`, or
+`glab repo update --defaultBranch <branch>` on GitLab.
 
 ## Commits
 

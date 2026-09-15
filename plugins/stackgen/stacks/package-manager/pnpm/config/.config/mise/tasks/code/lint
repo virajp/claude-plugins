@@ -5,6 +5,7 @@
 
 #USAGE flag "--debug" help="emit debug logs"
 #USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to lint (default: the whole repo)"
 
 set -euo pipefail
 # helpers ships in the toolchain-manager pack, not this one, so there is no
@@ -19,8 +20,14 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # different lint gate to run gets it by not pinning this package manager, or by
 # a component later in the order overlaying the slot again.
 #
-# One step, so no header: whatever called it — `code:all`, or a person — frames
-# it.
+# This task is also the repo's linting HOOK: the pre-commit gate calls
+# `code:lint --fix <files>` rather than a linter binary, so every tool a commit
+# lints with is configured once, here. That is why it takes an optional file
+# list — the hook passes the staged files, a person passes nothing and gets the
+# whole tree.
+
+files=()
+eval "files+=(${usage_files:-})"
 
 args=()
 if [[ "${usage_debug:-false}" == "true" ]]; then
@@ -30,4 +37,60 @@ if [[ "${usage_fix:-false}" == "true" ]]; then
   args+=(--fix)
 fi
 
+print_header "Linting files ..."
+
+# The toolchain manager's two shipped defaults, and an overlay keeps them: a
+# commit gets whatever this task does, so a tool that drops out of it stops
+# running at all. Each costs nothing when its binary is absent or nothing in
+# scope is its file type.
+#
+# `-x` follows the sourced `_scripts/` libraries, so they are analysed the way
+# their callers actually see them.
+if command -v shellcheck >/dev/null 2>&1; then
+  shell_scope=()
+  while IFS= read -r shell_file; do
+    if [ -n "${shell_file}" ]; then
+      shell_scope+=("${shell_file}")
+    fi
+  done < <(shell_files_in_scope ${files[@]+"${files[@]}"})
+
+  if [ "${#shell_scope[@]}" -gt 0 ]; then
+    print_subheader "Checking shell scripts ..."
+    shellcheck -x "${shell_scope[@]}"
+  fi
+fi
+
+# actionlint wants the workflows, so the scope is filtered to them and it is
+# skipped when none is in scope.
+if command -v actionlint >/dev/null 2>&1; then
+  workflow_scope=()
+  if [ "${#files[@]}" -gt 0 ]; then
+    for candidate in "${files[@]}"; do
+      case "${candidate}" in
+        .github/workflows/*.yml | .github/workflows/*.yaml)
+          if [ -f "${candidate}" ]; then
+            workflow_scope+=("${candidate}")
+          fi
+          ;;
+      esac
+    done
+  else
+    while IFS= read -r workflow; do
+      if [ -n "${workflow}" ]; then
+        workflow_scope+=("${workflow}")
+      fi
+    done < <(git -C "${MISE_PROJECT_ROOT}" ls-files '.github/workflows/*.yml' '.github/workflows/*.yaml' 2>/dev/null || true)
+  fi
+
+  if [ "${#workflow_scope[@]}" -gt 0 ]; then
+    print_subheader "Checking workflows ..."
+    actionlint "${workflow_scope[@]}"
+  fi
+fi
+
+# The house linter's rules read across files — an unused export, a duplicate
+# key against its neighbours — so a staged subset would change its verdict
+# rather than narrow it. It takes the whole tree even when a file list is
+# given.
+print_subheader "Linting with the house linter ..."
 pnpm dlx @askviraj/linter ${args[@]+"${args[@]}"}

@@ -1,0 +1,56 @@
+// Editor fragment — the dprint gate's contribution to the repo's editor
+// settings. `/vwf:init` merges every `.config/vscode.d/*.jsonc` into the two
+// editor files inside one marked block; a key written by hand after that block
+// wins. Nothing here names the editor by path — the convention does that.
+//
+// Scope: the formatter and the TOML half it reaches through `exec`. Everything
+// else — file nesting for ignore files, excludes, todo-tree — belongs to the
+// hygiene fragment.
+{
+  "extensions": [
+    "dprint.dprint",
+    "tamasfe.even-better-toml",
+  ],
+
+  "settings": {
+    // dprint is the default formatter for every language it has a plugin for.
+    // Format-on-save reaches it through the root `dprint.json` shim this pack
+    // also ships — without that file the extension finds no config and does
+    // nothing, silently.
+    "editor.defaultFormatter": "dprint.dprint",
+    "editor.formatOnSave": true,
+
+    // TOML is the one exception: dprint has no TOML plugin, so the CLI routes
+    // .toml through taplo via `exec` and the editor uses even-better-toml,
+    // which embeds the same taplo. Both read the config below.
+    "[toml]": {
+      "editor.defaultFormatter": "tamasfe.even-better-toml",
+    },
+
+    // `.config/taplo.toml` is the authority once `configFile.enabled` is on;
+    // the `formatter.*` keys below are the extension's fallback for a file
+    // outside that config's `include`. They are kept because the extension
+    // reads them first at startup, before the config file resolves.
+    "evenBetterToml.taplo.configFile.enabled": true,
+    "evenBetterToml.taplo.configFile.path": ".config/taplo.toml",
+    "evenBetterToml.formatter.alignComments": true,
+    "evenBetterToml.formatter.alignEntries": true,
+    "evenBetterToml.formatter.allowedBlankLines": 1,
+    "evenBetterToml.formatter.arrayAutoCollapse": false,
+    "evenBetterToml.formatter.arrayAutoExpand": true,
+    "evenBetterToml.formatter.arrayTrailingComma": true,
+    "evenBetterToml.formatter.columnWidth": 80,
+    "evenBetterToml.formatter.compactArrays": false,
+    "evenBetterToml.formatter.compactEntries": false,
+    "evenBetterToml.formatter.compactInlineTables": false,
+    "evenBetterToml.formatter.crlf": false,
+    "evenBetterToml.formatter.indentEntries": true,
+    "evenBetterToml.formatter.indentString": "",
+    "evenBetterToml.formatter.indentTables": false,
+    "evenBetterToml.formatter.inlineTableExpand": true,
+    "evenBetterToml.formatter.reorderArrays": true,
+    "evenBetterToml.formatter.reorderInlineTables": true,
+    "evenBetterToml.formatter.reorderKeys": true,
+    "evenBetterToml.formatter.trailingNewline": true,
+  },
+}

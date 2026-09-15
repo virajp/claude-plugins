@@ -35,7 +35,8 @@ From index.md's assumed decisions, verbatim:
 > (`disable-model-invocation: true`) — it must start a fresh session, which only
 > the user can guarantee.
 
-> **11.** Both `model: opus`, `effort: high`, as every other vwf workflow skill.
+> **11.** Both `model: opus`, `effort: medium`, as every other vwf workflow
+> skill.
 
 > **15.** `vwf.md`: two command rows, the invocation and tiering prose, two
 > `###` sections placed after the `verify`/`feedback` sections, one sentence in

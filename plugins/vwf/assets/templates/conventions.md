@@ -55,6 +55,27 @@ to the relevant anchors rather than repeating.
 
 ## Audit {#audit}
 
+<!-- Scope, storage and access only. The event shape is NOT restated here — it
+     is the audit-event entity's contract
+     ([audit-event](entities/audit-event/index.md), schema.yaml authoritative);
+     this anchor links it and holds what is recorded, who may read it, and how
+     long it is kept. -->
+
+## Web metadata {#web-metadata}
+
+<!-- NOT a product foundation — this anchor's condition is its own: present only
+     when some project declares the `site` platform, or `webapp` with the `seo`
+     capability. Omit it entirely otherwise.
+
+     The product-wide text every page inherits, so no screen repeats it: the
+     site name, the default description a page falls back to, the social handle
+     to credit, the content locale, and the facts the organisation states about
+     itself (legal name, logo asset by role, the canonical home address). The
+     per-screen values — title, description, indexability and the shared-link
+     picture — are the Metadata block on each `site`/`webapp` platform file
+     (format 25), never restated here. The visual assets (favicon mark, social
+     preview, theme colour) are the design system's Brand assets. -->
+
 ## Notifications {#notifications}
 
 ## Background processes {#background}

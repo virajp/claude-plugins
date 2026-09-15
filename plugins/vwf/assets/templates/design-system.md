@@ -47,6 +47,18 @@ Families: heading / body / mono — named, with intent.
 - Principles:
 - Reduced-motion behavior:
 
+## Brand assets
+
+<!-- The assets the PRODUCT supplies for the surfaces that represent it outside
+     itself. Present when any project declares the `site` platform, or `webapp`
+     with the `seo` capability; delete this section otherwise. Name each by ROLE
+     and describe it — never a file path, never a size the realization picks. -->
+
+- Favicon source mark: one square vector drawing, the whole set is rasterized
+  from it — note whether it sits on a rounded tile.
+- Social preview: the picture a shared link shows, 1280×640, with its alt text.
+- Theme colour: a Color Token role, not a literal.
+
 ## Accessibility Standard
 
 - Conformance target:
@@ -56,6 +68,23 @@ Families: heading / body / mono — named, with intent.
 
 Global patterns: buttons, inputs/forms, overlays, feedback, empty/loading/error,
 navigation.
+
+## Brand
+
+<!-- Required when the imported design-system payload carries a `brand:` block;
+     delete this section otherwise — it is never elicited in text. Written
+     verbatim in meaning from the payload; every path is relative to the repo
+     root. See the design-system-authoring skill's brand reference. -->
+
+- Logo source: `<repo-relative path>`
+- Variants:
+
+| Variant | Path | Use |
+| ------- | ---- | --- |
+
+- Clear space:
+- Minimum sizes (per variant):
+- Rules (what never happens to the mark — mono, dark, distortion, recolor):
 
 ## Terminal UX
 

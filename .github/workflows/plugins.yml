@@ -50,13 +50,13 @@ jobs:
       # generate BEFORE validating anything, so a stale manifest fails as
       # staleness rather than as some confusing downstream assertion.
       - name: Marketplace manifest matches the plugin manifests
-        run: mise run plugins:marketplace --check
+        run: mise run p:plugins:marketplace --check
 
       - name: stackgen inventory matches the stacks tree
-        run: mise run plugins:inventory --check
+        run: mise run p:plugins:inventory --check
 
       - name: Static validation of plugins/
-        run: mise run plugins:check
+        run: mise run p:plugins:check
 
       # The shell half. `shellcheck` and `shfmt` live in mise.dev.toml — the
       # maintainer's environment — and this job runs with MISE_ENV=ci, so they
@@ -64,7 +64,7 @@ jobs:
       # set, which exists to stay small.
       - name: shellcheck and shfmt over every shell file a pack ships
         run: |
-          mise x shellcheck@latest shfmt@latest -- mise run plugins:shellcheck
+          mise x shellcheck@latest shfmt@latest -- mise run p:plugins:shellcheck
 
       # Release-branch only. Every entry's `source.ref` is derived from that
       # plugin's manifest version, so bumping a version renames the ref before
@@ -72,8 +72,8 @@ jobs:
       # broken marketplace on `main`: Claude resolves the ref at install time,
       # so a ref with no tag is an install that fails for every user.
       #
-      # Deliberately not part of `plugins:marketplace --check`. That check is a
-      # pure function of the 2 manifests and must stay offline and
+      # Deliberately not part of `p:plugins:marketplace --check`. That check is
+      # a pure function of the 2 manifests and must stay offline and
       # fresh-clone-safe; this one asks the remote a question.
       - name: Every marketplace ref names a tag that exists
         if: github.ref == 'refs/heads/main'
@@ -88,7 +88,7 @@ jobs:
             fi
           done < <(node -p "require('./.claude-plugin/marketplace.json').plugins.map(p => p.source.ref).join('\n')")
           if [ "$missing" -ne 0 ]; then
-            echo "::error::main names unreleased tags. Run 'mise run plugins:release' and push the tags."
+            echo "::error::main names unreleased tags. Run 'mise run p:plugins:release' and push the tags."
             exit 1
           fi
 
@@ -98,7 +98,7 @@ jobs:
       # The BSD-sed portability guarantee. Runs on GNU sed here, which is the
       # point: the script has to work under both.
       - name: npm-normalize hook tests
-        run: mise run plugins:npm-normalize-test
+        run: mise run p:plugins:npm-normalize-test
 
       # Nothing in this repo emits, so `tsc` is only ever a checker — and one
       # `--noEmit` per project, because there are no project references to walk.

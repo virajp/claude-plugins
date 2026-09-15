@@ -1,6 +1,6 @@
 ---
 title: "Keep the blueprint true once the product is live"
-description: "Route bugs, metric readings, UX complaints and feature requests from production into the one doc each belongs in."
+description: "Route bugs, metric readings, UX complaints, feature requests and shape changes from production into the one doc each belongs in."
 order: 2
 ---
 
@@ -10,10 +10,11 @@ deploy verified against the blueprint. This guide picks up from there. **Relay**
 declares both `service` and `webapp` — is in production now, and reality has
 started disagreeing with the contract. A user reports a bug. The first metric
 reading comes in under target. Somebody says a badge looks wrong. Three teams
-ask for the same feature.
+ask for the same feature. A prospect wants single sign-on, which nothing in the
+registry can provide.
 
 Each of those arrives as a sentence in a chat window, and each has exactly one
-place it belongs. By the end of this guide all four have landed in a doc, three
+place it belongs. By the end of this guide all five have landed in a doc, four
 have a fixing command behind them, and none of them has been fixed by hand.
 
 Mechanics — flags, halt conditions, the classification table, config keys — live
@@ -72,13 +73,29 @@ it again.
 Relay's item classifies as a **behaviour bug**, and the reason is the entire
 judgment: `110-create-task` already pins that an unassigned task is invalid, an
 owner being chosen at creation rather than after. The blueprint is right and the
-code is wrong, so the offer is a fix cycle against that slice:
+code is wrong.
+
+Before it offers anything, the command prints where that flow stands:
+
+```text
+Build state: complete; contract: unreleased
+```
+
+The first value is the flow doc's `implementation:` stamp — `execute` wrote
+`complete` when the cycle landed, and nobody edits it by hand. The second is
+whether a released snapshot exists for what the report touches; Relay's API is
+never frozen, so the fix is unconstrained. Had it read `released`, the route
+would have said so — the fix is additive-only, or expand and contract — and left
+blueprint's released-contract guard and plan's delta checks to enforce it. The
+offer is a fix cycle against that slice:
 
 ```text
 /vwf:plan create-task
 ```
 
-Take it and you are back on the spine at
+Every route closes the same way, with the remaining path in one line — here
+`then /vwf:execute` — so you see the whole way to production before the single
+hand-off. Take it and you are back on the spine at
 [`/vwf:plan`](../../plugins/vwf.md#vwfplan). Relay defers instead — the
 ownership number is due this week, and the re-rank in step 3 is what will
 schedule the fix — so the item lands as a line in the flow doc's Open Questions,
@@ -143,17 +160,62 @@ ever said what that state renders — and the offer would have been
 /vwf:feedback "three teams have asked for recurring weekly chores"
 ```
 
-A want, not a defect, and it never goes straight to code — not to a plan, not to
-a blueprint edit — because the only question it raises first is which goal it
-serves, and that question belongs to `product.md`. The offer is `/vwf:product`.
+A want, not a defect, and it never goes straight to code — and never to a
+nameless "normal path" either. The route names the **unit** the idea lands in,
+and which command comes first turns on one question: does an existing goal serve
+it? Recurring chores do serve `#goal-standup-free` (a weekly chore nobody owns
+is precisely the thing re-asked every standup), and the `task` entity can absorb
+them — a recurrence rule is a field on a task, not a new flow — so the offer is
+the targeted blueprint update by unit name:
 
-Relay's answer is that recurring chores do serve `#goal-standup-free` (a weekly
-chore nobody owns is precisely the thing re-asked every standup), but not more
-urgently than notifications. So it is recorded as an unranked candidate under
-that goal's slice-priority row and nothing is scheduled. When it is ranked
-later, it enters `blueprint → plan → execute` like any other slice.
+```text
+/vwf:blueprint task
+```
 
-### 6. Harvest the design review
+Had the idea implied a goal `product.md` does not serve, the offer would have
+been `/vwf:product <note>` first — the report handed over as the note that seeds
+the update questions (a new goal, a re-rank) — and only then the unit. The path
+line carries the blueprint hop in both branches: here
+`then /vwf:plan <slice>, then /vwf:execute` after the blueprint offer; in the
+product-first case `/vwf:product <note>`, then `/vwf:blueprint <unit>`, then
+`/vwf:plan <slice>`, then `/vwf:execute`.
+
+Relay's answer is that it serves the goal, but not more urgently than
+notifications. So it is recorded as an unranked candidate under that goal's
+slice-priority row and nothing is scheduled. When it is ranked later, it enters
+`/vwf:blueprint task`, then `plan`, then `execute` like any other slice.
+
+### 6. Route the shape change
+
+```text
+/vwf:feedback "an enterprise prospect needs single sign-on before they can sign"
+```
+
+Also a want, but no flow can describe it yet: Relay's registry has one project
+and no identity capability, and single sign-on needs a provider integration — a
+new capability, possibly a new project — before any flow has a surface to pin.
+That is a **shape change**, the one kind whose owning doc is the registry rather
+than a flow or entity, so the build-state line reads `n/a` for both values and
+the offer is:
+
+```text
+/vwf:architecture
+```
+
+Update mode asks only about the delta, and the command hands the report over as
+that delta — the capability to record, the project to add. Architecture then
+invokes `/vwf:setup` itself, whose materialize pass lands whatever the new pin
+needs; feedback offers nothing to setup. The path line reads
+`then /vwf:blueprint <unit>, then /vwf:plan <slice>, then /vwf:execute`. Relay
+defers — a prospect is not yet a customer — so the item lands as one line under
+`## Open Questions` in `docs/blueprint/architecture.md`, created at the end of
+the doc the first time it is needed. A report whose registry change is
+incidental — a flow can be pinned down now, and the registry moves as a side
+effect — is not this kind: it stays a blueprint hole and reaches architecture
+through blueprint's own sub-step.
+[`/vwf:architecture`](../../plugins/vwf.md#vwfarchitecture).
+
+### 7. Harvest the design review
 
 ```text
 /vwf:feedback canvas
@@ -166,36 +228,47 @@ two different tools harvests both — then runs each remark through the same
 classification and the same routes as a pasted one.
 [`/vwf:feedback`](../../plugins/vwf.md#vwffeedback).
 
-### 7. Where the four items ended up
+### 8. Where the five items ended up
 
 The bug is a line in the flow doc's Open Questions, waiting for the cycle the
 re-rank just scheduled. The reading is a row in `product.md` and a re-ranked
 slice list. The complaint is a note at one screen and a design-system import.
-The idea is an unranked candidate under the goal it serves. Not one of them is a
-patch somebody applied and remembered.
+The idea is an unranked candidate under the goal it serves. The shape change is
+an open question in `architecture.md`. Not one of them is a patch somebody
+applied and remembered.
 
 That is the whole point of the loop. Every route ends in a **doc edit now** plus
-the **offer of the command that fixes it**, so the fix — when it happens —
-happens through `blueprint`, `plan` and `execute` against a contract that
-already says the right thing. The alternative is a codebase that has quietly
-diverged from its own blueprint, at which point the blueprint stops being worth
-reading and every later plan is a guess.
+the **offer of the command that fixes it**, with the remaining path spelled out
+in one line, so the fix — when it happens — happens through `blueprint`, `plan`
+and `execute` against a contract that already says the right thing. The
+alternative is a codebase that has quietly diverged from its own blueprint, at
+which point the blueprint stops being worth reading and every later plan is a
+guess.
 
 ## Decision points
 
 ### Classification is the judgment, not the paperwork
 
-The same sentence from a user can be any of six things — a behavior bug, a
-blueprint hole, a metric reading, a UX issue, a feature idea, or an incident. An
-outage is the easy one — production itself broke, so it routes as an incident
+The same sentence from a user can be any of eight things — a behavior bug, a
+blueprint hole, a metric reading, a UX issue, a feature idea, a shape change, an
+incident, or something the blueprint does not describe at all. An outage is the
+easy one — production itself broke, so it routes as an incident
 (`/vwf:feedback incident`), filed with a postmortem stub whose action items come
-back through this same classifier. For the rest, what decides is not the wording
-but what the blueprint already says about that surface. "The badge looks wrong"
-is a UX issue when the design system pinned a colour role and the screen ignored
-it, and a blueprint hole when nothing ever pinned what that badge means.
-Ambiguity is confirmed with you by multiple choice, one decision at a time,
-rather than guessed — and it is worth answering carefully, because the class
-picks the destination.
+back through this same classifier. The last one is the other easy one, in the
+opposite direction: tooling, docs, CI or a refactor has no flow, entity or
+screen to file against, so it is handed verbatim to `/vwf:change-plan` rather
+than forced into a blueprint shape it does not have. A shape change sits between
+them: it is product work, but the registry has to move — a project, a stack pin,
+a capability, a foundation — before any flow can hold it, so it goes to
+`/vwf:architecture` and only then to a blueprint unit; when the registry moves
+only as a side effect of pinning a flow down, it is a blueprint hole, not a
+shape change. For the rest, what decides is not the wording but what the
+blueprint already says about that surface. "The badge looks wrong" is a UX issue
+when the design system pinned a colour role and the screen ignored it, and a
+blueprint hole when nothing ever pinned what that badge means. Ambiguity is
+confirmed with you by multiple choice, one decision at a time, rather than
+guessed — and it is worth answering carefully, because the class picks the
+destination.
 
 ### A blueprint hole and an implementation defect look identical from production
 
@@ -226,6 +299,13 @@ was measuring the wrong thing. A plan can only be right after that is settled.
 
 ### Deferring is not a backlog
 
+vwf does keep a backlog — [`/vwf:backlog`](../../plugins/vwf.md#vwfbacklog),
+`docs/backlog.md` — and this is deliberately not it. The backlog is work nobody
+is on yet, agreed and waiting for a slot. Feedback is the opposite case: it is
+being worked now, it may change `product.md`, the blueprint or the architecture,
+and it follows the `plan` → `execute` line from there. So declining an offer
+here never files a backlog row, and nothing routes between the two.
+
 Declining the offered command does not put the item in a queue somebody has to
 remember to drain. The doc edit is written either way — an appendix row, a note
 at the screen, or, when the fix cycle is declined, an Open Questions line — so
@@ -235,6 +315,14 @@ the item lives in the same tree as the contract it contradicts, and the next
 is the fast path, not the record: with the daemon down the routing is unchanged
 and only the recall step is skipped, which is what makes it safe to defer.
 [Memory](../../plugins/vwf.md#memory).
+
+The one item with no doc to fall back on is the eighth kind — the report the
+blueprint does not describe at all. (A deferred shape change has one:
+`architecture.md`'s Open Questions.) There is no flow, entity or screen it
+contradicts, so declining
+[`/vwf:change-plan`](../../plugins/vwf.md#vwfchange-plan) files it to memory
+tagged `non-blueprint` and memory is then the only record. That is the one place
+deferring costs something, and it is worth knowing before you decline.
 
 ## When things halt
 

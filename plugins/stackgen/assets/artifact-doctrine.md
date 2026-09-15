@@ -203,7 +203,36 @@ Three rules bind the generated manifest:
   server in both gives the store two writers, which the concurrency rule above
   already forbids.
 
-## 6. Rules
+## 6. A name stackgen emits is vetted before it is landed
+
+§5 says stackgen holds no registry; this says what happens to the names it
+emits instead. A **concrete name** is any third-party thing a generated
+component would have a repo fetch or run: a package a `mise_tool` entry or a
+runner-invoked harness task names (`dlx`, `npx`, `uv run --with`, `uvx`), a
+command an `mcp_servers:` / `user_mcp_servers:` entry spawns, a GitHub Action,
+a container image. Every one of them gets a verdict before the dry-run gate
+shows it, from the `stackgen-reputation` skill — a skill anyone can call, the
+user by hand on a name they are about to type and the generator over the list
+it assembled. A name is passed with its ecosystem prefix — `npm:`, `pypi:`,
+`pub:`, `action:`, `image:` — and comes back as one of three verdicts:
+
+- **`pass`** — nothing found against it.
+- **`warn`** — a signal worth reading before consenting; the row travels to
+  the dry-run gate and is called out there.
+- **`block`** — the name is not landed. Generation halts that component with
+  the table, the user names the replacement, and the replacement is checked
+  in turn. The generator never swaps a name silently: a swap is a new
+  recommendation, and it is the user's to make.
+
+A source the skill cannot reach yields `UNRESOLVED`, never an inferred
+verdict, and halts generation the way an unreachable Context7 does.
+
+**Shipped packs are outside the check.** The names a pack carries were
+curated by hand and are reviewed as the pack is; the check covers what
+generation emits, because that is the one place a name nobody reviewed
+becomes concrete.
+
+## 7. Rules
 
 A rule is the one-screen artifact: a constraint short enough that lazy loading
 would cost more than it saves. Anything that needs a second screen is a skill
@@ -217,7 +246,10 @@ state contradicting its kind's ruling; a skill or plugin name assembled from
 configuration; a hook verdict shape that does not match its event; a
 `settings.json` or `.mcp.json` edit not behind its own consent line; an
 `lspServers` entry with no `extensionToLanguage` map; and a local-plugin write
-or registration not behind its own tier-3 consent line.
+or registration not behind its own tier-3 consent line. It also fails an
+artifact for a concrete name (§6) with no row in the verdict table it is
+handed, or a row reading `block` — reading the table, never looking a name up
+itself.
 
 Every one of these is silent at run time. That is the whole reason they are
 checked here.

@@ -35,9 +35,16 @@ vwf enforces at its own entry gate. Installing outside a git repo works too:
 `graphify install` still runs, and its repo-scoped post-commit hook is skipped
 automatically (with a note).
 
+A repo shaped by [`/vwf:init`](#vwfinit) does not need that one-shot at all: its
+task library carries `setup:ai`, which registers the marketplace, installs the
+plugins the repo declares at **project** scope, wires graphify the same way, and
+runs on every checkout. The full description is
+[stackgen's task library](./stackgen.md#the-task-library).
+
 Separately, `brew install virajp/tap/claude-status` installs the statusline —
-and with it the caps hook that delivers `/vwf:execute`'s resource-cap pause. See
-[/vwf:execute](#vwfexecute).
+and with it the caps hook that delivers `/vwf:execute`'s resource-cap pause.
+`setup:ai` prints that line as a hint when the package is absent, and never
+installs it. See [/vwf:execute](#vwfexecute).
 
 Restart Claude Code afterward so the commands, hooks, and dependencies load.
 
@@ -93,7 +100,7 @@ dependency until it dissolved into `stackgen`; if your machine still has it,
 enabled, shadowing the stackgen packs its skills moved into.
 
 `stackgen` is a dependency because vwf's stack menu is the union of what the
-installed stack plugins declare, and the six axes carry no *other (describe)*
+installed stack plugins declare, and the seven axes carry no *other (describe)*
 option — so with no stack plugin present, `/vwf:architecture` asks a question
 you cannot answer. Having it installed costs nothing if you are not ready to
 choose a stack: stackgen acts only when an axis is pinned.
@@ -119,7 +126,11 @@ delegate to three more fixed names in **the repo's own `.claude/`** —
 `design-import-screens`, `design-import-design-system` and
 `design-import-conversations`. Those are what the project's `design:` pin
 materializes from a stack `design-tool` pack, resolved **per project**, so a
-product can design its website with one tool and its app with another.
+product can design its website with one tool and its app with another. vwf's own
+three — `import-design-system`, `import-screens`, `import-conversations` — are
+**skill-invoked**: hidden from the `/` menu, reached only from
+`/vwf:design-system`, `/vwf:screens import` and `/vwf:feedback canvas`. They
+answer in a payload shape no user reads, so there is nothing to type.
 
 Adding a tool is a pack and a menu entry in the stack plugin, never a vwf
 change. Export needs no adapter at all, since `/vwf:screens prompt` just writes
@@ -181,9 +192,10 @@ adopting it.
   to grep, and says so. `decisions`, `planning`, `gaps` and `problems` are
   committed; `handoff`, `doctor` and `runs` are gitignored, being one
   developer's state rather than the team's.
-- **Leans on review engines.** `execute`'s code- and security-review stages run
-  on the `/code-review` and `/security-review` engines, falling back to their
-  own manual review dimensions when an engine is unavailable.
+- **Leans on review engines.** `execute` runs the `/code-review` and
+  `/security-review` engines itself, once the coder returns, and hands their
+  findings to the code- and security-review stages; a reviewer falls back to its
+  own manual review dimensions when its engine is unavailable.
 
 **Fit**
 
@@ -273,6 +285,7 @@ flowchart TD
     P e2@-. "visual language changed (UI)" .-> DS["/vwf:design-system"]:::user
     P --> B["/vwf:blueprint — after any foundation change<br/>(sweeps back to whole-product coverage, re-stamps it)"]:::user
     A --> B
+    A e11@-. "invokes setup to materialize the pins it recorded" .-> S
     DS --> B
     B e8@-. "screens reviewed in-pass; batch re-render" .-> M["/vwf:mockups — batch tool<br/>(local HTML mockups in docs/scratchpad)"]:::user
     B e9@-. "design-first screens" .-> SC["/vwf:screens<br/>(prompt → canvas → import)"]:::user
@@ -293,6 +306,7 @@ flowchart TD
     e5@{ animate: true }
     e6@{ animate: true }
     e7@{ animate: true }
+    e11@{ animate: true }
     e9@{ animate: true }
     e10@{ animate: true }
     e8@{ animate: true }
@@ -302,8 +316,11 @@ flowchart TD
 
 (`setup` **prints** the chain `product` → `architecture` → `design-system` →
 `blueprint` and offers to start the first one; it runs none of them, because
-each resolves its own mode and reports what it did. Blue marks who prompts them.
-Fully internal machinery never appears in the flow: `/vwf:git-workflow` is
+each resolves its own mode and reports what it did. The one arrow back into
+`setup` is `architecture`'s own: having recorded the stack pins and materialized
+nothing, it invokes setup in-session so
+[the materialize pass](#the-materialize-pass) lands them. Blue marks who prompts
+them. Fully internal machinery never appears in the flow: `/vwf:git-workflow` is
 invoked by the other commands for every git action, `/vwf:docs-sync` closes
 every run that changes reality (and is yours to run after ad-hoc work), the five
 execute subagents and the reviewer subagents run inside their commands, and
@@ -358,12 +375,13 @@ docs/
 │   │   ├── index.md             # flow catalog (per-project sections) + inter-service contracts
 │   │   └── <project>/           # one group per registry project owning the journeys
 │   │       └── <NNN>-<flow>/    # NNN designated: 100 = home, 010/020/030/040 entry,
-│   │           │                #   110–890 product, 910–940 account screens
+│   │           │                #   110–890 product, 910–950 account and audit screens
 │   │           ├── index.md     # the PLATFORM-AGNOSTIC contract: trigger, actors,
 │   │           │                #   steps, jobs, sequence diagram, acceptance
 │   │           └── <platform>.md # one per implemented platform (mobile, tablet,
 │   │                            #   desktop, web, auto) — screens (coded rows +
-│   │                            #   per-screen components blocks) only
+│   │                            #   per-screen components blocks), plus a
+│   │                            #   per-screen Metadata block on site/webapp
 │   ├── entities/                # the supporting data contracts
 │   │   ├── index.md             # entity catalog + product-wide ER diagram
 │   │   └── <entity>/            # index.md (lifecycle, relationships, invariants)
@@ -377,8 +395,11 @@ docs/
 │           └── entities/        # every entity's schema.yaml, frozen at the same
 │                                # release moment — <entity>@<date>.schema.yaml
 ├── plans/                       # per-cycle plans (the diff to apply)
-│   ├── <date>-<time>-<slice>.md # covers:/requires: chain links + a "Gaps
+│   ├── <date>-<time>-<slice>.md # covers:/requires:/backlog: links + a "Gaps
 │   └── archived/                # surfaced during execution" section
+├── backlog.md                   # the prioritised list of work that waits —
+│                                #   base repo only, one per product,
+│                                #   /vwf:backlog is its only writer
 ├── prompts/                     # canvas design briefs (committed intent)
 │   └── <type>/                  # prompt type (e.g. screens)
 │       └── <project>/           # registry project
@@ -507,39 +528,62 @@ postponement rather than a dead end: vwf names the three ways forward (install
 the plugin that has one, write it, or **defer the axis** as `unresolved`) rather
 than coming back quietly short.
 
-A stack is composed from **six independent axes** — you answer each one, and
+A stack is composed from **seven independent axes** — you answer each one, and
 they never merge because they never overlap. `project` and `repo` take a single
 template; `backing` and `deploy` take a **list**, one entry per capability and
 one per delivery mechanism (`deploy_template` became a list in `config_format`
 **16**, because a project routinely publishes to a package registry *and* ships
 a container image):
 
-| Axis        | Scope       | Takes                                                                                      |
-| ----------- | ----------- | ------------------------------------------------------------------------------------------ |
-| **project** | per project | one template, filtered by the platforms the project declares — see below                   |
-| **backing** | per project | a list — one entry per capability the project talks to (datastore, identity, telemetry, …) |
-| **deploy**  | per project | a list — one entry per delivery mechanism the project ships through                        |
-| **repo**    | per repo    | one template describing the checkout — its package manager and workspace layout            |
-| **design**  | per project | one design tool — the slug *is* the config value                                           |
-| **cicd**    | per project | one CI system — the slug *is* the config value                                             |
+| Axis           | Scope       | Takes                                                                                                          |
+| -------------- | ----------- | -------------------------------------------------------------------------------------------------------------- |
+| **project**    | per project | one template, filtered by the platforms the project declares — see below                                       |
+| **backing**    | per project | a list — one entry per capability the project talks to (datastore, identity, telemetry, …)                     |
+| **deploy**     | per project | a list — one entry per delivery mechanism the project ships through                                            |
+| **repo**       | per repo    | one template describing the checkout — its package manager and workspace layout                                |
+| **design**     | per project | one design tool — the slug *is* the config value                                                               |
+| **cicd**       | per project | one CI system — the slug *is* the config value                                                                 |
+| **stylesheet** | per project | one stylesheet approach — the slug *is* the config value; asked only of a project declaring `site` or `webapp` |
 
 **No slug appears in that table on purpose.** The roster is not vwf's to state:
 the menu is the union of what your **installed** stack plugins declare, so it
 changes with what you install, and `/vwf:architecture` is what enumerates it for
 your repo. Today [stackgen](./stackgen.md) is the only stack plugin, and it
-carries all six axes — the general-purpose set, the managed backing and deploy
+carries all seven axes — the general-purpose set, the managed backing and deploy
 services of each cloud it packs, and a generator for whatever no pack covers.
 
 Since `config_format` **13** every axis but `repo` is pinned **per project**, so
 a product can host its site on Cloudflare, its API on GCP and its worker
 somewhere else again — and design its app in one tool while its website is
-designed in another. On the `design` and `cicd` axes the slug **is** the config
-value, so the menu pick and the config key are one value rather than two that
-can disagree. Only `repo` stays per repo; it describes the checkout, not a
-project.
+designed in another. On the `design`, `cicd` and `stylesheet` axes — the three
+**tool axes** — the slug **is** the config value, so the menu pick and the
+config key are one value rather than two that can disagree. Only `repo` stays
+per repo; it describes the checkout, not a project.
+
+**vwf ships no default, but it honours one the plugin declares.** A menu entry
+may arrive flagged `default: true` — set in the stack plugin's own bundle, never
+inferred by vwf — and that entry is what the round **preselects**: highlighted,
+never assumed, with every other entry still offered and the user still picking.
+At most one entry per axis **per platform** carries it — two flagged entries on
+one axis are the plugin's defect when either serves every platform or their
+platform lists overlap — and the round preselects the one flagged entry among
+the entries it offers, after filtering by the project's platforms, so a flag on
+an entry the round does not offer highlights nothing there. Where none does, the
+round preselects the previous project's answer on that axis, and nothing before
+that. The flag is menu state only — it reaches no config key, and a pin made by
+accepting it is indistinguishable from one made by picking the same entry. Today
+two entries are flagged: stackgen's terminal design tool on the `design` axis,
+and its static Astro bundle on the `project` axis for `site` projects alone.
+
+**The `stylesheet` axis is conditional.** Added in `config_format` **19**, it is
+asked only of a project whose registry entry declares a `site` or a `webapp`
+platform, and it is asked **after** that project's design round: the design
+system's semantic tokens are the contract and the stylesheet is how they are
+realized, so the order is the dependency rather than a preference. A project
+declaring neither platform is never asked and records no key at all.
 
 **An axis can also be left unanswered.** Since `config_format` **16** any of the
-six may read `unresolved` — deferred, not decided — which is the line between
+seven may read `unresolved` — deferred, not decided — which is the line between
 *defining* a product and *building* one. `/vwf:product`, `/vwf:architecture`,
 `/vwf:blueprint`, `/vwf:design-system` and every other doc surface run to
 completion with no stack chosen at all; `/vwf:doctor` reports the deferral as a
@@ -562,22 +606,26 @@ role meant. **Your pin must cover every platform your project declares**, which
 stack plugin's answer — [stackgen](./stackgen.md) states the set it ships.
 
 **Templates ship in a stack plugin, never in vwf.** vwf has no `stacks/` tree at
-all: it owns the six axes, the platform vocabulary a template declares against,
-and the two adapter skill names it reaches a plugin through. So a product gets
-whichever menu its installed plugins add up to, and one that installs nothing
-sees an empty one.
+all: it owns the seven axes, the platform vocabulary a template declares
+against, and the two adapter skill names it reaches a plugin through. So a
+product gets whichever menu its installed plugins add up to, and one that
+installs nothing sees an empty one.
 
 **Why the split matters.** The same Hono + Effect service runs against Firebase
-or Postgres, on Cloud Run or any container host. Before format 19 all three were
-welded into one document, so picking `service` because you wanted Hono silently
-also bought you Firestore, Firebase Auth, Temporal and Cloud Run — none of it
-declared. Now a project template names no vendor and a backing template names no
-framework — and a backing template is now one capability rather than a vendor
-bundle, so `postgres` + `oidc` + `otel-lgtm` + `temporal`, each a stackgen
-bundle, is a completely vendor-free path through vwf.
+or Postgres, on Cloud Run or any container host. Before `blueprint_format` 19
+all three were welded into one document, so picking `service` because you wanted
+Hono silently also bought you Firestore, Firebase Auth, Temporal and Cloud Run —
+none of it declared. Now a project template names no vendor and a backing
+template names no framework — and a backing template is now one capability
+rather than a vendor bundle, so `postgres` + `oidc` + `otel-lgtm` + `temporal` +
+`audit-store-postgres`, each a stackgen bundle, is a completely vendor-free path
+through vwf. That last one is the shape to notice: an audit store is its own
+capability (`audit-store`), pinned beside the datastore rather than folded into
+it or into the telemetry sink.
 
-An operator back-office is `platforms: [service, webapp]` plus the
-`operator-rbac` capability, and picks whichever project template serves both of
+An operator back-office is `backend` / `platforms: [service, webapp]` plus the
+`operator-rbac` capability (`webapp` sits under `backend` as well as `frontend`
+for exactly this shape), and picks whichever project template serves both of
 those platforms at once. A project shipping through a store rather than to a
 deploy target (`mobile`, `tablet`, `desktop`, `auto`) records `[]` on the deploy
 axis, as does an `iac` project — it *is* the deploy path. A `cli` project pins
@@ -599,7 +647,11 @@ A template reaches vwf as a **payload**, never as a file: its stack facts
 template admits — Flutter's Kotlin and Swift) and its **conventions** prose,
 carrying the layout, testing and deployment rules. How a stack plugin stores
 that template is its own business. Picking one fills those facts into
-`.config/vwf.yaml`; you can then customize any of them.
+`.config/vwf.yaml`; you can then customize any of them. **Picking is
+`/vwf:architecture`'s and landing is `/vwf:setup`'s** — architecture records the
+slug and materializes nothing, then invokes setup, whose materialize pass asks
+the plugin for the template once per (repo, slug) and lands it in the repo that
+project belongs to.
 
 Only the axes land in the config — the conventions prose stays with the plugin,
 and `/vwf:plan` and `/vwf:execute` fetch it when they run: deduped by template
@@ -642,6 +694,15 @@ a language whose pin carries that template's emitted `language_facts` (LSP
 provision, mise tool, manifest) is *known* — doctor verifies against the facts
 instead of a language plugin. A token with neither stays blocking; nothing about
 the escape re-opens free text.
+
+That landing happens in **`/vwf:setup`'s materialize pass**, once per (repo,
+slug), never at the moment the pin is made — so a freshly recorded pin is
+expected to sit unmaterialized until setup runs, which is the handoff working
+rather than a gap. A pin whose landing you **declined**, or a repo setup has not
+re-run on since, is doctor's own finding: **pinned, not materialized —
+`/vwf:setup` materializes it**, blocking while the pin stands, one row per
+project rather than one per language, and never confused with `unresolved`. The
+axis was answered; what is missing is the artifact.
 
 Adding a stack option means adding a template file **to a plugin**, never to
 vwf. One entry per type today is a starting point, not a default.
@@ -714,10 +775,13 @@ project's `cicd` axis — [`stackgen`](./stackgen.md)'s
 `contracts/release-trigger.md` and its `ci-system` pack.
 
 The **operator back-office** deserves a note. Since format 22 it is not its own
-role: it is `platforms: [service, webapp]` plus the `operator-rbac` capability —
-a single app serving both the operator API and an embedded UI, and the **sole
-holder of admin capabilities** (the public `service` exposes no admin routes).
-The capability, not a type name, is what marks it.
+role: it is `backend` / `platforms: [service, webapp]` plus the `operator-rbac`
+capability — a single app serving both the operator API and an embedded UI, and
+the **sole holder of admin capabilities** (the public `service` exposes no admin
+routes). The capability, not a type name, is what marks it. It is also where the
+**audit store** lands: accepting the audit foundation adds `audit-store` to this
+project's capabilities, because the console is the only thing that reads audit
+records.
 
 The full stack docs ship inside each **stack plugin** under its own `stacks/`
 tree — never in vwf — and drive what `/vwf:setup` and `/vwf:architecture`
@@ -725,54 +789,60 @@ record.
 
 ## Commands
 
-| Command                        | What it does                                                                                                                                |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/vwf:init`                    | Internal — shape a repo (config layout, task library, gates, hygiene files, a licence); reached only through `/vwf:setup`                   |
-| `/vwf:setup [reshape]`         | Onboard/migrate a repo into vwf's format; `reshape` runs the repo-shape pass alone (re-runnable)                                            |
-| `/vwf:product`                 | The Phase −1 outcome contract — problem, users, goals, slice priority                                                                       |
-| `/vwf:architecture`            | Bootstrap or update the system shape + Project Registry                                                                                     |
-| `/vwf:design-system`           | Import the product's design system from its design tool into the contract (mandatory once UI exists)                                        |
-| `/vwf:blueprint [flow]`        | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                                                |
-| `/vwf:mockups [flow]`          | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                                                    |
-| `/vwf:screens <mode>`          | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                                          |
-| `/vwf:plan [slice]`            | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                                                           |
-| `/vwf:execute [plan]`          | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                                                  |
-| `/vwf:archive [plan]`          | Retire a completed plan into `docs/plans/archived/`                                                                                         |
-| `/vwf:doctor [project]`        | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, dependency audit, mempalace, graphify, repo shape, stamps |
-| `/vwf:verify [env]`            | Post-deploy: health-check + re-run acceptance criteria against the environment                                                              |
-| `/vwf:feedback [input]`        | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat)                            |
-| `/vwf:change-plan [what]`      | Plan an ad-hoc change — work with no blueprint slice behind it — into a folder `/vwf:change-execute` can run                                |
-| `/vwf:change-execute <folder>` | Run an approved change plan unattended in a fresh session — waves, review, the plan's own gate, then land                                   |
-| `/vwf:handoff [name]`          | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                                                     |
-| `/vwf:recall [name]`           | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                                                 |
-| `/vwf:readme`                  | Scan a repo and write or update its README against eight required sections                                                                  |
-| `/vwf:docs-sync [range]`       | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog                                        |
-| `/vwf:git-workflow`            | Internal — worktree isolation, commits, merges                                                                                              |
+| Command                        | What it does                                                                                                                                                    |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/vwf:init`                    | Internal — shape the base repo **and every member repo** (config layout, task library, gates, hygiene files, a licence); reached only through `/vwf:setup`      |
+| `/vwf:setup [reshape]`         | Onboard/migrate a repo into vwf's format; `reshape` runs the repo-shape pass alone, across every member (re-runnable)                                           |
+| `/vwf:product [note]`          | The Phase −1 outcome contract — problem, users, goals, slice priority; an optional feedback note seeds the update questions                                     |
+| `/vwf:architecture`            | Bootstrap or update the system shape + Project Registry                                                                                                         |
+| `/vwf:design-system`           | Import the product's design system from its design tool into the contract (mandatory once UI exists)                                                            |
+| `/vwf:blueprint [flow]`        | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                                                                    |
+| `/vwf:mockups [flow]`          | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                                                                        |
+| `/vwf:screens <mode>`          | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                                                              |
+| `/vwf:plan [slice]`            | Write reviewable cycle plans — a diff of blueprint vs code, deps chained as plans                                                                               |
+| `/vwf:execute [plan]`          | Run an approved plan autonomously — TDD, reviews, E2E + UX, one final gate                                                                                      |
+| `/vwf:archive [plan]`          | Retire a plan into `docs/plans/archived/` — a flat cycle plan file, or a whole change-plan folder                                                               |
+| `/vwf:doctor [project]`        | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, dependency audit, mempalace, graphify, the repo shape of every member, stamps |
+| `/vwf:verify [env]`            | Post-deploy: health-check + re-run acceptance criteria against the environment                                                                                  |
+| `/vwf:feedback [input]`        | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat)                                                |
+| `/vwf:backlog [verb]`          | The prioritised list of work that cannot be picked up now — `docs/backlog.md`, and this is its only writer                                                      |
+| `/vwf:change-plan [what]`      | Plan an ad-hoc change — work with no blueprint slice behind it — into a folder `/vwf:change-execute` can run                                                    |
+| `/vwf:change-execute <folder>` | Run an approved change plan unattended in a fresh session — waves, review, the plan's own gate, then land                                                       |
+| `/vwf:handoff [name]`          | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                                                                         |
+| `/vwf:recall [name]`           | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                                                                     |
+| `/vwf:readme`                  | Scan a repo and write or update its README against eight required sections                                                                                      |
+| `/vwf:docs-sync [range]`       | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog                                                            |
+| `/vwf:git-workflow`            | Internal — worktree isolation, commits, merges                                                                                                                  |
 
-**Seven are user-only** — `setup`, `design-system`, `verify`, `mockups`,
-`archive`, `recall` and `change-execute` carry `disable-model-invocation: true`,
-so the model never fires them on its own; you decide when a migration, a design
-import, a post-deploy check, a re-render, a plan retirement, a session resume or
-an unattended change run happens. `change-execute` is user-only for a reason of
-its own: it must start in a session that has done nothing else, and only you can
-guarantee that. Its partner `change-plan` stays model-invocable, so a future
-hand-off — a `/vwf:feedback` intake that turns out not to be a blueprint gap —
-can route into it by name. The rest stay model-invocable because the workflow
-**delegates to them by name** — `recall` resumes a paused run *through*
+**Six are user-only** — `setup`, `verify`, `mockups`, `archive`, `recall` and
+`change-execute` carry `disable-model-invocation: true`, so the model never
+fires them on its own; you decide when a migration, a post-deploy check, a
+re-render, a plan retirement, a session resume or an unattended change run
+happens. `change-execute` is user-only for a reason of its own: it must start in
+a session that has done nothing else, and only you can guarantee that. Its
+partner `change-plan` stays model-invocable, and that seam is now live: a
+`/vwf:feedback` intake that turns out not to be a blueprint gap routes into it
+by name. The rest stay model-invocable because the workflow **delegates to them
+by name** — `recall` resumes a paused run *through*
 `blueprint`/`plan`/`execute`, every skill commits *through* `git-workflow`,
 `setup` runs `doctor` inside its own spine, and `feedback` and `plan` route work
 into `product`/`architecture`/`design-system`/`blueprint`. Marking one of those
 user-only would silently break the chain: the flag blocks programmatic
 invocation, not just auto-triggering.
 
-**`init` is the one skill in the other direction** — hidden from you, reachable
-by a skill. It carries `user-invocable: false`, which keeps it out of the `/`
-menu, *and* `disable-model-invocation: false`, which keeps `/vwf:setup`'s call
-to it working; a user-only skill would have made that call a silent no-op. So
-init is reached exactly two ways, both through setup: Step 0's offer, or
-`/vwf:setup reshape`. The two stack-adapter skills a stack plugin ships carry
-the same pair for the same reason — they answer vwf in a payload shape no user
-reads.
+**Four skills go in the other direction** — hidden from you, reachable by a
+skill. Each carries `user-invocable: false`, which keeps it out of the `/` menu,
+*and* `disable-model-invocation: false`, which keeps its caller's invocation
+working; a user-only skill would have made that call a silent no-op. `init` is
+reached exactly two ways, both through setup: Step 0's offer, or
+`/vwf:setup reshape`. The three import adapters — `import-design-system`,
+`import-screens` and `import-conversations` — are reached only from
+`/vwf:design-system`, `/vwf:screens import` and `/vwf:feedback canvas`
+respectively; each answers vwf in a payload shape no user reads, so the `/` menu
+is the wrong place for them. The two stack-adapter skills a stack plugin ships
+carry the same pair for the same reason. Four is the count of **commands**
+hidden this way; the [doctrine skills](#vwf-skills) are hidden too, but a file
+or Claude's own judgment summons those rather than a caller.
 
 Model and reasoning effort are **tiered per surface**, not uniform. `opus` runs
 where judgment decides the outcome or where nobody is watching — `product`,
@@ -795,12 +865,20 @@ plugin ships no `commands/` directory.
 ### /vwf:init
 
 `init` takes no arguments and is **not typed**: `/vwf:setup` is its only door —
-Step 0's offer, or `/vwf:setup reshape`. It shapes the **base repo** — the
-layout everything else assumes. `/vwf:setup` sets up **vwf** in it. The two are
-a pair and neither does the other's job: the config layout, the task vocabulary,
-the gates, the ignore set and a licence belong to `init`; `docs/blueprint/`,
-`.config/vwf.yaml` and the memory tree stay `setup`'s. On a repo that has
-neither, run `/vwf:setup` and take the offer it makes first.
+Step 0's offer, or `/vwf:setup reshape`. It shapes a **product**, which is one
+**base repo** and every **member repo** that base declares — the layout
+everything else assumes, laid down in all of them in one run. `/vwf:setup` sets
+up **vwf** in the base. The two are a pair and neither does the other's job: the
+config layout, the task vocabulary, the gates, the ignore set and a licence
+belong to `init`; `docs/blueprint/`, `.config/vwf.yaml` and the memory tree stay
+`setup`'s. On a repo that has neither, run `/vwf:setup` and take the offer it
+makes first.
+
+**The shape is per repo; the run is per product.** A member is a repository in
+its own right — it carries its own `.config/`, its own task library, its own
+gates and its own lockfile, and it is shaped or not on its own evidence. What is
+*not* per repo is the run: there is one survey, one plan with a section per
+repo, and one yes.
 
 **It names no tool, and that is the design.** Every file it lays down comes from
 a stackgen pack, fetched through the stack adapter by three fixed slugs — the
@@ -834,77 +912,253 @@ byte-for-byte. `init` never names the editor; the fragment convention names the
 target, and a pack task is what installs the recommended extensions into a
 per-repo profile.
 
-**Project ids are slugged**, and the repo's own name with them. The resolved id
-— from the registry, a sub-directory, or the repo's name — is lowercased, runs
-outside the slug alphabet collapse to a single `-`, and the ends are trimmed, so
-`My.App` becomes `my-app`. That is not cosmetic: the task runner reads a
-per-project group's directory name as the task's *last* segment and strips what
-looks like a file extension from it, so an id carrying a dot silently loses
-everything after it. The same slug fills four surfaces — the task groups, the
-bootstrap aggregator's member flags, the `setup-<id>` aliases, and `REPO_NAME`,
-the repo-level environment key your own shell aliases can read. `REPO_NAME` is
-written **literally** and never derived from the directory: a linked worktree's
-config root is named for the branch.
+**One slug rule, two independent tokens.** The rule is the same for both — the
+name is lowercased, runs outside the slug alphabet collapse to a single `-`, and
+the ends are trimmed, so `My.App` becomes `my-app`. That is not cosmetic: the
+task runner reads a per-project group's directory name as the task's *last*
+segment and strips what looks like a file extension from it, so a token carrying
+a dot silently loses everything after it. What differs is what each token is
+derived from, and where it lands:
 
-**Mode resolves from what is on disk**, and from nothing else — there is no flag
-to override it and no directory argument to point it elsewhere: no `.config/`
-directory *and* no task-library directory means **new**; anything else means
-**existing**. The signal is deliberately narrow — a repo with source, a readme
-and a licence but no configuration layout has never been shaped, and nothing in
-the new pipeline touches source. Shaping a *different* repository means running
-`/vwf:setup` there.
+- **A project's id** — from the registry, a sub-project directory, or the
+  project's own platform token (`service`, `worker`, `webapp`, `site`, `cli`,
+  `iac`, …), and for a member from the base config's `members[].projects` first.
+  It names the `p:<id>:*` task group and its alias, and it is what the commit
+  gate's scope list holds.
+- **A repo's name** — from the basename of that repo's **main checkout**
+  directory, and nothing else. It fills `REPO_NAME`, the repo-level environment
+  key your own shell aliases can read. A member repo names its own folder, never
+  the base's.
 
-**Six questions, each one round**, asked *before* the plan so one yes covers all
-of it. Two on a new repo only — the repo name (proposed from the directory) and
-a one-line brief, which may be empty. Four on any repo, listed in order — the
-first of them is question 2 overall, and it is the one this section's slug rule
-waits on:
+The two never have to agree, and nothing reads one to infer the other: a
+single-project repo whose folder happens to spell its project id is a
+coincidence. `REPO_NAME` is written **literally** and never derived at read
+time: a linked worktree's directory is named for the branch, so a derived value
+would address a different repo depending on where you were standing.
 
-- **The ids, confirmed** — one list, the repo's own name first and then a row
-  per project init will write a task group for, each row showing the **name**
-  the repo spells, the **id** it slugifies to, and the **source** that name came
-  from (the registry, a sub-project directory, or the repo's own name). Naming
-  the source is the point: a row you disagree with is usually a row whose source
-  you did not expect. Accept the list, or type a replacement for any row — a
-  replacement is slugged by the same rule and shown once more only if slugging
-  changed it. Nothing is written until this is answered: not a `p:<slug>:*`
-  group, not a member flag, not an alias, not `REPO_NAME`.
+**The bootstrap aggregator's member flags and their `setup-<slug>` aliases are a
+different list.** They are one per **member repo**, named for the member, never
+for a project id: what they widen a run to is another repository, so a member
+holding three projects is still one flag. A run that finds flags named from
+project ids — what earlier versions wrote — rewrites them.
+
+**Which repos it shapes, it resolves itself.** There is no argument and no flag,
+so the set is never one it was told. The base is resolved by the membership
+contract, walking up out of a member or a linked worktree, so a run started
+inside a member shapes the whole product rather than the one repo you were
+standing in. The members are the **union** of two sources — the submodule paths
+`.gitmodules` declares, walked recursively, and the `members:` list in
+`.config/vwf.yaml` — deduped on realpath. Where only one of the two exists,
+which is the ordinary case, that list *is* the member set. Only where **both**
+exist does a path in one and not the other become a **membership disagreement**:
+it is reported in the plan, naming both sources, and never shaped — settling it
+by picking a side would write a repo into the product on `init`'s own authority.
+
+**A member that is not on this machine gets a clone row, not a second
+question.** An empty submodule directory or a declared sibling that is not there
+is *absent*; its section of the plan opens with the command that would fetch it
+— `git submodule update --init <path>` under submodule linkage,
+`git clone <url> <path>` under siblings — followed by *then survey and shape
+it*, and that row is covered by the same one yes as everything else. On a no
+nothing is cloned and the member is exactly as absent as before. A member with
+no clone source recorded anywhere gets no row at all: it is listed under
+`Deferred`, unlock *add the clone source*, because inventing one would be a
+guess at somebody's remote.
+
+**Mode resolves per repo, from what is on disk** and from nothing else — there
+is no flag to override it: no `.config/` directory *and* no task-library
+directory means **new**; anything else means **existing**. The signal is
+deliberately narrow — a repo with source, a readme and a licence but no
+configuration layout has never been shaped, and nothing in the new pipeline
+touches source. Each resolved repo is read on its **own** markers, so a base can
+come out existing while a member beside it comes out new, and each repo's
+section of the plan says which it got.
+
+**Seven questions, each one round**, asked *before* the plan so one yes covers
+all of it. **A round is one round for the whole product**, however many repos
+resolved: a question whose answer differs per repo shows one row per repo inside
+its single round, and never becomes a second round. Two are asked for the repos
+that came out **new** only — the repo name (proposed from the basename of that
+repo's **main checkout**, and the one thing that fills `REPO_NAME`) and a
+one-line brief, which may be empty, each listing one row per new repo. Five are
+asked whatever the modes are, listed in order — the first of them is question 2
+overall, and it is the one this section's slug rule waits on:
+
+- **The ids, confirmed** — one list, **grouped by repo**: the base's group
+  first, then one per member in the resolved order, and inside each group a row
+  per project init will write a task group for *in that repo*. Each row shows
+  the **name** the repo spells, the **id** it slugifies to, and the **source**
+  that name came from (the registry, a sub-project directory, or the project's
+  **type** — and for a member's projects, the base config's `members[].projects`
+  ahead of those). The type source is a choice rather than a reading: where a
+  repo has neither a registry nor sub-project directories there is no name in
+  the tree to propose from, so this same round asks which **platform token**
+  each project's primary surface is — `service`, `worker`, `webapp`, `site`,
+  `cli`, `iac` and the rest, offered as the closed per-role list plus a free
+  *other* you type — and proposes the token it picks. Two projects in one repo
+  that pick the same token are proposed as `<token>-<directory-slug>` each,
+  since an id is a directory name in the task library. Naming the source is the
+  point: a row you disagree with is usually a row whose source you did not
+  expect. Accept the list, or type a replacement for any row — a replacement is
+  slugged by the same rule and shown once more only if slugging changed it.
+  Nothing is written in any repo until this is answered: not a `p:<slug>:*`
+  group, not its alias, not a commit scope — and the scopes are filled on
+  **every** run, the first included, one per confirmed id, a registry being only
+  where the proposal was read from. `REPO_NAME` is **not** this question's; it
+  is question 1's, taking the repo's folder name. The aggregator's member flags
+  and the `setup-<slug>` aliases are not this question's either — they come from
+  the resolved member repos.
 - **The secrets provider** — the adapter's own menu, filtered to capability
-  providers, plus *none — decide later*.
-- **The licence** — MIT, Apache-2.0 or none.
-- **The security-contact URL** — defaulted to the origin's advisories page;
-  declining writes no security file, since one naming a channel nobody watches
-  is worse than none.
+  providers, plus *none — decide later*. Answered **once** and written into
+  every repo: a product keeps its secrets in one place, and a member on a
+  different provider is a decision nobody made by answering this.
+- **The agent plugins this product requires** — a multi-select, seeded by the
+  machine itself and answered **once** for every repo, since the inventory it
+  reads is the machine's and not a repo's. `init` runs the plugin task's
+  inventory mode, which prints the plugin sources registered on this machine —
+  every one **except the toolkit's own**, which the task always reconciles — and
+  then the plugins already installed from any of them, one row each. Those rows
+  are offered as the task printed them, in its order, **minus two**: the
+  workflow plugin's own row and its dependency's, which `init` drops because the
+  task installs both unconditionally and listing a fixed thing makes it look
+  optional. *None* sits alongside them, and is the ordinary answer for a repo
+  that needs nothing beyond the workflow. What you pick is written into that
+  task's two marked positions, so `setup:ai` installs it on every checkout. An
+  inventory that comes back empty is not an error: the question is still asked,
+  with *none* as the only thing to pick and the empty result stated in the
+  question, so the answer is recorded rather than assumed.
+- **The licence** — MIT, Apache-2.0 or none, **one row per repo** in the one
+  round: a licence is a file a repo carries, and members are licensed separately
+  often enough that assuming otherwise writes the wrong text into somebody's
+  repo.
+- **The security-contact URL** — **one row per repo**, each defaulted to *that*
+  repo's own origin's advisories page where it has an origin and to nothing
+  where it does not. Declining a row writes no security file in that repo, since
+  one naming a channel nobody watches is worse than none, and says nothing about
+  the other rows.
 
-**On an existing repo it surveys, plans, and applies on one consent.** The
-survey walks ten checks — root files against the allowlist, the readme's casing,
-task names against the pack's *legacy-name table*, task shebangs, the helper
-library's shape, missing files, ignore sections and hook fragments, commit
-types, per-project task groups, and the gate-config positions the packs ship
-marked for it to fill. Pass 1 has one case worth knowing: where a gate pack
-declares both a config under `.config/` and a two-line stand-in of the same name
-at the root — the stand-in existing because that tool's config discovery is
-root-only — your **real** config moves into `.config/` and the stand-in takes
-its place, with the plan saying the settings survive the move. Not every key
-does, and the plan says which: a gate pack's own skill names the key that is
-**not** inherited through the stand-in, where an extended file declaring it is a
-fatal diagnostic rather than a warning, so the move drops it. Dropping it
-**widens** what the gate covers, since the pack's own pinned plugin list is then
-what defines the file set. So the move row carries **sub-lines** — one for the
-dropped key, and one per **exclusion** the drop makes necessary, each naming the
-files that exclusion keeps out of the gate. Never a restored key, which puts the
-diagnostic back, and never after the fact: they are changes to the settings the
-row claims survive the move, so you read them before the one consent. The two
-are told apart by content, never by name. What comes back is **one plan**, in
-six counted sections: moves, creates, renames, appends, merges — all applied on
-a single yes — and `Rewrites (flagged, not applied)`, which is applied by
-nothing. A task file whose shebang names a shell other than bash goes there,
+**On an existing repo it surveys, plans, and applies on one consent** — and on a
+product it does that for every repo at once, running the survey each repo's own
+mode selected, so a single run may execute both pipelines. The survey walks
+eleven checks — root files against the allowlist, the readme's casing, task
+names against the pack's *legacy-name table*, task shebangs, the helper
+library's name and whether its contents still match the pack's, the files a pack
+owns that the repo lacks or has changed, ignore sections and hook fragments,
+commit types, per-project task groups, the tasks the repo owns that no pack
+ships, and the positions the packs ship marked for it to fill — the gate
+configs, and the plugin task's two agent-plugin lists, which are compared row
+for row against question 5's confirmed answer, with both sides shown in the plan
+when they differ, since that is the one position a user may have hand-edited.
+Pass 1 has one case worth knowing: where a gate pack declares both a config
+under `.config/` and a two-line stand-in of the same name at the root — the
+stand-in existing because that tool's config discovery is root-only — your
+**real** config moves into `.config/` and the stand-in takes its place, with the
+plan saying the settings survive the move. Not every key does, and the plan says
+which: a gate pack's own skill names the key that is **not** inherited through
+the stand-in, where an extended file declaring it is a fatal diagnostic rather
+than a warning, so the move drops it. Dropping it **widens** what the gate
+covers, since the pack's own pinned plugin list is then what defines the file
+set. So the move row carries **sub-lines** — one for the dropped key, and one
+per **exclusion** the drop makes necessary, each naming the files that exclusion
+keeps out of the gate. Never a restored key, which puts the diagnostic back, and
+never after the fact: they are changes to the settings the row claims survive
+the move, so you read them before the one consent. The two are told apart by
+content, never by name. What comes back is **one plan for the run**, carrying a
+**section per repo** — the base's first, then each member's in the resolved
+order, each headed with the repo and the mode it resolved to — and inside every
+section the same ten counted sections: moves, creates, replaces, offered
+(replace / keep), renames, rewrites applied, appends and merges — all applied on
+a single yes — and two applied by nothing, `Rewrites (flagged, not applied)` and
+`Repo-owned, kept`. Each repo's section closes with its own total and the
+document with a product total; a total counts only what would be applied, so a
+repo whose only rows are files it owns and files it chose to keep still reads as
+shaped. Two plans would be two chances to stop halfway — one repo renamed into
+the contract while its neighbours still call the old names — which is exactly
+what the one-consent rule exists to prevent. The apply order is **members first,
+the base last**, so the base commits with its record of the members already
+current. A task file whose shebang names a shell other than bash goes there,
 listed with the shell-specific syntax it uses, and is **never** rewritten:
 auto-translating a shell script is how a working task becomes a subtly broken
 one, so it lands in the report's `Deferred` section for you to rewrite
-deliberately. It never asks per file, never writes before the yes, never touches
-application code, and never writes a language manifest, a lockfile or a CI
-workflow.
+deliberately.
+
+**The helper library is the one named exception**, and the reason it earns one
+is timing. A repo whose copy has drifted from the pack's is not carrying a
+library of its own but an older version of the same one — and every task file
+this run creates is written against the pack's, so keeping the old copy means
+those brand-new tasks die on their first line, on a breakage this run caused.
+The plan therefore carries a **replace** of that file, sub-lined with each
+function that disappears along with it, and one **rewrite** row per call site of
+a retired name, `old → new` at its file and line, so you count them before the
+one yes rather than after. Nothing is translated on the spot: the mapping is
+read from the pack's legacy-name table, the same table the task-name check
+reads.
+
+**A function the table has no row for is not deferred — it moves.** Every
+function your own helper library **defines** that the pack's does not and its
+table does not map is carried, whole and text-unchanged, into `_scripts/local`:
+a repo-owned sidecar beside the pack's library, the one file in that directory
+no pack ships, no pack declares and `init` never replaces. The list is derived
+from what your file defines, not from what your tasks happen to call, so a
+helper nothing calls yet crosses over with the rest instead of disappearing into
+the replace unremarked. The plan carries one create for the sidecar, sub-lined
+with each function moved in, and one rewrite per task file that calls any of
+them, adding a single `source` line for the sidecar right after that file's
+existing source of the helper library — a task calling none of them gains no
+line, so a function that moved with nothing calling it is one sub-line and no
+rewrite. A repo that already has the sidecar gets the functions it lacks
+appended, never duplicated. A name your tasks call that nothing defines anywhere
+was a broken call before the run began, and that one is flagged rather than
+moved — there is no body to carry. It never asks per file, never writes before
+the yes, never touches application code, and never writes a language manifest, a
+lockfile or a CI workflow.
+
+**A pack-owned file whose content has diverged is offered, not skipped.** Every
+file a landed pack owns that your repo also has is compared with the pack's once
+the renames are accounted for. That comparison is **two tests**: the file's hash
+against the one the lockfile recorded, and — only on a mismatch — a second pass
+that takes the pack's shipped payload at the pinned version, splices your file's
+**current** value into every marked position that file carries, and hashes the
+result. Equal, and the whole difference lies inside those positions: **no offer
+at all**, and where a survey pass owns one of them that pass shows the change
+instead — a folder rename is a `repo-name key: <old> → <new>` replace row and
+nothing else. Unequal, and the content really did diverge: one
+`Offered (replace / keep)` row carrying a three-line summary — what your version
+adds, what it lacks, and whether it references a retired name — and the default
+`init` computed. **Replace** lands the pack's file and re-fills every marked
+position it carries from your confirmed answers, which is what makes a replace
+safe on a file whose positions you had already filled. **Keep** leaves your
+file's own content alone and records the decision under `enforcement.kept_files`
+in the **base's** `.config/vwf.yaml`, so neither a later reshape nor
+`/vwf:doctor` raises it again — the keep covers the content you customised,
+never a marked position's value, which the fill passes write on this run either
+way. There is one such record for the whole product, because a member carries
+only its back-link and no config of its own: a keep taken inside a member is
+keyed by its **base-relative** path — the member's path as prefix, then the path
+inside it — while a keep on the base's own file is the same rule with an empty
+prefix. The default is replace where your file references a retired name and
+keep everywhere else, and you may flip any row before answering — flipping
+re-prints the whole plan with the new decisions and asks the same one question,
+so the consent stays single. That key is the only thing `init` writes into
+`.config/vwf.yaml`, and it never creates that file: on a repo `/vwf:setup` has
+not reached yet, the keep still applies and the *record* is a deferral. The
+helper library is the one file this never offers — pass 5 replaces it
+unconditionally, for the timing reason above.
+
+**Tasks you wrote yourself are kept and listed, never moved.** Every task file
+in the library that no landed pack ships is yours; `init` lists each under
+`Repo-owned, kept` and touches none of them. What counts is the path a file
+**resolves to** once the passes above are accounted for, never the path it sits
+at today: a file that resolves into the shipped set — by a legacy-table rename,
+or because `init` offers it at that destination — is the set's, not yours, and
+already carries a row of its own up there. Listing it here as well would read as
+two files, one of them kept, where there is one. One shape earns a note and
+nothing more: a repo-owned task sitting in the `setup/` or `code/` group whose
+name the task-library contract's mandatory set does not carry is reported with
+one line saying those two groups are the contract's, and that the task's home is
+your own per-project group unless it is a gate every project shares. Moving it
+is your commit, not `init`'s — the contract can say a name is not one of its
+own, and cannot say what you meant by it.
 
 **Your readme is moved, never rewritten.** `README.md` → `readme.md` is a move
 like any other in the plan — content untouched, applied with `git mv` so the
@@ -926,6 +1180,13 @@ uses the `ops:` type the commit gate this run just installed will read it
 against. History is never rewritten, nothing is force-pushed, and no
 verification-skipping flag is ever passed.
 
+**Both of the pass's questions are asked once and applied to every repo.** The
+members commit first; the base then commits the run's files **plus the moved
+gitlinks**, which it deliberately stages so its record of where each member
+points is not left a commit behind. *Commit and push* pushes every repo. The
+branch pair is created in each repo that lacks it, since a member is its own
+repository and the base carrying both says nothing about it.
+
 **The branch model, on a brand-new repo: `develop` first, `main` from the first
 commit.** A repository with no commit has an unborn HEAD, so there is nothing
 for a second branch to point at — and the mechanism happens to match the model,
@@ -933,27 +1194,42 @@ since work flows from a feature branch or a worktree into `develop` and from
 `develop` into `main`. On an existing repo `init` creates whichever of the two
 is missing, from the one that is there. Both always end up present, because the
 repo's own merge tasks refuse a destination branch that does not exist locally.
-Then it asks **which branch the remote should default to**, with `develop`
-preselected, and runs a pack task for it — `setup:default-branch` — reporting
-only what that task reported, since whether it set the default or printed a
-command for you depends on what it found. `init` names no forge and inspects
-none.
 
-On an existing repo one commit goes **first and alone**: the pre-commit
+**The git pass opens by asking the landing model**, before it stages anything:
+`direct` — recommended, and what the toolchain pack ships — *merge locally and
+push*, or `pr` — *push the branch and open a pull request*. The answer is
+written literally to `MERGE_MODEL` in `.config/mise.toml`, so the file it writes
+is in what the same pass stages. **`init` never touches the remote's own
+settings.** It used to ask which branch the forge should default to and run a
+pack task for it; that task is gone, because setting a forge's default branch is
+a one-time act by whoever shapes the repo, not something a machine re-runs. The
+one line telling a maintainer to do it lives in the hygiene pack's
+`CONTRIBUTING.md`.
+
+In an existing repo one commit goes **first and alone**: the pre-commit
 configuration and the files it reads. A configuration file that is
 modified-but-unstaged aborts every commit, including the one that would have
 staged it, so a run that touched it has to close that file before it can commit
-anything else. On a new repo no such ordering is needed — the first commit
-precedes hook wiring by construction, which is also why the shipped
-protected-branch hook ships unchanged and never sees it.
+anything else. That ordering is **per repo**, since each repo's pre-commit is
+its own — so an existing-mode repo makes two commits and a new-mode repo one. On
+a new repo no such ordering is needed — the first commit precedes hook wiring by
+construction, which is also why the shipped protected-branch hook ships
+unchanged and never sees it.
 
-**Every run ends with the same report** — files written, files moved, tasks
-renamed, sections appended, fragments merged, and anything deferred with the
-thing that would unlock it, then a **git** section: branches created, the
-commit's short hash, what was pushed, and the forge task's own words verbatim.
-An empty section prints as `none`. Then two next-step lines, always both and
-neither of them run: `/vwf:readme` to fill the readme the stub only opens, and
-`/vwf:setup` to bring the repo into vwf's format.
+**Every run ends with the same report** — files written, files replaced, files
+kept, files moved, tasks renamed, tasks kept, calls rewritten, sections
+appended, fragments merged, and anything deferred with the thing that would
+unlock it. **Those ten sections repeat under one heading per repo**, the base
+first and then each member by its path, every count that repo's own and nothing
+totalled across repos: a count you cannot attribute to a tree is a count you
+cannot check. Then one **git** section for the whole run, because the pass asked
+its questions once — the landing model on one line, and branches, the commit and
+the push one line per repo in apply order, then the base's `Gitlinks staged`
+line. A repo's commit line names every commit the run made there, in order, each
+with its short hash and subject. An empty section prints as `none`. Then two
+next-step lines, always both and neither of them run: `/vwf:readme` to fill the
+readme the stub only opens, and `/vwf:setup` to bring the repo into vwf's
+format.
 
 **When it runs again.** `init` is not a one-time bootstrap — it is what keeps a
 repo's *shape* in step with what the packs ship and with what the repo has since
@@ -961,22 +1237,46 @@ learned about itself, and drift there is silent until the day a task is missing
 or a gate reads a config nobody filled. The way to ask for a re-run is
 `/vwf:setup reshape`, and it is owed **after the registry exists**
 (`/vwf:architecture` and `/vwf:setup` give the project ids their real source,
-which makes the commit gate's scope list fillable and may move a task group),
-**after a pack version moves**, **on a fresh clone that reports drift**, and
-**whenever `/vwf:doctor` says so**. Doctor's repo-shape check is what notices
-between runs: the pack versions the adapter's lockfile recorded against what it
-ships now, each registry id against its task group, commit scope and alias, both
-branches, and the repo-name key. Every one of those is `drift` and none is
-blocking — a repo behind its baseline is out of date, not broken — and all of
-them share one remedy, `/vwf:setup reshape`, printed once. A run that finds
-nothing costs one empty plan and says the repo is shaped, which is the answer
-rather than a wasted run.
+which may move a task group and the commit scope beside it), **after a pack
+version moves**, **after a member is added, removed or cloned on a machine that
+lacked it** (a new member has never been shaped at all, and the base's own fills
+move with the set — the aggregator's flags and their aliases are one per
+member), **on a fresh clone that reports drift**, and **whenever `/vwf:doctor`
+says so**. Doctor's repo-shape check is what notices between runs, on six
+subjects: the pack versions the adapter's lockfile recorded against what it
+ships now, each registry id against its task group and commit scope, both
+branches, the repo-name key against that repo's own **folder name, slugified**,
+the **content** of every pack-owned file against the hash the lockfile recorded
+when it landed — a mismatch re-tested with every marked position spliced out
+before it counts as a row, on init's own two tests, so a filled position is the
+shaped state and never a finding here — and the two marked positions beside the
+repo-name key — `MERGE_MODEL`, and `MEMBERS` on a product whose members are
+wired as plain siblings. **All six run per repo** — the base and every
+locally-present member, resolved the way `init` resolves them — with every row
+printed under the repo it was found in and one remedy for the whole product,
+since `reshape` walks the members too. A member this machine does not carry is a
+blind spot rather than a finding, reading `not present, not checked`. Beside the
+id check sits its counterpart on the base alone, comparing the aggregator's
+member flags and `setup-<slug>` aliases against the resolved member set — a
+member with no flag is a row, and so is a flag named from a project id. A repo
+drifts by standing still and also by moving: a pack-owned file you edited in
+place is no longer the file the pack ships, and doctor says which of the two a
+row is, because re-landing fixes one and the other is a file somebody meant to
+change. A file you chose to keep is skipped, since that decision is already
+recorded. With no adapter lockfile the content check reports
+`not checked — no lockfile` rather than passing or crashing: a repo that landed
+nothing has nothing to have drifted from. Every one of these is `drift` and none
+is blocking — a repo behind its baseline is out of date, not broken — and all of
+them share one remedy, `/vwf:setup reshape`, printed once.
 
-A second run on a shaped repo produces an **empty plan** and says so, **for the
-same id source**. The one legitimate exception is a run whose ids now come from
-a registry the repo did not have before: those rows read *id source changed*,
-naming both sources, and are never reported as a pack having moved. A declined
-write is a recorded deferral, never a halt — run `/vwf:setup reshape` whenever.
+A second run on a shaped **product** produces an **empty plan** and says so,
+**for the same id source** — and that empty plan still carries a section per
+repo, each reading nothing, because a plan naming only the base would leave you
+unable to tell a member that was checked from a member that was skipped. The one
+legitimate exception is a run whose ids now come from a registry the repo did
+not have before: those rows read *id source changed*, naming both sources, and
+are never reported as a pack having moved. A declined write is a recorded
+deferral, never a halt — run `/vwf:setup reshape` whenever.
 
 ### /vwf:setup
 
@@ -986,23 +1286,38 @@ it after upgrading vwf to bring the tree back to the current format.
 **`/vwf:setup reshape` is the shape pass alone.** It skips the mode fork
 entirely: `init` runs — surveying, showing its one plan, taking its own consents
 — its report prints verbatim, and setup stops. No validation, no stamp, no
-doctor, no commit; a re-shape never touches `.config/vwf.yaml`, so a user who
-wants both runs `/vwf:setup` again afterwards. It is also the line `/vwf:doctor`
-prints for every repo-shape finding, so most runs of it arrive from a drift row.
+doctor, no commit; a re-shape writes exactly one key into `.config/vwf.yaml` —
+`enforcement.kept_files`, the record of a pack-owned file you chose to keep —
+and nothing else in it, so a user who wants both runs `/vwf:setup` again
+afterwards. It is also the line `/vwf:doctor` prints for every repo-shape
+finding, so most runs of it arrive from a drift row. A `reshape` started
+**inside a member** is not a reshape of that member alone: `init` resolves the
+base and runs from there, so what gets reshaped is the product.
 
-**Step 0 begins with a shape check, before the mode fork**, and it asks two
-things. Is the shape *there* — the stack adapter's lockfile records all three
-unconditional slugs — and is it *current*, against the four repo-shape
-predicates `/vwf:doctor` owns (the pack versions the lockfile recorded, the
-registry ids behind the surfaces generated from them, the `develop`/`main` pair,
-and the repo-name environment key). Any slug missing, or any predicate failing,
-and setup says what is absent or behind and offers [`/vwf:init`](#vwfinit),
-which is what lays the shape down and what brings it forward. That seam is why
-`init` stays model-invocable — and it is hidden from the `/` menu, so this offer
-and `reshape` above are the only two ways it is reached. Declining is a recorded
-deferral, not a halt: the repo shape and the vwf format are two different
-things, and a repo can be onboarded into one without the other. Setup itself
-never materializes a bundle any more.
+**Step 0 begins with a shape check, before the mode fork**, and on a multi-repo
+product it asks its two things of **every repo** — the base and every member
+present on this machine, the same set `/vwf:doctor` evaluates. Is the shape
+*there* — that repo's stack-adapter lockfile records all three unconditional
+slugs — and is it *current*, against the six repo-shape predicates `/vwf:doctor`
+owns, evaluated on that repo's own artifacts (the pack versions the lockfile
+recorded, the registry ids behind the surfaces generated from them, the
+`develop`/`main` pair, the repo-name environment key, the content of the
+pack-owned files that landed — against the lock, marked positions spliced out —
+and the marked positions beside that key). Any slug missing in any repo, or any
+predicate failing in any repo, and setup says which repos are absent or behind
+and what each showed, and offers [`/vwf:init`](#vwfinit) **once for the whole
+product** — a base that is current while one member is behind is still an offer,
+because the shape is per repo and the product is shaped only when all of them
+are. `init` is what lays the shape down and what brings it forward, and it
+surveys and shapes every repo in one run of its own. That seam is why `init`
+stays model-invocable — and it is hidden from the `/` menu, so this offer and
+`reshape` above are the only two ways it is reached. An **absent** member is a
+blind spot, never a finding. Declining is a recorded deferral, not a halt: the
+repo shape and the vwf format are two different things, and a repo can be
+onboarded into one without the other. Setup itself never materializes one of the
+**three unconditional** bundles any more — that is `init`'s. The **pinned**
+stacks are a different matter, and they are setup's: see
+[the materialize pass](#the-materialize-pass) below.
 
 **Step 0 resolves one of three entry paths**, once, from what is on disk, and
 nothing after it re-derives the mode:
@@ -1033,16 +1348,17 @@ linkage; project roles and platforms; stacks) and confirms it with you via MCQ,
 then produces a **dry-run plan** of every doc to scaffold or reconcile. On a
 new/empty repo it applies the workspace structure as the default and elicits
 each project's stack from the [template menu](#stack-templates) — a platform no
-installed plugin has a template for leaves that axis unrecorded for
-`/vwf:architecture` to settle rather than halting the run. `setup` never writes
-`unresolved` itself; that value only ever comes from an `/vwf:architecture` run
-that offered the axis. It also writes the product's **one** `mempalace.yaml`, at
-the repo root — one wing, the seven rooms vwf's memory protocol uses, and a
-secret denylist behind `.gitignore` — mining the whole tree including
-submodules, and consolidating away any config it finds in `.config/` or a
-submodule root (mining reads the config only from the directory it is pointed
-at, so a stray one is silently inert rather than merely wrong). Nothing is
-written until you approve; it works in a worktree, never deletes, and **never
+installed plugin has a template for leaves that axis for `/vwf:architecture` to
+settle rather than halting the run. An axis setup finds **absent** on a repo
+architecture has not run on is written `unresolved` and the run carries on: the
+one case in which setup writes that value, and it fills an absence only — a
+pinned slug is never rewritten. It also writes the product's **one**
+`mempalace.yaml`, at the repo root — one wing, the seven rooms vwf's memory
+protocol uses, and a secret denylist behind `.gitignore` — mining the whole tree
+including submodules, and consolidating away any config it finds in `.config/`
+or a submodule root (mining reads the config only from the directory it is
+pointed at, so a stray one is silently inert rather than merely wrong). Nothing
+is written until you approve; it works in a worktree, never deletes, and **never
 moves a source file** — a layout that differs from its topology's grouping, and
 an `iac` project sitting in another project's repo, both end the run as written
 recommendations rather than as moves. It merges a vwf section into your
@@ -1056,6 +1372,30 @@ versions, harness inventory, enforcement opt-outs, and per-project nuances (a
 coverage-target override, a non-conventional health path) — so a later run
 detects drift, and every command knows how vwf operates in this repo (pipeline
 knobs, verify environments, the mempalace wing).
+
+#### The materialize pass
+
+**Architecture decides; setup pins.** A slug on a stack axis is a decision
+`/vwf:architecture` made and wrote, and landing it is setup's — which is why
+architecture invokes `/vwf:setup` at the end of its own run rather than leaving
+you a command to remember. The pass runs **once per run, in every mode**,
+`current` included: a repo architecture has just written pins into resolves to
+exactly that mode, so skipping it there would skip the whole handoff.
+
+It groups the axes holding a slug the target repo's adapter lockfile does not
+name, dedupes by slug per repo, and asks the stack plugin for each one — the
+invocation carrying `repo: <path>`, the member whose `projects:` list holds that
+project, so a member's materialization lands in **that** member's tree and its
+own lockfile, never the base's. Two members pinning the same slug each get their
+own copies. Every landing sits behind the plugin's own consent line; a landing
+you decline leaves the pin untouched and is reported, an `unresolved` axis is
+skipped silently, and an absent axis is written `unresolved` as above. On the
+spine the pass runs before the doctor gate, so a stack that lands here is one
+the gate no longer reports as missing — and a decline is the expected way to
+reach doctor's blocking **pinned, not materialized**, which halts the spine and
+reverts the stamp like any other. In mode `current` there is no stamp to revert:
+the block is what `/vwf:doctor` reports on demand and what the next spine run
+stops on.
 
 **The ordering of the shared spine is the point:** validate the bundle, *then*
 write the config, *then* run `/vwf:doctor` against it — a stamp written before
@@ -1092,19 +1432,25 @@ reviewer rejects a flow no goal justifies; entities trace to goals through the
 flows that use them), and `/vwf:feedback` logs metric readings against it. It's
 not a one-time doc — re-run it on **every product change**: adding, updating, or
 retiring a feature/goal, a pivot, or a re-rank (update mode asks only about the
-delta). Retired goals reconcile their inbound links, never dangle.
+delta). An optional argument is a **feedback note** — how `/vwf:feedback`'s
+feature-idea route hands over, as `/vwf:product <note>` — which update mode
+quotes in its first question and uses to decide which deltas to ask about first;
+create mode ignores it. Retired goals reconcile their inbound links, never
+dangle.
 
 ### /vwf:architecture
 
 Run this **after `product`**. It elicits your system's shape — projects, their
 types, how they interconnect, where they deploy — records each project's stack
 by presenting the [stack templates](#stack-templates) for its type as a menu
-(one round per project, and the menu is the whole vocabulary — nothing fitting
-leaves three ways forward, none of them a free-text pin; the answer lands as a
-structured block in `.config/vwf.yaml`), walks the **product-foundations
-checklist** (see [vwf skills](#vwf-skills) — one accept/adapt/skip question per
-elective foundation and accept/adapt/defer per core one, recorded as
-cross-cutting tokens), and writes **both** `docs/blueprint/registry.yaml` — the
+(one round per axis per project — including the **stylesheet** round, run after
+that project's design round and only for a project declaring `site` or `webapp`
+— and the menu is the whole vocabulary: nothing fitting leaves three ways
+forward, none of them a free-text pin; the answer lands as a structured block in
+`.config/vwf.yaml`), walks the **product-foundations checklist** (see
+[vwf skills](#vwf-skills) — one accept/adapt/skip question per elective
+foundation and accept/adapt/defer per core one, recorded as cross-cutting
+tokens), and writes **both** `docs/blueprint/registry.yaml` — the
 machine-readable registry every other command depends on — and
 `docs/blueprint/architecture.md`, its prose view with a system-shape mermaid
 diagram kept in sync with it. Re-run it any time the topology changes; it asks
@@ -1120,6 +1466,15 @@ interview as before, and a screen platform is never assumed — it makes the
 design system mandatory, so each one is confirmed explicitly. With no
 `product.md` either, it recommends `/vwf:product` first and offers the interview
 as the fallback.
+
+**It records the pin and lands nothing.** The stack question ends with a slug in
+`.config/vwf.yaml`; no template is fetched, no repo tree is touched. When the
+run is done and committed it **invokes `/vwf:setup` in-session**, whose
+[materialize pass](#the-materialize-pass) lands each slug once per (repo, slug)
+in the repo that project belongs to — so on a multi-repo product one invocation
+covers every member the pins spread across. Setup is idempotent on a repo it
+just stamped, so a run that finds everything already landed proposes nothing and
+costs a pass, never a second consent.
 
 This is the one doc that *does* name technologies and infrastructure — the
 blueprint deliberately doesn't.
@@ -1147,7 +1502,18 @@ the **Terminal UX** section when a project declares platform `cli`), runs the
 in `.config/vwf.yaml` (**universal**: one per product). Like the blueprint, the
 doc stays code-independent: token *values* and *scales*, never the component
 library, CSS framework, or design file. Every flow's Screens reference it;
-`blueprint` halts on a flow with screens until it exists.
+`blueprint` halts on a flow with screens until it exists. A product with a
+public web surface also gets a **Brand assets** section here — the favicon
+source mark, the social preview and the theme colour, each named by role and
+supplied by the product, never a file path or a size the realization picks.
+Distinct from it is the optional **Brand** section — the logo itself: its
+repo-relative source file, every variant with its path and use (mark, wordmark,
+lockup, mono, dark), the clear-space rule, the minimum sizes, and what may never
+be done to the mark. It is **import-only**: written when the adapter's payload
+carries a `brand:` block — a tool that holds the product's logo returns one —
+and deleted otherwise, never elicited in text on either path, because a logo is
+a file the design tool holds rather than a decision an interview can produce.
+The reviewer checks it only when the payload carried one.
 
 **Drift is one-way.** The canvas is the source; the doc is its distillation.
 Change the design system in the design tool and re-run the import — the doc is
@@ -1167,12 +1533,13 @@ Maintain the desired end state of the **whole product**. A run is a **sweep**:
 it derives a coverage worklist (every product goal served by a flow, every flow
 reviewed, every entity/schema/API operation a flow references authored and
 reviewed, every registry surface represented, every UI project carrying its
-**mandatory standard flows** — see below) and works through it **flow by flow**
-until whole-product coverage holds and a **whole-product coherence review**
-passes — then stamps `blueprint.coverage: complete` in `.config/vwf.yaml`.
-`plan` refuses to run until that stamp is complete, so a half-blueprinted
-product can't leak gaps into code. Stopping early is fine — the stamp records
-what remains, and the next run picks it up.
+**mandatory standard flows** and every `audit-store` project its **standard
+entities** — see below) and works through it **flow by flow** until
+whole-product coverage holds and a **whole-product coherence review** passes —
+then stamps `blueprint.coverage: complete` in `.config/vwf.yaml`. `plan` refuses
+to run until that stamp is complete, so a half-blueprinted product can't leak
+gaps into code. Stopping early is fine — the stamp records what remains, and the
+next run picks it up.
 
 ```text
 /vwf:blueprint                # sweep from the top of the worklist
@@ -1181,20 +1548,32 @@ what remains, and the next run picks it up.
 
 **Standard flows.** UI projects carry a canonical flow vocabulary with exact
 slugs — `splash`, `signin`, `home`, `onboarding`, `settings`, `notifications`,
-`profile`, `delete-account`, `recover-account` — with per-role mandates: a
-project on a device platform (`mobile`/`tablet`/`desktop`/`auto`) must have
-`splash` and `home`; one on a browser platform (`site`/`webapp`) must have
-`home` (`splash` optional). A project with no screen platform — `cli`-only or
-`plugin`-only — is exempt: the standard slugs are screen journeys a terminal
+`profile`, `delete-account`, `recover-account`, `audit-history` — with per-role
+mandates: a project on a device platform (`mobile`/`tablet`/`desktop`/`auto`)
+must have `splash` and `home`; one on a browser platform (`site`/`webapp`) must
+have `home` (`splash` optional). A project with no screen platform — `cli`-only
+or `plugin`-only — is exempt: the standard slugs are screen journeys a terminal
 tool or an extension has no equivalent for. A project whose registry entry
 carries an **Auth & identity capability** must additionally have `signin` — and
 with it `profile`, `delete-account`, and `recover-account` (an account you can
-sign into can be viewed, recovered, and deleted). A missing mandatory standard
-flow is a coverage hole like any other — waivable per flow under
-`enforcement.rules` in `.config/vwf.yaml`, with a reason, never re-asked. The
-slugs are exact: a `login` or `account` flow whose journey matches is proposed
-for a consent-gated rename (links, catalogs, and canvas join keys move
-together), never renamed silently.
+sign into can be viewed, recovered, and deleted). A project declaring the
+**`audit-store` capability** — which is what accepting the audit foundation
+writes onto the console — must additionally have `audit-history`, the operator
+read surface over the audit record. A missing mandatory standard flow is a
+coverage hole like any other — waivable per flow under `enforcement.rules` in
+`.config/vwf.yaml`, with a reason, never re-asked. The slugs are exact: a
+`login` or `account` flow whose journey matches is proposed for a consent-gated
+rename (links, catalogs, and canvas join keys move together), never renamed
+silently.
+
+**Standard entities** are the same idea one level down: an entity every product
+owes once the foundation or capability that triggers it is accepted. There is
+one today — **`audit-event`**, obliged by the audit foundation and signalled per
+project by `audit-store` — carrying its field floor, its append-only rule and
+its ids-never-PII rule. It is authored like any other entity and reviewed
+against the same bar; standard only means the contract starts filled in rather
+than blank. A missing one is a coverage hole, waivable per entity under
+`enforcement.rules` exactly as a standard flow is.
 
 Flows live **grouped by the registry project that owns the journey**, and a flow
 folder holds two kinds of file: **`index.md`** — the platform-agnostic contract
@@ -1227,6 +1606,7 @@ plugins from one project — a sweep nobody completes.
 100 home          ← the anchor: every UI project, always
 110 … 890         ← the product's own journeys, gap-numbered by 10
 910 profile · 920 settings · 930 notifications · 940 delete-account
+950 audit-history ← the console's, once the audit foundation is accepted
 ```
 
 So `home` is `100` in every product you ever blueprint, and its screens are
@@ -1257,6 +1637,26 @@ criteria — then derives what the flow stands on: each referenced entity
 operations it names (per-service OpenAPI contracts under `apis/`), the flow
 catalog, and the product-wide ER diagram. Screens point at the design system;
 `conventions.md` picks up any cross-cutting decision raised.
+
+**A web surface also says what it is to the outside.** Since `blueprint_format`
+**25** every Screens row on a `site` or `webapp` platform file carries a
+**Metadata block** headed by the row's code — `title`, `description`, `index`
+(whether the page is offered to search and listed in the product's public page
+index) and `image` (the picture a shared link shows, `default` or a slot of the
+screen's own). A `webapp` pins all four only when its registry entry declares
+the `seo` capability; without it, `title` alone. A `site` carries the full set
+always — a site is public by definition. Mobile, tablet, desktop and `auto`
+platform files carry no such block at all: those surfaces state nothing about
+themselves to anyone outside the product.
+
+The **product-wide** half of that lives in two places, never repeated per
+screen: the text facts — site name, the default description a page falls back
+to, the social handle, the content locale and what the organisation states about
+itself — under `conventions.md`'s `#web-metadata` anchor, and the **visual**
+assets — the favicon source mark, the 1280×640 social preview and the theme
+colour as a token role — under the design system's **Brand assets** section.
+Both sections are present only when some project declares `site`, or `webapp`
+with `seo`, and are omitted entirely otherwise.
 
 **You see every screen before you approve it.** A flow pass that authored or
 changed Screens **gates on a render & review**: the pass renders that flow's
@@ -1445,11 +1845,19 @@ first, then the diff re-derived. Only *how* questions are decided at plan time,
 so an approved plan carries no open decisions for execute to trip on. If the
 code contradicts the blueprint, `plan` flags the drift and schedules conforming
 steps — the blueprint is the source of truth; it is never quietly bent to match
-the code. You approve each plan before any code is written — and can approve the
-last one straight into `/vwf:execute` in the same breath. One soft nudge at that
-gate: a flow slice whose screens have no current visual render
-(`design.flows_rendered`) gets a note offering `/vwf:mockups` — or a pending
-`/vwf:screens import` — first. Advisory only, never a halt.
+the code.
+
+Its recall also reads the base repo's [`docs/backlog.md`](#vwfbacklog), since
+the slice in front of it is often already an item there. Matched ids go into the
+plan's `backlog:` frontmatter, and the approval gate marks them `planned`
+through `/vwf:backlog` — the only thing that writes that file — so no item is
+planned twice.
+
+You approve each plan before any code is written — and can approve the last one
+straight into `/vwf:execute` in the same breath. One soft nudge at that gate: a
+flow slice whose screens have no current visual render (`design.flows_rendered`)
+gets a note offering `/vwf:mockups` — or a pending `/vwf:screens import` —
+first. Advisory only, never a halt.
 
 ### /vwf:execute
 
@@ -1484,17 +1892,19 @@ What it does, by rule:
   time, and the next unblocked plan is offered as each one lands.
 - **Whole plan, dependencies first.** Implements every step, ordered so
   prerequisites land before dependents.
-- **Full pipeline each step.** `code → review → security`, looping findings back
-  to code. **Security findings are always fixed**, and so is any
-  **breaking-released-API finding** (a change that would break a contract frozen
-  under `apis/released/` — cap-exempt, never downgraded to a gap); other
-  **code-review findings loop up to 4 rounds**, after which any residual is
-  recorded as a gap — the blueprint/plan wasn't thorough enough. After **all**
-  steps, one `acceptance + ux` pass runs (E2E criteria + rendered-UI review),
-  with the same 4-round cap. `acceptance` runs when the slice touches a flow
-  with acceptance criteria; `ux` when it changes screens in a UI project (web
-  gets the full screenshot review; Flutter a code-level pass) — each skip
-  explicit, never silent.
+- **Full pipeline each step.** `code → engines → review ‖ security` — the
+  orchestrator runs the `/code-review` and `/security-review` engines itself and
+  hands each reviewer its engine's output — looping findings back to code, the
+  engines re-run before every round. **Security findings are always fixed**, and
+  so is any **breaking-released-API finding** (a change that would break a
+  contract frozen under `apis/released/` — cap-exempt, never downgraded to a
+  gap); other **code-review findings loop up to 4 rounds**, after which any
+  residual is recorded as a gap — the blueprint/plan wasn't thorough enough.
+  After **all** steps, one `acceptance + ux` pass runs (E2E criteria +
+  rendered-UI review), with the same 4-round cap. `acceptance` runs when the
+  slice touches a flow with acceptance criteria; `ux` when it changes screens in
+  a UI project (web gets the full screenshot review; Flutter a code-level pass)
+  — each skip explicit, never silent.
 - **Loops stop when they stop converging.** A round cap bounds how long a fix
   loop runs, but it can't tell *converging slowly* from *not converging at all*.
   Every finding loop also runs under a **convergence guard**: a round that
@@ -1527,7 +1937,7 @@ don't cover that is irreversible.
 
 ```mermaid
 flowchart TD
-    P["per step: code → review → security<br/>(findings loop back, no human gates)"] --> AX["acceptance (E2E) + ux (rendered)<br/>once, after all steps"]
+    P["per step: code → engines → review ‖ security<br/>(findings loop back, no human gates)"] --> AX["acceptance (E2E) + ux (rendered)<br/>once, after all steps"]
     AX --> RC["reconcile — registry, environment, harness stamp,<br/>human docs, implementation stamps"]
     RC --> G{"final gate — you review<br/>the run + gap list"}
     G -->|approve| M["merge (git-workflow)"]
@@ -1545,14 +1955,17 @@ survived all three. Each stage execution left a record there when it returned
 counts are counted rather than remembered and a skipped stage is visible as a
 record instead of an absence. If memory was down for part of the run it tells
 you the report is **reconstructed** — you should know whether you're approving a
-record or a recollection. Whatever you decide about the merge, it then offers to
-close each gap at the source — fix the blueprint (`/vwf:blueprint`, which
-re-stamps coverage) or re-derive the plan (`/vwf:plan`) — and hands the run's
-change set to [`/vwf:docs-sync`](#vwfdocs-sync), which reconciles **the repo's
-human docs**: any README/CLAUDE.md claim the landed change falsified is fixed in
-the same cycle, in this run's worktree, with its report relayed at the gate
-(stale docs are more harmful than no docs). Archiving is offered once a merged
-run has no open gaps.
+record or a recollection. Approving the merge first marks the ids the plan's
+`backlog:` frontmatter names `done` through [`/vwf:backlog`](#vwfbacklog), so
+that edit lands with the run; no stage of the pipeline touches that file itself.
+Whatever you decide about the merge, it then offers to close each gap at the
+source — fix the blueprint (`/vwf:blueprint`, which re-stamps coverage) or
+re-derive the plan (`/vwf:plan`) — and hands the run's change set to
+[`/vwf:docs-sync`](#vwfdocs-sync), which reconciles **the repo's human docs**:
+any README/CLAUDE.md claim the landed change falsified is fixed in the same
+cycle, in this run's worktree, with its report relayed at the gate (stale docs
+are more harmful than no docs). Archiving is offered once a merged run has no
+open gaps.
 
 The resource-cap pause is delivered by an **external `PostToolUse` caps hook** —
 a command can't measure its own context window, since those figures reach a
@@ -1571,12 +1984,46 @@ it and cannot detect its absence.
 
 ### /vwf:archive
 
-Move a finished plan out of the active set into `docs/plans/archived/`. It never
-deletes. Run it manually, or accept the offer at the end of `execute`.
+Move a plan out of the active set into `docs/plans/archived/`. It never deletes.
+Run it manually, or accept the offer at the end of `execute`. Finished is the
+usual case, not a requirement — a plan you decided not to run is archived too,
+with a warning rather than a refusal.
 
 ```text
 /vwf:archive
+/vwf:archive docs/plans/2026-09-10-release-notes-in-ci    # a change-plan folder
 ```
+
+**Two shapes are archived.** A **flat cycle plan** — `/vwf:plan`'s
+`docs/plans/<plan>.md`, plus its gap-report if one exists — moves file by file,
+and its row in `docs/plans/index.md` is flipped to archived in the same commit,
+because that index is the product's only view of its plans. A **change-plan
+folder** — `/vwf:change-plan`'s `docs/plans/<date>-<name>/`, recognised by an
+`index.md` whose frontmatter reads `type: vwf-change-plan` — moves **whole**,
+unit files and run log together; a half-moved folder is a plan
+`/vwf:change-execute` can no longer read. Change plans are never listed in
+`docs/plans/index.md` and archiving one does not start listing them, so there is
+no row to flip. Only the folder's Status block is rewritten, and only when it
+does not already read `COMPLETE` — `/vwf:change-execute` wrote that at landing
+and it is the truer record. Anything else becomes
+`ARCHIVED <date> — not run; was <previous status>`: archiving a plan that was
+never run is a legitimate thing to want, so an unfinished one is a warning, not
+a refusal. With no argument it lists both shapes side by side, change plans
+marked as such and a `RUNNING` folder — one a live `/vwf:change-execute` owns —
+left out.
+
+**Backlog items are marked `done` on the way out.** Either shape may carry a
+`backlog:` list, and every id on it whose row does not already read `done` is
+marked so through [`/vwf:backlog`](#vwfbacklog) in the same commit — a plan can
+reach `archived/` without having landed through the command that would have
+marked them, and an item left `planned` forever is the row nobody comes back to.
+
+A folder's `requires:` and `covers:` are read from its `index.md` on the same
+terms as a flat plan's frontmatter, so a plan another non-archived plan still
+requires is warned on before anything moves. A directory that is not a plan
+folder is refused in one line rather than guessed at, and a destination that
+already exists is never overwritten — which bites hardest here, since `mv` onto
+an existing directory nests it instead of failing.
 
 ### /vwf:verify
 
@@ -1610,8 +2057,30 @@ code change that would break the released contract like a security finding.
 ### /vwf:feedback
 
 The front door for what production teaches you. Paste a bug report, a metric
-reading, or a user complaint; it classifies and routes it to where it gets
-**fixed** — never to a backlog:
+reading, a user complaint, or a want that needs a new project or capability
+before any flow can describe it; it classifies and routes it to where it gets
+**fixed** now, rather than onto a list to wait. Feedback and the
+[backlog](#vwfbacklog) are opposite cases: feedback is being worked on, and may
+change `product.md`, the blueprint or the architecture before following the
+`plan` → `execute` line; the backlog is what nobody is working on yet. Nothing
+an intake produces becomes a backlog row.
+
+Once classified, and before it offers anything, feedback prints one **build
+state** line:
+
+```text
+Build state: <none/partial/complete>; contract: <unreleased/released>
+```
+
+The first value is the owning flow's or entity's `implementation:` stamp; the
+second is whether `docs/blueprint/apis/released/` holds a snapshot for what the
+report touches. A kind with no owning flow or entity (a metric reading, a shape
+change, an incident, a not-a-blueprint-gap) prints `n/a` for both. When the
+contract is released, the route says so: the fix is additive-only, or expand and
+contract — blueprint's released-contract guard and plan's delta checks decide;
+feedback only says so. Every route then closes with the **remaining path** in
+one line — `then /vwf:plan <slice>`, `then /vwf:execute` — so you see the whole
+way to production before the single hand-off. The routes:
 
 - **Behavior bug / blueprint hole** → gap + a `/vwf:plan` / `/vwf:blueprint`
   offer (deferred items land in the owning flow doc's Open Questions, so nothing
@@ -1622,14 +2091,34 @@ reading, or a user complaint; it classifies and routes it to where it gets
   / re-scope as the agenda.
 - **UX issue** → recorded at the exact screen/state, with a `/vwf:design-system`
   or `/vwf:blueprint` offer.
-- **Feature idea** → `/vwf:product` first (which goal does it serve?), then the
-  normal pipeline — never straight to code.
+- **Feature idea** → never straight to code, and always to a **named unit**: an
+  idea an existing flow or entity can absorb → `/vwf:blueprint <unit>`; an idea
+  that implies a goal `product.md` does not serve → `/vwf:product <note>` first,
+  handing the report over as the note that seeds the update questions, then
+  `/vwf:blueprint <unit>` for the unit the new goal's slice names; then
+  `/vwf:plan`, then `/vwf:execute`.
+- **Shape change** — the fix needs a new project, a changed stack pin, a new
+  capability or a cross-cutting foundation before any flow can be written →
+  `/vwf:architecture`, handed the report's substance as the delta its update
+  mode asks about; architecture hands to `/vwf:setup`'s materialize pass itself.
+  A report whose shape change is incidental stays a blueprint hole and reaches
+  architecture through blueprint's own sub-step. Deferred, it is one line under
+  `## Open Questions` in `docs/blueprint/architecture.md`.
 - **Incident** (`/vwf:feedback incident <what happened>`) → filed to memory as a
   problem with a postmortem stub appended to `docs/runbooks/postmortems.md`;
   each action item goes back through the classifier as its own intake.
+- **Not a blueprint gap** — tooling, docs, CI, a refactor, a tree the blueprint
+  never described → [`/vwf:change-plan`](#vwfchange-plan), handed the report
+  **verbatim** plus the one-line reason it was ruled outside the blueprint.
+  Nothing under `docs/blueprint/` describes this work, so there is no flow,
+  entity or screen to edit; change-plan runs its own recall, survey and
+  interview, and the folder it writes is the durable record. Deferred instead,
+  it is filed to memory tagged `non-blueprint` — with no blueprint doc to own
+  it, memory is the only record there is.
 
 ```text
 /vwf:feedback "cancelled order #1043 was refunded twice"
+/vwf:feedback "enterprise customers want SSO — there is no identity project"
 /vwf:feedback canvas    # harvest the design review conversation
 ```
 
@@ -1646,6 +2135,61 @@ went through the adapter, `canvas` reached a single tool's server directly — s
 it worked for one of the three configurable tools and silently harvested nothing
 for the other two, which is indistinguishable from a review nobody wrote.
 
+### /vwf:backlog
+
+The list of work that is **agreed but cannot be picked up now**, kept as
+`docs/backlog.md` and ordered so the next thing to start is obvious. It waits
+behind the work in flight; its priority decides what gets picked first when that
+work is done.
+
+That is the opposite case from [`/vwf:feedback`](#vwffeedback), and the line
+between them is worth holding. Feedback is something being **worked now** — it
+may change the product doc, the blueprint or the architecture, and it follows
+the `plan` → `execute` line from there. A backlog row is the thing nobody is
+working on yet. Nothing a feedback intake produces lands here.
+
+```text
+/vwf:backlog                          # list, priority then id
+/vwf:backlog add "stylesheet axis for web frontends"
+/vwf:backlog next                     # the top open item, and the command for it
+/vwf:backlog move B07 P1
+```
+
+The file is **product-level**: one `docs/backlog.md` for the whole product, in
+the **base repo**, beside `docs/plans/index.md` — never one per member repo, and
+a session running in a member addresses the base's file. Its shape is a header,
+one table (`Id | Item | Group | Priority | Status`), an optional `## Groups`
+list naming the ids that want one plan between them, and one `### Bnn — <title>`
+section per row carrying the detail the table cell has no room for. Ids are
+`Bnn`, sequential and **never reused** — a closed id stays spent. Priorities are
+`P1` (pick first) to `P3`. Statuses run `open` → `planned` → `done`, or `closed`
+for an item dropped without a plan; a `planned` section ends with
+`Planned in: <path>` and a `closed` one with the reason.
+
+`next` names the top open item and the command that picks it up —
+[`/vwf:change-plan`](#vwfchange-plan) for work the blueprint does not describe,
+[`/vwf:plan`](#vwfplan) when the item names a slice — and asks which it is when
+the item does not say. Every verb leaves the file's order alone: rows are never
+re-sorted, ids never renumbered, and a row is never deleted.
+
+**This skill is the only thing that writes that file.** The commands that move
+items as plans are written and as they land call it rather than editing it, each
+passing the ids from its plan's `backlog:` frontmatter — a list on a change-plan
+folder's `index.md` or on a flat cycle plan, empty or absent when the plan
+covers no backlog item:
+
+| Caller                                      | When                                      | Verb      |
+| ------------------------------------------- | ----------------------------------------- | --------- |
+| [`/vwf:change-plan`](#vwfchange-plan)       | at hand-off, once the folder is approved  | `planned` |
+| [`/vwf:plan`](#vwfplan)                     | at the approval gate                      | `planned` |
+| [`/vwf:change-execute`](#vwfchange-execute) | at landing, after the final gate          | `done`    |
+| [`/vwf:execute`](#vwfexecute)               | at its final gate                         | `done`    |
+| [`/vwf:archive`](#vwfarchive)               | archiving a plan whose ids are still open | `done`    |
+
+It never commits — its edit rides the caller's commit, or yours — never touches
+any other file, never invents or reuses an id, and never decides what gets
+built: `next` names the top item and the command for it, and you pick.
+
 ### /vwf:change-plan
 
 Not every change is a blueprint slice. Tooling, CI, a docs tree, a refactor that
@@ -1660,7 +2204,9 @@ writes. The two sit **beside** the chain rather than inside it.
 
 It **recalls before it asks** — `docs/memory/decisions/`, the last archived plan
 that touched the same tree (its *Out of scope*, *Parked* list and run log are
-often where the request came from), and the memory palace's `planning`,
+often where the request came from), the base repo's
+[`docs/backlog.md`](#vwfbacklog) where the product has one, since the request is
+often an item already sitting on it, and the memory palace's `planning`,
 `decisions` and `gaps` rooms when the server is up, skipped silently when it is
 not. Then it surveys through concurrent `Explore` subagents that return
 `file:line` conclusions rather than file contents, so the session stays small
@@ -1713,12 +2259,26 @@ for approve / revise / abandon. Only *approve* writes the folder; *abandon* ends
 with nothing on disk and a one-line note the next attempt can recall.
 
 What it writes is `docs/plans/<date>-<name>/` — an `index.md` with frontmatter
-`type: vwf-change-plan`, plus one `NN-<unit>.md` per subagent unit. Units in a
-wave own **disjoint paths** (the shared-file rule), a change that needs a new or
-altered check plans that as an owned edit rather than "update the gates", and
-the last two units are fixed: a docs unit and a gates-and-bump unit. Then it
-stops and prints the launch line. The stop is deliberate — the run belongs to a
-fresh session, and this one's context is the survey and the interview.
+`type: vwf-change-plan` and a `backlog:` list naming the ids this plan covers,
+plus one `NN-<unit>.md` per subagent unit. Units in a wave own **disjoint
+paths** (the shared-file rule), a change that needs a new or altered check plans
+that as an owned edit rather than "update the gates", and the last two units are
+fixed: a docs unit and a gates-and-bump unit.
+
+The **hand-off is four steps, in order**: the status is set to `APPROVED`;
+[`/vwf:backlog planned`](#vwfbacklog) marks the ids the frontmatter names, with
+the folder as their `Planned in:` path; the folder — plus `docs/backlog.md` if
+that step changed it — is **committed and pushed** through
+[`/vwf:git-workflow`](#vwfgit-workflow) on the branch you are standing on, in
+place and with no worktree; and only then the launch line is printed. The push
+is not an extra: the fresh session's worktree is cut from the integration
+branch, so it can see the folder only once the folder is committed there — an
+untracked folder ends up swept into some later wave's commit instead. The
+approval you gave is the explicit request the push rule wants, so it is not
+asked again, and nothing is merged.
+
+Then it stops. The stop is deliberate — the run belongs to a fresh session, and
+this one's context is the survey and the interview.
 
 ### /vwf:change-execute
 
@@ -1736,7 +2296,11 @@ launch line. From there:
 
 - **Refuse early.** A `DRAFT` folder is not approved; a `COMPLETE` one has
   nothing to do; a `requires:` folder that is not `COMPLETE` is named and the
-  run stops, with no override. `BLOCKED` or `RUNNING` is a **resume**.
+  run stops, with no override. A folder that is **not committed on the
+  integration branch** is refused too rather than swept into a wave commit —
+  `/vwf:change-plan` commits and pushes it at hand-off, so the answer is to run
+  that again on it, or to commit and push it by hand, then re-launch. `BLOCKED`
+  or `RUNNING` is a **resume**.
 - **One worktree** for the whole run, created through
   [`/vwf:git-workflow`](#vwfgit-workflow), which resolves what the integration
   branch is called — this skill never assumes a branch name. No unit gets a
@@ -1777,10 +2341,12 @@ line printed.
 
 The **final report is rendered from the run log**, not from recollection — by
 then the run may have spanned dozens of dispatches or a compaction. With every
-unit green it moves the folder to `docs/plans/archived/`, lands per the recorded
-consent, runs each after-landing `run` step and reports its outcome, then asks
-**one** question naming the `ask` steps in order. Waiting is offered as the
-equal option rather than the fallback.
+unit green it moves the folder to `docs/plans/archived/`, marks the ids its
+`backlog:` frontmatter names `done` through [`/vwf:backlog`](#vwfbacklog) so
+that edit rides the same final commit, lands per the recorded consent, runs each
+after-landing `run` step and reports its outcome, then asks **one** question
+naming the `ask` steps in order. Waiting is offered as the equal option rather
+than the fallback.
 
 **It never reads the blueprint**, and that is the line between the two pairs. A
 blueprint slice goes to [`/vwf:plan`](#vwfplan) → [`/vwf:execute`](#vwfexecute),
@@ -1930,9 +2496,13 @@ Two details follow the task contract [`/vwf:init`](#vwfinit) lays down. The
 pre-commit gate runs **before staging**, over the working tree's changed files,
 so a fixup folds into the same commit instead of needing one of its own — the
 sequence is `code:precommit`, then stage, then commit. And landing runs through
-`code:merge:develop` / `code:merge:main` (renamed from `merge:*`), which push
-with `--follow-tags`; the explicit push step survives only in the manual
-fallback for a repo that has no such task.
+`code:merge:develop` / `code:merge:main` (renamed from `merge:*`), which obey
+the repo's `MERGE_MODEL`: under `direct` they merge locally and push with
+`--follow-tags`, under `pr` they push the branch and open a pull request and
+nothing merges locally. The skill reads the value before it offers the landing
+options, so the two choices read "Merge & push" on one repo and "Push & open PR"
+on another — it still names no forge; the task does. The explicit push step
+survives only in the manual fallback for a repo that has no such task.
 
 ## How it asks questions
 
@@ -2111,13 +2681,15 @@ reachable by hand as `/vwf:karpathy-guidelines`):
   data retention & PII, notifications, runtime settings, rate limiting,
   reliability targets, disaster recovery & backup, cost guardrails, and incident
   response. Each ships with an opinionated default (e.g. audit logs are
-  append-only over privileged and destructive actions; durable work goes to a
-  worker, ephemeral to a service). `architecture` walks the checklist — accept /
-  adapt / skip for the eight elective ones, accept / adapt / defer for the five
-  **core** ones (users & operators, observability, reliability targets, DR &
-  backup, incident response), whose deferral records a `deferred-preprod` token
-  `/vwf:plan` and `/vwf:verify production` treat as blocking — and `blueprint`
-  expands the accepted ones into contracts.
+  append-only over privileged and destructive actions, expanding into the
+  `audit-event` standard entity, the `audit-history` operator flow and an
+  `audit-store` pin on the console; durable work goes to a worker, ephemeral to
+  a service). `architecture` walks the checklist — accept / adapt / skip for the
+  eight elective ones, accept / adapt / defer for the five **core** ones (users
+  & operators, observability, reliability targets, DR & backup, incident
+  response), whose deferral records a `deferred-preprod` token `/vwf:plan` and
+  `/vwf:verify production` treat as blocking — and `blueprint` expands the
+  accepted ones into contracts.
 - **`blueprint-authoring`** — the contract-vs-realization line (what belongs in
   the blueprint vs `plan`), the **density** bars (per-doc budgets, the delete
   test, the anti-patterns that inflate a contract), and the per-surface
@@ -2128,8 +2700,8 @@ reachable by hand as `/vwf:karpathy-guidelines`):
   `docs/blueprint/` edit (and on `docs/plans/` for frontmatter/link hygiene).
 - **`design-system-authoring`** — the UX/visual-contract doctrine (semantic
   tokens, typography, spacing, motion, accessibility, component behaviors,
-  anti-patterns, and Terminal UX for products that ship a CLI) behind
-  `/vwf:design-system`.
+  anti-patterns, Brand when the imported payload carries a logo, and Terminal UX
+  for products that ship a CLI) behind `/vwf:design-system`.
 - **`rest-api-design`** — technology-agnostic REST API principles (versioning,
   error formats, pagination, auth, OpenAPI), applied whenever the blueprint or
   plan touches an API surface.

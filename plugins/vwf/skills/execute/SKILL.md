@@ -3,14 +3,16 @@ name: execute
 description: Execute an approved cycle plan end-to-end in a dedicated worktree
   —
   dependency-ordered, code then review+security concurrently per step under TDD
-  with finding loops, one E2E acceptance + UX-conformance pass after all steps,
+  with finding loops — the orchestrator runs the two review engines itself and
+  hands their output to the reviewers — one E2E acceptance + UX-conformance
+  pass after all steps,
   gaps
   captured in the plan doc. Autonomous between the start and one final human
   gate, which reviews the run and approves the merge. Requires an approved
   plan in docs/plans/.
 argument-hint: "[plan-file]"
 model: opus
-effort: high
+
 disable-model-invocation: false
 ---
 
@@ -71,18 +73,19 @@ the pause rules — never migrate autonomously.
 
 ## Doc Paths
 
-| Doc           | Path                                                      |
-| ------------- | --------------------------------------------------------- |
-| Plan          | `<target-repo>/docs/plans/<plan>.md`                      |
-| Plan index    | `docs/plans/index.md` (base repo)                         |
-| Membership    | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`              |
-| Registry      | `docs/blueprint/registry.yaml`                            |
-| Flow (slice)  | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`    |
-| Entity        | `docs/blueprint/entities/<entity>/` (`index.md` + schema) |
-| API contract  | `docs/blueprint/apis/<project>.openapi.yaml`              |
-| Released APIs | `docs/blueprint/apis/released/`                           |
-| Conventions   | `docs/blueprint/conventions.md`                           |
-| Environment   | `docs/blueprint/environment.md`                           |
+| Doc           | Path                                                           |
+| ------------- | -------------------------------------------------------------- |
+| Plan          | `<target-repo>/docs/plans/<plan>.md`                           |
+| Plan index    | `docs/plans/index.md` (base repo)                              |
+| Membership    | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                   |
+| Registry      | `docs/blueprint/registry.yaml`                                 |
+| Flow (slice)  | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`         |
+| Entity        | `docs/blueprint/entities/<entity>/` (`index.md` + schema)      |
+| API contract  | `docs/blueprint/apis/<project>.openapi.yaml`                   |
+| Released APIs | `docs/blueprint/apis/released/`                                |
+| Conventions   | `docs/blueprint/conventions.md`                                |
+| Environment   | `docs/blueprint/environment.md`                                |
+| Backlog       | `docs/backlog.md` (base repo) — marked done via `/vwf:backlog` |
 
 ## References
 
@@ -96,14 +99,15 @@ stage returns short of a clean pass). Never read either upfront.
 
 ## Pipeline (per step)
 
-`code`, then `review` and `security` **concurrently**, per step — then
-**`acceptance` + `ux` once after all steps** (see the Acceptance & UX section
-below). The stage table, per-stage subagent contracts, and shared stage rules
-(model enforcement, terse subagent output, loop-on-findings, gap capture, never
-silently editing the blueprint) are defined in
-`${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` — follow them throughout. The
-durable gap record is the **plan doc's "Gaps surfaced during execution"
-section**.
+`code`, then `review` and `security` **concurrently**, per step — the
+orchestrator runs the two review engines itself and hands their output to the
+reviewers — then **`acceptance` + `ux` once after all steps** (see the
+Acceptance & UX section below). The stage table, per-stage subagent contracts,
+and shared stage rules (model enforcement, terse subagent output,
+loop-on-findings, gap capture, never silently editing the blueprint) are
+defined in `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` — follow them
+throughout. The durable gap record is the **plan doc's "Gaps surfaced during
+execution" section**.
 
 ## Autonomous Rules
 
@@ -121,8 +125,10 @@ section**.
   prompt**. Implement everything there and **commit each step autonomously** (no
   consent). Merge/push happens **only behind the final gate**.
 - **Full pipeline every step.** `code`, then `review` and `security` run
-  concurrently, for each step. Both findings sets merge into one loop-back to
-  `code` before the step is done — never a separate round per reviewer.
+  concurrently, for each step — the orchestrator runs the two review engines
+  itself and hands their output to the reviewers. Both findings sets merge into
+  one loop-back to `code` before the step is done — never a separate round per
+  reviewer.
 - **Always fix every security finding.** Security findings gate the step: loop
   back to `code` until security review is clean. A security finding is **never**
   downgraded to a gap or deferred.
@@ -154,6 +160,9 @@ section**.
   *non-blocking* gap never stops the run. An *isolated blocking* gap (the step
   can't proceed without a human decision, but other steps can) → skip that step
   **and its dependents**, document, continue.
+- **The backlog is never edited here.** `docs/backlog.md` has one writer,
+  `/vwf:backlog`; this command only calls it at the final gate with the plan's
+  `backlog:` ids, and no step, subagent or reconcile pass touches the file.
 - **All git via `/vwf:git-workflow`.** Never run raw git. On **every** mid-run
   invocation, pass git-workflow these declared preferences so it never prompts:
   **isolate without asking** (its Step 1) and **commit only — do not prompt,
@@ -192,9 +201,10 @@ the Resume check).
   test/coverage/build harness cannot run at all (TDD can't be verified); a git
   or merge **conflict** that cannot be safely resolved.
 - **Subagent death** — a stage subagent erroring twice in a row (after one
-  re-dispatch) on the **same step**. Commit what is safe, journal the step as
-  **blocked** (run journal + plan-doc gap section), and pause — never proceed on
-  a dead stage.
+  re-dispatch) on the **same step**. A reviewer that returned without its
+  `REVIEW:` / `SECURITY:` block counts as an error here. Commit what is safe,
+  journal the step as **blocked** (run journal + plan-doc gap section), and
+  pause — never proceed on a dead stage.
 - **Resource caps** — context > 65%, 5-hour > 90%, or 7-day > 80% (a repo may
   **tighten** these — never loosen — via `.config/vwf.yaml`
   `pipeline.execute_caps`; the hook honors the lower value). A command cannot
@@ -305,16 +315,28 @@ silently if mempalace is unavailable.
    `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md` — deduped by slug, **once
    for the whole run**, here rather than per step. The config block names the
    templates; the prose is what the code is actually written to, and every stage
-   below that touches code is passed it. **Two different halts live here.** An
-   axis reading `unresolved` halts at that asset's step 1, before any fetch —
-   the axis was deferred, so there is no prose to resolve; name the project and
-   the axis and point at `/vwf:architecture`. A failed fetch halts for the
-   opposite reason: the preflight already proved each pin resolves, so a failure
-   now is the plugin being unreachable. Report them distinguishably — a question
-   nobody answered is not a plugin that broke — and note that `/vwf:doctor` will
-   not have caught the first, since it reports deferral as a degradation by
-   design. Either way, code written to conventions nobody read is the thing this
-   whole gate exists to prevent.
+   below that touches code is passed it.
+
+   **Under `multi-repo`, the fetch carries `repo: <path>`** — that asset's
+   *The target repo* line, naming the member whose `members:` entry lists the
+   project (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`). Step 2 above already
+   resolved which repo each project is of; **hand that resolution to the fetch**
+   rather than dropping it, under both linkages — under `siblings` it is the
+   worktree's own repo, under `submodule` the member's path inside the base.
+   A materialized template lives in the repo it was landed in, so a fetch that
+   omits the repo reads the base's `.claude/` tree for a member's project and
+   finds the wrong prose or none. Dedupe per (repo, slug).
+
+   **Two different halts live here.** An axis reading `unresolved` halts at
+   that asset's step 1, before any fetch — the axis was deferred, so there is
+   no prose to resolve; name the project and the axis and point at
+   `/vwf:architecture`. A failed fetch halts for the opposite reason: the
+   preflight already proved each pin resolves, so a failure now is the plugin
+   being unreachable. Report them distinguishably — a question nobody answered
+   is not a plugin that broke — and note that `/vwf:doctor` will not have
+   caught the first, since it reports deferral as a degradation by design.
+   Either way, code written to conventions nobody read is the thing this whole
+   gate exists to prevent.
 4. **Dependency order.** Read the plan's "Delta — ordered steps", build the
    dependency order, and record the sequence you will execute. **Open the run
    journal** in mempalace (room `runs`, drawer `<plan>`) with that ordered
@@ -337,13 +359,32 @@ journal):
    sub-100% coverage result against the configured target (`.config/vwf.yaml`
    `pipeline.coverage_target`, default 100) is documented as a gap — never a
    silent pass.
-3. **review + security (concurrent)** — dispatch `execute-code-reviewer` and
-   `execute-security-reviewer` **in a single message** so both run at once. They
-   are independent read-only passes over the same diff; neither reads the
-   other's output, so serializing them only costs wall-clock.
+3. **review + security (engines first, then concurrent)** — four moves, in
+   this order:
+   1. In **one message**, invoke `/code-review` at high effort and
+      `/security-review` through the `Skill` tool. Each may run as a background
+      task; note the task each reports.
+   2. Wait on each with `TaskOutput`, blocking, up to 30 minutes from
+      invocation. An engine that errors or times out is stopped with `TaskStop`
+      and counted unavailable, with the reason kept for the prompt.
+   3. In **one message**, dispatch `execute-code-reviewer` and
+      `execute-security-reviewer` so both run at once. Each dispatch prompt
+      ends with a section headed `## Engine` holding either that engine's
+      output verbatim or the single line `ENGINE: unavailable — <reason>`. They
+      are independent read-only passes over the same diff; neither reads the
+      other's output, so serializing them only costs wall-clock.
+   4. Each reviewer returns exactly one block — `REVIEW:` or `SECURITY:`. A
+      return without it is an error under the "Subagent death" pause rule:
+      re-dispatch once; twice in a row on one step → journal `blocked`, pause.
+
+   The reviewers run no engine, so the orchestrator never waits for a
+   notification on a reviewer's behalf and never sends a reviewer a message to
+   finish its block — the only thing it waits for from a reviewer is its
+   return.
 4. **resolve both findings sets in one loop-back** — merge the two returns and
    send the combined findings **tags** to `code` in **one** dispatch, then
-   re-run both reviewers concurrently. Merging is not just faster, it is better:
+   repeat step 3 in full — engines first, then both reviewers concurrently —
+   for every round. Merging is not just faster, it is better:
    the coder fixes review and security findings in a single pass instead of two,
    so the two stages never fight over the same lines. Gating is unchanged and
    per-stage: every security finding and every `[breaking-api]` finding **must**
@@ -433,11 +474,13 @@ valid thing to approve, an undisclosed one is not.
 
 Then wait.
 
-- **Approve** → hand off to `/vwf:git-workflow` for the merge/push sequence
-  behind its own approval gate.
+- **Approve** → when the plan doc's `backlog:` names ids, first invoke
+  `/vwf:backlog done <ids>` so its edit lands with the run; then hand off to
+  `/vwf:git-workflow` for the merge/push sequence behind its own approval gate.
 - **Fix first** → the user names what to address → loop the affected steps back
-  through the pipeline (code, then review + security concurrently; re-verify
-  acceptance/ux if touched), then re-present the gate.
+  through the pipeline (code, then the loop's step 3 in full — engines first,
+  then review + security concurrently; re-verify acceptance/ux if touched), then
+  re-present the gate.
 - **Reject** → leave the worktree intact and committed for inspection; nothing
   merges.
 

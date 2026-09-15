@@ -4,12 +4,19 @@ Read this in mode **new** — a target with no configuration directory and no
 task library. Nothing here reads or moves a source file, so it is safe on a
 repository that has code but has never been shaped.
 
-The six questions in SKILL.md are already answered. Present the whole plan
+The seven questions in SKILL.md are already answered. Present the whole plan
 below, get **one** consent, then apply it in this order. The order is the
 contract: a step that runs early because it happens to be cheap produces a
 tree the next step has to undo.
 
+Everything below runs **once per repo that resolved to mode new** — every such
+member first, in the resolved order, then the base — under that one plan and
+that one consent.
+
 ## 1 — The repository itself
+
+"The repository" is the repo this pass is running in — the base on the base's
+pass, that member on a member's.
 
 Where there is none, create the repository with **`develop`** as its initial
 branch, and stop there. No second branch, no commit, no remote.
@@ -26,10 +33,28 @@ what creates whichever of the two the branch model needs and the repo lacks,
 after the commit question, so the branch work reads against a tree this run has
 already written to.
 
+**A resolved member is never created here.** "Where there is none" means a repo
+that is genuinely new — in practice the base, where the run started outside any
+repository at all. A member is a repo the product already declares and that
+exists somewhere; one that is missing from this machine is **absent**, not
+uncreated, and absence is answered by the **clone row** in the plan, not by
+`git init`. Creating an empty repo at a member's path would fill that path with
+something that shares nothing but a name with the repo the product means — and
+the clone that should have landed there afterwards then has nowhere to go.
+
+So: a member with a clone source is cloned by its row and shaped in this same
+run, and by the time this pass runs in it the repo is on disk and already had
+commits. A member with **no** clone source gets no row at all: report it as
+absent and uncloneable under *Deferred*, naming the unlock — add it to the
+product's membership with a source it can be cloned from, then run
+`/vwf:setup reshape` — and shape nothing at that path.
+
 Report what was created and what was already there. The rest of the git work —
-staging, the commit, the branches, the forge default, the push — is §11, the
+the landing model, staging, the commit, the branches, the push — is §11, the
 git pass, and that step is the only other one in this pipeline that touches
-git.
+git. Nothing in either step reaches the remote's own settings: which branch a
+forge calls default is a one-time act somebody performs there, not a step a
+run repeats.
 
 ## 2 — The three baselines
 
@@ -93,22 +118,52 @@ Merge every fragment the landed packs dropped into the gate config, per
 first merge, so every fragment present is appended; the algorithm is the same
 one a re-run uses.
 
-## 7 — The project ids, and the three things they fill
+## 7 — The project ids, the repo name, and the positions they fill
 
-Resolve the project ids, in this order of preference:
+Resolve the project ids **for the repo this pass is running in**, in this order
+of preference.
+
+On the **base**:
 
 1. the **registry ids** in `.config/vwf.yaml`, where the file exists and names
    projects;
 2. otherwise each **sub-project directory** name;
-3. otherwise, for a single-project repo, the **repo's own name**.
+3. otherwise the project's **type** — the platform token SKILL.md's question 2
+   asks for, per project, from the closed per-role lists
+   `${CLAUDE_PLUGIN_ROOT}/assets/templates/registry.yaml` carries.
 
-**Source 1 is live only on a re-run.** `.config/vwf.yaml` is written by
-`/vwf:setup`, which runs *after* `init`, so a first run on a fresh repo always
-falls through to source 2 or 3. That is not a defect to route around — it is
-why SKILL.md's re-run doctrine names the moment after the registry exists as
-one of the times to run `init` again, and why a later run may resolve a
-*different* id for the same project. The existing-repo pipeline reports that
-as an **id source changed**, never as a pack that moved.
+On a **member**, the same three steps, with the first one reading a hop out —
+the list that knows which projects live in a member is the base's:
+
+1. the **`projects:` list on this member's entry** in the base's
+   `.config/vwf.yaml`, where that file exists and declares one;
+2. otherwise each **sub-project directory** name inside the member;
+3. otherwise the same **type** question, asked for that member's project.
+
+**The repo's own name is not a source, on either list.** It was the third step
+until 2026-09-14 and it named the wrong thing: a task group's segment says what
+a task acts **on**, and the repo is where the task lives, not what it operates
+on. The repo's name has exactly one surface now — `REPO_NAME`, from question
+1's folder name — and it reaches no task group.
+
+**Two projects in one repo resolving to the same token** are proposed as
+`<token>-<directory-slug>` each. A group's segment is a directory name in the
+task library, so two groups cannot share one; across repos there is nothing to
+resolve, since each repo's task library is its own.
+
+Each repo resolves its own ids and fills its own task groups from them. Its
+`REPO_NAME` comes from question 1's folder name and from nothing on this list.
+The base's project list is never reused for a member: two repos in one product
+share a blueprint, not a task vocabulary.
+
+**Source 1 is live only on a re-run**, on either list — and it is the same file
+both times. `.config/vwf.yaml` is written by `/vwf:setup`, which runs *after*
+`init`, so a first run on a fresh product always falls through to source 2 or 3
+in every repo. That is not a defect to route around — it is why SKILL.md's
+re-run doctrine names the moment after the registry exists as one of the times
+to run `init` again, and why a later run may resolve a *different* id for the
+same project. The existing-repo pipeline reports that as an **id source
+changed**, never as a pack that moved.
 
 **Then slugify.** The resolved id is not used raw: it is slugified per the
 stack adapter's `assets/ids.md`, which owns the rule and is the only place it
@@ -122,54 +177,179 @@ are the second reason. Read the asset; never re-derive the rule here.
 
 **Then confirm, before anything is written.** The resolution order and the
 slugification above are how `init` *proposes* this list, and a proposal is all
-they are: SKILL.md's **question 2** shows every row — the name, the slug and
-which of the three sources the name came from — and takes a replacement for any
-of them, slugified by the same asset. The ids that reach the surfaces below are
-the ones that question **confirmed**, carried from the answer. Nothing here
-re-derives them, and nothing downstream re-derives them either.
+they are: SKILL.md's **question 2** shows every row — grouped by repo, one row
+per project, each carrying the name, the slug and which source the name came
+from — and takes a replacement for any of them, slugified by the same asset.
+The ids that reach the surfaces below are the ones that question
+**confirmed**, carried from the answer. Nothing here re-derives them, and
+nothing downstream re-derives them either.
 
-That list is one list with **three** surfaces — the per-project task groups,
-the bootstrap aggregator's **member flags**, and the **shell aliases** that
-shorten them — so resolve it once and fill all three from it. A multi-repo
-product's members come from the same detection `/vwf:setup` already does: the
-registry's `members:` list, or the submodule names where the repo declares
-them.
+**Three lists fill three surfaces, and no two of them are the same list.** The
+per-project **task groups** — and, on **every** run, the first one included,
+the commit gate's **scopes** — take the **project ids** resolved above, for the
+repo being shaped. A registry, where the repo has one, is where the proposal
+those ids came from was read; it is not a condition on the scope fill, which
+takes whatever question 2 confirmed either way — the fill itself is stated
+once, for both pipelines, in [existing repo](existing-repo.md) §11. `REPO_NAME`
+takes the repo's **folder name**, slugified, as question 1 confirmed it — one
+value per repo, on no list at all. The bootstrap aggregator's **member flags**
+and the **shell aliases** that shorten them take the **member repos** — one
+flag and one alias each, in the resolved order, each named by that member's
+own slug. Where that slug comes from is the pack's to say, not this section's:
+its **task-library reference** states both positions come from the member list
+and never from the project ids the `p:` group uses, and the shipped comments
+at those positions name the member directories as where the names come from.
+
+They are different lists because those two positions widen the scope to a
+**repo**, not to a project: the flag makes the aggregator recurse into a member
+and run *that* repo's own task library, which has its own project groups inside
+it. A member holding three projects is one flag and one alias, not three: the
+other two would name a project the aggregator has no repo to recurse into for,
+and a flag that cannot resolve to a directory is a flag that fails at the moment
+somebody trusts it.
+
+The members those two positions take are the ones **this run already
+resolved**, at the top of the run, and nothing here re-resolves them.
 
 ### The marked positions
 
-**Three**, and with the `_default` slot below they are the four things this
-section fills. Two are per-project and one is repo-level.
+**Seven**, and with the `_default` slot below they are the eight things this
+section fills. Only the `_default` slot comes from the id list. Two are **per
+member repo**, three are repo-level — the repo-name key among them, filled from
+SKILL.md's **question 1** — and the last two are the plugin task's, filled from
+SKILL.md's **question 5**, and they are written here because this is the one
+section that fills a marked position.
+
+**The pack's payload is where each one is marked**, by a comment and nothing
+else: a `MARKED POSITION` block above the value, for the five that sit in the
+toolchain manager's config and task files, and the commented template itself
+for the flag and alias lists, which stands where those lines go. There is no
+marker syntax a tool could enumerate, so the set is exactly the positions this
+section lists — read it from here, never from the payload.
 
 The toolchain pack ships the flag list and the alias list as **commented
-templates in place**, each with a note saying the ids come from the registry
-or the member directories — that is, from this list. Those comments are the
+templates in place**, each with a note saying the names come from the registry
+or the member directories — that is, from the members. Those comments are the
 pack asking `init` for the one thing no pack can know, and filling them is not
 authoring pack-owned content; it is answering the question the pack left open.
 
-Write the real lines at those two positions, one per id in the resolved order,
-copying the commented example's spelling exactly — the flag's own help text
-shape, and the alias's own left-hand and right-hand shape — and leave the
-surrounding comment in place as the record of where the list came from.
+Write the real lines at those two positions, **one per resolved member repo**,
+in the resolved order, copying the commented example's spelling exactly — the
+flag's own help text shape, and the alias's own left-hand and right-hand shape
+— and leave the surrounding comment in place as the record of where the list
+came from. The name each line carries is that member's own slug, as those
+comments describe it, never a project id.
 
-**A single-project repo has no members, so both positions stay exactly as
-shipped.** There is no flag and no alias to write, the aggregator's
-widen-the-scope flag is then a no-op that a caller passes without knowing the
-repo's shape, and deleting either comment would cost the next run — after the
-repo grows a second project — the template it fills.
+**A keep on the file carrying a position does not stop the fill.** Every marked
+position this section fills sits in a pack-owned file, and where the
+existing-repo pipeline offered that file and the answer was **keep**, the
+repo's own content stays and the position is written anyway: a keep covers the
+content somebody customised, never a marked position's value, which these fills
+own in either pipeline. [existing repo](existing-repo.md) §6 states that once,
+together with the second test that keeps it consistent — on a hash mismatch it
+splices the repo's current values, at every position this section enumerates
+that the file carries, into the pack's payload, and a file diverging only
+inside them is never offered. That splice reaches all seven; the fill on a kept
+file governs **six** of them, and not only the plugin task's two. `MERGE_MODEL`
+is the seventh, and it is §11(a)'s: the git pass writes it only in a repo whose
+environment-block file this run lands or replaces, so a kept file keeps the
+value that position already holds. Being spliced like the rest is what stops §6
+reading that value as content; no survey pass owns it, so no pass shows a row
+for it either.
 
-**The third is the repo's own name**, `REPO_NAME`, a marked position in the
-toolchain manager's environment block. It takes the **repo** slug **as question
-2 confirmed it** — the name question 1 proposed, slugified, then accepted or
-replaced on that list's first row — and it is written **literally**, never
-derived at read time from the directory the config sits in: a linked
-worktree's config root is named for the branch, so a derived value would
-change identity every time somebody cut one.
+**A repo with no members leaves both positions exactly as shipped** — a
+single-project repo, and a member repo that declares no members of its own,
+which is the ordinary case: membership is a base's to declare. There is no flag
+and no alias to write, the aggregator's widen-the-scope flag is then a no-op
+that a caller passes without knowing the repo's shape, and deleting either
+comment would cost the next run — after the product grows a member — the
+template it fills.
+
+**A position already carrying lines named for something else is rewritten, not
+appended to.** An earlier run filled these two from the *project* ids, so a
+reshape finds lines naming projects where members belong. Replace the whole list
+with what the members resolve to, and show it in the plan as a **rewrite** row:
+a fill row would read as a position that had been sitting as shipped, and the
+one thing a user needs to see here is that lines they have seen before are
+going away.
+
+**The third is the repo's folder name**, `REPO_NAME`, a marked position in the
+toolchain manager's environment block. It takes **this repo's folder name,
+slugified** — the basename of its main checkout, proposed by SKILL.md's
+**question 1**, then accepted or replaced there — and it is written
+**literally**, never derived at read time from the directory the config sits
+in: a linked worktree's config root is named for the branch, so a derived value
+would change identity every time somebody cut one. That is also why the
+proposal reads the **main checkout's** basename rather than the working
+directory's.
+
+**No project id reaches this key**, and the two are routinely different: a repo
+whose folder is `acme-shop` and whose one project is a service carries
+`REPO_NAME = "acme-shop"` beside a `p/service/` group. Each repo fills its own
+key from its own folder — a member names the member, never the base.
 
 That key exists because the things that vary only by repo — the per-repo
 launch aliases the user keeps — belong in the **user's own global
 configuration**, reading the value the repo publishes. They are not this
-pipeline's to write, and `init` never writes outside the target repo. What
-`init` owes is the value; what reads it is somebody else's file.
+pipeline's to write, and `init` never writes outside the repos it resolved as
+the base and its members. What `init` owes is the value; what reads it is
+somebody else's file.
+
+That boundary is what a member run widens, and it widens by exactly one thing:
+a sibling member sits outside the base's tree, so "the repo the caller is in" is
+no longer the edge. The resolved set is. Nothing outside it is written, and a
+path that did not come out of the resolution is not made one by being nearby.
+
+**The fourth and fifth are repo-level too**, and the toolchain pack ships both
+as marked positions in that same environment block, each with a comment saying
+what it takes. `MEMBERS` is written here, literally, by the same rule
+`REPO_NAME` follows. `MERGE_MODEL` is **not written by this section at all**:
+§11(a) asks for it inside the git pass and writes it there, in every repo whose
+environment-block file this run lands or replaces and nowhere else.
+
+`MERGE_MODEL` is how work lands: the merge tasks read it, and the pack's
+comment names its two values — `direct`, the shipped one, which merges locally
+and pushes, and `pr`, which pushes the branch and opens a pull request instead.
+The value is **asked in §11**, inside the git pass, and written there before
+that step stages — it is not a numbered question, because it is a decision
+about landing and the git pass is where landing is decided. A repo whose
+position is left as shipped runs on `direct`.
+
+`MEMBERS` is the product's other repositories, as paths relative to the repo
+root, in the pack's own space-separated spelling. Fill it from the **registry's
+members list, and only where the product is multi-repo with sibling linkage**.
+Under submodule linkage the repo's own submodule declarations are what the task
+library reads, and a repo with no members has nothing to list — in both cases
+the position stays exactly as shipped. The registry does not exist on a first
+run, so this is re-run work by construction.
+
+**This is the one member-shaped position the members do not always fill**, and
+the asymmetry is deliberate rather than an oversight in the two above. The flag
+and alias lists are written for every resolved member whatever the linkage,
+because nothing else in the repo carries those names; `MEMBERS` under submodule
+linkage would be a second copy of a list the version control system already
+holds, and a second copy is only a way for the two to disagree.
+
+**The sixth and seventh are the plugin task's two lists** — the further plugin
+sources a repo installs from, and the plugins it installs from them — shipped
+as commented templates in place like the flag and alias lists, each comment
+carrying its own row shape and saying the rows come from the confirmed answer
+to the plugin question. They take **question 5's confirmed rows, and only
+those**: write them one per line at each position, in the exact shape that
+position's comment shows, and leave the comment where it is so a later run can
+re-derive the list from the same question rather than from what the file
+already says.
+
+A **none** answer — including the one an empty inventory forces — leaves both
+positions exactly as shipped, for the same reason a single-project repo leaves
+the member flags alone: the template is what the next run fills, and deleting
+it costs that run its shape.
+
+The workflow's own plugin is never written at either position, and neither is
+whatever it depends on. The task installs both unconditionally, and its
+inventory prints them anyway, like every other installed plugin — question 5
+is where those two rows are **dropped**, before the question is even offered,
+so an answer cannot carry them here.
 
 ### The `_default` slot
 
@@ -261,29 +441,102 @@ Everything above has landed on disk and nothing is staged; a repository shaped
 and left dirty is a repository whose next command — a commit, a worktree, a
 merge — meets a working tree it did not expect.
 
+**This pass runs inside each repo, like the rest of the pipeline — but its two
+decisions are the product's.** The landing model and the commit answer are asked
+**once**, by the first repo to reach this step, and every repo after it applies
+the answer already given rather than asking again. Two questions per repo would
+be asking the user to decide the same thing several times and letting them
+answer inconsistently, which is a product whose merge tasks disagree with each
+other.
+
+Because the pipeline runs the **members first, in the resolved order, then the
+base**, the repos reach this pass in that order too — and that is what lets the
+base's commit record each member at the commit this run just gave it. A base
+that committed first would record the members as they were before the run
+touched them.
+
 Run it in this order.
 
-### (a) Stage exactly what this run wrote
+### (a) The landing model
 
-Every path in the run's own written / moved / renamed lists, and nothing else.
-Not `git add -A`: a repo that already had untracked work of its own does not
-get it swept into a commit whose message says the shape was laid down.
+Ask, in one round **and once for the whole product**, which way work lands:
+**`direct`** — recommended, and what the toolchain pack ships — *merge locally
+and push*; or **`pr`** — *push the branch and open a pull request*. Write the
+answer literally at the `MERGE_MODEL` marked position §7 described, **in every
+repo whose environment-block file this run lands or replaces** — each repo
+carries its own block, and each one's merge tasks read their own copy — and
+count it as a fill in each.
 
-### (b) One consent, three answers
+**A repo that kept that file keeps the value that position holds**, and what
+decides that is the kind of position it is, not the keep. The landing model is a
+real, working value under its comment — filled from the moment the file landed,
+as [existing repo](existing-repo.md) §9 says of that kind — so it is written
+where this run **lands or replaces** the environment-block file and nowhere
+else, and a kept file is neither. The file's other two positions — `REPO_NAME`
+and `MEMBERS` — are a different matter: §7 fills those, keep or no keep. Say so on that repo's line in the report, naming the value the
+product chose and the file that was kept, so a reader sees one decision rather
+than a repo that silently landed on `direct`.
 
-Ask once, showing the **file count** and the **branch** first so the answer is
-given against facts rather than a promise:
+It is asked here rather than as one of SKILL.md's numbered questions because it
+decides how work lands, which is what the rest of this pass is about; and it is
+asked **before** (b) so the file it writes is in what (b) stages.
+
+`init` does not act on the answer. The merge tasks read it, and what `pr` mode
+does about opening the pull request is the pack's business — naming that is
+exactly the naming this skill's hard rules forbid.
+
+### (b) Stage exactly what this run wrote
+
+Into this repo's own index: every path in **this repo's** written / moved /
+renamed lists, and nothing else. Not `git add -A`: a repo that already had
+untracked work of its own does not get it swept into a commit whose message says
+the shape was laid down.
+
+**Then one addition, in the base only, and it is the one thing `init` stages
+that it did not write**: every member path whose recorded commit moved because
+that member committed earlier in the run. A superproject records which commit of
+each member it is pinned to; shaping a member and committing it moves that
+pointer, and the moved pointers are as much this run's result as the files are.
+Leaving them unstaged would leave the base half-committed — a report saying the
+product is shaped over a tree that still says it is not, which is the one
+outcome this whole step exists to prevent. It is stated as an exception rather
+than folded into the rule above because it is one: every other path in every
+index came out of this run's own lists.
+
+The base's own paths are staged here. Its moved member pointers are staged
+inside (c), after the members have committed and before the base does — they do
+not exist to stage until then.
+
+### (c) One consent, three answers
+
+Ask once for the product, at the first repo to reach this step, showing the
+**file count** and the **branch** first so the answer is given against facts
+rather than a promise — and where the run shaped more than one repo, one such
+line **per repo**, so what is being agreed to is the whole product. A repo whose
+own pass has not run yet has no staged count to show; use the count its section
+of the plan carries, and say that is what it is.
 
 - **commit** — commit what was staged, locally;
 - **commit and push** — the same commit, then (e);
-- **leave it** — stage nothing further, write no commit, and say in the report
-  that the tree is staged and waiting.
+- **leave it** — stage nothing further, write no commit, and say in the report,
+  one line per repo, that its tree is staged and waiting.
 
-On either committing answer, make the commit with the toolchain manager's
+Every repo after the first applies that answer without asking again. Each repo
+gets its **own** commit, in the order the repos run — the members, then the base
+— and there is no commit spanning two repos, because there is no such thing. The
+base's moved member pointers are staged, per (b), after the last member has
+committed and before the base commits.
+
+A member that was absent and whose clone was declined never ran the pipeline, so
+it has nothing staged and is **skipped** here. Say that on its line rather than
+printing it as a repo that committed nothing — the two look identical in a
+report and mean opposite things.
+
+On either committing answer, make each commit with the toolchain manager's
 execution wrapper — `mise x -- git commit` — as
 [git-workflow](../../git-workflow/SKILL.md) spells it, and never with the
-verification-skipping flag. The message is **fixed**, and it is the one a real
-first run used:
+verification-skipping flag. The message is **fixed**, and the same in every
+repo — it is the one a real first run used:
 
 ```text
 ops: shape the repo with the toolchain, gates and hygiene baselines
@@ -303,10 +556,14 @@ is skipped, and the hook ships exactly as the pack wrote it. On an existing
 repo the hooks may already be wired, which is why that pipeline commits the
 gate configuration first and on its own.
 
-### (c) The branches
+### (d) The branches
 
 Only after the commit exists, because the whole reason §1 stopped at one
-branch is that a repository with no commit has nothing to branch from:
+branch is that a repository with no commit has nothing to branch from. The table
+is read against the repo this pass is running in, and the pair is created in
+**every** repo that lacks it: a member is a repository, its merge tasks are its
+own, and a member with one of the two missing has merge tasks that cannot run
+however well the base is shaped.
 
 | The repository had          | Create                 | Leave checked out |
 | --------------------------- | ---------------------- | ----------------- |
@@ -320,45 +577,41 @@ branch model, and it does not depend on which one a forge calls default: work
 flows from a feature branch or a worktree into `develop`, and from `develop`
 into `main`. A repo missing one of the two has merge tasks that cannot run.
 
-Where the answer at (b) was **leave it**, there is no commit to branch from on
+Where the answer at (c) was **leave it**, there is no commit to branch from on
 a fresh repository — record the branch work as a deferral with its unlock (the
 commit), and create nothing. On a repo that already had commits, create the
 missing branch anyway: it costs nothing and it is what the merge tasks need.
 
-### (d) The forge default
-
-Ask which branch should be the **default branch on the remote forge**, with
-`develop` preselected. Then run the toolchain pack's own task for it —
-`mise run setup:default-branch <answer>` — and **report only what the task
-reported.**
-
-The task decides what is possible: where it finds a forge CLI and a remote it
-sets the default; where it does not it prints the command a human can run.
-`init` never inspects the forge, never names one, and never chooses between
-CLIs — that knowledge is the pack's, and putting it here is exactly the naming
-this skill's hard rules forbid.
-
-Ask this even where there is no remote. The answer is a decision about the
-repository, the task's printed form is a usable record of it, and re-asking
-after a remote appears is a question the user has already answered.
-
 ### (e) The push
 
-Only where (b)'s answer was **commit and push** *and* an origin remote exists.
-Push `develop` and `main`, each with upstream tracking set, and report both.
+Only where (c)'s answer was **commit and push** *and* an origin remote exists.
+Push this repo's `develop` and `main`, each with upstream tracking set, and
+report both.
+
+Because each repo runs its own pass, the members push before the base does, and
+that order is the one that matters: a base pushed first publishes pointers to
+member commits the remote does not have, and the next person to clone it lands
+on pointers that resolve to nothing.
 
 No remote and a push answer is not a failure: report it as a deferral whose
 unlock is adding the remote and pushing by hand, and say which branches are
-waiting.
+waiting. It is that repo's deferral only — the rest of the product still pushes.
 
 ### What the report carries
 
-Branches created, the commit's short hash, what was pushed, and the forge
-task's own words. That is the git section SKILL.md's report specifies.
+The **landing model once**, since it is one answer for the product; then
+branches created, the commit's short hash and what was pushed, **one line per
+repo**, in the order the repos ran — the members, then the base. Then one
+`Gitlinks staged <n>` line for the base, counting the member pointers (b) added
+to its index, which reads `none` in a product with no members. That is the git
+section SKILL.md's report specifies.
 
 ## 12 — The report
 
-The six-section report and the two next-step lines, exactly as SKILL.md
-specifies. A new repo's report is mostly *files written*; *files moved* and
-*tasks renamed* read `none`, which is the honest shape of a tree that had
+The ten-section report and the two next-step lines, exactly as SKILL.md
+specifies — including how the ten sections are grouped when a run shaped more
+than one repo, which is written down there and is not restated here. A new
+repo's report is mostly *files written*; *files replaced*,
+*files kept*, *files moved*, *tasks renamed*, *tasks kept* and *calls
+rewritten* all read `none`, which is the honest shape of a tree that had
 nothing to reconcile.

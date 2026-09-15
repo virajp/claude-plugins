@@ -21,7 +21,6 @@ paths:
   - "**/CONTRIBUTING.md"
   - "**/.github/ISSUE_TEMPLATE/*"
   - "**/.config/vscode.d/*.jsonc"
-  - "**/.config/renovate.json"
   - "**/renovate.json"
 ---
 

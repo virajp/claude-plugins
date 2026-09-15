@@ -91,7 +91,7 @@ stays out is a language manifest, a CI workflow, a **whole** editor file
 and CLAUDE.md — a pack contributes to the editor through the fragment
 below, never by shipping `.vscode/settings.json`. **Mode is preserved**:
 anything under `config/.config/mise/tasks/**` must be authored executable
-(755), which `plugins:check` asserts, because mise runs a task file directly
+(755), which `p:plugins:check` asserts, because mise runs a task file directly
 and reports a non-executable one as an unknown task.
 
 ### Editor fragments
@@ -154,8 +154,8 @@ version: <semver — what sync diffs against, per component>
 type: <component type> # assets/taxonomy.md
 category: <token> # required where the type has categories
 capability: <token> # the vwf capability realized — where one applies
-kind: language-bundle | database | cloud-provider | repo-gate | toolchain-manager | repo-hygiene | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool # the bundle kind it composes into (assets/kinds.md)
-axis: project | backing | deploy | repo | design | cicd # omitted by cloud-provider components, which compose into both a backing- and a deploy-axis bundle; each bundle naming one declares its own
+kind: language-bundle | database | cloud-provider | repo-gate | toolchain-manager | repo-hygiene | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool | stylesheet # the bundle kind it composes into (assets/kinds.md)
+axis: project | backing | deploy | repo | design | cicd | stylesheet # omitted by cloud-provider components, which compose into both a backing- and a deploy-axis bundle; each bundle naming one declares its own
 platforms: [ <platform> ] # language components only — the bundle root
 languages: # language and app-framework components only
   - token: <language token>
@@ -198,11 +198,12 @@ decides alone.
 
 ```yaml
 name: <display name>
-axis: project | backing | deploy | repo | design | cicd
+axis: project | backing | deploy | repo | design | cicd | stylesheet
 kind: <bundle kind> # assets/kinds.md
 platforms: [ <platform> ] # project axis only
 artifact: <token> # deploy axis only
 unconditional: true # omitted by every bundle a user picks — see below
+default: true # optional — what vwf preselects; one per axis per platform
 components:
   - <type>/<slug>@<version> # a shipped pack, at its current version
   - <type>/<slug>@generated # no pack covers it — generated on first fetch
@@ -224,11 +225,37 @@ them is recorded in `.config/vwf.yaml` — nothing was chosen — only in
 `lock.yaml`, which is also what tells a caller whether the repo is shaped at
 all: all three slugs present, or not shaped.
 
+**`default: true` marks the menu entry vwf preselects on that axis.** It is
+optional and boolean, and it changes nothing about what the bundle is — only
+which entry the architecture menu highlights before the user answers, so a
+product that has no opinion lands on it and one that does picks another.
+`stackgen-stack-menu` copies the key onto every entry whose bundle carries
+it and onto no other; vwf preselects the one flagged entry among those it
+offers on the round, by the key alone, naming no tool. **At most one bundle
+per axis carries it per platform** — a bundle declaring no `platforms:` list
+covers every platform on its axis, so two flagged bundles conflict exactly
+when either declares no list or their lists intersect. Two that overlap on a
+platform would be a preselection decided by file order, which is silent
+nondeterminism, and the checker refuses the tree, naming both files and the
+platform they share. An axis whose flagged bundles all declare platforms
+may therefore carry one flagged bundle per platform, and a round filtered to
+one platform sees exactly one. It is **never set on an `unconditional`
+bundle**: that bundle is not in the menu, so there is nothing to preselect.
+
 **A `@generated` ref is a first-class outcome, not a gap.** A bundle may mix
 copied and generated components freely: the covered ones land verbatim, the
 uncovered ones run the generation pipeline on first fetch, and the lockfile
 records which was which per component. That mixing is the dispatch rule
 working at bundle scale.
+
+**A `stylesheet` component and its bundle take neither `platforms:` nor
+`languages:`**, and the absence is a ruling rather than an omission.
+`platforms:` is the `project` axis's, and vwf's condition on the stylesheet
+axis — asked of a project declaring `site` or `webapp` — lives in vwf's own
+rules, so repeating it here as a platform list would make one answer read as
+several. `languages:` belongs to the components that bring a language, and a
+stylesheet approach brings none: it is authored inside whatever the project
+already writes.
 
 **No bundle directory exists**, which is what keeps a bundle a composition
 rather than a fourth kind of artifact tree.
@@ -241,9 +268,10 @@ A bundle is the composition rooted per kind
 `toolchain-gate` components; a Cloud-Bundle a `cloud-provider` + its
 `cloud-service`s; a Datastore-Bundle category doctrine + an instance
 component; a Deploy-Bundle one `deploy-target` component alone; a
-Design-Bundle one `design-tool` component alone, and a CI-Bundle one
-`ci-system` — the two **tool axes**, whose bundle slug is the tool token the
-project config already holds. No bundle directory exists anywhere: the materializer folds the
+Design-Bundle one `design-tool` component alone, a CI-Bundle one
+`ci-system`, and a Stylesheet-Bundle one `stylesheet` component — the three
+**tool axes**, whose bundle slug is the token the project config already
+holds. No bundle directory exists anywhere: the materializer folds the
 resolved composition into **one** `.claude/stackgen/templates/<slug>.md` —
 the vwf payload as frontmatter, including the `components:` refs
 (`<type>/<slug>@<version>`, or `@generated`), with the components'
@@ -259,7 +287,7 @@ which is the grain `stackgen-sync` acts at.
   pack's bump never churns the rest of its bundle.
 - **A bundle pins the pack's current `version`.** Every
   `<type>/<slug>@<version>` component must name an existing pack at that
-  exact version, or be `@generated`; `plugins:inventory` fails generation
+  exact version, or be `@generated`; `p:plugins:inventory` fails generation
   otherwise, rather than rendering a row for a composition nothing can
   copy. So bumping a pack means re-pinning every bundle that names it —
   the bundle is the recorded composition, and `stackgen-sync` diffs on
@@ -273,7 +301,7 @@ which is the grain `stackgen-sync` acts at.
   Name the asset by role ("stackgen's secrets contract") or state its rule
   inline; a sibling component's conventions are "the `<type>/<slug>`
   component's conventions, in this composition's template". A bare
-  `<type>/<slug>` ref is an identifier and is fine. `plugins:check`
+  `<type>/<slug>` ref is an identifier and is fine. `p:plugins:check`
   rule 13 enforces it. This file is an asset rather than a landed tier, so
   its own citations may keep the token.
 - **Structure follows the kind; the slice follows the type.** A pack

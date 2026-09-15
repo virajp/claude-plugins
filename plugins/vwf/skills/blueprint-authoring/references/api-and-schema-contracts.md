@@ -90,8 +90,8 @@ advisory: `baseline/idempotency-keys` (every mutating operation idempotent),
 
 ## YAML path-typing & governance
 
-Because these files are typed by path, `plugins:check`/OKF tooling knows a file
-under `entities/*/schema.yaml` is a data model and one under
+Because these files are typed by path, `p:plugins:check`/OKF tooling knows a
+file under `entities/*/schema.yaml` is a data model and one under
 `apis/*.openapi.yaml` is an API contract without reading frontmatter. Keep them
 where they belong; do not add vwf frontmatter to either.
 

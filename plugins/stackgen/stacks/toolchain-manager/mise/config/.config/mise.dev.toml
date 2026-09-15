@@ -41,9 +41,10 @@ precommit = "mise run code:precommit"
 setup     = "mise run setup:all"
 worktrees = "mise run code:worktrees"
 
-# One alias per member project, when this repo has members (submodules, or
-# projects the registry names). The pack cannot know the ids, so these are a
-# template — `setup:all`'s own flags are generated from the same list:
+# One alias per MEMBER REPO, when this repo has members — each submodule, or
+# each path the `MEMBERS` list names — named by that member's own slug, never by
+# a project id. The pack cannot know the slugs, so these are a template —
+# `setup:all`'s own member flags come from the same list:
 #   setup-backend  = "mise run setup:all --backend"
 #   setup-frontend = "mise run setup:all --frontend"
 

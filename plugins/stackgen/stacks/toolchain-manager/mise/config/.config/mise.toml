@@ -94,11 +94,13 @@ task.disable_spec_from_run_scripts = true
 DISABLE_TELEMETRY = 1
 
 # A MARKED POSITION. The orchestrator that shapes this repo replaces "unfilled"
-# with the repo's project id: the name lowercased, every run of characters
-# outside [a-z0-9] replaced by a single "-", leading and trailing "-" trimmed.
-# So `virajp.dev` becomes `virajp-dev`. It is the same token the `p:<id>:*` task
-# group, `setup:all`'s member flags and the `setup-<id>` aliases carry, and the
-# rule and its reasons are stackgen's `assets/ids.md`.
+# with this repo's FOLDER NAME, slugified: the name of the main checkout's own
+# directory, lowercased, every run of characters outside [a-z0-9] replaced by a
+# single "-", leading and trailing "-" trimmed. So a checkout in `virajp.dev/`
+# becomes `virajp-dev`. It is NOT a project id — the `p:<id>:*` task group
+# carries that, and the two are independent; `setup:all`'s member flags and the
+# `setup-<slug>` aliases carry a third token, the MEMBER REPOS' own slugs. The
+# slug rule and its reasons are stackgen's `assets/ids.md`.
 #
 # **It is a literal, and it is never derived at load time.** The obvious
 # shorthand — reading the basename of the config root — is wrong in a linked
@@ -113,6 +115,31 @@ DISABLE_TELEMETRY = 1
 # would copy the same alias into every repo and make a change to the launcher a
 # change to every repo that has one.
 REPO_NAME = "unfilled"
+
+# A MARKED POSITION. How a branch reaches its destination — `code:merge:develop`
+# and `code:merge:main` read it, and the branch model itself is the same under
+# both values:
+#
+#   direct  merge locally and push the destination branch
+#   pr      push the branch and open a pull request; nothing merges locally
+#
+# `direct` is the shipped default because it is what a repo with no reviewer
+# needs, and because it is what these tasks did before the setting existed. A
+# repo that gates landing on review sets `pr` and nothing else changes.
+MERGE_MODEL = "direct"
+
+# A MARKED POSITION. The repo's member repos, space separated, each path
+# relative to this repo's root — `MEMBERS = "backend frontend"`. It is what
+# `setup:all --all` recurses into and what `code:worktrees` walks.
+#
+# **Left EMPTY for a repo whose members are submodules**, which are read from
+# `.gitmodules` instead: git already holds that list, and a second copy of it
+# here would only let the two disagree. Empty is also the right value for a
+# single-project repo, which has no members at all.
+#
+# One string rather than a list: TOML `[env]` values are strings, so the words
+# are split by the task library rather than by the parser.
+MEMBERS = ""
 
 # Project-local binaries on PATH without a `<pm> exec` prefix. Shipped commented
 # because it is a claim about the stack: uncomment it when a package-manager

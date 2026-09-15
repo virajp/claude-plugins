@@ -6,6 +6,9 @@ version: 1
 
 ignores:
   - "**/archived/**"
+  # The gitignored render surface — mockups and design-tool exports reviewed in
+  # a browser, never committed, and not ours to style.
+  - "docs/scratchpad/**"
   # tsup's bundle of installer/. Build output, gitignored, and not ours to style —
   # esbuild emits empty catch blocks and keeps unused helpers from bundled deps.
   # The source it is built from is linted.
@@ -17,6 +20,11 @@ ignores:
   # `.astro` is dprint's: the markup plugin formats it and the linter has no
   # Astro parser.
   - "site/**/*.astro"
+  # Copied verbatim into dist/ — SVG, PNG, ICO, the web manifest, robots, the
+  # social-preview render source, and `_headers`, which Cloudflare Workers
+  # Static Assets parses rather than serves. None of it is the linter's, and
+  # its HTML rewrite fights dprint's.
+  - "site/public/**"
 
 overrides:
   markdown:
