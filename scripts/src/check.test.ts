@@ -1087,11 +1087,18 @@ describe("the stack-adapter contract", () => {
 });
 
 describe("bundle defaults", () => {
-  // A bundle's `default: true` is what the architecture menu preselects. Two on
-  // one axis is silent nondeterminism — whichever sorts first wins — and a
-  // string `"true"` never preselects at all, so both directions are pinned.
-  const bundle = (axis: string, extra = "") =>
-    `---\nname: X\naxis: ${axis}\nkind: k\n${extra}components:\n- k/x@1.0.0\n---\n\nprose\n`;
+  // A bundle's `default: true` is what the architecture menu preselects among
+  // the entries it offers on a round, a list already filtered by the project's
+  // platforms. Two flagged on one axis conflict when either declares no
+  // platforms or their lists intersect — silent nondeterminism, whichever
+  // sorts first wins — and a string `"true"` never preselects at all, so both
+  // directions are pinned.
+  const bundle = (axis: string, extra = "", platforms: string[] = []) =>
+    `---\nname: X\naxis: ${axis}\nkind: k\n${extra}${
+      platforms.length > 0
+        ? `platforms:\n${platforms.map(p => `- ${p}\n`).join("")}`
+        : ""
+    }components:\n- k/x@1.0.0\n---\n\nprose\n`;
 
   const bundles = (files: Record<string, string>) => ({
     stackgen: {
@@ -1108,7 +1115,7 @@ describe("bundle defaults", () => {
     expect(check(root)).toEqual([]);
   });
 
-  it("accepts one flagged bundle per axis", () => {
+  it("passes two flagged bundles on distinct axes", () => {
     const root = tree(bundles({
       a: bundle("design", "default: true\n"),
       b: bundle("design"),
@@ -1117,7 +1124,7 @@ describe("bundle defaults", () => {
     expect(check(root)).toEqual([]);
   });
 
-  it("flags two bundles on one axis both carrying default: true", () => {
+  it("flags two flagged bundles on one axis when neither declares platforms", () => {
     const root = tree(bundles({
       a: bundle("design", "default: true\n"),
       b: bundle("design", "default: true\n"),
@@ -1125,9 +1132,40 @@ describe("bundle defaults", () => {
     }));
     const found = messages(check(root));
     expect(found).toHaveLength(1);
-    expect(found[0]).toContain("2 bundles on the `design` axis");
+    expect(found[0]).toContain("on the `design` axis");
     expect(found[0]).toContain("\"stacks/bundles/a.md\"");
     expect(found[0]).toContain("\"stacks/bundles/b.md\"");
+    expect(found[0]).toContain("declares no `platforms:` list");
+  });
+
+  it("passes two flagged bundles on one axis with disjoint platforms", () => {
+    const root = tree(bundles({
+      a: bundle("project", "default: true\n", ["site"]),
+      b: bundle("project", "default: true\n", ["backend"]),
+    }));
+    expect(check(root)).toEqual([]);
+  });
+
+  it("flags two flagged bundles on one axis when platforms intersect, or one declares none", () => {
+    const shared = messages(check(tree(bundles({
+      a: bundle("project", "default: true\n", ["site", "webapp"]),
+      b: bundle("project", "default: true\n", ["webapp"]),
+    }))));
+    expect(shared).toHaveLength(1);
+    expect(shared[0]).toContain("on the `project` axis");
+    expect(shared[0]).toContain("\"stacks/bundles/a.md\"");
+    expect(shared[0]).toContain("\"stacks/bundles/b.md\"");
+    expect(shared[0]).toContain("share the platform `webapp`");
+    expect(shared[0]).not.toContain("`site`");
+
+    const bare = messages(check(tree(bundles({
+      a: bundle("project", "default: true\n", ["site"]),
+      b: bundle("project", "default: true\n"),
+    }))));
+    expect(bare).toHaveLength(1);
+    expect(bare[0]).toContain(
+      "\"stacks/bundles/b.md\" declares no `platforms:` list",
+    );
   });
 
   it("flags a default that is not a boolean", () => {

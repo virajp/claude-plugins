@@ -206,13 +206,15 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   a `../` climb leaving the tree the file lands in, and a path into a sibling
   pack are each refused; a bare `<type>/<slug>` ref is the identifier vocabulary
   and stays legal, and the last three forms read `.md` only, with fenced blocks
-  blanked to their own line count); and **at most one default bundle per axis**
-  (across `stacks/bundles/*.md`, grouped by `axis`, at most one frontmatter
-  carries `default: true` — the entry vwf's architecture menu preselects — and
-  the value is boolean; two flagged is a preselection decided by file order, and
-  the finding names both). The retired-vocabulary and plugin-path rules are the
-  two that report a **line number**, being the two that fire on a sentence
-  rather than a file.
+  blanked to their own line count); and **at most one default bundle per axis
+  per platform** (across `stacks/bundles/*.md`, grouped by `axis`, two
+  frontmatters carrying `default: true` — the entry vwf's architecture menu
+  preselects on a round — conflict when either declares no `platforms:` list or
+  their lists intersect, and the value is boolean; a conflict is a preselection
+  decided by file order, and the finding names both files plus the platform they
+  share, or the one that declares no list). The retired-vocabulary and
+  plugin-path rules are the two that report a **line number**, being the two
+  that fire on a sentence rather than a file.
 
   Two of those are worth the extra sentence. The technology-free guard bans vwf
   naming a concrete technology **only where the mention prescribes**, which is

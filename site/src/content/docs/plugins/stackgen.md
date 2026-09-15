@@ -69,7 +69,9 @@ knowledge; instance components cite it and stay thin.
 The clearest worked example of "bundles are compositions, not directories" is
 the `site` platform. Four bundles serve it, all pinning the one
 `framework/astro` pack and all carrying React for islands, and they differ by
-which of Astro's two `output` values is set and whether an adapter is present:
+which of Astro's two `output` values is set and whether an adapter is present.
+`astro-ssg` carries `default: true`, so a `site` project's round preselects it;
+the other three are picked deliberately:
 
 | Bundle         | Menu name        | Renders                                                                                                             |
 | -------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------- |
@@ -294,9 +296,13 @@ The comments are **committed**: one YAML list per flow page, each item
 **`default: true`** — the optional frontmatter key that marks the entry vwf's
 architecture menu preselects on that axis, highlighted and never assumed, so a
 product with no opinion on its design tool lands here and one with an opinion
-picks another. The menu skill copies the key onto that entry and computes none;
-at most one bundle per axis carries it, and `p:plugins:check` refuses a second,
-naming both files.
+picks another. The menu skill copies the key onto every entry whose bundle
+carries it and computes none; at most one bundle per axis **per platform**
+carries it — two flagged bundles on one axis conflict when either declares no
+`platforms:` list or their lists intersect — and `p:plugins:check` refuses the
+pair, naming both files and the platform they share. That is what lets
+`astro-ssg` be flagged too, on the `project` axis for `site` alone, without
+being preselected on any other platform's round.
 
 **stackgen is now the only stack plugin.** Its packs are the covered path, and
 the menu keeps its open `generate` entry for the rest — the stack you use that

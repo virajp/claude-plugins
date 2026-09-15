@@ -32,7 +32,8 @@ Since format 13 the three
 technology axes are per project, so "which datastore?" is never a question about
 the product — it is a question about `api`, or about `website`:
 
-- **project** — once per project, filtered to that project's `role`.
+- **project** — once per project, filtered to the templates whose `platforms:`
+  cover every platform that project declares in the registry.
 - **backing** — once per project, filtered to the capabilities that project
   declares in the registry. Records a **list**: one slug per capability it needs
   (datastore, identity, queue, object storage, telemetry sink). A project that
@@ -56,12 +57,16 @@ the product — it is a question about `api`, or about `website`:
   declaring neither is not asked and records no key.
 
 **What is preselected, in order.** On every round the highlighted option is:
-the menu entry carrying **`default: true`** when one does — the flag is the
-adapter's, passed through in its menu payload, at most one per axis
-(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`, "The menu payload"); else the
-**previous project's answer** on that axis; else nothing. Preselected means
-highlighted, never assumed — the user still picks, every other entry stays
-offered, and the flag reaches no config key.
+the menu entry carrying **`default: true`** among the entries the round offers
+— after the axis's filter above — when one does; the flag is the adapter's,
+passed through in its menu payload, at most one per axis per platform
+(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`, "The menu payload"), so a
+flag on an entry filtered out of the round highlights nothing there; else the
+**previous project's answer** on that axis; else nothing. Two flagged entries
+reaching one round cannot happen when the adapter obeys its contract; if it
+does, highlight neither and fall through to the previous project's answer.
+Preselected means highlighted, never assumed — the user still picks, every
+other entry stays offered, and the flag reaches no config key.
 
 **Offer the previous project's answer as the default on the next.** Most
 products do run every project on one cloud, and re-asking from scratch per
@@ -118,9 +123,10 @@ one value and no second spelling to drift against — which is the whole reason
 they are axes rather than free text.
 
 **Preselection is the same rule as everywhere else.** An entry the adapter
-flagged `default: true` is highlighted first; the previous project's answer
-next; nothing otherwise. The menu stays closed either way — a flagged entry is
-one of the adapter's entries, not a new door.
+flagged `default: true` among the entries the round offers is highlighted
+first; the previous project's answer next; nothing otherwise. The menu stays
+closed either way — a flagged entry is one of the adapter's entries, not a new
+door.
 
 **Never name a tool here.** The options come from the menu; this file lists
 none, and vwf learns nothing about what any of them mean. `design` is read by
@@ -162,9 +168,10 @@ the project block**, for every project: it is what `/vwf:doctor` checks the repo
 against, and it cannot check what was never recorded.
 
 vwf ships no default and marks no template recommended: the one preselection it
-honours is the adapter's `default: true` (above), which it never infers and
-never records. Picking a project template fills its four frontmatter axes, and a
-`languages` token is whatever the stack plugin owning that language declares.
+honours is the adapter's `default: true` among the entries a round offers
+(above), which it never infers and never records. Picking a project template
+fills its four frontmatter axes, and a `languages` token is whatever the stack
+plugin owning that language declares.
 
 **The menu is the whole answer — there is no *other (describe)*.** Every axis
 must resolve to a template an installed plugin ships, and every `languages` token

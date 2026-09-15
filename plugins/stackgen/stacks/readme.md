@@ -124,7 +124,8 @@ truth is a committed directory under the target repo's `docs/`, its adapters
 read files rather than call a server, and it ships one extra user-invocable
 skill that runs the design session. The bundle whose frontmatter carries
 `default: true` is the entry vwf's architecture menu preselects on the axis —
-at most one per axis, which the checker enforces.
+at most one per axis per platform, where a bundle declaring no `platforms:`
+covers every platform on its axis, which the checker enforces.
 
 `claude-design` also declares an MCP server, which the materializer writes into
 the project's own `.mcp.json` behind its own consent line. That is the charter

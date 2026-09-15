@@ -91,22 +91,27 @@ the `repo:` line naming the member — which is the one landing path
 `/vwf:architecture` no longer takes.
 
 A bundle's frontmatter may also carry **`default: true`**, since 2026-09-15:
-`stackgen-stack-menu` copies it onto that entry of its payload and computes
-none, and vwf's architecture menu preselects whichever entry carries it —
-highlighted, never assumed, naming no tool. At most one bundle per axis, never
-an unconditional one; `p:plugins:check` rule 14 refuses a second. The one
-flagged today is `design-tool`'s `claude-code` — the terminal itself as a design
-tool, the fourth of that kind beside `claude-design`, `lovable` and `stitch`,
-and the first with a **file canvas**: a committed `docs/design/<project>/` its
-three import skills read as files, plus a fourth, user-invocable
-`design-session` skill that writes it — the design system and the logo, and
-since pack `0.2.0` a flow's screens (`screens <flow>`, from the brief
-`/vwf:screens prompt` wrote, into `screens/<flow>--<platform>/`) and a review
-round (`review <flow>`, which serves the canvas from the repo, waits for
-**Done**, then applies every open comment). The server is the skill's own
-`scripts/serve.mjs`, a single-file Node program with no dependencies: it binds
-`127.0.0.1` on an ephemeral port, serves only the canvas, carries no auth and no
-TLS, and appends each comment to a **committed**
+`stackgen-stack-menu` copies it onto every entry whose bundle carries it and
+computes none, and vwf's architecture menu preselects the one flagged entry
+among those it offers on a round, after filtering by the project's platforms —
+highlighted, never assumed, naming no tool. At most one bundle per axis **per
+platform**, never an unconditional one: two flagged bundles on one axis conflict
+when either declares no `platforms:` list (it is offered on every round of the
+axis) or their lists intersect, and `p:plugins:check` rule 14 refuses the pair,
+naming the platform they share. Two are flagged today. On the project axis it is
+`astro-ssg`, `platforms: [site]` — what a `site` project's round highlights, and
+nothing on any other platform's round. On the design axis it is `design-tool`'s
+`claude-code` — the terminal itself as a design tool, the fourth of that kind
+beside `claude-design`, `lovable` and `stitch`, and the first with a **file
+canvas**: a committed `docs/design/<project>/` its three import skills read as
+files, plus a fourth, user-invocable `design-session` skill that writes it — the
+design system and the logo, and since pack `0.2.0` a flow's screens
+(`screens <flow>`, from the brief `/vwf:screens prompt` wrote, into
+`screens/<flow>--<platform>/`) and a review round (`review <flow>`, which serves
+the canvas from the repo, waits for **Done**, then applies every open comment).
+The server is the skill's own `scripts/serve.mjs`, a single-file Node program
+with no dependencies: it binds `127.0.0.1` on an ephemeral port, serves only the
+canvas, carries no auth and no TLS, and appends each comment to a **committed**
 `comments/<flow>--<platform>.yaml`. It declares `taste-skill@taste-skill` as the
 plugin a product pinning it must add at init's fifth question.
 

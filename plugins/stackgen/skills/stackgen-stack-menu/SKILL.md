@@ -48,9 +48,13 @@ comparison. Choosing is the user's job and presenting the choice is vwf's.
    **Copy `default: true` from the bundle, never compute it.** An entry
    carries the key exactly when its bundle file's frontmatter does, and omits
    it otherwise — vwf preselects whichever entry carries it, and this skill
-   has no opinion of its own about which bundle that should be. At most one
-   bundle per axis may carry it; that is the checker's to refuse, not this
-   skill's to resolve.
+   has no opinion of its own about which bundle that should be. More than one
+   entry on an axis may carry it when their `platforms` differ — one per axis
+   per platform, where a bundle declaring no `platforms:` covers every
+   platform on its axis; which of them a round highlights is vwf's per-round
+   rule, applied after it has filtered the entries by the project's
+   platforms, not this skill's. Two overlapping on a platform is the
+   checker's to refuse, not this skill's to resolve.
 2. Return the payload below. The `generate` block is present on **every**
    answer — it is the open entry, and it is what makes an empty pack list read
    as a decision rather than a fault.
