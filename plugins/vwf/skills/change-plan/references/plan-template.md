@@ -31,16 +31,16 @@ backlog: [] # ids from docs/backlog.md this plan covers, or empty
 | Action                                            | Granted                      |
 | ------------------------------------------------- | ---------------------------- |
 | Merge to the integration branch and push on green | yes / no                     |
-| After landing: <step>                             | run / ask                    |
+| After landing: <step>                             | ask                          |
 | Release <project> publicly                        | none / patch / minor / major |
 
 <one `After landing:` row per step, in order; one `Release` row per project the
 units touch, each naming the command that bumps its version.>
 
-**A release recorded here is intent, not authorisation.** Every release step is
-an `ask` step: the run stops once, reports what it would ship, and waits. A
-`run` step publishes nothing and cuts no tag; where one stages something this
-session already loaded, it is picked up only by a **restarted** session.
+**A release recorded here is intent, not authorisation.** Every after-landing
+step is an `ask` step: the run stops once, reports what it would do, and waits.
+Where a step stages something this session already loaded, it is picked up only
+by a **restarted** session.
 
 ## Goal
 
@@ -97,12 +97,11 @@ only once a unit has landed belongs in that unit's **Verification**, not here.
 
 ## After landing
 
-| Step                          | Mode      | Notes                               |
-| ----------------------------- | --------- | ----------------------------------- |
-| <the command or skill to run> | run / ask | <what it does, and what it reaches> |
+| Step                          | Mode | Notes                               |
+| ----------------------------- | ---- | ----------------------------------- |
+| <the command or skill to run> | ask  | <what it does, and what it reaches> |
 
-<or "none". `run` steps execute unprompted after a consented landing; the run
-stops once and asks before every `ask` step.>
+<or "none". The run stops once and asks before every step.>
 
 ## Gates the orchestrator keeps
 
@@ -154,6 +153,10 @@ the fresh session's worktree — cut from the integration branch — can see it.
 Run in a fresh session:
 
 /vwf:change-execute docs/plans/<date>-<name>
+
+or let the queue pick it, by priority:
+
+/vwf:change-execute next
 ```
 
 ## NN-<unit>.md
@@ -218,5 +221,5 @@ consent block names the version the bump actually reaches. Its report is the
 run's final gate.
 
 It does **not** run the after-landing steps — those are the orchestrator's,
-after the landing, because a `run` step mutates the machine rather than the tree
-under review, and a unit never reaches outside the worktree.
+after the landing, because an after-landing step mutates the machine rather than
+the tree under review, and a unit never reaches outside the worktree.
