@@ -287,6 +287,19 @@ authored and unreachable, a defect this tree already carries once in its
 python packs. The reasoning is
 `docs/memory/decisions/2026-09-06-agents-sdk-is-a-framework-pack.md`.
 
+**`framework/html` made it four on 2026-09-15**, under a category minted for
+it, `document`: a hand-authored HTML5 page tree with plain CSS and ES-module
+JavaScript, no framework and no content model, served by Vite in development
+and built by `vite build` into `./dist` — the same `## Build output` heading
+the deploy packs cite — with `cp -R src/. dist/ && cp -R public/. dist/` as
+the documented copy-only opt-out and `html-validate` as its test. It is
+reached through the `html` bundle, `platforms: [site]`, the one entry on a
+`site` project's round beside the four Astro bundles; `astro-ssg` keeps the
+default flag. Having no layout, it meets the web-head contract's layout
+clause per page, and it carries a byte-identical copy of Astro's `icons`
+task, since rule 13 forbids a payload citing a sibling pack. The reasoning is
+`docs/memory/decisions/2026-09-15-html-site-pack.md`.
+
 **Media, messaging and secrets closed the platform.** `images`, `realtime`,
 `email-service` and `secrets-store` joined on the storage services' terms —
 one `backing` bundle each, no `config/` tier — and with them the last of the
