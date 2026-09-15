@@ -6,6 +6,13 @@ gpg_verify           = true
 raw                  = true
 status.missing_tools = "always"
 
+# Every platform the lock files must carry a URL for. The GitHub runners install
+# with `mise install --locked`, which fails on a tool whose lock entry has no
+# URL for linux-x64 — the global mise config on the maintainer's machine locks
+# macos-arm64 alone, so this is set here, where `mise lock`, `mise install` and
+# `mise upgrade` all read it.
+lockfile_platforms = [ "linux-x64", "macos-arm64" ]
+
 # NodeJS settings
 node.compile        = false
 npm.package_manager = "pnpm"

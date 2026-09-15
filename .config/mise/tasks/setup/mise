@@ -20,3 +20,10 @@ mise install
 
 print_header "Upgrading mise tools ..."
 mise upgrade --local || true
+
+# Refresh the lock files for every platform `lockfile_platforms` names, in both
+# environments — CI installs with `--locked` and fails on a tool whose entry has
+# no linux-x64 URL. The ci pass also rewrites mise.lock; that is idempotent.
+print_header "Locking tool URLs ..."
+mise lock
+MISE_ENV=ci mise lock
