@@ -7,7 +7,10 @@ re-deriving them, and review findings are filed once and recalled on fix
 loop-backs — so multi-round detail never piles up in the orchestrator's context.
 The orchestrator resolves the scope and persists durable decisions; the execute
 subagents persist and recall their own findings directly, so that detail
-bypasses the orchestrator entirely.
+bypasses the orchestrator entirely. In `/vwf:execute` that per-unit recall
+before dispatch and decision persistence after the run are for `code` units
+only — an `edit` unit's ruling is in its file; the run journal is written for
+every plan.
 
 ## The two stores
 
@@ -93,8 +96,9 @@ do not enter anyone else's diff.
   (blueprint/plan holes surfaced **during execution** + how they were
   reconciled, and out-of-scope points **parked during elicitation** — see
   below), `runs` (the **execute** run journal — the mirror of the plan folder's
-  Run log, written per node and read only when the folder is unreachable; see
-  below), `doctor` (`/vwf:doctor`'s
+  Run log, written for every plan, per node for a `code` unit and per report
+  for an `edit` unit, read only when the folder is unreachable; see below),
+  `doctor` (`/vwf:doctor`'s
   findings per run, so a later run reports a known one as **known** rather than
   rediscovering it), and `handoff` (session handoffs — the one room
   `/vwf:handoff` and `/vwf:recall` own).
@@ -286,6 +290,9 @@ markers, these are technical memories. Example:
 
 ## Findings memory — execute loop-backs
 
+This is the `code` unit's loop. An `edit` unit has no reviewer of its own — the
+wave review's findings ride the plan folder's Run log, not this room.
+
 Each review/security subagent files its **full** findings to room `problems`,
 tagged `<slice>/<stage>/<round>` (e.g. `order/review/2`), and returns only its
 terse contract block plus that tag. The orchestrator presents the terse block at
@@ -327,15 +334,17 @@ losing it. Same fallback rule: the doc line survives a mempalace outage.
 ## Run journal — the Run log's mirror (execute only)
 
 **The plan folder's Run log table is the authoritative record.** `/vwf:execute`
-appends one row to `index.md`'s Run log as each node returns — coder, reviewer,
-security, acceptance — and mirrors that same data into a single drawer per plan
-in room `runs` (drawer = `<plan folder>`): the result of the plan's `requires:`
-prerequisite check (each prerequisite plan and whether it is satisfied), the
-dependency-ordered unit sequence and, per unit, its status (pending/done),
-commit ref, review/security round counts, and gap tags. The orchestrator writes
-the drawer when it derives the order and updates it as each node returns
-(`mempalace_add_drawer` then `mempalace_update_drawer`), the cadence
-`/vwf:execute` and `execute-stages.md` state. Because an autonomous run's
+appends one row to `index.md`'s Run log as each node returns for a `code` unit
+— coder, reviewer, security, acceptance — and as each report returns for an
+`edit` unit, and mirrors that same data into a single drawer per plan in room
+`runs` (drawer = `<plan folder>`), for **every plan** whatever its units' Kind:
+the result of the plan's `requires:` prerequisite check (each prerequisite plan
+and whether it is satisfied), the dependency-ordered unit sequence and, per
+unit, its status (pending/done), commit ref, review/security round counts, and
+gap tags. The orchestrator writes the drawer when it derives the order and
+updates it as each row is written (`mempalace_add_drawer` then
+`mempalace_update_drawer`), the cadence `/vwf:execute` and `execute-stages.md`
+state. Because an autonomous run's
 primary pause is a resource cap (`/vwf:handoff` → later `/vwf:recall next`), a
 resumed run reads the folder's Run log first to skip finished units and pick up
 at the current one, and the journal only when the folder is unreachable —
