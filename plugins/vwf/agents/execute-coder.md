@@ -1,10 +1,10 @@
 ---
 name: execute-coder
 description: Code-stage implementer for the /vwf:execute command. Invoked only
-  by
-  /vwf:execute — do not delegate to it for general tasks. Implements one unit
-  of the approved plan folder under strict TDD and verifies the coverage gate
-  before handoff to code review. Returns the coverage report.
+  by /vwf:execute — do not delegate to it for general tasks. Implements one
+  unit of the approved plan folder under strict TDD and verifies the coverage
+  gate before handoff to the orchestrator's commit; the plan's review row that
+  covers the unit reviews it later. Returns the coverage report.
 tools: Read, Write, Edit, Bash, Grep, Glob,
   mcp__plugin_vwf_mempalace__mempalace_search,
   mcp__plugin_mempalace_mempalace__mempalace_search,
@@ -31,9 +31,10 @@ the blueprint slice it implements (in `docs/blueprint/`), the project's
 which has carried no stack since format 16) plus the `conventions:` prose of
 each template it pins, which is the layout, testing and placement you write to —
 the project's mempalace **wing**, and the **slice name** and **round
-number** for your gap tags (never invent them). On a **fix loop-back** you are
-also given a findings **recall tag** (e.g. `order/review/2`) instead of the
-findings text.
+number** for your gap tags (never invent them). On a **fix loop-back** from a
+review row you are also given a findings **recall tag** — the row's
+`<row-id>/review/<round>` or `<row-id>/security/<round>`, e.g. `R1/review/2` —
+instead of the findings text.
 
 ## What to do
 
