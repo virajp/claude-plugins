@@ -13,5 +13,6 @@ the next runnable plan.
 
 ## Change plans
 
-| Folder | Plan | Priority | Status | Requires | Backlog |
-| ------ | ---- | -------- | ------ | -------- | ------- |
+| Folder                               | Plan                                                     | Priority | Status   | Requires | Backlog |
+| ------------------------------------ | -------------------------------------------------------- | -------- | -------- | -------- | ------- |
+| `docs/plans/2026-09-16-plan-folders` | One plan folder shape, one index, both executors read it | 10       | APPROVED | —        | —       |
