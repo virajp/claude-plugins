@@ -351,7 +351,7 @@ rooms:
 | `problems`  | review, security, acceptance, and UX findings, and how they were resolved                                                                  |
 | `planning`  | plan rationale and deferred options (written by `/vwf:plan`)                                                                               |
 | `gaps`      | blueprint/plan holes — surfaced during execution, routed in by `/vwf:verify`/`/vwf:feedback`, or parked as out-of-scope during elicitation |
-| `runs`      | the `/vwf:execute` run journal — step order and per-step progress, for resuming a paused run                                               |
+| `runs`      | the mirror of a plan folder's Run log, written by `/vwf:execute` per unit and read only when the folder cannot be                          |
 | `doctor`    | `/vwf:doctor` findings per run, so a still-present one reports as *known* instead of being rediscovered                                    |
 | `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`                                                                                      |
 

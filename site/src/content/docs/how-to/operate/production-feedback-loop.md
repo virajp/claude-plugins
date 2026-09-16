@@ -43,7 +43,7 @@ how each kind of failure routes:
 The run comes back healthy, and every criterion passes except the ones belonging
 to `130-task-notifications` — a flow nobody has built yet cannot satisfy an
 acceptance criterion, so those come back not covered rather than quietly
-skipped. That is a testing gap, filed as one, with a plan step offered for next
+skipped. That is a testing gap, filed as one, with a plan unit offered for next
 cycle. A probe coming back down would have been something else entirely: an
 infrastructure failure is reported as operational and never filed as a blueprint
 gap — on a production run it also names the matching runbook from
@@ -94,14 +94,14 @@ offer is a fix cycle against that slice:
 ```
 
 Every route closes the same way, with the remaining path in one line — here
-`then /vwf:execute` — so you see the whole way to production before the single
-hand-off. Take it and you are back on the spine at
-[`/vwf:plan`](../../plugins/vwf.md#vwfplan). Relay defers instead — the
-ownership number is due this week, and the re-rank in step 3 is what will
-schedule the fix — so the item lands as a line in the flow doc's Open Questions,
-recording what production does against what the doc promises. That line is
-written whether or not the memory daemon is up, which is the property that makes
-deferring safe. [`/vwf:feedback`](../../plugins/vwf.md#vwffeedback).
+`then /vwf:execute`, the folder `plan` pushes, run in a fresh session — so you
+see the whole way to production before the single hand-off. Take it and you are
+back on the spine at [`/vwf:plan`](../../plugins/vwf.md#vwfplan). Relay defers
+instead — the ownership number is due this week, and the re-rank in step 3 is
+what will schedule the fix — so the item lands as a line in the flow doc's Open
+Questions, recording what production does against what the doc promises. That
+line is written whether or not the memory daemon is up, which is the property
+that makes deferring safe. [`/vwf:feedback`](../../plugins/vwf.md#vwffeedback).
 
 ### 3. Log the metric reading
 

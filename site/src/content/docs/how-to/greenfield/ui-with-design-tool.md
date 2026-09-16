@@ -229,7 +229,7 @@ browser-platform project gets the same two gates from whichever bundle
 materialized its stack, by a different mechanism; the rule that survives every
 stack is that a changed screen with no visual check is reported, not passed.
 
-Two consequences at the merge gate
+Two consequences in the final report
 ([the execute merge gate](./single-repo.md#the-execute-merge-gate)): a changed
 screen with no golden test is a finding, and a run that could not render at all
 reaches you as an explicit unrendered result rather than a quietly code-only
@@ -318,7 +318,7 @@ journey becomes a draft that a full blueprint pass has to complete before it
 means anything.
 
 Reject freely. A rejected difference costs one round of canvas rework; an
-accepted one that nobody thought about becomes contract, then a plan step, then
+accepted one that nobody thought about becomes contract, then a plan unit, then
 code.
 
 ## When things halt
