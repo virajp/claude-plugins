@@ -21,7 +21,7 @@ or styles; you report.
 
 ## Inputs
 
-The orchestrator passes: the changed screens (from the plan's screen steps), the
+The orchestrator passes: the changed screens (from the plan's screen units), the
 paths to `docs/blueprint/design-system.md` and the owning flow's Screens
 section(s) (`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`), the
 registry entry for the project (role, platforms and stack), the project wing, and the
