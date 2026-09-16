@@ -1,8 +1,8 @@
 ---
 name: change-plan
 description: Turn an ad-hoc change request — work outside the blueprint — into a
-  plan folder under docs/plans/<date>-<name>/ that /vwf:change-execute runs
-  unattended in a fresh session. Recall and survey the repo, split a request
+  plan folder under docs/plans/<date>-<name>/ that /vwf:execute runs unattended
+  in a fresh session. Recall and survey the repo, split a request
   that is really several plans, interview the user one question at a time until
   the checklist is discharged, present the shape behind a hard gate, agree the
   wave gate, the after-landing steps and the release intent, record consent,
@@ -20,20 +20,21 @@ disable-model-invocation: false
 
 # change-plan
 
-Produce a plan that `/vwf:change-execute <folder>` can run **without you
-present**. That sentence is the whole bar: every decision, ruling, file scope,
-gate and consent the run will need is written into the folder, or the run will
-stop and ask for it — which defeats the point. This skill is the part that talks
-to the user; `/vwf:change-execute` is the part that does not.
+Produce a plan that `/vwf:execute <folder>` can run **without you present**.
+That sentence is the whole bar: every decision, ruling, file scope, gate and
+consent the run will need is written into the folder, or the run will stop and
+ask for it — which defeats the point. This skill is the part that talks to the
+user; `/vwf:execute` is the part that does not.
 
-This pair sits **beside** vwf's chain, not inside it. A blueprint slice — a flow
-or an entity the product describes — is `/vwf:plan` → `/vwf:execute`. A change
-with no blueprint slice behind it — tooling, docs, CI, a refactor, a tree the
-blueprint does not describe — is `/vwf:change-plan` → `/vwf:change-execute`.
+This planner sits **beside** vwf's chain, not inside it. A blueprint slice — a
+flow or an entity the product describes — is `/vwf:plan` → `/vwf:execute`. A
+change with no blueprint slice behind it — tooling, docs, CI, a refactor, a tree
+the blueprint does not describe — is `/vwf:change-plan` → `/vwf:execute`. One
+executor runs both kinds of folder.
 
 The plan folder is the contract. `index.md` is the entry point and carries
-everything `/vwf:change-execute` reads mechanically; the unit files carry what
-each subagent reads. Nothing lives in conversation.
+everything `/vwf:execute` reads mechanically; the unit files carry what each
+subagent reads. Nothing lives in conversation.
 
 ## Procedure
 
@@ -100,7 +101,7 @@ Instruct every Explore agent to return **conclusions and `file:line` pointers
 only** — never file contents, diffs or directory dumps. Hold the findings; they
 ground the questions and become the plan's facts section. Do not read the files
 yourself — the survey exists so the orchestrator context stays small, and the
-same rule binds `/vwf:change-execute`.
+same rule binds `/vwf:execute`.
 
 ### 2. Scope check
 
@@ -108,9 +109,8 @@ If the request is really **several independent pieces** — two trees with no
 shared ruling, a doctrine change plus an unrelated tooling fix — say so before
 refining anything. Decompose it, agree the order, and plan **one folder per
 piece**, each through this whole procedure. A later piece that stands on an
-earlier one names it in its frontmatter `requires:` list; `/vwf:change-execute`
-halts until every required plan reads `COMPLETE`. One plan never swallows
-another.
+earlier one names it in its frontmatter `requires:` list; `/vwf:execute` halts
+until every required plan reads `COMPLETE`. One plan never swallows another.
 
 An answer mid-interview that raises something outside this plan's scope is
 **parked, durably**: acknowledge it, write it to the plan's *Parked* list with
@@ -139,14 +139,14 @@ table is what they review.
 ### 4. Agree the gate, the after-landing steps and the release intent
 
 Three sub-steps, each proposed from the survey and confirmed by the user. All
-three are written into `index.md`, and `/vwf:change-execute` runs **what is
-written and nothing it infers**.
+three are written into `index.md`, and `/vwf:execute` runs **what is written
+and nothing it infers**.
 
 **(a) The wave gate.** Propose the exact commands the run must pass, one per
 line, drawn from the survey's gate list — the repo's own task runner tasks, the
 capabilities the `harness:` stamp records, the checks CI already runs over the
 touched trees. Confirm them. These become `index.md`'s **Wave gate** section,
-and `/vwf:change-execute` runs them before wave 1 and after every wave. A check
+and `/vwf:execute` runs them before wave 1 and after every wave. A check
 that only holds once a particular unit has landed is **not** a wave-gate line —
 the gate runs before wave 1 and must be green then — it is that unit's
 *Verification*, repeated in the gates-and-bump unit's. A repo with no task
@@ -205,7 +205,7 @@ what was decided, so the next attempt can recall it. Only approve continues.
 both planners write: `index.md` plus one `NN-<unit>.md` per unit. Every section
 the template does not mark *cycle plans only* is required; the frontmatter and
 the **Status**, **Consent**, **Units**, **Wave gate**, **After landing** and
-**Run log** blocks have a fixed shape because `/vwf:change-execute` parses and
+**Run log** blocks have a fixed shape because `/vwf:execute` parses and
 rewrites them. The frontmatter's `type:` is `vwf-change-plan`, and its
 `backlog:` list names the ids recalled in §1 that this plan covers, or is
 empty.
@@ -216,9 +216,10 @@ Rules the plan must obey, learned from the plans that came before:
   context; its file carries its ruling quoted from index.md, its owned paths,
   its verification, and its commit line.
 - **Every unit is `Kind: edit`.** A change plan has no code unit in this
-  release — `/vwf:change-execute` runs its wave review on every unit and
-  switches on nothing. The sections the template marks *cycle plans only* —
-  Slice, Acceptance criteria (from blueprint), Gaps surfaced during execution
+  release. `/vwf:execute` reads each unit's Kind from the Units table: it
+  dispatches the `edit` units of a wave together, in one message, and judges
+  them by the wave review. The sections the template marks *cycle plans only*
+  — Slice, Acceptance criteria (from blueprint), Gaps surfaced during execution
   — and the `covers:` and `exposure:` frontmatter keys are omitted.
 - **A unit deletes with plain `rm`, never `git rm`.** A unit stages nothing, so
   no unit's deletion can ride another unit's commit.
@@ -230,8 +231,8 @@ Rules the plan must obey, learned from the plans that came before:
   or task plans that as an owned edit, never as "update the gates".
 - **`requires:` names a folder by its basename.** A required plan is written as
   its `docs/plans/<date>-<name>` path as planned, and is matched — by
-  `/vwf:change-execute` and by the plan index — on the basename alone, so the
-  line is never re-pointed when the folder moves to `docs/plans/archived/`.
+  `/vwf:execute` and by the plan index — on the basename alone, so the line is
+  never re-pointed when the folder moves to `docs/plans/archived/`.
 - **The two last units are fixed:** the **docs unit**, which runs
   `vwf:docs-sync` over the run's branch delta
   (`${CLAUDE_PLUGIN_ROOT}/skills/docs-sync/SKILL.md`) and applies its findings
@@ -242,7 +243,7 @@ Rules the plan must obey, learned from the plans that came before:
 - **Assumed decisions are a table**, one row per ruling you made, with the unit
   it changes and the alternative rejected. It is the review surface.
 - **Out of scope and Parked are explicit.** What the user declined, with the
-  reason, and what was raised and deferred, so `/vwf:change-execute` never
+  reason, and what was raised and deferred, so `/vwf:execute` never
   "helpfully" picks either up.
 
 ### 7. Self-review
@@ -267,7 +268,7 @@ Re-read the folder with fresh eyes before handing it off, and fix inline:
 In this order.
 
 1. **Set the status** to `APPROVED` with the date; until then it is `DRAFT` and
-   `/vwf:change-execute` refuses it.
+   `/vwf:execute` refuses it.
 2. **Add the index row.** Append one row to the plan index — the one table in
    the base repo's `docs/plans/index.md`, per
    `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`: `Folder` the plan folder path
@@ -301,11 +302,11 @@ Then end with exactly this, and nothing after it:
 ```text
 Run in a fresh session:
 
-/vwf:change-execute docs/plans/<date>-<name>
+/vwf:execute docs/plans/<date>-<name>
 
 or let the queue pick it, by priority:
 
-/vwf:change-execute next
+/vwf:execute next
 ```
 
 Do not start executing. The fresh session is the point — this session's context
@@ -321,4 +322,4 @@ is the survey and the interview, and the run should carry none of it.
 - Pushes anywhere but the branch it stands on, and merges nothing
 - Edits `docs/backlog.md` itself — it calls `/vwf:backlog`, which owns the file
 - Edits any row of the plan index, `docs/plans/index.md`, but the one it
-  appends — statuses are the executors' and `/vwf:archive`'s
+  appends — statuses are `/vwf:execute`'s and `/vwf:archive`'s
