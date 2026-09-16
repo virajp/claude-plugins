@@ -417,8 +417,8 @@ In this order.
    `APPROVED`, `Requires` the basenames of its `requires:` entries or `—`,
    `Backlog` its `backlog:` ids or `—`. When the file does not exist yet, write
    its whole shape from the asset first, then append. This is the one edit this
-   skill makes to that file — every other row is `/vwf:execute`'s,
-   `/vwf:change-execute`'s or `/vwf:archive`'s.
+   skill makes to that file — every other row is `/vwf:execute`'s or
+   `/vwf:archive`'s.
 3. **Mark the backlog items planned.** When the frontmatter's `backlog:` list
    names ids, invoke `/vwf:backlog planned <ids> <folder>` — that skill edits
    the file; this one never does.

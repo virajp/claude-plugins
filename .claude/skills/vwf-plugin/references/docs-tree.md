@@ -45,20 +45,18 @@ Both are discovered through the base repo's `docs/plans/index.md`, which holds
 **one table** per `assets/plan-index.md` — columns `Folder`, `Kind`, `Plan`,
 `Target repo`, `Priority`, `Status`, `Requires`, `Backlog`, statuses
 `APPROVED`/`RUNNING`/`COMPLETE` only, every edit a direct commit on the
-integration branch — the queue `/vwf:execute next` and
-`/vwf:change-execute
-next` each read filtered to their own `Kind`.
-`/vwf:change-execute` moves its folder into `archived/` at landing and re-points
-the row; `/vwf:execute` leaves a cycle folder live and writes the row
-`COMPLETE`; `/vwf:archive` moves either kind whole, only its Status line
+integration branch — the queue `/vwf:execute next` reads with no `Kind` filter.
+`/vwf:execute` moves the folder into `archived/` at landing and re-points the
+row when no gap is open, and leaves it live with the row `COMPLETE` when one is;
+`/vwf:archive` moves a folder of either kind whole, only its Status line
 rewritten, and re-points the row, after which the sweep drops a `COMPLETE` row
 nobody's `Requires` names), `docs/backlog.md` (the product's prioritised list of
 work that cannot be picked up now — a table plus one `### Bnn` section per item,
 **product-level and in the base repo only**, beside `docs/plans/index.md`;
-`/vwf:backlog` is its sole writer and `change-plan`, `plan`, `change-execute`,
-`execute` and `archive` call it with the ids their plan's `backlog:` frontmatter
-carries), `docs/runbooks/` (per-project operational runbooks plus
-`postmortems.md`, seeded by the incident-response foundation and appended to by
+`/vwf:backlog` is its sole writer and `change-plan`, `plan`, `execute` and
+`archive` call it with the ids their plan's `backlog:` frontmatter carries),
+`docs/runbooks/` (per-project operational runbooks plus `postmortems.md`, seeded
+by the incident-response foundation and appended to by
 `/vwf:feedback incident`), and `docs/prompts/`
 (`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design briefs grouped by
 prompt type → registry project → flow, one brief per platform regenerated in
@@ -77,7 +75,10 @@ dissolved into the flow templates). The single-file cycle plan `/vwf:plan` wrote
 until 2026-09-16 was retired with nothing archived and no compatibility reader:
 a plan in that shape still in flight is finished on the vwf release that wrote
 it, or its slice is re-run through `/vwf:plan`, whose stamp-heal drops what
-already conforms.
+already conforms. The change plan's own executor was retired the same day,
+2026-09-16, absorbed into `/vwf:execute` — the one executor, switching on each
+unit's `Kind` — with nothing archived, no alias and no redirect; the record is
+`docs/memory/decisions/2026-09-16-one-executor.md`.
 
 The `docs/blueprint/` tree is an **OKF bundle** — vwf is an opinionated
 *profile* of Google's Open Knowledge Format (OKF) v0.1. Every doc is a typed OKF

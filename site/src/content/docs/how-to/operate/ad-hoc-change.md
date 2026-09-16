@@ -10,15 +10,15 @@ a lint config. A module wants restructuring without moving a single behavior.
 None of that is a flow, none of it belongs in `docs/blueprint/`, and pushing it
 through `/vwf:plan` would mean inventing a slice to hang it on.
 
-That work has its own pair:
+That work has its own planner:
 **[`/vwf:change-plan`](../../plugins/vwf.md#vwfchange-plan)** writes a plan
-folder and queues it in `docs/plans/index.md`, and
-**[`/vwf:change-execute`](../../plugins/vwf.md#vwfchange-execute)** runs it
-unattended in a fresh session — by name, or `next` to take the queue's pick.
-They sit beside the chain rather than in it, and they read neither the blueprint
-nor the architecture registry. The folder they write and the index they queue in
-are the same ones `/vwf:plan` and `/vwf:execute` use; what differs is what runs
-over a unit.
+folder and queues it in `docs/plans/index.md`, and the one executor,
+**[`/vwf:execute`](../../plugins/vwf.md#vwfexecute)**, runs it unattended in a
+fresh session — by name, or `next` to take the queue's pick. The planner sits
+beside the chain rather than in it, and reads neither the blueprint nor the
+architecture registry; the executor reads the blueprint only for a plan that
+covers a slice. The folder it writes and the index it queues in are the same
+ones `/vwf:plan` uses; what differs is what runs over a unit.
 
 The worked example picks up **Relay**, the team task manager from
 [start a product from an empty repo](../greenfield/single-repo.md), some months
@@ -105,10 +105,10 @@ are worth answering carefully:
 
 - **The wave gate.** The exact commands the run must pass, proposed from your
   repo's own task list and its `harness:` stamp. Relay's is its lint task, its
-  test task, and the workflow linter. `/vwf:change-execute` runs **what is
-  written and nothing it infers** — a check you leave out is a check the run
-  will not do, however obvious it looks in the tree. It also runs the whole gate
-  once **before** the first wave, so every line has to be green on the untouched
+  test task, and the workflow linter. `/vwf:execute` runs **what is written and
+  nothing it infers** — a check you leave out is a check the run will not do,
+  however obvious it looks in the tree. It also runs the whole gate once
+  **before** the first wave, so every line has to be green on the untouched
   branch — which means a check that can only pass once one of the units has
   landed does not belong here. That one goes in the unit's own verification. If
   the repo has no task runner and no stamp, the answer is `none`, and the plan
@@ -163,21 +163,21 @@ It does not start executing, and that is deliberate.
 Open a new session, `/clear` or a new window, and paste the launch line:
 
 ```text
-/vwf:change-execute docs/plans/2026-09-08-ci-release-notes
+/vwf:execute docs/plans/2026-09-08-ci-release-notes
 ```
 
 or, when you would rather the queue decide:
 
 ```text
-/vwf:change-execute next
+/vwf:execute next
 ```
 
-`next` reads that table, keeps the `change` rows (`/vwf:execute next` takes the
-`cycle` rows the same way), and takes the `APPROVED` row of lowest priority
-whose requirements have all landed, tells you which it took and why the others
-were passed over, and runs it as if you had named it. With Relay's one plan in
-the queue the two lines do the same thing; with several, `next` is how a chain
-runs in order without you typing each folder.
+`next` reads that table — every row, cycle plan and change plan alike — and
+takes the `APPROVED` row of lowest priority whose requirements have all landed,
+tells you which it took and why the others were passed over, and runs it as if
+you had named it. With Relay's one plan in the queue the two lines do the same
+thing; with several, `next` is how a chain runs in order without you typing each
+folder.
 
 The fresh session is the whole point: the planning session's context was a
 survey and an interview, and none of it should ride along into the run. The
@@ -191,7 +191,7 @@ push it first — or re-run `/vwf:change-plan` on it — then re-launch.
 The first thing it does is **claim the plan**: the row in `docs/plans/index.md`
 is set to `RUNNING` in a commit pushed on the integration branch, before any
 worktree exists. That pushed row is what makes a second session safe: another
-`/vwf:change-execute next` running at the same time sees the row taken and picks
+`/vwf:execute next` running at the same time sees the row taken and picks
 something else, and if two sessions race for the same row, the push that lands
 second is rejected, so that session re-reads the queue and re-picks — or, for a
 named folder, stops and tells you another session has it. A `RUNNING` row is
@@ -199,17 +199,18 @@ never taken over, however long it has sat there; if the session that claimed it
 is gone, set the row back to `APPROVED` by hand in a commit on the integration
 branch, and the plan is runnable again.
 
-From there you are not needed. It creates one worktree, runs the plan's gate
-once as a preflight (a red line here is the branch's problem, not the plan's,
-and it says so rather than fixing it), then works wave by wave: every unit in a
-wave dispatched at once as its own subagent, a reviewer over the wave's diff
-with at most two rounds of findings, the gate again, and one commit per green
-unit. Each of those commits stages only what that unit owns, and unstages
-anything else that reached the index first, so one unit's work never rides
-another's commit. The two-round loop has one exception: a docs finding in a file
-no unit owns has nowhere to loop back to, so it goes to the docs unit, which is
-given that passage to own for the rest of the run, and you see it in the report
-as a `GAP:`. The last two units are fixed — a docs unit that runs
+From there you are not needed. It creates one worktree, runs `/vwf:doctor` and
+the plan's gate once as a preflight (a red line here is the branch's problem,
+not the plan's, and it says so rather than fixing it), then works wave by wave:
+every unit in a wave — all `edit` units, in a change plan — dispatched at once
+as its own subagent, a reviewer over the wave's diff with at most two rounds of
+findings, the gate again, and one commit per green unit. Each of those commits
+stages only what that unit owns, and unstages anything else that reached the
+index first, so one unit's work never rides another's commit. The two-round loop
+has one exception: a docs finding in a file no unit owns has nowhere to loop
+back to, so it goes to the docs unit, which is given that passage to own for the
+rest of the run, and you see it in the report as a `GAP:`. The last two units
+are fixed — a docs unit that runs
 [`/vwf:docs-sync`](../../plugins/vwf.md#vwfdocs-sync) over the branch delta, and
 a gates-and-bump unit. Relay's docs unit is what actually deletes the
 hand-written step from the contributing guide.
@@ -226,12 +227,13 @@ took — including every unit whose owned paths the run widened, with the findin
 that widened them (read these) — the review findings that survived the cap, the
 gate results, and the worktree path.
 
-If everything is green it archives the folder to `docs/plans/archived/`, marks
-every backlog item the plan covered `done`, and lands per the consent you
-recorded. Once the merge is in, one more commit on the integration branch sets
-the plan's row to `COMPLETE`, pointing at the archived folder, and drops every
-`COMPLETE` row that no waiting plan still requires — the queue only ever holds
-what is waiting, running, or still needed. Then it walks the after-landing
+If everything is green it marks every backlog item the plan covered `done`,
+archives the folder to `docs/plans/archived/` (a landing with a gap still open
+leaves the folder live for `/vwf:archive` instead), and lands per the consent
+you recorded. Once the merge is in, one more commit on the integration branch
+sets the plan's row to `COMPLETE`, pointing at the archived folder, and drops
+every `COMPLETE` row that no waiting plan still requires — the queue only ever
+holds what is waiting, running, or still needed. Then it walks the after-landing
 steps, stopping **once before each** to say what the step would do and wait for
 your yes — that yes covers that step and nothing else.
 
@@ -271,7 +273,7 @@ naming what it was before — gives its row in `docs/plans/index.md` the same
 folder still has open `done`, so nothing is left waiting on a plan that will not
 run. Nothing is deleted, and the next plan's recall still reads it.
 
-## What this pair will not do for you
+## What this will not do for you
 
 - **It will not read the blueprint**, so it will not notice that your "small
   refactor" changes a contract. That judgment is step 0 of this guide, and it is
@@ -288,7 +290,7 @@ run. Nothing is deleted, and the next plan's recall still reads it.
 
 - The command reference for both halves:
   [`/vwf:change-plan`](../../plugins/vwf.md#vwfchange-plan) and
-  [`/vwf:change-execute`](../../plugins/vwf.md#vwfchange-execute).
+  [`/vwf:execute`](../../plugins/vwf.md#vwfexecute).
 - If the change turned out to be a slice after all:
   [keep the blueprint true once the product is live](./production-feedback-loop.md).
 - If the planning session is going to outlast its window:

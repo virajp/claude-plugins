@@ -1,11 +1,18 @@
-# Execute Stages (used by /vwf:execute)
+# Execute Stages (used by /vwf:execute for a `code` unit)
 
 The stage pipeline, per-stage subagent contracts, and shared stage rules used by
 `/vwf:execute`. The invoking command owns the orchestration policy — when to
 pause, how many rounds, what happens at the end; this file defines what the
-stages **are**.
+stages **are**. It reads each unit's `Kind` from the folder's Units table: the
+stages and contracts below are what a `code` unit runs; an `edit` unit runs no
+stage — it is dispatched with its wave and judged by the wave review — and only
+the shared rules marked *every unit* reach it.
 
 ## Stages
+
+The stage table and the five dispatch contracts in this section apply to `code`
+units. `acceptance` and `ux` run once per plan, and only when the plan carries
+`covers:` — a plan without it skips both, journaled.
 
 | Stage      | What             | Model  | Subagent                      | Runs                                              |
 | ---------- | ---------------- | ------ | ----------------------------- | ------------------------------------------------- |
@@ -111,36 +118,41 @@ Per-stage dispatch contract:
 
 ## Shared stage rules
 
-- **Model enforcement** — dispatch each subagent on the model in the table,
-  unless `.config/vwf.yaml` `pipeline.models` overrides that stage's tier (per
-  the vwf-config asset). A downgrade from the shipped default is **stated in
-  that stage's report and at the final gate** — a weakened review is never
-  invisible. The stage itself always runs; config cannot skip it.
-- **Pipeline knobs** — the invoking command reads `.config/vwf.yaml` `pipeline`
-  for `coverage_target` (default 100; per-project override under
-  `projects.<name>.coverage_target`) and `review_round_cap` (default 4), and
-  reports configured-vs-default at the final gate.
-- **Terse subagent output** — a subagent's full reply lands in the
-  orchestrator's context. The pipeline agents return fixed contract blocks; any
-  *other* agent spawned (e.g. `Explore` for research) must be instructed to
+Each rule opens with its scope: *every unit* reaches a `code` and an `edit` unit
+alike (the wave review cites *Pipeline knobs* for its round cap and
+*Convergence guard* for its comparison); *`code` units with `covers:`* is
+blueprint-bound and never fires on a plan without one.
+
+- **Model enforcement** — *every unit.* Dispatch each subagent on the model in
+  the table, unless `.config/vwf.yaml` `pipeline.models` overrides that stage's
+  tier (per the vwf-config asset). A downgrade from the shipped default is
+  **stated in that stage's report and at the final gate** — a weakened review
+  is never invisible. The stage itself always runs; config cannot skip it.
+- **Pipeline knobs** — *every unit.* The invoking command reads
+  `.config/vwf.yaml` `pipeline` for `coverage_target` (default 100; per-project
+  override under `projects.<name>.coverage_target`) and `review_round_cap`
+  (default 4), and reports configured-vs-default at the final gate.
+- **Terse subagent output** — *every unit.* A subagent's full reply lands in
+  the orchestrator's context. The pipeline agents return fixed contract blocks;
+  any *other* agent spawned (e.g. `Explore` for research) must be instructed to
   return only conclusions and `file:line` pointers — never code excerpts, diffs,
   or full file/dir dumps. The orchestrator reads files itself when it needs
   their contents.
-- **Loop on findings** — review/security issues loop back to `code` with the
-  **tag**, re-commit via `/vwf:git-workflow`, then re-review. Send **both**
-  reviewers' tags in a single `code` dispatch and re-run both concurrently: one
-  merged fix pass keeps the two stages from rewriting each other's lines, and a
-  round counts once even though two reviewers ran. If the coder's recall of a
-  tag misses (mempalace down or the drawer absent), the orchestrator passes the
-  terse FINDINGS block it already holds from that reviewer's return — the loop
-  never stalls on a recall miss. The invoking command sets the gating and round
-  policy.
-- **Convergence guard** — a round cap bounds how long a loop runs; it cannot
-  tell *converging slowly* from *not converging at all*. Before dispatching each
-  new round, compare this round's findings with the previous round's — matching
-  on the `file:line` + rule in the terse FINDINGS block (the recall tag
-  identifies the round, not the finding). The loop is **not converging** when
-  either holds:
+- **Loop on findings** — *every unit.* Review/security issues loop back to
+  `code` with the **tag**, re-commit via `/vwf:git-workflow`, then re-review.
+  Send **both** reviewers' tags in a single `code` dispatch and re-run both
+  concurrently: one merged fix pass keeps the two stages from rewriting each
+  other's lines, and a round counts once even though two reviewers ran. If the
+  coder's recall of a tag misses (mempalace down or the drawer absent), the
+  orchestrator passes the terse FINDINGS block it already holds from that
+  reviewer's return — the loop never stalls on a recall miss. The invoking
+  command sets the gating and round policy.
+- **Convergence guard** — *every unit.* A round cap bounds how long a loop
+  runs; it cannot tell *converging slowly* from *not converging at all*. Before
+  dispatching each new round, compare this round's findings with the previous
+  round's — matching on the `file:line` + rule in the terse FINDINGS block (the
+  recall tag identifies the round, not the finding). The loop is **not
+  converging** when either holds:
   - the finding count did not **strictly decrease**;
   - a finding an earlier round resolved has **resurfaced**.
 
@@ -157,24 +169,26 @@ Per-stage dispatch contract:
   findings must be fixed and can never be downgraded to gaps, so a guard trip on
   one is not a gap at all — it is a decision the rules do not cover, and the
   invoking command pauses on it.
-- **Capture blueprint/plan gaps as they surface** — a *gap* (a hole in the
-  blueprint or plan, distinct from a code finding) reported by any stage is
-  never silently worked around. The subagent files the full gap to mempalace
-  room `gaps` and returns a terse pointer; the orchestrator mirrors that terse
-  line into the durable, mempalace-independent on-disk record **the moment it
-  surfaces** — the "Gaps surfaced during execution" section of the plan
-  folder's `index.md`. Gaps do not block the pipeline; they are reconciled at
-  cycle end.
-- **Never silently edit the blueprint** — flag drift and offer; do not rewrite
-  it. **Single exception:** the Reconcile step updates the `implementation:`
-  frontmatter key on the docs the plan's `covers:` lists — a state stamp the
-  pipeline owns, recording what the run landed. No other frontmatter key, and no
-  body or schema content, may be touched; anything else is drift to flag.
-- **The blueprint is the source of truth — code follows.** When landed code
-  contradicts the blueprint (not merely lags it), the pipeline never adjusts the
-  blueprint to match: the contradiction is surfaced (a finding when the plan
-  pinned it, a gap otherwise) and resolved by conforming the code or by the user
-  consciously amending the contract via `/vwf:blueprint`.
+- **Capture blueprint/plan gaps as they surface** — *`code` units with
+  `covers:`.* A *gap* (a hole in the blueprint or plan, distinct from a code
+  finding) reported by any stage is never silently worked around. The subagent
+  files the full gap to mempalace room `gaps` and returns a terse pointer; the
+  orchestrator mirrors that terse line into the durable, mempalace-independent
+  on-disk record **the moment it surfaces** — the "Gaps surfaced during
+  execution" section of the plan folder's `index.md`. Gaps do not block the
+  pipeline; they are reconciled at cycle end.
+- **Never silently edit the blueprint** — *`code` units with `covers:`.* Flag
+  drift and offer; do not rewrite it. **Single exception:** the Reconcile step
+  updates the `implementation:` frontmatter key on the docs the plan's
+  `covers:` lists — a state stamp the pipeline owns, recording what the run
+  landed. No other frontmatter key, and no body or schema content, may be
+  touched; anything else is drift to flag.
+- **The blueprint is the source of truth — code follows.** *`code` units with
+  `covers:`.* When landed code contradicts the blueprint (not merely lags it),
+  the pipeline never adjusts the blueprint to match: the contradiction is
+  surfaced (a finding when the plan pinned it, a gap otherwise) and resolved by
+  conforming the code or by the user consciously amending the contract via
+  `/vwf:blueprint`.
 
 ## Run log and its journal mirror (the record the gate renders)
 
@@ -183,33 +197,39 @@ and the primary write. A resumed run reads it to skip finished work, and the
 final gate **renders** it instead of recalling a long autonomous run from
 context, which is exactly the context most likely to have been compacted or
 handed off. Both uses fail the same way if the record is loose prose, so it
-takes a fixed shape: one row per node **execution**, in the table's columns
-`Wave | Unit | Model | Round | Outcome | Detail | Commit`.
+takes a fixed shape, in the table's columns
+`Wave | Unit | Model | Round | Outcome | Detail | Commit`: for a `code` unit,
+one row per node **execution**; for an `edit` unit, one row per unit
+**report** — the dispatch's return, and a re-dispatch's — with the wave review
+and every skip written the same way.
 
 | Field     | Value                                                                     |
 | --------- | ------------------------------------------------------------------------- |
 | `wave`    | the unit's wave from the folder; `—` for `acceptance`, `ux`, `reconcile`  |
 | `unit`    | `<id> <title>` — or `acceptance`, `ux`, `reconcile`                       |
-| `node`    | the stage that ran: `code`, `review`, `security`, `acceptance`, `ux`      |
+| `node`    | the node: `code`, `review`, `security`, `acceptance`, `ux`, or `edit`     |
 | `round`   | `1` on the first pass, incremented per fix loop                           |
 | `model`   | the tier it ran on, `(downgraded from <default>)` when config overrode it |
 | `outcome` | `pass` / `findings(<n>)` / `fail(<n>)` / `skipped` / `blocked`            |
 | `detail`  | terse — coverage vs target, per-criterion counts, finding tags            |
-| `commit`  | the commit ref for a `code` node; `—` otherwise                           |
+| `commit`  | the commit ref for a `code` node or a landed `edit` unit; `—` otherwise   |
 | `why`     | **required** when `outcome` is `skipped` or `blocked`                     |
 
 `node` and `why` ride inside the `Detail` column, since the table has no column
 of their own. The **journal** — mempalace room `runs`, drawer `<plan folder>` —
 is written from the same data, one record per row, and is the mirror: read only
-when the folder is unreachable.
+when the folder is unreachable. It is written for **every plan**, whatever its
+units' Kind.
 
 - **The record opens with the unit sequence** written at Setup — every unit
-  pending — and accumulates node rows beneath it. A unit is done when its
-  `code` node carries a commit and its reviewers' last round is clean.
-- **One row per execution, not per stage.** A unit whose findings looped
-  three times writes three `review` rows. The round count is then the number
-  of rows, and the convergence guard compares two rows — never two numbers
-  the orchestrator is holding in its head.
+  pending — and accumulates rows beneath it. A `code` unit is done when its
+  `code` node carries a commit and its reviewers' last round is clean; an
+  `edit` unit is done when its report is read and the wave review passed it.
+- **One row per execution, not per stage.** A `code` unit whose findings
+  looped three times writes three `review` rows; an `edit` unit dispatched
+  twice writes two `edit` rows. The round count is then the number of rows,
+  and the convergence guard compares two rows — never two numbers the
+  orchestrator is holding in its head.
 - **A skip is a row.** The conditional stages' "skipped explicitly, never
   silently" rule is discharged *by the row existing*, with its `why`. A stage
   with no row did not run, and the gate reports it that way.
@@ -228,6 +248,11 @@ when the folder is unreachable.
 
 ## Reconcile (end of run)
 
+Reconcile runs **before** the docs unit's wave, so that unit's delta is complete
+— the human docs are the docs unit's, not this step's. Every step below is
+gated on the plan's `covers:`: a plan without one skips Reconcile whole,
+journaled as a `skipped` row.
+
 1. **Architecture.** If the implementation introduced a topology change (new
    project, dependency, or capability), update the **registry block** in
    `docs/blueprint/registry.yaml` to match what was actually built — via
@@ -244,13 +269,7 @@ when the folder is unreachable.
    landed — e2e task, dev server, health endpoint, staging mode), update the
    `harness:` block in `.config/vwf.yaml` to match, per
    `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`.
-4. **Docs.** Delegate to /vwf:docs-sync with this run's change
-   set — it reconciles the repo's human docs (README, CLAUDE.md, any doc the
-   change contradicts) with what actually landed, editing in this worktree so
-   the sync rides the run's own commit flow — and relay its report line (what
-   was synced, or `docs: nothing contradicted`). Stale docs are more harmful
-   than no docs; this step is never skipped silently.
-5. **Implementation stamp.** For each blueprint doc in the plan's `covers:`
+4. **Implementation stamp.** For each blueprint doc in the plan's `covers:`
    frontmatter, set its `implementation:` key to what the run actually landed —
    the single carve-out from the never-silently-edit rule (state stamp only,
    never content):

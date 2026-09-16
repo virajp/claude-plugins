@@ -233,15 +233,16 @@ same plan folder — `/vwf:plan` for a blueprint slice, and beside that arc the
 ad-hoc `/vwf:change-plan` for work with no blueprint slice behind it (tooling,
 CI, docs, a refactor) — an `index.md` plus one file per unit, which each commits
 and pushes at hand-off with a row in `docs/plans/index.md`'s one plan table, so
-the fresh session can see it. `/vwf:execute <folder>` and
-`/vwf:change-execute <folder>` each run their kind of folder unattended in that
-fresh session, and `/vwf:execute next` or `/vwf:change-execute next` picks the
-runnable plan of its kind with the lowest `Priority` value from that table and
-runs it, asking before every after-landing step. Beside both sits
-`/vwf:backlog`, the sole writer of `docs/backlog.md` — the prioritised list of
-work that cannot be picked up now, which every planning and landing command
-calls to move an item. It names **no** technology — no language, no framework,
-no cloud — which is what lets the rest of this list exist. `vwf@virajp-plugins`
+the fresh session can see it. One executor runs both: `/vwf:execute <folder>`
+runs a folder of either kind unattended in that fresh session — a `code` unit
+through TDD, coverage and the review + security pass, an `edit` unit through the
+wave review — and `/vwf:execute next` picks the runnable plan with the lowest
+`Priority` value from that table, of either kind, and runs it, asking before
+every after-landing step. Beside both sits `/vwf:backlog`, the sole writer of
+`docs/backlog.md` — the prioritised list of work that cannot be picked up now,
+which every planning and landing command calls to move an item. It names **no**
+technology — no language, no framework, no cloud — which is what lets the rest
+of this list exist. `vwf@virajp-plugins`
 
 ### Tooling, design and delivery
 
