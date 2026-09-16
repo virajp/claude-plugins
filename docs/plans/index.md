@@ -1,18 +1,10 @@
 # Plans
 
 The product's plans as a set — the one file every vwf command reads to find a
-plan without walking the member repos. The first table lists the flat cycle
-plans `/vwf:plan` writes, each in the repo whose code it changes; the second is
-the queue of change-plan folders, which `/vwf:change-execute next` reads to pick
-the next runnable plan.
+plan without walking the member repos, and the queue `/vwf:execute next` and
+`/vwf:change-execute next` read to pick the next runnable plan of their kind.
 
-## Cycle plans
+## Plans
 
-| Plan | Target repo | Status |
-| ---- | ----------- | ------ |
-
-## Change plans
-
-| Folder                               | Plan                                                     | Priority | Status  | Requires | Backlog |
-| ------------------------------------ | -------------------------------------------------------- | -------- | ------- | -------- | ------- |
-| `docs/plans/2026-09-16-plan-folders` | One plan folder shape, one index, both executors read it | 10       | RUNNING | —        | —       |
+| Folder | Kind | Plan | Target repo | Priority | Status | Requires | Backlog |
+| ------ | ---- | ---- | ----------- | -------- | ------ | -------- | ------- |
