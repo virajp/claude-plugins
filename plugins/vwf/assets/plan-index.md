@@ -62,7 +62,7 @@ The three statuses:
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/vwf:plan`            | appends the row, `APPROVED`, in its hand-off commit                                                                                                             |
 | `/vwf:change-plan`     | appends the row, `APPROVED`, in its hand-off commit                                                                                                             |
-| `/vwf:execute`         | sets `RUNNING` at claim — before the worktree is cut; sets `COMPLETE` after the merge lands, pointing `Folder` at the archived path, then runs the **sweep**   |
+| `/vwf:execute`         | sets `RUNNING` at claim — before the worktree is cut; sets `COMPLETE` after the merge lands, leaving `Folder` as is — `/vwf:archive` re-points it — then runs the **sweep** |
 | `/vwf:change-execute`  | sets `RUNNING` at claim — before the worktree is cut; sets `COMPLETE` after the merge lands, pointing `Folder` at the archived path, then runs the **sweep**   |
 | `/vwf:archive`         | applies the landing edit by hand to one folder's row, in the archive's own commit; a folder with no row gets none                                              |
 
@@ -71,10 +71,12 @@ changes — and is archived there, under that repo's `docs/plans/archived/`; its
 row lives in the base, like every row. A change plan's folder and its row are
 both the base's.
 
-The **sweep**: after a row is set `COMPLETE`, remove every `COMPLETE` row that
-no `APPROVED` or `RUNNING` row's `Requires` names. A completed plan nobody
-still waits on leaves the queue; its folder under `docs/plans/archived/` is the
-record.
+The **sweep**: after a row is set `COMPLETE`, remove every `COMPLETE` row
+whose `Folder` already points under `docs/plans/archived/` and that no
+`APPROVED` or `RUNNING` row's `Requires` names. A completed plan nobody still
+waits on leaves the queue once its folder is archived; that folder is the
+record. A `COMPLETE` row whose `Folder` is a live path is never swept — it is
+how `/vwf:archive` finds the folder it has yet to move.
 
 **Every edit is a direct commit on the integration branch, made in the main
 checkout, never in a worktree.** The run branch never touches this file, so two
@@ -198,8 +200,14 @@ taken.
 3. `git pull --ff-only`.
 4. Edit the one row in the table:
    - **Claim** — the folder's row `Status` from `APPROVED` to `RUNNING`.
-   - **Completion** — the row `Status` to `COMPLETE`, its `Folder` cell to
-     `docs/plans/archived/<basename>`, then the sweep below.
+   - **Completion** — the row `Status` to `COMPLETE`, then the sweep below.
+     The `Folder` cell is re-pointed to `docs/plans/archived/<basename>` by
+     whichever skill moves the folder: the completion edit for a change plan,
+     which `/vwf:change-execute` archives at landing; `/vwf:archive` for a
+     cycle plan, whose folder `/vwf:execute` leaves in place in the target
+     repo. A `COMPLETE` row whose `Folder` is still a live path is one
+     `/vwf:archive` has yet to move, and the sweep leaves it alone until
+     `/vwf:archive`'s own landing edit re-points it.
 5. `git add -- docs/plans/index.md` — that file alone; nothing else the
    checkout carries rides this commit.
 6. `mise x -- git commit -m "docs: plan queue — <folder> running"` for a
@@ -236,11 +244,15 @@ without a conflict on it.
 
 ### The sweep
 
-Runs inside the completion edit, after the row is set `COMPLETE`. Remove every
-`COMPLETE` row whose `Folder` basename appears in no `APPROVED` or `RUNNING`
-row's `Requires` cell. A `COMPLETE` row that something still requires stays,
-its `Folder` pointing under `archived/`, until the last row that names it is
-itself complete and swept — a later completion sweeps it then.
+Runs inside the completion edit, after the row is set `COMPLETE`. A sweep
+candidate is a `COMPLETE` row whose `Folder` already points under
+`docs/plans/archived/`; remove each candidate whose `Folder` basename appears
+in no `APPROVED` or `RUNNING` row's `Requires` cell. A candidate that
+something still requires stays until the last row that names it is itself
+complete and swept — a later completion sweeps it then. A `COMPLETE` row whose
+`Folder` is a live path is not a candidate: it stays until `/vwf:archive`
+moves the folder and re-points the cell, after which that landing edit's own
+sweep may remove it.
 
 ## After landing
 
