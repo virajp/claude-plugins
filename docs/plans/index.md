@@ -6,5 +6,6 @@ plan without walking the member repos, and the queue `/vwf:execute next` and
 
 ## Plans
 
-| Folder | Kind | Plan | Target repo | Priority | Status | Requires | Backlog |
-| ------ | ---- | ---- | ----------- | -------- | ------ | -------- | ------- |
+| Folder                               | Kind   | Plan                                               | Target repo | Priority | Status   | Requires                | Backlog |
+| ------------------------------------ | ------ | -------------------------------------------------- | ----------- | -------- | -------- | ----------------------- | ------- |
+| `docs/plans/2026-09-16-one-executor` | change | One executor — /vwf:execute runs every plan folder | —           | 10       | APPROVED | 2026-09-16-plan-folders | —       |
