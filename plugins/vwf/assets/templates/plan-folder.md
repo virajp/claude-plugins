@@ -111,10 +111,11 @@ the unit that adds it — or "none". A unit adds nothing not listed here.>
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
 
-Kind is `code` or `edit`. `/vwf:plan` writes `code` on every unit;
-`/vwf:change-plan` writes `edit`. `/vwf:execute` runs a `code` unit through the
-per-unit pipeline and an `edit` unit under the wave review — the `edit` units
-of a wave are dispatched together, the `code` units one at a time.
+Kind is `code` or `edit`. `/vwf:plan` writes `code` on every slice unit and
+`edit` on the two fixed final units above; `/vwf:change-plan` writes `edit` on
+every unit. `/vwf:execute` runs a `code` unit through the per-unit pipeline and
+an `edit` unit under the wave review — the `edit` units of a wave are
+dispatched together, the `code` units one at a time.
 
 ## Shared-file rule
 
