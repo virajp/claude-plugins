@@ -9,10 +9,10 @@ stages **are**.
 
 | Stage      | What             | Model  | Subagent                      | Runs                                              |
 | ---------- | ---------------- | ------ | ----------------------------- | ------------------------------------------------- |
-| code       | Write Code (TDD) | opus   | `execute-coder`               | per step                                          |
-| review     | Code Review      | opus   | `execute-code-reviewer`       | per step, ‖ `security`, after `/code-review`      |
-| security   | Security Review  | opus   | `execute-security-reviewer`   | per step, ‖ `review`, after `/security-review`    |
-| acceptance | Acceptance (E2E) | sonnet | `execute-acceptance-verifier` | once, after all steps                             |
+| code       | Write Code (TDD) | opus   | `execute-coder`               | per unit                                          |
+| review     | Code Review      | opus   | `execute-code-reviewer`       | per unit, ‖ `security`, after `/code-review`      |
+| security   | Security Review  | opus   | `execute-security-reviewer`   | per unit, ‖ `review`, after `/security-review`    |
+| acceptance | Acceptance (E2E) | sonnet | `execute-acceptance-verifier` | once, after all units                             |
 | ux         | UX Conformance   | opus   | `execute-ux-reviewer`         | once, after `acceptance`                          |
 
 `review` and `security` are **independent read-only passes over the same diff**
@@ -26,12 +26,12 @@ handed its engine's output in its prompt. Merge their findings into **one**
 loop-back to `code`. Their gating is unchanged and stays per-stage (security
 and `[breaking-api]` always fixed; other review findings capped).
 
-`acceptance` and `ux` run **once per cycle**, after **all** steps, back to back
+`acceptance` and `ux` run **once per cycle**, after **all** units, back to back
 so one boot of the local stack serves both. Each is conditional — skipped
-**explicitly** (journaled and stated at the final gate), never silently:
+**explicitly** (a Run log row, and stated at the final gate), never silently:
 
-- `acceptance` — only when the plan's "Acceptance criteria (from blueprint)"
-  section carries criteria (skip on `none — no flow touched`).
+- `acceptance` — only when the folder's `index.md` "Acceptance criteria (from
+  blueprint)" section carries criteria (skip on `none — no flow touched`).
 - `ux` — only when the slice changes screens on a **screen platform** (`site`,
   `webapp`, `desktop`, `mobile`, `tablet`, `auto`). Every screen surface gets a real visual gate and a
   real accessibility gate, delivered by the repo's own `ux-gate` skill in
@@ -39,13 +39,14 @@ so one boot of the local stack serves both. Each is conditional — skipped
 
 Per-stage dispatch contract:
 
-- **code** — dispatch `execute-coder` with the plan (or the plan step), the
-  **blueprint slice** it implements, the **resolved stack** — both halves: the
-  `projects.<name>.stack` block from `.config/vwf.yaml` (the blueprint carries
-  none) **and the `conventions:` prose** Setup step 3 fetched for each of its
-  templates, which is what the code is actually written to — the project wing,
-  the **slice name** and **round number** (for its gap tags), and any recall
-  hits. It implements under
+- **code** — dispatch `execute-coder` with **the unit** — its `NN-<unit>.md`
+  file plus the index's assumed decisions and facts, never the whole folder —
+  the **blueprint slice** it implements, the **resolved stack** — both halves:
+  the `projects.<name>.stack` block from `.config/vwf.yaml` (the blueprint
+  carries none) **and the `conventions:` prose** Setup step 3 fetched for each
+  of its templates, which is what the code is actually written to — the project
+  wing, the **slice name** and **round number** (for its gap tags), and any
+  recall hits. It implements under
   strict TDD — RED → GREEN → REFACTOR for every change — and runs the suite to
   the coverage gate, returning the coverage report: `100%`, `<100%` with the
   uncovered `file:line` list, or `n/a` when the project has no coverage tooling.
@@ -58,12 +59,12 @@ Per-stage dispatch contract:
   **slice** and **round number** for its recall tag, plus the same **resolved
   stack** the coder got — block and `conventions:` prose both; a reviewer holding
   less than the coder cannot tell a convention breach from a style preference).
-  It reviews the code adversarially against the **plan, the blueprint,
-  `conventions.md`, and the resolved stack**. The dispatch prompt **ends with a
-  section headed `## Engine`** holding either the `/code-review` output
-  verbatim or the single line `ENGINE: unavailable — <reason>`; the reviewer
-  runs no engine itself and returns exactly one block. When the plan touches a
-  service's API surface, also pass the **living contract**
+  It reviews the code adversarially against the **unit and the index's rulings,
+  the blueprint, `conventions.md`, and the resolved stack**. The dispatch prompt
+  **ends with a section headed `## Engine`** holding either the `/code-review`
+  output verbatim or the single line `ENGINE: unavailable — <reason>`; the
+  reviewer runs no engine itself and returns exactly one block. When the plan
+  touches a service's API surface, also pass the **living contract**
   (`docs/blueprint/apis/<project>.openapi.yaml`) and the **latest released
   snapshot** (highest semver under `docs/blueprint/apis/released/`, when one
   exists) — the reviewer's released-contract compatibility dimension checks the
@@ -78,9 +79,10 @@ Per-stage dispatch contract:
   the same `## Engine` section the review contract states, holding the
   `/security-review` output. It files its full findings to mempalace (room
   `problems`) and returns the terse findings block plus a recall tag.
-- **acceptance** — dispatch `execute-acceptance-verifier` (pass the plan's
-  "Acceptance criteria (from blueprint)" section with each criterion's source
-  flow, the registry, the wing, and the **slice** and **round number**). It
+- **acceptance** — dispatch `execute-acceptance-verifier` (pass the folder's
+  `index.md` "Acceptance criteria (from blueprint)" section with each
+  criterion's source flow, the registry, the wing, and the **slice** and
+  **round number**). It
   independently maps each criterion to an E2E test (never trusting the coder's
   mapping), boots the repo's own E2E harness, runs it, and returns per-criterion
   `PASS` / `FAIL` / `NOT-COVERED` — a `FAIL` or `NOT-COVERED` loops back to
@@ -90,11 +92,11 @@ Per-stage dispatch contract:
   (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md`) — the **orchestrator decides**
   (mirror of the coverage policy): it is recorded as a gap and reported at the
   final gate. Never a silent pass. (With `plan`'s harness preflight this should
-  be rare — the plan injects bootstrap steps for capabilities the gates need, so
+  be rare — the plan injects bootstrap units for capabilities the gates need, so
   an `n/a` here usually means the preflight was skipped or the plan predates
   it.)
 - **ux** — dispatch `execute-ux-reviewer` (pass the changed screens from the
-  plan's screen steps, the `design-system.md` path, the owning flow docs'
+  plan's screen units, the `design-system.md` path, the owning flow docs'
   Screens section(s) (`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`),
   the project's registry entry (role and platforms), the wing, and the **slice** and **round
   number**). For any slice with a screen surface it renders the changed screens
@@ -160,8 +162,9 @@ Per-stage dispatch contract:
   never silently worked around. The subagent files the full gap to mempalace
   room `gaps` and returns a terse pointer; the orchestrator mirrors that terse
   line into the durable, mempalace-independent on-disk record **the moment it
-  surfaces** — the plan doc's "Gaps surfaced during execution" section. Gaps do
-  not block the pipeline; they are reconciled at cycle end.
+  surfaces** — the "Gaps surfaced during execution" section of the plan
+  folder's `index.md`. Gaps do not block the pipeline; they are reconciled at
+  cycle end.
 - **Never silently edit the blueprint** — flag drift and offer; do not rewrite
   it. **Single exception:** the Reconcile step updates the `implementation:`
   frontmatter key on the docs the plan's `covers:` lists — a state stamp the
@@ -173,18 +176,20 @@ Per-stage dispatch contract:
   pinned it, a gap otherwise) and resolved by conforming the code or by the user
   consciously amending the contract via `/vwf:blueprint`.
 
-## Run journal (the record the gate renders)
+## Run log and its journal mirror (the record the gate renders)
 
-The run journal — mempalace room `runs`, drawer `<plan>` — is the pipeline's
-checkpoint. A resumed run reads it to skip finished work, and the final gate
-**renders** it instead of recalling a long autonomous run from context, which is
-exactly the context most likely to have been compacted or handed off. Both uses
-fail the same way if the journal is loose prose, so its entries take a fixed
-shape: one record per node **execution**.
+The plan folder's **Run log** table in `index.md` is the pipeline's checkpoint,
+and the primary write. A resumed run reads it to skip finished work, and the
+final gate **renders** it instead of recalling a long autonomous run from
+context, which is exactly the context most likely to have been compacted or
+handed off. Both uses fail the same way if the record is loose prose, so it
+takes a fixed shape: one row per node **execution**, in the table's columns
+`Wave | Unit | Model | Round | Outcome | Detail | Commit`.
 
 | Field     | Value                                                                     |
 | --------- | ------------------------------------------------------------------------- |
-| `step`    | `<n>/<total> <title>` — or `acceptance`, `ux`, `reconcile`                |
+| `wave`    | the unit's wave from the folder; `—` for `acceptance`, `ux`, `reconcile`  |
+| `unit`    | `<id> <title>` — or `acceptance`, `ux`, `reconcile`                       |
 | `node`    | the stage that ran: `code`, `review`, `security`, `acceptance`, `ux`      |
 | `round`   | `1` on the first pass, incremented per fix loop                           |
 | `model`   | the tier it ran on, `(downgraded from <default>)` when config overrode it |
@@ -193,24 +198,32 @@ shape: one record per node **execution**.
 | `commit`  | the commit ref for a `code` node; `—` otherwise                           |
 | `why`     | **required** when `outcome` is `skipped` or `blocked`                     |
 
-- **The drawer opens with the step sequence** written at Setup — every step
-  pending — and accumulates node records beneath it. A step is done when its
+`node` and `why` ride inside the `Detail` column, since the table has no column
+of their own. The **journal** — mempalace room `runs`, drawer `<plan folder>` —
+is written from the same data, one record per row, and is the mirror: read only
+when the folder is unreachable.
+
+- **The record opens with the unit sequence** written at Setup — every unit
+  pending — and accumulates node rows beneath it. A unit is done when its
   `code` node carries a commit and its reviewers' last round is clean.
-- **One record per execution, not per stage.** A step whose findings looped
-  three times writes three `review` records. The round count is then the number
-  of records, and the convergence guard compares two records — never two numbers
+- **One row per execution, not per stage.** A unit whose findings looped
+  three times writes three `review` rows. The round count is then the number
+  of rows, and the convergence guard compares two rows — never two numbers
   the orchestrator is holding in its head.
-- **A skip is a record.** The conditional stages' "skipped explicitly, never
-  silently" rule is discharged *by the record existing*, with its `why`. A stage
-  with no record did not run, and the gate reports it that way.
+- **A skip is a row.** The conditional stages' "skipped explicitly, never
+  silently" rule is discharged *by the row existing*, with its `why`. A stage
+  with no row did not run, and the gate reports it that way.
 - **Downgrades are recorded where they happened** — on the node that ran under
   the weaker model, not summarized at the end.
-- **Write on return.** Append the record when the node returns, before
-  dispatching the next. This is the checkpoint: a record written late is a step
-  a resumed run repeats.
-- **When mempalace is down**, the journal degrades with every other memory
-  surface — but the final gate must then say the report was **reconstructed**,
-  not rendered. Whoever approves the merge needs to know which one they are
+- **Write on return.** Append the row to the folder when the node returns, then
+  mirror it to the journal, before dispatching the next. This is the
+  checkpoint: a row written late is a unit a resumed run repeats.
+- **A resume reads the folder first.** The journal is consulted only when the
+  folder cannot be read; when the two disagree, the worktree's commits win.
+- **When mempalace is down**, the journal is simply not written — the folder
+  still is, so the final gate renders as before. Only when the folder itself is
+  missing rows must the gate say the report was **reconstructed**, not
+  rendered. Whoever approves the merge needs to know which one they are
   reading.
 
 ## Reconcile (end of run)
@@ -241,9 +254,9 @@ shape: one record per node **execution**.
    frontmatter, set its `implementation:` key to what the run actually landed —
    the single carve-out from the never-silently-edit rule (state stamp only,
    never content):
-   - a **flow** is `complete` when every plan step covering it landed **and**
+   - a **flow** is `complete` when every unit covering it landed **and**
      its Acceptance criteria all returned `PASS` (stage run, none
-     `FAIL`/`NOT-COVERED`) **and** no open gap in the plan doc names it;
+     `FAIL`/`NOT-COVERED`) **and** no open gap in the plan folder names it;
    - an **entity** is `complete` when its blueprint delta fully landed with no
      open gap naming it (entities are verified through flows — no acceptance
      requirement of their own);
