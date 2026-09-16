@@ -49,20 +49,23 @@ exposure: dark # cycle plans only, optional — the slice ships behind a flag
 | Action                                            | Granted                      |
 | ------------------------------------------------- | ---------------------------- |
 | Merge to the integration branch and push on green | yes / no                     |
-| After landing: <step>                             | ask                          |
+| After landing: <step>                             | run / ask                    |
 | Release <project> publicly                        | none / patch / minor / major |
 | LSP <language>                                    | installed / proceed without  |
 
-<one `After landing:` row per step, in order; one `Release` row per project the
-units touch, each naming the command that bumps its version; one `LSP` row per
-language `/vwf:doctor` flagged without a server — cycle plans only, answered at
-`/vwf:plan`'s stack gate. That row is what `/vwf:execute`'s preflight reads
-instead of asking.>
+<one `After landing:` row per step, in order, carrying the mode the interview
+answered; one `Release` row per project the units touch, each naming the
+command that bumps its version; one `LSP` row per language `/vwf:doctor`
+flagged without a server — cycle plans only, answered at `/vwf:plan`'s stack
+gate. That row is what `/vwf:execute`'s preflight reads instead of asking.>
 
-**A release recorded here is intent, not authorisation.** Every after-landing
-step is an `ask` step: the run stops once, reports what it would do, and waits.
-Where a step stages something this session already loaded, it is picked up only
-by a **restarted** session.
+**The mode recorded here is the consent.** A `run` step runs on a green landing
+without a prompt; an `ask` step stops the run once before it, reports what it
+would do, and waits. The mode is the interview's answer (item 17), and a
+release step recorded `run` is authorised by the interview's release question
+(item 18) — a release recorded `ask`, or with no step at all, is intent, not
+authorisation. Where a step stages something this session already loaded, it is
+picked up only by a **restarted** session.
 
 ## Goal
 
@@ -101,21 +104,31 @@ the unit that adds it — or "none". A unit adds nothing not listed here.>
 
 ## Units
 
-| Id   | Wave   | Unit file              | Kind | Owns                                              | Depends on | Status  | Commit |
-| ---- | ------ | ---------------------- | ---- | ------------------------------------------------- | ---------- | ------- | ------ |
-| U1   | 1      | [01-x.md](01-x.md)     | code | `path/a`, `path/b`                                | —          | pending |        |
-| …    |        |                        |      |                                                   |            |         |        |
-| Un-1 | last   | `NN-docs.md`           | edit | the repo's docs (README, CLAUDE.md, `docs/**`, …) | all        | pending |        |
-| Un   | last+1 | `NN-gates-and-bump.md` | edit | version files, generated files                    | Un-1       | pending |        |
+| Id   | Wave   | Unit file              | Kind   | Owns                                              | Depends on        | Status  | Commit |
+| ---- | ------ | ---------------------- | ------ | ------------------------------------------------- | ----------------- | ------- | ------ |
+| U1   | 1      | [01-x.md](01-x.md)     | code   | `path/a`, `path/b`                                | —                 | pending |        |
+| …    |        |                        |        |                                                   |                   |         |        |
+| Un-2 | last-1 | `NN-review.md`         | review | —                                                 | <every code unit> | pending |        |
+| Un-1 | last   | `NN-docs.md`           | edit   | the repo's docs (README, CLAUDE.md, `docs/**`, …) | all               | pending |        |
+| Un   | last+1 | `NN-gates-and-bump.md` | edit   | version files, generated files                    | Un-1              | pending |        |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
 
-Kind is `code` or `edit`. `/vwf:plan` writes `code` on every slice unit and
-`edit` on the two fixed final units above; `/vwf:change-plan` writes `edit` on
-every unit. `/vwf:execute` runs a `code` unit through the per-unit pipeline and
-an `edit` unit under the wave review — the `edit` units of a wave are
-dispatched together, the `code` units one at a time.
+Kind is `code`, `edit` or `review`. `/vwf:execute` runs a `code` unit through
+TDD, the coverage gate and its commit — the `code` units one at a time; an
+`edit` unit under the wave review — the `edit` units of a wave dispatched
+together; and a `review` row through `/code-review` and `/security-review`
+followed by the two reviewers, once, over the **branch delta since the previous
+`review` row**, or since the branch base when it is the first. A `review` row
+owns nothing (`—`) and names in Depends on every unit it covers. `/vwf:plan`
+writes `code` on every slice unit, **one** `review` row after the last code
+unit and before the docs unit, and `edit` on the two fixed final units;
+`/vwf:change-plan` writes `edit` on every unit and a `review` row only when the
+change lands runnable code. A `review` row placed earlier than the last code
+unit is a planner decision — its reason is a row in the assumed-decisions
+table. Execute infers no row: a plan with `code` units no later `review` row
+covers is refused at preflight.
 
 ## Shared-file rule
 
@@ -141,11 +154,12 @@ only once a unit has landed belongs in that unit's **Verification**, not here.
 
 ## After landing
 
-| Step                          | Mode | Notes                               |
-| ----------------------------- | ---- | ----------------------------------- |
-| <the command or skill to run> | ask  | <what it does, and what it reaches> |
+| Step                          | Mode      | Notes                               |
+| ----------------------------- | --------- | ----------------------------------- |
+| <the command or skill to run> | run / ask | <what it does, and what it reaches> |
 
-<or "none". The run stops once and asks before every step.>
+<or "none". Mode is the interview's answer per step: `run` lands it on a green
+landing with no prompt; `ask` stops the run once before it.>
 
 ## Gates the orchestrator keeps
 
@@ -185,9 +199,10 @@ context to pick it up — or "none">
 ## Run log
 
 <written by the executor; empty at approval. `execute` appends one row per
-node for a `code` unit — a unit yields several — and one row per unit report
-for an `edit` unit, both as they return. This table is the record for both
-kinds; the mempalace journal is a mirror.>
+node for a `code` unit — a unit yields several — one row per round for a
+`review` row, and one row per unit report for an `edit` unit, each as they
+return. This table is the record for every kind; the mempalace journal is a
+mirror.>
 
 | Wave | Unit | Model | Round | Outcome | Detail | Commit |
 | ---- | ---- | ----- | ----- | ------- | ------ | ------ |
@@ -271,6 +286,30 @@ never paraphrased>
 by the unit. The type, and the scope where the repo's convention file lists any,
 comes from the file the survey read — `.config/git-conventional-commits.yaml` or
 the repo's equivalent — never a type that file does not allow.
+```
+
+## NN-review.md
+
+The `review` row's file is the header lines and a Scope section, nothing more —
+no Edits, no Test first, no Verification, no Commit. The row edits nothing and
+commits nothing; a finding it raises goes back to the coder of the unit whose
+Owns holds the file.
+
+```markdown
+# U<n> — Review: <what it covers>
+
+- **Wave:** <n>
+- **Depends on:** <the code units this row covers>
+- **Owns:** —
+- **Model:** <opus | a named tier | inherit>
+- **Kind:** review
+
+## Scope
+
+<the units this row covers, and the branch delta it reviews — since the
+previous review row, or since the branch base when it is the first. When the
+row sits earlier than the last code unit, the reason, as the assumed-decisions
+table records it — e.g. a boundary later units build on.>
 ```
 
 ## The two fixed final units

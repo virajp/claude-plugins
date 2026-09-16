@@ -151,14 +151,19 @@ that only holds once a particular unit has landed is **not** a wave-gate line �
 the gate runs before wave 1 and must be green then — it is that unit's
 *Verification*, repeated in the gates-and-bump unit's. A repo with no task
 runner and no harness stamp records `none` — say plainly, in that case, that the
-run has no automated gate and the wave review is the only check.
+run has no automated gate and the wave review is the only check. The wave
+review is the only review a change plan runs by default: a `Kind: review` row
+— the one that runs `/code-review` and `/security-review` — is written only
+when the change lands runnable code (item 10a), with its reason in the
+decisions table.
 
 **(b) After landing.** Propose the ordered steps that follow a consented
-landing, and confirm each. Every step has one mode, `ask`: the run stops once
-and asks before it — a local staging step and a release step alike. Nothing
-after the landing runs unprompted. Where a step stages something the session
-already loaded, say plainly that it is picked up only by a **restarted**
-session.
+landing, and confirm each. Each step gets one mode at the interview (item 17),
+`run` or `ask`, written to the After landing table: a `run` step runs on a
+green landing without a prompt — a local staging step and a release step alike
+— and an `ask` step stops the run once before it, reports what it would do,
+and waits. Where a step stages something the session already loaded, say
+plainly that it is picked up only by a **restarted** session.
 
 Empty is a valid answer. These become `index.md`'s **After landing** section.
 
@@ -166,12 +171,16 @@ Empty is a valid answer. These become `index.md`'s **After landing** section.
 user of that project see a difference, and how does that project ship — the
 command that bumps its version, the tag, the publish step. Record the answer as
 a `Release <project>` consent row reading `none`, `patch`, `minor` or `major`,
-together with the command that bumps it, and as the `ask` step in (b) that ships
-it. The gates-and-bump unit bumps with the command the plan names.
+together with the command that bumps it, and as the step in (b) that ships it.
+The gates-and-bump unit bumps with the command the plan names.
 
-**A release recorded here is intent, not authorisation.** Record every answer
-including "not this time" — a changed project with no public release recorded is
-a valid answer, and it means the change waits for the next one.
+This question doubles as the consent for a release step recorded `run`: a
+release the user names here and (b) records `run` is authorised, and the
+executor runs it on a green landing without asking again. A release recorded
+`ask`, or with no after-landing step, is **intent, not authorisation**. Record
+every answer including "not this time" — a changed project with no public
+release recorded is a valid answer, and it means the change waits for the next
+one.
 
 ### 5. Present the shape — the hard gate
 
@@ -218,7 +227,11 @@ Rules the plan must obey, learned from the plans that came before:
 - **Every unit is `Kind: edit`.** A change plan has no code unit in this
   release. `/vwf:execute` reads each unit's Kind from the Units table: it
   dispatches the `edit` units of a wave together, in one message, and judges
-  them by the wave review. The sections the template marks *cycle plans only*
+  them by the wave review — the only check, by default. A `Kind: review` row
+  (Owns `—`, Depends on the units it covers, a `NN-review.md` in the template's
+  shape) is added only when the change lands runnable code — shipped shell or
+  hook scripts, `scripts/`, `installer/` — and the reason is a row in the
+  decisions table. The sections the template marks *cycle plans only*
   — Slice, Acceptance criteria (from blueprint), Gaps surfaced during execution
   — and the `covers:` and `exposure:` frontmatter keys are omitted.
 - **A unit deletes with plain `rm`, never `git rm`.** A unit stages nothing, so
@@ -255,7 +268,10 @@ Re-read the folder with fresh eyes before handing it off, and fix inline:
 - every owned path appears in exactly one unit per wave, and every file in the
   shared-file rule has an owner
 - every gate delta from the interview is an owned edit somewhere
-- every unit's *Verification* names at least one gate line it must pass
+- a `review` row, when present, names its reason in the decisions table and
+  covers the units that land runnable code
+- every unit's *Verification* names at least one gate line it must pass — a
+  `review` row has none, by shape
 - every hit of the retired-name grep sits inside some unit's *Owns*, and every
   `## Commit` line's type is one the repo's convention file allows
 - every `requires:` plan exists and is not `DRAFT`

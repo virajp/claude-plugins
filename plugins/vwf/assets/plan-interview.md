@@ -79,6 +79,20 @@ reads instead of asking.
     failing test that defines done, and a harness bootstrap unit orders before
     the units whose verification depends on it. Waves are ordering only;
     `execute` runs units serially.
+
+10a. **Review placement.** Where the `Kind: review` row(s) go — the row that
+runs `/code-review` and `/security-review` plus the two reviewers over the
+branch delta since the previous row or the branch base. No code unit triggers a
+review by itself, and `execute` infers no row.
+*Cycle plans:* default is **one** row, after the last code unit and before the
+docs unit, covering every code unit. An earlier row is offered only with a
+reason — a boundary later units build on — and that reason is a row in the
+assumed-decisions table.
+*Change plans:* whether a row is needed at all — by default none, the wave
+review is the only check. One is written only when the change lands runnable
+code (shipped shell or hook scripts, `scripts/`, `installer/`), and the
+decisions table says why.
+
 11. **Model per unit.** Default is `opus`, written explicitly into every unit
     file's `Model:` line. A unit the user wants on a stronger or cheaper tier
     records that tier instead; `inherit` means the session's model.
@@ -111,15 +125,20 @@ reads instead of asking.
 16. **Landing.** May a fully green run merge to the integration branch and push
     without a further prompt? Default when unanswered is **no**.
 17. **After-landing steps.** Walk the steps the planner proposed one at a time;
-    each is confirmed as `ask` or dropped — the run stops once and asks before
-    every step it keeps. Where a step stages something this session already
-    loaded, say that a **restarted** session is what picks it up. No steps at
-    all is a valid answer.
+    each is confirmed as `run`, `ask` or dropped, and the mode is written to the
+    After landing table. `run` means a green landing runs the step with no
+    prompt — the consent given here is the consent; `ask` means the run stops
+    once before it, reports what it would do, and waits. Where a step stages
+    something this session already loaded, say that a **restarted** session is
+    what picks it up. No steps at all is a valid answer.
 18. **Release intent, per affected project.** Release to users or not, and
     `none` / `patch` / `minor` / `major`, together with the command that bumps
-    the version. Record every answer including "not this time". Note in the same
-    breath that this is **intent, not authorisation**: every release is an `ask`
-    step, and the executor stops once and asks before running it. A bump that
+    the version. Record every answer including "not this time". This question
+    doubles as the consent for a release step recorded `run` in item 17: a
+    release the user names here and records `run` is authorised, and the
+    executor runs it on a green landing without asking again. A release
+    recorded `ask`, or with no after-landing step, is **intent, not
+    authorisation** — the executor stops once and asks. A bump that
     would land on a component equal to 13 or 17 goes one further — `x.12.0`
     minor becomes `x.14.0`, `x.y.16` patch becomes `x.y.18`; those two integers
     are never issued on any version line, and the consent row names the version
