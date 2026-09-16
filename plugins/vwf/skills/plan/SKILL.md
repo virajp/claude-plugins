@@ -2,12 +2,13 @@
 name: plan
 description: Produce reviewable cycle plans as diffs for one slice of the
   blueprint (a flow or an entity). Reads desired (blueprint) vs actual (code),
-  writes only the delta to docs/plans/<date>-<time>-<slice>.md. Resolves the
-  slice's transitive dependency chain and plans each unimplemented dependency
-  as its own plan doc first, in order; routes any blueprint gap it uncovers
-  back through /vwf:blueprint before writing — so no cycle builds on a gap.
-  Requires the blueprint coverage stamp to read complete, and halts on any
-  /vwf:doctor blocking finding across the chain's projects.
+  writes only the delta as a plan folder, docs/plans/<date>-<HHMM>-<slice>/ (an
+  index.md plus one file per unit), that /vwf:execute runs unattended in a fresh
+  session. Resolves the slice's transitive dependency chain and plans each
+  unimplemented dependency as its own plan folder first, in order; routes any
+  blueprint gap it uncovers back through /vwf:blueprint before writing — so no
+  cycle builds on a gap. Requires the blueprint coverage stamp to read complete,
+  and halts on any /vwf:doctor blocking finding across the chain's projects.
 argument-hint: "[flow/<name> | entity/<name> | <name>]"
 model: opus
 
@@ -19,19 +20,20 @@ disable-model-invocation: false
 Produce reviewable cycle plans for a chosen slice of the blueprint. A plan is a
 **diff**: it reads the blueprint (desired state) and the actual code (actual
 state) for one slice and writes only the delta — what exists, what is missing,
-what changes, and in what order — as a reviewable artifact ordered for TDD.
+what changes, and in what order — as a **plan folder** ordered for TDD, one
+unit per step, that `/vwf:execute` runs unattended in a fresh session.
 
 A slice is never planned over unbuilt ground: the slice's **dependency chain**
 is resolved first, and every dependency with an unimplemented delta gets **its
-own plan doc**, planned and approved before the slice that stands on it — small,
-focused plans executed in order, instead of one plan swallowing its
+own plan folder**, planned and approved before the slice that stands on it —
+small, focused plans executed in order, instead of one plan swallowing its
 dependencies.
 
 You own the user conversation and the approval gates. Do **not** restate the
 blueprint; reference it.
 
 Adopt the **Senior Developer & Architect** persona: read code before forming
-opinions; order steps test-first; surface drift rather than silently resolving
+opinions; order units test-first; surface drift rather than silently resolving
 it. When a planning decision is genuinely open, elicit it following the
 **elicitation protocol** in `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`.
 
@@ -45,9 +47,10 @@ it. When a planning decision is genuinely open, elicit it following the
 | Entity (slice) | `docs/blueprint/entities/<entity>/` (`index.md` + schema)                           |
 | API contract   | `docs/blueprint/apis/<project>.openapi.yaml`                                        |
 | Released APIs  | `docs/blueprint/apis/released/`                                                     |
-| Plan           | `<target-repo>/docs/plans/<date>-<time>-<slice>.md` — **the repo whose code it changes** |
-| Plan index     | `docs/plans/index.md` (base repo) — its cycle-plan table, one row per plan: plan, target repo, status (`${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`) |
-| Plan template  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan.md`                                    |
+| Plan           | `<target-repo>/docs/plans/<date>-<HHMM>-<slice>/` — **the repo whose code it changes**; `index.md` plus one `NN-<unit>.md` per unit |
+| Plan index     | `docs/plans/index.md` (base repo) — its one table, one row per plan folder of either kind (`${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`) |
+| Plan template  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`                             |
+| Interview      | `${CLAUDE_PLUGIN_ROOT}/assets/plan-interview.md`                                    |
 | Backlog        | `docs/backlog.md` (base repo) — read at §2; marked planned via `/vwf:backlog`       |
 | Membership     | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                                        |
 
@@ -56,7 +59,7 @@ it. When a planning decision is genuinely open, elicit it following the
 | Reference                                    | When to read                                                                                                                    |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | [§3 conditional checks](references/delta-checks.md) | While working §3 — stamp-heal (empty delta), the released-contract check (a touched `apis/released/` snapshot), the harness preflight (always), the deferred-core-token check (a production-bound slice), and the visual-review advisory (a flow with platform files) |
-| [Writing the plan doc](references/plan-doc.md)      | At §7, once the delta is computed and every decision is settled — the doc's frontmatter, chain position, and acceptance-criteria transcription |
+| [Writing the plan folder](references/plan-doc.md)   | At §7, once the shape is approved — the folder's frontmatter, the chain position in Slice, the acceptance-criteria transcription, and the one-unit-per-step rule |
 
 ---
 
@@ -119,18 +122,18 @@ slice, is the **chain**.
   requested slice last — one numbered line each:
   `1. entity/customer — implementation: none`, `2. flow/checkout — requested`.
   The user may **approve the chain**, **trim an element** (a conscious hole —
-  record it under Risks / drift of every downstream plan in the chain), or
-  **abort**. A chain of length 1 (no unbuilt dependencies) proceeds without
+  record it as an assumed-decisions row of every downstream plan in the chain),
+  or **abort**. A chain of length 1 (no unbuilt dependencies) proceeds without
   ceremony.
 
 **Member gate.** Before the stack gate, resolve which repo each chain project
 lives in, per `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`. For every repo not on this
 machine, say what it is needed for and **offer a consent-gated clone**. On
 accept, clone and continue. **On decline, continue with that project excluded
-and record the blind spot** — name every uninspected project in the §8 approval
-presentation *and* in the plan doc's Risks section, so a reader knows the delta
-was computed without seeing them. A plan written against incomplete knowledge is
-useful; one that looks complete is not.
+and record the blind spot** — name every uninspected project in the §6 approval
+presentation *and* in the folder's *Facts the survey established*, so a reader
+knows the delta was computed without seeing them. A plan written against
+incomplete knowledge is useful; one that looks complete is not.
 
 **Stack gate.** Once the chain is approved, run `/vwf:doctor` scoped to every
 registry project the chain's elements map to **that is present on this machine**,
@@ -140,7 +143,7 @@ skipped rather than blocking: it is already recorded as a blind spot, and
 halting on a repo the user chose not to clone would override the consent they
 just gave. A stack no installed plugin
 defines (an **unknown** language, a `custom` template pin) is the finding this
-gate exists for: a plan's steps are sized against the selected templates'
+gate exists for: a plan's units are sized against the selected templates'
 conventions, and when there is no template there are no conventions — the plan
 would read as ordinary while resting on nothing
 (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`).
@@ -161,10 +164,14 @@ Three things about its placement and scope, each deliberate:
 - **Before §3, because §3 is the expensive part.** The surveyor is the largest
   inline read in the workflow; halting after it would spend exactly the work the
   gate exists to avoid.
-- **Blocking only.** Unlike `/vwf:execute` this gate does **not** ask about a
-  missing LSP server, and notes the rest rather than acting on it: planning
-  compiles nothing, so an absent toolchain is `execute`'s question to ask, not
-  this command's to ask twice.
+- **Blocking only.** Every other finding is noted, not acted on — planning
+  compiles nothing. The one exception is the **LSP question**: for each
+  language doctor reports without an LSP server, ask once (MCQ — *install now*
+  / *proceed without*) and hold the answer for the folder's Consent block as a
+  `LSP <language>: installed / proceed without` row (interview item 9a). An
+  absent toolchain is asked here, once, and recorded — `execute` reads the row
+  and never asks it again. A language doctor reports as *unavailable* (no LSP
+  ships in this marketplace) has nothing to install and is not asked; note it.
 
 This is a delegation, never a second copy of the rule — the finding kinds and
 their remedies live in `doctor` alone, so closing the menu further never means
@@ -177,7 +184,7 @@ slug, **once for the whole chain**, before §3. Its step 1 is where an
 `unresolved` axis halts, ahead of any fetch. The config block names the
 templates; only the plugin holds what they say, and the *how* questions this
 command settles — where a file goes, what a test looks like, which existing
-shape to extend — are answered by that prose. Sizing steps without it is
+shape to extend — are answered by that prose. Sizing units without it is
 guessing at a layout the repo already has an opinion about.
 
 **Under `topology: multi-repo`, pass the target repo with each fetch.** Each
@@ -187,14 +194,14 @@ whose `members:` entry lists that project, per the membership asset
 (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`); a project no member lists is
 the base's. The dedupe still holds, now per (repo, slug) rather than per slug:
 two members on the same slug are two materializations, and resolving one for
-both would size steps against prose the other repo does not contain.
+both would size units against prose the other repo does not contain.
 
 Once per chain rather than per element, because every element of a chain sits in
 the same few projects and the prose cannot change between them. Hold the result
 for §§3–7.
 
 Then run §§3–8 **once per chain element, in order** — each element produces its
-own plan doc behind its own approval gate.
+own plan folder behind its own approval gate.
 
 ### 3. Read desired vs actual & compute the delta
 
@@ -219,7 +226,7 @@ it, and it is what lets a reuse candidate be recognised as one), the relevant
 
 The resolved **stack conventions prose** stays here rather than going with it.
 The surveyor answers *what exists*; the prose answers *where a new thing
-belongs*, which is this command's question when it sizes the steps. Sending it
+belongs*, which is this command's question when it sizes the units. Sending it
 along would grow the workflow's largest read to settle a question the surveyor is
 not asked. It surveys **graph-first** per
 `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md` (falling back silently to direct
@@ -237,21 +244,23 @@ A `CONTRADICTIONS:` entry is never resolved in the plan — route it per §4, li
 any blueprint gap. `HARNESS:` seeds the preflight below.
 
 Apply the **minimalism decision ladder** in
-`${CLAUDE_PLUGIN_ROOT}/assets/minimalism.md` as you size each step: include a
-step only if a blueprint requirement needs it (rung 1), and prefer reusing
+`${CLAUDE_PLUGIN_ROOT}/assets/minimalism.md` as you size each unit: include a
+unit only if a blueprint requirement needs it (rung 1), and prefer reusing
 existing code, the stdlib, a native platform feature, or an installed dependency
 over new code or a new dependency (rungs 2–5). The plan carries no speculative
-steps and no unrequested abstraction or configurability — never at the cost of a
-safety guardrail. Every **new third-party dependency** a step introduces is
-named explicitly in that step (package + what it's for): the plan's approval
-gate is where the user consents to new dependencies, and execute never installs
-one the plan doesn't name.
+units and no unrequested abstraction or configurability — never at the cost of a
+safety guardrail. Every **new third-party dependency** a unit introduces is
+named explicitly in that unit and in the folder's *New dependencies* section
+(package + what it's for): the plan's approval gate is where the user consents
+to new dependencies, and execute never installs one the plan doesn't name.
 
 **Then run the five checks** in
 [§3 conditional checks](references/delta-checks.md) — stamp-heal, the
 released-contract check, the harness preflight, the deferred-core-token check,
 and the visual-review advisory. The harness preflight fires on every element;
-the other four only when their condition holds.
+the other four only when their condition holds. The harness preflight's
+injected bootstrap step is an injected **unit**, ordered before the units whose
+verification depends on it.
 
 ### 4. Route blueprint gaps back; flag drift
 
@@ -259,36 +268,45 @@ the other four only when their condition holds.
 When diffing or elicitation exposes a hole in the *contract* — a behaviour the
 blueprint never pinned down, a missing relationship, flow, or acceptance
 criterion, a schema property or API operation the element needs that no doc
-specifies — do **not** settle it inside the plan and do not park it under Risks:
-pause, present the gap, and offer `/vwf:blueprint <flow|entity>` (or
-`/vwf:architecture` for a registry hole). After that pass lands (and re-stamps
-coverage), re-derive the affected part of the diff (§3) against the updated
-contract. A plan written over a known blueprint gap defeats execute's autonomy:
-execute would hit the same hole mid-run and could only document it as a gap,
-where the contract should already have answered it.
+specifies — do **not** settle it inside the plan and do not park it as an
+assumed decision: pause, present the gap, and offer
+`/vwf:blueprint <flow|entity>` (or `/vwf:architecture` for a registry hole).
+After that pass lands (and re-stamps coverage), re-derive the affected part of
+the diff (§3) against the updated contract. A plan written over a known
+blueprint gap defeats execute's autonomy: execute would hit the same hole
+mid-run and could only document it as a gap, where the contract should already
+have answered it.
 
 **Drift: the blueprint is the source of truth — code follows.** When the code
 **contradicts** the blueprint (not merely lags it), never adjust the blueprint
-to match the code silently. Either the plan carries steps that conform the code,
+to match the code silently. Either the plan carries units that conform the code,
 or the user consciously amends the contract via `/vwf:blueprint` (which demotes
-the doc's `implementation:` stamp). List every contradiction under Risks / drift
-with the conforming step (or the amendment decision) that resolves it. If the
-blueprint implies a surface the registry/code lacks (e.g. a background job with
-no worker project), surface that there too.
+the doc's `implementation:` stamp). Every contradiction is a row of the
+assumed-decisions table — the contradiction as the decision, the conforming unit
+(or the amendment decision) in the *Unit* column. If the blueprint implies a
+surface the registry/code lacks (e.g. a background job with no worker project),
+surface that there too.
 
 **Consume execution-surfaced gaps.** If a prior plan for this slice exists —
-**the most recent un-archived plan** (filenames are timestamped; take the latest
-one still under `docs/plans/`, not `archived/`) — read its "Gaps surfaced during
-execution" section, and per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` recall room
-`gaps` for the slice. When this plan is a reconcile loop-back from
-`/vwf:execute`, closing those plan holes is the point of the pass — fold each
-into the ordered steps (against the now-updated blueprint) rather than
-re-deriving blind. Skip the recall silently if mempalace is unavailable.
+**the most recent un-archived plan folder** (folder names are timestamped; take
+the latest one still under `docs/plans/`, not `archived/`) — read the "Gaps
+surfaced during execution" section of its `index.md`, and per
+`${CLAUDE_PLUGIN_ROOT}/assets/memory.md` recall room `gaps` for the slice. When
+this plan is a reconcile loop-back from `/vwf:execute`, closing those plan
+holes is the point of the pass — fold each into the units (against the
+now-updated blueprint) rather than re-deriving blind. Skip the recall silently
+if mempalace is unavailable.
 
-### 5. Elicit open decisions
+### 5. Interview
+
+Work through `${CLAUDE_PLUGIN_ROOT}/assets/plan-interview.md` top to bottom,
+one item per turn, following its *Cycle plans:* notes — the blueprint and the
+surveyor answer most items before they are reached, and an answered item is
+confirmed in a sentence, never re-asked. **Never batch** — one decision per
+turn, and never assume one.
 
 The plan is a diff — most of it is mechanical. But where the blueprint
-underdetermines **how** to land a change (step ordering with competing valid
+underdetermines **how** to land a change (unit ordering with competing valid
 sequences, how to resolve a drift §4 surfaced, an ambiguous delta with more than
 one reasonable implementation path), elicit it per the protocol — one question
 at a time, MCQ + "Other", proposing 2-3 approaches with a recommendation. Apply
@@ -296,35 +314,72 @@ the decisions-vs-mechanics filter: if exactly one idiomatic path exists given
 the blueprint, conventions, and code, don't ask — proceed. Never guess — and
 apply the **what-vs-how test**: a question about what the product should *do*
 (behaviour, contract, data shape, acceptance) is a blueprint gap — route it per
-§4, never settle it here. An approved plan carries no unresolved decisions;
-Risks / drift holds risks and noted drift, not open questions execute would trip
-on.
+§4, never settle it here. An approved plan carries no unresolved decisions.
 
-### 6. Setup (git-workflow)
+Every ruling lands in the assumed-decisions table with the alternative it
+rejected and the unit it binds; anything raised that belongs to a later plan
+goes to *Parked* before the next question. The **priority** (item 12) is stated
+as a fact, never asked: `10 + max` over the `Priority` column of every
+unarchived `requires:` row in the base repo's `docs/plans/index.md`, or `10`
+when the plan requires none of them — say which row it stands on. Items 16–18
+produce the Consent block: the landing answer, the after-landing `ask` steps,
+and the release intent per project the units touch; the LSP rows come from §2.
 
-Everything above (§§2–5) reads the blueprint and code from the **current
-checkout** and is read-only — no worktree needed yet. Now, just before the first
-write, invoke `/vwf:git-workflow` to ensure an isolated worktree. All git
-actions in this command go through /vwf:git-workflow. Keep the worktree **local** —
-never push remotely here.
+### 6. Present the shape — the approval gate (per chain element)
 
-### 7. Write the plan
+**Nothing is written to disk before this gate.** Present the folder's sections
+per `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`, scaled to their
+weight and confirmed one at a time: the goal and the Slice (chain position);
+the assumed-decisions table, every ruling with its rejected alternative and
+every drift row; the unit map — id, wave, owns, depends-on, the failing test
+each names; every new dependency (package, what for, which unit); the wave
+gate, the after-landing steps, the gates the orchestrator keeps, and the
+derived priority with its arithmetic; the consent block, LSP rows included; the
+acceptance criteria the units cover; the blind spots and the visual-review
+advisory, when any; the parked list. Then wait for explicit approval. Offer:
 
-Write `docs/plans/<date>-<time>-<slice>.md` from the plan template, following
-[Writing the plan doc](references/plan-doc.md) — the OKF frontmatter (`covers:`
-and `requires:` in particular), the chain position, TDD-ordered steps, and the
-verbatim acceptance-criteria transcription.
+- **Approve & plan next** (mid-chain) — write the folder (§7), hand it off
+  (§8), then proceed to the next chain element (§3).
+- **Approve only** — write the folder (§7), hand it off (§8), and stop
+  (mid-chain: the rest of the chain stays unplanned; say so).
+- **Reject** — then either **Revise** (apply feedback to the section named,
+  re-present, looping until approved or abandoned) or **Abandon** (nothing is
+  on disk; leave a one-line note of what was decided so the next attempt can
+  recall it — and abandon the chain's downstream elements too, since they stand
+  on it).
+
+**Persist.** On approve, per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the
+approved plan's durable "how to land it" decisions and any deliberately deferred
+options to mempalace (room `planning`) — skip what the folder captures verbatim,
+and skip silently if mempalace is unavailable.
+
+### 7. Write the folder
+
+Write `docs/plans/<date>-<HHMM>-<slice>/` from
+`${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`, following
+[Writing the plan folder](references/plan-doc.md): `index.md` — the frontmatter
+(`type: vwf-plan`, `covers:`, `requires:`, `backlog:`), the Status block at
+`DRAFT`, the Consent block, the cycle-only sections (Slice, Acceptance criteria
+(from blueprint), Gaps surfaced during execution), the assumed decisions, the
+units table — plus one `NN-<unit>.md` per unit. Every unit is `Kind: code`, on
+Model `opus` unless the interview recorded another tier, with its Wave from
+dependency order, its Owns the files it touches, its Depends-on, its **Test
+first** line, its ruling quoted from `index.md`, its Verification (the gate
+lines) and its Commit line. Harness bootstrap units and the expand / backfill /
+contract units of `delta-checks.md` are units like any other, ordered before
+what depends on them. The two fixed final units — docs, gates-and-bump — are
+written as the template says.
 
 **`backlog:`.** The frontmatter also carries a `backlog:` list — the ids of the
 `docs/backlog.md` items §2's recall matched to this element. Write it empty when
 the slice came from nowhere in the backlog; an empty or absent list means the
-plan covers no backlog item, and §9 then calls nothing.
+plan covers no backlog item, and §8 then calls nothing.
 
-**Dark exposure.** A plan doc may declare `exposure: dark` for its slice — the
+**Dark exposure.** A plan may declare `exposure: dark` for its slice — the
 slice ships behind a **release flag** in the runtime-settings document (per the
 runtime-settings foundation: same schema/cache/audit path, no new
 infrastructure). Declaring it injects the flag key into the plan — **name,
-owner, removal date** — and an explicit **flag-removal step**, so the flag's
+owner, removal date** — and an explicit **flag-removal unit**, so the flag's
 retirement is planned work, never silently accumulated debt.
 
 **Into the repo whose code this plan changes.** In a `repo` or `monorepo`
@@ -332,51 +387,90 @@ topology that is the one checkout and the rule costs nothing. In `multi-repo` it
 is the member holding the chain element's project — resolve it from `members:`
 per `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`. A chain spanning two members already
 produces one plan per element, so each simply lands in its own repo; a plan is
-never split across repos.
-
-Then **append a row to the cycle-plan table of `docs/plans/index.md` in the
-base repo** — the plan's filename, its target repo, and its status
-(`${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`; the file's other table is the
-change-plan queue, which this skill never edits). That index is the only place
-the product's plans are visible as a set, and it is what `/vwf:archive` and
-`/vwf:execute` read to find a plan without walking every member.
+never split across repos. The folder is written **in place on the current
+branch** — this skill cuts no worktree; the fresh session that runs the plan
+cuts its own.
 
 **The dependency gate does not move.** `execute` halts until every `requires:`
 plan's `covers:` docs read `implementation: complete`, and those stamps live in
 the blueprint — in the base repo. So the chain resolves from the base alone even
 when the upstream plans sit in members that are not cloned here.
 
-### 8. Approval gate (per chain element)
+**Self-review** before handing off, fixing inline: every assumed-decisions row
+is quoted in the unit file its *Unit* column names; every owned path appears in
+exactly one unit per wave; every acceptance criterion is covered by some unit's
+E2E test; every unit's Verification names a gate line; every `requires:` folder
+exists; the derived priority matches its arithmetic; the launch line names this
+folder.
 
-Present the plan and wait for explicit approval. Offer:
+### 8. Hand off
 
-- **Approve & plan next** (mid-chain) — commit this plan per §9, proceed to the
-  next chain element (§3).
-- **Approve & execute** (the last element) — commit, then hand into
-  `/vwf:execute` **for the first unexecuted plan of the chain** (execute
-  enforces `requires:` order and offers each next plan as the previous one
-  lands).
-- **Approve only** — commit and stop (mid-chain: the rest of the chain stays
-  unplanned; say so).
-- **Reject** — then either **Revise** (apply feedback, re-present, looping until
-  approved or abandoned) or **Abandon** (leave the plan doc **uncommitted**,
-  state its exact path, offer via `/vwf:git-workflow` to remove it and the
-  worktree — and abandon the chain's downstream elements too, since they stand
-  on it). Never let a plan doc silently linger.
+In this order.
 
-**Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the approved
-plan's durable "how to land it" decisions and any deliberately deferred options
-to mempalace (room `planning`) — skip what the plan doc captures verbatim, and
-skip silently if mempalace is unavailable.
+1. **Set the status** to `APPROVED` with the date; until then it is `DRAFT` and
+   `/vwf:execute` refuses it.
+2. **Add the index row.** Append one row to the base repo's
+   `docs/plans/index.md`, per `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`:
+   `Folder` the plan folder path relative to its repo root, `Kind` `cycle`,
+   `Plan` the title, `Target repo` the member whose code it changes under
+   `multi-repo` or `—`, `Priority` the integer §5 derived, `Status`
+   `APPROVED`, `Requires` the basenames of its `requires:` entries or `—`,
+   `Backlog` its `backlog:` ids or `—`. When the file does not exist yet, write
+   its whole shape from the asset first, then append. This is the one edit this
+   skill makes to that file — every other row is `/vwf:execute`'s,
+   `/vwf:change-execute`'s or `/vwf:archive`'s.
+3. **Mark the backlog items planned.** When the frontmatter's `backlog:` list
+   names ids, invoke `/vwf:backlog planned <ids> <folder>` — that skill edits
+   the file; this one never does.
+4. **Commit and push the folder** through `vwf:git-workflow`, invoked with
+   these declared preferences, so it asks nothing:
+   - **work in place on the current branch, no worktree** — its Step 1 "if
+     declined" path. Say why: the fresh session's worktree is cut from the
+     integration branch, so it can see the folder only once the folder is
+     committed there; a folder still untracked at hand-off gets swept into some
+     later wave's commit. The index row rides the same commit for the same
+     reason — it is a direct commit on the branch, never a worktree's
+   - **stage exactly the plan folder**, `docs/plans/index.md`, plus
+     `docs/backlog.md` when step 3 changed it, and nothing else
+   - **commit** with type `docs` and the message
+     `docs: plan — <slice> — approved, awaiting execution`
+   - **push to the branch's upstream** after the commit, setting the upstream
+     when the branch has none. The approve in §6 is the explicit request
+     git-workflow's push rule wants; do not ask again
 
-### 9. Commit (git-workflow)
+   Under `multi-repo` the folder and the index are two repos: two commits,
+   the member's (the folder) first, the base's (the index row, and the backlog
+   edit) last, both pushed.
 
-After each approval, commit that plan via `/vwf:git-workflow`. Use a bare
-`docs:` message — no scope — with the subject naming the plan, e.g.
-`docs: plan — <slice>`. Keep the worktree **local**. Do not run raw git here.
+Then end with exactly this, and nothing after it:
 
-Then, when the plan's `backlog:` names ids, invoke
-`/vwf:backlog planned <ids> <plan path>` and commit its edit through
-`/vwf:git-workflow` with the same bare `docs:` shape. **Never edit
-`docs/backlog.md` here** — `/vwf:backlog` is the only skill that writes it; this
-one just tells it which items are now planned and where.
+```text
+Run in a fresh session:
+
+/vwf:execute docs/plans/<date>-<HHMM>-<slice>
+
+or let the queue pick it, by priority:
+
+/vwf:execute next
+```
+
+Do not start executing. The fresh session is the point — this session's context
+is the survey and the interview, and the run should carry none of it.
+
+**Mid-chain**, after the push, continue to the next element (§3) — each element
+is its own folder, its own row, its own commit; the launch line is printed once
+per folder and the chain's first unexecuted plan is the one to run first.
+
+## What this skill never does
+
+- Writes anything to disk before the gate in §6 is approved
+- Executes a unit, edits a file the plan names, or bumps a version
+- Asks two things in one turn, or asks what the blueprint, the surveyor or the
+  repo already answers
+- Settles a *what* question — behaviour, contract, data shape, acceptance — that
+  belongs to `/vwf:blueprint`
+- Records a release or landing consent it did not explicitly ask for
+- Pushes anywhere but the branch it stands on, and merges nothing
+- Edits `docs/backlog.md` itself — it calls `/vwf:backlog`, which owns the file
+- Edits any row of `docs/plans/index.md` but the one it appends — statuses are
+  `/vwf:execute`'s and `/vwf:archive`'s

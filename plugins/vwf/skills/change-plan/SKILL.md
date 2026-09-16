@@ -42,10 +42,10 @@ each subagent reads. Nothing lives in conversation.
 **Recall first.** Before asking anything, read what is already decided:
 
 - `docs/memory/decisions/` — any doc touching the trees the request names
-- the last plan in `docs/plans/archived/` that touched the same tree — folder or
-  flat file, since `/vwf:plan`'s cycle plans are flat files in the same
-  directory — reading its *Out of scope*, its *Parked* list and its *Run log*:
-  the request is often one of those items coming due, and a gap the last run
+- the last plan in `docs/plans/archived/` that touched the same tree — a folder
+  or, before 2026-09-16, a single `.md` file, the shape cycle plans had until
+  then — reading its *Out of scope*, its *Parked* list and its *Run log*: the
+  request is often one of those items coming due, and a gap the last run
   surfaced is a fact
 - the base repo's `docs/backlog.md` — the product's backlog, the prioritised
   list of work that cannot be picked up now, which `/vwf:backlog` maintains and
@@ -54,13 +54,14 @@ each subagent reads. Nothing lives in conversation.
   file of its own. The request is often one of its items; note every id it
   covers, so the plan's frontmatter can carry them. Reading the file is this
   skill's business; editing it never is — `/vwf:backlog` is its sole writer
-- the base repo's `docs/plans/index.md` — the plan index, whose change-plan
-  table is where the active change plans, their statuses and their priorities
-  live; `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md` is the shape. Like the
-  backlog it is the base's file alone, read from a member repo and never
-  duplicated there. The `Priority` column of the rows a new plan will require
-  is what §5's derived priority stands on. Reading the file is this skill's
-  business; the only edit it ever makes is the one row §8 appends
+- the base repo's `docs/plans/index.md` — the plan index, the one table where
+  every active plan of either kind, cycle and change, its status and its
+  priority live; `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md` is the shape.
+  Like the backlog it is the base's file alone, read from a member repo and
+  never duplicated there. The `Priority` column of the rows a new plan will
+  require — rows of either kind — is what §5's derived priority stands on.
+  Reading the file is this skill's business; the only edit it ever makes is the
+  one row §8 appends
 - the mempalace rooms `planning`, `decisions` and `gaps` for this repo's wing,
   when the server is up; **skip silently** when it is not. Resolve the wing and
   apply the two-store rules from `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` — do
@@ -118,10 +119,12 @@ first thing the next plan's recall reads.
 
 ### 3. Interview, one question at a time
 
-Work through [the checklist](references/interview.md) top to bottom. Each item
-is one `AskUserQuestion` call, or a prose question when the answer is
-open-ended. **Never batch** — one decision per turn, and never assume one. An
-item the survey already answered is confirmed in a sentence, not re-asked.
+Work through the checklist in `${CLAUDE_PLUGIN_ROOT}/assets/plan-interview.md`
+top to bottom — it is shared with `/vwf:plan`; where an item carries a
+*Change plans:* note, follow that note. Each item is one `AskUserQuestion`
+call, or a prose question when the answer is open-ended. **Never batch** — one
+decision per turn, and never assume one. An item the survey already answered is
+confirmed in a sentence, not re-asked.
 
 Ask only what has **more than one reasonable answer** given the repo. Where that
 holds, **propose two or three approaches with their trade-offs**, lead with your
@@ -197,19 +200,26 @@ what was decided, so the next attempt can recall it. Only approve continues.
 
 ### 6. Write the folder
 
-`docs/plans/<YYYY-MM-DD>-<kebab-name>/` from
-[the template](references/plan-template.md): `index.md` plus one `NN-<unit>.md`
-per unit. The template's sections are all required; the frontmatter, the consent
-block, the unit table, the wave gate, the after-landing list and the run log
-have a fixed shape because `/vwf:change-execute` parses and rewrites them. The
-frontmatter's `backlog:` list names the ids recalled in §1 that this plan
-covers, or is empty.
+`docs/plans/<YYYY-MM-DD>-<kebab-name>/` from the template in
+`${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md` — the one folder shape
+both planners write: `index.md` plus one `NN-<unit>.md` per unit. Every section
+the template does not mark *cycle plans only* is required; the frontmatter and
+the **Status**, **Consent**, **Units**, **Wave gate**, **After landing** and
+**Run log** blocks have a fixed shape because `/vwf:change-execute` parses and
+rewrites them. The frontmatter's `type:` is `vwf-change-plan`, and its
+`backlog:` list names the ids recalled in §1 that this plan covers, or is
+empty.
 
 Rules the plan must obey, learned from the plans that came before:
 
 - **One unit, one subagent, one commit.** A unit is stateless and inherits no
   context; its file carries its ruling quoted from index.md, its owned paths,
   its verification, and its commit line.
+- **Every unit is `Kind: edit`.** A change plan has no code unit in this
+  release — `/vwf:change-execute` runs its wave review on every unit and
+  switches on nothing. The sections the template marks *cycle plans only* —
+  Slice, Acceptance criteria (from blueprint), Gaps surfaced during execution
+  — and the `covers:` and `exposure:` frontmatter keys are omitted.
 - **A unit deletes with plain `rm`, never `git rm`.** A unit stages nothing, so
   no unit's deletion can ride another unit's commit.
 - **Shared-file rule.** Any file two units would write is owned by exactly one,
@@ -258,15 +268,15 @@ In this order.
 
 1. **Set the status** to `APPROVED` with the date; until then it is `DRAFT` and
    `/vwf:change-execute` refuses it.
-2. **Add the index row.** Append one row to the change-plan table of the base
-   repo's `docs/plans/index.md`, per
+2. **Add the index row.** Append one row to the plan index — the one table in
+   the base repo's `docs/plans/index.md`, per
    `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`: `Folder` the plan folder path
-   relative to the repo root, `Plan` the title, `Priority` the integer §5
-   derived, `Status` `APPROVED`, `Requires` the basenames of its `requires:`
-   entries or `—`, `Backlog` its `backlog:` ids or `—`. When the file has no
-   change-plan table yet, write the file's whole shape from the asset first,
-   then append. This is the one edit this skill makes to that file — every
-   other row is `/vwf:change-execute`'s or `/vwf:archive`'s.
+   relative to the repo root, `Kind` `change`, `Plan` the title, `Target repo`
+   `—`, `Priority` the integer §5 derived, `Status` `APPROVED`, `Requires` the
+   basenames of its `requires:` entries or `—`, `Backlog` its `backlog:` ids or
+   `—`. When the file has no table yet, write the file's whole shape from the
+   asset first, then append. This is the one edit this skill makes to that file
+   — every other row is an executor's or `/vwf:archive`'s.
 3. **Mark the backlog items planned.** When the frontmatter's `backlog:` list
    names ids, invoke `/vwf:backlog planned <ids> <folder>` — that skill edits
    the file; this one never does.
@@ -310,5 +320,5 @@ is the survey and the interview, and the run should carry none of it.
 - Writes a plan whose unit prompts depend on this conversation
 - Pushes anywhere but the branch it stands on, and merges nothing
 - Edits `docs/backlog.md` itself — it calls `/vwf:backlog`, which owns the file
-- Edits any row of `docs/plans/index.md` but the one it appends — statuses are
-  `/vwf:change-execute`'s and `/vwf:archive`'s
+- Edits any row of the plan index, `docs/plans/index.md`, but the one it
+  appends — statuses are the executors' and `/vwf:archive`'s

@@ -1,19 +1,37 @@
 # The plan folder template
 
-`docs/plans/<YYYY-MM-DD>-<kebab-name>/` holds `index.md` and one `NN-<unit>.md`
-per unit. Every section below is required. The frontmatter and the **Status**,
-**Consent**, **Units**, **Wave gate**, **After landing** and **Run log** blocks
-have a fixed shape: `/vwf:change-execute` parses them and rewrites the status
-column and the run log, so keep the headings and the column order exactly.
+One folder shape for both planners. `/vwf:plan` writes it for a blueprint slice
+and `/vwf:change-plan` for ad-hoc work; `/vwf:execute` and
+`/vwf:change-execute` parse it and rewrite the status column and the run log.
+The folder holds `index.md` and one `NN-<unit>.md` per unit, and is named
+
+- `docs/plans/<YYYY-MM-DD>-<HHMM>-<slice>/` for a **cycle plan** — the time
+  component stays so two plans for one slice on one day coexist;
+- `docs/plans/<YYYY-MM-DD>-<kebab-name>/` for a **change plan**.
+
+Every section below is required unless marked *cycle plans only*. The
+frontmatter and the **Status**, **Consent**, **Units**, **Wave gate**, **After
+landing** and **Run log** blocks have a fixed shape the executors parse, so keep
+the headings and the column order exactly. The **Status** block is the one
+status a plan has — there is no `status:` key in the frontmatter.
+
+<!-- Where the retired cycle template's sections went: "Current state (actual)"
+     and "Target state (per blueprint)" fold into Facts the survey established;
+     "Risks / drift" folds into Assumed decisions, one row per contradiction
+     naming the conforming unit; "Out of scope for this cycle" is Out of scope;
+     "Delta — ordered steps" is the Units table plus one NN-<unit>.md each. -->
 
 ## index.md
 
 ```markdown
 ---
-type: vwf-change-plan
+type: vwf-plan | vwf-change-plan
 title: <title>
 requires: [] # earlier plan folders this one stands on, e.g. docs/plans/2026-09-01-x
 backlog: [] # ids from docs/backlog.md this plan covers, or empty
+covers: [] # cycle plans only — the blueprint doc(s) this plan implements; the
+           # list the implementation: stamp is written to
+exposure: dark # cycle plans only, optional — the slice ships behind a flag
 ---
 
 # Plan — <title> (<date>)
@@ -33,9 +51,13 @@ backlog: [] # ids from docs/backlog.md this plan covers, or empty
 | Merge to the integration branch and push on green | yes / no                     |
 | After landing: <step>                             | ask                          |
 | Release <project> publicly                        | none / patch / minor / major |
+| LSP <language>                                    | installed / proceed without  |
 
 <one `After landing:` row per step, in order; one `Release` row per project the
-units touch, each naming the command that bumps its version.>
+units touch, each naming the command that bumps its version; one `LSP` row per
+language `/vwf:doctor` flagged without a server — cycle plans only, answered at
+`/vwf:plan`'s stack gate. That row is what `/vwf:execute`'s preflight reads
+instead of asking.>
 
 **A release recorded here is intent, not authorisation.** Every after-landing
 step is an `ask` step: the run stops once, reports what it would do, and waits.
@@ -47,16 +69,30 @@ by a **restarted** session.
 <one paragraph: what is true after this lands. Then the framing that produced
 the plan, and any reversal of a standing decision, named as one.>
 
+## Slice <!-- cycle plans only -->
+
+<which flow or entity this plan covers, with a link to its blueprint doc, and
+the plan's chain position when it is part of a dependency chain — e.g. "Plan 2
+of 3 — requires `<folder>`; required by `<folder>`". A standalone plan states
+"no dependency chain". Under `exposure: dark`, the flag's name, owner and
+removal date, and the unit that removes it.>
+
 ## Facts the survey established
 
-<what recall and the Explore pass found, so no unit re-derives it: counts,
-paths, the gates that cover the trees, the docs that describe today's behaviour,
-the dependencies each tree already has>
+<what recall and the survey found, so no unit re-derives it: counts, paths, the
+gates that cover the trees, the docs that describe today's behaviour, the
+dependencies each tree already has. For a cycle plan: what already exists in
+the target repo against what the blueprint says should — reference blueprint
+sections, do not restate them.>
 
 ## Assumed decisions — confirm or override at review
 
 | # | Decision | Ruling | Rejected | Unit |
 | - | -------- | ------ | -------- | ---- |
+
+<for a cycle plan, every code-contradicts-blueprint drift is a row here: the
+contradiction as the decision, the conforming unit in the last column — the
+blueprint is never adjusted to match code silently.>
 
 ## New dependencies
 
@@ -65,15 +101,20 @@ the unit that adds it — or "none". A unit adds nothing not listed here.>
 
 ## Units
 
-| Id   | Wave   | Unit file              | Owns                                              | Depends on | Status  | Commit |
-| ---- | ------ | ---------------------- | ------------------------------------------------- | ---------- | ------- | ------ |
-| U1   | 1      | [01-x.md](01-x.md)     | `path/a`, `path/b`                                | —          | pending |        |
-| …    |        |                        |                                                   |            |         |        |
-| Un-1 | last   | `NN-docs.md`           | the repo's docs (README, CLAUDE.md, `docs/**`, …) | all        | pending |        |
-| Un   | last+1 | `NN-gates-and-bump.md` | version files, generated files                    | Un-1       | pending |        |
+| Id   | Wave   | Unit file              | Kind | Owns                                              | Depends on | Status  | Commit |
+| ---- | ------ | ---------------------- | ---- | ------------------------------------------------- | ---------- | ------- | ------ |
+| U1   | 1      | [01-x.md](01-x.md)     | code | `path/a`, `path/b`                                | —          | pending |        |
+| …    |        |                        |      |                                                   |            |         |        |
+| Un-1 | last   | `NN-docs.md`           | edit | the repo's docs (README, CLAUDE.md, `docs/**`, …) | all        | pending |        |
+| Un   | last+1 | `NN-gates-and-bump.md` | edit | version files, generated files                    | Un-1       | pending |        |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
+
+Kind is `code` or `edit`. `/vwf:plan` writes `code` on every unit;
+`/vwf:change-plan` writes `edit`. No executor switches on it yet — `execute`
+runs its per-unit pipeline on every unit and `change-execute` its wave review;
+the switch is plan 2's.
 
 ## Shared-file rule
 
@@ -86,7 +127,9 @@ Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 
 ## Waves
 
-<one line per wave: which units, why they are safe together>
+<one line per wave: which units, why they are safe together. A cycle plan's
+waves are ordering only — `execute` runs its units serially in dependency
+order.>
 
 ## Wave gate
 
@@ -140,17 +183,50 @@ context to pick it up — or "none">
 
 ## Run log
 
-<written by /vwf:change-execute; empty at approval>
+<written by the executor; empty at approval. `execute` appends one row per
+node as it returns — a unit yields several; `change-execute` one row per unit
+report. This table is the record for both kinds; the mempalace journal is a
+mirror.>
 
 | Wave | Unit | Model | Round | Outcome | Detail | Commit |
 | ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+
+## Acceptance criteria (from blueprint) <!-- cycle plans only -->
+
+<copied verbatim from the Acceptance blocks of the flow docs this slice touches
+— the contract `execute`'s acceptance stage verifies end to end. The units must
+include the E2E tests that cover each criterion (the coder implements them; the
+acceptance verifier maps and runs them). Write "none — no flow touched" when
+the slice maps to no flow.>
+
+- [ ] Given <...>, when <...>, then <...> — from
+      [<flow name>](../../blueprint/flows/<project>/<NNN>-<flow>/index.md)
+
+## Gaps surfaced during execution <!-- cycle plans only -->
+
+<appended by `execute` as blueprint/plan holes surface — empty at approval. One
+terse line per gap: stage that found it · what the blueprint/plan under- or
+mis-specified · the assumption execution proceeded on. The durable,
+mempalace-independent copy; full detail lives in the mempalace `gaps` room.
+Reconciled into the blueprint (/vwf:blueprint) and a re-plan (/vwf:plan) at
+cycle end.>
+
+- …
 
 ## Launch
 
 This folder is already committed and pushed on the branch it was planned on, so
 the fresh session's worktree — cut from the integration branch — can see it.
 
-Run in a fresh session:
+Run in a fresh session — a cycle plan:
+
+/vwf:execute docs/plans/<date>-<HHMM>-<slice>
+
+or let the queue pick it, by priority:
+
+/vwf:execute next
+
+A change plan:
 
 /vwf:change-execute docs/plans/<date>-<name>
 
@@ -168,6 +244,8 @@ or let the queue pick it, by priority:
 - **Depends on:** <ids or —>
 - **Owns:** <explicit paths>
 - **Model:** <opus | a named tier | inherit>
+- **Kind:** <code | edit>
+- **Test first:** <code units only — the failing test that defines done>
 - **Read first:** every owned file, top to bottom, before editing.
 - **Lazy-load:** <files to open only if an edit needs them>
 
@@ -208,7 +286,8 @@ the repo's equivalent — never a type that file does not allow.
 (`${CLAUDE_PLUGIN_ROOT}/skills/docs-sync/SKILL.md`) and applies its findings plus
 every `DOCS FALSIFIED:` line the earlier units returned and the list from
 index.md's survey facts. Docs ship with the change, so this unit is never
-optional. A confirmed reversal from the interview also lands here, as a
+optional — a cycle plan's docs unit runs `/vwf:docs-sync` the same way. A
+confirmed reversal from the interview also lands here, as a
 `docs/memory/decisions/<date>-<slug>.md` per
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`.
 
@@ -218,7 +297,10 @@ passes the full wave gate. A bump that would land on a component equal to 13 or
 17 goes one further — `x.12.0` minor becomes `x.14.0`, `x.y.16` patch becomes
 `x.y.18`; those two integers are never issued on any version line, and the
 consent block names the version the bump actually reaches. Its report is the
-run's final gate.
+run's final gate. For a cycle plan it is also the unit that writes the
+`implementation:` stamps on the `covers:` docs — but only when the plan's
+executor delegates that; today `execute` writes them itself at Reconcile, so
+see the executor.
 
 It does **not** run the after-landing steps — those are the orchestrator's,
 after the landing, because an after-landing step mutates the machine rather than

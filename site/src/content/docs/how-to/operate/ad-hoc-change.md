@@ -16,7 +16,9 @@ folder and queues it in `docs/plans/index.md`, and
 **[`/vwf:change-execute`](../../plugins/vwf.md#vwfchange-execute)** runs it
 unattended in a fresh session — by name, or `next` to take the queue's pick.
 They sit beside the chain rather than in it, and they read neither the blueprint
-nor the architecture registry.
+nor the architecture registry. The folder they write and the index they queue in
+are the same ones `/vwf:plan` and `/vwf:execute` use; what differs is what runs
+over a unit.
 
 The worked example picks up **Relay**, the team task manager from
 [start a product from an empty repo](../greenfield/single-repo.md), some months
@@ -42,8 +44,9 @@ One question decides it: **does the blueprint say anything about this?**
   moves no behavior, a tree the blueprint never modelled — is a **change**.
 
 When it is genuinely both — a CI change that also alters an API's published
-version, say — plan the slice and let the change ride along in its cycle plan.
-Two folders for one landing is how you get two merge conflicts.
+version, say — plan the slice and let the change ride along in its cycle plan;
+both pairs write the same folder shape, so nothing is lost by folding it in. Two
+folders for one landing is how you get two merge conflicts.
 
 You do not always have to make that call yourself.
 [`/vwf:feedback`](../../plugins/vwf.md#vwffeedback) asks the same question of
@@ -140,17 +143,18 @@ except a one-line note the next attempt can recall. Approving writes
 `docs/plans/2026-09-08-ci-release-notes/` — an `index.md` plus one file per
 unit.
 
-Then it finishes the hand-off for you. A row for the plan is appended to the
-change-plan table of `docs/plans/index.md` — the queue — reading `APPROVED`,
-with a **priority** it works out rather than asks: `10` for a plan that requires
-nothing still active, `10` more than the highest `Priority` value among the
-plans it requires otherwise, so a chain runs in order. Any backlog item the plan
-covers is marked `planned` with this folder as its path, and the folder, the
-index and the backlog are **committed and pushed on the branch you are on** — in
-place, no worktree, nothing merged. That is not housekeeping: the next step runs
-in a worktree cut from the integration branch, and it can only see a folder that
-is already committed there. A folder left untracked ends up swept into some
-later commit of the run instead. Only then does it print the launch line.
+Then it finishes the hand-off for you. A row for the plan is appended to the one
+table of `docs/plans/index.md` — the queue every plan of either kind sits in,
+this one with `Kind` `change` — reading `APPROVED`, with a **priority** it works
+out rather than asks: `10` for a plan that requires nothing still active, `10`
+more than the highest `Priority` value among the plans it requires otherwise, so
+a chain runs in order. Any backlog item the plan covers is marked `planned` with
+this folder as its path, and the folder, the index and the backlog are
+**committed and pushed on the branch you are on** — in place, no worktree,
+nothing merged. That is not housekeeping: the next step runs in a worktree cut
+from the integration branch, and it can only see a folder that is already
+committed there. A folder left untracked ends up swept into some later commit of
+the run instead. Only then does it print the launch line.
 
 It does not start executing, and that is deliberate.
 
@@ -168,11 +172,12 @@ or, when you would rather the queue decide:
 /vwf:change-execute next
 ```
 
-`next` reads the change-plan table and takes the `APPROVED` row of lowest
-priority whose requirements have all landed, tells you which it took and why the
-others were passed over, and runs it as if you had named it. With Relay's one
-plan in the queue the two lines do the same thing; with several, `next` is how a
-chain runs in order without you typing each folder.
+`next` reads that table, keeps the `change` rows (`/vwf:execute next` takes the
+`cycle` rows the same way), and takes the `APPROVED` row of lowest priority
+whose requirements have all landed, tells you which it took and why the others
+were passed over, and runs it as if you had named it. With Relay's one plan in
+the queue the two lines do the same thing; with several, `next` is how a chain
+runs in order without you typing each folder.
 
 The fresh session is the whole point: the planning session's context was a
 survey and an interview, and none of it should ride along into the run. The

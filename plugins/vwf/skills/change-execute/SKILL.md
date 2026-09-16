@@ -7,10 +7,10 @@ description: Run an approved /vwf:change-plan folder autonomously in a fresh
   the final report renders, docs reconciled and versions bumped by the fixed
   final units, then land per the plan's recorded consent, mark the row
   complete, and stop once before every after-landing step. "next" reads that
-  index alone and picks the runnable plan of highest priority, safely beside
-  another session's run. Blocks only what a missing ruling blocks and resumes
-  from its last green unit. Invoke as /vwf:change-execute <plan-folder> or
-  /vwf:change-execute next in a session that has done nothing else.
+  index alone and picks the runnable change plan of highest priority, safely
+  beside another session's run. Blocks only what a missing ruling blocks and
+  resumes from its last green unit. Invoke as /vwf:change-execute <plan-folder>
+  or /vwf:change-execute next in a session that has done nothing else.
 argument-hint: "<plan-folder, its index.md, or next>"
 model: opus
 
@@ -30,50 +30,63 @@ Run it in a session that has done nothing else. It cannot check that, so the
 plan's launch line says it and this skill trusts it.
 
 There are two ways in. A **named folder** runs that plan. **`next`** reads the
-change-plan table of the base repo's `docs/plans/index.md` — the queue
-`/vwf:change-plan` adds a row to at every hand-off — and picks the runnable plan
-of highest priority, then runs it exactly as if it had been named. Both take the
-same procedure from §2 on; §1 is where they differ. The index is what makes
-`next` safe while another session is already running a plan: a run claims its
-row with a pushed commit before it cuts a worktree, and a claim that loses the
-push re-reads and re-picks, per [the plan queue](references/queue.md).
+plan index — the one table in the base repo's `docs/plans/index.md`, the queue
+`/vwf:change-plan` adds a row to at every hand-off — filtered to the rows whose
+`Kind` is `change`, and picks the runnable change plan of highest priority,
+then runs it exactly as if it had been named. Both take the same procedure from
+§2 on; §1 is where they differ. The index is what makes `next` safe while
+another session is already running a plan: a run claims its row with a pushed
+commit before it cuts a worktree, and a claim that loses the push re-reads and
+re-picks, per *The procedure* in `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`
+— the contract both executors share, read in full before §1.
 
 ## References
 
-| Reference                                     | When to read                                                                    |
-| --------------------------------------------- | ------------------------------------------------------------------------------- |
-| [The plan queue](references/queue.md)         | §1 and §7 — reading the index at the tip, the claim, the landing row, the sweep |
-| [The wave review](references/wave-review.md)  | §4 step 3 — the reviewer prompt, the finding loop, the guard                    |
-| [Blocking and resume](references/blocking.md) | §5 — what a failure skips, what it blocks, how a re-run picks up                |
+| Reference                                     | When to read                                                     |
+| --------------------------------------------- | ---------------------------------------------------------------- |
+| [The wave review](references/wave-review.md)  | §4 step 3 — the reviewer prompt, the finding loop, the guard     |
+| [Blocking and resume](references/blocking.md) | §5 — what a failure skips, what it blocks, how a re-run picks up |
 
 ## Procedure
 
 ### 1. Resolve and refuse early
 
-**`next`.** When `$ARGUMENTS` is `next`, run *Reading the queue* in
-[the plan queue](references/queue.md). On a pick, print the folder taken and its
-`Priority`, and every other `APPROVED` row with why it was not taken — a lower
-priority, or the requirement it waits on. Ask no confirmation: the session is
-meant to run unattended. Then continue below as if that folder had been named.
-Nothing runnable → stop with the message that procedure prints: each `APPROVED`
-row and what it waits on, or that the table is absent or empty.
+**`next`.** When `$ARGUMENTS` is `next`, run *Reading the queue* under *The
+procedure* in `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`, with the executor's
+kind set to `change`: the candidates are the `APPROVED` rows whose `Kind` cell
+reads `change`; a `cycle` row is never picked here — `/vwf:execute next` picks
+those. On a pick, print the folder taken and its `Priority`, and every other
+`APPROVED` change row with why it was not taken — a lower priority, or the
+requirement it waits on. Ask no confirmation: the session is meant to run
+unattended. Then continue below as if that folder had been named. Nothing
+runnable → stop with the message that procedure prints: each `APPROVED` change
+row and what it waits on, or that the table is absent or holds no change row.
 
 Resolve `$ARGUMENTS` to `<folder>/index.md`. Read the frontmatter — including
 its `backlog:` list, the ids §7 hands to `/vwf:backlog`, empty or absent when
 the plan covers no backlog item — and the **Status**, **Consent**, **Units** and
-**Run log** blocks. Then read the folder's **row** in the change-plan table of
-the base repo's `docs/plans/index.md`, at the integration branch's tip, the way
-[the plan queue](references/queue.md) reads it. Then:
+**Run log** blocks. Then read the folder's **row** in the plan index — the base
+repo's `docs/plans/index.md`, at the integration branch's tip, the way
+*Reading the queue* in `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md` reads it.
+Then:
 
+- Frontmatter `type: vwf-plan` → stop: "a cycle plan; run
+  `/vwf:execute <folder>`". This skill runs `type: vwf-change-plan` folders
+  only.
 - Status `DRAFT` → stop: "not approved; run /vwf:change-plan to finish it".
 - Status `COMPLETE` → stop: nothing to do.
-- Any `requires:` entry that does not resolve to a `COMPLETE` row, or to a
-  folder under `docs/plans/archived/` with no row — the queue rule, matched by
-  basename → stop, name it: "run /vwf:change-execute <that folder> first" when
-  it is `APPROVED`, "another session is running <that folder>; wait for it to
-  land" when it is `RUNNING`, or "<entry> is neither in the plan index nor
-  archived; fix the `requires:` line by hand" when it resolves to nothing. No
-  override.
+- Any `requires:` entry that is not **satisfied**, per *Resolution* in
+  `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`, matched by basename → stop,
+  name it. A `change` entry is satisfied by a `COMPLETE` row, or by a folder
+  under `docs/plans/archived/` with no row: say "run /vwf:change-execute <that
+  folder> first" when its row is `APPROVED`, "another session is running <that
+  folder>; wait for it to land" when it is `RUNNING`. A `cycle` entry is
+  satisfied when every doc in that plan's `covers:` reads
+  `implementation: complete` in the base repo's blueprint — its row is not the
+  test: say "run /vwf:execute <that folder> first; <doc> is not
+  `implementation: complete`". An entry that resolves to nothing — no row, no
+  folder → "<entry> is neither in the plan index nor archived; fix the
+  `requires:` line by hand". No override.
 - Status `APPROVED` with no row at all → stop: "not in the plan index; re-run
   `/vwf:change-plan`'s hand-off, or add the row by hand".
 - Status `APPROVED` with a `RUNNING` row → a claim another session holds. Stop
@@ -96,17 +109,18 @@ not swept into a wave commit: stop and say to run `/vwf:change-plan` again on
 it, or to commit and push it by hand, then re-launch.
 
 **Claim the row.** Before the worktree is cut, and before the folder's own
-Status is touched, run *Writing a row* in [the plan queue](references/queue.md)
-with the row set to `RUNNING` — the commit
-`docs: plan queue — <folder> running`, pushed on the integration branch. This
-is the **one** edit the run makes in the main checkout, and it is made there on
-purpose: the pushed row is what another session's `next` reads, so a claim that
-lived only on the run branch would claim nothing; and the run branch must never
-carry `docs/plans/index.md`, or two plans landing in parallel would conflict on
-it. A rejected push is handled inside that procedure — a clean rebase pushes
-again; a conflict on the same row means the plan was claimed first, and the run
-re-picks (`next`) or stops (a named folder). A resume whose row already reads
-`RUNNING` skips this step.
+Status is touched, run *Writing a row — the claim, and the completion* in
+`${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md` with the row set to `RUNNING` —
+the commit `docs: plan queue — <folder> running`, pushed on the integration
+branch. The row's `Status` cell is the only cell that changes; `Kind` and
+`Target repo` are never edited. This is the **one** edit the run makes in the
+main checkout, and it is made there on purpose: the pushed row is what another
+session's `next` reads, so a claim that lived only on the run branch would
+claim nothing; and the run branch must never carry `docs/plans/index.md`, or
+two plans landing in parallel would conflict on it. A rejected push is handled
+inside that procedure — a clean rebase pushes again; a conflict on the same row
+means the plan was claimed first, and the run re-picks (`next`) or stops (a
+named folder). A resume whose row already reads `RUNNING` skips this step.
 
 Set the folder's status to `RUNNING` with the timestamp. From there the plan
 folder is edited in the worktree only and committed with each wave, so a
@@ -141,6 +155,11 @@ as such — never start a run that would be blamed for a failure it inherited.
 Record the green preflight as the first run-log row (`wave 0`, `preflight`).
 
 ### 4. Waves
+
+The Units table carries a `Kind` column — `code` or `edit`, per
+`${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`; this executor reads it
+and ignores it in this release — every unit, whatever its Kind, runs the wave
+review below.
 
 For each wave in index.md order, skipping units already `green` on a resume:
 
@@ -233,13 +252,15 @@ commit. Then read the Consent block:
 - **Merge to the integration branch and push on green: yes** →
   `vwf:git-workflow` step 4, *merge, push & clean up*. A merge conflict is a
   hard halt: abort, keep the worktree, set `BLOCKED`, report the files. When
-  step 4 returns from the merge and push, run *Writing a row* in
-  [the plan queue](references/queue.md) with the row set to `COMPLETE`, its
-  `Folder` cell pointing at `docs/plans/archived/<basename>`, and the sweep —
-  every `COMPLETE` row no `APPROVED` or `RUNNING` row's `Requires` still names
-  is removed. That is the commit `docs: plan queue — <folder> complete`, on the
-  integration branch, in the main checkout; a rejected push re-applies the same
-  row until it lands, and never re-picks.
+  step 4 returns from the merge and push, run *Writing a row — the claim, and
+  the completion* in `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md` with the row
+  set to `COMPLETE`, its `Folder` cell pointing at
+  `docs/plans/archived/<basename>` — `Kind` and `Target repo` untouched — and
+  *The sweep* from the same asset: every `COMPLETE` row no `APPROVED` or
+  `RUNNING` row's `Requires` still names is removed, whatever its kind. That is
+  the commit `docs: plan queue — <folder> complete`, on the integration branch,
+  in the main checkout; a rejected push re-applies the same row until it lands,
+  and never re-picks.
 - **no** → stop with the worktree path and the branch name, and say the branch
   is ready to land. Say too that the index row stays `RUNNING` until the hand
   merge is followed by a hand edit of the row to `COMPLETE`, or by

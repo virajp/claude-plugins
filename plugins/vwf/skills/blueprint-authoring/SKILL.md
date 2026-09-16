@@ -57,9 +57,9 @@ versioning), use the **rest-api-design** skill — do not restate it here.
 
 **Scope.** This skill's `docs/blueprint/**` glob also matches
 `design-system.md`, but that doc is governed by the **design-system-authoring**
-skill — the entity completeness bars here do not apply to it. Plan,
-change-plan and gap-report docs under `docs/plans/**` (types `vwf-plan` /
-`vwf-change-plan` / `vwf-gap-report`) are in scope for **only** the
+skill — the entity completeness bars here do not apply to it. Plan folders
+under `docs/plans/**` — an `index.md` of type `vwf-plan` or `vwf-change-plan`
+plus its unit files — are in scope for **only** the
 [Frontmatter & links](references/frontmatter-and-links.md)
 reference (valid frontmatter + resolving typed links) — none of the entity
 doctrine applies to them.

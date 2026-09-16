@@ -235,8 +235,8 @@ re-eliciting what is already confirmed. What is not cheap is discovering the gap
 at `/vwf:architecture` and pinning around it, because a backing axis answered
 without the provider you actually wanted carries that pin into every plan and
 every run. Deferring is also a first-class answer — an axis may be left
-`unresolved` while you keep defining the product, though `/vwf:plan` and
-`/vwf:execute` halt until it is answered.
+`unresolved` while you keep defining the product, though `/vwf:plan` halts until
+it is answered, and so does an `/vwf:execute` run of a folder that touches it.
 
 Two capabilities are worth deciding earlier than the rest. **Identity** is one,
 because whether accounts exist is a product decision that reaches the registry

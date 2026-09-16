@@ -242,6 +242,8 @@ the chain is approved and before its survey. `/vwf:execute` runs it scoped to
 the plan's projects. **All three halt on any `blocking` finding** — the mandated
 tooling is what the pipeline is built on, and the stack menu is what its
 conventions and harness come from, so proceeding without either produces a run
-that fails later and less clearly, or one that fails to fail at all.
-`/vwf:execute` additionally gates on the LSP findings, as it always has;
-`/vwf:plan` does not, since it compiles nothing.
+that fails later and less clearly, or one that fails to fail at all. The LSP
+findings are `/vwf:plan`'s question: at its stack gate it asks, per flagged
+language, whether to install now or proceed without, and records the answer as
+an `LSP <language>` row in the plan folder's Consent block. `/vwf:execute`
+halts on `blocking` alone and reads that row; it never asks.

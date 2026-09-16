@@ -291,12 +291,13 @@ installed. See [`/vwf:plan`](../../plugins/vwf.md#vwfplan) and
 ### 8. /vwf:execute
 
 ```text
-/vwf:execute
+/vwf:execute next
 ```
 
-From here nothing is brownfield-specific: the run works the approved plan in a
-dedicated worktree and ends at one human merge gate. Both are covered in the
-spine — [`/vwf:execute`](../greenfield/single-repo.md#vwfexecute) and
+From here nothing is brownfield-specific: the run works the approved plan folder
+in a dedicated worktree, in a fresh session, and lands per the consent the
+folder recorded. Both are covered in the spine —
+[`/vwf:execute`](../greenfield/single-repo.md#vwfexecute) and
 [the execute merge gate](../greenfield/single-repo.md#the-execute-merge-gate) —
 with the stage table and pause conditions at
 [`/vwf:execute`](../../plugins/vwf.md#vwfexecute).
@@ -304,7 +305,7 @@ with the stage table and pause conditions at
 Bookable's first run merges with one gap: the blueprint never said whether a
 reschedule inside the notice window is refused or escalated to the studio. It is
 recorded rather than guessed at, and closing it at its source through
-`/vwf:blueprint` is the offer at the gate.
+`/vwf:blueprint` is the offer after the landing.
 
 Bookable deploys itself, as it always has; once the slice is live, the
 post-deploy check is the spine's
@@ -333,7 +334,7 @@ pass demotes the affected doc's implementation stamp, and the next plan picks up
 exactly that delta — which is the same mechanism, used on purpose.
 
 The one place to break the rule is behaviour that is currently a **bug** by
-anyone's reading. Pin the correct contract there; the drift becomes a plan step,
+anyone's reading. Pin the correct contract there; the drift becomes a plan unit,
 which is precisely where you want a bug fix to appear.
 
 ### The drift the blueprint exposes

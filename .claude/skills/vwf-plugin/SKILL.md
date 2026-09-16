@@ -61,12 +61,18 @@ back into `product`/`architecture`/`blueprint`/`plan`. The pair `change-plan` �
 `change-execute` sits **beside** that workflow line and never joins it — it
 plans and runs work with no blueprint slice behind it, reads neither the
 blueprint nor the registry, and gates on the commands its own plan folder names.
-Its plans queue in the change-plan table of the base repo's
-`docs/plans/index.md` (`assets/plan-index.md`): `change-plan` appends the row at
-hand-off with a derived priority, `change-execute <folder>` or
-`change-execute next` claims it `RUNNING` with a pushed commit before cutting a
-worktree and sets it `COMPLETE` after the merge lands, and every after-landing
-step is an `ask`. `init` is not a command on that line: since 2026-09-06 it is
+Both pairs write and run the **same plan folder** — `index.md` plus one file per
+unit, shaped by `assets/templates/plan-folder.md`, interviewed from
+`assets/plan-interview.md` — and every plan of either kind queues in the **one
+table** of the base repo's `docs/plans/index.md` (`assets/plan-index.md`, which
+also carries the procedure): `plan` and `change-plan` append the row at hand-off
+with a derived priority and push the folder; `execute <folder>` /
+`change-execute <folder>` — or `next`, which reads the table filtered to its own
+`Kind` — claims it `RUNNING` with a pushed commit before cutting a worktree and
+sets it `COMPLETE` after the merge lands (`change-execute` moves its folder to
+`archived/` there and re-points the row; `execute` leaves a cycle folder live
+for `/vwf:archive`, which moves it and re-points), and every after-landing step
+is an `ask`. `init` is not a command on that line: since 2026-09-06 it is
 **skill-invoked** and runs inside setup's Step 0, or alone via
 `/vwf:setup reshape`. `init` shapes the **base repo and every member repo the
 product has** and `setup` sets up **vwf** in the base — two different things,
@@ -194,18 +200,22 @@ entirely, so it **cannot be invoked by another skill**, and the failure is
 **silent** — the caller simply cannot see it. The rule: model-invocable when
 anything delegates to it, user-only when nothing does.
 
-The change pair is the one place the rule is applied by hand rather than read
-off the delegation graph. `change-execute` is **user only**: it must run in a
-session that has done nothing else, which no caller can guarantee, and nothing
-delegates to it — the plan's own launch line is the invocation, and the folder
-that line names arrives **already committed and pushed** on the integration
-branch, because `change-plan` commits it at hand-off with its index row; a
-folder that is not on that branch is refused rather than swept into a wave
-commit. `next` is the same skill reading that index for its argument, and no
-more model-invocable for it. `change-plan` is **user and model**, and the seam
-that reasoning reserved is now live: `/vwf:feedback`'s *not a blueprint gap*
-route calls it by name, which marking it user-only would have made a silent
-no-op.
+The two plan pairs are the one place the rule is applied by hand rather than
+read off the delegation graph. `execute` and `change-execute` are **user only**:
+each must run in a session that has done nothing else, which no caller can
+guarantee, and nothing delegates to either — the plan's own launch line is the
+invocation, and the folder that line names arrives **already committed and
+pushed** on the integration branch, because `plan` and `change-plan` commit it
+at hand-off with its index row; a folder that is not on that branch is refused
+rather than swept into a wave commit. `next` is the same skill reading that
+index for its argument, and no more model-invocable for it. `execute` joined
+this state on 2026-09-16, when `/vwf:plan`'s in-session execute hand-off — the
+one caller that needed it model-invocable — was retired; every resume is a
+person re-running `/vwf:execute <folder>`. `plan` and `change-plan` are **user
+and model**: `plan` is reached by name from `/vwf:feedback`'s blueprint-gap
+routes and by `execute`'s gap reconciliation, and the seam `change-plan`
+reserved is live too — `/vwf:feedback`'s *not a blueprint gap* route calls it by
+name, which marking it user-only would have made a silent no-op.
 
 **Skill-invoked** is the fourth state and the newest: hidden from the `/` menu,
 still reachable by the skill that owns its seam. Six skills are in it today —

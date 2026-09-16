@@ -214,18 +214,18 @@ first slice, `stallfront-web`:
 Three deltas, all of them from the same fact — a plan lives in the repo whose
 code it changes:
 
-- **The plan doc lands in the member**, and the base repo keeps a one-row index
-  entry naming the plan, its target repo and its status. That is what lets
-  anything enumerate the product's plans without walking members that are not
-  here.
+- **The plan folder lands in the member**, and the base repo keeps a one-row
+  index entry naming the folder, its kind, its target repo and its status. That
+  is what lets anything enumerate the product's plans without walking members
+  that are not here.
 - **A dependency chain can cross a repo boundary.** Stallfront's browse flow
   stands on a `product` entity that `api` owns and nothing has built, so that
   entity is planned first — as its own plan, in `stallfront-api`, approved
   behind its own gate — before the flow's plan is written in `stallfront-web`.
 - **A member that is not on this machine is offered, not assumed.** `plan` says
   what the repo is needed for and offers to clone it; decline and it proceeds
-  with that project excluded and says so in its output and in the plan doc, so
-  nobody later mistakes a partial delta for a complete one.
+  with that project excluded and says so in its output and in the plan folder,
+  so nobody later mistakes a partial delta for a complete one.
 
 Everything else — the diff shape, what to read before approving — is the spine's
 [`/vwf:plan`](./single-repo.md#vwfplan) and the manual's
@@ -234,11 +234,11 @@ Everything else — the diff shape, what to read before approving — is the spi
 ### 9. /vwf:execute
 
 ```text
-/vwf:execute
+/vwf:execute next
 ```
 
-The stage pipeline, the finding loops and the single human gate are unchanged:
-[`/vwf:execute`](./single-repo.md#vwfexecute). Two things are
+The stage pipeline, the finding loops and the landing per the folder's consent
+are unchanged: [`/vwf:execute`](./single-repo.md#vwfexecute). Two things are
 multi-repo-specific.
 
 **The worktree follows the linkage.** Under Stallfront's `submodule` linkage the

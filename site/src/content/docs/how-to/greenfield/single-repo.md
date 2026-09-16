@@ -267,36 +267,43 @@ delta is nearly everything, which is exactly why the dependency chain matters �
 entity becomes its own plan first, planned and approved behind its own gate and
 linked to the flow's plan by frontmatter.
 
-Relay reviews two plan docs in `docs/plans/`, in order. Each step names the
-failing test that defines "done", and the plan names every third-party package
-the run is allowed to install — approving the plan is where you consent to each
-one. Relay approves the entity plan, then approves the flow plan straight into
-execution. See [`/vwf:plan`](../../plugins/vwf.md#vwfplan).
+Relay reviews two plan folders in `docs/plans/`, in order — each an `index.md`
+plus one file per unit. Each unit names the failing test that defines "done",
+and the folder names every third-party package the run is allowed to install and
+carries a consent block — whether the run may merge on green, and what ships —
+so approving the plan is where you consent to each of those. Relay approves the
+entity plan, then the flow plan; each is committed and pushed with its row in
+`docs/plans/index.md`, and each ends on a launch line for a fresh session. See
+[`/vwf:plan`](../../plugins/vwf.md#vwfplan).
 
 ### /vwf:execute
 
 ```text
-/vwf:execute
+/vwf:execute next
 ```
 
-This is the unattended stage. It runs in a dedicated worktree and works the
-plan's steps in dependency order, each step through code, review and security,
-looping findings back into the code. After all steps land, one acceptance and UX
-pass runs against the whole slice. Nothing asks you anything unless it hits a
-pause condition — those are listed under
+This is the unattended stage, run in a **fresh session**. `next` reads
+`docs/plans/index.md` and takes the runnable cycle plan of lowest priority — the
+entity plan first, since the flow plan requires it. It claims the row, cuts a
+dedicated worktree and works the folder's units in dependency order, each unit
+through code, review and security, looping findings back into the code. After
+all units land, one acceptance and UX pass runs against the whole slice. Nothing
+asks you anything unless it hits a pause condition — those are listed under
 [`/vwf:execute`](../../plugins/vwf.md#vwfexecute).
 
-It ends at **one human gate**, where it reads the run back out of its journal:
-per-step commits, coverage, the acceptance and UX results, the implementation
+It ends at a **final report**, read back out of the Run log in the plan folder:
+per-unit commits, coverage, the acceptance and UX results, the implementation
 stamps it wrote onto the blueprint docs, and the consolidated gap list. Relay's
-entity run reaches the gate clean; the flow run carries one gap — the blueprint
-never said what happens to a task whose assignee leaves the team — recorded
-rather than guessed at.
+entity run reaches the report clean; the flow run carries one gap — the
+blueprint never said what happens to a task whose assignee leaves the team —
+recorded rather than guessed at.
 
-Relay approves both merges, then accepts the offer to close that gap at its
-source through `/vwf:blueprint`. Approving hands the merge to
-`/vwf:git-workflow`, which confirms once more; reject and the worktree is left
-intact. The stage table and the resource caps:
+Both folders recorded consent to merge on green, so each run lands itself —
+merge and push through `/vwf:git-workflow`, the index row set `COMPLETE` — and
+Relay then accepts the offer to close that gap at its source through
+`/vwf:blueprint`. A red gate, a blocking gap or a `no` in the consent block
+would have stopped at the report instead, with the worktree left intact. The
+stage table and the resource caps:
 [`/vwf:execute`](../../plugins/vwf.md#vwfexecute).
 
 A long run can pause on a resource cap and hand off instead of finishing, which
@@ -417,10 +424,11 @@ that when a metric reading misses.
 ### Plan approval
 
 The plan gate is the last point where a *how* question is cheap. Two things are
-worth reading closely before approving: the step order, since it is what
-`execute` runs and each step's failing test is what "done" means; and the
+worth reading closely before approving: the unit order, since it is what
+`execute` runs and each unit's failing test is what "done" means; and the
 dependency list, since the coder installs only the packages the plan names and
-one it missed becomes a gap instead of an install.
+one it missed becomes a gap instead of an install. The consent block is the
+third: it is what lets the run merge without asking you again.
 
 A *what* question — a behaviour the blueprint never pinned — is never settled in
 the plan. It routes back through `/vwf:blueprint` and the diff is re-derived, so
@@ -428,15 +436,18 @@ an approved plan carries no open decisions into an unattended run.
 
 ### The execute merge gate
 
-The one human decision in an autonomous run, and it is a merge decision, not a
-code review — the adversarial review already happened, twice, inside the run.
-What you are judging is whether the run's account holds: the gap list, the
-acceptance and UX results, and whether the stages that were skipped were skipped
-for reasons you accept. If memory was down for part of the run, the report says
-it is reconstructed; that changes how much weight it carries.
+The merge decision is made once, at plan approval, as the folder's consent block
+— the run lands itself on green and asks nothing at the end. It is a merge
+decision, not a code review: the adversarial review happens, twice, inside the
+run. What stops the run at its report instead is a red gate line, a gap that
+blocks, or a consent block that said no; then you read the run's account — the
+gap list, the acceptance and UX results, whether the stages that were skipped
+were skipped for reasons you accept — and say *fix first* or *reject*. If the
+folder could not be read and the report came from the memory mirror, it says it
+is reconstructed; that changes how much weight it carries.
 
-Gaps do not block the merge and should not be treated as blockers. Merge, then
-take the offer to close each one at its source.
+Non-blocking gaps do not stop the landing and should not be treated as blockers.
+Let it land, then take the offer to close each one at its source.
 
 ## When things halt
 
