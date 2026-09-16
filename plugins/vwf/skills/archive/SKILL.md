@@ -57,15 +57,15 @@ unless a step says otherwise.
 - Otherwise list the candidates and ask the user which to archive, each with
   its `Kind` shown:
   - the rows of the base repo's `docs/plans/index.md` — every `APPROVED` row is
-    offered; a `RUNNING` row belongs to a live `/vwf:execute` or
-    `/vwf:change-execute` run, so it is shown marked *in flight* and left out
-    of the offer; a `COMPLETE` row is offered only while its `Folder` still
-    points under `docs/plans/` — `/vwf:execute` lands a cycle plan by writing
-    the row `COMPLETE` and leaves the move to this skill, and the sweep never
-    removes a row whose `Folder` is a live path, so it waits here until the
-    move; `/vwf:change-execute` moves and re-points at landing, so a
-    `COMPLETE` row already under `archived/` is not offered — it is swept, or
-    waits on a `Requires`. **Read the index, never walk the
+    offered; a `RUNNING` row belongs to a live `/vwf:execute` run, so it is
+    shown marked *in flight* and left out of the offer; a `COMPLETE` row is
+    offered only while its `Folder` still points under `docs/plans/` — a
+    landing whose gap list was empty moved the folder and re-pointed the row
+    under `archived/`, so that row is not offered — it is swept, or waits on a
+    `Requires`; a landing with an open gap left the folder live as the working
+    record, its row `COMPLETE` at the live path, and the sweep never removes a
+    row whose `Folder` is a live path, so it waits here until the move. Either
+    way the plan's kind does not matter. **Read the index, never walk the
     members** — under `multi-repo` most are not on this machine, so a walk
     would list the product's plans as a function of what happens to be cloned
     (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`);
@@ -120,7 +120,7 @@ dependent loses depends on the **kind of the plan being archived**, per
 Move the whole directory —
 `mv docs/plans/<date>-<name> docs/plans/archived/<date>-<name>` — unit files,
 run log and all. Never a file at a time: the folder is one object, and a
-half-moved one is a plan neither executor can read. Create `archived/` if
+half-moved one is a plan the executor cannot read. Create `archived/` if
 absent. A plan never changes repo when archived — it is retired where it was
 written: a cycle folder moves within its **target repo**, a change folder within
 the base.
@@ -136,10 +136,11 @@ Nothing else in the folder changes — not a unit file, not the Run log, not the
 Consent block.
 
 Then **apply the landing edit to the folder's row** in the base repo's
-`docs/plans/index.md`, the same edit `/vwf:change-execute` makes when a run
-lands (`${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`): set the row's Status to
-`COMPLETE` — already so on a cycle plan `/vwf:execute` landed — and its
-`Folder` to `docs/plans/archived/<basename>`, then run the sweep — remove
+`docs/plans/index.md`, the same edit `/vwf:execute` makes when a landing with
+no open gap archives the folder (`${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`):
+set the row's Status to `COMPLETE` — already so on a plan `/vwf:execute`
+landed with open gaps and left live — and its `Folder` to
+`docs/plans/archived/<basename>`, then run the sweep — remove
 every `COMPLETE` row whose `Folder` points under `docs/plans/archived/` and
 that no `APPROVED` or `RUNNING` row's `Requires` names; a `COMPLETE` row whose
 `Folder` is still a live path is never swept, since its folder has not moved.
