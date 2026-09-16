@@ -1,37 +1,45 @@
-# Execute Stages (used by /vwf:execute for a `code` unit)
+# Execute Stages (used by /vwf:execute for `code` units and `review` rows)
 
 The stage pipeline, per-stage subagent contracts, and shared stage rules used by
 `/vwf:execute`. The invoking command owns the orchestration policy — when to
 pause, how many rounds, what happens at the end; this file defines what the
 stages **are**. It reads each unit's `Kind` from the folder's Units table: the
-stages and contracts below are what a `code` unit runs; an `edit` unit runs no
-stage — it is dispatched with its wave and judged by the wave review — and only
-the shared rules marked *every unit* reach it.
+`code` stage is what a `code` unit runs; the `review` and `security` stages run
+at a `review` row — a Units table row the planner placed, covering the `code`
+units its Depends on names; an `edit` unit runs no stage — it is dispatched
+with its wave and judged by the wave review — and only the shared rules marked
+*every unit* reach it.
 
 ## Stages
 
 The stage table and the five dispatch contracts in this section apply to `code`
-units. `acceptance` and `ux` run once per plan, and only when the plan carries
-`covers:` — a plan without it skips both, journaled.
+units and `review` rows. `acceptance` and `ux` run once per plan, and only when
+the plan carries `covers:` — a plan without it skips both, journaled.
 
-| Stage      | What             | Model  | Subagent                      | Runs                                              |
-| ---------- | ---------------- | ------ | ----------------------------- | ------------------------------------------------- |
-| code       | Write Code (TDD) | opus   | `execute-coder`               | per unit                                          |
-| review     | Code Review      | opus   | `execute-code-reviewer`       | per unit, ‖ `security`, after `/code-review`      |
-| security   | Security Review  | opus   | `execute-security-reviewer`   | per unit, ‖ `review`, after `/security-review`    |
-| acceptance | Acceptance (E2E) | sonnet | `execute-acceptance-verifier` | once, after all units                             |
-| ux         | UX Conformance   | opus   | `execute-ux-reviewer`         | once, after `acceptance`                          |
+| Stage      | What             | Model  | Subagent                      | Runs                                                                             |
+| ---------- | ---------------- | ------ | ----------------------------- | -------------------------------------------------------------------------------- |
+| code       | Write Code (TDD) | opus   | `execute-coder`               | per `code` unit                                                                  |
+| review     | Code Review      | opus   | `execute-code-reviewer`       | at each `review` row, ‖ `security`, after `/code-review` over the row's scope    |
+| security   | Security Review  | opus   | `execute-security-reviewer`   | at each `review` row, ‖ `review`, after `/security-review` over the row's scope  |
+| acceptance | Acceptance (E2E) | sonnet | `execute-acceptance-verifier` | once, after all units                                                            |
+| ux         | UX Conformance   | opus   | `execute-ux-reviewer`         | once, after `acceptance`                                                         |
 
-`review` and `security` are **independent read-only passes over the same diff**
-— neither reads the other's output. Their engines run first, and the
-orchestrator runs them: after the coder returns, invoke `/code-review` (high
-effort) and `/security-review` in one message, wait on each with `TaskOutput`
-(blocking, up to 30 minutes from invocation; an engine that errors or times out
-is stopped with `TaskStop` and counted unavailable, reason kept), and only then
-dispatch both reviewers in a single message so they run concurrently, each
-handed its engine's output in its prompt. Merge their findings into **one**
-loop-back to `code`. Their gating is unchanged and stays per-stage (security
-and `[breaking-api]` always fixed; other review findings capped).
+`review` and `security` are **independent read-only passes over the same
+range** — neither reads the other's output. They run only at a `review` row,
+over the row's scope: the branch delta since the previous `review` row that
+reached `green`, or the branch base when the row is the first. Their engines
+run first, and the orchestrator runs them: when wave order reaches the row,
+invoke `/code-review` (high effort) and `/security-review` over that range in
+one message, wait on each with `TaskOutput` (blocking, up to 30 minutes from
+invocation; an engine that errors or times out is stopped with `TaskStop` and
+counted unavailable, reason kept), and only then dispatch both reviewers in a
+single message so they run concurrently, each handed its engine's output in
+its prompt. Merge their findings into **one** loop-back: each finding names a
+file, the file maps to the unit whose Owns holds it, and that unit's coder is
+re-dispatched with the findings on its files; then the row re-runs in full,
+engines first. Their gating is unchanged and stays per-stage (security and
+`[breaking-api]` always fixed; other review findings capped). No `code` unit
+runs an engine by itself, and the orchestrator infers no row.
 
 `acceptance` and `ux` run **once per cycle**, after **all** units, back to back
 so one boot of the local stack serves both. Each is conditional — skipped
@@ -59,15 +67,19 @@ Per-stage dispatch contract:
   uncovered `file:line` list, or `n/a` when the project has no coverage tooling.
   The coder never blocks on coverage — the **orchestrator decides**: a residual
   below the configured target is documented as a gap and reported at the final
-  gate (never a silent pass). On a fix loop-back, pass the review findings
-  **tag** (not the text) — the coder recalls the detail from mempalace before
-  fixing.
+  gate (never a silent pass). On a fix loop-back from a `review` row, pass the
+  review findings **tag** (not the text) for the findings on the unit's own
+  files — the coder recalls the detail from mempalace before fixing.
 - **review** — dispatch `execute-code-reviewer` (pass the wing, plus the
-  **slice** and **round number** for its recall tag, plus the same **resolved
-  stack** the coder got — block and `conventions:` prose both; a reviewer holding
-  less than the coder cannot tell a convention breach from a style preference).
-  It reviews the code adversarially against the **unit and the index's rulings,
-  the blueprint, `conventions.md`, and the resolved stack**. The dispatch prompt
+  **`review` row id** and **round number** for its recall tag
+  `<row-id>/review/<round>`, the row's **scope** — the range `<from>..<to>` and
+  the file list it yields, never a unit — the unit files of every unit the row
+  covers, plus the same **resolved stack** the coders got — block and
+  `conventions:` prose both; a reviewer holding less than the coder cannot tell
+  a convention breach from a style preference). It reviews the code in the
+  range adversarially against the **covered units and the index's rulings, the
+  blueprint, `conventions.md`, and the resolved stack**, and every finding
+  names the file it is on. The dispatch prompt
   **ends with a section headed `## Engine`** holding either the `/code-review`
   output verbatim or the single line `ENGINE: unavailable — <reason>`; the
   reviewer runs no engine itself and returns exactly one block. When the plan
@@ -80,9 +92,12 @@ Per-stage dispatch contract:
   cap). It files its full findings to mempalace (room `problems`) and returns
   the terse findings block plus a recall tag.
 - **security** — dispatch `execute-security-reviewer` (pass the wing, plus the
-  **slice** and **round number** for its recall tag). It threat-models the
-  changes against the project's declared **capabilities** in the registry,
-  rating findings by exploitability and impact. The dispatch prompt ends with
+  **`review` row id** and **round number** for its recall tag
+  `<row-id>/security/<round>`, and the same **scope** — range and file list —
+  the review contract states). It threat-models the changes in the range
+  against the project's declared **capabilities** in the registry, rating
+  findings by exploitability and impact, every finding naming the file it is
+  on. The dispatch prompt ends with
   the same `## Engine` section the review contract states, holding the
   `/security-review` output. It files its full findings to mempalace (room
   `problems`) and returns the terse findings block plus a recall tag.
@@ -138,15 +153,20 @@ blueprint-bound and never fires on a plan without one.
   return only conclusions and `file:line` pointers — never code excerpts, diffs,
   or full file/dir dumps. The orchestrator reads files itself when it needs
   their contents.
-- **Loop on findings** — *every unit.* Review/security issues loop back to
-  `code` with the **tag**, re-commit via `/vwf:git-workflow`, then re-review.
-  Send **both** reviewers' tags in a single `code` dispatch and re-run both
-  concurrently: one merged fix pass keeps the two stages from rewriting each
-  other's lines, and a round counts once even though two reviewers ran. If the
-  coder's recall of a tag misses (mempalace down or the drawer absent), the
-  orchestrator passes the terse FINDINGS block it already holds from that
-  reviewer's return — the loop never stalls on a recall miss. The invoking
-  command sets the gating and round policy.
+- **Loop on findings** — *every unit.* At a `review` row, a finding names a
+  file; the orchestrator maps the file to the unit whose Owns holds it and
+  re-dispatches that unit's coder with the **tags** for the findings on its
+  files, re-commits via `/vwf:git-workflow`, then re-runs the row — engines
+  first, then both reviewers. Send **both** reviewers' tags in a single `code`
+  dispatch per unit: one merged fix pass keeps the two stages from rewriting
+  each other's lines, and a round counts once even though two reviewers ran
+  and several coders may have. A finding on a file **no unit owns** does not
+  loop — it is the orchestrator's `GAP:` in the run log. If the coder's recall
+  of a tag misses (mempalace down or the drawer absent), the orchestrator
+  passes the terse FINDINGS block it already holds from that reviewer's return
+  — the loop never stalls on a recall miss. The invoking command sets the
+  gating and round policy; `review_round_cap` is the row's cap, whatever number
+  of units it covers.
 - **Convergence guard** — *every unit.* A round cap bounds how long a loop
   runs; it cannot tell *converging slowly* from *not converging at all*. Before
   dispatching each new round, compare this round's findings with the previous
@@ -198,22 +218,22 @@ final gate **renders** it instead of recalling a long autonomous run from
 context, which is exactly the context most likely to have been compacted or
 handed off. Both uses fail the same way if the record is loose prose, so it
 takes a fixed shape, in the table's columns
-`Wave | Unit | Model | Round | Outcome | Detail | Commit`: for a `code` unit,
-one row per node **execution**; for an `edit` unit, one row per unit
-**report** — the dispatch's return, and a re-dispatch's — with the wave review
-and every skip written the same way.
+`Wave | Unit | Model | Round | Outcome | Detail | Commit`: for a `code` unit
+and a `review` row, one row per node **execution**; for an `edit` unit, one
+row per unit **report** — the dispatch's return, and a re-dispatch's — with
+the wave review and every skip written the same way.
 
-| Field     | Value                                                                     |
-| --------- | ------------------------------------------------------------------------- |
-| `wave`    | the unit's wave from the folder; `—` for `acceptance`, `ux`, `reconcile`  |
-| `unit`    | `<id> <title>` — or `acceptance`, `ux`, `reconcile`                       |
-| `node`    | the node: `code`, `review`, `security`, `acceptance`, `ux`, or `edit`     |
-| `round`   | `1` on the first pass, incremented per fix loop                           |
-| `model`   | the tier it ran on, `(downgraded from <default>)` when config overrode it |
-| `outcome` | `pass` / `findings(<n>)` / `fail(<n>)` / `skipped` / `blocked`            |
-| `detail`  | terse — coverage vs target, per-criterion counts, finding tags            |
-| `commit`  | the commit ref for a `code` node or a landed `edit` unit; `—` otherwise   |
-| `why`     | **required** when `outcome` is `skipped` or `blocked`                     |
+| Field     | Value                                                                                      |
+| --------- | ------------------------------------------------------------------------------------------ |
+| `wave`    | the unit's or `review` row's wave from the folder; `—` for `acceptance`, `ux`, `reconcile` |
+| `unit`    | `<id> <title>` — the row id on a `review` row's nodes — or `acceptance`, `ux`, `reconcile` |
+| `node`    | the node: `code`, `review`, `security`, `acceptance`, `ux`, or `edit`                      |
+| `round`   | `1` on the first pass, incremented per fix loop                                            |
+| `model`   | the tier it ran on, `(downgraded from <default>)` when config overrode it                  |
+| `outcome` | `pass` / `findings(<n>)` / `fail(<n>)` / `skipped` / `blocked`                             |
+| `detail`  | terse — coverage vs target, per-criterion counts, finding tags; a `review` node's range    |
+| `commit`  | the commit ref for a `code` node or a landed `edit` unit; `—` otherwise                    |
+| `why`     | **required** when `outcome` is `skipped` or `blocked`                                      |
 
 `node` and `why` ride inside the `Detail` column, since the table has no column
 of their own. The **journal** — mempalace room `runs`, drawer `<plan folder>` —
@@ -223,11 +243,15 @@ units' Kind.
 
 - **The record opens with the unit sequence** written at Setup — every unit
   pending — and accumulates rows beneath it. A `code` unit is done when its
-  `code` node carries a commit and its reviewers' last round is clean; an
-  `edit` unit is done when its report is read and the wave review passed it.
-- **One row per execution, not per stage.** A `code` unit whose findings
-  looped three times writes three `review` rows; an `edit` unit dispatched
-  twice writes two `edit` rows. The round count is then the number of rows,
+  `code` node carries a commit; a `review` row is done when its reviewers'
+  last round is clean; an `edit` unit is done when its report is read and the
+  wave review passed it.
+- **One row per execution, not per stage.** A `review` row whose findings
+  looped three times writes three `review` rows and three `security` rows,
+  each carrying the row's id in the unit cell and the row's wave, plus a
+  `code` row per coder it re-dispatched under that unit's id; an `edit` unit
+  dispatched twice writes two `edit` rows. The round count is then the number
+  of rows,
   and the convergence guard compares two rows — never two numbers the
   orchestrator is holding in its head.
 - **A skip is a row.** The conditional stages' "skipped explicitly, never

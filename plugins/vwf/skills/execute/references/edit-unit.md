@@ -41,10 +41,10 @@ instructed to edit nothing. Its prompt carries the wave's unit files, the diff
 of the wave (`git diff <last green commit>..HEAD` inside the worktree — the
 reviewer runs it, the orchestrator does not read it), and index.md's Assumed
 decisions and Shared-file rule. The prompt also says that findings on a `code`
-unit's code quality or security belong to that unit's own reviewers — the
-review and security stages already ran over it — and are not raised here: the
-wave review is scoped to the contract — rulings honoured, Owns respected,
-cross-unit drift, docs falsified. It returns exactly:
+unit's code quality or security belong to the `review` row that covers the
+code units — the review and security stages run there, never here — and are
+not raised: the wave review is scoped to the contract — rulings honoured, Owns
+respected, cross-unit drift, docs falsified. It returns exactly:
 
     FINDINGS: <n>
     <path>:<line> [<unit>] <rule> — <one line>     (one per finding)
@@ -80,10 +80,10 @@ quietly lost a rule is the defect, exactly as a dropped branch would be.
   with the same prompt plus the finding lines, and re-committed on the staging
   discipline. A `code` unit re-enters its own pipeline in
   [code-unit.md](code-unit.md) from step 2 — the coder dispatched
-  with the finding lines appended as the tag, then the engines, both reviewers,
-  the merged loop-back, the commit — so the wave review never edits code
-  outside the review and security gates. Each re-entry is a further round of
-  that unit's `review`/`security` loop, counted against its cap.
+  with the finding lines appended as the tag, then the commit — so the wave
+  review never edits code itself. It re-runs no engine: the next `review` row
+  covers the fix, and the re-entry is a further `code` row for that unit, not
+  a round of any review loop.
 - A **rule-5 finding in a file no unit owns** does not loop. It becomes a
   `DOCS FALSIFIED:` line handed to the docs unit, whose Owns the orchestrator
   widens to that passage; the widening is written into the Units table's Owns
@@ -99,8 +99,8 @@ quietly lost a rule is the defect, exactly as a dropped branch would be.
   `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` — the *Pipeline knobs* bullet
   for the round cap, the *Convergence guard* bullet for the comparison; this
   loop fixes the cap at two rounds because it reviews the contract — scope,
-  rulings, completeness, docs — not the code, whose quality and security a
-  `code` unit's own reviewers already looped on under the configured cap.
+  rulings, completeness, docs — not the code, whose quality and security the
+  covering `review` row loops on under the configured cap.
 - Findings still open when the loop ends are recorded as `contested` in the run
   log with the rounds tried, and the wave proceeds to its gate. They are listed
   in the final report; they do not block, because the plan and its rulings are
