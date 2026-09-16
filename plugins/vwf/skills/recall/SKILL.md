@@ -117,8 +117,11 @@ don't silently proceed as if the work vanished — resolve by the branch:
 the user whether to run it now**:
 
 - **Yes** → proceed to execute that prompt (route through the matching `/vwf:`
-  command — `blueprint` / `plan` / `execute` — when it names one). Resuming a
-  cap-paused `/vwf:execute` run is the primary use of this command.
+  command — `blueprint` / `plan` — when it names one). A prompt naming
+  `/vwf:execute <folder>` is the exception: `execute` is launched only by a
+  person in a fresh session, so print that launch line and stop — the run
+  resumes from the folder's Run log, which records every unit that returned.
+  Resuming a cap-paused run that way is the primary use of this command.
 - **No** → stop after the summary; the user drives from here.
 
 **For `next`, do not ask** — show the summary, then execute the Next prompt
