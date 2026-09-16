@@ -1,4 +1,4 @@
-# Blocking and resume (§5 and §1)
+# Blocking and resume (On failure, and Resolve and refuse early)
 
 Read this when a unit returns `UNRESOLVED:`, fails its verification, dies, or
 when a run starts against a `BLOCKED` or `RUNNING` plan.
@@ -54,8 +54,8 @@ A re-run against `BLOCKED` or `RUNNING`:
    branch — that reset is what lets a named run, or `next`, claim the plan
    afresh; nothing takes a `RUNNING` row otherwise.
 2. The index row stays `RUNNING` through the resume and is not touched. A row
-   found reading `APPROVED` is a hand reset, and §1 claims it again before
-   continuing.
+   found reading `APPROVED` is a hand reset, and the Resolve step claims it
+   again before continuing.
 3. Confirm the ruling each `unresolved` unit asked for is now in its unit file
    or the decisions table. If the status line's `UNRESOLVED:` text still
    describes an unanswered question, stop and name it.
@@ -69,5 +69,5 @@ A re-run against `BLOCKED` or `RUNNING`:
    Run-log rows from the earlier attempt stay; new rows are appended with the
    round numbering continued, so the final report shows the whole history.
 
-The user edits the plan and re-runs `/vwf:change-execute <folder>`; nothing else
+The user edits the plan and re-runs `/vwf:execute <folder>`; nothing else
 is needed to resume.

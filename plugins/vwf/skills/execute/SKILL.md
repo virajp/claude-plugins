@@ -1,16 +1,18 @@
 ---
 name: execute
-description: Execute an approved cycle-plan folder end-to-end in a dedicated
-  worktree, in a fresh session — dependency-ordered, code then review+security
-  concurrently per unit under TDD with finding loops — the orchestrator runs
-  the two review engines itself and hands their output to the reviewers — one
-  E2E acceptance + UX-conformance pass after all units, gaps captured in the
-  folder's index.md. Autonomous between the start and the landing — it lands
-  per the plan's recorded consent and stops once before every after-landing
-  step.
+description: Execute an approved plan folder — a cycle plan from /vwf:plan or
+  a change plan from /vwf:change-plan — to completion in a dedicated worktree,
+  in a fresh session. The one executor for every plan folder, reading each
+  unit's Kind from the Units table; a code unit runs the TDD / coverage /
+  engines / review + security pipeline one unit at a time, the edit units of a
+  wave are dispatched together and judged by the wave review; the acceptance
+  and UX pass and the blueprint reconcile run when the plan has a covers list.
+  It claims the plan's row in docs/plans/index.md, keeps a run log the final
+  report renders, lands per the plan's recorded consent — archiving the folder
+  when no gap is open — and stops once before every after-landing step.
   Invoke as /vwf:execute <plan-folder> or /vwf:execute next — the latter reads
-  docs/plans/index.md alone and picks the runnable cycle plan of highest
-  priority. Requires an approved plan folder in docs/plans/.
+  docs/plans/index.md alone and picks the runnable plan of highest priority,
+  of either kind. Requires an approved plan folder in docs/plans/.
 argument-hint: "<plan-folder, its index.md, or next>"
 model: opus
 
@@ -19,20 +21,25 @@ disable-model-invocation: true
 
 # execute — Run an Approved Plan to Completion
 
-Implement an approved cycle plan **to completion, autonomously**. The plan
-folder is the contract and its `index.md` is the only input: every ruling,
-consent row, unit scope and gate line the run needs was written there by
-`/vwf:plan`, and this skill reads it rather than re-asking it. Execution is
-mechanical from the folder: TDD is non-negotiable; every unit passes code, then
-a concurrent review + security pass, with findings looped back before it counts
-as done; acceptance and UX conformance run once after all units. There are **no
-per-stage human gates** — decisions come from the **Autonomous Rules** below,
-and the run stops only at the **Pause Conditions**, at the **final report**
-when something stands in the way of the landing, and once before each
+Implement an approved plan **to completion, autonomously**. The plan folder is
+the contract and its `index.md` is the only input: every ruling, consent row,
+unit scope and gate line the run needs was written there by `/vwf:plan` or
+`/vwf:change-plan`, and this skill reads it rather than re-asking it. The
+orchestrator **decides, reviews and verifies, and never reads unit work
+inline**: every edit is a subagent's, so this session's context stays the size
+of the reports. The Units table's `Kind` column is the switch: a `code` unit
+passes code under TDD, then a concurrent review + security pass, with findings
+looped back before it counts as done; an `edit` unit is dispatched with the
+other `edit` units of its wave and judged by the wave review; acceptance and UX
+conformance run once after all units when the plan has `covers:`. There are
+**no per-stage human gates** — decisions come from the **Autonomous Rules**
+below, and the run stops only at the **Pause Conditions**, at the **final
+report** when something stands in the way of the landing, and once before each
 **after-landing** step. You own the orchestration and dispatch the five stage
 subagents (`execute-coder`, `execute-code-reviewer`,
 `execute-security-reviewer`, `execute-acceptance-verifier`,
-`execute-ux-reviewer`).
+`execute-ux-reviewer`) for `code` units, the unit agents for `edit` units, and
+the wave reviewer for every wave.
 
 Run it in a session that has done nothing else. It cannot check that, so the
 plan's launch line says it and this skill trusts it.
@@ -41,27 +48,43 @@ Adopt the **Autonomous delivery driver** persona: keep moving, decide from the
 rules, isolate all work in one worktree, document what you can't resolve, and
 land only what the plan's Consent block already authorised.
 
+## References
+
+The rules that hold on every run — the halts, the pause conditions, the
+autonomous rules — stay here. The two pipelines and three conditional branches
+load on demand, each named where it applies — never upfront.
+
+| Reference                                                   | When to read                                                                                           |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| [One `code` unit](references/code-unit.md)                  | the Waves section, when a wave holds a `code` unit — the per-unit pipeline                             |
+| [`edit` units and the wave review](references/edit-unit.md) | the Waves section, when a wave holds an `edit` unit, and every wave's review                           |
+| [Blocking and resume](references/blocking.md)               | On failure — what a failure skips, what it blocks, how a re-run picks up                               |
+| [The `code`-unit preflight](references/preflight.md)        | Setup steps 2 and 3, when the Units table holds a `code` unit — the LSP rule and the conventions fetch |
+| [Acceptance & UX](references/acceptance-and-ux.md)          | when `covers:` is present and the acceptance or ux stage returns short of a pass                       |
+
 ## Halt Conditions
 
 ### 1. Resolve and refuse early
 
 **`next`.** When `$ARGUMENTS` is `next`, run *Reading the queue* in
-`${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`, keeping the rows whose `Kind` is
-`cycle`. On a pick, print the folder taken and its `Priority`, and every other
-`APPROVED` cycle row with why it was not taken — a lower priority, or the
-requirement it waits on. Ask no confirmation: the session is meant to run
-unattended. Then continue below as if that folder had been named. Nothing
-runnable → stop with the message that procedure prints: each `APPROVED` cycle
-row and what it waits on, or that the table is absent or holds no cycle rows.
+`${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`: the candidates are every
+`APPROVED` row whose requirements are satisfied, `cycle` or `change` alike —
+there is no Kind filter. On a pick, print the folder taken, its `Kind` and its
+`Priority`, and every other `APPROVED` row with why it was not taken — a lower
+priority, or the requirement it waits on. Ask no confirmation: the session is
+meant to run unattended. Then continue below as if that folder had been named.
+Nothing runnable → stop with the message that procedure prints: each `APPROVED`
+row and what it waits on, or that the table is absent or holds no rows.
 
-**Finding the plan.** A plan folder lives in **the repo whose code it changes**,
-and the one table of `docs/plans/index.md` in the base repo lists every one
-with its target repo (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`; the file's
-shape is `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`). Read the index rather
-than walking the members — under `multi-repo` most of them are not on this
-machine, so a walk would report the product's plans as a function of what
-happens to be cloned. Halt if no approved plan exists: "No approved plan found.
-Run `/vwf:plan` first."
+**Finding the plan.** A plan folder lives in **the repo whose code it changes**
+— a change plan's is the base's — and the one table of `docs/plans/index.md` in
+the base repo lists every one with its target repo
+(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`; the file's shape is
+`${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`). Read the index rather than
+walking the members — under `multi-repo` most of them are not on this machine,
+so a walk would report the product's plans as a function of what happens to be
+cloned. Halt if no approved plan exists: "No approved plan found. Run
+`/vwf:plan` or `/vwf:change-plan` first."
 
 **Halt if the target repo is absent.** Offer the consent-gated clone first; on
 decline, **stop**. Unlike `plan` and `doctor`, there is no honest partial
@@ -70,22 +93,26 @@ result — you cannot write code into a repo you do not have.
 **Read the folder.** Resolve `$ARGUMENTS` to `<folder>/index.md` — a folder
 shaped by `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`; `execute`
 reads folders only, and a single-file plan from an earlier release is not an
-input (finish it on the release that wrote it, or re-run its slice through
-`/vwf:plan`). Read the frontmatter — `covers:`, `requires:`, and `backlog:`
-(the ids the landing hands to `/vwf:backlog`, empty or absent when the plan
-covers no backlog item) — and the **Status**, **Consent**, **Units** and
-**Run log** blocks. Then read the folder's **row** in the base repo's
-`docs/plans/index.md`, at the integration branch's tip, the way that asset's
-*Reading the queue* reads it. Then:
+input (finish it on the release that wrote it, or re-plan it). Read the
+frontmatter — `type:`, `covers:` when present, `requires:`, and `backlog:` (the
+ids the landing hands to `/vwf:backlog`, empty or absent when the plan covers
+no backlog item) — and the **Status**, **Consent**, **Units** and **Run log**
+blocks. Hold two facts from this read for every gate below: **has `covers:`**
+— a cycle plan, whose blueprint-bound steps run — and **has a `code` unit** —
+one or more Units table rows whose `Kind` is `code`. Then read the folder's
+**row** in the base repo's `docs/plans/index.md`, at the integration branch's
+tip, the way that asset's *Reading the queue* reads it. Then:
 
-- Status `DRAFT` → stop: "not approved; run /vwf:plan to finish it".
+- Status `DRAFT` → stop: "not approved; run the planner that wrote it to finish
+  it" — `/vwf:plan` for `type: vwf-plan`, `/vwf:change-plan` for
+  `type: vwf-change-plan`.
 - Status `COMPLETE` → stop: nothing to do.
 - Any `requires:` entry unsatisfied — by the test its kind takes, per that
-  asset's *Resolution* → stop and name it. A **cycle** entry is satisfied when
-  every `covers:` doc of the required plan reads `implementation: complete`
-  **in the base repo's blueprint** — the blueprint is where the stamps live, so
-  this resolves even when the upstream plan's own repo is not cloned here; its
-  index row is not the test. Halt with:
+  asset's *Resolution*, matched by basename → stop and name it. A **cycle**
+  entry is satisfied when every `covers:` doc of the required plan reads
+  `implementation: complete` **in the base repo's blueprint** — the blueprint
+  is where the stamps live, so this resolves even when the upstream plan's own
+  repo is not cloned here; its index row is not the test. Halt with:
 
   > "Prerequisite plan `<folder>` has not been executed and merged (`<doc>` is
   > `implementation: <state>`). Run `/vwf:execute <folder>` first."
@@ -96,41 +123,44 @@ covers no backlog item) — and the **Status**, **Consent**, **Units** and
   merged Reconcile commit, an executed-but-unmerged prerequisite correctly
   halts too. A **change** entry is satisfied by the row test: a `COMPLETE`
   row, or a folder under `docs/plans/archived/` with no row; say "run
-  /vwf:change-execute <that folder> first" when it is `APPROVED` and "another
-  session is running <that folder>; wait for it to land" when it is
-  `RUNNING`. An entry that resolves to nothing → "<entry> is neither in the
-  plan index nor archived; fix the `requires:` line by hand".
+  /vwf:execute <that folder> first" when it is `APPROVED` and "another session
+  is running <that folder>; wait for it to land" when it is `RUNNING`. An
+  entry that resolves to nothing → "<entry> is neither in the plan index nor
+  archived; fix the `requires:` line by hand".
 - Status `APPROVED` with no row at all → stop: "not in the plan index; re-run
-  `/vwf:plan`'s hand-off, or add the row by hand".
+  the planner's hand-off, or add the row by hand".
 - Status `APPROVED` with a `RUNNING` row → a claim another session holds. Stop
   and name it: the row is resumed only by the session that holds it, or claimed
   afresh after a hand reset of the row to `APPROVED`, committed on the
   integration branch.
 - Status `BLOCKED` or `RUNNING` → a **resume**, per the Resume check under
-  Recall below: the worktree named in the status line exists, and the run
-  starts at the first unit the folder's Run log does not show done. The row is
-  expected to read `RUNNING` already, and is left alone; a row reading
-  `APPROVED` is a hand reset, and the run claims it again below.
+  Recall below and [blocking and resume](references/blocking.md): the worktree
+  named in the status line exists, and the run starts at the first unit that
+  is not `green`. The ruling a block asked for must now be in the plan — if the
+  status line still reads the same `UNRESOLVED:`, stop and say which ruling is
+  missing. The row is expected to read `RUNNING` already, and is left alone; a
+  row reading `APPROVED` is a hand reset, and the run claims it again below.
 - Status `APPROVED` with an `APPROVED` row → a fresh run.
 
-The folder arrives **already committed** on the integration branch —
-`/vwf:plan` commits and pushes it at hand-off — so the worktree Setup step 1
-cuts sees it from its first commit. A folder that is not on that branch is
-refused, not swept into a unit commit: stop and say to run `/vwf:plan` again on
-it, or to commit and push it by hand, then re-launch.
+The folder arrives **already committed** on the integration branch — the
+planner commits and pushes it at hand-off — so the worktree Setup step 1 cuts
+sees it from its first commit. A folder that is not on that branch is refused,
+not swept into a unit commit: stop and say to run the planner again on it, or
+to commit and push it by hand, then re-launch.
 
 **Claim the row.** Before the worktree is cut, and before the folder's own
-Status is touched, run *Writing a row* in
+Status is touched, run *Writing a row — the claim, and the completion* in
 `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md` with the row set to `RUNNING` —
 the commit `docs: plan queue — <folder> running`, pushed on the integration
-branch. This is the **one** edit the run makes in the main checkout, and it is
-made there on purpose: the pushed row is what another session's `next` reads,
-so a claim that lived only on the run branch would claim nothing; and the run
-branch must never carry `docs/plans/index.md`, or two plans landing in parallel
-would conflict on it. A rejected push is handled inside that procedure — a
-clean rebase pushes again; a conflict on the same row means the plan was
-claimed first, and the run re-picks (`next`) or stops (a named folder). A
-resume whose row already reads `RUNNING` skips this step.
+branch. The row's `Status` cell is the only cell that changes; `Kind` and
+`Target repo` are never edited. This is the **one** edit the run makes in the
+main checkout, and it is made there on purpose: the pushed row is what another
+session's `next` reads, so a claim that lived only on the run branch would
+claim nothing; and the run branch must never carry `docs/plans/index.md`, or
+two plans landing in parallel would conflict on it. A rejected push is handled
+inside that procedure — a clean rebase pushes again; a conflict on the same row
+means the plan was claimed first, and the run re-picks (`next`) or stops (a
+named folder). A resume whose row already reads `RUNNING` skips this step.
 
 Set the folder's Status to `RUNNING` with the timestamp and, once Setup step 1
 has cut it, the worktree path. From there the folder is edited in the worktree
@@ -144,89 +174,84 @@ detail.
 
 ## Format Check
 
-Before the first unit, run the preflight in
+With `covers:`, before the first unit, run the preflight in
 `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`. Since the run is autonomous: if
 the format drift is **non-blocking**, log it and continue; if it is **blocking**
 (the run needs an artifact the old format lacks), **pause** for `/vwf:setup` per
-the pause rules — never migrate autonomously.
+the pause rules — never migrate autonomously. Without `covers:` the check is
+skipped — one Run log row saying so, journaled — since the plan reads no
+blueprint artifact.
 
 ## Doc Paths
 
 | Doc           | Path                                                                            |
 | ------------- | ------------------------------------------------------------------------------- |
-| Plan          | `<target-repo>/docs/plans/<date>-<HHMM>-<slice>/` (`index.md` + unit files)     |
+| Plan          | `docs/plans/<date>-<HHMM>-<slice>/` in the target repo, or `docs/plans/<date>-<name>/` in the base (`index.md` + unit files) |
 | Plan index    | `docs/plans/index.md` (base repo) — its one table                               |
 | Plan template | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`                         |
 | Membership    | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                                    |
-| Registry      | `docs/blueprint/registry.yaml`                                                  |
-| Flow (slice)  | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`                          |
-| Entity        | `docs/blueprint/entities/<entity>/` (`index.md` + schema)                       |
-| API contract  | `docs/blueprint/apis/<project>.openapi.yaml`                                    |
-| Released APIs | `docs/blueprint/apis/released/`                                                 |
-| Conventions   | `docs/blueprint/conventions.md`                                                 |
-| Environment   | `docs/blueprint/environment.md`                                                 |
 | Backlog       | `docs/backlog.md` (base repo) — marked done via `/vwf:backlog`                  |
+| Registry      | `docs/blueprint/registry.yaml` — *cycle plans only*                             |
+| Flow (slice)  | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` — *cycle plans only*     |
+| Entity        | `docs/blueprint/entities/<entity>/` (`index.md` + schema) — *cycle plans only*  |
+| API contract  | `docs/blueprint/apis/<project>.openapi.yaml` — *cycle plans only*               |
+| Released APIs | `docs/blueprint/apis/released/` — *cycle plans only*                            |
+| Conventions   | `docs/blueprint/conventions.md` — *cycle plans only*                            |
+| Environment   | `docs/blueprint/environment.md` — *cycle plans only*                            |
 
-## References
-
-This skill is almost entirely rules that hold on every run — the halts, the
-pause conditions, the autonomous rules — so they stay here. Only two branches
-are conditional enough to load on demand, and each is named where it applies:
-[preflight](references/preflight.md) (Setup step 2, when doctor reports a
-missing LSP server) and
-[acceptance-and-ux](references/acceptance-and-ux.md) (when the acceptance or ux
-stage returns short of a clean pass). Never read either upfront.
-
-## Pipeline (per unit)
-
-`code`, then `review` and `security` **concurrently**, per unit — the
-orchestrator runs the two review engines itself and hands their output to the
-reviewers — then **`acceptance` + `ux` once after all units** (see the
-Acceptance & UX section below). The stage table, per-stage subagent contracts,
-and shared stage rules (model enforcement, terse subagent output,
-loop-on-findings, gap capture, never silently editing the blueprint) are
-defined in `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` — follow them
-throughout. The durable gap record is the **"Gaps surfaced during execution"
-section of the folder's `index.md`**.
+The *cycle plans only* rows are read on a plan with `covers:` and never
+otherwise.
 
 ## Autonomous Rules
 
 - **Implement the whole plan.** Every **unit** in the folder's Units table is
   implemented — no cherry-picking, no partial delivery.
-- **Dependencies first.** The order is the Units table's — its Depends-on
-  column and Wave column — run **serially**: one unit at a time, wave by wave,
-  a unit only after every unit it depends on is done. Never two coders at once
-  in this release: waves are ordering only here, and the merged executor
-  decides concurrency. Reorder only to honor a real dependency the table left
-  implicit. If the derivation finds a **cycle or genuine ambiguity**, fall back
-  to the table's **written order** as-is; if even that is not executable, treat
-  it as an **uncovered decision** and pause (per the Pause Conditions) — never
-  invent an order.
+- **Waves in order, Kind decides concurrency.** The order is the Units table's
+  — its Wave column, then its Depends-on column: wave by wave, a unit only
+  after every unit it depends on is done. Within a wave, every `edit` unit is
+  dispatched in one message and awaited; then each `code` unit runs serially
+  through its pipeline; then the wave review; then the wave gate. Engines and
+  reviewers never overlap across units. Reorder only to honor a real dependency
+  the table left implicit. If the derivation finds a **cycle or genuine
+  ambiguity**, fall back to the table's **written order** as-is; if even that
+  is not executable, treat it as an **uncovered decision** and pause (per the
+  Pause Conditions) — never invent an order.
 - **One plan, one worktree.** Via `/vwf:git-workflow`, create a dedicated
   isolated worktree for this plan — declared preference: **yes, isolate; do not
   prompt**. Implement everything there and **commit each unit autonomously** (no
   consent). Merge/push happens **only at the landing**, per the plan's Consent.
-- **Full pipeline every unit.** `code`, then `review` and `security` run
-  concurrently, for each unit — the orchestrator runs the two review engines
-  itself and hands their output to the reviewers. Both findings sets merge into
-  one loop-back to `code` before the unit is done — never a separate round per
-  reviewer.
-- **Always fix every security finding.** Security findings gate the unit: loop
-  back to `code` until security review is clean. A security finding is **never**
-  downgraded to a gap or deferred.
-- **Always fix every breaking-API finding.** A `[breaking-api]` finding from the
-  review stage (a code change that would break a **released** API contract under
-  `docs/blueprint/apis/released/`) gates exactly like a security finding: loop
-  back to `code` until the `API COMPAT:` line reads clean — exempt from the
-  review round cap, never downgraded to a gap, never configurable off.
-- **Review findings: capped rounds, guarded for convergence.** For `review`
-  (non-security) findings, loop `code → review` up to the configured cap
-  (`.config/vwf.yaml` `pipeline.review_round_cap`, default **4**) — and apply
-  the **convergence guard** in `execute-stages.md` before each new round. A
-  round that did not strictly reduce the finding count, or that resurfaced a
-  finding an earlier round resolved, is not converging: end the loop there
-  rather than burning the remaining rounds, and record the contested findings as
-  an **oscillation** gap naming them and the rounds tried.
+- **Full pipeline every `code` unit.** `code`, then `review` and `security`
+  concurrently — the orchestrator runs the two review engines itself and hands
+  their output to the reviewers — and both findings sets merge into one
+  loop-back to `code` before the unit is done, never a separate round per
+  reviewer. An `edit` unit has no stage of its own: its report and the wave
+  review are its whole pipeline. The **shared stage rules** in
+  `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` hold throughout: the ones
+  marked *every unit* — model enforcement via `pipeline.models` (an `edit`
+  unit's or the wave reviewer's dispatch honours an override of its tier the
+  same way, and states the downgrade), the pipeline knobs, terse subagent
+  output, loop on findings, the convergence guard — reach an `edit` unit and
+  the wave review too; the ones marked *`code` units with `covers:`* never
+  fire on a plan without one.
+- **Always fix every security finding.** For a `code` unit, security findings
+  gate the unit: loop back to `code` until security review is clean. A security
+  finding is **never** downgraded to a gap or deferred.
+- **Always fix every breaking-API finding.** For a `code` unit, a
+  `[breaking-api]` finding from the review stage (a code change that would
+  break a **released** API contract under `docs/blueprint/apis/released/`)
+  gates exactly like a security finding: loop back to `code` until the
+  `API COMPAT:` line reads clean — exempt from the review round cap, never
+  downgraded to a gap, never configurable off.
+- **Review findings: capped rounds, guarded for convergence.** For a `code`
+  unit's `review` (non-security) findings, loop `code → review` up to the
+  configured cap (`.config/vwf.yaml` `pipeline.review_round_cap`, default
+  **4**) — and apply the **convergence guard** in `execute-stages.md` before
+  each new round. A round that did not strictly reduce the finding count, or
+  that resurfaced a finding an earlier round resolved, is not converging: end
+  the loop there rather than burning the remaining rounds, and record the
+  contested findings as an **oscillation** gap naming them and the rounds
+  tried. The wave review's own loop is capped at two rounds under the same
+  guard, per [edit-unit.md](references/edit-unit.md).
   - Any review finding still unresolved when the loop ends — at the cap, or
     early at the guard — is **documented as a gap** and execution continues; it
     does not block.
@@ -239,37 +264,54 @@ section of the folder's `index.md`**.
 - **Gaps: document and continue.** Every gap (a blueprint/plan hole, not a code
   finding) is mirrored into the "Gaps surfaced during execution" section of
   the folder's `index.md` and filed to mempalace room `gaps`, then execution
-  continues. A *non-blocking* gap never stops the run. An *isolated blocking*
-  gap (the unit can't proceed without a human decision, but other units can) →
-  skip that unit **and its dependents**, document, continue.
+  continues; a unit's own `GAP:` line is recorded in its Run log row with the
+  assumption it took. A *non-blocking* gap never stops the run. An *isolated
+  blocking* gap (the unit can't proceed without a human decision, but other
+  units can) → skip that unit **and its dependents**, document, continue — per
+  [blocking and resume](references/blocking.md), where a unit's `UNRESOLVED:`
+  is the same thing.
 - **The backlog is never edited here.** `docs/backlog.md` has one writer,
   `/vwf:backlog`; this command only calls it at the landing with the plan's
   `backlog:` ids, and no unit, subagent or reconcile pass touches the file.
-- **All git via `/vwf:git-workflow`.** Never run raw git — the one exception is
+- **All git via `/vwf:git-workflow`.** Never run raw git — the exceptions are
   the index row, whose claim and completion edits are the plain commands
-  `assets/plan-index.md` spells out, in the main checkout. On **every** mid-run
+  `assets/plan-index.md` spells out, in the main checkout, and the staging
+  discipline below, whose `git add` and `git reset` are the plain commands
+  that keep one unit's commit to its own Owns. On **every** mid-run
   invocation, pass git-workflow these declared preferences so it never prompts:
   **isolate without asking** (its Step 1) and **commit only — do not prompt,
   never merge/push** (its Step 4). Without these, git-workflow's post-commit
   gate fires on every unit commit and stalls the run. The final merge/push (via
   git-workflow) happens only at the landing, per the plan's Consent.
+- **One commit per unit, staged to its Owns.** Every green unit, of either
+  Kind, is committed on its own, in wave order. Stage exactly that unit's Owns
+  — `git add -- <every owned path>`, which stages a deletion as readily as an
+  edit — then read `git diff --cached --stat`: for any path outside that unit's
+  Owns, `git reset -q HEAD -- <path>` before committing. A path another unit
+  staged is that unit's, and rides its own commit. Then commit with the unit
+  file's commit line via `vwf:git-workflow` step 3, and write the short hash
+  into the Units table and the run-log row. Commits are free; they are what
+  makes a later failure roll back to the last green unit instead of discarding
+  the run.
 - **Memory via mempalace (lean on it)** — follow
   `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`. mempalace is the run's working
-  memory, not just an end-of-run sink: resolve the project **wing** once;
-  **recall per unit** (decisions/problems/gaps/runs for that slice) before
-  dispatching the coder, not only before the first unit; pass the wing **and**
-  the recall hits to every subagent; **persist incrementally** — store each
-  unit's durable decisions as it lands, and append a **Run log** row to the
-  folder's `index.md` as each *node* returns, not only at reconcile, in the
-  fixed shape the Run log section of `execute-stages.md` defines, mirroring
-  each row to the **run journal** (room `runs`, drawer `<plan folder>`). The
-  Run log is what a resumed run reads after a pause **and** what the final
-  report renders — so a row skipped under context pressure is work a resumed
-  run repeats and a result the report cannot vouch for. The execute subagents
-  file their own findings and gaps directly (rich detail bypasses your context)
-  and recall them on fix loop-backs. Skip the journal silently if mempalace is
-  down — the folder's Run log and the worktree commits are the record either
-  way.
+  memory, not just an end-of-run sink: resolve the project **wing** once. For a
+  **`code` unit**, **recall per unit** (decisions/problems/gaps/runs for that
+  slice) before dispatching the coder, not only before the first unit; pass
+  the wing **and** the recall hits to every subagent; **persist incrementally**
+  — store each unit's durable decisions as it lands. An **`edit` unit** takes
+  neither: its ruling is in its file, and its `DECIDED:` lines ride the Run
+  log. For **every plan**, append a **Run log** row to the folder's `index.md`
+  as each *node* returns for a `code` unit and as each *report* returns for
+  an `edit` unit, not only at reconcile, in the fixed shape the Run log section
+  of `execute-stages.md` defines, mirroring each row to the **run journal**
+  (room `runs`, drawer `<plan folder>`). The Run log is what a resumed run
+  reads after a pause **and** what the final report renders — so a row skipped
+  under context pressure is work a resumed run repeats and a result the report
+  cannot vouch for. The execute subagents file their own findings and gaps
+  directly (rich detail bypasses your context) and recall them on fix
+  loop-backs. Skip the journal silently if mempalace is down — the folder's
+  Run log and the worktree commits are the record either way.
 
 ## Pause Conditions
 
@@ -285,9 +327,10 @@ second, per the Resume check.
 
 **Always on**
 
-- **Hard halts** — no approved plan or missing blueprint for a needed slice; the
-  test/coverage/build harness cannot run at all (TDD can't be verified); a git
-  or merge **conflict** that cannot be safely resolved.
+- **Hard halts** — no approved plan or, for a plan with `covers:`, a missing
+  blueprint for a needed slice; the test/coverage/build harness cannot run at
+  all (TDD can't be verified) when a `code` unit is planned; a git or merge
+  **conflict** that cannot be safely resolved.
 - **Subagent death** — a stage subagent erroring twice in a row (after one
   re-dispatch) on the **same unit**. A reviewer that returned without its
   `REVIEW:` / `SECURITY:` block counts as an error here. Commit what is safe,
@@ -345,37 +388,36 @@ not create) are **refused**, never paused on.
 
 Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, resolve the project **wing** and
 recall prior decisions, plan rationale, findings, and unreconciled gaps for this
-slice (rooms `decisions`, `planning`, `problems`, `gaps`) before the first unit.
+plan (rooms `decisions`, `planning`, `problems`, `gaps`) before the first unit.
 Pass the wing to every subagent.
 
 **Resume check.** On a `BLOCKED` or `RUNNING` folder, the folder's **Run log**
-is what the resumed run reads: which units are already done and their commits,
-and which node of the current unit last returned. Consult the **run journal**
-(room `runs`, drawer `<plan folder>`) only when the folder cannot be read.
-Confirm the worktree named in the status line exists — if it does not, the run
-cannot resume; say so and stop, and the user decides whether to start over
-from `APPROVED` (resetting the folder's Status **and** its index row by hand,
-the row in a commit on the integration branch). Reconcile the log against the
-worktree, and **resume at the current unit** — do not re-implement finished
-units. Run log rows from the earlier attempt stay; new rows are appended with
-the round numbering continued. This is how a run paused at a resource cap
-(`/vwf:handoff`, then `/vwf:execute <folder>` in a fresh session) picks up
-where it left off.
+and its **Units table** are what the resumed run reads: which units are already
+`green` and their commits, which unit is the first that is not, and — for a
+`code` unit — which node of it last returned. Consult the **run journal** (room
+`runs`, drawer `<plan folder>`) only when the folder cannot be read. Then the
+Resume steps of [blocking and resume](references/blocking.md): the worktree in
+the status line must exist, the rulings a block asked for must now be in the
+plan, and **the worktree is authoritative** — a unit the log marks done whose
+commit is absent is re-run, since the committed code is ground truth. Resume
+at the first non-`green` unit; never re-implement a finished one. Run log rows
+from the earlier attempt stay; new rows are appended with the round numbering
+continued. This is how a run paused at a resource cap (`/vwf:handoff`, then
+`/vwf:execute <folder>` in a fresh session) picks up where it left off.
 
-**Tie-break — the worktree is authoritative.** If the Run log (or the journal)
-marks a unit **done** but its commit is **absent** from the worktree, trust the
-worktree and **re-run that unit**. A record can be stale or ahead of what
-actually landed; the committed code is ground truth.
-
-Per-unit recall continues inside the Execute loop below. Skip every memory step
-silently if mempalace is unavailable.
+Per-unit recall continues inside the `code` pipeline, for `code` units only.
+Skip every memory step silently if mempalace is unavailable.
 
 ## Setup
 
 1. **Worktree.** Invoke `/vwf:git-workflow` to create the dedicated worktree,
-   passing the declared preferences (isolate without prompting; commit-only, no
-   post-commit prompt; never merge/push). All subsequent work and commits happen
-   here. Record the worktree path in the folder's status line.
+   passing the declared preferences (isolate without prompting; branch from the
+   repo's integration branch, named after the plan folder; commit-only, no
+   post-commit prompt; never merge/push). That skill resolves which branch the
+   integration branch is; this one never assumes a name. All subsequent work
+   and commits happen here; **no unit gets `isolation: "worktree"`** — units
+   in a wave own disjoint paths. Record the worktree path in the folder's
+   status line.
 
    **In a `multi-repo` product, which repo the worktree is of follows the
    linkage** — `/vwf:git-workflow` resolves it, and the two
@@ -387,13 +429,14 @@ silently if mempalace is unavailable.
      blueprint. Nothing here is cross-repo; the member's pointer commit is part
      of landing the branch.
    - **`linkage: siblings`** — the base repo's tree does **not** contain the
-     members, so the worktree is of the **target member**, and the blueprint
-     writes below (`implementation:` stamps, docs-sync edits) go to the base
-     checkout as a second working tree. Commit the two separately, **base repo
-     last**, so a half-finished run never leaves a doc claiming work that has
-     not landed.
-2. **Preflight (unattended — nothing here asks).** Run `/vwf:doctor` scoped to
-   the plan's projects. It reads each project's `stack.languages` from
+     members, so the worktree is of the **target member**, and the base's
+     writes — Reconcile's `implementation:` stamps, and the docs unit's edits
+     to the base's own docs — go to the base checkout as a second working
+     tree. Commit the two separately, **base repo last**, so a half-finished
+     run never leaves a doc claiming work that has not landed.
+2. **Preflight (unattended — nothing here asks).** For every plan, run
+   `/vwf:doctor` scoped to the plan's projects — the base repo's own when the
+   plan names none. It reads each project's `stack.languages` from
    `.config/vwf.yaml` and checks LSP servers, toolchains, manifests, and the
    harness.
 
@@ -406,285 +449,336 @@ silently if mempalace is unavailable.
    — it builds with the conventions, harness and UX gate silently absent. Report
    and stop.
 
-   **Then read the LSP findings against the plan's Consent block** — everything
-   else doctor reports is noted and carried into the run's gap list, not blocked
-   on. A missing LSP server was a question at `/vwf:plan`'s stack gate, and its
-   answer is the Consent row `LSP <language>`; this run reads the row and never
-   asks: follow [the LSP rule](references/preflight.md) when doctor reports one.
+   **Then, when the Units table holds a `code` unit, read the LSP findings
+   against the plan's Consent block** — everything else doctor reports is
+   noted and carried into the run's gap list, not blocked on. A missing LSP
+   server was a question at `/vwf:plan`'s stack gate, and its answer is the
+   Consent row `LSP <language>`; this run reads the row and never asks: follow
+   the LSP rule in [the `code`-unit preflight](references/preflight.md) when
+   doctor reports one. On a plan of `edit` units alone, a missing LSP server
+   is a Run log detail and nothing more.
 
    Then run every line of the folder's **Wave gate** section, in order, from the
-   worktree root — what is written and nothing
-   inferred; `none` is said in the Run log and skipped. A red line here is the
-   integration branch's, not the plan's: stop and report it as such — never
-   start a run that would be blamed for a failure it inherited. Record the green
-   preflight as the first Run log row (`wave 0`, `preflight`).
+   worktree root — what is written and nothing inferred; a gate the plan does
+   not name is not this run's to invent, however obvious it looks in the tree.
+   When the section reads `none`, say so in the Run log and continue: the wave
+   review is then the only gate. A red line here is the integration branch's,
+   not the plan's: stop and report it as such — never start a run that would be
+   blamed for a failure it inherited. Record the green preflight as the first
+   Run log row (`wave 0`, `preflight`).
 
-3. **Stack conventions.** Fetch the `conventions:` prose for every template this
-   plan's projects pin, per *Resolving the conventions* in
-   `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md` — deduped by slug, **once
-   for the whole run**, here rather than per unit. The config block names the
-   templates; the prose is what the code is actually written to, and every stage
-   below that touches code is passed it.
+3. **Stack conventions — only when the Units table holds a `code` unit.** Fetch
+   the `conventions:` prose for every template this plan's projects pin, per
+   the *Stack conventions* section of
+   [the `code`-unit preflight](references/preflight.md) — once for the whole
+   run, deduped per (repo, slug), with its two distinguishable halts. A plan of
+   `edit` units alone skips this step, said in the Run log.
+4. **Wave order.** Read the folder's Units table, build the sequence from its
+   Wave and Depends-on columns and each unit's `Kind`, and record the sequence
+   you will execute. **Open the Run log** in the folder's `index.md` — the
+   table is already there, empty at approval; no `pending` row is written per
+   unit, rows are appended as nodes and reports return — and **open the run
+   journal** in mempalace (room `runs`, drawer `<plan folder>`) with that
+   ordered sequence, as the folder's mirror; with `covers:`, the journal also
+   records the `requires:` check's result per prerequisite. The loop appends a
+   row per node or report per the Run log section of `execute-stages.md`; the
+   folder is both the resumable record and what the final report renders.
 
-   **Under `multi-repo`, the fetch carries `repo: <path>`** — that asset's
-   *The target repo* line, naming the member whose `members:` entry lists the
-   project (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`). Step 1 above already
-   resolved which repo each project is of; **hand that resolution to the fetch**
-   rather than dropping it, under both linkages — under `siblings` it is the
-   worktree's own repo, under `submodule` the member's path inside the base.
-   A materialized template lives in the repo it was landed in, so a fetch that
-   omits the repo reads the base's `.claude/` tree for a member's project and
-   finds the wrong prose or none. Dedupe per (repo, slug).
+## Waves (loop over waves, no human gates)
 
-   **Two different halts live here.** An axis reading `unresolved` halts at
-   that asset's step 1, before any fetch — the axis was deferred, so there is
-   no prose to resolve; name the project and the axis and point at
-   `/vwf:architecture`. A failed fetch halts for the opposite reason: the
-   preflight already proved each pin resolves, so a failure now is the plugin
-   being unreachable. Report them distinguishably — a question nobody answered
-   is not a plugin that broke — and note that `/vwf:doctor` will not have
-   caught the first, since it reports deferral as a degradation by design.
-   Either way, code written to conventions nobody read is the thing this whole
-   gate exists to prevent.
-4. **Dependency order.** Read the folder's Units table, build the dependency
-   order from its Depends-on and Wave columns, and record the sequence you will
-   execute. **Open the Run log** in the folder's `index.md` — the table is
-   already there, empty at approval; no `pending` row is written per unit, rows
-   are appended as nodes return — and **open the run journal** in mempalace
-   (room `runs`, drawer `<plan folder>`) with that ordered sequence, as the
-   folder's mirror. The loop appends a row per node per the Run log section of
-   `execute-stages.md`; the folder is both the resumable record and what the
-   final report renders.
+The Units table carries a `Kind` column — `code` or `edit`, per
+`${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md` — and it is the switch.
+For each wave in index.md order, skipping units already `green` on a resume:
 
-## Execute (loop over units, no human gates)
+1. **Dispatch the `edit` units** — every `edit` unit in the wave, in one
+   message, per [edit-unit.md](references/edit-unit.md)'s dispatch; wait for
+   every report; a Run log row per report as it arrives, one re-dispatch on an
+   agent error, then `failed`. Mark each unit in the Units table as its report
+   is read.
+2. **Run the `code` units** — each `code` unit in the wave, one at a time, per
+   [code-unit.md](references/code-unit.md): recall, the coder under TDD, the
+   two engines, both reviewers concurrently, the merged loop-back, gaps, the
+   unit's commit, persist and journal. A Run log row per node as it returns.
+   The next `code` unit starts only when this one's reviewers' last round is
+   clean or the unit is recorded `blocked` — engines and reviewers never
+   overlap across units.
+3. **Wave review**, per [edit-unit.md](references/edit-unit.md)'s reviewer
+   section, for every wave whatever its units' Kind: one reviewer subagent over
+   the wave's diff against the unit files, scoped to the contract — rulings
+   honoured, Owns respected, cross-unit drift, docs falsified — never a `code`
+   unit's code quality or security, which were its own reviewers'. Findings
+   loop back to the owning unit, at most two rounds, under the convergence
+   guard. Every round is a Run log row.
+4. **Wave gate**, run by the orchestrator: every line of index.md's *Wave gate*
+   section, plus every report read for `UNRESOLVED:`. A unit that returned
+   `UNRESOLVED:` or `failed`, and every unit that depends on it, is **skipped**
+   per [blocking and resume](references/blocking.md); the rest of the run
+   continues. A red gate line no skipped unit explains is attributed to the unit
+   whose Owns covers the failing path and handled as that unit's failure; one
+   that cannot be attributed marks every unit in the wave `failed` with the gate
+   line as detail.
+5. **Commit** the green `edit` units, one commit per unit in wave order, per
+   the staging discipline in the Autonomous Rules. A `code` unit was committed
+   inside its pipeline, on the same discipline; the folder's edits — the Run
+   log rows, the Units table cells, the gap section — ride whichever commit
+   closes the wave.
 
-For each unit in dependency order (skip any the folder's Run log already shows
-done — its `code` node carries a commit and its reviewers' last round is
-clean):
+The two fixed final units — the docs unit and the gates-and-bump unit — run as
+their own waves after every other wave, after the Acceptance & UX pass and
+after Reconcile; see *The fixed final waves* below.
 
-1. **recall** — before dispatching, `mempalace_search` the wing scoped to this
-   unit's slice across rooms `decisions`, `problems`, `gaps`, and `runs` (limit
-   3-5). Pass the relevant hits (with the wing) to the coder so it builds on
-   prior decisions instead of re-deriving them. Skip silently if mempalace is
-   down.
-2. **code** — dispatch `execute-coder` per the stage contract in
-   `execute-stages.md`: the unit's `NN-<unit>.md` file (its ruling, Test first
-   line, Owns and Verification) plus the index's *Facts the survey
-   established*, *Assumed decisions* and *Shared-file rule* sections — never
-   the whole folder — the resolved stack, wing, and recall hits. Mark the unit
-   `running` in the Units table. A sub-100% coverage result against the
-   configured target (`.config/vwf.yaml` `pipeline.coverage_target`, default
-   100) is documented as a gap — never a silent pass.
-3. **review + security (engines first, then concurrent)** — four moves, in
-   this order:
-   1. In **one message**, invoke `/code-review` at high effort and
-      `/security-review` through the `Skill` tool. Each may run as a background
-      task; note the task each reports.
-   2. Wait on each with `TaskOutput`, blocking, up to 30 minutes from
-      invocation. An engine that errors or times out is stopped with `TaskStop`
-      and counted unavailable, with the reason kept for the prompt.
-   3. In **one message**, dispatch `execute-code-reviewer` and
-      `execute-security-reviewer` so both run at once. Each dispatch prompt
-      ends with a section headed `## Engine` holding either that engine's
-      output verbatim or the single line `ENGINE: unavailable — <reason>`. They
-      are independent read-only passes over the same diff; neither reads the
-      other's output, so serializing them only costs wall-clock.
-   4. Each reviewer returns exactly one block — `REVIEW:` or `SECURITY:`. A
-      return without it is an error under the "Subagent death" pause rule:
-      re-dispatch once; twice in a row on one unit → record `blocked`, pause.
+## On failure
 
-   The reviewers run no engine, so the orchestrator never waits for a
-   notification on a reviewer's behalf and never sends a reviewer a message to
-   finish its block — the only thing it waits for from a reviewer is its
-   return.
-4. **resolve both findings sets in one loop-back** — merge the two returns and
-   send the combined findings **tags** to `code` in **one** dispatch, then
-   repeat step 3 in full — engines first, then both reviewers concurrently —
-   for every round. Merging is not just faster, it is better:
-   the coder fixes review and security findings in a single pass instead of two,
-   so the two stages never fight over the same lines. Gating is unchanged and
-   per-stage: every security finding and every `[breaking-api]` finding **must**
-   be fixed (cap-exempt); other review findings loop **per the round-cap rule**
-   (residuals after the cap → documented as gaps). A round counts once, even
-   though it ran two reviewers. Before each new round, apply the **convergence
-   guard** — the merged loop-back is what *keeps* the two reviewers from
-   fighting over the same lines, and the guard is what catches it when that
-   fails.
-5. **gaps** — any stage's gap pointer → mirror into the "Gaps surfaced during
-   execution" section of the folder's `index.md` and file to mempalace room
-   `gaps`. Decide blocking vs non-blocking and act per the rules.
-6. **commit** — commit the unit's work via `/vwf:git-workflow`, **per the
-   commit-only preference**, with the unit file's Commit line. The folder's
-   edits — the Run log rows, the Units table cells, the gap section — ride the
-   same commit: the folder is edited in the worktree, never in the main
-   checkout.
-7. **persist & journal** — store the unit's durable decisions to room
-   `decisions`, and fill the unit's Units table row: Status `green` (or
-   `skipped`, `failed`, `unresolved` per the gap rules) and the short commit
-   hash. The **Run log rows** themselves are written **as each node returns**
-   (steps 2-4), not batched here: one row per execution
-   (`Wave | Unit | Model | Round | Outcome | Detail | Commit`), appended to the
-   folder's `index.md` and mirrored to the journal before the next dispatch, so
-   the round count is the row count and a skip carries its `why`. Batching them
-   to the end of the unit is what makes a resumed run repeat work and the report
-   render from memory.
+The run **skips what a failure blocks and keeps going** with what it does not,
+then stops once at the end with every ruling needed — never mid-wave, and never
+with "how should I proceed". The exact semantics — isolated versus all-blocking,
+the mechanical re-dispatch, what the status line records, and how a re-run
+resumes — are [blocking and resume](references/blocking.md).
 
-## Acceptance & UX (once, after all units)
+## Acceptance & UX (once, after all unit waves)
 
-When every unit is done (or skipped per the gap rules), run the `acceptance` and
-`ux` stages back to back per the contracts in `execute-stages.md` — skip each
-(a Run log row with its `why`, never silent) per its condition: acceptance when
-the folder's `index.md` "Acceptance criteria (from blueprint)" section reads
-`none — no flow touched`, ux when the plan changes no screens in a UI project.
-On anything short of a clean pass, follow the autonomous policy in
-[acceptance & ux](references/acceptance-and-ux.md) — the loop-to-`code` rule and
-its 4-round cap under the convergence guard, the `n/a` cases, and the spec-gap
-routing. Two rules hold whatever it says: a residual is **never silently
-dropped**, and infrastructure is **never scaffolded beyond the plan's own
-units**.
+With `covers:`, when every unit wave is done (or skipped per the gap rules),
+run the `acceptance` and `ux` stages back to back per the contracts in
+`execute-stages.md` — skip each (a Run log row with its `why`, never silent)
+per its condition: acceptance when the folder's `index.md` "Acceptance criteria
+(from blueprint)" section reads `none — no flow touched`, ux when the plan
+changes no screens in a UI project. On anything short of a clean pass, follow
+the autonomous policy in [acceptance & ux](references/acceptance-and-ux.md) —
+the loop-to-`code` rule and its 4-round cap under the convergence guard, the
+`n/a` cases, and the spec-gap routing. Two rules hold whatever it says: a
+residual is **never silently dropped**, and infrastructure is **never
+scaffolded beyond the plan's own units**.
+
+Without `covers:` both stages are skipped — one Run log row each with that
+`why`, journaled — a plan with no blueprint slice has no acceptance criteria
+and no Screens contract to verify against.
 
 Record both stages like any other node — a Run log row per execution, and a
 `skipped` row with its `why` when the condition didn't hold, each mirrored to
 the journal. A resumed run must know whether they already passed, and the report
 states each skip from the row rather than from recollection.
 
-## Reconcile (in the worktree, before the final report)
+## Reconcile (in the worktree, before the fixed final waves)
 
-1. **Architecture, environment, harness, docs & implementation stamps.**
-   Reconcile per the Reconcile section of
+Reconcile runs **before** the docs unit's wave, so that unit's delta is complete
+— the human docs are the docs unit's, not this step's; this skill runs no
+docs-sync of its own.
+
+1. **Architecture, environment, harness & implementation stamps — with
+   `covers:`.** Reconcile per the Reconcile section of
    `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md` — the registry block for any
    topology change, `environment.md` for any new secret/env var, the
-   `.config/vwf.yaml` `harness:` block for any capability the run added, the
-   repo's human docs (README/CLAUDE.md) via /vwf:docs-sync
-   (relay its report — what was synced, or `docs: nothing contradicted`), and
-   the **`implementation:` stamp** on each
-   blueprint doc in the plan's `covers:` list (the single sanctioned blueprint
-   edit — state only, per the stage rules) — committed in the worktree like
-   every other unit. Then run every line of the folder's **Wave gate** section
-   once more over the finished tree, and every item under *Gates the
-   orchestrator keeps*; each is a Run log row (`wave —`, `reconcile`).
-2. **Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the run's
-   durable decisions, resolved findings, and each gap to mempalace (rooms
-   `decisions`, `problems`, `gaps`). Skip anything a doc already captures. Most
-   per-unit decisions were already persisted in the loop — here, fill only what
-   is missing. Then mark the Run log **complete** with a final `reconcile` row
-   and mirror it to the run journal (room `runs`, drawer `<plan folder>`).
+   `.config/vwf.yaml` `harness:` block for any capability the run added, and
+   the **`implementation:` stamp** on each blueprint doc in the plan's
+   `covers:` list (the single sanctioned blueprint edit — state only, per the
+   stage rules) — committed in the worktree like every other unit. A plan
+   without `covers:` skips this step whole, journaled as a `skipped` row.
+2. **Persist — when the Units table holds a `code` unit.** Per
+   `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the run's durable decisions,
+   resolved findings, and each gap to mempalace (rooms `decisions`, `problems`,
+   `gaps`). Skip anything a doc already captures. Most per-unit decisions were
+   already persisted in the `code` pipeline — here, fill only what is missing.
+   A plan of `edit` units alone has nothing to persist here: an `edit` unit's
+   decisions are in its file and its Run log row.
+3. **Mark the Run log** with a `reconcile` row — what ran, or the skip and its
+   `why` — and mirror it to the run journal (room `runs`, drawer
+   `<plan folder>`). This row is written for every plan.
 
-## Final report and landing
+### The fixed final waves
 
-**Render the report from the folder's Run log** — do not reconstruct the run
-from what you remember of it. By this point the run may have spanned dozens of
-dispatches, a compaction, or a resource-cap handoff, and the log is the only
-account that survived all three intact. Read the Run log table back and
-present:
+The two fixed final units run as their own waves, in this order, and **only
+when no unit is skipped**: the docs unit invokes `vwf:docs-sync` over the run's
+branch delta — its standalone mode,
+`${CLAUDE_PLUGIN_ROOT}/skills/docs-sync/SKILL.md` — and applies its findings
+plus every `DOCS FALSIFIED:` line the units returned; the gates-and-bump unit
+bumps each released project's version per the consent block **with the command
+that block names**, runs the generators the plan names, and passes the wave
+gate. Each runs the wave loop above in full — dispatch, wave review, wave gate,
+commit. Then run every line of the folder's **Wave gate** section once more
+over the finished tree, and every item under *Gates the orchestrator keeps* —
+those are the checks a diff cannot prove — before calling the run green; each
+is a Run log row (`wave —`, `reconcile`).
 
-- **The node rows**, grouped by unit — each unit's commit, and every execution
-  beneath it with its round, outcome, and any `skipped`/`blocked` `why`. Round
-  counts are **counted from the rows**, never recalled.
-- **Coverage** vs the configured target, and the **acceptance** (per-criterion
+## The final report
+
+Before landing, **render the report from the folder's Run log**, not from
+memory — by now the run may have spanned dozens of dispatches, a compaction, or
+a resource-cap handoff, and the log is the account that survived all three
+intact. Read the Run log table back and present:
+
+- every unit with its outcome, rounds, model, commit, and any `skipped` or
+  `failed` reason — for a `code` unit, every node beneath it with its round
+  and outcome; round counts are **counted from the rows**, never recalled
+- every `GAP:` the units returned, with the assumption each proceeded on —
+  including every Owns the orchestrator widened at run time, with the finding
+  that caused it
+- the review findings that survived the cap, marked `contested`
+- **model downgrades**, named on the nodes that ran under them
+- the wave gate and orchestrator gate results
+- the versions bumped and the worktree path
+- each after-landing step and its outcome, once After landing has run
+
+With `covers:`, also:
+
+- **coverage** vs the configured target, and the **acceptance** (per-criterion
   pass/fail) and **ux** (findings + a11y) results — each from its row, or its
-  `skipped` row's `why`.
-- **Model downgrades**, named on the nodes that ran under them.
-- **The implementation stamps written** — each `covers:` doc and the state it
-  was set to, with why anything is short of `complete`.
-- **The consolidated gap list** from the "Gaps surfaced during execution"
+  `skipped` row's `why`
+- **the implementation stamps written** — each `covers:` doc and the state it
+  was set to, with why anything is short of `complete`
+- **the consolidated gap list** from the "Gaps surfaced during execution"
   section of the folder's `index.md`, marking which came from a **cap** and
   which from the **convergence guard** — they point reconciliation at different
-  places.
-- **The wave gate and orchestrator gate results.**
-- **The worktree path.**
+  places
 
 Fall back to the run journal only when the folder cannot be read — say so
 plainly and mark the report **reconstructed**. Whoever reads it needs to know
 whether they are reading a record or a recollection; a reconstructed report is a
 valid thing to land on, an undisclosed one is not.
 
-**Then land per the Consent block.** Read the row *Merge to the integration
-branch and push on green*. When it reads `yes`, **and** every Wave gate line
-and orchestrator gate is green, **and** every unit is `green` or a skip the Run
-log records with its `why`, **and** the gap list holds no blocking gap → land
-without a further prompt:
+If any unit is `skipped`, `failed` or `unresolved`, this report is the block
+notice and the run stops here with the status set to `BLOCKED`.
 
-1. When the folder's `backlog:` names ids, invoke `/vwf:backlog done <ids>` —
+## Land
+
+With every unit `green`, every Wave gate line and orchestrator gate passed, and
+the gap list holding no blocking gap, prepare the landing commit:
+
+1. Read the Consent row *Merge to the integration branch and push on green*.
+2. **The folder.** On `yes`, when the gap list is **empty**, move the folder
+   to `docs/plans/archived/` — it is finished and the archive is its record.
+   When any gap is **open**, the folder stays live at its path as the working
+   record of what needs reconciling; the report names `/vwf:archive <folder>`
+   for after reconciliation. On `no` the folder is never moved — the hand
+   merge, then `/vwf:archive <folder>`, is what retires it.
+3. Set the folder's Status to `COMPLETE` with the date and the commit list on
+   `yes`, and to `RUNNING — ready to land by hand on <branch>` on `no`. Then,
+   when index.md's `backlog:` names ids, invoke `/vwf:backlog done <ids>` —
    that skill is the only writer of `docs/backlog.md`, and its edit rides the
-   run. Set the folder's Status to `COMPLETE` with the date and the commit list,
-   and commit it as one final `docs:` commit in the worktree.
-2. Hand off to `/vwf:git-workflow` step 4, *merge, push & clean up*, **with the
-   declared preference that consent was recorded in the plan — do not ask
-   again**. A merge conflict is a hard halt: abort, keep the worktree, set
-   `BLOCKED`, report the files.
-3. When step 4 returns from the merge and push, run *Writing a row* in
-   `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md` with the row `Status` set to
-   `COMPLETE` and its `Folder` cell **left at the live path** — a cycle plan's
-   folder is not moved here, so re-pointing `Folder` under
-   `docs/plans/archived/` is `/vwf:archive`'s edit, made when it moves the
-   folder — and the sweep, which still runs — every `COMPLETE` row no
-   `APPROVED` or `RUNNING` row's `Requires` still names is removed. That is
-   the commit
-   `docs: plan queue — <folder> complete`, on the integration branch, in the
-   main checkout; a rejected push re-applies the same row until it lands, and
-   never re-picks.
-4. The folder itself is **not** moved to `docs/plans/archived/` here — tell the
-   user to run `/vwf:archive` (see Archive below).
+   same commit. Commit all of it as one final `docs:` commit in the worktree.
 
-When any condition fails, or the row reads `no` → **stop at the report** with
-what failed — the red gate line, the unit that is not green, the blocking gap,
-or the consent itself — and the exact resume command, `/vwf:execute <folder>`.
-The worktree stays committed; the folder's Status reads `BLOCKED` with the
-detail, or `RUNNING` with the branch name and that it is ready to land by hand
-when consent alone withheld it (say too that the index row stays `RUNNING`
-until the hand merge is followed by a hand edit of the row to `COMPLETE`, or
-by `/vwf:archive <folder>`, which applies the same rule). Two things a user can
-say at that stop:
+Then act on that consent row:
+
+- **yes** → hand off to `/vwf:git-workflow` step 4, *merge, push & clean up*,
+  **with the declared preference that consent was recorded in the plan — do
+  not ask again**. A merge conflict is a hard halt: abort, keep the worktree,
+  set `BLOCKED`, report the files. When step 4 returns from the merge and push,
+  run *Writing a row — the claim, and the completion* in
+  `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md` with the row set to `COMPLETE`
+  — its `Folder` cell pointing at `docs/plans/archived/<basename>` when step 2
+  moved the folder, and left at the live path when a gap kept it there, for
+  `/vwf:archive` to re-point later — `Kind` and `Target repo` untouched — and
+  *The sweep* from the same asset: every `COMPLETE` row already under
+  `archived/` that no `APPROVED` or `RUNNING` row's `Requires` still names is
+  removed, whatever its kind. That is the commit
+  `docs: plan queue — <folder> complete`, on the integration branch, in the
+  main checkout; a rejected push re-applies the same row until it lands, and
+  never re-picks.
+- **no** → stop with the worktree path and the branch name, and say the branch
+  is ready to land by hand. Say too that the index row stays `RUNNING` until
+  the hand merge is followed by a hand edit of the row to `COMPLETE`, or by
+  `/vwf:archive <folder>`, which applies the same rule. Ask nothing further.
+
+When any landing condition fails — a red gate line, a unit that is not green,
+a blocking gap → **stop at the report** with what failed and the exact resume
+command, `/vwf:execute <folder>`. The worktree stays committed; the folder's
+Status reads `BLOCKED` with the detail. Two things a user can say at that stop:
 
 - **Fix first** → the user names what to address → loop the affected units back
-  through the pipeline (code, then the loop's step 3 in full — engines first,
-  then review + security concurrently; re-verify acceptance/ux if touched), then
-  re-present the report and re-read the Consent block.
+  through their pipeline (a `code` unit: code, then engines first, then review
+  + security concurrently; re-verify acceptance/ux if touched; an `edit` unit:
+  re-dispatch with the finding appended, then the wave review), then re-present
+  the report and re-read the Consent block.
 - **Reject** → leave the worktree intact and committed for inspection; nothing
   merges.
 
-**After landing — every step is an `ask`, and the run stops once before each.**
-Read the folder's **After landing** table. Before each step, in order, the run
-stops once, reports what the step would do in the step's own terms, and waits;
-a yes authorises exactly that step and nothing else. A `run` mode in an older
-folder is read as `ask`. An empty table, or `none`, skips this in one clause.
-The steps run from the repo root the landing left behind — the main checkout
-when the branch merged, the worktree when it did not, and then only the steps
-whose *Notes* say they may run from the worktree. The orchestrator runs them,
-never a unit. Offer waiting as the equal option: where a step stages something
-a **restarted** session picks up, "not yet" is the answer the two-stage shape
-exists for. Report each step taken — ran, with what it did, or exited non-zero,
-verbatim, never worked around.
+**Gap reconciliation (after the landing) — with `covers:`.** Whatever the
+landing decision, walk the consolidated gap list and offer to close each —
+**never silently rewrite either doc**: blueprint holes → `/vwf:blueprint` (the
+sweep re-stamps coverage); plan holes → `/vwf:plan` to re-derive the slice
+against the now-updated blueprint. When a gap is reconciled, note its
+resolution back into the `gaps` room so a later cycle's recall sees it as
+closed. Once no gap is open, the folder that stayed live is retired by
+`/vwf:archive` — user-only, so recommend it by name and stop there.
 
-**Gap reconciliation (after the landing).** Whatever the landing decision, walk
-the consolidated gap list and offer to close each — **never silently rewrite
-either doc**: blueprint holes → `/vwf:blueprint` (the sweep re-stamps
-coverage); plan holes → `/vwf:plan` to re-derive the slice against the
-now-updated blueprint. When a gap is reconciled, note its resolution back into
-the `gaps` room so a later cycle's recall sees it as closed.
+**Chain forward — with `covers:`.** Scan the one table of the base repo's
+`docs/plans/index.md` — not a walk of the members, most of which are not cloned
+here — for rows whose `Requires` names the folder just completed. If one is
+now unblocked (every prerequisite satisfied per that asset's *Resolution*),
+offer `/vwf:execute <next-folder>` — chained plans land one focused run at a
+time.
 
-## Archive
+## After landing — every step is an `ask`, and the run stops once before each
 
-After a merge with no open gaps, **tell the user to run `/vwf:archive`** to
-retire the completed plan folder. `/vwf:archive` is user-only — you cannot
-invoke it, so recommend it by name and stop there. While gaps remain open, don't
-recommend it — the folder is still the working record of what needs
-reconciling.
+Read index.md's **After landing** table. Every step in it is an `ask`: before
+each, in order, the run stops once, reports what the step would do in the
+step's own terms, and waits; a yes authorises exactly that step and nothing
+else. A step whose *Mode* reads `run` in an older folder is read as `ask` — the
+mode that let a plan pre-authorise a step at approval time is retired, and
+nothing recorded there authorises anything now. An empty table, or `none`,
+skips this section and is said in one clause.
 
-**Chain forward.** Scan the one table of the base repo's `docs/plans/index.md`
-— not a walk of the members, most of which are not cloned here — for `cycle`
-rows whose `Requires` names the folder just completed. If one is now unblocked
-(every prerequisite's `covers:` docs read `implementation: complete`), offer
-`/vwf:execute <next-folder>` — chained plans land one focused run at a time.
+The steps run from the repo root the landing left behind: the main checkout
+when the branch merged, the worktree when it did not — and when the landing was
+**not** consented, only those steps whose *Notes* say they may run from the
+worktree are offered. The orchestrator runs them, never a unit — a step may
+mutate the machine rather than the tree under review, and a unit never reaches
+outside the worktree. It is asked in the moment even though the plan recorded
+the intent: consent written at approval is intent, and this is precisely where
+a run reaches past the tree under review.
+
+**Offer waiting as the equal option, not the fallback.** Where a step stages
+something, it is exercised only in a restarted session — so "not yet, I want to
+look first" is the answer the two-stage shape exists to make easy. Say that the
+table names the remaining steps whenever the user comes back to them.
+
+Each step taken is reported with its outcome:
+
+- **Ran.** Say what it did in the step's own terms. A step whose *Notes* say a
+  **restarted** session is needed for its effect is reported with that sentence
+  — this session already loaded what the step replaced.
+- **Exited non-zero.** Report the failure verbatim, offer the remaining steps,
+  and never work around it. A step that refuses is usually a fact about the
+  machine rather than a failure of the run, and the plan named that step, not a
+  substitute for it.
+
+If the landing was not consented and no step may run from the worktree, there
+is nothing to offer yet; say so in the final line and stop.
 
 ## What does not stop the run
 
 The plan is approved and every ruling is in the folder. The run does **not**
-pause to re-ask a ruling, confirm a unit's scope, report progress between units,
-ask whether to continue after a green gate, ask before a commit, ask before the
-claim or the landing row, ask about a missing LSP server, or ask what to do
-about a gap — a gap is recorded and the stated assumption stands until the
-final report. It pauses on the Pause Conditions, at the report when the landing
-conditions fail, and once before each after-landing step. Everything else is
-recorded in the Run log and answered at the end.
+pause to re-ask a ruling, confirm a unit's scope, report progress between units
+or waves, ask whether to continue after a green gate, ask before a commit, ask
+before the claim or the landing row, ask about a missing LSP server, or ask
+what to do about a gap or a `GAP:` — a gap is recorded and the stated
+assumption stands until the final report. It pauses on the Pause Conditions —
+an inherited red preflight, a merge conflict, a resource cap among them — at
+the report when the landing conditions fail, and once before each
+after-landing step. Everything else is recorded in the Run log and answered at
+the end.
+
+## What this skill never does
+
+- Reads a unit's owned files itself, or does a unit's work inline because it
+  looks small
+- Dispatches a wave whose predecessor is not green or explicitly skipped
+- Runs two `code` units' pipelines at once, or a `code` unit's reviewers
+  beside another unit's
+- Runs a generator or bumps a version outside the gates-and-bump unit — a
+  consented after-landing step is the one exception, and it is the
+  orchestrator's because it may write outside the worktree
+- Runs an after-landing step without asking — without the in-the-moment yes for
+  that step — or merges past the integration branch
+- Treats a `run` mode in an older folder, or the consent recorded at approval,
+  as a step's authorisation
+- Edits `docs/plans/index.md` from inside the worktree, or edits any row but its
+  own plan's and the `COMPLETE` sweep the landing applies
+- Takes a `RUNNING` row, however stale — a hand reset to `APPROVED` is the only
+  release
+- Edits `docs/backlog.md` itself, or lets a unit do it — `/vwf:backlog` owns
+  that file, and the landing calls it
+- Edits a blueprint doc beyond the `implementation:` stamp, or runs a
+  blueprint-bound step on a plan without `covers:`
+- Runs a gate the plan's *Wave gate* section does not name, or skips one it does
+- Picks up an item from *Out of scope* or *Parked*, however adjacent
+- Reports the run from recollection when the run log exists
