@@ -1,9 +1,9 @@
 # The plan folder template
 
 One folder shape for both planners. `/vwf:plan` writes it for a blueprint slice
-and `/vwf:change-plan` for ad-hoc work; `/vwf:execute` and
-`/vwf:change-execute` parse it and rewrite the status column and the run log.
-The folder holds `index.md` and one `NN-<unit>.md` per unit, and is named
+and `/vwf:change-plan` for ad-hoc work; `/vwf:execute` parses it and rewrites
+the status column and the run log. The folder holds `index.md` and one
+`NN-<unit>.md` per unit, and is named
 
 - `docs/plans/<YYYY-MM-DD>-<HHMM>-<slice>/` for a **cycle plan** — the time
   component stays so two plans for one slice on one day coexist;
@@ -11,7 +11,7 @@ The folder holds `index.md` and one `NN-<unit>.md` per unit, and is named
 
 Every section below is required unless marked *cycle plans only*. The
 frontmatter and the **Status**, **Consent**, **Units**, **Wave gate**, **After
-landing** and **Run log** blocks have a fixed shape the executors parse, so keep
+landing** and **Run log** blocks have a fixed shape the executor parses, so keep
 the headings and the column order exactly. The **Status** block is the one
 status a plan has — there is no `status:` key in the frontmatter.
 
@@ -112,9 +112,9 @@ Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
 
 Kind is `code` or `edit`. `/vwf:plan` writes `code` on every unit;
-`/vwf:change-plan` writes `edit`. No executor switches on it yet — `execute`
-runs its per-unit pipeline on every unit and `change-execute` its wave review;
-the switch is plan 2's.
+`/vwf:change-plan` writes `edit`. `/vwf:execute` runs a `code` unit through the
+per-unit pipeline and an `edit` unit under the wave review — the `edit` units
+of a wave are dispatched together, the `code` units one at a time.
 
 ## Shared-file rule
 
@@ -184,9 +184,9 @@ context to pick it up — or "none">
 ## Run log
 
 <written by the executor; empty at approval. `execute` appends one row per
-node as it returns — a unit yields several; `change-execute` one row per unit
-report. This table is the record for both kinds; the mempalace journal is a
-mirror.>
+node for a `code` unit — a unit yields several — and one row per unit report
+for an `edit` unit, both as they return. This table is the record for both
+kinds; the mempalace journal is a mirror.>
 
 | Wave | Unit | Model | Round | Outcome | Detail | Commit |
 | ---- | ---- | ----- | ----- | ------- | ------ | ------ |
@@ -218,21 +218,13 @@ cycle end.>
 This folder is already committed and pushed on the branch it was planned on, so
 the fresh session's worktree — cut from the integration branch — can see it.
 
-Run in a fresh session — a cycle plan:
+Run in a fresh session, whichever kind the plan is:
 
-/vwf:execute docs/plans/<date>-<HHMM>-<slice>
+/vwf:execute docs/plans/<date>-<name>
 
 or let the queue pick it, by priority:
 
 /vwf:execute next
-
-A change plan:
-
-/vwf:change-execute docs/plans/<date>-<name>
-
-or let the queue pick it, by priority:
-
-/vwf:change-execute next
 ```
 
 ## NN-<unit>.md
@@ -286,8 +278,9 @@ the repo's equivalent — never a type that file does not allow.
 (`${CLAUDE_PLUGIN_ROOT}/skills/docs-sync/SKILL.md`) and applies its findings plus
 every `DOCS FALSIFIED:` line the earlier units returned and the list from
 index.md's survey facts. Docs ship with the change, so this unit is never
-optional — a cycle plan's docs unit runs `/vwf:docs-sync` the same way. A
-confirmed reversal from the interview also lands here, as a
+optional — it runs `/vwf:docs-sync` for every plan, of either kind, and the
+executor runs no docs-sync of its own. A confirmed reversal from the interview
+also lands here, as a
 `docs/memory/decisions/<date>-<slug>.md` per
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`.
 
@@ -297,10 +290,10 @@ passes the full wave gate. A bump that would land on a component equal to 13 or
 17 goes one further — `x.12.0` minor becomes `x.14.0`, `x.y.16` patch becomes
 `x.y.18`; those two integers are never issued on any version line, and the
 consent block names the version the bump actually reaches. Its report is the
-run's final gate. For a cycle plan it is also the unit that writes the
-`implementation:` stamps on the `covers:` docs — but only when the plan's
-executor delegates that; today `execute` writes them itself at Reconcile, so
-see the executor.
+run's final gate. It does not write the `implementation:` stamps on a cycle
+plan's `covers:` docs — those are the executor's Reconcile step, gated on
+`covers:` and run before the docs unit's wave, so the docs unit's delta is
+complete.
 
 It does **not** run the after-landing steps — those are the orchestrator's,
 after the landing, because an after-landing step mutates the machine rather than
