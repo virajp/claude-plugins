@@ -3,7 +3,8 @@
 ## Rules
 
 - ALWAYS ask user before running a `p:i:release`, `p:plugins:release` or
-  `p:site:release` task
+  `p:site:release` task — the one exception is a plan folder whose After landing
+  table records that release as `run`, consented at its interview
 - **Docs ship with the change.** Any change to plugin behavior must reconcile
   `readme.md`, this file, and the manual under `site/src/content/docs/` in the
   same commit — stale docs are more harmful than no docs
@@ -56,8 +57,10 @@ not on that branch, claims the row `RUNNING` with a pushed commit before it cuts
 a worktree, and marks it `COMPLETE` once the merge lands (archiving the folder
 there and re-pointing the row when no gap is open; leaving it live for
 `/vwf:archive` to move when one is) — each plan folder carries this repo's gate
-lines, and `mise run p:plugins:local` and `/release` as `ask` steps: every
-after-landing step is asked for in the moment; the `run` mode is retired.
+lines, and `mise run p:plugins:local` and `/release` as after-landing steps,
+each carrying `run` or `ask` as the interview recorded: `/vwf:execute` runs the
+`run` steps on a green landing without a prompt and stops once before each `ask`
+step.
 
 | Read                                                         | For                                                                                                                                                                                                                                                                                                                                                           |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -306,8 +309,9 @@ names the commands its plan folder gates on. The two planners share the folder
 shape (`assets/templates/plan-folder.md`), the interview checklist
 (`assets/plan-interview.md`) and the one plan index (`assets/plan-index.md`),
 and one executor, `execute`, runs both: each unit's `Kind` cell decides what
-runs over it — a `code` unit the TDD / coverage / engines / review + security
-pipeline, an `edit` unit the concurrent dispatch and the wave review — and the
+runs over it — a `code` unit TDD and the coverage gate, a `review` row the two
+engines plus the code and security reviewers over the branch delta since the
+last row, an `edit` unit the concurrent dispatch and the wave review — and the
 acceptance and UX pass and the blueprint reconcile fire only when the plan has
 `covers:`. The ordering gates, the skill and agent tables, how to add a skill
 and pick its invocation mode, and the dependency reasoning are the
@@ -370,12 +374,14 @@ not a component.
 **A release is two stages, and only the second reaches anyone else.** Local
 first — `mise run p:plugins:local` stages the changed plugins into the dev
 marketplace and updates this machine's install, publishing nothing and cutting
-no tag, so `/vwf:execute` offers it as the plan's first after-landing `ask` step
-— stopping once and asking before it, as before every after-landing step — and a
-staged plugin loads in the next **restarted** session. Public second — the tags.
+no tag, so `/vwf:execute` takes it as the plan's first after-landing step — run
+without a prompt on a green landing when the plan records it `run`, asked for
+once when it records `ask` — and a staged plugin loads in the next **restarted**
+session. Public second — the tags.
 
 **Ask the user before running `p:plugins:release`, `p:i:release` or
-`p:site:release`.**
+`p:site:release`** — unless the plan folder being landed records that release as
+a `run` step, consented at its interview.
 
 The mise environment split, the four workflows and why `deps-update.yml`
 dispatches rather than calls `release.yml`, the supply-chain settings and the

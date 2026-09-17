@@ -235,14 +235,15 @@ CI, docs, a refactor) — an `index.md` plus one file per unit, which each commi
 and pushes at hand-off with a row in `docs/plans/index.md`'s one plan table, so
 the fresh session can see it. One executor runs both: `/vwf:execute <folder>`
 runs a folder of either kind unattended in that fresh session — a `code` unit
-through TDD, coverage and the review + security pass, an `edit` unit through the
-wave review — and `/vwf:execute next` picks the runnable plan with the lowest
-`Priority` value from that table, of either kind, and runs it, asking before
-every after-landing step. Beside both sits `/vwf:backlog`, the sole writer of
-`docs/backlog.md` — the prioritised list of work that cannot be picked up now,
-which every planning and landing command calls to move an item. It names **no**
-technology — no language, no framework, no cloud — which is what lets the rest
-of this list exist. `vwf@virajp-plugins`
+through TDD and coverage, the code and security review at the plan's `review`
+rows, an `edit` unit through the wave review — and `/vwf:execute next` picks the
+runnable plan with the lowest `Priority` value from that table, of either kind,
+and runs it, running or asking before each after-landing step as the plan
+records. Beside both sits `/vwf:backlog`, the sole writer of `docs/backlog.md` —
+the prioritised list of work that cannot be picked up now, which every planning
+and landing command calls to move an item. It names **no** technology — no
+language, no framework, no cloud — which is what lets the rest of this list
+exist. `vwf@virajp-plugins`
 
 ### Tooling, design and delivery
 
