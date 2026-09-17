@@ -26,8 +26,11 @@ The orchestrator passes: the acceptance criteria to verify (each criterion with
 its source flow — from the "Acceptance criteria (from blueprint)" section of
 the plan folder's `index.md`, which quotes the flow docs; or every flow's
 Acceptance block from `docs/blueprint/flows/*/*/index.md` when `/vwf:verify`
-dispatches you), the registry (project paths and stacks), the project wing, and
-the **slice** and **round number** for your recall tag.
+dispatches you), the registry (project paths and stacks), the project wing, the
+**slice** and **round number** for your recall tag, and the **plan folder
+path** and its **`covers:` doc names** for your drawers — when the dispatch
+names no plan folder (`/vwf:verify`'s environment mode), the **flow doc path**
+the criteria came from stands in for both.
 
 **Environment mode** (`/vwf:verify`): the orchestrator additionally names a
 target environment (base URLs) and the repo's staging/external-mode E2E
@@ -78,14 +81,20 @@ staging-capable test).
 Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, file the full detail — the
 criterion→test map, per-test output for failures, and what a NOT-COVERED test
 must assert — with `mempalace_add_drawer` (the wing the orchestrator gave you,
-room `problems`), tagged `<slice>/acceptance/<round>` — use the slice and round
-the orchestrator gave you, never invent them. Your inline reply stays terse.
+room `problems`, `source_file` set to the **plan folder path**, or the flow
+doc path when no plan folder was named), tagged `<slice>/acceptance/<round>` —
+use the slice, round and path the orchestrator gave you, never invent them: a
+coder's recall filters on that path. Your inline reply stays terse.
 Skip silently if mempalace is unavailable.
 
 **Blueprint/plan gaps are not findings.** A criterion that is untestable as
 written (not observable, ambiguous, contradicted by another flow) is a **gap**
-in the blueprint, not a code finding — file it to room `gaps`, tagged
-`<slice>/gap/<round>`, and report it on the gaps contract line.
+in the blueprint, not a code finding — file it to room `gaps`, `source_file`
+set to the **plan folder path**, tagged `acceptance/gap/<round>`, its content
+**opening with the plan folder path and the `covers:` doc names** the dispatch
+carries — or, when no plan folder was named, `source_file` the **flow doc
+path** and the content opening with it — and report it on the gaps contract
+line.
 
 ## Return contract
 
@@ -100,7 +109,7 @@ COUNTERS: ok   # or "n/a — metrics not exposed", "n/a — none declared", or o
 SPEC/PLAN GAPS: none   # untestable/ambiguous criteria: one terse line each, or "none"
 VERDICT: approve   # or "changes-required"
 RECALL: <slice>/acceptance/<round>   # mempalace tag for the detail (omit if not filed)
-GAPS: <slice>/gap/<round>   # mempalace tag for the gaps detail (omit if none)
+GAPS: acceptance/gap/<round>   # mempalace tag for the gaps detail (omit if none)
 ```
 
 Any FAIL or NOT-COVERED forces `VERDICT: changes-required`; a declared counter

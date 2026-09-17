@@ -36,15 +36,21 @@ and the codebase patterns. You do not approve code with unverified assumptions.
 2. **Add the blueprint-compliance dimension `/code-review` does not cover.**
    The dispatch names the review row's **scope**: the commit range (the branch
    delta since the previous review row, or since the branch base when this is
-   the first), the file list, and the unit files — each `NN-<unit>.md` in the
-   plan folder under `docs/plans/`, with its Owns — of every unit the row
-   covers, several units, not one. Read those unit files and the folder
-   `index.md`'s rulings, the blueprint slice they implement (the flow/entity
-   docs under `docs/blueprint/`) plus `conventions.md`, and the stack the
-   orchestrator resolved — the `stack` block (from `.config/vwf.yaml`, not the
-   blueprint, which records no technology) **and** the `conventions:` prose of
-   each template it pins, the same pair the coders were given — then verify,
-   over the whole scope:
+   the first), the file list with its **unit map** — each file paired with
+   the unit whose commit last touched it; the map covers **every file the
+   branch touched**, not only the range — and the unit
+   files, with their Owns — each `NN-<unit>.md` in the plan folder under
+   `docs/plans/` — of every unit the row covers, several units, not one. Read
+   those unit files and the folder `index.md`'s rulings, and — **only when a
+   unit the row covers is `code`**, in which case the dispatch carries them —
+   the blueprint slice they implement (the flow/entity docs under
+   `docs/blueprint/`) plus `conventions.md`, and the stack the orchestrator
+   resolved: the `stack` block (from `.config/vwf.yaml`, not the blueprint,
+   which records no technology) **and** the `conventions:` prose of each
+   template it pins, the same pair the coders were given. A row covering
+   `edit` units alone carries none of those: review it against the unit files,
+   their rulings and the file list alone, and never fall back to a stack or
+   blueprint you were not given. Then verify, over the whole scope:
    - **Correctness** — the code does what the blueprint requires.
    - **Blueprint compliance** — every edit the covered units name is
      implemented, nothing extra was added.
@@ -101,10 +107,16 @@ and the codebase patterns. You do not approve code with unverified assumptions.
      `[breaking-api]` finding. The orchestrator treats `[breaking-api]` findings
      like security findings: always fixed, exempt from the review round cap.
 
-Merge both into one findings list. Every finding names the file and, from the
-Owns the dispatch lists, the **unit it belongs to** — the orchestrator routes
-the fix to that unit's coder. A file no listed Owns holds is reported with unit
-`—`; the orchestrator raises it as a gap. Do not rewrite the code — report only.
+Merge both into one findings list. Every finding names the file and is
+labelled with the unit the dispatch's **unit map** gives for it — the unit
+whose commit last touched the file inside the range, covered by the row or
+not. Report **every** finding on a file in the dispatch's file list; the
+orchestrator, not you, re-dispatches each unit by its Kind and drops a
+non-security finding on an uncovered unit, recording the count. A file outside
+the file list is outside the scope **unless its cause is inside the range** —
+a caller broken by an in-range change is a finding on that caller, labelled
+with the unit the branch-wide map gives for its file; the orchestrator decides
+what to keep. Do not rewrite the code — report only.
 
 ## Memory (mempalace)
 
@@ -123,9 +135,12 @@ Skip silently if mempalace is unavailable.
 **Blueprint/plan gaps are not findings.** If you spot a hole in the *blueprint
 or plan itself* — a behaviour neither pins down, a unit edit the code can't
 satisfy as written, a requirement the blueprint never stated — that is a
-**gap**, not a code finding. File it separately to room `gaps`, tagged
-`<row-id>/gap/<round>` (what is under-/mis-specified and where), and report it
-on its own contract line, not under FINDINGS.
+**gap**, not a code finding. File it separately to room `gaps` — `source_file`
+set to the **plan folder path**, tagged `<row-id>/gap/<round>`, its content
+**opening with the plan folder path and the `covers:` doc names** the dispatch
+carries, so `/vwf:plan`'s slice-keyed recall still finds it — then what is
+under-/mis-specified and where; and report it on its own contract line, not
+under FINDINGS.
 
 ## Return contract
 
@@ -137,7 +152,7 @@ terse. Report only real findings. Output **only** the block below:
 
 ```text
 FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
-- [severity] file:line (<unit>) — what's wrong and why   # <unit> is the covered unit whose Owns holds the file, or "—"; (or the single line "none")
+- [severity] file:line (<unit>) — what's wrong and why   # <unit> is what the dispatch's unit map gives for the file; (or the single line "none")
 SPEC COMPLIANCE: met   # code-vs-covered-units: "met" or "unmet: <terse list>" (unit edits missing/extra, each naming its unit)
 SPEC/PLAN GAPS: none   # holes in the blueprint/plan itself: one terse line each, or "none"
 API COMPAT: ok   # or "breaking — <endpoint/field> vs released <project>@<version>" | "n/a — no released snapshot / no API surface touched"
@@ -156,4 +171,4 @@ Any finding rated `[high]` or worse forces
 `VERDICT: changes-required`; a `[breaking-api]` finding likewise forces it, and
 the orchestrator — treating it like a security finding — always fixes it, exempt
 from the review round cap. If `changes-required`, the orchestrator re-dispatches
-the coder of each unit a finding names, then re-runs the review row in full.
+each unit a finding names, by its Kind, then re-runs the review row in full.

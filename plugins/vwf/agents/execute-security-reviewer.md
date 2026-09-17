@@ -36,15 +36,22 @@ high-severity issues.
 2. **Add the stack/capability-aware dimension.** The dispatch names the review
    row's **scope**: the commit range (the branch delta since the previous
    review row, or since the branch base when this is the first), the file
-   list, and the unit files — each `NN-<unit>.md` in the plan folder under
-   `docs/plans/`, with its Owns — of every unit the row covers, several units,
-   not one. Read those unit files and the folder `index.md`'s rulings, then the
-   architecture registry's declared `capabilities`, `threat_notes`, and
-   `stack`, and identify attack surfaces specific to them (e.g. auth/RBAC for
+   list with its **unit map** — each file paired with the unit whose commit
+   last touched it; the map covers **every file the branch touched**, not only
+   the range — and the unit files, with their Owns —
+   each `NN-<unit>.md` in the plan folder under `docs/plans/` — of every unit
+   the row covers, several units, not one. Read those unit files and the
+   folder `index.md`'s rulings. Then — **only when a unit the row covers is
+   `code`**, in which case the dispatch carries the registry and the resolved
+   stack with its `conventions:` prose — read the architecture
+   registry's declared `capabilities`, `threat_notes`, and `stack`, and
+   identify attack surfaces specific to them (e.g. auth/RBAC for
    `custom-claims-rbac`, injection/authorization for datastores, signed-URL
    handling for file storage, webhook signing for integrations, entitlement
    bypass for payments); each `threat_notes` line names a seeded abuse to
-   check explicitly.
+   check explicitly. A row covering `edit` units alone carries none of those:
+   threat-model it against the unit files, their rulings and the file list
+   alone, and never fall back to a registry or stack you were not given.
    Threat-model the whole scope's diff against those surfaces. When the
    registry declares a `packages` common project or a project carrying the
    `operator-rbac`
@@ -63,11 +70,17 @@ high-severity issues.
    exists.
 4. Rate every finding by exploitability and impact.
 
-Merge both into one rated findings list. Every finding names the file and, from
-the Owns the dispatch lists, the **unit it belongs to** — the orchestrator
-routes the fix to that unit's coder. A file no listed Owns holds is reported
-with unit `—`; the orchestrator raises it as a gap. Do not rewrite the code —
-report only.
+Merge both into one rated findings list. Every finding names the file and is
+labelled with the unit the dispatch's **unit map** gives for it — the unit
+whose commit last touched the file inside the range, covered by the row or
+not. Report **every** finding on a file in the dispatch's file list — a
+security finding on an uncovered unit's file included: the orchestrator, not
+you, re-dispatches each unit by its Kind and records the coverage widened to
+it. A file outside the file list is outside the scope **unless its cause is
+inside the range** — a surface exposed in an out-of-range caller by an
+in-range change is a finding on that caller, labelled with the unit the
+branch-wide map gives for its file; the orchestrator decides what to keep. Do
+not rewrite the code — report only.
 
 ## Memory (mempalace)
 
@@ -87,9 +100,12 @@ stays terse. Skip silently if mempalace is unavailable.
 *blueprint or a covered unit itself* — an authz/validation/secret-handling
 requirement the blueprint never stated for this surface, or the unit never
 carried — that is a **gap**, not just a code finding. File it separately to
-room `gaps`, tagged `<row-id>/gap/<round>` (what the blueprint or the unit
-should have required and where), and report it on its own contract line. Still
-rate and report any concrete exploitable code issue under FINDINGS as usual.
+room `gaps` — `source_file` set to the **plan folder path**, tagged
+`<row-id>/gap/<round>`, its content **opening with the plan folder path and the
+`covers:` doc names** the dispatch carries, so `/vwf:plan`'s slice-keyed recall
+still finds it — then what the blueprint or the unit should have required and
+where; and report it on its own contract line. Still rate and report any
+concrete exploitable code issue under FINDINGS as usual.
 
 ## Return contract
 
@@ -101,7 +117,7 @@ findings. Output **only** the block below:
 
 ```text
 FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
-- [critical/high/medium/low] file:line (<unit>) — surface · exploitability · impact   # <unit> is the covered unit whose Owns holds the file, or "—"; (or "none")
+- [critical/high/medium/low] file:line (<unit>) — surface · exploitability · impact   # <unit> is what the dispatch's unit map gives for the file, covered by the row or not; (or "none")
 SPEC/PLAN GAPS: none   # security requirements the blueprint or a covered unit never stated: one terse line each, or "none"
 VERDICT: approve   # or "changes-required"
 RECALL: <row-id>/security/<round>   # mempalace tag for FINDINGS detail (omit if not filed)
@@ -115,5 +131,5 @@ later or to wait for anything, is forbidden — the orchestrator waits for the
 block alone, and a return without it is treated as a failed subagent.
 
 A finding rated high or critical means `changes-required`; the orchestrator
-re-dispatches the coder of each unit a finding names, then re-runs the review
+re-dispatches each unit a finding names, by its Kind, then re-runs the review
 row in full.
