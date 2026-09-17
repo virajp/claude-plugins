@@ -2084,13 +2084,15 @@ What it does, by rule:
   fix commits as a new loop with its own round count. Gap and finding drawers in
   memory are keyed to the plan folder, since row ids repeat across plans. A plan
   with `code` units that no review row covers is refused at preflight — the run
-  infers no row. With `covers:`, after **all** unit waves, one `acceptance + ux`
-  pass runs (E2E criteria + rendered-UI review), with the same 4-round cap.
-  `acceptance` runs when the slice touches a flow with acceptance criteria; `ux`
-  when it changes screens in a UI project (web gets the full screenshot review;
-  Flutter a code-level pass) — each skip explicit, never silent. Without
-  `covers:` both are skipped, said in the Run log: a plan with no slice has no
-  criteria and no Screens contract to verify against.
+  infers no row — and so is a review row whose Depends on names no unit: a row
+  that covers nothing has no range to review. With `covers:`, after **all** unit
+  waves, one `acceptance + ux` pass runs (E2E criteria + rendered-UI review),
+  with the same 4-round cap. `acceptance` runs when the slice touches a flow
+  with acceptance criteria; `ux` when it changes screens in a UI project (web
+  gets the full screenshot review; Flutter a code-level pass) — each skip
+  explicit, never silent. Without `covers:` both are skipped, said in the Run
+  log: a plan with no slice has no criteria and no Screens contract to verify
+  against.
 - **Loops stop when they stop converging.** A round cap bounds how long a fix
   loop runs, but it can't tell *converging slowly* from *not converging at all*.
   Every finding loop — a review row's rounds and the wave review's two rounds
