@@ -2055,7 +2055,10 @@ What it does, by rule:
   cycle plan it covers every earlier-wave `code` unit no earlier row already
   covers, so the range it reviews and the units it covers are one set; on a
   change plan a row covers the units that land runnable code. A resume runs what
-  its folder says and takes none of those refusals.
+  its folder says and takes neither placement refusal; it refuses two things of
+  its own — a non-green `code` unit with no covering `review` row ahead of it,
+  and an after-landing step with a missing or unknown mode — each with the fix:
+  edit the folder by hand in the worktree, then re-launch.
 - **The review runs at the review row, and only there.** A `code` unit is TDD →
   coverage → commit, and moves on. At a `review` row the run goes
   `engines → review ‖ security` over the row's range — the orchestrator runs the
