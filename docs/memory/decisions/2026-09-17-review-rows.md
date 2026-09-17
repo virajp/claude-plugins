@@ -25,8 +25,8 @@ number moved.
 A review is a **`Kind: review` row** in the Units table. `/vwf:execute` runs the
 two engines and the two reviewers only when wave order reaches such a row, over
 the branch delta since the previous row that reached `green` or since the branch
-base, and loops findings back to the coder of the unit whose Owns holds the
-file. A `code` unit runs TDD, the coverage gate and its commit, and moves on.
+base, and loops findings back to the unit whose commit last touched the file. A
+`code` unit runs TDD, the coverage gate and its commit, and moves on.
 `/vwf:plan` writes one row after the last code unit and before the docs unit;
 `/vwf:change-plan` writes one only when the change lands runnable code. A plan
 with `code` units no row covers is refused at preflight. The loop is
@@ -55,15 +55,17 @@ record.
   `review` row, or the branch base when it is the first. Rejected: per-unit
   commits.
 - **Findings loop (4).** A finding names a file; the orchestrator maps it to the
-  unit whose Owns holds it and re-dispatches that unit's coder in fix-first
-  mode; then the row re-runs in full, engines first.
-  `pipeline.review_round_cap`, the convergence guard and the `contested` exit
-  apply to the row unchanged. A finding on a file no unit owns is the
-  orchestrator's `GAP:`. Rejected: a separate cap for review rows.
+  unit whose commit last touched it and re-dispatches that unit by its Kind — a
+  `code` unit's coder in fix-first mode, an `edit` unit's loop-back; then the
+  row re-runs in full, engines first. `pipeline.review_round_cap`, the
+  convergence guard and the `contested` exit apply to the row unchanged. A
+  finding no branch commit explains is recorded `contested` with `unmapped`,
+  never dropped. Rejected: a separate cap for review rows.
 - **Journal and recall tags (5).** The run journal's node value `review` names
   the row; the unit cell carries the row id; `wave` is the row's wave. Recall
-  tags are `<row-id>/review/<round>` and `<row-id>/security/<round>`; the
-  coder's own gap tag stays `<slice>/gap/<round>`. Rejected: a new tag scheme.
+  tags are `<row-id>/review/<round>` and `<row-id>/security/<round>`; every gap
+  files under one scheme, `<unit, row or stage id>/gap/<round>` with
+  `source_file` the plan folder path. Rejected: a new tag scheme.
 - **Change plans (6).** A change plan gets no review row by default — the wave
   review stays its only check. `/vwf:change-plan` writes one only when the
   change lands runnable code (shipped shell or hook scripts, `scripts/`,
@@ -80,6 +82,32 @@ record.
 The wave review widened two Owns in the run: the plan's Goal falsified
 `assets/plan-index.md`'s After landing passage and `agents/execute-coder.md`'s
 "before handoff to code review", and no unit had named either.
+
+## Refined during execution
+
+The fix rounds settled what the rulings left open;
+`skills/execute/references/review-unit.md` is the one authority.
+
+- **Review rows run first in their wave**, before any `edit` or `code` unit of
+  that wave is dispatched, so the engines see a committed tree.
+- **Two placement rules**, refused at preflight: a row sits in a wave strictly
+  later than every unit it covers, and on a cycle plan it covers every
+  earlier-wave `code` unit no earlier row covers. A change plan's row covers the
+  units landing runnable code.
+- **One branch-wide commit map.** Every file in the range maps to the unit whose
+  commit last touched it, built once over the whole branch from the Units table
+  and Run log Commit cells — never read from Owns.
+- **The off-coverage rule.** A finding on a file whose unit the row does not
+  cover: a security finding routes to that unit all the same, the widening
+  recorded; a non-security finding is dropped and counted.
+- **Late re-runs are a new loop.** A fix landing after the last row covering its
+  unit re-runs that row over the fix delta, rounds restarting at 1 under a fresh
+  cap, without advancing the row's recorded `to`.
+- **One gap scheme keyed to the folder.** `<unit, row or stage id>/gap/<round>`
+  with `source_file` the plan folder path, since ids repeat across plans.
+- **Resume.** The Run log tells a resumed run which round a row last returned
+  and whether a late re-run is pending; a row ended at the cap or the guard with
+  residuals `contested` reads `green` and is not re-run.
 
 ## Parked
 
