@@ -229,13 +229,19 @@ Rules the plan must obey, learned from the plans that came before:
   dispatches the `edit` units of a wave together, in one message, and judges
   them by the wave review — the only check, by default. A `Kind: review` row
   (Owns `—`, Depends on the units it covers, a `NN-review.md` in the template's
-  shape) is added only when the change lands runnable code — shipped shell or
-  hook scripts, `scripts/`, `installer/` — and the reason is a row in the
-  decisions table. The row sits in a wave strictly later than every unit it
-  covers — in the same wave it runs before their commit and reviews nothing,
-  since it scopes by commit range — and its Depends on names every `code` unit
-  in an earlier wave no earlier `review` row named; preflight refuses a folder
-  that breaks either. The sections the template marks *cycle plans only*
+  shape) is added only when the change lands runnable code — anything that
+  executes rather than is read: shipped shell or hook scripts, build or tooling
+  source, an installable package — and the reason is a row in the decisions
+  table. The row sits in a wave strictly later than every unit it covers — in
+  the same wave it runs before their commit and reviews nothing, since it
+  scopes by commit range — and covers, directly or transitively through
+  Depends on, the units that land that code. It still reviews the whole range
+  since the previous row: a review finding on a file whose unit it does not
+  cover is dropped and counted; a **security** finding is routed to that unit
+  all the same, the coverage widening recorded in the Run log — the one rule,
+  `${CLAUDE_PLUGIN_ROOT}/skills/execute/references/review-unit.md`'s. Preflight
+  refuses a row in the wave of a unit it covers. The sections the template
+  marks *cycle plans only*
   — Slice, Acceptance criteria (from blueprint), Gaps surfaced during execution
   — and the `covers:` and `exposure:` frontmatter keys are omitted.
 - **A unit deletes with plain `rm`, never `git rm`.** A unit stages nothing, so
@@ -273,9 +279,8 @@ Re-read the folder with fresh eyes before handing it off, and fix inline:
   shared-file rule has an owner
 - every gate delta from the interview is an owned edit somewhere
 - a `review` row, when present, names its reason in the decisions table,
-  covers the units that land runnable code, sits in a wave strictly later than
-  every unit it covers, and names in Depends on every earlier-wave `code` unit
-  no earlier row named
+  covers — directly or transitively — every unit that lands runnable code,
+  and sits in a wave strictly later than each of them
 - every unit's *Verification* names at least one gate line it must pass — a
   `review` row has none, by shape
 - every hit of the retired-name grep sits inside some unit's *Owns*, and every

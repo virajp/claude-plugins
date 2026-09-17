@@ -90,8 +90,9 @@ reason — a boundary later units build on — and that reason is a row in the
 assumed-decisions table.
 *Change plans:* whether a row is needed at all — by default none, the wave
 review is the only check. One is written only when the change lands runnable
-code (shipped shell or hook scripts, `scripts/`, `installer/`), and the
-decisions table says why.
+code — anything that executes rather than is read: shipped shell or hook
+scripts, build or tooling source, an installable package — and the decisions
+table says why.
 
 11. **Model per unit.** Default is `opus`, written explicitly into every unit
     file's `Model:` line. A unit the user wants on a stronger or cheaper tier
