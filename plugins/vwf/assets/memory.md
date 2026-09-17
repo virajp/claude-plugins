@@ -7,7 +7,10 @@ re-deriving them, and review findings are filed once and recalled on fix
 loop-backs — so multi-round detail never piles up in the orchestrator's context.
 The orchestrator resolves the scope and persists durable decisions; the execute
 subagents persist and recall their own findings directly, so that detail
-bypasses the orchestrator entirely.
+bypasses the orchestrator entirely. In `/vwf:execute` that per-unit recall
+before dispatch and decision persistence after the run are for `code` units
+only — an `edit` unit's ruling is in its file; the run journal is written for
+every plan.
 
 ## The two stores
 
@@ -66,9 +69,10 @@ what only one developer needs.**
 it adds the `docs/scratchpad/` line.
 
 `doctor` is ignored because its findings are about *this machine's* toolchain,
-not the repo. `runs` is ignored because an execute journal is one developer's
-run record. Both still exist locally, and both still survive a mempalace outage
-— they just do not enter anyone else's diff.
+not the repo. `runs` is ignored because it mirrors one developer's run — the
+record itself is the plan folder's Run log, which is committed with the folder.
+Both still exist locally, and both still survive a mempalace outage — they just
+do not enter anyone else's diff.
 
 > **`/vwf:handoff` and `/vwf:recall` never skip.** The handoff *is* the
 > deliverable, not a side memory. The reserved **`next`** handoff writes
@@ -91,8 +95,10 @@ run record. Both still exist locally, and both still survive a mempalace outage
   resolved), `planning` (plan rationale and deferred options), `gaps`
   (blueprint/plan holes surfaced **during execution** + how they were
   reconciled, and out-of-scope points **parked during elicitation** — see
-  below), `runs` (the **execute** run journal — dependency order and per-step
-  progress, for resuming a paused run; see below), `doctor` (`/vwf:doctor`'s
+  below), `runs` (the **execute** run journal — the mirror of the plan folder's
+  Run log, written for every plan, per node for a `code` unit and per report
+  for an `edit` unit, read only when the folder is unreachable; see below),
+  `doctor` (`/vwf:doctor`'s
   findings per run, so a later run reports a known one as **known** rather than
   rediscovering it), and `handoff` (session handoffs — the one room
   `/vwf:handoff` and `/vwf:recall` own).
@@ -164,7 +170,7 @@ rooms:
     description: Problems and postmortems from docs/memory/problems/
     keywords: [ problem, problems, incident, postmortem ]
   - name: planning
-    description: Cycle plans from docs/memory/planning/
+    description: Plan-folder rationale from docs/memory/planning/
     keywords: [ plan, plans, planning ]
   - name: gaps
     description: Gaps the pipeline captured
@@ -284,56 +290,86 @@ markers, these are technical memories. Example:
 
 ## Findings memory — execute loop-backs
 
+This is the `review` row's loop — the row the plan placed over its `code`
+units. The wave review's findings ride the plan folder's Run log, not this
+room.
+
 Each review/security subagent files its **full** findings to room `problems`,
-tagged `<slice>/<stage>/<round>` (e.g. `order/review/2`), and returns only its
-terse contract block plus that tag. The orchestrator presents the terse block at
-the gate and, on a fix loop-back, hands the coder just the **tag** — not the
-findings text. The coder recalls the tagged findings from mempalace, fixes them,
-and the detail never enters the orchestrator's context. This is the core context
-optimization: rich review detail lives in mempalace, not in the conversation.
+tagged `<loop-id>/<stage>/<round>` (e.g. `U7/review/2`; the loop id is the
+`review` row's id for its main loop, `<row-id>-late<n>` for its n-th late
+re-run — `U7-late1` — whose rounds restart at 1) with the plan folder
+path as the drawer's `source_file` — in one pinned form, the repo-relative
+`docs/plans/<folder>` with no trailing slash, exactly as the plan index's
+Folder cell names it, the same string filed and filtered on; loop ids repeat
+across plans filed to one wing, so every recall of a tag filters on that path
+— each finding labelled
+`(<unit>)` with the unit whose commit last touched its file in the row's
+range, and returns only
+its terse contract block plus that tag. The orchestrator presents the terse
+block at the gate and, on a fix loop-back, hands each coder just the **tags**,
+the path and its own unit id — not the findings text. The coder recalls the
+tagged drawers filtered on the path, fixes only the findings labelled with its
+id, and the detail never enters the orchestrator's context. This is the core
+context optimization: rich review detail lives in mempalace, not in the
+conversation.
 
 ## Gap memory — blueprint/plan holes surfaced during execution
 
 A **gap** is distinct from a finding: a finding is wrong *code*; a gap is a hole
 in the *blueprint or plan* that execution exposed — an underspecified behaviour
-the coder had to guess, a plan step contradicted by the real code, a requirement
+the coder had to guess, a plan unit contradicted by the real code, a requirement
 the blueprint never stated that review/security found missing. Gaps are captured
 **as they surface**, never silently worked around.
 
-Each stage subagent that hits a gap files its **full** gap detail to room
-`gaps`, tagged `<slice>/gap/<round>` — what is under/mis-specified, where, and
-the assumption it proceeded on — and surfaces only a terse one-line pointer in
-its return block. The orchestrator mirrors that terse line into a durable
-**"Gaps surfaced during execution"** section in the plan doc (the on-disk copy
-that survives a mempalace outage), and at reconcile recalls the `gaps` room to
-drive the blueprint/plan fixes. Because mempalace is skip-if-unavailable, the
-plan-doc line is the source of truth when recall is empty; the `gaps` room and
-`docs/memory/gaps/` carry the rich detail.
+Each stage subagent that hits a gap — the five writers are the coder (its
+unit id), the review and security reviewers (their loop id — the `review`
+row's id for its main loop, `<row-id>-late<n>` for its n-th late re-run), the
+acceptance verifier (`acceptance`) and the UX reviewer (`ux`) — files its
+**full** gap detail to room `gaps` under **one scheme**: tagged
+`<unit, loop or stage id>/gap/<round>`, `source_file` the plan folder path in
+the same pinned form as above (ids repeat across plans in one wing, so recall
+filters on it), and the
+content opening with the plan folder and the plan's `covers:` doc names, so
+`/vwf:plan`'s slice recall still finds it — then what is under/mis-specified,
+where, and the assumption it proceeded on — and surfaces only a terse
+one-line pointer in its return block. The orchestrator mirrors that terse line
+into a durable
+**"Gaps surfaced during execution"** section in the plan folder's `index.md`
+(the on-disk copy that survives a mempalace outage), and at reconcile recalls
+the `gaps` room to drive the blueprint/plan fixes. Because mempalace is
+skip-if-unavailable, the folder's line is the source of truth when recall is
+empty; the `gaps` room and `docs/memory/gaps/` carry the rich detail.
 
 **Parked scope — out-of-scope points raised during elicitation.** The same room
 also holds what a Q&A answer surfaces *beyond the current pass's scope* (per the
 elicitation protocol's scope check): the orchestrator files the full point to
 room `gaps`, tagged `<slice>/parked` — what was raised, why it is out of scope
 now, and what pass it belongs to — and mirrors a terse line into the pass's
-durable doc (the flow/entity doc's Open Questions, the plan's "Out of scope for
-this cycle", the product doc's Risks & assumptions). Parked points ride the
+durable doc (the flow/entity doc's Open Questions, the plan folder's "Out of
+scope", the product doc's Risks & assumptions). Parked points ride the
 existing recall paths: `blueprint` and `plan` already recall room `gaps` before
 working and treat closing recalled gaps as a first-class goal of the pass — so a
 scope change arriving in a fresh session finds the parked point instead of
 losing it. Same fallback rule: the doc line survives a mempalace outage.
 
-## Run journal — execute resumability (execute only)
+## Run journal — the Run log's mirror (execute only)
 
-`/vwf:execute` keeps a single drawer per plan in room `runs` (drawer =
-`<plan>`): the result of the plan's `requires:` prerequisite check (each
-prerequisite plan and whether it is satisfied), the dependency-ordered step
-sequence and, per step, its status (pending/done), commit ref, review/security
-round counts, and gap tags. The orchestrator writes it when it derives the order
-and updates it as each node returns — coder, reviewer, security, acceptance —
-(`mempalace_add_drawer` then `mempalace_update_drawer`), the cadence
-`/vwf:execute` and `execute-stages.md` state. Because an autonomous run's
+**The plan folder's Run log table is the authoritative record.** `/vwf:execute`
+appends one row to `index.md`'s Run log as each node returns for a `code` unit
+— coder, reviewer, security, acceptance — and as each report returns for an
+`edit` unit, and mirrors that same data into a single drawer per plan in room
+`runs` (drawer = `<plan folder>`), for **every plan** whatever its units' Kind:
+the result of the plan's `requires:` prerequisite check (each prerequisite plan
+and whether it is satisfied), the dependency-ordered unit sequence and, per
+unit, its status (pending/done), commit ref, review/security round counts, and
+gap tags. The orchestrator writes the drawer when it derives the order and
+updates it as each row is written (`mempalace_add_drawer` then
+`mempalace_update_drawer`), the cadence `/vwf:execute` and `execute-stages.md`
+state. Because an autonomous run's
 primary pause is a resource cap (`/vwf:handoff` → later `/vwf:recall next`), a
-resumed run reads this journal to skip finished steps and pick up at the current
-one — without it, resume would re-implement completed work. Skip silently if
-mempalace is unavailable; the worktree's commits are the fallback record. This
-room is execute-specific; blueprint/plan do not use it.
+resumed run reads the folder's Run log first to skip finished units and pick up
+at the current one, and the journal only when the folder is unreachable —
+without either, resume would re-implement completed work. Skip the journal
+silently if mempalace is unavailable; when the two disagree, the worktree's
+commits win over the journal. This room is execute-specific; blueprint/plan do
+not use it.

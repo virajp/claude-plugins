@@ -205,8 +205,8 @@ whole way to production before the single hand-off in step 3:
   its own recall, survey and interview and writes the plan folder — that folder
   is the durable record; feedback pre-surveys nothing for it. Deferred → file
   it to room `gaps` tagged `non-blueprint`: no blueprint doc owns it, so memory
-  is then the only record. Then `/vwf:change-plan <request>`, then
-  `/vwf:change-execute <folder>`.
+  is then the only record. Then `/vwf:change-plan <request>`, which commits
+  and pushes the folder, then `/vwf:execute <folder>` in a fresh session.
 
 ### 3. Persist & commit
 

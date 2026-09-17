@@ -68,8 +68,8 @@ rooms:
     keywords: [ problems, findings ]
   - name: planning
     description: Plan rationale and deferred options, from docs/memory/planning/
-    # `plans` removed: it captured all of docs/plans/, which is cycle-plan
-    # documents rather than the rationale vwf files here. They go to `repo-plans`.
+    # `plans` removed: it captured all of docs/plans/, which is plan folders
+    # rather than the rationale vwf files here. They go to `repo-plans`.
     keywords: [ planning ]
   - name: gaps
     description: Blueprint and plan holes surfaced during execution, plus scope
@@ -109,8 +109,8 @@ rooms:
     # filename brushes — which put ten of them in `plugins` and one in `handoff`.
     keywords: [ how-to, guides ]
   - name: repo-plans
-    description: Cycle-plan documents under docs/plans/, including the archived
-      and multi-workstream ones
+    description: Plan folders under docs/plans/, cycle and change plans alike,
+      including the archived ones
     # Named `repo-plans` rather than `plans` so it cannot be misread as the
     # protocol room `planning`, which holds vwf's own plan rationale.
     keywords: [ plans ]

@@ -100,18 +100,21 @@ when either declares no `platforms:` list (it is offered on every round of the
 axis) or their lists intersect, and `p:plugins:check` rule 14 refuses the pair,
 naming the platform they share. Two are flagged today. On the project axis it is
 `astro-ssg`, `platforms: [site]` — what a `site` project's round highlights, and
-nothing on any other platform's round. On the design axis it is `design-tool`'s
-`claude-code` — the terminal itself as a design tool, the fourth of that kind
-beside `claude-design`, `lovable` and `stitch`, and the first with a **file
-canvas**: a committed `docs/design/<project>/` its three import skills read as
-files, plus a fourth, user-invocable `design-session` skill that writes it — the
-design system and the logo, and since pack `0.2.0` a flow's screens
-(`screens <flow>`, from the brief `/vwf:screens prompt` wrote, into
-`screens/<flow>--<platform>/`) and a review round (`review <flow>`, which serves
-the canvas from the repo, waits for **Done**, then applies every open comment).
-The server is the skill's own `scripts/serve.mjs`, a single-file Node program
-with no dependencies: it binds `127.0.0.1` on an ephemeral port, serves only the
-canvas, carries no auth and no TLS, and appends each comment to a **committed**
+nothing on any other platform's round; the other four entries on that round, the
+three remaining Astro bundles and `html` (the `framework/html` pack, a
+hand-authored page tree under the `document` category, since 2026-09-15), carry
+no flag. On the design axis it is `design-tool`'s `claude-code` — the terminal
+itself as a design tool, the fourth of that kind beside `claude-design`,
+`lovable` and `stitch`, and the first with a **file canvas**: a committed
+`docs/design/<project>/` its three import skills read as files, plus a fourth,
+user-invocable `design-session` skill that writes it — the design system and the
+logo, and since pack `0.2.0` a flow's screens (`screens <flow>`, from the brief
+`/vwf:screens prompt` wrote, into `screens/<flow>--<platform>/`) and a review
+round (`review <flow>`, which serves the canvas from the repo, waits for
+**Done**, then applies every open comment). The server is the skill's own
+`scripts/serve.mjs`, a single-file Node program with no dependencies: it binds
+`127.0.0.1` on an ephemeral port, serves only the canvas, carries no auth and no
+TLS, and appends each comment to a **committed**
 `comments/<flow>--<platform>.yaml`. It declares `taste-skill@taste-skill` as the
 plugin a product pinning it must add at init's fifth question.
 
@@ -156,9 +159,11 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   pack owns**, since 2026-09-14 — the same `p/_project/` marked position and the
   same rename, landed from the **project** axis rather than the deploy one:
   `framework/astro` ships an `icons` overlay there, which rasterizes the favicon
-  set from the product's mark. The position is shared on purpose, so a pack
-  adding a file to it names a task no other pack in the same bundle already
-  ships; and, since 2026-09-06, **(h)** a pack's **editor fragment** at
+  set from the product's mark, and `framework/html` ships a byte-identical copy
+  of it — rule 13 forbids a payload citing a sibling pack, and no tier offers a
+  shared home yet. The position is shared on purpose, so a pack adding a file to
+  it names a task no other pack in the same bundle already ships; and, since
+  2026-09-06, **(h)** a pack's **editor fragment** at
   `.config/vscode.d/<pack>.jsonc`, three keys only (`settings`, `nesting`,
   `extensions`) — **`/vwf:init` composes them** into `.vscode/settings.json` and
   `.vscode/extensions.json`, which no pack ever ships whole and which the

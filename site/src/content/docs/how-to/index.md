@@ -64,5 +64,8 @@ product's journey diverges, so read the spine first and keep it open alongside.
   `/vwf:architecture`, with a reason for each pin.
 - **[Change something the blueprint does not describe](./operate/ad-hoc-change.md)**
   — the work that is not a flow: CI, tooling, a docs tree, a refactor that moves
-  no behavior. Planned with `/vwf:change-plan` and run unattended with
-  `/vwf:change-execute`, beside the chain rather than in it.
+  no behavior. Planned with `/vwf:change-plan` into the same folder shape a
+  cycle plan takes, queued in the one table of `docs/plans/index.md`, and run
+  unattended in a fresh session with the same `/vwf:execute` a cycle plan takes
+  — by name, or `next` for the queue's pick — beside the chain rather than in
+  it.

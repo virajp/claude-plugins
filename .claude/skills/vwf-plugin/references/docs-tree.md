@@ -36,25 +36,32 @@ the `service` platform — plus the frozen `apis/released/` snapshots, which a
 project's API serves its own UI, so no independent consumer needs the freeze),
 and `apis/released/entities/<entity>@<date>.schema.yaml`, frozen at the same
 moment for every entity regardless of project shape; the blueprint root holds
-only the system docs), `docs/plans/` (two forms side by side — `/vwf:plan`'s
-cycle plans as flat `<date>-<time>-<slice>.md` files, discovered through the
-base repo's `docs/plans/index.md`, and `/vwf:change-plan`'s ad-hoc change
-folders `<date>-<name>/`, each an `index.md` plus one file per unit and
-deliberately **never** listed in that index; `/vwf:archive` retires **either**
-shape — a flat file with its index row, or a folder moved whole with only its
-Status line rewritten and no row to fix — and `/vwf:change-execute` archives its
-own folder at landing, everything into `archived/`), `docs/backlog.md` (the
-product's prioritised list of work that cannot be picked up now — a table plus
-one `### Bnn` section per item, **product-level and in the base repo only**,
-beside `docs/plans/index.md`; `/vwf:backlog` is its sole writer and
-`change-plan`, `plan`, `change-execute`, `execute` and `archive` call it with
-the ids their plan's `backlog:` frontmatter carries), `docs/runbooks/`
-(per-project operational runbooks plus `postmortems.md`, seeded by the
-incident-response foundation and appended to by `/vwf:feedback incident`), and
-`docs/prompts/` (`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design
-briefs grouped by prompt type → registry project → flow, one brief per platform
-regenerated in place (the filename carries the platform, mirroring the flows
-tree exactly), plus the per-design-project canvas conventions files
+only the system docs), `docs/plans/` (one folder per plan, of either kind —
+`/vwf:plan`'s cycle plans as `<date>-<HHMM>-<slice>/`, `/vwf:change-plan`'s
+ad-hoc change plans as `<date>-<name>/` — each an `index.md` plus one
+`NN-<unit>.md` per unit, shaped by `assets/templates/plan-folder.md`; a cycle
+folder lives in the target repo under `multi-repo`, a change folder in the base.
+Both are discovered through the base repo's `docs/plans/index.md`, which holds
+**one table** per `assets/plan-index.md` — columns `Folder`, `Kind`, `Plan`,
+`Target repo`, `Priority`, `Status`, `Requires`, `Backlog`, statuses
+`APPROVED`/`RUNNING`/`COMPLETE` only, every edit a direct commit on the
+integration branch — the queue `/vwf:execute next` reads with no `Kind` filter.
+`/vwf:execute` moves the folder into `archived/` at landing and re-points the
+row when no gap is open, and leaves it live with the row `COMPLETE` when one is;
+`/vwf:archive` moves a folder of either kind whole, only its Status line
+rewritten, and re-points the row, after which the sweep drops a `COMPLETE` row
+nobody's `Requires` names), `docs/backlog.md` (the product's prioritised list of
+work that cannot be picked up now — a table plus one `### Bnn` section per item,
+**product-level and in the base repo only**, beside `docs/plans/index.md`;
+`/vwf:backlog` is its sole writer and `change-plan`, `plan`, `execute` and
+`archive` call it with the ids their plan's `backlog:` frontmatter carries),
+`docs/runbooks/` (per-project operational runbooks plus `postmortems.md`, seeded
+by the incident-response foundation and appended to by
+`/vwf:feedback incident`), and `docs/prompts/`
+(`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design briefs grouped by
+prompt type → registry project → flow, one brief per platform regenerated in
+place (the filename carries the platform, mirroring the flows tree exactly),
+plus the per-design-project canvas conventions files
 `screens/<project>/CLAUDE--<platform>.md`; written by `/vwf:screens prompt`;
 committed intent artifacts, not blueprint docs), and `docs/scratchpad/`
 (**gitignored, never committed** — the mockup render tree,
@@ -64,16 +71,24 @@ the `.gitignore` line when missing). Superseded commands/agents/templates are
 archived under `archived/vwf-<date>/` (`vwf-2026-06-19/` from the prior model;
 `vwf-2026-07-04/` holds the retired `autopilot` command, whose behavior merged
 into `execute`; `vwf-2026-07-07/` the format-8 `integration.md` template,
-dissolved into the flow templates).
+dissolved into the flow templates). The single-file cycle plan `/vwf:plan` wrote
+until 2026-09-16 was retired with nothing archived and no compatibility reader:
+a plan in that shape still in flight is finished on the vwf release that wrote
+it, or its slice is re-run through `/vwf:plan`, whose stamp-heal drops what
+already conforms. The change plan's own executor was retired the same day,
+2026-09-16, absorbed into `/vwf:execute` — the one executor, switching on each
+unit's `Kind` — with nothing archived, no alias and no redirect; the record is
+`docs/memory/decisions/2026-09-16-one-executor.md`.
 
 The `docs/blueprint/` tree is an **OKF bundle** — vwf is an opinionated
 *profile* of Google's Open Knowledge Format (OKF) v0.1. Every doc is a typed OKF
 concept: mandatory YAML frontmatter (`type` from a fixed vocabulary —
 `vwf-product`/`vwf-architecture`/`vwf-conventions`/`vwf-design-system`/
 `vwf-environment`/`vwf-flow`/`vwf-flow-platform`/`vwf-integration` (the flow
-catalog)/`vwf-entity`/`vwf-entities`/`vwf-plan`/`vwf-change-plan` (an ad-hoc
-change plan `docs/plans/<date>-<name>/index.md`; the blueprint completeness bars
-do not apply to it)/`vwf-gap-report` — plus `title`, `description`, `status`;
+catalog)/`vwf-entity`/`vwf-entities`/`vwf-plan`/`vwf-change-plan` (a plan
+folder's `index.md` — cycle or ad-hoc change plan; the blueprint completeness
+bars do not apply to it, and it carries no `status:` or `description:`, its
+Status block being its one status) — plus `title`, `description`, `status`;
 optional `timestamp`/`owner`/`resource`/`tags`; flow/entity docs additionally
 carry the pipeline-owned `implementation:` build stamp), and cross-doc
 relationships are typed markdown links (the OKF edge) rather than prose. YAML

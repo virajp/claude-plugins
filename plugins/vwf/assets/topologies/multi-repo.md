@@ -44,7 +44,8 @@ my-product/           # base repo — vwf lives here
 ├── .config/          # mise config, vwf.yaml
 ├── backend/          # submodule — a monorepo
 │   ├── .config/vwf-membership.yaml
-│   ├── docs/plans/   # this repo's cycle plans
+│   ├── docs/plans/   # this repo's cycle plans, one folder each
+│   │   └── <date>-<HHMM>-<slice>/
 │   ├── projects/
 │   │   ├── api/      # platforms: [service]
 │   │   ├── worker/   # platforms: [worker]
@@ -79,10 +80,10 @@ together in git at all:
 │   └── mempalace.yaml
 ├── acme-api/               # plain repo
 │   ├── .config/vwf-membership.yaml
-│   └── docs/plans/
+│   └── docs/plans/<date>-<HHMM>-<slice>/
 └── acme-app/
     ├── .config/vwf-membership.yaml
-    └── docs/plans/
+    └── docs/plans/<date>-<HHMM>-<slice>/
 ```
 
 **When to pick it.** A product whose repos already exist independently and are
@@ -138,8 +139,8 @@ on the **monorepo** shape becomes multi-repo by that fact alone.
 | `docs/blueprint/` | the base repo, always — one bundle per product |
 | `.config/vwf.yaml` | the base repo, always |
 | `.config/vwf-membership.yaml` | every member, never the base |
-| A cycle plan | **the repo whose code it changes** |
-| `docs/plans/index.md` | the base repo — a thin index of every plan and its target |
+| A cycle plan folder (`docs/plans/<date>-<HHMM>-<slice>/`) | **the repo whose code it changes** |
+| `docs/plans/index.md` | the base repo — a thin index: one table, its row per plan folder naming the target repo, per `assets/plan-index.md` |
 | `implementation:` stamps | the blueprint, so the base repo |
 | `mempalace.yaml` | under `siblings`, one per repo, all naming the same wing; under `submodule`, one at the base and none in members |
 | `graphify-out/` | one per checkout |

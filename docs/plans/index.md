@@ -1,16 +1,10 @@
 # Plans
 
-Every change-plan folder under `docs/plans/` that is not yet archived, with its
-status and what it waits on. A folder is run with `/vwf:change-execute <folder>`
-in a fresh session; it halts until every `requires:` plan reads `COMPLETE`, and
-moves to `archived/` when it lands. Archived plans are not listed here.
+The product's plans as a set — the one file every vwf command reads to find a
+plan without walking the member repos, and the queue `/vwf:execute next` reads
+to pick the next runnable plan.
 
-This file is written by hand today; making `/vwf:change-plan`,
-`/vwf:change-execute` and `/vwf:archive` maintain it is a later change, since
-vwf's index today lists flat cycle plans only.
+## Plans
 
-| Folder | Plan | Status | Requires | Backlog |
-| ------ | ---- | ------ | -------- | ------- |
-
-`Requires` names only plans not yet archived; a requirement already under
-`archived/` is satisfied. Nothing is in flight: every folder has landed.
+| Folder | Kind | Plan | Target repo | Priority | Status | Requires | Backlog |
+| ------ | ---- | ---- | ----------- | -------- | ------ | -------- | ------- |

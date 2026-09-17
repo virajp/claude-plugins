@@ -18,8 +18,9 @@ reviewed product through four disciplined phases.
    delta to apply.
 4. **Execute** — implement the plan autonomously under strict TDD, with code
    review, security review, E2E acceptance, and UX conformance per the rules,
-   behind one final merge gate — with post-deploy verification and a
-   production-feedback intake closing the loop.
+   landing per the consent the plan recorded at approval — merged on green when
+   consent says yes, stopped at the report otherwise — with post-deploy
+   verification and a production-feedback intake closing the loop.
 
 You drive it with slash commands. Claude does the work — asking one question at
 a time while authoring, running unattended while executing — and never merges
@@ -221,21 +222,28 @@ pass to `claude plugin install`.
 `/vwf:` commands covering the whole arc: shape a bare repo — or a whole
 multi-repo product in one run — into the standard layout, onboard it, pin the
 outcome contract, model the system, sweep a whole-product blueprint to complete
-coverage, plan one slice as a reviewable diff, execute it unattended behind one
-merge gate, verify the deploy, and route what production teaches you back to the
-document that fixes it. It carries
+coverage, plan one slice as a reviewable diff, execute it unattended and land it
+per the consent the plan recorded, verify the deploy, and route what production
+teaches you back to the document that fixes it. It carries
 [cross-session memory](https://claude-plugins.virajp.dev/plugins/mempalace/), a
 knowledge-graph layer, session handoff and recall, the
 [Karpathy coding guidelines](https://claude-plugins.virajp.dev/plugins/karpathy-guidelines/),
-and the Markdown and Context7 docs surfaces it absorbed. Beside that arc it
-carries an ad-hoc pair — `/vwf:change-plan` plans work with no blueprint slice
-behind it (tooling, CI, docs, a refactor) into a plan folder, which it commits
-and pushes at hand-off so the fresh session can see it, and
-`/vwf:change-execute` runs that folder unattended in that session. Beside both
-sits `/vwf:backlog`, the sole writer of `docs/backlog.md` — the prioritised list
-of work that cannot be picked up now, which every planning and landing command
-calls to move an item. It names **no** technology — no language, no framework,
-no cloud — which is what lets the rest of this list exist. `vwf@virajp-plugins`
+and the Markdown and Context7 docs surfaces it absorbed. Both planners write the
+same plan folder — `/vwf:plan` for a blueprint slice, and beside that arc the
+ad-hoc `/vwf:change-plan` for work with no blueprint slice behind it (tooling,
+CI, docs, a refactor) — an `index.md` plus one file per unit, which each commits
+and pushes at hand-off with a row in `docs/plans/index.md`'s one plan table, so
+the fresh session can see it. One executor runs both: `/vwf:execute <folder>`
+runs a folder of either kind unattended in that fresh session — a `code` unit
+through TDD and coverage, the code and security review at the plan's `review`
+rows, an `edit` unit through the wave review — and `/vwf:execute next` picks the
+runnable plan with the lowest `Priority` value from that table, of either kind,
+and runs it, running or asking before each after-landing step as the plan
+records. Beside both sits `/vwf:backlog`, the sole writer of `docs/backlog.md` —
+the prioritised list of work that cannot be picked up now, which every planning
+and landing command calls to move an item. It names **no** technology — no
+language, no framework, no cloud — which is what lets the rest of this list
+exist. `vwf@virajp-plugins`
 
 ### Tooling, design and delivery
 

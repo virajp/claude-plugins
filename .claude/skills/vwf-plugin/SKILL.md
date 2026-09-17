@@ -57,55 +57,72 @@ were **absorbed**. The reasoning is [`dependencies.md`][de].
 The workflow is
 `setup → product → architecture → design-system → blueprint → plan → execute`,
 with `verify` (post-deploy) and `feedback` (production intake) closing the loop
-back into `product`/`architecture`/`blueprint`/`plan`. The pair `change-plan` →
-`change-execute` sits **beside** that workflow line and never joins it — it
-plans and runs work with no blueprint slice behind it, reads neither the
-blueprint nor the registry, and gates on the commands its own plan folder names.
-`init` is not a command on that line: since 2026-09-06 it is **skill-invoked**
-and runs inside setup's Step 0, or alone via `/vwf:setup reshape`. `init` shapes
-the **base repo and every member repo the product has** and `setup` sets up
-**vwf** in the base — two different things, and a repo can have either without
-the other. It resolves that set itself and takes no argument: the base per the
-membership asset (so a run started inside a member walks up and shapes the
-product), the members as the **union** of `.gitmodules` walked recursively and
-the config's `members:` list, deduped on realpath, with a path in only one of
-two present sources reported as a disagreement and never shaped, and an absent
-member offered a **clone row inside the same plan**. Mode resolves per repo on
-that repo's own markers, there is **one plan with a section per repo and one
-consent**, and the apply order is members first so the base commits its gitlinks
-current. `init` materializes the three unconditional bundles through the stack
-adapter by the fixed slugs `mise`, `repo-gates` and `repo-hygiene` — per repo,
-each with its own lockfile — fills the marked positions those packs leave it
-(the member flags and their aliases, named for the **member repos** and never
-from a project id; the per-project groups, their aliases and the commit gate's
-scopes, all three from the project ids; the repo-name key, from that repo's own
-main-checkout folder name slugified and never from a project id; `MERGE_MODEL`,
-`MEMBERS` and the forge links, and the plugin task's two agent-plugin lists),
-runs **three** merges — ignore sections, pre-commit fragments, editor fragments
-— and writes a two-line readme stub; it names no tool, and every file it lays
-down is a pack's. Before any of that it asks **seven** questions — one round
-each for the whole product, a per-repo answer showing as a row inside its single
-round — the first naming each new repo's folder, which is the one thing that
-fills `REPO_NAME`, and the second confirming every project id, the slug it
-resolves to and the source the name came from — the registry, a sub-project
-directory, or the project's platform token — grouped by repo: nothing writes a
-`p:<slug>:*` group, its alias or a commit scope until that list is accepted, and
-the scopes are filled on **every** run, the first included, one per confirmed
-id. The fifth asks which agent plugins this product requires, seeded by running
-the plugin task's own inventory mode and written into those two lists; 4 and 5
-are answered once for every repo, 2, 6 and 7 carry a row per repo, and 1 and 3 a
-row per repo that resolved **new**. It then closes with a **consent-gated git
-pass**, whose two questions are asked once and applied to every repo: it asks
-the landing model and writes it to `MERGE_MODEL`, stages what the run wrote,
-asks one question with three answers (commit / commit and push / leave it),
-commits with a fixed `ops:` message — the members first, then the base with the
-moved **gitlinks** staged — and creates whichever of `develop` and `main` the
-branch model needs, per repo. It **never reaches the remote's own settings** —
-setting a forge's default branch is a one-time act, not a task a machine
-re-runs, and the line telling a maintainer to do it lives in the hygiene pack's
-`CONTRIBUTING.md`, which may name `gh` and `glab` where vwf prose may not. Init
-is **not a one-time bootstrap**: its "when it runs again" doctrine names the
-moments, and `/vwf:doctor` has the drift finding that prints the one remedy,
+back into `product`/`architecture`/`blueprint`/`plan`. The ad-hoc planner
+`change-plan` sits **beside** that workflow line and never joins it — it plans
+work with no blueprint slice behind it, reads neither the blueprint nor the
+registry, and names the commands its plan folder gates on. Both planners write
+the **same plan folder** — `index.md` plus one file per unit, shaped by
+`assets/templates/plan-folder.md`, interviewed from `assets/plan-interview.md` —
+and every plan of either kind queues in the **one table** of the base repo's
+`docs/plans/index.md` (`assets/plan-index.md`, which also carries the
+procedure): `plan` and `change-plan` append the row at hand-off with a derived
+priority and push the folder; the **one executor**, `execute <folder>` — or
+`execute next`, which reads the table with no `Kind` filter — claims it
+`RUNNING` with a pushed commit before cutting a worktree, runs each unit by its
+`Kind` (a `code` unit through TDD and the coverage gate, a `review` row through
+the two engines plus the code and security reviewers over the branch delta since
+the last row, the `edit` units of a wave concurrently under the wave review, the
+acceptance and UX pass and the blueprint reconcile only when the plan has
+`covers:`), and sets the row `COMPLETE` after the merge lands — moving the
+folder to `archived/` and re-pointing the row when no gap is open, leaving it
+live for `/vwf:archive` when one is — and runs each after-landing step on the
+mode the interview recorded, `run` without a prompt on a green landing or `ask`
+with one stop before it. `init` is not a command on that line: since 2026-09-06
+it is **skill-invoked** and runs inside setup's Step 0, or alone via
+`/vwf:setup reshape`. `init` shapes the **base repo and every member repo the
+product has** and `setup` sets up **vwf** in the base — two different things,
+and a repo can have either without the other. It resolves that set itself and
+takes no argument: the base per the membership asset (so a run started inside a
+member walks up and shapes the product), the members as the **union** of
+`.gitmodules` walked recursively and the config's `members:` list, deduped on
+realpath, with a path in only one of two present sources reported as a
+disagreement and never shaped, and an absent member offered a **clone row inside
+the same plan**. Mode resolves per repo on that repo's own markers, there is
+**one plan with a section per repo and one consent**, and the apply order is
+members first so the base commits its gitlinks current. `init` materializes the
+three unconditional bundles through the stack adapter by the fixed slugs `mise`,
+`repo-gates` and `repo-hygiene` — per repo, each with its own lockfile — fills
+the marked positions those packs leave it (the member flags and their aliases,
+named for the **member repos** and never from a project id; the per-project
+groups, their aliases and the commit gate's scopes, all three from the project
+ids; the repo-name key, from that repo's own main-checkout folder name slugified
+and never from a project id; `MERGE_MODEL`, `MEMBERS` and the forge links, and
+the plugin task's two agent-plugin lists), runs **three** merges — ignore
+sections, pre-commit fragments, editor fragments — and writes a two-line readme
+stub; it names no tool, and every file it lays down is a pack's. Before any of
+that it asks **seven** questions — one round each for the whole product, a
+per-repo answer showing as a row inside its single round — the first naming each
+new repo's folder, which is the one thing that fills `REPO_NAME`, and the second
+confirming every project id, the slug it resolves to and the source the name
+came from — the registry, a sub-project directory, or the project's platform
+token — grouped by repo: nothing writes a `p:<slug>:*` group, its alias or a
+commit scope until that list is accepted, and the scopes are filled on **every**
+run, the first included, one per confirmed id. The fifth asks which agent
+plugins this product requires, seeded by running the plugin task's own inventory
+mode and written into those two lists; 4 and 5 are answered once for every repo,
+2, 6 and 7 carry a row per repo, and 1 and 3 a row per repo that resolved
+**new**. It then closes with a **consent-gated git pass**, whose two questions
+are asked once and applied to every repo: it asks the landing model and writes
+it to `MERGE_MODEL`, stages what the run wrote, asks one question with three
+answers (commit / commit and push / leave it), commits with a fixed `ops:`
+message — the members first, then the base with the moved **gitlinks** staged —
+and creates whichever of `develop` and `main` the branch model needs, per repo.
+It **never reaches the remote's own settings** — setting a forge's default
+branch is a one-time act, not a task a machine re-runs, and the line telling a
+maintainer to do it lives in the hygiene pack's `CONTRIBUTING.md`, which may
+name `gh` and `glab` where vwf prose may not. Init is **not a one-time
+bootstrap**: its "when it runs again" doctrine names the moments, and
+`/vwf:doctor` has the drift finding that prints the one remedy,
 `/vwf:setup reshape`. `setup` is the Phase-0 bootstrapper — it onboards a repo
 (a Step-0 shape check, run over **every repo in the product** — the base and
 every locally-present member — that offers `/vwf:init` once when any of the
@@ -188,16 +205,22 @@ entirely, so it **cannot be invoked by another skill**, and the failure is
 **silent** — the caller simply cannot see it. The rule: model-invocable when
 anything delegates to it, user-only when nothing does.
 
-The change pair is the one place the rule is applied by hand rather than read
-off the delegation graph. `change-execute` is **user only**: it must run in a
-session that has done nothing else, which no caller can guarantee, and nothing
-delegates to it — the plan's own launch line is the invocation, and the folder
-that line names arrives **already committed and pushed** on the integration
-branch, because `change-plan` commits it at hand-off; a folder that is not on
-that branch is refused rather than swept into a wave commit. `change-plan` is
-**user and model**, and the seam that reasoning reserved is now live:
-`/vwf:feedback`'s *not a blueprint gap* route calls it by name, which marking it
-user-only would have made a silent no-op.
+The planners and the executor are the one place the rule is applied by hand
+rather than read off the delegation graph. `execute` is **user only**: it must
+run in a session that has done nothing else, which no caller can guarantee, and
+nothing delegates to it — the plan's own launch line is the invocation, and the
+folder that line names arrives **already committed and pushed** on the
+integration branch, because `plan` and `change-plan` commit it at hand-off with
+its index row; a folder that is not on that branch is refused rather than swept
+into a wave commit. `next` is the same skill reading that index for its
+argument, and no more model-invocable for it. `execute` joined this state on
+2026-09-16, when `/vwf:plan`'s in-session execute hand-off — the one caller that
+needed it model-invocable — was retired; every resume is a person re-running
+`/vwf:execute <folder>`. `plan` and `change-plan` are **user and model**: `plan`
+is reached by name from `/vwf:feedback`'s blueprint-gap routes and by
+`execute`'s gap reconciliation, and the seam `change-plan` reserved is live too
+— `/vwf:feedback`'s *not a blueprint gap* route calls it by name, which marking
+it user-only would have made a silent no-op.
 
 **Skill-invoked** is the fourth state and the newest: hidden from the `/` menu,
 still reachable by the skill that owns its seam. Six skills are in it today —

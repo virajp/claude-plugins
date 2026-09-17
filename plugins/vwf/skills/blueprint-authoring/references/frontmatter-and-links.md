@@ -33,6 +33,9 @@ status: draft                                      # required — draft | review
 - **`status`** — `draft` before the reviewer gate passes, `reviewed` once it
   returns `NO GAPS`, `stable` when the concept has shipped and settled. This is
   the **contract-maturity** axis; it is orthogonal to `implementation:` (below).
+  A plan folder's `index.md` (`vwf-plan`, `vwf-change-plan`) is the one
+  exception: it carries no `status:` and no `description:` — its Status block
+  is its one status, per `assets/templates/plan-folder.md`.
 - **`timestamp`** — optional. In-repo, git already tracks last-modified time
   authoritatively, so a hand-maintained field would just duplicate it (and can
   go stale). Record it only when the bundle travels **outside** git (tarball,
@@ -56,9 +59,8 @@ status: draft                                      # required — draft | review
 | `vwf-integration`   | `flows/index.md` (the flow catalog + contracts)                                                         |
 | `vwf-entity`        | an entity doc `entities/<entity>/index.md`                                                              |
 | `vwf-entities`      | `entities/index.md` (the entity catalog + ERD)                                                          |
-| `vwf-plan`          | a `docs/plans/` cycle plan                                                                              |
+| `vwf-plan`          | a cycle plan folder's `docs/plans/<date>-<HHMM>-<slice>/index.md`, in the target repo                   |
 | `vwf-change-plan`   | an ad-hoc change plan `docs/plans/<date>-<name>/index.md`; the blueprint completeness bars do not apply |
-| `vwf-gap-report`    | a legacy `*.gap-report.md` (retired autopilot)                                                          |
 
 Every flow is a **folder** (`docs/blueprint/flows/<project>/<NNN>-<flow>/` — one
 uniform depth for UI and non-UI projects alike) holding `index.md` (the

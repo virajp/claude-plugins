@@ -141,11 +141,13 @@ genuinely changes — the usual reason to decline is "not right now".
 
 ## Where a plan lives
 
-**A plan lives in the repo whose code it changes.** In a `repo` or `monorepo`
-topology that is the base repo, so the rule costs nothing and needs no
-configuration; in `multi-repo` it is the member. The base keeps a thin index at
-`docs/plans/index.md` — one row per plan, naming the plan, its target repo, and
-its status.
+**A plan lives in the repo whose code it changes.** A cycle plan is a
+**folder** — `docs/plans/<date>-<HHMM>-<slice>/`, `index.md` plus one file per
+unit. In a `repo` or `monorepo` topology that folder sits in the base repo, so
+the rule costs nothing and needs no configuration; in `multi-repo` it sits in
+the member. The base keeps a thin index at `docs/plans/index.md` — one table,
+one row per plan folder, whose `Target repo` column names the member holding
+the folder, per `assets/plan-index.md`.
 
 Two things follow that are worth knowing before implementing against this:
 
@@ -153,13 +155,14 @@ Two things follow that are worth knowing before implementing against this:
   `execute` sets the `implementation:` stamp on the blueprint's flow and entity
   docs, and those are in the base repo by definition — that is what makes the
   blueprint the source of truth. What distribution buys is the absence of merge
-  contention on one shared `docs/plans/`, and each plan reviewed in its own
-  repo's flow.
+  contention on one shared `docs/plans/`, and each plan folder reviewed in its
+  own repo's flow.
 - **The dependency-chain gate is unaffected.** `execute` halts until every
-  `requires:` plan's `covers:` docs read `implementation: complete`, and those
+  `requires:` folder's `covers:` docs read `implementation: complete`, and those
   are blueprint docs. So the chain resolves entirely from the base repo even
-  when the plans themselves are scattered across twenty members — an upstream
-  plan's own repo need not be present to know its work landed.
+  when the folders themselves are scattered across twenty members — an upstream
+  plan's own repo need not be present to know its work landed. The index row
+  is what `next`, the claim and visibility use; it is not that test.
 
 ## Memory and code intelligence follow the repo
 
