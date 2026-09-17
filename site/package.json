@@ -11,6 +11,7 @@
     "preview": "astro preview"
   },
   "dependencies": {
+    "@astrojs/markdown-remark": "^7.3.1",
     "@astrojs/sitemap": "^3.7.4",
     "@fontsource/geist-mono": "^5.3.0",
     "@fontsource/schibsted-grotesk": "^5.3.0",
@@ -22,7 +23,7 @@
     "@astrojs/check": "^0.9.10",
     "pagefind": "^1.5.2",
     "tsx": "^4.23.13",
-    "typescript": "^7.0.2",
+    "typescript": "^6.0.3",
     "wrangler": "^4.132.0"
   }
 }
