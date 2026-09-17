@@ -151,10 +151,10 @@ each unimplemented dependency becomes its own plan. See
 ### 8. /vwf:execute
 
 Unchanged except that the UX stage does not run — it fires only for a slice that
-changes screens on a screen platform, and Hookline has none. Code, review and
-security still run per unit, and the acceptance pass still runs once over the
-whole slice, so the report you reach is the same report, with the UX stage
-recorded as explicitly skipped. See
+changes screens on a screen platform, and Hookline has none. Code still runs per
+unit, review and security still run at the review row the plan places, and the
+acceptance pass still runs once over the whole slice, so the report you reach is
+the same report, with the UX stage recorded as explicitly skipped. See
 [`/vwf:execute`](./single-repo.md#vwfexecute) and
 [The execute merge gate](./single-repo.md#the-execute-merge-gate).
 

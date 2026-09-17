@@ -164,9 +164,9 @@ no such section there is nothing for the reviewer to hold clockon's output to,
 no reviewer renders a terminal to catch it visually, and nothing anywhere halts
 to tell you the check quietly did not run.
 
-Everything else — the worktree, the per-unit code/review/security loop, the
-landing per the folder's consent and how to judge the report — is the spine's
-([spine](./single-repo.md#vwfexecute),
+Everything else — the worktree, the per-unit TDD loop and the review row's
+code/security loop, the landing per the folder's consent and how to judge the
+report — is the spine's ([spine](./single-repo.md#vwfexecute),
 [the merge gate](./single-repo.md#the-execute-merge-gate),
 [`/vwf:execute`](../../plugins/vwf.md#vwfexecute)).
 
