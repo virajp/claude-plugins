@@ -9,7 +9,8 @@ Write `docs/plans/<date>-<HHMM>-<slice>/` from
 `NN-<unit>.md` per unit. The template's sections are all required, the
 cycle-only ones included; the frontmatter, the Status block, the Consent block,
 the Units table, the Wave gate, the After landing table and the Run log have a
-fixed shape because `/vwf:execute` parses and rewrites them.
+fixed shape because `/vwf:execute` parses and rewrites them — the Status block
+through `plan-management`, the rest itself.
 
 **Frontmatter.** `type: vwf-plan`, `title`, **`covers:`** (the blueprint doc(s)
 this element implements — one path, or the cycle element's set; the list the
@@ -18,8 +19,9 @@ this element's direct prerequisites in the chain, matched on the basename —
 empty for the first), **`backlog:`** (the `docs/backlog.md` item ids this
 element covers, matched by §2's recall — empty when the slice came from nowhere
 in the backlog), and `exposure: dark` when the slice ships behind a flag. There
-is no `status:` key: the **Status** block is the one status, `DRAFT` until §8
-sets `APPROVED`.
+is no `status:` key: the **Status** block is the one status, `DRAFT` until §8's
+`plan-management add` sets `APPROVED`; from then on that skill rewrites it on
+the executor's behalf, and `requires:` is never re-pointed by anyone.
 
 **Slice.** Links the covered doc(s) and states the chain position ("Plan 2 of 3
 — requires `<folder>`; required by `<folder>`"; or "no dependency chain").

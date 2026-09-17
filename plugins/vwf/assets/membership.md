@@ -111,7 +111,7 @@ Commands split cleanly by what they actually need:
   /vwf:architecture, /vwf:design-system,
   /vwf:blueprint, /vwf:screens,
   /vwf:mockups, /vwf:feedback,
-  /vwf:archive. These read the blueprint, which is wholly in the
+  plan-management. These read the blueprint, which is wholly in the
   base repo. **Absence is not a condition for them** — never detect, never ask.
 - **Code** — /vwf:plan, /vwf:execute,
   /vwf:doctor, /vwf:verify. These follow the
@@ -147,7 +147,8 @@ unit. In a `repo` or `monorepo` topology that folder sits in the base repo, so
 the rule costs nothing and needs no configuration; in `multi-repo` it sits in
 the member. The base keeps a thin index at `docs/plans/index.md` — one table,
 one row per plan folder, whose `Target repo` column names the member holding
-the folder, per `assets/plan-index.md`.
+the folder, per
+`${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`.
 
 Two things follow that are worth knowing before implementing against this:
 

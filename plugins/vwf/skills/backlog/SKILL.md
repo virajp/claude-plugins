@@ -6,7 +6,7 @@ description: The repo's prioritised backlog — docs/backlog.md, the list of wor
   lists them, names the next one, reprioritises, marks items planned and done,
   and closes the ones dropped without a plan. /vwf:plan and /vwf:change-plan
   call it as a plan folder is approved, /vwf:execute as one lands, and
-  /vwf:archive as one is retired. Not the place for production
+  plan-management as one is retired. Not the place for production
   feedback — that is worked now, and /vwf:feedback routes it into the docs and
   commands that fix it.
 argument-hint: "[add <item> | list | next | move <id> <priority> | planned <ids> <folder> | done <ids> | close <id>]"
@@ -32,7 +32,8 @@ row. A backlog row is the thing nobody is working on yet.
 ## The file
 
 `docs/backlog.md`, in the base repo's `docs/`, beside `docs/plans/index.md`
-(the plan index — `assets/plan-index.md`).
+(the plan index —
+`${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`).
 The backlog is **product-level**: one file for the whole product, never one per
 member repo — a caller running in a member addresses the base's file. This skill
 is the only writer of it.
@@ -125,12 +126,12 @@ the file keeps the writing order.
 The backlog moves as plans are written and as they land, and the commands that
 do that work call this skill rather than editing the file:
 
-| Caller             | When                                     | Verb                     |
-| ------------------ | ---------------------------------------- | ------------------------ |
-| `/vwf:plan`        | at hand-off, once the folder is approved | `planned <ids> <folder>` |
-| `/vwf:change-plan` | at hand-off, once the folder is approved | `planned <ids> <folder>` |
-| `/vwf:execute`     | at landing, after the final gate         | `done <ids>`             |
-| `/vwf:archive`     | archiving a plan whose ids are open      | `done <ids>`             |
+| Caller                    | When                                     | Verb                     |
+| ------------------------- | ---------------------------------------- | ------------------------ |
+| `/vwf:plan`               | at hand-off, once the folder is approved | `planned <ids> <folder>` |
+| `/vwf:change-plan`        | at hand-off, once the folder is approved | `planned <ids> <folder>` |
+| `/vwf:execute`            | at landing, after the final gate         | `done <ids>`             |
+| `plan-management archive` | archiving a plan whose ids are open      | `done <ids>`             |
 
 Callers pass the ids from the plan's **`backlog:` frontmatter** — the list on
 the folder's `index.md`, cycle plan and change plan alike. Empty or absent
