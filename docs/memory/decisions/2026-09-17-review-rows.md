@@ -64,10 +64,10 @@ record.
 - **Journal and recall tags (5).** The run journal's node value `review` names
   the row; the unit cell carries the row id; `wave` is the row's wave. Recall
   tags are `<loop-id>/review/<round>` and `<loop-id>/security/<round>` — the
-  loop id being the row id for the row's main loop and `<row-id>-late` for its
-  late re-run, the key the engine output files also take; every gap files under
-  one scheme, `<unit, loop or stage id>/gap/<round>` with `source_file` the plan
-  folder path. Rejected: a new tag scheme.
+  loop id being the row id for the row's main loop and `<row-id>-late<n>` for
+  its n-th late re-run, the key the engine output files also take; every gap
+  files under one scheme, `<unit, loop or stage id>/gap/<round>` with
+  `source_file` the plan folder path. Rejected: a new tag scheme.
 - **Change plans (6).** A change plan gets no review row by default — the wave
   review stays its only check. `/vwf:change-plan` writes one only when the
   change lands runnable code (shipped shell or hook scripts, `scripts/`,
@@ -92,10 +92,11 @@ The fix rounds settled what the rulings left open;
 
 - **Review rows run first in their wave**, before any `edit` or `code` unit of
   that wave is dispatched, so the engines see a committed tree.
-- **Two placement rules**, refused at preflight: a row sits in a wave strictly
-  later than every unit it covers, and on a cycle plan it covers every
-  earlier-wave `code` unit no earlier row covers. A change plan's row covers the
-  units landing runnable code.
+- **Three placement rules**, refused at preflight: a row whose Depends on names
+  no unit covers nothing; a row sits in a wave strictly later than every unit it
+  covers, and on a cycle plan it covers every earlier-wave `code` unit no
+  earlier row covers. A change plan's row covers the units landing runnable
+  code.
 - **One branch-wide commit map.** Every file in the range maps to the unit whose
   commit last touched it, built once over the whole branch from the Units table
   and Run log Commit cells — never read from Owns.
