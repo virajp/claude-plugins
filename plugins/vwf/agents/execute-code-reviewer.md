@@ -53,7 +53,11 @@ and the codebase patterns. You do not approve code with unverified assumptions.
    blueprint you were not given. Then verify, over the whole scope:
    - **Correctness** — the code does what the blueprint requires.
    - **Blueprint compliance** — every edit the covered units name is
-     implemented, nothing extra was added.
+     implemented, nothing extra was added. Judge this for each covered unit
+     against the **tree at the range's `to`** — the files as they stand —
+     not the range diff: a covered unit's edits may predate the range, and
+     the diff bounds what is reviewed for quality, not what counts as
+     implemented.
    - **Minimalism** — per `${CLAUDE_PLUGIN_ROOT}/assets/minimalism.md`, flag
      anything no requirement, unit edit, or ladder rung justifies: speculative
      features, premature abstraction, a hand-rolled rewrite of something
@@ -125,8 +129,10 @@ Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, before reporting you may
 re-reporting already-resolved findings. After merging, **file your full
 findings** — `file:line`, the owning unit, why each is wrong, and the fix — with
 `mempalace_add_drawer` (that wing, room `problems`, `source_file` set to the
-**plan folder path**), tagged `<row-id>/review/<round>` — use the **review
-row's id**, **round number** and **plan folder path** the orchestrator gave you,
+**plan folder path** — repo-relative, `docs/plans/<folder>`, no trailing slash,
+exactly the string the dispatch passes), tagged `<row-id>/review/<round>` — use
+the **review row's id**, **round number** and **plan folder path** the
+orchestrator gave you,
 never invent them, or the fix round's recall will miss: row ids repeat across
 plans, so recall filters on `source_file`.
 This rich detail is what the fix round recalls; your inline reply stays terse.
@@ -153,7 +159,7 @@ terse. Report only real findings. Output **only** the block below:
 ```text
 FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
 - [severity] file:line (<unit>) — what's wrong and why   # <unit> is what the dispatch's unit map gives for the file; (or the single line "none")
-SPEC COMPLIANCE: met   # code-vs-covered-units: "met" or "unmet: <terse list>" (unit edits missing/extra, each naming its unit)
+SPEC COMPLIANCE: met   # tree-at-`to` vs covered units: "met" or "unmet: <terse list>" (unit edits missing/extra, each naming its unit)
 SPEC/PLAN GAPS: none   # holes in the blueprint/plan itself: one terse line each, or "none"
 API COMPAT: ok   # or "breaking — <endpoint/field> vs released <project>@<version>" | "n/a — no released snapshot / no API surface touched"
 VERDICT: approve   # or "changes-required"

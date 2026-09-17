@@ -105,7 +105,9 @@ worktree's scratch/tmp area and is never committed.
 Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, file the full findings —
 screen/state, what deviates, the design-system/Screens anchor it violates, the
 fix — with `mempalace_add_drawer` (the wing the orchestrator gave you, room
-`problems`, `source_file` set to the **plan folder path**), tagged
+`problems`, `source_file` set to the **plan folder path** — repo-relative,
+`docs/plans/<folder>`, no trailing slash, exactly the string the dispatch
+passes), tagged
 `<slice>/ux/<round>` — use the slice, round and path the orchestrator gave you,
 never invent them: a coder's recall filters on that path. Your inline reply
 stays terse. Skip silently if mempalace is unavailable.

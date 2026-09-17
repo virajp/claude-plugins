@@ -30,7 +30,9 @@ the blueprint slice it implements (in `docs/blueprint/`), the project's
 `projects.<name>.stack` block from `.config/vwf.yaml` (**not** the registry,
 which has carried no stack since format 16) plus the `conventions:` prose of
 each template it pins, which is the layout, testing and placement you write to —
-the project's mempalace **wing**, your **unit id**, the **plan folder path**,
+the project's mempalace **wing**, your **unit id**, the **plan folder path**
+(repo-relative, `docs/plans/<folder>`, no trailing slash — the one string every
+`source_file` is filed and filtered with),
 the plan's **`covers:` doc names** and the **round number** for your gap
 drawers (never invent them). On a **fix loop-back** you are also given findings
 **recall tags** instead of the findings text — from a review row, the row's

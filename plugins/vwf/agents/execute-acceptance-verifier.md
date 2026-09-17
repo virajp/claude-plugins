@@ -81,8 +81,10 @@ staging-capable test).
 Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, file the full detail — the
 criterion→test map, per-test output for failures, and what a NOT-COVERED test
 must assert — with `mempalace_add_drawer` (the wing the orchestrator gave you,
-room `problems`, `source_file` set to the **plan folder path**, or the flow
-doc path when no plan folder was named), tagged `<slice>/acceptance/<round>` —
+room `problems`, `source_file` set to the **plan folder path** —
+repo-relative, `docs/plans/<folder>`, no trailing slash, exactly the string
+the dispatch passes — or the flow doc path when no plan folder was named),
+tagged `<slice>/acceptance/<round>` —
 use the slice, round and path the orchestrator gave you, never invent them: a
 coder's recall filters on that path. Your inline reply stays terse.
 Skip silently if mempalace is unavailable.

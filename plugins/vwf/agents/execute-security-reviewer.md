@@ -89,7 +89,9 @@ Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, before reporting you may
 re-reporting already-resolved findings. After merging, **file your full
 findings** — `file:line`, the owning unit, surface, exploitability, impact, and
 the mitigation — with `mempalace_add_drawer` (that wing, room `problems`,
-`source_file` set to the **plan folder path**), tagged
+`source_file` set to the **plan folder path** — repo-relative,
+`docs/plans/<folder>`, no trailing slash, exactly the string the dispatch
+passes), tagged
 `<row-id>/security/<round>` — use the **review row's id**, **round number** and
 **plan folder path** the orchestrator gave you, never invent them, or the fix
 round's recall will miss: row ids repeat across plans, so recall filters on
