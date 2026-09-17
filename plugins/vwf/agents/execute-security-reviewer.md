@@ -79,8 +79,10 @@ you, re-dispatches each unit by its Kind and records the coverage widened to
 it. A file outside the file list is outside the scope **unless its cause is
 inside the range** — a surface exposed in an out-of-range caller by an
 in-range change is a finding on that caller, labelled with the unit the
-branch-wide map gives for its file; the orchestrator decides what to keep. Do
-not rewrite the code — report only.
+branch-wide map gives for its file; the orchestrator decides what to keep. A
+file the branch-wide map cannot place is labelled with the sentinel
+`(unmapped)` — exactly that token, never a guessed unit — and the finding is
+still reported. Do not rewrite the code — report only.
 
 ## Memory (mempalace)
 
@@ -92,18 +94,20 @@ the mitigation — with `mempalace_add_drawer` (that wing, room `problems`,
 `source_file` set to the **plan folder path** — repo-relative,
 `docs/plans/<folder>`, no trailing slash, exactly the string the dispatch
 passes), tagged
-`<row-id>/security/<round>` — use the **review row's id**, **round number** and
-**plan folder path** the orchestrator gave you, never invent them, or the fix
-round's recall will miss: row ids repeat across plans, so recall filters on
-`source_file`. This rich detail is what the fix round recalls; your inline reply
-stays terse. Skip silently if mempalace is unavailable.
+`<loop-id>/security/<round>` — the **loop id** is the row id for a row's main
+loop and `<row-id>-late` for its late re-run, whose rounds restart at 1; use
+the **loop id**, **round number** and **plan folder path** the orchestrator
+gave you, never invent them, or the fix round's recall will miss: loop ids
+repeat across plans, so recall filters on `source_file`. This rich detail is
+what the fix round recalls; your inline reply stays terse. Skip silently if
+mempalace is unavailable.
 
 **Blueprint/plan gaps are not findings.** If a security issue traces to the
 *blueprint or a covered unit itself* — an authz/validation/secret-handling
 requirement the blueprint never stated for this surface, or the unit never
 carried — that is a **gap**, not just a code finding. File it separately to
 room `gaps` — `source_file` set to the **plan folder path**, tagged
-`<row-id>/gap/<round>`, its content **opening with the plan folder path and the
+`<loop-id>/gap/<round>`, its content **opening with the plan folder path and the
 `covers:` doc names** the dispatch carries, so `/vwf:plan`'s slice-keyed recall
 still finds it — then what the blueprint or the unit should have required and
 where; and report it on its own contract line. Still rate and report any
@@ -119,11 +123,11 @@ findings. Output **only** the block below:
 
 ```text
 FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
-- [critical/high/medium/low] file:line (<unit>) — surface · exploitability · impact   # <unit> is what the dispatch's unit map gives for the file, covered by the row or not; (or "none")
+- [critical/high/medium/low] file:line (<unit>) — surface · exploitability · impact   # <unit> is what the dispatch's unit map gives for the file, covered by the row or not, or the sentinel "unmapped"; (or "none")
 SPEC/PLAN GAPS: none   # security requirements the blueprint or a covered unit never stated: one terse line each, or "none"
 VERDICT: approve   # or "changes-required"
-RECALL: <row-id>/security/<round>   # mempalace tag for FINDINGS detail (omit if not filed)
-GAPS: <row-id>/gap/<round>   # mempalace tag for the gaps detail (omit if none)
+RECALL: <loop-id>/security/<round>   # mempalace tag for FINDINGS detail (omit if not filed)
+GAPS: <loop-id>/gap/<round>   # mempalace tag for the gaps detail (omit if none)
 ENGINE: unavailable — <reason>   # include only if the ## Engine section was unavailable: the orchestrator's reason, or "not supplied" when the section was absent
 ```
 

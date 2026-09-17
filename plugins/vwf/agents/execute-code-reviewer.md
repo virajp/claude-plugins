@@ -120,7 +120,9 @@ non-security finding on an uncovered unit, recording the count. A file outside
 the file list is outside the scope **unless its cause is inside the range** —
 a caller broken by an in-range change is a finding on that caller, labelled
 with the unit the branch-wide map gives for its file; the orchestrator decides
-what to keep. Do not rewrite the code — report only.
+what to keep. A file the branch-wide map cannot place is labelled with the
+sentinel `(unmapped)` — exactly that token, never a guessed unit — and the
+finding is still reported. Do not rewrite the code — report only.
 
 ## Memory (mempalace)
 
@@ -130,11 +132,12 @@ re-reporting already-resolved findings. After merging, **file your full
 findings** — `file:line`, the owning unit, why each is wrong, and the fix — with
 `mempalace_add_drawer` (that wing, room `problems`, `source_file` set to the
 **plan folder path** — repo-relative, `docs/plans/<folder>`, no trailing slash,
-exactly the string the dispatch passes), tagged `<row-id>/review/<round>` — use
-the **review row's id**, **round number** and **plan folder path** the
-orchestrator gave you,
-never invent them, or the fix round's recall will miss: row ids repeat across
-plans, so recall filters on `source_file`.
+exactly the string the dispatch passes), tagged `<loop-id>/review/<round>` —
+the **loop id** is the row id for a row's main loop and `<row-id>-late` for its
+late re-run, whose rounds restart at 1; use the **loop id**, **round number**
+and **plan folder path** the orchestrator gave you, never invent them, or the
+fix round's recall will miss: loop ids repeat across plans, so recall filters
+on `source_file`.
 This rich detail is what the fix round recalls; your inline reply stays terse.
 Skip silently if mempalace is unavailable.
 
@@ -142,7 +145,7 @@ Skip silently if mempalace is unavailable.
 or plan itself* — a behaviour neither pins down, a unit edit the code can't
 satisfy as written, a requirement the blueprint never stated — that is a
 **gap**, not a code finding. File it separately to room `gaps` — `source_file`
-set to the **plan folder path**, tagged `<row-id>/gap/<round>`, its content
+set to the **plan folder path**, tagged `<loop-id>/gap/<round>`, its content
 **opening with the plan folder path and the `covers:` doc names** the dispatch
 carries, so `/vwf:plan`'s slice-keyed recall still finds it — then what is
 under-/mis-specified and where; and report it on its own contract line, not
@@ -158,13 +161,13 @@ terse. Report only real findings. Output **only** the block below:
 
 ```text
 FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
-- [severity] file:line (<unit>) — what's wrong and why   # <unit> is what the dispatch's unit map gives for the file; (or the single line "none")
+- [severity] file:line (<unit>) — what's wrong and why   # <unit> is what the dispatch's unit map gives for the file, or the sentinel "unmapped"; (or the single line "none")
 SPEC COMPLIANCE: met   # tree-at-`to` vs covered units: "met" or "unmet: <terse list>" (unit edits missing/extra, each naming its unit)
 SPEC/PLAN GAPS: none   # holes in the blueprint/plan itself: one terse line each, or "none"
 API COMPAT: ok   # or "breaking — <endpoint/field> vs released <project>@<version>" | "n/a — no released snapshot / no API surface touched"
 VERDICT: approve   # or "changes-required"
-RECALL: <row-id>/review/<round>   # mempalace tag for FINDINGS detail (omit if not filed)
-GAPS: <row-id>/gap/<round>   # mempalace tag for the gaps detail (omit if none)
+RECALL: <loop-id>/review/<round>   # mempalace tag for FINDINGS detail (omit if not filed)
+GAPS: <loop-id>/gap/<round>   # mempalace tag for the gaps detail (omit if none)
 ENGINE: unavailable — <reason>   # include only if the ## Engine section was unavailable: the orchestrator's reason, or "not supplied" when the section was absent
 ```
 
