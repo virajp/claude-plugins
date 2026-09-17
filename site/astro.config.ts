@@ -1,3 +1,4 @@
+import { unified } from "@astrojs/markdown-remark";
 import sitemap from "@astrojs/sitemap";
 import { defineConfig } from "astro/config";
 
@@ -28,7 +29,7 @@ export default defineConfig({
   markdown: {
     // Rewrites every relative `.md` link in the docs collection to its route
     // and fails the build on one that leaves the collection.
-    remarkPlugins: [remarkDocsLinks],
+    processor: unified({ remarkPlugins: [remarkDocsLinks] }),
     // Heading ids stay Astro's default: GitHub-compatible, trailing hyphens
     // kept, so the docs' cross-links resolve unchanged.
     shikiConfig: {
