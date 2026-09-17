@@ -6,6 +6,5 @@ to pick the next runnable plan.
 
 ## Plans
 
-| Folder                              | Kind   | Plan                                                                                                    | Target repo | Priority | Status  | Requires | Backlog |
-| ----------------------------------- | ------ | ------------------------------------------------------------------------------------------------------- | ----------- | -------- | ------- | -------- | ------- |
-| `docs/plans/2026-09-17-review-rows` | change | Review rows — the plan places the code and security review; after-landing steps run on recorded consent | —           | 10       | RUNNING | —        | —       |
+| Folder | Kind | Plan | Target repo | Priority | Status | Requires | Backlog |
+| ------ | ---- | ---- | ----------- | -------- | ------ | -------- | ------- |
