@@ -13,7 +13,11 @@ answered in the final report.
 - **Isolated block.** Mark the unit `unresolved` or `failed`, mark every unit
   that transitively depends on it `skipped` with `depends on U<n>` as detail,
   and **continue** with every unit that does not. Later waves still run for
-  their unblocked units. The two fixed final units do **not** run while anything
+  their unblocked units — except that a skipped `review` row skips **every
+  later `review` row** too, with `depends on <row>` as detail: rows review
+  consecutive ranges and are never run out of order, per
+  [review-unit.md](review-unit.md). The two fixed final units do **not** run
+  while anything
   is skipped — docs reconciled against a half-landed change would describe a
   state that never existed.
 - **All-blocking.** When every remaining unit is skipped, there is nothing left
@@ -65,9 +69,14 @@ A re-run against `BLOCKED` or `RUNNING`:
    session died between the report and the commit, and the committed tree is
    ground truth. A `green` `review` row is exempt: its Commit cell is empty by
    design, and it is skipped on the Run log alone, per
-   [review-unit.md](review-unit.md).
+   [review-unit.md](review-unit.md) — unless a `code` or `edit` Run log row
+   of a unit it covers carries a commit newer than the `to` its last loop
+   recorded: that is a **pending late re-run**, run before continuing, per
+   *Late loop-backs re-run the last row* there.
 5. Reset `unresolved`, `failed` and `skipped` units to `pending`.
-6. Re-run the preflight, then continue from the first wave with a pending unit.
+6. Re-run the preflight, then continue from the first wave with a pending unit;
+   `review` rows run in table order, each ranged from the previous row in
+   table order that reached `green`.
    Run-log rows from the earlier attempt stay; new rows are appended with the
    round numbering continued, so the final report shows the whole history.
 

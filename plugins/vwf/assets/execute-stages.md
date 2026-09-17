@@ -6,7 +6,8 @@ pause, how many rounds, what happens at the end; this file defines what the
 stages **are**. It reads each unit's `Kind` from the folder's Units table: the
 `code` stage is what a `code` unit runs; the `review` and `security` stages run
 at a `review` row — a Units table row the planner placed, covering the `code`
-units its Depends on names; an `edit` unit runs no stage — it is dispatched
+units it covers, directly or transitively via Depends on; an `edit` unit runs
+no stage — it is dispatched
 with its wave and judged by the wave review — and only the shared rules marked
 *every unit* reach it.
 
@@ -26,20 +27,24 @@ the plan carries `covers:` — a plan without it skips both, journaled.
 
 `review` and `security` are **independent read-only passes over the same
 range** — neither reads the other's output. They run only at a `review` row,
-over the row's scope: the branch delta since the previous `review` row that
-reached `green`, or the branch base when the row is the first. Their engines
-run first, and the orchestrator runs them: when wave order reaches the row,
-invoke `/code-review` (high effort) and `/security-review` over that range in
-one message, wait on each with `TaskOutput` (blocking, up to 30 minutes from
+and the row's loop in `${CLAUDE_PLUGIN_ROOT}/skills/execute/references/review-unit.md`
+is the one authority for it — its placement first in its wave, its range and
+`from..to`, the file list mapped to units by the commit that last touched
+each file (never Owns), the one rule for a finding on an uncovered unit's file
+(security routed and the widening recorded, non-security dropped with the
+dropped-count clause — applied by the orchestrator to what the reviewers
+report in full), late re-runs and per-loop round counts. In outline: the
+orchestrator invokes `/code-review` (high effort) and `/security-review` in
+one message, waits on each with `TaskOutput` (blocking, up to 30 minutes from
 invocation; an engine that errors or times out is stopped with `TaskStop` and
-counted unavailable, reason kept), and only then dispatch both reviewers in a
-single message so they run concurrently, each handed its engine's output in
-its prompt. Merge their findings into **one** loop-back: each finding names a
-file, the file maps to the unit whose Owns holds it, and that unit's coder is
-re-dispatched with the findings on its files; then the row re-runs in full,
-engines first. Their gating is unchanged and stays per-stage (security and
-`[breaking-api]` always fixed; other review findings capped). No `code` unit
-runs an engine by itself, and the orchestrator infers no row.
+counted unavailable, reason kept), filters each branch-scoped output to the
+row's range, and only then dispatches both reviewers in a single message so
+they run concurrently, each handed its engine's filtered output in its
+prompt. It merges their findings into **one** loop-back, each finding's unit
+re-dispatched **by its Kind**; then the row re-runs in full, engines first.
+Their gating is unchanged and stays per-stage (security and `[breaking-api]`
+always fixed; other review findings capped). No `code` unit runs an engine by
+itself, and the orchestrator infers no row.
 
 `acceptance` and `ux` run **once per cycle**, after **all** units, back to back
 so one boot of the local stack serves both. Each is conditional — skipped
@@ -60,33 +65,37 @@ Per-stage dispatch contract:
   the `projects.<name>.stack` block from `.config/vwf.yaml` (the blueprint
   carries none) **and the `conventions:` prose** Setup step 3 fetched for each
   of its templates, which is what the code is actually written to — the project
-  wing, the **slice name** and **round number** (for its gap tags), and any
-  recall hits. It implements under
+  wing, its **unit id**, the **plan folder path** and the plan's **`covers:`
+  doc names** (for its gap drawers, per `memory.md`), the **round number**,
+  and any recall hits. It implements under
   strict TDD — RED → GREEN → REFACTOR for every change — and runs the suite to
   the coverage gate, returning the coverage report: `100%`, `<100%` with the
   uncovered `file:line` list, or `n/a` when the project has no coverage tooling.
   The coder never blocks on coverage — the **orchestrator decides**: a residual
   below the configured target is documented as a gap and reported at the final
-  gate (never a silent pass). On a fix loop-back from a `review` row, pass the
-  two review findings **tags** (not the text), the plan folder path the
-  drawers' `source_file` carries, and the coder's **own unit id**: each drawer
-  holds the whole row's findings across units, every finding labelled
-  `(<unit>)`, and the coder recalls the drawers filtered on that path and fixes
-  only the findings labelled with its id.
+  gate (never a silent pass). On a fix loop-back from a `review` row, pass
+  also the two review findings **tags** (not the text): each drawer holds the
+  whole row's findings across units, every finding labelled `(<unit>)`, and
+  the coder recalls the drawers filtered on the plan folder path (the drawers'
+  `source_file`) and fixes only the findings labelled with its own unit id.
 - **review** — dispatch `execute-code-reviewer` (pass the wing, plus the
   **`review` row id** and **round number** for its recall tag
-  `<row-id>/review/<round>` and the **plan folder path** it files as the
-  drawer's `source_file` — row ids repeat across plans in one wing, so the path
+  `<row-id>/review/<round>`, the **plan folder path** it files as the
+  drawer's `source_file` and the plan's **`covers:` doc names** for its gap
+  drawers — row ids repeat across plans in one wing, so the path
   is what a recall filters on — the row's **scope** — the range `<from>..<to>`
   and the file list it yields, never a unit — the unit files, with their Owns,
   of every unit the row covers — its Depends on, followed transitively, the
-  same set preflight counted — plus the same **resolved stack** the coders got
-  — block and `conventions:` prose both; a reviewer holding less than the coder
-  cannot tell a convention breach from a style preference). It reviews the
+  same set preflight counted — plus, when a unit the row covers is `code`,
+  the same **resolved stack** the coders got — block and `conventions:` prose
+  both; a reviewer holding less than the coder cannot tell a convention breach
+  from a style preference — and the **registry**; a row covering `edit` units
+  alone passes none of these, and the reviewer reviews against the unit files
+  and rulings alone). It reviews the
   code in the range adversarially against the **covered units and the index's
   rulings, the blueprint, `conventions.md`, and the resolved stack**, and every
-  finding names the file it is on and is labelled `(<unit>)` with the covered
-  unit whose Owns holds that file. The dispatch prompt
+  finding names the file it is on and is labelled `(<unit>)` with the unit the
+  file list's unit map gives for that file. The dispatch prompt
   **ends with a section headed `## Engine`** holding either the `/code-review`
   output verbatim or the single line `ENGINE: unavailable — <reason>`; the
   reviewer runs no engine itself and returns exactly one block. When the plan
@@ -100,8 +109,11 @@ Per-stage dispatch contract:
   the terse findings block plus a recall tag.
 - **security** — dispatch `execute-security-reviewer` (pass the wing, plus the
   **`review` row id** and **round number** for its recall tag
-  `<row-id>/security/<round>`, and the same **scope** — range and file list —
-  the review contract states). It threat-models the changes in the range
+  `<row-id>/security/<round>`, the same **plan folder path**, **`covers:`
+  doc names**, **scope** — range, file list and its unit map — and unit files
+  the review contract states, and, on the same condition — a unit
+  the row covers is `code` — the **registry**, the resolved stack and its
+  `conventions:` prose). It threat-models the changes in the range
   against the project's declared **capabilities** in the registry, rating
   findings by exploitability and impact, every finding naming the file it is
   on and labelled `(<unit>)` the same way, from the same unit files and the
@@ -111,7 +123,8 @@ Per-stage dispatch contract:
   `problems`) and returns the terse findings block plus a recall tag.
 - **acceptance** — dispatch `execute-acceptance-verifier` (pass the folder's
   `index.md` "Acceptance criteria (from blueprint)" section with each
-  criterion's source flow, the registry, the wing, and the **slice** and
+  criterion's source flow, the registry, the wing, the **plan folder path**
+  and the **`covers:` doc names** for its gap drawers, and the **slice** and
   **round number**). It
   independently maps each criterion to an E2E test (never trusting the coder's
   mapping), boots the repo's own E2E harness, runs it, and returns per-criterion
@@ -128,8 +141,10 @@ Per-stage dispatch contract:
 - **ux** — dispatch `execute-ux-reviewer` (pass the changed screens from the
   plan's screen units, the `design-system.md` path, the owning flow docs'
   Screens section(s) (`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`),
-  the project's registry entry (role and platforms), the wing, and the **slice** and **round
-  number**). For any slice with a screen surface it renders the changed screens
+  the project's registry entry (role and platforms), the wing, the **plan
+  folder path** and the **`covers:` doc names** for its gap drawers, and the
+  **slice** and **round number**). For any slice with a screen surface it
+  renders the changed screens
   via the repo's own `ux-gate` skill in `.claude/skills/`, which renders each
   changed screen and runs its ecosystem's accessibility scan; violations come
   back at WCAG A/AA severity
@@ -162,7 +177,8 @@ blueprint-bound and never fires on a plan without one.
   or full file/dir dumps. The orchestrator reads files itself when it needs
   their contents.
 - **Loop on findings** — *every unit.* At a `review` row, a finding names a
-  file and is labelled with the unit whose Owns holds it; the orchestrator
+  file and is labelled with the unit whose commit last touched it in the
+  range, per the file list's unit map; the orchestrator
   re-dispatches that unit by its Kind — a `code` unit's coder with the two
   **tags**, the plan folder path and its own unit id, so it fixes only the
   findings labelled with that id; an `edit` unit per its own loop-back, the
@@ -171,8 +187,10 @@ blueprint-bound and never fires on a plan without one.
   in a single `code`
   dispatch per unit: one merged fix pass keeps the two stages from rewriting
   each other's lines, and a round counts once even though two reviewers ran
-  and several coders may have. A finding on a file **no unit owns** does not
-  loop — it is the orchestrator's `GAP:` in the run log. If the coder's recall
+  and several units may have been re-dispatched. A finding on a file whose
+  unit the row does not cover follows the one rule in
+  `references/review-unit.md`'s scope step — security routed and recorded,
+  the rest dropped with the count clause. If the coder's recall
   of a tag misses (mempalace down or the drawer absent), the orchestrator
   passes the terse FINDINGS block it already holds from that reviewer's return
   — the loop never stalls on a recall miss. The invoking command sets the
@@ -262,10 +280,12 @@ units' Kind.
   looped three times writes three `review` rows and three `security` rows,
   each carrying the row's id in the unit cell and the row's wave, plus a
   `code` row per coder it re-dispatched under that unit's id; an `edit` unit
-  dispatched twice writes two `edit` rows. The round count is then the number
-  of rows,
-  and the convergence guard compares two rows — never two numbers the
-  orchestrator is holding in its head.
+  dispatched twice writes two `edit` rows. The round count is then the
+  highest `Round` value among that unit's rows — not the row count, since a
+  review round writes several — counted **per loop** for a `review` row, its
+  main loop and each late re-run reported separately, per
+  `references/review-unit.md`; the convergence guard compares two rows of one
+  loop — never two numbers the orchestrator is holding in its head.
 - **A skip is a row.** The conditional stages' "skipped explicitly, never
   silently" rule is discharged *by the row existing*, with its `why`. A stage
   with no row did not run, and the gate reports it that way.

@@ -37,10 +37,13 @@ checker a repo has.
 ## The reviewer
 
 One `general-purpose` subagent per wave, `name: "R<wave>"`, read-only —
-instructed to edit nothing. Its prompt carries the wave's unit files, the diff
-of the wave (`git diff <last green commit>..HEAD` inside the worktree — the
-reviewer runs it, the orchestrator does not read it), and index.md's Assumed
-decisions and Shared-file rule. The prompt also says that findings on a `code`
+instructed to edit nothing. Its prompt carries the wave's unit files — plus,
+when a `review` row in the wave re-dispatched units, those units' files too,
+since the row's Owns is `—` and its fix commits are attributed to the
+re-dispatched units' Owns — the diff of the wave
+(`git diff <last green commit>..HEAD` inside the worktree — the reviewer runs
+it, the orchestrator does not read it), and index.md's Assumed decisions and
+Shared-file rule. The prompt also says that findings on a `code`
 unit's code quality or security belong to the `review` row that covers the
 code units — the review and security stages run there, never here — and are
 not raised: the wave review is scoped to the contract — rulings honoured, Owns
@@ -82,8 +85,8 @@ quietly lost a rule is the defect, exactly as a dropped branch would be.
   [code-unit.md](code-unit.md) from step 2 — the coder dispatched
   with the finding lines appended as the tag, then the commit — so the wave
   review never edits code itself. The re-entry is a further `code` row for
-  that unit, not a round of this loop; the fix is reviewed by the `review` row
-  that covers it — the next one when one is still ahead, else the last one
+  that unit, not a round of this loop; the fix is reviewed by a `review` row
+  still ahead **that covers the unit**, otherwise by the last row covering it
   re-run over the fix delta per *Late loop-backs re-run the last row* in
   [review-unit.md](review-unit.md).
 - A **rule-5 finding in a file no unit owns** does not loop. It becomes a
