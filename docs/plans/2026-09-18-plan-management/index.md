@@ -10,7 +10,7 @@ backlog: []
 
 ## Status
 
-**APPROVED**
+**RUNNING** — since 2026-09-18, worktree `.worktrees/2026-09-18-plan-management`
 
 APPROVED 2026-09-18 by the user
 
@@ -173,7 +173,7 @@ none
 
 | Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                                                                                                                                                                                                | Depends on | Status  | Commit |
 | -- | ---- | -------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-skill.md](01-skill.md)                   | edit | `plugins/vwf/skills/plan-management/SKILL.md`, `plugins/vwf/skills/plan-management/references/plan-index.md`                                                                                                                                                                                                                                        | —          | pending |        |
+| U1 | 1    | [01-skill.md](01-skill.md)                   | edit | `plugins/vwf/skills/plan-management/SKILL.md`, `plugins/vwf/skills/plan-management/references/plan-index.md`                                                                                                                                                                                                                                        | —          | running |        |
 | U2 | 2    | [02-execute.md](02-execute.md)               | edit | `plugins/vwf/skills/execute/SKILL.md`, `plugins/vwf/skills/execute/references/blocking.md`                                                                                                                                                                                                                                                          | U1         | pending |        |
 | U3 | 2    | [03-planners.md](03-planners.md)             | edit | `plugins/vwf/skills/plan/SKILL.md`, `plugins/vwf/skills/plan/references/plan-doc.md`, `plugins/vwf/skills/change-plan/SKILL.md`, `plugins/vwf/skills/backlog/SKILL.md`, `plugins/vwf/assets/plan-interview.md`, `plugins/vwf/assets/templates/plan-folder.md`, `plugins/vwf/assets/templates/project-claude.md`, `plugins/vwf/assets/membership.md` | U1         | pending |        |
 | U4 | 3    | [04-docs.md](04-docs.md)                     | edit | `CLAUDE.md`, `readme.md`, `.claude/skills/vwf-plugin/**`, `site/src/content/docs/plugins/vwf.md`, `site/src/content/docs/how-to/operate/ad-hoc-change.md`, `docs/memory/decisions/2026-09-18-plan-management.md`                                                                                                                                    | U2, U3     | pending |        |
@@ -270,8 +270,13 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                    | Commit |
+| ---- | --------- | ----- | ----- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight | —     | 1     | pass        | doctor: mise, graphify CLI and graph (main checkout) present; no `.config/vwf.yaml`, no stack pins, no `code` unit — LSP and conventions steps skipped; format check skipped (no `covers:`); wave gate: 5/5 green on the inherited tree                                                   | —      |
+| 1    | U1 skill  | opus  | 1     | pass        | edit; DECIDED: writers sentence names "a session, on the user's word" as `archive`'s caller; `archive` on a never-run folder writes `**ARCHIVED**` (status lists four states, `ARCHIVED` is `archive`'s alone); Who-calls-it table lists the two planners in one cell per verb; GAP: none | —      |
+| 1    | R1        | opus  | 1     | findings(2) | SKILL.md:55 tree-traps — four table rows unpadded (cosmetic); SKILL.md:117 completeness — an unasked sentence in `add` about `/vwf:backlog planned`; CONTRACT clean; RULINGS clean; looped to U1                                                                                          | —      |
+| 1    | U1 skill  | opus  | 2     | pass        | edit; both R1 findings fixed — tables padded, unasked sentence removed from `add`                                                                                                                                                                                                         | —      |
+| 1    | R1        | opus  | 2     | findings(1) | round-1 findings both resolved; new: references/plan-index.md:65 tree-traps — `complete` writers-table row 2 chars wide (cosmetic, gates pass); CONTRACT clean; RULINGS clean; cap of two rounds reached → contested                                                                      | —      |
 
 ## Launch
 
