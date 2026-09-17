@@ -14,9 +14,13 @@ answered in the final report.
   that transitively depends on it `skipped` with `depends on U<n>` as detail,
   and **continue** with every unit that does not. Later waves still run for
   their unblocked units — except that a skipped `review` row skips **every
-  later `review` row** too, with `depends on <row>` as detail: rows review
-  consecutive ranges and are never run out of order, per
-  [review-unit.md](review-unit.md). The two fixed final units do **not** run
+  later `review` row** too, with `depends on <row>` as detail — rows review
+  consecutive ranges and are never run out of order — **and every later
+  `code` unit a later `review` row covers**, with `review row <row> skipped`
+  as detail: a `code` unit never lands without its row ahead of it, and a
+  commit between skipped rows would be swallowed as uncovered by the first
+  row's range on resume, per [review-unit.md](review-unit.md). The two fixed
+  final units do **not** run
   while anything
   is skipped — docs reconciled against a half-landed change would describe a
   state that never existed.

@@ -152,8 +152,9 @@ tip, the way that asset's *Reading the queue* reads it. Then:
   and cannot be re-approved mid-run. Two things it does refuse, each with the
   fix — edit the folder by hand in the worktree, then re-launch: a non-green
   `code` unit with no `review` row ahead that covers it (add a `NN-review.md`
-  and its row), since it would land with no review; and an After landing step
-  whose mode is neither `run` nor `ask` (re-record the step).
+  and its row), since it would land with no review; and an After landing
+  table with no *Mode* column, or a step whose mode is neither `run` nor
+  `ask` (re-record the step).
 - Status `APPROVED` with an `APPROVED` row → a fresh run. Three refusals are
   read off the folder here, before the claim, each stopping the run with the
   fix — amend the row and re-approve the plan — since execute runs what is
@@ -559,15 +560,15 @@ For each wave in index.md order, skipping units already `green` on a resume:
    convergence guard. Every round is a Run log row. The prompt also carries
    the unit files of every unit a `review` row in this wave re-dispatched,
    whose fix commits count against those units' Owns. A unit of either Kind
-   fixed here after the last `review` row covering it re-runs that row over
-   the fix
-   delta, then this review once more over the re-run's fix commits, before the
-   gate — *Late loop-backs re-run the last row* in
+   fixed here after the last `review` row covering it marks that row for a
+   late re-run, taken at step 7 — *Late loop-backs re-run the last row* in
    [review-unit.md](references/review-unit.md).
 5. **Wave gate**, run by the orchestrator: every line of index.md's *Wave gate*
    section, plus every report read for `UNRESOLVED:`. A unit that returned
    `UNRESOLVED:` or `failed`, and every unit that depends on it, is **skipped**
-   per [blocking and resume](references/blocking.md); the rest of the run
+   per [blocking and resume](references/blocking.md) — a skipped `review` row
+   takes every later `review` row and every later `code` unit one covers with
+   it, as that reference states; the rest of the run
    continues. A red gate line no skipped unit explains is attributed to the unit
    whose Owns covers the failing path and handled as that unit's failure; one
    that cannot be attributed marks every unit in the wave `failed` with the gate
@@ -583,6 +584,13 @@ For each wave in index.md order, skipping units already `green` on a resume:
    closes the wave with its own commit of the folder and nothing else,
    `docs: plan run log — <folder> wave <n>`, so the folder on the branch never
    lags what ran.
+7. **Late re-runs** — for each `review` row step 4 marked, now that the tree
+   is committed: the re-run per *Late loop-backs re-run the last row* in
+   [review-unit.md](references/review-unit.md), then the one contract review
+   `R<wave>-late` over the re-run's fix commits — one round outside the wave
+   review's cap, one loop-back, a second recorded `contested`, as that
+   reference states — then every line of the wave gate again and a closing
+   folder commit as in step 6.
 
 The two fixed final units — the docs unit and the gates-and-bump unit — run as
 their own waves after every other wave, after the Acceptance & UX pass and
@@ -645,8 +653,10 @@ docs-sync of its own.
    A plan of `edit` units alone has nothing to persist here: an `edit` unit's
    decisions are in its file and its Run log row.
 3. **Mark the Run log** with a `reconcile` row — what ran, or the skip and its
-   `why` — and mirror it to the run journal (room `runs`, drawer
-   `<plan folder>`). This row is written for every plan.
+   `why`, and the Reconcile commit's hash in its Commit cell, which is what
+   lets a `review` row's commit map exclude it — and mirror it to the run
+   journal (room `runs`, drawer `<plan folder>`). This row is written for
+   every plan.
 
 ### The fixed final waves
 
@@ -750,12 +760,13 @@ command, `/vwf:execute <folder>`. The worktree stays committed; the folder's
 Status reads `BLOCKED` with the detail. Two things a user can say at that stop:
 
 - **Fix first** → the user names what to address → loop the affected units back
-  through their pipeline (a `code` unit: its coder re-dispatched with the
-  finding, its commit, then the last `review` row that covers it re-run over
-  the fix delta per *Late loop-backs re-run the last row* in
-  [review-unit.md](references/review-unit.md); re-verify acceptance/ux if
-  touched; an `edit` unit: re-dispatch with the finding appended, then the
-  wave review), then re-present the report and re-read the Consent block.
+  through their pipeline: a `code` unit's coder re-dispatched with the
+  finding, an `edit` unit re-dispatched with the finding appended, each
+  committed; then, for a unit of either Kind a `review` row covers, the last
+  covering row re-run over the fix commits per *Late loop-backs re-run the
+  last row* in [review-unit.md](references/review-unit.md), with its `R-late`
+  contract review; re-verify acceptance/ux if touched; then re-present the
+  report and re-read the Consent block.
 - **Reject** → leave the worktree intact and committed for inspection; nothing
   merges.
 

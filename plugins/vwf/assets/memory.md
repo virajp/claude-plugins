@@ -296,8 +296,11 @@ room.
 
 Each review/security subagent files its **full** findings to room `problems`,
 tagged `<row-id>/<stage>/<round>` (e.g. `U7/review/2`) with the plan folder
-path as the drawer's `source_file` — row ids repeat across plans filed to one
-wing, so every recall of a tag filters on that path — each finding labelled
+path as the drawer's `source_file` — in one pinned form, the repo-relative
+`docs/plans/<folder>` with no trailing slash, exactly as the plan index's
+Folder cell names it, the same string filed and filtered on; row ids repeat
+across plans filed to one wing, so every recall of a tag filters on that path
+— each finding labelled
 `(<unit>)` with the unit whose commit last touched its file in the row's
 range, and returns only
 its terse contract block plus that tag. The orchestrator presents the terse
@@ -320,8 +323,9 @@ Each stage subagent that hits a gap — the five writers are the coder (its
 unit id), the review and security reviewers (their row id), the acceptance
 verifier (`acceptance`) and the UX reviewer (`ux`) — files its **full** gap
 detail to room `gaps` under **one scheme**: tagged
-`<unit, row or stage id>/gap/<round>`, `source_file` the plan folder
-path (ids repeat across plans in one wing, so recall filters on it), and the
+`<unit, row or stage id>/gap/<round>`, `source_file` the plan folder path in
+the same pinned form as above (ids repeat across plans in one wing, so recall
+filters on it), and the
 content opening with the plan folder and the plan's `covers:` doc names, so
 `/vwf:plan`'s slice recall still finds it — then what is under/mis-specified,
 where, and the assumption it proceeded on — and surfaces only a terse

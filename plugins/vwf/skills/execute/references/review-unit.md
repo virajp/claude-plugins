@@ -33,19 +33,25 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    commit → unit map is built **once, over the whole branch** (`<base>..HEAD`)
    and used everywhere — the range bounds which files the row scopes, never
    the map: every commit on the branch from the Units table's Commit cells
-   **and** every Run log row's Commit cell — a fix commit is one unit's row —
-   so a late re-run's map is as full as the main loop's; a commit in neither
-   is the orchestrator's own folder commit, touches only `docs/plans/`, and is
-   excluded. The map is unambiguous and never read from Owns, and the
-   reviewers receive it. **The one rule for a finding on a file whose unit
-   the row does not cover** — a change plan's row covers only the units
-   landing runnable code: a **security** finding is never dropped or deferred
-   — it routes to that unit all the same, and the round's Run log row records
-   the coverage widened to it; a **non-security** finding is dropped with the
+   **and** every Run log row's Commit cell — every commit the orchestrator
+   makes on a unit's behalf, a code fix, an `edit` unit's fix, an
+   orchestrator-applied edit, records its hash in that unit's Run log row, so
+   a late re-run's map is as full as the main loop's. Two kinds of commit
+   are excluded rather than mapped: the orchestrator's own `docs:` folder
+   commits, which touch `docs/plans/` alone, and the Reconcile commit — the
+   stamps, the registry, `.config/vwf.yaml` — whose hash the `reconcile` Run
+   log row records. A commit recorded **nowhere** is **refused at map time**,
+   its hash named, since a commit no unit answers for cannot be reviewed. The
+   map is unambiguous and never read from Owns, and the reviewers receive it.
+   **The one rule for a finding on a file whose unit the row does not cover**
+   — a change plan's row covers only the units landing runnable code: a
+   **security** or **`[breaking-api]`** finding is never dropped or deferred —
+   it routes to that unit all the same, and the round's Run log row records
+   the coverage widened to it; any other finding is dropped with the
    dropped-count clause. Record the range (`<from>..<to>`), the file list and
    its unit map in the row's Run log row — **every round records its own
-   `from..to`**, since `to` grows as fixes land, and the next row's `from` and
-   a resume read the main loop's last `to`. The file list and its map are what
+   `from..to`**, since `to` grows as fixes land, and the next row's `from`
+   reads the main loop's last `to`. The file list and its map are what
    the reviewers receive as their scope, never a unit. A file in the list that
    the row's Scope section does not name is still in scope: the list is the
    contract, the section its description. Preflight guarantees the range and
@@ -61,13 +67,17 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    Each may run as a background task; note the task each reports. Wait on each
    with `TaskOutput`, blocking, up to 30 minutes from invocation. An engine
    that errors or times out is stopped with `TaskStop` and counted
-   unavailable, with the reason kept for the prompt. Record each engine's
-   output in the run journal (room `runs`, drawer `<plan folder>`) under the
-   row and round, then **filter** it: a finding on a file in the row's file
-   list is kept; a finding on a file **outside the range** is kept too —
+   unavailable, with the reason kept for the prompt. Save each engine's
+   output verbatim to `<folder>/engine/<row-id>-<round>.md` in the plan
+   folder — committed with the folder, the on-disk record the dedupe below
+   reads — and mirror it to the run journal (room `runs`, drawer
+   `<plan folder>`) under the row and round; then **filter** it: a finding on
+   a file in the row's file list is kept; a finding on a file **outside the
+   range** is kept too —
    an in-range change can break a caller the range does not touch — **unless
-   the same finding (path, line, text) appeared in the recorded engine output
-   of a previous row or this row's earlier loop**, in which case it is that
+   the same finding (path, line, text) appeared in the saved engine output
+   of a previous row or this row's earlier loop** — read from those files,
+   never from the journal alone — in which case it is that
    loop's and is dropped, said in one clause of the row's Run log row,
    "n engine findings already reported by <row> dropped". A kept out-of-range
    finding maps through the one branch-wide map: to the unit whose commit
@@ -162,7 +172,10 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    `why`.
    Recall tags
    are `<row-id>/review/<round>` and `<row-id>/security/<round>`, and the
-   drawer's `source_file` is the plan folder path — row ids repeat across
+   drawer's `source_file` is the plan folder path in one pinned form — the
+   repo-relative `docs/plans/<folder>`, no trailing slash, exactly as the plan
+   index's Folder cell names it, the same string filed and filtered on, the
+   form `memory.md` states — row ids repeat across
    plans filed to one wing, so every recall of a tag filters on it.
 
 ## Late loop-backs re-run the last row
@@ -172,7 +185,11 @@ review of the row's own wave, or the acceptance or UX pass after all units, or
 a fix-first loop-back at the final report, looping back to an earlier-wave
 unit that row covers, of either Kind — is code no engine or reviewer has
 seen. Before the run proceeds past it, that row is **re-run in full over the
-fix delta** — the loop-back's own fix commits and nothing later. The re-run's
+fix delta** — the loop-back's own fix commits and nothing later. A re-run the
+wave review triggered waits until the wave's green `edit` units are committed
+(the Waves section's step 6) and runs at its step 7, the gate lines run again
+after it, so the engines see a committed tree — the same guarantee as the
+row's first run. The re-run's
 range is its own: `from` is the parent of its first fix commit, `to` the
 newest fix commit of its latest round, and a round after the first extends
 `to` only; the file list and unit map come from that range as in step 1. Then
@@ -183,8 +200,14 @@ baseline is the re-run's own round 1, and `pipeline.review_round_cap` applies
 to it afresh. The re-run is a Run log row per node like any round, and its
 rows record their own `from..to` without advancing the row's recorded `to` —
 the next row's `from` is the `to` of this row's main loop. After the re-run,
-the wave review runs once more over the re-run's fix commits, counted against
-its two-round cap, then the gate.
+one **contract review** runs over the re-run's fix commits with the fixed
+units' files, per [edit-unit.md](edit-unit.md)'s reviewer section — named
+`R<wave>-late` when the trigger was the wave review, `R-late` when it was the
+acceptance or UX pass or a fix-first loop-back and no wave is current — **one
+round, outside any cap**. Its findings loop back to the fixed units **once**,
+and that fix is reviewed by the same row re-run over it, then by the same
+contract review; a second loop-back from it is recorded `contested` and the
+run proceeds — never a third re-run. Then the wave gate lines once more.
 `code-unit.md`, `edit-unit.md` and the Waves and Acceptance sections of
 `SKILL.md` cite this rule rather than restate it.
 

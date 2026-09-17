@@ -261,7 +261,7 @@ the wave review and every skip written the same way.
 | `model`   | the tier it ran on, `(downgraded from <default>)` when config overrode it                  |
 | `outcome` | `pass` / `findings(<n>)` / `fail(<n>)` / `skipped` / `blocked`                             |
 | `detail`  | terse — coverage vs target, per-criterion counts, finding tags; a `review` node's range    |
-| `commit`  | the commit ref for a `code` node or a landed `edit` unit; `—` otherwise                    |
+| `commit`  | the ref for a `code` node, a landed `edit` unit, the `reconcile` row, or any row whose node committed on a unit's behalf; `—` otherwise |
 | `why`     | **required** when `outcome` is `skipped` or `blocked`                                      |
 
 `node` and `why` ride inside the `Detail` column, since the table has no column

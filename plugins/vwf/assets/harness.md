@@ -65,8 +65,9 @@ harness:
   re-verify just the capabilities this slice's gates will need (the repo may
   have changed since stamping), and **inject a bootstrap unit** into the plan
   folder for each missing one, ordered before the units whose verification
-  depends on it — built by the coder under the normal code→review→security
-  pipeline like any unit. Harness units are **gate-required guardrails**: the
+  depends on it — built by the coder under the normal TDD → coverage → commit
+  pipeline like any `code` unit, and reviewed at the `review` row that covers
+  it. Harness units are **gate-required guardrails**: the
   minimalism checks never flag them.
 - **Stamp reconcile** — when a cycle adds a capability, execute's end-of-run
   reconcile updates the stamp's `harness:` block to match.
