@@ -10,9 +10,11 @@ the status column and the run log. The folder holds `index.md` and one
 - `docs/plans/<YYYY-MM-DD>-<kebab-name>/` for a **change plan**.
 
 A plan with a `review` row gains one more thing at run time: `execute` saves
-each row's engine output verbatim as `engine/<row-id>-<round>.md` inside the
-folder, committed with it, creating the subfolder on the first review row. The
-planner never writes it, and `/vwf:archive` moves it with the folder.
+each row's engine output verbatim as `engine/<loop-id>-<round>.log` inside the
+folder — the loop id is the row id for the row's main loop and `<row-id>-late`
+for its late re-run — committed with it, creating the subfolder on the first
+review row. The planner never writes it, and `/vwf:archive` moves it with the
+folder.
 
 Every section below is required unless marked *cycle plans only*. The
 frontmatter and the **Status**, **Consent**, **Units**, **Wave gate**, **After
@@ -128,8 +130,11 @@ followed by the two reviewers — one loop per row, under the review round cap �
 over the **branch delta since the previous `review` row**, or since the branch
 base when it is the first. A `review` row
 owns nothing (`—`) and **covers** the units its Depends on reaches, directly or
-transitively. Two placement rules, which preflight refuses a folder for
-breaking: the row sits in a wave **strictly later** than every unit it covers —
+transitively — so its Depends on names **at least one** unit, on a cycle plan
+and a change plan alike; a row with Depends on `—` covers nothing and reviews
+nothing, and preflight refuses the folder for it. Two placement rules, which
+preflight refuses a folder for breaking as well: the row sits in a wave
+**strictly later** than every unit it covers —
 a row in the same wave as its units runs before their commit and reviews
 nothing, since it scopes by commit range; and on a cycle plan it covers **every
 earlier-wave `code` unit that no earlier `review` row already covers** — so
@@ -329,7 +334,8 @@ restates none of it.
 
 - **Wave:** <n — strictly later than every unit this row covers>
 - **Depends on:** <every unit in an earlier wave no earlier review row covers
-  — directly, or transitively through their Depends on>
+  — directly, or transitively through their Depends on; at least one, never
+  `—`>
 - **Owns:** —
 - **Model:** <opus | a named tier | inherit>
 - **Kind:** review

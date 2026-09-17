@@ -239,8 +239,10 @@ Rules the plan must obey, learned from the plans that came before:
   since the previous row: a review finding on a file whose unit it does not
   cover is dropped and counted; a **security** finding is routed to that unit
   all the same, the coverage widening recorded in the Run log — the one rule,
-  `${CLAUDE_PLUGIN_ROOT}/skills/execute/references/review-unit.md`'s. Preflight
-  refuses a row in the wave of a unit it covers. The sections the template
+  `${CLAUDE_PLUGIN_ROOT}/skills/execute/references/review-unit.md`'s. Its
+  Depends on names at least one unit it covers — never `—`: a row that covers
+  nothing reviews nothing. Preflight refuses a row in the wave of a unit it
+  covers, and a row that covers nothing. The sections the template
   marks *cycle plans only*
   — Slice, Acceptance criteria (from blueprint), Gaps surfaced during execution
   — and the `covers:` and `exposure:` frontmatter keys are omitted.
@@ -279,8 +281,9 @@ Re-read the folder with fresh eyes before handing it off, and fix inline:
   shared-file rule has an owner
 - every gate delta from the interview is an owned edit somewhere
 - a `review` row, when present, names its reason in the decisions table,
-  covers — directly or transitively — every unit that lands runnable code,
-  and sits in a wave strictly later than each of them
+  covers — directly or transitively — every unit that lands runnable code, so
+  its Depends on is never `—`, and sits in a wave strictly later than each of
+  them
 - every unit's *Verification* names at least one gate line it must pass — a
   `review` row has none, by shape
 - every hit of the retired-name grep sits inside some unit's *Owns*, and every
