@@ -9,6 +9,11 @@ the status column and the run log. The folder holds `index.md` and one
   component stays so two plans for one slice on one day coexist;
 - `docs/plans/<YYYY-MM-DD>-<kebab-name>/` for a **change plan**.
 
+A plan with a `review` row gains one more thing at run time: `execute` saves
+each row's engine output verbatim as `engine/<row-id>-<round>.md` inside the
+folder, committed with it, creating the subfolder on the first review row. The
+planner never writes it, and `/vwf:archive` moves it with the folder.
+
 Every section below is required unless marked *cycle plans only*. The
 frontmatter and the **Status**, **Consent**, **Units**, **Wave gate**, **After
 landing** and **Run log** blocks have a fixed shape the executor parses, so keep
