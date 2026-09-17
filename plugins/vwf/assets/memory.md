@@ -322,10 +322,11 @@ the blueprint never stated that review/security found missing. Gaps are captured
 **as they surface**, never silently worked around.
 
 Each stage subagent that hits a gap — the five writers are the coder (its
-unit id), the review and security reviewers (their row id), the acceptance
-verifier (`acceptance`) and the UX reviewer (`ux`) — files its **full** gap
-detail to room `gaps` under **one scheme**: tagged
-`<unit, row or stage id>/gap/<round>`, `source_file` the plan folder path in
+unit id), the review and security reviewers (their loop id — the `review`
+row's id for its main loop, `<row-id>-late` for its late re-run), the
+acceptance verifier (`acceptance`) and the UX reviewer (`ux`) — files its
+**full** gap detail to room `gaps` under **one scheme**: tagged
+`<unit, loop or stage id>/gap/<round>`, `source_file` the plan folder path in
 the same pinned form as above (ids repeat across plans in one wing, so recall
 filters on it), and the
 content opening with the plan folder and the plan's `covers:` doc names, so

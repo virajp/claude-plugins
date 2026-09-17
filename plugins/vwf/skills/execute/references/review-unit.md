@@ -18,7 +18,8 @@ nothing, commits nothing and stages nothing. The fix commits a round produces
 belong to the units fixed. The **row id** is its Id cell, `R1`; the **loop
 id** is the row id for the row's main loop and `<row-id>-late` for its late
 re-run (below), whose rounds restart at 1. Everything keyed per round — the
-engine output files and the recall tags — keys on the loop id, never the row
+engine output files, the recall tags and the reviewers' gap tags
+(`<loop-id>/gap/<round>`) — keys on the loop id, never the row
 id alone, so the two loops never overwrite each other's record.
 
 For the row (skip it when the folder's Run log already shows it `green` — its
@@ -100,7 +101,7 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    applies it in step 4.
 3. **reviewers** — in **one message**, dispatch `execute-code-reviewer` and
    `execute-security-reviewer` so both run at once, per the two dispatch
-   contracts in `execute-stages.md`: the row id, the round number, the plan
+   contracts in `execute-stages.md`: the loop id, the round number, the plan
    folder path, the range and the file list as the scope, the unit files —
    with their Owns — of every unit the row **covers**, which is every unit its
    Depends on names directly or transitively through the units they name, the
