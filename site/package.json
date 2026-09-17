@@ -14,15 +14,15 @@
     "@astrojs/sitemap": "^3.7.4",
     "@fontsource/geist-mono": "^5.3.0",
     "@fontsource/schibsted-grotesk": "^5.3.0",
-    "astro": "^6.4.8",
-    "mermaid": "^11.17.2",
+    "astro": "^7.3.2",
+    "mermaid": "^12.0.0",
     "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "pagefind": "^1.5.2",
     "tsx": "^4.23.13",
-    "typescript": "^6.0.3",
-    "wrangler": "^4.129.0"
+    "typescript": "^7.0.2",
+    "wrangler": "^4.132.0"
   }
 }
