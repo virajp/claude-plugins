@@ -79,8 +79,8 @@ Per-stage dispatch contract:
   the coder recalls the drawers filtered on the plan folder path (the drawers'
   `source_file`) and fixes only the findings labelled with its own unit id.
 - **review** — dispatch `execute-code-reviewer` (pass the wing, plus the
-  **loop id** — the `review` row id for its main loop, `<row-id>-late` for
-  its late re-run — and **round number** for its recall tag
+  **loop id** — the `review` row id for its main loop, `<row-id>-late<n>`
+  for its n-th late re-run — and **round number** for its recall tag
   `<loop-id>/review/<round>`, the **plan folder path** it files as the
   drawer's `source_file` and the plan's **`covers:` doc names** for its gap
   drawers — loop ids repeat across plans in one wing, so the path

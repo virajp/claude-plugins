@@ -295,9 +295,9 @@ units. The wave review's findings ride the plan folder's Run log, not this
 room.
 
 Each review/security subagent files its **full** findings to room `problems`,
-tagged `<loop-id>/<stage>/<round>` (e.g. `R1/review/2`; the loop id is the
-`review` row's id for its main loop, `<row-id>-late` for its late re-run, whose
-rounds restart at 1) with the plan folder
+tagged `<loop-id>/<stage>/<round>` (e.g. `U7/review/2`; the loop id is the
+`review` row's id for its main loop, `<row-id>-late<n>` for its n-th late
+re-run — `U7-late1` — whose rounds restart at 1) with the plan folder
 path as the drawer's `source_file` — in one pinned form, the repo-relative
 `docs/plans/<folder>` with no trailing slash, exactly as the plan index's
 Folder cell names it, the same string filed and filtered on; loop ids repeat
@@ -323,7 +323,7 @@ the blueprint never stated that review/security found missing. Gaps are captured
 
 Each stage subagent that hits a gap — the five writers are the coder (its
 unit id), the review and security reviewers (their loop id — the `review`
-row's id for its main loop, `<row-id>-late` for its late re-run), the
+row's id for its main loop, `<row-id>-late<n>` for its n-th late re-run), the
 acceptance verifier (`acceptance`) and the UX reviewer (`ux`) — files its
 **full** gap detail to room `gaps` under **one scheme**: tagged
 `<unit, loop or stage id>/gap/<round>`, `source_file` the plan folder path in

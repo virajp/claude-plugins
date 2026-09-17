@@ -439,8 +439,9 @@ and its **Units table** are what the resumed run reads: which units are already
 `review` row — which round last returned and whether a late re-run is pending
 (a covered unit's Run log commit that is not an ancestor of the `to` the row's
 last loop recorded — by ancestry, not recency, each covered unit tested once —
-per [blocking.md](references/blocking.md) step 4). Consult the **run journal** (room
-`runs`, drawer `<plan folder>`) only when the folder cannot be read. Then the
+per [blocking.md](references/blocking.md) step 4). Consult the **run journal**
+(room `runs`, drawer `<plan folder>`) only when the folder cannot be read. Then
+the
 Resume steps of [blocking and resume](references/blocking.md): the worktree in
 the status line must exist, the rulings a block asked for must now be in the
 plan, and **the worktree is authoritative** — a unit the log marks done whose
@@ -807,8 +808,9 @@ resume alike.
 The steps run from the repo root the landing left behind: the main checkout
 when the branch merged, the worktree when it did not — and when the branch did
 **not** merge, whether the landing was not consented or was consented and the
-merge failed (a conflict, a red safety net — the folder's Status reads
-`BLOCKED` naming it), only those steps whose *Notes* say they may run from the
+merge hit a conflict (the hard halt of the `yes` branch above — the folder's
+Status reads `BLOCKED` with the files), only those steps whose *Notes* say
+they may run from the
 worktree are offered, and every one of them as an `ask`: a `run` step's
 authorisation was for a green landing, and this is not one. The orchestrator
 runs them, never a unit — a step may mutate the machine rather than the tree

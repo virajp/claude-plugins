@@ -15,9 +15,11 @@ runs them over the row.
 The row's unit file, `NN-review.md`, carries only the header lines and a
 **Scope** section naming what it reviews. Its Owns is `—`: the row edits
 nothing, commits nothing and stages nothing. The fix commits a round produces
-belong to the units fixed. The **row id** is its Id cell, `R1`; the **loop
-id** is the row id for the row's main loop and `<row-id>-late` for its late
-re-run (below), whose rounds restart at 1. Everything keyed per round — the
+belong to the units fixed. The **row id** is its Id cell, `U<n>` like every
+other unit — `U7`, say; the **loop id** is the row id for the row's main loop
+and `<row-id>-late<n>` for each late re-run (below), n counting from 1 in the
+order the row's late loops ran — `U7-late1`, `U7-late2` — each with its rounds
+restarting at 1. Everything keyed per round — the
 engine output files, the recall tags and the reviewers' gap tags
 (`<loop-id>/gap/<round>`) — keys on the loop id, never the row
 id alone, so the two loops never overwrite each other's record.
@@ -75,8 +77,10 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    unavailable, with the reason kept for the prompt. Save each engine's
    output verbatim to `<folder>/engine/<loop-id>-<round>.log` in the plan
    folder — committed with the folder, the on-disk record the dedupe below
-   reads; the `.log` extension is deliberate, since no formatter or lint hook
-   touches it at commit and the dedupe compares bytes — and mirror it to the
+   reads; the `.log` extension is deliberate — it keeps the formatter and the
+   linter off the file at commit; the whitespace hooks may still normalise
+   its line endings and trailing whitespace, which the dedupe never sees,
+   since it matches on the `(path, line, text)` tuple — and mirror it to the
    run journal (room `runs`, drawer
    `<plan folder>`) under the row and round; then **filter** it: a finding on
    a file in the row's file list is kept; a finding on a file **outside the
@@ -205,8 +209,9 @@ newest fix commit of its latest round, and a round after the first extends
 `to` only; the file list and unit map come from that range as in step 1. Then
 engines first, both reviewers, steps 2-6. The re-run is a **new loop** over
 its own range, not a further round of the finished one: its loop id is
-`<row-id>-late` — the engine files and the recall tags key on it, so round 1
-of the re-run never overwrites round 1 of the main loop — its rounds restart
+`<row-id>-late<n>`, n the same counter as its `re-run n` — the engine files
+and the recall tags key on it, so round 1 of one late loop never overwrites
+round 1 of the main loop or of an earlier late loop — its rounds restart
 at 1 — the Run log rows say `re-run n` in Detail — the convergence guard's
 baseline is the re-run's own round 1, and `pipeline.review_round_cap` applies
 to it afresh. The re-run is a Run log row per node like any round, and its
