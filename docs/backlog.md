@@ -7,19 +7,20 @@ archived under `docs/plans/archived/`. Priority is `P1` (pick first) to `P3`.
 Captured 2026-09-13 from a single request; the grouping below is the proposed
 plan split, to be confirmed at each plan's interview.
 
-| Id  | Item                                                                    | Group | Priority | Status |
-| --- | ----------------------------------------------------------------------- | ----- | -------- | ------ |
-| B01 | `/vwf:change-plan` commits and pushes the plan folder when it hands off | A     | P1       | done   |
-| B02 | Version rule: no version component equal to `13` or `17`, enforced      | A     | P1       | done   |
-| B03 | `/vwf:backlog` skill — a prioritised to-do list beside the blueprint    | A     | P1       | done   |
-| B04 | `init`: split `REPO_NAME` (folder name) from the `p:<id>:*` group id    | B     | P1       | done   |
-| B05 | `/vwf:feedback` — post-build change intake from user feedback           | C     | P2       | done   |
-| B06 | Audit logs as an independent, access-controlled capability              | D     | P2       | done   |
-| B07 | Stylesheet axis for web frontends: `tailwindcss` and `stylex`           | E     | P2       | done   |
-| B08 | SEO, OpenGraph and favicons for sites and webapps                       | E     | P2       | done   |
-| B09 | `notion` MCP server config                                              | F     | P3       | done   |
-| B10 | `stack-reputation` skill — vet every stack stackgen recommends          | G     | P2       | done   |
-| B11 | Claude Code terminal as the default design tool, via `taste-skill`      | H     | P2       | done   |
+| Id  | Item                                                                         | Group | Priority | Status |
+| --- | ---------------------------------------------------------------------------- | ----- | -------- | ------ |
+| B01 | `/vwf:change-plan` commits and pushes the plan folder when it hands off      | A     | P1       | done   |
+| B02 | Version rule: no version component equal to `13` or `17`, enforced           | A     | P1       | done   |
+| B03 | `/vwf:backlog` skill — a prioritised to-do list beside the blueprint         | A     | P1       | done   |
+| B04 | `init`: split `REPO_NAME` (folder name) from the `p:<id>:*` group id         | B     | P1       | done   |
+| B05 | `/vwf:feedback` — post-build change intake from user feedback                | C     | P2       | done   |
+| B06 | Audit logs as an independent, access-controlled capability                   | D     | P2       | done   |
+| B07 | Stylesheet axis for web frontends: `tailwindcss` and `stylex`                | E     | P2       | done   |
+| B08 | SEO, OpenGraph and favicons for sites and webapps                            | E     | P2       | done   |
+| B09 | `notion` MCP server config                                                   | F     | P3       | done   |
+| B10 | `stack-reputation` skill — vet every stack stackgen recommends               | G     | P2       | done   |
+| B11 | Claude Code terminal as the default design tool, via `taste-skill`           | H     | P2       | done   |
+| B12 | `unclaim <folder>` verb for `plan-management` — reset a stale `RUNNING` plan |       | P1       | open   |
 
 ## Groups
 
@@ -150,3 +151,27 @@ enters comments, and edits are made from those. Touches the design axis,
 Planned in: `docs/plans/archived/2026-09-14-terminal-design-tool/` (the pack,
 the default, the logo) and `docs/plans/archived/2026-09-14-design-review-loop/`
 (screens, the review server, the comment round)
+
+### B12 — `unclaim <folder>` verb for `plan-management`
+
+A run that dies mid-way — session closed, machine off — leaves the plan's index
+row `RUNNING` and the folder's Status block `RUNNING` or `BLOCKED`, and nothing
+can pick the plan up again: `execute next` skips `RUNNING` rows and
+`execute <folder>` refuses one it did not claim. Today the fix is a hand edit of
+both files back to `APPROVED` (`execute/references/blocking.md`).
+
+Add an `unclaim <folder>` verb to the `plan-management` skill (the owner of both
+files once `docs/plans/2026-09-18-plan-management/` lands) that does that reset.
+It **refuses** when the run is live on this machine — the worktree is present
+per `git worktree list`, a process has its cwd in it per `lsof -d cwd`, or a
+transcript under `~/.claude/projects/<worktree-slug>/` was modified in the last
+few minutes. Otherwise it warns that a run on another machine cannot be ruled
+out — the claim is pushed, so a `RUNNING` row may belong to a session elsewhere
+— and asks once before resetting.
+
+A stronger check needs the claim to write a host and a heartbeat into the index
+row, which changes the index contract; decide that at this plan's interview, not
+before.
+
+Parked by the plan-index-queue plan (2026-09-15) and the review-rows plan
+(2026-09-17).
