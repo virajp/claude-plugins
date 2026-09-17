@@ -63,9 +63,11 @@ record.
   never dropped. Rejected: a separate cap for review rows.
 - **Journal and recall tags (5).** The run journal's node value `review` names
   the row; the unit cell carries the row id; `wave` is the row's wave. Recall
-  tags are `<row-id>/review/<round>` and `<row-id>/security/<round>`; every gap
-  files under one scheme, `<unit, row or stage id>/gap/<round>` with
-  `source_file` the plan folder path. Rejected: a new tag scheme.
+  tags are `<loop-id>/review/<round>` and `<loop-id>/security/<round>` — the
+  loop id being the row id for the row's main loop and `<row-id>-late` for its
+  late re-run, the key the engine output files also take; every gap files under
+  one scheme, `<unit, loop or stage id>/gap/<round>` with `source_file` the plan
+  folder path. Rejected: a new tag scheme.
 - **Change plans (6).** A change plan gets no review row by default — the wave
   review stays its only check. `/vwf:change-plan` writes one only when the
   change lands runnable code (shipped shell or hook scripts, `scripts/`,
@@ -103,7 +105,7 @@ The fix rounds settled what the rulings left open;
 - **Late re-runs are a new loop.** A fix landing after the last row covering its
   unit re-runs that row over the fix delta, rounds restarting at 1 under a fresh
   cap, without advancing the row's recorded `to`.
-- **One gap scheme keyed to the folder.** `<unit, row or stage id>/gap/<round>`
+- **One gap scheme keyed to the folder.** `<unit, loop or stage id>/gap/<round>`
   with `source_file` the plan folder path, since ids repeat across plans.
 - **Resume.** The Run log tells a resumed run which round a row last returned
   and whether a late re-run is pending; a row ended at the cap or the guard with
