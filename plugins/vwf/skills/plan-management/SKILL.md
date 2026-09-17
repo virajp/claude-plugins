@@ -7,7 +7,7 @@ description: The one owner of docs/plans/ bookkeeping — the plan index
   the listing. Invoked by /vwf:plan and /vwf:change-plan at hand-off, by
   /vwf:execute at claim, status changes and landing, and by a session when the
   user asks to archive or list plans — never typed.
-argument-hint: "[add <folder> | claim <folder> | status <folder> <state> [detail] | complete <folder> | archive [folder] | next | resolve <folder> | priority <folder> | list]"
+argument-hint: "[add <folder> | claim <folder> | status <folder> <state> [detail] | complete <folder> | archive [folder] | next | resolve <folder> | priority <folder | requires…> | list]"
 model: sonnet
 user-invocable: false
 disable-model-invocation: false
@@ -302,12 +302,15 @@ Return *runnable*, or the entries that block, each with the reason — the row
 status, the `covers:` doc not yet complete, or the entry that resolves to
 nothing. Never re-points a `requires:` line.
 
-### `priority <folder>`
+### `priority <folder | requires…>`
 
 The contract's rule under *The columns*: `10 + max` over the `Priority` column
-of every unarchived `requires:` row in the index, or `10` when the folder
-requires none of them. Return the integer and the row it stands on. Never
-asked, never hand-edited.
+of every unarchived `requires:` row in the index, or `10` when the plan
+requires none of them. The argument is either a **folder**, whose `requires:`
+list is read from its frontmatter, or the **entries themselves** — folder
+basenames, possibly none — for a planner at its gate, before the folder is
+written. Same rule, same return either way: the integer and the row it stands
+on. Never asked, never hand-edited.
 
 ### `list`
 
@@ -323,18 +326,18 @@ The index, the Status block and the archive move as plans are written, run and
 retired, and the commands that do that work call this skill rather than
 carrying the procedure:
 
-| Caller                          | When                                                  | Verb                               |
-| ------------------------------- | ----------------------------------------------------- | ---------------------------------- |
-| `/vwf:plan`, `/vwf:change-plan` | at the gate, deriving the folder's priority           | `priority <folder>`                |
-| `/vwf:plan`, `/vwf:change-plan` | at self-review, checking `requires:`                  | `resolve <folder>`                 |
-| `/vwf:plan`, `/vwf:change-plan` | at hand-off, once the folder is approved              | `add <folder>`                     |
-| `/vwf:execute`                  | in its `next` mode, picking the plan                  | `next`                             |
-| `/vwf:execute`                  | at preflight, on the named folder                     | `resolve <folder>`                 |
-| `/vwf:execute`                  | before the worktree is cut                            | `claim <folder>`                   |
-| `/vwf:execute`                  | at every Status change — start, pause, block, landing | `status <folder> <state> [detail]` |
-| `/vwf:execute`                  | on a green landing with no open gap                   | `archive <folder>`                 |
-| `/vwf:execute`                  | after the merge lands                                 | `complete <folder>`                |
-| a session, on the user's word   | the user asks to retire a folder, or to see the queue | `archive [folder]`, `list`         |
+| Caller                          | When                                                                | Verb                               |
+| ------------------------------- | ------------------------------------------------------------------- | ---------------------------------- |
+| `/vwf:plan`, `/vwf:change-plan` | at the gate, over the `requires:` list decided at interview item 12 | `priority <requires…>`             |
+| `/vwf:plan`, `/vwf:change-plan` | at self-review, checking `requires:`                                | `resolve <folder>`                 |
+| `/vwf:plan`, `/vwf:change-plan` | at hand-off, once the folder is approved                            | `add <folder>`                     |
+| `/vwf:execute`                  | in its `next` mode, picking the plan                                | `next`                             |
+| `/vwf:execute`                  | at preflight, on the named folder                                   | `resolve <folder>`                 |
+| `/vwf:execute`                  | before the worktree is cut                                          | `claim <folder>`                   |
+| `/vwf:execute`                  | at every Status change — start, pause, block, landing               | `status <folder> <state> [detail]` |
+| `/vwf:execute`                  | on a green landing with no open gap                                 | `archive <folder>`                 |
+| `/vwf:execute`                  | after the merge lands                                               | `complete <folder>`                |
+| a session, on the user's word   | the user asks to retire a folder, or to see the queue               | `archive [folder]`, `list`         |
 
 ## What this skill never does
 
