@@ -106,14 +106,21 @@ ids the landing hands to `/vwf:backlog`, empty or absent when the plan covers
 no backlog item) — and the **Status**, **Consent**, **Units** and **Run log**
 blocks. Hold two facts from this read for every gate below: **has `covers:`**
 — a cycle plan, whose blueprint-bound steps run — and **has a `code` unit** —
-one or more Units table rows whose `Kind` is `code`. Two refusals are read off
-the folder here, before the claim. **A `code` unit no `review` row covers** —
-a row covers a unit when its Depends on names it, directly or transitively
-through units it names — stops the run: name every uncovered unit and the fix,
-add a `review` row covering them and re-approve the plan; execute runs what is
-written and infers no row. **An After landing table with no *Mode* column, or
+one or more Units table rows whose `Kind` is `code`. Three refusals are read
+off the folder here, before the claim, each stopping the run with the fix —
+amend the row and re-approve the plan — since execute runs what is written and
+infers no row. **A `code` unit no `review` row covers** — a row covers a unit
+when its Depends on names it, directly or transitively through units it names
+— naming every uncovered unit. **A `review` row placed wrong** — its wave is
+not strictly greater than the wave of every unit it covers (a row reviews a
+commit range, and a unit in its own wave is committed after it runs), or its
+Depends on omits a `code` unit in an earlier wave than itself that no earlier
+`review` row names (the range would carry that unit's commits while the
+coverage would not, so the row's range and its coverage must agree) — naming
+the row and the unit. **An After landing table with no *Mode* column, or
 a step whose mode is neither `run` nor `ask`** — stops the run the same way:
-the planner that wrote it re-records the step. Then read the folder's **row**
+the planner that wrote it re-records the step; a section reading `none`, with
+no table, is valid and exempt. Then read the folder's **row**
 in the base repo's `docs/plans/index.md`, at the integration branch's tip, the
 way that asset's *Reading the queue* reads it. Then:
 
@@ -522,8 +529,9 @@ For each wave in index.md order, skipping units already `green` on a resume:
    per node as it returns. The next `code` unit starts only when this one's
    commit is written or the unit is recorded `blocked`.
 3. **Run the `review` rows** — each `review` row in the wave, one at a time,
-   after every unit its Depends on names is done and never beside a `code`
-   unit's pipeline, per [review-unit.md](references/review-unit.md): the range
+   after every unit its Depends on names is done — preflight put each in an
+   earlier wave, so each is committed — and never beside a `code` unit's
+   pipeline, per [review-unit.md](references/review-unit.md): the range
    since the previous green row or the branch base, the two engines, both
    reviewers concurrently, the findings mapped to the owning units and their
    coders re-dispatched, the row re-run engines first, under the round cap and
@@ -535,7 +543,10 @@ For each wave in index.md order, skipping units already `green` on a resume:
    honoured, Owns respected, cross-unit drift, docs falsified — never a `code`
    unit's code quality or security, which are the covering `review` row's.
    Findings loop back to the owning unit, at most two rounds, under the
-   convergence guard. Every round is a Run log row.
+   convergence guard. Every round is a Run log row. A `code` unit fixed here
+   after the last `review` row covering it re-runs that row over the fix delta
+   before the gate — *Late loop-backs re-run the last row* in
+   [review-unit.md](references/review-unit.md).
 5. **Wave gate**, run by the orchestrator: every line of index.md's *Wave gate*
    section, plus every report read for `UNRESOLVED:`. A unit that returned
    `UNRESOLVED:` or `failed`, and every unit that depends on it, is **skipped**
@@ -549,7 +560,10 @@ For each wave in index.md order, skipping units already `green` on a resume:
    inside its pipeline, on the same discipline, and a `review` row has no
    commit of its own — its fix commits belong to the units fixed; the folder's
    edits — the Run log rows, the Units table cells, the gap section — ride
-   whichever commit closes the wave.
+   whichever commit closes the wave. A wave that produced no commit — a clean
+   `review` row alone — is closed by the orchestrator's own commit of the
+   folder and nothing else, `docs: plan run log — <folder> wave <n>`, so the
+   folder on the branch never says a finished row is pending.
 
 The two fixed final units — the docs unit and the gates-and-bump unit — run as
 their own waves after every other wave, after the Acceptance & UX pass and
@@ -575,7 +589,10 @@ the autonomous policy in [acceptance & ux](references/acceptance-and-ux.md) —
 the loop-to-`code` rule and its 4-round cap under the convergence guard, the
 `n/a` cases, and the spec-gap routing. Two rules hold whatever it says: a
 residual is **never silently dropped**, and infrastructure is **never
-scaffolded beyond the plan's own units**.
+scaffolded beyond the plan's own units**. Every loop-back here lands after the
+last `review` row: each fix re-runs the row covering its unit over the fix
+delta before the stages re-verify — *Late loop-backs re-run the last row* in
+[review-unit.md](references/review-unit.md).
 
 Without `covers:` both stages are skipped — one Run log row each with that
 `why`, journaled — a plan with no blueprint slice has no acceptance criteria
@@ -714,8 +731,9 @@ Status reads `BLOCKED` with the detail. Two things a user can say at that stop:
 
 - **Fix first** → the user names what to address → loop the affected units back
   through their pipeline (a `code` unit: its coder re-dispatched with the
-  finding, its commit, then the `review` row that covers it re-run in full —
-  engines first, then both reviewers concurrently; re-verify acceptance/ux if
+  finding, its commit, then the last `review` row that covers it re-run over
+  the fix delta per *Late loop-backs re-run the last row* in
+  [review-unit.md](references/review-unit.md); re-verify acceptance/ux if
   touched; an `edit` unit: re-dispatch with the finding appended, then the
   wave review), then re-present the report and re-read the Consent block.
 - **Reject** → leave the worktree intact and committed for inspection; nothing

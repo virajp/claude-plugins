@@ -47,4 +47,6 @@ For the unit (skip it when the folder's Run log already shows it done — its
 A fix loop-back — from the covering review row, from the wave review, or from
 the acceptance and UX pass — re-enters this pipeline from step 2 with the
 finding lines or tags appended, then steps 3-5; its `code` row carries the next
-round number. The next `review` row covers the fix.
+round number. A `review` row still ahead covers the fix; a fix that lands after
+the last row covering this unit re-runs that row over the fix delta, per *Late
+loop-backs re-run the last row* in [review-unit.md](review-unit.md).

@@ -81,9 +81,11 @@ quietly lost a rule is the defect, exactly as a dropped branch would be.
   discipline. A `code` unit re-enters its own pipeline in
   [code-unit.md](code-unit.md) from step 2 — the coder dispatched
   with the finding lines appended as the tag, then the commit — so the wave
-  review never edits code itself. It re-runs no engine: the next `review` row
-  covers the fix, and the re-entry is a further `code` row for that unit, not
-  a round of any review loop.
+  review never edits code itself. The re-entry is a further `code` row for
+  that unit, not a round of this loop; the fix is reviewed by the `review` row
+  that covers it — the next one when one is still ahead, else the last one
+  re-run over the fix delta per *Late loop-backs re-run the last row* in
+  [review-unit.md](review-unit.md).
 - A **rule-5 finding in a file no unit owns** does not loop. It becomes a
   `DOCS FALSIFIED:` line handed to the docs unit, whose Owns the orchestrator
   widens to that passage; the widening is written into the Units table's Owns

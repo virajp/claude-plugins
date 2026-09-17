@@ -63,7 +63,9 @@ A re-run against `BLOCKED` or `RUNNING`:
    commit exists on the branch. A `green` unit whose commit is absent is reset
    to `pending` and re-run — the plan's table can be ahead of what landed if a
    session died between the report and the commit, and the committed tree is
-   ground truth.
+   ground truth. A `green` `review` row is exempt: its Commit cell is empty by
+   design, and it is skipped on the Run log alone, per
+   [review-unit.md](review-unit.md).
 5. Reset `unresolved`, `failed` and `skipped` units to `pending`.
 6. Re-run the preflight, then continue from the first wave with a pending unit.
    Run-log rows from the earlier attempt stay; new rows are appended with the

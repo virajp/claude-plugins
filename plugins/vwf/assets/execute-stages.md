@@ -68,18 +68,25 @@ Per-stage dispatch contract:
   The coder never blocks on coverage — the **orchestrator decides**: a residual
   below the configured target is documented as a gap and reported at the final
   gate (never a silent pass). On a fix loop-back from a `review` row, pass the
-  review findings **tag** (not the text) for the findings on the unit's own
-  files — the coder recalls the detail from mempalace before fixing.
+  two review findings **tags** (not the text), the plan folder path the
+  drawers' `source_file` carries, and the coder's **own unit id**: each drawer
+  holds the whole row's findings across units, every finding labelled
+  `(<unit>)`, and the coder recalls the drawers filtered on that path and fixes
+  only the findings labelled with its id.
 - **review** — dispatch `execute-code-reviewer` (pass the wing, plus the
   **`review` row id** and **round number** for its recall tag
-  `<row-id>/review/<round>`, the row's **scope** — the range `<from>..<to>` and
-  the file list it yields, never a unit — the unit files of every unit the row
-  covers, plus the same **resolved stack** the coders got — block and
-  `conventions:` prose both; a reviewer holding less than the coder cannot tell
-  a convention breach from a style preference). It reviews the code in the
-  range adversarially against the **covered units and the index's rulings, the
-  blueprint, `conventions.md`, and the resolved stack**, and every finding
-  names the file it is on. The dispatch prompt
+  `<row-id>/review/<round>` and the **plan folder path** it files as the
+  drawer's `source_file` — row ids repeat across plans in one wing, so the path
+  is what a recall filters on — the row's **scope** — the range `<from>..<to>`
+  and the file list it yields, never a unit — the unit files, with their Owns,
+  of every unit the row covers — its Depends on, followed transitively, the
+  same set preflight counted — plus the same **resolved stack** the coders got
+  — block and `conventions:` prose both; a reviewer holding less than the coder
+  cannot tell a convention breach from a style preference). It reviews the
+  code in the range adversarially against the **covered units and the index's
+  rulings, the blueprint, `conventions.md`, and the resolved stack**, and every
+  finding names the file it is on and is labelled `(<unit>)` with the covered
+  unit whose Owns holds that file. The dispatch prompt
   **ends with a section headed `## Engine`** holding either the `/code-review`
   output verbatim or the single line `ENGINE: unavailable — <reason>`; the
   reviewer runs no engine itself and returns exactly one block. When the plan
@@ -97,7 +104,8 @@ Per-stage dispatch contract:
   the review contract states). It threat-models the changes in the range
   against the project's declared **capabilities** in the registry, rating
   findings by exploitability and impact, every finding naming the file it is
-  on. The dispatch prompt ends with
+  on and labelled `(<unit>)` the same way, from the same unit files and the
+  same plan folder path as `source_file`. The dispatch prompt ends with
   the same `## Engine` section the review contract states, holding the
   `/security-review` output. It files its full findings to mempalace (room
   `problems`) and returns the terse findings block plus a recall tag.
@@ -154,10 +162,13 @@ blueprint-bound and never fires on a plan without one.
   or full file/dir dumps. The orchestrator reads files itself when it needs
   their contents.
 - **Loop on findings** — *every unit.* At a `review` row, a finding names a
-  file; the orchestrator maps the file to the unit whose Owns holds it and
-  re-dispatches that unit's coder with the **tags** for the findings on its
-  files, re-commits via `/vwf:git-workflow`, then re-runs the row — engines
-  first, then both reviewers. Send **both** reviewers' tags in a single `code`
+  file and is labelled with the unit whose Owns holds it; the orchestrator
+  re-dispatches that unit by its Kind — a `code` unit's coder with the two
+  **tags**, the plan folder path and its own unit id, so it fixes only the
+  findings labelled with that id; an `edit` unit per its own loop-back, the
+  finding lines appended — re-commits via `/vwf:git-workflow`, then re-runs
+  the row — engines first, then both reviewers. Send **both** reviewers' tags
+  in a single `code`
   dispatch per unit: one merged fix pass keeps the two stages from rewriting
   each other's lines, and a round counts once even though two reviewers ran
   and several coders may have. A finding on a file **no unit owns** does not
@@ -243,9 +254,10 @@ units' Kind.
 
 - **The record opens with the unit sequence** written at Setup — every unit
   pending — and accumulates rows beneath it. A `code` unit is done when its
-  `code` node carries a commit; a `review` row is done when its reviewers'
-  last round is clean; an `edit` unit is done when its report is read and the
-  wave review passed it.
+  `code` node carries a commit; a `review` row is done — `green` — when its
+  reviewers' last round is clean, or when its loop ended at the cap or the
+  convergence guard with the residuals recorded `contested`; an `edit` unit
+  is done when its report is read and the wave review passed it.
 - **One row per execution, not per stage.** A `review` row whose findings
   looped three times writes three `review` rows and three `security` rows,
   each carrying the row's id in the unit cell and the row's wave, plus a
