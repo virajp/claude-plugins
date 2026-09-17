@@ -231,7 +231,11 @@ Rules the plan must obey, learned from the plans that came before:
   (Owns `—`, Depends on the units it covers, a `NN-review.md` in the template's
   shape) is added only when the change lands runnable code — shipped shell or
   hook scripts, `scripts/`, `installer/` — and the reason is a row in the
-  decisions table. The sections the template marks *cycle plans only*
+  decisions table. The row sits in a wave strictly later than every unit it
+  covers — in the same wave it runs before their commit and reviews nothing,
+  since it scopes by commit range — and its Depends on names every `code` unit
+  in an earlier wave no earlier `review` row named; preflight refuses a folder
+  that breaks either. The sections the template marks *cycle plans only*
   — Slice, Acceptance criteria (from blueprint), Gaps surfaced during execution
   — and the `covers:` and `exposure:` frontmatter keys are omitted.
 - **A unit deletes with plain `rm`, never `git rm`.** A unit stages nothing, so
@@ -268,8 +272,10 @@ Re-read the folder with fresh eyes before handing it off, and fix inline:
 - every owned path appears in exactly one unit per wave, and every file in the
   shared-file rule has an owner
 - every gate delta from the interview is an owned edit somewhere
-- a `review` row, when present, names its reason in the decisions table and
-  covers the units that land runnable code
+- a `review` row, when present, names its reason in the decisions table,
+  covers the units that land runnable code, sits in a wave strictly later than
+  every unit it covers, and names in Depends on every earlier-wave `code` unit
+  no earlier row named
 - every unit's *Verification* names at least one gate line it must pass — a
   `review` row has none, by shape
 - every hit of the retired-name grep sits inside some unit's *Owns*, and every

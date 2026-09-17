@@ -376,8 +376,13 @@ last code unit and before the docs unit — Owns `—`, Depends on naming every
 code unit, Model `opus`, its `NN-review.md` the header lines and a Scope
 section as the template's `NN-review.md` shape says. An earlier `review` row
 is written only on a ruling item 10a recorded in the decisions table, and its
-Scope names that reason. No code unit triggers a review by itself, and
-`/vwf:execute` refuses a plan whose code units no later `review` row covers.
+Scope names that reason. Every `review` row sits in a wave strictly later than
+every unit it covers — a row in the same wave runs before their commit and
+reviews nothing — and its Depends on names every `code` unit in an earlier wave
+that no earlier `review` row already named, so the commit range it reviews and
+the units it covers are one set. No code unit triggers a review by itself, and
+`/vwf:execute` refuses a plan whose code units no later `review` row covers, or
+whose rows break either placement rule.
 The two fixed final units — docs, gates-and-bump — are written as the template
 says.
 
@@ -410,8 +415,10 @@ when the upstream plans sit in members that are not cloned here.
 **Self-review** before handing off, fixing inline: every assumed-decisions row
 is quoted in the unit file its *Unit* column names; every owned path appears in
 exactly one unit per wave; every acceptance criterion is covered by some unit's
-E2E test; every `code` unit is covered by a later `review` row, and a `review`
-row placed before the last code unit names its reason; every unit's
+E2E test; every `code` unit is covered by a later `review` row, every `review`
+row's wave is strictly later than every unit it covers, its Depends on names
+every earlier-wave `code` unit no earlier row named, and a `review` row placed
+before the last code unit names its reason; every unit's
 Verification names a gate line (a `review` row has none, by shape); every
 `requires:` folder exists; the derived priority matches its arithmetic; the
 launch line names this folder.

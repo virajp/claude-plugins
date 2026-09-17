@@ -121,7 +121,14 @@ TDD, the coverage gate and its commit — the `code` units one at a time; an
 together; and a `review` row through `/code-review` and `/security-review`
 followed by the two reviewers, once, over the **branch delta since the previous
 `review` row**, or since the branch base when it is the first. A `review` row
-owns nothing (`—`) and names in Depends on every unit it covers. `/vwf:plan`
+owns nothing (`—`) and names in Depends on every unit it covers. Two placement
+rules, which preflight refuses a folder for breaking: the row sits in a wave
+**strictly later** than every unit it covers — a row in the same wave as its
+units runs before their commit and reviews nothing, since it scopes by commit
+range; and its Depends on names **every `code` unit in an earlier wave that no
+earlier `review` row already named** — so the commit range it reviews and the
+units it covers are the same set, and no `code` unit lands between two rows
+named by neither. `/vwf:plan`
 writes `code` on every slice unit, **one** `review` row after the last code
 unit and before the docs unit, and `edit` on the two fixed final units;
 `/vwf:change-plan` writes `edit` on every unit and a `review` row only when the
@@ -292,14 +299,16 @@ the repo's equivalent — never a type that file does not allow.
 
 The `review` row's file is the header lines and a Scope section, nothing more —
 no Edits, no Test first, no Verification, no Commit. The row edits nothing and
-commits nothing; a finding it raises goes back to the coder of the unit whose
-Owns holds the file.
+commits nothing; a finding it raises goes back to the owning unit — the one
+whose Owns holds the file — re-dispatched by its Kind: a `code` unit's coder in
+fix-first mode, an `edit` unit per the wave-review loop-back.
 
 ```markdown
 # U<n> — Review: <what it covers>
 
-- **Wave:** <n>
-- **Depends on:** <the code units this row covers>
+- **Wave:** <n — strictly later than every unit this row covers>
+- **Depends on:** <every code unit in an earlier wave no earlier review row
+  named>
 - **Owns:** —
 - **Model:** <opus | a named tier | inherit>
 - **Kind:** review
