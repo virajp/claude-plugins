@@ -92,11 +92,11 @@ The fix rounds settled what the rulings left open;
 
 - **Review rows run first in their wave**, before any `edit` or `code` unit of
   that wave is dispatched, so the engines see a committed tree.
-- **Three placement rules**, refused at preflight: a row whose Depends on names
-  no unit covers nothing; a row sits in a wave strictly later than every unit it
-  covers, and on a cycle plan it covers every earlier-wave `code` unit no
-  earlier row covers. A change plan's row covers the units landing runnable
-  code.
+- **Two placement rules**, refused at preflight: a row sits in a wave strictly
+  later than every unit it covers, and on a cycle plan it covers every
+  earlier-wave `code` unit no earlier row covers. A change plan's row covers the
+  units landing runnable code. Beside them a third refusal: a review row whose
+  Depends on names no unit — a review row that covers nothing.
 - **One branch-wide commit map.** Every file in the range maps to the unit whose
   commit last touched it, built once over the whole branch from the Units table
   and Run log Commit cells — never read from Owns.
