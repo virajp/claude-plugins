@@ -140,7 +140,7 @@ on the **monorepo** shape becomes multi-repo by that fact alone.
 | `.config/vwf.yaml` | the base repo, always |
 | `.config/vwf-membership.yaml` | every member, never the base |
 | A cycle plan folder (`docs/plans/<date>-<HHMM>-<slice>/`) | **the repo whose code it changes** |
-| `docs/plans/index.md` | the base repo — a thin index: one table, its row per plan folder naming the target repo, per `assets/plan-index.md` |
+| `docs/plans/index.md` | the base repo — a thin index: one table, its row per plan folder naming the target repo, per `skills/plan-management/references/plan-index.md` |
 | `implementation:` stamps | the blueprint, so the base repo |
 | `mempalace.yaml` | under `siblings`, one per repo, all naming the same wing; under `submodule`, one at the base and none in members |
 | `graphify-out/` | one per checkout |

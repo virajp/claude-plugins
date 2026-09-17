@@ -42,21 +42,24 @@ ad-hoc change plans as `<date>-<name>/` — each an `index.md` plus one
 `NN-<unit>.md` per unit, shaped by `assets/templates/plan-folder.md`; a cycle
 folder lives in the target repo under `multi-repo`, a change folder in the base.
 Both are discovered through the base repo's `docs/plans/index.md`, which holds
-**one table** per `assets/plan-index.md` — columns `Folder`, `Kind`, `Plan`,
-`Target repo`, `Priority`, `Status`, `Requires`, `Backlog`, statuses
-`APPROVED`/`RUNNING`/`COMPLETE` only, every edit a direct commit on the
-integration branch — the queue `/vwf:execute next` reads with no `Kind` filter.
-`/vwf:execute` moves the folder into `archived/` at landing and re-points the
-row when no gap is open, and leaves it live with the row `COMPLETE` when one is;
-`/vwf:archive` moves a folder of either kind whole, only its Status line
-rewritten, and re-points the row, after which the sweep drops a `COMPLETE` row
-nobody's `Requires` names), `docs/backlog.md` (the product's prioritised list of
-work that cannot be picked up now — a table plus one `### Bnn` section per item,
+**one table** per `skills/plan-management/references/plan-index.md` — columns
+`Folder`, `Kind`, `Plan`, `Target repo`, `Priority`, `Status`, `Requires`,
+`Backlog`, statuses `APPROVED`/`RUNNING`/`COMPLETE` only, every edit a direct
+commit on the integration branch — the queue `/vwf:execute next` reads with no
+`Kind` filter. Every row, every folder's Status block and the archive move are
+written by one skill-invoked skill, `plan-management`, whose verbs the planners
+and `/vwf:execute` call: the landing moves the folder into `archived/` and
+re-points the row when no gap is open, and leaves it live with the row
+`COMPLETE` when one is; the `archive` verb, invoked when the user asks in prose,
+moves a folder of either kind whole, only its Status line rewritten, and
+re-points the row, after which the sweep drops a `COMPLETE` row nobody's
+`Requires` names), `docs/backlog.md` (the product's prioritised list of work
+that cannot be picked up now — a table plus one `### Bnn` section per item,
 **product-level and in the base repo only**, beside `docs/plans/index.md`;
 `/vwf:backlog` is its sole writer and `change-plan`, `plan`, `execute` and
-`archive` call it with the ids their plan's `backlog:` frontmatter carries),
-`docs/runbooks/` (per-project operational runbooks plus `postmortems.md`, seeded
-by the incident-response foundation and appended to by
+`plan-management`'s `archive` verb call it with the ids their plan's `backlog:`
+frontmatter carries), `docs/runbooks/` (per-project operational runbooks plus
+`postmortems.md`, seeded by the incident-response foundation and appended to by
 `/vwf:feedback incident`), and `docs/prompts/`
 (`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design briefs grouped by
 prompt type → registry project → flow, one brief per platform regenerated in

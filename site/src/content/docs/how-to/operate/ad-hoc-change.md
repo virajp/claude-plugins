@@ -232,14 +232,14 @@ gate results, and the worktree path.
 
 If everything is green it marks every backlog item the plan covered `done`,
 archives the folder to `docs/plans/archived/` (a landing with a gap still open
-leaves the folder live for `/vwf:archive` instead), and lands per the consent
-you recorded. Once the merge is in, one more commit on the integration branch
-sets the plan's row to `COMPLETE`, pointing at the archived folder, and drops
-every `COMPLETE` row that no waiting plan still requires — the queue only ever
-holds what is waiting, running, or still needed. Then it walks the after-landing
-steps on the mode you recorded: a `run` step runs without a prompt, and before
-an `ask` step it stops **once** to say what the step would do and wait for your
-yes — that yes covers that step and nothing else.
+leaves the folder live instead, to be archived when you ask), and lands per the
+consent you recorded. Once the merge is in, one more commit on the integration
+branch sets the plan's row to `COMPLETE`, pointing at the archived folder, and
+drops every `COMPLETE` row that no waiting plan still requires — the queue only
+ever holds what is waiting, running, or still needed. Then it walks the
+after-landing steps on the mode you recorded: a `run` step runs without a
+prompt, and before an `ask` step it stops **once** to say what the step would do
+and wait for your yes — that yes covers that step and nothing else.
 
 "Not yet" is offered as an equal option, not a fallback — where a step stages
 something, only a **restarted** session will pick it up. Coming back to the
@@ -271,12 +271,14 @@ and land through [`/vwf:git-workflow`](../../plugins/vwf.md#vwfgit-workflow)
 yourself.
 
 A plan you decide **not** to run at all is retired the same way a completed one
-is: [`/vwf:archive <folder>`](../../plugins/vwf.md#vwfarchive) moves the whole
-folder into `docs/plans/archived/` and marks its Status as archived-and-not-run,
-naming what it was before — gives its row in `docs/plans/index.md` the same
-`COMPLETE`-and-sweep edit a landing would — and marks every backlog item the
-folder still has open `done`, so nothing is left waiting on a plan that will not
-run. Nothing is deleted, and the next plan's recall still reads it.
+is: ask for it to be archived, and the session invokes
+[`plan-management`](../../plugins/vwf.md#vwfplan-management)'s `archive` verb,
+which moves the whole folder into `docs/plans/archived/` and marks its Status as
+archived-and-not-run, naming what it was before — gives its row in
+`docs/plans/index.md` the same `COMPLETE`-and-sweep edit a landing would — and
+marks every backlog item the folder still has open `done`, so nothing is left
+waiting on a plan that will not run. Nothing is deleted, and the next plan's
+recall still reads it.
 
 ## What this will not do for you
 
