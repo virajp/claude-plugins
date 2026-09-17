@@ -6,6 +6,6 @@ to pick the next runnable plan.
 
 ## Plans
 
-| Folder                                  | Kind   | Plan                                                                            | Target repo | Priority | Status   | Requires | Backlog |
-| --------------------------------------- | ------ | ------------------------------------------------------------------------------- | ----------- | -------- | -------- | -------- | ------- |
-| `docs/plans/2026-09-18-plan-management` | change | plan-management — one owner of the plan index, the Status block and the archive | —           | 10       | APPROVED | —        | —       |
+| Folder                                  | Kind   | Plan                                                                            | Target repo | Priority | Status  | Requires | Backlog |
+| --------------------------------------- | ------ | ------------------------------------------------------------------------------- | ----------- | -------- | ------- | -------- | ------- |
+| `docs/plans/2026-09-18-plan-management` | change | plan-management — one owner of the plan index, the Status block and the archive | —           | 10       | RUNNING | —        | —       |
