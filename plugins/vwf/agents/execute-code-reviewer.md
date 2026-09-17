@@ -112,9 +112,11 @@ Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, before reporting you may
 `mempalace_search` room `problems` (the wing the orchestrator gave you) to avoid
 re-reporting already-resolved findings. After merging, **file your full
 findings** — `file:line`, the owning unit, why each is wrong, and the fix — with
-`mempalace_add_drawer` (that wing, room `problems`), tagged
-`<row-id>/review/<round>` — use the **review row's id** and **round number** the
-orchestrator gave you, never invent them, or the fix round's recall will miss.
+`mempalace_add_drawer` (that wing, room `problems`, `source_file` set to the
+**plan folder path**), tagged `<row-id>/review/<round>` — use the **review
+row's id**, **round number** and **plan folder path** the orchestrator gave you,
+never invent them, or the fix round's recall will miss: row ids repeat across
+plans, so recall filters on `source_file`.
 This rich detail is what the fix round recalls; your inline reply stays terse.
 Skip silently if mempalace is unavailable.
 

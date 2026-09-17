@@ -33,16 +33,20 @@ each template it pins, which is the layout, testing and placement you write to �
 the project's mempalace **wing**, and the **slice name** and **round
 number** for your gap tags (never invent them). On a **fix loop-back** from a
 review row you are also given a findings **recall tag** — the row's
-`<row-id>/review/<round>` or `<row-id>/security/<round>`, e.g. `R1/review/2` —
-instead of the findings text.
+`<row-id>/review/<round>` or `<row-id>/security/<round>`, e.g. `U7/review/2` —
+plus the **plan folder path** and your **unit id**, instead of the findings
+text.
 
 ## What to do
 
 **Fix loop-back?** If you were given a recall tag, first `mempalace_search` room
-`problems` in the given wing for that tag (per
-`${CLAUDE_PLUGIN_ROOT}/assets/memory.md`), read the full findings, and address
-every one under the same TDD cycle below — a failing test first for each fix.
-Skip this step on the initial round or if mempalace is unavailable.
+`problems` in the given wing for that tag, filtering `source_file` on the plan
+folder path (per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` — row ids repeat
+across plans, so the tag alone is ambiguous in a wing). The drawer holds the
+whole review row's findings across every unit it covers; address **only** the
+findings labelled with your unit id under the same TDD cycle below — a failing
+test first for each fix — and leave the rest to their owning units. Skip this
+step on the initial round or if mempalace is unavailable.
 
 **Blueprint/plan gaps.** The plan is authoritative, but where it (or the
 blueprint it implements) leaves a behaviour underspecified or is contradicted by
