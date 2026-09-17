@@ -79,10 +79,11 @@ Per-stage dispatch contract:
   the coder recalls the drawers filtered on the plan folder path (the drawers'
   `source_file`) and fixes only the findings labelled with its own unit id.
 - **review** — dispatch `execute-code-reviewer` (pass the wing, plus the
-  **`review` row id** and **round number** for its recall tag
-  `<row-id>/review/<round>`, the **plan folder path** it files as the
+  **loop id** — the `review` row id for its main loop, `<row-id>-late` for
+  its late re-run — and **round number** for its recall tag
+  `<loop-id>/review/<round>`, the **plan folder path** it files as the
   drawer's `source_file` and the plan's **`covers:` doc names** for its gap
-  drawers — row ids repeat across plans in one wing, so the path
+  drawers — loop ids repeat across plans in one wing, so the path
   is what a recall filters on — the row's **scope** — the range `<from>..<to>`
   and the file list it yields, never a unit — the unit files, with their Owns,
   of every unit the row covers — its Depends on, followed transitively, the
@@ -108,8 +109,8 @@ Per-stage dispatch contract:
   cap). It files its full findings to mempalace (room `problems`) and returns
   the terse findings block plus a recall tag.
 - **security** — dispatch `execute-security-reviewer` (pass the wing, plus the
-  **`review` row id** and **round number** for its recall tag
-  `<row-id>/security/<round>`, the same **plan folder path**, **`covers:`
+  same **loop id** and **round number** for its recall tag
+  `<loop-id>/security/<round>`, the same **plan folder path**, **`covers:`
   doc names**, **scope** — range, file list and its unit map — and unit files
   the review contract states, and, on the same condition — a unit
   the row covers is `code` — the **registry**, the resolved stack and its

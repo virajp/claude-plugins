@@ -74,9 +74,14 @@ A re-run against `BLOCKED` or `RUNNING`:
    ground truth. A `green` `review` row is exempt: its Commit cell is empty by
    design, and it is skipped on the Run log alone, per
    [review-unit.md](review-unit.md) — unless a `code` or `edit` Run log row
-   of a unit it covers carries a commit newer than the `to` its last loop
-   recorded: that is a **pending late re-run**, run before continuing, per
-   *Late loop-backs re-run the last row* there.
+   of a unit it covers carries a commit that is **not an ancestor of** the
+   `to` its last loop — main or late — recorded (`git merge-base
+   --is-ancestor <commit> <to>` fails): that is a **pending late re-run**,
+   run before continuing, per *Late loop-backs re-run the last row* there.
+   The test is by ancestry, never by recency, so a resume after a late re-run
+   that already reviewed the commit finds nothing pending; and each covered
+   unit is tested **once**, whether the row's Depends on names it directly or
+   reaches it transitively, so no unit counts twice.
 5. Reset `unresolved`, `failed` and `skipped` units to `pending`.
 6. Re-run the preflight, then continue from the first wave with a pending unit;
    `review` rows run in table order, each ranged from the previous row in

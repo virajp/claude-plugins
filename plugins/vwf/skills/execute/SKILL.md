@@ -155,12 +155,15 @@ tip, the way that asset's *Reading the queue* reads it. Then:
   and its row), since it would land with no review; and an After landing
   table with no *Mode* column, or a step whose mode is neither `run` nor
   `ask` (re-record the step).
-- Status `APPROVED` with an `APPROVED` row → a fresh run. Three refusals are
+- Status `APPROVED` with an `APPROVED` row → a fresh run. Four refusals are
   read off the folder here, before the claim, each stopping the run with the
   fix — amend the row and re-approve the plan — since execute runs what is
   written and infers no row. **A `code` unit no `review` row covers** — a row
   covers a unit when its Depends on names it, directly or transitively
-  through units it names — naming every uncovered unit. **A `review` row
+  through units it names — naming every uncovered unit. **A `review` row that
+  covers nothing** — its Depends on names no unit at all, `—`, so it would
+  review nothing and pass inert; cycle plan and change plan alike — naming the
+  row. **A `review` row
   placed wrong** — its wave is not strictly greater than the wave of every
   unit it covers (a row reviews a commit range, and a unit in its own wave is
   committed after it runs), or it fails to cover a `code` unit in an earlier
@@ -434,8 +437,9 @@ Pass the wing to every subagent.
 and its **Units table** are what the resumed run reads: which units are already
 `green` and their commits, which unit is the first that is not, and — for a
 `review` row — which round last returned and whether a late re-run is pending
-(a covered unit's commit newer than the row's last recorded `to`, per
-[blocking.md](references/blocking.md) step 4). Consult the **run journal** (room
+(a covered unit's Run log commit that is not an ancestor of the `to` the row's
+last loop recorded — by ancestry, not recency, each covered unit tested once —
+per [blocking.md](references/blocking.md) step 4). Consult the **run journal** (room
 `runs`, drawer `<plan folder>`) only when the folder cannot be read. Then the
 Resume steps of [blocking and resume](references/blocking.md): the worktree in
 the status line must exist, the rulings a block asked for must now be in the
@@ -801,8 +805,10 @@ an unknown mode never reaches here: preflight refused it, on a fresh run and a
 resume alike.
 
 The steps run from the repo root the landing left behind: the main checkout
-when the branch merged, the worktree when it did not — and when the landing was
-**not** consented, only those steps whose *Notes* say they may run from the
+when the branch merged, the worktree when it did not — and when the branch did
+**not** merge, whether the landing was not consented or was consented and the
+merge failed (a conflict, a red safety net — the folder's Status reads
+`BLOCKED` naming it), only those steps whose *Notes* say they may run from the
 worktree are offered, and every one of them as an `ask`: a `run` step's
 authorisation was for a green landing, and this is not one. The orchestrator
 runs them, never a unit — a step may mutate the machine rather than the tree
@@ -825,8 +831,8 @@ Each step taken is reported with its outcome:
   that refuses is usually a fact about the machine rather than a failure of the
   run, and the plan named that step, not a substitute for it.
 
-If the landing was not consented and no step may run from the worktree, there
-is nothing to offer yet; say so in the final line and stop.
+If the branch did not merge and no step may run from the worktree, there is
+nothing to offer yet; say so in the final line and stop.
 
 ## What does not stop the run
 

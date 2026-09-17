@@ -295,10 +295,12 @@ units. The wave review's findings ride the plan folder's Run log, not this
 room.
 
 Each review/security subagent files its **full** findings to room `problems`,
-tagged `<row-id>/<stage>/<round>` (e.g. `U7/review/2`) with the plan folder
+tagged `<loop-id>/<stage>/<round>` (e.g. `R1/review/2`; the loop id is the
+`review` row's id for its main loop, `<row-id>-late` for its late re-run, whose
+rounds restart at 1) with the plan folder
 path as the drawer's `source_file` — in one pinned form, the repo-relative
 `docs/plans/<folder>` with no trailing slash, exactly as the plan index's
-Folder cell names it, the same string filed and filtered on; row ids repeat
+Folder cell names it, the same string filed and filtered on; loop ids repeat
 across plans filed to one wing, so every recall of a tag filters on that path
 — each finding labelled
 `(<unit>)` with the unit whose commit last touched its file in the row's

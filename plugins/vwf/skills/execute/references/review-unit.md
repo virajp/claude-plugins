@@ -15,7 +15,11 @@ runs them over the row.
 The row's unit file, `NN-review.md`, carries only the header lines and a
 **Scope** section naming what it reviews. Its Owns is `—`: the row edits
 nothing, commits nothing and stages nothing. The fix commits a round produces
-belong to the units fixed.
+belong to the units fixed. The **row id** is its Id cell, `R1`; the **loop
+id** is the row id for the row's main loop and `<row-id>-late` for its late
+re-run (below), whose rounds restart at 1. Everything keyed per round — the
+engine output files and the recall tags — keys on the loop id, never the row
+id alone, so the two loops never overwrite each other's record.
 
 For the row (skip it when the folder's Run log already shows it `green` — its
 last round clean, or ended at the cap or the guard with its residuals recorded
@@ -68,9 +72,11 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    with `TaskOutput`, blocking, up to 30 minutes from invocation. An engine
    that errors or times out is stopped with `TaskStop` and counted
    unavailable, with the reason kept for the prompt. Save each engine's
-   output verbatim to `<folder>/engine/<row-id>-<round>.md` in the plan
+   output verbatim to `<folder>/engine/<loop-id>-<round>.log` in the plan
    folder — committed with the folder, the on-disk record the dedupe below
-   reads — and mirror it to the run journal (room `runs`, drawer
+   reads; the `.log` extension is deliberate, since no formatter or lint hook
+   touches it at commit and the dedupe compares bytes — and mirror it to the
+   run journal (room `runs`, drawer
    `<plan folder>`) under the row and round; then **filter** it: a finding on
    a file in the row's file list is kept; a finding on a file **outside the
    range** is kept too —
@@ -85,7 +91,9 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    commit touched it, to the unit whose in-range change the engine or
    reviewer names as the cause; when none is named, to the unit that last
    touched the in-range file the finding cites; and when still nothing, it is
-   recorded `contested` with `unmapped` in Detail — never silently dropped.
+   recorded `contested` with `(unmapped)` in Detail — the sentinel the
+   reviewers label a file the branch-wide map cannot place, exactly that
+   token — never silently dropped.
    The one rule of step 1 then applies to a mapped finding in step 4 like any
    other. Hand the reviewers the filtered output. The one rule is not applied
    here: the reviewers report every finding in full, and the orchestrator
@@ -171,11 +179,12 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    convergence guard compares rows within one loop only. A skip carries its
    `why`.
    Recall tags
-   are `<row-id>/review/<round>` and `<row-id>/security/<round>`, and the
+   are `<loop-id>/review/<round>` and `<loop-id>/security/<round>` — the
+   loop id, so a late re-run's round 1 never shadows the main loop's — and the
    drawer's `source_file` is the plan folder path in one pinned form — the
    repo-relative `docs/plans/<folder>`, no trailing slash, exactly as the plan
    index's Folder cell names it, the same string filed and filtered on, the
-   form `memory.md` states — row ids repeat across
+   form `memory.md` states — loop ids repeat across
    plans filed to one wing, so every recall of a tag filters on it.
 
 ## Late loop-backs re-run the last row
@@ -194,8 +203,10 @@ range is its own: `from` is the parent of its first fix commit, `to` the
 newest fix commit of its latest round, and a round after the first extends
 `to` only; the file list and unit map come from that range as in step 1. Then
 engines first, both reviewers, steps 2-6. The re-run is a **new loop** over
-its own range, not a further round of the finished one: its rounds restart at
-1 — the Run log rows say `re-run n` in Detail — the convergence guard's
+its own range, not a further round of the finished one: its loop id is
+`<row-id>-late` — the engine files and the recall tags key on it, so round 1
+of the re-run never overwrites round 1 of the main loop — its rounds restart
+at 1 — the Run log rows say `re-run n` in Detail — the convergence guard's
 baseline is the re-run's own round 1, and `pipeline.review_round_cap` applies
 to it afresh. The re-run is a Run log row per node like any round, and its
 rows record their own `from..to` without advancing the row's recorded `to` —
