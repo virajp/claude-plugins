@@ -95,12 +95,12 @@ the mitigation — with `mempalace_add_drawer` (that wing, room `problems`,
 `docs/plans/<folder>`, no trailing slash, exactly the string the dispatch
 passes), tagged
 `<loop-id>/security/<round>` — the **loop id** is the row id for a row's main
-loop and `<row-id>-late` for its late re-run, whose rounds restart at 1; use
-the **loop id**, **round number** and **plan folder path** the orchestrator
-gave you, never invent them, or the fix round's recall will miss: loop ids
-repeat across plans, so recall filters on `source_file`. This rich detail is
-what the fix round recalls; your inline reply stays terse. Skip silently if
-mempalace is unavailable.
+loop and `<row-id>-late<n>` for its n-th late re-run, whose rounds restart at
+1; use the **loop id**, **round number** and **plan folder path** the
+orchestrator gave you, never invent them, or the fix round's recall will miss:
+loop ids repeat across plans, so recall filters on `source_file`. This rich
+detail is what the fix round recalls; your inline reply stays terse. Skip
+silently if mempalace is unavailable.
 
 **Blueprint/plan gaps are not findings.** If a security issue traces to the
 *blueprint or a covered unit itself* — an authz/validation/secret-handling

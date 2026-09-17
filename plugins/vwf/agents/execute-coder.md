@@ -37,9 +37,9 @@ the plan's **`covers:` doc names** and the **round number** for your gap
 drawers (never invent them). On a **fix loop-back** you are also given findings
 **recall tags** instead of the findings text — from a review row, the row's
 two, `<loop-id>/review/<round>` and `<loop-id>/security/<round>`, where the
-loop id is the row id for the row's main loop and `<row-id>-late` for its late
-re-run, e.g. `U7/review/2` or `U7-late/security/1`; from the acceptance or UX
-pass, its one,
+loop id is the row id for the row's main loop and `<row-id>-late<n>` for its
+n-th late re-run, e.g. `U7/review/2` or `U7-late1/security/1`; from the
+acceptance or UX pass, its one,
 `<slice>/acceptance/<round>` or `<slice>/ux/<round>`.
 
 ## What to do
