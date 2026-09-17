@@ -55,12 +55,11 @@ and run, in a fresh session, by the one executor, `/vwf:execute <folder>` — or
 runnable plan with the lowest `Priority` value — which refuses a folder that is
 not on that branch, claims the row `RUNNING` with a pushed commit before it cuts
 a worktree, and marks it `COMPLETE` once the merge lands (archiving the folder
-there and re-pointing the row when no gap is open; leaving it live for
-`/vwf:archive` to move when one is) — each plan folder carries this repo's gate
-lines, and `mise run p:plugins:local` and `/release` as after-landing steps,
-each carrying `run` or `ask` as the interview recorded: `/vwf:execute` runs the
-`run` steps on a green landing without a prompt and stops once before each `ask`
-step.
+there and re-pointing the row when no gap is open; leaving it live when one is,
+archived once you ask) — each plan folder carries this repo's gate lines, and
+`mise run p:plugins:local` and `/release` as after-landing steps, each carrying
+`run` or `ask` as the interview recorded: `/vwf:execute` runs the `run` steps on
+a green landing without a prompt and stops once before each `ask` step.
 
 | Read                                                         | For                                                                                                                                                                                                                                                                                                                                                           |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -307,15 +306,17 @@ with no blueprint slice behind it — tooling, CI, docs, a refactor, a tree the
 blueprint does not describe — reads neither the blueprint nor the registry, and
 names the commands its plan folder gates on. The two planners share the folder
 shape (`assets/templates/plan-folder.md`), the interview checklist
-(`assets/plan-interview.md`) and the one plan index (`assets/plan-index.md`),
-and one executor, `execute`, runs both: each unit's `Kind` cell decides what
-runs over it — a `code` unit TDD and the coverage gate, a `review` row the two
-engines plus the code and security reviewers over the branch delta since the
-last row, an `edit` unit the concurrent dispatch and the wave review — and the
-acceptance and UX pass and the blueprint reconcile fire only when the plan has
-`covers:`. The ordering gates, the skill and agent tables, how to add a skill
-and pick its invocation mode, and the dependency reasoning are the
-[`vwf-plugin`][vwf] skill.
+(`assets/plan-interview.md`) and the one plan index, whose contract and every
+write to it — the row, the Status block, the archive move — are the
+skill-invoked `plan-management`'s
+(`skills/plan-management/references/plan-index.md`); and one executor,
+`execute`, runs both: each unit's `Kind` cell decides what runs over it — a
+`code` unit TDD and the coverage gate, a `review` row the two engines plus the
+code and security reviewers over the branch delta since the last row, an `edit`
+unit the concurrent dispatch and the wave review — and the acceptance and UX
+pass and the blueprint reconcile fire only when the plan has `covers:`. The
+ordering gates, the skill and agent tables, how to add a skill and pick its
+invocation mode, and the dependency reasoning are the [`vwf-plugin`][vwf] skill.
 
 ## The installer CLI
 

@@ -97,11 +97,14 @@ table says why.
 11. **Model per unit.** Default is `opus`, written explicitly into every unit
     file's `Model:` line. A unit the user wants on a stronger or cheaper tier
     records that tier instead; `inherit` means the session's model.
-12. **Priority.** Stated, never asked: `10 + max` over the `Priority` column of
-    every unarchived `requires:` row in the base repo's `docs/plans/index.md`,
-    or `10` when the plan requires none of them. Say which row it stands on.
-    The user may name a required plan the interview missed, which changes the
-    arithmetic — nothing else does.
+12. **Priority.** Stated, never asked: no folder exists yet, so invoke
+    `plan-management priority <requires…>` with the `requires:` entries this
+    plan will carry — folder basenames, possibly none — and say what it
+    returns: `10 + max` over the `Priority` column of every unarchived
+    `requires:` row in the base repo's `docs/plans/index.md`, or `10` when the
+    plan requires none of them — and which row it stands on. The user may name
+    a required plan the interview missed, which changes the arithmetic —
+    nothing else does; run the verb again.
 
 ## D. Gates and docs
 

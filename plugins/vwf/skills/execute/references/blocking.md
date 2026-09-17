@@ -42,6 +42,10 @@ not carry is not mechanical, however small it looks.
 
 ## What the status line records
 
+The block is written with
+`plan-management status <folder> BLOCKED "<detail>"` in the worktree, the
+detail being:
+
 `BLOCKED at wave <n> — U<a> UNRESOLVED: <text>; U<b> failed: <gate line or
 agent died>; U<c>, U<d> skipped (depend on U<a>)`
 plus the worktree path.
@@ -60,7 +64,9 @@ A re-run against `BLOCKED` or `RUNNING`:
    `APPROVED`. Starting over means resetting the folder's Status **and** its
    index row to `APPROVED` by hand, the row in a commit on the integration
    branch — that reset is what lets a named run, or `next`, claim the plan
-   afresh; nothing takes a `RUNNING` row otherwise.
+   afresh; nothing takes a `RUNNING` row otherwise. No `plan-management` verb
+   does this yet: the `unclaim <folder>` verb that would replace the hand edit
+   is backlog B12.
 2. The index row stays `RUNNING` through the resume and is not touched. A row
    found reading `APPROVED` is a hand reset, and the Resolve step claims it
    again before continuing.

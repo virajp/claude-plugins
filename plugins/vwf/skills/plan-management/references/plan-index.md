@@ -8,9 +8,10 @@ file follows this contract; no skill reads a plan's status from anywhere else
 when this file has a row for it.
 
 The file holds **one table**. Every plan folder is a row, whichever skill wrote
-the folder and whichever repo holds it. Its writers are `/vwf:plan`,
-`/vwf:change-plan`, `/vwf:execute` and `/vwf:archive`, each making the one edit
-named under *Writers and their edits*.
+the folder and whichever repo holds it. Its writers are the verbs of
+`plan-management`, called by `/vwf:plan`, `/vwf:change-plan` and
+`/vwf:execute` — and, for `archive`, by a session on the user's word — each
+making the one edit named under *Writers and their edits*.
 
 ## The prose frame
 
@@ -57,12 +58,14 @@ The three statuses:
 
 ## Writers and their edits
 
-| Writer             | Edit                                                                                                                                                                                                                                                                              |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/vwf:plan`        | appends the row, `APPROVED`, in its hand-off commit                                                                                                                                                                                                                               |
-| `/vwf:change-plan` | appends the row, `APPROVED`, in its hand-off commit                                                                                                                                                                                                                               |
-| `/vwf:execute`     | sets `RUNNING` at claim — before the worktree is cut; sets `COMPLETE` after the merge lands, re-pointing `Folder` under `archived/` when the landing archived the folder (an empty gap list) and leaving it at the live path otherwise — `/vwf:archive` re-points it later — then runs the **sweep** |
-| `/vwf:archive`     | applies the landing edit by hand to one folder's row, in the archive's own commit; a folder with no row gets none                                                                                                                                                                 |
+| Verb       | Caller                          | Edit                                                                                                                                                                                                                                                                                       |
+| ---------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `add`      | `/vwf:plan`, `/vwf:change-plan` | appends the row, `APPROVED`, in the planner's hand-off commit                                                                                                                                                                                                                              |
+| `claim`    | `/vwf:execute`                  | sets `RUNNING` — before the worktree is cut; the commit `docs: plan queue — <folder> running`                                                                                                                                                                                              |
+| `complete` | `/vwf:execute`                  | sets `COMPLETE` after the merge lands, re-pointing `Folder` under `archived/` when the landing archived the folder (an empty gap list) and leaving it at the live path otherwise — `archive` re-points it later — then runs the **sweep**; the commit `docs: plan queue — <folder> complete` |
+| `archive`  | a session, on the user's word   | applies the landing edit to one folder's row, in the commit of the session that asked; a folder with no row gets none                                                                                                                                                                      |
+
+No verb commits: the caller named in each row commits the edit.
 
 A cycle plan's folder lives in the **target repo** — the member whose code it
 changes — and is archived there, under that repo's `docs/plans/archived/`; its
@@ -74,7 +77,7 @@ whose `Folder` already points under `docs/plans/archived/` and that no
 `APPROVED` or `RUNNING` row's `Requires` names. A completed plan nobody still
 waits on leaves the queue once its folder is archived; that folder is the
 record. A `COMPLETE` row whose `Folder` is a live path is never swept — it is
-how `/vwf:archive` finds the folder it has yet to move.
+how the `archive` verb finds the folder it has yet to move.
 
 **Every edit is a direct commit on the integration branch, made in the main
 checkout, never in a worktree.** The run branch never touches this file, so two
@@ -84,7 +87,7 @@ parallel landings cannot conflict on it. The two commit messages:
 - the landing: `docs: plan queue — <folder> complete`
 
 `/vwf:plan`'s and `/vwf:change-plan`'s rows ride their own approval commits,
-and `/vwf:archive`'s edit rides the archive commit.
+and the `archive` verb's edit rides the commit of the session that asked.
 
 ## Resolution
 
@@ -202,10 +205,10 @@ taken.
      The `Folder` cell is re-pointed to `docs/plans/archived/<basename>` by
      whichever skill moves the folder: the completion edit itself when the
      landing's gap list is empty and `/vwf:execute` archives the folder at
-     landing; `/vwf:archive` when a gap was open and the folder stayed live as
-     the working record. A `COMPLETE` row whose `Folder` is still a live path
-     is one `/vwf:archive` has yet to move, and the sweep leaves it alone until
-     `/vwf:archive`'s own landing edit re-points it.
+     landing; the `archive` verb when a gap was open and the folder stayed
+     live as the working record. A `COMPLETE` row whose `Folder` is still a
+     live path is one `archive` has yet to move, and the sweep leaves it alone
+     until `archive`'s own landing edit re-points it.
 5. `git add -- docs/plans/index.md` — that file alone; nothing else the
    checkout carries rides this commit.
 6. `mise x -- git commit -m "docs: plan queue — <folder> running"` for a
@@ -248,7 +251,7 @@ candidate is a `COMPLETE` row whose `Folder` already points under
 in no `APPROVED` or `RUNNING` row's `Requires` cell. A candidate that
 something still requires stays until the last row that names it is itself
 complete and swept — a later completion sweeps it then. A `COMPLETE` row whose
-`Folder` is a live path is not a candidate: it stays until `/vwf:archive`
+`Folder` is a live path is not a candidate: it stays until the `archive` verb
 moves the folder and re-points the cell, after which that landing edit's own
 sweep may remove it.
 
