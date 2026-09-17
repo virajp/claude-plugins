@@ -1,10 +1,10 @@
 ---
 name: execute-coder
 description: Code-stage implementer for the /vwf:execute command. Invoked only
-  by
-  /vwf:execute — do not delegate to it for general tasks. Implements one unit
-  of the approved plan folder under strict TDD and verifies the coverage gate
-  before handoff to code review. Returns the coverage report.
+  by /vwf:execute — do not delegate to it for general tasks. Implements one
+  unit of the approved plan folder under strict TDD and verifies the coverage
+  gate before handoff to the orchestrator's commit; the plan's review row that
+  covers the unit reviews it later. Returns the coverage report.
 tools: Read, Write, Edit, Bash, Grep, Glob,
   mcp__plugin_vwf_mempalace__mempalace_search,
   mcp__plugin_mempalace_mempalace__mempalace_search,
@@ -30,28 +30,44 @@ the blueprint slice it implements (in `docs/blueprint/`), the project's
 `projects.<name>.stack` block from `.config/vwf.yaml` (**not** the registry,
 which has carried no stack since format 16) plus the `conventions:` prose of
 each template it pins, which is the layout, testing and placement you write to —
-the project's mempalace **wing**, and the **slice name** and **round
-number** for your gap tags (never invent them). On a **fix loop-back** you are
-also given a findings **recall tag** (e.g. `order/review/2`) instead of the
-findings text.
+the project's mempalace **wing**, your **unit id**, the **plan folder path**
+(repo-relative, `docs/plans/<folder>`, no trailing slash — the one string every
+`source_file` is filed and filtered with),
+the plan's **`covers:` doc names** and the **round number** for your gap
+drawers (never invent them). On a **fix loop-back** you are also given findings
+**recall tags** instead of the findings text — from a review row, the row's
+two, `<loop-id>/review/<round>` and `<loop-id>/security/<round>`, where the
+loop id is the row id for the row's main loop and `<row-id>-late<n>` for its
+n-th late re-run, e.g. `U7/review/2` or `U7-late1/security/1`; from the
+acceptance or UX pass, its one,
+`<slice>/acceptance/<round>` or `<slice>/ux/<round>`.
 
 ## What to do
 
-**Fix loop-back?** If you were given a recall tag, first `mempalace_search` room
-`problems` in the given wing for that tag (per
-`${CLAUDE_PLUGIN_ROOT}/assets/memory.md`), read the full findings, and address
-every one under the same TDD cycle below — a failing test first for each fix.
-Skip this step on the initial round or if mempalace is unavailable.
+**Fix loop-back?** If you were given recall tags, first `mempalace_search` room
+`problems` in the given wing for each tag, filtering `source_file` on the plan
+folder path (per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` — ids repeat across
+plans, so a tag alone is ambiguous in a wing). Which findings are yours depends
+on the tag: a **review-row** tag names a drawer holding the whole row's
+findings across every unit it covers, each labelled `(<unit>)` — address
+**only** the findings labelled with your unit id; an **acceptance or ux** tag
+names a drawer with no unit labels — address every finding it holds on your
+own files. Fix under the same TDD cycle below — a failing test first for each
+fix — and leave the rest to their owning units. Skip this
+step on the initial round or if mempalace is unavailable.
 
 **Blueprint/plan gaps.** The plan is authoritative, but where it (or the
 blueprint it implements) leaves a behaviour underspecified or is contradicted by
 the real code, do **not** silently invent — proceed on the most idiomatic
 assumption to keep moving, but **capture the gap**. Per
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, file the full gap to room `gaps` in
-the given wing with `mempalace_add_drawer`, tagged `<slice>/gap/<round>` (what
-the blueprint/plan under-/mis-specified, where, and the assumption you proceeded
-on), and surface a terse one-liner in your return block. Skip the mempalace
-write silently if it is unavailable — still report the gap inline.
+the given wing with `mempalace_add_drawer` — `source_file` set to the **plan
+folder path**, tagged `<unit>/gap/<round>`, its content **opening with the plan
+folder path and the `covers:` doc names** the dispatch carries, so
+`/vwf:plan`'s slice-keyed recall still finds it — then what the blueprint/plan
+under-/mis-specified, where, and the assumption you proceeded on; and surface a
+terse one-liner in your return block. Skip the mempalace write silently if it
+is unavailable — still report the gap inline.
 
 **Orient graph-first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`, when a
 knowledge graph is reachable (in this worktree, or via the main checkout per
@@ -117,7 +133,7 @@ IMPLEMENTED:
 - <one terse line per unit edit satisfied>   # ≤ 8 lines total
 TESTS: <suite command> — <N passed / M failed>
 COVERAGE: <overall % | n/a — no coverage tooling>   # if < 100%, append "— uncovered: file:line, file:line …"
-GAPS: <slice>/gap/<round>   # mempalace tag for blueprint/plan holes hit; "none" if the plan fully determined the work
+GAPS: <unit>/gap/<round>   # mempalace tag for blueprint/plan holes hit; "none" if the plan fully determined the work
 ```
 
 Nothing before or after the block. If a gate failed and you stopped, say so in

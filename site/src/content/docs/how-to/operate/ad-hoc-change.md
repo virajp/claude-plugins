@@ -113,17 +113,20 @@ are worth answering carefully:
   landed does not belong here. That one goes in the unit's own verification. If
   the repo has no task runner and no stamp, the answer is `none`, and the plan
   says plainly that the wave review is then the only gate.
-- **The after-landing steps.** What happens once the branch is in. Every one is
-  an `ask`: the run stops and asks before it, whether it stages something on
-  your machine or ships a release. Nothing runs unprompted after the landing. An
-  empty list is a perfectly good answer.
+- **The after-landing steps.** What happens once the branch is in. Each one is
+  recorded `run` or `ask`, here, whether it stages something on your machine or
+  ships a release: a `run` step runs on a green landing without a prompt — the
+  yes you give now is the consent — and an `ask` step stops the run once before
+  it and waits. An empty list is a perfectly good answer.
 - **The release intent.** Per project the change touches: does a user see a
   difference, and what command ships it. Recorded as `none`, `patch`, `minor` or
   `major`. Relay's answer is `none` — CI plumbing, no user-visible change — so
   nothing ships and the version stays put.
 
-A release recorded here is **intent, not authorization**. Saying `minor` now
-does not authorize anything; the run still stops and asks in the moment.
+A release recorded here is **intent, not authorization** — unless its
+after-landing step is recorded `run`, in which case this answer is the consent
+and the run ships it on a green landing. Saying `minor` with an `ask` step, or
+no step, authorizes nothing; the run still stops and asks in the moment.
 
 ### 3. Approve the shape, then walk away
 
@@ -234,12 +237,14 @@ you recorded. Once the merge is in, one more commit on the integration branch
 sets the plan's row to `COMPLETE`, pointing at the archived folder, and drops
 every `COMPLETE` row that no waiting plan still requires — the queue only ever
 holds what is waiting, running, or still needed. Then it walks the after-landing
-steps, stopping **once before each** to say what the step would do and wait for
-your yes — that yes covers that step and nothing else.
+steps on the mode you recorded: a `run` step runs without a prompt, and before
+an `ask` step it stops **once** to say what the step would do and wait for your
+yes — that yes covers that step and nothing else.
 
 "Not yet" is offered as an equal option, not a fallback — where a step stages
 something, only a **restarted** session will pick it up. Coming back to the
-remaining steps tomorrow is a normal ending, and the table still names them.
+remaining `ask` steps tomorrow is a normal ending, and the table still names
+them.
 
 ## When it stops early
 
@@ -283,8 +288,9 @@ run. Nothing is deleted, and the next plan's recall still reads it.
 - **It will not pick up an item from *Out of scope* or *Parked***, however
   adjacent it looks once the run is underway. That is what the next plan's
   recall is for.
-- **It will not release anything on the plan's word alone.** Every publishing
-  step is an `ask` step, and consent recorded at approval time is intent.
+- **It will not release anything you did not consent to.** A publishing step
+  recorded `run` ships because you said so at the interview; one recorded `ask`,
+  or a release intent with no step behind it, stops the run and asks.
 
 ## Where to go next
 

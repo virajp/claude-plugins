@@ -285,10 +285,11 @@ entity plan, then the flow plan; each is committed and pushed with its row in
 This is the unattended stage, run in a **fresh session**. `next` reads
 `docs/plans/index.md` and takes the runnable cycle plan of lowest priority — the
 entity plan first, since the flow plan requires it. It claims the row, cuts a
-dedicated worktree and works the folder's units in dependency order, each unit
-through code, review and security, looping findings back into the code. After
-all units land, one acceptance and UX pass runs against the whole slice. Nothing
-asks you anything unless it hits a pause condition — those are listed under
+dedicated worktree and works the folder's units in dependency order, each code
+unit through TDD and coverage, and the review rows the plan places through code
+and security review, looping findings back into the code. After all units land,
+one acceptance and UX pass runs against the whole slice. Nothing asks you
+anything unless it hits a pause condition — those are listed under
 [`/vwf:execute`](../../plugins/vwf.md#vwfexecute).
 
 It ends at a **final report**, read back out of the Run log in the plan folder:
@@ -438,13 +439,14 @@ an approved plan carries no open decisions into an unattended run.
 
 The merge decision is made once, at plan approval, as the folder's consent block
 — the run lands itself on green and asks nothing at the end. It is a merge
-decision, not a code review: the adversarial review happens, twice, inside the
-run. What stops the run at its report instead is a red gate line, a gap that
-blocks, or a consent block that said no; then you read the run's account — the
-gap list, the acceptance and UX results, whether the stages that were skipped
-were skipped for reasons you accept — and say *fix first* or *reject*. If the
-folder could not be read and the report came from the memory mirror, it says it
-is reconstructed; that changes how much weight it carries.
+decision, not a code review: the adversarial review happens inside the run, two
+reviewers — code and security — at the review row the plan places. What stops
+the run at its report instead is a red gate line, a gap that blocks, or a
+consent block that said no; then you read the run's account — the gap list, the
+acceptance and UX results, whether the stages that were skipped were skipped for
+reasons you accept — and say *fix first* or *reject*. If the folder could not be
+read and the report came from the memory mirror, it says it is reconstructed;
+that changes how much weight it carries.
 
 Non-blocking gaps do not stop the landing and should not be treated as blockers.
 Let it land, then take the offer to close each one at its source.

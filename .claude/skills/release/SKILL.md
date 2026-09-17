@@ -11,7 +11,9 @@ allowed-tools: Read Grep Glob Bash
 
 **Ask the user before running `p:i:release`, `p:plugins:release` or
 `p:site:release`.** It is the repo's hard rule, and all three tasks tag and
-push.
+push. The one exception is a plan folder whose After landing table records that
+release as `run`, consented at its interview — `/vwf:execute` runs it on a green
+landing without a second ask.
 
 **There are three independent things to release, and one tag family each.** Ask
 which is meant before doing anything; the answer is usually visible in what
@@ -48,8 +50,9 @@ unguarded. Either give the new family a `-v` or widen
 is `mise run p:plugins:local`: it copies each changed plugin into the gitignored
 dev marketplace under `X.Y.Z+N` and updates this machine's install, so the
 author runs the plugin they are about to publish. It commits nothing, pushes
-nothing and cuts no tag; `/vwf:execute` offers it as the plan folder's
-after-landing `ask` step, stopping once before it, and a hand-made change
+nothing and cuts no tag; `/vwf:execute` takes it as the plan folder's
+after-landing step on the mode the interview recorded — `run` without a prompt
+on a green landing, `ask` with one stop before it — and a hand-made change
 reaches it the same way.
 
 So, before `p:plugins:release`, confirm the plugin being tagged has been staged

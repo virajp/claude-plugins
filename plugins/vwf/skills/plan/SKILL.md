@@ -321,9 +321,13 @@ rejected and the unit it binds; anything raised that belongs to a later plan
 goes to *Parked* before the next question. The **priority** (item 12) is stated
 as a fact, never asked: `10 + max` over the `Priority` column of every
 unarchived `requires:` row in the base repo's `docs/plans/index.md`, or `10`
-when the plan requires none of them — say which row it stands on. Items 16–18
-produce the Consent block: the landing answer, the after-landing `ask` steps,
-and the release intent per project the units touch; the LSP rows come from §2.
+when the plan requires none of them — say which row it stands on. Item 10a
+places the `review` row(s) — one after the last code unit by default, an
+earlier one only on a ruling recorded in the decisions table. Items 16–18
+produce the Consent block: the landing answer, the after-landing steps each
+carrying `run` or `ask`, and the release intent per project the units touch —
+a release step recorded `run` is authorised by item 18's answer; the LSP rows
+come from §2.
 
 ### 6. Present the shape — the approval gate (per chain element)
 
@@ -361,14 +365,27 @@ Write `docs/plans/<date>-<HHMM>-<slice>/` from
 (`type: vwf-plan`, `covers:`, `requires:`, `backlog:`), the Status block at
 `DRAFT`, the Consent block, the cycle-only sections (Slice, Acceptance criteria
 (from blueprint), Gaps surfaced during execution), the assumed decisions, the
-units table — plus one `NN-<unit>.md` per unit. Every unit is `Kind: code`, on
-Model `opus` unless the interview recorded another tier, with its Wave from
-dependency order, its Owns the files it touches, its Depends-on, its **Test
-first** line, its ruling quoted from `index.md`, its Verification (the gate
-lines) and its Commit line. Harness bootstrap units and the expand / backfill /
-contract units of `delta-checks.md` are units like any other, ordered before
-what depends on them. The two fixed final units — docs, gates-and-bump — are
-written as the template says.
+units table — plus one `NN-<unit>.md` per unit. Every slice unit is
+`Kind: code`, on Model `opus` unless the interview recorded another tier, with
+its Wave from dependency order, its Owns the files it touches, its Depends-on,
+its **Test first** line, its ruling quoted from `index.md`, its Verification
+(the gate lines) and its Commit line. Harness bootstrap units and the expand /
+backfill / contract units of `delta-checks.md` are units like any other,
+ordered before what depends on them. Then **one `Kind: review` row** after the
+last code unit and before the docs unit — Owns `—`, Depends on naming every
+code unit, Model `opus`, its `NN-review.md` the header lines and a Scope
+section as the template's `NN-review.md` shape says. An earlier `review` row
+is written only on a ruling item 10a recorded in the decisions table, and its
+Scope names that reason. Every `review` row sits in a wave strictly later than
+every unit it covers — a row in the same wave runs before their commit and
+reviews nothing — and it covers, directly or transitively through Depends on,
+every `code` unit in an earlier wave that no earlier `review` row already
+covers, so the commit range it reviews and the units it covers are one set. No
+code unit triggers a review by itself, and
+`/vwf:execute` refuses a plan whose code units no later `review` row covers, or
+whose rows break either placement rule.
+The two fixed final units — docs, gates-and-bump — are written as the template
+says.
 
 **`backlog:`.** The frontmatter also carries a `backlog:` list — the ids of the
 `docs/backlog.md` items §2's recall matched to this element. Write it empty when
@@ -399,9 +416,14 @@ when the upstream plans sit in members that are not cloned here.
 **Self-review** before handing off, fixing inline: every assumed-decisions row
 is quoted in the unit file its *Unit* column names; every owned path appears in
 exactly one unit per wave; every acceptance criterion is covered by some unit's
-E2E test; every unit's Verification names a gate line; every `requires:` folder
-exists; the derived priority matches its arithmetic; the launch line names this
-folder.
+E2E test; every `code` unit is covered by a later `review` row, every `review`
+row's wave is strictly later than every unit it covers, it covers — directly or
+transitively — every earlier-wave `code` unit no earlier row covers, and a
+`review` row placed
+before the last code unit names its reason; every unit's
+Verification names a gate line (a `review` row has none, by shape); every
+`requires:` folder exists; the derived priority matches its arithmetic; the
+launch line names this folder.
 
 ### 8. Hand off
 

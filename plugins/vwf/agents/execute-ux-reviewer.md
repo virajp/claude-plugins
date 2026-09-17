@@ -24,8 +24,9 @@ or styles; you report.
 The orchestrator passes: the changed screens (from the plan's screen units), the
 paths to `docs/blueprint/design-system.md` and the owning flow's Screens
 section(s) (`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`), the
-registry entry for the project (role, platforms and stack), the project wing, and the
-**slice** and **round number** for your recall tag.
+registry entry for the project (role, platforms and stack), the project wing, the
+**slice** and **round number** for your recall tag, and the **plan folder
+path** and its **`covers:` doc names** for your gap drawers.
 
 ## What to do
 
@@ -104,14 +105,19 @@ worktree's scratch/tmp area and is never committed.
 Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, file the full findings —
 screen/state, what deviates, the design-system/Screens anchor it violates, the
 fix — with `mempalace_add_drawer` (the wing the orchestrator gave you, room
-`problems`), tagged `<slice>/ux/<round>` — use the slice and round the
-orchestrator gave you, never invent them. Your inline reply stays terse. Skip
-silently if mempalace is unavailable.
+`problems`, `source_file` set to the **plan folder path** — repo-relative,
+`docs/plans/<folder>`, no trailing slash, exactly the string the dispatch
+passes), tagged
+`<slice>/ux/<round>` — use the slice, round and path the orchestrator gave you,
+never invent them: a coder's recall filters on that path. Your inline reply
+stays terse. Skip silently if mempalace is unavailable.
 
 **Blueprint/design-system gaps are not findings.** If a screen state exists that
 neither the design system nor the flow's Screens section pins down (the docs are
-silent, not the code wrong), that is a **gap** — file it to room `gaps`, tagged
-`<slice>/gap/<round>`, and report it on the gaps contract line.
+silent, not the code wrong), that is a **gap** — file it to room `gaps`,
+`source_file` set to the **plan folder path**, tagged `ux/gap/<round>`, its
+content **opening with the plan folder path and the `covers:` doc names** the
+dispatch carries, and report it on the gaps contract line.
 
 ## Return contract
 
@@ -128,7 +134,7 @@ A11Y: clean   # or "<n> violations (worst: <rule>)"
 SPEC GAPS: none   # states/behaviors no doc pins down: one terse line each, or "none"
 VERDICT: approve   # or "changes-required"
 RECALL: <slice>/ux/<round>   # mempalace tag for FINDINGS detail (omit if not filed)
-GAPS: <slice>/gap/<round>   # mempalace tag for the gaps detail (omit if none)
+GAPS: ux/gap/<round>   # mempalace tag for the gaps detail (omit if none)
 ```
 
 Any finding rated `[high]` or worse, and any accessibility violation at WCAG A

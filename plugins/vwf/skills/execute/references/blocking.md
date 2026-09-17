@@ -13,7 +13,15 @@ answered in the final report.
 - **Isolated block.** Mark the unit `unresolved` or `failed`, mark every unit
   that transitively depends on it `skipped` with `depends on U<n>` as detail,
   and **continue** with every unit that does not. Later waves still run for
-  their unblocked units. The two fixed final units do **not** run while anything
+  their unblocked units — except that a skipped `review` row skips **every
+  later `review` row** too, with `depends on <row>` as detail — rows review
+  consecutive ranges and are never run out of order — **and every later
+  `code` unit a later `review` row covers**, with `review row <row> skipped`
+  as detail: a `code` unit never lands without its row ahead of it, and a
+  commit between skipped rows would be swallowed as uncovered by the first
+  row's range on resume, per [review-unit.md](review-unit.md). The two fixed
+  final units do **not** run
+  while anything
   is skipped — docs reconciled against a half-landed change would describe a
   state that never existed.
 - **All-blocking.** When every remaining unit is skipped, there is nothing left
@@ -63,9 +71,21 @@ A re-run against `BLOCKED` or `RUNNING`:
    commit exists on the branch. A `green` unit whose commit is absent is reset
    to `pending` and re-run — the plan's table can be ahead of what landed if a
    session died between the report and the commit, and the committed tree is
-   ground truth.
+   ground truth. A `green` `review` row is exempt: its Commit cell is empty by
+   design, and it is skipped on the Run log alone, per
+   [review-unit.md](review-unit.md) — unless a `code` or `edit` Run log row
+   of a unit it covers carries a commit that is **not an ancestor of** the
+   `to` its last loop — main or late — recorded (`git merge-base
+   --is-ancestor <commit> <to>` fails): that is a **pending late re-run**,
+   run before continuing, per *Late loop-backs re-run the last row* there.
+   The test is by ancestry, never by recency, so a resume after a late re-run
+   that already reviewed the commit finds nothing pending; and each covered
+   unit is tested **once**, whether the row's Depends on names it directly or
+   reaches it transitively, so no unit counts twice.
 5. Reset `unresolved`, `failed` and `skipped` units to `pending`.
-6. Re-run the preflight, then continue from the first wave with a pending unit.
+6. Re-run the preflight, then continue from the first wave with a pending unit;
+   `review` rows run in table order, each ranged from the previous row in
+   table order that reached `green`.
    Run-log rows from the earlier attempt stay; new rows are appended with the
    round numbering continued, so the final report shows the whole history.
 

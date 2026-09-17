@@ -254,6 +254,9 @@ sweep may remove it.
 
 ## After landing
 
-A plan folder's After landing table carries `ask` steps only. The `run` mode
-that let a plan pre-authorise a step at plan time is retired; a `run` in an
-older folder is read as `ask`.
+A plan folder's After landing table carries one *Mode* per step, `run` or
+`ask`, as the planner's interview recorded it. On a green landing
+`/vwf:execute` runs a `run` step in table order without a prompt — the `run`
+in the folder is its authorisation — and stops once before an `ask` step. A
+table with no *Mode* column, or a mode that is neither, is refused at
+execute's preflight.

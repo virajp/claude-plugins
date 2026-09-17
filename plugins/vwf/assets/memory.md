@@ -290,16 +290,28 @@ markers, these are technical memories. Example:
 
 ## Findings memory — execute loop-backs
 
-This is the `code` unit's loop. An `edit` unit has no reviewer of its own — the
-wave review's findings ride the plan folder's Run log, not this room.
+This is the `review` row's loop — the row the plan placed over its `code`
+units. The wave review's findings ride the plan folder's Run log, not this
+room.
 
 Each review/security subagent files its **full** findings to room `problems`,
-tagged `<slice>/<stage>/<round>` (e.g. `order/review/2`), and returns only its
-terse contract block plus that tag. The orchestrator presents the terse block at
-the gate and, on a fix loop-back, hands the coder just the **tag** — not the
-findings text. The coder recalls the tagged findings from mempalace, fixes them,
-and the detail never enters the orchestrator's context. This is the core context
-optimization: rich review detail lives in mempalace, not in the conversation.
+tagged `<loop-id>/<stage>/<round>` (e.g. `U7/review/2`; the loop id is the
+`review` row's id for its main loop, `<row-id>-late<n>` for its n-th late
+re-run — `U7-late1` — whose rounds restart at 1) with the plan folder
+path as the drawer's `source_file` — in one pinned form, the repo-relative
+`docs/plans/<folder>` with no trailing slash, exactly as the plan index's
+Folder cell names it, the same string filed and filtered on; loop ids repeat
+across plans filed to one wing, so every recall of a tag filters on that path
+— each finding labelled
+`(<unit>)` with the unit whose commit last touched its file in the row's
+range, and returns only
+its terse contract block plus that tag. The orchestrator presents the terse
+block at the gate and, on a fix loop-back, hands each coder just the **tags**,
+the path and its own unit id — not the findings text. The coder recalls the
+tagged drawers filtered on the path, fixes only the findings labelled with its
+id, and the detail never enters the orchestrator's context. This is the core
+context optimization: rich review detail lives in mempalace, not in the
+conversation.
 
 ## Gap memory — blueprint/plan holes surfaced during execution
 
@@ -309,10 +321,19 @@ the coder had to guess, a plan unit contradicted by the real code, a requirement
 the blueprint never stated that review/security found missing. Gaps are captured
 **as they surface**, never silently worked around.
 
-Each stage subagent that hits a gap files its **full** gap detail to room
-`gaps`, tagged `<slice>/gap/<round>` — what is under/mis-specified, where, and
-the assumption it proceeded on — and surfaces only a terse one-line pointer in
-its return block. The orchestrator mirrors that terse line into a durable
+Each stage subagent that hits a gap — the five writers are the coder (its
+unit id), the review and security reviewers (their loop id — the `review`
+row's id for its main loop, `<row-id>-late<n>` for its n-th late re-run), the
+acceptance verifier (`acceptance`) and the UX reviewer (`ux`) — files its
+**full** gap detail to room `gaps` under **one scheme**: tagged
+`<unit, loop or stage id>/gap/<round>`, `source_file` the plan folder path in
+the same pinned form as above (ids repeat across plans in one wing, so recall
+filters on it), and the
+content opening with the plan folder and the plan's `covers:` doc names, so
+`/vwf:plan`'s slice recall still finds it — then what is under/mis-specified,
+where, and the assumption it proceeded on — and surfaces only a terse
+one-line pointer in its return block. The orchestrator mirrors that terse line
+into a durable
 **"Gaps surfaced during execution"** section in the plan folder's `index.md`
 (the on-disk copy that survives a mempalace outage), and at reconcile recalls
 the `gaps` room to drive the blueprint/plan fixes. Because mempalace is

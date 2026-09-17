@@ -9,6 +9,13 @@ the status column and the run log. The folder holds `index.md` and one
   component stays so two plans for one slice on one day coexist;
 - `docs/plans/<YYYY-MM-DD>-<kebab-name>/` for a **change plan**.
 
+A plan with a `review` row gains one more thing at run time: `execute` saves
+each row's engine output verbatim as `engine/<loop-id>-<round>.log` inside the
+folder — the loop id is the row id for the row's main loop and
+`<row-id>-late<n>` for its n-th late re-run, n from 1 (`U7-late1`) — committed
+with it, creating the subfolder on the first review row. The planner never
+writes it, and `/vwf:archive` moves it with the folder.
+
 Every section below is required unless marked *cycle plans only*. The
 frontmatter and the **Status**, **Consent**, **Units**, **Wave gate**, **After
 landing** and **Run log** blocks have a fixed shape the executor parses, so keep
@@ -49,20 +56,23 @@ exposure: dark # cycle plans only, optional — the slice ships behind a flag
 | Action                                            | Granted                      |
 | ------------------------------------------------- | ---------------------------- |
 | Merge to the integration branch and push on green | yes / no                     |
-| After landing: <step>                             | ask                          |
+| After landing: <step>                             | run / ask                    |
 | Release <project> publicly                        | none / patch / minor / major |
 | LSP <language>                                    | installed / proceed without  |
 
-<one `After landing:` row per step, in order; one `Release` row per project the
-units touch, each naming the command that bumps its version; one `LSP` row per
-language `/vwf:doctor` flagged without a server — cycle plans only, answered at
-`/vwf:plan`'s stack gate. That row is what `/vwf:execute`'s preflight reads
-instead of asking.>
+<one `After landing:` row per step, in order, carrying the mode the interview
+answered; one `Release` row per project the units touch, each naming the
+command that bumps its version; one `LSP` row per language `/vwf:doctor`
+flagged without a server — cycle plans only, answered at `/vwf:plan`'s stack
+gate. That row is what `/vwf:execute`'s preflight reads instead of asking.>
 
-**A release recorded here is intent, not authorisation.** Every after-landing
-step is an `ask` step: the run stops once, reports what it would do, and waits.
-Where a step stages something this session already loaded, it is picked up only
-by a **restarted** session.
+**The mode recorded here is the consent.** A `run` step runs on a green landing
+without a prompt; an `ask` step stops the run once before it, reports what it
+would do, and waits. The mode is the interview's answer (item 17), and a
+release step recorded `run` is authorised by the interview's release question
+(item 18) — a release recorded `ask`, or with no step at all, is intent, not
+authorisation. Where a step stages something this session already loaded, it is
+picked up only by a **restarted** session.
 
 ## Goal
 
@@ -101,21 +111,49 @@ the unit that adds it — or "none". A unit adds nothing not listed here.>
 
 ## Units
 
-| Id   | Wave   | Unit file              | Kind | Owns                                              | Depends on | Status  | Commit |
-| ---- | ------ | ---------------------- | ---- | ------------------------------------------------- | ---------- | ------- | ------ |
-| U1   | 1      | [01-x.md](01-x.md)     | code | `path/a`, `path/b`                                | —          | pending |        |
-| …    |        |                        |      |                                                   |            |         |        |
-| Un-1 | last   | `NN-docs.md`           | edit | the repo's docs (README, CLAUDE.md, `docs/**`, …) | all        | pending |        |
-| Un   | last+1 | `NN-gates-and-bump.md` | edit | version files, generated files                    | Un-1       | pending |        |
+| Id   | Wave   | Unit file              | Kind   | Owns                                              | Depends on                                             | Status  | Commit |
+| ---- | ------ | ---------------------- | ------ | ------------------------------------------------- | ------------------------------------------------------ | ------- | ------ |
+| U1   | 1      | [01-x.md](01-x.md)     | code   | `path/a`, `path/b`                                | —                                                      | pending |        |
+| …    |        |                        |        |                                                   |                                                        |         |        |
+| Un-2 | last-1 | `NN-review.md`         | review | —                                                 | <every unit in an earlier wave no earlier row covers>  | pending |        |
+| Un-1 | last   | `NN-docs.md`           | edit   | the repo's docs (README, CLAUDE.md, `docs/**`, …) | all                                                    | pending |        |
+| Un   | last+1 | `NN-gates-and-bump.md` | edit   | version files, generated files                    | Un-1                                                   | pending |        |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
 
-Kind is `code` or `edit`. `/vwf:plan` writes `code` on every slice unit and
-`edit` on the two fixed final units above; `/vwf:change-plan` writes `edit` on
-every unit. `/vwf:execute` runs a `code` unit through the per-unit pipeline and
-an `edit` unit under the wave review — the `edit` units of a wave are
-dispatched together, the `code` units one at a time.
+Kind is `code`, `edit` or `review`. `/vwf:execute` runs a `code` unit through
+TDD, the coverage gate and its commit — the `code` units one at a time; an
+`edit` unit under the wave review — the `edit` units of a wave dispatched
+together; and a `review` row through `/code-review` and `/security-review`
+followed by the two reviewers — one loop per row, under the review round cap —
+over the **branch delta since the previous `review` row**, or since the branch
+base when it is the first. A `review` row
+owns nothing (`—`) and **covers** the units its Depends on reaches, directly or
+transitively — so its Depends on names **at least one** unit, on a cycle plan
+and a change plan alike; a row with Depends on `—` covers nothing and reviews
+nothing, and preflight refuses the folder for it. Two placement rules, which
+preflight refuses a folder for breaking as well: the row sits in a wave
+**strictly later** than every unit it covers —
+a row in the same wave as its units runs before their commit and reviews
+nothing, since it scopes by commit range; and on a cycle plan it covers **every
+earlier-wave `code` unit that no earlier `review` row already covers** — so
+the commit range it reviews and the units it covers are the same set, and no
+`code` unit lands between two rows covered by neither; preflight refuses an
+uncovered `code` unit. On a change plan the row covers the units that land
+runnable code, but still reviews the whole range since the previous row: a
+finding on a file whose unit it does not cover is dropped and counted when it
+is a review finding, and routed to that unit all the same when it is a
+**security** finding, the coverage widening recorded in the Run log — the one
+rule, in `${CLAUDE_PLUGIN_ROOT}/skills/execute/references/review-unit.md`.
+`/vwf:plan`
+writes `code` on every slice unit, **one** `review` row after the last code
+unit and before the docs unit, and `edit` on the two fixed final units;
+`/vwf:change-plan` writes `edit` on every unit and a `review` row only when the
+change lands runnable code. A `review` row placed earlier than the last code
+unit is a planner decision — its reason is a row in the assumed-decisions
+table. Execute infers no row: a plan with `code` units no later `review` row
+covers is refused at preflight.
 
 ## Shared-file rule
 
@@ -141,11 +179,12 @@ only once a unit has landed belongs in that unit's **Verification**, not here.
 
 ## After landing
 
-| Step                          | Mode | Notes                               |
-| ----------------------------- | ---- | ----------------------------------- |
-| <the command or skill to run> | ask  | <what it does, and what it reaches> |
+| Step                          | Mode      | Notes                               |
+| ----------------------------- | --------- | ----------------------------------- |
+| <the command or skill to run> | run / ask | <what it does, and what it reaches> |
 
-<or "none". The run stops once and asks before every step.>
+<or "none". Mode is the interview's answer per step: `run` lands it on a green
+landing with no prompt; `ask` stops the run once before it.>
 
 ## Gates the orchestrator keeps
 
@@ -185,9 +224,14 @@ context to pick it up — or "none">
 ## Run log
 
 <written by the executor; empty at approval. `execute` appends one row per
-node for a `code` unit — a unit yields several — and one row per unit report
-for an `edit` unit, both as they return. This table is the record for both
-kinds; the mempalace journal is a mirror.>
+node for a `code` unit — a unit yields several — one row per node per round for
+a `review` row (its review and security nodes — the row id in the unit cell,
+the row's wave in the wave cell, each round's `from..to` in Detail — plus one
+`code` row per unit re-dispatched, under that unit's own id with its fix
+commit), and one row per unit
+report for an `edit` unit, each as they return. A unit's or row's round count
+is the highest `Round` value it carries, never its number of rows. This table
+is the record for every kind; the mempalace journal is a mirror.>
 
 | Wave | Unit | Model | Round | Outcome | Detail | Commit |
 | ---- | ---- | ----- | ----- | ------- | ------ | ------ |
@@ -237,7 +281,7 @@ or let the queue pick it, by priority:
 - **Depends on:** <ids or —>
 - **Owns:** <explicit paths>
 - **Model:** <opus | a named tier | inherit>
-- **Kind:** <code | edit>
+- **Kind:** <code | edit — a review row takes the NN-review.md shape below>
 - **Test first:** <code units only — the failing test that defines done>
 - **Read first:** every owned file, top to bottom, before editing.
 - **Lazy-load:** <files to open only if an edit needs them>
@@ -271,6 +315,37 @@ never paraphrased>
 by the unit. The type, and the scope where the repo's convention file lists any,
 comes from the file the survey read — `.config/git-conventional-commits.yaml` or
 the repo's equivalent — never a type that file does not allow.
+```
+
+## NN-review.md
+
+The `review` row's file is the header lines and a Scope section, nothing more —
+no Edits, no Test first, no Verification, no Commit. The row edits nothing and
+commits nothing; a finding it raises goes back to the unit whose commit last
+touched the file inside the row's range — never read from Owns — re-dispatched
+by its Kind: a `code` unit's coder in fix-first mode, an `edit` unit per the
+wave-review loop-back. The loop, the range, the unit map and what becomes of a
+finding outside the row's coverage are
+`${CLAUDE_PLUGIN_ROOT}/skills/execute/references/review-unit.md`'s; this shape
+restates none of it.
+
+```markdown
+# U<n> — Review: <what it covers>
+
+- **Wave:** <n — strictly later than every unit this row covers>
+- **Depends on:** <every unit in an earlier wave no earlier review row covers
+  — directly, or transitively through their Depends on; at least one, never
+  `—`>
+- **Owns:** —
+- **Model:** <opus | a named tier | inherit>
+- **Kind:** review
+
+## Scope
+
+<the units this row covers, and the branch delta it reviews — since the
+previous review row, or since the branch base when it is the first. When the
+row sits earlier than the last code unit, the reason, as the assumed-decisions
+table records it — e.g. a boundary later units build on.>
 ```
 
 ## The two fixed final units

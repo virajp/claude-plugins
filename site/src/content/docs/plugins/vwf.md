@@ -151,29 +151,30 @@ adopting it.
   judgment decides the outcome (`product`, `blueprint`, `plan`, the
   `blueprint-reviewer` and `blueprint-coherence-reviewer` gates) or where nobody
   is watching — `execute` is the unattended command, and its `execute-coder`,
-  code-review, security-review, and ux subagents are all `opus` too. `sonnet`
-  runs the remaining commands and the writer/surveyor subagents; `haiku` runs
-  the two purely mechanical ones (`archive`, `recall`). Effort follows the same
-  logic rather than sitting at maximum everywhere: a stronger model reaches the
-  same answer in fewer reasoning tokens, so capability and effort are traded
-  against each other per surface instead of both being maxed. No gate is
-  weakened — every review stage still runs, and config can never disable one.
+  the code-review and security-review subagents that run at the plan's review
+  rows, and the ux subagent are all `opus` too. `sonnet` runs the remaining
+  commands and the writer/surveyor subagents; `haiku` runs the two purely
+  mechanical ones (`archive`, `recall`). Effort follows the same logic rather
+  than sitting at maximum everywhere: a stronger model reaches the same answer
+  in fewer reasoning tokens, so capability and effort are traded against each
+  other per surface instead of both being maxed. No gate is weakened — the
+  review runs at the plan's review rows, and config can never disable one.
 - **Read-heavy work is delegated to keep the orchestrator fast.** Coverage
   scans, the desired-vs-actual codebase survey, and the bulk doc writing run in
   subagents (`blueprint-surveyor`, `plan-surveyor`, `flow-writer`,
   `entity-writer`) that return conclusions rather than file contents. Anything
   the orchestrator loads is re-processed on every later turn of the pass, so
   keeping scans out of its context compounds across a sweep.
-- **High token cost.** An `execute` cycle runs several subagents per step — the
-  coder, code review and security review all on `opus`, plus E2E acceptance and
-  UX conformance when the slice warrants them — with fix loop-backs. The coder
-  is the dominant consumer: it runs per step and per fix round, so `opus` there
-  is the single largest cost in the workflow. The wager is that better code
-  means fewer `code → review` rounds, and round count drives a cycle's length
-  more than per-token latency does. Independent stages also run concurrently —
-  review ‖ security per step, all per-doc blueprint reviewers in one round —
-  which cuts wall-clock but not spend. Expect a meaningful cost per slice; this
-  is not a cheap workflow.
+- **High token cost.** An `execute` cycle runs several subagents — the coder per
+  step, code review and security review per review row, all on `opus`, plus E2E
+  acceptance and UX conformance when the slice warrants them — with fix
+  loop-backs. The coder is the dominant consumer: it runs per step and per fix
+  round, so `opus` there is the single largest cost in the workflow. The wager
+  is that better code means fewer `code → review` rounds, and round count drives
+  a cycle's length more than per-token latency does. Independent stages also run
+  concurrently — review ‖ security per review row, all per-doc blueprint
+  reviewers in one round — which cuts wall-clock but not spend. Expect a
+  meaningful cost per slice; this is not a cheap workflow.
 
 **Dependencies**
 
@@ -192,9 +193,10 @@ adopting it.
   committed; `handoff`, `doctor` and `runs` are gitignored, being one
   developer's state rather than the team's.
 - **Leans on review engines.** `execute` runs the `/code-review` and
-  `/security-review` engines itself, once the coder returns, and hands their
-  findings to the code- and security-review stages; a reviewer falls back to its
-  own manual review dimensions when its engine is unavailable.
+  `/security-review` engines itself at each review row the plan places, over the
+  branch delta since the previous one, and hands their findings to the code- and
+  security-review stages; a reviewer falls back to its own manual review
+  dimensions when its engine is unavailable.
 
 **Fit**
 
@@ -202,11 +204,12 @@ adopting it.
   phases (product, architecture, design-system, blueprint, plan) ask one
   question at a time and gate on your approval — plan for interactive sessions.
   `/vwf:execute` then runs the approved plan folder **unattended**, in a fresh
-  session: code, code review, and security review per unit, and one acceptance
-  and ux pass after all units, deciding from a fixed rule set and stopping only
-  on a hard halt, a resource cap, an all-blocking gap, an irreversible decision
-  — or the **final report**, where it lands per the consent the plan recorded,
-  and stops for you only when a gate is red, a gap blocks, or consent said no.
+  session: code per unit, code review and security review at the review rows the
+  plan places, and one acceptance and ux pass after all units, deciding from a
+  fixed rule set and stopping only on a hard halt, a resource cap, an
+  all-blocking gap, an irreversible decision — or the **final report**, where it
+  lands per the consent the plan recorded, and stops for you only when a gate is
+  red, a gap blocks, or consent said no.
 - **Released APIs are frozen.** Once `/vwf:verify` records a production release,
   breaking a released API contract is blocked like a security finding —
   reviewers loop it until fixed, and the only way out is a conscious
@@ -261,10 +264,10 @@ Each phase answers one question:
   dependencies are not swallowed into the plan: each becomes **its own plan**,
   chained (`covers:`/`requires:`) and executed in order.
 - **Execute** answers *is it built, correct, safe, and does it do what the
-  blueprint promises?* — TDD, then code/security review, then E2E acceptance and
-  rendered-UI conformance. When the run lands, it stamps each covered blueprint
-  doc's `implementation:` state — the blueprint stays the source of truth, and
-  it now knows what's built.
+  blueprint promises?* — TDD per unit, code/security review at the review rows
+  the plan places, then E2E acceptance and rendered-UI conformance. When the run
+  lands, it stamps each covered blueprint doc's `implementation:` state — the
+  blueprint stays the source of truth, and it now knows what's built.
 - **Verify & feedback** answer *does it hold in production, and what next?* —
   post-deploy checks against the same acceptance criteria, and a routed intake
   for what production teaches you. A clean production run offers to record a
@@ -797,29 +800,29 @@ record.
 
 ## Commands
 
-| Command                   | What it does                                                                                                                                                                                                                                                  |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/vwf:init`               | Internal — shape the base repo **and every member repo** (config layout, task library, gates, hygiene files, a licence); reached only through `/vwf:setup`                                                                                                    |
-| `/vwf:setup [reshape]`    | Onboard/migrate a repo into vwf's format; `reshape` runs the repo-shape pass alone, across every member (re-runnable)                                                                                                                                         |
-| `/vwf:product [note]`     | The Phase −1 outcome contract — problem, users, goals, slice priority; an optional feedback note seeds the update questions                                                                                                                                   |
-| `/vwf:architecture`       | Bootstrap or update the system shape + Project Registry                                                                                                                                                                                                       |
-| `/vwf:design-system`      | Import the product's design system from its design tool into the contract (mandatory once UI exists)                                                                                                                                                          |
-| `/vwf:blueprint [flow]`   | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                                                                                                                                                                  |
-| `/vwf:mockups [flow]`     | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                                                                                                                                                                      |
-| `/vwf:screens <mode>`     | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                                                                                                                                                            |
-| `/vwf:plan [slice]`       | Write a reviewable cycle-plan folder — a diff of blueprint vs code, deps chained as plans; interviews, records consent, commits and pushes it at hand-off                                                                                                     |
-| `/vwf:execute <folder>`   | Run an approved plan folder of either kind unattended in a fresh session — TDD and reviews per `code` unit, waves and review per `edit` unit, E2E + UX when the plan covers a slice, then land per the plan's consent; `next` picks the queue's runnable plan |
-| `/vwf:archive [folder]`   | Retire a plan folder, cycle or change, whole into `docs/plans/archived/` and re-point its index row                                                                                                                                                           |
-| `/vwf:doctor [project]`   | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, dependency audit, mempalace, graphify, the repo shape of every member, stamps                                                                                               |
-| `/vwf:verify [env]`       | Post-deploy: health-check + re-run acceptance criteria against the environment                                                                                                                                                                                |
-| `/vwf:feedback [input]`   | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat)                                                                                                                                              |
-| `/vwf:backlog [verb]`     | The prioritised list of work that cannot be picked up now — `docs/backlog.md`, and this is its only writer                                                                                                                                                    |
-| `/vwf:change-plan [what]` | Plan an ad-hoc change — work with no blueprint slice behind it — into the same folder shape, for `/vwf:execute` to run                                                                                                                                        |
-| `/vwf:handoff [name]`     | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                                                                                                                                                                       |
-| `/vwf:recall [name]`      | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                                                                                                                                                                   |
-| `/vwf:readme`             | Scan a repo and write or update its README against eight required sections                                                                                                                                                                                    |
-| `/vwf:docs-sync [range]`  | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog                                                                                                                                                          |
-| `/vwf:git-workflow`       | Internal — worktree isolation, commits, merges                                                                                                                                                                                                                |
+| Command                   | What it does                                                                                                                                                                                                                                                                                   |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/vwf:init`               | Internal — shape the base repo **and every member repo** (config layout, task library, gates, hygiene files, a licence); reached only through `/vwf:setup`                                                                                                                                     |
+| `/vwf:setup [reshape]`    | Onboard/migrate a repo into vwf's format; `reshape` runs the repo-shape pass alone, across every member (re-runnable)                                                                                                                                                                          |
+| `/vwf:product [note]`     | The Phase −1 outcome contract — problem, users, goals, slice priority; an optional feedback note seeds the update questions                                                                                                                                                                    |
+| `/vwf:architecture`       | Bootstrap or update the system shape + Project Registry                                                                                                                                                                                                                                        |
+| `/vwf:design-system`      | Import the product's design system from its design tool into the contract (mandatory once UI exists)                                                                                                                                                                                           |
+| `/vwf:blueprint [flow]`   | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                                                                                                                                                                                                   |
+| `/vwf:mockups [flow]`     | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                                                                                                                                                                                                       |
+| `/vwf:screens <mode>`     | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                                                                                                                                                                                             |
+| `/vwf:plan [slice]`       | Write a reviewable cycle-plan folder — a diff of blueprint vs code, deps chained as plans; interviews, records consent, commits and pushes it at hand-off                                                                                                                                      |
+| `/vwf:execute <folder>`   | Run an approved plan folder of either kind unattended in a fresh session — TDD per `code` unit, code + security review at each `review` row, waves and review per `edit` unit, E2E + UX when the plan covers a slice, then land per the plan's consent; `next` picks the queue's runnable plan |
+| `/vwf:archive [folder]`   | Retire a plan folder, cycle or change, whole into `docs/plans/archived/` and re-point its index row                                                                                                                                                                                            |
+| `/vwf:doctor [project]`   | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, dependency audit, mempalace, graphify, the repo shape of every member, stamps                                                                                                                                |
+| `/vwf:verify [env]`       | Post-deploy: health-check + re-run acceptance criteria against the environment                                                                                                                                                                                                                 |
+| `/vwf:feedback [input]`   | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat)                                                                                                                                                                               |
+| `/vwf:backlog [verb]`     | The prioritised list of work that cannot be picked up now — `docs/backlog.md`, and this is its only writer                                                                                                                                                                                     |
+| `/vwf:change-plan [what]` | Plan an ad-hoc change — work with no blueprint slice behind it — into the same folder shape, for `/vwf:execute` to run                                                                                                                                                                         |
+| `/vwf:handoff [name]`     | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                                                                                                                                                                                                        |
+| `/vwf:recall [name]`      | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                                                                                                                                                                                                    |
+| `/vwf:readme`             | Scan a repo and write or update its README against eight required sections                                                                                                                                                                                                                     |
+| `/vwf:docs-sync [range]`  | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog                                                                                                                                                                                           |
+| `/vwf:git-workflow`       | Internal — worktree isolation, commits, merges                                                                                                                                                                                                                                                 |
 
 **Six are user-only** — `setup`, `verify`, `mockups`, `archive`, `recall` and
 `execute` carry `disable-model-invocation: true`, so the model never fires them
@@ -856,12 +859,13 @@ Model and reasoning effort are **tiered per surface**, not uniform. `opus` runs
 where judgment decides the outcome or where nobody is watching — `product`,
 `blueprint`, `plan`, `change-plan` and `execute` (the last being the unattended
 one), plus the `blueprint-reviewer`, `blueprint-coherence-reviewer`,
-`execute-coder`, code-review, security-review, and ux subagents. `sonnet` runs
-the remaining commands and the writer/surveyor subagents; `haiku` runs the two
-purely mechanical ones (`archive`, `recall`). Effort tracks the same logic —
-`high` through most of the workflow, `medium`/`low` on mechanical surfaces. No
-configuration can skip a gate: `pipeline.models` may re-tier a stage, but the
-stage always runs and any downgrade is reported at that gate.
+`execute-coder`, the code-review and security-review subagents that run at the
+plan's review rows, and the ux subagent. `sonnet` runs the remaining commands
+and the writer/surveyor subagents; `haiku` runs the two purely mechanical ones
+(`archive`, `recall`). Effort tracks the same logic — `high` through most of the
+workflow, `medium`/`low` on mechanical surfaces. No configuration can skip a
+gate: `pipeline.models` may re-tier a stage, but the stage always runs and any
+downgrade is reported at that gate.
 
 Under the hood each command is a **skill** (`skills/<name>/SKILL.md`) — Claude
 Code's unified skills keep the `/vwf:<name>` invocation exactly as before (this
@@ -1861,13 +1865,25 @@ The *how* questions are an **interview**, one question per turn down the same
 checklist `change-plan` works, never batched; the blueprint and the code survey
 answer most items before they are reached. Every ruling lands in the folder's
 assumed-decisions table with the alternative it rejected and the unit it binds.
-Three things are always agreed before anything is written: the **wave gate**
-(the exact commands the run must pass), the **after-landing steps** (every one
-an `ask`), and the **consent block** — whether the run may merge and push on
-green, the release intent per project the units touch (intent, not
-authorisation), and the LSP rows. The **priority** is stated, never asked:
-`10 + max` over the `Priority` of every unarchived plan its `requires:` names,
-or `10` when it requires none — the order `/vwf:execute next` picks in.
+One item is **review placement**: where the `Kind: review` row goes — the row at
+which `execute` runs `/code-review` and `/security-review` plus the two
+reviewers over the branch delta. A cycle plan gets **one** by default, in its
+own wave after the last code unit and before the docs unit, covering every code
+unit; an earlier row is a ruling with its reason in the decisions table — a
+boundary later units build on. Every row sits in a wave strictly later than the
+units it covers, and covers every earlier-wave code unit no earlier row already
+covers, so the commit range it reviews and the units it covers are one set. No
+code unit triggers a review by itself, and `execute` infers no row: a plan whose
+code units no review row covers, or whose rows break either placement rule, is
+refused at its preflight. Three things are always agreed before anything is
+written: the **wave gate** (the exact commands the run must pass), the
+**after-landing steps** (each recorded `run` or `ask`), and the **consent
+block** — whether the run may merge and push on green, the release intent per
+project the units touch (the consent for a release step recorded `run`; intent
+alone when the step is `ask` or absent), and the LSP rows. The **priority** is
+stated, never asked: `10 + max` over the `Priority` of every unarchived plan its
+`requires:` names, or `10` when it requires none — the order `/vwf:execute next`
+picks in.
 
 Its recall also reads the base repo's [`docs/backlog.md`](#vwfbacklog), since
 the slice in front of it is often already an item there. Matched ids go into the
@@ -1983,26 +1999,31 @@ once, before the first unit — what is written and nothing inferred; a red line
 here is the branch's, not the plan's, and is reported as such rather than worked
 around.
 
-**Kind is the switch.** Every unit file carries a `Kind` and the Units table
-repeats it. Within a wave, every `edit` unit is dispatched in one message as its
-own subagent, on the model its unit file names, given paths and never
-conversation context; its report and the wave review are its whole pipeline.
-Then each `code` unit runs **one at a time** through five stages, each a fresh
-purpose-built subagent — engines and reviewers never overlap across units:
+**Kind is the switch.** Every unit file carries a `Kind` — `code`, `edit` or
+`review` — and the Units table repeats it. Within a wave, each `review` row runs
+**first**, before anything else in the wave is dispatched, so the engines see a
+committed tree and nothing in flight: every unit a row covers sits in an earlier
+wave, which the preflight guaranteed. It runs the `review` and `security` stages
+over the branch delta since the previous review row, or the branch base when it
+is the first. Then every `edit` unit is dispatched in one message as its own
+subagent, on the model its unit file names, given paths and never conversation
+context; its report and the wave review are its whole pipeline. Then each `code`
+unit runs **one at a time** through the `code` stage to its commit. Each stage
+is a fresh purpose-built subagent:
 
-| Stage      | Model  | What happens                                                                  |
-| ---------- | ------ | ----------------------------------------------------------------------------- |
-| code       | opus   | Implements the unit under TDD (RED → GREEN → REFACTOR) to the coverage gate   |
-| review     | opus   | Adversarial code review against the plan, blueprint, conventions, and stack   |
-| security   | opus   | Threat-models the change against the project's declared capabilities          |
-| acceptance | sonnet | Independently maps the blueprint's flow criteria to E2E tests and runs them   |
-| ux         | opus   | Renders changed screens, judges them against the design system, axe a11y scan |
+| Stage      | Runs at              | Model  | What happens                                                                  |
+| ---------- | -------------------- | ------ | ----------------------------------------------------------------------------- |
+| code       | each `code` unit     | opus   | Implements the unit under TDD (RED → GREEN → REFACTOR) to the coverage gate   |
+| review     | each `review` row    | opus   | Adversarial code review against the plan, blueprint, conventions, and stack   |
+| security   | each `review` row    | opus   | Threat-models the change against the project's declared capabilities          |
+| acceptance | once, with `covers:` | sonnet | Independently maps the blueprint's flow criteria to E2E tests and runs them   |
+| ux         | once, with `covers:` | opus   | Renders changed screens, judges them against the design system, axe a11y scan |
 
 Then, for every wave of either kind, a **wave review**: one reviewer subagent
 over the wave's diff against the unit files, scoped to the contract — rulings
 honoured, owned paths respected, cross-unit drift, docs falsified — never a
-`code` unit's code quality or security, which its own reviewers already looped
-on. Findings loop back to the owning unit for at most two rounds under the
+`code` unit's code quality or security, which the review row that covers it
+checks. Findings loop back to the owning unit for at most two rounds under the
 convergence guard, with one exception: a docs finding in a file no unit owns has
 nobody to loop to, so it goes to the docs unit, whose owned paths the
 orchestrator widens to cover that passage, recorded as a `GAP:` and listed in
@@ -2025,37 +2046,66 @@ What it does, by rule:
   run first, and no override flag exists. Chained plans land one focused run at
   a time, and the next unblocked plan is offered as each one lands.
 - **Whole plan, waves in order.** Implements every unit in the order the Units
-  table's waves and Depends-on columns give — `edit` units of a wave together,
-  `code` units serially, never two coders at once. A wave runs only when its
-  predecessor is green or explicitly skipped.
-- **Full pipeline each `code` unit.** `code → engines → review ‖ security` — the
-  orchestrator runs the `/code-review` and `/security-review` engines itself and
-  hands each reviewer its engine's output — looping findings back to code, the
-  engines re-run before every round. **Security findings are always fixed**, and
-  so is any **breaking-released-API finding** (a change that would break a
-  contract frozen under `apis/released/` — cap-exempt, never downgraded to a
-  gap); other **code-review findings loop up to 4 rounds**, after which any
-  residual is recorded as a gap — the blueprint/plan wasn't thorough enough.
-  With `covers:`, after **all** unit waves, one `acceptance + ux` pass runs (E2E
-  criteria + rendered-UI review), with the same 4-round cap. `acceptance` runs
-  when the slice touches a flow with acceptance criteria; `ux` when it changes
-  screens in a UI project (web gets the full screenshot review; Flutter a
-  code-level pass) — each skip explicit, never silent. Without `covers:` both
-  are skipped, said in the Run log: a plan with no slice has no criteria and no
-  Screens contract to verify against.
+  table's waves and Depends-on columns give — `review` rows first, `edit` units
+  of a wave together, `code` units serially, never two coders at once. A wave
+  runs only when its predecessor is green or explicitly skipped. Two placement
+  rules hold, and the preflight refuses a fresh run that breaks either: a
+  `review` row sits in a wave **strictly later** than every unit it covers — in
+  the same wave it would run before their commit and review nothing — and on a
+  cycle plan it covers every earlier-wave `code` unit no earlier row already
+  covers, so the range it reviews and the units it covers are one set; on a
+  change plan a row covers the units that land runnable code. A resume runs what
+  its folder says and takes neither placement refusal; it refuses two things of
+  its own — a non-green `code` unit with no covering `review` row ahead of it,
+  and an after-landing step with a missing or unknown mode — each with the fix:
+  edit the folder by hand in the worktree, then re-launch.
+- **The review runs at the review row, and only there.** A `code` unit is TDD →
+  coverage → commit, and moves on. At a `review` row the run goes
+  `engines → review ‖ security` over the row's range — the orchestrator runs the
+  `/code-review` and `/security-review` engines itself, filters their output to
+  the range, and hands each reviewer its engine's output. Every finding names a
+  file; the run maps it to the unit whose **commit** last touched that file on
+  the branch — never read from owned paths — and re-dispatches that unit by its
+  Kind: a `code` unit's coder in fix-first mode, an `edit` unit through the
+  wave-review loop-back; then the row re-runs in full, engines first. A finding
+  on a file whose unit the row does not cover follows one rule: a security
+  finding is routed to that unit all the same, the widening recorded in the Run
+  log; a non-security finding is dropped and counted. **Security findings are
+  always fixed**, and so is any **breaking-released-API finding** (a change that
+  would break a contract frozen under `apis/released/` — cap-exempt, never
+  downgraded to a gap); other **code-review findings loop up to 4 rounds** per
+  row, whatever number of units it covers, after which any residual is recorded
+  as a gap marked `contested` — the blueprint/plan wasn't thorough enough. A row
+  is green when its last round is clean, or when it ended at the cap or the
+  convergence guard with its residuals `contested`. The row owns nothing and
+  commits nothing: its fix commits belong to the units fixed. A fix that lands
+  after the last row covering its unit — from a wave review, the acceptance or
+  UX pass, or a fix-first loop-back at the report — re-runs that row over the
+  fix commits as a new loop with its own round count. Gap and finding drawers in
+  memory are keyed to the plan folder, since row ids repeat across plans. A plan
+  with `code` units that no review row covers is refused at preflight — the run
+  infers no row — and so is a review row whose Depends on names no unit: a row
+  that covers nothing has no range to review. With `covers:`, after **all** unit
+  waves, one `acceptance + ux` pass runs (E2E criteria + rendered-UI review),
+  with the same 4-round cap. `acceptance` runs when the slice touches a flow
+  with acceptance criteria; `ux` when it changes screens in a UI project (web
+  gets the full screenshot review; Flutter a code-level pass) — each skip
+  explicit, never silent. Without `covers:` both are skipped, said in the Run
+  log: a plan with no slice has no criteria and no Screens contract to verify
+  against.
 - **Loops stop when they stop converging.** A round cap bounds how long a fix
   loop runs, but it can't tell *converging slowly* from *not converging at all*.
-  Every finding loop — the wave review's two rounds included — also runs under a
-  **convergence guard**: a round that doesn't strictly reduce the finding count,
-  or that resurfaces a finding an earlier round already fixed, ends the loop
-  right there instead of burning the remaining rounds. The residual is recorded
-  as an **oscillation** gap that says so — the loop failed to settle, which is a
-  different problem from a contract that left something open, and points you
-  somewhere different when you go to fix it. A wave-review residual is marked
-  `contested` and does not block: the plan and its rulings are the contract, and
-  a reviewer's residual is an opinion about it. A security or breaking-API
-  finding can never become a gap, so if one of *those* stops converging the run
-  pauses for you instead.
+  Every finding loop — a review row's rounds and the wave review's two rounds
+  alike — also runs under a **convergence guard**: a round that doesn't strictly
+  reduce the finding count, or that resurfaces a finding an earlier round
+  already fixed, ends the loop right there instead of burning the remaining
+  rounds. The residual is recorded as an **oscillation** gap that says so — the
+  loop failed to settle, which is a different problem from a contract that left
+  something open, and points you somewhere different when you go to fix it. A
+  wave-review residual is marked `contested` and does not block: the plan and
+  its rulings are the contract, and a reviewer's residual is an opinion about
+  it. A security or breaking-API finding can never become a gap, so if one of
+  *those* stops converging the run pauses for you instead.
 - **No unapproved dependencies.** The coder installs only the third-party
   packages the approved plan names — the plan's approval gate is where you
   consent to each new dependency. One the plan missed is captured as a gap,
@@ -2108,11 +2158,11 @@ rows from the earlier attempt stay, and the new rows continue the numbering.
 
 ```mermaid
 flowchart TD
-    W["per wave: edit units together → code units one at a time<br/>(code → engines → review ‖ security, findings loop back)"] --> R["wave review — contract only,<br/>two rounds; then the wave gate; commit per unit"]
+    W["per wave: review rows first (engines → review ‖ security, findings loop back<br/>to the unit whose commit touched the file) → edit units together → code units one at a time (TDD, commit)"] --> R["wave review — contract only,<br/>two rounds; then the wave gate; commit per unit"]
     R --> AX["with covers: acceptance (E2E) + ux (rendered)<br/>once, after all unit waves; then the blueprint reconcile"]
     AX --> F["fixed final waves — the docs unit (docs-sync),<br/>the gates-and-bump unit"]
     F --> G{"final report — rendered from the Run log,<br/>read against the Consent block"}
-    G -->|consent yes, all green| M["merge + push (git-workflow), folder archived<br/>when no gap is open, row COMPLETE, after-landing asks"]
+    G -->|consent yes, all green| M["merge + push (git-workflow), folder archived<br/>when no gap is open, row COMPLETE, after-landing steps on their recorded mode"]
     G -->|red gate, blocking gap, or no| S["stops at the report — fix first / reject;<br/>worktree left intact"]
 ```
 
@@ -2151,16 +2201,20 @@ path as the working record of what needs reconciling, the row keeps the live
 path, and the report names [`/vwf:archive <folder>`](#vwfarchive) for after
 reconciliation. When any condition fails, or consent said `no`, it **stops at
 the report** with what failed and the resume command, and you say *fix first*
-(name it; a `code` unit loops back through its pipeline, an `edit` unit is
-re-dispatched with the finding and reviewed again) or *reject* (the worktree
-stays intact, nothing merges). A landing you did not consent to leaves the row
-`RUNNING` until your hand merge is followed by a hand edit of the row, or by
-`/vwf:archive <folder>`, which applies the same rule. Then the **after-landing
-steps**, every one an `ask`: before each, in order, the run stops once, says
-what the step would do, and waits — a yes authorises that step alone, waiting is
-offered as the equal option rather than the fallback, and a `run` written into
-an older plan's table is read as `ask`. With `covers:`, whatever the landing
-decision, it then offers to close each gap at the source — fix the blueprint
+(name it; a `code` unit's coder is re-dispatched with the finding and the last
+review row that covers it re-runs over the fix commits as a new loop, an `edit`
+unit is re-dispatched with the finding and reviewed again) or *reject* (the
+worktree stays intact, nothing merges). A landing you did not consent to leaves
+the row `RUNNING` until your hand merge is followed by a hand edit of the row,
+or by `/vwf:archive <folder>`, which applies the same rule. Then the
+**after-landing steps**, each on the mode the plan recorded: a `run` step runs
+with no prompt — the `run` in the folder is its authorisation, consented at the
+interview that wrote it, a release step included; before an `ask` step the run
+stops once, says what the step would do, and waits — a yes authorises that step
+alone, and waiting is offered as the equal option rather than the fallback. When
+the landing was not consented, only the steps that can run from the worktree are
+offered, every one as an `ask`. With `covers:`, whatever the landing decision,
+it then offers to close each gap at the source — fix the blueprint
 (`/vwf:blueprint`, which re-stamps coverage) or re-derive the plan (`/vwf:plan`)
 — and scans the queue for a plan its landing unblocked, offering that folder
 next. The repo's human docs were already reconciled by the docs unit, in this
@@ -2467,11 +2521,11 @@ things are always agreed before anything is written:
   again in the gates-and-bump unit's. A repo with neither task runner nor stamp
   records `none`, and the plan says plainly that the wave review is then the
   only check.
-- **The after-landing steps** — every one an `ask`: the run stops once and asks
-  before it, a local staging step and a release step alike. Nothing after the
-  landing runs unprompted; the `run` mode that once let a plan pre-authorise a
-  step is retired, and a `run` in an older folder is read as `ask`. An empty
-  list is a valid answer.
+- **The after-landing steps** — each recorded `run` or `ask`, decided here and
+  written to the folder's After landing table. A `run` step runs on a green
+  landing with no prompt — the consent given at the interview is the consent, a
+  local staging step and a release step alike; an `ask` step stops the run once
+  before it, says what it would do, and waits. An empty list is a valid answer.
 - **The priority** — stated, never asked: `10 + max` over the `Priority` of
   every unarchived plan its `requires:` names, or `10` when it requires none. It
   is the order [`/vwf:execute next`](#vwfexecute) picks in, derived from the
@@ -2479,8 +2533,11 @@ things are always agreed before anything is written:
   plan may require a cycle plan.
 - **The release intent** — per project the units touch, whether a user sees a
   difference and how that project ships, recorded as a consent row reading
-  `none`, `patch`, `minor` or `major` together with the command that bumps it. A
-  release recorded here is **intent, not authorization**.
+  `none`, `patch`, `minor` or `major` together with the command that bumps it.
+  This answer doubles as the consent for a release step recorded `run` above —
+  the executor then ships it on a green landing without asking again. A release
+  recorded `ask`, or with no after-landing step, is **intent, not
+  authorization**.
 
 Nothing reaches disk before a **hard gate**: the goal and any reversal, the
 assumed-decisions table, the unit map, every new third-party dependency a unit
@@ -2492,11 +2549,19 @@ What it writes is `docs/plans/<date>-<name>/` — the **same folder shape**
 [`/vwf:plan`](#vwfplan) writes, from one template: an `index.md` with
 frontmatter `type: vwf-change-plan` and a `backlog:` list naming the ids this
 plan covers, plus one `NN-<unit>.md` per subagent unit, every unit `Kind: edit`.
-The sections the template marks *cycle plans only* — the slice, the acceptance
-criteria, the gaps — are omitted. Units in a wave own **disjoint paths** (the
-shared-file rule), a change that needs a new or altered check plans that as an
-owned edit rather than "update the gates", and the last two units are fixed: a
-docs unit and a gates-and-bump unit.
+A change plan gets **no review row by default** — the wave review is its only
+check; a `Kind: review` row, the one at which `execute` runs `/code-review` and
+`/security-review`, is written only when the change lands runnable code —
+anything that executes rather than is read: shipped shell or hook scripts, build
+or tooling source, an installable package — with its reason in the decisions
+table. The row sits in a wave strictly later than the units it covers and still
+reviews the whole range since the previous row: a review finding on a file whose
+unit it does not cover is dropped and counted, a security finding is routed to
+that unit all the same. The sections the template marks *cycle plans only* — the
+slice, the acceptance criteria, the gaps — are omitted. Units in a wave own
+**disjoint paths** (the shared-file rule), a change that needs a new or altered
+check plans that as an owned edit rather than "update the gates", and the last
+two units are fixed: a docs unit and a gates-and-bump unit.
 
 The **hand-off is five steps, in order**: the status is set to `APPROVED`; one
 row is appended to the **one table** of the base repo's `docs/plans/index.md` —
@@ -2813,12 +2878,15 @@ start step 1; it runs none of them.)
 # 5. Execute — in a fresh session, unattended (per chained plan, in order)
 /vwf:execute next
 #    → claims the row, cuts a worktree
-#    → per unit: code (TDD) → review → security (findings loop back;
+#    → per code unit: code (TDD) → commit
+#    → the plan's review row, first in its wave: engines → review ‖ security
+#      (findings loop back to the unit whose commit touched the file;
 #      breaking a released API is always fixed)
 #    → acceptance (E2E) + ux (rendered) once, after all units
 #    → reconcile registry + docs + implementation stamps
 #    → final report from the Run log → lands per the plan's consent
-#    → asks before each after-landing step; offers the next plan in the chain
+#    → runs each after-landing step on its recorded mode, run or ask;
+#      offers the next plan in the chain
 
 # 6. Archive the completed plan, deploy it yourself, then verify
 /vwf:archive
