@@ -76,7 +76,10 @@ blocker rather than a preference. Know this before you install.
   **degradation** — its hook is guarded, so the run is correct and merely costs
   more — and says nothing at all about the Context7 runner, while `uv` matters
   as graphify's runtime rather than on its own. Run `/vwf:doctor` first
-  regardless, but install all five rather than relying on it to tell you.
+  regardless, but install all five rather than relying on it to tell you. A
+  sixth, `gh` — logged in, with the `project` scope — is needed only by
+  `/vwf:backlog`, which keeps the backlog in a GitHub Project; doctor reports
+  its absence as a **degradation** with the remedy.
 - **It is opinionated on purpose.** One workflow, one set of conventions, sized
   for a solo developer or a small team — not a configurable framework for a
   large org.
@@ -239,11 +242,12 @@ through TDD and coverage, the code and security review at the plan's `review`
 rows, an `edit` unit through the wave review — and `/vwf:execute next` picks the
 runnable plan with the lowest `Priority` value from that table, of either kind,
 and runs it, running or asking before each after-landing step as the plan
-records. Beside both sits `/vwf:backlog`, the sole writer of `docs/backlog.md` —
-the prioritised list of work that cannot be picked up now, which every planning
-and landing command calls to move an item. It names **no** technology — no
-language, no framework, no cloud — which is what lets the rest of this list
-exist. `vwf@virajp-plugins`
+records. Beside both sits `/vwf:backlog`, the sole writer of the backlog project
+on the repo's forge — a GitHub Project named for the base repo, the prioritised
+list of work that cannot be picked up now, which every planning and landing
+command calls to move an item. It names **no** technology — no language, no
+framework, no cloud — which is what lets the rest of this list exist.
+`vwf@virajp-plugins`
 
 ### Tooling, design and delivery
 

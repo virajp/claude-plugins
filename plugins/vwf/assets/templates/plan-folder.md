@@ -36,7 +36,7 @@ status a plan has — there is no `status:` key in the frontmatter.
 type: vwf-plan | vwf-change-plan
 title: <title>
 requires: [] # earlier plan folders this one stands on, e.g. docs/plans/2026-09-01-x
-backlog: [] # ids from docs/backlog.md this plan covers, or empty
+backlog: [] # ids (Bnn) of the backlog project's items this plan covers, or empty
 covers: [] # cycle plans only — the blueprint doc(s) this plan implements; the
            # list the implementation: stamp is written to
 exposure: dark # cycle plans only, optional — the slice ships behind a flag

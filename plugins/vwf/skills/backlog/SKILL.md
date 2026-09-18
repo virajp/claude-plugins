@@ -1,15 +1,15 @@
 ---
 name: backlog
-description: The repo's prioritised backlog — docs/backlog.md, the list of work
-  that is agreed but cannot be picked up now, ordered so the next thing to start
-  is obvious. This skill is the only thing that edits that file. It adds items,
-  lists them, names the next one, reprioritises, marks items planned and done,
-  and closes the ones dropped without a plan. /vwf:plan and /vwf:change-plan
-  call it as a plan folder is approved, /vwf:execute as one lands, and
-  plan-management as one is retired. Not the place for production
-  feedback — that is worked now, and /vwf:feedback routes it into the docs and
-  commands that fix it.
-argument-hint: "[add <item> | list | next | move <id> <priority> | planned <ids> <folder> | done <ids> | close <id>]"
+description: The product's prioritised backlog — a project on the repo's forge,
+  a GitHub Project named for the base repo under its account, holding the work
+  that is agreed but cannot be picked up now, ordered so the next thing to
+  start is obvious. Not a file in the tree. It adds items, lists them, names
+  the next one, reprioritises, marks items planned and done, and closes the
+  ones dropped without a plan. /vwf:plan and /vwf:change-plan call it as a plan
+  folder is approved, /vwf:execute as one lands, and plan-management as one is
+  retired. Not the place for production feedback — that is worked now, and
+  /vwf:feedback routes it into the docs and commands that fix it.
+argument-hint: "[add <item> | list | next | move <id> <P0|P1|P2> | planned <ids> <folder> | done <ids> | close <id>]"
 model: sonnet
 
 disable-model-invocation: false
@@ -27,65 +27,105 @@ Production feedback is the opposite case and does not belong here. Feedback is
 something being **worked now** — it may change the product doc, the blueprint or
 the architecture, and it follows the `plan` and `execute` line from there.
 `/vwf:feedback` owns that route end to end; nothing it intakes becomes a backlog
-row. A backlog row is the thing nobody is working on yet.
+item. A backlog item is the thing nobody is working on yet.
 
-## The file
+## The project
 
-`docs/backlog.md`, in the base repo's `docs/`, beside `docs/plans/index.md`
-(the plan index —
-`${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`).
-The backlog is **product-level**: one file for the whole product, never one per
-member repo — a caller running in a member addresses the base's file. This skill
-is the only writer of it.
+The backlog is a **project on the repo's forge** — for a GitHub remote, a
+GitHub Project owned by the account the base repo's `origin` names and titled
+with the repo's name, so `virajp/claude-plugins` keeps its backlog in the
+project `claude-plugins` under `virajp`. It is **product-level**: one project
+for the whole product, never one per member repo — a caller running in a member
+resolves the base first, the way
+`${CLAUDE_PLUGIN_ROOT}/assets/membership.md` resolves it, and reads the base's
+remote. Nothing is cached and no config key names the project: every verb
+resolves owner and title from the base repo's remote, then finds the project by
+title. There is no file in the tree — nothing to commit, nothing to diff.
 
-Its shape, in order:
+**The forge decides the backend.** The host of the base repo's `origin` is read
+first:
 
-- a **one-paragraph header** saying what the file is and how an item gets picked
-  up;
-- **one table**, columns `Id | Item | Group | Priority | Status`;
-- an optional **`## Groups`** list — one bullet per group, naming the ids it
-  holds and why they travel together;
-- **`## Items`**, one `### Bnn — <title>` section per row, carrying the detail
-  the table cell has no room for.
+- `github.com`, or any host `gh auth status` lists → **GitHub**, implemented in
+  `${CLAUDE_PLUGIN_ROOT}/skills/backlog/references/github.md`, which carries
+  the command per verb, the field bootstrap and the missing-project procedure;
+- `gitlab.com`, or any host `glab auth status` lists → **GitLab**: every verb
+  stops with "GitLab is not yet supported by /vwf:backlog" and names the parked
+  shape — the repo's own issues under scoped labels `priority::` and
+  `status::`, shown on an issue board, a `references/gitlab.md` beside the
+  GitHub one;
+- anything else → unsupported; stop and name the host.
 
-The vocabulary:
+**The precondition, checked first by every verb.** `gh` on `PATH`,
+authenticated for the remote's host, with the `project` scope on its token.
+Any of the three missing stops the verb with the remedy — `gh auth login` for
+a missing login, `gh auth refresh -s project` for a missing scope — and a
+caller's recall reports "backlog unreadable: <reason>" and continues with
+nothing. The one tolerance: a token carrying `read:project` alone passes
+`list` and `next`, the two verbs that write nothing, and fails every other.
+There is no fallback store.
+
+**Items are draft issues** in the project — never repo issues. Each is titled
+`Bnn — <item>`; the body carries the detail the plan interview starts from.
+The project's own fields carry the state:
 
 | Field      | Values                                                                            |
 | ---------- | --------------------------------------------------------------------------------- |
-| `Id`       | `Bnn`, sequential from `B01`, **never reused** — a closed id stays spent          |
-| `Priority` | `P1` (pick first), `P2`, `P3`                                                     |
-| `Status`   | `open` → `planned` → `done`, or `closed` for an item dropped without a plan       |
+| `Id`       | `Bnn`, the title's prefix, from `B01`, **never reused** — a closed id stays spent |
+| `Priority` | the template's `P0` (pick first), `P1`, `P2`                                      |
+| `Status`   | `Todo` → `In Progress` → `Done`, or `Closed` for an item dropped without a plan   |
 | `Group`    | free text, or empty — a label shared by items that want one plan between them     |
 
-Two statuses carry a line the section must end with. A `planned` item ends with
-`Planned in: <folder>` — the plan folder that covers it. A `closed`
-item ends with the reason it was dropped.
+The older vocabulary an archived plan folder may still use translates once:
+`open` is `Todo`, `planned` is `In Progress`, `done` is `Done`, `closed` is
+`Closed`; the old `P1`/`P2`/`P3` reads as `P0`/`P1`/`P2`. The verbs below keep
+their names.
 
-When the file does not exist, `add` creates it — the header, the empty table,
-and the `## Items` heading — and writes the first row. No other verb creates it;
-they report that there is no backlog yet.
+Two statuses carry a line the body must end with. An `In Progress` item ends
+with `Planned in: <folder>` — the plan folder that covers it. A `Closed` item
+ends with the reason it was dropped.
+
+**The bootstrap** adds what the Team planning template lacks, once, on the
+first verb that needs it, and is idempotent: the `Closed` option on the
+`Status` field, and a `Group` text field. The reference specifies both
+mutations.
+
+**A missing project** is created by the user, not by the skill: GitHub's API
+cannot instantiate a built-in template, and Team planning is one. `add` is the
+one verb that asks consent, hands over the browser with the URL and the two
+settings, waits for the word "done", and re-finds the project by title; every
+other verb reports "no backlog project yet — `/vwf:backlog add` creates it"
+and stops. The procedure is in the reference.
 
 ## Verbs
 
-`$ARGUMENTS` selects one. With no argument, run `list`.
+`$ARGUMENTS` selects one. With no argument, run `list`. Every verb runs the
+precondition check, resolves the project, then does its one thing with the
+commands the reference gives.
 
 ### `add <item>`
 
-Append a row and its section. Take the next unused id — one past the highest
-`Bnn` in the file, whether or not that one is still open. Ask for the priority
-with a three-option question (`P1`, `P2`, `P3`) unless the request already names
-one. Set `Group` only when the user names a group; an item that stands alone
-leaves the cell empty. Write the section with enough detail that the plan
-interview starts from it rather than from the one-line title.
+Create a draft issue titled with the next unused id — one past the highest
+`Bnn` any item's title carries, done and closed included — and set its Status
+to `Todo`. Ask for the priority with a three-option question (`P0`, `P1`, `P2`)
+unless the request already names one. Set `Group` only when the user names a
+group; an item that stands alone leaves the field empty. Write the body with
+enough detail that the plan interview starts from it rather than from the
+one-line title. On a repo with no project, ask consent to create it, hand over
+the browser per the reference's missing-project procedure, and add once the
+project is found.
 
 ### `list`
 
-Print the table, ordered by priority then id. Fold `done` and `closed` rows into
-a trailing count rather than listing them, unless the user asks for everything.
+Print a five-column table — Id, Item, Group, Priority, Status — from the
+project's items, ordered by priority (`P0` first) then id. Fold `Done` and
+`Closed` items into a trailing count rather than listing them, unless the user
+asks for everything. An item whose title carries no `Bnn` is listed under
+"unnumbered" with a warning; the skill never renumbers it. End with the
+project's URL.
 
 ### `next`
 
-Name the top `open` item by priority then id — its id, title and section — and
+Name the top `Todo` item by priority then id — its id, title and body — and
 the command that picks it up:
 
 - `/vwf:change-plan <item>` for work the blueprint does not describe;
@@ -97,34 +137,34 @@ is a one-line answer, not an error.
 
 ### `move <id> <priority>`
 
-Change one item's priority. The id does not move and the row does not change
-place in the table.
+Set one item's Priority to `P0`, `P1` or `P2`. The id does not change.
 
 ### `planned <ids> <folder>`
 
-Set each named item to `planned` and end each section with
-`Planned in: <folder>`. `<ids>` is one id or several. An item already `planned`
-under a different path is a question for the user, not a silent overwrite.
+Set each named item's Status to `In Progress` and end each body with
+`Planned in: <folder>`. `<ids>` is one id or several. An item already
+`In Progress` under a different path is a question for the user, not a silent
+overwrite.
 
 ### `done <ids>`
 
-Set each named item to `done`. An item that was never `planned` still moves —
-work sometimes lands without a plan folder — but say so.
+Set each named item's Status to `Done`. An item that was never `In Progress`
+still moves — work sometimes lands without a plan folder — but say so.
 
 ### `close <id>`
 
-Set the item to `closed` and ask the reason, which becomes the section's last
-line. A closed item stays in the file with its id; the id is never handed to a
-later item.
+Set the item's Status to `Closed` — adding the option to the field first when
+it is absent — and ask the reason, which becomes the body's last line. A closed
+item stays in the project with its id; the id is never handed to a later item.
 
-**Every verb leaves the file's order alone.** Rows are never re-sorted, ids are
-never renumbered, and a row is never deleted — `list` decides the reading order,
-the file keeps the writing order.
+**Ids are never renumbered, and an item is never deleted or archived by this
+skill.** The project keeps every item it was given; `list` decides the reading
+order.
 
 ## Who calls it
 
 The backlog moves as plans are written and as they land, and the commands that
-do that work call this skill rather than editing the file:
+do that work call this skill rather than touching the project:
 
 | Caller                    | When                                     | Verb                     |
 | ------------------------- | ---------------------------------------- | ------------------------ |
@@ -139,12 +179,17 @@ means the plan covers no backlog item and nothing is called.
 
 ## What this skill never does
 
-- **Commit.** The change rides on the caller's commit, or the user's. This skill
-  writes the file and stops.
-- **Edit any other file.** Not the plan it is told about, not a doc, not a
-  config. `docs/backlog.md` alone.
-- **Invent an id, or reuse one.** Ids come from the file, one past the highest.
-- **Read or write a memory room.** The file is the store — a backlog that only
-  exists in memory is one an offline session cannot read.
+- **Commit.** There is nothing in the tree to commit — the project is the
+  store, and a caller's commit carries no backlog change.
+- **Edit any file.** It edits the project and nothing on disk — not the plan it
+  is told about, not a doc, not a config.
+- **Invent an id, or reuse one.** Ids come from the item titles, one past the
+  highest.
+- **Keep a file copy.** The project is the one store. A session that cannot
+  reach it has no backlog to read, and says so — this replaces the earlier
+  rule that a file was kept so an offline session could read it.
+- **Create the project itself.** The user creates it in the browser from the
+  Team planning template; the skill hands over the URL and waits.
+- **Open a repo issue.** Items are draft issues inside the project.
 - **Decide what gets built.** `next` names the top item and the command for it;
   the user picks.

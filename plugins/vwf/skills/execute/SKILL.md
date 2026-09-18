@@ -224,7 +224,7 @@ blueprint artifact.
 | Plan index    | `docs/plans/index.md` (base repo) — its one table                               |
 | Plan template | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`                         |
 | Membership    | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                                    |
-| Backlog       | `docs/backlog.md` (base repo) — marked done via `/vwf:backlog`                  |
+| Backlog       | a project on the base repo's forge, never a path — marked done via `/vwf:backlog` |
 | Registry      | `docs/blueprint/registry.yaml` — *cycle plans only*                             |
 | Flow (slice)  | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` — *cycle plans only*     |
 | Entity        | `docs/blueprint/entities/<entity>/` (`index.md` + schema) — *cycle plans only*  |
@@ -313,9 +313,9 @@ otherwise.
   units can) → skip that unit **and its dependents**, document, continue — per
   [blocking and resume](references/blocking.md), where a unit's `UNRESOLVED:`
   is the same thing.
-- **The backlog is never edited here.** `docs/backlog.md` has one writer,
+- **The backlog is never edited here.** The backlog project has one writer,
   `/vwf:backlog`; this command only calls it at the landing with the plan's
-  `backlog:` ids, and no unit, subagent or reconcile pass touches the file.
+  `backlog:` ids, and no unit, subagent or reconcile pass touches the project.
 - **All git via `/vwf:git-workflow`.** Never run raw git — the exceptions are
   the index row, whose claim and completion commits are the plain commands
   `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`
@@ -746,8 +746,8 @@ the gap list holding no blocking gap, prepare the landing commit:
    its path — as the working record of what needs reconciling, or for the hand
    merge — and, when index.md's `backlog:` names ids, invoke
    `/vwf:backlog done <ids>` here instead — that skill is the only writer of
-   `docs/backlog.md`, and its edit rides the same commit. Either way, commit
-   all of it as one final `docs:` commit in the worktree.
+   the backlog project, and its edit touches nothing in the tree. Either way,
+   commit all of it as one final `docs:` commit in the worktree.
 
 Then act on that consent row:
 
@@ -883,8 +883,8 @@ and answered at the end.
   applies
 - Takes a `RUNNING` row, however stale — a hand reset to `APPROVED` is the only
   release
-- Edits `docs/backlog.md` itself, or lets a unit do it — `/vwf:backlog` owns
-  that file, and the landing calls it
+- Edits the backlog itself, or lets a unit do it — `/vwf:backlog` owns the
+  project, and the landing calls it
 - Edits a blueprint doc beyond the `implementation:` stamp, or runs a
   blueprint-bound step on a plan without `covers:`
 - Runs a gate the plan's *Wave gate* section does not name, or skips one it does

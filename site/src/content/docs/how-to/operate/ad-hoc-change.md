@@ -65,14 +65,15 @@ without ever being forced into a flow it does not fit.
 
 The first thing it does is **read before it asks**. It looks through
 `docs/memory/decisions/`, the last archived plan that touched the same tree, the
-base repo's [`docs/backlog.md`](../../plugins/vwf.md#vwfbacklog) if the product
-keeps one — the request is often an item already on it, and the ids it covers go
-into the plan's `backlog:` frontmatter — and the memory palace's `planning`,
-`decisions` and `gaps` rooms. This matters more than it sounds: Relay's
-release-notes request turns out to be sitting in the *Parked* list of the plan
-that set up its CI six weeks earlier, together with the reason it was deferred.
-That is a fact the interview now does not have to re-derive, and a decision it
-will not accidentally reverse in silence.
+base repo's [backlog project](../../plugins/vwf.md#vwfbacklog) through
+`/vwf:backlog list` if the product keeps one — the request is often an item
+already on it, and the ids it covers go into the plan's `backlog:` frontmatter;
+when `gh` cannot reach the project the recall says so and reads nothing — and
+the memory palace's `planning`, `decisions` and `gaps` rooms. This matters more
+than it sounds: Relay's release-notes request turns out to be sitting in the
+*Parked* list of the plan that set up its CI six weeks earlier, together with
+the reason it was deferred. That is a fact the interview now does not have to
+re-derive, and a decision it will not accidentally reverse in silence.
 
 Then it surveys — concurrent `Explore` subagents that return `file:line`
 conclusions rather than file contents, so the session stays small enough to hold
@@ -152,12 +153,13 @@ this one with `Kind` `change` — reading `APPROVED`, with a **priority** it wor
 out rather than asks: `10` for a plan that requires nothing still active, `10`
 more than the highest `Priority` value among the plans it requires otherwise, so
 a chain runs in order. Any backlog item the plan covers is marked `planned` with
-this folder as its path, and the folder, the index and the backlog are
-**committed and pushed on the branch you are on** — in place, no worktree,
-nothing merged. That is not housekeeping: the next step runs in a worktree cut
-from the integration branch, and it can only see a folder that is already
-committed there. A folder left untracked ends up swept into some later commit of
-the run instead. Only then does it print the launch line.
+this folder as its path — an edit to the project on the forge, nothing in the
+tree — and the folder and the index are **committed and pushed on the branch you
+are on** — in place, no worktree, nothing merged. That is not housekeeping: the
+next step runs in a worktree cut from the integration branch, and it can only
+see a folder that is already committed there. A folder left untracked ends up
+swept into some later commit of the run instead. Only then does it print the
+launch line.
 
 It does not start executing, and that is deliberate.
 

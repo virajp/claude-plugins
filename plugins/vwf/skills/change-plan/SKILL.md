@@ -48,19 +48,22 @@ subagent reads. Nothing lives in conversation.
   then — reading its *Out of scope*, its *Parked* list and its *Run log*: the
   request is often one of those items coming due, and a gap the last run
   surfaced is a fact
-- the base repo's `docs/backlog.md` — the product's backlog, the prioritised
-  list of work that cannot be picked up now, which `/vwf:backlog` maintains and
-  keeps in the base repo alone, beside the base's `docs/plans/` — when the
-  product has one. A session in a member repo reads the base's file, never a
-  file of its own. The request is often one of its items; note every id it
-  covers, so the plan's frontmatter can carry them. Reading the file is this
-  skill's business; editing it never is — `/vwf:backlog` is its sole writer
+- the backlog, read through `/vwf:backlog list` — the product's backlog, the
+  prioritised list of work that cannot be picked up now, a project on the base
+  repo's forge that the `backlog` skill alone writes. It is product-level: a
+  session in a member repo reads the base's project, resolved from the base's
+  remote, never one of its own. When the verb reports the backlog unreadable —
+  `gh` absent, unauthenticated or without the `project` scope, or no project
+  yet — record that with its reason in the facts and continue with nothing.
+  The request is often one of its items; note every id it covers, so the
+  plan's frontmatter can carry them. Reading the backlog is this skill's
+  business; editing it never is — `/vwf:backlog` is its sole writer
 - the base repo's `docs/plans/index.md` — the plan index, the one table where
   every active plan of either kind, cycle and change, its status and its
   priority live;
   `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md` is
   the shape, and `plan-management` its only writer. Like the backlog it is the
-  base's file alone, read from a member repo and never duplicated there. The
+  base's alone, read from a member repo and never duplicated there. The
   `Priority` column of the rows a new plan will require — rows of either kind
   — is what §5's derived priority stands on. Reading the file is this skill's
   business; editing it never is — §8's `plan-management add` appends the row
@@ -220,8 +223,8 @@ the template does not mark *cycle plans only* is required; the frontmatter and
 the **Status**, **Consent**, **Units**, **Wave gate**, **After landing** and
 **Run log** blocks have a fixed shape because `/vwf:execute` parses and
 rewrites them. The frontmatter's `type:` is `vwf-change-plan`, and its
-`backlog:` list names the ids recalled in §1 that this plan covers, or is
-empty.
+`backlog:` list names the `Bnn` ids recalled in §1 — the backlog project's
+items this plan covers — or is empty.
 
 Rules the plan must obey, learned from the plans that came before:
 
@@ -313,7 +316,7 @@ In this order.
    does.
 2. **Mark the backlog items planned.** When the frontmatter's `backlog:` list
    names ids, invoke `/vwf:backlog planned <ids> <folder>` — that skill edits
-   the file; this one never does.
+   the project, not a file; this one never does either.
 3. **Commit and push the folder** through `vwf:git-workflow`, invoked with
    these declared preferences, so it asks nothing:
    - **work in place on the current branch, no worktree** — its Step 1 "if
@@ -322,10 +325,9 @@ In this order.
      committed there; a folder still untracked at hand-off gets swept into some
      later wave's commit. The index row rides the same commit for the same
      reason — it is a direct commit on the branch, never a worktree's
-   - **stage exactly the plan folder**, `docs/plans/index.md`, plus
-     `docs/backlog.md` when step 2 changed it, and nothing else — the
-     `plan-management` and `backlog` edits ride this commit; neither skill
-     commits
+   - **stage exactly the plan folder** and `docs/plans/index.md`, and nothing
+     else — the `plan-management` edit rides this commit and that skill never
+     commits; step 2 changed nothing in the tree
    - **commit** with type `docs` and the message
      `docs: change plan — <name> — approved, awaiting execution`
    - **push to the branch's upstream** after the commit, setting the upstream
@@ -355,7 +357,7 @@ is the survey and the interview, and the run should carry none of it.
 - Records a release or landing consent it did not explicitly ask for
 - Writes a plan whose unit prompts depend on this conversation
 - Pushes anywhere but the branch it stands on, and merges nothing
-- Edits `docs/backlog.md` itself — it calls `/vwf:backlog`, which owns the file
+- Edits the backlog itself — it calls `/vwf:backlog`, which owns the project
 - Edits the plan index, `docs/plans/index.md`, or a folder's Status block
   itself — `add` is the one `plan-management` verb it calls on them; every
   later status is `/vwf:execute`'s to call, and the archive move is the same

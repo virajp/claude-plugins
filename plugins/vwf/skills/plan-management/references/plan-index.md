@@ -1,9 +1,9 @@
 # The Plan Index
 
 `docs/plans/index.md` is the product's one view of its plans as a set. It lives
-in the **base** repo, as `docs/backlog.md` does — a `repo` or `monorepo`
-topology has only the base, and under `multi-repo` a command running in a
-member repo addresses the base's file. Every skill that reads or writes the
+in the **base** repo, as the backlog project is the base's — a `repo` or
+`monorepo` topology has only the base, and under `multi-repo` a command running
+in a member repo addresses the base's file. Every skill that reads or writes the
 file follows this contract; no skill reads a plan's status from anywhere else
 when this file has a row for it.
 
@@ -45,7 +45,7 @@ Header row, exactly:
 | `Priority`    | the derived integer — `10 + max(Priority of every unarchived plan in its requires:)`, or `10` when it requires none of them; never asked, never edited by hand |
 | `Status`      | `APPROVED`, `RUNNING` or `COMPLETE` — nothing else                                                               |
 | `Requires`    | the **basenames** of the folder's `requires:` entries, or `—`                                                    |
-| `Backlog`     | the ids from the folder's `backlog:` frontmatter, or `—`                                                         |
+| `Backlog`     | the ids from the folder's `backlog:` frontmatter — the `Bnn` prefixes of the backlog project's items — or `—`     |
 
 The three statuses:
 
@@ -138,11 +138,11 @@ worktree is cut; a rejected push means re-pull and re-pick.
 The `next` pick, the claim at the start of a run, and the `COMPLETE` row after
 a landing are each a read or a write of this file, and every step of them is
 one plain git command. Both procedures run in the **main checkout of the base
-repo**, never in a worktree. The index is the base repo's, as `docs/backlog.md`
-is — a run started in a member repo addresses the base's file, resolved the way
-`${CLAUDE_PLUGIN_ROOT}/assets/membership.md` resolves it. `<integration>` below
-is the branch `vwf:git-workflow` resolves as the integration branch; this
-contract never assumes its name.
+repo**, never in a worktree. The index is the base repo's, as the backlog
+project is — a run started in a member repo addresses the base's file, resolved
+the way `${CLAUDE_PLUGIN_ROOT}/assets/membership.md` resolves it.
+`<integration>` below is the branch `vwf:git-workflow` resolves as the
+integration branch; this contract never assumes its name.
 
 ### Reading the queue
 
