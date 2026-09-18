@@ -37,8 +37,8 @@ Three things, and nothing else, are written here:
 The rest of a plan folder stays with whoever writes it. The folder's content —
 `index.md` below the Status block, and every unit file — is the planners'
 (`/vwf:plan`, `/vwf:change-plan`). The Run log is `/vwf:execute`'s, written in
-the worktree per unit. `docs/backlog.md` is `/vwf:backlog`'s, which this skill
-calls and never edits.
+the worktree per unit. The backlog — a project on the base repo's forge — is
+`/vwf:backlog`'s, which this skill calls and never edits.
 
 **No verb commits.** Every verb writes and stops; the caller commits, and each
 verb below names the commit its edit rides: the planner's approval commit for
@@ -56,7 +56,7 @@ session that asked for a standalone `archive`.
 | Archived     | `<target-repo>/docs/plans/archived/`                                            |
 | Folder shape | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`                         |
 | Membership   | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                                    |
-| Backlog      | `docs/backlog.md` (base repo) — closed via `/vwf:backlog`                       |
+| Backlog      | a project on the base repo's forge, never a path — closed via `/vwf:backlog`    |
 | The contract | `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`         |
 
 The contract — `references/plan-index.md` beside this file — is the index's
@@ -110,9 +110,10 @@ Then:
    membership (the member whose code a cycle plan changes under `multi-repo`;
    `—` for a change plan, and for any plan in a `repo` or `monorepo`
    topology), `Priority`, `Status` `APPROVED`, `Requires` the basenames of
-   the `requires:` entries or `—`, `Backlog` the `backlog:` ids or `—`. When
-   the file is absent, write the contract's *prose frame* — the intro and the
-   header row — first, then the row.
+   the `requires:` entries or `—`, `Backlog` the `backlog:` ids — the `Bnn`
+   prefixes of the backlog project's items — or `—`. When the file is absent,
+   write the contract's *prose frame* — the intro and the header row — first,
+   then the row.
 
 The edit rides the planner's approval commit.
 
@@ -249,12 +250,12 @@ folder only and report that the row is left for `complete`, since the index
 never rides a run branch.
 
 **Close the backlog items.** Either kind may carry a `backlog:` frontmatter
-list. For every id on it whose row in `docs/backlog.md` does not yet read
-`done`, invoke `/vwf:backlog done <ids>` — a plan can reach `archived/` without
+list. For every id on it whose item in the backlog project does not yet read
+`Done`, invoke `/vwf:backlog done <ids>` — a plan can reach `archived/` without
 having landed through the command that would have closed them, and a retired
-plan leaving an item `planned` forever is the row nobody comes back to. Never
-edit `docs/backlog.md` here: `/vwf:backlog` is its only writer, and the
-caller's commit carries what it wrote.
+plan leaving an item `In Progress` forever is the row nobody comes back to.
+Never edit the backlog here: `/vwf:backlog` is its only writer, and its edit
+touches nothing in the tree, so the archive commit carries no backlog change.
 
 **Guard collisions.** Before each move, check the destination does **not**
 already exist. On a collision, suffix the archived name (e.g. `-2`) or ask the
