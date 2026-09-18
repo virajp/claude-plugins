@@ -6,6 +6,6 @@ to pick the next runnable plan.
 
 ## Plans
 
-| Folder                                           | Kind   | Plan                                                                                 | Target repo | Priority | Status   | Requires | Backlog |
-| ------------------------------------------------ | ------ | ------------------------------------------------------------------------------------ | ----------- | -------- | -------- | -------- | ------- |
-| docs/plans/2026-09-18-backlog-on-github-projects | change | backlog on GitHub Projects — the store moves from docs/backlog.md to a forge project | —           | 10       | APPROVED | —        | —       |
+| Folder                                           | Kind   | Plan                                                                                 | Target repo | Priority | Status  | Requires | Backlog |
+| ------------------------------------------------ | ------ | ------------------------------------------------------------------------------------ | ----------- | -------- | ------- | -------- | ------- |
+| docs/plans/2026-09-18-backlog-on-github-projects | change | backlog on GitHub Projects — the store moves from docs/backlog.md to a forge project | —           | 10       | RUNNING | —        | —       |
