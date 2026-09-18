@@ -10,10 +10,9 @@ backlog: []
 
 ## Status
 
-**RUNNING**
+**COMPLETE**
 
-RUNNING since 2026-09-18 in
-/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-09-18-backlog-on-github-projects
+COMPLETE 2026-09-18 — 4f0d50ae, 45338409, a18a2faf, 99b3ac3d, 7f27f5d3, f2707644
 
 ## Consent
 
@@ -207,7 +206,7 @@ backend lands; not this plan.
 | U2 | 2    | [02-callers.md](02-callers.md)               | edit | `plugins/vwf/skills/change-plan/SKILL.md`, `plugins/vwf/skills/plan/SKILL.md`, `plugins/vwf/skills/plan/references/plan-doc.md`, `plugins/vwf/skills/execute/SKILL.md`, `plugins/vwf/skills/execute/references/blocking.md`, `plugins/vwf/skills/plan-management/SKILL.md`, `plugins/vwf/skills/plan-management/references/plan-index.md`, `plugins/vwf/skills/feedback/SKILL.md`, `plugins/vwf/assets/templates/plan-folder.md` | U1         | green  | 45338409 |
 | U3 | 2    | [03-doctor.md](03-doctor.md)                 | edit | `plugins/vwf/skills/doctor/SKILL.md`, `plugins/vwf/skills/doctor/references/stack-checks.md`                                                                                                                                                                                                                                                                                                                                     | U1         | green  | a18a2faf |
 | U4 | 3    | [04-docs.md](04-docs.md)                     | edit | `readme.md`, `.claude/skills/vwf-plugin/**`, `site/src/content/docs/plugins/vwf.md`, `site/src/content/docs/how-to/operate/ad-hoc-change.md`, `site/src/content/docs/how-to/operate/production-feedback-loop.md`, `docs/memory/decisions/2026-09-18-backlog-on-github-projects.md`                                                                                                                                               | U2, U3     | green  | 99b3ac3d |
-| U5 | 4    | [05-gates-and-bump.md](05-gates-and-bump.md) | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `site/package.json`, the deletion `docs/backlog.md`                                                                                                                                                                                                                                                                                                 | U4         | green  |          |
+| U5 | 4    | [05-gates-and-bump.md](05-gates-and-bump.md) | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `site/package.json`, the deletion `docs/backlog.md`                                                                                                                                                                                                                                                                                                 | U4         | green  | f2707644 |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -333,8 +332,10 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | 3    | U4 docs           | opus  | 1     | pass        | edit; 8 files incl. dependencies.md (within .claude/skills/vwf-plugin/** Owns) and the new decision doc; DECIDED: no #vwfdoctor link (no heading); docs-sync applied by hand — surveyor report reached the orchestrator, forwarded, R3 checks coverage; p:site:check green                                     | 99b3ac3d |
 | 3    | R3                | opus  | 1     | pass        | 0 findings; CONTRACT clean; RULINGS clean; surveyor checklist verified covered                                                                                                                                                                                                                                 | —        |
 | 3    | wave gate         | —     | 1     | pass        | 5 gate lines green; no UNRESOLVED in reports                                                                                                                                                                                                                                                                   | 99b3ac3d |
-| 4    | U5 gates-and-bump | opus  | 1     | pass        | edit; site 1.1.26→1.1.27 (p:site:version, staged nothing); vwf 19.33.0→19.34.0 by hand; marketplace.json regenerated (vwf-v19.34.0); docs/backlog.md rm'd; 5 gate lines green                                                                                                                                  | —        |
+| 4    | U5 gates-and-bump | opus  | 1     | pass        | edit; site 1.1.26→1.1.27 (p:site:version, staged nothing); vwf 19.33.0→19.34.0 by hand; marketplace.json regenerated (vwf-v19.34.0); docs/backlog.md rm'd; 5 gate lines green                                                                                                                                  | f2707644 |
 | 4    | R4                | opus  | 1     | pass        | 0 findings; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                      | —        |
+| 4    | wave gate         | —     | 1     | pass        | 5 gate lines green; no UNRESOLVED in reports                                                                                                                                                                                                                                                                   | f2707644 |
+| —    | reconcile         | —     | 1     | pass        | final gate over the finished tree: 5 lines green; orchestrator gates: none beyond the wave gate                                                                                                                                                                                                                | f2707644 |
 
 ## Launch
 
