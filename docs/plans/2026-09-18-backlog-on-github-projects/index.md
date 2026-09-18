@@ -10,9 +10,10 @@ backlog: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-09-18 by the user
+RUNNING since 2026-09-18 in
+/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-09-18-backlog-on-github-projects
 
 ## Consent
 
@@ -202,7 +203,7 @@ backend lands; not this plan.
 
 | Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                                                                                                                                                                                                                                                                             | Depends on | Status  | Commit |
 | -- | ---- | -------------------------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-skill.md](01-skill.md)                   | edit | `plugins/vwf/skills/backlog/SKILL.md`, `plugins/vwf/skills/backlog/references/github.md`                                                                                                                                                                                                                                                                                                                                         | —          | pending |        |
+| U1 | 1    | [01-skill.md](01-skill.md)                   | edit | `plugins/vwf/skills/backlog/SKILL.md`, `plugins/vwf/skills/backlog/references/github.md`                                                                                                                                                                                                                                                                                                                                         | —          | green   |        |
 | U2 | 2    | [02-callers.md](02-callers.md)               | edit | `plugins/vwf/skills/change-plan/SKILL.md`, `plugins/vwf/skills/plan/SKILL.md`, `plugins/vwf/skills/plan/references/plan-doc.md`, `plugins/vwf/skills/execute/SKILL.md`, `plugins/vwf/skills/execute/references/blocking.md`, `plugins/vwf/skills/plan-management/SKILL.md`, `plugins/vwf/skills/plan-management/references/plan-index.md`, `plugins/vwf/skills/feedback/SKILL.md`, `plugins/vwf/assets/templates/plan-folder.md` | U1         | pending |        |
 | U3 | 2    | [03-doctor.md](03-doctor.md)                 | edit | `plugins/vwf/skills/doctor/SKILL.md`, `plugins/vwf/skills/doctor/references/stack-checks.md`                                                                                                                                                                                                                                                                                                                                     | U1         | pending |        |
 | U4 | 3    | [04-docs.md](04-docs.md)                     | edit | `readme.md`, `.claude/skills/vwf-plugin/**`, `site/src/content/docs/plugins/vwf.md`, `site/src/content/docs/how-to/operate/ad-hoc-change.md`, `site/src/content/docs/how-to/operate/production-feedback-loop.md`, `docs/memory/decisions/2026-09-18-backlog-on-github-projects.md`                                                                                                                                               | U2, U3     | pending |        |
@@ -312,8 +313,13 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                         | Commit |
+| ---- | --------- | ----- | ----- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight | —     | 1     | pass        | doctor: no .config/vwf.yaml, no stack; mise, graphify CLI and graph (main checkout) present; gh 2.x present, token lacks project scope (degradation, noted); format check skipped — no covers:; conventions fetch skipped — edit units only; all five gate lines green                                         | —      |
+| 1    | U1 skill  | opus  | 1     | pass        | edit; DECIDED: updateProjectV2Field options inlined in mutation text (gh api -F is scalar-only), existing options read first; title/body edit uses DI_content id, field edits PVTI_ item id (Context7 reading, unverified — gh not run); GAP: precommit re-padded run-log row (outside Owns), second run green | —      |
+| 1    | R1        | opus  | 1     | findings(1) | SKILL.md:58 [U1] completeness — precondition vs references/github.md:22-23 disagree on the read:project tolerance for list/next; CONTRACT clean; RULINGS clean                                                                                                                                                 | —      |
+| 1    | U1 skill  | opus  | 2     | pass        | edit; fixed R1 finding: tolerance (read:project passes list/next) stated once in SKILL.md, reference defers; DECIDED: kept per 01-skill.md Precondition bullet                                                                                                                                                 | —      |
+| 1    | R1        | opus  | 2     | pass        | 0 findings; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                      | —      |
 
 ## Launch
 
