@@ -36,8 +36,11 @@ member that already carries one is left as it is, exactly as the base is.
 
 ## The licence
 
-Question 6 is **one round with one row per repo**, and each repo takes its own
-row's answer, one of three:
+The licence is gated on question 6's **visibility** answer, and the gate comes
+first: a repo that answered **`private`** gets no licence row at question 6a
+and **no `LICENSE`** — a licence grants the public rights a private repo is
+not offering — and nothing below applies to it. A repo that answered
+**`public`** has a row at 6a, and takes its own row's answer, one of three:
 
 - **MIT** or **Apache-2.0** — copy that one text from the hygiene pack's
   licence catalogue to `LICENSE` at **that repo's** root, filling `<YEAR>` and
@@ -46,9 +49,11 @@ row's answer, one of three:
   and it is not the same as a licence a tool picked on the author's behalf.
 
 **A repo that already carries a licence file is listed as kept, never
-replaced** — the licence a repository already declares is a decision somebody
-made, and a row's answer is what a repo with no licence gets rather than a
-rewrite of one that is there.
+replaced**, whichever visibility it answered — the licence a repository
+already declares is a decision somebody made, and a row's answer is what a
+repo with no licence gets rather than a rewrite of one that is there. A
+private repo carrying one keeps it too: `init` removes no file on a
+visibility answer.
 
 The catalogue directory is **pack-private** and never lands in a repo: the
 materializer skips it, and `init` reads one file out of it. A repo ends up
@@ -63,15 +68,33 @@ rather than writing an empty holder.
 
 ## The security contact
 
-Question 7 is **one round with one row per repo**, and each row's answer fills
-`<REPO_URL>` in the hygiene pack's security file for that repo — **that
-repo's** origin remote's web URL, no trailing slash, with the advisories page
-as the proposed default. A repo with no origin of its own gets no default and
-is asked on its row like any other.
+Question 6b is **one row per repo**, in the round that follows the visibility
+answer, and the row takes one of two shapes:
 
-**Declining a row writes no file in that repo.** A repository with no private
-channel to point at is better off with none than with one naming a channel
-nobody watches, and that is the pack's own rule rather than a preference here.
+- A **`public`** repo's row is a URL, proposed as **that repo's** origin
+  remote's advisories page — the web URL, no trailing slash, with the
+  advisories path appended. A repo with no origin of its own gets no default
+  and is asked on its row like any other.
+- A **`private`** repo's row is a **free contact** with no default — an email
+  address, or an internal URL a reporter inside the organisation can reach.
+  An advisories page is a public channel, and a private repo has no reporter
+  outside it to offer one to.
+
+Either answer is **spliced into the hygiene pack's security template** at its
+one contact slot — the same slot the advisories URL filled before, and the
+only fill that file takes — and the template reads naturally with an email as
+with a URL; the pack's text is written for both. The slot takes the row's
+answer as typed, never the origin URL §4 fills elsewhere. The pack's
+issue-template chooser carries a *Report a vulnerability* link that follows the
+same answer: where the contact is a URL, that entry's `url:` takes it; where the
+contact is an email, or the row was declined, the **whole entry is removed** —
+the forge accepts only a web address there, and an entry pointing nowhere is
+worse than none.
+
+**Declining a row writes no file in that repo, whichever shape it had.** A
+repository with no private channel to point at is better off with none than
+with one naming a channel nobody watches, and that is the pack's own rule
+rather than a preference here.
 
 ## Copied as-is
 
