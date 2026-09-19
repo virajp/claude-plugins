@@ -6,6 +6,5 @@ to pick the next runnable plan.
 
 ## Plans
 
-| Folder                                              | Kind   | Plan                                                           | Target repo | Priority | Status  | Requires | Backlog |
-| --------------------------------------------------- | ------ | -------------------------------------------------------------- | ----------- | -------- | ------- | -------- | ------- |
-| `docs/plans/2026-09-19-mise-drop-disable-telemetry` | change | mise pack drops DISABLE_TELEMETRY from the generated mise.toml | —           | 10       | RUNNING | —        | B48     |
+| Folder | Kind | Plan | Target repo | Priority | Status | Requires | Backlog |
+| ------ | ---- | ---- | ----------- | -------- | ------ | -------- | ------- |
