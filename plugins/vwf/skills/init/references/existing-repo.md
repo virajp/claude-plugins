@@ -860,9 +860,18 @@ Then the rest, exactly as the new-repo pipeline's **git pass** describes it
 the landing-model question and the three-answer commit question asked **once**
 for the whole run, each repo staging what this run wrote in it, the fixed
 shaping message per repo, the commits ordered members then base with the base's
-changed gitlinks staged into its own, the branches per repo, the push. Two
-differences, both from the fact that a repo taking this pipeline already
-existed:
+changed gitlinks staged into its own, the branches per repo, the push, and the
+**forge pass** after the last push — §11(f), read there and not restated here:
+the same eligibility, the same precondition, the same one consent for the
+product. Its consent line on this pipeline says one more thing, because a repo
+that already existed has usually been on its forge for a while: the pass is
+**idempotent** — a default branch already set is set again to the same value
+or to the one chosen, and a branch already protected in any form is left
+exactly as it is and reported, never rewritten to the two rules. Question 6's
+forge-read default applies here as everywhere, and it is here that it earns
+its keep: an existing repo almost always has an `origin`, so the row arrives
+proposing what the forge already says. Three differences, all from the fact
+that a repo taking this pipeline already existed:
 
 - The first commit here is **not** before hook wiring. That is why the gate
   configuration went first: with the hooks live, the commit above is what
@@ -870,8 +879,10 @@ existed:
   that read a settled configuration.
 - The branch table's first row cannot apply — this repo has commits. Create
   `develop` from `main` where `develop` is missing, `main` from `develop`
-  where `main` is missing, and nothing where both exist. Nothing after that
-  touches the remote's settings on this pipeline either.
+  where `main` is missing, and nothing where both exist.
+- A branch this run just created is one the forge has never seen protected,
+  so its `Forge` line is a plain set; the branch the repo already had is the
+  one the idempotence check is most likely to report as left alone.
 
 ## Report
 

@@ -5,6 +5,6 @@ contact_links:
     about: What this repository ships, and how to use it — check here before
       filing a bug.
   - name: Report a vulnerability
-    url: <REPO_URL>/security/advisories/new
+    url: <REPO_URL>
     about: Security reports go through the private advisory channel, never
       through an issue.

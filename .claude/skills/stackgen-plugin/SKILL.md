@@ -137,57 +137,58 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   library (`.config/mise*.toml`, `.config/mise/tasks/**`); **(b)** a gate's own
   config (`.config/dprint.json`, `.config/pre-commit-config.yaml`,
   `.config/gitleaks.toml`, `.config/grype.yaml`, …); **(c)** the hygiene files
-  (`.gitignore`, `.editorconfig`, `.gitattributes`, `SECURITY.md`,
-  `renovate.json` at the root, the licence texts); **(d)** a provider's
-  environment fragment at `.config/mise/conf.d/<pack>.toml`, auto-loaded, so no
-  component edits `mise.toml`; **(e)** a hook fragment at
-  `.config/pre-commit.d/<pack>.yaml`, copied verbatim — **`/vwf:init` merges
-  it**, nothing in stackgen edits the pre-commit config, which is what keeps a
-  fragment a fragment. A fragment is for a **non-gate** check only: since
-  2026-09-12 a gate tool is configured once, in a `code:*` task the base hooks
-  call, so a pack needing a gate overlays that task instead. Only
-  `package-manager/uv` still ships a fragment, for `uv lock --check`; **(f)** a
-  deploy target's own config and its deploy task, since 2026-09-05 —
-  `cloud-service/workers-static-assets`, its `workers-ssr` sibling and
-  `cloud-service/containers` each ship `wrangler.jsonc` at the root (the SSR and
-  Containers ones both carrying `main`, the Containers one adding a `containers`
-  array, the Durable Object binding that addresses it and the migration that
-  declares the class) plus a `.config/mise/tasks/p/_project/deploy` overlay, and
-  the first two were the first `cloud-provider`/`cloud-service` packs to ship a
-  `config/` tree at all, which is what put both types on the composition order
-  (**last**, after `capability-provider`); **(g)** a **project task a framework
-  pack owns**, since 2026-09-14 — the same `p/_project/` marked position and the
-  same rename, landed from the **project** axis rather than the deploy one:
-  `framework/astro` ships an `icons` overlay there, which rasterizes the favicon
-  set from the product's mark, and `framework/html` ships a byte-identical copy
-  of it — rule 13 forbids a payload citing a sibling pack, and no tier offers a
-  shared home yet. The position is shared on purpose, so a pack adding a file to
-  it names a task no other pack in the same bundle already ships; and, since
-  2026-09-06, **(h)** a pack's **editor fragment** at
-  `.config/vscode.d/<pack>.jsonc`, three keys only (`settings`, `nesting`,
-  `extensions`) — **`/vwf:init` composes them** into `.vscode/settings.json` and
-  `.vscode/extensions.json`, which no pack ever ships whole and which the
-  convention in `assets/pack-format.md` names (init itself never names an
-  editor). The dprint gate's fragment is the one filename exception,
-  `dprint-editor.jsonc`: dprint discovers any `dprint.jsonc` below the root as a
-  sub-directory config, and one with no `plugins` array makes a bare
-  `dprint check` exit 13. Note the second underscore rule: `config/_<name>/` at
-  the top of the tier is pack-private and never copied, but nested deeper
-  `p/_project/` is a **marked position**, copied and renamed to the pinned
-  project's id — **slugged** per `assets/ids.md`, which owns that rule and the
-  measured reason for it. Still fenced out: `package.json`, any language
-  manifest or lockfile, a **whole** editor file, and CI workflows — the last of
-  those refused *inside* `.github/`, which is otherwise an allowlisted root
-  directory beside `.config/`. What lands at the repo **root** is capped by a
-  fixed allowlist, whose doctrine is `assets/output-tree.md` and whose two tiers
-  do not both reach the checker: the **landable** tier is
-  `PACK_CONFIG_ROOT_FILES` in `scripts/src/check.ts`, enforced by
-  `p:plugins:check` rule 11, and beside it sits a second tier of root files
-  **vwf** writes — `CLAUDE.md` and `mempalace.yaml` — which may sit at a shaped
-  root and which no pack may land. `readme.md` is on the landable tier only
-  because a shaped repo has one — **no pack may ship it** — and `renovate.json`
-  joined that tier on 2026-09-10, at the root because Renovate's config
-  discovery never reaches `.config/`.
+  (`.gitignore`, `.editorconfig`, `.gitattributes`, `SECURITY.md` — its one
+  contact slot taking a URL or an email — `renovate.json` at the root, the
+  licence texts — copied by `/vwf:init` for a repo that answered `public`, never
+  for a private one); **(d)** a provider's environment fragment at
+  `.config/mise/conf.d/<pack>.toml`, auto-loaded, so no component edits
+  `mise.toml`; **(e)** a hook fragment at `.config/pre-commit.d/<pack>.yaml`,
+  copied verbatim — **`/vwf:init` merges it**, nothing in stackgen edits the
+  pre-commit config, which is what keeps a fragment a fragment. A fragment is
+  for a **non-gate** check only: since 2026-09-12 a gate tool is configured
+  once, in a `code:*` task the base hooks call, so a pack needing a gate
+  overlays that task instead. Only `package-manager/uv` still ships a fragment,
+  for `uv lock --check`; **(f)** a deploy target's own config and its deploy
+  task, since 2026-09-05 — `cloud-service/workers-static-assets`, its
+  `workers-ssr` sibling and `cloud-service/containers` each ship
+  `wrangler.jsonc` at the root (the SSR and Containers ones both carrying
+  `main`, the Containers one adding a `containers` array, the Durable Object
+  binding that addresses it and the migration that declares the class) plus a
+  `.config/mise/tasks/p/_project/deploy` overlay, and the first two were the
+  first `cloud-provider`/`cloud-service` packs to ship a `config/` tree at all,
+  which is what put both types on the composition order (**last**, after
+  `capability-provider`); **(g)** a **project task a framework pack owns**,
+  since 2026-09-14 — the same `p/_project/` marked position and the same rename,
+  landed from the **project** axis rather than the deploy one: `framework/astro`
+  ships an `icons` overlay there, which rasterizes the favicon set from the
+  product's mark, and `framework/html` ships a byte-identical copy of it — rule
+  13 forbids a payload citing a sibling pack, and no tier offers a shared home
+  yet. The position is shared on purpose, so a pack adding a file to it names a
+  task no other pack in the same bundle already ships; and, since 2026-09-06,
+  **(h)** a pack's **editor fragment** at `.config/vscode.d/<pack>.jsonc`, three
+  keys only (`settings`, `nesting`, `extensions`) — **`/vwf:init` composes
+  them** into `.vscode/settings.json` and `.vscode/extensions.json`, which no
+  pack ever ships whole and which the convention in `assets/pack-format.md`
+  names (init itself never names an editor). The dprint gate's fragment is the
+  one filename exception, `dprint-editor.jsonc`: dprint discovers any
+  `dprint.jsonc` below the root as a sub-directory config, and one with no
+  `plugins` array makes a bare `dprint check` exit 13. Note the second
+  underscore rule: `config/_<name>/` at the top of the tier is pack-private and
+  never copied, but nested deeper `p/_project/` is a **marked position**, copied
+  and renamed to the pinned project's id — **slugged** per `assets/ids.md`,
+  which owns that rule and the measured reason for it. Still fenced out:
+  `package.json`, any language manifest or lockfile, a **whole** editor file,
+  and CI workflows — the last of those refused *inside* `.github/`, which is
+  otherwise an allowlisted root directory beside `.config/`. What lands at the
+  repo **root** is capped by a fixed allowlist, whose doctrine is
+  `assets/output-tree.md` and whose two tiers do not both reach the checker: the
+  **landable** tier is `PACK_CONFIG_ROOT_FILES` in `scripts/src/check.ts`,
+  enforced by `p:plugins:check` rule 11, and beside it sits a second tier of
+  root files **vwf** writes — `CLAUDE.md` and `mempalace.yaml` — which may sit
+  at a shaped root and which no pack may land. `readme.md` is on the landable
+  tier only because a shaped repo has one — **no pack may ship it** — and
+  `renovate.json` joined that tier on 2026-09-10, at the root because Renovate's
+  config discovery never reaches `.config/`.
 
 **Three consent tiers**: the `.claude/` files ride the ordinary dry-run gate;
 `settings.json`, `.mcp.json` and a pack's `config/` tree are never written

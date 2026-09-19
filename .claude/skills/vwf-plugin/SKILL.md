@@ -113,24 +113,38 @@ directory, or the project's platform token — grouped by repo: nothing writes a
 `p:<slug>:*` group, its alias or a commit scope until that list is accepted, and
 the scopes are filled on **every** run, the first included, one per confirmed
 id. The fifth asks which agent plugins this product requires, seeded by running
-the plugin task's own inventory mode and written into those two lists; 4 and 5
-are answered once for every repo, 2, 6 and 7 carry a row per repo, and 1 and 3 a
-row per repo that resolved **new**. It then closes with a **consent-gated git
-pass**, whose two questions are asked once and applied to every repo: it asks
-the landing model and writes it to `MERGE_MODEL`, stages what the run wrote,
-asks one question with three answers (commit / commit and push / leave it),
-commits with a fixed `ops:` message — the members first, then the base with the
-moved **gitlinks** staged — and creates whichever of `develop` and `main` the
-branch model needs, per repo. It **never reaches the remote's own settings** —
-setting a forge's default branch is a one-time act, not a task a machine
-re-runs, and the line telling a maintainer to do it lives in the hygiene pack's
-`CONTRIBUTING.md`, which may name `gh` and `glab` where vwf prose may not. Init
-is **not a one-time bootstrap**: its "when it runs again" doctrine names the
+the plugin task's own inventory mode and written into those two lists. The sixth
+asks each repo's **visibility**, `public` or `private`, defaulted from the forge
+where the repo has an origin the forge CLI answers for and `private` otherwise,
+written nowhere in the tree; its two dependent parts are the seventh round — 6a
+the licence, rows for `public` repos only (a private repo gets no `LICENSE`),
+and 6b the security contact, a public repo's row defaulted to its advisories
+page and a private repo's a free email or internal URL with no default. 4 and 5
+are answered once for every repo, 2, 6 and 6b carry a row per repo, 6a a row per
+public repo, and 1 and 3 a row per repo that resolved **new**. It then closes
+with a **consent-gated git pass**, whose two questions are asked once and
+applied to every repo: it asks the landing model and writes it to `MERGE_MODEL`,
+stages what the run wrote, asks one question with three answers (commit / commit
+and push / leave it), commits with a fixed `ops:` message — the members first,
+then the base with the moved **gitlinks** staged — creates whichever of
+`develop` and `main` the branch model needs, per repo, and pushes. **After the
+push comes the forge pass**, on one further consent for the whole product: it
+sets each pushed repo's default branch on the forge (`develop` preselected),
+protects `develop` and `main` there — no force-push, no deletion, and a pull
+request required when `MERGE_MODEL` is `pr`; a branch already protected in any
+form is left exactly as it is — and reaches the backlog skill's missing-project
+procedure for the base, never running the project-creating command itself. Those
+three are the only forge settings it touches; a repo whose answer was not
+*commit and push* is listed `pending`, and a forge it has no CLI for, or a CLI
+it cannot log in with, gets the by-hand list — which the hygiene pack's
+`CONTRIBUTING.md` keeps, naming `gh` and `glab` where vwf's `SKILL.md` prose may
+not (the init references name them, as the backlog skill already did). Init is
+**not a one-time bootstrap**: its "when it runs again" doctrine names the
 moments, and `/vwf:doctor` has the drift finding that prints the one remedy,
 `/vwf:setup reshape`. `setup` is the Phase-0 bootstrapper — it onboards a repo
 (a Step-0 shape check, run over **every repo in the product** — the base and
 every locally-present member — that offers `/vwf:init` once when any of the
-three slugs is missing **or** any of doctor's six baseline predicates fails in
+three slugs is missing **or** any of doctor's seven baseline predicates fails in
 any of them, the `reshape` argument forcing that offer and stopping once init
 returns, detect-or-ask topology via MCQ, consent-gated reconciliation into the
 `docs/blueprint/` format, the CLAUDE.md vwf section, the memory tree and

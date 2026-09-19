@@ -40,7 +40,7 @@ rather than printing an empty plan that reads like an already-shaped repo. The
 three land **per repo** — the base and every member `init` resolved, each
 recording its own lockfile — so a member is shaped on its own evidence.
 `/vwf:setup` no longer fetches any of them: it checks **each repo's** adapter
-lockfile for all three — and each repo's shape against doctor's six baseline
+lockfile for all three — and each repo's shape against doctor's seven baseline
 predicates — and offers `/vwf:init` once when any of them is missing or behind,
 which is why `init` is model-invocable and, being hidden from the `/` menu,
 reached no other way. Note that `mise` legitimately appears in two different

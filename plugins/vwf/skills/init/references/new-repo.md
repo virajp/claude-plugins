@@ -50,11 +50,12 @@ product's membership with a source it can be cloned from, then run
 `/vwf:setup reshape` — and shape nothing at that path.
 
 Report what was created and what was already there. The rest of the git work —
-the landing model, staging, the commit, the branches, the push — is §11, the
-git pass, and that step is the only other one in this pipeline that touches
-git. Nothing in either step reaches the remote's own settings: which branch a
-forge calls default is a one-time act somebody performs there, not a step a
-run repeats.
+the landing model, staging, the commit, the branches, the push, and the forge
+pass after it — is §11, the git pass, and that step is the only other one in
+this pipeline that touches git. Nothing in **this** step reaches a remote:
+`init` never creates one, and what it sets on the forge is §11(f)'s alone —
+the default branch, the protection on `develop` and `main`, and the backlog
+project, on their own consent, and nothing else the forge holds.
 
 ## 2 — The three baselines
 
@@ -99,6 +100,16 @@ occurrence across every landed file, from:
 A placeholder whose source is missing — no origin remote, no configured name
 — is **asked**, once, rather than guessed or left in place. A `<` surviving in
 a landed file after this step is a bug, not a template.
+
+**Two occurrences of `<REPO_URL>` are the security contact's, not the repo
+URL's.** In the hygiene pack's `SECURITY.md` that token is the whole reporting
+channel, and it takes question 6b's answer as typed — a URL or an email —
+spliced by the contact procedure in [readme and licence](readme-and-license.md)
+rather than filled here. The issue-template chooser's *Report a vulnerability*
+entry follows the same answer: its `url:` takes the contact where the contact
+is a URL, and the whole entry is **removed** where the contact is an email or
+the row was declined, since that link must be a web address. Every other
+occurrence is the origin URL, per the table.
 
 ## 5 — The ignore sections
 
@@ -441,13 +452,14 @@ Everything above has landed on disk and nothing is staged; a repository shaped
 and left dirty is a repository whose next command — a commit, a worktree, a
 merge — meets a working tree it did not expect.
 
-**This pass runs inside each repo, like the rest of the pipeline — but its two
+**This pass runs inside each repo, like the rest of the pipeline — but its
 decisions are the product's.** The landing model and the commit answer are asked
 **once**, by the first repo to reach this step, and every repo after it applies
 the answer already given rather than asking again. Two questions per repo would
 be asking the user to decide the same thing several times and letting them
 answer inconsistently, which is a product whose merge tasks disagree with each
-other.
+other. The forge pass, (f), is the same shape one step later: it runs **after
+every repo has pushed**, and asks its one consent for the whole product.
 
 Because the pipeline runs the **members first, in the resolved order, then the
 base**, the repos reach this pass in that order too — and that is what lets the
@@ -597,13 +609,178 @@ No remote and a push answer is not a failure: report it as a deferral whose
 unlock is adding the remote and pushing by hand, and say which branches are
 waiting. It is that repo's deferral only — the rest of the product still pushes.
 
+### (f) The forge pass
+
+The one step that writes to the forge, and it runs **once for the product,
+after the last repo has pushed** — the base's push, in the order above. It
+sets three things and no fourth: each repo's **default branch**, the
+**protection** on its `develop` and `main`, and the product's **backlog
+project**. Everything else the forge holds — who may push, who reviews,
+required checks, the repo's description, its visibility — is nobody's here.
+The pass never creates a remote and never pushes: a repo reaches it already
+pushed or does not reach it at all.
+
+**Eligibility.** A repo takes the pass only where (c)'s answer was **commit
+and push** and (e) actually pushed it. A repo whose answer was **commit** or
+**leave it**, or that had no remote, is listed as `pending` on its `Forge`
+line with that reason, and nothing is set for it — a default branch on a forge
+that does not have the branch yet is a setting the next push has to undo. A
+run that pushed nothing skips the whole step in one line.
+
+**The precondition, per repo**, is the same shape the backlog skill's is
+(`${CLAUDE_PLUGIN_ROOT}/skills/backlog/references/github.md` §Precondition),
+and a miss here is **never a stop**: report the reason on that repo's `Forge`
+line, print the by-hand list below for it, and continue with the next repo.
+
+1. The forge, from the `origin` host: `github.com` or any host
+   `gh auth status` lists is GitHub; `gitlab.com` or any host
+   `glab auth status` lists is GitLab; anything else has no CLI here and takes
+   the by-hand list outright.
+2. The CLI on `PATH` — `command -v gh`, `command -v glab`.
+3. Logged in to that host — `gh auth status --hostname <host>`,
+   `glab auth status --hostname <host>`. On GitHub the token needs the `repo`
+   scope, which is what the same command's `Token scopes:` line shows.
+4. **Admin on the repo is not tested up front.** A ruleset write without it
+   is refused by the forge, and that refusal is reported on the `Forge` line
+   the same way a failed login is — reason named, by-hand list printed, run
+   continuing.
+
+**The visibility default, read at question 6.** The same precondition is what
+lets question 6 propose a default before the plan, and the read is this — run
+in each repo that has an `origin`, at question time, and never again:
+
+```text
+gh repo view --json visibility --jq .visibility          → PUBLIC | PRIVATE | INTERNAL
+glab repo view --output json --jq .visibility            → public | private | internal
+```
+
+`INTERNAL` and `internal` propose `private`. No `origin`, a forge with no
+CLI, a precondition miss or a failed read all propose `private` — and the
+question says which of them it was, so a user who expected `public` learns
+why they did not get it. The value is only a **default**: the row is still
+answered, and what the forge says is never written anywhere in the tree.
+
+**The plan for the pass, and its one consent.** Before writing anything,
+build the per-repo table and show it once: the repo, the default branch it
+will set, the protection it will add to each of `develop` and `main`, and,
+for each of those, whether the forge already carries one — then the backlog
+line for the base. One question, apply or stop; a stop prints the same table
+as the by-hand list and the run continues to the report. The table is built
+from these reads, in this order:
+
+- **The default branch.** One row per repo, **`develop` preselected** and
+  `main` the other. The branch model does not depend on the answer — work
+  flows into `develop` and from there into `main` either way — but a forge
+  opens pull requests, shows a landing page and clones against its default,
+  and `develop` is where that traffic belongs on a product whose `main` takes
+  nothing but merges. Nothing in the tree records the answer: the forge is
+  the record, and doctor's predicate (g) reads it back from there.
+- **The protection, both branches, always**: no force-push and no deletion.
+  Where `MERGE_MODEL` — the value (a) wrote — is **`pr`**, additionally
+  **require a pull request**, with no approval count: the landing model says
+  a branch lands through a request, so a direct push to either long-lived
+  branch is exactly what the forge should refuse. Under `direct` the merge
+  tasks push the merge themselves, and a require-pull-request rule would
+  refuse the model the user just chose.
+- **The idempotence check, per branch.** A branch that is already protected
+  in any form is **left exactly as it is** and reported as such — never
+  merged with, never replaced, however different its rules are from the two
+  above. On GitHub: a ruleset named `vwf-<branch>` in
+  `gh api repos/{owner}/{repo}/rulesets`, any rule at all in
+  `gh api repos/{owner}/{repo}/rules/branches/<branch>`, or a classic
+  protection answering at
+  `gh api repos/{owner}/{repo}/branches/<branch>/protection`. On GitLab: the
+  branch's name in `glab api projects/:id/protected_branches`. The default
+  branch is set regardless — it is one value, and setting it to what it
+  already is changes nothing.
+
+**The writes, per forge.** Each is one call per repo or per branch; their
+exact text is here so nothing is improvised at apply time.
+
+GitHub — the default branch, then one **ruleset** per branch, named
+`vwf-<branch>`, through the rulesets endpoint and never the classic
+protection one:
+
+```text
+gh repo edit --default-branch <branch>
+
+gh api repos/{owner}/{repo}/rulesets --method POST --input - <<'JSON'
+{
+  "name": "vwf-<branch>",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": { "ref_name": { "include": ["refs/heads/<branch>"], "exclude": [] } },
+  "rules": [
+    { "type": "non_fast_forward" },
+    { "type": "deletion" },
+    { "type": "pull_request",
+      "parameters": { "required_approving_review_count": 0,
+                      "dismiss_stale_reviews_on_push": false,
+                      "require_code_owner_review": false,
+                      "require_last_push_approval": false,
+                      "required_review_thread_resolution": false } }
+  ]
+}
+JSON
+```
+
+The third rule is present **only under `pr`**; under `direct` the `rules`
+list is the first two. The payload is passed as a file or on standard input,
+never assembled from `-f` fields — a nested object does not survive that.
+
+GitLab — the default branch, then one **protected branch** per branch, with
+force-push refused; a protected branch cannot be deleted, which is the second
+rule for free:
+
+```text
+glab repo update --defaultBranch <branch>
+
+glab api projects/:id/protected_branches --method POST \
+  -f name=<branch> -F allow_force_push=false \
+  -F push_access_level=<level> -F merge_access_level=30
+```
+
+`<level>` is `30` under `direct` — developers may push, which is what the
+merge tasks do — and `0` under `pr`, where nobody pushes to the branch
+directly and it takes merges alone, which is how GitLab spells *require a
+merge request*.
+
+Any other forge: print the table as the by-hand list and set nothing.
+
+**The backlog project, base only, last.** It is the backlog skill's, and
+`init` never runs `gh project create` or anything like it — a project made
+that way carries no template. What `init` does is **invoke that skill's
+missing-project procedure by name**
+(`${CLAUDE_PLUGIN_ROOT}/skills/backlog/references/github.md` §Missing project):
+the skill's own precondition — which needs the `project` scope this pass did
+not — the browser hand-over with the URL and the two settings, the title rule,
+the wait for the word, the re-find, and the field bootstrap afterwards, all
+exactly as that reference spells them. Before invoking it, resolve the project
+as that reference does; one **present** is reported `present` and skipped.
+On GitLab, print the skill's own "not yet supported" line on the `Backlog
+project` line and continue. On another forge, ask the user to create it by
+hand and say so on the line. A decline inside the procedure, or a precondition
+miss on the `project` scope, reads `pending` with its reason — the next
+`/vwf:backlog add` reaches the same procedure.
+
+**The by-hand list** is what a repo gets wherever the pass could not act for
+it — no CLI for the forge, a failed precondition, a refused call, or the
+consent declined. It is the same table, printed for that repo alone, in the
+words a person applies on the forge's settings pages: set the default branch
+to `<branch>`; on `develop` and on `main`, refuse force-pushes and deletion,
+and require a pull request where the landing model is `pr`; and, for the
+base, create the backlog project per the backlog skill. The hygiene pack's
+`CONTRIBUTING.md`, at the repo's root, carries the same by-hand form of the
+default-branch line, so the list points there rather than restating it.
+
 ### What the report carries
 
 The **landing model once**, since it is one answer for the product; then
-branches created, the commit's short hash and what was pushed, **one line per
-repo**, in the order the repos ran — the members, then the base. Then one
-`Gitlinks staged <n>` line for the base, counting the member pointers (b) added
-to its index, which reads `none` in a product with no members. That is the git
+branches created, the commit's short hash, what was pushed and what the forge
+pass set, **one line per repo**, in the order the repos ran — the members,
+then the base. Then one `Gitlinks staged <n>` line for the base, counting the
+member pointers (b) added to its index, which reads `none` in a product with
+no members, and one `Backlog project` line, the base's alone. That is the git
 section SKILL.md's report specifies.
 
 ## 12 — The report

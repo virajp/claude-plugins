@@ -93,11 +93,17 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
   gitlinks, which it deliberately stages so the base's record of its members
   is not left a commit behind. Push is a
   second decision inside one question, never an assumed consequence of
-  committing, and the pass never reaches the remote's own settings. History is
+  committing. **After the push comes the forge pass**, on one further consent
+  for the whole product: it sets each pushed repo's default branch on the
+  forge, protects `develop` and `main` there, and reaches the backlog skill's
+  missing-project procedure for the base — those three are the only forge
+  settings it touches. It never creates a remote, never pushes without the
+  push answer, and on a forge it has no CLI for, or a CLI it cannot log in
+  with, it prints the by-hand list and carries on. History is
   never rewritten, nothing is force-pushed, and no verification-skipping flag
   is ever passed. Both
   pipelines describe the pass; [new repo](references/new-repo.md) §11 is where
-  it is written down.
+  it is written down, the forge pass at §11(f).
 - **Idempotent, for the same id source.** A second run on a shaped **product**
   produces an **empty plan** — one section per repo, each reading nothing —
   and says the product is shaped. Every step below is written to be
@@ -257,7 +263,9 @@ whole product**, however many repos resolved: a question that differs per repo
 shows one row per repo inside its single round, and never becomes a second
 round. Two of them — 1 and 3 — are asked for the repos that resolved to mode
 **new** only, because an existing repo already answers them; the other five
-are asked whatever the modes are.
+are asked whatever the modes are. Question 6 has two dependent parts, 6a and
+6b, which together are the **seventh round**: they are shown against 6's
+answers, so they cannot share its round.
 
 1. **The repo name.** *Mode-new repos only.* Asked in one round listing every
    repo that resolved to **new**, each proposed from that repo's **folder
@@ -398,15 +406,36 @@ are asked whatever the modes are.
    writes into the plugin task's two marked positions — never the workflow's
    own plugin or its dependency, which are dropped above and stay the task's
    unconditional business.
-6. **The licence.** MIT, Apache-2.0, or none — **one row per repo** in the one
-   round, because a licence is a file a repo carries and members are licensed
-   separately often enough that assuming otherwise writes the wrong text into
-   somebody's repo. The hygiene pack ships the two texts; **none** is a
-   legible answer and writes no file, in that repo or in any other.
-7. **The security-contact URL.** **One row per repo** in the one round, each
-   defaulted to **that repo's own** origin remote's advisories page where that
-   repo has an origin, and to nothing where it does not. Declining a row
-   writes no security file in that repo — a file naming a channel nobody
+6. **The visibility.** `public` or `private` — **one row per repo** in the one
+   round, because visibility is a fact about a repo rather than a product, and
+   a private member beside a public base is ordinary enough that one answer
+   for all of them would write a licence into somebody's private repo. Each
+   row's default is **read from the forge** where that repo has an `origin`
+   the forge CLI can answer for — [new repo](references/new-repo.md) §11(f)
+   carries the read — and is `private` where it has no origin or the read
+   fails: a repo nobody has published is private until somebody says
+   otherwise. The answer is written nowhere in the tree — the forge is the
+   record of what a repo is — and what it decides is the shape of the two
+   dependent parts below, asked as the seventh round once every row here is
+   answered.
+
+   **6a — The licence.** *Rows for the repos that answered `public` only.*
+   MIT, Apache-2.0, or none — one row per such repo, because a licence is a
+   file a repo carries and members are licensed separately often enough that
+   assuming otherwise writes the wrong text into somebody's repo. The hygiene
+   pack ships the two texts; **none** is a legible answer and writes no file,
+   in that repo or in any other. A `private` repo gets no row and no
+   `LICENSE`: a licence grants the public rights a private repo is not
+   offering, and a file granting them is a claim nobody made. A repo that
+   already carries a licence file keeps it whatever it answered.
+
+   **6b — The security contact.** **One row per repo**, and the row's shape
+   follows that repo's visibility. A `public` repo's row is defaulted to
+   **that repo's own** origin remote's advisories page where it has an origin,
+   and to nothing where it does not. A `private` repo has no advisories page a
+   reporter outside it can reach, so its row is a **free contact** — an email
+   address or an internal URL — with no default. Declining a row writes no
+   security file in that repo either way — a file naming a channel nobody
    watches is worse than none — and declining one row says nothing about the
    others.
 
@@ -507,10 +536,10 @@ Deferred          <n>    <what> — unlock: <what would let it happen>
 
 Then a **git** section, from the pass that just ran — printed **once for the
 run**, since the pass asked its questions once. The landing model is one line
-because one answer was written everywhere; branches, the commit and the push
-are **one line per repo**, in apply order — the members, then the base; and
-the last line is the base's alone. Every line reads `none` where nothing
-happened:
+because one answer was written everywhere; branches, the commit, the push and
+the forge are **one line per repo**, in apply order — the members, then the
+base; and the last two lines are the base's alone. Every line reads `none`
+where nothing happened:
 
 ```text
 Landing model            <the value written>
@@ -518,6 +547,8 @@ Branches created  <n>    <repo> <name>                      (one per repo)
 Commit                   <repo> <hash> <subject>; <hash> <subject>
 Pushed            <n>    <repo> <branch> → origin
 Gitlinks staged   <n>    <path>              (the base's, one per member)
+Forge             <n>    <repo> default <branch>; protected <branches>; <what was left>
+Backlog project          <url> | present | pending — <reason>
 ```
 
 **A repo's `Commit` line names every commit the run made in that repo**, in
@@ -529,10 +560,17 @@ repo makes one. A repo where the answer was **leave it** reads
 `not committed`, and a repo whose gate commit landed but whose shape commit
 did not is exactly the case a single hash would hide.
 
-There is no forge line, and its absence is the point: `init` never reaches the
-remote's own settings. Which branch a forge calls default is a one-time act
-somebody performs on the forge, and the hygiene pack's contribution guide is
-where that instruction lives.
+**The `Forge` line is one per repo**, and it says what the forge pass set
+there — the default branch, the branches it protected — and what it left: a
+setting already present is named as left alone, never as set. A repo the pass
+did not reach reads its reason instead — `pending` where the answer was
+**commit** or **leave it**, `skipped` with the reason where the precondition
+failed or a call was refused, `by hand` where the forge has no CLI and the
+list was printed. The `Backlog project` line is the base's alone and reads the
+project's URL, `present` where one already existed, or `pending` with its
+reason. Which branch a forge calls default is no longer an act somebody
+performs there by hand: the pass sets it, and the hygiene pack's contribution
+guide keeps the by-hand form for a forge the pass cannot reach.
 
 Then the two next-step lines, in this order and always both:
 
@@ -584,11 +622,18 @@ schedule of events rather than on a symptom, and the way to ask for one is
   **deferred** — an offline ignore section, a missing toolchain binary, a
   declined materialization — is still deferred in the clone, and its unlock is
   a re-run.
+- **After the forge drifts.** What the forge pass set is the forge's record,
+  not the tree's, so nothing in the repo notices when it moves. `/vwf:doctor`'s
+  baseline predicate **(g)** is what reads that state back, and it is the
+  seventh reason its finding names `/vwf:setup reshape`. The re-run's forge
+  pass is idempotent: what still holds is reported and left alone, and only
+  what drifted is offered — and a repo the first run left `pending` gets its
+  pass on the run where its push finally happens.
 - **Whenever `/vwf:doctor` says so.** Doctor is what notices the drift between
   a run: adapter lockfile against installed packs, registry ids against the
   scope list and the task groups, the repo-name key against the folder, a
-  missing branch. Its finding prints `/vwf:setup reshape`, once, as the one
-  remedy for every shape row.
+  missing branch, the forge state. Its finding prints `/vwf:setup reshape`,
+  once, as the one remedy for every shape row.
 
 A run that finds nothing costs one empty plan and says the repo is shaped —
 which is the answer, not a wasted run. On a product, that empty plan still
