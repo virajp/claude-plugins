@@ -6,5 +6,6 @@ to pick the next runnable plan.
 
 ## Plans
 
-| Folder | Kind | Plan | Target repo | Priority | Status | Requires | Backlog |
-| ------ | ---- | ---- | ----------- | -------- | ------ | -------- | ------- |
+| Folder                               | Kind   | Plan                                                                 | Target repo | Priority | Status   | Requires | Backlog |
+| ------------------------------------ | ------ | -------------------------------------------------------------------- | ----------- | -------- | -------- | -------- | ------- |
+| `docs/plans/2026-09-19-unclaim-verb` | change | unclaim verb — release a stale RUNNING claim through plan-management | —           | 10       | APPROVED | —        | B12     |
