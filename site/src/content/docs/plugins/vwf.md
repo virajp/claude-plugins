@@ -1971,11 +1971,12 @@ date prefix, then the folder name. It prints the folder taken, its `Kind` and
 its priority, and why each other `APPROVED` row was not, and runs it as if
 named, asking no confirmation. Nothing runnable → each `APPROVED` row and what
 it waits on, and stop. A `RUNNING` row is never taken, however stale: resuming
-one is `/vwf:execute <folder>`, and a claim whose session is gone is reset to
-`APPROVED` by hand, in a commit on the integration branch. It reads folders
-only: a single-file plan from an earlier release is finished on the release that
-wrote it, or its slice is re-run through `/vwf:plan` — the stamp-heal drops what
-already conforms.
+one is `/vwf:execute <folder>`, and a claim whose session is gone is released by
+asking the session to unclaim it — [`plan-management`](#vwfplan-management)'s
+`unclaim <folder>`, which refuses while the run's worktree still exists. It
+reads folders only: a single-file plan from an earlier release is finished on
+the release that wrote it, or its slice is re-run through `/vwf:plan` — the
+stamp-heal drops what already conforms.
 
 The first thing it does, named or picked, is **claim the row**: the folder's row
 is set `RUNNING` in one commit — `docs: plan queue — <folder> running` — pushed
@@ -2163,8 +2164,11 @@ of the run continues and it stops once at the end with every ruling it needs —
 never mid-wave, and never with "how should I proceed". The status line records
 where it stopped, and re-running the same command once the ruling is in
 `index.md` resumes at the first unit that is not `green` — the worktree is
-authoritative, so a unit marked green whose commit is missing is re-run. Run log
-rows from the earlier attempt stay, and the new rows continue the numbering.
+authoritative, so a unit marked green whose commit is missing is re-run. A
+resume that finds the worktree gone cannot continue: it offers to unclaim the
+folder and invokes the verb on your yes, so a fresh `/vwf:execute <folder>` can
+claim it again. Run log rows from the earlier attempt stay, and the new rows
+continue the numbering.
 
 ```mermaid
 flowchart TD
@@ -2216,20 +2220,20 @@ the report** with what failed and the resume command, and you say *fix first*
 review row that covers it re-runs over the fix commits as a new loop, an `edit`
 unit is re-dispatched with the finding and reviewed again) or *reject* (the
 worktree stays intact, nothing merges). A landing you did not consent to leaves
-the row `RUNNING` until your hand merge is followed by a hand edit of the row,
-or by asking for the folder to be archived, which applies the same rule. Then
-the **after-landing steps**, each on the mode the plan recorded: a `run` step
-runs with no prompt — the `run` in the folder is its authorisation, consented at
-the interview that wrote it, a release step included; before an `ask` step the
-run stops once, says what the step would do, and waits — a yes authorises that
-step alone, and waiting is offered as the equal option rather than the fallback.
-When the landing was not consented, only the steps that can run from the
-worktree are offered, every one as an `ask`. With `covers:`, whatever the
-landing decision, it then offers to close each gap at the source — fix the
-blueprint (`/vwf:blueprint`, which re-stamps coverage) or re-derive the plan
-(`/vwf:plan`) — and scans the queue for a plan its landing unblocked, offering
-that folder next. The repo's human docs were already reconciled by the docs
-unit, in this run's worktree (stale docs are more harmful than no docs).
+the row `RUNNING` until your hand merge is followed by asking for the folder to
+be archived, which makes the row edit a landing would have made. Then the
+**after-landing steps**, each on the mode the plan recorded: a `run` step runs
+with no prompt — the `run` in the folder is its authorisation, consented at the
+interview that wrote it, a release step included; before an `ask` step the run
+stops once, says what the step would do, and waits — a yes authorises that step
+alone, and waiting is offered as the equal option rather than the fallback. When
+the landing was not consented, only the steps that can run from the worktree are
+offered, every one as an `ask`. With `covers:`, whatever the landing decision,
+it then offers to close each gap at the source — fix the blueprint
+(`/vwf:blueprint`, which re-stamps coverage) or re-derive the plan (`/vwf:plan`)
+— and scans the queue for a plan its landing unblocked, offering that folder
+next. The repo's human docs were already reconciled by the docs unit, in this
+run's worktree (stale docs are more harmful than no docs).
 
 **It reads the blueprint only when the plan covers one.** A cycle plan maps its
 slice to a registry project, enforces TDD and a coverage gate, and stamps the
@@ -2261,8 +2265,8 @@ it and cannot detect its absence.
 
 `plan-management` is **not typed**: it is the skill the planners and the
 executor call for every write to the plan queue, and the one a session invokes
-when you ask, in prose, to archive a plan folder or to see the queue. It owns
-three things and nothing else — the rows of the base repo's
+when you ask, in prose, to unclaim a stale plan, archive a plan folder or to see
+the queue. It owns three things and nothing else — the rows of the base repo's
 `docs/plans/index.md`, the **Status block** at the top of every plan folder's
 `index.md`, and the move that retires a folder into `docs/plans/archived/` — and
 it is the one implementation of the reads over them: the `next` pick,
@@ -2271,17 +2275,18 @@ stays the planners'; the Run log stays `execute`'s; the backlog — a project on
 the base repo's forge — stays [`/vwf:backlog`](#vwfbacklog)'s, which this skill
 calls and never edits.
 
-| Verb                               | Does                                                                                                                                                                                                                                                                                                                                     | Called by                                                               |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `add <folder>`                     | The hand-off: Status `APPROVED`, the priority derived, the row appended to the one table (`Kind` from the folder's `type:`)                                                                                                                                                                                                              | `plan`, `change-plan`                                                   |
-| `claim <folder>`                   | In the main checkout, on the integration branch: the row `APPROVED` → `RUNNING`; a row already `RUNNING`, or absent, is refused                                                                                                                                                                                                          | `execute`, before the worktree is cut                                   |
-| `status <folder> <state> [detail]` | The folder's Status block alone — `RUNNING`, `BLOCKED`, `COMPLETE` or `APPROVED` and the line under it; never mirrored to the row                                                                                                                                                                                                        | `execute`, at start, pause, block and landing                           |
-| `complete <folder>`                | After the merge: the row `COMPLETE`, its `Folder` re-pointed under `archived/` when the folder was moved, then the sweep                                                                                                                                                                                                                 | `execute`, in the main checkout                                         |
-| `archive [folder]`                 | The completion check (every warning asks, none refuses), the whole-folder move, the Status block set `ARCHIVED <date> — not run; was <previous status>` unless it already reads `COMPLETE`, the row edit and sweep when run in the main checkout, `/vwf:backlog done` for any id still open, the mempalace `runs` drawer marked archived | `execute`, on a green landing with no open gap; a session, on your word |
-| `next`                             | The pick: every `APPROVED` row whose `Requires` are all satisfied, lowest `Priority`, then date, then name; a `RUNNING` row is never taken                                                                                                                                                                                               | `execute next`                                                          |
-| `resolve <folder>`                 | The `requires:` list by kind — a change requirement is a `COMPLETE` row or an archived folder, a cycle requirement every `covers:` doc stamped `implementation: complete`; an entry matching nothing is named, never re-pointed                                                                                                          | the planners at self-review; `execute` at preflight                     |
-| `priority <folder \| requires…>`   | `10 + max` over the `Priority` of every unarchived plan the `requires:` list names, or `10` — from the folder, or from the entries themselves before the folder exists                                                                                                                                                                   | the planners at their gate                                              |
-| `list`                             | The table by priority, `RUNNING` rows marked in flight, `COMPLETE` rows still at a live path marked awaiting archive, then any folder on disk with no row                                                                                                                                                                                | a session, on your word                                                 |
+| Verb                               | Does                                                                                                                                                                                                                                                                                                                                                                  | Called by                                                                                        |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `add <folder>`                     | The hand-off: Status `APPROVED`, the priority derived, the row appended to the one table (`Kind` from the folder's `type:`)                                                                                                                                                                                                                                           | `plan`, `change-plan`                                                                            |
+| `claim <folder>`                   | In the main checkout, on the integration branch: the row `APPROVED` → `RUNNING`; a row already `RUNNING`, or absent, is refused                                                                                                                                                                                                                                       | `execute`, before the worktree is cut                                                            |
+| `unclaim <folder>`                 | Releases a stale claim: refuses while the worktree the folder names still exists (naming `git worktree remove <path>` as your proof the run is gone), asks once, then resets the row and the folder's Status block to `APPROVED` in the main checkout and reports the commit — `docs: plan queue — <folder> unclaimed` — and the stale branch, which it never deletes | a session, on your word; `execute`, on its resume path when the worktree is gone and you say yes |
+| `status <folder> <state> [detail]` | The folder's Status block alone — `RUNNING`, `BLOCKED`, `COMPLETE` or `APPROVED` and the line under it; never mirrored to the row                                                                                                                                                                                                                                     | `execute`, at start, pause, block and landing                                                    |
+| `complete <folder>`                | After the merge: the row `COMPLETE`, its `Folder` re-pointed under `archived/` when the folder was moved, then the sweep                                                                                                                                                                                                                                              | `execute`, in the main checkout                                                                  |
+| `archive [folder]`                 | The completion check (every warning asks, none refuses), the whole-folder move, the Status block set `ARCHIVED <date> — not run; was <previous status>` unless it already reads `COMPLETE`, the row edit and sweep when run in the main checkout, `/vwf:backlog done` for any id still open, the mempalace `runs` drawer marked archived                              | `execute`, on a green landing with no open gap; a session, on your word                          |
+| `next`                             | The pick: every `APPROVED` row whose `Requires` are all satisfied, lowest `Priority`, then date, then name; a `RUNNING` row is never taken                                                                                                                                                                                                                            | `execute next`                                                                                   |
+| `resolve <folder>`                 | The `requires:` list by kind — a change requirement is a `COMPLETE` row or an archived folder, a cycle requirement every `covers:` doc stamped `implementation: complete`; an entry matching nothing is named, never re-pointed                                                                                                                                       | the planners at self-review; `execute` at preflight                                              |
+| `priority <folder \| requires…>`   | `10 + max` over the `Priority` of every unarchived plan the `requires:` list names, or `10` — from the folder, or from the entries themselves before the folder exists                                                                                                                                                                                                | the planners at their gate                                                                       |
+| `list`                             | The table by priority, `RUNNING` rows marked in flight, `COMPLETE` rows still at a live path marked awaiting archive, then any folder on disk with no row                                                                                                                                                                                                             | a session, on your word                                                                          |
 
 **Archiving is asked for, not typed.** A landing whose gap list is empty
 archives its own folder. A folder the landing left live — a gap still open, a
@@ -2299,12 +2304,27 @@ requirement: an unrun plan is a warning you answer, not a refusal. A `requires:`
 entry names a folder by its **basename**, so `docs/plans/X` and
 `docs/plans/archived/X` are the same plan and no line is ever re-pointed.
 
+**Unclaiming is asked for the same way.** A `RUNNING` row whose session is gone
+— the window closed, the machine rebooted — is never stolen: `next` skips it and
+`claim` refuses it. You release it by asking: *unclaim
+`docs/plans/<date>-<name>`*. The verb proves the run is gone by the worktree's
+absence — while it still exists it refuses and names
+`git worktree remove <path>`, which git itself refuses on a dirty tree, so
+nothing uncommitted is lost silently — shows what it found, asks once, resets
+the row and the folder to `APPROVED`, and reports the commit. The run's branch
+is reported with the `git branch -D` line, never deleted: a fresh `/vwf:execute`
+refuses to cut a worktree over it until it is gone, and whether its committed
+units are worth keeping is your call. [`/vwf:execute`](#vwfexecute)'s resume
+path offers the same verb when it finds the worktree gone.
+
 **It never commits.** Every verb writes and stops, and names the commit its edit
 rides: the planner's approval commit for `add`, `execute`'s two
-`docs: plan queue — <folder> …` commits for `claim` and `complete`, its final
+`docs: plan queue — <folder> …` commits for `claim` and `complete`, the
+same-shaped `… unclaimed` commit of whoever asked for `unclaim`, its final
 `docs:` commit in the worktree for the landing's `status` and `archive`, and the
 git-workflow commit of the session that asked for a standalone archive. Nothing
-here deletes a folder, walks the members for plans, or edits a unit file.
+here deletes a folder, walks the members for plans, edits a unit file, removes a
+worktree or deletes a branch.
 
 ### /vwf:verify
 
