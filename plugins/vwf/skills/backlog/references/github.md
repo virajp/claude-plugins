@@ -75,53 +75,70 @@ Only `add` reaches this; every other verb stops with "no backlog project yet —
 returns `fields[]`, each with `id`, `name` and `type`; a single-select field
 also carries `options[]` with `id` and `name`. Read:
 
-- `Status` — its `id`, and the option ids of `Todo`, `In Progress`, `Done` and,
-  once added, `Closed`;
+- `Status` — its `id`, and the option ids of `Backlog`, `In progress`, `Done`
+  and `Closed`, once the bootstrap has shaped the field;
 - `Priority` — its `id`, and the option ids of `P0`, `P1`, `P2`;
 - `Group` — its `id`, once added.
 
 **Bootstrap** — idempotent; each step runs only when `field-list` shows the
-thing absent. The Team planning template ships `Status` and `Priority`; the
-two additions are the skill's.
+thing missing. The Team planning template ships `Status` with the options
+`Backlog`, `Ready`, `In progress`, `In review` and `Done`, and `Priority`; the
+skill trims `Status` to its four and adds `Group`.
 
-`Closed` absent from `Status`: `updateProjectV2Field` **replaces** the option
-list, so every existing option is sent back by name, colour and description or
-it is lost. `field-list` does not print colour or description; read them first:
+`Status` not exactly the four, in five steps:
 
-    gh api graphql -f query='
-      query($id: ID!) {
-        node(id: $id) {
-          ... on ProjectV2SingleSelectField {
-            options { name color description }
-          }
-        }
-      }' -F id=<status-field-id> --jq '.data.node.options'
+1. `field-list` — when `Status`'s options are exactly `Backlog`, `In progress`,
+   `Done` and `Closed`, order ignored, skip to `Group`.
+2. `item-list` filtered to `status == "Ready"` or `status == "In review"`:
 
-then send that list plus the new option, inlined in the mutation text — `-F`
-passes scalars only, so the option list is written into the query:
+       gh project item-list <number> --owner <owner> --format json --limit 500 \
+         --jq '.items[] | select(.status == "Ready" or .status == "In review")
+               | [.title, .status] | @tsv'
 
-    gh api graphql -f query='
-      mutation($fieldId: ID!) {
-        updateProjectV2Field(input: {
-          fieldId: $fieldId
-          singleSelectOptions: [
-            {name: "Todo", color: <as read>, description: "<as read>"},
-            {name: "In Progress", color: <as read>, description: "<as read>"},
-            {name: "Done", color: <as read>, description: "<as read>"},
-            {name: "Closed", color: GRAY, description: "Dropped without a plan"}
-          ]
-        }) {
-          projectV2Field {
-            ... on ProjectV2SingleSelectField { id options { id name } }
-          }
-        }
-      }' -F fieldId=<status-field-id>
+   When any item comes back, print each `title` and its state and stop: "these
+   items sit in a Status option the bootstrap removes; move each to `Backlog`
+   or `In progress` on the board, then run the verb again". The bootstrap never
+   moves an item itself.
+3. `updateProjectV2Field` **replaces** the option list, and `field-list` does
+   not print colour or description; read them first:
 
-The existing options take the colour (an unquoted enum such as `GRAY`) and
-the description the query returned, in the order returned, never the
-placeholders above; a project whose `Status` carries more than the three is
-sent all of them. The mutation's reply carries the new option's id for the
-verb that needed it.
+       gh api graphql -f query='
+         query($id: ID!) {
+           node(id: $id) {
+             ... on ProjectV2SingleSelectField {
+               options { name color description }
+             }
+           }
+         }
+       }' -F id=<status-field-id> --jq '.data.node.options'
+
+4. Send exactly four options, inlined in the mutation text — `-F` passes
+   scalars only, so the option list is written into the query:
+
+       gh api graphql -f query='
+         mutation($fieldId: ID!) {
+           updateProjectV2Field(input: {
+             fieldId: $fieldId
+             singleSelectOptions: [
+               {name: "Backlog", color: <as read>, description: "<as read>"},
+               {name: "In progress", color: <as read>, description: "<as read>"},
+               {name: "Done", color: <as read>, description: "<as read>"},
+               {name: "Closed", color: GRAY, description: "Dropped without a plan"}
+             ]
+           }) {
+             projectV2Field {
+               ... on ProjectV2SingleSelectField { id options { id name } }
+             }
+           }
+         }' -F fieldId=<status-field-id>
+
+   `Backlog`, `In progress` and `Done` take the colour (an unquoted enum such
+   as `GRAY`) and the description step 3 returned for them, never the
+   placeholders above. Every option not sent — `Ready`, `In review`, anything
+   else the field carried — is deleted; that is the point of the trim, and
+   step 2 is what makes it safe.
+5. Run `field-list` again and read the option ids from it: a replace reissues
+   every option's id, so any id read before the mutation is stale.
 
 `Group` absent:
 
@@ -169,11 +186,26 @@ one key per populated field, named for the field in lower case — `status`,
 `status` key.
 
 The id is parsed from the title with `^B([0-9]{2,}) — `, case-sensitive, the
-dash the em dash the skill writes. The **next id** is one past the highest
-number any title carries, over every item whatever its status — done and
-closed included — zero-padded to two digits; an item whose title does not
-match is "unnumbered", warned about in `list`, and never renumbered. An empty
-project starts at `B01`.
+dash the em dash the skill writes; an item whose title does not match is
+"unnumbered", warned about in `list`, and never renumbered.
+
+The **next id** is one past the highest number over two sources, zero-padded
+to two digits:
+
+- every item title in the project, whatever its status — done and closed
+  included;
+- every id in the `backlog:` frontmatter list of every plan folder directly
+  under `docs/plans/` and `docs/plans/archived/` in the base repo — the
+  `^backlog:` line of each `index.md`, its `[ … ]` list split on commas, each
+  entry matched with `^B([0-9]{2,})$`. Frontmatter lists only, never prose:
+
+      grep -h '^backlog:' docs/plans/*/index.md docs/plans/archived/*/index.md \
+        | sed 's/^backlog:[[:space:]]*\[\(.*\)\].*/\1/' | tr ',' '\n' \
+        | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -E '^B[0-9]{2,}$' \
+        | sed 's/^B//' | sort -n | tail -1
+
+A project starts at `B01` only when both sources are empty — so an id spent by
+a retired file store, or by a project since deleted, is never reissued.
 
 `Bnn` on the command line matches the title prefix; an id no item carries is a
 stop naming it.
@@ -187,11 +219,11 @@ Field and option ids are the ones `field-list` returned this run.
     gh project item-create <number> --owner <owner> \
       --title "Bnn — <item>" --body "<detail>" --format json --jq .id
 
-Then set `Status` to `Todo` explicitly — a draft item starts with none — and
+Then set `Status` to `Backlog` explicitly — a draft item starts with none — and
 `Priority` to the answer:
 
     gh project item-edit --id <item-id> --project-id <project-id> \
-      --field-id <status-field-id> --single-select-option-id <todo-option-id>
+      --field-id <status-field-id> --single-select-option-id <backlog-option-id>
     gh project item-edit --id <item-id> --project-id <project-id> \
       --field-id <priority-field-id> --single-select-option-id <priority-option-id>
 
@@ -202,7 +234,7 @@ and, when a group was named:
 
 **`move`** — the `Priority` edit above with the new option id.
 
-**`planned`, `done`, `close`** — the `Status` edit above with `In Progress`,
+**`planned`, `done`, `close`** — the `Status` edit above with `In progress`,
 `Done` or `Closed`, then the body's last line. The body is replaced whole:
 read `content.body` from `item-list`, append the line after a blank line —
 `Planned in: <folder>` or the close reason — and write it back with the draft
@@ -212,8 +244,8 @@ issue's own id:
       --body "<body with the line appended>"
 
 `planned` on an item whose body already ends with a `Planned in:` line naming
-a different folder asks before replacing that line. `close` runs the `Closed`
-bootstrap first when the option is absent.
+a different folder asks before replacing that line. `close` runs the `Status`
+bootstrap first when `Closed` is absent.
 
 **`list`, `next`** — `item-list` alone; nothing is written. `list` ends with
 the project's `url` from the resolution.

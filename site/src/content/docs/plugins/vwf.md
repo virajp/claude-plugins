@@ -2432,7 +2432,7 @@ working on yet. Nothing a feedback intake produces lands here.
 ```text
 /vwf:backlog                          # list, priority then id
 /vwf:backlog add "stylesheet axis for web frontends"
-/vwf:backlog next                     # the top Todo item, and the command for it
+/vwf:backlog next                     # the top Backlog item, and the command for it
 /vwf:backlog move B07 P0
 ```
 
@@ -2462,37 +2462,46 @@ already looks.
 **The items.** Each is a **draft issue** in the project — never a repository
 issue — titled `Bnn — <item>`, with the detail the plan interview starts from in
 its body. Ids are sequential and **never reused**: a closed id stays spent, and
-the next id is one past the highest any item carries, done and closed included.
-The project's own fields carry the state: **Priority** is the Team planning
-template's `P0` (pick first), `P1`, `P2`; **Status** runs `Todo` → `In Progress`
-→ `Done`, or `Closed` for an item dropped without a plan — an option the skill
-adds to the field once, the first time it needs it; **Group** is a text field
-the skill adds once, naming the items that want one plan between them. An
-`In Progress` item's body ends with `Planned in: <folder>` and a `Closed` one's
-with the reason. An item retitled in the browser without its `Bnn —` prefix is
-listed as unnumbered and warned about, never renumbered.
+the next id is one past the highest over two sources — every item's title, done
+and closed included, and the `backlog:` frontmatter list of every plan folder
+under `docs/plans/` and `docs/plans/archived/` in the base repo — so an id a
+plan already carries is never issued again, even to a project that was created
+after it. `B01` only when both are empty. The project's own fields carry the
+state: **Priority** is the Team planning template's `P0` (pick first), `P1`,
+`P2`; **Status** runs `Backlog` → `In progress` → `Done`, or `Closed` for an
+item dropped without a plan. The template ships `Status` with `Ready` and
+`In review` as well; the skill trims the field to its four the first time it
+needs it, keeping `Backlog`, `In progress` and `Done` as the template spells and
+colours them and adding `Closed`. The trim removes an item's Status along with
+the option, so while any item sits in `Ready` or `In review` the skill stops,
+names each one, and asks you to move it to `Backlog` or `In progress` on the
+board first — it never moves an item itself. **Group** is a text field the skill
+adds once, naming the items that want one plan between them. An `In progress`
+item's body ends with `Planned in: <folder>` and a `Closed` one's with the
+reason. An item retitled in the browser without its `Bnn —` prefix is listed as
+unnumbered and warned about, never renumbered.
 
 **The first run.** `add` on a repo with no project is the one verb that creates
 one. GitHub's API cannot instantiate a built-in template, and **Team planning**
 is one, so the skill asks your consent, prints the new-project URL and the two
 things to set on that page — the Team planning template and the title, the
 repo's name exactly — waits for you to say it is done, then finds the project by
-title, adds the `Closed` option and the `Group` field, and continues with the
-`add`. Every other verb on a missing project reports that there is no backlog
-project yet and names `add` as the way to create it.
+title, trims the `Status` field to the four options and adds the `Group` field,
+and continues with the `add`. Every other verb on a missing project reports that
+there is no backlog project yet and names `add` as the way to create it.
 
 **A GitLab remote is detected and stops.** The forge is read from the base
 repo's `origin` host: GitHub is implemented; `gitlab.com`, or any host `glab`
 knows, ends every verb with "GitLab is not yet supported by /vwf:backlog"; any
 other host is unsupported and named.
 
-`next` names the top `Todo` item by priority then id and the command that picks
-it up — [`/vwf:change-plan`](#vwfchange-plan) for work the blueprint does not
-describe, [`/vwf:plan`](#vwfplan) when the item names a slice — and asks which
-it is when the item does not say. `list` prints the items as a five-column table
-(Id, Item, Group, Priority, Status), `Done` and `Closed` folded into a trailing
-count, and ends with the project's URL. Ids are never renumbered, and an item is
-never deleted or archived by this skill.
+`next` names the top `Backlog` item by priority then id and the command that
+picks it up — [`/vwf:change-plan`](#vwfchange-plan) for work the blueprint does
+not describe, [`/vwf:plan`](#vwfplan) when the item names a slice — and asks
+which it is when the item does not say. `list` prints the items as a five-column
+table (Id, Item, Group, Priority, Status), `Done` and `Closed` folded into a
+trailing count, and ends with the project's URL. Ids are never renumbered, and
+an item is never deleted or archived by this skill.
 
 **This skill is the only thing that writes the project.** The commands that move
 items as plans are written and as they land call it rather than editing it, each
