@@ -8,13 +8,14 @@ description: Execute an approved plan folder — a cycle plan from /vwf:plan or
   and judged by the wave review, and a review row runs the code and security
   engines and reviewers over the branch delta the row covers; the acceptance
   and UX pass and the blueprint reconcile run when the plan has a covers list.
-  It claims the plan's row in docs/plans/index.md, keeps a run log the final
-  report renders, lands per the plan's recorded consent — archiving the folder
-  when no gap is open — and runs each after-landing step on the mode the plan
-  recorded, run or ask.
-  Invoke as /vwf:execute <plan-folder> or /vwf:execute next — the latter reads
-  docs/plans/index.md alone and picks the runnable plan of highest priority,
-  of either kind. Requires an approved plan folder in docs/plans/.
+  It claims the plan's row in docs/plans/index.md through plan-management,
+  keeps a run log the final report renders, lands per the plan's recorded
+  consent — archiving the folder when no gap is open — and runs each
+  after-landing step on the mode the plan recorded, run or ask.
+  Invoke as /vwf:execute <plan-folder> or /vwf:execute next — the latter asks
+  plan-management for the runnable plan of highest priority in
+  docs/plans/index.md, of either kind. Requires an approved plan folder in
+  docs/plans/.
 argument-hint: "<plan-folder, its index.md, or next>"
 model: opus
 
@@ -73,21 +74,23 @@ branches load on demand, each named where it applies — never upfront.
 
 ### 1. Resolve and refuse early
 
-**`next`.** When `$ARGUMENTS` is `next`, run *Reading the queue* in
-`${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`: the candidates are every
-`APPROVED` row whose requirements are satisfied, `cycle` or `change` alike —
-there is no Kind filter. On a pick, print the folder taken, its `Kind` and its
-`Priority`, and every other `APPROVED` row with why it was not taken — a lower
-priority, or the requirement it waits on. Ask no confirmation: the session is
-meant to run unattended. Then continue below as if that folder had been named.
-Nothing runnable → stop with the message that procedure prints: each `APPROVED`
-row and what it waits on, or that the table is absent or holds no rows.
+**`next`.** When `$ARGUMENTS` is `next`, invoke `plan-management next` — the
+pick is that skill's, per *Reading the queue* in
+`${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`: the
+candidates are every `APPROVED` row whose requirements are satisfied, `cycle`
+or `change` alike — there is no Kind filter. On a pick, print what it returned
+— the folder taken, its `Kind` and its `Priority`, and every other `APPROVED`
+row with why it was not taken. Ask no confirmation: the session is meant to run
+unattended. Then continue below as if that folder had been named. Nothing
+runnable → stop with the message the verb returns: each `APPROVED` row and what
+it waits on, or that the table is absent or holds no rows.
 
 **Finding the plan.** A plan folder lives in **the repo whose code it changes**
 — a change plan's is the base's — and the one table of `docs/plans/index.md` in
 the base repo lists every one with its target repo
 (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`; the file's shape is
-`${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`). Read the index rather than
+`${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`, and
+`plan-management` is its one writer). Read the index rather than
 walking the members — under `multi-repo` most of them are not on this machine,
 so a walk would report the product's plans as a function of what happens to be
 cloned. Halt if no approved plan exists: "No approved plan found. Run
@@ -108,18 +111,16 @@ blocks. Hold two facts from this read for every gate below: **has `covers:`**
 — a cycle plan, whose blueprint-bound steps run — and **has a `code` unit** —
 one or more Units table rows whose `Kind` is `code`. Then read the folder's
 **row** in the base repo's `docs/plans/index.md`, at the integration branch's
-tip, the way that asset's *Reading the queue* reads it. Then:
+tip, the way the contract's *Reading the queue* reads it. Then:
 
 - Status `DRAFT` → stop: "not approved; run the planner that wrote it to finish
   it" — `/vwf:plan` for `type: vwf-plan`, `/vwf:change-plan` for
   `type: vwf-change-plan`.
 - Status `COMPLETE` → stop: nothing to do.
-- Any `requires:` entry unsatisfied — by the test its kind takes, per that
-  asset's *Resolution*, matched by basename → stop and name it. A **cycle**
-  entry is satisfied when every `covers:` doc of the required plan reads
-  `implementation: complete` **in the base repo's blueprint** — the blueprint
-  is where the stamps live, so this resolves even when the upstream plan's own
-  repo is not cloned here; its index row is not the test. Halt with:
+- Invoke `plan-management resolve <folder>` — the contract's *Resolution*,
+  by the test each entry's kind takes. Anything but *runnable* → stop and name
+  each entry it returned with the reason it gave. For a **cycle** entry short
+  of its stamps, halt with:
 
   > "Prerequisite plan `<folder>` has not been executed and merged (`<doc>` is
   > `implementation: <state>`). Run `/vwf:execute <folder>` first."
@@ -128,25 +129,27 @@ tip, the way that asset's *Reading the queue* reads it. Then:
   `/vwf:plan` (its stamp-heal offer) or amend the blueprint via
   `/vwf:blueprint`; never guess past the halt. Because stamps land in the
   merged Reconcile commit, an executed-but-unmerged prerequisite correctly
-  halts too. A **change** entry is satisfied by the row test: a `COMPLETE`
-  row, or a folder under `docs/plans/archived/` with no row; say "run
-  /vwf:execute <that folder> first" when it is `APPROVED` and "another session
-  is running <that folder>; wait for it to land" when it is `RUNNING`. An
-  entry that resolves to nothing → "<entry> is neither in the plan index nor
-  archived; fix the `requires:` line by hand".
+  halts too. For a **change** entry, say "run /vwf:execute <that folder>
+  first" when its row is `APPROVED` and "another session is running <that
+  folder>; wait for it to land — or, when that run is gone, ask to unclaim
+  it" when it is `RUNNING`. An entry the verb names
+  as unresolvable → "<entry> is neither in the plan index nor archived; fix
+  the `requires:` line by hand".
 - Status `APPROVED` with no row at all → stop: "not in the plan index; re-run
   the planner's hand-off, or add the row by hand".
 - Status `APPROVED` with a `RUNNING` row → a claim another session holds. Stop
   and name it: the row is resumed only by the session that holds it, or claimed
-  afresh after a hand reset of the row to `APPROVED`, committed on the
-  integration branch.
+  afresh once the user has asked the session to unclaim it —
+  `plan-management`'s `unclaim <folder>`, which refuses while the run's
+  worktree still exists. Execute stops here; it never invokes the verb from
+  this refusal.
 - Status `BLOCKED` or `RUNNING` → a **resume**, per the Resume check under
   Recall below and [blocking and resume](references/blocking.md): the worktree
   named in the status line exists, and the run starts at the first unit that
   is not `green`. The ruling a block asked for must now be in the plan — if the
   status line still reads the same `UNRESOLVED:`, stop and say which ruling is
   missing. The row is expected to read `RUNNING` already, and is left alone; a
-  row reading `APPROVED` is a hand reset, and the run claims it again below.
+  row reading `APPROVED` was unclaimed, and the run claims it again below.
   A resume runs what its folder says and takes none of the fresh-run refusals
   below — a folder written before review rows existed was reviewed per unit,
   and cannot be re-approved mid-run. Two things it does refuse, each with the
@@ -181,28 +184,30 @@ not swept into a unit commit: stop and say to run the planner again on it, or
 to commit and push it by hand, then re-launch.
 
 **Claim the row.** Before the worktree is cut, and before the folder's own
-Status is touched, run *Writing a row — the claim, and the completion* in
-`${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md` with the row set to `RUNNING` —
-the commit `docs: plan queue — <folder> running`, pushed on the integration
-branch. The row's `Status` cell is the only cell that changes; `Kind` and
-`Target repo` are never edited. This is the **one** edit the run makes in the
-main checkout, and it is made there on purpose: the pushed row is what another
-session's `next` reads, so a claim that lived only on the run branch would
-claim nothing; and the run branch must never carry `docs/plans/index.md`, or
-two plans landing in parallel would conflict on it. A rejected push is handled
-inside that procedure — a clean rebase pushes again; a conflict on the same row
-means the plan was claimed first, and the run re-picks (`next`) or stops (a
-named folder). A resume whose row already reads `RUNNING` skips this step.
+Status is touched, invoke `plan-management claim <folder>` in the main
+checkout — it sets the row `RUNNING` and nothing else — then commit and push
+`docs: plan queue — <folder> running` on the integration branch, exactly as
+the contract's *Writing a row — the claim* spells out. This is the **one** edit
+the run makes in the main checkout, and it is made there on purpose: the pushed
+row is what another session's `next` reads, so a claim that lived only on the
+run branch would claim nothing; and the run branch must never carry
+`docs/plans/index.md`, or two plans landing in parallel would conflict on it. A
+rejected push is handled per that procedure — a clean rebase pushes again; a
+conflict on the same row means the plan was claimed first, and the run re-picks
+(`next`) or stops (a named folder). A resume whose row already reads `RUNNING`
+skips this step.
 
-Set the folder's Status to `RUNNING` with the timestamp and, once Setup step 1
-has cut it, the worktree path. From there the folder is edited in the worktree
-only and committed with each unit, so a session that dies still leaves a
-legible plan on the branch — never in the main checkout, which would dirty the
-integration branch — the one exception being the index row above, which is
-committed and pushed in the main checkout and never edited in the worktree. The
-row does not change on a pause or a block: the index carries `APPROVED`,
-`RUNNING` or `COMPLETE` only, and the folder's status line keeps the run
-detail.
+Once Setup step 1 has cut the worktree, invoke
+`plan-management status <folder> RUNNING "RUNNING since <ts> in <worktree>"`
+there — the Status block is the verb's, and every later change to it (a
+pause, a block, the landing) is the same verb with a different state and
+detail. From there the folder is edited in the worktree only and committed
+with each unit, so a session that dies still leaves a legible plan on the
+branch — never in the main checkout, which would dirty the integration branch —
+the one exception being the index row above, which is committed and pushed in
+the main checkout and never edited in the worktree. The row does not change on
+a pause or a block: the index carries `APPROVED`, `RUNNING` or `COMPLETE`
+only, and the folder's status line keeps the run detail.
 
 ## Format Check
 
@@ -222,7 +227,7 @@ blueprint artifact.
 | Plan index    | `docs/plans/index.md` (base repo) — its one table                               |
 | Plan template | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`                         |
 | Membership    | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                                    |
-| Backlog       | `docs/backlog.md` (base repo) — marked done via `/vwf:backlog`                  |
+| Backlog       | a project on the base repo's forge, never a path — marked done via `/vwf:backlog` |
 | Registry      | `docs/blueprint/registry.yaml` — *cycle plans only*                             |
 | Flow (slice)  | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` — *cycle plans only*     |
 | Entity        | `docs/blueprint/entities/<entity>/` (`index.md` + schema) — *cycle plans only*  |
@@ -311,14 +316,16 @@ otherwise.
   units can) → skip that unit **and its dependents**, document, continue — per
   [blocking and resume](references/blocking.md), where a unit's `UNRESOLVED:`
   is the same thing.
-- **The backlog is never edited here.** `docs/backlog.md` has one writer,
+- **The backlog is never edited here.** The backlog project has one writer,
   `/vwf:backlog`; this command only calls it at the landing with the plan's
-  `backlog:` ids, and no unit, subagent or reconcile pass touches the file.
+  `backlog:` ids, and no unit, subagent or reconcile pass touches the project.
 - **All git via `/vwf:git-workflow`.** Never run raw git — the exceptions are
-  the index row, whose claim and completion edits are the plain commands
-  `assets/plan-index.md` spells out, in the main checkout, and the staging
-  discipline below, whose `git add` and `git reset` are the plain commands
-  that keep one unit's commit to its own Owns. On **every** mid-run
+  the index row, whose claim and completion commits are the plain commands
+  `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`
+  spells out, in the main checkout, around the `plan-management` verb that
+  makes the edit, and the staging discipline below, whose `git add` and
+  `git reset` are the plain commands that keep one unit's commit to its own
+  Owns. On **every** mid-run
   invocation, pass git-workflow these declared preferences so it never prompts:
   **isolate without asking** (its Step 1) and **commit only — do not prompt,
   never merge/push** (its Step 4). Without these, git-workflow's post-commit
@@ -390,13 +397,15 @@ second, per the Resume check.
   for autonomous runs, install it or this pause will not fire — and on any
   other platform it cannot be installed at all, so plan long runs around a
   pause that will never arrive. On the injected cap directive: finish writing
-  the Run log rows for every report already in hand, commit what is green, set
-  the folder's Status to `RUNNING — paused at unit <n> for context` (the index
-  row stays `RUNNING` — a pause is the folder's detail, not the queue's), run
-  `/vwf:handoff` with no argument to snapshot state as the reserved `next`
-  handoff, and stop with the launch line `/vwf:execute <folder>`. The person
-  re-runs it in a fresh session; `/vwf:recall next` surfaces the handoff and
-  the launch line but cannot invoke this skill.
+  the Run log rows for every report already in hand, commit what is green,
+  invoke
+  `plan-management status <folder> RUNNING "RUNNING — paused at unit <n> for context"`
+  (the index row stays `RUNNING` — a pause is the folder's detail, not the
+  queue's), run `/vwf:handoff` with no argument to snapshot state as the
+  reserved `next` handoff, and stop with the launch line
+  `/vwf:execute <folder>`. The person re-runs it in a fresh session;
+  `/vwf:recall next` surfaces the handoff and the launch line but cannot
+  invoke this skill.
 
   **The contract vwf states, for whoever provides the hook**: read
   `<cwd>/.config/vwf.yaml` → `pipeline.execute_caps` and apply it
@@ -725,39 +734,45 @@ With every unit `green`, every Wave gate line and orchestrator gate passed, and
 the gap list holding no blocking gap, prepare the landing commit:
 
 1. Read the Consent row *Merge to the integration branch and push on green*.
-2. **The folder.** On `yes`, when the gap list is **empty**, move the folder
-   to `docs/plans/archived/` — it is finished and the archive is its record.
-   When any gap is **open**, the folder stays live at its path as the working
-   record of what needs reconciling; the report names `/vwf:archive <folder>`
-   for after reconciliation. On `no` the folder is never moved — the hand
-   merge, then `/vwf:archive <folder>`, is what retires it.
-3. Set the folder's Status to `COMPLETE` with the date and the commit list on
-   `yes`, and to `RUNNING — ready to land by hand on <branch>` on `no`. Then,
-   when index.md's `backlog:` names ids, invoke `/vwf:backlog done <ids>` —
-   that skill is the only writer of `docs/backlog.md`, and its edit rides the
-   same commit. Commit all of it as one final `docs:` commit in the worktree.
+2. **The Status block.** In the worktree, invoke
+   `plan-management status <folder> COMPLETE "COMPLETE <date> — <commits>"`
+   on `yes`, and
+   `plan-management status <folder> RUNNING "RUNNING — ready to land by hand on <branch>"`
+   on `no`.
+3. **The folder.** On `yes`, when the gap list is **empty**, invoke
+   `plan-management archive <folder>` in the worktree — it moves the folder to
+   `docs/plans/archived/`, leaves the `COMPLETE` block as written, closes the
+   `backlog:` ids through `/vwf:backlog done`, marks the run's mempalace
+   drawer archived, and edits no row, since the index never rides a run
+   branch. The folder is finished and the archive is its record. When any gap
+   is **open**, or on `no`, `archive` is not invoked: the folder stays live at
+   its path — as the working record of what needs reconciling, or for the hand
+   merge — and, when index.md's `backlog:` names ids, invoke
+   `/vwf:backlog done <ids>` here instead — that skill is the only writer of
+   the backlog project, and its edit touches nothing in the tree. Either way,
+   commit all of it as one final `docs:` commit in the worktree.
 
 Then act on that consent row:
 
 - **yes** → hand off to `/vwf:git-workflow` step 4, *merge, push & clean up*,
   **with the declared preference that consent was recorded in the plan — do
   not ask again**. A merge conflict is a hard halt: abort, keep the worktree,
-  set `BLOCKED`, report the files. When step 4 returns from the merge and push,
-  run *Writing a row — the claim, and the completion* in
-  `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md` with the row set to `COMPLETE`
-  — its `Folder` cell pointing at `docs/plans/archived/<basename>` when step 2
-  moved the folder, and left at the live path when a gap kept it there, for
-  `/vwf:archive` to re-point later — `Kind` and `Target repo` untouched — and
-  *The sweep* from the same asset: every `COMPLETE` row already under
-  `archived/` that no `APPROVED` or `RUNNING` row's `Requires` still names is
-  removed, whatever its kind. That is the commit
-  `docs: plan queue — <folder> complete`, on the integration branch, in the
-  main checkout; a rejected push re-applies the same row until it lands, and
-  never re-picks.
+  invoke `plan-management status <folder> BLOCKED "<the conflicting files>"`
+  there, report the files. When step 4 returns from the merge and push,
+  invoke `plan-management complete <folder>` in the main checkout — it sets
+  the row `COMPLETE`, re-points `Folder` under `archived/` when step 3 moved
+  the folder and leaves it at the live path otherwise, and runs the sweep, per
+  the contract's *Writing a row — the completion* and *The sweep* in
+  `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`.
+  That is the commit `docs: plan queue — <folder> complete`, on the
+  integration branch, in the main checkout; a rejected push re-applies the
+  same row until it lands, and never re-picks.
 - **no** → stop with the worktree path and the branch name, and say the branch
   is ready to land by hand. Say too that the index row stays `RUNNING` until
-  the hand merge is followed by a hand edit of the row to `COMPLETE`, or by
-  `/vwf:archive <folder>`, which applies the same rule. Ask nothing further.
+  the hand merge is followed by asking the session to archive the folder —
+  `plan-management archive <folder>`, run in the main checkout, which moves
+  the folder and applies the same row edit and sweep — and that no typed
+  command does this. Ask nothing further.
 
 When any landing condition fails — a red gate line, a unit that is not green,
 a blocking gap → **stop at the report** with what failed and the exact resume
@@ -781,13 +796,16 @@ landing decision, walk the consolidated gap list and offer to close each —
 sweep re-stamps coverage); plan holes → `/vwf:plan` to re-derive the slice
 against the now-updated blueprint. When a gap is reconciled, note its
 resolution back into the `gaps` room so a later cycle's recall sees it as
-closed. Once no gap is open, the folder that stayed live is retired by
-`/vwf:archive` — user-only, so recommend it by name and stop there.
+closed. Once no gap is open, the folder that stayed live is retired by asking
+the session to archive it — `plan-management archive <folder>`, which the user
+reaches in prose, never by a typed command — so say that and stop there.
 
 **Chain forward — with `covers:`.** Scan the one table of the base repo's
 `docs/plans/index.md` — not a walk of the members, most of which are not cloned
 here — for rows whose `Requires` names the folder just completed. If one is
-now unblocked (every prerequisite satisfied per that asset's *Resolution*),
+now unblocked (`plan-management resolve <that folder>` returns *runnable*, per
+the contract's *Resolution* in
+`${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`),
 offer `/vwf:execute <next-folder>` — chained plans land one focused run at a
 time.
 
@@ -862,12 +880,14 @@ and answered at the end.
   orchestrator's because it may write outside the worktree
 - Runs an `ask` step without the in-the-moment yes, runs a `run` step on a
   landing that was not green, or merges past the integration branch
-- Edits `docs/plans/index.md` from inside the worktree, or edits any row but its
-  own plan's and the `COMPLETE` sweep the landing applies
-- Takes a `RUNNING` row, however stale — a hand reset to `APPROVED` is the only
-  release
-- Edits `docs/backlog.md` itself, or lets a unit do it — `/vwf:backlog` owns
-  that file, and the landing calls it
+- Edits `docs/plans/index.md` or a folder's Status block itself — every such
+  edit is a `plan-management` verb, the index one only in the main checkout,
+  and never a row but its own plan's and the sweep the landing's `complete`
+  applies
+- Takes a `RUNNING` row, however stale — `unclaim` on the user's ask, once its
+  worktree is gone, is the only release
+- Edits the backlog itself, or lets a unit do it — `/vwf:backlog` owns the
+  project, and the landing calls it
 - Edits a blueprint doc beyond the `implementation:` stamp, or runs a
   blueprint-bound step on a plan without `covers:`
 - Runs a gate the plan's *Wave gate* section does not name, or skips one it does

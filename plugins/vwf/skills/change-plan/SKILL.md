@@ -48,21 +48,25 @@ subagent reads. Nothing lives in conversation.
   then — reading its *Out of scope*, its *Parked* list and its *Run log*: the
   request is often one of those items coming due, and a gap the last run
   surfaced is a fact
-- the base repo's `docs/backlog.md` — the product's backlog, the prioritised
-  list of work that cannot be picked up now, which `/vwf:backlog` maintains and
-  keeps in the base repo alone, beside the base's `docs/plans/` — when the
-  product has one. A session in a member repo reads the base's file, never a
-  file of its own. The request is often one of its items; note every id it
-  covers, so the plan's frontmatter can carry them. Reading the file is this
-  skill's business; editing it never is — `/vwf:backlog` is its sole writer
+- the backlog, read through `/vwf:backlog list` — the product's backlog, the
+  prioritised list of work that cannot be picked up now, a project on the base
+  repo's forge that the `backlog` skill alone writes. It is product-level: a
+  session in a member repo reads the base's project, resolved from the base's
+  remote, never one of its own. When the verb reports the backlog unreadable —
+  `gh` absent, unauthenticated or without the `project` scope, or no project
+  yet — record that with its reason in the facts and continue with nothing.
+  The request is often one of its items; note every id it covers, so the
+  plan's frontmatter can carry them. Reading the backlog is this skill's
+  business; editing it never is — `/vwf:backlog` is its sole writer
 - the base repo's `docs/plans/index.md` — the plan index, the one table where
   every active plan of either kind, cycle and change, its status and its
-  priority live; `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md` is the shape.
-  Like the backlog it is the base's file alone, read from a member repo and
-  never duplicated there. The `Priority` column of the rows a new plan will
-  require — rows of either kind — is what §5's derived priority stands on.
-  Reading the file is this skill's business; the only edit it ever makes is the
-  one row §8 appends
+  priority live;
+  `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md` is
+  the shape, and `plan-management` its only writer. Like the backlog it is the
+  base's alone, read from a member repo and never duplicated there. The
+  `Priority` column of the rows a new plan will require — rows of either kind
+  — is what §5's derived priority stands on. Reading the file is this skill's
+  business; editing it never is — §8's `plan-management add` appends the row
 - the mempalace rooms `planning`, `decisions` and `gaps` for this repo's wing,
   when the server is up; **skip silently** when it is not. Resolve the wing and
   apply the two-store rules from `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` — do
@@ -195,11 +199,14 @@ their weight and confirmed one at a time:
    which unit. The gate is where the user consents to a dependency; a unit never
    adds one the plan does not name
 5. the wave gate, the after-landing steps, the gates the orchestrator keeps —
-   and the **derived priority**, stated as a fact with the arithmetic that
-   produced it: `10 + max` over the `Priority` column of every unarchived
-   `requires:` row in the plan index, naming the row it stands on, or
-   "requires nothing active → 10". It is never asked; the one thing that
-   changes it is a required plan the user names here that the interview missed
+   and the **derived priority**, what `plan-management priority <requires…>`
+   returns — passed the `requires:` entries item 12 settled, folder basenames
+   or none, since no folder exists before §6 — stated as a fact with the
+   arithmetic that produced it: `10 + max`
+   over the `Priority` column of every unarchived `requires:` row in the plan
+   index, naming the row it stands on, or "requires nothing active → 10". It
+   is never asked; the one thing that changes it is a required plan the user
+   names here that the interview missed — then the verb is run again
 6. the consent block and the release intent
 7. the parked list
 
@@ -216,8 +223,8 @@ the template does not mark *cycle plans only* is required; the frontmatter and
 the **Status**, **Consent**, **Units**, **Wave gate**, **After landing** and
 **Run log** blocks have a fixed shape because `/vwf:execute` parses and
 rewrites them. The frontmatter's `type:` is `vwf-change-plan`, and its
-`backlog:` list names the ids recalled in §1 that this plan covers, or is
-empty.
+`backlog:` list names the `Bnn` ids recalled in §1 — the backlog project's
+items this plan covers — or is empty.
 
 Rules the plan must obey, learned from the plans that came before:
 
@@ -288,30 +295,29 @@ Re-read the folder with fresh eyes before handing it off, and fix inline:
   `review` row has none, by shape
 - every hit of the retired-name grep sits inside some unit's *Owns*, and every
   `## Commit` line's type is one the repo's convention file allows
-- every `requires:` plan exists and is not `DRAFT`
-- the derived priority equals `10 + max` over the `Priority` column of every
-  unarchived `requires:` row in the plan index, or `10` when it requires none
+- every `requires:` entry resolves to a row or an archived folder, and none is
+  `DRAFT` — invoke `plan-management resolve <folder>` and treat an
+  *unresolvable* entry as a finding
+- the derived priority equals what `plan-management priority <folder>` returns
 - the launch line names this folder
 
 ### 8. Hand off
 
 In this order.
 
-1. **Set the status** to `APPROVED` with the date; until then it is `DRAFT` and
-   `/vwf:execute` refuses it.
-2. **Add the index row.** Append one row to the plan index — the one table in
-   the base repo's `docs/plans/index.md`, per
-   `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`: `Folder` the plan folder path
-   relative to the repo root, `Kind` `change`, `Plan` the title, `Target repo`
-   `—`, `Priority` the integer §5 derived, `Status` `APPROVED`, `Requires` the
-   basenames of its `requires:` entries or `—`, `Backlog` its `backlog:` ids or
-   `—`. When the file has no table yet, write the file's whole shape from the
-   asset first, then append. This is the one edit this skill makes to that file
-   — every other row is an executor's or `/vwf:archive`'s.
-3. **Mark the backlog items planned.** When the frontmatter's `backlog:` list
+1. **Hand the folder to `plan-management`.** Invoke
+   `plan-management add <folder>` — its `add` verb sets the Status block to
+   `APPROVED` with the date (until then it is `DRAFT` and `/vwf:execute`
+   refuses it) and appends the folder's row to the plan index — the one table
+   in the base repo's `docs/plans/index.md` — `Kind` `change`, deriving the
+   priority itself
+   (`${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md` is
+   the shape). That skill edits the Status block and the index; this one never
+   does.
+2. **Mark the backlog items planned.** When the frontmatter's `backlog:` list
    names ids, invoke `/vwf:backlog planned <ids> <folder>` — that skill edits
-   the file; this one never does.
-4. **Commit and push the folder** through `vwf:git-workflow`, invoked with
+   the project, not a file; this one never does either.
+3. **Commit and push the folder** through `vwf:git-workflow`, invoked with
    these declared preferences, so it asks nothing:
    - **work in place on the current branch, no worktree** — its Step 1 "if
      declined" path. Say why: the fresh session's worktree is cut from the
@@ -319,8 +325,9 @@ In this order.
      committed there; a folder still untracked at hand-off gets swept into some
      later wave's commit. The index row rides the same commit for the same
      reason — it is a direct commit on the branch, never a worktree's
-   - **stage exactly the plan folder**, `docs/plans/index.md`, plus
-     `docs/backlog.md` when step 3 changed it, and nothing else
+   - **stage exactly the plan folder** and `docs/plans/index.md`, and nothing
+     else — the `plan-management` edit rides this commit and that skill never
+     commits; step 2 changed nothing in the tree
    - **commit** with type `docs` and the message
      `docs: change plan — <name> — approved, awaiting execution`
    - **push to the branch's upstream** after the commit, setting the upstream
@@ -350,6 +357,8 @@ is the survey and the interview, and the run should carry none of it.
 - Records a release or landing consent it did not explicitly ask for
 - Writes a plan whose unit prompts depend on this conversation
 - Pushes anywhere but the branch it stands on, and merges nothing
-- Edits `docs/backlog.md` itself — it calls `/vwf:backlog`, which owns the file
-- Edits any row of the plan index, `docs/plans/index.md`, but the one it
-  appends — statuses are `/vwf:execute`'s and `/vwf:archive`'s
+- Edits the backlog itself — it calls `/vwf:backlog`, which owns the project
+- Edits the plan index, `docs/plans/index.md`, or a folder's Status block
+  itself — `add` is the one `plan-management` verb it calls on them; every
+  later status is `/vwf:execute`'s to call, and the archive move is the same
+  skill's

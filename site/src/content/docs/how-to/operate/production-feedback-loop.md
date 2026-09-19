@@ -299,12 +299,13 @@ was measuring the wrong thing. A plan can only be right after that is settled.
 
 ### Deferring is not a backlog
 
-vwf does keep a backlog — [`/vwf:backlog`](../../plugins/vwf.md#vwfbacklog),
-`docs/backlog.md` — and this is deliberately not it. The backlog is work nobody
-is on yet, agreed and waiting for a slot. Feedback is the opposite case: it is
-being worked now, it may change `product.md`, the blueprint or the architecture,
-and it follows the `plan` → `execute` line from there. So declining an offer
-here never files a backlog row, and nothing routes between the two.
+vwf does keep a backlog — [`/vwf:backlog`](../../plugins/vwf.md#vwfbacklog), a
+project on the base repo's forge — and this is deliberately not it. The backlog
+is work nobody is on yet, agreed and waiting for a slot. Feedback is the
+opposite case: it is being worked now, it may change `product.md`, the blueprint
+or the architecture, and it follows the `plan` → `execute` line from there. So
+declining an offer here never files a backlog item, and nothing routes between
+the two.
 
 Declining the offered command does not put the item in a queue somebody has to
 remember to drain. The doc edit is written either way — an appendix row, a note

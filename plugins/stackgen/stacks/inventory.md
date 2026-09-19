@@ -100,7 +100,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `toolchain-gate/pre-commit` | pre-commit | `repo-gate` | repo |  |  | 1.1.1 | The local gate, and the wiring that makes local and CI run the identical command. Ships .config/pre-commit-config.yaml and .config/git-conventional-commits.yaml. |
 | `toolchain-gate/ruff` | Ruff | `language-bundle` | repo |  |  | 0.2.0 | The lint and format gate for Python — one tool for both halves, run through the project's uv environment rather than a global install. |
 | `toolchain-gate/tsconfig` | tsconfig | `language-bundle` | project |  |  | 0.1.0 | The TypeScript compiler configuration — a strict shared base, per-project configs, the path alias and the emit variant. |
-| `toolchain-manager/mise` | mise | `toolchain-manager` | repo |  |  | 1.2.2 | The repo's toolchain manager — the .config/ five-file split selected by MISE_ENV, and the file-based task library everything else invokes, grouped into `setup:*` for bootstrap, `code:*` for gates and git, and `p:<project-id>:*` for a project's own commands. |
+| `toolchain-manager/mise` | mise | `toolchain-manager` | repo |  |  | 1.2.3 | The repo's toolchain manager — the .config/ five-file split selected by MISE_ENV, and the file-based task library everything else invokes, grouped into `setup:*` for bootstrap, `code:*` for gates and git, and `p:<project-id>:*` for a project's own commands. |
 
 ## Bundles
 
@@ -149,7 +149,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `github-actions` | GitHub Actions | `ci-system` | cicd | `ci-system/github-actions@0.2.0` |  |
 | `html` | HTML | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.2.1`, `toolchain-gate/tsconfig@0.1.0`, `toolchain-gate/eslint@0.2.0`, `framework/html@0.1.0` |  |
 | `lovable` | Lovable | `design-tool` | design | `design-tool/lovable@0.1.0` |  |
-| `mise` | mise | `toolchain-manager` | repo | `toolchain-manager/mise@1.2.2` | yes |
+| `mise` | mise | `toolchain-manager` | repo | `toolchain-manager/mise@1.2.3` | yes |
 | `notion` | Notion | `capability-provider` | backing | `capability-provider/notion@0.1.0` |  |
 | `npm-package` | Package registry · npm | `deploy-target` | deploy | `deploy-target/npm-registry@generated` |  |
 | `oidc` | OIDC issuer | `capability-provider` | backing | `capability-provider/oidc@0.1.0` |  |

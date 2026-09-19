@@ -48,10 +48,10 @@ it. When a planning decision is genuinely open, elicit it following the
 | API contract   | `docs/blueprint/apis/<project>.openapi.yaml`                                        |
 | Released APIs  | `docs/blueprint/apis/released/`                                                     |
 | Plan           | `<target-repo>/docs/plans/<date>-<HHMM>-<slice>/` — **the repo whose code it changes**; `index.md` plus one `NN-<unit>.md` per unit |
-| Plan index     | `docs/plans/index.md` (base repo) — its one table, one row per plan folder of either kind (`${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`) |
+| Plan index     | `docs/plans/index.md` (base repo) — its one table, one row per plan folder of either kind, written only by `plan-management` (`${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`) |
 | Plan template  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`                             |
 | Interview      | `${CLAUDE_PLUGIN_ROOT}/assets/plan-interview.md`                                    |
-| Backlog        | `docs/backlog.md` (base repo) — read at §2; marked planned via `/vwf:backlog`       |
+| Backlog        | a project on the base repo's forge, never a path — read at §2 via `/vwf:backlog list`; marked planned via `/vwf:backlog` |
 | Membership     | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                                        |
 
 ## References
@@ -95,11 +95,15 @@ is missing).
 **Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior
 decisions and plan rationale for this slice (rooms `decisions`, `planning`)
 before computing anything — build on them, don't re-derive resolved choices.
-Skip silently if mempalace is unavailable. Read the **base repo's**
-`docs/backlog.md` too, when the product has one — the backlog is product-level
-and lives there, whichever member this slice will land in. A slice that is
-already a backlog item carries its id into §7's `backlog:` frontmatter, so the
-item is marked planned rather than planned twice.
+Skip silently if mempalace is unavailable. Read the backlog too, through
+`/vwf:backlog list` — the product's backlog, a project on the **base repo's**
+forge that the `backlog` skill alone writes; it is product-level, resolved from
+the base's remote whichever member this slice will land in. When the verb
+reports the backlog unreadable — `gh` absent, unauthenticated or without the
+`project` scope, or no project yet — record that with its reason in the plan's
+facts and continue with nothing. A slice that is already a backlog item carries
+its id into §7's `backlog:` frontmatter, so the item is marked planned rather
+than planned twice.
 
 Derive the slice's dependency graph from the blueprint's typed links:
 
@@ -319,9 +323,12 @@ apply the **what-vs-how test**: a question about what the product should *do*
 Every ruling lands in the assumed-decisions table with the alternative it
 rejected and the unit it binds; anything raised that belongs to a later plan
 goes to *Parked* before the next question. The **priority** (item 12) is stated
-as a fact, never asked: `10 + max` over the `Priority` column of every
-unarchived `requires:` row in the base repo's `docs/plans/index.md`, or `10`
-when the plan requires none of them — say which row it stands on. Item 10a
+as a fact, never asked: no folder exists yet, so invoke
+`plan-management priority <requires…>` with the `requires:` entries item 12
+settled — folder basenames, possibly none — and state what it returns:
+`10 + max` over the `Priority` column of every unarchived `requires:` row in
+the base repo's `docs/plans/index.md`, or `10` when the plan requires none of
+them — and which row it stands on. Item 10a
 places the `review` row(s) — one after the last code unit by default, an
 earlier one only on a ruling recorded in the decisions table. Items 16–18
 produce the Consent block: the landing answer, the after-landing steps each
@@ -387,10 +394,10 @@ whose rows break either placement rule.
 The two fixed final units — docs, gates-and-bump — are written as the template
 says.
 
-**`backlog:`.** The frontmatter also carries a `backlog:` list — the ids of the
-`docs/backlog.md` items §2's recall matched to this element. Write it empty when
-the slice came from nowhere in the backlog; an empty or absent list means the
-plan covers no backlog item, and §8 then calls nothing.
+**`backlog:`.** The frontmatter also carries a `backlog:` list — the `Bnn` ids
+of the backlog project's items §2's recall matched to this element. Write it
+empty when the slice came from nowhere in the backlog; an empty or absent list
+means the plan covers no backlog item, and §8 then calls nothing.
 
 **Dark exposure.** A plan may declare `exposure: dark` for its slice — the
 slice ships behind a **release flag** in the runtime-settings document (per the
@@ -422,29 +429,27 @@ transitively — every earlier-wave `code` unit no earlier row covers, and a
 `review` row placed
 before the last code unit names its reason; every unit's
 Verification names a gate line (a `review` row has none, by shape); every
-`requires:` folder exists; the derived priority matches its arithmetic; the
-launch line names this folder.
+`requires:` entry resolves to a row or an archived folder — invoke
+`plan-management resolve <folder>` and treat an *unresolvable* entry as a
+finding; the derived priority matches what `plan-management priority <folder>`
+returns; the launch line names this folder.
 
 ### 8. Hand off
 
 In this order.
 
-1. **Set the status** to `APPROVED` with the date; until then it is `DRAFT` and
-   `/vwf:execute` refuses it.
-2. **Add the index row.** Append one row to the base repo's
-   `docs/plans/index.md`, per `${CLAUDE_PLUGIN_ROOT}/assets/plan-index.md`:
-   `Folder` the plan folder path relative to its repo root, `Kind` `cycle`,
-   `Plan` the title, `Target repo` the member whose code it changes under
-   `multi-repo` or `—`, `Priority` the integer §5 derived, `Status`
-   `APPROVED`, `Requires` the basenames of its `requires:` entries or `—`,
-   `Backlog` its `backlog:` ids or `—`. When the file does not exist yet, write
-   its whole shape from the asset first, then append. This is the one edit this
-   skill makes to that file — every other row is `/vwf:execute`'s or
-   `/vwf:archive`'s.
-3. **Mark the backlog items planned.** When the frontmatter's `backlog:` list
+1. **Hand the folder to `plan-management`.** Invoke
+   `plan-management add <folder>` — its `add` verb sets the Status block to
+   `APPROVED` with the date (until then it is `DRAFT` and `/vwf:execute`
+   refuses it) and appends the folder's row to the base repo's
+   `docs/plans/index.md`, `Kind` `cycle`, deriving the priority itself
+   (`${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md` is
+   the shape). That skill edits the Status block and the index; this one never
+   does.
+2. **Mark the backlog items planned.** When the frontmatter's `backlog:` list
    names ids, invoke `/vwf:backlog planned <ids> <folder>` — that skill edits
-   the file; this one never does.
-4. **Commit and push the folder** through `vwf:git-workflow`, invoked with
+   the project, not a file; this one never does either.
+3. **Commit and push the folder** through `vwf:git-workflow`, invoked with
    these declared preferences, so it asks nothing:
    - **work in place on the current branch, no worktree** — its Step 1 "if
      declined" path. Say why: the fresh session's worktree is cut from the
@@ -452,8 +457,9 @@ In this order.
      committed there; a folder still untracked at hand-off gets swept into some
      later wave's commit. The index row rides the same commit for the same
      reason — it is a direct commit on the branch, never a worktree's
-   - **stage exactly the plan folder**, `docs/plans/index.md`, plus
-     `docs/backlog.md` when step 3 changed it, and nothing else
+   - **stage exactly the plan folder** and `docs/plans/index.md`, and nothing
+     else — the `plan-management` edit rides this commit and that skill never
+     commits; step 2 changed nothing in the tree
    - **commit** with type `docs` and the message
      `docs: plan — <slice> — approved, awaiting execution`
    - **push to the branch's upstream** after the commit, setting the upstream
@@ -461,8 +467,10 @@ In this order.
      git-workflow's push rule wants; do not ask again
 
    Under `multi-repo` the folder and the index are two repos: two commits,
-   the member's (the folder) first, the base's (the index row, and the backlog
-   edit) last, both pushed.
+   the member's (the folder) first, the base's (the index row) last, both
+   pushed. The backlog project is the base's — resolved from the base's remote
+   — so a member session addresses the same project and commits nothing for
+   it.
 
 Then end with exactly this, and nothing after it:
 
@@ -493,6 +501,7 @@ per folder and the chain's first unexecuted plan is the one to run first.
   belongs to `/vwf:blueprint`
 - Records a release or landing consent it did not explicitly ask for
 - Pushes anywhere but the branch it stands on, and merges nothing
-- Edits `docs/backlog.md` itself — it calls `/vwf:backlog`, which owns the file
-- Edits any row of `docs/plans/index.md` but the one it appends — statuses are
-  `/vwf:execute`'s and `/vwf:archive`'s
+- Edits the backlog itself — it calls `/vwf:backlog`, which owns the project
+- Edits `docs/plans/index.md` or a folder's Status block itself — `add` is the
+  one `plan-management` verb it calls on them; every later status is
+  `/vwf:execute`'s to call, and the archive move is the same skill's

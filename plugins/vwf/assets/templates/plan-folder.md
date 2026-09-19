@@ -14,7 +14,8 @@ each row's engine output verbatim as `engine/<loop-id>-<round>.log` inside the
 folder — the loop id is the row id for the row's main loop and
 `<row-id>-late<n>` for its n-th late re-run, n from 1 (`U7-late1`) — committed
 with it, creating the subfolder on the first review row. The planner never
-writes it, and `/vwf:archive` moves it with the folder.
+writes it, and the `archive` verb of `plan-management` moves it with the
+folder.
 
 Every section below is required unless marked *cycle plans only*. The
 frontmatter and the **Status**, **Consent**, **Units**, **Wave gate**, **After
@@ -35,7 +36,7 @@ status a plan has — there is no `status:` key in the frontmatter.
 type: vwf-plan | vwf-change-plan
 title: <title>
 requires: [] # earlier plan folders this one stands on, e.g. docs/plans/2026-09-01-x
-backlog: [] # ids from docs/backlog.md this plan covers, or empty
+backlog: [] # ids (Bnn) of the backlog project's items this plan covers, or empty
 covers: [] # cycle plans only — the blueprint doc(s) this plan implements; the
            # list the implementation: stamp is written to
 exposure: dark # cycle plans only, optional — the slice ships behind a flag

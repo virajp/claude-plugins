@@ -42,6 +42,10 @@ not carry is not mechanical, however small it looks.
 
 ## What the status line records
 
+The block is written with
+`plan-management status <folder> BLOCKED "<detail>"` in the worktree, the
+detail being:
+
 `BLOCKED at wave <n> — U<a> UNRESOLVED: <text>; U<b> failed: <gate line or
 agent died>; U<c>, U<d> skipped (depend on U<a>)`
 plus the worktree path.
@@ -49,20 +53,26 @@ plus the worktree path.
 The Units table and the Run log carry the same facts per unit; the status line
 is the summary a reader sees first. The plan's row in the base repo's
 `docs/plans/index.md` is **not** updated on a block or a pause — it stays
-`RUNNING`, the claim this session holds, and carries none of this detail.
+`RUNNING`, the claim this session holds, and carries none of this detail; the
+row is released only by `plan-management`'s `unclaim`, on the user's ask.
 
 ## Resume
 
 A re-run against `BLOCKED` or `RUNNING`:
 
 1. Confirm the worktree in the status line exists. If it does not, the run
-   cannot resume — say so and stop; the user decides whether to start over from
-   `APPROVED`. Starting over means resetting the folder's Status **and** its
-   index row to `APPROVED` by hand, the row in a commit on the integration
-   branch — that reset is what lets a named run, or `next`, claim the plan
-   afresh; nothing takes a `RUNNING` row otherwise.
+   cannot resume — say so, report it, and **offer** the reset: "the run's
+   worktree is gone; unclaim `<folder>` so it can be claimed afresh?" On yes,
+   invoke `plan-management unclaim <folder>` in the main checkout — the verb
+   in `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/SKILL.md`, which proves
+   the worktree absent, never touches the run's branch, asks once, then resets
+   the row and the folder's Status block to `APPROVED` — commit and push what
+   it reports through `/vwf:git-workflow` on the integration branch
+   (`docs: plan queue — <folder> unclaimed`), relay its note on the stale
+   branch, and end: the fresh claim is a new `/vwf:execute <folder>`. On no,
+   end with the row as it was; nothing takes a `RUNNING` row otherwise.
 2. The index row stays `RUNNING` through the resume and is not touched. A row
-   found reading `APPROVED` is a hand reset, and the Resolve step claims it
+   found reading `APPROVED` was unclaimed, and the Resolve step claims it
    again before continuing.
 3. Confirm the ruling each `unresolved` unit asked for is now in its unit file
    or the decisions table. If the status line's `UNRESOLVED:` text still

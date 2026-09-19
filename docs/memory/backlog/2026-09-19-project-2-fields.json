@@ -1,0 +1,123 @@
+{
+  "fields": [
+    {
+      "id": "PVTF_lAHOAC-yws4Bj2glzhipU3s",
+      "name": "Title",
+      "type": "ProjectV2Field"
+    },
+    {
+      "id": "PVTF_lAHOAC-yws4Bj2glzhipU3w",
+      "name": "Assignees",
+      "type": "ProjectV2Field"
+    },
+    {
+      "id": "PVTSSF_lAHOAC-yws4Bj2glzhipU30",
+      "name": "Status",
+      "options": [
+        { "id": "5f3193f2", "name": "Backlog" },
+        { "id": "46a295f8", "name": "In progress" },
+        { "id": "74f5fe9f", "name": "Done" },
+        { "id": "d2700806", "name": "Closed" }
+      ],
+      "type": "ProjectV2SingleSelectField"
+    },
+    {
+      "id": "PVTF_lAHOAC-yws4Bj2glzhipU34",
+      "name": "Labels",
+      "type": "ProjectV2Field"
+    },
+    {
+      "id": "PVTF_lAHOAC-yws4Bj2glzhipU38",
+      "name": "Linked pull requests",
+      "type": "ProjectV2Field"
+    },
+    {
+      "id": "PVTF_lAHOAC-yws4Bj2glzhipU4A",
+      "name": "Milestone",
+      "type": "ProjectV2Field"
+    },
+    {
+      "id": "PVTF_lAHOAC-yws4Bj2glzhipU4E",
+      "name": "Repository",
+      "type": "ProjectV2Field"
+    },
+    {
+      "id": "PVTF_lAHOAC-yws4Bj2glzhipU4M",
+      "name": "Reviewers",
+      "type": "ProjectV2Field"
+    },
+    {
+      "id": "PVTF_lAHOAC-yws4Bj2glzhipU4Q",
+      "name": "Parent issue",
+      "type": "ProjectV2Field"
+    },
+    {
+      "id": "PVTF_lAHOAC-yws4Bj2glzhipU4U",
+      "name": "Sub-issues progress",
+      "type": "ProjectV2Field"
+    },
+    {
+      "id": "PVTF_lAHOAC-yws4Bj2glzhipU4Y",
+      "name": "Created",
+      "type": "ProjectV2Field"
+    },
+    {
+      "id": "PVTF_lAHOAC-yws4Bj2glzhipU4c",
+      "name": "Updated",
+      "type": "ProjectV2Field"
+    },
+    {
+      "id": "PVTF_lAHOAC-yws4Bj2glzhipU4g",
+      "name": "Closed",
+      "type": "ProjectV2Field"
+    },
+    {
+      "id": "PVTSSF_lAHOAC-yws4Bj2glzhipVNw",
+      "name": "Priority",
+      "options": [
+        { "id": "79628723", "name": "P0" },
+        { "id": "0a877460", "name": "P1" },
+        { "id": "da944a9c", "name": "P2" }
+      ],
+      "type": "ProjectV2SingleSelectField"
+    },
+    {
+      "id": "PVTSSF_lAHOAC-yws4Bj2glzhipVN0",
+      "name": "Size",
+      "options": [
+        { "id": "eff732af", "name": "XS" },
+        { "id": "9592a5a3", "name": "S" },
+        { "id": "9728cbdc", "name": "M" },
+        { "id": "c53df028", "name": "L" },
+        { "id": "7b141a16", "name": "XL" }
+      ],
+      "type": "ProjectV2SingleSelectField"
+    },
+    {
+      "id": "PVTF_lAHOAC-yws4Bj2glzhipVN4",
+      "name": "Estimate",
+      "type": "ProjectV2Field"
+    },
+    {
+      "id": "PVTIF_lAHOAC-yws4Bj2glzhipVN8",
+      "name": "Iteration",
+      "type": "ProjectV2IterationField"
+    },
+    {
+      "id": "PVTF_lAHOAC-yws4Bj2glzhipVOA",
+      "name": "Start date",
+      "type": "ProjectV2Field"
+    },
+    {
+      "id": "PVTF_lAHOAC-yws4Bj2glzhipVOE",
+      "name": "Target date",
+      "type": "ProjectV2Field"
+    },
+    {
+      "id": "PVTF_lAHOAC-yws4Bj2glzhiu-zs",
+      "name": "Group",
+      "type": "ProjectV2Field"
+    }
+  ],
+  "totalCount": 20
+}

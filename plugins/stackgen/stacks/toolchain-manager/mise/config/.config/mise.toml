@@ -91,7 +91,6 @@ task.disable_spec_from_run_scripts = true
 [env]
 # Names shared with the variants; the VALUES live per layer. Only what is the
 # same everywhere belongs here.
-DISABLE_TELEMETRY = 1
 
 # A MARKED POSITION. The orchestrator that shapes this repo replaces "unfilled"
 # with this repo's FOLDER NAME, slugified: the name of the main checkout's own

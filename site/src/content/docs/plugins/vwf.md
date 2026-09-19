@@ -53,14 +53,15 @@ Restart Claude Code afterward so the commands, hooks, and dependencies load.
 `vwf` shells out to a few external tools. Install them first — nothing checks
 them at install time, and the table below gives the command for each.
 
-| Tool            | Required?    | Why                                             | Install                               |
-| --------------- | ------------ | ----------------------------------------------- | ------------------------------------- |
-| mise            | **required** | task runner + resolves the toolchain            | `brew install mise`                   |
-| graphify        | **required** | knowledge graph the commands rely on            | `mise use -g pipx:graphifyy@latest`   |
-| node + pnpm     | **required** | runs vwf's Context7 MCP server (default runner) | `mise use -g node@latest pnpm@latest` |
-| Claude Code CLI | **required** | hosts the commands                              | `mise use -g claude-code@latest`      |
-| uv              | **required** | graphify's Python runtime                       | `mise use -g uv@latest`               |
-| rtk             | recommended  | the token-saving `rtk hook claude` Bash hook    | `brew install --formulae rtk`         |
+| Tool            | Required?    | Why                                                   | Install                                                                  |
+| --------------- | ------------ | ----------------------------------------------------- | ------------------------------------------------------------------------ |
+| mise            | **required** | task runner + resolves the toolchain                  | `brew install mise`                                                      |
+| graphify        | **required** | knowledge graph the commands rely on                  | `mise use -g pipx:graphifyy@latest`                                      |
+| node + pnpm     | **required** | runs vwf's Context7 MCP server (default runner)       | `mise use -g node@latest pnpm@latest`                                    |
+| Claude Code CLI | **required** | hosts the commands                                    | `mise use -g claude-code@latest`                                         |
+| uv              | **required** | graphify's Python runtime                             | `mise use -g uv@latest`                                                  |
+| rtk             | recommended  | the token-saving `rtk hook claude` Bash hook          | `brew install --formulae rtk`                                            |
+| gh              | recommended  | reads and writes the backlog project (`/vwf:backlog`) | `brew install gh`, then `gh auth login` and `gh auth refresh -s project` |
 
 **Nothing checks these at install time.** `claude plugin install vwf` succeeds
 regardless, so the first thing to run afterwards is **`/vwf:doctor`** — it
@@ -73,7 +74,11 @@ printed the command to fix each; that gate did not come back when the
 installer's plugin flags did, so the failure now arrives at first use rather
 than at install. `rtk` is the exception — the hook entry is guarded, so a `vwf`
 without `rtk` still runs correctly and merely costs more, and `/vwf:doctor`
-reports it as a **degradation** every run rather than blocking.
+reports it as a **degradation** every run rather than blocking. `gh` is the same
+kind of exception: only [`/vwf:backlog`](#vwfbacklog) and the planners' recall
+of it need the GitHub CLI, and `/vwf:doctor` reports one that is absent, not
+logged in, or without the `project` scope as a **degradation** with the remedy,
+every run.
 
 **The memory server runs as your own daemon.** `vwf` declares mempalace over
 **HTTP** (`http://127.0.0.1:8765/mcp`), not as a stdio subprocess — start it
@@ -153,8 +158,9 @@ adopting it.
   is watching — `execute` is the unattended command, and its `execute-coder`,
   the code-review and security-review subagents that run at the plan's review
   rows, and the ux subagent are all `opus` too. `sonnet` runs the remaining
-  commands and the writer/surveyor subagents; `haiku` runs the two purely
-  mechanical ones (`archive`, `recall`). Effort follows the same logic rather
+  commands and the writer/surveyor subagents, `plan-management` among them — its
+  bookkeeping is mechanical, but it reads a queue across repos; `haiku` runs the
+  one purely mechanical command (`recall`). Effort follows the same logic rather
   than sitting at maximum everywhere: a stronger model reaches the same answer
   in fewer reasoning tokens, so capability and effort are traded against each
   other per surface instead of both being maxed. No gate is weakened — the
@@ -183,8 +189,10 @@ adopting it.
   refuses the install any more; `/vwf:setup` and `/vwf:execute` halt on a
   missing `graphify` — and on `mise` once a stack is pinned — `/vwf:doctor`
   reports a missing `rtk` as a **degradation**, and `uv` and `pnpm` fail later
-  in their own ways. Dependency auto-install/enable needs Claude Code ≥ 2.1.143.
-  See [Prerequisites](#prerequisites).
+  in their own ways. `gh` — logged in, with the `project` scope — is needed only
+  by [`/vwf:backlog`](#vwfbacklog), and its absence is a **degradation** too.
+  Dependency auto-install/enable needs Claude Code ≥ 2.1.143. See
+  [Prerequisites](#prerequisites).
 - **Memory is written twice, so mempalace is optional.** Every memory write goes
   to both `mempalace` (an **HTTP daemon you run** —
   `mempalace-mcp --transport http`) and a markdown tree under `docs/memory/`.
@@ -295,8 +303,7 @@ flowchart TD
     SC e10@-. "accepted deltas → blueprint pass" .-> B
     B -->|"offers the top-priority slice"| C["/vwf:plan &lt;slice&gt; — per build cycle<br/>(diff + chained dependency plans)"]:::user
     C -->|"approve — the folder is pushed; launch in a fresh session"| D["/vwf:execute &lt;folder&gt; | next<br/>(autonomous · lands per the plan's consent)"]:::chained
-    D -->|"offered once merged, no gaps"| E["/vwf:archive"]:::chained
-    E --> V["deploy (you) → /vwf:verify<br/>(a clean production pass freezes released API contracts)"]:::user
+    D -->|"merged; the folder archived when no gap is open"| V["deploy (you) → /vwf:verify<br/>(a clean production pass freezes released API contracts)"]:::user
     V e3@-. "regressions & readings" .-> FB["/vwf:feedback"]:::user
     FB e4@-. "routes back into the product" .-> P
     D e5@-. "blueprint/plan gaps" .-> B
@@ -345,12 +352,12 @@ executed in order — never one plan swallowing its dependencies), each approved
 folder is committed and pushed with a launch line, `execute` runs it unattended
 in a fresh session and a dedicated worktree, and lands per the consent the
 folder recorded — stamping the covered blueprint docs' `implementation:` state
-as it lands — and `archive` is offered once no gaps remain. After you deploy,
-`verify` checks the environment (and, on a clean production pass, offers to
-freeze the released API contracts) and `feedback` routes what production says
-back into the product. When execution exposes a hole in the blueprint or plan,
-`vwf` captures it and loops back to fix the source — never silently working
-around it.
+as it lands — and archives the folder itself when no gap is open; one left live
+is archived when you ask. After you deploy, `verify` checks the environment
+(and, on a clean production pass, offers to freeze the released API contracts)
+and `feedback` routes what production says back into the product. When execution
+exposes a hole in the blueprint or plan, `vwf` captures it and loops back to fix
+the source — never silently working around it.
 
 Work with **no blueprint slice behind it** — tooling, CI, a docs tree, a
 refactor, a repo the blueprint does not describe — never enters this chain at
@@ -405,9 +412,8 @@ docs/
 │   │                            #   backlog:, consent, run log, gaps) + a file per unit
 │   ├── <date>-<name>/           # a change plan, the same shape
 │   └── archived/                # retired folders, whole
-├── backlog.md                   # the prioritised list of work that waits —
-│                                #   base repo only, one per product,
-│                                #   /vwf:backlog is its only writer
+│                                # (the backlog is not here — it is a project on
+│                                #   the repo's forge, /vwf:backlog's alone)
 ├── prompts/                     # canvas design briefs (committed intent)
 │   └── <type>/                  # prompt type (e.g. screens)
 │       └── <project>/           # registry project
@@ -812,11 +818,11 @@ record.
 | `/vwf:screens <mode>`     | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                                                                                                                                                                                             |
 | `/vwf:plan [slice]`       | Write a reviewable cycle-plan folder — a diff of blueprint vs code, deps chained as plans; interviews, records consent, commits and pushes it at hand-off                                                                                                                                      |
 | `/vwf:execute <folder>`   | Run an approved plan folder of either kind unattended in a fresh session — TDD per `code` unit, code + security review at each `review` row, waves and review per `edit` unit, E2E + UX when the plan covers a slice, then land per the plan's consent; `next` picks the queue's runnable plan |
-| `/vwf:archive [folder]`   | Retire a plan folder, cycle or change, whole into `docs/plans/archived/` and re-point its index row                                                                                                                                                                                            |
+| `/vwf:plan-management`    | Internal — the one writer of the plan queue: the index rows, every folder's Status block, the archive move; called by the planners and `execute`, or when you ask to archive or list                                                                                                           |
 | `/vwf:doctor [project]`   | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, dependency audit, mempalace, graphify, the repo shape of every member, stamps                                                                                                                                |
 | `/vwf:verify [env]`       | Post-deploy: health-check + re-run acceptance criteria against the environment                                                                                                                                                                                                                 |
 | `/vwf:feedback [input]`   | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat)                                                                                                                                                                               |
-| `/vwf:backlog [verb]`     | The prioritised list of work that cannot be picked up now — `docs/backlog.md`, and this is its only writer                                                                                                                                                                                     |
+| `/vwf:backlog [verb]`     | The prioritised list of work that cannot be picked up now — a GitHub Project named for the base repo, and this is its only writer                                                                                                                                                              |
 | `/vwf:change-plan [what]` | Plan an ad-hoc change — work with no blueprint slice behind it — into the same folder shape, for `/vwf:execute` to run                                                                                                                                                                         |
 | `/vwf:handoff [name]`     | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                                                                                                                                                                                                        |
 | `/vwf:recall [name]`      | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                                                                                                                                                                                                    |
@@ -824,24 +830,23 @@ record.
 | `/vwf:docs-sync [range]`  | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog                                                                                                                                                                                           |
 | `/vwf:git-workflow`       | Internal — worktree isolation, commits, merges                                                                                                                                                                                                                                                 |
 
-**Six are user-only** — `setup`, `verify`, `mockups`, `archive`, `recall` and
-`execute` carry `disable-model-invocation: true`, so the model never fires them
-on its own; you decide when a migration, a post-deploy check, a re-render, a
-plan retirement, a session resume or an unattended run happens. The executor is
-user-only for a reason of its own: it must start in a session that has done
-nothing else, and only you can guarantee that — which is why `recall` prints the
-`/vwf:execute <folder>` launch line for a cap-paused run rather than launching
-it. Its partners `plan` and `change-plan` stay model-invocable, and that seam is
-live: a `/vwf:feedback` intake routes into one or the other by name. The rest
-stay model-invocable because the workflow **delegates to them by name** —
-`recall` resumes a paused pass *through* `blueprint`/`plan`, every skill commits
-*through* `git-workflow`, `setup` runs `doctor` inside its own spine, and
-`feedback` and `plan` route work into
-`product`/`architecture`/`design-system`/`blueprint`. Marking one of those
+**Five are user-only** — `setup`, `verify`, `mockups`, `recall` and `execute`
+carry `disable-model-invocation: true`, so the model never fires them on its
+own; you decide when a migration, a post-deploy check, a re-render, a session
+resume or an unattended run happens. The executor is user-only for a reason of
+its own: it must start in a session that has done nothing else, and only you can
+guarantee that — which is why `recall` prints the `/vwf:execute <folder>` launch
+line for a cap-paused run rather than launching it. Its partners `plan` and
+`change-plan` stay model-invocable, and that seam is live: a `/vwf:feedback`
+intake routes into one or the other by name. The rest stay model-invocable
+because the workflow **delegates to them by name** — `recall` resumes a paused
+pass *through* `blueprint`/`plan`, every skill commits *through* `git-workflow`,
+`setup` runs `doctor` inside its own spine, and `feedback` and `plan` route work
+into `product`/`architecture`/`design-system`/`blueprint`. Marking one of those
 user-only would silently break the chain: the flag blocks programmatic
 invocation, not just auto-triggering.
 
-**Four skills go in the other direction** — hidden from you, reachable by a
+**Five skills go in the other direction** — hidden from you, reachable by a
 skill. Each carries `user-invocable: false`, which keeps it out of the `/` menu,
 *and* `disable-model-invocation: false`, which keeps its caller's invocation
 working; a user-only skill would have made that call a silent no-op. `init` is
@@ -850,8 +855,11 @@ reached exactly two ways, both through setup: Step 0's offer, or
 `import-screens` and `import-conversations` — are reached only from
 `/vwf:design-system`, `/vwf:screens import` and `/vwf:feedback canvas`
 respectively; each answers vwf in a payload shape no user reads, so the `/` menu
-is the wrong place for them. The two stack-adapter skills a stack plugin ships
-carry the same pair for the same reason. Four is the count of **commands**
+is the wrong place for them. `plan-management` is reached from `plan`,
+`change-plan` and `execute` at every write to the plan queue, and by the session
+when you ask in prose to archive a folder or see the queue — it replaced the
+typed archive command on 2026-09-18. The two stack-adapter skills a stack plugin
+ships carry the same pair for the same reason. Five is the count of **commands**
 hidden this way; the [doctrine skills](#vwf-skills) are hidden too, but a file
 or Claude's own judgment summons those rather than a caller.
 
@@ -860,12 +868,12 @@ where judgment decides the outcome or where nobody is watching — `product`,
 `blueprint`, `plan`, `change-plan` and `execute` (the last being the unattended
 one), plus the `blueprint-reviewer`, `blueprint-coherence-reviewer`,
 `execute-coder`, the code-review and security-review subagents that run at the
-plan's review rows, and the ux subagent. `sonnet` runs the remaining commands
-and the writer/surveyor subagents; `haiku` runs the two purely mechanical ones
-(`archive`, `recall`). Effort tracks the same logic — `high` through most of the
-workflow, `medium`/`low` on mechanical surfaces. No configuration can skip a
-gate: `pipeline.models` may re-tier a stage, but the stage always runs and any
-downgrade is reported at that gate.
+plan's review rows, and the ux subagent. `sonnet` runs the remaining commands —
+`plan-management` included — and the writer/surveyor subagents; `haiku` runs the
+one purely mechanical command (`recall`). Effort tracks the same logic — `high`
+through most of the workflow, `medium`/`low` on mechanical surfaces. No
+configuration can skip a gate: `pipeline.models` may re-tier a stage, but the
+stage always runs and any downgrade is reported at that gate.
 
 Under the hood each command is a **skill** (`skills/<name>/SKILL.md`) — Claude
 Code's unified skills keep the `/vwf:<name>` invocation exactly as before (this
@@ -1885,11 +1893,12 @@ stated, never asked: `10 + max` over the `Priority` of every unarchived plan its
 `requires:` names, or `10` when it requires none — the order `/vwf:execute next`
 picks in.
 
-Its recall also reads the base repo's [`docs/backlog.md`](#vwfbacklog), since
-the slice in front of it is often already an item there. Matched ids go into the
-folder's `backlog:` frontmatter, and the hand-off marks them `planned` through
-`/vwf:backlog` — the only thing that writes that file — so no item is planned
-twice.
+Its recall also reads the base repo's [backlog project](#vwfbacklog) through
+`/vwf:backlog list`, since the slice in front of it is often already an item
+there — and records the backlog as unreadable, with the reason, when `gh` cannot
+reach it. Matched ids go into the folder's `backlog:` frontmatter, and the
+hand-off marks them `planned` through `/vwf:backlog` — the only thing that
+writes the project — so no item is planned twice.
 
 Nothing reaches disk before the **approval gate**: the goal and the chain
 position, the assumed-decisions table, the unit map, every new dependency, the
@@ -1899,8 +1908,8 @@ units cover, and the parked list — presented for *Approve & plan next*
 set to `APPROVED`; one row is appended to the one table of the base repo's
 `docs/plans/index.md` — the folder, `Kind` `cycle`, the title, the target repo,
 the derived priority, `APPROVED`, the basenames it requires, the backlog ids;
-the backlog ids are marked `planned`; and the folder — plus the index, plus the
-backlog if it changed — is **committed and pushed** through
+the backlog ids are marked `planned`, an edit to the project and nothing in the
+tree; and the folder plus the index are **committed and pushed** through
 [`/vwf:git-workflow`](#vwfgit-workflow) on the branch you are standing on, in
 place and with no worktree, because the fresh session's worktree is cut from the
 integration branch and can see the folder only once it is committed there. Under
@@ -1941,13 +1950,14 @@ launch line.
 
 **The queue.** The one table of the base repo's `docs/plans/index.md` is where
 every approved plan of either kind waits: one row per folder — `Folder`, `Kind`,
-`Plan`, `Target repo`, `Priority`, `Status`, `Requires`, `Backlog` — with a
-status of `APPROVED`, `RUNNING` or `COMPLETE` and nothing else; the folder's own
-Status block keeps the run detail (`BLOCKED`, a pause, the worktree path), which
-the index never mirrors. The planner adds the row at hand-off; this skill flips
-it; every edit is a direct commit on the integration branch from the main
-checkout, never a worktree's, so the run branch never carries the file and two
-plans landing in parallel cannot conflict on it.
+`Plan`, `Target repo`, `Priority`, `Status`, `Requires`, `Backlog` (the `Bnn`
+ids of the backlog project's items the plan covers) — with a status of
+`APPROVED`, `RUNNING` or `COMPLETE` and nothing else; the folder's own Status
+block keeps the run detail (`BLOCKED`, a pause, the worktree path), which the
+index never mirrors. The planner adds the row at hand-off; this skill flips it;
+every edit is a direct commit on the integration branch from the main checkout,
+never a worktree's, so the run branch never carries the file and two plans
+landing in parallel cannot conflict on it.
 
 `next` reads that table, at the integration branch's tip, with **no Kind
 filter**, and takes the `APPROVED` row of lowest `Priority` whose every
@@ -1961,11 +1971,12 @@ date prefix, then the folder name. It prints the folder taken, its `Kind` and
 its priority, and why each other `APPROVED` row was not, and runs it as if
 named, asking no confirmation. Nothing runnable → each `APPROVED` row and what
 it waits on, and stop. A `RUNNING` row is never taken, however stale: resuming
-one is `/vwf:execute <folder>`, and a claim whose session is gone is reset to
-`APPROVED` by hand, in a commit on the integration branch. It reads folders
-only: a single-file plan from an earlier release is finished on the release that
-wrote it, or its slice is re-run through `/vwf:plan` — the stamp-heal drops what
-already conforms.
+one is `/vwf:execute <folder>`, and a claim whose session is gone is released by
+asking the session to unclaim it — [`plan-management`](#vwfplan-management)'s
+`unclaim <folder>`, which refuses while the run's worktree still exists. It
+reads folders only: a single-file plan from an earlier release is finished on
+the release that wrote it, or its slice is re-run through `/vwf:plan` — the
+stamp-heal drops what already conforms.
 
 The first thing it does, named or picked, is **claim the row**: the folder's row
 is set `RUNNING` in one commit — `docs: plan queue — <folder> running` — pushed
@@ -2153,8 +2164,11 @@ of the run continues and it stops once at the end with every ruling it needs —
 never mid-wave, and never with "how should I proceed". The status line records
 where it stopped, and re-running the same command once the ruling is in
 `index.md` resumes at the first unit that is not `green` — the worktree is
-authoritative, so a unit marked green whose commit is missing is re-run. Run log
-rows from the earlier attempt stay, and the new rows continue the numbering.
+authoritative, so a unit marked green whose commit is missing is re-run. A
+resume that finds the worktree gone cannot continue: it offers to unclaim the
+folder and invokes the verb on your yes, so a fresh `/vwf:execute <folder>` can
+claim it again. Run log rows from the earlier attempt stay, and the new rows
+continue the numbering.
 
 ```mermaid
 flowchart TD
@@ -2187,26 +2201,27 @@ or a recollection.
 integration branch and push on green* row reads `yes`, every gate line is green,
 every unit is green or an explained skip, and no gap blocks: the ids the
 folder's `backlog:` names are marked `done` through
-[`/vwf:backlog`](#vwfbacklog) so that edit lands with the run, the folder's
-Status is set `COMPLETE`, the branch is merged and pushed through
-[`/vwf:git-workflow`](#vwfgit-workflow) without a further prompt, and one more
-integration-branch commit — `docs: plan queue — <folder> complete` — sets the
-row `COMPLETE` and **sweeps**: every `COMPLETE` row already under `archived/`
-that no `APPROVED` or `RUNNING` row still requires leaves the table, its
-archived folder being the record. **Where the folder ends up depends on the gap
-list.** When no gap is open, the landing moves the folder whole to
+[`/vwf:backlog`](#vwfbacklog) — an edit to the forge project, nothing in the
+tree — the folder's Status is set `COMPLETE`, the branch is merged and pushed
+through [`/vwf:git-workflow`](#vwfgit-workflow) without a further prompt, and
+one more integration-branch commit — `docs: plan queue — <folder> complete` —
+sets the row `COMPLETE` and **sweeps**: every `COMPLETE` row already under
+`archived/` that no `APPROVED` or `RUNNING` row still requires leaves the table,
+its archived folder being the record. **Where the folder ends up depends on the
+gap list.** When no gap is open, the landing moves the folder whole to
 `docs/plans/archived/` and the row's `Folder` points there — it is finished and
 the archive is its record. When any gap is open, the folder stays live at its
 path as the working record of what needs reconciling, the row keeps the live
-path, and the report names [`/vwf:archive <folder>`](#vwfarchive) for after
+path, and the report says to ask for the archive —
+[`plan-management`](#vwfplan-management)'s `archive` verb — after
 reconciliation. When any condition fails, or consent said `no`, it **stops at
 the report** with what failed and the resume command, and you say *fix first*
 (name it; a `code` unit's coder is re-dispatched with the finding and the last
 review row that covers it re-runs over the fix commits as a new loop, an `edit`
 unit is re-dispatched with the finding and reviewed again) or *reject* (the
 worktree stays intact, nothing merges). A landing you did not consent to leaves
-the row `RUNNING` until your hand merge is followed by a hand edit of the row,
-or by `/vwf:archive <folder>`, which applies the same rule. Then the
+the row `RUNNING` until your hand merge is followed by asking for the folder to
+be archived, which makes the row edit a landing would have made. Then the
 **after-landing steps**, each on the mode the plan recorded: a `run` step runs
 with no prompt — the `run` in the folder is its authorisation, consented at the
 interview that wrote it, a release step included; before an `ask` step the run
@@ -2246,62 +2261,70 @@ Install it before an autonomous run or that pause won't fire. The hook must read
 `.config/vwf.yaml` → `pipeline.execute_caps` **tighten-only**; vwf never invokes
 it and cannot detect its absence.
 
-### /vwf:archive
+### /vwf:plan-management
 
-Move a plan folder out of the active set into `docs/plans/archived/`. It never
-deletes. Run it manually, or accept the offer at the end of `execute`. Finished
-is the usual case, not a requirement — a plan you decided not to run is archived
-too, with a warning rather than a refusal.
+`plan-management` is **not typed**: it is the skill the planners and the
+executor call for every write to the plan queue, and the one a session invokes
+when you ask, in prose, to unclaim a stale plan, archive a plan folder or to see
+the queue. It owns three things and nothing else — the rows of the base repo's
+`docs/plans/index.md`, the **Status block** at the top of every plan folder's
+`index.md`, and the move that retires a folder into `docs/plans/archived/` — and
+it is the one implementation of the reads over them: the `next` pick,
+`requires:` resolution, priority derivation, the listing. The folder's content
+stays the planners'; the Run log stays `execute`'s; the backlog — a project on
+the base repo's forge — stays [`/vwf:backlog`](#vwfbacklog)'s, which this skill
+calls and never edits.
 
-```text
-/vwf:archive
-/vwf:archive docs/plans/2026-06-26-1430-order            # a cycle plan
-/vwf:archive docs/plans/2026-09-10-release-notes-in-ci   # a change plan
-```
+| Verb                               | Does                                                                                                                                                                                                                                                                                                                                                                  | Called by                                                                                        |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `add <folder>`                     | The hand-off: Status `APPROVED`, the priority derived, the row appended to the one table (`Kind` from the folder's `type:`)                                                                                                                                                                                                                                           | `plan`, `change-plan`                                                                            |
+| `claim <folder>`                   | In the main checkout, on the integration branch: the row `APPROVED` → `RUNNING`; a row already `RUNNING`, or absent, is refused                                                                                                                                                                                                                                       | `execute`, before the worktree is cut                                                            |
+| `unclaim <folder>`                 | Releases a stale claim: refuses while the worktree the folder names still exists (naming `git worktree remove <path>` as your proof the run is gone), asks once, then resets the row and the folder's Status block to `APPROVED` in the main checkout and reports the commit — `docs: plan queue — <folder> unclaimed` — and the stale branch, which it never deletes | a session, on your word; `execute`, on its resume path when the worktree is gone and you say yes |
+| `status <folder> <state> [detail]` | The folder's Status block alone — `RUNNING`, `BLOCKED`, `COMPLETE` or `APPROVED` and the line under it; never mirrored to the row                                                                                                                                                                                                                                     | `execute`, at start, pause, block and landing                                                    |
+| `complete <folder>`                | After the merge: the row `COMPLETE`, its `Folder` re-pointed under `archived/` when the folder was moved, then the sweep                                                                                                                                                                                                                                              | `execute`, in the main checkout                                                                  |
+| `archive [folder]`                 | The completion check (every warning asks, none refuses), the whole-folder move, the Status block set `ARCHIVED <date> — not run; was <previous status>` unless it already reads `COMPLETE`, the row edit and sweep when run in the main checkout, `/vwf:backlog done` for any id still open, the mempalace `runs` drawer marked archived                              | `execute`, on a green landing with no open gap; a session, on your word                          |
+| `next`                             | The pick: every `APPROVED` row whose `Requires` are all satisfied, lowest `Priority`, then date, then name; a `RUNNING` row is never taken                                                                                                                                                                                                                            | `execute next`                                                                                   |
+| `resolve <folder>`                 | The `requires:` list by kind — a change requirement is a `COMPLETE` row or an archived folder, a cycle requirement every `covers:` doc stamped `implementation: complete`; an entry matching nothing is named, never re-pointed                                                                                                                                       | the planners at self-review; `execute` at preflight                                              |
+| `priority <folder \| requires…>`   | `10 + max` over the `Priority` of every unarchived plan the `requires:` list names, or `10` — from the folder, or from the entries themselves before the folder exists                                                                                                                                                                                                | the planners at their gate                                                                       |
+| `list`                             | The table by priority, `RUNNING` rows marked in flight, `COMPLETE` rows still at a live path marked awaiting archive, then any folder on disk with no row                                                                                                                                                                                                             | a session, on your word                                                                          |
 
-**One shape, two kinds.** A plan is a folder — `index.md` plus one file per unit
-— told apart by the `type:` in its frontmatter: `vwf-plan` is a cycle plan
-`/vwf:plan` wrote, living in the **target repo** whose code it changes;
-`vwf-change-plan` is a change plan `/vwf:change-plan` wrote, living in the base.
-Either moves **whole**, unit files and Run log together, and never changes repo
-— a half-moved folder is a plan the executor cannot read. Both kinds are rows of
-the one table in the base repo's `docs/plans/index.md`, so the folder's row gets
-the same edit a landing makes, in the archive's own commit: `COMPLETE`, its
-`Folder` re-pointed at the archived path, then the sweep that drops every
-`COMPLETE` row already under `archived/` that no `APPROVED` or `RUNNING` row
-still requires. That re-point is the archive's job for a plan whose landing left
-a gap open: `/vwf:execute` archives a folder itself when no gap is open, but a
-gap keeps the folder live as the working record, with the row `COMPLETE` at the
-live path, and the sweep never removes a row whose `Folder` is a live path, so
-the row waits here until the move. A folder with no row gets none — archiving
-does not start listing it. Only the folder's Status block is rewritten, and only
-when it does not already read `COMPLETE` — the executor wrote that at landing
-and it is the truer record. Anything else becomes
-`ARCHIVED <date> — not run; was <previous
-status>`: archiving a plan that was
-never run is a legitimate thing to want, so an unfinished one is a warning, not
-a refusal. With no argument it lists the candidates from the index, each with
-its `Kind` — every `APPROVED` row offered, a `RUNNING` row (one a live run owns)
-shown as in flight and left out, a `COMPLETE` row offered while its `Folder` is
-still live — plus any folder on disk with no row, marked unindexed. It reads the
-index rather than walking the members, most of which are not on this machine.
+**Archiving is asked for, not typed.** A landing whose gap list is empty
+archives its own folder. A folder the landing left live — a gap still open, a
+hand merge, a plan you decided not to run — is retired by asking: *archive
+`docs/plans/<date>-<name>`*, or just *archive a plan* to be shown the
+candidates, each with its `Kind` — every `APPROVED` row, a `RUNNING` row shown
+as in flight and left out, a `COMPLETE` row while its `Folder` is still live,
+plus any folder on disk with no row. The session invokes the verb in the main
+checkout, which moves the folder whole (unit files and Run log together, never
+changing repo, never overwriting an existing destination), gives its row the
+same `COMPLETE`-and-sweep edit a landing makes, marks the backlog items and
+reports the commit — `docs: archive plan <name>` — for
+[`/vwf:git-workflow`](#vwfgit-workflow). Finished is the usual case, not a
+requirement: an unrun plan is a warning you answer, not a refusal. A `requires:`
+entry names a folder by its **basename**, so `docs/plans/X` and
+`docs/plans/archived/X` are the same plan and no line is ever re-pointed.
 
-**Backlog items are marked `done` on the way out.** Either kind may carry a
-`backlog:` list, and every id on it whose row does not already read `done` is
-marked so through [`/vwf:backlog`](#vwfbacklog) in the same commit — a plan can
-reach `archived/` without having landed through the command that would have
-marked them, and an item left `planned` forever is the row nobody comes back to.
+**Unclaiming is asked for the same way.** A `RUNNING` row whose session is gone
+— the window closed, the machine rebooted — is never stolen: `next` skips it and
+`claim` refuses it. You release it by asking: *unclaim
+`docs/plans/<date>-<name>`*. The verb proves the run is gone by the worktree's
+absence — while it still exists it refuses and names
+`git worktree remove <path>`, which git itself refuses on a dirty tree, so
+nothing uncommitted is lost silently — shows what it found, asks once, resets
+the row and the folder to `APPROVED`, and reports the commit. The run's branch
+is reported with the `git branch -D` line, never deleted: a fresh `/vwf:execute`
+refuses to cut a worktree over it until it is gone, and whether its committed
+units are worth keeping is your call. [`/vwf:execute`](#vwfexecute)'s resume
+path offers the same verb when it finds the worktree gone.
 
-The completion check reads the folder's Status block, its Run log (a `failed`,
-`unresolved` or `skipped` row is work that never finished), for a cycle plan its
-gap section and the `implementation:` stamp of every doc it `covers:`, and
-whether any active plan still names it in `requires:` — each a warning, not a
-halt. A `requires:` entry names a folder by its **basename** — `docs/plans/X`
-and `docs/plans/archived/X` are the same plan — so no line is ever re-pointed
-when a folder moves. A directory that is not a plan folder, or a path to a
-single file, is refused in one line rather than guessed at, and a destination
-that already exists is never overwritten — which bites hardest here, since `mv`
-onto an existing directory nests it instead of failing.
+**It never commits.** Every verb writes and stops, and names the commit its edit
+rides: the planner's approval commit for `add`, `execute`'s two
+`docs: plan queue — <folder> …` commits for `claim` and `complete`, the
+same-shaped `… unclaimed` commit of whoever asked for `unclaim`, its final
+`docs:` commit in the worktree for the landing's `status` and `archive`, and the
+git-workflow commit of the session that asked for a standalone archive. Nothing
+here deletes a folder, walks the members for plans, edits a unit file, removes a
+worktree or deletes a branch.
 
 ### /vwf:verify
 
@@ -2341,7 +2364,7 @@ before any flow can describe it; it classifies and routes it to where it gets
 [backlog](#vwfbacklog) are opposite cases: feedback is being worked on, and may
 change `product.md`, the blueprint or the architecture before following the
 `plan` → `execute` line; the backlog is what nobody is working on yet. Nothing
-an intake produces becomes a backlog row.
+an intake produces becomes a backlog item.
 
 Once classified, and before it offers anything, feedback prints one **build
 state** line:
@@ -2415,57 +2438,112 @@ for the other two, which is indistinguishable from a review nobody wrote.
 
 ### /vwf:backlog
 
-The list of work that is **agreed but cannot be picked up now**, kept as
-`docs/backlog.md` and ordered so the next thing to start is obvious. It waits
-behind the work in flight; its priority decides what gets picked first when that
-work is done.
+The list of work that is **agreed but cannot be picked up now**, kept as a
+project on the repo's forge and ordered so the next thing to start is obvious.
+It waits behind the work in flight; its priority decides what gets picked first
+when that work is done.
 
 That is the opposite case from [`/vwf:feedback`](#vwffeedback), and the line
 between them is worth holding. Feedback is something being **worked now** — it
 may change the product doc, the blueprint or the architecture, and it follows
-the `plan` → `execute` line from there. A backlog row is the thing nobody is
+the `plan` → `execute` line from there. A backlog item is the thing nobody is
 working on yet. Nothing a feedback intake produces lands here.
 
 ```text
 /vwf:backlog                          # list, priority then id
 /vwf:backlog add "stylesheet axis for web frontends"
-/vwf:backlog next                     # the top open item, and the command for it
-/vwf:backlog move B07 P1
+/vwf:backlog next                     # the top Backlog item, and the command for it
+/vwf:backlog move B07 P0
 ```
 
-The file is **product-level**: one `docs/backlog.md` for the whole product, in
-the **base repo**, beside `docs/plans/index.md` — never one per member repo, and
-a session running in a member addresses the base's file. Its shape is a header,
-one table (`Id | Item | Group | Priority | Status`), an optional `## Groups`
-list naming the ids that want one plan between them, and one `### Bnn — <title>`
-section per row carrying the detail the table cell has no room for. Ids are
-`Bnn`, sequential and **never reused** — a closed id stays spent. Priorities are
-`P1` (pick first) to `P3`. Statuses run `open` → `planned` → `done`, or `closed`
-for an item dropped without a plan; a `planned` section ends with
-`Planned in: <folder>` and a `closed` one with the reason.
+**Where it lives.** On a GitHub remote the backlog is a **GitHub Project** owned
+by the account the base repo's `origin` names and titled with the repo's name —
+`virajp/claude-plugins` keeps its backlog in the project `claude-plugins` under
+`virajp`. Nothing is written to the tree: there is no file to commit and no
+config key to set, and every verb finds the project afresh from the base repo's
+remote. It is **product-level**: one project for the whole product, never one
+per member repo, and a session running in a member resolves the base first and
+reads its project.
 
-`next` names the top open item and the command that picks it up —
-[`/vwf:change-plan`](#vwfchange-plan) for work the blueprint does not describe,
-[`/vwf:plan`](#vwfplan) when the item names a slice — and asks which it is when
-the item does not say. Every verb leaves the file's order alone: rows are never
-re-sorted, ids never renumbered, and a row is never deleted.
+**What you need.** The GitHub CLI, `gh`, on your `PATH`, logged in to the
+remote's host, with the `project` scope on its token — `gh auth login`, then
+`gh auth refresh -s project`. `/vwf:doctor` reports a `gh` that is absent,
+unauthenticated or short of the scope as a **degradation** with the remedy,
+every run. A token carrying `read:project` alone is enough for `list` and
+`next`, the two verbs that write nothing.
 
-**This skill is the only thing that writes that file.** The commands that move
+**There is no file fallback.** The project is the one store. When `gh` cannot
+reach it, every verb stops with the remedy, and a planner's recall reports the
+backlog unreadable and continues with nothing. An earlier version kept the
+backlog as a markdown file in the base repo precisely so an offline session
+could read it; that trade was reversed so the backlog lives where the team
+already looks.
+
+**The items.** Each is a **draft issue** in the project — never a repository
+issue — titled `Bnn — <item>`, with the detail the plan interview starts from in
+its body. Ids are sequential and **never reused**: a closed id stays spent, and
+the next id is one past the highest over two sources — every item's title, done
+and closed included, and the `backlog:` frontmatter list of every plan folder
+under `docs/plans/` and `docs/plans/archived/` in the base repo — so an id a
+plan already carries is never issued again, even to a project that was created
+after it. `B01` only when both are empty. The project's own fields carry the
+state: **Priority** is the Team planning template's `P0` (pick first), `P1`,
+`P2`; **Status** runs `Backlog` → `In progress` → `Done`, or `Closed` for an
+item dropped without a plan. The template ships `Status` with `Ready` and
+`In review` as well; the skill trims the field to its four the first time it
+needs it, keeping `Backlog`, `In progress` and `Done` as the template spells and
+colours them and adding `Closed`. The trim removes an item's Status along with
+the option, so while any item sits in `Ready` or `In review` the skill stops,
+names each one, and asks you to move it to `Backlog` or `In progress` on the
+board first — it never moves an item itself. The replace also reissues the id of
+every option it keeps, which would clear every item's Status, so the skill
+records each item's Status to a temp file first, prints the path, writes every
+item back afterwards and prints the count restored — and stops naming the item
+and the file if any write fails. **Group** is a text field the skill adds once,
+naming the items that want one plan between them. An `In progress` item's body
+ends with `Planned in: <folder>` and a `Closed` one's with the reason. An item
+retitled in the browser without its `Bnn —` prefix is listed as unnumbered and
+warned about, never renumbered.
+
+**The first run.** `add` on a repo with no project is the one verb that creates
+one. GitHub's API cannot instantiate a built-in template, and **Team planning**
+is one, so the skill asks your consent, prints the new-project URL and the two
+things to set on that page — the Team planning template and the title, the
+repo's name exactly — waits for you to say it is done, then finds the project by
+title, trims the `Status` field to the four options and adds the `Group` field,
+and continues with the `add`. Every other verb on a missing project reports that
+there is no backlog project yet and names `add` as the way to create it.
+
+**A GitLab remote is detected and stops.** The forge is read from the base
+repo's `origin` host: GitHub is implemented; `gitlab.com`, or any host `glab`
+knows, ends every verb with "GitLab is not yet supported by /vwf:backlog"; any
+other host is unsupported and named.
+
+`next` names the top `Backlog` item by priority then id and the command that
+picks it up — [`/vwf:change-plan`](#vwfchange-plan) for work the blueprint does
+not describe, [`/vwf:plan`](#vwfplan) when the item names a slice — and asks
+which it is when the item does not say. `list` prints the items as a five-column
+table (Id, Item, Group, Priority, Status), `Done` and `Closed` folded into a
+trailing count, and ends with the project's URL. Ids are never renumbered, and
+an item is never deleted or archived by this skill.
+
+**This skill is the only thing that writes the project.** The commands that move
 items as plans are written and as they land call it rather than editing it, each
 passing the ids from its plan's `backlog:` frontmatter — the list on the
 folder's `index.md`, cycle plan and change plan alike, empty or absent when the
 plan covers no backlog item:
 
-| Caller                                | When                                      | Verb      |
-| ------------------------------------- | ----------------------------------------- | --------- |
-| [`/vwf:plan`](#vwfplan)               | at hand-off, once the folder is approved  | `planned` |
-| [`/vwf:change-plan`](#vwfchange-plan) | at hand-off, once the folder is approved  | `planned` |
-| [`/vwf:execute`](#vwfexecute)         | at landing, per the folder's consent      | `done`    |
-| [`/vwf:archive`](#vwfarchive)         | archiving a plan whose ids are still open | `done`    |
+| Caller                                   | When                                      | Verb      |
+| ---------------------------------------- | ----------------------------------------- | --------- |
+| [`/vwf:plan`](#vwfplan)                  | at hand-off, once the folder is approved  | `planned` |
+| [`/vwf:change-plan`](#vwfchange-plan)    | at hand-off, once the folder is approved  | `planned` |
+| [`/vwf:execute`](#vwfexecute)            | at landing, per the folder's consent      | `done`    |
+| [`plan-management`](#vwfplan-management) | archiving a plan whose ids are still open | `done`    |
 
-It never commits — its edit rides the caller's commit, or yours — never touches
-any other file, never invents or reuses an id, and never decides what gets
-built: `next` names the top item and the command for it, and you pick.
+It never commits — there is nothing in the tree to commit — never edits a file,
+never opens a repository issue, never creates the project itself, never invents
+or reuses an id, and never decides what gets built: `next` names the top item
+and the command for it, and you pick.
 
 ### /vwf:change-plan
 
@@ -2483,7 +2561,8 @@ same executor a cycle plan takes — runs what it writes. The planner sits
 It **recalls before it asks** — `docs/memory/decisions/`, the last archived plan
 that touched the same tree (its *Out of scope*, *Parked* list and run log are
 often where the request came from), the base repo's
-[`docs/backlog.md`](#vwfbacklog) where the product has one, since the request is
+[backlog project](#vwfbacklog) through `/vwf:backlog list` — recorded as
+unreadable, with the reason, when `gh` cannot reach it — since the request is
 often an item already sitting on it, and the memory palace's `planning`,
 `decisions` and `gaps` rooms when the server is up, skipped silently when it is
 not. Then it surveys through concurrent `Explore` subagents that return
@@ -2568,8 +2647,8 @@ row is appended to the **one table** of the base repo's `docs/plans/index.md` �
 folder, `Kind` `change`, title, the derived priority, `APPROVED`, the basenames
 it requires, the backlog ids — the one edit this skill ever makes to that file;
 [`/vwf:backlog planned`](#vwfbacklog) marks the ids the frontmatter names, with
-the folder as their `Planned in:` path; the folder — plus `docs/plans/index.md`,
-plus `docs/backlog.md` if that step changed it — is **committed and pushed**
+the folder as their `Planned in:` path — an edit to the forge project, nothing
+in the tree; the folder plus `docs/plans/index.md` is **committed and pushed**
 through [`/vwf:git-workflow`](#vwfgit-workflow) on the branch you are standing
 on, in place and with no worktree; and only then the launch line is printed. The
 push is not an extra: the fresh session's worktree is cut from the integration
@@ -2888,8 +2967,8 @@ start step 1; it runs none of them.)
 #    → runs each after-landing step on its recorded mode, run or ask;
 #      offers the next plan in the chain
 
-# 6. Archive the completed plan, deploy it yourself, then verify
-/vwf:archive
+# 6. Deploy it yourself, then verify — the landing archived the plan;
+#    a folder left live is archived by asking in prose
 /vwf:verify staging
 #    → health per project + all flows' acceptance criteria against staging
 /vwf:verify production

@@ -68,11 +68,15 @@ claimed, and a degradation before that, since a repo with no stack has no
 toolchain to resolve. A missing language server is an ordinary finding; `uv` is
 named as a prerequisite of graphify's remedy rather than checked on its own; a
 missing `rtk` is a **degradation** finding in §5 — its hook is guarded, so the
-run is correct and merely costs more — and the **Context7 runner is not checked
-at all**, a missing one surfacing as a dead MCP server. That runner is
-`pnpm
-dlx` by default and `${CONTEXT7_RUNNER}` overrides it, so what a check
-would have to verify is whatever the user pinned, not `pnpm`.
+run is correct and merely costs more — as is, since 2026-09-18, a forge CLI
+(`gh`) that is absent, not logged in, or without the `project` scope, which
+leaves `/vwf:backlog` with nothing to read and every planner's recall of it
+empty, since the backlog is a GitHub Project with no file fallback — and the
+**Context7 runner is not checked at all**, a missing one surfacing as a dead MCP
+server. That runner is `pnpm
+dlx` by default and `${CONTEXT7_RUNNER}` overrides
+it, so what a check would have to verify is whatever the user pinned, not
+`pnpm`.
 
 So the trade is slightly worse than "doctor already blocked on it": one of five
 blocks always, one once a stack is pinned, one degrades, one is named only as

@@ -1,0 +1,463 @@
+{
+  "items": [
+    {
+      "content": {
+        "body": "Add an `unclaim <folder>` verb to vwf's plan-management skill: reset a stale RUNNING row in docs/plans/index.md back to APPROVED so the plan can be claimed afresh by /vwf:execute.\n\nToday the only release of a RUNNING claim is a hand edit of the row, committed on the integration branch (plan-management's 'What this skill never does' — 'Take a RUNNING row'). A session that died mid-run leaves the row RUNNING forever; the verb makes the reset a named, consent-gated operation with the same commit shape as claim/complete (docs: plan queue — <folder> unclaimed), refusing when the worktree named in the folder's Status block still exists.\n\nOrigin: docs/backlog.md B12 (P1 there; P0 here), carried over when the backlog moved to this project on 2026-09-18.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSUM",
+        "title": "B12 — unclaim <folder> verb for plan-management",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pOJg",
+      "priority": "P0",
+      "title": "B12 — unclaim <folder> verb for plan-management"
+    },
+    {
+      "content": {
+        "body": "mise in .config/ (mise.toml, mise.dev.toml, mise.ci.toml, optional mise.test.toml), the standard task vocabulary (code:*, setup:*), dprint, pre-commit and git-conventional-commits.\n\nEvidence: plans 2026-09-05-vwf-init, 2026-09-12-task-library; /vwf:init is reached through /vwf:setup.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSi0",
+        "title": "B13 — init skill bootstraps a repo with mise, tasks, dprint, pre-commit and conventional commits",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pRgY",
+      "priority": "P2",
+      "title": "B13 — init skill bootstraps a repo with mise, tasks, dprint, pre-commit and conventional commits"
+    },
+    {
+      "content": {
+        "body": "Each subagent and skill frontmatter names the model tier for its job.\n\nEvidence: model: lines across plugins/vwf/skills/*/SKILL.md and agents/; pipeline.models override in vwf-config.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSjI",
+        "title": "B14 — model on every subagent and skill",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pRkI",
+      "priority": "P2",
+      "title": "B14 — model on every subagent and skill"
+    },
+    {
+      "content": {
+        "body": "Evidence: plugins/vwf/skills/feedback; plans 2026-09-10-vwf-feedback-archive-import, 2026-09-14-feedback-gaps.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSjg",
+        "title": "B16 — /vwf:feedback skill routes production feedback into the docs and commands that fix it",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pRqg",
+      "priority": "P2",
+      "title": "B16 — /vwf:feedback skill routes production feedback into the docs and commands that fix it"
+    },
+    {
+      "content": {
+        "body": "Evidence: assets/topologies/*, membership.md; plans 2026-09-13-init-walks-the-members, 2026-09-14-repo-name-split.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSjo",
+        "title": "B17 — folder structure for repo, multi-repo and monorepo topologies",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pRtE",
+      "priority": "P2",
+      "title": "B17 — folder structure for repo, multi-repo and monorepo topologies"
+    },
+    {
+      "content": {
+        "body": "Requested tiers: base-bundle (installed by init), bundle (a set of packs), pack (things that work together), stack (a technology). Landed as: three unconditional bundles init lays down, stacks/bundles/*.md composing packs by <type>/<slug>@<version>, one pack per technology under stacks/<type>/<slug>/. The 'pack vs stack' split collapsed into one tier by design.\n\nEvidence: plugins/stackgen/stacks, inventory.md, plan 2026-08-31-stack-plugin-migration.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSjs",
+        "title": "B18 — stackgen structured as base bundles, bundles, packs",
+        "type": "DraftIssue"
+      },
+      "group": "stackgen",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pRww",
+      "priority": "P2",
+      "title": "B18 — stackgen structured as base bundles, bundles, packs"
+    },
+    {
+      "content": {
+        "body": "Evidence: plan 2026-09-06-init-behind-setup — setup Step 0 offers init on doctor's six baseline predicates; /vwf:setup reshape runs it alone.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSjw",
+        "title": "B19 — init behind doctor and setup, not a top-level command",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pR0s",
+      "priority": "P2",
+      "title": "B19 — init behind doctor and setup, not a top-level command"
+    },
+    {
+      "content": {
+        "body": "Scan stacks/bundles/*.md and the typescript language pack: any TypeScript bundle that does not pin framework/effect, and any convention that writes Promise-based code where Effect is the standard. The effect pack exists (stacks/framework/effect); the sweep across bundles has not been done.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSj0",
+        "title": "B20 — every TypeScript bundle uses the Effect framework",
+        "type": "DraftIssue"
+      },
+      "group": "stackgen",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pR3o",
+      "priority": "P0",
+      "title": "B20 — every TypeScript bundle uses the Effect framework"
+    },
+    {
+      "content": {
+        "body": "Evidence: stacks/stylesheet/{plain-css,stylex,tailwindcss}; plan 2026-09-14-web-frontend-surface (the stylesheet axis).",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSj4",
+        "title": "B21 — tailwindcss and StyleX packs in stackgen",
+        "type": "DraftIssue"
+      },
+      "group": "stackgen",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pR8E",
+      "priority": "P2",
+      "title": "B21 — tailwindcss and StyleX packs in stackgen"
+    },
+    {
+      "content": {
+        "body": "archify (installed as a user skill) renders architecture, sequence and state diagrams as explorable HTML/SVG. Decide whether /vwf:architecture or /vwf:readme should call it for the architecture diagram, or whether mermaid stays. No mention of it in plugins/ today.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSkA",
+        "title": "B22 — evaluate archify for vwf diagrams",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pSAc",
+      "priority": "P1",
+      "title": "B22 — evaluate archify for vwf diagrams"
+    },
+    {
+      "content": {
+        "body": "Evidence: MERGE_MODEL asked in init's git pass and read by git-workflow Step 4 (direct or pr); the user can override in the prompt.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSkM",
+        "title": "B23 — git landing model chosen once and saved in config; git-workflow follows it",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pSDg",
+      "priority": "P2",
+      "title": "B23 — git landing model chosen once and saved in config; git-workflow follows it"
+    },
+    {
+      "content": {
+        "body": "Evidence: /vwf:backlog, first as docs/backlog.md (plan 2026-09-13-vwf-process), then moved to this GitHub Project (plan 2026-09-18-backlog-on-github-projects).",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSkQ",
+        "title": "B24 — backlog skill in vwf",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pSFk",
+      "priority": "P2",
+      "title": "B24 — backlog skill in vwf"
+    },
+    {
+      "content": {
+        "body": "Evidence: plan 2026-09-14-notion-workspace; stacks/capability-provider/notion.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSkU",
+        "title": "B25 — notion MCP server",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pSIg",
+      "priority": "P2",
+      "title": "B25 — notion MCP server"
+    },
+    {
+      "content": {
+        "body": "Evidence: product-foundations audit-logs reference; audit-store-d1 and audit-store-postgres packs; plan 2026-09-14-audit-capability.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSkY",
+        "title": "B26 — audit logs as a product foundation under observability",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pSLk",
+      "priority": "P2",
+      "title": "B26 — audit logs as a product foundation under observability"
+    },
+    {
+      "content": {
+        "body": "Evidence: plan 2026-09-14-repo-name-split — init's first question fills REPO_NAME, its second confirms each project id and slug.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSkg",
+        "title": "B27 — REPO_NAME distinct from the p:<slug>:* task-group id",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pSPI",
+      "priority": "P2",
+      "title": "B27 — REPO_NAME distinct from the p:<slug>:* task-group id"
+    },
+    {
+      "content": {
+        "body": "init asks the licence as MIT / Apache-2.0 / none per repo (init SKILL.md step 6) with no visibility question. Add public/private per repo; a private repo gets no LICENSE and a security-advisory setup that fits (GitHub advisories are public-repo only). Move the licence choice under that question.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSkk",
+        "title": "B28 — repo visibility question in init: public or private decides the licence and the security advisory posture",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pSR8",
+      "priority": "P1",
+      "title": "B28 — repo visibility question in init: public or private decides the licence and the security advisory posture"
+    },
+    {
+      "content": {
+        "body": "Today /vwf:product writes docs/blueprint/product.md. Make it a folder with index.md as the product doc and a fact-sheet.md for facts, market research and sources the product doc cites. Every reader of product.md (architecture, blueprint, feedback) follows.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSko",
+        "title": "B29 — product doc becomes a folder: docs/blueprint/product/index.md plus fact-sheet.md",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pSWM",
+      "priority": "P1",
+      "title": "B29 — product doc becomes a folder: docs/blueprint/product/index.md plus fact-sheet.md"
+    },
+    {
+      "content": {
+        "body": "Evidence: p:plugins:check rule 1, p:i:version and p:site:version skip past, all three release tasks refuse; config_format and blueprint_format bumps skip too.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSkw",
+        "title": "B30 — never issue 13 or 17 as a version component",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pSbA",
+      "priority": "P2",
+      "title": "B30 — never issue 13 or 17 as a version component"
+    },
+    {
+      "content": {
+        "body": "Evidence: plans 2026-09-15-plan-index-queue and 2026-09-16-plan-folders — both planners commit and push the folder plus its index row at hand-off, on the branch it was planned on.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSk0",
+        "title": "B31 — change-plan commits and pushes the approved plan folder",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pSe0",
+      "priority": "P2",
+      "title": "B31 — change-plan commits and pushes the approved plan folder"
+    },
+    {
+      "content": {
+        "body": "Evidence: plan 2026-09-14-terminal-design-tool — the claude-code design-tool pack is the default on the design axis, with the logo in the design-system contract. Whether taste-skill is what it drives is item 'design skills embedded into vwf'.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSk4",
+        "title": "B32 — claude-code terminal as the default design tool",
+        "type": "DraftIssue"
+      },
+      "group": "design",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pSik",
+      "priority": "P2",
+      "title": "B32 — claude-code terminal as the default design tool"
+    },
+    {
+      "content": {
+        "body": "Evidence: plan 2026-09-14-stack-reputation; stackgen:stackgen-reputation, invoked by the generator over every concrete name.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSlA",
+        "title": "B33 — stack-reputation skill vets every package stackgen recommends",
+        "type": "DraftIssue"
+      },
+      "group": "stackgen",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pSmg",
+      "priority": "P2",
+      "title": "B33 — stack-reputation skill vets every package stackgen recommends"
+    },
+    {
+      "content": {
+        "body": "Evidence: plans 2026-09-05-site-seo-and-markdown and 2026-09-14-web-frontend-surface (the head every site ships); html and astro conventions carry the OpenGraph set and the icon links; p:site:icons and the html pack's icons task.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSlM",
+        "title": "B34 — SEO, OpenGraph and favicons for every website and webapp",
+        "type": "DraftIssue"
+      },
+      "group": "design",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pSps",
+      "priority": "P2",
+      "title": "B34 — SEO, OpenGraph and favicons for every website and webapp"
+    },
+    {
+      "content": {
+        "body": "Find out whether the Claude Design project (design system, screens, conversations) can be exported through the design MCP or the DesignSync tool and committed under docs/, so the design source is versioned with the repo. Nothing in vwf reads or exports it today beyond import-* payloads.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSlQ",
+        "title": "B35 — download the claude-design project and commit it to the repo",
+        "type": "DraftIssue"
+      },
+      "group": "design",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pStU",
+      "priority": "P1",
+      "title": "B35 — download the claude-design project and commit it to the repo"
+    },
+    {
+      "content": {
+        "body": "Logo landed in the design-system contract (plan 2026-09-14-terminal-design-tool). Layout — page-level composition rules the screens inherit — is not a first-class section of design-system.md yet.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSlU",
+        "title": "B36 — design covers logo, layout and design system",
+        "type": "DraftIssue"
+      },
+      "group": "design",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pSxA",
+      "priority": "P1",
+      "title": "B36 — design covers logo, layout and design system"
+    },
+    {
+      "content": {
+        "body": "/vwf:mockups renders into docs/scratchpad/, never committed. Keep that as the working surface, and move the approved version into docs/mockups/<project>/<flow>/ committed to the repo once the flow's screens are accepted.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSlc",
+        "title": "B37 — commit approved mockups under docs/mockups",
+        "type": "DraftIssue"
+      },
+      "group": "design",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pS0Q",
+      "priority": "P1",
+      "title": "B37 — commit approved mockups under docs/mockups"
+    },
+    {
+      "content": {
+        "body": "Five vwf skills carry disable-model-invocation: true — execute, mockups, recall, setup, verify. Confirm each is blocked because it is risky to run unasked, and open the rest. Also the user-invocable: false set (init, plan-management, the import-* adapters, the authoring doctrines) — confirm each belongs there.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSlk",
+        "title": "B38 — audit which skills block model invocation",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pS34",
+      "priority": "P1",
+      "title": "B38 — audit which skills block model invocation"
+    },
+    {
+      "content": {
+        "body": "Evidence: plan 2026-09-16-one-executor — one executor runs both kinds; plan 2026-09-16-plan-folders — the two planners share the folder shape, interview checklist and plan index; plan 2026-09-17-review-rows.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSlo",
+        "title": "B39 — change-plan and execute learnings folded into plan and execute",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pS8M",
+      "priority": "P2",
+      "title": "B39 — change-plan and execute learnings folded into plan and execute"
+    },
+    {
+      "content": {
+        "body": "init still composes a vscode.d editor block (fragments-and-sections.md, the editor merge). Remove it from the shape init lays down, and from the hygiene pack's payload, so a shaped repo carries no editor config.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSlw",
+        "title": "B40 — drop the vscode configuration from init",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pS-c",
+      "priority": "P1",
+      "title": "B40 — drop the vscode configuration from init"
+    },
+    {
+      "content": {
+        "body": "https://github.com/vercel-labs/agent-skills and https://vercel.com/design/guidelines — evaluate as a pack or a vendored skill that the web frontend surface applies.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSl0",
+        "title": "B41 — Vercel design guidelines as a design skill",
+        "type": "DraftIssue"
+      },
+      "group": "design",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pTB4",
+      "priority": "P1",
+      "title": "B41 — Vercel design guidelines as a design skill"
+    },
+    {
+      "content": {
+        "body": "https://github.com/voltagent/awesome-design-md — evaluate as a pack or a vendored skill that the web frontend surface applies.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSl4",
+        "title": "B42 — Awesome Design (DESIGN.md) as a design skill",
+        "type": "DraftIssue"
+      },
+      "group": "design",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pTE0",
+      "priority": "P1",
+      "title": "B42 — Awesome Design (DESIGN.md) as a design skill"
+    },
+    {
+      "content": {
+        "body": "https://github.com/Leonxlnx/taste-skill — the image-to-code-skill is installed on this machine as the taste-skill plugin; decide how vwf's screens/mockups path invokes it.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSmA",
+        "title": "B43 — image-to-code from taste-skill as a design skill",
+        "type": "DraftIssue"
+      },
+      "group": "design",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pTJE",
+      "priority": "P1",
+      "title": "B43 — image-to-code from taste-skill as a design skill"
+    },
+    {
+      "content": {
+        "body": "Vercel guidelines, Awesome Design, taste-skill image-to-code: once evaluated, wire each into the step that should use it (design-system, screens, mockups, the web frontend surface) rather than leaving them as loose user skills.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSmE",
+        "title": "B44 — embed the design skills into vwf so they are used at the right step",
+        "type": "DraftIssue"
+      },
+      "group": "design",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pTNI",
+      "priority": "P1",
+      "title": "B44 — embed the design skills into vwf so they are used at the right step"
+    },
+    {
+      "content": {
+        "body": "https://github.com/juliangarnier/anime — a pack on the stylesheet or app-framework axis, or a convention the astro packs cite.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSmI",
+        "title": "B45 — website animation: anime.js",
+        "type": "DraftIssue"
+      },
+      "group": "design",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pTSA",
+      "priority": "P1",
+      "title": "B45 — website animation: anime.js"
+    },
+    {
+      "content": {
+        "body": "https://threejs.org/ — evaluate as a pack; likely opt-in per site rather than a bundle default.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSmM",
+        "title": "B46 — website 3D: three.js",
+        "type": "DraftIssue"
+      },
+      "group": "design",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pTWE",
+      "priority": "P1",
+      "title": "B46 — website 3D: three.js"
+    },
+    {
+      "content": {
+        "body": "The astro-ssg bundle exists (plan 2026-09-05-astro-static) but the astro pack's conventions do not cover MDX for static content, content collections, or the page/layout split in the depth the other packs have.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSmU",
+        "title": "B47 — astro-ssg defined in detail, MDX for static content",
+        "type": "DraftIssue"
+      },
+      "group": "astro",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pTbA",
+      "priority": "P1",
+      "title": "B47 — astro-ssg defined in detail, MDX for static content"
+    },
+    {
+      "content": {
+        "body": "stacks/toolchain-manager/mise/config/.config/mise.toml:94 still sets DISABLE_TELEMETRY = 1, and the mise skill documents it. Drop it from the payload and the doc.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSmc",
+        "title": "B48 — remove DISABLE_TELEMETRY from the generated mise.toml",
+        "type": "DraftIssue"
+      },
+      "group": "stackgen",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pThU",
+      "priority": "P1",
+      "title": "B48 — remove DISABLE_TELEMETRY from the generated mise.toml"
+    },
+    {
+      "content": {
+        "body": "p:plugins:release, p:i:release and p:site:release cut one tag family each straight to production. Add a staging release path (a pre-release tag or a staging environment for the site) and the CI behind it.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSmk",
+        "title": "B49 — release tasks support a staging release as well as production",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pTls",
+      "priority": "P1",
+      "title": "B49 — release tasks support a staging release as well as production"
+    },
+    {
+      "content": {
+        "body": "Setup plus architecture plus design-system plus blueprint before a first page renders is too many steps and too many questions for a simple website. Find the short path: a preset that answers the common case, or a website-only flow that skips what a static site does not need.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSmw",
+        "title": "B50 — shaping a repo and building a basic website takes too long",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pTn8",
+      "priority": "P1",
+      "title": "B50 — shaping a repo and building a basic website takes too long"
+    },
+    {
+      "content": {
+        "body": "stacks/language/ has bash, markdown and typescript. Add rust and go packs scoped to the cli platform — no web or service bundles pin them.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSm8",
+        "title": "B51 — rust and go language packs, CLI projects only",
+        "type": "DraftIssue"
+      },
+      "group": "stackgen",
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pTq8",
+      "priority": "P1",
+      "title": "B51 — rust and go language packs, CLI projects only"
+    },
+    {
+      "content": {
+        "body": "Evidence: plan 2026-09-15-plan-index-queue — the one table with status, priority, requires and backlog columns; plan 2026-09-18-plan-management owns every write to it.",
+        "id": "DI_lAHOAC-yws4Bj2glzgLJSnU",
+        "title": "B52 — plan and change-plan maintain docs/plans/index.md",
+        "type": "DraftIssue"
+      },
+      "id": "PVTI_lAHOAC-yws4Bj2glzg7pTu8",
+      "priority": "P2",
+      "title": "B52 — plan and change-plan maintain docs/plans/index.md"
+    }
+  ],
+  "totalCount": 40
+}

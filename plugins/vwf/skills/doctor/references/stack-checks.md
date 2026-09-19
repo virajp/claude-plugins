@@ -261,6 +261,26 @@ runs correctly and simply pays full price. Missing from `PATH` → a
 tool exists at all — without it the hook is silent in both directions, which is
 why the finding is worth reporting on every run rather than once.
 
+**The forge CLI is recommended, never required.** `/vwf:backlog` keeps the
+product's backlog on the base repo's forge and needs that forge's CLI to read
+it. Resolve the forge the way the `backlog` skill does — the rule is in
+`${CLAUDE_PLUGIN_ROOT}/skills/backlog/SKILL.md` and is not restated here —
+then run three probes: the binary on `PATH` (`gh`, or `glab` on GitLab), its
+`auth status` green for the base remote's host, and on GitHub the `project`
+scope on the token (the scope check is the reference's,
+`${CLAUDE_PLUGIN_ROOT}/skills/backlog/references/github.md`). Each miss is a
+**degradation** no caller halts on: name what it costs — a missing binary or
+login leaves the backlog unreadable, so every verb stops and the planners'
+recall proceeds without it; a token carrying `read:project` but not `project`
+keeps `list` and `next` working, the tolerance the skill states, and stops the
+write verbs alone — and give the remedy (`brew install gh`, or the releases at
+<https://github.com/cli/cli>; `gh auth login`; `gh auth refresh -s project`).
+On a GitLab remote run the same three for `glab` and note that the backlog is
+not yet supported there, so the row reports the CLI state as information
+rather than a cost. An unsupported host reports `n/a — no forge CLI`. Like
+`rtk`, this is reported on every run: a machine without the CLI runs correctly
+and simply has no backlog to read, and nothing else says so until a verb fails.
+
 ## The repo shape against its baseline
 
 Part of §5, and the one check that reads the **shape** `/vwf:init` lays down

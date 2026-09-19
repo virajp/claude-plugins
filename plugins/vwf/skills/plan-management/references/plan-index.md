@@ -1,16 +1,17 @@
 # The Plan Index
 
 `docs/plans/index.md` is the product's one view of its plans as a set. It lives
-in the **base** repo, as `docs/backlog.md` does — a `repo` or `monorepo`
-topology has only the base, and under `multi-repo` a command running in a
-member repo addresses the base's file. Every skill that reads or writes the
+in the **base** repo, as the backlog project is the base's — a `repo` or
+`monorepo` topology has only the base, and under `multi-repo` a command running
+in a member repo addresses the base's file. Every skill that reads or writes the
 file follows this contract; no skill reads a plan's status from anywhere else
 when this file has a row for it.
 
 The file holds **one table**. Every plan folder is a row, whichever skill wrote
-the folder and whichever repo holds it. Its writers are `/vwf:plan`,
-`/vwf:change-plan`, `/vwf:execute` and `/vwf:archive`, each making the one edit
-named under *Writers and their edits*.
+the folder and whichever repo holds it. Its writers are the verbs of
+`plan-management`, called by `/vwf:plan`, `/vwf:change-plan` and
+`/vwf:execute` — and, for `unclaim` and `archive`, by a session on the user's
+word — each making the one edit named under *Writers and their edits*.
 
 ## The prose frame
 
@@ -44,7 +45,7 @@ Header row, exactly:
 | `Priority`    | the derived integer — `10 + max(Priority of every unarchived plan in its requires:)`, or `10` when it requires none of them; never asked, never edited by hand |
 | `Status`      | `APPROVED`, `RUNNING` or `COMPLETE` — nothing else                                                               |
 | `Requires`    | the **basenames** of the folder's `requires:` entries, or `—`                                                    |
-| `Backlog`     | the ids from the folder's `backlog:` frontmatter, or `—`                                                         |
+| `Backlog`     | the ids from the folder's `backlog:` frontmatter — the `Bnn` prefixes of the backlog project's items — or `—`     |
 
 The three statuses:
 
@@ -57,12 +58,15 @@ The three statuses:
 
 ## Writers and their edits
 
-| Writer             | Edit                                                                                                                                                                                                                                                                              |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/vwf:plan`        | appends the row, `APPROVED`, in its hand-off commit                                                                                                                                                                                                                               |
-| `/vwf:change-plan` | appends the row, `APPROVED`, in its hand-off commit                                                                                                                                                                                                                               |
-| `/vwf:execute`     | sets `RUNNING` at claim — before the worktree is cut; sets `COMPLETE` after the merge lands, re-pointing `Folder` under `archived/` when the landing archived the folder (an empty gap list) and leaving it at the live path otherwise — `/vwf:archive` re-points it later — then runs the **sweep** |
-| `/vwf:archive`     | applies the landing edit by hand to one folder's row, in the archive's own commit; a folder with no row gets none                                                                                                                                                                 |
+| Verb       | Caller                          | Edit                                                                                                                                                                                                                                                                                       |
+| ---------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `add`      | `/vwf:plan`, `/vwf:change-plan` | appends the row, `APPROVED`, in the planner's hand-off commit                                                                                                                                                                                                                              |
+| `claim`    | `/vwf:execute`                  | sets `RUNNING` — before the worktree is cut; the commit `docs: plan queue — <folder> running`                                                                                                                                                                                              |
+| `unclaim`  | a session, on the user's word   | sets `APPROVED` back from `RUNNING` — the one reverse edit, in the main checkout, once the run's worktree is gone and the user consents; invoked by a session on the user's word, or by `/vwf:execute`'s resume path on a yes; the commit `docs: plan queue — <folder> unclaimed`          |
+| `complete` | `/vwf:execute`                  | sets `COMPLETE` after the merge lands, re-pointing `Folder` under `archived/` when the landing archived the folder (an empty gap list) and leaving it at the live path otherwise — `archive` re-points it later — then runs the **sweep**; the commit `docs: plan queue — <folder> complete` |
+| `archive`  | a session, on the user's word   | applies the landing edit to one folder's row, in the commit of the session that asked; a folder with no row gets none                                                                                                                                                                      |
+
+No verb commits: the caller named in each row commits the edit.
 
 A cycle plan's folder lives in the **target repo** — the member whose code it
 changes — and is archived there, under that repo's `docs/plans/archived/`; its
@@ -74,17 +78,18 @@ whose `Folder` already points under `docs/plans/archived/` and that no
 `APPROVED` or `RUNNING` row's `Requires` names. A completed plan nobody still
 waits on leaves the queue once its folder is archived; that folder is the
 record. A `COMPLETE` row whose `Folder` is a live path is never swept — it is
-how `/vwf:archive` finds the folder it has yet to move.
+how the `archive` verb finds the folder it has yet to move.
 
 **Every edit is a direct commit on the integration branch, made in the main
 checkout, never in a worktree.** The run branch never touches this file, so two
-parallel landings cannot conflict on it. The two commit messages:
+parallel landings cannot conflict on it. The three commit messages:
 
 - the claim: `docs: plan queue — <folder> running`
+- the unclaim: `docs: plan queue — <folder> unclaimed`
 - the landing: `docs: plan queue — <folder> complete`
 
 `/vwf:plan`'s and `/vwf:change-plan`'s rows ride their own approval commits,
-and `/vwf:archive`'s edit rides the archive commit.
+and the `archive` verb's edit rides the commit of the session that asked.
 
 ## Resolution
 
@@ -121,8 +126,9 @@ alone, rows of either kind:
   then folder name;
 - the pick prints the folder, its `Kind` and its `Priority`;
 - a `RUNNING` row is **never** taken — resuming one is
-  `/vwf:execute <folder>`, and a claim whose session is gone is reset to
-  `APPROVED` by hand, in a commit on the integration branch;
+  `/vwf:execute <folder>`, and a claim whose session is gone is released by
+  `unclaim <folder>`, once the worktree it names is gone, in a commit on the
+  integration branch;
 - a row waiting on an unsatisfied requirement is not a candidate;
 - nothing runnable → print each `APPROVED` row and what it waits on, and stop;
 - no table, or no rows → say so and stop.
@@ -135,11 +141,11 @@ worktree is cut; a rejected push means re-pull and re-pick.
 The `next` pick, the claim at the start of a run, and the `COMPLETE` row after
 a landing are each a read or a write of this file, and every step of them is
 one plain git command. Both procedures run in the **main checkout of the base
-repo**, never in a worktree. The index is the base repo's, as `docs/backlog.md`
-is — a run started in a member repo addresses the base's file, resolved the way
-`${CLAUDE_PLUGIN_ROOT}/assets/membership.md` resolves it. `<integration>` below
-is the branch `vwf:git-workflow` resolves as the integration branch; this
-contract never assumes its name.
+repo**, never in a worktree. The index is the base repo's, as the backlog
+project is — a run started in a member repo addresses the base's file, resolved
+the way `${CLAUDE_PLUGIN_ROOT}/assets/membership.md` resolves it.
+`<integration>` below is the branch `vwf:git-workflow` resolves as the
+integration branch; this contract never assumes its name.
 
 ### Reading the queue
 
@@ -170,9 +176,9 @@ contract never assumes its name.
      re-points a `requires:` line; the user fixes the entry by hand.
 5. The candidates are the `APPROVED` rows whose every entry is satisfied, of
    either kind. A `RUNNING` row is never a candidate, however stale — a
-   claim is released only by a hand edit back to `APPROVED`, committed on the
-   integration branch — and a row waiting on a `RUNNING` requirement is not
-   one either.
+   claim is released only by `unclaim <folder>`, once the worktree it names
+   is gone, in a commit on the integration branch — and a row waiting on a
+   `RUNNING` requirement is not one either.
 6. Order the candidates by `Priority` ascending, then by the folder's date
    prefix ascending, then by folder name. The first is the pick; print its
    folder, `Kind` and `Priority`.
@@ -187,9 +193,11 @@ conditions. The executor says what each row status means for a named run.
 
 ### Writing a row — the claim, and the completion
 
-The one edit the executor makes in the main checkout. Record two facts before
-touching anything: the branch the checkout is on, and whether a stash was
-taken.
+The one edit the executor makes in the main checkout. `unclaim` follows the
+same procedure with the reverse edit — the row from `RUNNING` back to
+`APPROVED` — and the push-rejection rule applies unchanged. Record two facts
+before touching anything: the branch the checkout is on, and whether a stash
+was taken.
 
 1. When the checkout is dirty — `git status --porcelain` prints anything —
    `git stash push -u -m "vwf plan queue <folder>"` and remember that a stash
@@ -198,19 +206,21 @@ taken.
 3. `git pull --ff-only`.
 4. Edit the one row in the table:
    - **Claim** — the folder's row `Status` from `APPROVED` to `RUNNING`.
+   - **Unclaim** — the row `Status` from `RUNNING` back to `APPROVED`, once
+     the verb's liveness check and the user's consent have passed.
    - **Completion** — the row `Status` to `COMPLETE`, then the sweep below.
      The `Folder` cell is re-pointed to `docs/plans/archived/<basename>` by
      whichever skill moves the folder: the completion edit itself when the
      landing's gap list is empty and `/vwf:execute` archives the folder at
-     landing; `/vwf:archive` when a gap was open and the folder stayed live as
-     the working record. A `COMPLETE` row whose `Folder` is still a live path
-     is one `/vwf:archive` has yet to move, and the sweep leaves it alone until
-     `/vwf:archive`'s own landing edit re-points it.
+     landing; the `archive` verb when a gap was open and the folder stayed
+     live as the working record. A `COMPLETE` row whose `Folder` is still a
+     live path is one `archive` has yet to move, and the sweep leaves it alone
+     until `archive`'s own landing edit re-points it.
 5. `git add -- docs/plans/index.md` — that file alone; nothing else the
    checkout carries rides this commit.
 6. `mise x -- git commit -m "docs: plan queue — <folder> running"` for a
-   claim, `… — <folder> complete` for a completion. `<folder>` is the
-   basename.
+   claim, `… — <folder> unclaimed` for an unclaim, `… — <folder> complete`
+   for a completion. `<folder>` is the basename.
 7. `git push`. On a **rejected push**, loop:
    - `git pull --rebase`.
    - The rebase is clean → another session changed a different row. `git push`
@@ -230,6 +240,9 @@ taken.
        for the next candidate or stops with nothing runnable; for a named
        folder, the row is now `RUNNING` under another session and the
        executor refuses it. Neither exit skips step 8.
+     - An **unclaim** goes to step 8 and stops: the same row changed under
+       it — the run landed, or another session released it — so the verb
+       reports that and the user asks again after reading the queue.
 8. **Restore the checkout — every path ends here**, the landed push, the
    dropped claim and the refusal alike. When the checkout was on another
    branch — `git checkout -`. When a stash was taken — `git stash pop`.
@@ -248,7 +261,7 @@ candidate is a `COMPLETE` row whose `Folder` already points under
 in no `APPROVED` or `RUNNING` row's `Requires` cell. A candidate that
 something still requires stays until the last row that names it is itself
 complete and swept — a later completion sweeps it then. A `COMPLETE` row whose
-`Folder` is a live path is not a candidate: it stays until `/vwf:archive`
+`Folder` is a live path is not a candidate: it stays until the `archive` verb
 moves the folder and re-points the cell, after which that landing edit's own
 sweep may remove it.
 

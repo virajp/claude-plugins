@@ -142,16 +142,17 @@ result and no-ops when it is absent.
 production override the *same* keys rather than each inventing their own, so the
 two differ in value and never in vocabulary.
 
-- `mise.toml` `[env]` — only what is identical everywhere (`DISABLE_TELEMETRY`),
-  plus **`REPO_NAME`**: a marked position the orchestrator fills with this repo's
-  **folder name, slugified** — the main checkout's own directory, proposed by
-  `/vwf:init`'s first question, shown and confirmed before it is written. It is
-  **not** a project id: the `p:<id>:*` group carries that, and the two tokens
-  are independent. `setup:all`'s member flags and the `setup-<slug>` aliases are
-  a **third** list: one per **member repo**, named by that member's own slug.
-  `REPO_NAME` is **a literal, never derived at load time** — the basename of the
-  config root is the *branch* name inside a linked worktree, so a derived value
-  would address a different repo depending on where you stood.
+- `mise.toml` `[env]` — only what is identical everywhere — today nothing but
+  the marked positions — starting with **`REPO_NAME`**: a marked position the
+  orchestrator fills with this repo's **folder name, slugified** — the main
+  checkout's own directory, proposed by `/vwf:init`'s first question, shown and
+  confirmed before it is written. It is **not** a project id: the `p:<id>:*`
+  group carries that, and the two tokens are independent. `setup:all`'s member
+  flags and the `setup-<slug>` aliases are a **third** list: one per **member
+  repo**, named by that member's own slug. `REPO_NAME` is **a literal, never
+  derived at load time** — the basename of the config root is the *branch* name
+  inside a linked worktree, so a derived value would address a different repo
+  depending on where you stood.
   Aliases that vary only by repo (the agent launchers) belong in the user's
   **global** config reading `$REPO_NAME`, not here: one definition, per-repo
   values. Two more marked positions sit beside it, both filled by the
