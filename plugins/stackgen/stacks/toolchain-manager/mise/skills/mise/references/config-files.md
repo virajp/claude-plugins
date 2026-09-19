@@ -79,7 +79,6 @@ python.uv_venv_auto = "create|source"
 
 [env]
 # Only what is identical in every environment.
-DISABLE_TELEMETRY = 1
 
 # A marked position: the orchestrator fills it with this repo's folder name,
 # slugified (the slug rule `assets/ids.md` defines) — not a project id. A

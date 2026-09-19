@@ -9,9 +9,10 @@ backlog: [ B48 ]
 
 ## Status
 
-**APPROVED**
+**COMPLETE**
 
-APPROVED 2026-09-19 by the user
+COMPLETE 2026-09-19 — 34d383af, bea16f14, 90fa37a8 on branch
+2026-09-19-mise-drop-disable-telemetry
 
 ## Consent
 
@@ -94,11 +95,11 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                                                                                                                                                                                                                                     | Depends on | Status  | Commit |
-| -- | ---- | -------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-mise-pack.md](01-mise-pack.md)           | edit | `plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise.toml`, `plugins/stackgen/stacks/toolchain-manager/mise/skills/mise/SKILL.md`, `plugins/stackgen/stacks/toolchain-manager/mise/skills/mise/references/config-files.md`, `plugins/stackgen/stacks/toolchain-manager/mise/pack.yaml`, `plugins/stackgen/stacks/bundles/mise.md`, `plugins/stackgen/stacks/inventory.md` | —          | pending |        |
-| U2 | 2    | [02-docs.md](02-docs.md)                     | edit | `readme.md`, `CLAUDE.md`, `site/src/content/docs/**`, `.claude/**` (expected no-op)                                                                                                                                                                                                                                                                                                      | U1         | pending |        |
-| U3 | 3    | [03-gates-and-bump.md](03-gates-and-bump.md) | edit | `plugins/stackgen/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`                                                                                                                                                                                                                                                                                                         | U2         | pending |        |
+| Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                                                                                                                                                                                                                                     | Depends on | Status | Commit        |
+| -- | ---- | -------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ | ------------- |
+| U1 | 1    | [01-mise-pack.md](01-mise-pack.md)           | edit | `plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise.toml`, `plugins/stackgen/stacks/toolchain-manager/mise/skills/mise/SKILL.md`, `plugins/stackgen/stacks/toolchain-manager/mise/skills/mise/references/config-files.md`, `plugins/stackgen/stacks/toolchain-manager/mise/pack.yaml`, `plugins/stackgen/stacks/bundles/mise.md`, `plugins/stackgen/stacks/inventory.md` | —          | green  | 34d383af      |
+| U2 | 2    | [02-docs.md](02-docs.md)                     | edit | `readme.md`, `CLAUDE.md`, `site/src/content/docs/**`, `.claude/**` (expected no-op)                                                                                                                                                                                                                                                                                                      | U1         | green  | — (no change) |
+| U3 | 3    | [03-gates-and-bump.md](03-gates-and-bump.md) | edit | `plugins/stackgen/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`                                                                                                                                                                                                                                                                                                         | U2         | green  | 90fa37a8      |
 
 ## Shared-file rule
 
@@ -173,8 +174,19 @@ none
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit       | Model | Round | Outcome | Detail                                                                                                                                                                                                                                                                   | Commit   |
+| ---- | ---------- | ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| 0    | preflight  | —     | —     | green   | doctor: no `.config/vwf.yaml`, no project scoped; mise, graphify CLI and the main checkout's graph present, no blocking finding; no `code` unit — LSP rule and conventions fetch skipped; format check skipped (no `covers:`); wave gate 4/4 green on the inherited tree | —        |
+| 1    | U1         | opus  | 1     | green   | six owned files changed; DECIDED none; GAP: `git diff --stat` showed the plan folder's own index.md too — the orchestrator's status/run-log edit re-padded by the format hook, not the unit's; verification 5/5 green                                                    | 34d383af |
+| 1    | R1         | opus  | 1     | pass    | findings 0; CONTRACT clean; RULINGS clean; payload diff exactly one deleted line, SKILL.md refolded within surrounding width, no telemetry prose anywhere outside plugins/                                                                                               | —        |
+| 2    | U2         | opus  | 1     | green   | CHANGED none — docs-sync surveyed develop..HEAD against readme.md, CLAUDE.md, installer/CLAUDE.md, site/CLAUDE.md, .claude/**, site/src/content/docs/**: no falsified passage; DECIDED none; GAP only the folder's own re-padding; commit skipped per the unit file      | —        |
+| 2    | R2         | opus  | 1     | pass    | findings 0; CONTRACT clean; RULINGS clean; no edit matches the survey fact                                                                                                                                                                                               | —        |
+| 3    | U3         | opus  | 1     | green   | plugin.json 1.20.0 → 1.20.1; marketplace.json regenerated (ref stackgen-v1.20.1); DECIDED none; GAP none; verification 7/7 green                                                                                                                                         | 90fa37a8 |
+| 3    | R3         | opus  | 1     | pass    | findings 0; CONTRACT clean; RULINGS clean; vwf/site/installer versions untouched                                                                                                                                                                                         | —        |
+| —    | acceptance | —     | —     | skipped | no covers: — no blueprint slice, no acceptance criteria                                                                                                                                                                                                                  | —        |
+| —    | ux         | —     | —     | skipped | no covers: — no Screens contract                                                                                                                                                                                                                                         | —        |
+| —    | reconcile  | —     | —     | skipped | no covers: — no stamps, registry or environment to reconcile; no code unit — nothing to persist; U2 and U3 were this plan's docs and gates-and-bump units                                                                                                                | —        |
+| —    | final gate | —     | —     | green   | wave gate 4/4 green over the finished tree; orchestrator gate: grep DISABLE_TELEMETRY plugins/ → 0 hits                                                                                                                                                                  | —        |
 
 ## Launch
 
