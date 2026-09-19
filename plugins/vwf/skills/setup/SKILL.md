@@ -87,7 +87,10 @@ user happened to be standing in.
 
 `/vwf:setup reshape` is the line `/vwf:doctor` prints for every repo-shape
 finding, so most runs of it arrive from a drift row and should act on exactly
-what that row named.
+what that row named. The shape pass includes init's **forge pass** — the
+default branch, the protection on `develop` and `main`, the base's backlog
+project — which is idempotent on a repo already set, so a reshape that arrives
+from a forge-state row sets only what drifted.
 
 ## Step 0 — Resolve the mode
 
@@ -104,19 +107,21 @@ First, is the shape **there**: in **each** repo of that set, the stack adapter's
 lockfile records all three unconditional repo slugs — `mise`, `repo-gates` and
 `repo-hygiene` (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). Named exactly,
 never constructed: a slug assembled from configuration is one that can silently
-resolve to nothing. Second, is it **current**: the six predicates under **"The
-repo shape against its baseline"** in `/vwf:doctor`'s stack-checks reference,
-evaluated **per repo** on that repo's own artifacts — the pack versions the
-adapter lockfile records against what the adapter ships now, the registry's
-project ids behind the surfaces generated from them, the `develop`/`main` pair,
-the toolchain manager's repo-name key against the repo's folder, the bytes of
-the pack-owned files the packs landed against the lock, marked positions
-spliced out, and the marked positions init fills in that same environment
-block. Read the artifacts that section reads and
-evaluate them **by it**: the predicates are doctor's and are deliberately not
-restated here, so the two can never drift apart. Every repo recording all
-three slugs and holding all six predicates — say so in one line, naming the
-repos checked, and read on.
+resolve to nothing. Second, is it **current**: the seven predicates under
+**"The repo shape against its baseline"** in `/vwf:doctor`'s stack-checks
+reference, evaluated **per repo** on that repo's own artifacts — the pack
+versions the adapter lockfile records against what the adapter ships now, the
+registry's project ids behind the surfaces generated from them, the
+`develop`/`main` pair, the toolchain manager's repo-name key against the repo's
+folder, the bytes of the pack-owned files the packs landed against the lock,
+marked positions spliced out, the marked positions init fills in that same
+environment block, and — predicate (g), the forge state — the default branch
+as chosen, both branches protected, and the base's backlog project present,
+read from the forge when its CLI is on `PATH` and logged in. Read the
+artifacts that section reads and evaluate them **by it**: the predicates are
+doctor's and are deliberately not restated here, so the two can never drift
+apart. Every repo recording all three slugs and holding all seven predicates —
+say so in one line, naming the repos checked, and read on.
 
 **Otherwise some repo needs init, and setup offers it — once, for the whole
 product.** Any of the three slugs missing in a repo, that repo is **unshaped**:
