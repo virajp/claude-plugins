@@ -6,8 +6,8 @@ description: The one owner of docs/plans/ bookkeeping — the plan index
   next pick, the resolution of a folder's requires list, priority derivation,
   the listing. Invoked by /vwf:plan and /vwf:change-plan at hand-off, by
   /vwf:execute at claim, status changes and landing, and by a session when the
-  user asks to archive or list plans — never typed.
-argument-hint: "[add <folder> | claim <folder> | status <folder> <state> [detail] | complete <folder> | archive [folder] | next | resolve <folder> | priority <folder | requires…> | list]"
+  user asks to unclaim, archive or list plans — never typed.
+argument-hint: "[add <folder> | claim <folder> | unclaim <folder> | status <folder> <state> [detail] | complete <folder> | archive [folder] | next | resolve <folder> | priority <folder | requires…> | list]"
 model: sonnet
 user-invocable: false
 disable-model-invocation: false
@@ -43,9 +43,10 @@ the worktree per unit. The backlog — a project on the base repo's forge — is
 **No verb commits.** Every verb writes and stops; the caller commits, and each
 verb below names the commit its edit rides: the planner's approval commit for
 `add`, `/vwf:execute`'s two `docs: plan queue — <folder> …` commits for
-`claim` and `complete`, `/vwf:execute`'s final `docs:` commit in the worktree
-for the landing's `status` and `archive`, and the git-workflow commit of the
-session that asked for a standalone `archive`.
+`claim` and `complete`, the same-shaped `… unclaimed` commit of whoever asked
+for `unclaim`, `/vwf:execute`'s final `docs:` commit in the worktree for the
+landing's `status` and `archive`, and the git-workflow commit of the session
+that asked for a standalone `archive`.
 
 ## The files
 
@@ -85,10 +86,13 @@ plans as a function of what happens to be cloned.
 The index is edited **only in the main checkout, on the integration branch** —
 a run branch never touches it, which is what lets two sessions land in
 parallel without a conflict on it; the contract's *Writing a row* is the
-procedure, one plain git command per step. The Status block and the move are
-edited **wherever the folder is** — a worktree during a run, the main checkout
+procedure, one plain git command per step — `claim`, `unclaim` and `complete`
+are the verbs that edit it. The Status block and the move are edited
+**wherever the folder is** — a worktree during a run, the main checkout
 otherwise. A verb that edits both, invoked from a worktree, does the folder
-half and says the row is left for the landing's `complete`.
+half and says the row is left for the landing's `complete`. `unclaim` is the
+one verb that edits both halves in the main checkout: by its own precondition
+the run's worktree no longer exists, so the folder is only there.
 
 ## Verbs
 
@@ -128,6 +132,56 @@ caller's to handle per that procedure — a clean rebase pushes again, a
 conflict on the same row means another session claimed first, and the caller
 re-picks or stops. A row already `RUNNING`, or absent, is refused in one line.
 Edits no Status block — the worktree does not exist yet.
+
+### `unclaim <folder>`
+
+The reverse of `claim`, for a claim whose run is gone: the row back from
+`RUNNING` to `APPROVED`, on the user's consent, once the run's worktree no
+longer exists. It releases a claim; it never takes one — a `RUNNING` row is
+still never stolen, and `next` still never picks one.
+
+**Where.** The main checkout, on the integration branch, after
+`git pull --ff-only` — the same procedure `claim` follows (the contract's
+*Writing a row*), including the stash-if-dirty step and the push-rejection
+handling.
+
+**Precondition — the row.** The folder's row must read `RUNNING`. Anything
+else is a one-line refusal naming what was found: `APPROVED` — nothing to
+release; `COMPLETE` — landed, `archive` is the verb; no row — no row. A second
+`unclaim` on the same folder lands on the `APPROVED` refusal.
+
+**Precondition — liveness.** Read the folder's Status block in the main
+checkout. Its detail line normally names the run's worktree —
+`RUNNING since <ts> in <path>` — but whether it does or not, derive the run's
+worktree from `git worktree list --porcelain`: a listed path whose basename
+is the folder's basename, or whose branch is named for it. When such a
+worktree is listed, **refuse**: print the path and the one line the user runs
+to prove the run is gone — `git worktree remove <path>`. Note that git
+refuses to remove a dirty worktree, so nothing uncommitted is lost silently,
+and that a live session in another window is exactly what this refusal
+protects. The verb never removes a worktree.
+
+**The branch.** `git branch --list <folder basename>`. When the branch
+exists, the report names it and the line `git branch -D <branch>`, with the
+note that a fresh `/vwf:execute` refuses to cut a worktree over an existing
+branch until it is gone, and that the user decides whether its committed
+units are worth keeping. The verb never deletes a branch.
+
+**Consent.** Print what was found — the row `RUNNING`, the worktree absent,
+the branch present or absent, the Status detail line — and ask once: reset
+`<folder>` to `APPROVED`? A no ends the verb with nothing edited.
+
+**The edits.** The row's `Status` cell `RUNNING` → `APPROVED`, nothing else in
+the row. The folder's Status block: when it already reads `**APPROVED**`,
+leave it — at claim the block is edited in the worktree, so on the
+integration branch it usually still does; otherwise set it to `**APPROVED**`
+with the detail line `APPROVED <date> — unclaimed; was: <previous detail
+line>`.
+
+**The report.** The edit for the caller's
+`docs: plan queue — <folder> unclaimed` commit, plus the branch note when the
+branch exists. The caller commits and pushes on the integration branch, the
+way `claim`'s commit lands.
 
 ### `status <folder> <state> [detail]`
 
@@ -253,7 +307,7 @@ never rides a run branch.
 list. For every id on it whose item in the backlog project does not yet read
 `Done`, invoke `/vwf:backlog done <ids>` — a plan can reach `archived/` without
 having landed through the command that would have closed them, and a retired
-plan leaving an item `In Progress` forever is the row nobody comes back to.
+plan leaving an item `In progress` forever is the row nobody comes back to.
 Never edit the backlog here: `/vwf:backlog` is its only writer, and its edit
 touches nothing in the tree, so the archive commit carries no backlog change.
 
@@ -338,6 +392,8 @@ carrying the procedure:
 | `/vwf:execute`                  | at every Status change — start, pause, block, landing               | `status <folder> <state> [detail]` |
 | `/vwf:execute`                  | on a green landing with no open gap                                 | `archive <folder>`                 |
 | `/vwf:execute`                  | after the merge lands                                               | `complete <folder>`                |
+| `/vwf:execute`                  | on its resume path, on the user's yes once the worktree is gone     | `unclaim <folder>`                 |
+| a session, on the user's word   | the user asks to unclaim a stale plan                               | `unclaim <folder>`                 |
 | a session, on the user's word   | the user asks to retire a folder, or to see the queue               | `archive [folder]`, `list`         |
 
 ## What this skill never does
@@ -354,5 +410,7 @@ carrying the procedure:
 - **Decide whether a warning blocks.** Every completion warning asks; the user
   decides.
 - **Take a `RUNNING` row.** `next` never picks one and `claim` refuses one;
-  a stale claim is released only by a hand edit back to `APPROVED`, committed
-  on the integration branch.
+  a stale claim is released only by `unclaim`, on the user's consent, once the
+  worktree it names is gone — never by a hand edit.
+- **Remove a worktree or delete a branch.** `unclaim` names the commands and
+  the user runs them.
