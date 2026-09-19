@@ -88,7 +88,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `package-manager/pnpm` | pnpm | `language-bundle` | repo |  |  | 0.2.1 | Dependency installation, locking and workspace layout for the Node ecosystem — the manifest contract and the monorepo shape. |
 | `package-manager/pub` | pub | `app-framework` | repo |  |  | 0.1.0 | Dependency declaration and locking for a Flutter app — pubspec.yaml, which also carries the SDK constraints and native package-manager config. |
 | `package-manager/uv` | uv | `language-bundle` | repo |  |  | 0.1.0 | Dependency resolution, locking, virtualenv management and process running for Python — one tool where the ecosystem historically had four. |
-| `repo-hygiene/repo-hygiene` | Repo hygiene | `repo-hygiene` | repo |  |  | 1.1.0 | The files a repository needs before it has a stack — the ignore set, the editor and attribute defaults, the licence and the security contact, and the dependency-update policy. |
+| `repo-hygiene/repo-hygiene` | Repo hygiene | `repo-hygiene` | repo |  |  | 1.1.1 | The files a repository needs before it has a stack — the ignore set, the editor and attribute defaults, the licence and the security contact, and the dependency-update policy. |
 | `stylesheet/plain-css` | Plain CSS | `stylesheet` | stylesheet | plain |  | 0.1.0 | The design system's roles as CSS custom properties and hand-authored rules in cascade layers — no build step of its own, no generated classes, and nothing between the contract and the browser. |
 | `stylesheet/stylex` | StyleX | `stylesheet` | stylesheet | compile-time |  | 0.1.0 | Styles authored as typed objects in the component's own language and compiled to atomic CSS at build — the token mapping type-checked, the cascade replaced by explicit merge order, and nothing evaluated at runtime. |
 | `stylesheet/tailwindcss` | Tailwind CSS | `stylesheet` | stylesheet | utility |  | 0.1.0 | Utility classes generated from a token block — the design system's semantic roles declared once in CSS, and every style written at the call site as a class rather than in a stylesheet of its own. |
@@ -159,7 +159,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `pnpm-workspace` | pnpm · workspace | `workspace` | repo | `package-manager/pnpm@0.2.1` |  |
 | `postgres` | PostgreSQL | `database` | backing | `datastore/postgres@0.1.0` |  |
 | `repo-gates` | Repo gates | `repo-gate` | repo | `toolchain-gate/dprint@1.0.1`, `toolchain-gate/gitleaks@1.1.0`, `toolchain-gate/grype@1.0.0`, `toolchain-gate/pre-commit@1.1.1` | yes |
-| `repo-hygiene` | repo-hygiene | `repo-hygiene` | repo | `repo-hygiene/repo-hygiene@1.1.0` | yes |
+| `repo-hygiene` | repo-hygiene | `repo-hygiene` | repo | `repo-hygiene/repo-hygiene@1.1.1` | yes |
 | `stitch` | Google Stitch | `design-tool` | design | `design-tool/stitch@0.1.0` |  |
 | `stylex` | StyleX | `stylesheet` | stylesheet | `stylesheet/stylex@0.1.0` |  |
 | `tailwindcss` | Tailwind CSS | `stylesheet` | stylesheet | `stylesheet/tailwindcss@0.1.0` |  |

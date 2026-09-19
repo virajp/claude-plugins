@@ -164,17 +164,36 @@ uses a placeholder, so a `<` in a shipped file is one of these or a bug.
 | `<YEAR>`     | the year the licence is first applied                        |
 | `<HOLDER>`   | the copyright holder — a person or the legal entity          |
 
+One position reads differently: in `SECURITY.md` the same `<REPO_URL>` token
+stands alone on its own line and is filled with the **security contact the
+initializer was given** — an advisory URL or an email — never with the repo
+URL plus a suffix, so the file reads the same whichever shape the contact is.
+The issue forms' "Report a vulnerability" link is the same slot: its `url:` is
+the bare token, filled with the contact when the contact is a URL — and the
+whole entry is **removed** by the initializer when the contact is an email or
+was declined, since a contact link there must be a web address. The
+"Documentation" link above it keeps the repo URL, as everywhere else.
+
 ## Licence and security contact
 
-**Both are asked, never assumed.** A repository that declines a licence gets
-no `LICENSE` file, which is a legible answer — "all rights reserved" — and
-not the same as a licence chosen by a tool on the author's behalf. The two
-offered are MIT and Apache-2.0: permissive either way, differing in whether
-the grant is explicit about patents and about what a contributor is
-contributing.
+**Both follow the repository's visibility, and both are asked, never
+assumed.** The initializer asks whether each repo is public or private first,
+and the two files take their shape from the answer.
 
-`SECURITY.md` is the same call. A repository with no private channel to point
-at is better off with no file than with one naming a channel nobody watches.
+A **public** repo is offered a licence — MIT or Apache-2.0: permissive either
+way, differing in whether the grant is explicit about patents and about what a
+contributor is contributing — or none. Declining gets no `LICENSE` file, which
+is a legible answer — "all rights reserved" — and not the same as a licence
+chosen by a tool on the author's behalf. A **private** repo is offered no
+licence and gets no `LICENSE`: a grant to the public has no reader there.
+
+`SECURITY.md` is the same call, with the contact shaped by visibility: a
+public repo's default is its forge's private advisory page; a private repo is
+asked for a contact of its own — an email or an internal URL — with no
+default. Either shape fills the one position in the template. A repository
+with no private channel to point at is better off with no file than with one
+naming a channel nobody watches, so declining the contact writes no file
+whichever the visibility.
 
 ## Dependency updates
 

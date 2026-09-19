@@ -31,9 +31,14 @@ then do is `MERGE_MODEL` in `.config/mise.toml`: `direct` merges locally and
 pushes, `pr` pushes the branch and opens a pull request instead, merging
 nothing.
 
-The forge's own default branch is set **by hand, once**, and no task re-runs it:
-`gh repo edit --default-branch <branch>`, or
-`glab repo update --defaultBranch <branch>` on GitLab.
+The forge's own settings — the default branch, and protection on `develop` and
+`main` — are set by `/vwf:init`'s forge pass on GitHub and GitLab, and no task
+re-runs them. On any other forge a maintainer sets them **by hand, once**:
+
+- The default branch: `gh repo edit --default-branch <branch>`, or
+  `glab repo update --defaultBranch <branch>` on GitLab.
+- Protection on both `develop` and `main`: no force-push and no deletion; and
+  when `MERGE_MODEL` is `pr`, a pull request required to land on either.
 
 ## Commits
 
