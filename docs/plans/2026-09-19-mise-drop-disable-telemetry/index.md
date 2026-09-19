@@ -181,6 +181,8 @@ none
 | 1    | R1        | opus  | 1     | pass    | findings 0; CONTRACT clean; RULINGS clean; payload diff exactly one deleted line, SKILL.md refolded within surrounding width, no telemetry prose anywhere outside plugins/                                                                                               | —        |
 | 2    | U2        | opus  | 1     | green   | CHANGED none — docs-sync surveyed develop..HEAD against readme.md, CLAUDE.md, installer/CLAUDE.md, site/CLAUDE.md, .claude/**, site/src/content/docs/**: no falsified passage; DECIDED none; GAP only the folder's own re-padding; commit skipped per the unit file      | —        |
 | 2    | R2        | opus  | 1     | pass    | findings 0; CONTRACT clean; RULINGS clean; no edit matches the survey fact                                                                                                                                                                                               | —        |
+| 3    | U3        | opus  | 1     | green   | plugin.json 1.20.0 → 1.20.1; marketplace.json regenerated (ref stackgen-v1.20.1); DECIDED none; GAP none; verification 7/7 green                                                                                                                                         | —        |
+| 3    | R3        | opus  | 1     | pass    | findings 0; CONTRACT clean; RULINGS clean; vwf/site/installer versions untouched                                                                                                                                                                                         | —        |
 
 ## Launch
 
