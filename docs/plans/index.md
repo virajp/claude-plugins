@@ -6,6 +6,5 @@ to pick the next runnable plan.
 
 ## Plans
 
-| Folder                                              | Kind   | Plan                                                                                              | Target repo | Priority | Status  | Requires | Backlog |
-| --------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------- | ----------- | -------- | ------- | -------- | ------- |
-| docs/plans/2026-09-19-backlog-trim-preserves-status | change | backlog trim preserves Status — snapshot every item before the replace mutation, restore it after | —           | 10       | RUNNING | —        | —       |
+| Folder | Kind | Plan | Target repo | Priority | Status | Requires | Backlog |
+| ------ | ---- | ---- | ----------- | -------- | ------ | -------- | ------- |
