@@ -72,22 +72,28 @@ The project's own fields carry the state:
 | ---------- | --------------------------------------------------------------------------------- |
 | `Id`       | `Bnn`, the title's prefix, from `B01`, **never reused** — a closed id stays spent |
 | `Priority` | the template's `P0` (pick first), `P1`, `P2`                                      |
-| `Status`   | `Todo` → `In Progress` → `Done`, or `Closed` for an item dropped without a plan   |
+| `Status`   | `Backlog` → `In progress` → `Done`, or `Closed` for one dropped without a plan    |
 | `Group`    | free text, or empty — a label shared by items that want one plan between them     |
 
 The older vocabulary an archived plan folder may still use translates once:
-`open` is `Todo`, `planned` is `In Progress`, `done` is `Done`, `closed` is
+`open` is `Backlog`, `planned` is `In progress`, `done` is `Done`, `closed` is
 `Closed`; the old `P1`/`P2`/`P3` reads as `P0`/`P1`/`P2`. The verbs below keep
 their names.
 
-Two statuses carry a line the body must end with. An `In Progress` item ends
+Two statuses carry a line the body must end with. An `In progress` item ends
 with `Planned in: <folder>` — the plan folder that covers it. A `Closed` item
 ends with the reason it was dropped.
 
-**The bootstrap** adds what the Team planning template lacks, once, on the
-first verb that needs it, and is idempotent: the `Closed` option on the
-`Status` field, and a `Group` text field. The reference specifies both
-mutations.
+**The bootstrap** reshapes what the Team planning template ships, once, on the
+first verb that needs it, and is idempotent. The template's `Status` field
+carries `Backlog`, `Ready`, `In progress`, `In review` and `Done`; the
+bootstrap trims it to the skill's four — `Backlog`, `In progress` and `Done`
+kept with their colour and description, `Closed` added — and creates a `Group`
+text field. The trim is a replace, and an item sitting in a removed option
+would lose its Status: so when any item is `Ready` or `In review` the bootstrap
+stops, names each such item, and asks the user to move it to `Backlog` or
+`In progress` on the board before the verb is re-run — it never moves an item
+itself. The reference specifies the procedure and both mutations.
 
 **A missing project** is created by the user, not by the skill: GitHub's API
 cannot instantiate a built-in template, and Team planning is one. `add` is the
@@ -105,11 +111,12 @@ commands the reference gives.
 ### `add <item>`
 
 Create a draft issue titled with the next unused id — one past the highest
-`Bnn` any item's title carries, done and closed included — and set its Status
-to `Todo`. Ask for the priority with a three-option question (`P0`, `P1`, `P2`)
-unless the request already names one. Set `Group` only when the user names a
-group; an item that stands alone leaves the field empty. Write the body with
-enough detail that the plan interview starts from it rather than from the
+`Bnn` over every item's title, done and closed included, and every plan
+folder's `backlog:` frontmatter list, live and archived — and set its Status
+to `Backlog`. Ask for the priority with a three-option question (`P0`, `P1`,
+`P2`) unless the request already names one. Set `Group` only when the user
+names a group; an item that stands alone leaves the field empty. Write the body
+with enough detail that the plan interview starts from it rather than from the
 one-line title. On a repo with no project, ask consent to create it, hand over
 the browser per the reference's missing-project procedure, and add once the
 project is found.
@@ -125,7 +132,7 @@ project's URL.
 
 ### `next`
 
-Name the top `Todo` item by priority then id — its id, title and body — and
+Name the top `Backlog` item by priority then id — its id, title and body — and
 the command that picks it up:
 
 - `/vwf:change-plan <item>` for work the blueprint does not describe;
@@ -141,14 +148,14 @@ Set one item's Priority to `P0`, `P1` or `P2`. The id does not change.
 
 ### `planned <ids> <folder>`
 
-Set each named item's Status to `In Progress` and end each body with
+Set each named item's Status to `In progress` and end each body with
 `Planned in: <folder>`. `<ids>` is one id or several. An item already
-`In Progress` under a different path is a question for the user, not a silent
+`In progress` under a different path is a question for the user, not a silent
 overwrite.
 
 ### `done <ids>`
 
-Set each named item's Status to `Done`. An item that was never `In Progress`
+Set each named item's Status to `Done`. An item that was never `In progress`
 still moves — work sometimes lands without a plan folder — but say so.
 
 ### `close <id>`
@@ -183,8 +190,8 @@ means the plan covers no backlog item and nothing is called.
   store, and a caller's commit carries no backlog change.
 - **Edit any file.** It edits the project and nothing on disk — not the plan it
   is told about, not a doc, not a config.
-- **Invent an id, or reuse one.** Ids come from the item titles, one past the
-  highest.
+- **Invent an id, or reuse one.** Ids come from the item titles and the plan
+  folders' `backlog:` lists, one past the highest.
 - **Keep a file copy.** The project is the one store. A session that cannot
   reach it has no backlog to read, and says so — this replaces the earlier
   rule that a file was kept so an offline session could read it.

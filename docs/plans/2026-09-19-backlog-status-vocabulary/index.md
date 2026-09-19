@@ -10,9 +10,10 @@ backlog: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-09-19 by the user
+RUNNING since 2026-09-19T05:44 in
+/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-09-19-backlog-status-vocabulary
 
 ## Consent
 
@@ -131,7 +132,7 @@ None.
 
 | Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                              | Depends on | Status  | Commit |
 | -- | ---- | -------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-skill.md](01-skill.md)                   | edit | `plugins/vwf/skills/backlog/SKILL.md`, `plugins/vwf/skills/backlog/references/github.md`                                                                                          | —          | pending |        |
+| U1 | 1    | [01-skill.md](01-skill.md)                   | edit | `plugins/vwf/skills/backlog/SKILL.md`, `plugins/vwf/skills/backlog/references/github.md`                                                                                          | —          | running |        |
 | U2 | 2    | [02-docs.md](02-docs.md)                     | edit | `.claude/skills/vwf-plugin/references/skills-and-agents.md`, `site/src/content/docs/plugins/vwf.md`, `docs/memory/decisions/2026-09-19-backlog-status-vocabulary.md`, `readme.md` | U1         | pending |        |
 | U3 | 3    | [03-gates-and-bump.md](03-gates-and-bump.md) | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `site/package.json`                                                                                  | U2         | pending |        |
 
@@ -219,8 +220,10 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome | Detail                                                                                                                                                                                                                   | Commit |
+| ---- | --------- | ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| 0    | preflight | —     | 1     | pass    | doctor: no .config/vwf.yaml, no stack; mise, graphify CLI, graph in main checkout present; format check skipped (no covers:); conventions fetch skipped (edit units only); 5 wave-gate lines green on the inherited tree | —      |
+| 1    | U1 skill  | opus  | 1     | pass    | edit; DECIDED: Status table cell shortened to fit the hand-aligned column; step 5 reads ids from field-list only (decision 4); GAP none                                                                                  | —      |
 
 ## Launch
 
