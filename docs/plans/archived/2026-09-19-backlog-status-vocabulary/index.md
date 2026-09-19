@@ -10,10 +10,9 @@ backlog: []
 
 ## Status
 
-**RUNNING**
+**COMPLETE**
 
-RUNNING since 2026-09-19T05:44 in
-/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-09-19-backlog-status-vocabulary
+COMPLETE 2026-09-19 — a609b8b8, c54f17e9, e905cbf8, 0f85a7ac
 
 ## Consent
 
@@ -130,11 +129,11 @@ None.
 
 ## Units
 
-| Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                              | Depends on | Status  | Commit   |
-| -- | ---- | -------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
-| U1 | 1    | [01-skill.md](01-skill.md)                   | edit | `plugins/vwf/skills/backlog/SKILL.md`, `plugins/vwf/skills/backlog/references/github.md`                                                                                          | —          | green   | a609b8b8 |
-| U2 | 2    | [02-docs.md](02-docs.md)                     | edit | `.claude/skills/vwf-plugin/references/skills-and-agents.md`, `site/src/content/docs/plugins/vwf.md`, `docs/memory/decisions/2026-09-19-backlog-status-vocabulary.md`, `readme.md` | U1         | green   | c54f17e9 |
-| U3 | 3    | [03-gates-and-bump.md](03-gates-and-bump.md) | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `site/package.json`                                                                                  | U2         | running |          |
+| Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                              | Depends on | Status | Commit   |
+| -- | ---- | -------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ | -------- |
+| U1 | 1    | [01-skill.md](01-skill.md)                   | edit | `plugins/vwf/skills/backlog/SKILL.md`, `plugins/vwf/skills/backlog/references/github.md`                                                                                          | —          | green  | a609b8b8 |
+| U2 | 2    | [02-docs.md](02-docs.md)                     | edit | `.claude/skills/vwf-plugin/references/skills-and-agents.md`, `site/src/content/docs/plugins/vwf.md`, `docs/memory/decisions/2026-09-19-backlog-status-vocabulary.md`, `readme.md` | U1         | green  | c54f17e9 |
+| U3 | 3    | [03-gates-and-bump.md](03-gates-and-bump.md) | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `site/package.json`                                                                                  | U2         | green  | 0f85a7ac |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -232,9 +231,10 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | —    | acceptance        | —     | 1     | skipped | why: no covers: — no blueprint slice, no acceptance criteria                                                                                                                                                             | —        |
 | —    | ux                | —     | 1     | skipped | why: no covers: — no Screens contract                                                                                                                                                                                    | —        |
 | —    | reconcile         | —     | 1     | skipped | why: no covers: (no stamps, registry, environment or harness edit) and no code unit (nothing to persist); the docs unit ran as wave 2                                                                                    | —        |
-| 3    | U3 gates-and-bump | opus  | 1     | pass    | edit; site 1.1.27→1.1.28 (p:site:version, committed nothing), vwf 19.34.0→19.34.1 by hand, marketplace.json regenerated (ref + version field); all 5 gate lines green; GAP none                                          | —        |
+| 3    | U3 gates-and-bump | opus  | 1     | pass    | edit; site 1.1.27→1.1.28 (p:site:version, committed nothing), vwf 19.34.0→19.34.1 by hand, marketplace.json regenerated (ref + version field); all 5 gate lines green; GAP none                                          | 0f85a7ac |
 | 3    | R3                | opus  | 1     | pass    | wave review: FINDINGS 0, CONTRACT clean, RULINGS clean; no tag exists                                                                                                                                                    | —        |
 | 3    | gate              | —     | 1     | pass    | 5 gate lines green (precommit re-padded the folder once, green on the second pass)                                                                                                                                       | —        |
+| —    | reconcile         | —     | 2     | pass    | final gate over the finished tree: 5 wave-gate lines green; orchestrator gates: none beyond the wave gate (per the folder)                                                                                               | 0f85a7ac |
 
 ## Launch
 
