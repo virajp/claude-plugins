@@ -9,9 +9,10 @@ backlog: [ B12 ]
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-09-19 by the user
+RUNNING since 2026-09-19T12:46Z in
+/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-09-19-unclaim-verb
 
 ## Consent
 
@@ -144,12 +145,12 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                                      | Kind | Owns                                                                                                                                                                              | Depends on | Status  | Commit |
-| -- | ---- | ---------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-plan-management.md](01-plan-management.md) | edit | `plugins/vwf/skills/plan-management/SKILL.md`, `plugins/vwf/skills/plan-management/references/plan-index.md`                                                                      | —          | pending |        |
-| U2 | 1    | [02-execute.md](02-execute.md)                 | edit | `plugins/vwf/skills/execute/SKILL.md`, `plugins/vwf/skills/execute/references/blocking.md`                                                                                        | —          | pending |        |
-| U3 | 2    | [03-docs.md](03-docs.md)                       | edit | `.claude/skills/vwf-plugin/references/skills-and-agents.md`, `site/src/content/docs/plugins/vwf.md`, `docs/memory/decisions/2026-09-19-unclaim-verb.md`, `readme.md`, `CLAUDE.md` | U1, U2     | pending |        |
-| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md)   | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `site/package.json`                                                                                  | U3         | pending |        |
+| Id | Wave | Unit file                                      | Kind | Owns                                                                                                                                                                              | Depends on | Status  | Commit   |
+| -- | ---- | ---------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
+| U1 | 1    | [01-plan-management.md](01-plan-management.md) | edit | `plugins/vwf/skills/plan-management/SKILL.md`, `plugins/vwf/skills/plan-management/references/plan-index.md`                                                                      | —          | green   | a2ac7047 |
+| U2 | 1    | [02-execute.md](02-execute.md)                 | edit | `plugins/vwf/skills/execute/SKILL.md`, `plugins/vwf/skills/execute/references/blocking.md`                                                                                        | —          | green   | 647fba34 |
+| U3 | 2    | [03-docs.md](03-docs.md)                       | edit | `.claude/skills/vwf-plugin/references/skills-and-agents.md`, `site/src/content/docs/plugins/vwf.md`, `docs/memory/decisions/2026-09-19-unclaim-verb.md`, `readme.md`, `CLAUDE.md` | U1, U2     | pending |          |
+| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md)   | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `site/package.json`                                                                                  | U3         | pending |          |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -243,8 +244,14 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                    | Commit   |
+| ---- | --------- | ----- | ----- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 0    | preflight | —     | 1     | pass        | no vwf.yaml, edit units only, no review row; mise, graphify, graph ok; format check skipped (no covers:); conventions fetch skipped (no code unit); 5 gate lines green                                                                                                                                                    | —        |
+| 1    | U1        | opus  | 1     | green       | unclaim verb section, hint, description, where-runs, 2 Called-by rows, never-does bullets, In progress; plan-index writers row, 3 commit messages, next rule + step 5 re-pointed. DECIDED: same-row push conflict on unclaim → restore checkout and stop (plan's 'applies unchanged' fit neither existing branch). No GAP | a2ac7047 |
+| 1    | U2        | opus  | 1     | green       | both execute refusals name unclaim; never-does bullet re-pointed; blocking.md resume offers and invokes unclaim on yes, B12 sentence deleted. DECIDED: two 'is a hand reset' sentences (SKILL.md, blocking.md) reworded to 'was unclaimed' — the verification grep targets them. No GAP                                   | 647fba34 |
+| 1    | R1        | opus  | 1     | findings(3) | all U1: SKILL.md:396 Called-by row 1 char wide; plan-index.md:65 Writers row unpadded; 3 consistency edits (SKILL.md:46, plan-index.md:13, :209) correct but unreported — reporting only. CONTRACT clean, RULINGS clean; U1/U2 verb spec agree                                                                            |          |
+| 1    | U1        | opus  | 2     | green       | R1 loop-back: Called-by row repadded to 69; Writers row repadded 33/284 (caller cell shortened, resume-path caller moved into Edit cell); three round-1 consistency edits now reported                                                                                                                                    | a2ac7047 |
+| 1    | R1        | opus  | 2     | pass        | 0 findings; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                                 |          |
 
 ## Launch
 
