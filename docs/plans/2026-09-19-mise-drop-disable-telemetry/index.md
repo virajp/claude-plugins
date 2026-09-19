@@ -9,9 +9,10 @@ backlog: [ B48 ]
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-09-19 by the user
+RUNNING since 2026-09-19T16:12Z in
+/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-09-19-mise-drop-disable-telemetry
 
 ## Consent
 
@@ -173,8 +174,11 @@ none
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome | Detail                                                                                                                                                                                                                                                                   | Commit |
+| ---- | --------- | ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| 0    | preflight | —     | —     | green   | doctor: no `.config/vwf.yaml`, no project scoped; mise, graphify CLI and the main checkout's graph present, no blocking finding; no `code` unit — LSP rule and conventions fetch skipped; format check skipped (no `covers:`); wave gate 4/4 green on the inherited tree | —      |
+| 1    | U1        | opus  | 1     | green   | six owned files changed; DECIDED none; GAP: `git diff --stat` showed the plan folder's own index.md too — the orchestrator's status/run-log edit re-padded by the format hook, not the unit's; verification 5/5 green                                                    | —      |
+| 1    | R1        | opus  | 1     | pass    | findings 0; CONTRACT clean; RULINGS clean; payload diff exactly one deleted line, SKILL.md refolded within surrounding width, no telemetry prose anywhere outside plugins/                                                                                               | —      |
 
 ## Launch
 
