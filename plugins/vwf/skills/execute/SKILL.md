@@ -131,22 +131,25 @@ tip, the way the contract's *Reading the queue* reads it. Then:
   merged Reconcile commit, an executed-but-unmerged prerequisite correctly
   halts too. For a **change** entry, say "run /vwf:execute <that folder>
   first" when its row is `APPROVED` and "another session is running <that
-  folder>; wait for it to land" when it is `RUNNING`. An entry the verb names
+  folder>; wait for it to land — or, when that run is gone, ask to unclaim
+  it" when it is `RUNNING`. An entry the verb names
   as unresolvable → "<entry> is neither in the plan index nor archived; fix
   the `requires:` line by hand".
 - Status `APPROVED` with no row at all → stop: "not in the plan index; re-run
   the planner's hand-off, or add the row by hand".
 - Status `APPROVED` with a `RUNNING` row → a claim another session holds. Stop
   and name it: the row is resumed only by the session that holds it, or claimed
-  afresh after a hand reset of the row to `APPROVED`, committed on the
-  integration branch.
+  afresh once the user has asked the session to unclaim it —
+  `plan-management`'s `unclaim <folder>`, which refuses while the run's
+  worktree still exists. Execute stops here; it never invokes the verb from
+  this refusal.
 - Status `BLOCKED` or `RUNNING` → a **resume**, per the Resume check under
   Recall below and [blocking and resume](references/blocking.md): the worktree
   named in the status line exists, and the run starts at the first unit that
   is not `green`. The ruling a block asked for must now be in the plan — if the
   status line still reads the same `UNRESOLVED:`, stop and say which ruling is
   missing. The row is expected to read `RUNNING` already, and is left alone; a
-  row reading `APPROVED` is a hand reset, and the run claims it again below.
+  row reading `APPROVED` was unclaimed, and the run claims it again below.
   A resume runs what its folder says and takes none of the fresh-run refusals
   below — a folder written before review rows existed was reviewed per unit,
   and cannot be re-approved mid-run. Two things it does refuse, each with the
@@ -881,8 +884,8 @@ and answered at the end.
   edit is a `plan-management` verb, the index one only in the main checkout,
   and never a row but its own plan's and the sweep the landing's `complete`
   applies
-- Takes a `RUNNING` row, however stale — a hand reset to `APPROVED` is the only
-  release
+- Takes a `RUNNING` row, however stale — `unclaim` on the user's ask, once its
+  worktree is gone, is the only release
 - Edits the backlog itself, or lets a unit do it — `/vwf:backlog` owns the
   project, and the landing calls it
 - Edits a blueprint doc beyond the `implementation:` stamp, or runs a
