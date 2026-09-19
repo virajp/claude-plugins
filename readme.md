@@ -77,9 +77,13 @@ blocker rather than a preference. Know this before you install.
   more — and says nothing at all about the Context7 runner, while `uv` matters
   as graphify's runtime rather than on its own. Run `/vwf:doctor` first
   regardless, but install all five rather than relying on it to tell you. A
-  sixth, `gh` — logged in, with the `project` scope — is needed only by
-  `/vwf:backlog`, which keeps the backlog in a GitHub Project; doctor reports
-  its absence as a **degradation** with the remedy.
+  sixth, `gh`, logged in, is needed by `/vwf:backlog`, which keeps the backlog
+  in a GitHub Project and wants the `project` scope, by `init`'s **forge pass**
+  (the default branch and protection on `develop` and `main` on the `repo`
+  scope, the backlog project on `project` — on a GitLab remote, `glab`), and by
+  the doctor predicate that reads that forge state back; doctor reports its
+  absence as a **degradation** with the remedy, and init prints the by-hand list
+  and carries on.
 - **It is opinionated on purpose.** One workflow, one set of conventions, sized
   for a solo developer or a small team — not a configurable framework for a
   large org.

@@ -75,18 +75,27 @@ closed list (`service`, `worker`, `webapp`, `site`, `cli`, `iac`, …) or type a
 requires** (a multi-select seeded by what is already registered on your machine,
 with *none* as the ordinary answer — `init` offers those rows minus the workflow
 plugin's own and its dependency's, since `setup:ai` installs those two either
-way), the licence, and a security contact — then shows **one plan** and applies
-it on one yes. Relay is one repo, so every one of those questions is a single
-row; on a product with member repos the same seven rounds simply carry a row per
-repo where the answer can differ.
+way), and whether Relay is **public or private** — proposed from what the forge
+says where the repo already has an `origin`, `private` otherwise — with the
+seventh round shaped by that answer: the licence, asked only for a public repo,
+and a security contact, an advisories-page URL for a public repo or a free email
+or internal URL for a private one — then shows **one plan** and applies it on
+one yes. Relay is one repo, so every one of those questions is a single row; on
+a product with member repos the same seven rounds simply carry a row per repo
+where the answer can differ.
 
 It closes with a git pass: it asks how work lands in this repo — `direct`, which
 merges locally and pushes, or `pr` — writes that answer to `MERGE_MODEL`, then
 stages what it wrote and asks once whether to commit, commit and push, or leave
-it, creating `develop` and `main` along the way. It never touches the forge's
-own settings: which branch the remote calls default is a one-time act a
-maintainer performs, and the hygiene pack's `CONTRIBUTING.md` carries the line
-for it. Its report prints, and setup carries on with its own work.
+it, creating `develop` and `main` along the way. If you chose *commit and push*,
+the **forge pass** follows on one more consent: it shows what it will set on the
+forge — the default branch (`develop` preselected), protection on `develop` and
+`main` (no force-push, no deletion, and a pull request required under `pr`), and
+the backlog project it hands you the browser to create — and applies it through
+the forge CLI, leaving any protection already there untouched. Without the CLI,
+or on a forge it has none for, it prints the same list for you to apply by hand
+— the form the hygiene pack's `CONTRIBUTING.md` keeps — and carries on. Its
+report prints, and setup carries on with its own work.
 
 **Then setup does its half.** A repo with no manifest, no source directories and
 no `docs/blueprint/` is *blank*, and setup treats it as such: it asks nothing

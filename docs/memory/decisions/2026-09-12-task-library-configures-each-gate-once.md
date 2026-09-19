@@ -83,6 +83,12 @@ ruling, verbatim:
 
 ## The D17 reversal
 
+> **Superseded by**
+> [`2026-09-20-init-forge-pass.md`](./2026-09-20-init-forge-pass.md) — init
+> reaches the forge again, through its CLI rather than a task; "names no forge
+> and inspects none" no longer holds for the init references, and the
+> `CONTRIBUTING.md` line is the by-hand fallback.
+
 D17 of `2026-09-06-init-owns-the-first-commit` had `init` ask which branch the
 remote should default to and run `mise run setup:default-branch <answer>`, so
 that vwf named no forge. The task is now deleted and the question with it.

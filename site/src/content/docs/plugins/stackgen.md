@@ -590,10 +590,10 @@ gate — a language-bundle topic rather than a repo gate — ships
 needs and no tool owns: a sectioned `.gitignore` (with a graphify section that
 ignores `graphify-out/*` while keeping `GRAPH_REPORT.md`), `.graphifyignore`,
 `.editorconfig`, `.gitattributes`, `SECURITY.md`, `CONTRIBUTING.md`, three
-`.github/ISSUE_TEMPLATE/` files, a root `renovate.json`, the chosen `LICENSE`,
-and the **editor baseline** — the largest `vscode.d/` fragment, since the
-settings every repo wants regardless of stack are hygiene by the same definition
-everything else here is.
+`.github/ISSUE_TEMPLATE/` files, a root `renovate.json`, the chosen `LICENSE` on
+a repo `/vwf:init` was told is public, and the **editor baseline** — the largest
+`vscode.d/` fragment, since the settings every repo wants regardless of stack
+are hygiene by the same definition everything else here is.
 
 The seam with `repo-gates` is worth stating, because it is the reason the kind
 exists rather than folding in: **a gate scans, while hygiene declares what is
@@ -602,10 +602,17 @@ different decisions, and a secret that is ignored is still a secret nothing ever
 scanned — writing them as one act is how that gets missed. Two consequences
 follow. The licence texts live under `config/_licenses/` as a **pack-private**
 payload that is never copied wholesale: a repo gets the one licence it chose,
-not a directory of them. And the stack-specific ignore sections are **appended
-per repo** by `/vwf:init`, one section per technology, never frozen into the
-pack — a pack that hard-codes them ages the moment a language renames its build
-directory.
+not a directory of them — and a repo init was told is **private** gets none,
+since a grant to the public has no reader there. `SECURITY.md`'s one contact
+slot takes the security contact as init was given it — an advisories URL for a
+public repo, an email or an internal URL for a private one — and the issue
+chooser's *Report a vulnerability* link takes a URL contact or is removed for an
+email or a decline. `CONTRIBUTING.md` records that the forge's default branch
+and the protection on `develop` and `main` are set by `/vwf:init`'s forge pass
+on GitHub and GitLab, and keeps the **by-hand** form of both for any other
+forge. And the stack-specific ignore sections are **appended per repo** by
+`/vwf:init`, one section per technology, never frozen into the pack — a pack
+that hard-codes them ages the moment a language renames its build directory.
 
 **`mise`** is the toolchain manager, and the rest of this section is its
 subject: how the toolchain is pinned, where env values live, and the task
@@ -802,14 +809,15 @@ inside `code/*` and `setup/*` change with the tech stack.
   profile flag combines with the install, uninstall and list flags only once the
   profile exists, and none of the three creates it.
 - **Nothing in the set edits a remote's settings.** There was a
-  `setup:default-branch` once; it is gone. Setting the forge's default branch is
-  a one-time act by whoever shapes the repo, not a task a machine re-runs, so
-  the library carries no task for it and `/vwf:init` never reaches the remote.
-  The `repo-hygiene` pack's `CONTRIBUTING.md` carries the one line instead —
+  `setup:default-branch` once; it is gone, and no task re-runs it. The forge's
+  default branch and the protection on `develop` and `main` are set by
+  `/vwf:init`'s **forge pass** on GitHub and GitLab, on its own consent, through
+  the forge CLI rather than a task; the `repo-hygiene` pack's `CONTRIBUTING.md`
+  keeps the by-hand form for any other forge —
   `gh repo edit --default-branch <branch>` or
-  `glab repo update --defaultBranch <branch>`. It is orthogonal to the merge
-  tasks either way: work flows feature → `develop` → `main` whichever branch the
-  forge calls default.
+  `glab repo update --defaultBranch <branch>`, and the two protection rules. It
+  is orthogonal to the merge tasks either way: work flows feature → `develop` →
+  `main` whichever branch the forge calls default.
 - **`setup/deps/*` — the package manager, and only that.** Five verbs, all five
   slots: `cleanup`, `install` (which honours `--frozen`, the lockfile-strict
   mode CI uses), `upgrade`, `outdated`, `audit`. `setup:deps:all` runs them in
