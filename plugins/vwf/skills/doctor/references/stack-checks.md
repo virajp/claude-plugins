@@ -280,6 +280,9 @@ not yet supported there, so the row reports the CLI state as information
 rather than a cost. An unsupported host reports `n/a — no forge CLI`. Like
 `rtk`, this is reported on every run: a machine without the CLI runs correctly
 and simply has no backlog to read, and nothing else says so until a verb fails.
+The same three answers decide whether predicate **(g)** below runs at all —
+it reuses them rather than probing a second time, and a miss here is what it
+reports as its skip reason.
 
 ## The repo shape against its baseline
 
@@ -290,11 +293,11 @@ that did not exist when the repo was shaped, and a fresh clone arrives with one
 branch. It drifts by moving, too — a pack-owned file the repo edited in place
 is no longer the file the pack ships. None of that stops the repo working, so
 **every finding here is `drift`, and none is blocking** — a repo behind its
-baseline is out of date, not broken. All six sub-checks carry the **same
+baseline is out of date, not broken. All seven sub-checks carry the **same
 remedy, `/vwf:setup reshape`**,
 which is why §9 prints that line once with the rows that led to it.
 
-**The six run per repo** — the base and every **locally-present** member,
+**The seven run per repo** — the base and every **locally-present** member,
 resolved the way `/vwf:init`'s **Step 0** resolves them: the paths
 `.gitmodules` declares union the `members:` list the config carries, deduped
 on realpath. That step owns the rule and it is not restated here; a path only
@@ -503,7 +506,81 @@ until the day that task runs:
 `.config/mise.toml` absent altogether is (d)'s row for that repo, already
 printed — (f) adds nothing to it.
 
-Doctor **writes none of this** — no branch, no directory, no key, no scope, and
-no pack-owned file. It reports the rows, gives `/vwf:setup reshape` once as the
-remedy, and stops there, as it does with every other structural change in this
-file.
+**(g) Forge state.** The one sub-check that reads the **remote** rather than
+the checkout. `/vwf:init`'s **forge pass** — the last step of its git pass,
+run for a repo whose answer was *commit + push* — sets the repo's default
+branch on the forge, protects `develop` and `main` there, and hands the base's
+backlog project over to the user; the forge is the record for all three, and
+nothing in the tree says what it chose. So this predicate asks the forge, in
+**each** repo — the base and every locally-present member — through the same
+CLI the recommended forge-CLI check above already probed.
+
+**The skip rule comes first.** A repo with no `origin`, or one whose host's
+CLI is absent, unauthenticated for that host, or unsupported (`n/a — no forge
+CLI`), prints one note line under that repo — `forge state — not checked:
+<reason>` — and **no drift row**: the CLI's absence is already the degradation
+above, and a second row saying the same would read as two problems. A call the
+forge refuses — a ruleset listing on a repo the token has no admin on, a
+project listing without the `project` scope — is the same note for that one
+check, never drift: doctor cannot tell an absent setting from one it was not
+allowed to read. Otherwise, three checks:
+
+- **Default branch.** Read it from the forge — `gh repo view --json
+  defaultBranchRef --jq .defaultBranchRef.name` on GitHub, the default-branch
+  line of `glab repo view` on GitLab — and check it is one of the two branches
+  the forge pass offers, `develop` or `main`. Anything else — the forge's own
+  first-push default, typically — is one drift row naming the repo and the
+  branch the forge holds. Which of the two it should be is the user's answer at
+  the forge pass, recorded nowhere in the tree, so doctor never asserts
+  `develop` over `main` or the reverse.
+- **Protection.** On **both** `develop` and `main`, whether the branch is
+  protected on the forge at all. The pass leaves existing protection alone —
+  it never merges its rules into a ruleset or protection already present — so
+  a branch counts as protected when **any** ruleset or protection covers it,
+  by any name: on GitHub, any active ruleset (`gh api
+  repos/<owner>/<repo>/rulesets`) whose conditions include the branch, or
+  classic protection on it
+  (`gh api repos/<owner>/<repo>/branches/<branch>/protection`); on GitLab, a
+  `protected_branches` entry for the branch
+  (`glab api projects/:id/protected_branches`). **No protection at all** on
+  `develop` or `main` is the one drift row here, naming the repo and the
+  branch. Where protection exists but lacks one of the rules the pass would
+  have set — **no force-push and no deletion**, always; **a pull request
+  required** when that repo's `MERGE_MODEL` reads `pr`, read from the same
+  `[env]` block (f) reads (on GitHub the ruleset rules `non_fast_forward`,
+  `deletion` and `pull_request`, or the classic `allow_force_pushes`,
+  `allow_deletions` and `required_pull_request_reviews`; on GitLab
+  `allow_force_push` and a `push_access_levels` list that lets nobody push
+  directly, deletion being refused by protection itself) — doctor prints one
+  **note** naming the branch and the missing rule, like the skip note: it is
+  information, never drift, because a reshape would leave that protection
+  exactly as it is, so no remedy exists to point at. Under `direct` the
+  require-PR rule is neither expected nor noted when present. A branch the
+  forge does not carry reports `not on the forge — not checked` for that
+  branch: pushing it is the git pass's, and (c) already says whether it exists
+  locally.
+- **Backlog project.** **Base only, once per product**, and printed under the
+  base's section. Resolve it exactly as the backlog skill's GitHub reference
+  does — owner and name from `gh repo view --json owner,name`, then
+  `gh project list --owner <owner>` filtered to an **open** project titled
+  `<repo>` (`${CLAUDE_PLUGIN_ROOT}/skills/backlog/references/github.md`,
+  "Resolving the project", which owns the rule and is not restated here). No
+  match is one drift row: `backlog project <repo> — absent`. Two open matches
+  is the skill's own stop, reported here as **information** naming both URLs,
+  never as drift, since the user has to pick and a reshape cannot. On a GitLab
+  remote print the skill's "not yet supported" line as information and check
+  nothing; on any other host the skip rule already applies.
+
+**Every row is `drift`, none is blocking**, and the remedy is the same one
+line as (a)–(f): `/vwf:setup reshape`, whose forge pass re-offers what is
+absent — the default branch and a protection for an unprotected branch through
+the CLI on one consent, the backlog project through the backlog skill's browser
+hand-over — and leaves what is already set untouched, which is why an existing
+protection short of a rule is a note and not a row. Doctor reads the forge and
+never writes to it; every command above is a read, and a network miss is the
+skip note, not a finding.
+
+Doctor **writes none of this** — no branch, no directory, no key, no scope, no
+pack-owned file, and no forge setting. It reports the rows, gives
+`/vwf:setup reshape` once as the remedy, and stops there, as it does with every
+other structural change in this file.
