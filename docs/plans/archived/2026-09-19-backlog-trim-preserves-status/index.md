@@ -10,10 +10,9 @@ backlog: []
 
 ## Status
 
-**RUNNING**
+**COMPLETE**
 
-RUNNING since 2026-09-19 in
-/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-09-19-backlog-trim-preserves-status
+COMPLETE 2026-09-19 — 1a8aa1c3, 96d1c818, ef27ae29, 614bace2
 
 ## Consent
 
@@ -136,7 +135,7 @@ None.
 | -- | ---- | -------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ | -------- |
 | U1 | 1    | [01-skill.md](01-skill.md)                   | edit | `plugins/vwf/skills/backlog/SKILL.md`, `plugins/vwf/skills/backlog/references/github.md`                                                                                              | —          | green  | 1a8aa1c3 |
 | U2 | 2    | [02-docs.md](02-docs.md)                     | edit | `.claude/skills/vwf-plugin/references/skills-and-agents.md`, `site/src/content/docs/plugins/vwf.md`, `docs/memory/decisions/2026-09-19-backlog-trim-preserves-status.md`, `readme.md` | U1         | green  | 96d1c818 |
-| U3 | 3    | [03-gates-and-bump.md](03-gates-and-bump.md) | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `site/package.json`                                                                                      | U2         | green  |          |
+| U3 | 3    | [03-gates-and-bump.md](03-gates-and-bump.md) | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `site/package.json`                                                                                      | U2         | green  | 614bace2 |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -239,8 +238,10 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | —    | acceptance        | —     | 1     | skipped     | why: no covers: — a change plan has no acceptance criteria                                                                                                                                                                                                                                                                                                              | —        |
 | —    | ux                | —     | 1     | skipped     | why: no covers: — no Screens contract to verify against                                                                                                                                                                                                                                                                                                                 | —        |
 | —    | reconcile         | —     | 1     | skipped     | why: no covers: (no stamps, registry or environment to reconcile); no code unit (nothing to persist beyond the unit rows)                                                                                                                                                                                                                                               | —        |
-| 3    | U3 gates-and-bump | opus  | 1     | pass        | edit — site 1.1.28 → 1.1.29 (p:site:version, committed nothing), vwf 19.34.1 → 19.34.2 by hand, marketplace.json regenerated (ref vwf-v19.34.2). GAP: none                                                                                                                                                                                                              | —        |
+| 3    | U3 gates-and-bump | opus  | 1     | pass        | edit — site 1.1.28 → 1.1.29 (p:site:version, committed nothing), vwf 19.34.1 → 19.34.2 by hand, marketplace.json regenerated (ref vwf-v19.34.2). GAP: none                                                                                                                                                                                                              | 614bace2 |
 | 3    | R3                | opus  | 1     | pass        | 0 findings; CONTRACT clean, RULINGS clean; no tag, nothing staged, no hard-coded old version in the docs                                                                                                                                                                                                                                                                | —        |
+| 3    | gate              | —     | 1     | pass        | marketplace --check, inventory --check, plugins:check, code:precommit (x2), p:site:check — 5/5 green; no UNRESOLVED                                                                                                                                                                                                                                                     | 614bace2 |
+| —    | reconcile         | —     | 2     | pass        | final wave gate over the finished tree 5/5 green; Gates the orchestrator keeps: none beyond the wave gate                                                                                                                                                                                                                                                               | —        |
 
 ## Launch
 
