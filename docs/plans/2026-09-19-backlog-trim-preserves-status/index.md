@@ -10,9 +10,10 @@ backlog: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-09-19 by the user
+RUNNING since 2026-09-19 in
+/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-09-19-backlog-trim-preserves-status
 
 ## Consent
 
@@ -133,7 +134,7 @@ None.
 
 | Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                                  | Depends on | Status  | Commit |
 | -- | ---- | -------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-skill.md](01-skill.md)                   | edit | `plugins/vwf/skills/backlog/SKILL.md`, `plugins/vwf/skills/backlog/references/github.md`                                                                                              | —          | pending |        |
+| U1 | 1    | [01-skill.md](01-skill.md)                   | edit | `plugins/vwf/skills/backlog/SKILL.md`, `plugins/vwf/skills/backlog/references/github.md`                                                                                              | —          | green   |        |
 | U2 | 2    | [02-docs.md](02-docs.md)                     | edit | `.claude/skills/vwf-plugin/references/skills-and-agents.md`, `site/src/content/docs/plugins/vwf.md`, `docs/memory/decisions/2026-09-19-backlog-trim-preserves-status.md`, `readme.md` | U1         | pending |        |
 | U3 | 3    | [03-gates-and-bump.md](03-gates-and-bump.md) | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `site/package.json`                                                                                      | U2         | pending |        |
 
@@ -224,8 +225,13 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                    | Commit |
+| ---- | --------- | ----- | ----- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight | —     | 1     | pass        | doctor: mise, graphify CLI and the main checkout's graph present; no .config/vwf.yaml so no project scope, no LSP read (edit units only); format check skipped (no covers:); conventions fetch skipped (no code unit); wave gate 5/5 green on develop tip 2c5cc8f7; sequence U1 → U2 → U3 | —      |
+| 1    | U1 skill  | opus  | 1     | pass        | edit — SKILL.md bootstrap paragraph + close verb confirmed; github.md hazard sentence, steps renumbered 1–7 (3 snapshot, 7 restore), safety sentence replaced. DECIDED: bash while-read loop, exit 1 on failure; printed line `Status snapshot: <path>`. GAP: none                        | —      |
+| 1    | R1        | opus  | 1     | findings(2) | github.md:163 wc -l padding in the restored count (cosmetic); github.md:166 the loop's option-id is a prose placeholder, name→id map not runnable as written. CONTRACT clean, RULINGS clean                                                                                               | —      |
+| 1    | U1 skill  | opus  | 2     | pass        | edit — github.md step 7: padding-free total; name→id map is a jq lookup over the step-6 field-list JSON, an unmatched name stops the verb naming item and snapshot path. DECIDED: jq over field-list rather than case, bash-only loop                                                     | —      |
+| 1    | R1        | opus  | 2     | pass        | both round-1 findings resolved, nothing new; CONTRACT clean, RULINGS clean                                                                                                                                                                                                                | —      |
 
 ## Launch
 

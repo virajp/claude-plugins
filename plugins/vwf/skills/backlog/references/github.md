@@ -83,9 +83,12 @@ also carries `options[]` with `id` and `name`. Read:
 **Bootstrap** — idempotent; each step runs only when `field-list` shows the
 thing missing. The Team planning template ships `Status` with the options
 `Backlog`, `Ready`, `In progress`, `In review` and `Done`, and `Priority`; the
-skill trims `Status` to its four and adds `Group`.
+skill trims `Status` to its four and adds `Group`. The hazard is generic:
+**any** replace of a single-select field's option list reissues every option's
+id, the kept names included, and an item's value is bound to the old id — so a
+trim that only guards the removed options still clears every item's Status.
 
-`Status` not exactly the four, in five steps:
+`Status` not exactly the four, in seven steps:
 
 1. `field-list` — when `Status`'s options are exactly `Backlog`, `In progress`,
    `Done` and `Closed`, order ignored, skip to `Group`.
@@ -99,7 +102,19 @@ skill trims `Status` to its four and adds `Group`.
    items sit in a Status option the bootstrap removes; move each to `Backlog`
    or `In progress` on the board, then run the verb again". The bootstrap never
    moves an item itself.
-3. `updateProjectV2Field` **replaces** the option list, and `field-list` does
+3. Snapshot every item's Status before anything is mutated — one
+   `<item-id>\t<status>` line per item that has a `status` key, to a temp
+   file:
+
+       snapshot=$(mktemp)
+       gh project item-list <number> --owner <owner> --format json --limit 500 \
+         --jq '.items[] | select(has("status")) | [.id, .status] | @tsv' \
+         > "$snapshot"
+
+   Print the path — "Status snapshot: `$snapshot`" — before step 5 runs, so a
+   run that stops part-way leaves the user the file to restore from. An item
+   with no `status` key is absent from the snapshot and untouched by step 7.
+4. `updateProjectV2Field` **replaces** the option list, and `field-list` does
    not print colour or description; read them first:
 
        gh api graphql -f query='
@@ -112,7 +127,7 @@ skill trims `Status` to its four and adds `Group`.
          }
        }' -F id=<status-field-id> --jq '.data.node.options'
 
-4. Send exactly four options, inlined in the mutation text — `-F` passes
+5. Send exactly four options, inlined in the mutation text — `-F` passes
    scalars only, so the option list is written into the query:
 
        gh api graphql -f query='
@@ -133,12 +148,39 @@ skill trims `Status` to its four and adds `Group`.
          }' -F fieldId=<status-field-id>
 
    `Backlog`, `In progress` and `Done` take the colour (an unquoted enum such
-   as `GRAY`) and the description step 3 returned for them, never the
+   as `GRAY`) and the description step 4 returned for them, never the
    placeholders above. Every option not sent — `Ready`, `In review`, anything
-   else the field carried — is deleted; that is the point of the trim, and
-   step 2 is what makes it safe.
-5. Run `field-list` again and read the option ids from it: a replace reissues
+   else the field carried — is deleted; that is the point of the trim. The
+   stop in step 2 covers the removed options and the restore in step 7 covers
+   the kept ones; neither alone is safe.
+6. Run `field-list` again and read the option ids from it: a replace reissues
    every option's id, so any id read before the mutation is stale.
+7. Restore from the snapshot: read it line by line, map each status name to
+   the id step 6 returned for that name, and run the per-verb Status edit once
+   per line. The map is a `jq` lookup over step 6's `field-list` output, held
+   in `$fields`:
+
+       fields=$(gh project field-list <number> --owner <owner> \
+         --format json --limit 50)
+       n=0; total=$(wc -l < "$snapshot" | tr -d ' ')
+       while IFS=$'\t' read -r item status; do
+         id=$(jq -r --arg s "$status" '.fields[] | select(.name == "Status")
+           | .options[] | select(.name == $s) | .id' <<< "$fields")
+         [ -n "$id" ] \
+           || { echo "no option named $status for $item — snapshot: $snapshot"
+                exit 1; }
+         gh project item-edit --id "$item" --project-id <project-id> \
+           --field-id <status-field-id> --single-select-option-id "$id" \
+           || { echo "restore failed at $item — snapshot: $snapshot"; exit 1; }
+         n=$((n + 1))
+       done < "$snapshot"
+       echo "restored $n of $total"
+
+   A status name the four options do not carry, or a non-zero exit from any
+   `item-edit`, stops the verb naming the item id and the snapshot path — the
+   field is never left half-restored silently, and no item is skipped; the
+   user re-runs the remaining lines from the file. The verb ends by printing
+   "restored N of N".
 
 `Group` absent:
 

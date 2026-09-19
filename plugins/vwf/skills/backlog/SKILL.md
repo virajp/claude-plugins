@@ -93,7 +93,12 @@ text field. The trim is a replace, and an item sitting in a removed option
 would lose its Status: so when any item is `Ready` or `In review` the bootstrap
 stops, names each such item, and asks the user to move it to `Backlog` or
 `In progress` on the board before the verb is re-run — it never moves an item
-itself. The reference specifies the procedure and both mutations.
+itself. The replace also reissues the ids of the options it keeps, and an
+item's value is bound to the old id: so the bootstrap snapshots every item's
+Status to a temp file before the mutation and writes each one back afterwards,
+by option name against the ids re-read after it — an item is never left
+without the Status it had. The reference specifies the procedure and both
+mutations.
 
 **A missing project** is created by the user, not by the skill: GitHub's API
 cannot instantiate a built-in template, and Team planning is one. `add` is the
