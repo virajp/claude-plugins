@@ -2475,11 +2475,15 @@ needs it, keeping `Backlog`, `In progress` and `Done` as the template spells and
 colours them and adding `Closed`. The trim removes an item's Status along with
 the option, so while any item sits in `Ready` or `In review` the skill stops,
 names each one, and asks you to move it to `Backlog` or `In progress` on the
-board first — it never moves an item itself. **Group** is a text field the skill
-adds once, naming the items that want one plan between them. An `In progress`
-item's body ends with `Planned in: <folder>` and a `Closed` one's with the
-reason. An item retitled in the browser without its `Bnn —` prefix is listed as
-unnumbered and warned about, never renumbered.
+board first — it never moves an item itself. The replace also reissues the id of
+every option it keeps, which would clear every item's Status, so the skill
+records each item's Status to a temp file first, prints the path, writes every
+item back afterwards and prints the count restored — and stops naming the item
+and the file if any write fails. **Group** is a text field the skill adds once,
+naming the items that want one plan between them. An `In progress` item's body
+ends with `Planned in: <folder>` and a `Closed` one's with the reason. An item
+retitled in the browser without its `Bnn —` prefix is listed as unnumbered and
+warned about, never renumbered.
 
 **The first run.** `add` on a repo with no project is the one verb that creates
 one. GitHub's API cannot instantiate a built-in template, and **Team planning**
