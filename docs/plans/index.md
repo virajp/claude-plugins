@@ -6,6 +6,6 @@ to pick the next runnable plan.
 
 ## Plans
 
-| Folder                                          | Kind   | Plan                                                                                                                           | Target repo | Priority | Status   | Requires | Backlog |
-| ----------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------ | ----------- | -------- | -------- | -------- | ------- |
-| docs/plans/2026-09-19-backlog-status-vocabulary | change | backlog status vocabulary — the Team planning template's real options, and a next-id floor that continues a migrated numbering | —           | 10       | APPROVED | —        | —       |
+| Folder                                          | Kind   | Plan                                                                                                                           | Target repo | Priority | Status  | Requires | Backlog |
+| ----------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------ | ----------- | -------- | ------- | -------- | ------- |
+| docs/plans/2026-09-19-backlog-status-vocabulary | change | backlog status vocabulary — the Team planning template's real options, and a next-id floor that continues a migrated numbering | —           | 10       | RUNNING | —        | —       |
