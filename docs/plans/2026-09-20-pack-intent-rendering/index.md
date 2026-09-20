@@ -1,0 +1,286 @@
+---
+type: vwf-change-plan
+title: pack intent rendering — conditional files, the editor split, one
+  exclusion set
+requires: [ docs/plans/2026-09-20-branch-model ]
+backlog: [ B28 ]
+---
+
+# Plan — pack intent rendering (2026-09-20)
+
+## Status
+
+**APPROVED**
+
+APPROVED 2026-09-20 by the user
+
+## Consent
+
+| Action                                            | Granted                                                                                                                                          |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Merge to the integration branch and push on green | yes                                                                                                                                              |
+| After landing: `mise run p:plugins:local`         | run                                                                                                                                              |
+| Release vwf publicly                              | minor — `19.41.0` → `19.42.0`, a hand edit of `plugins/vwf/.claude-plugin/plugin.json` then `mise run p:plugins:marketplace`; no release step    |
+| Release stackgen publicly                         | minor — `1.24.0` → `1.25.0`, a hand edit of `plugins/stackgen/.claude-plugin/plugin.json` then `mise run p:plugins:marketplace`; no release step |
+| Release site publicly                             | patch — `1.1.37` → `1.1.38` via `mise run p:site:version`; no release step                                                                       |
+| Release installer publicly                        | none — untouched                                                                                                                                 |
+
+**The mode recorded here is the consent.** A `run` step runs on a green landing
+without a prompt; an `ask` step stops the run once before it, reports what it
+would do, and waits. The mode is the interview's answer (item 17), and a release
+step recorded `run` is authorised by the interview's release question (item 18)
+— a release recorded `ask`, or with no step at all, is intent, not
+authorisation. Where a step stages something this session already loaded, it is
+picked up only by a **restarted** session.
+
+## Goal
+
+After this lands, a pack can declare a landed file **conditional** on an answer
+init already holds — the forge, the editor, the secrets provider, the update bot
+— and the materializer honours it: the hygiene pack's GitHub issue forms land
+only on GitHub, its Renovate policy only where Renovate is the bot, every editor
+fragment only when the editor is in use, and the provider's ignore line only for
+the provider picked. The hygiene editor baseline carries editor-wide keys alone;
+the Node, Dart, Astro, pnpm and Turbo keys move to the fragments of the packs
+that pin those stacks, and the default formatter is scoped per language. The
+four exclusion lists the gate files restate are asserted equal by the checker.
+The last two stale passages go.
+
+Backlog item B28, piece D2, plan 5 of 5 — candidates 14, 15, 16 (the part plan 1
+left) and 19 (the part plan 3 left) of
+`docs/memory/problems/2026-09-20-init-shape-audit.md`; closes L9, L10, L11, L12
+(the rendering half), L13, L17, L18, L19, L20, L21, L22, G9, G11, G12, G15.
+Requires `2026-09-20-branch-model` (the chain; and CONTRIBUTING.md, which that
+plan edits, is touched again here). **B28 closes when this plan lands.**
+
+Not a reversal. The pack format gains one optional key; the "a tool-naming key
+belongs to that tool's pack" rule the hygiene pack already states
+(`conventions.md:135-141`) is applied to its own fragment.
+
+## Facts the survey established
+
+Paths: `H` = `plugins/stackgen/stacks/repo-hygiene/repo-hygiene`, `G` =
+`plugins/stackgen/stacks/toolchain-gate`, `M` =
+`plugins/stackgen/stacks/toolchain-manager/mise/config/.config`, `I` =
+`plugins/vwf/skills/init`, `PF` = `plugins/stackgen/assets/pack-format.md`.
+Verified at `1241e1cf`, before plans 1–4 land; units locate passages by heading.
+
+- **No conditional file today.** `pack.yaml`'s keys are `PF:157-181`; the only
+  condition is bundle-level `unconditional: true` (`PF:212, 223-233`);
+  `config/_<name>/` pack-private is the sole per-path switch (`PF:48-58`). The
+  hygiene landed set: `H/conventions.md:15-26` (ISSUE_TEMPLATE `:22`,
+  `renovate.json` `:23`, the vscode fragment `:24`); three template files under
+  `H/config/.github/ISSUE_TEMPLATE/`; the `fnox.local.toml` line
+  `H/config/.gitignore:55-57`; the fnox and doppler packs ship no `.gitignore`.
+  Init's questions after plans 1–4: name, ids, brief, secrets (q4
+  `I/SKILL.md:355-373` — filters the adapter menu to capability-provider
+  entries, bundle fetched by slug `:509-510`), plugins, visibility with licence
+  and contact under it — seven; no editor, forge or update-bot question.
+  `setup:vscode` runs unconditionally from `setup:all`
+  (`M/mise/tasks/setup/all:55-59`) and skips only without `code`, without
+  `REPO_NAME`, or without `extensions.json` (`setup/vscode:34-48`); the editor
+  merge takes every `vscode.d/*.jsonc` ungated
+  (`I/references/fragments-and-sections.md:152-155`).
+- **The hygiene fragment** `H/config/.config/vscode.d/repo-hygiene.jsonc`:
+  editor-wide `:14-37, 72, 93-106` (todo-tree), nesting `:119-129, 148-154`,
+  extensions `:166-169, 171`; stack-specific — `files.exclude` `:46-48`,
+  `:50-52`, `:54` (astro, dart_tool, turbo, node_modules, tsbuildinfo,
+  pnpm-lock), `watcherExclude` `:59, 63, 67-69`, `search.exclude` `:74, 80-82`,
+  template-string-converter `:85-92` and its extension `:167` (JS/TS), the fish
+  extension `:165`, `yaml.*` `:107-111` and `redhat.vscode-yaml` `:170`, nesting
+  `*.js` `:130` and the `package.json` children `:132-147`
+  (pnpm/turbo/vitest/doppler). Its own rule `:6-11`, `H/conventions.md:135-141`.
+  `defaultFormatter` editor-wide at
+  `G/dprint/config/.config/vscode.d/dprint-editor.jsonc:20-21`; only
+  analysis-options scopes `[dart]` (`:19-20`). L18: `dprint-editor.jsonc:39`
+  `arrayAutoCollapse=false` vs `taplo.toml:23` true; `:47` `indentEntries=true`
+  vs `taplo.toml:31` false. L19: `.env` under `.envrc` `:120` and `.gitignore`
+  `:128`; `CLAUDE.md` under `AGENTS.md` `:131` and `readme.md` `:151`.
+  `.editorconfig:23-24` (`[*.{py,dart}]`), `.gitattributes:8-9` (pnpm-lock,
+  mise.lock).
+- **The eight fragments and their packs**: repo-hygiene (hygiene),
+  analysis-options (`G/analysis-options`, Dart), dprint-editor (`G/dprint`),
+  eslint (`G/eslint`), pre-commit (`G/pre-commit`), ruff (`G/ruff`), tsconfig
+  (`G/tsconfig`, JS/TS), mise (toolchain-manager). **No fragment exists** for
+  `package-manager/pnpm`, `framework/astro`, or turbo — turbo is
+  `build-orchestrator/turbo@generated` in `bundles/pnpm-turbo.md:7`, a generated
+  component with no shipped pack; `framework/astro` and
+  `package-manager/pnpm@0.2.1` are shipped packs.
+- **The four exclusion lists**: `G/dprint/config/.config/dprint.json:5-16`,
+  `taplo.toml:10-16` (ships inside the dprint pack),
+  `G/gitleaks/config/.config/gitleaks.toml:42-49`,
+  `G/pre-commit/config/.config/pre-commit-config.yaml:39`. The stated-once rule:
+  `G/pre-commit/conventions.md:41-43`. `trailing-whitespace` hook `:151-154` (no
+  markdown exclude) vs `H/config/.editorconfig:14-17`. Grype threshold
+  `code/sec:70, 72`, `grype.yaml:15`.
+- **Stale passages**: `bundles/repo-gates.md:21-26` claims each gate ships a
+  `.config/pre-commit.d/<gate>.yaml` fragment; the only one in the tree is
+  `package-manager/uv/config/.config/pre-commit.d/uv.yaml`;
+  `site/src/content/docs/plugins/stackgen.md:583-587` already says none does.
+  `H/config/CONTRIBUTING.md:34-35` names `/vwf:init`, which nobody can type
+  (plan 4 re-words `:23-41` but not that token).
+- **Not a finding**: `setup:precommit` installs with no `--hook-type`, so the
+  types come from `pre-commit-config.yaml:20-22` (pre-commit, commit-msg);
+  `--overwrite` never touches the graphify post-commit hook `setup/ai:180-190`
+  installs.
+- **The checker**: `scripts/src/check.ts` (rule 11 walks a pack's `config/`
+  tier; rules are keyword-bound and their tests live in
+  `scripts/src/check.test.ts`); the rules are documented in
+  `.claude/skills/plugin-authoring/references/checks.md:34-210`. Gates over
+  `scripts/`: `pnpm vitest run` and `pnpm exec tsc --noEmit -p scripts`
+  (`.github/workflows/plugins.yml:96, 108`).
+- **Docs describing today** (U8's): `site/src/content/docs/plugins/stackgen.md`
+  (`:416-422`, `:490-519`, `:555-600`) (baseline `:592-600`, gates `:577-590`);
+  `.claude/skills/stackgen-plugin/SKILL.md:81, 136-146, 168-172, 195, 232`;
+  `CLAUDE.md:170-176, 255, 264-268, 289, 353`; `PF:143-149` (baseline
+  ownership); the site's `### /vwf:init` question list.
+- **Versions after plan 4**: vwf `19.41.0`, stackgen `1.24.0`, site `1.1.37`;
+  hygiene `1.1.4`, dprint `1.0.1`, pre-commit `1.1.3`, tsconfig `0.1.0`,
+  analysis-options and astro and pnpm (`0.2.1`) as their `pack.yaml` read at run
+  time. Bumps, pins and inventory in one commit (U9). Commit types
+  `ops docs merge feat fix refactor`, no scopes. Priority: `10 + 40` over the
+  required plan's row → 50.
+
+## Assumed decisions — confirm or override at review
+
+| # | Decision           | Ruling                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Rejected                                                         | Unit       |
+| - | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ---------- |
+| 1 | Conditional files  | `pack.yaml` gains an optional **`conditional:`** list — each entry a landed path or glob and a `when:` from a fixed vocabulary: `forge: github                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | gitlab`,`editor: vscode`,`secrets: <slug>`,`update_bot: renovate | dependabot |
+| 2 | Two new questions  | Init asks **editor** — once per product, "is VS Code the editor here?", default yes when `.vscode/` or `code` exists — and **update bot** — per repo, `renovate` / `dependabot` / `none`, seeded from the survey (a `.github/renovate.json`, `.renovaterc` → renovate; `dependabot.yml` → dependabot; else renovate). The count becomes **nine**; the forge (origin host) and the provider (q4) are already known                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | fold into existing rounds                                        | U5         |
+| 3 | Hygiene conditions | `ISSUE_TEMPLATE/*` `when: forge: github`; `renovate.json` `when: update_bot: renovate`; every pack's `vscode.d/*.jsonc` `when: editor: vscode`; the `fnox.local.toml` line leaves the base `.gitignore` and becomes an ignore-section row keyed on the provider slug `fnox` (the stack read passes the pinned provider as a component); `setup:vscode` unchanged                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | gate `setup:vscode` too                                          | U3, U4, U5 |
+| 4 | Editor split       | The hygiene fragment keeps editor-wide keys (`:14-37, 72, 93-106`, the non-stack nesting rows, the generic extensions). Moves: Node/TS keys (`node_modules`, `tsbuildinfo`, `pnpm-lock` excludes, `*.js` nesting, the template-string converter and its extension) → the tsconfig fragment; Dart (`.dart_tool`) → analysis-options; Astro (`.astro`) → a **new** fragment in `framework/astro`; pnpm and Turbo excludes and the `package.json` children → a **new** fragment in `package-manager/pnpm` (turbo is generated, pnpm-turbo is the bundle that carries it); `yaml.*` and `redhat.vscode-yaml` → the pre-commit fragment; the fish extension is **dropped**. `defaultFormatter: dprint.dprint` leaves the editor-wide scope and is set per language in the dprint fragment for the languages its plugins cover. L18: `dprint-editor.jsonc:39, 47` aligned to `taplo.toml`. L19: `.env` under `.gitignore` only, `CLAUDE.md` under `readme.md` only. `.editorconfig`/`.gitattributes` stack lines **stay** — one file, no fragment mechanism (parked) | keep the baseline whole                                          | U3, U4     |
+| 5 | Values             | Checker **rule 15**: across the dprint pack's `dprint.json` and `taplo.toml`, the gitleaks allowlist and the pre-commit global `exclude`, the exclusion sets agree after normalisation (strip `^`, `/`, `**/`, trailing `/`, regex escapes); a difference names the file and the entry. `trailing-whitespace` gains `exclude: \.md$`. The grype threshold and the branch literals stay                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | render from one list at init                                     | U2, U4     |
+| 6 | Stale passages     | `bundles/repo-gates.md:21-26` says no gate ships a `pre-commit.d` fragment (the hook-fragment merge has no inputs from the three bundles today); `H/config/CONTRIBUTING.md:34-35` names `/vwf:setup` (the forge pass is reached through it)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | leave to docs-sync                                               | U3, U6     |
+| 7 | Not a finding      | The graphify post-commit hook (rest of L16)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | —                                                                | —          |
+| 8 | Review row         | `scripts/src/check.ts` and its test change → one `Kind: review` row in wave 2 covering U1–U6                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | none                                                             | R7         |
+| 9 | Pack bumps         | hygiene `1.1.4` → **`1.2.0`** (conditionals, the split), dprint `1.0.1` → **`1.1.0`** (per-language formatter), pre-commit `1.1.3` → `1.1.4`, tsconfig, analysis-options, astro, pnpm each **minor** (a new or widened fragment) from whatever their `pack.yaml` reads at run time; every pin and the inventory in U9, one commit                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | per-unit bumps                                                   | U9         |
+
+## New dependencies
+
+none
+
+## Units
+
+| Id | Wave | Unit file                                            | Kind   | Owns                                                                                                                                                                                                                                | Depends on             | Status  | Commit |
+| -- | ---- | ---------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ------- | ------ |
+| U1 | 1    | [01-pack-format.md](01-pack-format.md)               | edit   | `plugins/stackgen/assets/pack-format.md`, `plugins/stackgen/assets/output-tree.md`, `plugins/stackgen/skills/stackgen-stack-template/references/materializer.md`                                                                    | —                      | pending |        |
+| U2 | 1    | [02-checker.md](02-checker.md)                       | edit   | `scripts/src/check.ts`, `scripts/src/check.test.ts`, `.claude/skills/plugin-authoring/references/checks.md`                                                                                                                         | —                      | pending |        |
+| U3 | 1    | [03-hygiene-pack.md](03-hygiene-pack.md)             | edit   | `plugins/stackgen/stacks/repo-hygiene/repo-hygiene/**` except `pack.yaml`'s version line                                                                                                                                            | —                      | pending |        |
+| U4 | 1    | [04-stack-packs.md](04-stack-packs.md)               | edit   | `plugins/stackgen/stacks/toolchain-gate/{dprint,pre-commit,tsconfig,analysis-options}/**`, `plugins/stackgen/stacks/framework/astro/**`, `plugins/stackgen/stacks/package-manager/pnpm/**` — except each `pack.yaml`'s version line | —                      | pending |        |
+| U5 | 1    | [05-init.md](05-init.md)                             | edit   | `plugins/vwf/skills/init/SKILL.md`, `plugins/vwf/skills/init/references/new-repo.md`, `plugins/vwf/skills/init/references/fragments-and-sections.md`                                                                                | —                      | pending |        |
+| U6 | 1    | [06-doctor-and-bundles.md](06-doctor-and-bundles.md) | edit   | `plugins/vwf/skills/doctor/references/stack-checks.md`, `plugins/stackgen/stacks/bundles/repo-gates.md`                                                                                                                             | —                      | pending |        |
+| R7 | 2    | [07-review.md](07-review.md)                         | review | —                                                                                                                                                                                                                                   | U1, U2, U3, U4, U5, U6 | pending |        |
+| U8 | 3    | [08-docs.md](08-docs.md)                             | edit   | `readme.md`, `CLAUDE.md`, `.claude/docs/**`, `.claude/skills/vwf-plugin/**`, `.claude/skills/stackgen-plugin/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-09-20-pack-intent-rendering.md`                           | R7                     | pending |        |
+| U9 | 4    | [09-gates-and-bump.md](09-gates-and-bump.md)         | edit   | every `pack.yaml` version line named in decision 9, `plugins/stackgen/stacks/bundles/*.md` pins, `plugins/stackgen/stacks/inventory.md`, the two `plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`              | U8                     | pending |        |
+
+Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
+`skipped`. U1–U6, U8, U9 are `edit`; R7 is the review row — the two engines and
+the two reviewers over the delta since the branch base, covering U1–U6 through
+Depends on, strictly later than each.
+
+## Shared-file rule
+
+| File                                                                                         | Why it collides                                          | Owner   |
+| -------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------- |
+| every `pack.yaml` **version line**, every bundle pin, `inventory.md`                         | the generator refuses a pin without its pack             | U9 only |
+| every `pack.yaml` **`conditional:` block**                                                   | content, not version — the owning pack unit writes it    | U3 / U4 |
+| the two `plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`                | version and generated files                              | U9 only |
+| every human-facing doc — `readme.md`, `CLAUDE.md`, `.claude/**`, `site/**`, `docs/memory/**` | n units editing one doc                                  | U8 only |
+| `.claude/skills/plugin-authoring/references/checks.md`                                       | a doc, but the rule text belongs with the rule           | U2 only |
+| `plugins/stackgen/assets/pack-format.md`                                                     | U3/U4 would describe `conditional:`; U1 owns the schema  | U1 only |
+| `bundles/repo-gates.md`                                                                      | U4 would fix the fragment claim; U6 owns the bundle file | U6 only |
+
+## Waves
+
+- **Wave 1** — U1–U6: six disjoint sets; the pack units write their own
+  `conditional:` blocks against U1's schema (cited by key name) and U2's rule 11
+  validates them at the wave gate.
+- **Wave 2** — R7.
+- **Wave 3** — U8.
+- **Wave 4** — U9.
+
+## Wave gate
+
+    mise run p:plugins:marketplace -- --check
+    mise run p:plugins:inventory -- --check
+    mise run p:plugins:check
+    mise run p:plugins:shellcheck
+    mise run p:plugins:npm-normalize-test
+    pnpm vitest run
+    pnpm exec tsc --noEmit -p scripts
+    mise run code:precommit
+    mise run p:site:check
+
+plus the wave review, plus every report read for `UNRESOLVED:`. Every line here
+must be green before wave 1. Rule 15 is U2's — it is not green before wave 1 by
+shape; U2's verification runs it, and U9's runs the full gate with it.
+
+## After landing
+
+| Step                       | Mode | Notes                                                                                                                                                                   |
+| -------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mise run p:plugins:local` | run  | stages vwf at `19.42.0+N` and stackgen at `1.25.0+N` into the dev marketplace and updates this machine's install; publishes nothing; a **restarted** session loads them |
+
+## Gates the orchestrator keeps
+
+none beyond the wave gate. The conditionals are proven by the user's next
+`/vwf:setup reshape` on this repo (GitHub, VS Code, Renovate — every condition
+true) and on a GitLab or Dependabot repo, where the skips show.
+
+## Unit contract
+
+Every unit prompt carries, in order: its ruling quoted from this file, its owned
+paths plus "touch nothing outside this list", the facts section, the shared-file
+rule, and the return block below. A unit never bumps a version, never runs a
+generator, never edits a doc, never adds a dependency this file does not list,
+never commits. A unit deletes with plain `rm`, never `git rm` — it stages
+nothing.
+
+A unit returns exactly this block and nothing else — no file contents, no diff:
+
+    CHANGED: <path> — <one line>            (one per file)
+    DECIDED: <what> — <why>                 (choices made inside scope, or none)
+    DOCS FALSIFIED: <path> — <passage>      (reported, never edited; or none)
+    GAP: <what the plan left unspecified and the assumption taken>   (or none)
+    UNRESOLVED: <the ruling needed>         (or none)
+
+A `GAP:` is a hole in the plan the unit could proceed past on a stated
+assumption; it is recorded and the run continues. An `UNRESOLVED:` is a ruling
+the unit could not proceed without; it blocks the unit and its dependents.
+
+## Out of scope
+
+- Rendering the exclusion lists at init (decision 5), the grype threshold or the
+  branch literals as values.
+- Per-stack `.editorconfig` / `.gitattributes` sections (decision 4).
+- Gating `setup:vscode` (decision 3).
+- The graphify post-commit hook (decision 7).
+- This repo's own copies of any pack file — the next reshape.
+- A public release — the bumps land; the tags wait for the next `/release`.
+
+## Parked
+
+- `.editorconfig` and `.gitattributes` per-stack sections — would need a
+  section-contribution mechanism like the ignore sections; a later backlog item
+  if the stack lines ever bite.
+- Merge method per branch (from plan 4).
+- **B28 closes at this landing** — the five D2 plans plus A, B, C and D1 are its
+  whole scope; `/vwf:execute`'s `done` here is the right one.
+
+## Run log
+
+| Wave | Unit | Model | Round | Outcome | Detail | Commit |
+| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+
+## Launch
+
+This folder is already committed and pushed on the branch it was planned on, so
+the fresh session's worktree — cut from the integration branch — can see it.
+
+Run in a fresh session:
+
+/vwf:execute docs/plans/2026-09-20-pack-intent-rendering
+
+or let the queue pick it, by priority:
+
+/vwf:execute next

@@ -12,3 +12,4 @@ to pick the next runnable plan.
 | `docs/plans/2026-09-20-init-mode-seam`        | change | init mode seam — three modes from evidence, the stack read, conflicts offered in every mode | —           | 20       | APPROVED | 2026-09-20-pack-first-run-safety | B28      |
 | `docs/plans/2026-09-20-init-brownfield-reads` | change | init brownfield reads — root configs, hooks, tasks and .gitignore read first                | —           | 30       | APPROVED | 2026-09-20-init-mode-seam        | B28      |
 | `docs/plans/2026-09-20-branch-model`          | change | branch model — landing model per branch; the git pass reads where it stands                 | —           | 40       | APPROVED | 2026-09-20-init-brownfield-reads | B28, B53 |
+| `docs/plans/2026-09-20-pack-intent-rendering` | change | pack intent rendering — conditional files, the editor split, one exclusion set              | —           | 50       | APPROVED | 2026-09-20-branch-model          | B28      |
