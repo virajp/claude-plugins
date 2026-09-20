@@ -40,10 +40,8 @@ now constructive except for the two unsets, which are the rule itself."
 Decision 3 — precommit / mise flags: "`setup:precommit`: before anything, read
 `git config --local core.hooksPath`, test `.husky/`, `lefthook.yml`,
 `.lefthook.yml`; any present → print what was found and the two by-hand lines
-(`git config --local --unset-all core.hooksPath`;
-`pre-commit install …
---overwrite`) and exit 1; a new `--force` flag does
-today's `:29-30`. `pre-commit autoupdate` (`:19`) runs only under a new
+(the hooksPath unset and the overwrite install) and exit 1; a new `--force` flag
+does today's `:29-30`. `pre-commit autoupdate` (`:19`) runs only under a new
 `--update` flag. `setup:mise`: `mise upgrade --local` (`:22`) and
 `dprint config update` (`:44`) run only under a new `--upgrade` flag.
 `setup:all` passes neither flag."
@@ -64,19 +62,16 @@ declared as `#USAGE flag` lines like `--fix`; the env-variable names are exactly
 1. **`code/git-config`** — rewrite to the contract of decision 2. Resolve
    `<FORGE>` from `git remote get-url origin` (host `github.com` → `GITHUB`,
    `gitlab.com` → `GITLAB`, anything else or no remote → `GIT`). Check mode:
-   compare each of the seven keys against its required value
-   (`git config
-   --local --get`), collect every mismatch as
-   `key: expected <v> (from
-   $VAR) — actual <v|unset>`, print them under
+   compare each of the seven keys against its required value (a local git-config
+   get per key), collect every mismatch as one line — the key, the expected
+   value and its variable, the actual value or unset — print them under
    `print_error`, print the export line for each unset variable, exit 1 on any
    mismatch; `print_ok` otherwise. `--fix`: first verify all three variables are
    set — if any is not, print which and exit 1 **before writing anything**; then
-   `git config
-   --local` each identity key, `commit.gpgsign true`,
-   `tag.gpgsign true`, `gpg.format ssh`, and `--unset` each `gpg.*program` key
-   present; re-run the check and exit with its status. Replace the `:15` comment
-   with one stating the new rule in one line. Keep the `#MISE description` and
+   set each identity key locally, `commit.gpgsign true`, `tag.gpgsign true`,
+   `gpg.format ssh`, and `--unset` each `gpg.*program` key present; re-run the
+   check and exit with its status. Replace the `:15` comment with one stating
+   the new rule in one line. Keep the `#MISE description` and
    `#USAGE flag "--fix"` lines, reworded.
 2. **`setup/precommit`** — add `#USAGE flag "--force"` and
    `#USAGE flag "--update"`. Before `:19`: the foreign-hook check of decision 3
