@@ -65,9 +65,10 @@ replaces it. `pre-commit autoupdate` runs only under `--update`; a plain
 
 The base config's first local hook, `git-config`, requires the repo's local
 `user.name`, `user.email` and `user.signingkey` to **equal** the forge variables
-— `GITHUB_USER_NAME`, `GITHUB_EMAIL` and `GITHUB_SIGNING_KEY` when the origin is
-`github.com`, the `GITLAB_*` twins for `gitlab.com`, `GIT_*` for any other host
-or no remote — with `commit.gpgsign` and `tag.gpgsign` set to `true`,
+— `GITHUB_USER_NAME`, `GITHUB_EMAIL` and `GITHUB_SIGNING_KEY` when the origin
+host is `github.com` or any subdomain of it (`ssh.github.com`), the `GITLAB_*`
+twins for `gitlab.com` and its subdomains, `GIT_*` for any other host or no
+remote — with `commit.gpgsign` and `tag.gpgsign` set to `true`,
 `gpg.format` set to `ssh`, and `gpg.program` and `gpg.ssh.program` absent. The
 hook runs `code:git-config --fix`: it writes the identity keys from the
 variables, fails naming any unset one and writing nothing partial, sets the two
@@ -76,10 +77,11 @@ things it removes, and the rule itself. When it changed any key it prints
 "identity corrected — re-run the commit" and exits 1: git loads the identity
 before hooks run, so the triggering commit is refused rather than landed with
 the old one, and the re-run carries the correction. `<FORGE>_SIGNING_KEY`
-holds what git accepts as `user.signingkey` under `gpg.format=ssh`: the path to
-the key file (`~/.ssh/id_ed25519.pub`) or the literal public key prefixed
-`key::` — a bare `ssh-ed25519 AAAA…` line is written verbatim and the first
-signed commit fails inside git.
+holds what git accepts as `user.signingkey` under `gpg.format=ssh`: prefer the
+path to the key file (`~/.ssh/id_ed25519.pub`) or the literal public key
+prefixed `key::`. A bare `ssh-ed25519 AAAA…` line still works as the deprecated
+form of `key::`; a literal key of another type (`sk-ssh-ed25519@openssh.com …`,
+`ecdsa-…`) without the prefix is read as a file path and fails.
 
 ## The config is a base, and packs extend it by fragment
 

@@ -24,7 +24,8 @@ a gate people bypass.
 
 **The `git-config` hook requires a per-repo identity.**
 The local `user.name`, `user.email` and `user.signingkey` must equal the forge
-variables — `GITHUB_*`, `GITLAB_*` or `GIT_*` by origin host — with ssh-signed
+variables — `GITHUB_*` for `github.com` and its subdomains, `GITLAB_*` likewise
+for `gitlab.com`, `GIT_*` for any other origin host or none — with ssh-signed
 commits and tags; its `--fix` writes those keys from the variables, fails naming
 an unset one, and unsets only `gpg.program` and `gpg.ssh.program`. A commit that
 changed any key is refused and the re-run carries the corrected identity — git
