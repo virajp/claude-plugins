@@ -140,7 +140,10 @@ in [the onboard pipeline](references/onboard-pipeline.md), named with its
 unlock (`/vwf:setup reshape`, run whenever), and the run continues to the mode
 table. setup never materializes a bundle itself and never halts on an unshaped
 or drifted repo: the repo shape and the vwf format are two different things,
-and a repo can be onboarded into one without the other.
+and a repo can be onboarded into one without the other. The check **repeats
+after the materialize pass**, once per run, so a pack version that pass moves
+in this run is caught in this run — see [the second shape
+check](#the-second-shape-check) under the pass.
 
 Read `.config/vwf.yaml`, then compare its `blueprint_format` and `config_format`
 against the shipped integers (`${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`, and the
@@ -202,6 +205,25 @@ each landing behind the **adapter's own** consent line. A declined landing
 leaves the pin untouched and is reported. An `unresolved` axis is skipped
 silently. An **absent** axis is written `unresolved` and the run continues — a
 slug is never rewritten.
+
+### The second shape check
+
+The pass ends with **a second shape check** — the same two questions Step 0
+asked, is the shape *there* and is it *current*, over the same set of repos,
+evaluated against the adapter lockfile the pass has just written. It exists
+because Step 0 runs before the pass: a pack version the pass moved is drift
+Step 0 could not see, and without this check it would wait for the next run —
+the pass edits the lockfile Step 0 read. Read the artifacts Step 0
+names and evaluate them by the same doctor predicates; on any repo unshaped or
+behind, make the offer exactly as Step 0's paragraph makes it — the drifted
+repos, what each showed, the one question, `/vwf:init` on a yes, a recorded
+deferral on a decline — and continue. Every repo clean, print nothing: a clean
+second check is not a report line.
+
+It runs **once per setup invocation**, wherever the pass ran — before step 3 in
+`onboard` and `migrate`, before the report in `current` — and never a third
+time. A `reshape` invocation is the shape pass itself, runs no materialize
+pass, and does not run this check.
 
 ## The shared spine
 
