@@ -1,0 +1,21 @@
+/security-review — R5 round 1 — range b43a91ef..2767ab39
+(engine ran via the security-review skill; its diff step compared against main, so the analysis was re-scoped to the range by a sub-task)
+
+# Vuln 1: data-exposure regression (secret-scan bypass): plugins/stackgen/stacks/toolchain-gate/gitleaks/config/.config/gitleaks.toml:47-48
+
+Severity: High
+
+Description: The new [allowlist] paths entries ^\.env$ and ^\.env\..* are a global gitleaks allowlist, and gitleaks applies the global allowlist to every source mode — dir, git, and git --staged alike. The comment justifies the entry for dir mode ("a value that was never going to be committed"), but code:sec --staged, which is the pre-commit secret gate, now also skips any staged file named .env, .env.local, .env.production, .env.example, etc. at the repo root. The file that most commonly carries real credentials is now the one file the commit gate will never read. The dir-mode nuisance this was meant to solve (a gitignored .env tripping full scans) is real, but the fix trades a false positive for a silent false negative in the mode that actually guards commits.
+
+Exploit Scenario: Developer on a shaped repo runs git add -A (or git add -f .env, or commits a .env.production that was never gitignored — the hygiene .gitignore typically covers .env but not every .env.* variant). Pre-commit runs mise run code:sec --staged → gitleaks git --staged --config .config/gitleaks.toml. Every finding in the staged .env* file is dropped by the path allowlist; the hook prints green; the credentials are committed and pushed. Before this range the same staged file would have failed the hook.
+
+Recommendation: Remove the .env entries (keep .venv/ — never tracked, a generated tree, matching the list's stated rule). Solve the dir-mode noise where it originates instead: in code:sec full mode scan tracked content rather than the filesystem, e.g. gitleaks git (history, honours the index) or gitleaks dir over git ls-files output; or, if a path allowlist is unavoidable, pass a second config to the full scan only so the staged gate keeps the strict one. Also update the toml comment, which currently states the opposite of the rule's own "never widen to tracked source" line.
+
+Confidence: 9/10
+
+Rejected candidates:
+- code/git-config FORGE chosen from git remote get-url origin — untrusted URL only selects which of the user's own trusted env-var prefixes is written; quoted git config calls, no eval. Confidence 2.
+- code/git-config prints actual local config values on mismatch — names, emails, SSH public-key path; not secrets. Confidence 1.
+- setup/precommit --force unsetting core.hooksPath — previously unconditional; hardening. Confidence 1.
+- setup/mise --upgrade — gates previously-automatic upgrades; supply-chain improvement. Confidence 1.
+- code/sec grype status capture — exit code preserved; no bypass. Confidence 1.

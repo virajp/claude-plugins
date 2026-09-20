@@ -1,0 +1,16 @@
+/security-review — R5 round 2 — range b43a91ef..b869b325 (analysis re-scoped to the range by a sub-task)
+
+No high-confidence security findings in b43a91ef..b869b325.
+
+Round-1 High: closed — tested with gitleaks 8.30.1 in a temp repo: a staged .env holding a random ghp_ token run through gitleaks git --staged --config .config/gitleaks.toml (the shipped b869b325 toml) reports leaks found: 1; the same repo through the overlay gitleaks dir scan reports clean for .env, still reports the same token in a tracked src file, still honours the base toml's .venv/* and build/* allowlist, and still fires a custom [[rules]] entry defined in the base toml — so [extend] path merges rather than replaces.
+
+Rejected candidates (confidence / why):
+- mktemp overlay predictable path / symlink race — 2: mktemp with a template yields a random 0600 file; no pre-existing-path reuse.
+- Overlay world-readable — 1: mode 0600, content is only [extend] + two path regexes; no secret.
+- [extend] path absolute-path handling — 2: written absolute from MISE_PROJECT_ROOT; gitleaks resolves it. A quote or backslash in the checkout path would break the TOML and fail closed; operator's own path.
+- Overlay reaching the --staged branch — 1: the staged branch exits before the overlay is created and passes SECRETS_CONFIG directly.
+- EXIT trap not removing overlay — 2: trap set right after mktemp; under set -e runs on failure too.
+- useDefault=true fallback dropping repo rules — 1: taken only when .config/gitleaks.toml is absent.
+- -- handling in git-config — 2: keys are literals, values only from env vars; ${spec%%=*}/${spec#*=} split correctly on a value containing =.
+- Authority parse — 3: git@evil.com:github.com/x → evil.com → GIT; https://x@github.com.evil.com/r → GIT.
+- pre-commit-config exclude ^\.vscode/ for check-json — 2: files are JSONC by design, not a secret gate.

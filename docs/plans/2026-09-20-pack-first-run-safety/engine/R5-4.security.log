@@ -1,0 +1,12 @@
+/security-review — R5 round 4 — range b43a91ef..673d0fe0 (analysis re-scoped to the range by a sub-task)
+
+No high-confidence security findings in b43a91ef..673d0fe0.
+
+Round-1 High: closed — gitleaks.toml at 673d0fe0 still carries no .env allowlist (only .venv/, build/, dist/, graphify-out/, node_modules/, target/); the only diffs since round 3 are the two task scripts, three docs and a pre-commit-config.yaml line.
+
+Rejected candidates (74665080):
+- CHANGED-false-with-mismatch in code/git-config — 2: every write is gated on the same local_get comparison check uses, and check runs unconditionally after the loops under set -e, so a surviving mismatch exits 1 regardless of CHANGED.
+- Partial write on exit-1 path — 1: all writes finish before check; a git config failure aborts via set -e. The CHANGED exit 1 is deliberate and post-write.
+- --system probe swallowing a permission error — 2: an unreadable system file also fails for git itself; the effective HOOKS_PATH fallback still classifies GLOBAL_ONLY when neither scoped probe answers.
+- Unquoted expansion / eval — 1: all expansions quoted, lefthook paths are literals, keys are literals, values only from env.
+- --force with global/system hooksPath — 1: GLOBAL_ONLY exits 1 before the --local --unset-all branch.
