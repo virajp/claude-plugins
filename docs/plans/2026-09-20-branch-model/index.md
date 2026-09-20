@@ -1,0 +1,276 @@
+---
+type: vwf-change-plan
+title: branch model — landing model per branch; the git pass reads where it
+  stands
+requires: [ docs/plans/2026-09-20-init-brownfield-reads ]
+backlog: [ B28, B53 ]
+---
+
+# Plan — branch model (2026-09-20)
+
+## Status
+
+**APPROVED**
+
+APPROVED 2026-09-20 by the user
+
+## Consent
+
+| Action                                            | Granted                                                                                                                                          |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Merge to the integration branch and push on green | yes                                                                                                                                              |
+| After landing: `mise run p:plugins:local`         | run                                                                                                                                              |
+| Release vwf publicly                              | minor — `19.40.0` → `19.41.0`, a hand edit of `plugins/vwf/.claude-plugin/plugin.json` then `mise run p:plugins:marketplace`; no release step    |
+| Release stackgen publicly                         | minor — `1.23.1` → `1.24.0`, a hand edit of `plugins/stackgen/.claude-plugin/plugin.json` then `mise run p:plugins:marketplace`; no release step |
+| Release site publicly                             | patch — `1.1.36` → `1.1.37` via `mise run p:site:version`; no release step                                                                       |
+| Release installer publicly                        | none — untouched                                                                                                                                 |
+
+**The mode recorded here is the consent.** A `run` step runs on a green landing
+without a prompt; an `ask` step stops the run once before it, reports what it
+would do, and waits. The mode is the interview's answer (item 17), and a release
+step recorded `run` is authorised by the interview's release question (item 18)
+— a release recorded `ask`, or with no step at all, is intent, not
+authorisation. Where a step stages something this session already loaded, it is
+picked up only by a **restarted** session.
+
+## Goal
+
+After this lands, the landing model is set per repo **and per branch** —
+`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`, each `direct` or `pr` — and every
+reader honours it: `code:merge:develop` and `code:merge:main`, git-workflow's
+Step 4, the forge pass's require-PR rule, and doctor's predicates. Init's git
+pass reads where each repo stands before it commits: the ops commit lands on
+`develop` in every mode, never on `main`; a repo whose mainline is `master` or
+`trunk` gets `main` and `develop` created beside it and the old branch reported;
+a detached member is refused with the branch to check out, never committed.
+
+Backlog items **B53** ("Merging strategy must be configurable for each repo and
+branch (`main` & `develop`)" — scoped at the interview to the landing model,
+`direct` vs `pr`, per branch) and **B28**, piece D2, plan 4 of 5 — candidate 11
+of `docs/memory/problems/2026-09-20-init-shape-audit.md`; closes B3, B13, G6 and
+the init half of L14 (the literals `main` and `develop` stay: branch names are
+fixed by the B53 answer). Requires `2026-09-20-init-brownfield-reads` (the
+chain; the git pass this plan edits follows the passes that plan adds).
+
+**Reversal, confirmed at the interview.** `MERGE_MODEL` — "a marked `[env]`
+position, `direct|pr`, read as `direct` when unset, filled at landing"
+(`docs/memory/decisions/2026-09-12-task-library-configures-each-gate-once.md:68-77`)
+— is retired in favour of two positions, one per branch. A repo still carrying
+the single key is read as both until its next reshape, and doctor reports it as
+drift. The docs unit writes one decisions doc.
+
+## Facts the survey established
+
+Paths: `NR` = `plugins/vwf/skills/init/references/new-repo.md`, `ER` =
+`…/existing-repo.md`, `MISE` =
+`plugins/stackgen/stacks/toolchain-manager/mise/config/.config`, `DOC` =
+`plugins/vwf/skills/doctor/references/stack-checks.md`. Verified at `39d8bb27`,
+before plans 1–3 land; the units locate passages by heading.
+
+- **Where the ops commit lands.** Never chosen: `NR:546-559` commits in the repo
+  the pass runs in, on whatever is checked out; a repo created by §1 starts on
+  `develop` (`NR:21-22`); existing repos "leave branches alone here"
+  (`NR:31-32`). The develop/main creation table `NR:580-585` (no commits →
+  `main` from HEAD, leave develop; main only → develop; develop only → main;
+  both → nothing; "leave checked out: as it was"), restated `ER:905-907`;
+  rationale `NR:24-29, 587-590`. **No** read of the current branch or a member's
+  HEAD anywhere in init (only the toplevel and common-dir reads at
+  `SKILL.md:169` and `:278`); `assets/membership.md:126` clones members with a
+  plain submodule init — detached by construction (B3).
+- **`MERGE_MODEL` today.** Asked once per product (`NR:455-462`); `direct|pr`
+  written literally at the `mise.toml` marked position in every repo whose
+  env-block file the run lands or replaces (`NR:473-479`); a kept file keeps its
+  value (`NR:481-490`; `ER:330-333, 558-563`). Summary `init/SKILL.md:88-110`
+  (branches `:93-94`, forge `:100-104`), `:350`, `:417-421`. The marked
+  position: `MISE/mise.toml:118-128`. Not mentioned in `vwf-config.md`.
+- **The forge pass** (`NR:612-760`): eligibility `:621-627`; precondition
+  `:629-645`; default-branch row `develop` preselected `:674-681`; protection
+  rules with require-PR under `pr` `:682-690`; idempotence `:691-702`; GitHub
+  writes `:700-729` (the `pull_request` rule only under `pr`, `:731-733`);
+  GitLab `:735-748`; backlog `:752-760`; `ER:889-911` references it.
+- **Readers of `MERGE_MODEL`.** git-workflow
+  `plugins/vwf/skills/git-workflow/SKILL.md:31-35`, Step 4 `:186-225` (reads
+  `mise env -s bash` `:197-199`, unset → direct; the three options per mode
+  `:206-219`); `:61` forbids force-push to main/develop;
+  `references/landing.md:21, 34-35, 58-76`. execute hands to git-workflow's Step
+  4 (`plugins/vwf/skills/execute/SKILL.md:757-770`); units commit only
+  (`:331-332`). The mise skill: `skills/mise/references/task-library.md:164-165`
+  (rows), `:487-503` (the merge procedure), `:515-532` (the `MERGE_MODEL`
+  section), `:639`.
+- **The merge tasks.** `MISE/mise/tasks/_scripts/merge`: `MERGE_MODE`
+  `:150-151`; refuse FROM main, INTO main only from develop `:153-164`
+  (`CURRENT_BRANCH` via rev-parse `:137-139`); destination must exist locally
+  `:172-181`; direct = hop to the main worktree `:190-201`, `git checkout DEST`
+  `:273`, `git pull origin DEST --tags` `:283`, a no-ff merge `:295`, a push
+  with tags `:305`, restore `:318` — always `--no-ff` (`:17-19`); pr =
+  `open_pull_request` `:99-125` (push with upstream `:104`; `gh pr create` with
+  base and head `:116`; the `glab mr create` twin `:119`; no merge-method flag),
+  dispatch `:258`. `code/merge/develop:21`
+  `merge_to_destination_branch develop "$branch"`; `code/merge/main:16`
+  `merge_to_destination_branch main develop` (`:9-14` "both branches are
+  fixed"). `code/worktrees:15-23` `default_branch()` reads `origin/HEAD`, falls
+  back to literal `main` (`:21`).
+- **Other literals.**
+  `plugins/stackgen/stacks/toolchain-gate/pre-commit/config/.config/pre-commit-config.yaml:161-164`
+  `no-commit-to-branch --branch main`; hygiene `config/CONTRIBUTING.md:23-27`
+  (feature → develop → main; the hook refuses main), `:30-32` (`MERGE_MODEL`),
+  `:34-41` (the forge pass). No `setup:default-branch` task exists.
+- **Doctor.** (c) `DOC:375-382` — `show-ref` on `develop` and `main`, either
+  missing = drift; (f) `DOC:482-493` — `MERGE_MODEL` absent or not `direct|pr` =
+  drift, falls back to direct; (g) `DOC:509-570` — default branch must be
+  `develop` or `main` (`:528-535`), protection on both `:536-558` (require-PR
+  note under `pr`), backlog `:559+`.
+- **`master`/`trunk`.** Zero handling anywhere in `plugins/`; init's table has
+  no row; doctor (c)/(g) would flag; the merge tasks refuse (destination
+  missing); `worktrees` falls back to `main`.
+- **Docs describing today** (U6's): `CLAUDE.md:283-288` (init's git pass),
+  `:365-367` ("develop takes the work; main is what users read"), `:126`,
+  `:471-473`; `.claude/docs/ci-and-releases.md:44-49, 59-60, 69-77, 102`;
+  `site/src/content/docs/plugins/vwf.md:79-80, 197, 783, 1248-1252` (branch
+  model), `:1255-1260` (`MERGE_MODEL`), `:1262-1284` (forge pass);
+  `site/src/content/docs/plugins/stackgen.md:615, 728, 743-752`.
+- **Versions after plan 3**: vwf `19.40.0`, stackgen `1.23.1`, site `1.1.36`;
+  mise pack `1.4.1`, hygiene `1.1.3`. Bumps, pins and inventory in one commit
+  (U7). Commit types `ops docs merge feat fix refactor`, no scopes. Priority:
+  `10 + 30` over the required plan's row → 40.
+- This repo's own `.config/mise.toml` carries `MERGE_MODEL` and its
+  `.config/mise/tasks/` the old merge scripts — **not** in scope; they follow at
+  the next `/vwf:setup reshape`.
+
+## Assumed decisions — confirm or override at review
+
+| # | Decision           | Ruling                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Rejected                             | Unit       |
+| - | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | ---------- |
+| 1 | Per-branch landing | Two marked positions replace `MERGE_MODEL` in the mise pack's `mise.toml`: **`MERGE_MODEL_DEVELOP`** (preselected `direct`) and **`MERGE_MODEL_MAIN`** (preselected `pr`), values `direct` or `pr`. Init's git pass asks one row per repo per branch — a two-column table under the existing question. `code:merge:develop` reads the first, `code:merge:main` the second; git-workflow's Step 4 reads the one for its destination; the forge pass writes the require-PR rule per branch from that branch's value; doctor (f) checks both. A repo still carrying `MERGE_MODEL` alone: every reader takes it as both values, and doctor (f) reports "legacy `MERGE_MODEL` — reshape writes the pair" | `MERGE_MODEL` + a `_MAIN` override   | U1, U3, U4 |
+| 2 | Branch names       | Fixed: `develop` and `main` (the B53 answer). A repo whose mainline is `master` or `trunk` (or any other name): the git pass creates `main` from that mainline and `develop` from `main`, checks out `develop`, leaves the old branch in place and reports it in the run's summary for the user to retire; the forge default-branch row applies to the new pair                                                                                                                                                                                                                                                                                                                                     | configurable branch names            | U1, U2     |
+| 3 | The ops commit     | Lands on **`develop`** in every mode — checked out, or created first from the mainline per decision 2 — never on `main` or another branch; the creation table gains the "checked out: develop" column and loses "as it was"                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | wherever the repo stands             | U1, U2     |
+| 4 | Detached member    | Before the git pass, read each member's HEAD (`git symbolic-ref -q HEAD`); a detached member is a **refused plan row** naming the branch to check out (`develop`, or the mainline), the member's shaping is deferred, the base's gitlink for it is not moved; `assets/membership.md`'s clone step checks out the member's default branch after `submodule update --init` so a member cloned by the run is never detached                                                                                                                                                                                                                                                                            | commit on the detached HEAD and warn | U1, U2     |
+| 5 | Merge method       | Unchanged — `--no-ff` locally, the forge's default for a PR; B53 was scoped to the landing model                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | squash / rebase knobs                | —          |
+| 6 | `code:worktrees`   | `default_branch()` keeps reading `origin/HEAD`; the literal fallback stays `main`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | fallback to develop                  | U3         |
+| 7 | Review row         | `_scripts/merge`, `code/merge/develop`, `code/merge/main` and `code/worktrees` are shipped shell → one `Kind: review` row in wave 2 covering U1–U4                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | none                                 | R5         |
+| 8 | Pack bumps         | mise `1.4.1` → **`1.5.0`** (two marked positions added, one retired), hygiene `1.1.3` → `1.1.4` (CONTRIBUTING); pins and inventory in U7, one commit                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | per-unit bumps                       | U7         |
+
+## New dependencies
+
+none
+
+## Units
+
+| Id | Wave | Unit file                                                | Kind   | Owns                                                                                                                                                                                                                                                                                                                                         | Depends on     | Status  | Commit |
+| -- | ---- | -------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------- | ------ |
+| U1 | 1    | [01-init-git-pass.md](01-init-git-pass.md)               | edit   | `plugins/vwf/skills/init/SKILL.md`, `plugins/vwf/skills/init/references/new-repo.md`                                                                                                                                                                                                                                                         | —              | pending |        |
+| U2 | 1    | [02-existing-and-members.md](02-existing-and-members.md) | edit   | `plugins/vwf/skills/init/references/existing-repo.md`, `plugins/vwf/assets/membership.md`                                                                                                                                                                                                                                                    | —              | pending |        |
+| U3 | 1    | [03-mise-pack.md](03-mise-pack.md)                       | edit   | `plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise.toml`, `…/mise/config/.config/mise/tasks/_scripts/merge`, `…/tasks/code/merge/develop`, `…/tasks/code/merge/main`, `…/tasks/code/worktrees`, `plugins/stackgen/stacks/toolchain-manager/mise/skills/**`, `plugins/stackgen/stacks/toolchain-manager/mise/conventions.md` | —              | pending |        |
+| U4 | 1    | [04-readers.md](04-readers.md)                           | edit   | `plugins/vwf/skills/git-workflow/SKILL.md`, `plugins/vwf/skills/git-workflow/references/landing.md`, `plugins/vwf/skills/doctor/references/stack-checks.md`, `plugins/stackgen/stacks/repo-hygiene/repo-hygiene/config/CONTRIBUTING.md`                                                                                                      | —              | pending |        |
+| R5 | 2    | [05-review.md](05-review.md)                             | review | —                                                                                                                                                                                                                                                                                                                                            | U1, U2, U3, U4 | pending |        |
+| U6 | 3    | [06-docs.md](06-docs.md)                                 | edit   | `readme.md`, `CLAUDE.md`, `.claude/docs/**`, `.claude/skills/vwf-plugin/**`, `.claude/skills/stackgen-plugin/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-09-20-branch-model.md`                                                                                                                                             | R5             | pending |        |
+| U7 | 4    | [07-gates-and-bump.md](07-gates-and-bump.md)             | edit   | `…/mise/pack.yaml`, `…/repo-hygiene/repo-hygiene/pack.yaml`, `plugins/stackgen/stacks/bundles/mise.md`, `bundles/repo-hygiene.md`, `plugins/stackgen/stacks/inventory.md`, the two `plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`                                                                                     | U6             | pending |        |
+
+Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
+`skipped`. U1–U4, U6, U7 are `edit`; R5 is the review row — it runs the two
+engines and the two reviewers over the delta since the branch base, covers U1–U4
+through Depends on, and sits strictly later than each.
+
+## Shared-file rule
+
+| File                                                                                         | Why it collides                                     | Owner   |
+| -------------------------------------------------------------------------------------------- | --------------------------------------------------- | ------- |
+| the two `pack.yaml`, the two bundle files, `inventory.md`                                    | the generator refuses a pin without its pack        | U7 only |
+| the two `plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`                | version and generated files                         | U7 only |
+| every human-facing doc — `readme.md`, `CLAUDE.md`, `.claude/**`, `site/**`, `docs/memory/**` | n units editing one doc                             | U6 only |
+| `doctor/references/stack-checks.md`                                                          | U1 would describe (f)'s legacy rule; U4 owns doctor | U4 only |
+| hygiene `CONTRIBUTING.md`                                                                    | U3 would restate the model; U4 owns the landed file | U4 only |
+| `…/mise/skills/**`                                                                           | U4 would cite the task rows; U3 owns the mise prose | U3 only |
+| the pre-commit pack's `no-commit-to-branch` line                                             | untouched — names are fixed                         | —       |
+| this repo's own `.config/mise.toml`, `.config/mise/tasks/**`                                 | out of scope — the next reshape's                   | —       |
+
+## Waves
+
+- **Wave 1** — U1, U2, U3, U4: four disjoint sets; U1/U2 split init by file and
+  cite each other; U4's doctor and git-workflow edits cite U3's task names.
+- **Wave 2** — R5.
+- **Wave 3** — U6.
+- **Wave 4** — U7.
+
+## Wave gate
+
+    mise run p:plugins:marketplace -- --check
+    mise run p:plugins:inventory -- --check
+    mise run p:plugins:check
+    mise run p:plugins:shellcheck
+    mise run p:plugins:npm-normalize-test
+    mise run code:precommit
+    mise run p:site:check
+
+plus the wave review, plus every report read for `UNRESOLVED:`. Every line here
+must be green before wave 1.
+
+## After landing
+
+| Step                       | Mode | Notes                                                                                                                                                                   |
+| -------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mise run p:plugins:local` | run  | stages vwf at `19.41.0+N` and stackgen at `1.24.0+N` into the dev marketplace and updates this machine's install; publishes nothing; a **restarted** session loads them |
+
+## Gates the orchestrator keeps
+
+none beyond the wave gate. The per-branch model is proven by the user's next
+`/vwf:setup reshape` on this repo, which rewrites its `MERGE_MODEL` into the
+pair and lands the new merge scripts.
+
+## Unit contract
+
+Every unit prompt carries, in order: its ruling quoted from this file, its owned
+paths plus "touch nothing outside this list", the facts section, the shared-file
+rule, and the return block below. A unit never bumps a version, never runs a
+generator, never edits a doc, never adds a dependency this file does not list,
+never commits. A unit deletes with plain `rm`, never `git rm` — it stages
+nothing.
+
+A unit returns exactly this block and nothing else — no file contents, no diff:
+
+    CHANGED: <path> — <one line>            (one per file)
+    DECIDED: <what> — <why>                 (choices made inside scope, or none)
+    DOCS FALSIFIED: <path> — <passage>      (reported, never edited; or none)
+    GAP: <what the plan left unspecified and the assumption taken>   (or none)
+    UNRESOLVED: <the ruling needed>         (or none)
+
+A `GAP:` is a hole in the plan the unit could proceed past on a stated
+assumption; it is recorded and the run continues. An `UNRESOLVED:` is a ruling
+the unit could not proceed without; it blocks the unit and its dependents.
+
+## Out of scope
+
+- Configurable branch names, and the `no-commit-to-branch --branch main` hook
+  line — names are fixed (decision 2).
+- The merge method — squash, rebase, fast-forward (decision 5).
+- PR requirements beyond require-PR (reviewers, checks) — not in B53's answer.
+- This repo's own `.config/mise.toml` and task copies — the next reshape.
+- Rendering the branch literals of the packs as values (rest of L14) — plan 5,
+  if at all; with names fixed there may be nothing to render.
+- A public release — the bumps land; the tags wait for the next `/release`.
+
+## Parked
+
+- Merge method per branch (squash / rebase / merge commit) and PR requirements
+  per branch — raised at the B53 scoping question, declined for now; a later
+  backlog item if wanted.
+- B28 closes when plan 5 lands; B53 closes here. `/vwf:execute`'s `done` at this
+  landing marks both — B28 may need moving back to `Backlog` by hand.
+
+## Run log
+
+| Wave | Unit | Model | Round | Outcome | Detail | Commit |
+| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+
+## Launch
+
+This folder is already committed and pushed on the branch it was planned on, so
+the fresh session's worktree — cut from the integration branch — can see it.
+
+Run in a fresh session:
+
+/vwf:execute docs/plans/2026-09-20-branch-model
+
+or let the queue pick it, by priority:
+
+/vwf:execute next
