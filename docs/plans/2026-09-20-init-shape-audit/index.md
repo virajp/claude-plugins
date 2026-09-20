@@ -9,9 +9,10 @@ backlog: [ B28 ]
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-09-20 by the user
+RUNNING since 2026-09-20T09:06Z in
+/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/plan/2026-09-20-init-shape-audit
 
 ## Consent
 
@@ -123,13 +124,13 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                                        | Kind | Owns                                                                   | Depends on | Status  | Commit |
-| -- | ---- | ------------------------------------------------ | ---- | ---------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-greenfield-walk.md](01-greenfield-walk.md)   | edit | `docs/memory/problems/2026-09-20-init-shape-audit-greenfield.md`       | —          | pending |        |
-| U2 | 1    | [02-brownfield-walk.md](02-brownfield-walk.md)   | edit | `docs/memory/problems/2026-09-20-init-shape-audit-brownfield.md`       | —          | pending |        |
-| U3 | 1    | [03-landing-register.md](03-landing-register.md) | edit | `docs/memory/problems/2026-09-20-init-shape-audit-landing-register.md` | —          | pending |        |
-| U4 | 2    | [04-docs.md](04-docs.md)                         | edit | `docs/memory/problems/2026-09-20-init-shape-audit.md`                  | U1, U2, U3 | pending |        |
-| U5 | 3    | [05-gates-and-bump.md](05-gates-and-bump.md)     | edit | — (runs the gate; no file)                                             | U4         | pending |        |
+| Id | Wave | Unit file                                        | Kind | Owns                                                                   | Depends on | Status  | Commit   |
+| -- | ---- | ------------------------------------------------ | ---- | ---------------------------------------------------------------------- | ---------- | ------- | -------- |
+| U1 | 1    | [01-greenfield-walk.md](01-greenfield-walk.md)   | edit | `docs/memory/problems/2026-09-20-init-shape-audit-greenfield.md`       | —          | green   | 7859795b |
+| U2 | 1    | [02-brownfield-walk.md](02-brownfield-walk.md)   | edit | `docs/memory/problems/2026-09-20-init-shape-audit-brownfield.md`       | —          | green   | 8198bc26 |
+| U3 | 1    | [03-landing-register.md](03-landing-register.md) | edit | `docs/memory/problems/2026-09-20-init-shape-audit-landing-register.md` | —          | green   | 936ba19e |
+| U4 | 2    | [04-docs.md](04-docs.md)                         | edit | `docs/memory/problems/2026-09-20-init-shape-audit.md`                  | U1, U2, U3 | pending |          |
+| U5 | 3    | [05-gates-and-bump.md](05-gates-and-bump.md)     | edit | — (runs the gate; no file)                                             | U4         | pending |          |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`. Every unit is `edit`.
@@ -212,8 +213,16 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Commit |
+| ---- | --------- | ----- | ----- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight | —     | 1     | green       | resolve runnable (requires COMPLETE); doctor: mise, graphify CLI and graph present, no .config/vwf.yaml so no stack to check, all-edit plan so no LSP or conventions step; 4 gate lines green (code:precommit pass 2); no covers: so format check skipped                                                                                                                                                                                                                                                                                                                                    | —      |
+| 1    | U1        | opus  | 1     | green       | 22-row register, 15 findings, 107 pointers. DECIDED: AAAK line in a text block under the H1; wing `ai-plugins`. DOCS FALSIFIED: bundles/repo-gates.md:24-27 (no toolchain-gate pack ships a pre-commit.d fragment); readme-and-license.md:114-119 + repo-hygiene conventions.md:217-222 (renovate caveat says .config/, lands at root); plan index.md:78 (31 task files, not ~36), :67 (SKILL.md line drift). GAP: no AAAK example in problems/; used memory.md:284-287 shape                                                                                                                |        |
+| 1    | U2        | opus  | 1     | green       | 11 passes, 21-row register, 20 findings (4 blocks: mode gate; pass-1 basename map moving root install/main into the task library; detached-HEAD submodule member; root .gitleaks.toml allowlist dropped), 13 D2 candidates. DECIDED: mode-boundary section up front. DOCS FALSIFIED: task-library.md:631-634; hygiene conventions.md:216-220 + readme-and-license.md:114-119 (renovate); pre-commit-config.yaml:201-204 vs fragments-and-sections.md:107-111. GAP: AAAK grammar (PROBLEM date ★4 scope summary source); existing-repo.md silent on new-repo §3/4/8/9/10 → treated as not run |        |
+| 1    | U3        | opus  | 1     | green       | 32-row register over all 58 config/ files, 23 findings, D2 candidates. DECIDED: task scripts grouped in 5 rows; _licenses/* kept as never-copied rows. DOCS FALSIFIED: bundles/repo-gates.md:25-26 (no gate pack ships a pre-commit.d fragment); materializer.md:73-83 (root-allowlist sentence truncated); repo-hygiene CONTRIBUTING.md:35 names untypeable /vwf:init. GAP: new-repo.md silent on materializer conflicts in mode new → cells say unspecified                                                                                                                                |        |
+| 1    | R1        | opus  | 1     | findings(3) | landing-register.md:292 [U3] finding 23 false — materializer.md:73-83 is complete, quoted fragment is :105; greenfield.md:117 [U1] 12 of 31 slot files → 10; landing-register.md:80 [U3] no standalone pointer column (RULINGS: departed from decision 2). CONTRACT clean; 60+ citations verified                                                                                                                                                                                                                                                                                            |        |
+| 1    | U1        | opus  | 2     | green       | R1 loop-back: slot-file count 12→10 with the producing grep beside it                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |        |
+| 1    | U3        | opus  | 2     | green       | R1 loop-back: finding 23 dropped (22 remain); standalone Pointer column added, pointers tagged reads/exists/risk/file. DOCS FALSIFIED retracted: materializer.md:73-83                                                                                                                                                                                                                                                                                                                                                                                                                       |        |
+| 1    | R1        | opus  | 2     | pass        | all three fixes verified; 7 pointers spot-checked; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |        |
 
 ## Launch
 
