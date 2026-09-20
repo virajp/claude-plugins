@@ -49,9 +49,11 @@ The last two stale passages go.
 Backlog item B28, piece D2, plan 5 of 5 — candidates 14, 15, 16 (the part plan 1
 left) and 19 (the part plan 3 left) of
 `docs/memory/problems/2026-09-20-init-shape-audit.md`; closes L9, L10, L11, L12
-(the rendering half), L13, L17, L18, L19, L20, L21, L22, G9, G11, G12, G15.
-Requires `2026-09-20-branch-model` (the chain; and CONTRIBUTING.md, which that
-plan edits, is touched again here). **B28 closes when this plan lands.**
+(the rendering half), L13, L17, L18, L19, L20, L21, L22, G9, G11, G12. G15
+(every member carries a full copy of every gate config, and nothing records they
+started identical) is **not** closed here — it is a backlog item of its own,
+B55. Requires `2026-09-20-branch-model` (the chain; and CONTRIBUTING.md, which
+that plan edits, is touched again here). **B28 closes when this plan lands.**
 
 Not a reversal. The pack format gains one optional key; the "a tool-naming key
 belongs to that tool's pack" rule the hygiene pack already states
@@ -264,6 +266,10 @@ the unit could not proceed without; it blocks the unit and its dependents.
   section-contribution mechanism like the ignore sections; a later backlog item
   if the stack lines ever bite.
 - Merge method per branch (from plan 4).
+- **G15 — member gate-config drift** (B55): every member repo carries a full
+  copy of every gate config with nothing recording they started identical; a
+  later plan decides between base-owned configs the members reference and a
+  doctor predicate diffing members against the base.
 - **B28 closes at this landing** — the five D2 plans plus A, B, C and D1 are its
   whole scope; `/vwf:execute`'s `done` here is the right one.
 
