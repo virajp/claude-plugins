@@ -1317,7 +1317,13 @@ anything else. That ordering is **per repo**, since each repo's pre-commit is
 its own — so an existing-mode repo makes two commits and a new-mode repo one. On
 a new repo no such ordering is needed — the first commit precedes hook wiring by
 construction, which is also why the shipped protected-branch hook ships
-unchanged and never sees it.
+unchanged and never sees it. That existing-repo commit runs through the live
+hook, and since stackgen `1.22.0` the hook's `git-config` step requires the
+forge identity from `GITHUB_USER_NAME`, `GITHUB_EMAIL` and `GITHUB_SIGNING_KEY`
+(or the `GITLAB_` / `GIT_` twins) — which `init` does not yet ask for. Until it
+does, **export the three before a reshape** and expect that commit to be refused
+once while the identity is written, then re-run it; with the variables unset the
+commit fails outright.
 
 **Every run ends with the same report** — files written, files replaced, files
 kept, files moved, tasks renamed, tasks kept, calls rewritten, sections

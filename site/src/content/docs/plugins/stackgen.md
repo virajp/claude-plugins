@@ -584,10 +584,17 @@ language. Each of those four packs now ships **its own config file** under
 `.config/` and a `vscode.d/` editor fragment. None of them ships a
 `pre-commit.d/` fragment any more: the gate config carries three tool-neutral
 hooks — `format`, `lint`, `sec` — that call `code:format`, `code:lint` and
-`code:sec`, and each tool is configured once, inside the task. The formatter
-also ships the root `dprint.json` shim described above, and the JS/TS linter
-gate — a language-bundle topic rather than a repo gate — ships
-`.config/linter.yaml`, the config it had always invoked and never supplied.
+`code:sec`, and each tool is configured once, inside the task. Both scanners
+document the same **baseline step for an existing repo**: run the scan, fix what
+can be fixed — rotate a real secret, upgrade a dependency — and record what
+remains, a gitleaks finding by fingerprint in the allowlist, a grype
+vulnerability id under `ignore:` in `.config/grype.yaml`, each with a one-line
+reason and when to re-check, then re-run until green. The thresholds stay where
+they are: a time-boxed ignore is the temporary silence, a lowered threshold the
+permanent one. The formatter also ships the root `dprint.json` shim described
+above, and the JS/TS linter gate — a language-bundle topic rather than a repo
+gate — ships `.config/linter.yaml`, the config it had always invoked and never
+supplied.
 
 **`repo-hygiene`** is the newest kind on the repo axis, beside `repo-gate`,
 `toolchain-manager` and `workspace`. Its single pack ships the files every repo
@@ -735,10 +742,28 @@ inside `code/*` and `setup/*` change with the tech stack.
   staged filenames, `sec` passes `--staged` and lets gitleaks read the index. A
   repo customising a gate edits the task, never the hook, so every tool is
   configured exactly once. `code:sec` needs scanners from `mise.dev.toml` — run
-  it under the dev toolchain (`MISE_ENV=dev`). `code:count` is a size reading
-  rather than a metric: lines of **tracked** text grouped by extension, which is
-  the whole ignore story for free — no build output, no vendored tree, and no
-  second exclusion list to keep in step with `.gitignore`.
+  it under the dev toolchain (`MISE_ENV=dev`). Its full scan skips a `.env` file
+  through a throwaway overlay of the gitleaks config, for the `dir` scan alone —
+  the shipped `gitleaks.toml` stays strict, so a `.env` someone stages is still
+  caught — and a grype failure prints the remedy: the finding's vulnerability id
+  under `ignore:` in `.config/grype.yaml` with a one-line reason.
+  **`code:git-config` requires the forge identity, per repo**: the local
+  git-config must carry `user.name`, `user.email` and `user.signingkey` equal to
+  `GITHUB_USER_NAME`, `GITHUB_EMAIL` and `GITHUB_SIGNING_KEY` when the origin
+  host is `github.com` or a subdomain of it, the `GITLAB_` twins for
+  `gitlab.com`, and the `GIT_` twins for any other host or no remote — with
+  ssh-signed commits and tags and no `gpg.program` or `gpg.ssh.program`.
+  `--fix`, which the hook runs, writes those keys from the variables, refuses
+  before writing anything when one is unset, and exits 1 after a change
+  (*identity corrected — re-run the commit*), because git reads its identity
+  before a hook runs: the first commit on a fresh clone is refused while the
+  identity is written, and the re-run carries it. Export the three variables
+  where the hook can see them — the global mise `[env]` block is the one place a
+  GUI git client that never sources your shell profile still picks up, since the
+  hook runs under `mise x`. `code:count` is a size reading rather than a metric:
+  lines of **tracked** text grouped by extension, which is the whole ignore
+  story for free — no build output, no vendored tree, and no second exclusion
+  list to keep in step with `.gitignore`.
 - **`code/merge/*` — landing, with the predicates first.**
   `code:merge:develop <branch>` refuses a source that is `main` or `develop`,
   refuses a **destination branch that does not exist locally** — naming the
@@ -764,7 +789,23 @@ inside `code/*` and `setup/*` change with the tech stack.
 - **`setup/*` — bootstrap & upgrade.** `setup:all` is the entrypoint — run it on
   clone and to re-sync. It calls `setup:mise`, `setup:secrets`,
   `setup:external:start`, `setup:deps:all`, `setup:precommit`, `setup:ai` and
-  `setup:vscode` in order, and stays idempotent. `setup:ai` installs and
+  `setup:vscode` in order, and stays idempotent. **It never upgrades or
+  overwrites anything it did not create**: a pack task that would have to stops,
+  names what it found and prints the by-hand command, and every destructive step
+  sits behind a flag `setup:all` never passes. `setup:mise --upgrade` is what
+  runs `mise upgrade --local` and `dprint config update`, moving the tool pins
+  the lockfile records; `setup:precommit --update` is what runs
+  `pre-commit autoupdate`, moving the hook `rev:` lines; and
+  `setup:precommit --force` is what takes the hooks over from a **local**
+  `core.hooksPath`, a `.husky/` directory or a lefthook config, installing with
+  `--overwrite`. Without it `setup:precommit` refuses, prints the unset and the
+  install to run by hand plus the cleanup (delete the foreign files and drop a
+  husky `prepare` script — the task deletes nothing), and exits 1 — which halts
+  `setup:all` there on a brownfield clone until that cleanup is done, since the
+  orchestrator stops at a failing step. A `core.hooksPath` set in a global or
+  system git-config is named by scope and refused even under `--force`. A plain
+  install keeps a hand-written hook script as `.legacy` and chains it, and a
+  repo pre-commit already owns is never refused. `setup:ai` installs and
   reconciles the repo's agent plugins; it is bootstrap and re-sync like every
   other step here, which is why it is a `setup:*` task and not a gate. It drives
   **Claude's own `claude plugin` commands and nothing else** — no package

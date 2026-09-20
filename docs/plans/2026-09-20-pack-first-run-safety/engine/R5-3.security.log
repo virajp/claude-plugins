@@ -1,0 +1,13 @@
+/security-review — R5 round 3 — range b43a91ef..75103af5 (analysis re-scoped to the range by a sub-task)
+
+No high-confidence security findings in b43a91ef..75103af5.
+
+Round-1 High: closed — gitleaks.toml at 75103af5 has no .env allowlist (only .venv/, build/, dist/, graphify-out/, node_modules/); code:sec --staged passes that config directly and exits before the [extend] overlay is built. Neither file changed since round 2's live test.
+
+Rejected candidates (fa905d2e, setup/precommit):
+- TAKEN_OVER satisfied by a repo-committed file — 1: with core.hooksPath empty, git rev-parse --git-path hooks is .git/hooks (common dir in a worktree), which no clone/checkout can populate; .git/config is likewise untracked.
+- Marker string present in an attacker hook — 1: TAKEN_OVER only skips the husky/lefthook presence check; the plain pre-commit install then overwrites a hook it recognises as its own. Writing .git/hooks/pre-commit already means arbitrary local execution.
+- --force bypass of a global hooksPath — 1: GLOBAL_ONLY exits 1 before the install branch even with --force; only --local --unset-all runs.
+- Unquoted expansion/eval — 1: all quoted; loop paths are literals; no eval.
+- print_yellow uses echo -e on the hooksPath value — 2: escape rendering in output only, value from the user's own git config.
+- git config --get on a multi-valued key returns empty via || true — 2: hardening; pre-commit install then refuses itself.

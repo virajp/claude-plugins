@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-#MISE description="Validate local git-config has no forbidden keys"
+#MISE description="Validate the local git-config carries the forge identity and signing setup"
 
-#USAGE flag "--fix" help="Remove forbidden keys from the local git-config"
+#USAGE flag "--fix" help="Write the identity from the forge variables and set the signing keys in the local git-config"
 
 set -euo pipefail
 # shellcheck source=/dev/null
@@ -12,28 +12,128 @@ print_wait "Validating git-config ... "
 
 FIXIT="${usage_fix:-false}"
 
-# Identity & signing keys must live in GLOBAL git-config, never per-repo local
-FORBIDDEN="user\.name|user\.email|user\.signingkey|commit\.gpgsign|tag\.gpgsign|gpg\.format|gpg\.program|gpg\.ssh\.program"
-LOCAL_CONFIG=$(git config --local --list | grep -E "^($FORBIDDEN)=" || true)
+# Identity and signing: PER-REPO, required, equal to GITHUB_/GITLAB_/GIT_USER_NAME & kin
+ORIGIN=$(git remote get-url origin 2>/dev/null || true)
+# The authority is what sits before the path: after `://` in a URL, before the
+# first `:` in scp form; a bare path has neither. Userinfo is stripped from the
+# authority alone, so an `@` in the path cannot spoof the host.
+case "$ORIGIN" in
+  *://*)
+    HOST=${ORIGIN#*://}
+    HOST=${HOST%%/*}
+    ;;
+  *)
+    HOST=${ORIGIN%%/*}
+    case "$HOST" in
+      *:*) HOST=${HOST%%:*} ;;
+      *) HOST="" ;;
+    esac
+    ;;
+esac
+HOST=${HOST##*@}
+HOST=${HOST%%:*}
+case "$HOST" in
+  github.com | *.github.com) FORGE="GITHUB" ;;
+  gitlab.com | *.gitlab.com) FORGE="GITLAB" ;;
+  *) FORGE="GIT" ;;
+esac
 
-if [ -n "$LOCAL_CONFIG" ]; then
-  if [ "$FIXIT" = "true" ]; then
-    print_newline
-    while IFS= read -r line; do
-      key=${line%=*}
-      print_wait "- removing $key ... "
-      git config --local --unset "$key"
-      print_ok
-    done <<<"$LOCAL_CONFIG"
-    exit 0
-  else
+VAR_NAME="${FORGE}_USER_NAME"
+VAR_EMAIL="${FORGE}_EMAIL"
+VAR_KEY="${FORGE}_SIGNING_KEY"
+
+local_get() { git config --local --get -- "$1" 2>/dev/null || true; }
+
+# Prints every key that misses its required value and returns 1 when there is one.
+check() {
+  local failures="" unset_vars="" spec key var expected actual
+  for spec in "user.name=${VAR_NAME}" "user.email=${VAR_EMAIL}" "user.signingkey=${VAR_KEY}"; do
+    key=${spec%%=*}
+    var=${spec#*=}
+    expected="${!var:-}"
+    actual=$(local_get "$key")
+    if [ -z "$expected" ]; then
+      unset_vars+="${var}"$'\n'
+      failures+="- ${key}: expected \$${var} (unset), actual ${actual:-<unset>}"$'\n'
+    elif [ "$actual" != "$expected" ]; then
+      failures+="- ${key}: expected '${expected}' (\$${var}), actual ${actual:-<unset>}"$'\n'
+    fi
+  done
+  for spec in commit.gpgsign=true tag.gpgsign=true gpg.format=ssh; do
+    key=${spec%%=*}
+    expected=${spec#*=}
+    actual=$(local_get "$key")
+    if [ "$actual" != "$expected" ]; then
+      failures+="- ${key}: expected '${expected}', actual ${actual:-<unset>}"$'\n'
+    fi
+  done
+  for key in gpg.program gpg.ssh.program; do
+    actual=$(local_get "$key")
+    if [ -n "$actual" ]; then
+      failures+="- ${key}: expected unset, actual '${actual}'"$'\n'
+    fi
+  done
+
+  if [ -z "$failures" ]; then
+    print_ok
+    return 0
+  fi
+  print_error "ERROR"
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    print_warn "$line"
+  done <<<"$failures"
+  if [ -n "$unset_vars" ]; then
+    print_yellow "Export the variables the identity is read from (origin host resolves to ${FORGE}):"
+    while IFS= read -r var; do
+      [ -n "$var" ] || continue
+      print_yellow "  export ${var}=..."
+    done <<<"$unset_vars"
+  fi
+  print_error "Please run \`mise run ${MISE_TASK_NAME:-code:git-config} --fix\` to set them"
+  return 1
+}
+
+if [ "$FIXIT" = "true" ]; then
+  missing=""
+  for var in "$VAR_NAME" "$VAR_EMAIL" "$VAR_KEY"; do
+    [ -n "${!var:-}" ] || missing+=" ${var}"
+  done
+  if [ -n "$missing" ]; then
     print_error "ERROR"
-    while IFS= read -r line; do
-      print_warn "- $line"
-    done <<<"$LOCAL_CONFIG"
-    print_error "Please run \`mise run ${MISE_TASK_NAME:-code:git-config} --fix\` to remove them"
+    print_error "Cannot fix — unset:${missing}. Export them and re-run; nothing was written."
     exit 1
   fi
+  print_newline
+  # git resolves the author, the committer and `commit.gpgsign` BEFORE the
+  # pre-commit hook runs, so a key this run changes reaches only the next
+  # commit — the one in flight would still land under the old identity,
+  # unsigned. A run that changed anything therefore fails on purpose.
+  CHANGED=false
+  for spec in "user.name=${!VAR_NAME}" "user.email=${!VAR_EMAIL}" "user.signingkey=${!VAR_KEY}" commit.gpgsign=true tag.gpgsign=true gpg.format=ssh; do
+    key=${spec%%=*}
+    if [ "$(local_get "$key")" != "${spec#*=}" ]; then
+      print_wait "- setting ${key} ... "
+      git config --local -- "$key" "${spec#*=}"
+      CHANGED=true
+      print_ok
+    fi
+  done
+  for key in gpg.program gpg.ssh.program; do
+    if [ -n "$(local_get "$key")" ]; then
+      print_wait "- unsetting ${key} ... "
+      git config --local --unset-all -- "$key"
+      CHANGED=true
+      print_ok
+    fi
+  done
+  print_wait "Re-validating git-config ... "
+  check
+  if [ "$CHANGED" = "true" ]; then
+    print_warn "identity corrected — re-run the commit"
+    exit 1
+  fi
+  exit 0
 fi
 
-print_ok
+check

@@ -22,8 +22,28 @@ task is what knows its own tools' paths. An unscoped hook otherwise runs the
 formatter over a commit that touched one YAML file, and a gate people wait on is
 a gate people bypass.
 
+**The `git-config` hook requires a per-repo identity.**
+The local `user.name`, `user.email` and `user.signingkey` must equal the forge
+variables — `GITHUB_*` for `github.com` and its subdomains, `GITLAB_*` likewise
+for `gitlab.com`, `GIT_*` for any other origin host or none — with ssh-signed
+commits and tags; its `--fix` writes those keys from the variables, fails naming
+an unset one, and unsets only `gpg.program` and `gpg.ssh.program`. A commit that
+changed any key is refused and the re-run carries the corrected identity — git
+reads it before hooks run.
+
 **Revs are pinned and updated deliberately.** An unpinned rev means the gate's
 behaviour changes without a commit, and the change lands on whoever pulls next.
+`pre-commit autoupdate` runs only under `setup:precommit --update`; a plain
+`setup:precommit` installs the hooks and moves no `rev:`.
+
+**`setup:precommit` never clobbers a hook setup it did not create.** An
+effective `core.hooksPath`, a `.husky/` directory or a lefthook config is
+reported with the by-hand lines — the unset, the `--overwrite` install, and the
+file cleanup the task never does itself — and exits 1; `--force` runs the unset
+and the install, on the local git-config only, so a global or system
+`core.hooksPath` is refused even then. A repo pre-commit already owns is not
+refused again. Without `--force` a hand-written `.git/hooks/pre-commit` is kept
+as `.legacy` and chained, never replaced.
 
 **Never bypass a red gate.** The gate found something or it is broken; both need
 answering, and neither is answered by skipping it.
