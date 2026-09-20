@@ -6,8 +6,7 @@ to pick the next runnable plan.
 
 ## Plans
 
-| Folder                                              | Kind   | Plan                                                                 | Target repo | Priority | Status   | Requires                          | Backlog |
-| --------------------------------------------------- | ------ | -------------------------------------------------------------------- | ----------- | -------- | -------- | --------------------------------- | ------- |
-| `docs/plans/archived/2026-09-20-init-editor-dedupe` | change | init editor dedupe — a hand key and the block never both carry a key | —           | 10       | COMPLETE | 2026-09-20-init-forge-pass        | B28     |
-| `docs/plans/2026-09-20-setup-reshape-triggers`      | change | setup reshape triggers — every structural change re-checks the shape | —           | 20       | RUNNING  | 2026-09-20-init-editor-dedupe     | B28     |
-| `docs/plans/2026-09-20-init-shape-audit`            | change | init shape audit — what init lands, reads and ignores, per mode      | —           | 30       | APPROVED | 2026-09-20-setup-reshape-triggers | B28     |
+| Folder                                                  | Kind   | Plan                                                                 | Target repo | Priority | Status   | Requires                          | Backlog |
+| ------------------------------------------------------- | ------ | -------------------------------------------------------------------- | ----------- | -------- | -------- | --------------------------------- | ------- |
+| `docs/plans/archived/2026-09-20-setup-reshape-triggers` | change | setup reshape triggers — every structural change re-checks the shape | —           | 20       | COMPLETE | 2026-09-20-init-editor-dedupe     | B28     |
+| `docs/plans/2026-09-20-init-shape-audit`                | change | init shape audit — what init lands, reads and ignores, per mode      | —           | 30       | APPROVED | 2026-09-20-setup-reshape-triggers | B28     |
