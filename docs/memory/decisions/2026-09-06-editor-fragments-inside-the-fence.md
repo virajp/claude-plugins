@@ -29,6 +29,12 @@ exactly three keys and nothing else:
 | `nesting`    | a parent file name → its child file names | union of children, per parent                 |
 | `extensions` | recommended extension ids, a list         | union                                         |
 
+> **Amended by
+> [`2026-09-20-init-editor-dedupe.md`](./2026-09-20-init-editor-dedupe.md).** A
+> hand key wins because the block **omits** it, never by later-key precedence
+> over a duplicate; *take* and *union* remove the hand copy on the user's word.
+> Block-first and byte-for-byte otherwise stand.
+
 `/vwf:init` composes them into the two editor files, in the materializer's
 documented composition order, between one marked block placed **first** — so a
 key a human writes after the block wins by ordinary later-key precedence, and a

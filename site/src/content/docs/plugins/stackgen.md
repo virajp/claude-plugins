@@ -503,9 +503,13 @@ through a `code:*` task the base config already calls, and only
 `package-manager/uv` still ships one. The **two editor files**: init deep-merges
 every `vscode.d/` fragment's `settings`, unions the `nesting` children per
 parent and the `extensions` list, and writes one marked block **first** in each
-file, so a key you add after it wins by ordinary later-key precedence and
-survives a second merge byte-for-byte. Nothing in stackgen edits either composed
-file, which is what keeps a fragment a fragment.
+file. A key you already carry outside the block is a **collision**: the block
+**omits** it, so your key wins without the file ever holding a duplicate, and
+what becomes of it — keep mine, take the pack's, or union — is asked once by
+init and recorded, an identical extension id simply kept; everything outside the
+block survives a second merge byte-for-byte unless you chose otherwise for that
+key. Nothing in stackgen edits either composed file, which is what keeps a
+fragment a fragment.
 
 One root file is a **shim** rather than a config: `dprint.json`, whose entire
 content is `{ "extends": ".config/dprint.json" }`. That formatter's config

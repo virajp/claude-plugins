@@ -935,10 +935,23 @@ because two packs with an opinion about the same file is a lost update; each
 contributes a small per-pack fragment and `init` merges them — deep-merging the
 settings, unioning the file-nesting children per parent and the recommendation
 list — into one marked block placed **first** in each file. Anything you write
-after that block is yours: it wins on a conflict, and a second run leaves it
-byte-for-byte. `init` never names the editor; the fragment convention names the
-target, and a pack task is what installs the recommended extensions into a
-per-repo profile.
+after that block is yours, and a second run leaves it byte-for-byte. `init`
+reads the existing file whole, and a settings key or file-nesting parent you
+wrote by hand that the packs also compose is a **collision** — it is never
+resolved by the file carrying the key twice. Each collision is one row in one
+round inside the plan, `file · key · hand value · pack value · choice`, with
+three answers: **keep mine** (the block omits the key and your copy is untouched
+— the default), **take the pack's** (the block carries the pack's value and
+`init` removes your copy, the exact lines shown before you consent), or
+**union**, offered only for an object-valued setting or a nesting parent (pack
+and hand entries merged into the block, your copy removed). The answer is
+recorded under `enforcement.editor_keys` in the base's `.config/vwf.yaml` — a
+file `init` writes into and never creates — and applies on every later run
+without asking; editing the block or your section is how you are asked again. A
+run with no collision asks nothing, and an extension id you already recommend is
+simply kept, unasked and unrecorded. `init` never names the editor; the fragment
+convention names the target, and a pack task is what installs the recommended
+extensions into a per-repo profile.
 
 **One slug rule, two independent tokens.** The rule is the same for both — the
 name is lowercased, runs outside the slug alphabet collapse to a single `-`, and
@@ -1389,17 +1402,18 @@ it after upgrading vwf to bring the tree back to the current format.
 **`/vwf:setup reshape` is the shape pass alone.** It skips the mode fork
 entirely: `init` runs — surveying, showing its one plan, taking its own consents
 — its report prints verbatim, and setup stops. No validation, no stamp, no
-doctor, no commit; a re-shape writes exactly one key into `.config/vwf.yaml` —
-`enforcement.kept_files`, the record of a pack-owned file you chose to keep —
-and nothing else in it, so a user who wants both runs `/vwf:setup` again
-afterwards. It is also the line `/vwf:doctor` prints for every repo-shape
-finding, so most runs of it arrive from a drift row. The shape pass includes
-init's **forge pass** — the default branch, the protection on `develop` and
-`main`, the base's backlog project — which is idempotent on a repo already set,
-so a reshape that arrives from a forge-state row sets only what drifted. A
-`reshape` started **inside a member** is not a reshape of that member alone:
-`init` resolves the base and runs from there, so what gets reshaped is the
-product.
+doctor, no commit; a re-shape writes exactly two keys into `.config/vwf.yaml` —
+`enforcement.kept_files`, the record of a pack-owned file you chose to keep, and
+`enforcement.editor_keys`, the record of what you chose for an editor key your
+hand-written `.vscode` section already carried — and nothing else in it, so a
+user who wants both runs `/vwf:setup` again afterwards. It is also the line
+`/vwf:doctor` prints for every repo-shape finding, so most runs of it arrive
+from a drift row. The shape pass includes init's **forge pass** — the default
+branch, the protection on `develop` and `main`, the base's backlog project —
+which is idempotent on a repo already set, so a reshape that arrives from a
+forge-state row sets only what drifted. A `reshape` started **inside a member**
+is not a reshape of that member alone: `init` resolves the base and runs from
+there, so what gets reshaped is the product.
 
 **Step 0 begins with a shape check, before the mode fork**, and on a multi-repo
 product it asks its two things of **every repo** — the base and every member

@@ -169,10 +169,15 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   keys only (`settings`, `nesting`, `extensions`) — **`/vwf:init` composes
   them** into `.vscode/settings.json` and `.vscode/extensions.json`, which no
   pack ever ships whole and which the convention in `assets/pack-format.md`
-  names (init itself never names an editor). The dprint gate's fragment is the
-  one filename exception, `dprint-editor.jsonc`: dprint discovers any
-  `dprint.jsonc` below the root as a sub-directory config, and one with no
-  `plugins` array makes a bare `dprint check` exit 13. Note the second
+  names (init itself never names an editor). The composed block sits first, and
+  the convention's rule since 2026-09-20 is that a key the file already carries
+  outside the block is a **collision** the composing skill **omits** from the
+  block — keep mine, take the pack's or union, asked once and recorded by vwf,
+  an identical extension id kept unasked — so a hand key wins without the file
+  ever holding a duplicate, never because the format tolerates one. The dprint
+  gate's fragment is the one filename exception, `dprint-editor.jsonc`: dprint
+  discovers any `dprint.jsonc` below the root as a sub-directory config, and one
+  with no `plugins` array makes a bare `dprint check` exit 13. Note the second
   underscore rule: `config/_<name>/` at the top of the tier is pack-private and
   never copied, but nested deeper `p/_project/` is a **marked position**, copied
   and renamed to the pinned project's id — **slugged** per `assets/ids.md`,
