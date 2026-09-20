@@ -97,6 +97,22 @@ a repo's whole toolchain enabled in every other window forever — and because
 pruning is only safe once it is scoped to one profile. Silent on a machine
 without the editor.
 
+**A task never clobbers what it did not create.** Foreign state — another hook
+manager's install, a `core.hooksPath` someone set, a lockfile or a plugin pin
+the repo tracks — is stopped at, named, and left for the one by-hand command the
+task prints. Every destructive step sits behind a flag passed on purpose:
+`setup:precommit --force`, `setup:precommit --update`, `setup:mise --upgrade`.
+`setup:all` passes none of them, so a bootstrap on any clone rewrites nothing
+outside the files the packs own.
+
+**The commit identity is per repo, required, and equal to the forge's.**
+`code:git-config`, which the hooks run, requires the local git-config to carry
+the identity and ssh-signing keys equal to `<FORGE>_USER_NAME`, `<FORGE>_EMAIL`
+and `<FORGE>_SIGNING_KEY` — `GITHUB_`, `GITLAB_` or `GIT_` by the origin host —
+and its `--fix` sets them from those variables rather than deleting anything: a
+machine states who it commits as once, in its environment, and every repo it
+touches is corrected to match on the first commit.
+
 **The repo's agent plugins are the repo's, and a user's are theirs.**
 `setup:ai` installs and updates only what this repo requires, at **project**
 scope, so the declaration lives in the repo's own settings and nothing a machine

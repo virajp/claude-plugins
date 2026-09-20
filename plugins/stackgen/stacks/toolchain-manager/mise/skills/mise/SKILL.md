@@ -224,6 +224,21 @@ different command.
   tools, secrets, `setup:deps:install --frozen`, nothing else. **vwf's
   git-workflow probes for `setup:worktree` by name** before falling back to
   `setup:all`, so a repo without it silently takes the slower path.
+- **No task clobbers state it did not create.** A task that would have to
+  unset, overwrite or upgrade something foreign stops, names it and prints the
+  by-hand command. Every destructive step is behind a flag passed on purpose —
+  `setup:precommit --force` (take over a foreign `core.hooksPath` or hook
+  manager), `setup:precommit --update` (`pre-commit autoupdate`),
+  `setup:mise --upgrade` (`mise upgrade --local` and the formatter's plugin
+  update) — and `setup:all` passes none of them.
+- **`code:git-config` requires a per-repo forge identity.** The local
+  git-config's `user.name`, `user.email` and `user.signingkey` must **equal**
+  `<FORGE>_USER_NAME`, `<FORGE>_EMAIL` and `<FORGE>_SIGNING_KEY`, with ssh
+  signing on for commits and tags and no `gpg.*program` override; `<FORGE>` is
+  `GITHUB` for an origin on `github.com`, `GITLAB` for `gitlab.com`, `GIT` for
+  any other host or no remote. `--fix`, which the hook runs, sets the keys from
+  the variables and never deletes an identity. The full contract is in
+  [references/task-library.md](references/task-library.md).
 - **`code:all` needs the dev toolchain.** The formatter and the scanners are
   pinned in `mise.dev.toml`, so the aggregate gate runs under `MISE_ENV=dev` —
   in the pipeline too, wherever the pipeline runs the gate rather than the build.

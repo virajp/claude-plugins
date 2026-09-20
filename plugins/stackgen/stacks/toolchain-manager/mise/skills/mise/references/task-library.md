@@ -145,12 +145,12 @@ until someone reads two tasks side by side.
 | Task                                                  | Does                                                                        |
 | ----------------------------------------------------- | ---------------------------------------------------------------------------- |
 | `setup:all [--all] [--<slug>…]`                       | the bootstrap orchestrator — the order below; `--<slug>` per member         |
-| `setup:mise`                                          | reshim, doctor, install, upgrade; formatter plugins and the linter if present |
+| `setup:mise [--upgrade]`                              | reshim, doctor, install, the linter if present; tool upgrade and formatter plugin update only under `--upgrade` |
 | `setup:secrets`                                       | **slot** — the pinned secret manager's setup                                |
 | `setup:external:{start,stop,pull}`                    | **slots** — local services; each a no-op outside a dev shell                |
 | `setup:deps:all`                                      | `cleanup → install → upgrade → outdated → audit`                            |
 | `setup:deps:{install,cleanup,upgrade,outdated,audit}` | **slots** — the package manager's verbs; `install` honours `--frozen`       |
-| `setup:precommit`                                     | autoupdate, unset `core.hooksPath`, install the hooks                       |
+| `setup:precommit [--force] [--update]`                | install the hooks; refuses a foreign hook manager or `core.hooksPath` without `--force`; autoupdate only under `--update` |
 | `setup:ai [--user] [--inventory]`                     | install and update the repo's required plugins at project scope             |
 | `setup:vscode`                                        | reconcile the repo's editor profile with its recommended extensions        |
 | `setup:worktree`                                      | the lighter sibling a fresh worktree runs                                   |
@@ -159,7 +159,7 @@ until someone reads two tasks side by side.
 | `code:lint [--fix] [files...]`                        | **slot** — the linter; ships shellcheck/actionlint; `lint` hook calls it    |
 | `code:sec [--staged] [files...]`                      | secret and vulnerability scan; the `sec` hook calls it with `--staged`      |
 | `code:precommit [--all]`                              | run the hooks over what you changed, **before** you stage                   |
-| `code:git-config [--fix]`                             | reject identity and signing keys in the local git-config                    |
+| `code:git-config [--fix]`                             | require the forge identity and ssh signing in the local git-config; `--fix` sets them from `GITHUB_*` / `GITLAB_*` / `GIT_*` |
 | `code:worktrees`                                      | list worktrees across the repo and its members                              |
 | `code:merge:develop <branch>`                         | merge a branch into `develop`, or open a pull request — `MERGE_MODEL`       |
 | `code:merge:main`                                     | merge `develop` into `main`, or open a pull request — `MERGE_MODEL`         |
@@ -170,6 +170,33 @@ until someone reads two tasks side by side.
 `setup:all`, or run by hand. `setup:all` calls every other `setup:*` task except
 `setup:worktree`, which is the fresh-worktree sibling and not part of the
 bootstrap order.
+
+**`code:git-config` requires the forge identity, per repo.** The local
+git-config must carry `user.name`, `user.email` and `user.signingkey` **equal
+to** `<FORGE>_USER_NAME`, `<FORGE>_EMAIL` and `<FORGE>_SIGNING_KEY` — presence
+is not enough — with `commit.gpgsign` and `tag.gpgsign` `true`, `gpg.format`
+`ssh`, and `gpg.program` and `gpg.ssh.program` absent. `<FORGE>` is `GITHUB`
+when the origin host is `github.com`, `GITLAB` when it is `gitlab.com`, and
+`GIT` for any other host or no remote — so the variables are exactly
+`GITHUB_USER_NAME`, `GITHUB_EMAIL`, `GITHUB_SIGNING_KEY` and their `GITLAB_` /
+`GIT_` twins, exported by the machine, never committed. Check mode lists each
+failing key with expected against actual and the variable to export, and exits
+1; `--fix` writes the identity keys from the variables — failing by name on an
+unset one and writing nothing partial — sets the two booleans and `gpg.format`,
+and unsets the two `gpg.*program` keys. It never deletes an identity: the two
+unsets are the rule itself. The pre-commit hook runs `--fix`, so a clone whose
+variables are set is corrected on its first commit, and one whose variables are
+not is told which to export.
+
+**What a task never does to the host.** A pack task never unsets, overwrites or
+upgrades state it did not create; where it would have to, it stops, names what
+it found and prints the one by-hand command. Every destructive step sits behind
+a flag passed on purpose — `--force` (`setup:precommit` takes over a foreign
+`core.hooksPath` or a husky / lefthook install), `--update` (`setup:precommit`
+runs `pre-commit autoupdate`, which moves the `rev:` lines), `--upgrade`
+(`setup:mise` runs `mise upgrade --local` and `dprint config update`, which move
+the lockfile and the plugin pins) — and `setup:all` passes none of them, so a
+bootstrap on any clone rewrites nothing outside the files the packs own.
 
 **Nothing in this set edits a remote's settings.** Setting the forge's default
 branch is a one-time act by whoever shapes the repo, not a task a machine
@@ -260,11 +287,11 @@ at all, only the tasks it calls in order:
 
 ```text
 setup:all  (--all recurses into every member)
-  ├─ setup:mise            # reshim · doctor · install · upgrade   (common)
+  ├─ setup:mise            # reshim · doctor · install             (common)
   ├─ setup:secrets         # the pinned secret manager             (SLOT)
   ├─ setup:external:start  # local services                        (SLOT)
   ├─ setup:deps:all        # the package manager's five verbs      (SLOTS)
-  ├─ setup:precommit       # autoupdate + install the hooks        (common)
+  ├─ setup:precommit       # install the hooks                     (common)
   ├─ setup:ai              # install and reconcile agent plugins   (common)
   ├─ setup:vscode          # the repo's editor profile            (common)
   └─ <each member>         # only with --all
@@ -273,6 +300,14 @@ setup:all  (--all recurses into every member)
 **Keep it idempotent: re-running `setup:all` must converge, never error.** It is
 the re-sync command as much as the bootstrap one, so a step that only works on a
 clean machine is a step that breaks the second run.
+
+**And keep it non-destructive: `setup:all` passes no flag.** Moving the tool
+lockfile and the formatter's plugin pins is `setup:mise --upgrade`, run by hand;
+moving the hook `rev:` lines is `setup:precommit --update`; taking over a
+`core.hooksPath` or a husky / lefthook install another tool left is
+`setup:precommit --force`. Without them `setup:precommit` stops on any of the
+three, prints what it found and the two by-hand lines, and exits 1 — a clone
+that already has a hook manager is told, not overwritten.
 
 ### Member flags
 
