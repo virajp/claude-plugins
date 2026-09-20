@@ -9,26 +9,22 @@ backlog: [ B28 ]
 
 ## Status
 
-**BLOCKED**
+**RUNNING**
 
-BLOCKED 2026-09-20 after wave 1 in
+RUNNING since 2026-09-20 in
 /Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/plan/2026-09-20-setup-reshape-triggers
-— UNRESOLVED: U2 owns `plugins/vwf/skills/stackgen-sync/SKILL.md`, which does
-not exist; the skill is `plugins/stackgen/skills/stackgen-sync/SKILL.md`, under
-the tree this plan rules untouched. Ruling needed: re-own U2 there (with a
-stackgen bump in U6 and its release intent recorded) or drop the stackgen-sync
-trigger.
+— resumed after the U2 ruling (a)
 
 ## Consent
 
-| Action                                            | Granted                                                                                                                                       |
-| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Merge to the integration branch and push on green | yes                                                                                                                                           |
-| After landing: `mise run p:plugins:local`         | run                                                                                                                                           |
-| Release vwf publicly                              | minor — `19.37.0` → `19.38.0`, a hand edit of `plugins/vwf/.claude-plugin/plugin.json` then `mise run p:plugins:marketplace`; no release step |
-| Release stackgen publicly                         | none — untouched                                                                                                                              |
-| Release site publicly                             | patch — `1.1.32` → `1.1.33` via `mise run p:site:version`; no release step                                                                    |
-| Release installer publicly                        | none — untouched                                                                                                                              |
+| Action                                            | Granted                                                                                                                                                                   |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Merge to the integration branch and push on green | yes                                                                                                                                                                       |
+| After landing: `mise run p:plugins:local`         | run                                                                                                                                                                       |
+| Release vwf publicly                              | minor — `19.37.0` → `19.38.0`, a hand edit of `plugins/vwf/.claude-plugin/plugin.json` then `mise run p:plugins:marketplace`; no release step                             |
+| Release stackgen publicly                         | minor — `1.20.3` → `1.21.0`, a hand edit of `plugins/stackgen/.claude-plugin/plugin.json` then `mise run p:plugins:marketplace`; no release step (ruling (a), 2026-09-20) |
+| Release site publicly                             | patch — `1.1.32` → `1.1.33` via `mise run p:site:version`; no release step                                                                                                |
+| Release installer publicly                        | none — untouched                                                                                                                                                          |
 
 **The mode recorded here is the consent.** A `run` step runs on a green landing
 without a prompt; an `ask` step stops the run once before it, reports what it
@@ -71,8 +67,9 @@ Not a reversal. It closes the half of the 2026-09-06 note left open —
   execute `:217`, feedback `:185`).
 - Setup's Step 0 (`:92-138`) runs **before** the materialize pass, so a pack
   version moved by materialize in the same run is not reshaped until the next
-  run. `stackgen-sync` (`plugins/vwf/skills/stackgen-sync/SKILL.md:77-82`) says
-  "a re-run of init is what folds it in" and invokes nothing. A member added to
+  run. `stackgen-sync` (`plugins/stackgen/skills/stackgen-sync/SKILL.md:82` —
+  the survey wrote a `plugins/vwf/` path; corrected by ruling (a)) says "a
+  re-run of init is what folds it in" and invokes nothing. A member added to
   `members:` or the registry outside architecture, and a folder rename, are
   caught only by doctor's predicates (b), (c), (d).
 - Init's re-run doctrine (`plugins/vwf/skills/init/SKILL.md:596-636`) lists the
@@ -89,7 +86,7 @@ Not a reversal. It closes the half of the 2026-09-06 note left open —
   reads the handoff, the plan index and the palace; its only setup mention is
   the format-drift nudge at `:93`.
 - Versions as the required plans leave them: vwf `19.37.0`, stackgen `1.20.3`
-  (untouched here), site `1.1.32`. Commit types
+  (bumped here to `1.21.0` by ruling (a)), site `1.1.32`. Commit types
   `ops docs merge feat fix refactor`, no scopes. Priority: `10 + 10` over the
   required plan's row → 20.
 
@@ -109,27 +106,27 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                                          | Kind | Owns                                                                                                                                                                             | Depends on     | Status     | Commit   |
-| -- | ---- | -------------------------------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ---------- | -------- |
-| U1 | 1    | [01-setup.md](01-setup.md)                         | edit | `plugins/vwf/skills/setup/SKILL.md`                                                                                                                                              | —              | green      | 93a626bd |
-| U2 | 1    | [02-stackgen-sync.md](02-stackgen-sync.md)         | edit | `plugins/vwf/skills/stackgen-sync/SKILL.md`                                                                                                                                      | —              | unresolved |          |
-| U3 | 1    | [03-recall-and-doctor.md](03-recall-and-doctor.md) | edit | `plugins/vwf/skills/recall/SKILL.md`, `plugins/vwf/skills/doctor/SKILL.md`                                                                                                       | —              | green      | 12913a81 |
-| U4 | 1    | [04-init.md](04-init.md)                           | edit | `plugins/vwf/skills/init/SKILL.md`                                                                                                                                               | —              | green      | a0448eb0 |
-| U5 | 2    | [05-docs.md](05-docs.md)                           | edit | `readme.md`, `CLAUDE.md`, `.claude/docs/repo-shape.md`, `.claude/skills/vwf-plugin/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-09-20-setup-reshape-triggers.md` | U1, U2, U3, U4 | skipped    |          |
-| U6 | 3    | [06-gates-and-bump.md](06-gates-and-bump.md)       | edit | `plugins/vwf/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`                                                                                 | U5             | skipped    |          |
+| Id | Wave | Unit file                                          | Kind | Owns                                                                                                                                                                             | Depends on     | Status  | Commit   |
+| -- | ---- | -------------------------------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------- | -------- |
+| U1 | 1    | [01-setup.md](01-setup.md)                         | edit | `plugins/vwf/skills/setup/SKILL.md`                                                                                                                                              | —              | green   | 93a626bd |
+| U2 | 1    | [02-stackgen-sync.md](02-stackgen-sync.md)         | edit | `plugins/stackgen/skills/stackgen-sync/SKILL.md`                                                                                                                                 | —              | green   | 39c8c96c |
+| U3 | 1    | [03-recall-and-doctor.md](03-recall-and-doctor.md) | edit | `plugins/vwf/skills/recall/SKILL.md`, `plugins/vwf/skills/doctor/SKILL.md`                                                                                                       | —              | green   | 12913a81 |
+| U4 | 1    | [04-init.md](04-init.md)                           | edit | `plugins/vwf/skills/init/SKILL.md`                                                                                                                                               | —              | green   | a0448eb0 |
+| U5 | 2    | [05-docs.md](05-docs.md)                           | edit | `readme.md`, `CLAUDE.md`, `.claude/docs/repo-shape.md`, `.claude/skills/vwf-plugin/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-09-20-setup-reshape-triggers.md` | U1, U2, U3, U4 | pending |          |
+| U6 | 3    | [06-gates-and-bump.md](06-gates-and-bump.md)       | edit | `plugins/vwf/.claude-plugin/plugin.json`, `plugins/stackgen/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`                                  | U5             | pending |          |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`. Every unit is `edit`.
 
 ## Shared-file rule
 
-| File                                                                                         | Why it collides                         | Owner   |
-| -------------------------------------------------------------------------------------------- | --------------------------------------- | ------- |
-| `plugins/vwf/.claude-plugin/plugin.json`, `site/package.json`                                | version files                           | U6 only |
-| `.claude-plugin/marketplace.json`                                                            | generated                               | U6 only |
-| every human-facing doc — `readme.md`, `CLAUDE.md`, `.claude/**`, `site/**`, `docs/memory/**` | n units editing one doc                 | U5 only |
-| `plugins/vwf/skills/doctor/SKILL.md`                                                         | U1/U2 would cite `baseline`; U3 owns it | U3 only |
-| `plugins/stackgen/**`                                                                        | untouched — stackgen is not released    | —       |
+| File                                                                                                         | Why it collides                                                                    | Owner   |
+| ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | ------- |
+| `plugins/vwf/.claude-plugin/plugin.json`, `plugins/stackgen/.claude-plugin/plugin.json`, `site/package.json` | version files                                                                      | U6 only |
+| `.claude-plugin/marketplace.json`                                                                            | generated                                                                          | U6 only |
+| every human-facing doc — `readme.md`, `CLAUDE.md`, `.claude/**`, `site/**`, `docs/memory/**`                 | n units editing one doc                                                            | U5 only |
+| `plugins/vwf/skills/doctor/SKILL.md`                                                                         | U1/U2 would cite `baseline`; U3 owns it                                            | U3 only |
+| `plugins/stackgen/**`                                                                                        | `stackgen-sync/SKILL.md` is U2's, `plugin.json` is U6's; nothing else (ruling (a)) | U2, U6  |
 
 ## Waves
 
@@ -151,9 +148,9 @@ must be green before wave 1.
 
 ## After landing
 
-| Step                       | Mode | Notes                                                                                                                                      |
-| -------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `mise run p:plugins:local` | run  | stages vwf at `19.38.0+N` into the dev marketplace and updates this machine's install; publishes nothing; a **restarted** session loads it |
+| Step                       | Mode | Notes                                                                                                                                                                 |
+| -------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mise run p:plugins:local` | run  | stages vwf at `19.38.0+N` and stackgen at `1.21.0+N` into the dev marketplace and updates this machine's install; publishes nothing; a **restarted** session loads it |
 
 ## Gates the orchestrator keeps
 
@@ -206,7 +203,10 @@ the unit could not proceed without; it blocks the unit and its dependents.
   stackgen path, add a stackgen bump to U6 and record its release intent; or (b)
   drop the stackgen-sync trigger (decision 1 then covers setup alone, and the
   init bullet at `init/SKILL.md:656` and decision 4 lose that line). U5 and U6
-  skipped as dependents.
+  skipped as dependents. **Ruled (a) by the user, 2026-09-20:** U2 re-owned to
+  the stackgen path; U6 gains `plugins/stackgen/.claude-plugin/plugin.json` and
+  the stackgen bump `1.20.3` → `1.21.0` (minor — a skill gains an invocation);
+  Consent, Facts, the Shared-file rule and the after-landing note re-recorded.
 - **R1 contested (round 2, cap).** `init/SKILL.md:656` names an in-session
   reshape from `/stackgen:stackgen-sync` that the tree does not have while U2 is
   unresolved; resolves with the U2 ruling.
@@ -230,6 +230,10 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | 1    | U4        | opus  | 2     | pass                  | R1 finding applied: the sync bullet names `/stackgen:stackgen-sync`; refolded, nothing else touched                                                                                                                                                                                                                                                                                                                    | a0448eb0 |
 | 1    | R1        | opus  | 2     | findings(1) contested | init/SKILL.md:656 [U4] the sync bullet asserts an in-session reshape the tree does not have while U2 is unresolved — holds until the U2 ruling lands or the bullet is dropped; not a departure from decision 4. CONTRACT clean, RULINGS clean                                                                                                                                                                          | —        |
 | 1    | gate      | —     | 1     | pass                  | wave gate 5/5 green; U2 unresolved → U5, U6 skipped as dependents; run stops at the report                                                                                                                                                                                                                                                                                                                             | —        |
+| 1    | ruling    | —     | —     | decided               | user ruled (a): U2 re-owned to `plugins/stackgen/skills/stackgen-sync/SKILL.md`; U6 gains the stackgen bump `1.20.3` → `1.21.0` (minor); U2 re-dispatched, U5/U6 back to pending                                                                                                                                                                                                                                       | —        |
+| 1    | U2        | opus  | 2     | pass                  | re-run on the stackgen path. DECIDED: invocation is a new closing step 7 "Re-check the shape" after apply-and-commit, so the check reads the lockfile the sync wrote; setup cited by command only. DOCS FALSIFIED: stackgen.md stackgen-sync section (steps list / "re-run of init"). GAP: "never lays down a pack file" would contradict step 6 — scoped to init's composed outputs                                   | 39c8c96c |
+| 1    | R1-late   | opus  | 1     | pass                  | findings(0) over U2's stackgen-sync diff; the contested init:656 finding is closed — the bullet is now true of the tree. CONTRACT clean, RULINGS clean                                                                                                                                                                                                                                                                 | —        |
+| 1    | gate      | —     | 2     | pass                  | wave gate 5/5 green after the U2 re-run; wave 1 complete, no unit skipped                                                                                                                                                                                                                                                                                                                                              | —        |
 
 ## Launch
 
