@@ -1,7 +1,7 @@
 ---
 type: vwf-change-plan
-title: init brownfield reads — root tool configs, hooks, inline tasks and
-  .gitignore are read before anything lands
+title: init brownfield reads — root configs, hooks, tasks and .gitignore read
+  first
 requires: [ docs/plans/2026-09-20-init-mode-seam ]
 backlog: [ B28 ]
 ---
