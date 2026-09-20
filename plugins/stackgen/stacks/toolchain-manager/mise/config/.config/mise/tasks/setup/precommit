@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 
-#MISE description="Update and install pre-commit hooks"
+#MISE description="Install pre-commit hooks; refuses to replace a foreign hook manager"
 #MISE hide=true
+
+#USAGE flag "--force" help="Replace a foreign hook manager (core.hooksPath, husky, lefthook) with pre-commit"
+#USAGE flag "--update" help="Run pre-commit autoupdate first, moving every hook rev to its latest tag"
 
 set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 CONFIG=".config/pre-commit-config.yaml"
+FORCE="${usage_force:-false}"
+UPDATE="${usage_update:-false}"
 
 if [ ! -f "${MISE_PROJECT_ROOT}/${CONFIG}" ]; then
   print_warn "No ${CONFIG} — skipping hook installation."
@@ -15,16 +20,52 @@ if [ ! -f "${MISE_PROJECT_ROOT}/${CONFIG}" ]; then
   exit 0
 fi
 
-print_subheader "Updating pre-commit hooks ..."
-pre-commit autoupdate --config "${CONFIG}"
+# Anything that already owns this repo's hooks is FOREIGN state this task did
+# not create: a `core.hooksPath` (which also makes `pre-commit install` refuse
+# outright), a husky directory, a lefthook config. None of it is touched without
+# `--force`; the task names what it found and the by-hand lines instead.
+FOREIGN=""
+HOOKS_PATH=$(git config --local --get core.hooksPath 2>/dev/null || true)
+if [ -n "$HOOKS_PATH" ]; then
+  FOREIGN+="- core.hooksPath is set to '${HOOKS_PATH}'"$'\n'
+fi
+for path in .husky lefthook.yml .lefthook.yml; do
+  if [ -e "${MISE_PROJECT_ROOT}/${path}" ]; then
+    FOREIGN+="- ${path} is present"$'\n'
+  fi
+done
 
-# `core.hooksPath` set to anything makes `pre-commit install` refuse outright,
-# and a repo that once used a shared hooks directory still carries the setting.
-# Unsetting is safe when it was never set, which is why the failure is ignored.
-#
+if [ -n "$FOREIGN" ]; then
+  if [ "$FORCE" = "true" ]; then
+    print_warn "Replacing the existing hook setup (--force):"
+  else
+    print_error "Another hook manager owns this repo's hooks — refusing to replace it:"
+  fi
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    print_yellow "$line"
+  done <<<"$FOREIGN"
+  if [ "$FORCE" != "true" ]; then
+    print_yellow "To hand the hooks to pre-commit, run these by hand:"
+    print_yellow "  git config --local --unset-all core.hooksPath"
+    print_yellow "  pre-commit install --config ${CONFIG} --install-hooks --overwrite"
+    print_yellow "or re-run this task with --force, which does the same."
+    exit 1
+  fi
+fi
+
+# `autoupdate` rewrites every `rev:` in a file the shape lock records, so it is
+# an upgrade the user asks for, never a side effect of setting a machine up.
+if [ "$UPDATE" = "true" ]; then
+  print_subheader "Updating pre-commit hooks ..."
+  pre-commit autoupdate --config "${CONFIG}"
+fi
+
 # The hook TYPES are not passed here. `default_install_hook_types` in the config
 # is what declares them, so the commit-msg hook arrives with the config rather
 # than with whoever last edited this line.
 print_subheader "Installing pre-commit hooks ..."
-git config --local --unset-all core.hooksPath || true
+if [ "$FORCE" = "true" ]; then
+  git config --local --unset-all core.hooksPath || true
+fi
 pre-commit install --config "${CONFIG}" --install-hooks --overwrite

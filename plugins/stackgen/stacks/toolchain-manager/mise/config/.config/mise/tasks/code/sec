@@ -66,10 +66,16 @@ fi
 
 if command -v grype >/dev/null 2>&1; then
   print_wait "Scanning dependencies for known vulnerabilities ... "
+  grype_status=0
   if [ -f "${VULN_CONFIG}" ]; then
-    grype "dir:${MISE_PROJECT_ROOT}" --config "${VULN_CONFIG}" --fail-on medium
+    grype "dir:${MISE_PROJECT_ROOT}" --config "${VULN_CONFIG}" --fail-on medium || grype_status=$?
   else
-    grype "dir:${MISE_PROJECT_ROOT}" --fail-on medium
+    grype "dir:${MISE_PROJECT_ROOT}" --fail-on medium || grype_status=$?
+  fi
+  if [ "$grype_status" -ne 0 ]; then
+    print_error "ERROR"
+    print_warn "To accept a finding, add its vulnerability id under ignore: in .config/grype.yaml with a one-line reason — see the grype conventions."
+    exit "$grype_status"
   fi
   print_ok
 else
