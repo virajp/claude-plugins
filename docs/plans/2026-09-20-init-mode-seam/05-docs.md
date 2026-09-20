@@ -54,8 +54,8 @@ flatten" doctrine now covers `source` and `blank` through pass 6.
 
 - `mise run p:site:check` green.
 - `mise run code:precommit` green.
-- `grep -rn "no \`.config/\` and no\|two markers" site/src/content/docs
-  CLAUDE.md` — no page still states the two-marker rule as current.
+- grep the site docs and CLAUDE.md for the old two-marker rule ("no .config/ and
+  no task library") — no page still states it as current.
 - `grep -rn "sub-project directory" site/src/content/docs CLAUDE.md .claude` —
   every hit cites or sits beside the definition.
 
