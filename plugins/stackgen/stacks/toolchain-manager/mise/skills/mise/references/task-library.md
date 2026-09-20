@@ -176,8 +176,9 @@ git-config must carry `user.name`, `user.email` and `user.signingkey` **equal
 to** `<FORGE>_USER_NAME`, `<FORGE>_EMAIL` and `<FORGE>_SIGNING_KEY` — presence
 is not enough — with `commit.gpgsign` and `tag.gpgsign` `true`, `gpg.format`
 `ssh`, and `gpg.program` and `gpg.ssh.program` absent. `<FORGE>` is `GITHUB`
-when the origin host is `github.com`, `GITLAB` when it is `gitlab.com`, and
-`GIT` for any other host or no remote — so the variables are exactly
+when the origin host is `github.com` or a subdomain of it (`ssh.github.com`),
+`GITLAB` when it is `gitlab.com` or a subdomain, and `GIT` for any other host
+or no remote — so the variables are exactly
 `GITHUB_USER_NAME`, `GITHUB_EMAIL`, `GITHUB_SIGNING_KEY` and their `GITLAB_` /
 `GIT_` twins, exported by the machine, never committed. Check mode lists each
 failing key with expected against actual and the variable to export, and exits
@@ -186,9 +187,11 @@ unset one and writing nothing partial — sets the two booleans and `gpg.format`
 and unsets the two `gpg.*program` keys. It never deletes an identity: the two
 unsets are the rule itself. `<FORGE>_SIGNING_KEY` holds what git accepts as
 `user.signingkey` under `gpg.format` `ssh`: the path to the key file
-(`~/.ssh/id_ed25519.pub`, say) or the literal public key prefixed `key::` — a
-bare `ssh-ed25519 AAAA…` line is written verbatim and the first signed commit
-fails inside git. The pre-commit hook runs `--fix`, but git has already loaded
+(`~/.ssh/id_ed25519.pub`, say) or the literal public key prefixed `key::`. A
+bare `ssh-ed25519 AAAA…` line still works as the deprecated form of `key::`,
+but a literal key of any other type — `sk-ssh-ed25519@openssh.com …`,
+`ecdsa-…` — without the prefix is read as a file path and the first signed
+commit fails. The pre-commit hook runs `--fix`, but git has already loaded
 its identity by the time a hook runs, so a fix cannot rescue the commit that
 triggered it: whenever `--fix` changed a key it exits 1 — *identity corrected —
 re-run the commit* — and the first commit on a fresh clone is refused while the

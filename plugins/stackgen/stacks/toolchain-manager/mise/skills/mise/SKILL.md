@@ -235,9 +235,10 @@ different command.
   git-config's `user.name`, `user.email` and `user.signingkey` must **equal**
   `<FORGE>_USER_NAME`, `<FORGE>_EMAIL` and `<FORGE>_SIGNING_KEY`, with ssh
   signing on for commits and tags and no `gpg.*program` override; `<FORGE>` is
-  `GITHUB` for an origin on `github.com`, `GITLAB` for `gitlab.com`, `GIT` for
-  any other host or no remote. `--fix`, which the hook runs, sets the keys from
-  the variables and never deletes an identity. The full contract is in
+  `GITHUB` for an origin on `github.com` or a subdomain of it, `GITLAB` for
+  `gitlab.com` or a subdomain, `GIT` for any other host or no remote. `--fix`,
+  which the hook runs, sets the keys from the variables and never deletes an
+  identity. The full contract is in
   [references/task-library.md](references/task-library.md).
 - **`code:all` needs the dev toolchain.** The formatter and the scanners are
   pinned in `mise.dev.toml`, so the aggregate gate runs under `MISE_ENV=dev` —
