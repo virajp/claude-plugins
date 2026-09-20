@@ -70,7 +70,10 @@ run reports any of them:
   itself, out of the editor fragments the packs ship, per
   [fragments and sections](fragments-and-sections.md). A directory this run
   writes is not a stray a later pass discovers. The convention names it; this
-  file does not.
+  file does not. Exempt from this pass is not unread: the composition step
+  itself reads both editor files whole, and a key somebody added there by
+  hand that the packs also compose is surfaced **there**, as a collision row
+  in this repo's section — pass 7 says where.
 - **`.claude/`** — the materializer's lockfile home, and a directory **this
   run writes**, exactly like the editor one. Every shaped repo carries it by
   definition: it is the evidence a later run reads to know the repo is shaped
@@ -393,8 +396,9 @@ product's only one — so a keep inside a member is recorded there, keyed by the
 path relative to the base root with the member's path as its prefix
 (`backend/.config/…`), while a keep in the base keeps its plain spelling.
 
-**That key is the one thing `init` writes into `.config/vwf.yaml`, and `init`
-never creates the file.** The entry is written under the same single consent
+**That key is one of the two things `init` writes into `.config/vwf.yaml` —
+the other is `enforcement.editor_keys`, the editor merge's — and `init` never
+creates the file.** The entry is written under the same single consent
 as everything else, merged into whatever the block already holds, and an
 absent `kept_files` block reads as empty. On a repo `/vwf:setup` has not
 reached there is no file to write into: the keep still applies — the file is
@@ -416,8 +420,18 @@ its sidecar rather than through this pass's offer.
 - **Ignore sections** — for every stack the materializer's lockfile records,
   whether the ignore file already carries that section's banner. A missing one
   is an append.
+- **Editor fragments** — whether each of the two editor files carries the
+  block, which is a merge where it does not; and, read from the file whole,
+  every key **outside** the block that the composed set also carries. Each is
+  a **collision** — one sub-line under that file's merge row in `Merges`,
+  reading `file · key · hand value · pack value · choice`, its choice the
+  answer `enforcement.editor_keys` records where it records one and **keep**
+  otherwise. A sub-line with no record is what the collision round asks
+  about, before the plan is printed; a `take` or `union` sub-line names the
+  hand lines it removes.
 
-Both are detailed in [fragments and sections](fragments-and-sections.md).
+All three are detailed in
+[fragments and sections](fragments-and-sections.md).
 
 ### 8 — Commit types
 
@@ -720,6 +734,14 @@ at the consent step below before answering. `Repo-owned, kept` is a list and
 nothing else: paths, with the contract note of pass 10 on the rows that earn
 one, and nothing in it is ever applied.
 
+An editor **merge** row carries a **collision sub-line** per key the hand
+section and the composed set share — `file · key · hand value · pack value ·
+choice`, per pass 7 — and the choice is not a default to flip at consent: it
+is the recorded answer, or the one the collision round took before the plan
+was printed. A `take` or `union` sub-line lists the hand lines the apply
+removes, since those are the one edit outside the block and the user reads
+them before the one consent rather than after.
+
 ```text
 Moves        <n>
 Creates      <n>
@@ -810,7 +832,10 @@ pipeline in its turn, at the same point in the order.
   Where that file does not exist, `init` does **not** create it: the keep
   stands and the record is the **Deferred** line §6 describes. Beyond that
   record and the fills §9 and §11 own, nothing about a kept file is applied
-  here.
+  here. The collision round's answers are written at the same point and on
+  the same terms — one `enforcement.editor_keys.<file>.<key>` entry per
+  answer, the file spelled as `kept_files` spells its paths, merged into the
+  block, deferred the same way where the file is absent.
 - **Renames** rewrite the path for a task file, and rewrite the **text** for
   every caller. Use the editing tools for those rewrites — a stream editor's
   in-place flag is not portable across platforms, and the difference is a
