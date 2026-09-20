@@ -98,7 +98,10 @@ than breaking, and a file a pack owns whose **content** has diverged is offered
 to you as replace or keep — a file differing only inside the positions `init`
 fills is not an offer at all. Declining is recorded as a deferral, with
 `/vwf:setup reshape` as the unlock, and the onboard continues — the repo shape
-and the vwf format are two different things.
+and the vwf format are two different things. The offer comes back on its own:
+setup re-checks the shape once more after its materialize pass and on every
+re-run's Step 0. (A repo that was never shaped stays silent at `/vwf:recall`,
+whose drift line is for a shaped repo that has fallen behind.)
 
 Two brownfield-only items appear in that plan. **Harness detection** records
 which verification capabilities the repo can already run: Bookable's `dev` task

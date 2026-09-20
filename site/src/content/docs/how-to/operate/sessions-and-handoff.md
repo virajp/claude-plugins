@@ -65,9 +65,13 @@ Start a new session — `/clear`, or a new window — and:
 Bare `/vwf:recall` does the same thing. It resolves the project the same way
 `handoff` did, reads the handoff back, and then **re-reads the files it points
 at**, so what you get is grounded in the current code rather than in yesterday's
-snapshot. It summarizes the goal, the state and the open steps, and then — for
-`next` alone — runs the continuation straight away instead of asking. One
-command, and Relay is back in `/vwf:blueprint` at the empty-state question.
+snapshot. Before it reads the palace rooms it also runs `/vwf:doctor baseline` —
+the local repo-shape predicates alone, no forge read — and prints one line if a
+repo has fallen behind, naming the repos and offering `/vwf:setup reshape`; when
+every repo is clean, or the repo was never shaped, it prints nothing and carries
+on. It summarizes the goal, the state and the open steps, and then — for `next`
+alone — runs the continuation straight away instead of asking. One command, and
+Relay is back in `/vwf:blueprint` at the empty-state question.
 
 The `next` handoff is behind two stores, written together. **mempalace** is the
 memory daemon: semantic search over everything vwf has filed, ranked by meaning.

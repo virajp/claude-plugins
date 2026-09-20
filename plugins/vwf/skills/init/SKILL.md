@@ -644,6 +644,21 @@ schedule of events rather than on a symptom, and the way to ask for one is
   missing branch, the forge state. Its finding prints `/vwf:setup reshape`,
   once, as the one remedy for every shape row.
 
+Nobody has to remember that schedule. Four commands bring the user to the door
+themselves, each **offering** `reshape` the Step 0 way — one line naming the
+drifted repos and the failing predicate, then the question — and saying
+nothing when the check is clean:
+
+- **`/vwf:architecture`** — after it writes the registry, by invoking
+  `/vwf:setup`, whose Step 0 runs the check.
+- **`/vwf:setup`** — after its own materialize pass, once per run, so a pack
+  version the run itself moved is offered in the same session.
+- **`/stackgen:stackgen-sync`** — after a sync, by invoking
+  `/vwf:setup reshape` in-session.
+- **`/vwf:recall`** — at session start, as one printed line from doctor's
+  local baseline predicates alone, (a) through (f); the forge predicate (g)
+  stays doctor's whole run and setup's Step 0.
+
 A run that finds nothing costs one empty plan and says the repo is shaped —
 which is the answer, not a wasted run. On a product, that empty plan still
 carries **a section per repo**, each reading nothing, and the run says the

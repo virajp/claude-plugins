@@ -2,11 +2,12 @@
 
 - **Wave:** 1
 - **Depends on:** —
-- **Owns:** `plugins/vwf/skills/stackgen-sync/SKILL.md`
+- **Owns:** `plugins/stackgen/skills/stackgen-sync/SKILL.md`
 - **Model:** opus
 - **Kind:** edit
 - **Read first:** the owned file, top to bottom, before editing — the passage at
-  `:77-82`.
+  `:82` (the survey wrote a `plugins/vwf/` path; ruling (a) re-owned this unit
+  to the stackgen tree).
 - **Lazy-load:** `plugins/vwf/skills/setup/SKILL.md:72-90` (`reshape` — read,
   never edit).
 
@@ -21,8 +22,8 @@ then the question; nothing reshapes unprompted, and a clean check says nothing."
 
 ## Edits
 
-1. **`plugins/vwf/skills/stackgen-sync/SKILL.md:77-82`** — replace "a re-run of
-   init is what folds it in" with the invocation: once the sync has written,
+1. **`plugins/stackgen/skills/stackgen-sync/SKILL.md:82`** — replace "a re-run
+   of init is what folds it in" with the invocation: once the sync has written,
    invoke `/vwf:setup reshape`'s shape check in-session — which offers the
    reshape on drift and says nothing when clean — and state that the sync itself
    never lays down a pack file, the reshape does. Name the skill by its command,
@@ -32,14 +33,15 @@ then the question; nothing reshapes unprompted, and a clean check says nothing."
 
 - `mise run p:plugins:check` green (rule 6 — a `${CLAUDE_PLUGIN_ROOT}` path, if
   one is used, must resolve).
-- `grep -n "re-run of init" plugins/vwf/skills/stackgen-sync/SKILL.md` — zero
-  hits.
-- `grep -n "setup reshape" plugins/vwf/skills/stackgen-sync/SKILL.md` — at least
-  one hit.
+- `grep -n "re-run of init" plugins/stackgen/skills/stackgen-sync/SKILL.md` —
+  zero hits.
+- `grep -n "setup reshape" plugins/stackgen/skills/stackgen-sync/SKILL.md` — at
+  least one hit.
 
 ## Guardrails
 
-- Only the one file.
+- Only the one file. It ships in the stackgen plugin, invoked as
+  `/stackgen:stackgen-sync`; name setup by its command, `/vwf:setup reshape`.
 - No doc outside it — `DOCS FALSIFIED:` lines.
 - `plugins/**/*.md` is not dprint-formatted: match the fold width by hand;
   strict-YAML frontmatter untouched.

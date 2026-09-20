@@ -7,7 +7,7 @@ description: Check that the repo actually matches what .config/vwf.yaml declares
   room set, the graphify CLI/graph/hook/ignore file, and format-stamp drift.
   Reports; never writes without consent. Run it after setup, before execute, or
   any time the repo and the config might have drifted apart.
-argument-hint: "[project ...]"
+argument-hint: "[project ... | baseline]"
 model: sonnet
 
 disable-model-invocation: false
@@ -27,6 +27,34 @@ and their references are read every run, not just when no argument was given.
 Narrowing them is how a scoped run comes back clean while a blocking finding
 sits unread, and `/vwf:setup` / `/vwf:execute`
 halt on a blocking finding they were never told about.
+
+The one argument that is not a project name is **`baseline`** — a named
+invocation that runs the repo-shape check alone, described below.
+
+## The `baseline` invocation
+
+`/vwf:doctor baseline` evaluates the **local** baseline predicates of the
+repo-shape check — **(a) through (f)** in the stack-checks reference, the file
+reads against the lockfile, the config and the tree — **per repo**, the base
+and every locally-present member, and returns that result and **nothing else**.
+No stack, manifest, health, memory, graphify or format-stamp check runs, §§1–4
+and §§6–8 are skipped entirely, and predicate **(g)** — the forge state — is
+never read: it needs the forge CLI, and this invocation is meant to be cheap
+enough to run at every session start. It writes nothing: no report is filed to
+room `doctor`, no recall of prior findings is made, and no remedy is offered —
+the caller decides what to print.
+
+Its output is **one line per drifted repo**, naming the repo and the letters of
+the predicates that failed — `<repo>: (a) (c) (e)` — and no line for a repo
+that is clean. A base with no lockfile is reported as **`not shaped`** on its
+own line rather than as drift, since a repo never shaped has no baseline to
+drift from; an absent member is `not present, not checked`, exactly as §5
+reports it. Whether any of that is shown, and how, is the caller's: this is
+what **`/vwf:recall`** calls to print its shape-drift line, and the remedy for
+every row is the one `/vwf:setup reshape` the full run prints under §9.
+
+`$ARGUMENTS` is either project names or `baseline`, never both — `baseline`
+scopes nothing, since the repo-shape check is per repo, not per project.
 
 ## Doc Paths
 
@@ -251,4 +279,7 @@ that fails later and less clearly, or one that fails to fail at all. The LSP
 findings are `/vwf:plan`'s question: at its stack gate it asks, per flagged
 language, whether to install now or proceed without, and records the answer as
 an `LSP <language>` row in the plan folder's Consent block. `/vwf:execute`
-halts on `blocking` alone and reads that row; it never asks.
+halts on `blocking` alone and reads that row; it never asks. `/vwf:recall`
+calls the `baseline` invocation alone, at session start, and prints its result
+as one shape-drift line pointing at `/vwf:setup reshape` — it never runs doctor
+whole, and it never reads the forge.

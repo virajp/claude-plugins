@@ -51,7 +51,10 @@ base has no members yet, so this run shapes one repo. The **shape** is per repo
 — each member carries its own `.config/`, its own task library and its own gates
 — but the **run** is per product: once the members exist, one `init` from the
 base surveys and shapes all of them in one plan and on one yes, and a member
-added later is picked up by the next `/vwf:setup reshape`.
+added later is picked up by the next `/vwf:setup reshape` — which you no longer
+have to remember: `/vwf:recall` prints one drift line at session start when a
+repo has fallen behind, and setup and `/stackgen:stackgen-sync` re-check the
+shape as they finish.
 
 The setup run is the spine's blank-repo bootstrap unchanged
 ([`/vwf:setup`](./single-repo.md#vwfsetup)): two questions, both proposed from
