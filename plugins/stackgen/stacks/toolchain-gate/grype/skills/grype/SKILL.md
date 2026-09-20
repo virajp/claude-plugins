@@ -65,6 +65,13 @@ a higher threshold honestly enforced.
 readable where the gate is invoked. The file is the home of the decision; move
 both or neither.
 
+**On an existing repo, establish a baseline rather than lowering the bar.** The
+first `mise run code:sec` over a never-scanned tree usually fails; upgrade each
+finding that has a fix, and copy the vulnerability id of each one that does not
+under `ignore:` in `.config/grype.yaml` with a one-line `# reason` and re-check
+date, then re-run until green. The threshold stays `medium`. The full procedure
+is the pack's conventions, under "Establishing a baseline on an existing repo".
+
 ## Every ignore gets a reason and an expiry
 
 ```yaml

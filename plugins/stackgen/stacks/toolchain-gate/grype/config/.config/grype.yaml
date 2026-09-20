@@ -33,4 +33,8 @@ fail-on-severity: medium
 #
 # An empty list rather than a deleted key: this file is the documented home for
 # the next rule, and the paragraph above it is the bar that rule has to clear.
+#
+# Baseline on an existing repo: run `mise run code:sec`, add each unfixable
+# finding's vulnerability id here with its reason, re-run until green — never
+# lower `fail-on-severity` to clear the first scan.
 ignore: []

@@ -26,7 +26,10 @@ component for the parity rule this depends on.
 ## What this pack writes
 
 `.config/gitleaks.toml` — the scanner's config: `[extend] useDefault = true`,
-the commented rule template, and the allowlist of generated trees.
+the commented rule template, and the allowlist of generated trees — `build/`,
+`dist/`, `graphify-out/`, `node_modules/`, `target/` — plus `.venv/` and the
+gitignored `.env` and `.env.*` files, which `dir` mode reads regardless of
+`.gitignore` and which exist to hold secrets outside the tree.
 
 The fence in `output-tree.md` was opened for gate config files on 2026-09-05;
 `package.json` and CI workflows remain outside it.

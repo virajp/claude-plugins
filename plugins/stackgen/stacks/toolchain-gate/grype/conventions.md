@@ -37,6 +37,16 @@ site and the key in the file say the same thing on purpose — the call site is
 where somebody reads the gate, the file is where the decision and its reasoning
 live. Change them together.
 
+**Establishing a baseline on an existing repo.** A dependency tree that has
+never been scanned rarely clears `medium` on its first run, and a gate that
+fails on day one gets bypassed rather than fixed. Run `mise run code:sec`, and
+for each grype finding upgrade the dependency where an upgrade exists; where
+none does, copy the finding's vulnerability id under `ignore:` in
+`.config/grype.yaml` with a one-line `# reason` that says why it does not apply
+and when to re-check, then re-run until green. The threshold stays `medium` —
+lowering it to clear the first scan is the permanent silence this pack's ignore
+list exists to avoid; a time-boxed ignore is the temporary one.
+
 **There is no pre-commit hook for this one.** gitleaks ships hook definitions;
 grype does not, so it reaches the commit gate only through `code:sec`. That is
 worth knowing before assuming the local gate covers it: remove the task and

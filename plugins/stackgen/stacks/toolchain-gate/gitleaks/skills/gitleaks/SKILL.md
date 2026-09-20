@@ -95,6 +95,12 @@ future real instance of that credential type — and nothing reports that it
 happened. Prefer a path or a fingerprint; reach for a rule-level exemption only
 when the rule is genuinely wrong for this repo, and say why in a comment.
 
+The shipped file already allowlists the generated trees (`build/`, `dist/`,
+`graphify-out/`, `node_modules/`, `target/`), `.venv/`, and `.env` / `.env.*`.
+`gitleaks dir` does not honour `.gitignore`, so a gitignored `.env` — the file
+whose whole purpose is to keep secrets out of the tree — would otherwise fail
+every full `code:sec` run on a value that was never going to be committed.
+
 ## Where this stops
 
 Which secrets a product has and where they come from is stackgen's secrets
