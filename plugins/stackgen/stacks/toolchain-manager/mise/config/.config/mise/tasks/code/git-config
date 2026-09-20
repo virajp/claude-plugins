@@ -105,20 +105,35 @@ if [ "$FIXIT" = "true" ]; then
     exit 1
   fi
   print_newline
+  # git resolves the author, the committer and `commit.gpgsign` BEFORE the
+  # pre-commit hook runs, so a key this run changes reaches only the next
+  # commit — the one in flight would still land under the old identity,
+  # unsigned. A run that changed anything therefore fails on purpose.
+  CHANGED=false
   for spec in "user.name=${!VAR_NAME}" "user.email=${!VAR_EMAIL}" "user.signingkey=${!VAR_KEY}" commit.gpgsign=true tag.gpgsign=true gpg.format=ssh; do
     key=${spec%%=*}
-    print_wait "- setting ${key} ... "
-    git config --local -- "$key" "${spec#*=}"
-    print_ok
+    if [ "$(local_get "$key")" != "${spec#*=}" ]; then
+      print_wait "- setting ${key} ... "
+      git config --local -- "$key" "${spec#*=}"
+      CHANGED=true
+      print_ok
+    fi
   done
   for key in gpg.program gpg.ssh.program; do
     if [ -n "$(local_get "$key")" ]; then
       print_wait "- unsetting ${key} ... "
       git config --local --unset-all -- "$key"
+      CHANGED=true
       print_ok
     fi
   done
   print_wait "Re-validating git-config ... "
+  check
+  if [ "$CHANGED" = "true" ]; then
+    print_warn "identity corrected — re-run the commit"
+    exit 1
+  fi
+  exit 0
 fi
 
 check
