@@ -9,9 +9,15 @@ backlog: [ B28 ]
 
 ## Status
 
-**APPROVED**
+**BLOCKED**
 
-APPROVED 2026-09-20 by the user
+BLOCKED 2026-09-20 after wave 1 in
+/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/plan/2026-09-20-setup-reshape-triggers
+— UNRESOLVED: U2 owns `plugins/vwf/skills/stackgen-sync/SKILL.md`, which does
+not exist; the skill is `plugins/stackgen/skills/stackgen-sync/SKILL.md`, under
+the tree this plan rules untouched. Ruling needed: re-own U2 there (with a
+stackgen bump in U6 and its release intent recorded) or drop the stackgen-sync
+trigger.
 
 ## Consent
 
@@ -103,14 +109,14 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                                          | Kind | Owns                                                                                                                                                                             | Depends on     | Status  | Commit |
-| -- | ---- | -------------------------------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------- | ------ |
-| U1 | 1    | [01-setup.md](01-setup.md)                         | edit | `plugins/vwf/skills/setup/SKILL.md`                                                                                                                                              | —              | pending |        |
-| U2 | 1    | [02-stackgen-sync.md](02-stackgen-sync.md)         | edit | `plugins/vwf/skills/stackgen-sync/SKILL.md`                                                                                                                                      | —              | pending |        |
-| U3 | 1    | [03-recall-and-doctor.md](03-recall-and-doctor.md) | edit | `plugins/vwf/skills/recall/SKILL.md`, `plugins/vwf/skills/doctor/SKILL.md`                                                                                                       | —              | pending |        |
-| U4 | 1    | [04-init.md](04-init.md)                           | edit | `plugins/vwf/skills/init/SKILL.md`                                                                                                                                               | —              | pending |        |
-| U5 | 2    | [05-docs.md](05-docs.md)                           | edit | `readme.md`, `CLAUDE.md`, `.claude/docs/repo-shape.md`, `.claude/skills/vwf-plugin/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-09-20-setup-reshape-triggers.md` | U1, U2, U3, U4 | pending |        |
-| U6 | 3    | [06-gates-and-bump.md](06-gates-and-bump.md)       | edit | `plugins/vwf/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`                                                                                 | U5             | pending |        |
+| Id | Wave | Unit file                                          | Kind | Owns                                                                                                                                                                             | Depends on     | Status     | Commit   |
+| -- | ---- | -------------------------------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ---------- | -------- |
+| U1 | 1    | [01-setup.md](01-setup.md)                         | edit | `plugins/vwf/skills/setup/SKILL.md`                                                                                                                                              | —              | green      | 93a626bd |
+| U2 | 1    | [02-stackgen-sync.md](02-stackgen-sync.md)         | edit | `plugins/vwf/skills/stackgen-sync/SKILL.md`                                                                                                                                      | —              | unresolved |          |
+| U3 | 1    | [03-recall-and-doctor.md](03-recall-and-doctor.md) | edit | `plugins/vwf/skills/recall/SKILL.md`, `plugins/vwf/skills/doctor/SKILL.md`                                                                                                       | —              | green      | 12913a81 |
+| U4 | 1    | [04-init.md](04-init.md)                           | edit | `plugins/vwf/skills/init/SKILL.md`                                                                                                                                               | —              | green      | a0448eb0 |
+| U5 | 2    | [05-docs.md](05-docs.md)                           | edit | `readme.md`, `CLAUDE.md`, `.claude/docs/repo-shape.md`, `.claude/skills/vwf-plugin/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-09-20-setup-reshape-triggers.md` | U1, U2, U3, U4 | skipped    |          |
+| U6 | 3    | [06-gates-and-bump.md](06-gates-and-bump.md)       | edit | `plugins/vwf/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`                                                                                 | U5             | skipped    |          |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`. Every unit is `edit`.
@@ -189,10 +195,41 @@ the unit could not proceed without; it blocks the unit and its dependents.
 - B28's last piece — the greenfield / brownfield rework (D) — is its own folder,
   chained after this one. B28 closes only when it lands.
 
+## Gaps surfaced during execution
+
+- **U2 — blocking, isolated.** Decision 1 and the survey cite
+  `plugins/vwf/skills/stackgen-sync/SKILL.md:77-82`; no such file. The passage
+  ("a re-run of init is what folds it in") is
+  `plugins/stackgen/skills/stackgen-sync/SKILL.md:82`, inside sync step 2. The
+  Shared-file rule marks `plugins/stackgen/**` untouched and Consent records no
+  stackgen release, so U2 made no edit. Ruling needed: (a) re-own U2 to the
+  stackgen path, add a stackgen bump to U6 and record its release intent; or (b)
+  drop the stackgen-sync trigger (decision 1 then covers setup alone, and the
+  init bullet at `init/SKILL.md:656` and decision 4 lose that line). U5 and U6
+  skipped as dependents.
+- **R1 contested (round 2, cap).** `init/SKILL.md:656` names an in-session
+  reshape from `/stackgen:stackgen-sync` that the tree does not have while U2 is
+  unresolved; resolves with the U2 ruling.
+- **U3 GAP (non-blocking).** Recall's pipeline reads no plan index, so the shape
+  check sits after the format check and before step 3's palace reads.
+- **DOCS FALSIFIED handed to U5:** `vwf.md#vwfsetup` (shape check no longer Step
+  0 only), `vwf.md` doctor argument surface and recall pipeline,
+  `vwf.md:1340-1348` #vwfinit "When it runs again" (no trigger list),
+  `.claude/skills/vwf-plugin/` setup description.
+
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome               | Detail                                                                                                                                                                                                                                                                                                                                                                                                                 | Commit   |
+| ---- | --------- | ----- | ----- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 0    | preflight | —     | 1     | pass                  | doctor: no blocking finding (mise, graphify CLI, graph in main checkout; no vwf.yaml → no stack pins); wave gate 5/5 green on develop tip; format check, conventions fetch skipped — no covers:, edit units only                                                                                                                                                                                                       | —        |
+| 1    | U1        | opus  | 1     | pass                  | DECIDED: second shape check is the materialize pass's closing subsection (the pass runs in every mode; step 3 does not run in `current`), never on `reshape`; Step 0 gains the one sentence. DOCS FALSIFIED: vwf.md#vwfsetup, vwf-plugin skill setup description. GAP none                                                                                                                                             | 93a626bd |
+| 1    | U2        | opus  | 1     | unresolved            | owned path `plugins/vwf/skills/stackgen-sync/SKILL.md` does not exist — the skill is `plugins/stackgen/skills/stackgen-sync/SKILL.md:82`, under the tree the Shared-file rule and Consent mark untouched; no edit made. Ruling needed: (a) re-own U2 to the stackgen path, add a stackgen bump to U6 and record its release intent, or (b) drop the stackgen-sync trigger from this plan. U5, U6 skipped as dependents | —        |
+| 1    | U4        | opus  | 1     | pass                  | DECIDED: four-line trigger list placed after the reasons list, framed as offers-the-Step-0-way, silent when clean; recall line names (a)–(f), defers (g). DOCS FALSIFIED: none found (vwf.md init section, vwf-plugin skill — U5 to confirm). GAP none                                                                                                                                                                 | a0448eb0 |
+| 1    | U3        | opus  | 1     | pass                  | DECIDED: `baseline` is an argument value beside the project list, not a mode; a lockfile-less base reports `not shaped`, distinct from drift. DOCS FALSIFIED: vwf.md doctor argument surface and recall pipeline. GAP: recall reads no plan index — shape check placed after the format check, before step 3 palace reads                                                                                              | 12913a81 |
+| 1    | R1        | opus  | 1     | findings(2)           | init/SKILL.md:656 [U4] names `/vwf:stackgen-sync`, which does not exist — the command is `/stackgen:stackgen-sync` (looped to U4 as the name fix; whether the bullet stands follows the U2 ruling); vwf.md:1340-1348 #vwfinit "When it runs again" carries no trigger list — DOCS FALSIFIED handed to U5 (already in its Owns). CONTRACT clean, RULINGS clean                                                          | —        |
+| 1    | U4        | opus  | 2     | pass                  | R1 finding applied: the sync bullet names `/stackgen:stackgen-sync`; refolded, nothing else touched                                                                                                                                                                                                                                                                                                                    | a0448eb0 |
+| 1    | R1        | opus  | 2     | findings(1) contested | init/SKILL.md:656 [U4] the sync bullet asserts an in-session reshape the tree does not have while U2 is unresolved — holds until the U2 ruling lands or the bullet is dropped; not a departure from decision 4. CONTRACT clean, RULINGS clean                                                                                                                                                                          | —        |
+| 1    | gate      | —     | 1     | pass                  | wave gate 5/5 green; U2 unresolved → U5, U6 skipped as dependents; run stops at the report                                                                                                                                                                                                                                                                                                                             | —        |
 
 ## Launch
 
