@@ -47,7 +47,9 @@ repos:
           user.name, user.email and user.signingkey from GITHUB_*, GITLAB_* or
           GIT_* — with ssh-signed commits and tags. `--fix` writes those keys
           from the variables and unsets gpg.program and gpg.ssh.program; an
-          unset variable fails the hook and writes nothing.
+          unset variable fails the hook and writes nothing. A commit that
+          changed any key is refused — git read the old identity before the
+          hook ran — and the re-run carries the corrected one.
         entry: mise x -- mise run code:git-config --fix
         language: system
         pass_filenames: false

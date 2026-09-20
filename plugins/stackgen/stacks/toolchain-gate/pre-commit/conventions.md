@@ -26,7 +26,9 @@ a gate people bypass.
 The local `user.name`, `user.email` and `user.signingkey` must equal the forge
 variables — `GITHUB_*`, `GITLAB_*` or `GIT_*` by origin host — with ssh-signed
 commits and tags; its `--fix` writes those keys from the variables, fails naming
-an unset one, and unsets only `gpg.program` and `gpg.ssh.program`.
+an unset one, and unsets only `gpg.program` and `gpg.ssh.program`. A commit that
+changed any key is refused and the re-run carries the corrected identity — git
+reads it before hooks run.
 
 **Revs are pinned and updated deliberately.** An unpinned rev means the gate's
 behaviour changes without a commit, and the change lands on whoever pulls next.

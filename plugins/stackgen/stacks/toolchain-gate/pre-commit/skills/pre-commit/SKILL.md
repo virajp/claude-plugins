@@ -43,22 +43,23 @@ the old path stays baked in until you do.
 
 `setup:precommit` never clobbers a hook setup it did not create. Before it
 installs anything it reads the **effective** `core.hooksPath` and looks for
-`.husky/`, `lefthook.yml` and `.lefthook.yml`; if any is present it prints what
+`.husky/` and a lefthook config in any of its forms (`lefthook` or `.lefthook`
+with `.yml`, `.yaml`, `.toml` or `.json`); if any is present it prints what
 it found and the two by-hand lines — the `core.hooksPath` unset and the
 `pre-commit install … --overwrite` call — plus the cleanup it leaves to you
 (delete `.husky/` or the lefthook file, drop a husky `prepare` script; the task
 deletes nothing), and exits 1. `--force` runs those two steps itself, unsetting
 the **local** value only: a `core.hooksPath` from a global or system git-config
-is named as such and refused even under `--force`. A repo whose installed hook
-already carries pre-commit's marker is not refused again for a tracked husky or
-lefthook file. The refusal matters because `install` fails outright while a
-`core.hooksPath` is set, and a leftover path silently wins over pre-commit's
-installed hook, so the symptom is a gate that reports nothing rather than one
-that errors. On the plain path `install` runs without `--overwrite`, so a
-hand-written `.git/hooks/pre-commit` is kept as `pre-commit.legacy` and chained
-rather than replaced; `--force` is what replaces it. `pre-commit autoupdate`
-runs only under `--update`; a plain `setup:precommit` leaves every `rev:` where
-the lockfile recorded it.
+— set there alone or beside a local one — is named as such and refused even
+under `--force`. A repo whose installed hook already carries pre-commit's marker
+is not refused again for a tracked husky or lefthook file. The refusal matters
+because `install` fails outright while a `core.hooksPath` is set, and a leftover
+path silently wins over pre-commit's installed hook, so the symptom is a gate
+that reports nothing rather than one that errors. On the plain path `install`
+runs without `--overwrite`, so a hand-written `.git/hooks/pre-commit` is kept
+as `pre-commit.legacy` and chained rather than replaced; `--force` is what
+replaces it. `pre-commit autoupdate` runs only under `--update`; a plain
+`setup:precommit` leaves every `rev:` where the lockfile recorded it.
 
 ## The git-config hook: a required per-repo identity
 
@@ -71,11 +72,14 @@ or no remote — with `commit.gpgsign` and `tag.gpgsign` set to `true`,
 hook runs `code:git-config --fix`: it writes the identity keys from the
 variables, fails naming any unset one and writing nothing partial, sets the two
 booleans and `gpg.format`, and unsets the two `gpg.*program` keys — the only two
-things it removes, and the rule itself. `<FORGE>_SIGNING_KEY` holds what git
-accepts as `user.signingkey` under `gpg.format=ssh`: the path to the key file
-(`~/.ssh/id_ed25519.pub`) or the literal public key prefixed `key::` — a bare
-`ssh-ed25519 AAAA…` line is written verbatim and the first signed commit fails
-inside git.
+things it removes, and the rule itself. When it changed any key it prints
+"identity corrected — re-run the commit" and exits 1: git loads the identity
+before hooks run, so the triggering commit is refused rather than landed with
+the old one, and the re-run carries the correction. `<FORGE>_SIGNING_KEY`
+holds what git accepts as `user.signingkey` under `gpg.format=ssh`: the path to
+the key file (`~/.ssh/id_ed25519.pub`) or the literal public key prefixed
+`key::` — a bare `ssh-ed25519 AAAA…` line is written verbatim and the first
+signed commit fails inside git.
 
 ## The config is a base, and packs extend it by fragment
 
