@@ -31,9 +31,9 @@ useDefault = true
 # `useDefault` above is on: the default ruleset's `generic-api-key` rule fires
 # on any long high-entropy string, and a cache index full of hashes is exactly
 # that — which fails the commit gate for a hash, not for a credential. The same
-# blindness reads a gitignored `.env` — a file that exists precisely to hold
-# secrets outside the tree — which is why it is allowlisted here rather than
-# left to fail every full scan on a value that was never going to be committed.
+# blindness reads a gitignored `.env`, which is why `code:sec`'s full scan
+# extends this file with a `.env` allowlist at run time — never here, where the
+# entry would be mode-wide and blind the staged gate to a `.env` someone staged.
 #
 # Listed by path because gitleaks has no "ask git" option. Keep this list to
 # trees nothing commits and nobody reviews; widening it to tracked source is how
@@ -44,9 +44,7 @@ useDefault = true
 # so the next instance of that credential type is still caught.
 [allowlist]
 paths = [
-  '''^\.env$''',
-  '''^\.env\..*''',
-  '''^\.venv/''',
+  '''\.venv/*''',
   '''build/*''',
   '''dist/*''',
   '''graphify-out/*''',
