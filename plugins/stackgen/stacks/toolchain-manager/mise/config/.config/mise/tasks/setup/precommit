@@ -64,8 +64,14 @@ fi
 # The hook TYPES are not passed here. `default_install_hook_types` in the config
 # is what declares them, so the commit-msg hook arrives with the config rather
 # than with whoever last edited this line.
+#
+# Without `--overwrite`, pre-commit keeps a hook script it did not write as
+# `<hook>.legacy` and chains it, so a hand-written hook survives; `--force` is
+# what replaces it.
 print_subheader "Installing pre-commit hooks ..."
 if [ "$FORCE" = "true" ]; then
   git config --local --unset-all core.hooksPath || true
+  pre-commit install --config "${CONFIG}" --install-hooks --overwrite
+else
+  pre-commit install --config "${CONFIG}" --install-hooks
 fi
-pre-commit install --config "${CONFIG}" --install-hooks --overwrite

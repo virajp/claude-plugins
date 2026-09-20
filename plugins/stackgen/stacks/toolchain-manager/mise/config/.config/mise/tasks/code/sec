@@ -54,11 +54,29 @@ if command -v gitleaks >/dev/null 2>&1; then
   # The scanner takes a directory, so a file list narrows it only as far as a
   # shared parent — with one given, the whole tree is scanned rather than
   # guessing at that parent. The narrowed scan is `--staged`.
-  if [ -f "${SECRETS_CONFIG}" ]; then
-    gitleaks dir . --config "${SECRETS_CONFIG}" --redact=50
-  else
-    gitleaks dir . --redact=50
-  fi
+  #
+  # `dir` mode does not honour `.gitignore`, so a gitignored `.env` — a file
+  # that exists to hold secrets OUTSIDE the tree — fails every full scan on a
+  # value that was never going to be committed. It is skipped here through a
+  # throwaway overlay that extends the repo's config, and NOT in that config:
+  # an allowlist there is mode-wide, and would also make the `--staged` gate
+  # above wave through a `.env` someone did stage.
+  OVERLAY=$(mktemp "${TMPDIR:-/tmp}/gitleaks-overlay.XXXXXX")
+  trap 'rm -f "${OVERLAY}"' EXIT
+  {
+    echo '[extend]'
+    if [ -f "${SECRETS_CONFIG}" ]; then
+      echo "path = \"${SECRETS_CONFIG}\""
+    else
+      echo 'useDefault = true'
+    fi
+    cat <<'EOF'
+
+[allowlist]
+paths = ['(^|/)\.env$', '(^|/)\.env\..*']
+EOF
+  } >"${OVERLAY}"
+  gitleaks dir . --config "${OVERLAY}" --redact=50
   print_ok
 else
   print_warn "gitleaks is not on PATH — skipping the secret scan."
@@ -74,7 +92,11 @@ if command -v grype >/dev/null 2>&1; then
   fi
   if [ "$grype_status" -ne 0 ]; then
     print_error "ERROR"
-    print_warn "To accept a finding, add its vulnerability id under ignore: in .config/grype.yaml with a one-line reason — see the grype conventions."
+    if [ -f "${VULN_CONFIG}" ]; then
+      print_warn "To accept a finding, add its vulnerability id under ignore: in .config/grype.yaml with a one-line reason — see the grype conventions."
+    else
+      print_warn "No .config/grype.yaml to accept a finding in — materialize the grype component first, then add the id under ignore: with a one-line reason."
+    fi
     exit "$grype_status"
   fi
   print_ok

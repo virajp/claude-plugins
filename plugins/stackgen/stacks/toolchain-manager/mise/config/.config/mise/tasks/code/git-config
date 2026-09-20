@@ -14,12 +14,27 @@ FIXIT="${usage_fix:-false}"
 
 # Identity and signing: PER-REPO, required, equal to GITHUB_/GITLAB_/GIT_USER_NAME & kin
 ORIGIN=$(git remote get-url origin 2>/dev/null || true)
-HOST=${ORIGIN#*://}
-HOST=${HOST#*@}
-HOST=${HOST%%[:/]*}
+# The authority is what sits before the path: after `://` in a URL, before the
+# first `:` in scp form; a bare path has neither. Userinfo is stripped from the
+# authority alone, so an `@` in the path cannot spoof the host.
+case "$ORIGIN" in
+  *://*)
+    HOST=${ORIGIN#*://}
+    HOST=${HOST%%/*}
+    ;;
+  *)
+    HOST=${ORIGIN%%/*}
+    case "$HOST" in
+      *:*) HOST=${HOST%%:*} ;;
+      *) HOST="" ;;
+    esac
+    ;;
+esac
+HOST=${HOST##*@}
+HOST=${HOST%%:*}
 case "$HOST" in
-  github.com) FORGE="GITHUB" ;;
-  gitlab.com) FORGE="GITLAB" ;;
+  github.com | *.github.com) FORGE="GITHUB" ;;
+  gitlab.com | *.gitlab.com) FORGE="GITLAB" ;;
   *) FORGE="GIT" ;;
 esac
 
@@ -27,7 +42,7 @@ VAR_NAME="${FORGE}_USER_NAME"
 VAR_EMAIL="${FORGE}_EMAIL"
 VAR_KEY="${FORGE}_SIGNING_KEY"
 
-local_get() { git config --local --get "$1" 2>/dev/null || true; }
+local_get() { git config --local --get -- "$1" 2>/dev/null || true; }
 
 # Prints every key that misses its required value and returns 1 when there is one.
 check() {
@@ -93,13 +108,13 @@ if [ "$FIXIT" = "true" ]; then
   for spec in "user.name=${!VAR_NAME}" "user.email=${!VAR_EMAIL}" "user.signingkey=${!VAR_KEY}" commit.gpgsign=true tag.gpgsign=true gpg.format=ssh; do
     key=${spec%%=*}
     print_wait "- setting ${key} ... "
-    git config --local "$key" "${spec#*=}"
+    git config --local -- "$key" "${spec#*=}"
     print_ok
   done
   for key in gpg.program gpg.ssh.program; do
     if [ -n "$(local_get "$key")" ]; then
       print_wait "- unsetting ${key} ... "
-      git config --local --unset-all "$key"
+      git config --local --unset-all -- "$key"
       print_ok
     fi
   done
