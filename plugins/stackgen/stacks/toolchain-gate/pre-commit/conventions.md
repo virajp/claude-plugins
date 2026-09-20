@@ -22,8 +22,21 @@ task is what knows its own tools' paths. An unscoped hook otherwise runs the
 formatter over a commit that touched one YAML file, and a gate people wait on is
 a gate people bypass.
 
+**The `git-config` hook requires a per-repo identity.**
+The local `user.name`, `user.email` and `user.signingkey` must equal the forge
+variables — `GITHUB_*`, `GITLAB_*` or `GIT_*` by origin host — with ssh-signed
+commits and tags; its `--fix` writes those keys from the variables, fails naming
+an unset one, and unsets only `gpg.program` and `gpg.ssh.program`.
+
 **Revs are pinned and updated deliberately.** An unpinned rev means the gate's
 behaviour changes without a commit, and the change lands on whoever pulls next.
+`pre-commit autoupdate` runs only under `setup:precommit --update`; a plain
+`setup:precommit` installs the hooks and moves no `rev:`.
+
+**`setup:precommit` never clobbers a hook setup it did not create.** A local
+`core.hooksPath`, a `.husky/` directory or a lefthook config is reported with
+the two by-hand lines and exits 1; `--force` is what runs the unset and the
+`--overwrite` install.
 
 **Never bypass a red gate.** The gate found something or it is broken; both need
 answering, and neither is answered by skipping it.

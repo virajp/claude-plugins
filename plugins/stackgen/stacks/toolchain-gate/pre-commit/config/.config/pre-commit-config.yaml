@@ -42,10 +42,12 @@ repos:
   - repo: local
     hooks:
       - id: git-config
-        name: Forbidden local git-config
-        description: Prevents a local .git/config from overriding global user
-          and signing settings — the override is invisible in a diff and the
-          symptom is unsigned commits from an address nobody recognises.
+        name: Required local git-config (forge identity, ssh signing)
+        description: Requires a per-repo identity equal to the forge variables —
+          user.name, user.email and user.signingkey from GITHUB_*, GITLAB_* or
+          GIT_* — with ssh-signed commits and tags. `--fix` writes those keys
+          from the variables and unsets gpg.program and gpg.ssh.program; an
+          unset variable fails the hook and writes nothing.
         entry: mise x -- mise run code:git-config --fix
         language: system
         pass_filenames: false
@@ -133,6 +135,8 @@ repos:
         name: Check JSON syntax
         description: Every config gate below reads a config file; an unparseable
           one fails inside the tool with a message about the tool.
+        # The composed editor files under .vscode/ are JSONC by design.
+        exclude: ^\.vscode/
       - id: check-toml
         name: Check TOML syntax
         description: Same reason as JSON, for the toolchain manager's config.

@@ -27,7 +27,9 @@ never created rather than being caught later. The config lives at
 config, which means every invocation carries `--config`:
 
 ```sh
-mise run setup:precommit        # autoupdate + install the hooks
+mise run setup:precommit        # install the hooks; refuses a foreign setup
+mise run setup:precommit --update   # also move every rev with autoupdate
+mise run setup:precommit --force    # unset core.hooksPath and overwrite
 mise run code:precommit         # run against changed files
 mise run code:precommit --all   # run against everything
 
@@ -39,10 +41,29 @@ script**, which is why `git commit` needs no flag afterwards while a manual
 `pre-commit run` still does. Re-run `setup:precommit` after moving the config;
 the old path stays baked in until you do.
 
-`setup:precommit` also clears any `core.hooksPath` the repo has set locally —
-`install` refuses outright while one is set, and a leftover path silently wins
-over pre-commit's installed hook, so the symptom is a gate that reports nothing
-rather than one that errors.
+`setup:precommit` never clobbers a hook setup it did not create. Before it
+installs anything it reads `git config --local core.hooksPath` and looks for
+`.husky/`, `lefthook.yml` and `.lefthook.yml`; if any is present it prints what
+it found and the two by-hand lines — the `core.hooksPath` unset and the
+`pre-commit install … --overwrite` call — and exits 1. `--force` runs those two
+steps itself. The refusal matters because `install` fails outright while a
+`core.hooksPath` is set, and a leftover path silently wins over pre-commit's
+installed hook, so the symptom is a gate that reports nothing rather than one
+that errors. `pre-commit autoupdate` runs only under `--update`; a plain
+`setup:precommit` leaves every `rev:` where the lockfile recorded it.
+
+## The git-config hook: a required per-repo identity
+
+The base config's first local hook, `git-config`, requires the repo's local
+`user.name`, `user.email` and `user.signingkey` to **equal** the forge variables
+— `GITHUB_USER_NAME`, `GITHUB_EMAIL` and `GITHUB_SIGNING_KEY` when the origin is
+`github.com`, the `GITLAB_*` twins for `gitlab.com`, `GIT_*` for any other host
+or no remote — with `commit.gpgsign` and `tag.gpgsign` set to `true`,
+`gpg.format` set to `ssh`, and `gpg.program` and `gpg.ssh.program` absent. The
+hook runs `code:git-config --fix`: it writes the identity keys from the
+variables, fails naming any unset one and writing nothing partial, sets the two
+booleans and `gpg.format`, and unsets the two `gpg.*program` keys — the only two
+things it removes, and the rule itself.
 
 ## The config is a base, and packs extend it by fragment
 
@@ -155,9 +176,10 @@ lockfile freshness.
 ## Pin revs; update them deliberately
 
 Every third-party `repo:` entry carries a `rev:`. `pre-commit autoupdate` moves
-them, and it is run as a deliberate act (`setup:precommit`), not silently on
-each commit — an unpinned or auto-moving hook set means a commit can fail on a
-change nobody in the repo made.
+them, and it is run as a deliberate act (`setup:precommit --update`), never by
+a plain `setup:precommit` and not silently on each commit — an unpinned or
+auto-moving hook set means a commit can fail on a change nobody in the repo
+made.
 
 ## The commit convention lives here too
 
