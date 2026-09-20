@@ -813,29 +813,29 @@ record.
 
 ## Commands
 
-| Command                   | What it does                                                                                                                                                                                                                                                                                   |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/vwf:init`               | Internal — shape the base repo **and every member repo** (config layout, task library, gates, hygiene files, a licence on a public repo, the forge's default branch and branch protection); reached only through `/vwf:setup`                                                                  |
-| `/vwf:setup [reshape]`    | Onboard/migrate a repo into vwf's format; `reshape` runs the repo-shape pass alone, across every member (re-runnable)                                                                                                                                                                          |
-| `/vwf:product [note]`     | The Phase −1 outcome contract — problem, users, goals, slice priority; an optional feedback note seeds the update questions                                                                                                                                                                    |
-| `/vwf:architecture`       | Bootstrap or update the system shape + Project Registry                                                                                                                                                                                                                                        |
-| `/vwf:design-system`      | Import the product's design system from its design tool into the contract (mandatory once UI exists)                                                                                                                                                                                           |
-| `/vwf:blueprint [flow]`   | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                                                                                                                                                                                                   |
-| `/vwf:mockups [flow]`     | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                                                                                                                                                                                                       |
-| `/vwf:screens <mode>`     | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                                                                                                                                                                                             |
-| `/vwf:plan [slice]`       | Write a reviewable cycle-plan folder — a diff of blueprint vs code, deps chained as plans; interviews, records consent, commits and pushes it at hand-off                                                                                                                                      |
-| `/vwf:execute <folder>`   | Run an approved plan folder of either kind unattended in a fresh session — TDD per `code` unit, code + security review at each `review` row, waves and review per `edit` unit, E2E + UX when the plan covers a slice, then land per the plan's consent; `next` picks the queue's runnable plan |
-| `/vwf:plan-management`    | Internal — the one writer of the plan queue: the index rows, every folder's Status block, the archive move; called by the planners and `execute`, or when you ask to archive or list                                                                                                           |
-| `/vwf:doctor [project]`   | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, dependency audit, mempalace, graphify, the repo shape of every member, stamps                                                                                                                                |
-| `/vwf:verify [env]`       | Post-deploy: health-check + re-run acceptance criteria against the environment                                                                                                                                                                                                                 |
-| `/vwf:feedback [input]`   | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat)                                                                                                                                                                               |
-| `/vwf:backlog [verb]`     | The prioritised list of work that cannot be picked up now — a GitHub Project named for the base repo, and this is its only writer                                                                                                                                                              |
-| `/vwf:change-plan [what]` | Plan an ad-hoc change — work with no blueprint slice behind it — into the same folder shape, for `/vwf:execute` to run                                                                                                                                                                         |
-| `/vwf:handoff [name]`     | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                                                                                                                                                                                                        |
-| `/vwf:recall [name]`      | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation                                                                                                                                                                                                    |
-| `/vwf:readme`             | Scan a repo and write or update its README against eight required sections                                                                                                                                                                                                                     |
-| `/vwf:docs-sync [range]`  | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog                                                                                                                                                                                           |
-| `/vwf:git-workflow`       | Internal — worktree isolation, commits, merges                                                                                                                                                                                                                                                 |
+| Command                                 | What it does                                                                                                                                                                                                                                                                                   |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/vwf:init`                             | Internal — shape the base repo **and every member repo** (config layout, task library, gates, hygiene files, a licence on a public repo, the forge's default branch and branch protection); reached only through `/vwf:setup`                                                                  |
+| `/vwf:setup [reshape]`                  | Onboard/migrate a repo into vwf's format; `reshape` runs the repo-shape pass alone, across every member (re-runnable)                                                                                                                                                                          |
+| `/vwf:product [note]`                   | The Phase −1 outcome contract — problem, users, goals, slice priority; an optional feedback note seeds the update questions                                                                                                                                                                    |
+| `/vwf:architecture`                     | Bootstrap or update the system shape + Project Registry                                                                                                                                                                                                                                        |
+| `/vwf:design-system`                    | Import the product's design system from its design tool into the contract (mandatory once UI exists)                                                                                                                                                                                           |
+| `/vwf:blueprint [flow]`                 | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                                                                                                                                                                                                   |
+| `/vwf:mockups [flow]`                   | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                                                                                                                                                                                                       |
+| `/vwf:screens <mode>`                   | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                                                                                                                                                                                             |
+| `/vwf:plan [slice]`                     | Write a reviewable cycle-plan folder — a diff of blueprint vs code, deps chained as plans; interviews, records consent, commits and pushes it at hand-off                                                                                                                                      |
+| `/vwf:execute <folder>`                 | Run an approved plan folder of either kind unattended in a fresh session — TDD per `code` unit, code + security review at each `review` row, waves and review per `edit` unit, E2E + UX when the plan covers a slice, then land per the plan's consent; `next` picks the queue's runnable plan |
+| `/vwf:plan-management`                  | Internal — the one writer of the plan queue: the index rows, every folder's Status block, the archive move; called by the planners and `execute`, or when you ask to archive or list                                                                                                           |
+| `/vwf:doctor [project ... \| baseline]` | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, dependency audit, mempalace, graphify, the repo shape of every member, stamps; `baseline` runs the local repo-shape predicates alone                                                                         |
+| `/vwf:verify [env]`                     | Post-deploy: health-check + re-run acceptance criteria against the environment                                                                                                                                                                                                                 |
+| `/vwf:feedback [input]`                 | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat)                                                                                                                                                                               |
+| `/vwf:backlog [verb]`                   | The prioritised list of work that cannot be picked up now — a GitHub Project named for the base repo, and this is its only writer                                                                                                                                                              |
+| `/vwf:change-plan [what]`               | Plan an ad-hoc change — work with no blueprint slice behind it — into the same folder shape, for `/vwf:execute` to run                                                                                                                                                                         |
+| `/vwf:handoff [name]`                   | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                                                                                                                                                                                                        |
+| `/vwf:recall [name]`                    | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation; prints one shape-drift line when a repo has fallen behind                                                                                                                                         |
+| `/vwf:readme`                           | Scan a repo and write or update its README against eight required sections                                                                                                                                                                                                                     |
+| `/vwf:docs-sync [range]`                | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog                                                                                                                                                                                           |
+| `/vwf:git-workflow`                     | Internal — worktree isolation, commits, merges                                                                                                                                                                                                                                                 |
 
 **Five are user-only** — `setup`, `verify`, `mockups`, `recall` and `execute`
 carry `disable-model-invocation: true`, so the model never fires them on its
@@ -1385,6 +1385,21 @@ of these is `drift` and none is blocking — a repo behind its baseline is out o
 date, not broken — and all of them share one remedy, `/vwf:setup reshape`,
 printed once.
 
+Nobody has to remember that schedule. Four commands bring you to the door
+themselves, each **offering** `reshape` the Step 0 way — one line naming the
+drifted repos and the failing predicate, then the question — and saying nothing
+when the check is clean:
+
+- **`/vwf:architecture`** — after it writes the registry, by invoking
+  `/vwf:setup`, whose Step 0 runs the check.
+- **`/vwf:setup`** — after its own materialize pass, once per run, so a pack
+  version the run itself moved is offered in the same session.
+- **`/stackgen:stackgen-sync`** — after a sync, by invoking `/vwf:setup reshape`
+  in-session.
+- **`/vwf:recall`** — at session start, as one printed line from doctor's local
+  baseline predicates alone, (a) through (f); the forge predicate (g) stays
+  doctor's whole run and setup's Step 0.
+
 A second run on a shaped **product** produces an **empty plan** and says so,
 **for the same id source** — and that empty plan still carries a section per
 repo, each reading nothing, because a plan naming only the base would leave you
@@ -1408,12 +1423,15 @@ doctor, no commit; a re-shape writes exactly two keys into `.config/vwf.yaml` �
 hand-written `.vscode` section already carried — and nothing else in it, so a
 user who wants both runs `/vwf:setup` again afterwards. It is also the line
 `/vwf:doctor` prints for every repo-shape finding, so most runs of it arrive
-from a drift row. The shape pass includes init's **forge pass** — the default
-branch, the protection on `develop` and `main`, the base's backlog project —
-which is idempotent on a repo already set, so a reshape that arrives from a
-forge-state row sets only what drifted. A `reshape` started **inside a member**
-is not a reshape of that member alone: `init` resolves the base and runs from
-there, so what gets reshaped is the product.
+from a drift row — or from one of the commands that now offer it in-session:
+setup itself after its materialize pass, `/stackgen:stackgen-sync` after a
+re-sync, and `/vwf:recall`'s one drift line at session start (see
+[`/vwf:init`](#vwfinit), *When it runs again*). The shape pass includes init's
+**forge pass** — the default branch, the protection on `develop` and `main`, the
+base's backlog project — which is idempotent on a repo already set, so a reshape
+that arrives from a forge-state row sets only what drifted. A `reshape` started
+**inside a member** is not a reshape of that member alone: `init` resolves the
+base and runs from there, so what gets reshaped is the product.
 
 **Step 0 begins with a shape check, before the mode fork**, and on a multi-repo
 product it asks its two things of **every repo** — the base and every member
@@ -1437,10 +1455,13 @@ every repo in one run of its own. That seam is why `init` stays model-invocable
 only two ways it is reached. An **absent** member is a blind spot, never a
 finding. Declining is a recorded deferral, not a halt: the repo shape and the
 vwf format are two different things, and a repo can be onboarded into one
-without the other. Setup itself never materializes one of the **three
-unconditional** bundles any more — that is `init`'s. The **pinned** stacks are a
-different matter, and they are setup's: see
-[the materialize pass](#the-materialize-pass) below.
+without the other. The check is not Step 0's alone: it **repeats once after the
+materialize pass**, against the lockfile that pass has just written, so a pack
+version the run itself moved is offered in the same run rather than the next —
+see [the second shape check](#the-second-shape-check) below. Setup itself never
+materializes one of the **three unconditional** bundles any more — that is
+`init`'s. The **pinned** stacks are a different matter, and they are setup's:
+see [the materialize pass](#the-materialize-pass) below.
 
 **Step 0 resolves one of three entry paths**, once, from what is on disk, and
 nothing after it re-derives the mode:
@@ -1537,6 +1558,21 @@ user-level vwf upgrade reaches each repo on next use. A stamped config with no
 registry yet is a **legal early state**, not drift: doctor reports it as "early
 — next `/vwf:product`, then `/vwf:architecture`" and the format check stays
 silent.
+
+#### The second shape check
+
+The materialize pass ends with **a second shape check** — the same two questions
+Step 0 asked, is the shape *there* and is it *current*, over the same set of
+repos, evaluated against the adapter lockfile the pass has just written. It
+exists because Step 0 runs before the pass: a pack version the pass moved is
+drift Step 0 could not see, and without this check it would wait for the next
+run. On any repo unshaped or behind, the offer is made exactly as Step 0 makes
+it — the drifted repos, what each showed, the one question, `/vwf:init` on a
+yes, a recorded deferral on a decline — and the run continues. Every repo clean,
+it prints nothing. It runs **once per setup invocation**, wherever the pass ran
+— before the doctor gate in `onboard` and `migrate`, before the report in
+`current` — and never a third time. A `reshape` invocation is the shape pass
+itself, runs no materialize pass, and does not run this check.
 
 ### /vwf:product
 
@@ -2802,6 +2838,23 @@ mempalace under your project. In a new session:
 you left off, and offers to run the captured next prompt. Every handoff is
 written to **both** memory stores, so `recall` works with or without the
 mempalace daemon.
+
+Beside its format check, before it reads the palace, `recall` also runs a
+**shape check**: `/vwf:doctor baseline`, the named invocation that evaluates the
+local repo-shape predicates — (a) through (f), file reads against the lockfile,
+the config and the tree, per repo of the product — and nothing else. No stack,
+health, memory or graphify check runs, nothing is written, and the forge
+predicate (g) is never read, since it needs the forge CLI and this runs at every
+session start. Doctor answers one line per drifted repo with the letters that
+failed, `not shaped` for a base with no lockfile, and `recall` prints **one
+line** on drift — the repos, their letters, and `/vwf:setup reshape` as the
+remedy, reading like
+`shape drift: base (a) (e), api (c) — run /vwf:setup reshape` — and **nothing**
+when every repo is clean or the repo was never shaped. It is an offer: `recall`
+never runs `reshape` itself, and the line never stops the recall. This is how a
+change made outside vwf — a pack bumped by hand, a member added, a folder
+renamed — is seen before the session builds on it; the other doors are listed
+under [`/vwf:init`](#vwfinit), *When it runs again*.
 
 #### The `next` handoff
 

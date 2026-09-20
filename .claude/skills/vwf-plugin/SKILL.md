@@ -147,13 +147,20 @@ it cannot log in with, gets the by-hand list — which the hygiene pack's
 `CONTRIBUTING.md` keeps, naming `gh` and `glab` where vwf's `SKILL.md` prose may
 not (the init references name them, as the backlog skill already did). Init is
 **not a one-time bootstrap**: its "when it runs again" doctrine names the
-moments, and `/vwf:doctor` has the drift finding that prints the one remedy,
-`/vwf:setup reshape`. `setup` is the Phase-0 bootstrapper — it onboards a repo
-(a Step-0 shape check, run over **every repo in the product** — the base and
-every locally-present member — that offers `/vwf:init` once when any of the
-three slugs is missing **or** any of doctor's seven baseline predicates fails in
-any of them, the `reshape` argument forcing that offer and stopping once init
-returns, detect-or-ask topology via MCQ, consent-gated reconciliation into the
+moments **and the four commands that bring the user to the door** — `/vwf:setup`
+after its materialize pass, `/vwf:architecture` through setup,
+`/stackgen:stackgen-sync` invoking `/vwf:setup reshape` in-session, and
+`/vwf:recall` printing one drift line from `/vwf:doctor baseline` — each an
+offer the Step 0 way, silent when clean; and `/vwf:doctor` has the drift finding
+that prints the one remedy, `/vwf:setup reshape`. `setup` is the Phase-0
+bootstrapper — it onboards a repo (a Step-0 shape check, run over **every repo
+in the product** — the base and every locally-present member — that offers
+`/vwf:init` once when any of the three slugs is missing **or** any of doctor's
+seven baseline predicates fails in any of them, **repeated once after the
+materialize pass** against the lockfile that pass just wrote so a pack version
+moved in the run is offered in the run — never on `reshape`, which runs no pass
+— the `reshape` argument forcing that offer and stopping once init returns,
+detect-or-ask topology via MCQ, consent-gated reconciliation into the
 `docs/blueprint/` format, the CLAUDE.md vwf section, the memory tree and
 `mempalace.yaml`, the `environment.md` bootstrap) and is **re-runnable**:
 re-running *is* the resume mechanism, since Step 0 re-resolves the mode from

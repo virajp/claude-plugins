@@ -120,7 +120,10 @@ library — run `/vwf:setup`: its Step 0 offers `init`, which lays down the conf
 layout, the gates and the hygiene files the rest of the workflow assumes, in the
 base repo **and every member repo it has**, on one consent. `/vwf:setup reshape`
 runs that pass alone — across every member — and is what `/vwf:doctor` prints
-when a shaped repo has fallen behind.
+when a shaped repo has fallen behind. You rarely have to remember it: `setup`
+re-checks the shape after its materialize pass, `/stackgen:stackgen-sync` after
+a re-sync, and `/vwf:recall` prints one drift line at session start — each
+offers the reshape, none runs it unasked.
 
 Once a repo **is** shaped, its own task library takes the plugin side over:
 `mise run setup:ai` registers or refreshes the marketplace and installs or
