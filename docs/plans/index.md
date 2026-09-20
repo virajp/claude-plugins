@@ -6,5 +6,6 @@ to pick the next runnable plan.
 
 ## Plans
 
-| Folder | Kind | Plan | Target repo | Priority | Status | Requires | Backlog |
-| ------ | ---- | ---- | ----------- | -------- | ------ | -------- | ------- |
+| Folder                                        | Kind   | Plan                                                                                      | Target repo | Priority | Status   | Requires | Backlog |
+| --------------------------------------------- | ------ | ----------------------------------------------------------------------------------------- | ----------- | -------- | -------- | -------- | ------- |
+| `docs/plans/2026-09-20-pack-first-run-safety` | change | pack first-run safety — no task clobbers host state; git-config requires a forge identity | —           | 10       | APPROVED | —        | B28     |
