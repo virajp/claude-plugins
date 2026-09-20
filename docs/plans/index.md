@@ -6,6 +6,7 @@ to pick the next runnable plan.
 
 ## Plans
 
-| Folder                                        | Kind   | Plan                                                                                      | Target repo | Priority | Status   | Requires | Backlog |
-| --------------------------------------------- | ------ | ----------------------------------------------------------------------------------------- | ----------- | -------- | -------- | -------- | ------- |
-| `docs/plans/2026-09-20-pack-first-run-safety` | change | pack first-run safety — no task clobbers host state; git-config requires a forge identity | —           | 10       | APPROVED | —        | B28     |
+| Folder                                        | Kind   | Plan                                                                                        | Target repo | Priority | Status   | Requires                         | Backlog |
+| --------------------------------------------- | ------ | ------------------------------------------------------------------------------------------- | ----------- | -------- | -------- | -------------------------------- | ------- |
+| `docs/plans/2026-09-20-pack-first-run-safety` | change | pack first-run safety — no task clobbers host state; git-config requires a forge identity   | —           | 10       | APPROVED | —                                | B28     |
+| `docs/plans/2026-09-20-init-mode-seam`        | change | init mode seam — three modes from evidence, the stack read, conflicts offered in every mode | —           | 20       | APPROVED | 2026-09-20-pack-first-run-safety | B28     |
