@@ -98,12 +98,13 @@ and a hand-fix that differs from what `fmt` would produce fails again on the
 next run.
 
 `dprint config update --config .config/dprint.json` is how plugin versions move,
-and it is a deliberate act run from `setup:mise`, not something that happens on
-its own. It runs only when `setup:mise` has a terminal to answer the exec-plugin
-checksum prompt in. CI and any non-TTY run skip it by design and print
-`Skipping formatter plugin updates`, so a pin moves when a person runs
-`setup:mise` and at no other time. Pinned plugins are the whole reason two
-machines format identically.
+and it is a deliberate act run from `setup:mise --upgrade` only — never from a
+plain `setup:mise`, and never from `setup:all`, which passes no flag. Even under
+`--upgrade` it runs only when `setup:mise` has a terminal to answer the
+exec-plugin checksum prompt in. CI and any non-TTY run skip it by design and
+print `Skipping formatter plugin updates`, so a pin moves when a person runs
+`setup:mise --upgrade` and at no other time. Pinned plugins are the whole reason
+two machines format identically.
 
 ## The editor does not follow `--config`, so a root shim answers it
 
