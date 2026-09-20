@@ -79,9 +79,9 @@ user's clock.
    than reconciled here. So compare the file **around** those regions and
    report drift there; never rewrite inside them, and never treat a
    fragment that has moved as a reason to edit the merged file — say the
-   fragment moved and that a re-run of init is what folds it in. Two
-   things writing between the same markers is the one way this file could
-   lose an edit.
+   fragment moved and leave the fold to the shape check that closes the
+   sync (step 7). Two things writing between the same markers is the one
+   way this file could lose an edit.
 
 3. **Offer regeneration per generated component.** A `generated` component
    has no pack to diff against; offer to re-run the generator for that
@@ -149,6 +149,19 @@ user's clock.
    components' lockfile hashes and the `local_plugin` block, and commit as
    one commit via the repo's git workflow. The local plugin's own files
    are on the machine, not in the commit.
+
+7. **Re-check the shape.** Once everything selected is written and
+   committed — or nothing was selected — run the shape check `/vwf:setup`
+   runs in its Step 0, in-session, over the base and every member: is
+   the shape there, and is it current, evaluated against the lockfile
+   this sync just updated. On drift, **offer** `/vwf:setup reshape` the
+   way Step 0 offers it — one line naming the drifted repos and the
+   failing predicate, then the question — and invoke `/vwf:setup reshape`
+   in-session on a yes; a decline ends the sync. A clean check says
+   nothing, and nothing reshapes unprompted. This is where a fragment
+   that moved in step 2 is folded into the merged config: the sync never
+   writes what init composes — the merged file, the regions between its
+   markers — the reshape does.
 
 ## Rules
 
