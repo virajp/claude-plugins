@@ -27,7 +27,9 @@ Four sources define it, and none of them is a history:
    like any other. A config whose `enforcement:` block lacks `kept_files:` is
    one entry as well: it gains `kept_files: {}` and the stamp is rewritten with
    the rest, with no content to migrate, since nothing wrote that key before
-   `config_format` 18.
+   `config_format` 18. A block lacking `editor_keys:` is the same kind of
+   entry: it gains `editor_keys: {}`, with nothing to migrate, since nothing
+   wrote that key before `config_format` 20.
 2. **Resolve every unrecognised spelling through
    [format lineage](format-lineage.md)** before recording it as a gap. A tree
    written against an older format is usually *correct for that format* and

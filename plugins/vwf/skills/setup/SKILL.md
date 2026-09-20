@@ -145,6 +145,11 @@ and a repo can be onboarded into one without the other.
 Read `.config/vwf.yaml`, then compare its `blueprint_format` and `config_format`
 against the shipped integers (`${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`, and the
 current `config_format` named in `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`).
+The latest config step, `19 → 20`, is the smallest kind: add
+`enforcement.editor_keys: {}` when the block lacks it, bump the stamp, and move
+nothing else — no content converts, since nothing wrote that key before 20,
+and a collision already sitting in a repo's `.vscode` files is `init`'s to ask
+on its next composition, never this migration's to answer.
 
 | `.config/vwf.yaml`                                       | Mode      |
 | -------------------------------------------------------- | --------- |

@@ -32,13 +32,16 @@ before a stack is chosen, and the deploy axis is a **list**, because a project
 may ship through more than one delivery mechanism. Since **format 18**
 `enforcement:` also records a **kept file** — a pack-owned file a reshape
 offered to replace and the user kept — so the decision is settled once and
-neither `/vwf:init` nor `/vwf:doctor` raises it again. Since **blueprint-format
-6** this file replaces the old stamp at `docs/blueprint/.vwf.yml`.
+neither `/vwf:init` nor `/vwf:doctor` raises it again. Since **format 20** it
+also records an **editor key** answer — what `/vwf:init` does with a key both
+a hand-written `.vscode` section and the composed block carry — so a collision
+is asked once and never again. Since **blueprint-format 6** this file replaces
+the old stamp at `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 19)
+## Schema (config_format 20)
 
 ```yaml
-config_format: 19 # this file's own schema version — setup migrates it
+config_format: 20 # this file's own schema version — setup migrates it
 blueprint_format: 25 # the docs/blueprint format stamp
 
 product:
@@ -109,6 +112,7 @@ enforcement: # vwf's enforcement opt-outs
   # `structure:` was retired in format 19 and `stacks:` in format 10, for the same reason: both became MENUS (assets/topologies/ for structure; the stack menu is stackgen's, offered through the stack adapter), so no choice deviates from anything and none needs a waiver. A legacy `structure:` or `stacks:` block reads as drift — structure migrates into `topology` + `topology_reason`, stacks into projects.<name>.stack (its reason into `note`).
   rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (assets/standard-flows.md); standard-entities/<project>/<slug> waives a mandatory standard entity (assets/standard-entities.md); baseline/<rule>[/<unit>] waives an engineering-baseline rule product-wide or scoped (assets/engineering-baseline.md; boundary-validation never product-wide); pipeline/<rule>[/<unit>] waives a delivery-pipeline rule (assets/delivery-pipeline.md)
   kept_files: {} # FORMAT 18. <path>: { reason: <one line> } — a file the landed packs OWN that this repo kept over the pack's, written by `/vwf:init` (consented, in its single plan) when a reshape offered that file as replace-or-keep and the answer was keep. The path is BASE-RELATIVE: a file the base owns is spelled exactly as its lockfile names it, and a file inside a member repo takes that member's path as prefix followed by the path the member's own lockfile names — this one block on the base records every repo's keeps, since a member carries only its back-link and no `.config/vwf.yaml` of its own. NOT a rule id and never under `rules:` — a path names no catalogued rule. Read by `init`, which never re-offers a recorded path, and by `/vwf:doctor`, whose content-drift check skips it; an absent block reads as empty, so a repo that has kept nothing records nothing
+  editor_keys: {} # FORMAT 20. <file>: { <key>: keep | take | union } — what `/vwf:init`'s editor-block composition does with a COLLISION: a top-level settings key or a nesting parent present both in the hand-written section of a `.vscode/settings.json` and in the composed set. `<file>` is BASE-RELATIVE with the member prefix exactly as `kept_files` spells it — `.vscode/settings.json` for the base, `<member-path>/.vscode/settings.json` for a member — and `<key>` is the settings key or the nesting parent. NOT an extension id: a colliding id is the same id twice, so every choice yields the same file — init keeps it without asking and records nothing. `keep`: the block OMITS the key and the hand copy is untouched. `take`: the block carries the pack's value and init removes the hand copy. `union`: pack and hand entries composed into the block and the hand copy removed — offered only for an object-valued key or a nesting parent. Written by `/vwf:init` (consented, in its single plan) when a collision is answered; read by `init` alone, which applies a recorded answer on every later run without asking — editing the block is how a user is re-asked — and never by `/vwf:doctor`, which does not read `.vscode`. An absent block reads as empty, so a repo with no collision records nothing
 
 pipeline: # bounded knobs — see the hard floor below
   coverage_target: 100 # default coverage gate (per-project override above)
@@ -211,7 +215,7 @@ at answering the question, never at installing something.
 | `projects.*`         | `setup` / `architecture` (`stack`, `design`, `cicd` — all elicited); `execute` reconcile                                                  | `plan`, `execute`, `doctor`, the verifiers, the design adapter (`design`) and the pinned CI system (`cicd`) — **never** `blueprint` or the reviewers, which must not see a stack |
 | `repo`               | `setup` / `architecture` (elicited)                                                                                                       | `doctor`, `plan`, `execute`                                                                                     |
 | `harness`            | `setup`; `execute` reconcile                                                                                                              | `plan` preflight, acceptance/ux verifiers, `verify`, `doctor`                                                   |
-| `enforcement`        | `setup` / `architecture` (consented); `init` (`kept_files` only, consented in its single plan)                                            | `setup`, `architecture`, `blueprint`, the reviewers; `init` and `doctor` (`kept_files`)                         |
+| `enforcement`        | `setup` / `architecture` (consented); `init` (`kept_files` and `editor_keys` only, consented in its single plan)                          | `setup`, `architecture`, `blueprint`, the reviewers; `init` and `doctor` (`kept_files`); `init` alone (`editor_keys`) |
 | `pipeline`           | the user (hand-edited)                                                                                                                    | `execute`, and the external caps hook that delivers its resource-cap pause                                       |
 | `environments`       | `setup` / `verify` (confirmed)                                                                                                            | `verify`                                                                                                        |
 | `production_env`     | `setup` / `verify` (confirmed)                                                                                                            | `verify` (the release environment)                                                                              |
@@ -594,6 +598,21 @@ earlier than 65/90/80), never loosen.
   on one of those platform files with **no `Metadata` block** as `24` drift; the
   block is **proposed per row** and **never auto-filled** — the setup skill's
   `format-lineage` reference carries what each field is proposed as.
+
+- **`19 → 20` migration** (performed by `/vwf:setup`): **`enforcement:` gains
+  `editor_keys:`, and nothing else moves.** Add `editor_keys: {}` where the
+  block lacks it and rewrite the stamp — the same shape `16 → 18` took for
+  `kept_files`. There is nothing to convert: no surface wrote this key before
+  20, so every existing repo converges on an empty map, and a reader of 19
+  tolerates the absent key as empty — the edit exists so the key is visible in
+  the file a user hand-reads. A collision that already exists in a repo's
+  `.vscode` files is not migrated here: `/vwf:init` asks it on its next
+  composition and writes the answer then.
+
+  **Neither 13 nor 17 is in play on this bump.** `blueprint_format` is
+  **untouched** and stays **25**: nothing under `docs/blueprint/` changes, the
+  fourth config bump to ship without a paired blueprint bump, after `14`, `16`
+  and `18`.
 
 - **`10 → 11` migration** (performed by `/vwf:setup`): stacks stop being
   *enforced with an escape hatch* and become a **menu**, and the flat
