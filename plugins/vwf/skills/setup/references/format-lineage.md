@@ -15,7 +15,7 @@ registering as something unknown.
 
 ## What the stamps mean now
 
-`blueprint_format` (**25**) and `config_format` (**19**) are **drift
+`blueprint_format` (**25**) and `config_format` (**20**) are **drift
 detectors** and nothing else. `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md` compares
 a repo's stamps against the shipped integers and nudges
 `/vwf:setup`. Nothing selects a migration path by them any more,
@@ -123,6 +123,7 @@ must go through the rule below. Every other row is mechanical.
 | a flat **list** at `projects.<name>.stack` | the structured block — `template`, `languages`, `frameworks`, `dependencies`, split per `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md` | config-key | |
 | `enforcement.structure` | retired — `topology` plus `topology_reason` | config-key | |
 | no `enforcement.kept_files` block | `kept_files: {}` — the block format 18 introduced; nothing is retired and nothing converts, an absent block reading as empty | config-key | |
+| no `enforcement.editor_keys` block | `editor_keys: {}` — the block format 20 introduced; nothing is retired and nothing converts, an absent block reading as empty. A collision already in a repo's `.vscode` files is `init`'s to ask on its next composition, not this pass's | config-key | |
 | a flow id carrying a `<device>` segment, or missing its `<platform>` leaf | `<project>/<NNN>-<flow>/<platform>` | config-key | |
 | `environments` keys `dev`, `test`, `stage`, `prod` | `development`, `staging`, `production` — `test` has no single canonical partner; propose, never auto-fix | config-key | yes |
 | mempalace rooms `plans`, `decision` | `planning`, `decisions` | config-key | |

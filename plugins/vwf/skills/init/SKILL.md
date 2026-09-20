@@ -30,8 +30,10 @@ are a pair and neither does the other's job: everything a repository needs
 before it has a product — the config layout, the task vocabulary, the gates,
 the ignore set, a licence — is this command's, and everything about
 `docs/blueprint/`, `.config/vwf.yaml` and the memory tree stays `/vwf:setup`'s
-— with one key excepted, `enforcement.kept_files`, which records a pack-owned
-file the user chose to keep and which only a reshape can know about.
+— with two keys excepted, `enforcement.kept_files`, which records a pack-owned
+file the user chose to keep, and `enforcement.editor_keys`, which records what
+the user chose for an editor key the hand section already carried; both are
+things only a shaping run can know about.
 Run `init` first on a repo that has neither.
 
 Nothing here knows what the repo is written in, and that is the design. Every
@@ -67,11 +69,13 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
   `_scripts/local` sidecar the existing-repo pipeline writes. No pack declares
   it, no pack ships it and `init` never replaces it — and nothing in it is
   authored, since every function it holds is carried verbatim out of the
-  repo's own helper file. It is a **move**, wearing a create's row. **One key
-  is neither either**: `enforcement.kept_files` in `.config/vwf.yaml`, where a
-  reshape records a pack-owned file the user chose to keep so it is never
-  re-offered. `init` writes that key into a file it never creates, and writes
-  nothing else in it.
+  repo's own helper file. It is a **move**, wearing a create's row. **Two keys
+  are neither either**: `enforcement.kept_files` in `.config/vwf.yaml`, where
+  a reshape records a pack-owned file the user chose to keep so it is never
+  re-offered, and `enforcement.editor_keys` beside it, where any run records
+  the answer for an editor key the hand section already carried so it is
+  never re-asked. `init` writes those two keys into a file it never creates,
+  and writes nothing else in it.
 - **Never application code.** Not a source file, not a test, not a directory
   of either.
 - **Never a language manifest or a lockfile.** Those declare what the project
@@ -490,7 +494,12 @@ surfaces, the repo-name key from question 1's folder name, the commit gate's
 scopes from those same confirmed ids and its forge links where a remote exists
 — then the **three merges** (ignore sections, hook fragments, editor
 fragments), then the **git pass**, whose questions were asked once for the run
-and whose commit is that repo's own. The report comes last, once, when every
+and whose commit is that repo's own. The editor merge reads the existing file
+whole, and a key the hand section already carries that the packs also compose
+is a **collision**: asked in one round inside the plan — keep mine, take the
+pack's, or union where the value is an object — recorded under
+`enforcement.editor_keys` so it is never asked twice, and never resolved by
+the file carrying the key twice. The report comes last, once, when every
 repo is done.
 
 Both pipelines materialize the same three baselines. They are fetched by the

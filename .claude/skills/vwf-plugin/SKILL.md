@@ -104,23 +104,30 @@ main-checkout folder name slugified and never from a project id; `MERGE_MODEL`,
 `MEMBERS` and the forge links, and the plugin task's two agent-plugin lists),
 runs **three** merges — ignore sections, pre-commit fragments, editor fragments
 — and writes a two-line readme stub; it names no tool, and every file it lays
-down is a pack's. Before any of that it asks **seven** questions — one round
-each for the whole product, a per-repo answer showing as a row inside its single
-round — the first naming each new repo's folder, which is the one thing that
-fills `REPO_NAME`, and the second confirming every project id, the slug it
-resolves to and the source the name came from — the registry, a sub-project
-directory, or the project's platform token — grouped by repo: nothing writes a
-`p:<slug>:*` group, its alias or a commit scope until that list is accepted, and
-the scopes are filled on **every** run, the first included, one per confirmed
-id. The fifth asks which agent plugins this product requires, seeded by running
-the plugin task's own inventory mode and written into those two lists. The sixth
-asks each repo's **visibility**, `public` or `private`, defaulted from the forge
-where the repo has an origin the forge CLI answers for and `private` otherwise,
-written nowhere in the tree; its two dependent parts are the seventh round — 6a
-the licence, rows for `public` repos only (a private repo gets no `LICENSE`),
-and 6b the security contact, a public repo's row defaulted to its advisories
-page and a private repo's a free email or internal URL with no default. 4 and 5
-are answered once for every repo, 2, 6 and 6b carry a row per repo, 6a a row per
+down is a pack's. The editor merge reads each `.vscode` file whole: a settings
+key or nesting parent the hand section already carries that the packs also
+compose is a **collision**, asked once per run inside the plan (keep mine, take
+the pack's, or union for an object-valued key or a nesting parent) and recorded
+under `enforcement.editor_keys` in the base's `.config/vwf.yaml` — with
+`enforcement.kept_files`, one of the two keys `init` writes there — so a hand
+key wins because the block **omits** it, never because the file carries it
+twice. Before any of that it asks **seven** questions — one round each for the
+whole product, a per-repo answer showing as a row inside its single round — the
+first naming each new repo's folder, which is the one thing that fills
+`REPO_NAME`, and the second confirming every project id, the slug it resolves to
+and the source the name came from — the registry, a sub-project directory, or
+the project's platform token — grouped by repo: nothing writes a `p:<slug>:*`
+group, its alias or a commit scope until that list is accepted, and the scopes
+are filled on **every** run, the first included, one per confirmed id. The fifth
+asks which agent plugins this product requires, seeded by running the plugin
+task's own inventory mode and written into those two lists. The sixth asks each
+repo's **visibility**, `public` or `private`, defaulted from the forge where the
+repo has an origin the forge CLI answers for and `private` otherwise, written
+nowhere in the tree; its two dependent parts are the seventh round — 6a the
+licence, rows for `public` repos only (a private repo gets no `LICENSE`), and 6b
+the security contact, a public repo's row defaulted to its advisories page and a
+private repo's a free email or internal URL with no default. 4 and 5 are
+answered once for every repo, 2, 6 and 6b carry a row per repo, 6a a row per
 public repo, and 1 and 3 a row per repo that resolved **new**. It then closes
 with a **consent-gated git pass**, whose two questions are asked once and
 applied to every repo: it asks the landing model and writes it to `MERGE_MODEL`,

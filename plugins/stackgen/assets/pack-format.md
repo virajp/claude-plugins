@@ -128,10 +128,17 @@ them, into `.vscode/settings.json` and `.vscode/extensions.json`:
   parent, every pack's extension ids, each id once.
 - Everything composed lands inside **one marked block per file**, placed
   **first**, between `// >>> vscode.d` and `// <<< vscode.d` on their own
-  lines. First is deliberate: JSON's own last-wins rule then makes a key a
-  person adds after the block beat the composed one, so a repo can
-  override any of this by typing below it and a re-run rewrites only what
-  is between the markers.
+  lines. A key the file already carries **outside** the block — a
+  `settings` key or a `nesting` parent — is a collision, and the composing
+  skill **omits** it from the block, so a hand key wins without the file
+  ever holding a duplicate. What becomes of such a key is the user's
+  choice at composition time — keep mine, take the pack's, or union —
+  asked once and recorded by the composing skill, so a later run applies
+  the answer without asking. An extension id the file already lists is
+  simply kept, unasked and unrecorded. The block still sits first, and
+  everything outside it still survives byte-for-byte unless the user chose
+  otherwise for that key; a re-run rewrites only what is between the
+  markers.
 
 **Ownership of the base.** The `repo-hygiene` pack's fragment carries the
 editor **baseline** — the nesting map, the exclude lists, the editor-wide

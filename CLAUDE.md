@@ -297,28 +297,34 @@ splice of every marked position's current value into the pack's payload, so a
 file diverging only inside those positions is never offered and the owning pass
 shows the change instead. A keep covers that content and never a marked
 position's value, and is recorded under `enforcement.kept_files` in the
-**base's** `.config/vwf.yaml`, keyed by the member path as prefix, the one key
-`init` writes into `.config/vwf.yaml`. `setup` then sets up **vwf** in the base,
-and offers `init` once for the whole product when any repo's shape is **missing
-or drifted**, on the seven baseline predicates `/vwf:doctor` owns and now
-evaluates per repo — the seventh, (g), reading the forge state back (default
-branch, both branches protected, the base's backlog project) where the forge CLI
-answers. **Architecture decides the stack and setup pins it**: architecture
-records a slug and materializes nothing, then invokes `/vwf:setup` in-session,
-whose **materialize pass** — every mode, once per `(repo, slug)`, carrying the
-contract's `repo:` line — lands each pinned template in the member repo that
-project belongs to, writes `unresolved` on an axis it finds absent, and never
-rewrites a pin. A pin nobody landed is `/vwf:doctor`'s blocking *pinned, not
-materialized*. **Everything up to `blueprint` is done in full before planning**
-— `plan` hard-halts on a partial coverage stamp. The ad-hoc planner
-`change-plan` sits **beside** that line rather than in it: it plans work with no
-blueprint slice behind it — tooling, CI, docs, a refactor, a tree the blueprint
-does not describe — reads neither the blueprint nor the registry, and names the
-commands its plan folder gates on. The two planners share the folder shape
-(`assets/templates/plan-folder.md`), the interview checklist
-(`assets/plan-interview.md`) and the one plan index, whose contract and every
-write to it — the row, the Status block, the archive move — are the
-skill-invoked `plan-management`'s
+**base's** `.config/vwf.yaml`, keyed by the member path as prefix. The editor
+merge reads each `.vscode` file whole, and a settings key or nesting parent the
+hand section already carries that the packs also compose is a **collision** —
+asked once per run inside the plan (keep mine, take the pack's, or union for an
+object-valued key or a nesting parent), never resolved by the file carrying the
+key twice, and recorded under `enforcement.editor_keys` beside it, spelled as
+`kept_files` spells its paths; those two are the only keys `init` writes into
+`.config/vwf.yaml`, and `config_format` 20 is the bump that added the second.
+`setup` then sets up **vwf** in the base, and offers `init` once for the whole
+product when any repo's shape is **missing or drifted**, on the seven baseline
+predicates `/vwf:doctor` owns and now evaluates per repo — the seventh, (g),
+reading the forge state back (default branch, both branches protected, the
+base's backlog project) where the forge CLI answers. **Architecture decides the
+stack and setup pins it**: architecture records a slug and materializes nothing,
+then invokes `/vwf:setup` in-session, whose **materialize pass** — every mode,
+once per `(repo, slug)`, carrying the contract's `repo:` line — lands each
+pinned template in the member repo that project belongs to, writes `unresolved`
+on an axis it finds absent, and never rewrites a pin. A pin nobody landed is
+`/vwf:doctor`'s blocking *pinned, not materialized*. **Everything up to
+`blueprint` is done in full before planning** — `plan` hard-halts on a partial
+coverage stamp. The ad-hoc planner `change-plan` sits **beside** that line
+rather than in it: it plans work with no blueprint slice behind it — tooling,
+CI, docs, a refactor, a tree the blueprint does not describe — reads neither the
+blueprint nor the registry, and names the commands its plan folder gates on. The
+two planners share the folder shape (`assets/templates/plan-folder.md`), the
+interview checklist (`assets/plan-interview.md`) and the one plan index, whose
+contract and every write to it — the row, the Status block, the archive move —
+are the skill-invoked `plan-management`'s
 (`skills/plan-management/references/plan-index.md`); and one executor,
 `execute`, runs both: each unit's `Kind` cell decides what runs over it — a
 `code` unit TDD and the coverage gate, a `review` row the two engines plus the

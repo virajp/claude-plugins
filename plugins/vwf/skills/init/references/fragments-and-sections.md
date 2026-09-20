@@ -167,13 +167,22 @@ Three keys, and nothing else is merged:
 | `nesting`    | a parent file name → its child file names | union of children, per parent                 |
 | `extensions` | recommended extension ids, a list         | union                                         |
 
+**The existing output file is an input too**, where one exists. Read each of
+the two editor files **whole**, as JSONC — comments and trailing commas
+tolerated — and keep what sits **outside** the marked block apart from what
+sits inside it: the hand section is what the collision step below compares
+against, and nothing else in this step reads it. A file that does not parse
+is a halt for this step on the same terms as a fragment that does not.
+
 ### Outputs
 
 The **two editor files the convention names**. Each gets exactly one marked
 block, and the block goes **first** — at the top of the object for the
-settings file, at the top of the array for the recommendations file — so that
-anything a human wrote afterwards sits after it and, for the settings file,
-wins by ordinary later-key precedence.
+settings file, at the top of the array for the recommendations file — so
+that anything a human wrote afterwards sits after it, apart, and readable as
+theirs. A hand key wins because the block **omits** it — the collision step
+below is what takes it out — never because the file carries the key twice
+and the format happens to tolerate that.
 
 1. **`settings`** merges into the first file, deep, later fragment winning.
 2. **`nesting`** renders into the single nesting setting the convention names.
@@ -184,6 +193,86 @@ wins by ordinary later-key precedence.
 3. **`extensions`** is a sorted union, no duplicates, rendered as the
    recommendations list.
 
+That is the **composed set**. It is not yet the block: the collision step
+runs over it first.
+
+### Collisions with the hand section
+
+A **collision** is a key present both in the composed set and **outside the
+block** in the existing file: a top-level `settings` key, a parent of the
+nesting setting, or an extension id. Two packs shipping one key is not a
+collision — that is the composition order's business and stays silent; a
+collision is always a pack against a person, and it is **never resolved
+silently**. It is asked, once, and the answer is recorded so it is not asked
+again.
+
+**Collect, then decide each.** Intersect the hand section's keys with the
+composed set. For each key in the intersection:
+
+- a recorded answer exists under **`enforcement.editor_keys`** in the base's
+  `.config/vwf.yaml` — `<file>: { <key>: keep | take | union }`, the file
+  spelled base-relative with the member's path as prefix exactly as
+  `kept_files` spells its paths — and that answer applies, without asking;
+- otherwise the key joins the **collision round**.
+
+**The collision round** belongs to the plan step — it is not one of
+SKILL.md's seven questions, and a run with no collision asks nothing. One
+round per run, whatever the repo count, one row per collision, each row
+reading `file · key · hand value · pack value · choice`, and the choice is
+one of three:
+
+| Choice    | The block                  | The hand copy                               |
+| --------- | -------------------------- | ------------------------------------------- |
+| **keep**  | omits the key              | untouched                                   |
+| **take**  | carries the pack's value   | removed — the exact lines shown in the plan |
+| **union** | carries pack + hand merged | removed — the exact lines shown in the plan |
+
+**The shape of the key decides which choices are offered:**
+
+- a **scalar** setting — keep or take. There is nothing to union.
+- an **object-valued** setting, or a **nesting parent** — keep, take or
+  union. Union composes the pack's entries and the hand entries into the
+  block's one value — for a nesting parent, the union of children, sorted
+  and joined as the setting takes them; for an object, the pack's keys and
+  the hand keys, the hand value winning where both name one key.
+- an **extension id** — the id is the value, so a colliding id is the same
+  id twice, and every choice ends the same way: the file recommends it once.
+  **Keep, and do not ask** — the block omits the id, the hand line stays
+  exactly where it is, and nothing is recorded, since there is no answer to
+  record. Say so in the plan as one line per id. An id that differs cannot
+  collide; the sorted union the recommendations list already is covers the
+  rest.
+
+**Keep is the default** on every row, and it is the behaviour a run that was
+never asked would have shown: the block omits the key, and the hand copy is
+exactly as it was.
+
+**Then the block is composed** — the composed set **minus** every `keep` key,
+**plus** the union value in place of the pack's for every `union` key — and
+the hand copy of every `take` and `union` key is **removed** from outside the
+block. That removal is the **one** edit this step makes outside the markers,
+and it is made only on a recorded or just-given answer. The plan shows the
+exact lines it will remove, before the one consent. A hand copy that was the
+last member of its object leaves a valid file behind — the trailing comma on
+the member before it goes with it.
+
+**Recording the answers.** Every answer the round takes — keep, take or
+union — is written under `enforcement.editor_keys` in the **base's**
+`.config/vwf.yaml`, merged into whatever the block already holds, on the same
+single consent as everything else and at the same point in the apply as the
+`kept_files` record. It is the second of the two keys `init` writes into that
+file, and `init` still never creates the file: on a repo `/vwf:setup` has not
+reached, the answer still applies to this run's block and the record becomes
+a **Deferred** line, unlock *run `/vwf:setup`, then `/vwf:setup reshape`* —
+the next run asks again.
+
+**Editing the block is how a user is re-asked.** A recorded answer applies
+for as long as the key collides; a key that stops colliding — the hand copy
+gone, or the pack no longer shipping it — makes the record inert, and a user
+who wants a different answer edits the block or the hand section and runs
+`/vwf:setup reshape`, which sees the collision afresh only where the record
+no longer describes it.
+
 ### The marked block
 
 Markers are the convention's — one pair, spelled there, using that file's own
@@ -193,9 +282,13 @@ comment syntax. Then:
 - **Markers absent** → insert the pair, with the merged content, at the top.
 - **Everything outside the pair survives byte-for-byte.** No reordering, no
   reformatting, no comment stripping. A key somebody added by hand after the
-  block is theirs, it wins over the block's value, and a second merge must
-  leave it exactly as it was.
-- **A file that does not exist yet** is created holding the block alone.
+  block is theirs: the block **omits** it, so the file carries it once and the
+  hand value is the one the editor reads, and a second merge must leave it
+  exactly as it was. The **one** carve-out is the collision step's: the hand
+  copy of a `take` or `union` key is removed, on the user's word and never
+  otherwise.
+- **A file that does not exist yet** is created holding the block alone —
+  there is no hand section, so no collision.
 
 ### Validate
 
@@ -207,6 +300,8 @@ fails as behaviour nobody can explain rather than as an error anybody sees.
 
 ### Idempotency
 
-Same fragments, same composition order, same sorts — same block between the
-same markers, and nothing outside it touched. That is what makes a second run
-an empty plan.
+Same fragments, same composition order, same sorts, same recorded answers —
+same block between the same markers, and nothing outside it touched. A `keep`
+still collides on the next run and is still omitted, without a question; a
+`take` or `union` removed its hand copy, so it no longer collides at all. That
+is what makes a second run an empty plan.
