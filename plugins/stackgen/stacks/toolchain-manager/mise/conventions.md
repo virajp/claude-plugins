@@ -111,7 +111,9 @@ the identity and ssh-signing keys equal to `<FORGE>_USER_NAME`, `<FORGE>_EMAIL`
 and `<FORGE>_SIGNING_KEY` — `GITHUB_`, `GITLAB_` or `GIT_` by the origin host —
 and its `--fix` sets them from those variables rather than deleting anything: a
 machine states who it commits as once, in its environment, and every repo it
-touches is corrected to match on the first commit.
+touches is corrected to match. The correction refuses the commit that triggered
+it — git had already loaded its identity when the hook ran — and the re-run
+carries the new one.
 
 **The repo's agent plugins are the repo's, and a user's are theirs.**
 `setup:ai` installs and updates only what this repo requires, at **project**

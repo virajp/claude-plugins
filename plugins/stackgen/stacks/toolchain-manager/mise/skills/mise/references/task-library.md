@@ -188,9 +188,12 @@ unsets are the rule itself. `<FORGE>_SIGNING_KEY` holds what git accepts as
 `user.signingkey` under `gpg.format` `ssh`: the path to the key file
 (`~/.ssh/id_ed25519.pub`, say) or the literal public key prefixed `key::` — a
 bare `ssh-ed25519 AAAA…` line is written verbatim and the first signed commit
-fails inside git. The pre-commit hook runs `--fix`, so a clone whose
-variables are set is corrected on its first commit, and one whose variables are
-not is told which to export.
+fails inside git. The pre-commit hook runs `--fix`, but git has already loaded
+its identity by the time a hook runs, so a fix cannot rescue the commit that
+triggered it: whenever `--fix` changed a key it exits 1 — *identity corrected —
+re-run the commit* — and the first commit on a fresh clone is refused while the
+identity is written; the re-run carries it. A clone whose variables are not set
+is told which to export instead.
 
 **What a task never does to the host.** A pack task never unsets, overwrites or
 upgrades state it did not create; where it would have to, it stops, names what
@@ -201,10 +204,10 @@ system git-config is named by scope and refused even under `--force`; without
 the flag a hand-written hook script is kept as `.legacy` and chained, and a repo
 pre-commit already owns installs again without complaint), `--update`
 (`setup:precommit` runs `pre-commit autoupdate`, which moves the `rev:` lines),
-`--upgrade` (`setup:mise` runs `mise upgrade --local` and `dprint config update`,
-which move the lockfile and the plugin pins) — and `setup:all` passes none of
-them, so a bootstrap on any clone rewrites nothing outside the files the packs
-own.
+`--upgrade` (`setup:mise` runs `mise upgrade --local` and
+`dprint config update`, which move the lockfile and the plugin pins) — and
+`setup:all` passes none of them, so a bootstrap on any clone rewrites nothing
+outside the files the packs own.
 
 **Nothing in this set edits a remote's settings.** Setting the forge's default
 branch is a one-time act by whoever shapes the repo, not a task a machine
@@ -314,12 +317,14 @@ lockfile and the formatter's plugin pins is `setup:mise --upgrade`, run by hand;
 moving the hook `rev:` lines is `setup:precommit --update`; taking over a
 `core.hooksPath` or a husky / lefthook install another tool left is
 `setup:precommit --force`. Without them `setup:precommit` stops on an effective
-`core.hooksPath`, a `.husky/` directory or a lefthook config, prints what it
-found and the by-hand cleanup — the unset, the `--overwrite` install, then
-delete `.husky/` or the lefthook file and drop a `prepare` script that runs
-husky; the task deletes nothing — and exits 1. A `core.hooksPath` from a global
-or system git-config is named by scope and refused even under `--force`, which
-unsets the local value only. A repo whose hooks pre-commit already owns — no
+`core.hooksPath`, a `.husky/` directory or a lefthook config in any of its forms
+(`lefthook` or `.lefthook`, with `.yml`, `.yaml`, `.toml` or `.json`), prints
+what it found and the by-hand cleanup — the unset, the `--overwrite` install,
+then delete `.husky/` or the lefthook file and drop a `prepare` script that runs
+husky; the task deletes nothing — and exits 1. A `core.hooksPath` set in a
+global or system git-config — alone, or beside a local one — is treated as
+global: named by scope and refused even under `--force`, which unsets the local
+value only. A repo whose hooks pre-commit already owns — no
 `core.hooksPath`, pre-commit's own hook installed — is not refused again, even
 with the husky or lefthook file still tracked.
 
