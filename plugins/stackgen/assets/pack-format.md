@@ -198,10 +198,10 @@ the materializer writes elsewhere.
 A pack may declare that some of its `config/` files make sense only under
 an answer the caller already holds — the forge the repo pushes to, the
 editor in use, the secrets provider picked, the update bot the repo runs.
-`conditional:` is an optional list; each entry names a **landed path or
-glob** (repo-root relative, spelled as the file lands — so `renovate.json`,
-not `config/renovate.json`) and a `when:` map of **exactly one axis to one
-value**, drawn from a fixed vocabulary:
+`conditional:` is an optional list; each entry names a **path or glob**
+(spelled as the pack's `config/` tree spells it, relative to `config/` —
+so `renovate.json`, not `config/renovate.json`) and a `when:` map of
+**exactly one axis to one value**, drawn from a fixed vocabulary:
 
 | Axis         | Values                             | Answered by                                |
 | ------------ | ---------------------------------- | ------------------------------------------ |
