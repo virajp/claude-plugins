@@ -201,10 +201,11 @@ evaluation step lands it only where question 7's answer passed that axis
 the editor's value — on a **no**, `none` is passed, no fragment lands, this
 step has no input, and it composes nothing: the two output files are neither
 created nor touched, and a hand-written one is left exactly as it was. A
-fragment already in the tree from an earlier run, under a path the dry-run
-now reports as skipped, is not an input either — the answer decides, never
-the directory listing — and it is reported in the plan's **Skipped** rows
-like any other skipped path.
+fragment already in the tree from an earlier run, whose condition the
+dry-run now finds false, is not an input either — the answer decides, never
+the directory listing — and it is not a **Skipped** row: the materializer
+keeps a path its lockfile records and lists it as *landed earlier, condition
+now false — kept*, which is the row the plan shows for it.
 
 Parse each one as JSONC — comments and trailing commas are part of the format.
 A fragment that does not parse is a **halt for this step**, naming the file:
