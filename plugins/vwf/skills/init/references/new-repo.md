@@ -102,15 +102,32 @@ lockfile of this repo records — a file the repo wrote itself — as a
 rule and its record are [existing repo](existing-repo.md) §6's, run over that
 path exactly as that pass runs it over a diverged file, and a keep is recorded
 under `enforcement.kept_files` as §6 records one — in the base's config, the
-member's path as prefix, or as a Deferred line where no config exists yet. The
-rows are shown **before** the one consent, one per conflict, so a `blank` repo
-that happens to hold one such file — and a `source` repo, which usually does —
-never has it silently skipped and never has it silently overwritten. Three
-root files are not offered at all: a readme, a licence and a security file the
-repo already carries are kept on the already-there rule in
-[readme and licence](readme-and-license.md), and reported as kept.
+member's path as prefix. The rows are shown **before** the one consent, one
+per conflict, so a `blank` repo that happens to hold one such file — and a
+`source` repo, which usually does — never has it silently skipped and never
+has it silently overwritten. Three root files are not offered at all: a
+readme, a licence and a security file the repo already carries are kept on
+the already-there rule in [readme and licence](readme-and-license.md), and
+reported as kept.
+
+**The record has a home in every mode, because `init` makes one.** Where no
+`.config/vwf.yaml` exists in the base — the ordinary case on a first run, since
+`/vwf:setup` is what writes the file in full — `init` writes a **stub** there,
+in the plan as one create row, carrying exactly two blocks and nothing else:
+`config_format`, at the value `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`'s
+schema heading names, and `enforcement`, holding `kept_files` and
+`editor_keys`. No roster, no product name, no project — every other key is
+`/vwf:setup`'s, and its migration and fill passes complete the stub on the run
+that follows, reading the two blocks it finds as their own. So a keep, and an
+editor-key answer under §6's collision rule, is always **recorded**, in a
+member's turn as much as the base's; there is no Deferred line for either
+record, and nothing is re-asked on the next reshape for want of the file.
 
 ## 3 — The secrets provider
+
+Runs in **every mode** — a `shaped` repo reaches it from
+[existing repo](existing-repo.md)'s post-landing paragraph, after that
+pipeline's landing and before the git pass, on exactly the terms below.
 
 Materialize the bundle whose slug the user picked at question 4, by that slug,
 through the same adapter. **Last**, after the three baselines — a provider's
@@ -122,6 +139,11 @@ deferral whose unlock is a later `/vwf:setup reshape` run, and say plainly that
 the slot the packs left for it will announce itself as unconfigured until then.
 
 ## 4 — The placeholders
+
+Runs in **every mode**, after the mode's landing and before the git pass —
+the `shaped` pipeline reaches it from
+[existing repo](existing-repo.md)'s post-landing paragraph — over every file
+this run landed or replaced, in whichever mode it landed.
 
 Three, and no others: `<REPO_URL>`, `<YEAR>` and `<HOLDER>`. The hygiene
 pack's conventions are authoritative for what each means; fill every
@@ -192,6 +214,14 @@ one a re-run uses.
 
 ## 7 — The project ids, the repo name, and the positions they fill
 
+The fills this section enumerates run in **every mode**, but on a `shaped`
+repo [existing repo](existing-repo.md)'s **pass 9** already owns them — it
+surveys each marked position, shows the row, and applies the fill by this
+section's rules — so the existing pipeline does not run this section a second
+time after its landing; it reaches §3, §4, §8, §9 and §10 from its post-landing
+paragraph and takes the fills from its own pass. A `blank` or `source` repo
+runs this section as written.
+
 Resolve the project ids **for the repo this pass is running in**, in this order
 of preference.
 
@@ -251,9 +281,10 @@ The base's project list is never reused for a member: two repos in one product
 share a blueprint, not a task vocabulary.
 
 **Source 1 is live only on a re-run**, on either list — and it is the same file
-both times. `.config/vwf.yaml` is written by `/vwf:setup`, which runs *after*
-`init`, so a first run on a fresh product always falls through to source 2 or 3
-in every repo. That is not a defect to route around — it is why SKILL.md's
+both times. `.config/vwf.yaml`'s projects are written by `/vwf:setup`, which
+runs *after* `init` — the stub §2 leaves names none — so a first run on a
+fresh product always falls through to source 2 or 3 in every repo. That is not
+a defect to route around — it is why SKILL.md's
 re-run doctrine names the moment after the registry exists as one of the times
 to run `init` again, and why a later run may resolve a *different* id for the
 same project. The existing-repo pipeline reports that as an **id source
@@ -475,13 +506,29 @@ them to fix something that is not broken. So the slot keeps the marker — that
 is what lists it among the repo's unfilled slots — prints **"no project tasks
 yet"** through the pack's own print vocabulary, and exits 0.
 
-## 8 — The readme stub and the licence
+## 8 — The readme stub, the licence and the security file
 
-Per [readme and licence](readme-and-license.md). Both are placed here, after
-the packs have landed, so a pack shipping either would have been caught by the
+Runs in **every mode**, after the mode's landing and before the git pass —
+the `shaped` pipeline reaches it from
+[existing repo](existing-repo.md)'s post-landing paragraph — since questions
+3, 6a and 6b are asked whatever the mode, and a repo shaped years ago is as
+entitled to its answers as a blank one.
+
+Per [readme and licence](readme-and-license.md) — the stub, the licence
+question 6a answered, and the security contact 6b answered, each on that
+reference's already-there rule, so a file the repo carries is kept and
+reported rather than written over. All three are placed here, after the packs
+have landed, so a pack shipping any of them would have been caught by the
 materializer's own root allowlist rather than silently overwritten.
 
 ## 9 — Bootstrap
+
+Runs in **every mode**, after the mode's landing and before the git pass —
+the `shaped` pipeline reaches it from
+[existing repo](existing-repo.md)'s post-landing paragraph. On a repo whose
+config was trusted and whose task files carried the bit already, both steps
+change nothing and say so; a task file this run created, replaced or renamed
+is exactly what the second step exists for, in every mode.
 
 Run the two bootstrap steps the toolchain pack documents, **in the pack's own
 order** — the **trust** step first, then the task that makes every file in the
@@ -522,6 +569,12 @@ unlock — install the manager, then run `/vwf:setup reshape` — and the run
 continues to the report. Everything above it has already landed on disk.
 
 ## 10 — Offer the bootstrap aggregator
+
+Runs in **every mode**, after the mode's landing and before the git pass —
+the `shaped` pipeline reaches it from
+[existing repo](existing-repo.md)'s post-landing paragraph — and it is an
+offer there too: a reshape that moved a pin or landed a provider has tools to
+install and hooks to wire exactly as a first run does.
 
 **Only if §9 actually ran.** The aggregator is a task, and a task library that
 was never made discoverable has no task to run — so where §9 deferred, this
@@ -877,8 +930,8 @@ section SKILL.md's report specifies.
 
 ## 12 — The report
 
-The ten-section report and the two next-step lines, exactly as SKILL.md
-specifies — including how the ten sections are grouped when a run shaped more
+The thirteen-section report and the two next-step lines, exactly as SKILL.md
+specifies — including how the sections are grouped when a run shaped more
 than one repo, which is written down there and is not restated here. A
 `blank` repo's report is mostly *files written*; *files replaced*,
 *files kept*, *files moved*, *tasks renamed*, *tasks kept* and *calls

@@ -115,6 +115,12 @@ to a repo, and every write it makes is consent-gated and committed once.
      per-component record is what lets sync act on one component alone,
      and per file it is what makes `config/` precedence auditable: it
      names which component supplied the version that actually landed.
+     The hash written here is the landing hash, not the last word:
+     `/vwf:init` **re-records** the hash of every landed file it changes
+     after landing — its marked-position fills, the `.gitignore` section
+     appends, the hook-fragment merge, the editor block, and either answer
+     of its replace-or-keep offer — so a differing hash is content drift
+     only when no such writer ran.
 
    **Composition order, and why a bug in it is silent.** More than one
    component may write into one `config/` tree — `.config/mise/tasks/` is

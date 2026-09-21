@@ -296,50 +296,61 @@ procedure for the base; those three are the only forge settings it touches,
 existing protection is left alone, and a forge it has no CLI for gets the
 by-hand list the hygiene pack's `CONTRIBUTING.md` keeps). The aggregator's
 member flags and the `setup-<slug>` aliases are named for the **member repos**,
-never for a project id. On a `shaped` repo it **adopts rather than flattens**:
-an unmapped helper function moves to a repo-owned `_scripts/local` sidecar, a
-task no pack ships is kept and listed, and a pack-owned file whose **content**
-diverged is offered as replace-or-keep — content being what survives two tests,
-the hash against the lock and then a splice of every marked position's current
-value into the pack's payload, so a file diverging only inside those positions
-is never offered and the owning pass shows the change instead. The offer is
-**every mode's**: on a `source` or `blank` repo every path the materializer
-reports as a conflict gets the same row (a readme, licence or security file
-already there is kept outright). A keep covers that content and never a marked
-position's value, and is recorded under `enforcement.kept_files` in the
-**base's** `.config/vwf.yaml`, keyed by the member path as prefix. The editor
-merge reads each `.vscode` file whole, and a settings key or nesting parent the
-hand section already carries that the packs also compose is a **collision** —
-asked once per run inside the plan (keep mine, take the pack's, or union for an
-object-valued key or a nesting parent), never resolved by the file carrying the
-key twice, and recorded under `enforcement.editor_keys` beside it, spelled as
-`kept_files` spells its paths; those two are the only keys `init` writes into
-`.config/vwf.yaml`, and `config_format` 20 is the bump that added the second.
-`setup` then sets up **vwf** in the base, and offers `init` once for the whole
-product when any repo's shape is **missing or drifted** — at Step 0 and again
-after its materialize pass — on the seven baseline predicates `/vwf:doctor` owns
-and now evaluates per repo — the seventh, (g), reading the forge state back
-(default branch, both branches protected, the base's backlog project) where the
-forge CLI answers; `/stackgen:stackgen-sync` ends by bringing the same offer
-in-session, and `/vwf:recall` prints one drift line from `/vwf:doctor baseline`
-— the local predicates (a)–(f) alone, never (g) — pointing at
-`/vwf:setup reshape`, so nobody has to remember to reshape. **Architecture
-decides the stack and setup pins it**: architecture records a slug and
-materializes nothing, then invokes `/vwf:setup` in-session, whose **materialize
-pass** — every mode, once per `(repo, slug)`, carrying the contract's `repo:`
-line — lands each pinned template in the member repo that project belongs to,
-writes `unresolved` on an axis it finds absent, and never rewrites a pin. A pin
-nobody landed is `/vwf:doctor`'s blocking *pinned, not materialized*.
-**Everything up to `blueprint` is done in full before planning** — `plan`
-hard-halts on a partial coverage stamp. The ad-hoc planner `change-plan` sits
-**beside** that line rather than in it: it plans work with no blueprint slice
-behind it — tooling, CI, docs, a refactor, a tree the blueprint does not
-describe — reads neither the blueprint nor the registry, and names the commands
-its plan folder gates on. The two planners share the folder shape
-(`assets/templates/plan-folder.md`), the interview checklist
-(`assets/plan-interview.md`) and the one plan index, whose contract and every
-write to it — the row, the Status block, the archive move — are the
-skill-invoked `plan-management`'s
+never for a project id. On a `shaped` repo it **adopts rather than flattens**: a
+root tool config a pack supersedes (`.pre-commit-config.yaml`, `.mise.toml`,
+`.gitleaks.toml`, … — the seven-row table in
+`plugins/vwf/skills/init/references/tool-configs.md`) is a plan row — move into
+`.config/` and offer, keep both, or delete on an explicit pick — a foreign hook
+manager (`core.hooksPath`, `.husky/`, lefthook) is a row defaulting to keep,
+`.gitignore` is merged section by section rather than offered, an unmapped
+helper function moves to a repo-owned `_scripts/local` sidecar, a task no pack
+ships — a file or an inline `[tasks.*]` table — is kept and listed, and a
+pack-owned file whose **content** diverged is offered as replace-or-keep —
+content being what survives two tests, the hash against the lock and then a
+splice of every marked position's current value into the pack's payload, so a
+file diverging only inside those positions is never offered and the owning pass
+shows the change instead. The offer is **every mode's**: on a `source` or
+`blank` repo every path the materializer reports as a conflict gets the same row
+(a readme, licence or security file already there is kept outright). A keep
+covers that content and never a marked position's value, and is recorded under
+`enforcement.kept_files` in the **base's** `.config/vwf.yaml`, keyed by the
+member path as prefix. The editor merge reads each `.vscode` file whole, and a
+settings key or nesting parent the hand section already carries that the packs
+also compose is a **collision** — asked once per run inside the plan (keep mine,
+take the pack's, or union for an object-valued key or a nesting parent), never
+resolved by the file carrying the key twice, and recorded under
+`enforcement.editor_keys` beside it, spelled as `kept_files` spells its paths;
+those two are the only keys `init` writes into `.config/vwf.yaml` — into a
+**stub** (`config_format` plus the `enforcement` block) where the file does not
+exist yet — and `config_format` 20 is the bump that added the second. The five
+post-landing steps (the secrets provider; the placeholders; the readme, licence
+and security files as one; the bootstrap; the aggregator offer) run in **every**
+mode, and `init` re-records the lockfile hash of every file it filled, appended
+to or merged as its last step before the git pass. `setup` then sets up **vwf**
+in the base, and offers `init` once for the whole product when any repo's shape
+is **missing or drifted** — at Step 0 and again after its materialize pass — on
+the seven baseline predicates `/vwf:doctor` owns and now evaluates per repo —
+the seventh, (g), reading the forge state back (default branch, both branches
+protected, the base's backlog project) where the forge CLI answers;
+`/stackgen:stackgen-sync` ends by bringing the same offer in-session, and
+`/vwf:recall` prints one drift line from `/vwf:doctor baseline` — the local
+predicates (a)–(f) alone, never (g) — pointing at `/vwf:setup reshape`, so
+nobody has to remember to reshape. **Architecture decides the stack and setup
+pins it**: architecture records a slug and materializes nothing, then invokes
+`/vwf:setup` in-session, whose **materialize pass** — every mode, once per
+`(repo, slug)`, carrying the contract's `repo:` line — lands each pinned
+template in the member repo that project belongs to, writes `unresolved` on an
+axis it finds absent, and never rewrites a pin. A pin nobody landed is
+`/vwf:doctor`'s blocking *pinned, not materialized*. **Everything up to
+`blueprint` is done in full before planning** — `plan` hard-halts on a partial
+coverage stamp. The ad-hoc planner `change-plan` sits **beside** that line
+rather than in it: it plans work with no blueprint slice behind it — tooling,
+CI, docs, a refactor, a tree the blueprint does not describe — reads neither the
+blueprint nor the registry, and names the commands its plan folder gates on. The
+two planners share the folder shape (`assets/templates/plan-folder.md`), the
+interview checklist (`assets/plan-interview.md`) and the one plan index, whose
+contract and every write to it — the row, the Status block, the archive move —
+are the skill-invoked `plan-management`'s
 (`skills/plan-management/references/plan-index.md`); and one executor,
 `execute`, runs both: each unit's `Kind` cell decides what runs over it — a
 `code` unit TDD and the coverage gate, a `review` row the two engines plus the

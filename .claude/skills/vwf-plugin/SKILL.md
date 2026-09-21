@@ -96,27 +96,42 @@ its tree contains, never a flag or setup's fork — `shaped` (the adapter lockfi
 exists), `source` (no lockfile, but a language manifest, a source directory, a
 root tool config or a `.config/`), `blank` (none of those); `source` runs the
 new-repo landing plus the survey passes with something to read, and the
-replace-or-keep offer over materializer conflicts runs in every mode. A **stack
-read** — pins, else lockfile components, else a fixed manifest table, first hit
-per language, six keys — drives the ignore sections and the toolchain config's
-`RUNTIME_BLOCK` / `PATH_ENTRIES`. There is **one plan with a section per repo
-and one consent**, and the apply order is members first so the base commits its
-gitlinks current. `init` materializes the three unconditional bundles through
-the stack adapter by the fixed slugs `mise`, `repo-gates` and `repo-hygiene` —
-per repo, each with its own lockfile — fills the marked positions those packs
-leave it (the member flags and their aliases, named for the **member repos** and
-never from a project id; the per-project groups, their aliases and the commit
-gate's scopes, all three from the project ids; the repo-name key, from that
-repo's own main-checkout folder name slugified and never from a project id;
-`MERGE_MODEL`, `MEMBERS`, the two runtime positions from the stack read and the
-forge links, and the plugin task's two agent-plugin lists), runs **three**
-merges — ignore sections, pre-commit fragments, editor fragments — and writes a
-two-line readme stub; it names no tool, and every file it lays down is a pack's.
-The editor merge reads each `.vscode` file whole: a settings key or nesting
-parent the hand section already carries that the packs also compose is a
-**collision**, asked once per run inside the plan (keep mine, take the pack's,
-or union for an object-valued key or a nesting parent) and recorded under
-`enforcement.editor_keys` in the base's `.config/vwf.yaml` — with
+replace-or-keep offer over materializer conflicts runs in every mode. The root
+survey reads a repo's own tooling before a pack lands over it: every root
+spelling in the seven-row tool-config table
+(`skills/init/references/tool-configs.md`) is a plan row — move into `.config/`
+and offer through pass 6 (default), keep both, delete on an explicit pick; the
+toolchain manager's root file is split into the pack's files, the
+dependency-update policy yields to one the repo has — a foreign hook manager is
+a row defaulting to keep (switch runs `setup:precommit --force` last),
+`.gitignore` is merged section by section with normalised patterns, inline
+`[tasks.*]` tables count as tasks, an unmapped commit type is asked, and every
+licence spelling counts. After any mode's landing the five new-repo steps (§3
+secrets, §4 placeholders, §8 readme/licence/security, §9 bootstrap, §10
+aggregator) run, and `init` re-records the lockfile hash of every file it
+filled, appended to or merged — pass 6's replace and keep re-record too — as the
+last step before the git pass; a missing `.config/vwf.yaml` gets a stub
+(`config_format` + `enforcement`) so `kept_files` and `editor_keys` are never
+deferred. A **stack read** — pins, else lockfile components, else a fixed
+manifest table, first hit per language, six keys — drives the ignore sections
+and the toolchain config's `RUNTIME_BLOCK` / `PATH_ENTRIES`. There is **one plan
+with a section per repo and one consent**, and the apply order is members first
+so the base commits its gitlinks current. `init` materializes the three
+unconditional bundles through the stack adapter by the fixed slugs `mise`,
+`repo-gates` and `repo-hygiene` — per repo, each with its own lockfile — fills
+the marked positions those packs leave it (the member flags and their aliases,
+named for the **member repos** and never from a project id; the per-project
+groups, their aliases and the commit gate's scopes, all three from the project
+ids; the repo-name key, from that repo's own main-checkout folder name slugified
+and never from a project id; `MERGE_MODEL`, `MEMBERS`, the two runtime positions
+from the stack read and the forge links, and the plugin task's two agent-plugin
+lists), runs **three** merges — ignore sections, pre-commit fragments, editor
+fragments — and writes a two-line readme stub; it names no tool, and every file
+it lays down is a pack's. The editor merge reads each `.vscode` file whole: a
+settings key or nesting parent the hand section already carries that the packs
+also compose is a **collision**, asked once per run inside the plan (keep mine,
+take the pack's, or union for an object-valued key or a nesting parent) and
+recorded under `enforcement.editor_keys` in the base's `.config/vwf.yaml` — with
 `enforcement.kept_files`, one of the two keys `init` writes there — so a hand
 key wins because the block **omits** it, never because the file carries it
 twice. Before any of that it asks **seven** questions — one round each for the

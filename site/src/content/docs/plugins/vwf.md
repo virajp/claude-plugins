@@ -945,13 +945,14 @@ three answers: **keep mine** (the block omits the key and your copy is untouched
 `init` removes your copy, the exact lines shown before you consent), or
 **union**, offered only for an object-valued setting or a nesting parent (pack
 and hand entries merged into the block, your copy removed). The answer is
-recorded under `enforcement.editor_keys` in the base's `.config/vwf.yaml` — a
-file `init` writes into and never creates — and applies on every later run
-without asking; editing the block or your section is how you are asked again. A
-run with no collision asks nothing, and an extension id you already recommend is
-simply kept, unasked and unrecorded. `init` never names the editor; the fragment
-convention names the target, and a pack task is what installs the recommended
-extensions into a per-repo profile.
+recorded under `enforcement.editor_keys` in the base's `.config/vwf.yaml` — or
+in the stub `init` writes there when the file does not exist yet, so the answer
+is always recorded — and applies on every later run without asking; editing the
+block or your section is how you are asked again. A run with no collision asks
+nothing, and an extension id you already recommend is simply kept, unasked and
+unrecorded. `init` never names the editor; the fragment convention names the
+target, and a pack task is what installs the recommended extensions into a
+per-repo profile.
 
 **One slug rule, two independent tokens.** The rule is the same for both — the
 name is lowercased, runs outside the slug alphabet collapse to a single `-`, and
@@ -1128,7 +1129,8 @@ and cannot share its round:
     licensed separately often enough that assuming otherwise writes the wrong
     text into somebody's repo. A `private` repo gets no row and no `LICENSE` — a
     licence grants the public rights a private repo is not offering. A repo that
-    already carries a licence file keeps it whatever it answered.
+    already carries a licence file — `LICENSE`, `LICENSE.md`, `LICENCE` or
+    `COPYING`, every spelling counts — keeps it whatever it answered.
   - **6b — the security contact** — **one row per repo**, its shape following
     the visibility: a `public` repo's row is defaulted to *that* repo's own
     origin's advisories page where it has an origin and to nothing where it does
@@ -1170,21 +1172,54 @@ the move, so you read them before the one consent. The two are told apart by
 content, never by name. What comes back is **one plan for the run**, carrying a
 **section per repo** — the base's first, then each member's in the resolved
 order, each headed with the repo and the mode it resolved to — and inside every
-section the same ten counted sections: moves, creates, replaces, offered
-(replace / keep), renames, rewrites applied, appends and merges — all applied on
-a single yes — and two applied by nothing, `Rewrites (flagged, not applied)` and
-`Repo-owned, kept`. Each repo's section closes with its own total and the
-document with a product total; a total counts only what would be applied, so a
-repo whose only rows are files it owns and files it chose to keep still reads as
-shaped. Two plans would be two chances to stop halfway — one repo renamed into
-the contract while its neighbours still call the old names — which is exactly
-what the one-consent rule exists to prevent. The apply order is **members first,
-the base last**, so the base commits with its record of the members already
-current. A task file whose shebang names a shell other than bash goes there,
-listed with the shell-specific syntax it uses, and is **never** rewritten:
-auto-translating a shell script is how a working task becomes a subtly broken
-one, so it lands in the report's `Deferred` section for you to rewrite
-deliberately.
+section the same thirteen counted sections: moves, root tool configs (move /
+keep both / delete), the hook manager (keep / switch), creates, replaces,
+offered (replace / keep), renames, rewrites applied, appends and merges — all
+applied on a single yes — and three applied by nothing,
+`Rewrites (flagged, not applied)`, `Repo-owned, kept` and `Projects`. Each
+repo's section closes with its own total and the document with a product total;
+a total counts only what would be applied — an offered row kept, a root tool
+config kept both ways and a hook manager kept are outside it — so a repo whose
+only rows are files it owns and files it chose to keep still reads as shaped.
+Two plans would be two chances to stop halfway — one repo renamed into the
+contract while its neighbours still call the old names — which is exactly what
+the one-consent rule exists to prevent. The apply order is **members first, the
+base last**, so the base commits with its record of the members already current.
+A task file whose shebang names a shell other than bash goes there, listed with
+the shell-specific syntax it uses, and is **never** rewritten: auto-translating
+a shell script is how a working task becomes a subtly broken one, so it lands in
+the report's `Deferred` section for you to rewrite deliberately.
+
+**Root tool configs are read before a pack lands over them.** The root survey's
+rename map is the **full path** each pack's `config/` tree declares — never a
+task-file basename, so a root file that happens to share a name with a shipped
+task is not moved into the library — plus every root spelling of a **tool-config
+table** `init` carries, one row per tool a pack ships: the tool, the spellings a
+repo may already have at the root or inside `.github/`
+(`.pre-commit-config.yaml`; `.mise.toml` or a root `mise.toml`;
+`.gitleaks.toml`; `.grype.yaml`; `.dprint.json` or a real root `dprint.json`;
+`.github/renovate.json`, `.renovaterc` or `renovate.json`;
+`.github/dependabot.yml`), the `.config/` path the pack lands, and the merge
+shape. Every hit is one plan row, `root tool config`, with three outcomes:
+**move** — the default — moves your file to the pack's `.config/` path with
+`git mv`, before anything is created, and then offers it through the
+replace-or-keep row below against the pack's, so what you wrote is read and
+compared before the pack's lands and a keep there keeps it (the toolchain
+manager's root file is the one **split** instead: its `[env]` and `[tools]`
+tables merge into the pack's split files, its inline tasks are read as tasks,
+and only a table no split file owns keeps the file alive, cut down and listed as
+repo-owned); **keep both** leaves your file where it is beside the pack's and
+reports it under `Deferred` as **unread by the gate**, since the gate passes the
+`.config/` path explicitly; **delete** is reachable only by flipping the row
+yourself and is never proposed. The dependency-update policy is the one
+**yield**: the pack lands `renovate.json` at the root because that tool's
+discovery never reaches `.config/`, so a policy you already carry under any of
+its spellings wins, the pack's is **not landed** and the row says so —
+`.github/dependabot.yml` is a different service's file and reads `keep both`,
+the pack's `renovate.json` landing beside it. An entry your `.gitignore` ignores
+is build output, skipped without a row; `.git/` is exempt by name; and a
+directory holding its own manifest or source is a **project**, listed once under
+`Projects` with the id question 2 confirmed and never under `Deferred`.
 
 **The helper library is the one named exception**, and the reason it earns one
 is timing. A repo whose copy has drifted from the pack's is not carrying a
@@ -1224,59 +1259,93 @@ also has is compared with the pack's once the renames are accounted for. On a
 the materializer's dry run reports as a **conflict** — a file already at a
 pack's path — is one such row, shown before the consent and recorded on a keep
 exactly as below; a `blank` repo rarely has one, and when it does it is never a
-silent skip. A readme, a `LICENSE` or a `SECURITY.md` already in the repo is
-outside the offer altogether: kept, never replaced, and reported. The `shaped`
-comparison is **two tests**: the file's hash against the one the lockfile
-recorded, and — only on a mismatch — a second pass that takes the pack's shipped
-payload at the pinned version, splices your file's **current** value into every
-marked position that file carries, and hashes the result. Equal, and the whole
-difference lies inside those positions: **no offer at all**, and where a survey
-pass owns one of them that pass shows the change instead — a folder rename is a
-`repo-name key: <old> → <new>` replace row and nothing else. Unequal, and the
-content really did diverge: one `Offered (replace / keep)` row carrying a
-three-line summary — what your version adds, what it lacks, and whether it
-references a retired name — and the default `init` computed. **Replace** lands
-the pack's file and re-fills every marked position it carries from your
-confirmed answers, which is what makes a replace safe on a file whose positions
-you had already filled. **Keep** leaves your file's own content alone and
-records the decision under `enforcement.kept_files` in the **base's**
-`.config/vwf.yaml`, so neither a later reshape nor `/vwf:doctor` raises it again
-— the keep covers the content you customised, never a marked position's value,
-which the fill passes write on this run either way. There is one such record for
-the whole product, because a member carries only its back-link and no config of
-its own: a keep taken inside a member is keyed by its **base-relative** path —
-the member's path as prefix, then the path inside it — while a keep on the
-base's own file is the same rule with an empty prefix. The default is replace
-where your file references a retired name and keep everywhere else, and you may
-flip any row before answering — flipping re-prints the whole plan with the new
-decisions and asks the same one question, so the consent stays single. That key
-is the only thing `init` writes into `.config/vwf.yaml`, and it never creates
-that file: on a repo `/vwf:setup` has not reached yet, the keep still applies
-and the *record* is a deferral. The helper library is the one file this never
-offers — pass 5 replaces it unconditionally, for the timing reason above.
+silent skip. A readme, a licence file under any spelling — `LICENSE`,
+`LICENSE.md`, `LICENCE` or `COPYING` — or a `SECURITY.md` already in the repo is
+outside the offer altogether: kept, never replaced, and reported. So is
+`.gitignore`, which is never replaced and never kept whole: the pack's sections
+are **merged** into yours, section by section — each banner section your file
+lacks appended, patterns compared normalised (a leading or trailing `/`
+stripped, a `**/` prefix ignored, blank and comment lines skipped) so a pattern
+you carry under another spelling is never doubled. The `shaped` comparison is
+**two tests**: the file's hash against the one the lockfile recorded — and a
+file the lockfile has no record for is compared against the pack's bytes **after
+the fills**, never raw, so a file that is exactly what a landing would have
+written is not re-offered on every run — and, only on a mismatch, a second pass
+that takes the pack's shipped payload at the pinned version, splices your file's
+**current** value into every marked position that file carries, and hashes the
+result. Equal, and the whole difference lies inside those positions: **no offer
+at all**, and where a survey pass owns one of them that pass shows the change
+instead — a folder rename is a `repo-name key: <old> → <new>` replace row and
+nothing else. Unequal, and the content really did diverge: one
+`Offered (replace / keep)` row carrying a three-line summary — what your version
+adds, what it lacks, and whether it references a retired name — and the default
+`init` computed. **Replace** lands the pack's file and re-fills every marked
+position it carries from your confirmed answers, which is what makes a replace
+safe on a file whose positions you had already filled. **Keep** leaves your
+file's own content alone and records the decision under `enforcement.kept_files`
+in the **base's** `.config/vwf.yaml`, so neither a later reshape nor
+`/vwf:doctor` raises it again — the keep covers the content you customised,
+never a marked position's value, which the fill passes write on this run either
+way. There is one such record for the whole product, because a member carries
+only its back-link and no config of its own: a keep taken inside a member is
+keyed by its **base-relative** path — the member's path as prefix, then the path
+inside it — while a keep on the base's own file is the same rule with an empty
+prefix. The default is replace where your file references a retired name and
+keep everywhere else, and you may flip any row before answering — flipping
+re-prints the whole plan with the new decisions and asks the same one question,
+so the consent stays single. Either answer then **re-records the file's hash**
+in the lockfile, after the fills, so a replaced or kept file reads as current —
+not as drift — to the next reshape and to `/vwf:doctor`. That key is one of the
+two things `init` writes into `.config/vwf.yaml`, and where the file does not
+exist yet — a repo `/vwf:setup` has not reached — `init` writes a **stub**
+holding `config_format` and the `enforcement` block alone, so the record always
+has a home and nothing is deferred; setup's own passes complete the file later.
+The helper library is the one file this never offers — pass 5 replaces it
+unconditionally, for the timing reason above.
 
-**Tasks you wrote yourself are kept and listed, never moved.** Every task file
-in the library that no landed pack ships is yours; `init` lists each under
-`Repo-owned, kept` and touches none of them. What counts is the path a file
-**resolves to** once the passes above are accounted for, never the path it sits
-at today: a file that resolves into the shipped set — by a legacy-table rename,
-or because `init` offers it at that destination — is the set's, not yours, and
-already carries a row of its own up there. Listing it here as well would read as
-two files, one of them kept, where there is one. One shape earns a note and
-nothing more: a repo-owned task sitting in the `setup/` or `code/` group whose
-name the task-library contract's mandatory set does not carry is reported with
-one line saying those two groups are the contract's, and that the task's home is
-your own per-project group unless it is a gate every project shares. Moving it
-is your commit, not `init`'s — the contract can say a name is not one of its
-own, and cannot say what you meant by it.
+**Tasks you wrote yourself are kept and listed, never moved.** Every task in the
+library that no landed pack ships is yours — a task file, or an inline
+`[tasks.*]` table in any of the toolchain manager's config files, which the
+rename, shebang and repo-owned passes all read as tasks so none is invisible for
+being a table rather than a file; `init` lists each under `Repo-owned, kept`, an
+inline one with its file and table, and touches none of them — it never turns a
+table into a file. A commit type your gate config carries that the legacy table
+maps neither way is **asked**, never guessed: once per type, with the closed set
+plus *keep as is*. What counts is the path a file **resolves to** once the
+passes above are accounted for, never the path it sits at today: a file that
+resolves into the shipped set — by a legacy-table rename, or because `init`
+offers it at that destination — is the set's, not yours, and already carries a
+row of its own up there. Listing it here as well would read as two files, one of
+them kept, where there is one. One shape earns a note and nothing more: a
+repo-owned task sitting in the `setup/` or `code/` group whose name the
+task-library contract's mandatory set does not carry is reported with one line
+saying those two groups are the contract's, and that the task's home is your own
+per-project group unless it is a gate every project shares. Moving it is your
+commit, not `init`'s — the contract can say a name is not one of its own, and
+cannot say what you meant by it.
 
 **Your readme is moved, never rewritten.** `README.md` → `readme.md` is a move
 like any other in the plan — content untouched, applied with `git mv` so the
-history follows the file. A repo already carrying `readme.md` needs nothing, and
-one carrying both names is reported as a conflict for you rather than resolved
-here. `init` writes a stub only where there is no readme at all, and the stub is
-exactly two lines: the H1 and the one-line brief, or the H1 alone when the brief
-is empty.
+history follows the file — and its **callers are rewritten** with it, the way a
+renamed task's are: every relative link, task help line or manifest field that
+names the old spelling is one `old → new` rewrite row at its file and line, an
+anchor kept. A repo already carrying `readme.md` needs nothing, and one carrying
+both names is reported as a conflict for you rather than resolved here. `init`
+writes a stub only where there is no readme at all, and the stub is exactly two
+lines: the H1 and the one-line brief, or the H1 alone when the brief is empty.
+
+**Five steps run after the landing in every mode**, before the git pass, and a
+`shaped` repo is no exception: the secrets provider question 4 picked, the three
+placeholders across every landed and replaced file, the readme stub, the licence
+and the security file on their already-there rule, the two bootstrap steps
+(trust, then the executable bit), and the aggregator offer. They were the
+blank-repo landing's alone, while the questions that feed them were asked in
+every mode — a shaped repo answered and had nothing run on the answers. Last
+before the git pass, `init` **re-records the lockfile hash** of every file it
+filled, appended to or merged — the marked positions, the placeholders, the
+ignore sections, the hook fragments, the editor block — so nothing it wrote
+reads as drift the next morning. A file a pack task rewrites later under its own
+update flag reads as drift until the next reshape offers it, by design.
 
 **It ends with a git pass, and that pass is consent-gated.** Everything above it
 lands on disk; a repo shaped and left dirty is a repo whose next command — a
@@ -1377,23 +1446,37 @@ does, **export the three before a reshape** and expect that commit to be refused
 once while the identity is written, then re-run it; with the variables unset the
 commit fails outright.
 
+**Which hooks that commit runs under is the hook manager row's answer.** The
+root survey reads the repo's local `core.hooksPath`, a `.husky/` directory and a
+`lefthook.yml` or `.lefthook.yml`; any hit is one plan row,
+`switch hook manager to pre-commit`, whose default is **keep** — a hook manager
+somebody installed is a decision on the same footing as a diverged file, and
+switching it silently is how a team's hooks stop running the morning after a
+reshape. On keep the gate-first commit runs under the **installed** hooks, the
+shipped gate config lands but is not wired, `setup:precommit` is not invoked
+(and the aggregator, if accepted, refuses the foreign manager without
+`--force`), and the report names the manager it found. On **switch** the run
+invokes `setup:precommit --force` as its last shaping step, so that commit is
+the first one through the shipped gate. No hit, no row: the hooks are the gate's
+already or not yet wired, and the aggregator wires them as on any repo.
+
 **Every run ends with the same report** — files written, files replaced, files
-kept, files moved, tasks renamed, tasks kept, calls rewritten, sections
-appended, fragments merged, and anything deferred with the thing that would
-unlock it. **Those ten sections repeat under one heading per repo**, the base
-first and then each member by its path, every count that repo's own and nothing
-totalled across repos: a count you cannot attribute to a tree is a count you
-cannot check. Then one **git** section for the whole run, because the pass asked
-its questions once — the landing model on one line, and branches, the commit,
-the push and the forge one line per repo in apply order, then the base's
-`Gitlinks staged` and `Backlog project` lines. A repo's commit line names every
-commit the run made there, in order, each with its short hash and subject. Its
-`Forge` line says what the pass set there and what it left alone — a setting
-already present is named as left, never as set — or reads `pending`, `skipped`
-with the reason, or `by hand` where the list was printed. An empty section
-prints as `none`. Then two next-step lines, always both and neither of them run:
-`/vwf:readme` to fill the readme the stub only opens, and `/vwf:setup` to bring
-the repo into vwf's format.
+kept, files moved, root tool configs, the hook manager, projects, tasks renamed,
+tasks kept, calls rewritten, sections appended, fragments merged, and anything
+deferred with the thing that would unlock it. **Those thirteen sections repeat
+under one heading per repo**, the base first and then each member by its path,
+every count that repo's own and nothing totalled across repos: a count you
+cannot attribute to a tree is a count you cannot check. Then one **git** section
+for the whole run, because the pass asked its questions once — the landing model
+on one line, and branches, the commit, the push and the forge one line per repo
+in apply order, then the base's `Gitlinks staged` and `Backlog project` lines. A
+repo's commit line names every commit the run made there, in order, each with
+its short hash and subject. Its `Forge` line says what the pass set there and
+what it left alone — a setting already present is named as left, never as set —
+or reads `pending`, `skipped` with the reason, or `by hand` where the list was
+printed. An empty section prints as `none`. Then two next-step lines, always
+both and neither of them run: `/vwf:readme` to fill the readme the stub only
+opens, and `/vwf:setup` to bring the repo into vwf's format.
 
 **When it runs again.** `init` is not a one-time bootstrap — it is what keeps a
 repo's *shape* in step with what the packs ship and with what the repo has since
@@ -1414,36 +1497,37 @@ between runs, on seven subjects: the pack versions the adapter's lockfile
 recorded against what it ships now, each registry id against its task group and
 commit scope, both branches, the repo-name key against that repo's own **folder
 name, slugified**, the **content** of every pack-owned file against the hash the
-lockfile recorded when it landed — a mismatch re-tested with every marked
-position spliced out before it counts as a row, on init's own two tests, so a
-filled position is the shaped state and never a finding here — and two of the
-four marked positions beside the repo-name key — `MERGE_MODEL`, and `MEMBERS` on
-a product whose members are wired as plain siblings; the other two,
-`RUNTIME_BLOCK` and `PATH_ENTRIES`, are filled from init's stack read and are
-legitimately empty on a repo with no language, so no row reads them — and the
-**forge state**, predicate (g), read from the forge where its CLI answers for
-the origin host: the default branch one of `develop` or `main`, each of the two
-branches carrying some protection, and, for the base alone, the backlog project
-present. Where the CLI is absent, not logged in or refuses a read, that repo
-gets one `not checked` note and no row; an existing protection short of one of
-the pass's rules is a note too, never drift, since a reshape would leave it
-exactly as it is. **All seven run per repo** — the base and every
-locally-present member, resolved the way `init` resolves them — with every row
-printed under the repo it was found in and one remedy for the whole product,
-since `reshape` walks the members too. A member this machine does not carry is a
-blind spot rather than a finding, reading `not present, not checked`. Beside the
-id check sits its counterpart on the base alone, comparing the aggregator's
-member flags and `setup-<slug>` aliases against the resolved member set — a
-member with no flag is a row, and so is a flag named from a project id. A repo
-drifts by standing still and also by moving: a pack-owned file you edited in
-place is no longer the file the pack ships, and doctor says which of the two a
-row is, because re-landing fixes one and the other is a file somebody meant to
-change. A file you chose to keep is skipped, since that decision is already
-recorded. With no adapter lockfile the content check reports
-`not checked — no lockfile` rather than passing or crashing: a repo that landed
-nothing has nothing to have drifted from. Every one of these is `drift` and none
-is blocking — a repo behind its baseline is out of date, not broken — and all of
-them share one remedy, `/vwf:setup reshape`, printed once.
+lockfile records — the landing's, re-recorded by `init` after every fill, append
+or merge it made — a mismatch re-tested with every marked position spliced out
+before it counts as a row, on init's own two tests, so a filled position is the
+shaped state and never a finding here — and two of the four marked positions
+beside the repo-name key — `MERGE_MODEL`, and `MEMBERS` on a product whose
+members are wired as plain siblings; the other two, `RUNTIME_BLOCK` and
+`PATH_ENTRIES`, are filled from init's stack read and are legitimately empty on
+a repo with no language, so no row reads them — and the **forge state**,
+predicate (g), read from the forge where its CLI answers for the origin host:
+the default branch one of `develop` or `main`, each of the two branches carrying
+some protection, and, for the base alone, the backlog project present. Where the
+CLI is absent, not logged in or refuses a read, that repo gets one `not checked`
+note and no row; an existing protection short of one of the pass's rules is a
+note too, never drift, since a reshape would leave it exactly as it is. **All
+seven run per repo** — the base and every locally-present member, resolved the
+way `init` resolves them — with every row printed under the repo it was found in
+and one remedy for the whole product, since `reshape` walks the members too. A
+member this machine does not carry is a blind spot rather than a finding,
+reading `not present, not checked`. Beside the id check sits its counterpart on
+the base alone, comparing the aggregator's member flags and `setup-<slug>`
+aliases against the resolved member set — a member with no flag is a row, and so
+is a flag named from a project id. A repo drifts by standing still and also by
+moving: a pack-owned file you edited in place is no longer the file the pack
+ships, and doctor says which of the two a row is, because re-landing fixes one
+and the other is a file somebody meant to change. A file you chose to keep is
+skipped, since that decision is already recorded. With no adapter lockfile the
+content check reports `not checked — no lockfile` rather than passing or
+crashing: a repo that landed nothing has nothing to have drifted from. Every one
+of these is `drift` and none is blocking — a repo behind its baseline is out of
+date, not broken — and all of them share one remedy, `/vwf:setup reshape`,
+printed once.
 
 Nobody has to remember that schedule. Four commands bring you to the door
 themselves, each **offering** `reshape` the Step 0 way — one line naming the

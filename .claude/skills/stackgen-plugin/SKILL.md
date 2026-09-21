@@ -193,7 +193,14 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   at a shaped root and which no pack may land. `readme.md` is on the landable
   tier only because a shaped repo has one — **no pack may ship it** — and
   `renovate.json` joined that tier on 2026-09-10, at the root because Renovate's
-  config discovery never reaches `.config/`.
+  config discovery never reaches `.config/` — and since 2026-09-21 it
+  **yields**: a repo already carrying a policy under `.github/renovate.json`,
+  `.renovaterc` or `renovate.json` keeps its own and the pack's is not landed
+  (`/vwf:init`'s tool-config table owns the spellings; the hygiene pack's
+  conventions state the rule). The lockfile's per-file `hash:` is the landing
+  hash **re-recorded by `/vwf:init`** after its fills, appends, merges and its
+  replace-or-keep offer, so a differing hash is drift only when no such writer
+  ran — `assets/output-tree.md` and the materializer reference both say so.
 
 **Three consent tiers**: the `.claude/` files ride the ordinary dry-run gate;
 `settings.json`, `.mcp.json` and a pack's `config/` tree are never written

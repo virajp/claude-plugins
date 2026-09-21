@@ -30,14 +30,24 @@ directory, and a stale ignore line fails by being silently absent from a diff.
 
 ### The algorithm
 
-1. **Resolve the section names.** The input is the **language set the stack
-   read produced** — SKILL.md's *The stack read*, which takes the config's
-   pins first, the lockfile's components next, and in `source` mode the
-   manifests it finds; a `blank` repo's set is empty and lands no section.
-   The **hygiene pack's conventions** own the mapping from that set to
-   template names and are the only source for it — read the table there.
-   Two languages may name the same template, so resolve to the set of
-   **distinct** names: a section is per template, not per language.
+This is a **section merge**, and it is the one thing that ever changes an
+ignore file: the repo's file is **kept whole**, and each section it lacks is
+appended to it. The pack's base sections and the per-technology ones are
+merged the same way, so a repo that arrived with its own `.gitignore` gets
+the sections it lacks exactly as a repo that got the pack's file whole — the
+file is never replaced, and it is never offered as replace-or-keep. **Every
+file gets the sections it lacks**, and only those.
+
+1. **Resolve the section names.** The **pack's base sections** come first,
+   read from the sectioned file the pack ships, in the order they sit there.
+   Then the per-technology sections, whose input is the **language set the
+   stack read produced** — SKILL.md's *The stack read*, which takes the
+   config's pins first, the lockfile's components next, and in `source` mode
+   the manifests it finds; a `blank` repo's set is empty and adds no section
+   past the base ones. The **hygiene pack's conventions** own the mapping
+   from that set to template names and are the only source for it — read the
+   table there. Two languages may name the same template, so resolve to the
+   set of **distinct** names: a section is per template, not per language.
 
    A language with **no row** is one of two things and the conventions say
    which. Most need no template at all — the base sections already cover
@@ -49,19 +59,30 @@ directory, and a stale ignore line fails by being silently absent from a diff.
    then belongs — that table — so the next repo does not re-ask.
 2. **Skip what is already there.** A banner already present means that
    section was appended before. Skip it whole — do not re-fetch, and do not
-   diff its contents against the current template. The file is the repo's
-   once it lands, and a template that changed upstream is not a reason to
-   overwrite lines somebody may have edited.
-3. **Fetch each remaining template.** One request per section.
+   diff its contents against the current template or the pack's copy. The
+   file is the repo's once it lands, and a template that changed upstream is
+   not a reason to overwrite lines somebody may have edited.
+3. **Fetch each remaining per-technology template.** One request per
+   section. A base section needs no fetch — its body is the pack's.
 4. **Append**, in the order the sections were resolved, each as its own
-   banner followed by the template's body verbatim. **Sections are appended,
+   banner followed by the section's body verbatim. **Sections are appended,
    never interleaved** — the pack's own rule, and what keeps the base
    sections readable as one block.
 5. **Append nothing the file already carries.** That is the hygiene pack's
    own rule for this file, stated in its conventions, and it is
-   authoritative — filter the incoming template against the patterns already
-   present and append what is left. The filter reads the file, never the
-   other appended sections: what is already there is what counts.
+   authoritative — filter the incoming section against the patterns already
+   present and append what is left. The filter reads the whole file — the
+   hand-written lines, the banner sections, whatever is there — never only
+   the other appended sections: what is already there is what counts.
+
+   **Patterns are compared normalised**, never as raw lines. Before the
+   comparison, on both sides: a leading `/` is stripped, a trailing `/` is
+   stripped, a `**/` prefix is ignored, and blank lines and comment lines are
+   skipped — they are not patterns and match nothing. So `/node_modules/`,
+   `node_modules` and `**/node_modules/` are one pattern, and a pattern the
+   file already carries under a different spelling is **never doubled**. The
+   line that is appended is the incoming section's own spelling, not the
+   normalised form — normalisation decides equality and writes nothing.
 
    **A negation and the pattern it re-includes are one unit.** Dropping the
    pattern while keeping the line that re-includes a file under it leaves the
@@ -70,6 +91,12 @@ directory, and a stale ignore line fails by being silently absent from a diff.
 
    A section the filter empties is a section the file already covers — skip
    its banner too, rather than appending a heading with nothing under it.
+6. **Re-hash.** The file the merge wrote is one the materializer's lockfile
+   records, and the hash it recorded at landing no longer matches. `init`
+   re-records it in the existing-repo pipeline's re-hash step — the last
+   before the git pass, which covers every file this run filled, appended to
+   or merged — so the next run reads the merged file as current, not as
+   drift.
 
 ### When the fetch fails
 
@@ -127,6 +154,10 @@ One pair per fragment, and the fragment's filename is what names them:
    and leave the previous file in place, restoring it if it was already
    written. A gate config that does not parse is a gate that does not run, and
    it fails at the next commit rather than here.
+6. **Re-hash.** The gate config is the gate pack's, and the lockfile hash it
+   landed under no longer describes the merged file. `init` re-records it in
+   the existing-repo pipeline's re-hash step — the last before the git pass —
+   so a merged gate config is never read as a diverged one on the next run.
 
 ### Idempotency
 
@@ -262,10 +293,11 @@ union — is written under `enforcement.editor_keys` in the **base's**
 `.config/vwf.yaml`, merged into whatever the block already holds, on the same
 single consent as everything else and at the same point in the apply as the
 `kept_files` record. It is the second of the two keys `init` writes into that
-file, and `init` still never creates the file: on a repo `/vwf:setup` has not
-reached, the answer still applies to this run's block and the record becomes
-a **Deferred** line, unlock *run `/vwf:setup`, then `/vwf:setup reshape`* —
-the next run asks again.
+file. On a repo `/vwf:setup` has not reached, the file is the **stub config**
+SKILL.md describes — `config_format` and the `enforcement` block alone,
+written by this same run so the two keys have a home — and the answer is
+recorded there like anywhere else. Nothing about an editor answer is ever
+deferred: a run that asked is a run that recorded.
 
 **Editing the block is how a user is re-asked.** A recorded answer applies
 for as long as the key collides; a key that stops colliding — the hand copy
@@ -290,6 +322,10 @@ comment syntax. Then:
   otherwise.
 - **A file that does not exist yet** is created holding the block alone —
   there is no hand section, so no collision.
+- **Re-hash.** Where the lockfile records the editor file, the hash it holds
+  describes the file before the block went in. `init` re-records it in the
+  existing-repo pipeline's re-hash step — the last before the git pass — so
+  the block is not read as drift the next morning.
 
 ### Validate
 

@@ -54,9 +54,13 @@ not offering — and nothing below applies to it. A repo that answered
 **A repo that already carries a licence file is listed as kept, never
 replaced**, whichever visibility it answered — the licence a repository
 already declares is a decision somebody made, and a row's answer is what a
-repo with no licence gets rather than a rewrite of one that is there. A
-private repo carrying one keeps it too: `init` removes no file on a
-visibility answer.
+repo with no licence gets rather than a rewrite of one that is there. **Every
+spelling counts**: `LICENSE`, `LICENSE.md`, `LICENCE` and `COPYING` are each
+"already carries a licence file", and a repo with any one of them at its root
+has no licence row at 6a and takes no `LICENSE` beside it — only `LICENSE` is
+on the allowlist, but the other three are the repo's own and are neither
+moved nor doubled. A private repo carrying one keeps it too: `init` removes
+no file on a visibility answer.
 
 The catalogue directory is **pack-private** and never lands in a repo: the
 materializer skips it, and `init` reads one file out of it. A repo ends up
@@ -120,16 +124,22 @@ placeholder and no question:
 | the attributes file          | line-ending normalisation, generated trees, binaries       |
 | the dependency-update policy | the update cadence and the minimum release age             |
 
-The ignore file is the exception among them — it lands as the pack's sectioned
-base and then **grows** by the append in
-[fragments and sections](fragments-and-sections.md).
+The ignore file is the exception among them — it is never copied over one the
+repo has: the **section merge** in
+[fragments and sections](fragments-and-sections.md) gives every file, the
+pack's fresh copy and a repo's own alike, the sections it lacks.
 
-**When the dependency-update policy lands, print the caveat the pack's
-conventions state** about where that tool actually looks for its
-configuration. The file sits where this repo shape puts configuration, which
-is not where the hosted service searches; a repo that wants the service
-enabled has one more thing to do, and saying so at write time is cheaper than
-a policy nobody notices is inert.
+**The dependency-update policy lands at the repo root**, not under
+`.config/` — the pack's conventions say why: Renovate's discovery is
+root-first (`renovate.json`, then `.github/`, then `.renovaterc`) and never
+reaches the configuration directory, so the root is the one place the hosted
+service reads it. It is the one hygiene file with a **yield** rule: a repo
+that already carries a policy under any of those spellings keeps its own,
+and the pack's is **not landed** — the plan's row for it says so, and no
+file is moved. The spellings, and the rule, are the
+[tool-config table](tool-configs.md)'s. A repo that wants the service enabled
+still has to install it on the forge; say so at write time, since a policy
+nobody wired is inert without an error.
 
 ## What `init` does not write here
 
