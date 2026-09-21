@@ -9,3 +9,9 @@ axis: repo
 # Topic 4 (hook running) and 5 (gate wiring & CI parity) of the repo-gate bar (assets/kinds.md).
 # Gates satisfy no vwf harness capability.
 harness: n/a
+# The editor fragment lands only where init's editor answer is vscode; every
+# other file in config/ lands unconditionally. Paths are relative to config/.
+conditional:
+  - path: .config/vscode.d/pre-commit.jsonc
+    when:
+      editor: vscode

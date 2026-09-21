@@ -7,3 +7,9 @@ type: toolchain-gate
 kind: language-bundle
 axis: project
 harness: n/a
+# The editor fragment lands only where init's editor answer is vscode; every
+# other file in config/ lands unconditionally. Paths are relative to config/.
+conditional:
+  - path: .config/vscode.d/tsconfig.jsonc
+    when:
+      editor: vscode

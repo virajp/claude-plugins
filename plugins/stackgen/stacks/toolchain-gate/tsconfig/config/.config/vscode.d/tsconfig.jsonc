@@ -3,8 +3,9 @@
 // into the two editor files inside one marked block; a key written by hand
 // after that block wins.
 //
-// No `extensions` entry: TypeScript support is built into the editor, so there
-// is nothing to recommend installing.
+// Scope: the `js/ts.*` keys, the Node/TS excludes and nesting, and the one
+// helper extension that only makes sense in a JS/TS file. TypeScript support
+// itself is built into the editor, so there is nothing to recommend for it.
 {
   "settings": {
     // The `@/` path alias is the point of the shared base config, and these
@@ -29,13 +30,53 @@
     // surfaces — the same question `tsc --noEmit` asks in the gate.
     "js/ts.tsserver.experimental.enableProjectDiagnostics": true,
     "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+
+    // The dependency tree and the incremental build state: regenerable, and
+    // hidden from the explorer, the watcher and search alike. A path hidden
+    // from the explorer is still searched unless it is in `search.exclude`
+    // too. The three maps are unions across fragments, so these rows add to
+    // the hygiene baseline's rather than replace it.
+    "files.exclude": {
+      "**/node_modules/": true,
+      "**/tsconfig.build.tsbuildinfo": true,
+      "**/tsconfig.tsbuildinfo": true,
+    },
+    "files.watcherExclude": {
+      "**/node_modules/": true,
+      "**/tsconfig.build.tsbuildinfo": true,
+      "**/tsconfig.tsbuildinfo": true,
+    },
+    "search.exclude": {
+      "**/node_modules/": true,
+      "**/tsconfig.build.tsbuildinfo": true,
+      "**/tsconfig.tsbuildinfo": true,
+    },
+
+    // Turns a quoted string into a template literal the moment a `${` is typed
+    // inside it, for the two languages that have template literals.
+    "template-string-converter.autoRemoveTemplateString": true,
+    "template-string-converter.convertOutermostQuotes": true,
+    "template-string-converter.convertWithinTemplateString": true,
+    "template-string-converter.quoteType": "both",
+    "template-string-converter.validLanguages": [
+      "javascript",
+      "typescript",
+    ],
   },
 
   // The per-project configs sit beside the base one; nest them under it so the
   // explorer shows one entry rather than a column of near-identical names.
+  // Emitted JS nests its source map and declaration beside it the same way.
   "nesting": {
     "tsconfig.json": [
       "tsconfig.*.json",
     ],
+    "*.js": ["${capture}.js.map", "${capture}.d.ts", "${capture}.d.ts.map"],
   },
+
+  // The companion to the `template-string-converter.*` keys above; drop one
+  // and the settings it serves go dead.
+  "extensions": [
+    "meganrogge.template-string-converter",
+  ],
 }

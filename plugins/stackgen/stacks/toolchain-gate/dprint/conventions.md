@@ -16,7 +16,15 @@ lands on whoever commits next rather than on whoever upgraded.
 reformatted produces a diff nobody authored and a check nobody can make pass
 without regenerating. Templated markdown is the exclusion that surprises people:
 formatting a template rewrites the placeholders it exists to carry. The agent
-tooling tree is the other one, and it gets its own section below.
+tooling tree is the other one, and it gets its own section below. The set is
+the **one exclusion set** the three formatter lists share — this file,
+`taplo.toml`'s `exclude` and the hook config's global `exclude` spell the same
+entries in their own syntax, and the toolkit's checker holds the three equal.
+Widen one, widen all three. The secret scanner's path allowlist is held to a
+**subset** of it: only the generated trees its directory-mode walk would read,
+since the pack extends upstream's default config (which already skips `.git`,
+`node_modules` and the named lockfiles) and `.claude/` is authored source a
+scanner must scan. Widen it only with a generated tree.
 
 **`exec` is the escape hatch** for languages dprint has no plugin for — it
 shells out to that language's own formatter, keeping one entry point even where
@@ -37,7 +45,22 @@ layout, and is reached only through dprint's `exec` escape hatch, so the two
 land together or the TOML half formats with taplo's defaults. `dprint.json` at
 the repo root is a two-line shim that extends the first — see the section
 below. `.config/vscode.d/dprint-editor.jsonc` is this pack's editor fragment:
-the formatter keys and the even-better-toml keys, and nothing else.
+the formatter keys and the even-better-toml keys, and nothing else. It lands
+only where init's editor answer is vscode — `pack.yaml`'s `conditional:` names
+it.
+
+**The default formatter is bound per language, never editor-wide.** The
+fragment sets `editor.defaultFormatter` inside a `[<language>]` scope for
+exactly the languages `.config/dprint.json`'s plugins cover, and `[toml]` to
+even-better-toml. An editor-wide binding would ask dprint to format a file it
+has no plugin for, and would silently override the formatter another pack
+binds for its own language — Dart's, in the analyzer pack — depending on
+composition order alone. The scoped list and the plugin list move together:
+add a plugin, add its language ids.
+
+**The even-better-toml fallback keys equal `.config/taplo.toml`.** The
+extension reads its `formatter.*` settings before the config file resolves, so
+a value that differs there formats the first save differently from the gate.
 
 **That filename is the one exception to the fragment convention's
 `<pack>.jsonc` rule, and it is forced:** dprint discovers a `dprint.jsonc`

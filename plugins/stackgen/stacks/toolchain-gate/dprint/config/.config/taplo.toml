@@ -7,12 +7,23 @@
 # land in a stable order, so a changed value shows as one line rather than as a
 # reshuffled block.
 
+# The one exclusion set the three formatter lists share, in glob form — the
+# same entries `.config/dprint.json` and the hook config's global `exclude`
+# carry, held equal by the toolkit's checker. The secret scanner's allowlist is
+# a subset: generated trees only.
 exclude = [
+  "**/.claude/**",
   "**/.git/**",
+  "**/.turbo/**",
+  "**/.venv/**",
   "**/build/**",
   "**/dist/**",
+  "**/graphify-out/**",
   "**/node_modules/**",
   "**/target/**",
+  "**/*-lock.json",
+  "**/*-lock.yaml",
+  "**/*.lock",
 ]
 include = [ "**/*.toml" ]
 

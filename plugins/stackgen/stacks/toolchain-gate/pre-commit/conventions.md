@@ -60,7 +60,17 @@ common failure is reported immediately rather than after the slow gate.
 
 **The exclusion set is stated once**, not restated per gate. Generated trees,
 vendored code and lockfiles are excluded for the same reason everywhere, and
-per-gate copies drift until one gate is scanning what the others skip.
+per-gate copies drift until one gate is scanning what the others skip. Across
+the gate packs that set is spelled three times — the formatter's `excludes`,
+the TOML formatter's `exclude` and this config's global `exclude` — each in its
+tool's own syntax, and the toolkit's checker holds the three equal after
+normalising the syntax away. The secret scanner's path allowlist is held to a
+subset of it: generated trees only, since its pack extends upstream's default
+config (which already skips `.git`, `node_modules` and the named lockfiles) and
+`.claude/` is authored source a scanner must scan. Widen a formatter list,
+widen all three; widen the allowlist only with a generated tree. One hook
+narrows further: `trailing-whitespace` skips `.md`, because two trailing spaces
+are a Markdown hard break, and `.editorconfig` says the same to the editor.
 
 **A repo with no hook runner records this topic `n/a`** and loses the parity
 guarantee with it. That is a real loss, not a formality — without it, nothing
@@ -71,9 +81,14 @@ makes local and CI run the same command.
 Three files, all under `.config/`. `pre-commit-config.yaml` is the base hook set
 and the merge point every pack fragment lands in.
 `git-conventional-commits.yaml` is the commit convention the `commit-msg` hook
-enforces. `vscode.d/pre-commit.jsonc` is this pack's editor fragment, and it
-carries nesting alone — the gate runs on commit, so it contributes no setting
-and recommends no extension.
+enforces. `vscode.d/pre-commit.jsonc` is this pack's editor fragment: the
+nesting that folds the convention file under the hook config, and the YAML
+language server — `yaml.completion`, `yaml.hover`, `yaml.format.enable` off
+because the repo formatter owns YAML — with the `redhat.vscode-yaml` extension
+that serves those keys. The gate itself contributes no setting: it runs on
+commit, and an editor running the hooks would be a second definition of it.
+The fragment lands only where init's editor answer is vscode — `pack.yaml`'s
+`conditional:` names it.
 
 **Two positions in the convention file are marked for `/vwf:init` to fill, and
 the comments say when.** `commitScopes` is filled on **every** run, the first

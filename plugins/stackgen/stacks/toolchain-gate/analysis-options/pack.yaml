@@ -7,3 +7,9 @@ axis: project
 # Topic-level gate for the app bundle, not a repo gate: it is meaningful for
 # exactly one toolchain.
 harness: n/a
+# The editor fragment lands only where init's editor answer is vscode; every
+# other file in config/ lands unconditionally. Paths are relative to config/.
+conditional:
+  - path: .config/vscode.d/analysis-options.jsonc
+    when:
+      editor: vscode
