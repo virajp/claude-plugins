@@ -127,17 +127,21 @@ Commands split cleanly by what they actually need:
    linkage, `git clone <url> <path>` under siblings. Never clone uninvited — it
    writes to the user's disk outside the repo they invoked you in.
 3. **On accept** — clone, then, under submodule linkage, put the member on a
-   branch **at the commit the base's gitlink records** — the commit the clone
-   left it at: `git checkout -B <branch>` in the member, where `<branch>` is
-   the one `origin/HEAD` names, else `develop`, else `main`. Never a plain
-   checkout of that branch: it would move the tree to the remote tip, so a
-   survey reads code the base does not record and the base's gitlink shows
-   modified. A submodule arrives detached, and a detached member cannot take a
-   shaping commit — `init` refuses it — so a member this run cloned is never
-   left detached. Where the recorded commit is not on that branch's remote
-   history, the branch is created at the recorded commit all the same and the
-   divergence is reported — never resolved by moving the tree. A sibling clone
-   is on its default branch already. Then proceed normally.
+   branch. A submodule arrives detached at the commit the base's gitlink
+   records, and a detached member cannot take a shaping commit — `init`
+   refuses it — so a member this run cloned is never left detached. Pick the
+   remote branch whose history **contains the recorded commit** — prefer
+   `origin/develop`, then `origin/main`, then the one `origin/HEAD` names —
+   and check it out **at the remote tip**: `git checkout -B <branch>
+   origin/<branch>`. The member is then current, the shaping commit lands
+   ahead of the tip, and the base commits its gitlink to it at the end
+   (members first, base last) — the gitlink moving forward is the expected
+   outcome of the run, not drift. Where **no** remote branch contains the
+   recorded commit, the member has diverged: create the branch at the recorded
+   commit, report the divergence, and treat the member as a deferred row — its
+   shaping skipped, the base's gitlink for it unmoved — never resolved by
+   moving the tree. A sibling clone is on its default branch already. Then
+   proceed normally.
 4. **On decline** — **proceed with that project excluded, and record the blind
    spot.** Name every project that could not be inspected in the command's own
    output, and in whatever artifact it writes: `plan` stamps them in the plan

@@ -1156,7 +1156,9 @@ repeats the row under that member's heading, the command included, and the
 next run — after the checkout — picks the member up as any other. It is the
 one refusal in this pipeline that a user clears with a single command, which
 is why it is refused rather than worked around: checking a branch out on
-someone's behalf is a state change in a repo they may be mid-way through.
+someone's behalf is a state change in a repo they may be mid-way through. A
+member the clone step reports as **diverged** — its recorded commit on no
+remote branch — takes the same row, with the divergence as its reason.
 
 The base is read on the same terms, though it is the repo the run was invoked
 in and almost always on a branch. A detached base halts the whole run at the
@@ -1240,8 +1242,11 @@ that a repo taking this pipeline already existed:
   that read a settled configuration.
 - The branches come **before** the commits, not after — this repo has
   commits, so there is something to branch from already, and the commits have
-  to land on `develop`. Read §11(d)'s table with its first row set aside:
-  create `develop` from `main` where `develop` is missing, `main` from
+  to land on `develop`. A missing local `develop` or `main` is created from
+  its **remote-tracking branch** where one exists — `origin/develop`,
+  `origin/main` — never fabricated from the other local branch; only with no
+  such remote branch does §11(d)'s table apply, read with its first row set
+  aside: create `develop` from `main` where `develop` is missing, `main` from
   `develop` where `main` is missing, and nothing where both exist. A repo
   whose mainline is neither — `master`, `trunk`, or any other name, read from
   `origin/HEAD` or from the branch the repo is on — gets `main` created from
@@ -1256,10 +1261,11 @@ that a repo taking this pipeline already existed:
   this run wrote differs between the branch the repo was on and `develop`;
   the unlock is the checkout itself, once the user has set that file aside.
   Two: `develop` is checked out in **another worktree** of the same repo —
-  which is what a repo shaped by these packs looks like, its worktrees under
-  the tree's own worktree directory — or the run is itself inside a linked
-  worktree, where the switch is impossible; the report names the worktree
-  that holds `develop`, and the unlock is running the shaping from there.
+  the main checkout, or a linked one under the tree's own worktree directory,
+  which is what a repo shaped by these packs looks like — and git holds a
+  branch in one tree at a time; the report names the worktree that holds
+  `develop`, and the unlock is running the shaping from that tree. A run
+  already on `develop`, in whichever tree, needs no switch at all.
 - A branch this run just created is one the forge has never seen protected,
   so its `Forge` line is a plain set; the branch the repo already had is the
   one the idempotence check is most likely to report as left alone.
