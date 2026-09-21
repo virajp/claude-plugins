@@ -599,7 +599,10 @@ supplied.
 **`repo-hygiene`** is the newest kind on the repo axis, beside `repo-gate`,
 `toolchain-manager` and `workspace`. Its single pack ships the files every repo
 needs and no tool owns: a sectioned `.gitignore` (with a graphify section that
-ignores `graphify-out/*` while keeping `GRAPH_REPORT.md`), `.graphifyignore`,
+ignores `graphify-out/*` while keeping `GRAPH_REPORT.md`, plus one upstream
+template section per language `/vwf:init`'s stack read finds — a table keyed by
+language, `node`, `python`, `dart`, `go`, `rust`, `swift` — so a repo with a
+`package.json` gets its Node section on the first run), `.graphifyignore`,
 `.editorconfig`, `.gitattributes`, `SECURITY.md`, `CONTRIBUTING.md`, three
 `.github/ISSUE_TEMPLATE/` files, a root `renovate.json`, the chosen `LICENSE` on
 a repo `/vwf:init` was told is public, and the **editor baseline** — the largest
@@ -691,7 +694,14 @@ without any component editing `mise.toml`.
 linters, security scanners, and other dev tooling belong in `mise.dev.toml`, so
 a fresh checkout or a CI build does not pull them. `[tasks.init]` is the
 exception that lives in the base: file-based tasks must be executable under
-`MISE_ENV=ci` too.
+`MISE_ENV=ci` too. The runtime's settings are a **marked position** the base
+ships empty: `RUNTIME_BLOCK` under `[settings]` and `PATH_ENTRIES` at the end of
+`[env]` are filled by `/vwf:init` from its stack read — one runtime settings
+line per detected language, the `_.path` entry where a project-local binary
+directory needs it — and left empty for a language the repo does not have, since
+a setting for an absent runtime is a claim about the stack that is not true.
+With `REPO_NAME`, `MERGE_MODEL` and `MEMBERS` they are the base's five marked
+positions.
 
 `mise.dev.toml` holds the **local values** of runtime env vars (verbose logging,
 local hosts, test credentials). `mise.ci.toml` carries the **production values**
@@ -962,6 +972,13 @@ init authors from scratch:
   space-separated paths relative to the repo root, filled from the members init
   resolved where the linkage is **siblings**. A submodule product leaves it
   exactly as shipped — `.gitmodules` answers instead;
+- the two **runtime positions** in the same base config — **`RUNTIME_BLOCK`**
+  under `[settings]` and **`PATH_ENTRIES`** at the end of `[env]` — both shipped
+  empty and filled from init's **stack read**: one runtime settings line per
+  detected language in the first, the `_.path` entry a project-local binary
+  directory needs in the second, and nothing in either for a language the repo
+  does not have. A repo with no detected language leaves both exactly as
+  shipped;
 - the commit gate's **scope list**, one scope per project id — filled on *any*
   run, the first included, from the ids init's second question confirmed. A
   project registry, where the repo has one, is only where those ids were

@@ -115,15 +115,16 @@ claude plugin install vwf@virajp-plugins
 Restart your agent afterward so the skills, hooks and MCP servers load, then run
 `/vwf:doctor`. It is the closest thing to a preflight now that nothing is gated
 at install time — though see the [caveat](#caveats) on what it does and does not
-check. On a repo that has never been shaped — no `.config/` layout, no task
-library — run `/vwf:setup`: its Step 0 offers `init`, which lays down the config
-layout, the gates and the hygiene files the rest of the workflow assumes, in the
-base repo **and every member repo it has**, on one consent. `/vwf:setup reshape`
-runs that pass alone — across every member — and is what `/vwf:doctor` prints
-when a shaped repo has fallen behind. You rarely have to remember it: `setup`
-re-checks the shape after its materialize pass, `/stackgen:stackgen-sync` after
-a re-sync, and `/vwf:recall` prints one drift line at session start — each
-offers the reshape, none runs it unasked.
+check. On a repo that has never been shaped — empty, or already carrying source
+— run `/vwf:setup`: its Step 0 offers `init`, which lays down the config layout,
+the gates and the hygiene files the rest of the workflow assumes, in the base
+repo **and every member repo it has**, on one consent — a file already in the
+repo is offered, never overwritten. `/vwf:setup reshape` runs that pass alone —
+across every member — and is what `/vwf:doctor` prints when a shaped repo has
+fallen behind. You rarely have to remember it: `setup` re-checks the shape after
+its materialize pass, `/stackgen:stackgen-sync` after a re-sync, and
+`/vwf:recall` prints one drift line at session start — each offers the reshape,
+none runs it unasked.
 
 Once a repo **is** shaped, its own task library takes the plugin side over:
 `mise run setup:ai` registers or refreshes the marketplace and installs or

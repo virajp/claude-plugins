@@ -54,23 +54,32 @@ Restart Claude Code, then `cd` into the empty Relay repo.
 ```
 
 One command, and it does two things in order. **Step 0 runs first and finds no
-shape** — no `.config/` layout, no task library — so it says what is absent and
-offers [`init`](../../plugins/vwf.md#vwfinit), which is what lays it down. Say
-yes. `init` is not something you type: this offer and `/vwf:setup reshape` are
-the only two ways it is reached. Declining is legal and is recorded as a
-deferral, with `/vwf:setup reshape` as the unlock whenever you want it.
+shape** — no adapter lockfile, no config layout, no task library — so it says
+what is absent and offers [`init`](../../plugins/vwf.md#vwfinit), which is what
+lays it down. Say yes. `init` is not something you type: this offer and
+`/vwf:setup reshape` are the only two ways it is reached. Declining is legal and
+is recorded as a deferral, with `/vwf:setup reshape` as the unlock whenever you
+want it.
 
-On an empty repo `init` resolves to its **new** pipeline and shapes the repo
-before anything else runs: the config layout, the toolchain manager's five-file
-split, the task library grouped `setup:*` / `code:*` / `p:*`, the four repo
-gates with their configs and hook fragments, the hygiene files, and the licence
-Relay chose. It asks seven questions in one round each — the repo name, proposed
-from this repo's own folder name and the one thing that fills `REPO_NAME`, and a
-one-line brief (both proposed or skippable); the ids it will write task groups
-and commit scopes for, each shown with its slug and where the name came from and
-yours to replace — with no registry and no sub-project directories yet, Relay's
-one project is proposed from its **platform token**, which you pick from the
-closed list (`service`, `worker`, `webapp`, `site`, `cli`, `iac`, …) or type as
+Relay's repo is empty — at most a readme, which is not evidence — so `init`
+resolves it to mode **`blank`**: no lockfile, no manifest, no source directory,
+no root tool config. It runs the new-repo landing alone, shaping the repo before
+anything else runs: the config layout, the toolchain manager's five-file split,
+the task library grouped `setup:*` / `code:*` / `p:*`, the four repo gates with
+their configs and hook fragments, the hygiene files, and the licence Relay
+chose. Its stack read finds nothing on a blank repo, so no `.gitignore` language
+section lands and the toolchain config's runtime positions stay empty until a
+stack is pinned. (Had the repo already carried a `package.json` or a `src/`
+directory, the mode would be **`source`**: the same landing, with every file
+already there offered as replace-or-keep rather than overwritten.) It asks seven
+questions in one round each — the repo name, proposed from this repo's own
+folder name and the one thing that fills `REPO_NAME`, and a one-line brief (both
+proposed or skippable); the ids it will write task groups and commit scopes for,
+each shown with its slug and where the name came from and yours to replace —
+with no registry and no sub-project directories yet (a sub-project directory
+being, on a first run, one that carries its own language manifest), Relay's one
+project is proposed from its **platform token**, which you pick from the closed
+list (`service`, `worker`, `webapp`, `site`, `cli`, `iac`, …) or type as
 *other*; which provider holds Relay's secrets, which **agent plugins this repo
 requires** (a multi-select seeded by what is already registered on your machine,
 with *none* as the ordinary answer — `init` offers those rows minus the workflow
