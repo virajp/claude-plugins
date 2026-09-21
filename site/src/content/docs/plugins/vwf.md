@@ -1350,14 +1350,29 @@ update flag reads as drift until the next reshape offers it, by design.
 **It ends with a git pass, and that pass is consent-gated.** Everything above it
 lands on disk; a repo shaped and left dirty is a repo whose next command — a
 commit, a worktree, a merge — meets a working tree it did not expect. So `init`
-stages **exactly what this run wrote** (never `git add -A`, so untracked work of
-your own is not swept into a commit about the repo's shape) and asks **one
-question with three answers**, showing the file count and the branch first:
-*commit*, *commit and push*, or *leave it*. Push is a second decision inside one
-question, never an assumed consequence of committing. The message is fixed and
-uses the `ops:` type the commit gate this run just installed will read it
-against. History is never rewritten, nothing is force-pushed, and no
-verification-skipping flag is ever passed.
+checks out `develop`, stages **exactly what this run wrote** (never
+`git add -A`, so untracked work of your own is not swept into a commit about the
+repo's shape) and asks **one question with three answers**, showing the file
+count and the branch first: *commit*, *commit and push*, or *leave it*. Push is
+a second decision inside one question, never an assumed consequence of
+committing. The message is fixed and uses the `ops:` type the commit gate this
+run just installed will read it against, and **the commit lands on `develop` in
+every mode** — never on `main`, and never on whatever branch the repo happened
+to be standing on. History is never rewritten, nothing is force-pushed, and no
+verification-skipping flag is ever passed; a push the remote rejects is a
+deferral for that repo and branch, never a force.
+
+**Before the pass, `init` reads where each repo stands.** A repo on a branch
+takes the branch work below; a member standing on **no branch** — a detached
+HEAD, which is how a submodule arrives from a plain clone — is a **refused** row
+in the plan naming the branch to check out (`develop` where it has one, else its
+mainline): its shaping is deferred with that checkout as the unlock, and the
+base's gitlink for it is not moved, because a commit on a detached HEAD belongs
+to no branch. A member this run clones is never left that way: after the clone
+it is checked out on the remote branch whose history holds the recorded gitlink
+commit — `origin/develop`, then `origin/main`, then what `origin/HEAD` names —
+at that branch's tip, and where no remote branch holds the commit the member is
+reported as diverged and deferred.
 
 **Both of the pass's questions are asked once and applied to every repo.** The
 members commit first; the base then commits the run's files **plus the moved
@@ -1371,14 +1386,30 @@ commit.** A repository with no commit has an unborn HEAD, so there is nothing
 for a second branch to point at — and the mechanism happens to match the model,
 since work flows from a feature branch or a worktree into `develop` and from
 `develop` into `main`. On an existing repo `init` creates whichever of the two
-is missing, from the one that is there. Both always end up present, because the
-repo's own merge tasks refuse a destination branch that does not exist locally.
+is missing — from its remote-tracking branch where the remote already carries
+it, else from the one that is there — before the commit, and checks out
+`develop`. The names are **fixed**: a repo whose mainline is `master`, `trunk`
+or any other name — read from `origin/HEAD`, or the branch it is on where there
+is no remote — gets `main` created from that mainline and `develop` from `main`,
+the old branch **left in place** and named on the report's `Branches created`
+line to retire by hand. Both always end up present with `develop` checked out,
+whichever way the repo arrived, because the repo's own merge tasks refuse a
+destination branch that does not exist locally.
 
-**The git pass opens by asking the landing model**, before it stages anything:
-`direct` — recommended, and what the toolchain pack ships — *merge locally and
-push*, or `pr` — *push the branch and open a pull request*. The answer is
-written literally to `MERGE_MODEL` in `.config/mise.toml`, so the file it writes
-is in what the same pass stages.
+**The git pass opens by asking the landing model, per branch**, before it stages
+anything: **one row per repo per branch**, `develop` and `main`, each `direct` —
+*merge locally and push* — or `pr` — *push the branch and open a pull request*.
+The toolchain pack's preselections are `direct` for `develop` and `pr` for
+`main`: work into `develop` is the day's landing, while `main` takes nothing but
+`develop` and is where a review gate earns its keep. A repo whose file the run
+replaces is preselected from what that file carries. Each answer is written
+literally to that repo's `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` in
+`.config/mise.toml`, so the file it writes is in what the same pass stages. A
+repo that kept that file is not asked — but a kept file still carrying the
+single legacy `MERGE_MODEL` has that line rewritten in place into the two
+positions, each carrying the one value, reported as *legacy `MERGE_MODEL`
+`<value>` — written to both positions*; until that run, every reader takes the
+one value for both branches.
 
 **After the push comes the forge pass**, the one step that writes to the forge,
 run **once for the product after the last repo has pushed** and on **one further
@@ -1402,14 +1433,16 @@ and clones against its default, and that traffic belongs on `develop` when
 `main` takes nothing but merges. Nothing in the tree records the answer — the
 forge is the record, and `/vwf:doctor`'s predicate (g) reads it back from there.
 The protection is the same on both branches, always: **no force-push and no
-deletion**; where `MERGE_MODEL` is `pr`, additionally **a pull request
-required** (no approval count) — under `direct` the merge tasks push the merge
-themselves, and that rule would refuse the model you just chose. On GitHub each
-branch gets one **ruleset** named `vwf-<branch>`; on GitLab a protected branch.
-**A branch already protected in any form is left exactly as it is** and
-reported, never merged with and never replaced, however its rules differ; the
-default branch is set regardless, since setting it to what it already is changes
-nothing.
+deletion**; then **per branch, from that branch's own value** —
+`MERGE_MODEL_DEVELOP` for `develop`, `MERGE_MODEL_MAIN` for `main`, as the file
+carries them — where the value is `pr`, additionally **a pull request required**
+(no approval count); where it is `direct` the merge tasks push the merge
+themselves, and that rule would refuse the model you just chose. The pack's
+defaults give `main` the rule and `develop` not. On GitHub each branch gets one
+**ruleset** named `vwf-<branch>`; on GitLab a protected branch. **A branch
+already protected in any form is left exactly as it is** and reported, never
+merged with and never replaced, however its rules differ; the default branch is
+set regardless, since setting it to what it already is changes nothing.
 
 The precondition is the backlog skill's — the forge CLI on `PATH`, logged in to
 the origin host — and a miss is **never a stop**: the reason goes on that repo's
@@ -1467,16 +1500,20 @@ deferred with the thing that would unlock it. **Those thirteen sections repeat
 under one heading per repo**, the base first and then each member by its path,
 every count that repo's own and nothing totalled across repos: a count you
 cannot attribute to a tree is a count you cannot check. Then one **git** section
-for the whole run, because the pass asked its questions once — the landing model
-on one line, and branches, the commit, the push and the forge one line per repo
-in apply order, then the base's `Gitlinks staged` and `Backlog project` lines. A
-repo's commit line names every commit the run made there, in order, each with
-its short hash and subject. Its `Forge` line says what the pass set there and
-what it left alone — a setting already present is named as left, never as set —
-or reads `pending`, `skipped` with the reason, or `by hand` where the list was
-printed. An empty section prints as `none`. Then two next-step lines, always
-both and neither of them run: `/vwf:readme` to fill the readme the stub only
-opens, and `/vwf:setup` to bring the repo into vwf's format.
+for the whole run, because the pass asked its questions once — the landing
+model, branches, the commit, the push and the forge one line per repo in apply
+order, the landing line carrying that repo's two values, one per branch, and the
+`Branches created` line naming a mainline of another name the run left beside
+the pair, to retire by hand; a member refused for standing on no branch appears
+under *Deferred* instead, with the checkout as its unlock — then the base's
+`Gitlinks staged` and `Backlog project` lines. A repo's commit line names every
+commit the run made there, in order, each with its short hash and subject. Its
+`Forge` line says what the pass set there and what it left alone — a setting
+already present is named as left, never as set — or reads `pending`, `skipped`
+with the reason, or `by hand` where the list was printed. An empty section
+prints as `none`. Then two next-step lines, always both and neither of them run:
+`/vwf:readme` to fill the readme the stub only opens, and `/vwf:setup` to bring
+the repo into vwf's format.
 
 **When it runs again.** `init` is not a one-time bootstrap — it is what keeps a
 repo's *shape* in step with what the packs ship and with what the repo has since
@@ -1500,25 +1537,29 @@ name, slugified**, the **content** of every pack-owned file against the hash the
 lockfile records — the landing's, re-recorded by `init` after every fill, append
 or merge it made — a mismatch re-tested with every marked position spliced out
 before it counts as a row, on init's own two tests, so a filled position is the
-shaped state and never a finding here — and two of the four marked positions
-beside the repo-name key — `MERGE_MODEL`, and `MEMBERS` on a product whose
-members are wired as plain siblings; the other two, `RUNTIME_BLOCK` and
-`PATH_ENTRIES`, are filled from init's stack read and are legitimately empty on
-a repo with no language, so no row reads them — and the **forge state**,
-predicate (g), read from the forge where its CLI answers for the origin host:
-the default branch one of `develop` or `main`, each of the two branches carrying
-some protection, and, for the base alone, the backlog project present. Where the
-CLI is absent, not logged in or refuses a read, that repo gets one `not checked`
-note and no row; an existing protection short of one of the pass's rules is a
-note too, never drift, since a reshape would leave it exactly as it is. **All
-seven run per repo** — the base and every locally-present member, resolved the
-way `init` resolves them — with every row printed under the repo it was found in
-and one remedy for the whole product, since `reshape` walks the members too. A
-member this machine does not carry is a blind spot rather than a finding,
-reading `not present, not checked`. Beside the id check sits its counterpart on
-the base alone, comparing the aggregator's member flags and `setup-<slug>`
-aliases against the resolved member set — a member with no flag is a row, and so
-is a flag named from a project id. A repo drifts by standing still and also by
+shaped state and never a finding here — and three of the five marked positions
+beside the repo-name key — `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`, each
+checked on its own, a block still carrying the legacy single `MERGE_MODEL` and
+neither new position being one drift row reading *legacy `MERGE_MODEL` — reshape
+writes the pair*, and `MEMBERS` on a product whose members are wired as plain
+siblings; the other two, `RUNTIME_BLOCK` and `PATH_ENTRIES`, are filled from
+init's stack read and are legitimately empty on a repo with no language, so no
+row reads them — and the **forge state**, predicate (g), read from the forge
+where its CLI answers for the origin host: the default branch one of `develop`
+or `main`, each of the two branches carrying some protection — a pull request
+required on a branch whose own value is `pr` noted when missing, never drift —
+and, for the base alone, the backlog project present. Where the CLI is absent,
+not logged in or refuses a read, that repo gets one `not checked` note and no
+row; an existing protection short of one of the pass's rules is a note too,
+never drift, since a reshape would leave it exactly as it is. **All seven run
+per repo** — the base and every locally-present member, resolved the way `init`
+resolves them — with every row printed under the repo it was found in and one
+remedy for the whole product, since `reshape` walks the members too. A member
+this machine does not carry is a blind spot rather than a finding, reading
+`not present, not checked`. Beside the id check sits its counterpart on the base
+alone, comparing the aggregator's member flags and `setup-<slug>` aliases
+against the resolved member set — a member with no flag is a row, and so is a
+flag named from a project id. A repo drifts by standing still and also by
 moving: a pack-owned file you edited in place is no longer the file the pack
 ships, and doctor says which of the two a row is, because re-landing fixes one
 and the other is a file somebody meant to change. A file you chose to keep is
@@ -3118,12 +3159,15 @@ pre-commit gate runs **before staging**, over the working tree's changed files,
 so a fixup folds into the same commit instead of needing one of its own — the
 sequence is `code:precommit`, then stage, then commit. And landing runs through
 `code:merge:develop` / `code:merge:main` (renamed from `merge:*`), which obey
-the repo's `MERGE_MODEL`: under `direct` they merge locally and push with
-`--follow-tags`, under `pr` they push the branch and open a pull request and
-nothing merges locally. The skill reads the value before it offers the landing
-options, so the two choices read "Merge & push" on one repo and "Push & open PR"
-on another — it still names no forge; the task does. The explicit push step
-survives only in the manual fallback for a repo that has no such task.
+the repo's landing model **per destination** — `MERGE_MODEL_DEVELOP` for the
+first, `MERGE_MODEL_MAIN` for the second: under `direct` they merge locally and
+push with `--follow-tags`, under `pr` they push the branch and open a pull
+request and nothing merges locally. The skill reads the value for the
+destination it is about to land on before it offers the landing options — a repo
+still carrying the legacy single `MERGE_MODEL` is read as both, and neither set
+means `direct` — so the two choices read "Merge & push" on one repo and "Push &
+open PR" on another — it still names no forge; the task does. The explicit push
+step survives only in the manual fallback for a repo that has no such task.
 
 ## How it asks questions
 

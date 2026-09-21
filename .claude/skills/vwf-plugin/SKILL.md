@@ -123,15 +123,16 @@ the marked positions those packs leave it (the member flags and their aliases,
 named for the **member repos** and never from a project id; the per-project
 groups, their aliases and the commit gate's scopes, all three from the project
 ids; the repo-name key, from that repo's own main-checkout folder name slugified
-and never from a project id; `MERGE_MODEL`, `MEMBERS`, the two runtime positions
-from the stack read and the forge links, and the plugin task's two agent-plugin
-lists), runs **three** merges — ignore sections, pre-commit fragments, editor
-fragments — and writes a two-line readme stub; it names no tool, and every file
-it lays down is a pack's. The editor merge reads each `.vscode` file whole: a
-settings key or nesting parent the hand section already carries that the packs
-also compose is a **collision**, asked once per run inside the plan (keep mine,
-take the pack's, or union for an object-valued key or a nesting parent) and
-recorded under `enforcement.editor_keys` in the base's `.config/vwf.yaml` — with
+and never from a project id; `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN`,
+`MEMBERS`, the two runtime positions from the stack read and the forge links,
+and the plugin task's two agent-plugin lists), runs **three** merges — ignore
+sections, pre-commit fragments, editor fragments — and writes a two-line readme
+stub; it names no tool, and every file it lays down is a pack's. The editor
+merge reads each `.vscode` file whole: a settings key or nesting parent the hand
+section already carries that the packs also compose is a **collision**, asked
+once per run inside the plan (keep mine, take the pack's, or union for an
+object-valued key or a nesting parent) and recorded under
+`enforcement.editor_keys` in the base's `.config/vwf.yaml` — with
 `enforcement.kept_files`, one of the two keys `init` writes there — so a hand
 key wins because the block **omits** it, never because the file carries it
 twice. Before any of that it asks **seven** questions — one round each for the
@@ -155,64 +156,80 @@ defaulted to its advisories page and a private repo's a free email or internal
 URL with no default. 4 and 5 are answered once for every repo, 2, 6 and 6b carry
 a row per repo, 6a a row per public repo, and 1 and 3 a row per repo that
 resolved `blank` or `source`. It then closes with a **consent-gated git pass**,
-whose two questions are asked once and applied to every repo: it asks the
-landing model and writes it to `MERGE_MODEL`, stages what the run wrote, asks
-one question with three answers (commit / commit and push / leave it), commits
-with a fixed `ops:` message — the members first, then the base with the moved
-**gitlinks** staged — creates whichever of `develop` and `main` the branch model
-needs, per repo, and pushes. **After the push comes the forge pass**, on one
-further consent for the whole product: it sets each pushed repo's default branch
-on the forge (`develop` preselected), protects `develop` and `main` there — no
-force-push, no deletion, and a pull request required when `MERGE_MODEL` is `pr`;
-a branch already protected in any form is left exactly as it is — and reaches
-the backlog skill's missing-project procedure for the base, never running the
-project-creating command itself. Those three are the only forge settings it
-touches; a repo whose answer was not *commit and push* is listed `pending`, and
-a forge it has no CLI for, or a CLI it cannot log in with, gets the by-hand list
-— which the hygiene pack's `CONTRIBUTING.md` keeps, naming `gh` and `glab` where
-vwf's `SKILL.md` prose may not (the init references name them, as the backlog
-skill already did). Init is **not a one-time bootstrap**: its "when it runs
-again" doctrine names the moments **and the four commands that bring the user to
-the door** — `/vwf:setup` after its materialize pass, `/vwf:architecture`
-through setup, `/stackgen:stackgen-sync` invoking `/vwf:setup reshape`
-in-session, and `/vwf:recall` printing one drift line from
-`/vwf:doctor baseline` — each an offer the Step 0 way, silent when clean; and
-`/vwf:doctor` has the drift finding that prints the one remedy,
-`/vwf:setup reshape`. `setup` is the Phase-0 bootstrapper — it onboards a repo
-(a Step-0 shape check, run over **every repo in the product** — the base and
-every locally-present member — that offers `/vwf:init` once when any of the
-three slugs is missing **or** any of doctor's seven baseline predicates fails in
-any of them, **repeated once after the materialize pass** against the lockfile
-that pass just wrote so a pack version moved in the run is offered in the run —
-never on `reshape`, which runs no pass — the `reshape` argument forcing that
-offer and stopping once init returns, detect-or-ask topology via MCQ,
-consent-gated reconciliation into the `docs/blueprint/` format, the CLAUDE.md
-vwf section, the memory tree and `mempalace.yaml`, the `environment.md`
-bootstrap) and is **re-runnable**: re-running *is* the resume mechanism, since
-Step 0 re-resolves the mode from what is on disk and a conforming repo resolves
-to `current`. Setup is also where a **pinned** stack is landed: **architecture
-decides, setup pins.** Its **materialize pass** runs once per run in every mode
-— `current` included, which is the mode a repo architecture just wrote pins into
-resolves to — grouping the axes holding a slug the target repo's adapter
-lockfile does not name, deduping by slug per repo, and invoking
-`-stack-template` once per `(repo, slug)` with the contract's `repo:` line; an
-**absent** axis is written `unresolved` and a pinned slug is never rewritten. On
-the spine it runs before the doctor gate, and a declined landing is the expected
-way to reach doctor's blocking *pinned, not materialized*. **It runs none of the
-foundations** — it ends by printing the chain and offering to start
-`/vwf:product`, because each of those commands resolves its own mode and reports
-what it did, which a gate inside setup could only guess at on their behalf. The
-one return trip is `/vwf:architecture`'s, which invokes `/vwf:setup` in-session
-after its own commit so the pins it just recorded get materialized. `product.md`
-(the Phase −1 outcome contract, type `vwf-product`, gated by the
-`product-reviewer`) and `architecture` (the registry) are both unconditionally
-required before `blueprint` — every **flow's** Purpose must `Serves:`-link a
-product goal anchor (entities trace to goals transitively via their `Used by:`
-flow links), which the `blueprint-reviewer` verifies and the minimalism check
-traces to. `design-system` is a second foundation, **required once the registry
-has a UI project** (some project declares a **screen platform**): `blueprint`
-halts on a flow with a Screens surface if `docs/blueprint/design-system.md` is
-missing. `environment.md` (the per-project env-var/secret catalog, type
+whose two questions are asked once and applied to every repo. It first reads
+where each repo stands (`git symbolic-ref -q HEAD`): a member on no branch is a
+**refused** row naming the branch to check out, its shaping deferred and its
+gitlink unmoved, and a member the run clones is checked out on the remote branch
+holding the recorded gitlink commit, at that branch's tip, so it never arrives
+detached. It asks the landing model **one row per repo per branch** — `develop`
+and `main`, each `direct` or `pr`, preselected `direct` and `pr`, or from what a
+replaced file carries — and writes each row to that repo's `MERGE_MODEL_DEVELOP`
+and `MERGE_MODEL_MAIN`; a kept file still carrying the single legacy
+`MERGE_MODEL` is not asked, but its line is rewritten in place into the pair
+carrying the one value, and until then every reader takes that value for both
+branches. It creates whichever of `develop` and `main` the repo lacks — from the
+remote-tracking branch first, else from the table; a mainline of another name
+(`master`, `trunk`, read from `origin/HEAD`, else the branch the repo is on)
+gets `main` from it and `develop` from `main`, the old branch left in place and
+reported to retire by hand — checks out `develop`, stages what the run wrote,
+asks one question with three answers (commit / commit and push / leave it),
+commits with a fixed `ops:` message **on `develop` in every mode**, never on
+`main` — the members first, then the base with the moved **gitlinks** staged —
+and pushes; a rejected push is a deferral, never a force. **After the push comes
+the forge pass**, on one further consent for the whole product: it sets each
+pushed repo's default branch on the forge (`develop` preselected), protects
+`develop` and `main` there — no force-push, no deletion, and a pull request
+required on each branch whose own value is `pr`, `MERGE_MODEL_DEVELOP` for
+`develop` and `MERGE_MODEL_MAIN` for `main`; a branch already protected in any
+form is left exactly as it is — and reaches the backlog skill's missing-project
+procedure for the base, never running the project-creating command itself. Those
+three are the only forge settings it touches; a repo whose answer was not
+*commit and push* is listed `pending`, and a forge it has no CLI for, or a CLI
+it cannot log in with, gets the by-hand list — which the hygiene pack's
+`CONTRIBUTING.md` keeps, naming `gh` and `glab` where vwf's `SKILL.md` prose may
+not (the init references name them, as the backlog skill already did). Init is
+**not a one-time bootstrap**: its "when it runs again" doctrine names the
+moments **and the four commands that bring the user to the door** — `/vwf:setup`
+after its materialize pass, `/vwf:architecture` through setup,
+`/stackgen:stackgen-sync` invoking `/vwf:setup reshape` in-session, and
+`/vwf:recall` printing one drift line from `/vwf:doctor baseline` — each an
+offer the Step 0 way, silent when clean; and `/vwf:doctor` has the drift finding
+that prints the one remedy, `/vwf:setup reshape`. `setup` is the Phase-0
+bootstrapper — it onboards a repo (a Step-0 shape check, run over **every repo
+in the product** — the base and every locally-present member — that offers
+`/vwf:init` once when any of the three slugs is missing **or** any of doctor's
+seven baseline predicates fails in any of them, **repeated once after the
+materialize pass** against the lockfile that pass just wrote so a pack version
+moved in the run is offered in the run — never on `reshape`, which runs no pass
+— the `reshape` argument forcing that offer and stopping once init returns,
+detect-or-ask topology via MCQ, consent-gated reconciliation into the
+`docs/blueprint/` format, the CLAUDE.md vwf section, the memory tree and
+`mempalace.yaml`, the `environment.md` bootstrap) and is **re-runnable**:
+re-running *is* the resume mechanism, since Step 0 re-resolves the mode from
+what is on disk and a conforming repo resolves to `current`. Setup is also where
+a **pinned** stack is landed: **architecture decides, setup pins.** Its
+**materialize pass** runs once per run in every mode — `current` included, which
+is the mode a repo architecture just wrote pins into resolves to — grouping the
+axes holding a slug the target repo's adapter lockfile does not name, deduping
+by slug per repo, and invoking `-stack-template` once per `(repo, slug)` with
+the contract's `repo:` line; an **absent** axis is written `unresolved` and a
+pinned slug is never rewritten. On the spine it runs before the doctor gate, and
+a declined landing is the expected way to reach doctor's blocking *pinned, not
+materialized*. **It runs none of the foundations** — it ends by printing the
+chain and offering to start `/vwf:product`, because each of those commands
+resolves its own mode and reports what it did, which a gate inside setup could
+only guess at on their behalf. The one return trip is `/vwf:architecture`'s,
+which invokes `/vwf:setup` in-session after its own commit so the pins it just
+recorded get materialized. `product.md` (the Phase −1 outcome contract, type
+`vwf-product`, gated by the `product-reviewer`) and `architecture` (the
+registry) are both unconditionally required before `blueprint` — every
+**flow's** Purpose must `Serves:`-link a product goal anchor (entities trace to
+goals transitively via their `Used by:` flow links), which the
+`blueprint-reviewer` verifies and the minimalism check traces to.
+`design-system` is a second foundation, **required once the registry has a UI
+project** (some project declares a **screen platform**): `blueprint` halts on a
+flow with a Screens surface if `docs/blueprint/design-system.md` is missing.
+`environment.md` (the per-project env-var/secret catalog, type
 `vwf-environment`) is a third foundation, **required once the registry declares
 an external integration or a secrets-manager `config`** — `setup` bootstraps it
 from the repo's existing env-var/secret usage (names only, never values) and

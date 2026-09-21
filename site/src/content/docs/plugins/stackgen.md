@@ -708,8 +708,8 @@ ships empty: `RUNTIME_BLOCK` under `[settings]` and `PATH_ENTRIES` at the end of
 line per detected language, the `_.path` entry where a project-local binary
 directory needs it — and left empty for a language the repo does not have, since
 a setting for an absent runtime is a claim about the stack that is not true.
-With `REPO_NAME`, `MERGE_MODEL` and `MEMBERS` they are the base's five marked
-positions.
+With `REPO_NAME`, `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and `MEMBERS` they
+are the base's six marked positions.
 
 `mise.dev.toml` holds the **local values** of runtime env vars (verbose logging,
 local hosts, test credentials). `mise.ci.toml` carries the **production values**
@@ -792,18 +792,28 @@ inside `code/*` and `setup/*` change with the tech stack.
   with one extra predicate: the source must be `develop`. A conflict leaves the
   tree mid-merge on purpose. (These were `merge:develop` and `merge:main`; a
   merge is one more thing a change runs through, like the gates.)
-- **`MERGE_MODEL` — what "land it" means on this repo.** What the merge tasks do
-  *after* the predicates is a repo-level value in `mise.toml`'s `[env]`, a
-  marked position `/vwf:init` fills, read as `direct` when unset. Under
-  **`direct`** the task hops to the main worktree, checks out the destination,
-  `git merge --no-ff` and `git push --follow-tags` — today's behaviour, and the
-  one mode that also refuses unpushed commits on the source. Under **`pr`**
-  nothing merges locally: the task pushes the branch with `--follow-tags` and
-  opens a pull request through whichever forge CLI is on PATH (`gh` first, then
-  `glab`), printing the branch and one "open the request on your forge" line
-  where neither is. A repo-level value rather than a flag, because which one
-  applies is a property of the repo's review policy, not of the person landing
-  the change.
+- **`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` — what "land it" means on each
+  branch.** What the merge tasks do *after* the predicates is set **per
+  destination branch** — two marked positions in `mise.toml`'s `[env]` that
+  `/vwf:init` fills: `MERGE_MODEL_DEVELOP`, which `code:merge:develop` reads and
+  which ships `direct`, and `MERGE_MODEL_MAIN`, which `code:merge:main` reads
+  and which ships `pr`. A destination whose position is unset reads as `direct`;
+  a file shaped before the pair existed still carries the single legacy
+  `MERGE_MODEL`, which the merge reads in place of whichever position is unset —
+  both, on such a file — with one warning naming it legacy, so a landing never
+  fails on an old file and the reshape that writes the pair is not forgotten.
+  Under **`direct`** the task hops to the main worktree, checks out the
+  destination, `git merge --no-ff` and `git push --follow-tags` — today's
+  behaviour, and the one mode that also refuses unpushed commits on the source.
+  Under **`pr`** nothing merges locally: the task pushes the branch with
+  `--follow-tags` and opens a pull request through whichever forge CLI is on
+  PATH (`gh` first, then `glab`), printing the branch and one "open the request
+  on your forge" line where neither is. Repo-level values rather than flags,
+  because which one applies is a property of the repo's review policy, not of
+  the person landing the change; and one per branch rather than one per repo,
+  because `develop` and `main` carry different review policies more often than
+  the same one — a solo repo that merges into `develop` locally still wants a
+  request as the record of what reached `main`.
 - **`setup/*` — bootstrap & upgrade.** `setup:all` is the entrypoint — run it on
   clone and to re-sync. It calls `setup:mise`, `setup:secrets`,
   `setup:external:start`, `setup:deps:all`, `setup:precommit`, `setup:ai` and
@@ -973,10 +983,13 @@ init authors from scratch:
   folder, never the base's. The per-repo launch aliases that read it live in
   your own global configuration — init publishes the value and never writes
   outside the repos it resolved;
-- **`MERGE_MODEL`**, beside it in the same `[env]` block: `direct` or `pr`, the
-  landing model the merge tasks read, asked inside init's git pass. Unset reads
-  as `direct`, so an unfilled repo behaves as it always did;
-- **`MEMBERS`**, beside those two: the product's other repositories as
+- **`MERGE_MODEL_DEVELOP`** and **`MERGE_MODEL_MAIN`**, beside it in the same
+  `[env]` block: `direct` or `pr` each, the landing model `code:merge:develop`
+  and `code:merge:main` respectively read, asked inside init's git pass one row
+  per repo per branch. Shipped `direct` and `pr`; an unset position reads as
+  `direct`, and a file still carrying the single legacy `MERGE_MODEL` is read as
+  both values until the reshape writes the pair;
+- **`MEMBERS`**, beside those three: the product's other repositories as
   space-separated paths relative to the repo root, filled from the members init
   resolved where the linkage is **siblings**. A submodule product leaves it
   exactly as shipped — `.gitmodules` answers instead;
