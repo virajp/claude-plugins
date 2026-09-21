@@ -137,11 +137,12 @@ Commands split cleanly by what they actually need:
    ahead of the tip, and the base commits its gitlink to it at the end
    (members first, base last) — the gitlink moving forward is the expected
    outcome of the run, not drift. Where **no** remote branch contains the
-   recorded commit, the member has diverged: create the branch at the recorded
-   commit, report the divergence, and treat the member as a deferred row — its
-   shaping skipped, the base's gitlink for it unmoved — never resolved by
-   moving the tree. A sibling clone is on its default branch already. Then
-   proceed normally.
+   recorded commit, the member has diverged: create a branch at the recorded
+   commit — named for the first of `origin/HEAD`'s target, `develop`, `main`
+   that exists on the remote — report the divergence, and treat the member
+   as a deferred row — its shaping skipped, the base's gitlink for it unmoved
+   — never resolved by moving the tree. A sibling clone is on its default
+   branch already. Then proceed normally.
 4. **On decline** — **proceed with that project excluded, and record the blind
    spot.** Name every project that could not be inspected in the command's own
    output, and in whatever artifact it writes: `plan` stamps them in the plan

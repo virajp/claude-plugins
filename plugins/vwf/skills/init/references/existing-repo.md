@@ -1158,7 +1158,9 @@ one refusal in this pipeline that a user clears with a single command, which
 is why it is refused rather than worked around: checking a branch out on
 someone's behalf is a state change in a repo they may be mid-way through. A
 member the clone step reports as **diverged** — its recorded commit on no
-remote branch — takes the same row, with the divergence as its reason.
+remote branch — takes the same row, with the divergence as its reason and
+its own unlock: fetch, land the recorded commit on the member's `develop` by
+hand — a merge or a rebase, never a force — and re-run.
 
 The base is read on the same terms, though it is the repo the run was invoked
 in and almost always on a branch. A detached base halts the whole run at the
