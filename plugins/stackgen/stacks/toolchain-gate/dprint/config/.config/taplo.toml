@@ -8,9 +8,9 @@
 # reshuffled block.
 
 # The one exclusion set the three formatter lists share, in glob form — the
-# same entries `.config/dprint.json` and the hook config's global `exclude`
-# carry, held equal by the toolkit's checker. The secret scanner's allowlist is
-# a subset: generated trees only.
+# same set, at any depth, that `.config/dprint.json` and the hook config's
+# global `exclude` spell in their own syntax, held equal by the toolkit's
+# checker. The secret scanner's allowlist is a subset: generated trees only.
 exclude = [
   "**/.claude/**",
   "**/.git/**",

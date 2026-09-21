@@ -24,19 +24,21 @@ default_install_hook_types:
 # Stated once so each hook below only says what differs from it.
 default_stages: [pre-commit]
 
-# The exclusion set, stated once rather than per gate — and it is the same set
-# the formatter and the TOML formatter carry in their own syntax; the toolkit's
-# checker holds the three equal, and holds the secret scanner's allowlist to a
-# subset of it (generated trees only). One alternative per line, anchored at
-# the root by the `^` outside the group.
+# The exclusion set, stated once rather than per gate — and it is the same set,
+# at any depth, that the formatter and the TOML formatter spell as `**/…` globs;
+# the toolkit's checker holds the three equal, and holds the secret scanner's
+# allowlist to a subset of it (generated trees only). One alternative per line;
+# `(^|/)` is the regex spelling of "this segment, wherever it sits".
 #
 # graphify-out/ holds generated output. Some of it is tracked so the map is
 # shareable, but no hook may rewrite it: graphify writes those files without a
 # trailing newline, so end-of-file-fixer would "fix" every commit and the next
 # rebuild would undo it, forever. Regenerate with graphify, never format. The
-# agent tooling tree `.claude/` is the same shape: machine-owned end to end,
-# rewritten by the tools that materialize it. The rest are generated trees,
-# caches and lockfiles, which no hook should rewrite or report on.
+# agent tooling tree `.claude/` is machine-owned in a shaped repo — the
+# materialized skills, the stackgen lockfile, settings the agent rewrites — so
+# no filename-passing hook reformats it; the secrets scanner still walks it,
+# because scanning rewrites nothing. The rest are generated trees, caches and
+# lockfiles, which no hook should rewrite or report on.
 #
 # In a repo that has never run graphify this pattern matches nothing, and the
 # manual `check-useless-excludes` audit at the bottom of this file will say so.
@@ -44,20 +46,19 @@ default_stages: [pre-commit]
 # that the tree exists today. Add each further generated tree here — never a
 # second copy inside one hook.
 exclude: |-
-  (?x)^(
-    \.claude/|
-    \.git/|
-    \.turbo/|
-    \.venv/|
-    build/|
-    dist/|
-    graphify-out/|
-    node_modules/|
-    target/|
-    .*-lock\.json$|
-    .*-lock\.yaml$|
-    .*\.lock$
-  )
+  (?x)
+  (^|/)\.claude/|
+  (^|/)\.git/|
+  (^|/)\.turbo/|
+  (^|/)\.venv/|
+  (^|/)build/|
+  (^|/)dist/|
+  (^|/)graphify-out/|
+  (^|/)node_modules/|
+  (^|/)target/|
+  (^|/)[^/]*-lock\.json$|
+  (^|/)[^/]*-lock\.yaml$|
+  (^|/)[^/]*\.lock$
 
 repos:
   - repo: local
