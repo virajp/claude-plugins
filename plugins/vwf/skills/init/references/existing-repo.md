@@ -503,8 +503,10 @@ what lets one `[env]` block carry `REPO_NAME` and `MEMBERS` beside the pair and
 still reconstruct equal — a folder rename on a repo landing `main` by `pr` is
 §9's replace row and nothing else. A kept file that still carries the retired
 single `MERGE_MODEL` is spliced on the same terms too: its one value is read as
-both positions' value, every reader takes it that way, and `/vwf:doctor` (f)
-reports it as legacy until a reshape replaces the file and writes the pair.
+both positions' value, and every reader takes it that way until this run's
+fill — a keep never covers a marked position's value, as pass 6 says — writes
+that one value into both positions, retires the single key, and reports the
+line. `/vwf:doctor` (f) is what reports the legacy key in the meantime.
 
 **A record whose `source:` is `generated` has no pack payload**, so there is
 nothing to splice into: the second test is **skipped**, and test 1's mismatch
@@ -771,8 +773,10 @@ not the same kind of wait:
   survey pass does not pre-empt it, and never reports the landing model a user
   chose — or the shipped one they kept — as a hole. A kept file carrying the
   retired single `MERGE_MODEL` instead of the pair is not a hole here either:
-  its value stands for both branches until the file is replaced, and doctor is
-  what reports the legacy key.
+  the git pass fills both positions from that one value — a keep never
+  covers a position's value — retires the single key, and says so on the
+  repo's line; the pair is asked afresh only where the file is landed or
+  replaced.
 
 The plugin task's **two lists** are checked in the same pass, against the
 confirmed answer to SKILL.md's **question 5** — which is asked on an existing
@@ -1187,13 +1191,13 @@ in its own turn, before its own shaping commit. Doing it once for the run would
 leave every other repo's configuration modified-but-unstaged at the moment that
 repo came to commit, which is the abort this subsection exists to avoid.
 
-**It lands on `develop`, like every commit this run makes.** Before staging
-anything, do this repo's branch work — the bullet below, the new-repo table's
-rows read against a repo that has commits — and check `develop` out, so the
-gate commit and the shaping commit after it sit on the branch work flows
-through. A repo that was on `main` when the run started is on `develop` from
-here on, and the report says so; a repo that was on `develop` already stays
-put.
+**It lands on `develop`, like every commit this run makes — so the branch work
+comes first, then the checkout, and only then is anything staged.** Do this
+repo's branch work — the bullet below, the new-repo table's rows read against
+a repo that has commits — and check `develop` out, so the gate commit and the
+shaping commit after it sit on the branch work flows through. A repo that was
+on `main` when the run started is on `develop` from here on, and the report
+says so; a repo that was on `develop` already stays put.
 
 Where this run wrote, merged into or moved any of: the gate's configuration
 file, the commit-message gate's configuration, or anything under the fragment
@@ -1245,12 +1249,17 @@ that a repo taking this pipeline already existed:
   where it is, and the report names it as the one to retire by hand, since
   the merge tasks and the forge pass now name the pair alone. Every row ends
   with `develop` checked out — the table's "checked out" column reads
-  `develop` for every row, never "as it was". Where git refuses the checkout
-  because a file this run wrote differs between the branch the repo was on
-  and `develop`, that repo takes §11(c)'s **leave it** outcome on its own —
-  nothing committed, its line in the report saying the tree is written and
-  waiting, with the checkout as the unlock — rather than a commit on the
-  wrong branch.
+  `develop` for every row, never "as it was". Git refuses the checkout for
+  two reasons, and either way that repo takes §11(c)'s **leave it** outcome
+  on its own — nothing committed, its line in the report saying the tree is
+  written and waiting — rather than a commit on the wrong branch. One: a file
+  this run wrote differs between the branch the repo was on and `develop`;
+  the unlock is the checkout itself, once the user has set that file aside.
+  Two: `develop` is checked out in **another worktree** of the same repo —
+  which is what a repo shaped by these packs looks like, its worktrees under
+  the tree's own worktree directory — or the run is itself inside a linked
+  worktree, where the switch is impossible; the report names the worktree
+  that holds `develop`, and the unlock is running the shaping from there.
 - A branch this run just created is one the forge has never seen protected,
   so its `Forge` line is a plain set; the branch the repo already had is the
   one the idempotence check is most likely to report as left alone.

@@ -126,12 +126,18 @@ Commands split cleanly by what they actually need:
    consent-gated clone: `git submodule update --init <path>` under submodule
    linkage, `git clone <url> <path>` under siblings. Never clone uninvited — it
    writes to the user's disk outside the repo they invoked you in.
-3. **On accept** — clone, then, under submodule linkage, check a branch out in
-   the member: the one `origin/HEAD` names, else `develop`, else `main`. A
-   submodule arrives detached, and a detached member cannot take a shaping
-   commit — `init` refuses it — so a member this run cloned is never left
-   detached. A sibling clone is on its default branch already. Then proceed
-   normally.
+3. **On accept** — clone, then, under submodule linkage, put the member on a
+   branch **at the commit the base's gitlink records** — the commit the clone
+   left it at: `git checkout -B <branch>` in the member, where `<branch>` is
+   the one `origin/HEAD` names, else `develop`, else `main`. Never a plain
+   checkout of that branch: it would move the tree to the remote tip, so a
+   survey reads code the base does not record and the base's gitlink shows
+   modified. A submodule arrives detached, and a detached member cannot take a
+   shaping commit — `init` refuses it — so a member this run cloned is never
+   left detached. Where the recorded commit is not on that branch's remote
+   history, the branch is created at the recorded commit all the same and the
+   divergence is reported — never resolved by moving the tree. A sibling clone
+   is on its default branch already. Then proceed normally.
 4. **On decline** — **proceed with that project excluded, and record the blind
    spot.** Name every project that could not be inspected in the command's own
    output, and in whatever artifact it writes: `plan` stamps them in the plan
