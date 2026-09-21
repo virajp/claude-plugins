@@ -22,9 +22,10 @@ rather than four unrelated tools.
 one. `.config/dprint.json`, `.config/gitleaks.toml`, `.config/grype.yaml`,
 `.config/pre-commit-config.yaml` and `.config/git-conventional-commits.yaml`
 land with the skills, through the `config/` tier of stackgen's output
-charter. **No gate ships a hook fragment**: the four are reached through
-the tool-neutral hooks the pre-commit pack's own `pre-commit-config.yaml`
-carries — each calling a `code:*` task, never a binary — so the
+charter. **No gate ships a hook fragment**: pre-commit is the runner, and
+the other three are reached through the tool-neutral hooks its own
+`pre-commit-config.yaml` carries — each calling a `code:*` task, never a
+binary — so the
 `.config/pre-commit.d/` merge `/vwf:init` runs has no input from any of the
 three unconditional bundles — its fragments come from packs outside them,
 and the uv pack's is the one in the tree today.
