@@ -126,7 +126,12 @@ Commands split cleanly by what they actually need:
    consent-gated clone: `git submodule update --init <path>` under submodule
    linkage, `git clone <url> <path>` under siblings. Never clone uninvited — it
    writes to the user's disk outside the repo they invoked you in.
-3. **On accept** — clone, then proceed normally.
+3. **On accept** — clone, then, under submodule linkage, check a branch out in
+   the member: the one `origin/HEAD` names, else `develop`, else `main`. A
+   submodule arrives detached, and a detached member cannot take a shaping
+   commit — `init` refuses it — so a member this run cloned is never left
+   detached. A sibling clone is on its default branch already. Then proceed
+   normally.
 4. **On decline** — **proceed with that project excluded, and record the blind
    spot.** Name every project that could not be inspected in the command's own
    output, and in whatever artifact it writes: `plan` stamps them in the plan
