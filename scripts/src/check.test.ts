@@ -554,6 +554,79 @@ describe("the pack config tier", () => {
       expect.stringContaining("declares no top-level `repos` list"),
     ]);
   });
+
+  // The materializer evaluates `conditional:` against the caller's answers and
+  // skips what does not hold — an axis or value it does not recognise is a
+  // condition that never holds, and a path matching nothing is a condition
+  // guarding no file. Neither reports anything downstream.
+  const conditional = (
+    entries: string,
+    files: Record<string, string> = {},
+  ) => ({
+    alpha: {
+      files: {
+        "stacks/toolchain-manager/mise/pack.yaml":
+          `name: mise\nconditional:\n${entries}`,
+        [`${pack}/.config/vscode.d/mise.jsonc`]: "{ \"settings\": {} }\n",
+        [`${pack}/renovate.json`]: "{}\n",
+        ...files,
+      },
+    },
+  });
+
+  it("accepts a conditional list naming known axes and landed paths", () => {
+    const root = tree(conditional(
+      "  - path: .config/vscode.d/*.jsonc\n    when: { editor: vscode }\n"
+        + "  - path: renovate.json\n    when: { update_bot: renovate }\n"
+        + "  - path: renovate.json\n    when: { secrets: fnox }\n",
+    ));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a conditional entry on an axis outside the vocabulary", () => {
+    const root = tree(conditional(
+      "  - path: renovate.json\n    when: { ci: github }\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(
+        "`conditional[0]` (renovate.json) `when` names axis `ci`, not one of "
+          + "forge, editor, secrets, update_bot",
+      ),
+    ]);
+  });
+
+  it("flags a conditional entry whose value the axis never takes", () => {
+    const root = tree(conditional(
+      "  - path: renovate.json\n    when: { forge: bitbucket }\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(
+        "`when.forge` is \"bitbucket\", not one of github, gitlab",
+      ),
+    ]);
+  });
+
+  it("flags a conditional entry whose path matches nothing", () => {
+    const root = tree(conditional(
+      "  - path: .github/ISSUE_TEMPLATE/*\n    when: { forge: github }\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(
+        "`conditional[0]` (.github/ISSUE_TEMPLATE/*) matches no file under "
+          + "the pack's config/ tier",
+      ),
+    ]);
+  });
+
+  it("flags a conditional entry naming two axes at once", () => {
+    // Two answers is two entries on the same path, never one map.
+    const root = tree(conditional(
+      "  - path: renovate.json\n    when: { forge: github, editor: vscode }\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("`when` names 2 axes — exactly one of"),
+    ]);
+  });
 });
 
 describe("frontmatter", () => {
@@ -1174,6 +1247,103 @@ describe("bundle defaults", () => {
       "bundle `default` is \"true\", not a boolean — the menu preselects on "
       + "`default: true` alone, so any other spelling never preselects and "
       + "reports nothing",
+    ]);
+  });
+});
+
+describe("the exclusion sets", () => {
+  // Four tools, four syntaxes, one convention: the generated trees every gate
+  // skips. Each list is authored by hand in its tool's own spelling, so the
+  // drift is an entry added to some of them — which no tool reports, since each
+  // reads only its own list. The three formatter lists must agree; the scanner's
+  // allowlist is held to a subset of them, since upstream's default config
+  // already skips part of the set and authored source must stay scanned.
+  const gate = "stacks/toolchain-gate";
+  const dprint = `${gate}/dprint/config/.config/dprint.json`;
+  const taplo = `${gate}/dprint/config/.config/taplo.toml`;
+  const gitleaks = `${gate}/gitleaks/config/.config/gitleaks.toml`;
+  const preCommit = `${gate}/pre-commit/config/.config/pre-commit-config.yaml`;
+
+  const lists = (overrides: Partial<Record<string, string>> = {}) => ({
+    stackgen: {
+      files: {
+        [dprint]: overrides.dprint ?? JSON.stringify({
+          excludes: ["**/node_modules/", "**/dist/", "**/*.lock", "**/.env.*"],
+        }),
+        [taplo]: overrides.taplo ?? "exclude = [\n"
+            + "  \"**/node_modules/**\",\n  \"**/dist/**\",\n  \"**/*.lock\",\n"
+            + "  \"**/.env.*\",\n]\ninclude = [ \"**/*.toml\" ]\n",
+        [gitleaks]: overrides.gitleaks ?? "[allowlist]\npaths = [\n"
+            + "  '''node_modules/*''',\n  '''dist/*''',\n  '''.*\\.lock''',\n"
+            + "  '''\\.env\\..*''',\n]\n",
+        [preCommit]: overrides.preCommit
+          ?? "exclude: ^(node_modules/|dist/|.*\\.lock|\\.env\\..*)\n"
+            + "repos:\n  - repo: local\n",
+      },
+    },
+  });
+
+  it("passes four lists that agree after normalisation", () => {
+    expect(messages(check(tree(lists())))).toEqual([]);
+  });
+
+  it("flags an entry present in some formatter lists and absent from another", () => {
+    const root = tree(lists({
+      dprint: JSON.stringify({
+        excludes: ["**/node_modules/", "**/*.lock", "**/.env.*"],
+      }),
+    }));
+    expect(messages(check(root))).toEqual([
+      `exclusion \`dist\` is in ${taplo}, ${preCommit} and not in ${dprint} — `
+      + "the formatters' exclusion lists state one set",
+    ]);
+  });
+
+  it("passes a gitleaks allowlist narrower than the formatters' set", () => {
+    // Upstream's default config already skips part of the set, and `.claude/`
+    // is authored source the scanner must read — the allowlist is a subset.
+    const root = tree(lists({
+      gitleaks: "[allowlist]\npaths = [\n  '''node_modules/*''',\n"
+        + "  '''.*\\.lock''',\n  '''\\.env\\..*''',\n]\n",
+    }));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a gitleaks allowlist entry no formatter excludes", () => {
+    // An allowlist entry with no generated tree behind it is a scanner quietly
+    // not scanning.
+    const root = tree(lists({
+      gitleaks: "[allowlist]\npaths = [\n  '''node_modules/*''',\n"
+        + "  '''dist/*''',\n  '''.*\\.lock''',\n  '''\\.env\\..*''',\n"
+        + "  '''src/secrets/*''',\n]\n",
+    }));
+    expect(messages(check(root))).toEqual([
+      `${gitleaks}: allowlists \`src/secrets\`, which no formatter list `
+      + "excludes — the scanner's allowlist is a subset of the formatters' set",
+    ]);
+  });
+
+  it("reads a verbose pre-commit pattern the same as a one-line one", () => {
+    const root = tree(lists({
+      preCommit: "exclude: |\n  (?x)^(\n    node_modules/ | # a comment\n"
+        + "    dist/ |\n    .*\\.lock |\n    \\.env\\..*\n  )\n"
+        + "repos:\n  - repo: local\n",
+    }));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("holds a pre-commit config with no global exclude to the others", () => {
+    const root = tree(lists({ preCommit: "repos:\n  - repo: local\n" }));
+    expect(messages(check(root))).toHaveLength(4);
+    expect(messages(check(root))[0]).toContain(
+      `exclusion \`*.lock\` is in ${dprint}, ${taplo} and not in ${preCommit}`,
+    );
+  });
+
+  it("flags a dprint config that lost its excludes list", () => {
+    const root = tree(lists({ dprint: "{}\n" }));
+    expect(messages(check(root))).toEqual([
+      `${dprint}: declares no exclusion list to compare`,
     ]);
   });
 });
