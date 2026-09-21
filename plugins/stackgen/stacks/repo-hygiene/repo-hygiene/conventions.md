@@ -74,38 +74,45 @@ does not ingest, and its one shipped entry is the graph's own output — feeding
 the last run's summary back in as source. Both live at the root and nest under
 `.gitignore` in the editor, which is the grouping rule below.
 
-### Which template a pinned pack takes
+### Which template a detected language takes
 
-The pack the repo pins names the template — the initializer never infers one
-from a file it happened to find. Every name below resolves at
+The initializer's **stack read** names the template — the languages it learned
+from the repo's pins, else its lockfile's components, else the manifests it
+found at the root and in each sub-project directory — and the read is the
+only input: a file that merely happened to be in the tree names nothing. Every
+name below resolves at
 `https://raw.githubusercontent.com/github/gitignore/main/<Name>.gitignore`,
 and each was fetched to confirm it does.
 
-| Pinned pack             | Template appended   |
-| ----------------------- | ------------------- |
-| `package-manager/pnpm`  | `Node.gitignore`    |
-| `language/typescript`   | `Node.gitignore`    |
-| `package-manager/uv`    | `Python.gitignore`  |
-| `package-manager/pub`   | `Dart.gitignore`    |
-| `app-framework/flutter` | `Flutter.gitignore` |
+| Language | Template appended                                     |
+| -------- | ----------------------------------------------------- |
+| node     | `Node.gitignore`                                      |
+| python   | `Python.gitignore`                                    |
+| dart     | `Dart.gitignore`, plus `Flutter.gitignore` on Flutter |
+| go       | `Go.gitignore`                                        |
+| rust     | `Rust.gitignore`                                      |
+| swift    | `Swift.gitignore`                                     |
 
-A TypeScript repo on pnpm pins two rows naming the same template and gets
-**one** `# ==== Node ====` section — the append rule is per section, not per
-pack. A Flutter repo pins `pub` and `flutter` and gets both: the Dart template
+The language keys are the read's own vocabulary, so a pin and a manifest
+resolve alike: `package-manager/pnpm` and `language/typescript` are both
+`node`, as is a `package.json` in a repo that has pinned nothing yet, and the
+three name **one** `# ==== Node ====` section — the append rule is per
+section, not per source. A Flutter repo is `dart` with the
+`app-framework/flutter` pack pinned and gets both templates: the Dart one
 covers the package tooling, the Flutter one the app build output above it.
 
-The rest of this tree has **no row and needs none**. `language/bash` and
-`language/markdown` have no template upstream at all; `framework/effect` is
-Node, already appended by the pack that pins it; and `toolchain-manager/mise`,
-the toolchain gates, `datastore/postgres`, `ci-system/github-actions`, the
-cloud packs, the deploy targets and the design tools write nothing an ignore
-file has to learn — the base sections already cover them. Absence here is an
-answer, not an omission.
+A language absent from this table, or a pin that names no language, has **no
+row and needs none**. `language/bash` and `language/markdown` have no template
+upstream at all; `framework/effect` is Node, already appended for the language
+that pins it; and `toolchain-manager/mise`, the toolchain gates,
+`datastore/postgres`, `ci-system/github-actions`, the cloud packs, the deploy
+targets and the design tools write nothing an ignore file has to learn — the
+base sections already cover them. Absence here is an answer, not an omission.
 
-**A pinned pack with no row is proposed, never guessed.** The initializer
-names the template it would fetch and waits for a yes; a wrong name is a 404,
-and a 404 is a section that silently never lands. Once confirmed, the row
-belongs in this table.
+**A detected language with no row is proposed, never guessed.** The
+initializer names the template it would fetch and waits for a yes; a wrong
+name is a 404, and a 404 is a section that silently never lands. Once
+confirmed, the row belongs in this table.
 
 **The seam with secret scanning.** Ignoring a file and allowlisting it are two
 different acts, and this file only does the first. A secret that is ignored is

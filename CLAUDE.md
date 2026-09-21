@@ -269,33 +269,43 @@ config layout, the task vocabulary, the gates, the hygiene files — from
 stackgen's three unconditional bundles, resolving the members itself as the
 union of `.gitmodules` and the config's `members:` list, surveying all of them
 at once and applying **one plan with a section per repo on one consent**,
-members first so the base commits its gitlinks current. It asks seven questions
-(the first naming each new repo's folder, which is what fills `REPO_NAME`; the
-second confirming every project id, its slug and the source the name came from —
-the registry, a sub-project directory, or the project's platform token — grouped
-by repo, before any `p:<slug>:*` group or commit scope is written; the fifth
-asking which agent plugins this product requires, seeded by the plugin task's
-own inventory mode and written into that task's two marked positions; the sixth
-each repo's **visibility**, `public` or `private`, defaulted from the forge,
-with the licence — public repos only — and the security contact — an advisories
-URL for a public repo, a free email or internal URL for a private one — asked
-under it as the seventh round), and closes with a consent-gated git pass (the
-first commit, the `develop`/`main` pair, the landing model it writes to
-`MERGE_MODEL`, the push, and — after the push, on one further consent for the
-product — the **forge pass**, which sets each pushed repo's default branch on
-the forge, protects `develop` and `main` there, and reaches the backlog skill's
-missing-project procedure for the base; those three are the only forge settings
-it touches, existing protection is left alone, and a forge it has no CLI for
-gets the by-hand list the hygiene pack's `CONTRIBUTING.md` keeps). The
-aggregator's member flags and the `setup-<slug>` aliases are named for the
-**member repos**, never for a project id. On an existing repo it **adopts rather
-than flattens**: an unmapped helper function moves to a repo-owned
-`_scripts/local` sidecar, a task no pack ships is kept and listed, and a
-pack-owned file whose **content** diverged is offered as replace-or-keep —
-content being what survives two tests, the hash against the lock and then a
-splice of every marked position's current value into the pack's payload, so a
-file diverging only inside those positions is never offered and the owning pass
-shows the change instead. A keep covers that content and never a marked
+members first so the base commits its gitlinks current. Each repo's **mode** is
+decided from its tree, never a flag: `shaped` where the adapter lockfile exists,
+`source` where there is no lockfile but a language manifest, a source directory,
+a root tool config or a `.config/`, `blank` otherwise — and a **stack read**
+(pins, else lockfile components, else a fixed manifest table, first hit per
+language) drives the `.gitignore` language sections and the toolchain config's
+two runtime positions. It asks seven questions (the first naming each `blank` or
+`source` repo's folder, which is what fills `REPO_NAME`; the second confirming
+every project id, its slug and the source the name came from — the registry, a
+sub-project directory (the registry's `projects[].path`, or on a first run in
+`source` mode a non-root directory with its own manifest or one a workspace file
+lists), or the project's platform token — grouped by repo, before any
+`p:<slug>:*` group or commit scope is written; the fifth asking which agent
+plugins this product requires, seeded by the plugin task's own inventory mode
+and written into that task's two marked positions; the sixth each repo's
+**visibility**, `public` or `private`, defaulted from the forge, with the
+licence — public repos only — and the security contact — an advisories URL for a
+public repo, a free email or internal URL for a private one — asked under it as
+the seventh round), and closes with a consent-gated git pass (the first commit,
+the `develop`/`main` pair, the landing model it writes to `MERGE_MODEL`, the
+push, and — after the push, on one further consent for the product — the **forge
+pass**, which sets each pushed repo's default branch on the forge, protects
+`develop` and `main` there, and reaches the backlog skill's missing-project
+procedure for the base; those three are the only forge settings it touches,
+existing protection is left alone, and a forge it has no CLI for gets the
+by-hand list the hygiene pack's `CONTRIBUTING.md` keeps). The aggregator's
+member flags and the `setup-<slug>` aliases are named for the **member repos**,
+never for a project id. On a `shaped` repo it **adopts rather than flattens**:
+an unmapped helper function moves to a repo-owned `_scripts/local` sidecar, a
+task no pack ships is kept and listed, and a pack-owned file whose **content**
+diverged is offered as replace-or-keep — content being what survives two tests,
+the hash against the lock and then a splice of every marked position's current
+value into the pack's payload, so a file diverging only inside those positions
+is never offered and the owning pass shows the change instead. The offer is
+**every mode's**: on a `source` or `blank` repo every path the materializer
+reports as a conflict gets the same row (a readme, licence or security file
+already there is kept outright). A keep covers that content and never a marked
 position's value, and is recorded under `enforcement.kept_files` in the
 **base's** `.config/vwf.yaml`, keyed by the member path as prefix. The editor
 merge reads each `.vscode` file whole, and a settings key or nesting parent the

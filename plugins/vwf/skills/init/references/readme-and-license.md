@@ -9,8 +9,8 @@ A row's answer never reaches a repo other than the one it names.
 
 ## The readme
 
-**Every repo that resolved to mode new gets a two-line stub at its own root,
-and nothing more:**
+**Every repo that resolved to mode `blank` or `source` and carries no readme
+gets a two-line stub at its own root, and nothing more:**
 
 ```markdown
 # <repo name>
@@ -20,19 +20,22 @@ and nothing more:**
 
 Both lines come from that repo's own answers to the two questions the new-repo
 path asks — question 1 the name, question 3 the brief, each asked for every
-repo that resolved to mode new and for no other. An **empty brief** writes the
-H1 alone — an honest empty file beats an invented sentence about a product
-nobody has described yet.
+repo that resolved to `blank` or `source` and for no other. An **empty brief**
+writes the H1 alone — an honest empty file beats an invented sentence about a
+product nobody has described yet.
 
 Then **name `/vwf:readme`** in the report as the command that fills the rest.
 It writes the title, the project list, the architecture diagram, the setup
 guide and the task list, and it does that by scanning a repo that has
 something in it. Running it against a stub is the wrong order.
 
-**An existing readme is never rewritten.** It is moved to the lowercase
-filename, content untouched, as the existing-repo pipeline's second survey
-pass lists it. `init` writes a stub only where there is no readme at all — a
-member that already carries one is left as it is, exactly as the base is.
+**An existing readme is never rewritten.** In `shaped` mode it is moved to
+the lowercase filename, content untouched, as the existing-repo pipeline's
+second survey pass lists it. In `blank` or `source` mode a `README.md` the
+repo already carries is **kept as-is, never stubbed and reported as kept** —
+the rename is that pipeline's pass 2 and is not run here. `init` writes a stub
+only where there is no readme at all — a member that already carries one is
+left as it is, exactly as the base is.
 
 ## The licence
 
@@ -68,6 +71,14 @@ rather than writing an empty holder.
 
 ## The security contact
 
+**A repo that already carries a security file is listed as already there —
+kept, never replaced**, in every mode. The channel a repository already names
+is a decision somebody made, and the row's answer is what a repo with no such
+file gets rather than a rewrite of one that is there. The pack's template is
+written only where the file is absent, and **question 6b is asked only for a
+repo where it will be written**: a repo keeping its own file has no row at
+that question, and the plan's section for it reports the file as kept.
+
 Question 6b is **one row per repo**, in the round that follows the visibility
 answer, and the row takes one of two shapes:
 
@@ -89,7 +100,9 @@ issue-template chooser carries a *Report a vulnerability* link that follows the
 same answer: where the contact is a URL, that entry's `url:` takes it; where the
 contact is an email, or the row was declined, the **whole entry is removed** —
 the forge accepts only a web address there, and an entry pointing nowhere is
-worse than none.
+worse than none. A repo that kept its own security file had no row, and its
+chooser entry takes the declined shape: `init` has no address it was told to
+point at, and reads none out of a file it did not write.
 
 **Declining a row writes no file in that repo, whichever shape it had.** A
 repository with no private channel to point at is better off with none than

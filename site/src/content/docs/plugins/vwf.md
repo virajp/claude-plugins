@@ -813,29 +813,29 @@ record.
 
 ## Commands
 
-| Command                                 | What it does                                                                                                                                                                                                                                                                                   |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/vwf:init`                             | Internal — shape the base repo **and every member repo** (config layout, task library, gates, hygiene files, a licence on a public repo, the forge's default branch and branch protection); reached only through `/vwf:setup`                                                                  |
-| `/vwf:setup [reshape]`                  | Onboard/migrate a repo into vwf's format; `reshape` runs the repo-shape pass alone, across every member (re-runnable)                                                                                                                                                                          |
-| `/vwf:product [note]`                   | The Phase −1 outcome contract — problem, users, goals, slice priority; an optional feedback note seeds the update questions                                                                                                                                                                    |
-| `/vwf:architecture`                     | Bootstrap or update the system shape + Project Registry                                                                                                                                                                                                                                        |
-| `/vwf:design-system`                    | Import the product's design system from its design tool into the contract (mandatory once UI exists)                                                                                                                                                                                           |
-| `/vwf:blueprint [flow]`                 | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                                                                                                                                                                                                   |
-| `/vwf:mockups [flow]`                   | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                                                                                                                                                                                                       |
-| `/vwf:screens <mode>`                   | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                                                                                                                                                                                             |
-| `/vwf:plan [slice]`                     | Write a reviewable cycle-plan folder — a diff of blueprint vs code, deps chained as plans; interviews, records consent, commits and pushes it at hand-off                                                                                                                                      |
-| `/vwf:execute <folder>`                 | Run an approved plan folder of either kind unattended in a fresh session — TDD per `code` unit, code + security review at each `review` row, waves and review per `edit` unit, E2E + UX when the plan covers a slice, then land per the plan's consent; `next` picks the queue's runnable plan |
-| `/vwf:plan-management`                  | Internal — the one writer of the plan queue: the index rows, every folder's Status block, the archive move; called by the planners and `execute`, or when you ask to archive or list                                                                                                           |
-| `/vwf:doctor [project ... \| baseline]` | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, dependency audit, mempalace, graphify, the repo shape of every member, stamps; `baseline` runs the local repo-shape predicates alone                                                                         |
-| `/vwf:verify [env]`                     | Post-deploy: health-check + re-run acceptance criteria against the environment                                                                                                                                                                                                                 |
-| `/vwf:feedback [input]`                 | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat)                                                                                                                                                                               |
-| `/vwf:backlog [verb]`                   | The prioritised list of work that cannot be picked up now — a GitHub Project named for the base repo, and this is its only writer                                                                                                                                                              |
-| `/vwf:change-plan [what]`               | Plan an ad-hoc change — work with no blueprint slice behind it — into the same folder shape, for `/vwf:execute` to run                                                                                                                                                                         |
-| `/vwf:handoff [name]`                   | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                                                                                                                                                                                                        |
-| `/vwf:recall [name]`                    | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation; prints one shape-drift line when a repo has fallen behind                                                                                                                                         |
-| `/vwf:readme`                           | Scan a repo and write or update its README against eight required sections                                                                                                                                                                                                                     |
-| `/vwf:docs-sync [range]`                | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog                                                                                                                                                                                           |
-| `/vwf:git-workflow`                     | Internal — worktree isolation, commits, merges                                                                                                                                                                                                                                                 |
+| Command                                 | What it does                                                                                                                                                                                                                                                                                     |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/vwf:init`                             | Internal — shape the base repo **and every member repo** (config layout, task library, gates, hygiene files, a licence on a public repo, the forge's default branch and branch protection), each in the mode its tree decides — `blank`, `source` or `shaped`; reached only through `/vwf:setup` |
+| `/vwf:setup [reshape]`                  | Onboard/migrate a repo into vwf's format; `reshape` runs the repo-shape pass alone, across every member (re-runnable)                                                                                                                                                                            |
+| `/vwf:product [note]`                   | The Phase −1 outcome contract — problem, users, goals, slice priority; an optional feedback note seeds the update questions                                                                                                                                                                      |
+| `/vwf:architecture`                     | Bootstrap or update the system shape + Project Registry                                                                                                                                                                                                                                          |
+| `/vwf:design-system`                    | Import the product's design system from its design tool into the contract (mandatory once UI exists)                                                                                                                                                                                             |
+| `/vwf:blueprint [flow]`                 | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                                                                                                                                                                                                     |
+| `/vwf:mockups [flow]`                   | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                                                                                                                                                                                                         |
+| `/vwf:screens <mode>`                   | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                                                                                                                                                                                               |
+| `/vwf:plan [slice]`                     | Write a reviewable cycle-plan folder — a diff of blueprint vs code, deps chained as plans; interviews, records consent, commits and pushes it at hand-off                                                                                                                                        |
+| `/vwf:execute <folder>`                 | Run an approved plan folder of either kind unattended in a fresh session — TDD per `code` unit, code + security review at each `review` row, waves and review per `edit` unit, E2E + UX when the plan covers a slice, then land per the plan's consent; `next` picks the queue's runnable plan   |
+| `/vwf:plan-management`                  | Internal — the one writer of the plan queue: the index rows, every folder's Status block, the archive move; called by the planners and `execute`, or when you ask to archive or list                                                                                                             |
+| `/vwf:doctor [project ... \| baseline]` | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, dependency audit, mempalace, graphify, the repo shape of every member, stamps; `baseline` runs the local repo-shape predicates alone                                                                           |
+| `/vwf:verify [env]`                     | Post-deploy: health-check + re-run acceptance criteria against the environment                                                                                                                                                                                                                   |
+| `/vwf:feedback [input]`                 | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat)                                                                                                                                                                                 |
+| `/vwf:backlog [verb]`                   | The prioritised list of work that cannot be picked up now — a GitHub Project named for the base repo, and this is its only writer                                                                                                                                                                |
+| `/vwf:change-plan [what]`               | Plan an ad-hoc change — work with no blueprint slice behind it — into the same folder shape, for `/vwf:execute` to run                                                                                                                                                                           |
+| `/vwf:handoff [name]`                   | Capture the session so work resumes in a fresh one — no name writes the reserved `next`                                                                                                                                                                                                          |
+| `/vwf:recall [name]`                    | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation; prints one shape-drift line when a repo has fallen behind                                                                                                                                           |
+| `/vwf:readme`                           | Scan a repo and write or update its README against eight required sections                                                                                                                                                                                                                       |
+| `/vwf:docs-sync [range]`                | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog                                                                                                                                                                                             |
+| `/vwf:git-workflow`                     | Internal — worktree isolation, commits, merges                                                                                                                                                                                                                                                   |
 
 **Five are user-only** — `setup`, `verify`, `mockups`, `recall` and `execute`
 carry `disable-model-invocation: true`, so the model never fires them on its
@@ -961,11 +961,11 @@ segment and strips what looks like a file extension from it, so a token carrying
 a dot silently loses everything after it. What differs is what each token is
 derived from, and where it lands:
 
-- **A project's id** — from the registry, a sub-project directory, or the
-  project's own platform token (`service`, `worker`, `webapp`, `site`, `cli`,
-  `iac`, …), and for a member from the base config's `members[].projects` first.
-  It names the `p:<id>:*` task group and its alias, and it is what the commit
-  gate's scope list holds.
+- **A project's id** — from the registry, a sub-project directory (defined under
+  question 2 below), or the project's own platform token (`service`, `worker`,
+  `webapp`, `site`, `cli`, `iac`, …), and for a member from the base config's
+  `members[].projects` first. It names the `p:<id>:*` task group and its alias,
+  and it is what the commit gate's scope list holds.
 - **A repo's name** — from the basename of that repo's **main checkout**
   directory, and nothing else. It fills `REPO_NAME`, the repo-level environment
   key your own shell aliases can read. A member repo names its own folder, never
@@ -1006,27 +1006,65 @@ no clone source recorded anywhere gets no row at all: it is listed under
 `Deferred`, unlock *add the clone source*, because inventing one would be a
 guess at somebody's remote.
 
-**Mode resolves per repo, from what is on disk** and from nothing else — there
-is no flag to override it: no `.config/` directory *and* no task-library
-directory means **new**; anything else means **existing**. The signal is
-deliberately narrow — a repo with source, a readme and a licence but no
-configuration layout has never been shaped, and nothing in the new pipeline
-touches source. Each resolved repo is read on its **own** markers, so a base can
-come out existing while a member beside it comes out new, and each repo's
-section of the plan says which it got.
+**Mode resolves per repo, from what its tree contains** and from nothing else —
+there is no flag to override it, and setup's own blank-or-code fork is not
+handed down: init re-derives it. Three modes, the first row that holds decides:
+
+| The repo carries                                                                                                      | Mode     |
+| --------------------------------------------------------------------------------------------------------------------- | -------- |
+| the stack adapter's **lockfile** — written when a pack first landed                                                   | `shaped` |
+| no lockfile, but a **language manifest**, a **source directory**, a **root tool config**, or a `.config/` without one | `source` |
+| none of those                                                                                                         | `blank`  |
+
+`shaped` runs the existing-repo pipeline whole — the eleven survey passes, the
+plan, the apply. `source` runs the new-repo landing **plus** the
+read-before-land passes of that pipeline that have something to read: the root
+survey and the replace-or-keep offer over what is already there, and the rename
+and helper-library passes only where a task library exists — a repository with
+code but no lockfile has never been shaped, and shaping it as if it were empty
+is what lands a pack's file over one the repo already wrote. `blank` runs the
+new-repo landing alone. A readme, a licence, `.gitignore`, `.gitattributes` and
+a docs tree make a repo no less blank — that is setup's definition, cited — and
+init's evidence is one item wider than setup's: a root tool config is not code,
+but it is a file the survey has to read before a pack lands beside it, so it
+resolves `source` here where setup calls the repo blank. Each resolved repo is
+read on its **own** tree, so a base can come out `shaped` while a member beside
+it comes out `source` or `blank`, and each repo's section of the plan says which
+it got and the evidence that decided it.
+
+**The stack read** learns what each repo is written in once, before the plan,
+and everything downstream that depends on a language reads that one answer.
+Three sources, in order, the **first hit per language** winning: the pins in
+`.config/vwf.yaml` (each project's `stack.*` axes and its `languages` list);
+else the lockfile's components, on a `shaped` repo; else, in `source` mode only,
+a language manifest at the root and in every sub-project directory, read by a
+fixed table and nothing looser — `package.json` → node, `pyproject.toml` or
+`requirements.txt` → python, `pubspec.yaml` → dart, `go.mod` → go, `Cargo.toml`
+→ rust, `Package.swift` → swift. Every source resolves to those six keys: a pin
+token or a lockfile component slug is mapped onto one by the hygiene pack's own
+template table, so a pin and a manifest naming the same language collapse to one
+hit, and a token, slug or manifest nothing maps is proposed in the plan rather
+than guessed. A `blank` repo reads nothing. The read drives three things and is
+the only thing that drives them: the `.gitignore` language sections — one per
+language found, so a `source` repo gets its section on the **first** run rather
+than after some later pin — the two runtime positions the toolchain pack marks
+in its base config, `RUNTIME_BLOCK` and `PATH_ENTRIES` (one runtime's settings
+lines per language, the path entry left empty where nothing needs one), and the
+sub-project proposals question 2 shows where no registry names them.
 
 **Seven questions, each one round**, asked *before* the plan so one yes covers
 all of it. **A round is one round for the whole product**, however many repos
 resolved: a question whose answer differs per repo shows one row per repo inside
 its single round, and never becomes a second round. Two are asked for the repos
-that came out **new** only — the repo name (proposed from the basename of that
-repo's **main checkout**, and the one thing that fills `REPO_NAME`) and a
-one-line brief, which may be empty, each listing one row per new repo. The other
-five are asked whatever the modes are, listed in order — the first of them is
-question 2 overall, and it is the one this section's slug rule waits on;
-question 6, the visibility, has two dependent parts, 6a and 6b, which together
-are the seventh round, since they are shown against 6's answers and cannot share
-its round:
+that came out `blank` or `source` only — the repo name (proposed from the
+basename of that repo's **main checkout**, and the one thing that fills
+`REPO_NAME`) and a one-line brief, which may be empty (a `source` repo that
+already carries a readme keeps it, whatever the row says), each listing one row
+per such repo. The other five are asked whatever the modes are, listed in order
+— the first of them is question 2 overall, and it is the one this section's slug
+rule waits on; question 6, the visibility, has two dependent parts, 6a and 6b,
+which together are the seventh round, since they are shown against 6's answers
+and cannot share its round:
 
 - **The ids, confirmed** — one list, **grouped by repo**: the base's group
   first, then one per member in the resolved order, and inside each group a row
@@ -1034,9 +1072,16 @@ its round:
   the **name** the repo spells, the **id** it slugifies to, and the **source**
   that name came from (the registry, a sub-project directory, or the project's
   **type** — and for a member's projects, the base config's `members[].projects`
-  ahead of those). The type source is a choice rather than a reading: where a
-  repo has neither a registry nor sub-project directories there is no name in
-  the tree to propose from, so this same round asks which **platform token**
+  ahead of those). **A sub-project directory is defined once**, and every
+  mention here means this: where a registry exists, the registry's
+  `projects[].path` list and nothing else in the tree; where none does — a first
+  run — the term is live in `source` mode only, and means a non-root directory
+  carrying its **own language manifest** from the stack read's table, or one a
+  **workspace file** at the root enumerates as a member. `docs/`, `scripts/`,
+  `.config/`, `.github/` and any dot-directory never qualify, and a `blank` repo
+  proposes none. The type source is a choice rather than a reading: where a repo
+  has neither a registry nor sub-project directories so defined there is no name
+  in the tree to propose from, so this same round asks which **platform token**
   each project's primary surface is — `service`, `worker`, `webapp`, `site`,
   `cli`, `iac` and the rest, offered as the closed per-role list plus a free
   *other* you type — and proposes the token it picks. Two projects in one repo
@@ -1095,23 +1140,24 @@ its round:
     repo, since one naming a channel nobody watches is worse than none, and says
     nothing about the other rows.
 
-**On an existing repo it surveys, plans, and applies on one consent** — and on a
+**On a `shaped` repo it surveys, plans, and applies on one consent** — and on a
 product it does that for every repo at once, running the survey each repo's own
-mode selected, so a single run may execute both pipelines. The survey walks
-eleven checks — root files against the allowlist, the readme's casing, task
-names against the pack's *legacy-name table*, task shebangs, the helper
-library's name and whether its contents still match the pack's, the files a pack
-owns that the repo lacks or has changed, ignore sections and hook fragments,
-commit types, per-project task groups, the tasks the repo owns that no pack
-ships, and the positions the packs ship marked for it to fill — the gate
-configs, and the plugin task's two agent-plugin lists, which are compared row
-for row against question 5's confirmed answer, with both sides shown in the plan
-when they differ, since that is the one position a user may have hand-edited.
-Pass 1 has one case worth knowing: where a gate pack declares both a config
-under `.config/` and a two-line stand-in of the same name at the root — the
-stand-in existing because that tool's config discovery is root-only — your
-**real** config moves into `.config/` and the stand-in takes its place, with the
-plan saying the settings survive the move. Not every key does, and the plan says
+mode selected, so a single run may execute both pipelines (a `source` repo
+borrows the passes below that have something to read). The survey walks eleven
+checks — root files against the allowlist, the readme's casing, task names
+against the pack's *legacy-name table*, task shebangs, the helper library's name
+and whether its contents still match the pack's, the files a pack owns that the
+repo lacks or has changed, ignore sections and hook fragments, commit types,
+per-project task groups, the tasks the repo owns that no pack ships, and the
+positions the packs ship marked for it to fill — the gate configs, and the
+plugin task's two agent-plugin lists, which are compared row for row against
+question 5's confirmed answer, with both sides shown in the plan when they
+differ, since that is the one position a user may have hand-edited. Pass 1 has
+one case worth knowing: where a gate pack declares both a config under
+`.config/` and a two-line stand-in of the same name at the root — the stand-in
+existing because that tool's config discovery is root-only — your **real**
+config moves into `.config/` and the stand-in takes its place, with the plan
+saying the settings survive the move. Not every key does, and the plan says
 which: a gate pack's own skill names the key that is **not** inherited through
 the stand-in, where an extended file declaring it is a fatal diagnostic rather
 than a warning, so the move drops it. Dropping it **widens** what the gate
@@ -1171,37 +1217,43 @@ moved — there is no body to carry. It never asks per file, never writes before
 the yes, never touches application code, and never writes a language manifest, a
 lockfile or a CI workflow.
 
-**A pack-owned file whose content has diverged is offered, not skipped.** Every
-file a landed pack owns that your repo also has is compared with the pack's once
-the renames are accounted for. That comparison is **two tests**: the file's hash
-against the one the lockfile recorded, and — only on a mismatch — a second pass
-that takes the pack's shipped payload at the pinned version, splices your file's
-**current** value into every marked position that file carries, and hashes the
-result. Equal, and the whole difference lies inside those positions: **no offer
-at all**, and where a survey pass owns one of them that pass shows the change
-instead — a folder rename is a `repo-name key: <old> → <new>` replace row and
-nothing else. Unequal, and the content really did diverge: one
-`Offered (replace / keep)` row carrying a three-line summary — what your version
-adds, what it lacks, and whether it references a retired name — and the default
-`init` computed. **Replace** lands the pack's file and re-fills every marked
-position it carries from your confirmed answers, which is what makes a replace
-safe on a file whose positions you had already filled. **Keep** leaves your
-file's own content alone and records the decision under `enforcement.kept_files`
-in the **base's** `.config/vwf.yaml`, so neither a later reshape nor
-`/vwf:doctor` raises it again — the keep covers the content you customised,
-never a marked position's value, which the fill passes write on this run either
-way. There is one such record for the whole product, because a member carries
-only its back-link and no config of its own: a keep taken inside a member is
-keyed by its **base-relative** path — the member's path as prefix, then the path
-inside it — while a keep on the base's own file is the same rule with an empty
-prefix. The default is replace where your file references a retired name and
-keep everywhere else, and you may flip any row before answering — flipping
-re-prints the whole plan with the new decisions and asks the same one question,
-so the consent stays single. That key is the only thing `init` writes into
-`.config/vwf.yaml`, and it never creates that file: on a repo `/vwf:setup` has
-not reached yet, the keep still applies and the *record* is a deferral. The
-helper library is the one file this never offers — pass 5 replaces it
-unconditionally, for the timing reason above.
+**A pack-owned file whose content has diverged is offered, not skipped — in
+every mode.** On a `shaped` repo, every file a landed pack owns that your repo
+also has is compared with the pack's once the renames are accounted for. On a
+`source` or `blank` repo there is no lockfile to compare against, so every path
+the materializer's dry run reports as a **conflict** — a file already at a
+pack's path — is one such row, shown before the consent and recorded on a keep
+exactly as below; a `blank` repo rarely has one, and when it does it is never a
+silent skip. A readme, a `LICENSE` or a `SECURITY.md` already in the repo is
+outside the offer altogether: kept, never replaced, and reported. The `shaped`
+comparison is **two tests**: the file's hash against the one the lockfile
+recorded, and — only on a mismatch — a second pass that takes the pack's shipped
+payload at the pinned version, splices your file's **current** value into every
+marked position that file carries, and hashes the result. Equal, and the whole
+difference lies inside those positions: **no offer at all**, and where a survey
+pass owns one of them that pass shows the change instead — a folder rename is a
+`repo-name key: <old> → <new>` replace row and nothing else. Unequal, and the
+content really did diverge: one `Offered (replace / keep)` row carrying a
+three-line summary — what your version adds, what it lacks, and whether it
+references a retired name — and the default `init` computed. **Replace** lands
+the pack's file and re-fills every marked position it carries from your
+confirmed answers, which is what makes a replace safe on a file whose positions
+you had already filled. **Keep** leaves your file's own content alone and
+records the decision under `enforcement.kept_files` in the **base's**
+`.config/vwf.yaml`, so neither a later reshape nor `/vwf:doctor` raises it again
+— the keep covers the content you customised, never a marked position's value,
+which the fill passes write on this run either way. There is one such record for
+the whole product, because a member carries only its back-link and no config of
+its own: a keep taken inside a member is keyed by its **base-relative** path —
+the member's path as prefix, then the path inside it — while a keep on the
+base's own file is the same rule with an empty prefix. The default is replace
+where your file references a retired name and keep everywhere else, and you may
+flip any row before answering — flipping re-prints the whole plan with the new
+decisions and asks the same one question, so the consent stays single. That key
+is the only thing `init` writes into `.config/vwf.yaml`, and it never creates
+that file: on a repo `/vwf:setup` has not reached yet, the keep still applies
+and the *record* is a deferral. The helper library is the one file this never
+offers — pass 5 replaces it unconditionally, for the timing reason above.
 
 **Tasks you wrote yourself are kept and listed, never moved.** Every task file
 in the library that no landed pack ships is yours; `init` lists each under
@@ -1309,16 +1361,16 @@ the skill's own *not yet supported* line is printed and the run continues; a
 decline or a scope miss reads `pending`, and the next `/vwf:backlog add` reaches
 the same procedure.
 
-In an existing repo one commit goes **first and alone**: the pre-commit
+In a `shaped` repo one commit goes **first and alone**: the pre-commit
 configuration and the files it reads. A configuration file that is
 modified-but-unstaged aborts every commit, including the one that would have
 staged it, so a run that touched it has to close that file before it can commit
 anything else. That ordering is **per repo**, since each repo's pre-commit is
-its own — so an existing-mode repo makes two commits and a new-mode repo one. On
-a new repo no such ordering is needed — the first commit precedes hook wiring by
-construction, which is also why the shipped protected-branch hook ships
-unchanged and never sees it. That existing-repo commit runs through the live
-hook, and since stackgen `1.22.0` the hook's `git-config` step requires the
+its own — so a `shaped` repo makes two commits, and a `blank` or `source` repo
+one. In those two modes no such ordering is needed — the first commit precedes
+hook wiring by construction, which is also why the shipped protected-branch hook
+ships unchanged and never sees it. That `shaped`-repo commit runs through the
+live hook, and since stackgen `1.22.0` the hook's `git-config` step requires the
 forge identity from `GITHUB_USER_NAME`, `GITHUB_EMAIL` and `GITHUB_SIGNING_KEY`
 (or the `GITLAB_` / `GIT_` twins) — which `init` does not yet ask for. Until it
 does, **export the three before a reshape** and expect that commit to be refused
@@ -1364,32 +1416,34 @@ commit scope, both branches, the repo-name key against that repo's own **folder
 name, slugified**, the **content** of every pack-owned file against the hash the
 lockfile recorded when it landed — a mismatch re-tested with every marked
 position spliced out before it counts as a row, on init's own two tests, so a
-filled position is the shaped state and never a finding here — and the two
-marked positions beside the repo-name key — `MERGE_MODEL`, and `MEMBERS` on a
-product whose members are wired as plain siblings — and the **forge state**,
-predicate (g), read from the forge where its CLI answers for the origin host:
-the default branch one of `develop` or `main`, each of the two branches carrying
-some protection, and, for the base alone, the backlog project present. Where the
-CLI is absent, not logged in or refuses a read, that repo gets one `not checked`
-note and no row; an existing protection short of one of the pass's rules is a
-note too, never drift, since a reshape would leave it exactly as it is. **All
-seven run per repo** — the base and every locally-present member, resolved the
-way `init` resolves them — with every row printed under the repo it was found in
-and one remedy for the whole product, since `reshape` walks the members too. A
-member this machine does not carry is a blind spot rather than a finding,
-reading `not present, not checked`. Beside the id check sits its counterpart on
-the base alone, comparing the aggregator's member flags and `setup-<slug>`
-aliases against the resolved member set — a member with no flag is a row, and so
-is a flag named from a project id. A repo drifts by standing still and also by
-moving: a pack-owned file you edited in place is no longer the file the pack
-ships, and doctor says which of the two a row is, because re-landing fixes one
-and the other is a file somebody meant to change. A file you chose to keep is
-skipped, since that decision is already recorded. With no adapter lockfile the
-content check reports `not checked — no lockfile` rather than passing or
-crashing: a repo that landed nothing has nothing to have drifted from. Every one
-of these is `drift` and none is blocking — a repo behind its baseline is out of
-date, not broken — and all of them share one remedy, `/vwf:setup reshape`,
-printed once.
+filled position is the shaped state and never a finding here — and two of the
+four marked positions beside the repo-name key — `MERGE_MODEL`, and `MEMBERS` on
+a product whose members are wired as plain siblings; the other two,
+`RUNTIME_BLOCK` and `PATH_ENTRIES`, are filled from init's stack read and are
+legitimately empty on a repo with no language, so no row reads them — and the
+**forge state**, predicate (g), read from the forge where its CLI answers for
+the origin host: the default branch one of `develop` or `main`, each of the two
+branches carrying some protection, and, for the base alone, the backlog project
+present. Where the CLI is absent, not logged in or refuses a read, that repo
+gets one `not checked` note and no row; an existing protection short of one of
+the pass's rules is a note too, never drift, since a reshape would leave it
+exactly as it is. **All seven run per repo** — the base and every
+locally-present member, resolved the way `init` resolves them — with every row
+printed under the repo it was found in and one remedy for the whole product,
+since `reshape` walks the members too. A member this machine does not carry is a
+blind spot rather than a finding, reading `not present, not checked`. Beside the
+id check sits its counterpart on the base alone, comparing the aggregator's
+member flags and `setup-<slug>` aliases against the resolved member set — a
+member with no flag is a row, and so is a flag named from a project id. A repo
+drifts by standing still and also by moving: a pack-owned file you edited in
+place is no longer the file the pack ships, and doctor says which of the two a
+row is, because re-landing fixes one and the other is a file somebody meant to
+change. A file you chose to keep is skipped, since that decision is already
+recorded. With no adapter lockfile the content check reports
+`not checked — no lockfile` rather than passing or crashing: a repo that landed
+nothing has nothing to have drifted from. Every one of these is `drift` and none
+is blocking — a repo behind its baseline is out of date, not broken — and all of
+them share one remedy, `/vwf:setup reshape`, printed once.
 
 Nobody has to remember that schedule. Four commands bring you to the door
 themselves, each **offering** `reshape` the Step 0 way — one line naming the
@@ -1472,12 +1526,12 @@ see [the materialize pass](#the-materialize-pass) below.
 **Step 0 resolves one of three entry paths**, once, from what is on disk, and
 nothing after it re-derives the mode:
 
-| `.config/vwf.yaml`                                       | Mode                                                                   |
-| -------------------------------------------------------- | ---------------------------------------------------------------------- |
-| absent, and no legacy `docs/blueprint/.vwf.yml`          | `onboard` — forking on evidence between a blank repo and one with code |
-| parseable, either stamp behind — or only the legacy file | `migrate`                                                              |
-| parseable, both stamps current                           | `current` — report the stamps, print the chain, exit                   |
-| present but **unparseable**                              | halt, with the parse error and two remedies                            |
+| `.config/vwf.yaml`                                       | Mode                                                                                                                                                                                              |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| absent, and no legacy `docs/blueprint/.vwf.yml`          | `onboard` — forking on evidence between a blank repo and one with code; setup's fork only, since `init` runs its own three-mode test per repo (`blank`, `source`, `shaped`) and is handed nothing |
+| parseable, either stamp behind — or only the legacy file | `migrate`                                                                                                                                                                                         |
+| parseable, both stamps current                           | `current` — report the stamps, print the chain, exit                                                                                                                                              |
+| present but **unparseable**                              | halt, with the parse error and two remedies                                                                                                                                                       |
 
 An unparseable config is never onboarded over: it still records decisions
 nothing else does, so overwriting it would discard them silently. There is **no

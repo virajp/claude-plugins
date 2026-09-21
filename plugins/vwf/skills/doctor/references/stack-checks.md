@@ -479,14 +479,19 @@ set from whatever happens to sit in `.config/` instead — anything not in the
 lockfile is not the adapter's, which is the rule the materialization itself
 lives by.
 
-**(f) The two marked positions beside `REPO_NAME`.** The same `[env]` block
-carries two more positions the toolchain pack ships marked. `MERGE_MODEL` is
-read in **each** repo, from that repo's own block; `MEMBERS` is read on the
-**base alone**, since a member declares no members of its own unless it
-carries its own `.gitmodules`, in which case it is a base in its turn and this
-check reaches it as one. Each is read by a task rather than by vwf, so an
-unfilled one is wrong only where it is used — which is why it goes unnoticed
-until the day that task runs:
+**(f) Two of the four marked positions beside `REPO_NAME`.** The toolchain
+pack ships four more positions marked in its base config — `MERGE_MODEL` and
+`MEMBERS` in the same `[env]` block, and the two runtime positions
+`RUNTIME_BLOCK` under `[settings]` and `PATH_ENTRIES` at the end of `[env]`,
+which `init` fills from its stack read and which are **legitimately empty** on
+a repo with no detected language, so this check reads neither of them, and
+(e) splices their values out like any other position's. `MERGE_MODEL` is read
+in **each** repo, from that repo's own block; `MEMBERS` is read on the **base
+alone**, since a member declares no members of its own unless it carries its
+own `.gitmodules`, in which case it is a base in its turn and this check
+reaches it as one. Each is read by a task rather than by vwf, so an unfilled
+one is wrong only where it is used — which is why it goes unnoticed until the
+day that task runs:
 
 - **`MERGE_MODEL`** — absent from the block, or holding anything other than
   `direct` or `pr`, is one drift row. The merge tasks fall back to `direct`

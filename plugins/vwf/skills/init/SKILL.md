@@ -56,12 +56,13 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
   **Placeholders** — `<REPO_URL>`, `<YEAR>` and `<HOLDER>` — are values a pack
   templated into a file it ships; the hygiene pack's conventions are
   authoritative for them. **Marked positions** are the commented slots a pack
-  ships *because no pack can know a repo's project ids, its name, its remote
-  or which other packs landed beside it*: the bootstrap aggregator's member
-  flags, the shell aliases, the per-project task groups, the repo-name key,
-  the landing-model key and the member-path key, the commit gate's scope list
-  and forge links, the plugin task's two agent-plugin lists, and the composed
-  editor block.
+  ships *because no pack can know a repo's project ids, its name, its remote,
+  its languages or which other packs landed beside it*: the bootstrap
+  aggregator's member flags, the shell aliases, the per-project task groups,
+  the repo-name key, the landing-model key and the member-path key, the
+  toolchain config's runtime block and path entries, the commit gate's scope
+  list and forge links, the plugin task's two agent-plugin lists, and the
+  composed editor block.
   Filling one is exactly `init`'s job and is not authoring pack content — what
   the rule forbids is inventing pack-owned content from scratch, at a path or
   a position no pack marked.
@@ -71,11 +72,11 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
   authored, since every function it holds is carried verbatim out of the
   repo's own helper file. It is a **move**, wearing a create's row. **Two keys
   are neither either**: `enforcement.kept_files` in `.config/vwf.yaml`, where
-  a reshape records a pack-owned file the user chose to keep so it is never
-  re-offered, and `enforcement.editor_keys` beside it, where any run records
-  the answer for an editor key the hand section already carried so it is
-  never re-asked. `init` writes those two keys into a file it never creates,
-  and writes nothing else in it.
+  any run — whatever mode the repo resolved — records a pack-owned file the
+  user chose to keep so it is never re-offered, and `enforcement.editor_keys`
+  beside it, where any run records the answer for an editor key the hand
+  section already carried so it is never re-asked. `init` writes those two
+  keys into a file it never creates, and writes nothing else in it.
 - **Never application code.** Not a source file, not a test, not a directory
   of either.
 - **Never a language manifest or a lockfile.** Those declare what the project
@@ -126,7 +127,11 @@ The repository the caller is already in is not the target; it is the way in.
 `init` shapes a **product**, which is one **base repo** and every **member
 repo** that base declares, and it resolves that set itself: it still takes no
 arguments and reads no flag, so the repos it shapes are the ones it resolved,
-never ones it was told.
+never ones it was told. The same holds for each repo's **mode**: `/vwf:setup`
+forks its own onboarding on whether a repo is blank or carries code, and that
+fork is one input `init` **re-derives** from the tree rather than takes as an
+argument — setup's fork stays setup's, for its onboard sub-paths, and the
+table in step 4 is `init`'s own.
 
 1. **The base.** Resolve it per
    `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`'s five steps — the asset owns
@@ -175,26 +180,47 @@ never ones it was told.
    every run and recorded nowhere — the membership asset states why — and an
    absent member is handled below.
 4. **The mode of each.** Apply the table below to **every present** resolved
-   repo, on that repo's own markers. A base can resolve **existing** while a
-   member resolves **new**, and each repo's section of the plan says which it
-   got. An absent member has no markers to read yet; its mode resolves with
-   its survey, after the clone below.
+   repo, on what that repo's own tree contains. A base can resolve **shaped**
+   while a member resolves **source** or **blank**, and each repo's section of
+   the plan says which it got. An absent member has no tree to read yet; its
+   mode resolves with its survey, after the clone below.
 
-Detect a repo's mode from that repo itself:
+Detect a repo's mode from that repo itself — three modes, and the first row
+that holds decides:
 
-| The repo                                                  | Mode         |
-| --------------------------------------------------------- | ------------ |
-| no `.config/` directory **and** no task-library directory | **new**      |
-| anything else                                             | **existing** |
+| The repo carries                                                                                                      | Mode       |
+| --------------------------------------------------------------------------------------------------------------------- | ---------- |
+| the stack adapter's **lockfile** — written when a pack first landed                                                   | **shaped** |
+| no lockfile, but a **language manifest**, a **source directory**, a **root tool config**, or a `.config/` without one | **source** |
+| none of those                                                                                                         | **blank**  |
 
-The signal is deliberately narrow. A repository with source, a readme and a
-licence but no configuration layout has never been shaped, and treating it as
-new is right — nothing in the **new** pipeline touches source. The moment
-either marker is present, some earlier shaping exists and the survey is the
-honest path.
+What each mode runs:
+
+- **`shaped`** runs the [existing repo](references/existing-repo.md) pipeline
+  whole — the eleven survey passes, the plan, the apply. Some earlier landing
+  exists and the survey is the honest path.
+- **`source`** runs the [new repo](references/new-repo.md) landing **plus** the
+  read-before-land passes of the existing pipeline that have something to
+  read: pass 1, the root survey, and pass 6, the replace-or-keep offer over
+  what the materializer reports as already there; pass 3, the renames, and
+  pass 5, the helper library and its sidecar, only where a task library
+  exists. A repository with code but no lockfile has never been shaped, and
+  shaping it as if it were empty is what lands a pack's file over one the
+  repo already wrote.
+- **`blank`** runs the new-repo landing alone. Nothing here is read, because
+  there is nothing to read.
+
+The evidence is the tree, never a flag, and what is **not** evidence is
+`/vwf:setup`'s own definition, stated once in its onboard fork
+(`${CLAUDE_PLUGIN_ROOT}/skills/setup/SKILL.md`, *onboard forks once more*): a
+readme, a licence, `.gitignore`, `.gitattributes` and a docs tree make a repo
+no less blank. `init`'s evidence is one item wider than setup's code test — a
+**root tool config** is not code, but it is a file pass 1 has to read before a
+pack lands beside it, so it resolves `source` here where setup calls the repo
+blank. That is the two definitions doing different jobs, not disagreeing.
 
 Say the **resolved set** in one line before doing anything else: the base, then
-each member with `present` or `absent`, and each repo's mode with the marker
+each member with `present` or `absent`, and each repo's mode with the evidence
 that decided it.
 
 ### An absent member
@@ -259,6 +285,68 @@ in one line which branch was taken:
 `init` never writes the roster key itself — that is `/vwf:setup`'s, and a key
 written here would record a decision nobody was asked for.
 
+## The stack read
+
+`init` learns what a repo is written in **once per repo**, before the plan,
+and everything downstream that depends on a language reads that one answer.
+Three sources, read in this order, and the **first hit per language wins** —
+a later source never overrides an earlier one, it only adds a language the
+earlier ones did not name:
+
+1. **The pins**, where `.config/vwf.yaml` exists: each project's `stack.*`
+   axes and its `languages` list, the keys
+   `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` owns.
+2. **The lockfile's components** — a `shaped` repo's, the language,
+   package-manager and app-framework entries the materializer recorded when
+   they landed.
+3. **The manifests**, in `source` mode only: a language manifest at the root
+   and in every sub-project directory (defined beside question 2 below), read
+   by this table and by nothing looser:
+
+   | Manifest found                          | Language |
+   | --------------------------------------- | -------- |
+   | `package.json`                          | node     |
+   | `pyproject.toml` or `requirements.txt`  | python   |
+   | `pubspec.yaml`                          | dart     |
+   | `go.mod`                                | go       |
+   | `Cargo.toml`                            | rust     |
+   | `Package.swift`                         | swift    |
+
+   A file not in this table is not a manifest, whatever it looks like, and a
+   language the table does not name is proposed in the plan rather than
+   guessed.
+
+**One vocabulary, whatever the source.** The read's answer is a set drawn
+from the six keys in that table's `Language` column — `node`, `python`,
+`dart`, `go`, `rust`, `swift` — and nothing else, so the hygiene table and
+the runtime positions key on one spelling. Sources 1 and 2 do not speak it
+natively: a config `languages` token and a lockfile component slug (a
+`language/…`, `package-manager/…` or `app-framework/…` entry) are each
+**mapped onto one key first**, by the table the hygiene pack keeps under
+*Which template a detected language takes* in its conventions — the adapter
+owns that mapping, and `init` restates none of it — so a pin and a manifest
+that name the same language collapse to one hit, and "first hit per language"
+counts keys, never raw tokens. A token or slug that table maps to no key is
+proposed in the plan on the same terms as an unlisted manifest, never guessed
+and never carried through as its own language.
+
+A `blank` repo reads nothing — there is no pin, no lockfile and no manifest —
+and lands no language section. Say in one line, per repo, which source
+answered and what it found.
+
+**What the read drives**, and it is the only thing that drives them:
+
+- the **ignore sections** [new repo](references/new-repo.md) §5 appends —
+  one per language the read produced, resolved through the hygiene pack's own
+  table, so a `source` repo with a manifest gets its language's section on the
+  **first** run rather than after some later pin;
+- the **two runtime positions** the toolchain pack marks in its base config
+  — `RUNTIME_BLOCK` and `PATH_ENTRIES` — which §5 fills from the same read,
+  one runtime's lines per language and the path entry empty where no language
+  needs one;
+- the **sub-project proposals** question 2 shows, where no registry names
+  them.
+
 ## The questions
 
 Seven in all, each one round, MCQ where an option set exists, per
@@ -266,17 +354,18 @@ Seven in all, each one round, MCQ where an option set exists, per
 whole product**, however many repos resolved: a question that differs per repo
 shows one row per repo inside its single round, and never becomes a second
 round. Two of them — 1 and 3 — are asked for the repos that resolved to mode
-**new** only, because an existing repo already answers them; the other five
-are asked whatever the modes are. Question 6 has two dependent parts, 6a and
-6b, which together are the **seventh round**: they are shown against 6's
-answers, so they cannot share its round.
+**blank** or **source** only, because a `shaped` repo already answers them;
+the other five are asked whatever the modes are. Question 6 has two dependent
+parts, 6a and 6b, which together are the **seventh round**: they are shown
+against 6's answers, so they cannot share its round.
 
-1. **The repo name.** *Mode-new repos only.* Asked in one round listing every
-   repo that resolved to **new**, each proposed from that repo's **folder
-   name** — the basename of its **main checkout**, which on a run started in a
-   linked worktree is the parent of that repo's common git directory
-   (`rev-parse --git-common-dir`) and never the worktree's own directory, since
-   that one is named for a branch. A run where no repo resolved new skips it.
+1. **The repo name.** *`blank` and `source` repos only.* Asked in one round
+   listing every repo that resolved to either, each proposed from that repo's
+   **folder name** — the basename of its **main checkout**, which on a run
+   started in a linked worktree is the parent of that repo's common git
+   directory (`rev-parse --git-common-dir`) and never the worktree's own
+   directory, since that one is named for a branch. A run where every repo
+   resolved `shaped` skips it.
 
    **What this question settles is `REPO_NAME`.** The answer, slugified by the
    stack adapter's `assets/ids.md` exactly as question 2's replacements are, is
@@ -294,14 +383,25 @@ answers, so they cannot share its round.
    [new repo](references/new-repo.md) §7 resolves them by: the registry, a
    sub-project directory, or the project's **type**.
 
+   **A sub-project directory is defined here, once**, and every other mention
+   in this skill and its references means this. Where a registry exists, the
+   sub-project directories are the registry's `projects[].path` list, and
+   nothing else in the tree is one. Where none does — a first run — the term
+   is live in **`source` mode only**, and means a non-root directory that
+   carries its **own language manifest** from the stack read's table, or that
+   a **workspace file** at the root enumerates as a member (the file names are
+   in [new repo](references/new-repo.md) §7). `docs/`, `scripts/`, `.config/`,
+   `.github/` and any dot-directory never qualify, whatever they carry. A
+   `blank` repo proposes none, since it has no manifest to find one by.
+
    **The type source is a choice, not a reading.** Where a repo has neither a
-   registry nor sub-project directories, there is no name in the tree to
-   propose from — the repo's own name was the old answer and it is the wrong
-   one, since a task group names what a task acts **on**. So ask, per project
-   in that repo and inside this same round, which **platform token** is that
-   project's primary surface — `service`, `worker`, `webapp`, `site`, `cli`,
-   `iac` and the rest — and propose the token it picks as the id. The options
-   are the closed per-role platform lists
+   registry nor sub-project directories as defined above, there is no name in
+   the tree to propose from — the repo's own name was the old answer and it is
+   the wrong one, since a task group names what a task acts **on**. So ask,
+   per project in that repo and inside this same round, which **platform
+   token** is that project's primary surface — `service`, `worker`, `webapp`,
+   `site`, `cli`, `iac` and the rest — and propose the token it picks as the
+   id. The options are the closed per-role platform lists
    `${CLAUDE_PLUGIN_ROOT}/assets/templates/registry.yaml` carries, narrowed to
    the project's role where a registry names one and offered as their union
    where nothing does, plus a free **other** the user types. Offer **only** the
@@ -318,9 +418,10 @@ answers, so they cannot share its round.
 
    **A member's projects come from the base first.** Where the base config's
    `members:` list declares that member's `projects`, those are its projects;
-   otherwise that member's own sub-project directories; otherwise the type
-   question above, asked for the member's one project. The order is the same
-   declaration-before-detection order §7 already uses, applied one repo down.
+   otherwise that member's own sub-project directories, as defined above;
+   otherwise the type question above, asked for the member's one project. The
+   order is the same declaration-before-detection order §7 already uses,
+   applied one repo down.
 
    Naming the source is the point of showing the list: a row a user disagrees
    with is usually a row whose source they did not expect, and the source is
@@ -348,10 +449,12 @@ answers, so they cannot share its round.
    filled from the resolved members where the linkage is siblings, and stays
    exactly as shipped where the repo's own submodule declarations are what
    the task library reads. And `MERGE_MODEL` is asked in the git pass.
-3. **A one-line brief.** *Mode-new repos only.* What the repo is, in a
-   sentence — one row per repo that resolved to **new**, in the same round
+3. **A one-line brief.** *`blank` and `source` repos only.* What the repo is,
+   in a sentence — one row per repo that resolved to either, in the same round
    question 1 listed them in. **May be empty** — an empty brief writes a
-   one-line stub, and `/vwf:readme` fills the rest.
+   one-line stub, and `/vwf:readme` fills the rest. A `source` repo that
+   already carries a readme keeps it, whatever the row says, per
+   [readme and licence](references/readme-and-license.md).
 4. **The secrets provider.** Answered **once** and written into every repo: a
    product keeps its secrets in one place, and a member on a different
    provider is a decision nobody made by answering this. Fetch the adapter's
@@ -460,25 +563,32 @@ Two plans would be two chances to stop halfway, which is exactly the state the
 one-consent rule exists to prevent — one repo renamed into the contract while
 its neighbours still call the old names.
 
-| Read                                                           | When                              |
-| -------------------------------------------------------------- | --------------------------------- |
-| [new repo](references/new-repo.md)                             | mode **new** — and the git pass   |
-| [existing repo](references/existing-repo.md)                   | mode **existing**                 |
-| [fragments and sections](references/fragments-and-sections.md) | both — the three merge algorithms |
-| [readme and licence](references/readme-and-license.md)         | both — the stub and the files     |
+| Read                                                           | When                                                                          |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| [new repo](references/new-repo.md)                             | modes **blank** and **source** — and the git pass                             |
+| [existing repo](references/existing-repo.md)                   | mode **shaped**; and the passes **source** borrows, cited there by number     |
+| [fragments and sections](references/fragments-and-sections.md) | every mode — the three merge algorithms                                       |
+| [readme and licence](references/readme-and-license.md)         | every mode — the stub and the files                                           |
 
 **The existing-repo pipeline adopts rather than flattens**, and three rules
-carry that. A function the repo's own helper library **defines** that the
-pack's does not and its legacy table does not map is **moved**, whole, into a
-repo-owned `_scripts/local` sidecar — never deferred, never guessed at, and
-never lost to the replace merely because nothing calls it yet. A task file no
-pack ships is **kept and listed**, with a note where it sits in a group the
-task-name contract reserves — `init` moves none of them. And a
-pack-owned file whose **content** has diverged is **offered**, replace or keep,
-one row in the same single plan, where a replace re-fills every marked position
-that file carries and a keep is recorded so it is not asked again — a keep
-covering the content the repo customised and never a marked position's value,
-which the fills own either way. **What counts as diverged is two tests**: the
+carry that — rules the `source` mode borrows for what its tree already holds,
+and whose third **every mode runs**. A function the repo's own helper library
+**defines** that the pack's does not and its legacy table does not map is
+**moved**, whole, into a repo-owned `_scripts/local` sidecar — never deferred,
+never guessed at, and never lost to the replace merely because nothing calls
+it yet. A task file no pack ships is **kept and listed**, with a note where it
+sits in a group the task-name contract reserves — `init` moves none of them.
+And a pack-owned file whose **content** has diverged is **offered**, replace
+or keep, one row in the same single plan, where a replace re-fills every
+marked position that file carries and a keep is recorded so it is not asked
+again — a keep covering the content the repo customised and never a marked
+position's value, which the fills own either way. **That offer is not the
+shaped mode's alone**: every path the materializer's dry-run reports as a
+conflict — a file at a pack's path that no lockfile records — is one such row,
+in `blank` and `source` mode too, shown before the consent and recorded under
+`enforcement.kept_files` on a keep exactly as the existing pipeline's pass 6
+records it. A `blank` repo rarely has one; when it does, it is never a silent
+skip. **What counts as diverged is two tests**: the
 file's hash against the lockfile's record, and, on a mismatch, the pack's
 payload with the repo's current values spliced in at **every** position
 [new repo](references/new-repo.md) §7 enumerates that the file carries, owned
@@ -491,8 +601,9 @@ the mismatch stands.
 Whichever pipeline runs, the same work happens in the same order at the end of
 each repo: the **fills** the packs marked — the project ids and their
 surfaces, the repo-name key from question 1's folder name, the commit gate's
-scopes from those same confirmed ids and its forge links where a remote exists
-— then the **three merges** (ignore sections, hook fragments, editor
+scopes from those same confirmed ids and its forge links where a remote exists,
+the two runtime positions from the stack read — then the **three merges**
+(ignore sections, the first of them from the same read, hook fragments, editor
 fragments), then the **git pass**, whose questions were asked once for the run
 and whose commit is that repo's own. The editor merge reads the existing file
 whole, and a key the hand section already carries that the packs also compose
@@ -562,10 +673,10 @@ Backlog project          <url> | present | pending — <reason>
 
 **A repo's `Commit` line names every commit the run made in that repo**, in
 the order they were made, each with its short hash and its subject — one line
-still, however many there were. An existing-mode repo makes **two**: the gate
+still, however many there were. A `shaped` repo makes **two**: the gate
 configuration commits first and alone, so the hooks the rest of the run trips
-are the ones the repo just accepted, and the shape commit follows. A new-mode
-repo makes one. A repo where the answer was **leave it** reads
+are the ones the repo just accepted, and the shape commit follows. A `blank`
+or `source` repo makes one. A repo where the answer was **leave it** reads
 `not committed`, and a repo whose gate commit landed but whose shape commit
 did not is exactly the case a single hash would hide.
 

@@ -161,8 +161,16 @@ two differ in value and never in vocabulary.
   pushes and opens a pull request — and **`MEMBERS`**, the space-separated,
   repo-relative paths of this repo's member repos, left empty when they are
   submodules, which `members()` reads from `.gitmodules` instead. A string and
-  never an array: mise env values are strings. **Two more marked positions sit
-  outside the TOML**, in `.config/mise/tasks/setup/ai`: `EXTRA_MARKETPLACES`
+  never an array: mise env values are strings. The base's other two marked
+  positions are the runtime's: **`RUNTIME_BLOCK`** under `[settings]` and
+  **`PATH_ENTRIES`** at the end of `[env]`, both shipped **empty** and filled
+  by the orchestrator from its **stack read** — the languages the repo's pins,
+  lockfile or manifests name — one runtime settings line per detected language
+  in the first, the `_.path` entry a project-local binary directory needs in
+  the second, and nothing in either for a language the repo does not have.
+  These five are the only marked positions in the config split. **Two more
+  marked positions sit outside the TOML**, in `.config/mise/tasks/setup/ai`:
+  `EXTRA_MARKETPLACES`
   (rows `<source-ref>|<name>`) and `EXTRA_PLUGINS` (rows `<name>@<marketplace>`)
   — the plugin marketplaces and plugins this repo requires beyond the toolkit's
   own. Both default to empty, both are filled by the same orchestrator from a

@@ -2,7 +2,13 @@
 
 Read this in mode `onboard`. Step 0 has already decided which of the two
 sub-paths applies — **blank** (no manifest, no source directories, no
-`docs/blueprint/`) or **code** (anything else).
+`docs/blueprint/`) or **code** (anything else). That fork is setup's alone:
+`/vwf:init`, offered at Step 0, runs its own mode test per repo — `blank`,
+`source` or `shaped`, the table in
+`${CLAUDE_PLUGIN_ROOT}/skills/init/SKILL.md` — which differs from this fork on
+one item, a root tool config (not code here, `source` evidence there); so a
+source-bearing repo is shaped as `source`, its existing files offered, never
+overwritten.
 
 Neither sub-path validates, stamps, commits, or prints the chain. Each gathers
 its facts, writes the docs it is responsible for, and hands both back to the
