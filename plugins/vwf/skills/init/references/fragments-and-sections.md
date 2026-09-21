@@ -30,22 +30,23 @@ directory, and a stale ignore line fails by being silently absent from a diff.
 
 ### The algorithm
 
-1. **Resolve the section names.** The **hygiene pack's conventions** own the
-   mapping and are the only source for it — read the table there. It is keyed
-   on the **pinned pack**, never on a file that happened to be found in the
-   tree, so the pins the materializer's lockfile records are the input. Two
-   pinned packs may name the same template, so resolve to the set of
-   **distinct** names: a section is per template, not per pack.
+1. **Resolve the section names.** The input is the **language set the stack
+   read produced** — SKILL.md's *The stack read*, which takes the config's
+   pins first, the lockfile's components next, and in `source` mode the
+   manifests it finds; a `blank` repo's set is empty and lands no section.
+   The **hygiene pack's conventions** own the mapping from that set to
+   template names and are the only source for it — read the table there.
+   Two languages may name the same template, so resolve to the set of
+   **distinct** names: a section is per template, not per language.
 
-   A pinned pack with **no row** is one of two things and the conventions say
-   which. Most of them need no template at all — the base sections already
-   cover them — and that absence is an answer written down rather than an
-   omission. Only a pinned pack the conventions neither give a row nor
-   account for is **proposed**: name the template in the plan, wait for a
-   yes, and never guess silently, because a wrong name is a 404 and a 404 is
-   a section that quietly never appears. The conventions also say where a
-   confirmed name then belongs — that table — so the next repo does not
-   re-ask.
+   A language with **no row** is one of two things and the conventions say
+   which. Most need no template at all — the base sections already cover
+   them — and that absence is an answer written down rather than an omission.
+   Only a language the conventions neither give a row nor account for is
+   **proposed**: name the template in the plan, wait for a yes, and never
+   guess silently, because a wrong name is a 404 and a 404 is a section that
+   quietly never appears. The conventions also say where a confirmed name
+   then belongs — that table — so the next repo does not re-ask.
 2. **Skip what is already there.** A banner already present means that
    section was appended before. Skip it whole — do not re-fetch, and do not
    diff its contents against the current template. The file is the repo's

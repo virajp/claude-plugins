@@ -1,20 +1,30 @@
 # The Existing-Repo Pipeline
 
-Read this in mode **existing** — a target that already has a configuration
-directory or a task library. Something shaped this repo before, and the job is
-to reconcile it against what the packs ship without discarding a decision
-somebody made on purpose.
+Read this in mode **`shaped`** — a target whose materializer lockfile exists.
+Something shaped this repo before, and the job is to reconcile it against what
+the packs ship without discarding a decision somebody made on purpose.
+SKILL.md's Step 0 decides the mode; this file never re-derives it.
+
+**This file is also the home of the passes the other two modes borrow.** A
+**`source`** repo — no lockfile, but something in the tree — takes the
+[new repo](new-repo.md) landing and, before it lands, runs the passes below
+that have something to read: pass 1's root survey, pass 6's offer over every
+path the materializer reports as a conflict, and passes 3 and 5 only where a
+task library already exists. A **`blank`** repo runs pass 6's offer alone, over
+the same conflict list. Each borrowed pass says, in its own opening, which
+modes run it and on what input; everything else in this file is the `shaped`
+pipeline's.
 
 Three phases, in order and never interleaved: **survey**, **plan**, **apply**.
 The survey writes nothing. The plan is one document. The apply touches only
 what the survey listed.
 
 **All three run across the resolved repo set, not across one repo.** The survey
-runs its eleven passes **in each repo** that resolved to mode existing. The plan
+runs its eleven passes **in each repo** that resolved to mode `shaped`. The plan
 is still one document, printed once, with **one section per repo** — the base
 first, then each member in resolved order. The apply touches the repos in
 **members-then-base order**, so the base's gitlinks are current by the time it
-commits. A repo of the set that resolved to mode new takes the
+commits. A repo of the set that resolved to mode `blank` or `source` takes the
 [new repo](new-repo.md) pipeline in its own section of that same document, under
 the same one consent; nothing about the set changes which pipeline a repo reads.
 
@@ -36,6 +46,10 @@ absent member before its survey has run**, which is the same rule every other
 repo gets — the survey is simply later in the wall clock, not skipped.
 
 ### 1 — Root files against the allowlist
+
+**Runs in `shaped` and in `source`, over the repo's root entries; a `blank`
+repo has no root entry this pass would read and skips it.** In `source` mode
+its rows open that repo's section of the plan, ahead of the new-repo landing's.
 
 The hygiene doctrine closes a repository root to a fixed set, and the
 materializer enforces it as a ceiling. The root this pass reads is **the root of
@@ -135,6 +149,9 @@ the user rather than resolved here.
 
 ### 3 — Task names against the legacy table
 
+**Precondition: a task library exists** — every `shaped` repo, and a `source`
+repo that already carries one; without a library there is nothing to rename.
+
 The toolchain pack's task-library reference carries a **Legacy names** table —
 each row a name this contract replaced and what it became. Read that table and
 match every task file in the library against its left-hand column. Each hit is
@@ -182,6 +199,9 @@ reason this rule refuses: what it maps is written down in a table the pack
 owns, not translated by `init` on the spot.
 
 ### 5 — The helper library
+
+**Precondition: a task library exists** — the same one pass 3 states; a repo
+with no helper file to compare has no sidecar to write.
 
 The shared helper file's name lost its leading underscore, and so did its
 siblings — the legacy table says so in its own rows. That is two renames, not
@@ -270,27 +290,39 @@ the pack's library already.
 
 ### 6 — Missing files
 
+**Runs in every mode, and the mode decides what reaches it.** In `shaped` the
+input is the survey's own diff below — every pack-owned path the repo carries.
+In `blank` and `source` the input is the **materializer's conflict list**: the
+paths its dry-run reports as already present and recorded in no lockfile, which
+[new repo](new-repo.md) §2 hands here instead of deferring. Either way, a path
+offered to this pass takes the compare, the default rule, the outcomes and the
+`kept_files` record exactly as written below — one row per path, in the plan,
+before the one consent.
+
 Diff **the repo this pass is running in** against what the three baseline
 bundles ship — the same three bundles for every repo of the set, since the shape
 is per repo and a member gets its own full configuration tree. Every file a
 bundle declares and that repo lacks is a **create**, listed with the bundle it
 comes from.
 
-A file the repo *has* and a pack also owns is **compared**, once pass 3's
-renames are accounted for — and what it is compared **against** is the
-materializer's lockfile, not the pack. Each `entries:` record carries a `hash:`,
-the content of that file as it stood when it landed here, **the marked positions
-already filled**. That is the only honest baseline: a file `init` itself filled
-never matches the pack's bytes again, so comparing against the pack would
-re-offer every filled file on every run and no shaped repo would ever produce an
-empty plan.
+A path offered to this pass — a file the repo *has* and a pack also owns, once
+pass 3's renames are accounted for — is **compared**, and what it is compared
+**against** is the materializer's lockfile, not the pack. Each `entries:`
+record carries a `hash:`, the content of that file as it stood when it landed
+here, **the marked positions already filled**. That is the only honest
+baseline: a file `init` itself filled never matches the pack's bytes again, so
+comparing against the pack would re-offer every filled file on every run and no
+shaped repo would ever produce an empty plan.
 
 - **The lockfile records the file** — compare what is on disk against that
   record's `hash:`. Identical, and it needs nothing. Different, and it is
   **offered**.
 - **The lockfile records nothing for it** — the repo acquired that file some
   other way — compare against the **pack's** bytes instead, on exactly the same
-  terms. There is no landing to compare to.
+  terms. There is no landing to compare to. Every path the conflict list hands
+  here in `blank` or `source` mode is this case, since neither mode has a
+  lockfile yet: a conflict carrying the pack's bytes already needs nothing, and
+  every other one is offered.
 
 This is the question `/vwf:doctor`'s content-drift predicate asks, of the same
 record, by the same two tests and over the same set of marked positions — so
@@ -388,7 +420,9 @@ hole and keeps the single consent.
 materializer's lockfile names that file. A path recorded there is not offered
 again by a later run, and `/vwf:doctor` reads the same record to skip the
 file. The reason travels with it, in the user's own words where they gave
-one.
+one. The record is written in **every mode** — a keep over a conflict in
+`blank` or `source` is recorded on the same terms as one in `shaped`, and
+lands in the same Deferred line below where the base has no config file yet.
 
 **One record for the product, and it is the base's.** A member carries no
 `.config/vwf.yaml` of its own — its file is the back-link, and the base's is the
@@ -413,13 +447,21 @@ Pass 5 compares it and plans its replacement unconditionally: there is no
 keep row for it, and its retired names leave through pass 5's rewrites and
 its sidecar rather than through this pass's offer.
 
+**Three hygiene files are never offered either, from the other end.** The
+readme, the licence file and the security file take the already-there rule of
+[readme and licence](readme-and-license.md): one the repo carries is **kept,
+never replaced, and reported as kept** — no offer, no default to flip, and no
+`kept_files` entry, since nothing was decided. A conflict the materializer
+reports on one of those paths, in any mode, becomes that report line and
+nothing else.
+
 ### 7 — Fragments and sections
 
 - **Hook fragments** — for every landed pack that ships one, whether the gate
   configuration already carries its marked block. A missing one is a merge.
-- **Ignore sections** — for every stack the materializer's lockfile records,
-  whether the ignore file already carries that section's banner. A missing one
-  is an append.
+- **Ignore sections** — for every language the stack read produced
+  (SKILL.md's *The stack read*), whether the ignore file already carries that
+  section's banner. A missing one is an append.
 - **Editor fragments** — whether each of the two editor files carries the
   block, which is a merge where it does not; and, read from the file whole,
   every key **outside** the block that the composed set also carries. Each is
@@ -698,7 +740,7 @@ then each member in resolved order. A repo's section opens with a heading naming
 it and the mode it resolved to:
 
 ```text
-── <repo> ── (existing)
+── <repo> ── (shaped)
 ```
 
 and under that heading come the ten sections, in full, for that repo. An absent
@@ -801,8 +843,8 @@ repos is load-bearing for the same reason the order inside one is: a member's
 apply is what moves that member's commit, and the base's gitlinks are only
 current once every member has committed. A member cleared for cloning is cloned
 at the top of its own turn, surveyed, its rows printed, and only then applied; a
-repo of the set that resolved to mode new takes the [new repo](new-repo.md)
-pipeline in its turn, at the same point in the order.
+repo of the set that resolved to mode `blank` or `source` takes the
+[new repo](new-repo.md) pipeline in its turn, at the same point in the order.
 
 - **Moves** use `git mv`, so the rename is in the index and the history
   follows the file. The readme move is a move like any other.
