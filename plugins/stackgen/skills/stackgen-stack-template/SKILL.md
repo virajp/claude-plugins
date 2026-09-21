@@ -168,6 +168,17 @@ check real.
   (`<repo>/.claude/stackgen/lock.yaml`) resolve under that path; absent
   means the current repo. Each repo gets its own independent copies and
   its own lockfile — never one repo's copies pasted around.
+- **A caller may pass answers the same way**: an optional `answers:` map
+  beside the `repo:` line, at most one value per axis of the
+  `conditional:` vocabulary — `forge`, `editor`, `secrets`, `update_bot`
+  (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). The materializer
+  evaluates every pack's `conditional:` entries against it in its step 1
+  and skips the paths whose answer differs, recording them in the
+  lockfile's `skipped:` list; an axis the map leaves out, or a map not
+  passed at all, reads as **true** and lands the path, so a caller that
+  passes nothing lands what it always landed. `/vwf:init` is the caller
+  that holds all four and passes them per repo. These two lines are the
+  whole of the optional input beside the catalog paths.
 - **The caller may pass context; this skill never reaches for another
   plugin's files.** vwf passes the principles-catalog paths into the
   invocation (the design-adapter payload style). If a generation run needs

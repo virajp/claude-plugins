@@ -71,7 +71,7 @@ chose. Its stack read finds nothing on a blank repo, so no `.gitignore` language
 section lands and the toolchain config's runtime positions stay empty until a
 stack is pinned. (Had the repo already carried a `package.json` or a `src/`
 directory, the mode would be **`source`**: the same landing, with every file
-already there offered as replace-or-keep rather than overwritten.) It asks seven
+already there offered as replace-or-keep rather than overwritten.) It asks nine
 questions in one round each — the repo name, proposed from this repo's own
 folder name and the one thing that fills `REPO_NAME`, and a one-line brief (both
 proposed or skippable); the ids it will write task groups and commit scopes for,
@@ -88,10 +88,19 @@ way), and whether Relay is **public or private** — proposed from what the forg
 says where the repo already has an `origin`, `private` otherwise — with the
 seventh round shaped by that answer: the licence, asked only for a public repo,
 and a security contact, an advisories-page URL for a public repo or a free email
-or internal URL for a private one — then shows **one plan** and applies it on
-one yes. Relay is one repo, so every one of those questions is a single row; on
-a product with member repos the same seven rounds simply carry a row per repo
-where the answer can differ.
+or internal URL for a private one; then whether **VS Code** is the editor here,
+defaulted *yes* because the `code` binary is on your `PATH`, and which **update
+bot** watches Relay — `renovate`, `dependabot` or `none`, seeded `renovate` on a
+repo carrying no policy — then shows **one plan** and applies it on one yes.
+Those last two, with the forge read from Relay's `origin` and the provider you
+picked, decide the packs' conditional files: the Renovate policy lands because
+the bot is Renovate, the editor fragments because the editor is VS Code, and the
+GitHub issue forms where Relay's `origin` is on GitHub — a repo with no remote
+yet skips them and lands them on the reshape after you add one — and a path a
+condition skips is listed in the plan under **Skipped**, never silently missing.
+Relay is one repo, so every one of those questions is a single row; on a product
+with member repos the same nine rounds simply carry a row per repo where the
+answer can differ.
 
 It closes with a git pass: it asks how work lands in this repo, **one row per
 branch** — `direct`, which merges locally and pushes, or `pr`, which pushes the

@@ -421,12 +421,20 @@ than something that rides the landing:
   `p:<id>:deploy` task beside it; and any pack may drop an **editor fragment**
   into `.config/vscode.d/`, three keys wide, which `/vwf:init` composes —
   declares them in a `config/` tree mirroring the repo root, and they land
-  there. Everything else goes under `.config/`: a `config/` tree landing a root
-  path outside the **landable** tier of the fixed allowlist is a pack authoring
-  error the materializer refuses — that list also names the root files vwf
-  itself writes, `CLAUDE.md` and `mempalace.yaml`, which may sit at a shaped
-  root and which no pack may land. Two **directories** are allowlisted at that
-  root, `.config/` and `.github/`, and a CI workflow inside the second is
+  there. A pack may also mark some of them **conditional**: an optional
+  `conditional:` list in its `pack.yaml`, each entry a `config/` path or glob
+  and a `when:` of one axis to one value — `forge` (`github`, `gitlab`),
+  `editor` (`vscode`), `secrets` (a provider slug), `update_bot` (`renovate`,
+  `dependabot`, `none`) — evaluated by the materializer against the `answers:`
+  map the caller passes beside `repo:`; a path whose answer differs is left out
+  of the landing set and written to the lockfile's `skipped:` list with its
+  condition, never a create and never a conflict, and an axis the caller did not
+  answer reads true. Everything else goes under `.config/`: a `config/` tree
+  landing a root path outside the **landable** tier of the fixed allowlist is a
+  pack authoring error the materializer refuses — that list also names the root
+  files vwf itself writes, `CLAUDE.md` and `mempalace.yaml`, which may sit at a
+  shaped root and which no pack may land. Two **directories** are allowlisted at
+  that root, `.config/` and `.github/`, and a CI workflow inside the second is
   refused outright. Mode is preserved, because a task file arriving without its
   exec bit fails as an *unknown task* rather than as a permission error.
 
@@ -493,7 +501,24 @@ parent file name to its children; and `extensions`, a list of recommended ids �
 and nothing else. What forced it is that a recommendation list only ever
 *prompts*, is per-workspace, and nothing merges a common set into it: a pack
 that ships a linter and says nothing about the editor ships a linter whose
-editor integration nobody turns on.
+editor integration nobody turns on. Every fragment in the tree — ten of them:
+the hygiene baseline, dprint-editor, pre-commit, eslint, ruff, tsconfig,
+analysis-options, mise, astro and pnpm — is **conditional on the editor**: its
+pack's `pack.yaml` names it under `when: { editor: vscode }`, so a repo whose
+init answer was *no* lands none and composes nothing. The split between them is
+by ownership. The hygiene baseline carries **editor-wide keys alone** —
+indentation and suggestion defaults, the generic excludes, todo-tree, the
+nesting rows no stack owns, the generic extensions — and every key that names a
+stack sits in the fragment of the pack that pins it: `node_modules`, the
+tsbuildinfo files, the template-string converter and `*.js` nesting in
+tsconfig's; `.dart_tool` in analysis-options'; `.astro` in astro's; `.turbo`,
+the pnpm lockfile and the `package.json` children in pnpm's, since Turbo is a
+generated component the pnpm-turbo bundle carries and has no pack of its own;
+the YAML language-server keys and their extension in pre-commit's. The default
+formatter is bound **per language** in the dprint fragment — one `[<language>]`
+scope for each plugin `.config/dprint.json` carries, `[toml]` to
+even-better-toml — never editor-wide, which would ask dprint to format a file it
+has no plugin for and override Dart's formatter by composition order alone.
 
 Two files inside the fence are written **whole** by no pack, and both are
 composed by `/vwf:init`. The **pre-commit config**: a pack may contribute a
@@ -594,7 +619,21 @@ they are: a time-boxed ignore is the temporary silence, a lowered threshold the
 permanent one. The formatter also ships the root `dprint.json` shim described
 above, and the JS/TS linter gate — a language-bundle topic rather than a repo
 gate — ships `.config/linter.yaml`, the config it had always invoked and never
-supplied.
+supplied. The trees a gate skips are stated as **one exclusion set**: the
+formatter's `dprint.json` and `taplo.toml` and the hook config's global
+`exclude` — a `(?x)` block, one anchored alternative per line — spell the same
+twelve entries (`.claude`, `.git`, `.turbo`, `.venv`, `build`, `dist`,
+`graphify-out`, `node_modules`, `target` and the three lockfile globs) in their
+own syntax, and the toolkit's checker holds the three equal after normalising
+the syntax away. The secret scanner's `[allowlist] paths` is held to a
+**subset** of it, never the reverse: gitleaks extends upstream's default config,
+which already skips `.git`, `node_modules` and the named lockfiles, and
+`.claude/` is authored source a scanner must scan even though no formatter
+touches it in a shaped repo, where it is machine-owned. Its seven entries are
+anchored `(^|/)` — `.turbo/` joined them — so `\.turbo/` no longer matches a
+`foo.turbo.ts`. Widen a formatter list, widen all three; widen the allowlist
+only with a generated tree. One hook narrows further: `trailing-whitespace`
+skips `.md`, because two trailing spaces are a Markdown hard break.
 
 **`repo-hygiene`** is the newest kind on the repo axis, beside `repo-gate`,
 `toolchain-manager` and `workspace`. Its single pack ships the files every repo
@@ -602,12 +641,22 @@ needs and no tool owns: a sectioned `.gitignore` (with a graphify section that
 ignores `graphify-out/*` while keeping `GRAPH_REPORT.md`, plus one upstream
 template section per language `/vwf:init`'s stack read finds — a table keyed by
 language, `node`, `python`, `dart`, `go`, `rust`, `swift` — so a repo with a
-`package.json` gets its Node section on the first run), `.graphifyignore`,
-`.editorconfig`, `.gitattributes`, `SECURITY.md`, `CONTRIBUTING.md`, three
-`.github/ISSUE_TEMPLATE/` files, a root `renovate.json`, the chosen `LICENSE` on
-a repo `/vwf:init` was told is public, and the **editor baseline** — the largest
-`vscode.d/` fragment, since the settings every repo wants regardless of stack
-are hygiene by the same definition everything else here is.
+`package.json` gets its Node section on the first run — and one **provider row**
+beside the language rows, `fnox.local.toml` for fnox and `.doppler/` for
+doppler, appended under a banner named for the slug only where init's stack read
+carries that provider, so the base ignore file names no secrets manager),
+`.graphifyignore`, `.editorconfig`, `.gitattributes`, `SECURITY.md`,
+`CONTRIBUTING.md`, three `.github/ISSUE_TEMPLATE/` files, a root
+`renovate.json`, the chosen `LICENSE` on a repo `/vwf:init` was told is public,
+and the **editor baseline** — the `vscode.d/` fragment carrying the settings
+every repo wants regardless of stack, editor-wide keys alone, since a key that
+names a stack belongs to that stack's pack. Three of those are **conditional**,
+named in the pack's `conditional:` list with the one answer init already holds
+that lands them: the issue forms on `forge: github`, the Renovate policy on
+`update_bot: renovate`, the editor baseline on `editor: vscode`. A GitLab repo
+gets no GitHub issue forms, a Dependabot repo no Renovate policy, a repo edited
+elsewhere no VS Code fragment; each skipped path is listed in the plan and
+recorded in the lockfile, never reported missing.
 
 The seam with `repo-gates` is worth stating, because it is the reason the kind
 exists rather than folding in: **a gate scans, while hygiene declares what is
@@ -622,7 +671,7 @@ slot takes the security contact as init was given it — an advisories URL for a
 public repo, an email or an internal URL for a private one — and the issue
 chooser's *Report a vulnerability* link takes a URL contact or is removed for an
 email or a decline. `CONTRIBUTING.md` records that the forge's default branch
-and the protection on `develop` and `main` are set by `/vwf:init`'s forge pass
+and the protection on `develop` and `main` are set by `/vwf:setup`'s forge pass
 on GitHub and GitLab, and keeps the **by-hand** form of both for any other
 forge. And the stack-specific ignore sections are **appended per repo** by
 `/vwf:init`, one section per technology, never frozen into the pack — a pack
@@ -634,7 +683,9 @@ leading or trailing `/` stripped, a `**/` prefix ignored) so one the file
 carries under another spelling is never doubled. `renovate.json` is the one
 hygiene file that **yields**: a policy the repo already carries under
 `.github/renovate.json`, `.renovaterc` or `renovate.json` wins, and the pack's
-is not landed.
+is not landed — and it is conditional besides, landing only where the repo's
+update-bot answer is `renovate`, so a repo on Dependabot or on no bot gets no
+second policy beside its own.
 
 **`mise`** is the toolchain manager, and the rest of this section is its
 subject: how the toolchain is pinned, where env values live, and the task

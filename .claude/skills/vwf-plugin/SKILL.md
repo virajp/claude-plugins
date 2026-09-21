@@ -38,7 +38,7 @@ before it was cut.
 [dt]: references/docs-tree.md
 [de]: references/dependencies.md
 
-The fourteen checker rules, the two mise gates and the authoring traps are the
+The fifteen checker rules, the two mise gates and the authoring traps are the
 sibling `plugin-authoring` skill, which also applies here. The user-facing
 reference is `site/src/content/docs/plugins/vwf.md`, published at
 `https://claude-plugins.virajp.dev/plugins/vwf/`.
@@ -153,44 +153,53 @@ and `private` otherwise, written nowhere in the tree; its two dependent parts
 are the seventh round — 6a the licence, rows for `public` repos only (a private
 repo gets no `LICENSE`), and 6b the security contact, a public repo's row
 defaulted to its advisories page and a private repo's a free email or internal
-URL with no default. 4 and 5 are answered once for every repo, 2, 6 and 6b carry
-a row per repo, 6a a row per public repo, and 1 and 3 a row per repo that
-resolved `blank` or `source`. It then closes with a **consent-gated git pass**,
-whose two questions are asked once and applied to every repo. It first reads
-where each repo stands (`git symbolic-ref -q HEAD`): a member on no branch is a
-**refused** row naming the branch to check out, its shaping deferred and its
-gitlink unmoved, and a member the run clones is checked out on the remote branch
-holding the recorded gitlink commit, at that branch's tip, so it never arrives
-detached. It asks the landing model **one row per repo per branch** — `develop`
-and `main`, each `direct` or `pr`, preselected `direct` and `pr`, or from what a
-replaced file carries — and writes each row to that repo's `MERGE_MODEL_DEVELOP`
-and `MERGE_MODEL_MAIN`; a kept file still carrying the single legacy
-`MERGE_MODEL` is not asked, but its line is rewritten in place into the pair
-carrying the one value, and until then every reader takes that value for both
-branches. It creates whichever of `develop` and `main` the repo lacks — from the
-remote-tracking branch first, else from the table; a mainline of another name
-(`master`, `trunk`, read from `origin/HEAD`, else the branch the repo is on)
-gets `main` from it and `develop` from `main`, the old branch left in place and
-reported to retire by hand — checks out `develop`, stages what the run wrote,
-asks one question with three answers (commit / commit and push / leave it),
-commits with a fixed `ops:` message **on `develop` in every mode**, never on
-`main` — the members first, then the base with the moved **gitlinks** staged —
-and pushes; a rejected push is a deferral, never a force. **After the push comes
-the forge pass**, on one further consent for the whole product: it sets each
-pushed repo's default branch on the forge (`develop` preselected), protects
-`develop` and `main` there — no force-push, no deletion, and a pull request
-required on each branch whose own value is `pr`, `MERGE_MODEL_DEVELOP` for
-`develop` and `MERGE_MODEL_MAIN` for `main`; a branch already protected in any
-form is left exactly as it is — and reaches the backlog skill's missing-project
-procedure for the base, never running the project-creating command itself. Those
-three are the only forge settings it touches; a repo whose answer was not
-*commit and push* is listed `pending`, and a forge it has no CLI for, or a CLI
-it cannot log in with, gets the by-hand list — which the hygiene pack's
-`CONTRIBUTING.md` keeps, naming `gh` and `glab` where vwf's `SKILL.md` prose may
-not (the init references name them, as the backlog skill already did). Init is
-**not a one-time bootstrap**: its "when it runs again" doctrine names the
-moments **and the four commands that bring the user to the door** — `/vwf:setup`
-after its materialize pass, `/vwf:architecture` through setup,
+URL with no default. The seventh asks the **editor** once for the product — is
+VS Code in use, defaulted yes where any resolved repo carries a `.vscode/` or
+the `code` binary is on `PATH` — and the eighth the **update bot** per repo,
+`renovate`, `dependabot` or `none`, seeded from the survey; those two are the
+eighth and ninth rounds, and with the forge read from each `origin` host and
+question 4's provider slug they are the `answers:` map every fetch passes the
+materializer beside `repo:` — every key present, `none` the no-match value on
+`forge`, `editor` and `secrets` and a legal answer on `update_bot` — against
+which a pack's `conditional:` files are evaluated, the skips listed per repo
+under a **Skipped** heading in the plan. 4, 5 and 7 are answered once for every
+repo, 2, 6, 6b and 8 carry a row per repo, 6a a row per public repo, and 1 and 3
+a row per repo that resolved `blank` or `source`. It then closes with a
+**consent-gated git pass**, whose two questions are asked once and applied to
+every repo. It first reads where each repo stands (`git symbolic-ref -q HEAD`):
+a member on no branch is a **refused** row naming the branch to check out, its
+shaping deferred and its gitlink unmoved, and a member the run clones is checked
+out on the remote branch holding the recorded gitlink commit, at that branch's
+tip, so it never arrives detached. It asks the landing model **one row per repo
+per branch** — `develop` and `main`, each `direct` or `pr`, preselected `direct`
+and `pr`, or from what a replaced file carries — and writes each row to that
+repo's `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`; a kept file still carrying
+the single legacy `MERGE_MODEL` is not asked, but its line is rewritten in place
+into the pair carrying the one value, and until then every reader takes that
+value for both branches. It creates whichever of `develop` and `main` the repo
+lacks — from the remote-tracking branch first, else from the table; a mainline
+of another name (`master`, `trunk`, read from `origin/HEAD`, else the branch the
+repo is on) gets `main` from it and `develop` from `main`, the old branch left
+in place and reported to retire by hand — checks out `develop`, stages what the
+run wrote, asks one question with three answers (commit / commit and push /
+leave it), commits with a fixed `ops:` message **on `develop` in every mode**,
+never on `main` — the members first, then the base with the moved **gitlinks**
+staged — and pushes; a rejected push is a deferral, never a force. **After the
+push comes the forge pass**, on one further consent for the whole product: it
+sets each pushed repo's default branch on the forge (`develop` preselected),
+protects `develop` and `main` there — no force-push, no deletion, and a pull
+request required on each branch whose own value is `pr`, `MERGE_MODEL_DEVELOP`
+for `develop` and `MERGE_MODEL_MAIN` for `main`; a branch already protected in
+any form is left exactly as it is — and reaches the backlog skill's
+missing-project procedure for the base, never running the project-creating
+command itself. Those three are the only forge settings it touches; a repo whose
+answer was not *commit and push* is listed `pending`, and a forge it has no CLI
+for, or a CLI it cannot log in with, gets the by-hand list — which the hygiene
+pack's `CONTRIBUTING.md` keeps, naming `gh` and `glab` where vwf's `SKILL.md`
+prose may not (the init references name them, as the backlog skill already did).
+Init is **not a one-time bootstrap**: its "when it runs again" doctrine names
+the moments **and the four commands that bring the user to the door** —
+`/vwf:setup` after its materialize pass, `/vwf:architecture` through setup,
 `/stackgen:stackgen-sync` invoking `/vwf:setup reshape` in-session, and
 `/vwf:recall` printing one drift line from `/vwf:doctor baseline` — each an
 offer the Step 0 way, silent when clean; and `/vwf:doctor` has the drift finding

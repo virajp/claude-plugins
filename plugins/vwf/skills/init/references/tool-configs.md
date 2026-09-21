@@ -60,9 +60,13 @@ Three rows need a word:
   under any spelling keeps it and the pack's is not landed. A
   `.github/dependabot.yml` is the same job done by a different service, and
   its row is **keep both** — pass 1's outcome, not a fourth shape: the repo's
-  file stays and is reported as a second dependency policy, and the pack's
-  `renovate.json` still lands today. Whether it should land beside a
-  Dependabot policy is a later plan's question, and this row does not guess.
+  file stays and is reported as a second dependency policy. Whether the
+  pack's `renovate.json` lands beside it is not this row's to decide: the
+  same evidence seeds question 8's update-bot row — a renovate spelling
+  preselects `renovate`, a `dependabot.yml` preselects `dependabot`, both
+  preselects `renovate` and the row says it found both — and the pack's
+  file is `conditional:` on `update_bot: renovate`, so it lands only where
+  that answer stands and is a **Skipped** row otherwise.
 
 A tool with no row here is not on the survey's list: a root file for it is
 off the allowlist and is reported, as pass 1 says, never moved. Adding a tool
