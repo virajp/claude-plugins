@@ -1,17 +1,37 @@
 # The New-Repo Pipeline
 
-Read this in mode **new** — a target with no configuration directory and no
-task library. Nothing here reads or moves a source file, so it is safe on a
-repository that has code but has never been shaped.
+Read this in mode **blank** and in mode **source** — the two modes of
+SKILL.md's three whose repo carries no stack-adapter lockfile, so nothing has
+landed there yet. Mode **shaped** is [existing repo](existing-repo.md)'s. A
+`blank` repo runs this landing alone. A `source` repo — one with a language
+manifest, a source directory, a root tool config or a `.config/` without the
+lockfile — runs this landing **plus** the read-before-land passes below, so a
+tree that already holds something is read before a pack lands beside it.
+Nothing here reads or moves a source file in either mode.
 
 The seven questions in SKILL.md are already answered. Present the whole plan
 below, get **one** consent, then apply it in this order. The order is the
 contract: a step that runs early because it happens to be cheap produces a
 tree the next step has to undo.
 
-Everything below runs **once per repo that resolved to mode new** — every such
-member first, in the resolved order, then the base — under that one plan and
-that one consent.
+Everything below runs **once per repo that resolved to `blank` or `source`** —
+every such member first, in the resolved order, then the base — under that one
+plan and that one consent.
+
+## What `source` mode borrows
+
+A `source` repo runs four of the existing pipeline's survey passes, by their
+numbers in [existing repo](existing-repo.md), before this pipeline's §2 and
+inside the same one plan: **pass 1**, the root files against the allowlist,
+always — a root tool config is exactly what that pass exists to read; **pass
+6**, the replace-or-keep offer, always, over every path §2 below hands it;
+**pass 3**, the task names against the legacy table, and **pass 5**, the helper
+library and its `_scripts/local` sidecar, **only where a task library exists**
+— a `.config/` that carries one is `source` evidence like any other, and a task
+library nobody surveyed is one the landing would flatten. The other passes read
+files only a landing leaves behind and have nothing to read here. Their rows
+sit in that repo's section of the plan beside this pipeline's, in pass order,
+and their outcomes take the same report lines the existing pipeline gives them.
 
 ## 1 — The repository itself
 
@@ -74,6 +94,22 @@ of the pipeline. This is the same rule `/vwf:setup`'s tooling step follows,
 and it matters most here, where a repo that has picked no stack is the normal
 case rather than a fault.
 
+**Every conflict the dry-run lists is a row, in every mode.** The
+materializer's dry-run names each target path that already exists and that no
+lockfile of this repo records — a file the repo wrote itself — as a
+**conflict**, never a write. In this pipeline each of those becomes a
+**pass-6 row**: the replace-or-keep offer, its three-line summary, its default
+rule and its record are [existing repo](existing-repo.md) §6's, run over that
+path exactly as that pass runs it over a diverged file, and a keep is recorded
+under `enforcement.kept_files` as §6 records one — in the base's config, the
+member's path as prefix, or as a Deferred line where no config exists yet. The
+rows are shown **before** the one consent, one per conflict, so a `blank` repo
+that happens to hold one such file — and a `source` repo, which usually does —
+never has it silently skipped and never has it silently overwritten. Three
+root files are not offered at all: a readme, a licence and a security file the
+repo already carries are kept on the already-there rule in
+[readme and licence](readme-and-license.md), and reported as kept.
+
 ## 3 — The secrets provider
 
 Materialize the bundle whose slug the user picked at question 4, by that slug,
@@ -111,16 +147,41 @@ is a URL, and the whole entry is **removed** where the contact is an email or
 the row was declined, since that link must be a web address. Every other
 occurrence is the origin URL, per the table.
 
-## 5 — The ignore sections
+## 5 — The ignore sections, and the two runtime positions
 
-Append one section per detected stack to the hygiene pack's sectioned ignore
-file, per [fragments and sections](fragments-and-sections.md).
+Append one section per language to the hygiene pack's sectioned ignore file,
+per [fragments and sections](fragments-and-sections.md).
 
-**The detected stack is what the materializer's lockfile records** — the
-language, package-manager and app-framework components it lists — and nothing
-else. On a repo that has picked no stack the lockfile names none, the step
-appends nothing, and that is correct: the baseline sections cover what every
-repo needs, and a section for a language nobody chose is a guess.
+**The languages are what SKILL.md's stack read produced** — the pins where a
+config exists, else the lockfile's language, package-manager and app-framework
+components, else, in `source` mode, the manifests its table names at the root
+and in every sub-project directory — and nothing else. The read is one answer
+per repo, taken before the plan; this step does not re-read. Whatever the
+source, that answer is spelled in the read's six language keys — a pin token
+or a lockfile component slug was mapped onto one key by the hygiene pack's
+own table before it counted, so no raw slug reaches this step. Each language
+it produced resolves to a template through that same table, the
+algorithm's step 1, and a `source` repo carrying a `package.json` therefore
+gets the node section on its **first** run, not after some later pin. A
+`blank` repo's read produced nothing, the step appends nothing, and that is
+correct: the baseline sections cover what every repo needs, and a section for
+a language nobody has is a guess.
+
+### The two runtime positions
+
+The toolchain pack's base config carries **two marked positions** the stack
+read fills, in the same file the environment block sits in: `RUNTIME_BLOCK`,
+the per-runtime settings, and `PATH_ENTRIES`, the project-local binaries the
+shell finds without a runner prefix. The pack's comment at each position
+names the lines each runtime takes; this step writes, from the same read §5
+used, **one runtime's lines per language the read produced** at the first,
+and at the second the entry a language needs — **left empty** where no
+language the read produced needs one. A `blank` repo fills both as empty,
+which is exactly what the pack ships; nothing is invented for a runtime the
+repo does not have. Both are marked positions, so a filled value is what the
+hash splice in [existing repo](existing-repo.md) §6 ignores — filling them is
+never content drift, and they are re-filled on every run the read changes,
+keep or no keep, like every other position §7 enumerates.
 
 ## 6 — The hook fragments
 
@@ -138,7 +199,8 @@ On the **base**:
 
 1. the **registry ids** in `.config/vwf.yaml`, where the file exists and names
    projects;
-2. otherwise each **sub-project directory** name;
+2. otherwise each **sub-project directory** name — the term SKILL.md's
+   question 2 defines once, and the definition below spells the files for;
 3. otherwise the project's **type** — the platform token SKILL.md's question 2
    asks for, per project, from the closed per-role lists
    `${CLAUDE_PLUGIN_ROOT}/assets/templates/registry.yaml` carries.
@@ -148,8 +210,29 @@ the list that knows which projects live in a member is the base's:
 
 1. the **`projects:` list on this member's entry** in the base's
    `.config/vwf.yaml`, where that file exists and declares one;
-2. otherwise each **sub-project directory** name inside the member;
+2. otherwise each **sub-project directory** name inside the member, by the
+   same definition;
 3. otherwise the same **type** question, asked for that member's project.
+
+**The sub-project directory, by file.** SKILL.md's question 2 owns the
+definition: with a registry, its `projects[].path` list; without one, in
+`source` mode only, a non-root directory that carries its own language
+manifest from the stack read's table, or that a workspace file at the root
+enumerates as a member — and `docs/`, `scripts/`, `.config/`, `.github/` and
+any dot-directory never qualify. The workspace files that enumerate members
+are these, read for the member paths or globs they list and nothing else:
+
+```text
+pnpm-workspace.yaml     the `packages:` globs
+melos.yaml              the `packages:` globs
+Cargo.toml              a `[workspace]` table's `members`
+go.work                 its `use` directives
+```
+
+A glob is expanded against the tree and each directory it matches is one
+sub-project; a directory the glob matches that carries no manifest is still
+one, since the workspace file is the declaration. A `blank` repo has none of
+these files and proposes no sub-project.
 
 **The repo's own name is not a source, on either list.** It was the third step
 until 2026-09-14 and it named the wrong thing: a task group's segment says what
@@ -224,15 +307,17 @@ resolved**, at the top of the run, and nothing here re-resolves them.
 
 ### The marked positions
 
-**Seven**, and with the `_default` slot below they are the eight things this
-section fills. Only the `_default` slot comes from the id list. Two are **per
-member repo**, three are repo-level — the repo-name key among them, filled from
-SKILL.md's **question 1** — and the last two are the plugin task's, filled from
-SKILL.md's **question 5**, and they are written here because this is the one
-section that fills a marked position.
+**Nine**, and with the `_default` slot below they are the ten things this
+section enumerates. Only the `_default` slot comes from the id list. Two are
+**per member repo**, three are repo-level — the repo-name key among them,
+filled from SKILL.md's **question 1** — two are the plugin task's, filled from
+SKILL.md's **question 5**, and the last two are the toolchain config's
+**runtime positions**, filled from the stack read by **§5** and enumerated
+here because this is the one section that lists every marked position, so the
+splice below reaches them.
 
 **The pack's payload is where each one is marked**, by a comment and nothing
-else: a `MARKED POSITION` block above the value, for the five that sit in the
+else: a `MARKED POSITION` block above the value, for the seven that sit in the
 toolchain manager's config and task files, and the commented template itself
 for the flag and alias lists, which stands where those lines go. There is no
 marker syntax a tool could enumerate, so the set is exactly the positions this
@@ -260,9 +345,10 @@ own in either pipeline. [existing repo](existing-repo.md) §6 states that once,
 together with the second test that keeps it consistent — on a hash mismatch it
 splices the repo's current values, at every position this section enumerates
 that the file carries, into the pack's payload, and a file diverging only
-inside them is never offered. That splice reaches all seven; the fill on a kept
-file governs **six** of them, and not only the plugin task's two. `MERGE_MODEL`
-is the seventh, and it is §11(a)'s: the git pass writes it only in a repo whose
+inside them is never offered. That splice reaches all nine; the fill on a kept
+file governs **eight** of them — the two runtime positions §5 fills among
+them — and not only the plugin task's two. `MERGE_MODEL`
+is the ninth, and it is §11(a)'s: the git pass writes it only in a repo whose
 environment-block file this run lands or replaces, so a kept file keeps the
 value that position already holds. Being spliced like the rest is what stops §6
 reading that value as content; no survey pass owns it, so no pass shows a row
@@ -361,6 +447,12 @@ whatever it depends on. The task installs both unconditionally, and its
 inventory prints them anyway, like every other installed plugin — question 5
 is where those two rows are **dropped**, before the question is even offered,
 so an answer cannot carry them here.
+
+**The eighth and ninth are the two runtime positions** — `RUNTIME_BLOCK` and
+`PATH_ENTRIES` in the toolchain pack's base config — and they are **§5's** to
+fill, from the stack read, not this section's. They are listed here for the
+one reason `MERGE_MODEL` is: the splice above has to know every position a
+file carries, and a value at either of them is a fill, never content.
 
 ### The `_default` slot
 
@@ -787,8 +879,11 @@ section SKILL.md's report specifies.
 
 The ten-section report and the two next-step lines, exactly as SKILL.md
 specifies — including how the ten sections are grouped when a run shaped more
-than one repo, which is written down there and is not restated here. A new
-repo's report is mostly *files written*; *files replaced*,
+than one repo, which is written down there and is not restated here. A
+`blank` repo's report is mostly *files written*; *files replaced*,
 *files kept*, *files moved*, *tasks renamed*, *tasks kept* and *calls
 rewritten* all read `none`, which is the honest shape of a tree that had
-nothing to reconcile.
+nothing to reconcile. A `source` repo's report carries whatever the borrowed
+passes did — a root config moved by pass 1, a conflict kept or replaced by
+pass 6, and, where a task library existed, what passes 3 and 5 renamed and
+moved — on the same lines the existing pipeline prints them on.
