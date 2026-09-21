@@ -121,12 +121,16 @@ pass; any other host, and a repo with no `origin`, passes **`none`**. A
 **Every key is always present, and `none` is the spelling of no answer.**
 The materializer's own rule is that an axis the map leaves out reads as
 **true** — every path conditioned on it lands — so an omitted key is a
-silent yes, never a no; `init` therefore omits nothing and writes `none`, a
-value no `when:` names, wherever the answer was none or nothing could be
-read. A condition against `none` is false and the file is skipped — a repo
-with no remote yet gets no forge-specific files, and gets them on the
-reshape that follows the remote, which the plan says on the skipped row. A
-pack that marks nothing `when:` is untouched by all four and lands whole.
+silent yes, never a no; `init` therefore omits nothing and writes `none`
+wherever the answer was none or nothing could be read. On `forge`, `editor`
+and `secrets` that is `init`'s **no-match value** — the vocabulary names no
+`none` on those axes, so a condition against it is false and the file is
+skipped: a repo with no remote yet gets no forge-specific files, and gets
+them on the reshape that follows the remote, which the plan says on the
+skipped row. On `update_bot` it is **one of the three answers** a pack may
+name — `when: update_bot: none` is legal — so a file conditioned on it lands
+exactly when the row picked no bot. A pack that marks nothing `when:` is
+untouched by all four and lands whole.
 
 **The two questions' mechanics**, where SKILL.md states the rule and this
 file the reads behind it:

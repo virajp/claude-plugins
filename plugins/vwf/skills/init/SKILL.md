@@ -596,9 +596,10 @@ one value per axis, `forge`, `editor`, `secrets` and `update_bot`.
    What this question settles is the `editor` axis the materializer's
    conditional evaluation step reads: a **yes** passes the axis value the
    convention names for that editor, and every pack file conditioned on it —
-   every editor fragment — lands; a **no** passes `none` on that axis, a
-   value no condition names, so those files are **skipped**, listed in the
-   plan under their own heading, and the editor merge in
+   every editor fragment — lands; a **no** passes `none` on that axis —
+   `init`'s no-match value, which no `when:` names on this axis — so those
+   files are **skipped**, listed in the plan under their own heading, and the
+   editor merge in
    [fragments and sections](references/fragments-and-sections.md) then has no
    fragment to read and composes nothing. Nothing about the answer is written
    into the tree; a later run asks again, defaulted the same way.
@@ -621,7 +622,10 @@ one value per axis, `forge`, `editor`, `secrets` and `update_bot`.
    passed as that repo's value, so the hygiene pack's policy file lands only
    where the answer names the service it configures, and is **skipped** —
    listed in the plan under the same heading — where the answer is the other
-   service or **none**. A repo whose own policy file the yield rule keeps is
+   service or **none**. On this axis alone, **none** is not `init`'s
+   no-match value but one of the three answers a pack may name in a `when:`,
+   so a file a pack conditions on it lands exactly when no bot was picked. A
+   repo whose own policy file the yield rule keeps is
    unchanged by the answer: the pack's file was never going to land there.
 
 Ask all nine **before** presenting the plan, so the plan is complete and one
