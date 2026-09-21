@@ -505,7 +505,7 @@ is used — which is why it goes unnoticed until the day that task runs:
   the pair`: every reader takes that one value as both until the reshape, so
   the row is the only thing that says the pair is missing. The remedy holds
   on a kept file too — a keep never covers a marked position's value, so the
-  reshape fills both positions from the legacy value through the splice
+  reshape fills both positions from the legacy value through its fill
   whether the file is replaced or kept.
 - **`MEMBERS`** — absent **or empty** on a product whose config reads
   `topology: multi-repo` with `linkage: siblings` is one drift row. Under that
