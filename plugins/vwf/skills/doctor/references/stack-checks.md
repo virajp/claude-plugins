@@ -412,10 +412,10 @@ A path the lockfile lists under `skipped:` has no `entries:` record — the two
 lists never share a path, and `skipped:` holds only what was never landed. It
 is intentionally absent — its pack declared a condition the repo's answer did
 not meet — and is **never** reported as missing; a later run whose answer
-changed re-evaluates it, which is the reshape landing it. The reverse is a
-finding: a path present on disk **and** under `skipped:` is one drift row
-worded **landed by hand, skipped by condition**, with the same remedy,
-`/vwf:setup reshape`. A path that **has** an `entries:` record — landed on an
+changed re-evaluates it, which is the reshape landing it. Present on disk,
+a file at a skipped path is the repo's own — unread, unlisted, and never a
+row here, since no reshape could clear it while the answer stands. A path
+that **has** an `entries:` record — landed on an
 earlier run whose answer has since flipped, or never conditional — is checked
 by hash like any landed file, whatever its condition reads today. One row is
 read from the config rather than the lockfile: a repo whose config pins a
