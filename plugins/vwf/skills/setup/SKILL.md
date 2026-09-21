@@ -73,11 +73,13 @@ Read the one the step needs, not all of them.
 
 `$ARGUMENTS` carries at most one word. With `reshape`, setup **skips the
 detection below entirely**: invoke `/vwf:init` — which surveys **the base and
-every member**, shows its one plan and takes its own consents — print init's
-report verbatim, and **stop**. No mode fork, no validation, no stamp, no
-doctor, no commit; a re-shape never touches `.config/vwf.yaml`, because the
-spine below is a setup run's, and a user who wants both runs `/vwf:setup` again
-afterwards.
+every member**, decides each repo's mode from its tree (`blank`, `source` or
+`shaped` — a source-bearing repo is shaped as `source`, its existing files
+offered, never overwritten), shows its one plan and takes its own consents —
+print init's report verbatim, and **stop**. No mode fork, no validation, no
+stamp, no doctor, no commit; a re-shape never touches `.config/vwf.yaml`,
+because the spine below is a setup run's, and a user who wants both runs
+`/vwf:setup` again afterwards.
 
 A run of `/vwf:setup reshape` started **inside a member** is not a reshape of
 that member alone. init resolves the base per the membership asset
@@ -133,7 +135,10 @@ still an offer, because the shape is per repo and the product is shaped only
 when all of them are. Both causes reach the same offer — init is what lays the
 shape down and what brings it forward — and on a yes invoke `/vwf:init`, which
 surveys the base and every member and shapes them in one run of its own, and
-continue once it returns. init is **skill-invoked**: hidden from the `/` menu
+continue once it returns. init decides each repo's mode from what its tree
+contains — `blank`, `source` or `shaped` — so a repo that already carries
+source is shaped as `source`: its existing files are offered, never
+overwritten. init is **skill-invoked**: hidden from the `/` menu
 and called from here alone, so this offer and `reshape` above are the
 only two ways it is reached. A **decline** is a recorded deferral on the terms
 in [the onboard pipeline](references/onboard-pipeline.md), named with its
@@ -171,7 +176,13 @@ repo has no package or language manifest, no source directories, and no
 `docs/blueprint/` tree. A README, LICENSE, `.gitignore`, `.gitattributes`, and
 tooling-only configs (mise, formatter, linter, pre-commit — at the root or under
 `.config/`) are **not** code: a repo holding only those is blank. Anything else
-takes the code sub-path. Both are in the onboard pipeline.
+takes the code sub-path. Both are in the onboard pipeline. This fork chooses
+setup's onboard sub-path only: `/vwf:init` runs its **own** mode test per repo
+— `blank`, `source` or `shaped`, the table in
+`${CLAUDE_PLUGIN_ROOT}/skills/init/SKILL.md` — and nothing is handed down,
+since init takes no argument. The two tests differ on exactly one item: a
+root tool config is not code here, but it is `source` evidence there, because
+init has to read it before a pack lands beside it.
 
 **An old `docs/blueprint/` tree found under `onboard`** is handed to the migrate
 pipeline once detection is confirmed. The two are one reconciliation at
