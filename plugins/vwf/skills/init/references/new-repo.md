@@ -379,12 +379,14 @@ that the file carries, into the pack's payload, and a file diverging only
 inside them is never offered. That splice reaches all ten; the fill on a kept
 file governs **eight** of them — the two runtime positions §5 fills among
 them — and not only the plugin task's two. `MERGE_MODEL_DEVELOP` and
-`MERGE_MODEL_MAIN` are the ninth and tenth, and they are §11(a)'s: the git
-pass writes them only in a repo whose environment-block file this run lands or
-replaces, so a kept file keeps the values those positions already hold — or
-the one legacy `MERGE_MODEL` key an older file carries in their place. Being
-spliced like the rest is what stops §6 reading those values as content; no
-survey pass owns them, so no pass shows a row for them either.
+`MERGE_MODEL_MAIN` are the fifth and sixth, and they are §11(a)'s: the git
+pass asks them only for a repo whose environment-block file this run lands or
+replaces, so a kept file keeps the values those positions already hold — and
+where an older kept file carries the one legacy `MERGE_MODEL` key in their
+place, the splice writes that value into both positions, since a keep never
+covers a marked position's value. Being spliced like the rest is what stops §6
+reading those values as content; no survey pass owns them, so no pass shows a
+row for them either.
 
 **A repo with no members leaves both positions exactly as shipped** — a
 single-project repo, and a member repo that declares no members of its own,
@@ -446,7 +448,8 @@ before that step stages — not as a numbered question, because they are a
 decision about landing and the git pass is where landing is decided. A repo
 whose positions are left as shipped runs on the pack's defaults, `direct` into
 `develop` and `pr` into `main`. An older file carrying the single legacy key
-`MERGE_MODEL` is read as both values until a reshape writes the pair.
+`MERGE_MODEL` is read as both values by every reader until a run writes the
+pair — §11(a) on a landed or replaced file, the splice on a kept one.
 
 `MEMBERS` is the product's other repositories, as paths relative to the repo
 root, in the pack's own space-separated spelling. Fill it from the **registry's
@@ -629,10 +632,15 @@ plan row**, not a repo that commits: the row names the branch to check out —
 is deferred under *Deferred* with that checkout as the unlock, and the base's
 gitlink for it is **not** moved. A commit on a detached HEAD belongs to no
 branch and is lost the moment somebody checks one out, which is worse than not
-committing. The mechanics — the read's place before the gate-first commit, the
-row's wording — are [existing repo](existing-repo.md)'s, and the clone step in
-`${CLAUDE_PLUGIN_ROOT}/assets/membership.md` checks the member out on its
-default branch so a member this run cloned never arrives detached.
+committing. The read runs at survey time for a member that was present, and
+at **apply** time for one this run cloned — immediately after its clone row,
+as the first line of the survey that row defers. The mechanics — the read's
+place before the gate-first commit, the row's wording — are
+[existing repo](existing-repo.md)'s. The clone row itself is the **full**
+clone sequence `${CLAUDE_PLUGIN_ROOT}/assets/membership.md` spells — the
+clone, then the branch checkout at the recorded gitlink commit — never the
+bare clone command alone, which is what leaves a submodule detached; so a
+member this run cloned never arrives detached, and its HEAD read answers.
 
 Run it in this order.
 
@@ -651,13 +659,17 @@ next paragraph.
 | `<repo>` | `develop` | `direct`    | `MERGE_MODEL_DEVELOP` |
 | `<repo>` | `main`    | `pr`        | `MERGE_MODEL_MAIN`    |
 
-The preselections are what the toolchain pack ships, and they are the same
-for every repo: work into `develop` is the day's landing and needs no reviewer
-between a green branch and the integration line, while `main` takes nothing
-but `develop` and is where a review gate earns its keep. A repo may answer
-differently from its siblings — each repo carries its own block, and each
-one's merge tasks read their own copy. Write each row's answer literally at
-that repo's marked position §7 described, and count each as a fill.
+The preselections shown are the toolchain pack's, and they are what a repo
+whose file is landing for the first time gets: work into `develop` is the
+day's landing and needs no reviewer between a green branch and the integration
+line, while `main` takes nothing but `develop` and is where a review gate earns
+its keep. **A repo whose file this run replaces is preselected from what that
+file carries** — its current pair where it has one, else its legacy
+`MERGE_MODEL` for both rows, else the pack's defaults — so a reshape never
+proposes a landing the repo did not already run. A repo may answer differently
+from its siblings — each repo carries its own block, and each one's merge
+tasks read their own copy. Write each row's answer literally at that repo's
+marked position §7 described, and count each as a fill.
 
 **A repo that kept that file keeps the values those positions hold**, and what
 decides that is the kind of position it is, not the keep. The landing model is a
@@ -668,10 +680,12 @@ else, and a kept file is neither. The file's other two positions — `REPO_NAME`
 and `MEMBERS` — are a different matter: §7 fills those, keep or no keep. Say so
 on that repo's line in the report, naming the values it keeps and the file
 that was kept, so a reader sees one decision rather than a repo that silently
-landed on the pack's defaults. A kept file that still carries the
-single legacy key `MERGE_MODEL` keeps it too, and its line reads **"legacy
-`MERGE_MODEL` — read as both until reshape"**: every reader takes the one value
-for both branches, and a run that replaces the file is what writes the pair.
+landed on the pack's defaults. A kept file that still carries the single
+legacy key `MERGE_MODEL` is not asked either, but it is not left as it is: a
+keep never covers a marked position's value, so §7's splice writes the legacy
+value into **both** positions, and its line reads **"legacy `MERGE_MODEL`
+`<value>` — written to both positions"**. Until that run, every reader takes
+the one value for both branches.
 
 It is asked here rather than as one of SKILL.md's numbered questions because it
 decides how work lands, which is what the rest of this pass is about; and it is
@@ -681,10 +695,19 @@ asked **before** (b) so the file it writes is in what (b) stages.
 mode does about opening the pull request is the pack's business — naming that
 is exactly the naming this skill's hard rules forbid.
 
-### (b) Stage exactly what this run wrote
+### (b) Check out `develop`, then stage exactly what this run wrote
 
-Into this repo's own index: every path in **this repo's** written / moved /
-renamed lists, and nothing else. Not `git add -A`: a repo that already had
+**The branch work comes before staging.** On a repo that already has commits,
+read (d)'s table now — create whichever of the pair is missing, the mainline
+row included — and **check out `develop`**, so that what (b) stages and (c)
+commits sits on the branch work flows through: the ops commit lands on
+`develop` in every mode, never on `main` and never on whatever branch the repo
+happened to be standing on. A fresh repository is on `develop` already, from
+§1, and takes the table's first row after the commit instead. This is the
+order [existing repo](existing-repo.md)'s git pass keeps too.
+
+Then, into this repo's own index: every path in **this repo's** written /
+moved / renamed lists, and nothing else. Not `git add -A`: a repo that already had
 untracked work of its own does not get it swept into a commit whose message says
 the shape was laid down.
 
@@ -728,12 +751,10 @@ it has nothing staged and is **skipped** here. Say that on its line rather than
 printing it as a repo that committed nothing — the two look identical in a
 report and mean opposite things.
 
-On either committing answer, first **check out `develop`, creating it per
-(d)'s table** — the ops commit lands on `develop` in every mode, never on
-`main` and never on whatever branch the repo happened to be standing on; the
-table's *Create* column is what makes `develop` exist to check out, and the
+On either committing answer, the commit is made on `develop`, which (b)
+checked out — the table's *Create* column is what made it exist, and the
 mainline row is why a repo arriving on `master` or `trunk` still commits on
-`develop`. Then make each commit with the toolchain manager's execution
+`develop`. Make each commit with the toolchain manager's execution
 wrapper — `mise x -- git commit` — as
 [git-workflow](../../git-workflow/SKILL.md) spells it, and never with the
 verification-skipping flag. The message is **fixed**, and the same in every
@@ -763,11 +784,11 @@ The table is read against the repo this pass is running in, and the pair is
 created in **every** repo that lacks it: a member is a repository, its merge
 tasks are its own, and a member with one of the two missing has merge tasks
 that cannot run however well the base is shaped. The rows split by when they
-run: a repo that already had commits takes its row **before** (c)'s commit,
-because that commit lands on `develop` and `develop` has to exist first; a
-fresh repository takes the first row **after** the commit, because the whole
-reason §1 stopped at one branch is that a repository with no commit has
-nothing to branch from.
+run: a repo that already had commits takes its row at the start of (b),
+**before** staging and the commit, because that commit lands on `develop` and
+`develop` has to exist first; a fresh repository takes the first row **after**
+the commit, because the whole reason §1 stopped at one branch is that a
+repository with no commit has nothing to branch from.
 
 | The repository had                   | Create                                             | Checked out |
 | ------------------------------------ | -------------------------------------------------- | ----------- |
@@ -786,16 +807,18 @@ is why the last row exists: a repo whose mainline is `master`, `trunk` or any
 other name gets the pair created beside it, the old branch is **left in
 place**, untouched and unreported to the forge, and the run's summary names it
 on that repo's `Branches created` line as *`<name>` left — retire by hand* so
-the user decides when it goes. The mainline is the branch the repo stood on at
-the HEAD read above; where it stood on some branch that is neither, and `main`
-or `develop` exists, the row for what exists applies and the odd branch is
-simply not the mainline.
+the user decides when it goes. The mainline is read from **`origin/HEAD`**,
+and only where there is no remote to read it from is it the branch the repo is
+on — a `main` is never created from a feature branch the user happened to be
+standing on when a remote can say what the mainline is. Where `main` or
+`develop` exists, the row for what exists applies whatever branch the repo
+stood on, and that branch is simply not the mainline.
 
 Where the answer at (c) was **leave it**, there is no commit to branch from on
 a fresh repository — record the branch work as a deferral with its unlock (the
-commit), and create nothing. On a repo that already had commits, create the
-missing branches anyway and check out `develop`: it costs nothing and it is
-what the merge tasks need.
+commit), and create nothing. On a repo that already had commits, the branches
+were created and `develop` checked out at (b), before the answer was asked,
+and they stay: it costs nothing and it is what the merge tasks need.
 
 ### (e) The push
 

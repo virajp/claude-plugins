@@ -98,20 +98,21 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
   its shaping deferred and its gitlink left where it was — asks how work lands
   in this product, **one row per repo per branch**, `develop` and `main`, each
   `direct` or `pr`, written to that repo's two marked positions
-  `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`, stages what this run wrote
-  and asks **one question with three answers** — commit, commit and push,
-  leave it — checks out `develop`,
+  `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`, checks out `develop`,
   creating whichever of `develop` and `main` the branch model needs and the
-  repo lacks, commits with a fixed `ops:` message when told to — **the ops
-  commit lands on `develop` in every mode**, never on `main` or whatever branch
-  the repo stood on — and pushes **only** on the commit-and-push answer. A repo
-  whose mainline is named something else gets `main` created from it and
-  `develop` from `main`, the old branch left in place and reported for the
-  user to retire. Both questions are asked **once**, in one round each — the
-  landing table carrying every repo's rows — and applied to every resolved
-  repo: the members commit first, and the base then commits the run's
-  files **plus** the moved gitlinks, which it deliberately stages so the base's
-  record of its members is not left a commit behind. Push is a second decision
+  repo lacks, stages what this run wrote and asks **one question with three
+  answers** — commit, commit and push, leave it — commits with a fixed `ops:`
+  message when told to — **the ops commit lands on `develop` in every mode**,
+  never on `main` or whatever branch the repo stood on — and pushes **only**
+  on the commit-and-push answer. A repo whose mainline — read from
+  `origin/HEAD`, else the branch it is on — is named something else gets
+  `main` created from it and `develop` from `main`, the old branch left in
+  place and reported for the user to retire. Both questions are asked
+  **once**, in one round each — the landing table carrying every repo's rows
+  — and applied to every resolved repo: the members commit first, and the
+  base then commits the run's files **plus** the moved gitlinks, which it
+  deliberately stages so the base's record of its members is not left a
+  commit behind. Push is a second decision
   inside one question, never an assumed consequence of committing. **After the
   push comes the forge pass**, on one further consent for the whole product:
   it sets each pushed repo's default branch on the forge, protects `develop`
@@ -245,22 +246,25 @@ reason to skip it. What follows is `init`'s **own** handling, stated here in
 full. `${CLAUDE_PLUGIN_ROOT}/assets/membership.md` splits the commands that
 need a member's **code** from the ones that do not, and `init` is named in
 neither list — it does not read a member's code, it **shapes** one. So that
-asset is cited below for exactly one thing, the two clone commands, which it
+asset is cited below for exactly one thing, the clone sequence, which it
 owns.
 
 **`init` makes no separate offer.** The clone is a **row in the plan**,
 covered by the same one yes as everything else, so an absent member is not a
-second question in front of the one consent. The row is the command the
-asset spells for the linkage in force — `git submodule update --init <path>`
-under submodule linkage, `git clone <url> <path>` under siblings — followed
-by *then survey and shape it*.
+second question in front of the one consent. The row is the asset's **full**
+clone sequence for the linkage in force — the clone command it spells for
+that linkage, and, under submodule linkage, the branch checkout that follows
+it, landing a branch at the recorded gitlink commit — never the bare clone
+alone: a submodule arrives detached, and a detached member is a repo the git
+pass refuses, so the checkout is what makes the member shapeable in the same
+run. The row ends *then survey and shape it*.
 
 An absent member's section holds that clone row **first** and then reads
 *surveyed after the clone*: nothing can be surveyed in a directory that is not
 there yet. That survey runs at **apply** time, immediately after the clone and
-before any write into that repo, and its rows are printed then — so the run's
-output still accounts for every row, in the order it happened, even though the
-plan could not.
+its checkout and before any write into that repo, opening with the git pass's
+HEAD read, and its rows are printed then — so the run's output still accounts
+for every row, in the order it happened, even though the plan could not.
 
 **On a decline, nothing is cloned.** The clone rows sit inside the one plan,
 so the one no that stops the plan stops them too: no directory is created, no
