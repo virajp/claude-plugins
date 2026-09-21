@@ -15,3 +15,9 @@ axis: repo
 # harness tasks are run BY. What it contributes is the repo-axis fact that the
 # task names exist at all.
 harness: n/a
+# The editor fragment lands only where init's editor answer is vscode; every
+# other file in config/ lands unconditionally. Paths are relative to config/.
+conditional:
+  - path: .config/vscode.d/mise.jsonc
+    when:
+      editor: vscode

@@ -12,3 +12,9 @@ axis: repo
 # Authored ahead of its bundle: no `language/python` component and no python
 # bundle exist yet, so nothing can compose this pack. See conventions.md.
 harness: n/a
+# The editor fragment lands only where init's editor answer is vscode; every
+# other file in config/ lands unconditionally. Paths are relative to config/.
+conditional:
+  - path: .config/vscode.d/ruff.jsonc
+    when:
+      editor: vscode

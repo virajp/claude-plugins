@@ -9,3 +9,9 @@ axis: repo
 # Topic 10 of the language-bundle bar. NOT a repo-gate: this linter is
 # meaningful only for one toolchain, so it belongs to its language's bundle.
 harness: n/a
+# The editor fragment lands only where init's editor answer is vscode; every
+# other file in config/ lands unconditionally. Paths are relative to config/.
+conditional:
+  - path: .config/vscode.d/eslint.jsonc
+    when:
+      editor: vscode
