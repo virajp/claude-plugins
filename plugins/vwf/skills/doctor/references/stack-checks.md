@@ -408,6 +408,13 @@ tier: the tree `/vwf:init` shapes, and the one this section is about. A file
 whose content no longer matches its recorded hash is one drift row naming the
 path, once the second test below confirms it; a recorded path that no longer
 exists at all is the same row, worded **removed**, and takes no second test.
+A path the lockfile lists under `skipped:` is not among those records at all:
+it is intentionally absent — its pack declared a condition the repo's answer
+did not meet on the round that landed the pack — and is **never** reported as
+missing; a later run whose answer changed re-evaluates it, which is the reshape
+landing it. The reverse is a finding: a path present on disk **and** listed as
+skipped is one drift row worded **landed by hand, skipped by condition**, with
+the same remedy, `/vwf:setup reshape`.
 
 The hash comparison stays the first and cheapest test, and a match ends it: a
 file matching its record raises nothing and nothing further is read. **A
