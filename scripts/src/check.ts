@@ -768,16 +768,20 @@ function editorFragmentFaults(source: string): string[] {
  * inside one segment. Nothing else is a metacharacter.
  */
 function landedGlob(pattern: string): RegExp {
-  const source = pattern
-    .split("/")
-    .map(segment =>
-      segment === "**"
-        ? "(?:[^/]+/)*"
-        : segment
-          .replace(/[.+^${}()|[\]\\]/g, "\\$&")
-          .replace(/\*/g, "[^/]*")
-          .replace(/\?/g, "[^/]") + "/"
-    )
+  const segments = pattern.split("/");
+  const source = segments
+    .map((segment, index) => {
+      if (segment === "**") {
+        // A trailing `**` names every file below, at any depth.
+        return index === segments.length - 1
+          ? "(?:[^/]+/)*[^/]+"
+          : "(?:[^/]+/)*";
+      }
+      return segment
+        .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+        .replace(/\*/g, "[^/]*")
+        .replace(/\?/g, "[^/]") + "/";
+    })
     .join("")
     .replace(/\/$/, "");
   return new RegExp(`^${source}$`);
@@ -1603,7 +1607,9 @@ function tomlStringList(source: string, key: string): string[] | null {
  * "at the root or under any directory", a glob's two stars — reads as `^` before
  * the grouping is looked at, so it never counts as a group of its own. A
  * prefix or suffix outside a top-level group applies to every alternative
- * inside it.
+ * inside it. An alternative carrying two top-level groups has no one reading
+ * as entries, so it is refused — the reader throws, and rule 15 reports the
+ * file as unreadable with this reason.
  */
 function regexAlternatives(pattern: string): string[] {
   let source = pattern;
@@ -1614,6 +1620,11 @@ function regexAlternatives(pattern: string): string[] {
   const parts = splitTopLevel(source);
   if (parts.length > 1) {
     return parts.flatMap(regexAlternatives);
+  }
+  if (topLevelGroups(source) > 1) {
+    throw new Error(
+      "more than one alternation group — spell one entry per line",
+    );
   }
   const group = /^([^()]*)\((?:\?:)?(.*)\)([^()]*)$/s.exec(source);
   if (group === null) {
@@ -1626,25 +1637,47 @@ function regexAlternatives(pattern: string): string[] {
 /** A regex's `(^|/)` or `(?:^|/)` — the anchor a glob spells with two stars. */
 const REGEX_ANYWHERE_ANCHOR = /\((?:\?:)?\^\|\/\)/g;
 
-/** Split a regex on `|` at nesting depth zero. */
-function splitTopLevel(source: string): string[] {
-  const parts: string[] = [];
+/**
+ * Walk a regex's characters with the nesting depth and whether the cursor is
+ * inside a bracket class — where `(`, `)` and `|` are literals.
+ */
+function* regexChars(
+  source: string,
+): Generator<{ char: string; depth: number; inClass: boolean; }> {
   let depth = 0;
-  let current = "";
+  let inClass = false;
   for (let index = 0; index < source.length; index++) {
-    const char = source[index]!;
+    let char = source[index]!;
     if (char === "\\") {
-      current += char + (source[index + 1] ?? "");
+      char += source[index + 1] ?? "";
       index++;
+      yield { char, depth, inClass };
       continue;
     }
-    if (char === "(") {
+    if (inClass) {
+      inClass = char !== "]";
+      yield { char, depth, inClass: true };
+      continue;
+    }
+    if (char === "[") {
+      inClass = true;
+    }
+    else if (char === "(") {
       depth++;
     }
     else if (char === ")") {
       depth--;
     }
-    if (char === "|" && depth === 0) {
+    yield { char, depth, inClass };
+  }
+}
+
+/** Split a regex on `|` at nesting depth zero, outside any bracket class. */
+function splitTopLevel(source: string): string[] {
+  const parts: string[] = [];
+  let current = "";
+  for (const { char, depth, inClass } of regexChars(source)) {
+    if (char === "|" && depth === 0 && !inClass) {
       parts.push(current);
       current = "";
       continue;
@@ -1653,6 +1686,17 @@ function splitTopLevel(source: string): string[] {
   }
   parts.push(current);
   return parts;
+}
+
+/** How many `(` open at depth zero, outside any bracket class. */
+function topLevelGroups(source: string): number {
+  let count = 0;
+  for (const { char, depth, inClass } of regexChars(source)) {
+    if (char === "(" && depth === 1 && !inClass) {
+      count++;
+    }
+  }
+  return count;
 }
 
 /**

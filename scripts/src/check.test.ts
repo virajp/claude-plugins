@@ -590,7 +590,8 @@ describe("the pack config tier", () => {
     const root = tree(conditional(
       "  - path: .config/vscode.d/*.jsonc\n    when: { editor: vscode }\n"
         + "  - path: \"**/vscode.d/*.jsonc\"\n    when: { editor: vscode }\n"
-        + "  - path: \"**/*.jsonc\"\n    when: { editor: vscode }\n",
+        + "  - path: \"**/*.jsonc\"\n    when: { editor: vscode }\n"
+        + "  - path: .config/vscode.d/**\n    when: { editor: vscode }\n",
     ));
     expect(messages(check(root))).toEqual([]);
   });
@@ -1393,6 +1394,31 @@ describe("the exclusion sets", () => {
         + "repos:\n  - repo: local\n",
     }));
     expect(messages(check(root))).toEqual([]);
+  });
+
+  it("keeps a bar inside a bracket class out of the alternation", () => {
+    const root = tree(lists({
+      preCommit: "exclude: ^(node_modules/|dist/|[^/]*[|.]lock|\\.env\\..*)\n"
+        + "repos:\n  - repo: local\n",
+    }));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("exclusion `*.lock` is in "),
+      expect.stringContaining(`exclusion \`*[|.]lock\` is in ${preCommit}`),
+    ]);
+  });
+
+  it("refuses a pre-commit pattern with two alternation groups", () => {
+    // `^(?:build|dist)/.*\.(json|yaml)$` has no one reading as entries.
+    const root = tree(lists({
+      preCommit: "exclude: ^(?:build|dist)/.*\\.(json|yaml)$\n"
+        + "repos:\n  - repo: local\n",
+    }));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(
+        `${preCommit}: exclusion list could not be read — more than one `
+          + "alternation group — spell one entry per line",
+      ),
+    ]);
   });
 
   it("flags an exclusion list that cannot be read", () => {
