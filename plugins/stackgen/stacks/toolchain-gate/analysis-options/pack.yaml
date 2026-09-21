@@ -1,6 +1,6 @@
 name: analysis_options
 summary: The Dart analyzer and lint configuration for a Flutter app.
-version: 0.1.0
+version: 0.2.0
 type: toolchain-gate
 kind: app-framework
 axis: project
