@@ -204,7 +204,9 @@ repos:
           failure mode nobody re-reads because it keeps working.
         stages: [manual]
 
-# Fragments from `.config/pre-commit.d/*.yaml` are merged below this line by
-# `/vwf:init`, each between a `# >>> pre-commit.d/<name>.yaml` and a matching
-# `# <<< pre-commit.d/<name>.yaml` marker. A re-run replaces what is between a
-# pair; do not hand-edit there, and put a repo's own hooks above this line.
+# Fragments from `.config/pre-commit.d/*.yaml` are appended by `/vwf:init` as
+# entries at the end of the `repos:` list above, each between a
+# `# >>> pre-commit.d/<name>.yaml` and a matching `# <<< pre-commit.d/<name>.yaml`
+# marker. A re-run replaces what is between a pair and leaves everything
+# outside the markers byte for byte; do not hand-edit there, and put a repo's
+# own hooks before the first marker.

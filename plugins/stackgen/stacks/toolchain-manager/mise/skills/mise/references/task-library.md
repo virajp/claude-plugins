@@ -687,8 +687,12 @@ can be a later row's left-hand side — `setup:pnpm:update` becomes
 
 The `print_*` rows are how a repo's own tasks are rewritten when a diverged
 `_scripts/helpers` is replaced by this pack's: every call to a left-hand name
-becomes its right-hand one, and a call to a name with no row here is flagged for
-the user rather than rewritten.
+becomes its right-hand one. A function the diverged copy defines that this
+pack's `helpers` does not, and no row here maps, is neither rewritten nor
+dropped: its body **moves, whole, into `_scripts/local`** — the repo-owned
+sibling the `_scripts/` section above allows for, the one file in that
+directory no pack ships and `/vwf:init` never replaces — and its calls keep
+their name.
 
 | Was                                                | Is now                | Why it moved                                                             |
 | -------------------------------------------------- | --------------------- | ------------------------------------------------------------------------ |

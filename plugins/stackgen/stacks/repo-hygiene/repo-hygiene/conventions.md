@@ -59,7 +59,13 @@ hold the file together:
 
 - **Sections are appended, never interleaved.** The initializer appends a
   stack's ignore file from `github/gitignore` as its own banner at the end,
-  and appends nothing whose pattern the file already carries.
+  and appends nothing whose pattern the file already carries. A repo that
+  already has a `.gitignore` keeps it whole: the initializer merges **section
+  by section**, appending each banner section of this base whose patterns
+  are not already present, and compares patterns **normalised** — a leading
+  `/` and a trailing `/` stripped, a `**/` prefix ignored, blank and comment
+  lines skipped — so a pattern the file carries under another spelling is
+  never doubled.
 - **The mise local patterns are load-bearing.** They cover every path mise
   loads a local override from; dropping one is how a machine-local pin ends
   up in a review.
@@ -220,8 +226,10 @@ a secrets provider declares its tool) and is on by default; the pre-commit
 manager is **off** by default and has to be asked for, or the hook revisions
 are the one pinned set nothing updates.
 
-**Renovate's own config discovery does not include `.config/`.** The file is
-placed there because that is where this repo's shape puts configuration, and a
-repository that actually enables the bot either points `configFileNames` at it
-(self-hosted) or carries the root name the hosted app searches for. The
-initializer says so when it writes the file.
+**Renovate's own config discovery does not include `.config/`.** That is why
+this file is the one policy that lands at the root rather than under
+`.config/`: Renovate reads `renovate.json` first, then `.github/`,
+`.gitlab/` and `.renovaterc`, and never `.config/`. A repo that already
+carries a policy under one of those names — `.github/renovate.json`,
+`.renovaterc` — keeps it: the repo's file wins, this pack's copy is not
+landed, and the initializer reports that it was not.

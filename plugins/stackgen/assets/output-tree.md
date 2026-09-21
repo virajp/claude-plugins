@@ -362,12 +362,12 @@ entries:
     slug: generated/go # the template (bundle) it landed with
     component: language/go # the component ref — <type>/<slug> (assets/taxonomy.md)
     source: generated # or pack/<type>/<slug>@<version>
-    hash: <content hash at landing>
+    hash: <content hash — at landing, re-recorded by the composing skill after its fills>
   - path: .config/mise/tasks/code/format # a `config/` tier file — outside .claude/
     slug: generated/mise
     component: toolchain-manager/mise # which component's version won, per file
     source: pack/toolchain-manager/mise@0.1.0
-    hash: <content hash at landing>
+    hash: <content hash — at landing, re-recorded by the composing skill after its fills>
     mode: "755" # preserved for .config/mise/tasks/** — mise runs the file itself
 settings_keys: [] # exact settings.json keys stackgen added, with consent — a hooks entry is spelled `hooks.<Event>[<matcher>]`
 mcp_servers: [] # exact .mcp.json server keys stackgen added, with consent
@@ -391,6 +391,13 @@ Rules the lockfile enforces:
 - **Sync diffs against the lockfile, mechanically, per component**:
   unchanged / pack moved / repo edited are hash comparisons, not inference,
   and one component's drift never churns the rest of its bundle.
+- **`hash:` has three writers, and a differing hash is drift only when none
+  of them ran.** The materializer writes it at landing. The composing skill
+  (`/vwf:init`) **re-records** it after every change it makes to a landed
+  file — the marked-position fills, the `.gitignore` section appends, the
+  hook-fragment merge, the editor block — and its replace-or-keep offer
+  re-records it on either answer, so a file kept as the repo's own reads as
+  current, not as drift, the next time sync or the offer runs.
 - **Anything not in the lockfile is not stackgen's** — never diffed, never
   overwritten, never removed. A landing set that collides with an unlisted
   path is a conflict for the user, not a write.
