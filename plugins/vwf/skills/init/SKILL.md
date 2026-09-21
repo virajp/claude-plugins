@@ -598,8 +598,8 @@ one value per axis, `forge`, `editor`, `secrets` and `update_bot`.
    convention names for that editor, and every pack file conditioned on it —
    every editor fragment — lands; a **no** passes `none` on that axis —
    `init`'s no-match value, which no `when:` names on this axis — so those
-   files are **skipped**, listed in the plan under their own heading, and the
-   editor merge in
+   files are **skipped**, listed in the plan under their own heading, and
+   the editor merge in
    [fragments and sections](references/fragments-and-sections.md) then has no
    fragment to read and composes nothing. Nothing about the answer is written
    into the tree; a later run asks again, defaulted the same way.
