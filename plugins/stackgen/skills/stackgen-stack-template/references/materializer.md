@@ -212,9 +212,11 @@ to a repo, and every write it makes is consent-gated and committed once.
      landing what it always landed.
 
    A path named by more than one entry stays only when every condition
-   is true. The `skipped:` list is rewritten whole on every run from that
-   run's answers: a path skipped last time whose condition now holds
-   leaves it and lands as a create. Removing a kept path is the user's,
+   is true. A run evaluates only the packs of the slug it materializes,
+   so it rewrites `skipped:` for **those packs alone** — their entries
+   replaced from that run's answers, every other pack's entries kept as
+   they were: a path skipped last time whose condition now holds leaves
+   the list and lands as a create. Removing a kept path is the user's,
    through sync or removal, never a side effect of an answer changing.
 
 2. **Collision check, against the lockfile.** Any target path that exists

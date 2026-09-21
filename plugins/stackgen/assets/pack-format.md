@@ -224,10 +224,11 @@ Those three are the hygiene pack's: the issue forms are GitHub's format
 and land nowhere else; the Renovate policy only where Renovate is the bot;
 the editor fragment only where the editor is in use — and the third
 applies to **every** pack that ships a `vscode.d/` fragment, each stating
-it in its own `pack.yaml` on its own fragment's name. The `secrets` axis works the same way — a file
-that only makes sense beside one provider, `when: { secrets: fnox }` — but
-no shipped pack carries such a file today: the provider's ignore line is an
-ignore-section row keyed on the provider slug, not a conditional file.
+it in its own `pack.yaml` on its own fragment's name. The `secrets` axis
+works the same way — a file that only makes sense beside one provider,
+`when: { secrets: fnox }` — but no shipped pack carries such a file today:
+the provider's ignore line is an ignore-section row keyed on the provider
+slug, not a conditional file.
 
 Rules:
 

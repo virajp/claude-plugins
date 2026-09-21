@@ -419,8 +419,10 @@ Rules the lockfile enforces:
   whose condition later turns false keeps that record, is never written to
   `skipped:` and is never removed by the evaluation — the dry-run plan
   names it as landed earlier, condition now false, kept — so doctor reads
-  it as any other landed file. The list is rewritten on every run, from
-  the answers of that run — a path whose condition now holds leaves it and
+  it as any other landed file. A run rewrites the list **for the packs it
+  evaluated** — their entries replaced from that run's answers, every
+  other pack's kept — since a run materializes one slug and can judge no
+  other pack's conditions; a path whose condition now holds leaves it and
   lands as an ordinary entry, subject to the same collision check as any
   other create.
 - **Removal removes exactly the listed entries**, `settings_keys` and
