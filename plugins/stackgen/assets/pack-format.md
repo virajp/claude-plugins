@@ -234,9 +234,11 @@ Rules:
 - **A path not named under `conditional:` is unconditional.** The key
   narrows; absence is the default every existing pack already has.
 - **A glob may name a whole set** — `.config/vscode.d/*.jsonc` is one
-  entry, not one per fragment. A glob is matched against the landed paths,
-  after the `p/_project/` rename, and every `path` or glob must match at
-  least one file in the pack's own `config/` tree.
+  entry, not one per fragment. A `path` or glob is spelled as the pack's
+  own `config/` tree spells it — **before** the `p/_project/` rename — and
+  must match at least one file there; that pre-rename tree is what rule 11
+  resolves it against, and the materializer evaluates it on the same
+  pre-rename path and applies the rename after.
 - **One axis per entry, one value per axis.** A file that depends on two
   answers is two entries on the same path, both of which must hold. A
   value outside the vocabulary, or an axis not in the table, is a pack

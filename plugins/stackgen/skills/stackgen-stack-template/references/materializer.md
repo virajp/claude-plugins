@@ -185,15 +185,23 @@ to a repo, and every write it makes is consent-gated and committed once.
    to one value, from the fixed vocabulary `forge`, `editor`, `secrets`,
    `update_bot` (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). For each
    entry, match its path or glob against the component's `config/` paths
-   in the set, as they land, and evaluate `when:` against the `answers:`
-   the caller passed:
+   in the set as the pack spells them — **before** the `p/_project/`
+   rename, the same spelling rule 11 resolved; the rename is applied to
+   whatever stays — and evaluate `when:` against the `answers:` the
+   caller passed:
 
    - **False** — the answer for that axis is present and differs — drops
-     every matched path from the landing set and writes it to the
-     lockfile's `skipped:` list as `{ path, pack, when }`
-     (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). A dropped path is
-     never a create and never a conflict: a file already sitting there is
-     the repo's own, unread and unlisted.
+     every matched path from the landing set. A dropped path this repo's
+     lockfile has **never landed** (no `entries:` record) is written to
+     the lockfile's `skipped:` list as `{ path, pack, when }`
+     (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`): never a create and
+     never a conflict, and a file already sitting there is the repo's
+     own, unread and unlisted. A dropped path that **has** an `entries:`
+     record — landed on an earlier run, the answer since flipped — is
+     **not** written to `skipped:`: it keeps its record, is not removed,
+     and is named in the plan under the skips heading as landed earlier,
+     condition now false — kept. A path is in `entries:` or in
+     `skipped:`, never both.
    - **True** leaves the path in the set, an ordinary member from here on
      — so a path both conditional and pre-existing is a conflict in step
      2 only when its condition is true.
@@ -204,13 +212,10 @@ to a repo, and every write it makes is consent-gated and committed once.
      landing what it always landed.
 
    A path named by more than one entry stays only when every condition
-   is true. The list is rewritten whole on every run from
-   that run's answers: a path skipped last time whose condition now holds
-   leaves `skipped:` and lands as a create; a path landed earlier whose
-   condition now reads false is **not removed** — it is listed in the plan
-   under the skips heading as landed earlier, its `entries:` record stays,
-   and removing it is the user's, through sync or removal, never a side
-   effect of an answer changing.
+   is true. The `skipped:` list is rewritten whole on every run from that
+   run's answers: a path skipped last time whose condition now holds
+   leaves it and lands as a create. Removing a kept path is the user's,
+   through sync or removal, never a side effect of an answer changing.
 
 2. **Collision check, against the lockfile.** Any target path that exists
    but is **not** in the target repo's own
@@ -239,8 +244,9 @@ to a repo, and every write it makes is consent-gated and committed once.
 
    **Skips are listed under their own heading**, never folded into the
    creates or the conflicts: every path the evaluation in step 1 dropped,
-   with the pack and the `when:` it failed against — and, marked as such,
-   any path landed on an earlier run whose condition now reads false. The
+   with the pack and the `when:` it failed against — and, marked "landed
+   earlier, condition now false — kept", any path with an `entries:`
+   record whose condition flipped, which stays where it is. The
    heading is present even when empty, so a user reading a plan with no
    issue forms in it sees *why* rather than a shorter list. Skips are not
    deselectable — there is nothing to decline.

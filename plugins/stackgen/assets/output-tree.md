@@ -413,10 +413,16 @@ Rules the lockfile enforces:
   of under `entries:`. It carries no hash, because nothing landed. Every
   reader treats it as **intentionally absent**: `/vwf:doctor` never reports
   it as missing, sync never diffs it, removal never looks for it, and a
-  file sitting at that path is the repo's own. The list is rewritten on
-  every run, from the answers of that run — a path whose condition now
-  holds leaves it and lands as an ordinary entry, subject to the same
-  collision check as any other create.
+  file sitting at that path is the repo's own. **A path is in `entries:`
+  or in `skipped:`, never both**: `skipped:` holds only paths the
+  materializer has never landed here. A path with an `entries:` record
+  whose condition later turns false keeps that record, is never written to
+  `skipped:` and is never removed by the evaluation — the dry-run plan
+  names it as landed earlier, condition now false, kept — so doctor reads
+  it as any other landed file. The list is rewritten on every run, from
+  the answers of that run — a path whose condition now holds leaves it and
+  lands as an ordinary entry, subject to the same collision check as any
+  other create.
 - **Removal removes exactly the listed entries**, `settings_keys` and
   `mcp_servers`, nothing else — the same receipt invariant this repo's
   installer CLI lives by.
