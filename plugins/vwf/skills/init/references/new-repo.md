@@ -376,17 +376,21 @@ own in either pipeline. [existing repo](existing-repo.md) §6 states that once,
 together with the second test that keeps it consistent — on a hash mismatch it
 splices the repo's current values, at every position this section enumerates
 that the file carries, into the pack's payload, and a file diverging only
-inside them is never offered. That splice reaches all ten; the fill on a kept
-file governs **eight** of them — the two runtime positions §5 fills among
-them — and not only the plugin task's two. `MERGE_MODEL_DEVELOP` and
-`MERGE_MODEL_MAIN` are the fifth and sixth, and they are §11(a)'s: the git
-pass asks them only for a repo whose environment-block file this run lands or
-replaces, so a kept file keeps the values those positions already hold — and
-where an older kept file carries the one legacy `MERGE_MODEL` key in their
-place, the splice writes that value into both positions, since a keep never
-covers a marked position's value. Being spliced like the rest is what stops §6
-reading those values as content; no survey pass owns them, so no pass shows a
-row for them either.
+inside them is never offered. That splice is a read — it decides whether the
+file is offered and writes nothing — and it reaches all ten. The **fill** on a
+kept file governs **eight** of them unconditionally — the two runtime
+positions §5 fills among them — and not only the plugin task's two.
+`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` are the fifth and sixth, and they
+are §11(a)'s: the git pass asks them only for a repo whose environment-block
+file this run lands or replaces, so a kept file keeps the values those
+positions already hold. The one exception is a kept file that still carries
+the retired single `MERGE_MODEL` line in their place: a keep never covers a
+marked position's value, so the fill **rewrites that line in place into the
+two positions**, each carrying the one value, retires the single key, and the
+post-fill re-hash SKILL.md describes covers the file like any other fill. So
+the fill touches ten positions on such a file and eight on any other kept
+one. Being spliced like the rest is what stops §6 reading those values as
+content; no survey pass owns them, so no pass shows a row for them either.
 
 **A repo with no members leaves both positions exactly as shipped** — a
 single-project repo, and a member repo that declares no members of its own,
@@ -449,7 +453,8 @@ decision about landing and the git pass is where landing is decided. A repo
 whose positions are left as shipped runs on the pack's defaults, `direct` into
 `develop` and `pr` into `main`. An older file carrying the single legacy key
 `MERGE_MODEL` is read as both values by every reader until a run writes the
-pair — §11(a) on a landed or replaced file, the splice on a kept one.
+pair — §11(a) on a landed or replaced file, the fill's in-place rewrite on a
+kept one.
 
 `MEMBERS` is the product's other repositories, as paths relative to the repo
 root, in the pack's own space-separated spelling. Fill it from the **registry's
@@ -638,9 +643,14 @@ as the first line of the survey that row defers. The mechanics — the read's
 place before the gate-first commit, the row's wording — are
 [existing repo](existing-repo.md)'s. The clone row itself is the **full**
 clone sequence `${CLAUDE_PLUGIN_ROOT}/assets/membership.md` spells — the
-clone, then the branch checkout at the recorded gitlink commit — never the
-bare clone command alone, which is what leaves a submodule detached; so a
-member this run cloned never arrives detached, and its HEAD read answers.
+clone, then the checkout of the remote branch whose history holds the
+recorded gitlink commit, at that branch's remote tip where the recorded commit
+is an ancestor of it (the base commits its gitlink forward at the end, which
+is expected, not drift), or a branch created at the recorded commit, reported
+as diverged and the member deferred, where no remote branch contains it —
+never the bare clone command alone, which is what leaves a submodule
+detached; so a member this run cloned never arrives detached, and its HEAD
+read answers.
 
 Run it in this order.
 
@@ -682,10 +692,10 @@ on that repo's line in the report, naming the values it keeps and the file
 that was kept, so a reader sees one decision rather than a repo that silently
 landed on the pack's defaults. A kept file that still carries the single
 legacy key `MERGE_MODEL` is not asked either, but it is not left as it is: a
-keep never covers a marked position's value, so §7's splice writes the legacy
-value into **both** positions, and its line reads **"legacy `MERGE_MODEL`
-`<value>` — written to both positions"**. Until that run, every reader takes
-the one value for both branches.
+keep never covers a marked position's value, so §7's fill rewrites that line
+in place into the two positions, each carrying the one value, and its line
+reads **"legacy `MERGE_MODEL` `<value>` — written to both positions"**. Until
+that run, every reader takes the one value for both branches.
 
 It is asked here rather than as one of SKILL.md's numbered questions because it
 decides how work lands, which is what the rest of this pass is about; and it is
@@ -790,6 +800,16 @@ run: a repo that already had commits takes its row at the start of (b),
 the commit, because the whole reason §1 stopped at one branch is that a
 repository with no commit has nothing to branch from.
 
+**The first rule, before the table is read: a local branch missing while its
+remote-tracking branch exists is created from that** — `develop` from
+`origin/develop`, `main` from `origin/main` — and only what is *still* missing
+afterwards takes a creation row below. A fresh clone has no local branches at
+all, and a table read against it alone would create `develop` from `main` and
+diverge from the `develop` the remote already has; so (d) never reads "`main`
+only" while `origin/develop` exists, and a push at (e) then has nothing to be
+rejected for. Where there is no remote, or the remote has neither, the table
+is read as it stands.
+
 | The repository had                   | Create                                             | Checked out |
 | ------------------------------------ | -------------------------------------------------- | ----------- |
 | no commits (§1 created it)           | `main`, from HEAD, after the commit                | `develop`   |
@@ -834,6 +854,12 @@ on pointers that resolve to nothing.
 No remote and a push answer is not a failure: report it as a deferral whose
 unlock is adding the remote and pushing by hand, and say which branches are
 waiting. It is that repo's deferral only — the rest of the product still pushes.
+A push the remote **rejects** — a branch that has moved on since the
+remote-tracking tip (d) built on — is the same shape: a deferral for that repo
+and that branch, whose unlock is to fetch, rebase or merge by hand and re-run
+the push, and **never a force-push**. With the clone step landing a member at
+its remote tip and (d) creating the pair from the remote-tracking branches, the
+case should not arise; the rule is here for when it does.
 
 ### (f) The forge pass
 

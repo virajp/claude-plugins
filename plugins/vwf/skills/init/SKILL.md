@@ -254,10 +254,12 @@ covered by the same one yes as everything else, so an absent member is not a
 second question in front of the one consent. The row is the asset's **full**
 clone sequence for the linkage in force — the clone command it spells for
 that linkage, and, under submodule linkage, the branch checkout that follows
-it, landing a branch at the recorded gitlink commit — never the bare clone
-alone: a submodule arrives detached, and a detached member is a repo the git
-pass refuses, so the checkout is what makes the member shapeable in the same
-run. The row ends *then survey and shape it*.
+it — the remote branch whose history holds the recorded gitlink commit,
+checked out at its remote tip, or, where none holds it, a branch at the
+recorded commit with the member reported as diverged and deferred — never the
+bare clone alone: a submodule arrives detached, and a detached member is a
+repo the git pass refuses, so the checkout is what makes the member shapeable
+in the same run. The row ends *then survey and shape it*.
 
 An absent member's section holds that clone row **first** and then reads
 *surveyed after the clone*: nothing can be surveyed in a directory that is not
