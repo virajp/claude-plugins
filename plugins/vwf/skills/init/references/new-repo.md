@@ -931,12 +931,11 @@ from these reads, in this order:
   the record, and doctor's predicate (g) reads it back from there.
 - **The protection, both branches, always**: no force-push and no deletion.
   Then **per branch, from that branch's own value** — `MERGE_MODEL_DEVELOP`
-  for `develop`, `MERGE_MODEL_MAIN` for `main`, as (a) wrote them, or the
-  legacy `MERGE_MODEL` for both where a kept file still carries it: where the
-  value is **`pr`**, additionally **require a pull request**, with no approval
-  count, because the landing model says that branch lands through a request,
-  so a direct push to it is exactly what the forge should refuse. Where it is
-  `direct` the merge tasks push the merge themselves, and a
+  for `develop`, `MERGE_MODEL_MAIN` for `main`, as the file carries them:
+  where the value is **`pr`**, additionally **require a pull request**, with
+  no approval count, because the landing model says that branch lands through
+  a request, so a direct push to it is exactly what the forge should refuse.
+  Where it is `direct` the merge tasks push the merge themselves, and a
   require-pull-request rule would refuse the model the user just chose. The
   pack's defaults give `main` the rule and `develop` not. A repo whose pair
   was created beside a mainline of another name gets the rows for `develop`
