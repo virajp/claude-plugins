@@ -107,17 +107,20 @@ task.disable_spec_from_run_scripts = true
 # change to every repo that has one.
 REPO_NAME = "unfilled"
 
-# A MARKED POSITION. How a branch reaches its destination — `code:merge:develop`
-# and `code:merge:main` read it, and the branch model itself is the same under
-# both values:
+# TWO MARKED POSITIONS. How a branch reaches its destination, one value per
+# long-lived branch — the branch model itself is the same under both values:
 #
 #   direct  merge locally and push the destination branch
 #   pr      push the branch and open a pull request; nothing merges locally
 #
-# `direct` is the shipped default because it is what a repo with no reviewer
-# needs, and because it is what these tasks did before the setting existed. A
-# repo that gates landing on review sets `pr` and nothing else changes.
-MERGE_MODEL = "direct"
+# `MERGE_MODEL_DEVELOP` is what `code:merge:develop` reads, and ships `direct`:
+# what a repo with no reviewer needs, and what that task did before the setting
+# existed. `MERGE_MODEL_MAIN` is what `code:merge:main` reads, and ships `pr`:
+# `main` is the release branch, and a request is the record of what reached it.
+# An older file carrying the single `MERGE_MODEL` key is read as both values
+# until the orchestrator writes the pair.
+MERGE_MODEL_DEVELOP = "direct"
+MERGE_MODEL_MAIN    = "pr"
 
 # A MARKED POSITION. The repo's member repos, space separated, each path
 # relative to this repo's root — `MEMBERS = "backend frontend"`. It is what

@@ -161,8 +161,8 @@ until someone reads two tasks side by side.
 | `code:precommit [--all]`                              | run the hooks over what you changed, **before** you stage                   |
 | `code:git-config [--fix]`                             | require the forge identity and ssh signing in the local git-config; `--fix` sets them from `GITHUB_*` / `GITLAB_*` / `GIT_*` |
 | `code:worktrees`                                      | list worktrees across the repo and its members                              |
-| `code:merge:develop <branch>`                         | merge a branch into `develop`, or open a pull request — `MERGE_MODEL`       |
-| `code:merge:main`                                     | merge `develop` into `main`, or open a pull request — `MERGE_MODEL`         |
+| `code:merge:develop <branch>`                         | merge a branch into `develop`, or open a pull request — `MERGE_MODEL_DEVELOP` |
+| `code:merge:main`                                     | merge `develop` into `main`, or open a pull request — `MERGE_MODEL_MAIN`    |
 | `code:count`                                          | lines of tracked text, grouped by extension, plus a total                   |
 
 `code:all` is the one-command gate. `precommit`, `git-config`, `merge:*` and
@@ -556,7 +556,8 @@ one command instead of after the whole-tree hook pass; then no untracked files
 and no uncommitted changes, and — under `direct` alone — no unpushed commits on
 the source branch, a question `pr` never asks because publishing that branch is
 its first act; then the hook safety net. Only after all of that does it touch
-git, and what it does then is `MERGE_MODEL`'s to say — under `direct`, hop to
+git, and what it does then is the destination's landing model's to say —
+`MERGE_MODEL_DEVELOP` or `MERGE_MODEL_MAIN` — under `direct`, hop to
 the main worktree if this is a linked one, check out the destination, pull with
 tags, `git merge --no-ff --no-edit`,
 `git push --follow-tags`, and return to where it started.
@@ -569,13 +570,16 @@ is a judgement call a task cannot make.
 same commit with no record that a merge happened, and the merge commit is what
 makes "what shipped" a question git can answer.
 
-#### `MERGE_MODEL` — what "land it" means on this repo
+#### `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` — what "land it" means on each branch
 
 Every predicate above runs under both values but one: the unpushed-commits check
-is `direct`'s alone. What happens *after* them is not shared at all, and
-**`MERGE_MODEL`** in `mise.toml`'s `[env]` is the one value that says which — a
-marked position the orchestrator fills, read as `direct` when it is unset or
-empty, so a repo nobody filled behaves exactly as described above:
+is `direct`'s alone. What happens *after* them is not shared at all, and the
+landing model is set **per destination branch** — two marked positions in
+`mise.toml`'s `[env]` the orchestrator fills: **`MERGE_MODEL_DEVELOP`**, which
+`code:merge:develop` reads and which ships `direct`, and **`MERGE_MODEL_MAIN`**,
+which `code:merge:main` reads and which ships `pr`. A destination whose position
+is unset or empty reads as `direct`, so a repo with neither behaves exactly as
+described above:
 
 | Value    | After the predicates                                                     |
 | -------- | ------------------------------------------------------------------------ |
@@ -592,10 +596,19 @@ under `pr` opens `develop` → `main` rather than merging it.
 request aimed at a branch that does not exist fails later and reads worse than
 the one command that would have said so.
 
-A repo-level value and not a flag, because which one applies is a property of
+**The legacy key.** A repo shaped before the pair existed carries the single
+`MERGE_MODEL`. The merge reads it in place of whichever position is unset —
+both, on such a file — and prints one warning naming it legacy, so a landing
+never fails on an old file and the reshape that writes the pair is not
+forgotten.
+
+Repo-level values and not flags, because which one applies is a property of
 the repo — its review policy, its branch protection — and not of the person
 landing the change. A flag would let two people on the same repo land
-differently.
+differently. And one per branch rather than one per repo, because `develop`
+and `main` carry different review policies more often than the same one: a
+solo repo that merges into `develop` locally still wants a request as the
+record of what reached `main`.
 
 ### `code:count` — a size reading
 

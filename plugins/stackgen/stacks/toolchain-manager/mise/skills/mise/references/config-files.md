@@ -87,9 +87,11 @@ task.disable_spec_from_run_scripts = true  # flags come from #USAGE, not from a 
 # name inside a linked worktree.
 REPO_NAME = "unfilled"
 
-# A marked position: how code:merge:* lands a branch on THIS repo.
+# Two marked positions: how a branch lands on THIS repo, one per destination —
+# code:merge:develop reads the first, code:merge:main the second.
 #   direct = merge locally and push   |   pr = push and open a pull request
-MERGE_MODEL = "direct"
+MERGE_MODEL_DEVELOP = "direct"
+MERGE_MODEL_MAIN    = "pr"
 
 # A marked position: this repo's member repos, as space-separated paths
 # relative to the repo root. Left empty when the members are submodules, which
@@ -116,16 +118,19 @@ hide        = true
 run         = "find .config/mise/tasks/ -name '*' -type f -not -path '*/*.env' -exec chmod 755 {} \\;"
 ```
 
-**The base carries five marked positions, and they are the only ones in any of
-the five files.** Three are `[env]` values: `REPO_NAME` is the repo's folder
+**The base carries six marked positions, and they are the only ones in any of
+the five files.** Four are `[env]` values: `REPO_NAME` is the repo's folder
 name, slugified — never a project id, which is the `p:<id>:*` group's token;
-`MERGE_MODEL` is how `code:merge:*` lands a branch here; `MEMBERS` is the
-member list for a product whose parts are linked as siblings rather than as
-submodules. Each ships with a working default, so an unfilled repo runs —
-`direct` is today's local merge, an empty `MEMBERS` means `members()` falls
-through to `.gitmodules` — and each is filled by the orchestrator rather than
-by hand. They sit in the **base** and not in `mise.dev.toml` because the tasks
-that read them run in the pipeline too.
+`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` are how `code:merge:develop` and
+`code:merge:main` land a branch here, one landing model per destination — a
+file still carrying the single legacy `MERGE_MODEL` is read as both until the
+orchestrator writes the pair; `MEMBERS` is the member list for a product whose
+parts are linked as siblings rather than as submodules. Each ships with a
+working default, so an unfilled repo runs — `direct` into `develop` is today's
+local merge, `pr` into `main` opens the request, an empty `MEMBERS` means
+`members()` falls through to `.gitmodules` — and each is filled by the
+orchestrator rather than by hand. They sit in the **base** and not in
+`mise.dev.toml` because the tasks that read them run in the pipeline too.
 
 **The other two are slots, shipped empty, and the orchestrator fills both from
 its stack read** — the languages it learned from the repo's pins, its lockfile

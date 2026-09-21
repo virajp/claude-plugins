@@ -155,20 +155,23 @@ two differ in value and never in vocabulary.
   depending on where you stood.
   Aliases that vary only by repo (the agent launchers) belong in the user's
   **global** config reading `$REPO_NAME`, not here: one definition, per-repo
-  values. Two more marked positions sit beside it, both filled by the
-  orchestrator and both with a working default: **`MERGE_MODEL`**
-  (`direct` | `pr`) — whether `code:merge:*` merges locally and pushes, or
-  pushes and opens a pull request — and **`MEMBERS`**, the space-separated,
-  repo-relative paths of this repo's member repos, left empty when they are
-  submodules, which `members()` reads from `.gitmodules` instead. A string and
-  never an array: mise env values are strings. The base's other two marked
-  positions are the runtime's: **`RUNTIME_BLOCK`** under `[settings]` and
-  **`PATH_ENTRIES`** at the end of `[env]`, both shipped **empty** and filled
-  by the orchestrator from its **stack read** — the languages the repo's pins,
-  lockfile or manifests name — one runtime settings line per detected language
-  in the first, the `_.path` entry a project-local binary directory needs in
-  the second, and nothing in either for a language the repo does not have.
-  These five are the only marked positions in the config split. **Two more
+  values. Three more marked positions sit beside it, each filled by the
+  orchestrator and each with a working default: **`MERGE_MODEL_DEVELOP`** and
+  **`MERGE_MODEL_MAIN`** (`direct` | `pr`, one per long-lived branch) — whether
+  `code:merge:develop` and `code:merge:main` respectively merge locally and
+  push, or push and open a pull request; shipped `direct` and `pr`, and a file
+  still carrying the single legacy `MERGE_MODEL` is read as both values with a
+  warning — and **`MEMBERS`**, the space-separated, repo-relative paths of this
+  repo's member repos, left empty when they are submodules, which `members()`
+  reads from `.gitmodules` instead. A string and never an array: mise env
+  values are strings. The base's other two marked positions are the runtime's:
+  **`RUNTIME_BLOCK`** under `[settings]` and **`PATH_ENTRIES`** at the end of
+  `[env]`, both shipped **empty** and filled by the orchestrator from its
+  **stack read** — the languages the repo's pins, lockfile or manifests name —
+  one runtime settings line per detected language in the first, the `_.path`
+  entry a project-local binary directory needs in the second, and nothing in
+  either for a language the repo does not have.
+  These six are the only marked positions in the config split. **Two more
   marked positions sit outside the TOML**, in `.config/mise/tasks/setup/ai`:
   `EXTRA_MARKETPLACES`
   (rows `<source-ref>|<name>`) and `EXTRA_PLUGINS` (rows `<name>@<marketplace>`)
