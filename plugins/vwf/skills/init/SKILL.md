@@ -93,25 +93,35 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
 - **One consent, then apply.** The whole plan is presented once and applied on
   one yes. `init` never asks per file and never writes before the yes.
 - **The git pass is the one exception, and it is at the end.** `init` shapes a
-  tree and then closes it: it asks how work lands in this product, stages what
-  this run wrote and asks **one question with three answers** — commit, commit
-  and push, leave it — commits with a fixed `ops:` message when told to,
-  creates whichever of `develop` and `main` the branch model needs and the
-  repo lacks, and pushes **only** on the commit-and-push answer. Both
-  questions are asked **once** and applied to every resolved repo: the members
-  commit first, and the base then commits the run's files **plus** the moved
-  gitlinks, which it deliberately stages so the base's record of its members
-  is not left a commit behind. Push is a
-  second decision inside one question, never an assumed consequence of
-  committing. **After the push comes the forge pass**, on one further consent
-  for the whole product: it sets each pushed repo's default branch on the
-  forge, protects `develop` and `main` there, and reaches the backlog skill's
-  missing-project procedure for the base — those three are the only forge
-  settings it touches. It never creates a remote, never pushes without the
-  push answer, and on a forge it has no CLI for, or a CLI it cannot log in
-  with, it prints the by-hand list and carries on. History is
-  never rewritten, nothing is force-pushed, and no verification-skipping flag
-  is ever passed. Both
+  tree and then closes it: it reads where each repo stands first — a member
+  standing on no branch is a **refused** row naming the branch to check out,
+  its shaping deferred and its gitlink left where it was — asks how work lands
+  in this product, **one row per repo per branch**, `develop` and `main`, each
+  `direct` or `pr`, written to that repo's two marked positions
+  `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`, stages what this run wrote
+  and asks **one question with three answers** — commit, commit and push,
+  leave it — checks out `develop`,
+  creating whichever of `develop` and `main` the branch model needs and the
+  repo lacks, commits with a fixed `ops:` message when told to — **the ops
+  commit lands on `develop` in every mode**, never on `main` or whatever branch
+  the repo stood on — and pushes **only** on the commit-and-push answer. A repo
+  whose mainline is named something else gets `main` created from it and
+  `develop` from `main`, the old branch left in place and reported for the
+  user to retire. Both questions are asked **once**, in one round each — the
+  landing table carrying every repo's rows — and applied to every resolved
+  repo: the members commit first, and the base then commits the run's
+  files **plus** the moved gitlinks, which it deliberately stages so the base's
+  record of its members is not left a commit behind. Push is a second decision
+  inside one question, never an assumed consequence of committing. **After the
+  push comes the forge pass**, on one further consent for the whole product:
+  it sets each pushed repo's default branch on the forge, protects `develop`
+  and `main` there — requiring a pull request on whichever of the two has its
+  landing model set to `pr` — and reaches the backlog skill's missing-project
+  procedure for the base — those three are the only forge settings it touches.
+  It never creates a remote, never pushes without the push answer, and on a
+  forge it has no CLI for, or a CLI it cannot log in with, it prints the
+  by-hand list and carries on. History is never rewritten, nothing is
+  force-pushed, and no verification-skipping flag is ever passed. Both
   pipelines describe the pass; [new repo](references/new-repo.md) §11 is where
   it is written down, the forge pass at §11(f).
 - **Idempotent, for the same id source.** A second run on a shaped **product**
@@ -454,7 +464,8 @@ against 6's answers, so they cannot share its round.
    widen the run to another repo, which is what a member is. `MEMBERS` is
    filled from the resolved members where the linkage is siblings, and stays
    exactly as shipped where the repo's own submodule declarations are what
-   the task library reads. And `MERGE_MODEL` is asked in the git pass.
+   the task library reads. And the landing pair — `MERGE_MODEL_DEVELOP` and
+   `MERGE_MODEL_MAIN` — is asked in the git pass.
 3. **A one-line brief.** *`blank` and `source` repos only.* What the repo is,
    in a sentence — one row per repo that resolved to either, in the same round
    question 1 listed them in. **May be empty** — an empty brief writes a
@@ -602,9 +613,9 @@ payload with the repo's current values spliced in at **every** position
 [new repo](references/new-repo.md) §7 enumerates that the file carries, owned
 or not. A file diverging only inside those positions
 is not offered at all — where a pass owns one it shows the row, and where none
-does, as with `MERGE_MODEL`, there is simply no row. A record sourced
-`generated` has no payload to splice into, so the second test is skipped and
-the mismatch stands.
+does, as with the two landing-model positions, there is simply no row. A
+record sourced `generated` has no payload to splice into, so the second test
+is skipped and the mismatch stands.
 
 Whichever pipeline runs, the same work happens in the same order at the end of
 each repo, after that mode's landing and before the git pass. **Five steps are
@@ -681,15 +692,18 @@ Deferred          <n>    <what> — unlock: <what would let it happen>
 ```
 
 Then a **git** section, from the pass that just ran — printed **once for the
-run**, since the pass asked its questions once. The landing model is one line
-because one answer was written everywhere; branches, the commit, the push and
-the forge are **one line per repo**, in apply order — the members, then the
-base; and the last two lines are the base's alone. Every line reads `none`
-where nothing happened:
+run**, since the pass asked its questions once. The landing model, branches,
+the commit, the push and the forge are **one line per repo**, in apply order
+— the members, then the base — the landing line carrying that repo's two
+values, one per branch; and the last two lines are the base's alone. A
+`Branches created` line also names a mainline of another name the run left
+beside the pair, for the user to retire; a member refused for standing on no
+branch appears under *Deferred* instead, with the checkout as its unlock.
+Every line reads `none` where nothing happened:
 
 ```text
-Landing model            <the value written>
-Branches created  <n>    <repo> <name>                      (one per repo)
+Landing model            <repo> develop <value>; main <value>   (one per repo)
+Branches created  <n>    <repo> <name>; <old> left     (one per repo)
 Commit                   <repo> <hash> <subject>; <hash> <subject>
 Pushed            <n>    <repo> <branch> → origin
 Gitlinks staged   <n>    <path>              (the base's, one per member)
