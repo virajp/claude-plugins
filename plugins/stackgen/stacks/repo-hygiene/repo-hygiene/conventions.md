@@ -19,11 +19,19 @@ by the fixed slug `repo-hygiene`, the way `mise` and `repo-gates` are.
 | `.editorconfig`       | the shape defaults a formatter has no plugin for        |
 | `.gitattributes`      | line-ending normalisation, generated trees, binaries    |
 | `CONTRIBUTING.md`     | setup, the branch model, commits, the gates             |
-| `.github/ISSUE_TEMPLATE/` | the bug and feature forms, and the two contact links |
-| `renovate.json`       | the dependency-update policy — at the root, where Renovate reads it |
-| `.config/vscode.d/repo-hygiene.jsonc` | the editor baseline every other fragment sits on |
+| `.github/ISSUE_TEMPLATE/` | the bug and feature forms, and the two contact links — **conditional**, `forge: github` |
+| `renovate.json`       | the dependency-update policy — at the root, where Renovate reads it — **conditional**, `update_bot: renovate` |
+| `.config/vscode.d/repo-hygiene.jsonc` | the editor baseline every other fragment sits on — **conditional**, `editor: vscode` |
 | `SECURITY.md`         | the private report channel — written only when asked for |
 | `LICENSE`             | one of `_licenses/`, **copied by the initializer**      |
+
+Three of these are **conditional**: `pack.yaml`'s `conditional:` list names
+each with the one answer the initializer already holds that lands it — the
+forge the origin resolves to, the update bot the repo runs, the editor in use
+— and the materializer skips the file where the answer differs. A GitLab repo
+gets no GitHub issue forms, a Dependabot repo no Renovate policy, a repo
+edited elsewhere no VS Code fragment. Everything else in this pack lands
+unconditionally.
 
 Most of these sit at the repo root, which is the whole of the exception list —
 everything a repo configures otherwise lives under `.config/`. The allowlist
@@ -85,10 +93,13 @@ the last run's summary back in as source. Both live at the root and nest under
 The initializer's **stack read** names the template — the languages it learned
 from the repo's pins, else its lockfile's components, else the manifests it
 found at the root and in each sub-project directory — and the read is the
-only input: a file that merely happened to be in the tree names nothing. Every
-name below resolves at
+only input: a file that merely happened to be in the tree names nothing. The
+read passes the **pinned secrets provider** as a component too, so a provider
+row below resolves the same way a language row does. Every language name
+below resolves at
 `https://raw.githubusercontent.com/github/gitignore/main/<Name>.gitignore`,
-and each was fetched to confirm it does.
+and each was fetched to confirm it does; a provider row names no template —
+its section is the pattern in the cell, under a banner named for the slug.
 
 | Language | Template appended                                     |
 | -------- | ----------------------------------------------------- |
@@ -98,6 +109,17 @@ and each was fetched to confirm it does.
 | go       | `Go.gitignore`                                        |
 | rust     | `Rust.gitignore`                                      |
 | swift    | `Swift.gitignore`                                     |
+
+| Provider | Section appended                                                              |
+| -------- | ----------------------------------------------------------------------------- |
+| fnox     | `fnox.local.toml` — the machine-local override; `fnox.toml` beside it is committed |
+| doppler  | `.doppler/` — the CLI's per-checkout scope, which its pack says is ignored    |
+
+The provider rows are why the base `.gitignore` names no secrets manager: a
+repo that picked doppler has no `fnox.local.toml` to ignore, and an ignore
+line for a tool the repo does not run is a line nobody can explain. A provider
+absent from this table keeps nothing machine-local in the tree and needs no
+row.
 
 The language keys are the read's own vocabulary, so a pin and a manifest
 resolve alike: `package-manager/pnpm` and `language/typescript` are both
@@ -146,8 +168,9 @@ collects every ignore file any pack ships — `.dockerignore`, `.graphifyignore`
 `.prettierignore` — alongside `.gitattributes` and `.gitmodules`.
 
 A key that names a tool belongs to that tool's pack, not here — and so does an
-extension id. The baseline is **unconditional**, so anything it recommends
-reaches every repository including the one that pinned the alternative; an
+extension id. The baseline is conditional on the editor alone — never on a
+stack — so anything it recommends reaches every repository that uses the
+editor, including the one that pinned the alternative; an
 extension for a framework, a language or a tool is that pack's fragment's to
 recommend. A duplicated key is not an error, it is a silent override decided
 by composition order, so keeping the fragments disjoint is the whole
@@ -211,7 +234,8 @@ whichever the visibility.
 ## Dependency updates
 
 `renovate.json` is a policy, not an installation — nothing here adds a bot to
-the repository, and the file is inert until one is enabled on it. It sits at
+the repository, and the file is inert until one is enabled on it, which is why
+it lands only where the initializer's update-bot answer is `renovate`. It sits at
 the repo root because that is the first path Renovate's config discovery
 reads; under `.config/` it is a file the bot never opens. What
 it encodes: the recommended baseline, minor and patch grouped into one pull
