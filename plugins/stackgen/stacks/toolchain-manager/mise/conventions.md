@@ -108,7 +108,9 @@ the recommendation list the repo composed, installing what is missing and
 rather than a global install, because accepting a recommendation globally leaves
 a repo's whole toolchain enabled in every other window forever — and because
 pruning is only safe once it is scoped to one profile. Silent on a machine
-without the editor.
+without the editor. The pack's own editor fragment,
+`.config/vscode.d/mise.jsonc`, lands only where init's editor answer is vscode
+— `pack.yaml`'s `conditional:` names it.
 
 **A task never clobbers what it did not create.** Foreign state — another hook
 manager's install, a `core.hooksPath` someone set, a lockfile or a plugin pin

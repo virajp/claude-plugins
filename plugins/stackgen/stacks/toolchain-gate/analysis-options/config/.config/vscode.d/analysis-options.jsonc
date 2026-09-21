@@ -3,9 +3,10 @@
 // editor files inside one marked block; a key written by hand after that block
 // wins.
 //
-// Scope: the Dart toolchain's own extensions and formatter binding. Nothing
-// about the Flutter app's layout or run configuration is here — those differ
-// per project everywhere they were looked for.
+// Scope: the Dart toolchain's own extensions, formatter binding and the
+// analyzer cache exclude. Nothing about the Flutter app's layout or run
+// configuration is here — those differ per project everywhere they were
+// looked for.
 {
   "extensions": [
     "dart-code.dart-code",
@@ -14,10 +15,24 @@
 
   "settings": {
     // Dart is the one language dprint does not format: the Dart formatter is
-    // part of the SDK and the analyzer assumes its output. So the default
-    // formatter is overridden for this language and no further.
+    // part of the SDK and the analyzer assumes its output. The dprint gate
+    // binds its formatter per language and never editor-wide, so this scope
+    // is the only place Dart's is set.
     "[dart]": {
       "editor.defaultFormatter": "Dart-Code.dart-code",
+    },
+
+    // The analyzer's cache, regenerable and hidden from the explorer, the
+    // watcher and search alike. The three maps are unions across fragments,
+    // so this row adds to the hygiene baseline's rather than replacing it.
+    "files.exclude": {
+      "**/.dart_tool": true,
+    },
+    "files.watcherExclude": {
+      "**/.dart_tool": true,
+    },
+    "search.exclude": {
+      "**/.dart_tool": true,
     },
   },
 

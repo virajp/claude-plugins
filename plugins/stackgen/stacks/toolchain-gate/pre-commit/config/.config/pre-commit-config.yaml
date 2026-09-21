@@ -24,30 +24,52 @@ default_install_hook_types:
 # Stated once so each hook below only says what differs from it.
 default_stages: [pre-commit]
 
-# The exclusion set, stated once rather than per gate.
+# The exclusion set, stated once rather than per gate — and it is the same set,
+# at any depth, that the formatter and the TOML formatter spell as `**/…` globs;
+# the toolkit's checker holds the three equal, and holds the secret scanner's
+# allowlist to a subset of it (generated trees only). One alternative per line;
+# `(^|/)` is the regex spelling of "this segment, wherever it sits".
 #
 # graphify-out/ holds generated output. Some of it is tracked so the map is
 # shareable, but no hook may rewrite it: graphify writes those files without a
 # trailing newline, so end-of-file-fixer would "fix" every commit and the next
-# rebuild would undo it, forever. Regenerate with graphify, never format.
+# rebuild would undo it, forever. Regenerate with graphify, never format. The
+# agent tooling tree `.claude/` is machine-owned in a shaped repo — the
+# materialized skills, the stackgen lockfile, settings the agent rewrites — so
+# no filename-passing hook reformats it; the secrets scanner still walks it,
+# because scanning rewrites nothing. The rest are generated trees, caches and
+# lockfiles, which no hook should rewrite or report on.
 #
 # In a repo that has never run graphify this pattern matches nothing, and the
 # manual `check-useless-excludes` audit at the bottom of this file will say so.
 # That is expected: the exclusion is a standing rule about a tree, not a claim
 # that the tree exists today. Add each further generated tree here — never a
 # second copy inside one hook.
-exclude: ^graphify-out/
+exclude: |-
+  (?x)
+  (^|/)\.claude/|
+  (^|/)\.git/|
+  (^|/)\.turbo/|
+  (^|/)\.venv/|
+  (^|/)build/|
+  (^|/)dist/|
+  (^|/)graphify-out/|
+  (^|/)node_modules/|
+  (^|/)target/|
+  (^|/)[^/]*-lock\.json$|
+  (^|/)[^/]*-lock\.yaml$|
+  (^|/)[^/]*\.lock$
 
 repos:
   - repo: local
     hooks:
       - id: git-config
         name: Required local git-config (forge identity, ssh signing)
-        description: Requires a per-repo identity equal to the forge variables —
-          user.name, user.email and user.signingkey from GITHUB_*, GITLAB_* or
-          GIT_* — with ssh-signed commits and tags. `--fix` writes those keys
-          from the variables and unsets gpg.program and gpg.ssh.program; an
-          unset variable fails the hook and writes nothing. A commit that
+        description: Requires a per-repo identity equal to the forge variables
+          — user.name, user.email and user.signingkey from GITHUB_*, GITLAB_*
+          or GIT_* — with ssh-signed commits and tags. `--fix` writes those
+          keys from the variables and unsets gpg.program and gpg.ssh.program;
+          an unset variable fails the hook and writes nothing. A commit that
           changed any key is refused — git read the old identity before the
           hook ran — and the re-run carries the corrected one.
         entry: mise x -- mise run code:git-config --fix
@@ -158,6 +180,8 @@ repos:
         name: Remove trailing whitespace
         description: Invisible in review and the cause of diffs nobody
           authored when the next editor strips it.
+        # Two trailing spaces are a Markdown hard break; `.editorconfig` agrees.
+        exclude: \.md$
       - id: mixed-line-ending
         name: Normalise line endings to LF
         description: A CRLF file entering the tree rewrites whole-file diffs

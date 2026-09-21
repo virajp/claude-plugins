@@ -923,12 +923,20 @@ with the full hook set and conventional commits wired for release notes, the
 security and dependency gates configured, `.editorconfig`, `.gitattributes`, a
 Renovate config, `CONTRIBUTING.md`, issue templates under `.github/`, an ignore
 file for the code-intelligence graph, and composed editor settings and extension
-recommendations. Three of its contents follow the answers rather than the shape:
+recommendations. Some of its contents follow the answers rather than the shape:
 a secrets provider where you named one — answer *none — decide later* and the
 packs' slot simply stays unfilled and announces itself — a `SECURITY.md` unless
 you declined the security contact, and a `LICENSE` on a repo you called `public`
 unless you answered *none* — a `private` repo gets no licence row and no
-`LICENSE`.
+`LICENSE`. And some are **conditional files** the packs declare against an
+answer init already holds: the issue templates land only where the repo's
+`origin` is GitHub, the Renovate config only where the update-bot answer is
+`renovate`, every editor fragment — and so the composed editor files — only
+where the editor answer is *yes*, and the secrets provider's ignore line
+(`fnox.local.toml`, doppler's `.doppler/`) only in a repo that runs that
+provider. A path a condition skipped is listed in the plan under a **Skipped**
+heading and recorded in the lockfile, so `/vwf:doctor` never reports it missing
+and a file you put at that path is yours.
 
 **The editor files are composed, not shipped.** No pack writes one whole,
 because two packs with an opinion about the same file is a lost update; each
@@ -1053,7 +1061,7 @@ in its base config, `RUNTIME_BLOCK` and `PATH_ENTRIES` (one runtime's settings
 lines per language, the path entry left empty where nothing needs one), and the
 sub-project proposals question 2 shows where no registry names them.
 
-**Seven questions, each one round**, asked *before* the plan so one yes covers
+**Nine questions, each one round**, asked *before* the plan so one yes covers
 all of it. **A round is one round for the whole product**, however many repos
 resolved: a question whose answer differs per repo shows one row per repo inside
 its single round, and never becomes a second round. Two are asked for the repos
@@ -1061,11 +1069,13 @@ that came out `blank` or `source` only — the repo name (proposed from the
 basename of that repo's **main checkout**, and the one thing that fills
 `REPO_NAME`) and a one-line brief, which may be empty (a `source` repo that
 already carries a readme keeps it, whatever the row says), each listing one row
-per such repo. The other five are asked whatever the modes are, listed in order
+per such repo. The other seven are asked whatever the modes are, listed in order
 — the first of them is question 2 overall, and it is the one this section's slug
 rule waits on; question 6, the visibility, has two dependent parts, 6a and 6b,
 which together are the seventh round, since they are shown against 6's answers
-and cannot share its round:
+and cannot share its round; questions 7 and 8, the editor and the update bot,
+are the eighth and ninth rounds, and they are the two whose answers reach the
+materializer rather than a file:
 
 - **The ids, confirmed** — one list, **grouped by repo**: the base's group
   first, then one per member in the resolved order, and inside each group a row
@@ -1141,6 +1151,39 @@ and cannot share its round:
     for an email or a decline. Declining a row writes no security file in that
     repo, since one naming a channel nobody watches is worse than none, and says
     nothing about the other rows.
+- **The editor** — answered **once** for the product: is VS Code, the editor the
+  packs' fragments are written for, the editor used here? Defaulted *yes* where
+  any resolved repo carries a `.vscode/` directory or the `code` binary is on
+  `PATH`, *no* otherwise, and the question says which decided it. One answer for
+  every repo, because an editor is a fact about the people working the product
+  rather than about any one tree. A *yes* lands every editor fragment and the
+  composed editor files; a *no* skips them all, listed under the plan's
+  **Skipped** heading, and the editor merge composes nothing — a hand-written
+  `.vscode/` file is left exactly as it was. Nothing about the answer is written
+  into the tree; a later run asks again, defaulted the same way.
+- **The update bot** — **one row per repo**: `renovate`, `dependabot` or `none`,
+  seeded from the survey — a policy already under `.github/renovate.json`,
+  `.renovaterc` or `renovate.json` preselects `renovate`, a
+  `.github/dependabot.yml` preselects `dependabot`, a repo carrying neither
+  preselects `renovate` (the service whose policy the hygiene pack ships), and a
+  repo carrying both is preselected `renovate` with the row saying it found
+  both. The hygiene pack's `renovate.json` lands only where the row reads
+  `renovate`; on `dependabot` or `none` it is skipped, so a Dependabot repo no
+  longer gets a second policy beside its own. Per repo because the policy is a
+  file each repo carries, and a member watched by a different service than its
+  base is ordinary.
+
+Those two answers, with two the run already holds — the forge, read once per
+repo from its `origin` host (`github` or `gitlab`), and the provider slug
+question 4 picked — are what every fetch passes the materializer as an
+`answers:` map beside `repo:`, keyed `forge`, `editor`, `secrets` and
+`update_bot`. Every key is always present, and `none` is the spelling of no
+answer: on `forge`, `editor` and `secrets` it matches no pack's condition, so
+the file is skipped — a repo with no remote yet gets no forge-specific files,
+and gets them on the reshape that follows the remote; on `update_bot` it is one
+of the three legal answers, so a file conditioned on it lands exactly when no
+bot was picked. `init` evaluates nothing itself; the materializer does, and a
+pack that marks nothing conditional lands whole, as it always has.
 
 **On a `shaped` repo it surveys, plans, and applies on one consent** — and on a
 product it does that for every repo at once, running the survey each repo's own
@@ -1176,19 +1219,25 @@ section the same thirteen counted sections: moves, root tool configs (move /
 keep both / delete), the hook manager (keep / switch), creates, replaces,
 offered (replace / keep), renames, rewrites applied, appends and merges — all
 applied on a single yes — and three applied by nothing,
-`Rewrites (flagged, not applied)`, `Repo-owned, kept` and `Projects`. Each
-repo's section closes with its own total and the document with a product total;
-a total counts only what would be applied — an offered row kept, a root tool
-config kept both ways and a hook manager kept are outside it — so a repo whose
-only rows are files it owns and files it chose to keep still reads as shaped.
-Two plans would be two chances to stop halfway — one repo renamed into the
-contract while its neighbours still call the old names — which is exactly what
-the one-consent rule exists to prevent. The apply order is **members first, the
-base last**, so the base commits with its record of the members already current.
-A task file whose shebang names a shell other than bash goes there, listed with
-the shell-specific syntax it uses, and is **never** rewritten: auto-translating
-a shell script is how a working task becomes a subtly broken one, so it lands in
-the report's `Deferred` section for you to rewrite deliberately.
+`Rewrites (flagged, not applied)`, `Repo-owned, kept` and `Projects`, plus one
+uncounted heading, **Skipped**, present even when empty: every path a pack's
+condition left out, one line per path naming the pack and the axis whose value
+decided it — not a conflict, not a keep, not a deferral, and nothing waits on a
+later run unless the answer itself changes — and, marked *landed earlier,
+condition now false — kept*, any path an earlier run landed whose answer has
+since flipped, which stays where it is. Each repo's section closes with its own
+total and the document with a product total; a total counts only what would be
+applied — an offered row kept, a root tool config kept both ways and a hook
+manager kept are outside it — so a repo whose only rows are files it owns and
+files it chose to keep still reads as shaped. Two plans would be two chances to
+stop halfway — one repo renamed into the contract while its neighbours still
+call the old names — which is exactly what the one-consent rule exists to
+prevent. The apply order is **members first, the base last**, so the base
+commits with its record of the members already current. A task file whose
+shebang names a shell other than bash goes there, listed with the shell-specific
+syntax it uses, and is **never** rewritten: auto-translating a shell script is
+how a working task becomes a subtly broken one, so it lands in the report's
+`Deferred` section for you to rewrite deliberately.
 
 **Root tool configs are read before a pack lands over them.** The root survey's
 rename map is the **full path** each pack's `config/` tree declares — never a
@@ -1216,8 +1265,9 @@ yourself and is never proposed. The dependency-update policy is the one
 discovery never reaches `.config/`, so a policy you already carry under any of
 its spellings wins, the pack's is **not landed** and the row says so —
 `.github/dependabot.yml` is a different service's file and reads `keep both`,
-the pack's `renovate.json` landing beside it. An entry your `.gitignore` ignores
-is build output, skipped without a row; `.git/` is exempt by name; and a
+and it seeds question 8's row to `dependabot`, which skips the pack's
+`renovate.json` rather than landing it beside yours. An entry your `.gitignore`
+ignores is build output, skipped without a row; `.git/` is exempt by name; and a
 directory holding its own manifest or source is a **project**, listed once under
 `Projects` with the id question 2 confirmed and never under `Deferred`.
 

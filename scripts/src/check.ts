@@ -95,6 +95,7 @@ export function check(repoRoot: string): Finding[] {
   findings.push(...checkDesignAdapters(plugins));
   findings.push(...checkStackAdapters(plugins));
   findings.push(...checkBundleDefaults(plugins));
+  findings.push(...checkExclusionSets(plugins));
   findings.push(...checkVwfIsTechnologyFree(plugins));
   return findings;
 }
@@ -384,7 +385,7 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  * What a stackgen pack ships to run in a target repo must be materializable
  * as-is.
  *
- * Seven assertions, all of them about a file whose failure mode in the target
+ * Eight assertions, all of them about a file whose failure mode in the target
  * repo is silence rather than an error:
  *
  * - a task file lands **executable** — `.config/mise/tasks/**` is a *file-based*
@@ -410,7 +411,11 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  *   declares `repos:` on the same reasoning, from the base end;
  * - an **editor fragment** parses as JSONC and carries only `settings`,
  *   `nesting` and `extensions`, because init merges the fragments into a file
- *   no pack owns and a key outside the three is dropped without a word.
+ *   no pack owns and a key outside the three is dropped without a word;
+ * - every **`conditional:` entry** in the pack's `pack.yaml` names a path or
+ *   glob that matches a file under its `config/` tier, and a `when:` of
+ *   exactly one known axis with a value that axis takes — an axis no caller
+ *   answers is never evaluated, so the file lands everywhere, silently.
  *
  * The walk is its own rather than `plugin.files`: most of these paths run
  * through `.config/`, and the reader's glob does not descend into a dot
@@ -509,8 +514,122 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
         at(`${path(absolute)}: ${message}`);
       }
     }
+
+    const packYaml = join(plugin.root, pack, "pack.yaml");
+    if (existsSync(packYaml)) {
+      for (const message of conditionalFaults(readText(packYaml), config)) {
+        at(`${path(packYaml)}: ${message}`);
+      }
+    }
   }
   return findings;
+}
+
+/**
+ * The four axes a `conditional:` entry may name, and the values each admits.
+ * `null` is "any slug": the secrets axis is answered by whichever
+ * capability-provider pack the product picked, and the vocabulary there is
+ * the stacks tree rather than a list here.
+ */
+const PACK_CONDITION_AXES: ReadonlyMap<string, ReadonlySet<string> | null> =
+  new Map([
+    ["forge", new Set(["github", "gitlab"])],
+    ["editor", new Set(["vscode"])],
+    ["secrets", null],
+    ["update_bot", new Set(["renovate", "dependabot", "none"])],
+  ]);
+
+/**
+ * What a pack's `conditional:` list is held to.
+ *
+ * The materializer evaluates the key against the caller's answers, and an
+ * axis the caller did not answer reads as true — the omitted key lands the
+ * file. So an axis outside the vocabulary is one no caller ever answers: its
+ * condition can never skip anything, and the file lands everywhere, silently.
+ * A value the axis never takes is the mirror case — a condition no answer ever
+ * satisfies, so the file lands nowhere. A path or glob that matches nothing
+ * under the pack's own `config/` tier is a condition guarding a file that does
+ * not exist, which is a rename that forgot the key; and the path is matched
+ * inside that tier only — an absolute path or a `..` segment reaches out of
+ * what the pack lands, which is rule 13's fault stated on a glob.
+ */
+function conditionalFaults(source: string, config: string): string[] {
+  let document: unknown;
+  try {
+    document = parseYaml(source);
+  }
+  catch (error) {
+    return [`pack.yaml is not valid YAML — ${firstLine(error)}`];
+  }
+  const conditional = (document as { conditional?: unknown; } | null)
+    ?.conditional;
+  if (conditional === undefined) {
+    return [];
+  }
+  if (!Array.isArray(conditional)) {
+    return ["`conditional` is not a list"];
+  }
+
+  const axes = [...PACK_CONDITION_AXES.keys()].join(", ");
+  const faults: string[] = [];
+  conditional.forEach((entry: unknown, index) => {
+    const label = `\`conditional[${index}]\``;
+    if (!isPlainObject(entry) || typeof entry.path !== "string") {
+      faults.push(`${label} declares no \`path\``);
+      return;
+    }
+    const at = `${label} (${entry.path})`;
+    if (isAbsolute(entry.path) || entry.path.split("/").includes("..")) {
+      faults.push(
+        `${at} climbs out of what the pack lands — a conditional path is `
+          + `relative to the config/ tier and stays inside it`,
+      );
+      return;
+    }
+    // Walked and matched by hand rather than `globSync`: neither it nor
+    // `path.matchesGlob` lets `**` enter a dot-directory, and every landed
+    // path here runs through `.config/`.
+    const matcher = landedGlob(entry.path);
+    const matches = [...filesUnder(config)]
+      .filter(absolute => matcher.test(relative(config, absolute)))
+      .length;
+    if (matches === 0) {
+      faults.push(`${at} matches no file under the pack's config/ tier`);
+    }
+    if (!isPlainObject(entry.when)) {
+      faults.push(`${at} declares no \`when\` map`);
+      return;
+    }
+    const keys = Object.keys(entry.when);
+    if (keys.length !== 1) {
+      faults.push(
+        `${at} \`when\` names ${keys.length} axes — exactly one of ${axes}`,
+      );
+      return;
+    }
+    const [axis] = keys as [string];
+    const value = entry.when[axis];
+    const allowed = PACK_CONDITION_AXES.get(axis);
+    if (allowed === undefined) {
+      faults.push(`${at} \`when\` names axis \`${axis}\`, not one of ${axes}`);
+    }
+    else if (typeof value !== "string" || value === "") {
+      faults.push(`${at} \`when.${axis}\` is not a string`);
+    }
+    else if (allowed !== null && !allowed.has(value)) {
+      faults.push(
+        `${at} \`when.${axis}\` is ${JSON.stringify(value)}, not one of ${
+          [...allowed].join(", ")
+        }`,
+      );
+    }
+    // `none` is the secrets question's no-provider answer, which init reads as
+    // "no match" — a file conditioned on it could never land.
+    else if (allowed === null && value === "none") {
+      faults.push(`${at} \`when.${axis}\` is "none", which names no provider`);
+    }
+  });
+  return faults;
 }
 
 /**
@@ -641,6 +760,31 @@ function editorFragmentFaults(source: string): string[] {
     faults.push("editor fragment's `extensions` is not a list of strings");
   }
   return faults;
+}
+
+/**
+ * A landed path or glob as a matcher over `config/`-relative paths. `**`
+ * matches any run of segments, dot-directories included; `*` and `?` stay
+ * inside one segment. Nothing else is a metacharacter.
+ */
+function landedGlob(pattern: string): RegExp {
+  const segments = pattern.split("/");
+  const source = segments
+    .map((segment, index) => {
+      if (segment === "**") {
+        // A trailing `**` names every file below, at any depth.
+        return index === segments.length - 1
+          ? "(?:[^/]+/)*[^/]+"
+          : "(?:[^/]+/)*";
+      }
+      return segment
+        .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+        .replace(/\*/g, "[^/]*")
+        .replace(/\?/g, "[^/]") + "/";
+    })
+    .join("")
+    .replace(/\/$/, "");
+  return new RegExp(`^${source}$`);
 }
 
 /** Every regular file under a directory, recursively; none when it is absent. */
@@ -1371,6 +1515,312 @@ function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
           });
         }
       });
+    }
+  }
+  return findings;
+}
+
+/**
+ * The four exclusion lists the gate packs ship, each in its tool's own syntax,
+ * and the reader that lifts the entries out of each.
+ *
+ * dprint and taplo take globs; gitleaks and pre-commit take regexes — the
+ * pre-commit one a single pattern, so its alternatives are the entries. The two
+ * TOML readers are deliberately narrow: `scripts/` carries no TOML parser, and
+ * a bracketed list of string literals is all either file holds.
+ *
+ * Three of the lists are the **formatters'** and must agree; the gitleaks
+ * allowlist is the **scanner's** and is held to a subset of them instead — see
+ * {@link checkExclusionSets}.
+ */
+const EXCLUSION_LISTS: readonly {
+  readonly path: string;
+  readonly syntax: "glob" | "regex";
+  readonly role: "formatter" | "scanner";
+  readonly entries: (source: string) => string[] | null;
+}[] = [
+  {
+    path: "stacks/toolchain-gate/dprint/config/.config/dprint.json",
+    syntax: "glob",
+    role: "formatter",
+    entries: source => {
+      const excludes = (JSON.parse(source) as { excludes?: unknown; }).excludes;
+      return isStringList(excludes) ? excludes as string[] : null;
+    },
+  },
+  {
+    path: "stacks/toolchain-gate/dprint/config/.config/taplo.toml",
+    syntax: "glob",
+    role: "formatter",
+    entries: source => tomlStringList(source, "exclude"),
+  },
+  {
+    path: "stacks/toolchain-gate/gitleaks/config/.config/gitleaks.toml",
+    syntax: "regex",
+    role: "scanner",
+    entries: source => tomlStringList(source, "paths"),
+  },
+  {
+    path:
+      "stacks/toolchain-gate/pre-commit/config/.config/pre-commit-config.yaml",
+    syntax: "regex",
+    role: "formatter",
+    entries: source => {
+      const exclude = (parseYaml(source) as { exclude?: unknown; } | null)
+        ?.exclude;
+      // No global exclude is a legitimate config that excludes nothing.
+      if (exclude === undefined) {
+        return [];
+      }
+      return typeof exclude === "string" ? regexAlternatives(exclude) : null;
+    },
+  },
+];
+
+/**
+ * The string literals inside a TOML array assigned to `key`, or `null` when
+ * no such assignment exists. Reads `'''…'''`, `'…'` and `"…"` alike, since
+ * gitleaks spells its regexes as literal strings and taplo its globs as basic
+ * ones.
+ */
+function tomlStringList(source: string, key: string): string[] | null {
+  // The array body is every literal up to the first `]` outside a literal, so
+  // a `]` inside a quoted entry (a regex character class) does not end it.
+  const match = new RegExp(
+    `^${key}\\s*=\\s*\\[((?:'''.*?'''|'[^']*'|"[^"]*"|[^\\]])*)\\]`,
+    "ms",
+  )
+    .exec(source);
+  if (match === null) {
+    return null;
+  }
+  return [...(match[1] ?? "").matchAll(/'''(.*?)'''|'([^']*)'|"([^"]*)"/gs)]
+    .map(m => m[1] ?? m[2] ?? m[3])
+    .filter((s): s is string => s !== undefined);
+}
+
+/**
+ * The alternatives of pre-commit's global `exclude` regex, as entries.
+ *
+ * `^(a/|b/)` and `^a/|^b/` both read as two entries; a `(?x)` verbose pattern
+ * has its whitespace and comments removed first, and the `(^|/)` anchor —
+ * "at the root or under any directory", a glob's two stars — reads as `^` before
+ * the grouping is looked at, so it never counts as a group of its own. A
+ * prefix or suffix outside a top-level group applies to every alternative
+ * inside it. An alternative carrying two top-level groups has no one reading
+ * as entries, so it is refused — the reader throws, and rule 15 reports the
+ * file as unreadable with this reason.
+ */
+function regexAlternatives(pattern: string): string[] {
+  let source = pattern;
+  if (source.startsWith("(?x)")) {
+    source = source.slice(4).replace(/#[^\n]*/g, "").replace(/\s+/g, "");
+  }
+  source = source.replace(REGEX_ANYWHERE_ANCHOR, "^");
+  const parts = splitTopLevel(source);
+  if (parts.length > 1) {
+    return parts.flatMap(regexAlternatives);
+  }
+  if (topLevelGroups(source) > 1) {
+    throw new Error(
+      "more than one alternation group — spell one entry per line",
+    );
+  }
+  const group = /^([^()]*)\((?:\?:)?(.*)\)([^()]*)$/s.exec(source);
+  if (group === null) {
+    return [source];
+  }
+  const [, prefix = "", inner = "", suffix = ""] = group;
+  return splitTopLevel(inner).map(alt => `${prefix}${alt}${suffix}`);
+}
+
+/** A regex's `(^|/)` or `(?:^|/)` — the anchor a glob spells with two stars. */
+const REGEX_ANYWHERE_ANCHOR = /\((?:\?:)?\^\|\/\)/g;
+
+/**
+ * Walk a regex's characters with the nesting depth and whether the cursor is
+ * inside a bracket class — where `(`, `)` and `|` are literals.
+ */
+function* regexChars(
+  source: string,
+): Generator<{ char: string; depth: number; inClass: boolean; }> {
+  let depth = 0;
+  let inClass = false;
+  for (let index = 0; index < source.length; index++) {
+    let char = source[index]!;
+    if (char === "\\") {
+      char += source[index + 1] ?? "";
+      index++;
+      yield { char, depth, inClass };
+      continue;
+    }
+    if (inClass) {
+      inClass = char !== "]";
+      yield { char, depth, inClass: true };
+      continue;
+    }
+    if (char === "[") {
+      inClass = true;
+    }
+    else if (char === "(") {
+      depth++;
+    }
+    else if (char === ")") {
+      depth--;
+    }
+    yield { char, depth, inClass };
+  }
+}
+
+/** Split a regex on `|` at nesting depth zero, outside any bracket class. */
+function splitTopLevel(source: string): string[] {
+  const parts: string[] = [];
+  let current = "";
+  for (const { char, depth, inClass } of regexChars(source)) {
+    if (char === "|" && depth === 0 && !inClass) {
+      parts.push(current);
+      current = "";
+      continue;
+    }
+    current += char;
+  }
+  parts.push(current);
+  return parts;
+}
+
+/** How many `(` open at depth zero, outside any bracket class. */
+function topLevelGroups(source: string): number {
+  let count = 0;
+  for (const { char, depth, inClass } of regexChars(source)) {
+    if (char === "(" && depth === 1 && !inClass) {
+      count++;
+    }
+  }
+  return count;
+}
+
+/**
+ * One entry in the shape every syntax reduces to.
+ *
+ * A regex loses its anchors — `^`, `$`, and the `(^|/)` that spells "anywhere"
+ * — its `\.` escapes and its `[^/]*` or `.*` (a glob's `*`); every
+ * entry then loses a leading slash or `**` segment and a trailing slash, with
+ * or without the one or two stars after it — the spellings of "this directory,
+ * wherever it sits" that the four tools take. What survives is the name the
+ * sets are compared on.
+ */
+function normalizeExclusion(entry: string, syntax: "glob" | "regex"): string {
+  let value = entry.trim();
+  if (syntax === "regex") {
+    value = value
+      .replace(REGEX_ANYWHERE_ANCHOR, "^")
+      .replace(/^\^/, "")
+      .replace(/\$$/, "")
+      .replace(/\[\^\/\]\*|\.\*/g, "*")
+      .replace(/\\([./])/g, "$1");
+  }
+  value = value.replace(/^\/+/, "");
+  while (value.startsWith("**/")) {
+    value = value.slice(3);
+  }
+  return value.replace(/(?:\/\*{1,2}|\/)$/, "");
+}
+
+/**
+ * Rule 15: the formatters' exclusion lists state one set, and the scanner's
+ * allowlist is a subset of it.
+ *
+ * A generated tree — `node_modules/`, `dist/`, `graphify-out/` — is excluded
+ * from formatting, from TOML formatting and from every pre-commit hook, and
+ * each tool reads its own list in its own syntax. The convention is stated
+ * once and copied three times, so the drift is the usual kind: a tree added to
+ * one list and not the others, which no tool reports — the formatter simply
+ * formats it. Compared as sets after normalisation; an entry in some of the
+ * three and not the rest is the finding, naming the files on each side.
+ *
+ * The gitleaks allowlist is held the other way round. The pack extends
+ * upstream's default config, whose built-in allowlist already skips `.git`,
+ * `node_modules` and the named lockfiles, and `.claude/` is authored source a
+ * scanner must scan — so the formatters' set is wider than the scanner's by
+ * design, and a formatter-excluded tree the scanner still reads is no finding.
+ * A tree the scanner skips that no formatter excludes is: an allowlist entry
+ * with no generated tree behind it is a scanner quietly not scanning.
+ *
+ * A list that is absent from the tree is left out of the comparison rather
+ * than treated as empty, so a pack fixture holding one of the four files is
+ * not held to the other three.
+ */
+function checkExclusionSets(plugins: readonly Plugin[]): Finding[] {
+  const findings: Finding[] = [];
+
+  for (const plugin of plugins) {
+    const present = new Map<string, Set<string>>();
+    let scanner: { path: string; set: Set<string>; } | null = null;
+    for (const list of EXCLUSION_LISTS) {
+      const absolute = join(plugin.root, list.path);
+      if (!existsSync(absolute)) {
+        continue;
+      }
+      let entries: string[] | null;
+      try {
+        entries = list.entries(readText(absolute));
+      }
+      catch (error) {
+        findings.push({
+          scope: plugin.dir,
+          message: `${list.path}: exclusion list could not be read — ${
+            firstLine(error)
+          }`,
+        });
+        continue;
+      }
+      if (entries === null) {
+        findings.push({
+          scope: plugin.dir,
+          message: `${list.path}: declares no exclusion list to compare`,
+        });
+        continue;
+      }
+      const set = new Set(entries.map(e => normalizeExclusion(e, list.syntax)));
+      if (list.role === "scanner") {
+        scanner = { path: list.path, set };
+      }
+      else {
+        present.set(list.path, set);
+      }
+    }
+
+    const union = new Set([...present.values()].flatMap(s => [...s]));
+    if (present.size >= 2) {
+      for (const entry of [...union].sort()) {
+        const has = [...present].filter(([, set]) => set.has(entry)).map(
+          ([path]) => path,
+        );
+        const lacks = [...present.keys()].filter(path => !has.includes(path));
+        if (lacks.length === 0) {
+          continue;
+        }
+        findings.push({
+          scope: plugin.dir,
+          message: `exclusion \`${entry}\` is in ${has.join(", ")} and not in ${
+            lacks.join(", ")
+          } — the formatters' exclusion lists state one set`,
+        });
+      }
+    }
+
+    if (scanner !== null && present.size > 0) {
+      for (const entry of [...scanner.set].sort()) {
+        if (union.has(entry)) {
+          continue;
+        }
+        findings.push({
+          scope: plugin.dir,
+          message: `${scanner.path}: allowlists \`${entry}\`, which no `
+            + `formatter list excludes — the scanner's allowlist is a subset `
+            + `of the formatters' set`,
+        });
+      }
     }
   }
   return findings;

@@ -37,7 +37,7 @@ request. The two can differ: a repo that lands features directly on `develop`
 and still requires a pull request for `main` is the usual shape.
 
 The forge's own settings — the default branch, and protection on `develop` and
-`main` — are set by `/vwf:init`'s forge pass on GitHub and GitLab, and no task
+`main` — are set by `/vwf:setup`'s forge pass on GitHub and GitLab, and no task
 re-runs them. On any other forge a maintainer sets them **by hand, once**:
 
 - The default branch: `gh repo edit --default-branch <branch>`, or

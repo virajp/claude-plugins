@@ -4,7 +4,7 @@ axis: repo
 kind: repo-hygiene
 unconditional: true
 components:
-- repo-hygiene/repo-hygiene@1.1.4
+- repo-hygiene/repo-hygiene@1.2.0
 ---
 
 # Repo — hygiene

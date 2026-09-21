@@ -33,6 +33,7 @@ step every repo has to remember to run.
 
 The editor fragment is `.config/vscode.d/eslint.jsonc` — `eslint.*` keys only,
 with `eslint.format.enable` off, because the layout half of the split is
-dprint's in the editor exactly as it is in the gate.
+dprint's in the editor exactly as it is in the gate. The fragment lands only
+where init's editor answer is vscode — `pack.yaml`'s `conditional:` names it.
 
 Full judgment: the `eslint` skill.

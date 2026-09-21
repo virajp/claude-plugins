@@ -4,10 +4,10 @@ axis: project
 kind: language-bundle
 components:
 - language/typescript@0.1.0
-- package-manager/pnpm@0.2.1
-- toolchain-gate/tsconfig@0.1.0
-- toolchain-gate/eslint@0.2.0
-- framework/astro@0.2.0
+- package-manager/pnpm@0.3.0
+- toolchain-gate/tsconfig@0.2.0
+- toolchain-gate/eslint@0.3.0
+- framework/astro@0.3.0
 - framework/react@generated
 platforms:
 - site

@@ -31,7 +31,7 @@ invisible to every other check, and the committed file keeps advertising the old
 version. It is the surviving fragment of the retired `plugins:render-clean`,
 narrowed to the one file that still has the problem.
 
-## The fourteen rules
+## The fifteen rules
 
 Each is something no format and no type can state. The checker is deliberately
 much smaller than the one it replaced: whole families of assertion became
@@ -102,7 +102,7 @@ much smaller than the one it replaced: whole families of assertion became
    two-directions-cover-each-other-on-a-rename idiom rule 7 uses for agent
    cross-references.
 10. **The technology-free vwf guard.** Below.
-11. **A pack's `config/` payload tier is materializable as-is.** Seven
+11. **A pack's `config/` payload tier is materializable as-is.** Eight
     assertions, every one of them about a file whose failure mode in the
     *target* repo is silence rather than an error:
     - a **task file lands executable**. `config/.config/mise/tasks/**` is a
@@ -140,7 +140,25 @@ much smaller than the one it replaced: whole families of assertion became
       the fragments merge into at all;
     - an **editor fragment parses as JSONC** and carries only `settings`,
       `nesting` and `extensions`. `/vwf:init` composes the fragments into editor
-      files no pack owns, and a fourth key is dropped without a word.
+      files no pack owns, and a fourth key is dropped without a word;
+    - every **`conditional:` entry** in the pack's `pack.yaml` names a **path or
+      glob that matches at least one file** under its own `config/` tier, and a
+      `when:` map of **exactly one known axis** — `forge` (`github`, `gitlab`),
+      `editor` (`vscode`), `secrets` (any provider slug — never `none`, the
+      no-provider answer init reads as "no match"), `update_bot` (`renovate`,
+      `dependabot`, `none`) — with a value that axis takes, and a path that is
+      relative and carries no `..` segment. The materializer evaluates the key
+      against the caller's answers, and an axis the caller did not answer reads
+      as true — the omitted key lands the file. So an axis outside the
+      vocabulary is one no caller ever answers: its condition can never skip
+      anything, and the file lands everywhere, silently. A value the axis never
+      takes is the mirror case — no answer ever satisfies it, so the file lands
+      nowhere; a path matching nothing is a condition guarding no file, which is
+      a rename that forgot the key — the glob is matched by the checker's own
+      walk, so `**` enters dot-directories like `.config/`, which `globSync`
+      would not; and an absolute path or a climb is rule 13's fault stated on a
+      glob — it reaches out of what the pack lands. The finding names the pack,
+      the entry's index and its path.
 
     The walk is its own rather than the plugin file reader's, because every one
     of these paths runs through a dot segment the reader's glob does not descend
@@ -208,6 +226,41 @@ much smaller than the one it replaced: whole families of assertion became
     green, since an axis with no default is what every axis was before the flag
     existed — and it does not check that the flagged bundle's components
     resolve, which `p:plugins:inventory` owns.
+15. **The formatters' exclusion lists state one set, and the scanner's allowlist
+    is a subset of it.** The gate packs ship four lists of the trees a gate
+    skips — `dprint.json`'s `excludes` and `taplo.toml`'s `exclude` (both in the
+    dprint pack, both globs) and pre-commit's global `exclude` (one regex, whose
+    top-level alternatives are the entries; a `(?x)` verbose pattern has its
+    whitespace and comments removed first) are the **formatters'** three and
+    must agree; the gitleaks `[allowlist] paths` (regexes) is the **scanner's**
+    and is held to a subset of them instead. The formatters' convention is
+    stated once in the pre-commit pack's conventions and copied three times in
+    three syntaxes, so the drift is an entry added to some of the lists and not
+    the rest — and no tool reports it, since each reads only its own list: the
+    formatter simply formats the tree. The scanner is held the other way round
+    because the pack extends upstream's default config, whose built-in allowlist
+    already skips `.git`, `node_modules` and the named lockfiles, and `.claude/`
+    is authored source a scanner must scan — so the formatters' set is wider
+    than the scanner's by design, a formatter-excluded tree the scanner still
+    reads is no finding, and a tree the scanner skips that no formatter excludes
+    is one, naming `gitleaks.toml` and the entry: an allowlist entry with no
+    generated tree behind it is a scanner quietly not scanning. Each entry is
+    **normalised** before the compare — a regex loses its anchors (`^`, `$`, and
+    the `(^|/)` or `(?:^|/)` that means "at the root or under any directory", a
+    glob's `**/`), its `\.` escapes and its `[^/]*` or `.*` (a glob's `*`);
+    every entry then loses a leading `/` or `**/` and a trailing `/`, `/*` or
+    `/**`, the spellings of "this directory, wherever it sits" that the four
+    tools take — so `**/dist/`, `**/dist/**`, `dist/*`, `^dist/` and
+    `(^|/)dist/` are one entry, `dist`. The formatters' finding names the entry,
+    the files that carry it and the files that do not. A list absent from the
+    tree is left out of the comparison rather than read as empty, so a fixture
+    holding one of the four files is not held to the other three; a file present
+    but carrying no list at all, or one that cannot be parsed, is its own
+    finding naming the file — nothing else parses `dprint.json`, `taplo.toml` or
+    `gitleaks.toml`. Rule 15 reads those four paths and no others — a fifth list
+    is a fifth entry in `EXCLUSION_LISTS`, not a wider walk — and its two TOML
+    readers are deliberately narrow: `scripts/` carries no TOML parser, and a
+    bracketed list of string literals is all either file holds.
 
 ### The plugin-root trap (rules 6 and 13)
 

@@ -1,9 +1,15 @@
 name: pnpm
 summary: Dependency installation, locking and workspace layout for the Node
   ecosystem — the manifest contract and the monorepo shape.
-version: 0.2.1
+version: 0.3.0
 type: package-manager
 package_manager: pnpm
 kind: language-bundle
 axis: repo
 harness: n/a
+# The editor fragment lands only where init's editor answer is vscode; every
+# other file in config/ lands unconditionally. Paths are relative to config/.
+conditional:
+  - path: .config/vscode.d/pnpm.jsonc
+    when:
+      editor: vscode

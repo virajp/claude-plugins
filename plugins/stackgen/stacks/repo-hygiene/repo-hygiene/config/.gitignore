@@ -52,9 +52,6 @@ mise.local.lock
 .env
 .env.*
 !.env.example
-# The local-first secrets manager's machine-local override; the file beside it
-# holds references and ciphertext only, and is committed.
-fnox.local.toml
 # Private keys and identities: the one hit that is always real.
 *.pem
 *.key

@@ -5,7 +5,7 @@ kind: app-framework
 components:
 - app-framework/flutter@0.4.0
 - package-manager/pub@0.1.0
-- toolchain-gate/analysis-options@0.1.0
+- toolchain-gate/analysis-options@0.2.0
 platforms:
 - mobile
 - tablet

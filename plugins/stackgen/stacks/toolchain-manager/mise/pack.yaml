@@ -3,7 +3,7 @@ summary: The repo's toolchain manager — the .config/ five-file split selected
   by MISE_ENV, and the file-based task library everything else invokes, grouped
   into `setup:*` for bootstrap, `code:*` for gates and git, and
   `p:<project-id>:*` for a project's own commands.
-version: 1.5.0
+version: 1.6.0
 type: toolchain-manager
 kind: toolchain-manager
 axis: repo
@@ -15,3 +15,9 @@ axis: repo
 # harness tasks are run BY. What it contributes is the repo-axis fact that the
 # task names exist at all.
 harness: n/a
+# The editor fragment lands only where init's editor answer is vscode; every
+# other file in config/ lands unconditionally. Paths are relative to config/.
+conditional:
+  - path: .config/vscode.d/mise.jsonc
+    when:
+      editor: vscode

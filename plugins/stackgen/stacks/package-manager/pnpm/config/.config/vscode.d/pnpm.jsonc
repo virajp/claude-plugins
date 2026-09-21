@@ -1,0 +1,51 @@
+// Editor fragment — the package manager's contribution to the repo's editor
+// settings. `/vwf:init` merges every `.config/vscode.d/*.jsonc` into the two
+// editor files inside one marked block; a key written by hand after that block
+// wins.
+//
+// Scope: the lockfile, the build orchestrator's cache, and the nesting under
+// the manifest. Turbo has no pack of its own — it is a generated component
+// the pnpm-turbo bundle carries — so its cache exclude lives here, beside the
+// manager it runs through. `node_modules` is the tsconfig fragment's.
+{
+  "settings": {
+    // The lockfile is an input a human reviews in a diff, not a file anyone
+    // opens; the Turbo cache is regenerable. Both hidden from the explorer,
+    // the cache also from the watcher and search. The three maps are unions
+    // across fragments, so these rows add to the hygiene baseline's rather
+    // than replacing it.
+    "files.exclude": {
+      "**/.turbo/": true,
+      "pnpm-lock.yaml": true,
+    },
+    "files.watcherExclude": {
+      "**/.turbo/": true,
+    },
+    "search.exclude": {
+      "**/.turbo/": true,
+    },
+  },
+
+  // Parent → children, merged into `explorer.fileNesting.patterns`. Everything
+  // that travels with the manifest — the lockfile, the workspace file, the
+  // registry settings, the test and build configs, the orchestrator's config,
+  // the hosting and secrets manifests — folds under `package.json`.
+  "nesting": {
+    "package.json": [
+      "pnpm-lock.yaml",
+      "pnpm-workspace.yaml",
+      ".npmrc",
+      "vitest.config.ts",
+      "turbo.json",
+      "build.ts",
+      "esbuild.mjs",
+      "waitOn.json",
+      "waitOnExternal.json",
+      "apphosting.yaml",
+      "apphosting.*.yaml",
+      ".prettierrc.yaml",
+      ".markdownlint.yaml",
+      "doppler.yaml",
+    ],
+  },
+}

@@ -66,7 +66,7 @@ repo's own skills, docs, agents and worktrees. None of them is `plugins/`.
 Setup and the refresh loop — `mise run p:plugins:local`, and the three measured
 CLI facts that shape it — are [`dev-marketplace.md`](dev-marketplace.md).
 
-> **Authoring one:** the fourteen checker rules, the invocation frontmatter, the
+> **Authoring one:** the fifteen checker rules, the invocation frontmatter, the
 > plugin-root trap and the dprint exclusion live in
 > `.claude/skills/plugin-authoring/`, which auto-applies while you edit
 > `plugins/`.
@@ -154,12 +154,12 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   design and are skipped. **`--check`** is the same byte compare the marketplace
   task makes, run by pre-commit and `plugins.yml`, and `inventory.test.ts` pins
   it in vitest too.
-- **`p:plugins:check`** — validates the authored tree. Fourteen rules: manifest
+- **`p:plugins:check`** — validates the authored tree. Fifteen rules: manifest
   name↔dir **plus the two things the version itself must be** — plain semver,
   and free of a 13 or 17 component, those two integers never being issued on any
   version line this repo maintains; dependencies resolving within the
   marketplace; hook scripts existing and executable; **a pack's `config/`
-  payload tier being materializable as-is** (seven assertions in one rule: exec
+  payload tier being materializable as-is** (eight assertions in one rule: exec
   bit *and* a known shebang on every file under `config/.config/mise/tasks/**`,
   because mise reports a 644 task as an *unknown* one rather than a permission
   error and execs the file directly; the same two on every `hooks/*.sh`, which
@@ -173,10 +173,16 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   file no pack owns; the gate pack's **whole**
   `config/.config/pre-commit-config.yaml` parsing on the same terms, from the
   base end, since it is neither a fragment nor at the tier's root and nothing
-  reached it before; and every `config/.config/vscode.d/*.jsonc` parsing as
-  JSONC with only the three keys `settings`, `nesting` and `extensions`, since
-  init composes them into an editor file no pack owns and a fourth key is
-  dropped without a word); **strict-YAML frontmatter** (every skill and agent a
+  reached it before; every `config/.config/vscode.d/*.jsonc` parsing as JSONC
+  with only the three keys `settings`, `nesting` and `extensions`, since init
+  composes them into an editor file no pack owns and a fourth key is dropped
+  without a word; and every `conditional:` entry in the pack's `pack.yaml`
+  naming a relative path or glob with no `..` segment that matches at least one
+  file under `config/` — resolved by the checker's own walk, so `**` enters
+  dot-directories — and a `when:` of exactly one known axis, `forge`, `editor`,
+  `secrets` or `update_bot`, with a value that axis takes, `secrets: none`
+  refused, since an unknown axis is one no caller answers and its file lands
+  everywhere silently); **strict-YAML frontmatter** (every skill and agent a
   plugin ships, and every `stacks/*/*/skills/*/SKILL.md` and
   `stacks/*/*/agents/*.md` a pack ships — the larger half, and the half that
   actually lands in a user's repo; a pack's `rules/*.md` is out, frontmatter
@@ -212,9 +218,21 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   preselects on a round — conflict when either declares no `platforms:` list or
   their lists intersect, and the value is boolean; a conflict is a preselection
   decided by file order, and the finding names both files plus the platform they
-  share, or the one that declares no list). The retired-vocabulary and
-  plugin-path rules are the two that report a **line number**, being the two
-  that fire on a sentence rather than a file.
+  share, or the one that declares no list); and **the formatters' exclusion
+  lists state one set, and the scanner's allowlist is a subset of it** (the
+  dprint pack's `dprint.json` `excludes` and `taplo.toml` `exclude`, both globs,
+  and the pre-commit pack's global `exclude`, one regex whose top-level
+  alternatives are the entries, a `(?x)` block stripped of its whitespace and
+  comments first, are the **formatters'** three and are held equal after
+  normalisation — anchors, `**/`, `\.` escapes, `[^/]*` and a trailing `/`, `/*`
+  or `/**` stripped, so `**/dist/`, `dist/*` and `(^|/)dist/` are one entry; the
+  gitleaks `[allowlist] paths` is the **scanner's** and is held to a subset of
+  their union instead, since the pack extends upstream's default allowlist and
+  `.claude/` is authored source a scanner must scan — a finding names the entry
+  and the files that carry it and do not; a list absent from the tree is left
+  out of the compare, a file present but unparseable is its own finding). The
+  retired-vocabulary and plugin-path rules are the two that report a **line
+  number**, being the two that fire on a sentence rather than a file.
 
   Two of those are worth the extra sentence. The technology-free guard bans vwf
   naming a concrete technology **only where the mention prescribes**, which is

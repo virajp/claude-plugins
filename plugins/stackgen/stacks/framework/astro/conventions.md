@@ -128,13 +128,20 @@ Astro's own half of it:
   `<`, and emit it with `is:inline` and `set:html` — Astro must not process a
   script it did not author, and the escape is what keeps a product name
   containing an angle bracket from closing the element.
-- **The icons task** is the pack's one landed file: it rasterizes the whole
-  set from `public/brand/favicon.svg` with one-off tools and lands under the
-  project's own task group. It is run by hand when the mark changes, never in
-  a gate and never in the build.
+- **The icons task** is one of the pack's two landed files: it rasterizes the
+  whole set from `public/brand/favicon.svg` with one-off tools and lands under
+  the project's own task group. It is run by hand when the mark changes, never
+  in a gate and never in the build.
 
 Depth — the tag order this settles on, the escaping, and how `trailingSlash`
 interacts with the canonical — is the `head` reference.
+
+## What this pack writes
+
+| File                                  | Is                                                                                                                                                                  |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.config/mise/tasks/p/_project/icons` | the icons task above, renamed into the project's task group as it lands                                                                                             |
+| `.config/vscode.d/astro.jsonc`        | the editor fragment: `.astro/` — the types and cache `astro sync` regenerates — hidden from the explorer, the watcher and search; lands only where init's editor answer is vscode (`pack.yaml`'s `conditional:`) |
 
 ## What this component does not decide
 

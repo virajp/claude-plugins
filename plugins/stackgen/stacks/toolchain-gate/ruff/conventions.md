@@ -45,7 +45,8 @@ the lockfile records per file which component supplied what landed.
 no setting**. The keys that would point the editor at an interpreter or a ruff
 binary are exactly the ones that can make the editor lint with a different ruff
 than `uv run` gives the gate, and a repo pinning its own interpreter path is a
-repo-level decision, not a pack's.
+repo-level decision, not a pack's. The fragment lands only where init's editor
+answer is vscode — `pack.yaml`'s `conditional:` names it.
 
 ## Not yet reachable
 

@@ -1,0 +1,26 @@
+// Editor fragment — the Astro framework's contribution to the repo's editor
+// settings. `/vwf:init` merges every `.config/vscode.d/*.jsonc` into the two
+// editor files inside one marked block; a key written by hand after that block
+// wins.
+//
+// Scope: the framework's generated tree, and nothing else. The `.astro` file
+// type's formatting is the dprint gate's (its markup plugin covers it), and
+// the language extension is a per-project choice this fragment does not make.
+{
+  "settings": {
+    // `.astro/` is the content-collection types and the build cache Astro
+    // regenerates on every `astro sync` and `astro dev`: hidden from the
+    // explorer, the watcher and search alike. The three maps are unions
+    // across fragments, so this row adds to the hygiene baseline's rather
+    // than replacing it.
+    "files.exclude": {
+      "**/.astro/": true,
+    },
+    "files.watcherExclude": {
+      "**/.astro/": true,
+    },
+    "search.exclude": {
+      "**/.astro/": true,
+    },
+  },
+}

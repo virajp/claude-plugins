@@ -44,10 +44,18 @@ file gets the sections it lacks**, and only those.
    stack read produced** — SKILL.md's *The stack read*, which takes the
    config's pins first, the lockfile's components next, and in `source` mode
    the manifests it finds; a `blank` repo's set is empty and adds no section
-   past the base ones. The **hygiene pack's conventions** own the mapping
-   from that set to template names and are the only source for it — read the
-   table there. Two languages may name the same template, so resolve to the
-   set of **distinct** names: a section is per template, not per language.
+   past the base ones. The read carries **one more component** beside the
+   languages: the **pinned secrets provider's slug**, question 4's answer,
+   passed as it is and in every mode, so the **provider row** the same table
+   keeps applies — a provider whose files keep something machine-local gets
+   its ignore section, under a banner named for the slug, only in a repo that
+   runs it, and a **none** answer carries no component. The **hygiene pack's
+   conventions** own the mapping from that set to template names and
+   provider sections and are the only source for it — read the table there.
+   Two languages may name the same template, so resolve to the set of
+   **distinct** names: a section is per template, not per language. A
+   provider section names no template and is fetched from nowhere: its body
+   is the table cell's own pattern, appended like a base section's.
 
    A language with **no row** is one of two things and the conventions say
    which. Most need no template at all — the base sections already cover
@@ -181,10 +189,28 @@ alone. Read the convention for every literal it uses.
 
 ### Inputs
 
-Every `.config/vscode.d/*.jsonc` present in this repo after the packs have
-landed, taken in the **composition order the materializer documents** — the
-same order the packs themselves landed in, so a later pack's opinion wins
-where two disagree, exactly as it does for a shared file.
+Every `.config/vscode.d/*.jsonc` **that landed** in this repo — present in
+the tree **and** carrying an `entries:` record in the lockfile, whichever run
+landed it — **minus** any path this run's dry-run reports as skipped, taken
+in the **composition order the materializer documents** — the same order the
+packs themselves landed in, a fragment an earlier run landed keeping its
+place in it, so a later pack's opinion wins where two disagree, exactly as
+it does for a shared file. The lockfile is the record, not this run's
+dry-run: a reshape fetches the three baselines and the provider alone, and
+a fragment a stack pin's materialize pass landed earlier is in no dry-run
+of this run yet is as much an input as any the run just landed.
+
+**A skipped fragment is not read.** Every editor fragment a pack ships is
+conditioned on the `editor` axis, and the materializer's conditional
+evaluation step lands it only where question 7's answer passed that axis
+the editor's value — on a **no**, `none` is passed, no fragment lands, this
+step has no input, and it composes nothing: the two output files are neither
+created nor touched, and a hand-written one is left exactly as it was. A
+fragment already in the tree from an earlier run, whose condition the
+dry-run now finds false, is not an input either — the answer decides, never
+the directory listing — and it is not a **Skipped** row: the materializer
+keeps a path its lockfile records and lists it as *landed earlier, condition
+now false — kept*, which is the row the plan shows for it.
 
 Parse each one as JSONC — comments and trailing commas are part of the format.
 A fragment that does not parse is a **halt for this step**, naming the file:
@@ -248,7 +274,7 @@ composed set. For each key in the intersection:
 - otherwise the key joins the **collision round**.
 
 **The collision round** belongs to the plan step — it is not one of
-SKILL.md's seven questions, and a run with no collision asks nothing. One
+SKILL.md's nine questions, and a run with no collision asks nothing. One
 round per run, whatever the repo count, one row per collision, each row
 reading `file · key · hand value · pack value · choice`, and the choice is
 one of three:

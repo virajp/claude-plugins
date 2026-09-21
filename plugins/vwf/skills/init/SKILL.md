@@ -361,7 +361,12 @@ answered and what it found.
 - the **ignore sections** [new repo](references/new-repo.md) §5 appends —
   one per language the read produced, resolved through the hygiene pack's own
   table, so a `source` repo with a manifest gets its language's section on the
-  **first** run rather than after some later pin;
+  **first** run rather than after some later pin. The read carries **one more
+  component** here, and it is not a language: the **secrets provider slug**
+  question 4 picked, passed as it is, so the provider row that same table
+  keeps resolves beside the language rows — a provider whose files keep
+  something machine-local gets its ignore section only in a repo that runs
+  it, and a **none** answer carries nothing;
 - the **two runtime positions** the toolchain pack marks in its base config
   — `RUNTIME_BLOCK` and `PATH_ENTRIES` — which §5 fills from the same read,
   one runtime's lines per language and the path entry empty where no language
@@ -371,15 +376,21 @@ answered and what it found.
 
 ## The questions
 
-Seven in all, each one round, MCQ where an option set exists, per
+Nine in all, each one round, MCQ where an option set exists, per
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`. **A round is one round for the
 whole product**, however many repos resolved: a question that differs per repo
 shows one row per repo inside its single round, and never becomes a second
 round. Two of them — 1 and 3 — are asked for the repos that resolved to mode
 **blank** or **source** only, because a `shaped` repo already answers them;
-the other five are asked whatever the modes are. Question 6 has two dependent
+the other seven are asked whatever the modes are. Question 6 has two dependent
 parts, 6a and 6b, which together are the **seventh round**: they are shown
-against 6's answers, so they cannot share its round.
+against 6's answers, so they cannot share its round. Questions 7 and 8 — the
+editor and the update bot — are the **eighth and ninth rounds**, and they are
+the two whose answers reach the materializer rather than a file: together
+with two answers the run already holds — the forge, read from each repo's
+origin host, and the provider slug question 4 picked — they are what the
+materializer's conditional evaluation step evaluates a pack's `when:` against,
+one value per axis, `forge`, `editor`, `secrets` and `update_bot`.
 
 1. **The repo name.** *`blank` and `source` repos only.* Asked in one round
    listing every repo that resolved to either, each proposed from that repo's
@@ -570,9 +581,62 @@ against 6's answers, so they cannot share its round.
    security file in that repo either way — a file naming a channel nobody
    watches is worse than none — and declining one row says nothing about the
    others.
+7. **The editor.** Answered **once** for the product: is the editor the
+   packs' editor fragments are written for — the one the fragment convention
+   in the stack adapter's `assets/pack-format.md` names — the editor used
+   here? **Yes** or **no**. The default is **yes** where any resolved repo
+   carries that editor's own settings directory — the directory the
+   convention's two output files sit in — or where its command-line binary is
+   on `PATH`, and **no** otherwise; the question says which of the two
+   decided it. One answer for all the repos, because an editor is a fact
+   about the people working the product rather than about any one tree, and
+   a product whose members compose editor settings while its base does not is
+   a state nobody asked for.
 
-Ask them **before** presenting the plan, so the plan is complete and one yes
-covers all of it.
+   What this question settles is the `editor` axis the materializer's
+   conditional evaluation step reads: a **yes** passes the axis value the
+   convention names for that editor, and every pack file conditioned on it —
+   every editor fragment — lands; a **no** passes `none` on that axis —
+   `init`'s no-match value, which no `when:` names on this axis — so those
+   files are **skipped**, listed in the plan under their own heading, and
+   the editor merge in
+   [fragments and sections](references/fragments-and-sections.md) then has no
+   fragment to read and composes nothing. Nothing about the answer is written
+   into the tree; a later run asks again, defaulted the same way.
+8. **The update bot.** **One row per repo** in the one round: which hosted
+   dependency-update service watches this repo — the one whose policy file
+   the hygiene pack ships, the other one, or **none**. The options are the
+   axis values the materializer's conditional evaluation step accepts on
+   `update_bot`, plus **none**; [new repo](references/new-repo.md) §2 spells
+   them. Each row is **seeded from the survey**: a repo already carrying a
+   policy file under any spelling the [tool-config
+   table](references/tool-configs.md)'s row for that service lists is
+   preselected to that service — the survey's pass-1 evidence is the answer,
+   and the row says which file decided it — and a repo carrying
+   neither is preselected to the service whose policy the hygiene pack ships,
+   since that is what an unanswered run has always landed. It is per repo
+   because the policy is a file each repo carries and a member watched by a
+   different service than its base is ordinary.
+
+   What this question settles is the `update_bot` axis: the row's answer is
+   passed as that repo's value, so the hygiene pack's policy file lands only
+   where the answer names the service it configures, and is **skipped** —
+   listed in the plan under the same heading — where the answer is the other
+   service or **none**. On this axis alone, **none** is not `init`'s
+   no-match value but one of the three answers a pack may name in a `when:`,
+   so a file a pack conditions on it lands exactly when no bot was picked. A
+   repo whose own policy file the yield rule keeps is
+   unchanged by the answer: the pack's file was never going to land there.
+
+Ask all nine **before** presenting the plan, so the plan is complete and one
+yes covers all of it. The plan's summary then says, per repo, the four values
+the materializer receives in its `answers:` map, beside `repo:` — the forge
+from the origin host, the editor, the provider slug from question 4, the
+update bot, each carrying `none` where the answer was none or nothing could be
+read, since an axis the map leaves out lands every path conditioned on it —
+and lists every path a condition skipped under its own **Skipped** heading,
+one line per path naming the axis that decided it, so a file that did not land
+is a file the reader can see was not landed rather than one that was missed.
 
 ## The pipelines
 
@@ -653,7 +717,13 @@ Both pipelines materialize the same three baselines. They are fetched by the
 constructed: a name assembled from configuration is one that can silently
 resolve to nothing, which is the rule the `ux-gate` and design-adapter seams
 already follow. The secrets provider is fetched by whichever slug the user
-picked at question 4.
+picked at question 4. **Every fetch carries the four answers** as its
+`answers:` map — the forge, the editor, the provider slug, the update bot —
+so the materializer's conditional evaluation step can decide a pack's
+conditional files; a pack with no `when:` lands whole, as it always has, and a
+file a condition skips is the plan's **Skipped** row, never a deferral:
+nothing is waiting on a later run, the repo simply is not the kind the file
+was for.
 
 Their landing is consent-gated by the materializer, and their presence in a
 lockfile is what tells a later run — or `/vwf:setup` — that a repo is shaped

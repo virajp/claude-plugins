@@ -116,7 +116,8 @@ rather than a preference here.
 ## Copied as-is
 
 The remaining hygiene files land exactly as the pack ships them, with no
-placeholder and no question:
+placeholder — and only the last is gated on a question, the update-bot row
+below:
 
 | File                         | Is                                                         |
 | ---------------------------- | ---------------------------------------------------------- |
@@ -137,9 +138,14 @@ service reads it. It is the one hygiene file with a **yield** rule: a repo
 that already carries a policy under any of those spellings keeps its own,
 and the pack's is **not landed** — the plan's row for it says so, and no
 file is moved. The spellings, and the rule, are the
-[tool-config table](tool-configs.md)'s. A repo that wants the service enabled
-still has to install it on the forge; say so at write time, since a policy
-nobody wired is inert without an error.
+[tool-config table](tool-configs.md)'s. It is also **conditional**: the
+pack names it under `when: update_bot: renovate`, so it lands only in a
+repo whose question-8 row answered `renovate`, and a repo on `dependabot`
+or `none` gets a **Skipped** row for it rather than a file — the yield
+covers a repo that has a policy, the condition a repo that does not want
+this one. A repo that wants the service enabled still has to install it
+on the forge; say so at write time, since a policy nobody wired is inert
+without an error.
 
 ## What `init` does not write here
 

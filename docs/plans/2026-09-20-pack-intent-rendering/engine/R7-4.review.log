@@ -1,0 +1,25 @@
+/code-review high — R7 round 4 — range 55be3bed..e116e983 (branch-scoped engine)
+
+No `ReportFindings` tool is available in this session, so the findings are restated here directly.
+
+## Review: `plan/2026-09-20-pack-intent-rendering` (develop...HEAD, 39 files)
+
+Checker and suites are green on the branch (`p:plugins:check`, vitest 171 pass, `tsc --noEmit`). Findings new since R7 round 3, ordered by severity; recorded gaps (G-2 setup-pass answers, G-4) are not repeated.
+
+1. `plugins/stackgen/stacks/toolchain-gate/dprint/conventions.md:53-96` — **medium (shipped doc defect)**. U4 round 5's "restored verbatim" pass duplicated four whole paragraphs: "The default formatter is bound per language…", "The even-better-toml fallback keys equal…", "That filename is the one exception…", and "The fence in `output-tree.md`…" each appear twice (lines 53/76, 62/85, 66/89, 73/96). Ships to every user in the pack.
+
+2. `plugins/stackgen/skills/stackgen-sync/SKILL.md:47-51` vs `plugins/stackgen/assets/output-tree.md:405-423` — **medium**. output-tree.md now promises "sync never diffs it [a `skipped:` path]", but sync step 2 still "re-derives its landing set from the current pack" with no `answers:` and no read of `skipped:`. Under the materializer's unanswered-reads-true rule, `renovate.json` / the issue forms re-enter the derived set on a Dependabot or GitLab repo, absent on disk with no `entries:` record — a state none of sync's three classifications covers, so it is reported as a pack file to land. Sync is in nobody's Owns.
+
+3. `plugins/vwf/skills/init/references/new-repo.md:113-131` — **medium**. A repo with no `origin` passes `forge: none`, so the GitHub issue forms are skipped "until the reshape that follows the remote". Nothing triggers that reshape: `/vwf:doctor`'s baseline predicates and `setup` Step 0 never compare `skipped[].when` against the current answers, so on the common greenfield path (init before `git remote add`) the forms never land unless the user remembers `/vwf:setup reshape` by hand. Same for `editor` and `update_bot` answers, which are persisted nowhere.
+
+4. `plugins/stackgen/stacks/toolchain-gate/pre-commit/config/.config/pre-commit-config.yaml:48-62` — **low/medium**. The global `exclude` widened from `^graphify-out/` to the 12-entry formatter set, which now also removes every lockfile and `.claude/` from the non-formatting hooks: `check-merge-conflict`, `check-yaml`, `check-json`, `check-added-large-files`, `mixed-line-ending`. A `pnpm-lock.yaml` left with `<<<<<<<` markers after a bad merge, or an invalid `.claude/settings.json`, now passes the gate. The formatter-set equality was ruled, but nothing in the ruling asked the *checking* hooks to go blind on lockfiles.
+
+5. `scripts/src/check.ts:1605-1622` (`tomlStringList`) — **low**. `^paths\s*=\s*\[` with the `m` flag takes the *first* line-start `paths =` in the file. gitleaks supports a rule-level `[rules.allowlist]` with its own `paths = [...]`; the moment a repo (or the pack template, whose commented `[[rules]]` block sits *above* `[allowlist]`) adds one, rule 15 compares the rule's list, not the scanner's global allowlist, silently.
+
+6. `scripts/src/check.ts:534-539, 607-613` — **low**. `secrets: null` admits any non-empty string except `none`, so `when: { secrets: fnoxx }` passes rule 11 and the file lands nowhere — exactly the silent-skip the rule's own comment says it exists to catch. The vocabulary is `stacks/capability-provider/*` and is already on disk to check against; `pack-format.md:216-219` says an out-of-vocabulary value is refused.
+
+7. `plugins/stackgen/skills/stackgen-stack-template/references/materializer.md:214-218` — **low**. "The `skipped:` list is rewritten whole on every run from that run's answers" — but a run lands one slug (setup's pass, sync) and can only evaluate that pack's conditions; a whole rewrite by such a run empties the hygiene pack's skips recorded by init. Doctor tolerates the loss today (a path in neither list is "not stackgen's"), but the record the plan's Skipped rows and the re-evaluation rule depend on is gone.
+
+8. `scripts/src/check.ts:1651-1654` (`regexAlternatives`) — **low**. `(?x)` handling strips `#[^\n]*` before looking at classes/escapes, so a verbose pattern containing `\#` or `[#]` (a legal literal in verbose mode) is truncated at that point and the remaining alternatives vanish from the comparison without a finding.
+
+Verified and not raised: the 12-entry sets normalise equal across dprint/taplo/pre-commit, gitleaks anchors resolve to a proper subset, the gitleaks/`code:sec --staged` hook is `pass_filenames: false, always_run: true` so the `.claude/` exclusion cannot blind it, the even-better-toml fallback keys now match `taplo.toml`, every `conditional:` path exists under its pack's `config/`, and `[^/]*`/`(^|/)`/`$` normalisation is correct for the shipped entries. Stale counts in `CLAUDE.md` ("fourteen rules", "seven assertions", "seven questions") and `site/…/vwf.md:1056` are U8's in wave 3 and are not flagged here.

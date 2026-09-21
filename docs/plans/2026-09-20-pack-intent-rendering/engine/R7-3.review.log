@@ -1,0 +1,19 @@
+/code-review high — R7 round 3 — range 55be3bed..645bb0e5 (branch-scoped engine)
+
+The `ReportFindings` tool is not available in this environment, so the findings are stated here directly.
+
+## Findings
+
+1. **`plugins/vwf/skills/setup/references/materialize.md:92` — high** — Setup's materialize pass invokes the adapter with `repo:` only, never `answers:`. Under the materializer's new "unanswered reads as true" rule, every pack landed through that path (astro, pnpm, tsconfig, analysis-options — all given `when: { editor: vscode }` in this diff) lands its `.config/vscode.d/*.jsonc` fragment regardless of init's editor answer. Scenario: user answers **no** to question 7; init skips the hygiene/dprint/pre-commit fragments and records them in `skipped:`, then `/vwf:setup`'s pass lands `astro.jsonc` and `pnpm.jsonc` anyway — the editor axis is half-applied and the pack.yaml comment "lands only where init's editor answer is vscode" is false for those packs. No unit owns `setup/references/materialize.md`.
+
+2. **`scripts/src/check.ts:770` (`landedGlob`) — medium** — A pattern ending in `**` (or a bare `**`) compiles to `^…/(?:[^/]+/)*$`, which requires the string to end in `/`; no file path does, so `.config/vscode.d/**` matches nothing and rule 11 reports a false "matches no file under the pack's config/ tier". The doc explicitly allows a glob to name a whole set. Verified: `landedGlob(".config/vscode.d/**").test(".config/vscode.d/a.jsonc") === false`.
+
+3. **`scripts/src/check.ts:1614` (`regexAlternatives`) — low** — The group regex `^([^()]*)\((?:\?:)?(.*)\)([^()]*)$` is greedy across multiple top-level groups, so `^(?:build|dist)/.*\.(json|yaml)$` yields entries `^build$`, `^dist)/*.(json$`, `^yaml$` and rule 15 emits nonsense findings. `splitTopLevel` also splits on a `|` inside a `[…]` class. The shipped config avoids both shapes, but a pack author writing an ordinary two-group pre-commit `exclude` hits it.
+
+4. **`plugins/vwf/skills/init/references/tool-configs.md:63-65` — low** — "the pack's `renovate.json` still lands today. Whether it should land beside a Dependabot policy is a later plan's question" is falsified by question 8 (a `dependabot` row now skips `renovate.json`, and new-repo.md's seed rule cites this table's rows). No unit in the plan owns this file (U5 owns SKILL.md, new-repo.md, fragments-and-sections.md only).
+
+5. **`plugins/stackgen/assets/pack-format.md:216-226` — low** — The example presented as "the hygiene pack's" third entry is `.config/vscode.d/*.jsonc`, but the hygiene `pack.yaml` actually declares `.config/vscode.d/repo-hygiene.jsonc`; a reader copying the doc's glob into a pack that ships several fragments gets different landing semantics than the shipped pack.
+
+Verified green: `mise run p:plugins:check`, `vitest run` (169 pass), and the new pre-commit `(?x)` exclude compiles and matches correctly under Python `re` (`pnpm-lock.yaml`, `x/Cargo.lock`, `.claude/x.md` excluded; `build.rs`, `builder/a`, `src/lockfile.json` not).
+
+Not flagged: the stale rule-count / "seven questions" / hook-fragment passages in `CLAUDE.md`, `.claude/docs/repo-shape.md` and `site/src/content/docs/plugins/{vwf,stackgen}.md` — those are U8's (wave 3) per the plan's Owns table.

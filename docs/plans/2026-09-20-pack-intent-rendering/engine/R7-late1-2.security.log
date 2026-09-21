@@ -1,0 +1,3 @@
+/security-review — R7-late1 round 2 — range e116e983..2e68927d (fix delta 8d6c87f1..2e68927d examined)
+
+NO FINDINGS — each new `conditional:` entry names one relative path (`.config/vscode.d/<pack>.jsonc`) that exists under that pack's own `config/` tier, with `when: editor: vscode`, a value in the checker's axis vocabulary; no absolute or `..` path, no other pack.yaml key changed, and the rest of the range is prose and engine logs.

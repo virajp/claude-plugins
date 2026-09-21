@@ -4,10 +4,10 @@ axis: repo
 kind: repo-gate
 unconditional: true
 components:
-- toolchain-gate/dprint@1.0.1
-- toolchain-gate/gitleaks@1.1.1
+- toolchain-gate/dprint@1.1.0
+- toolchain-gate/gitleaks@1.1.2
 - toolchain-gate/grype@1.0.1
-- toolchain-gate/pre-commit@1.1.3
+- toolchain-gate/pre-commit@1.1.4
 ---
 
 # Repo — the four gates
@@ -22,9 +22,13 @@ rather than four unrelated tools.
 one. `.config/dprint.json`, `.config/gitleaks.toml`, `.config/grype.yaml`,
 `.config/pre-commit-config.yaml` and `.config/git-conventional-commits.yaml`
 land with the skills, through the `config/` tier of stackgen's output
-charter, and each gate also drops the hook fragment that
-wires it — `.config/pre-commit.d/<gate>.yaml` — for `/vwf:init` to merge.
-The earlier line stopped at naming the file as a prerequisite, which left
+charter. **No gate ships a hook fragment**: pre-commit is the runner, and
+the other three are reached through the tool-neutral hooks its own
+`pre-commit-config.yaml` carries — each calling a `code:*` task, never a
+binary — so the `.config/pre-commit.d/` merge `/vwf:init` runs has no input
+from any of the three unconditional bundles — its fragments come from packs
+outside them, and the uv pack's is the one in the tree today. The earlier
+line stopped at naming the file as a prerequisite, which left
 every repo hand-writing the config the skill assumes and no two repos
 agreeing on it.
 

@@ -9,7 +9,7 @@ lockfile — runs this landing **plus** the read-before-land passes below, so a
 tree that already holds something is read before a pack lands beside it.
 Nothing here reads or moves a source file in either mode.
 
-The seven questions in SKILL.md are already answered. Present the whole plan
+The nine questions in SKILL.md are already answered. Present the whole plan
 below, get **one** consent, then apply it in this order. The order is the
 contract: a step that runs early because it happens to be cheap produces a
 tree the next step has to undo.
@@ -93,6 +93,72 @@ deferral, not a halt**: record what was skipped and name its unlock — run
 of the pipeline. This is the same rule `/vwf:setup`'s tooling step follows,
 and it matters most here, where a repo that has picked no stack is the normal
 case rather than a fault.
+
+### The answers each fetch carries
+
+**Every invocation above — and §3's — passes the materializer four answers**
+— an `answers:` map in the invocation payload, beside `repo:`, keyed
+`forge`, `editor`, `secrets` and `update_bot`, one per axis its
+**conditional evaluation step** reads, and that step is what decides whether
+a file a pack marks `when:` lands in this repo. `init` evaluates nothing
+itself; it passes values, spelled exactly as the axis takes them, and takes
+back what the dry-run lists as landed and as skipped. The four, for the repo
+this pass is running in:
+
+| Axis         | Value passed                                     | From                             |
+| ------------ | ------------------------------------------------ | -------------------------------- |
+| `forge`      | `github` or `gitlab`, from the `origin` host     | §11(f)'s precondition, step 1    |
+| `editor`     | `vscode` on a **yes**; `none` on a **no**        | question 7, once for the product |
+| `secrets`    | the provider slug, as the menu spelled it        | question 4, once for the product |
+| `update_bot` | `renovate` or `dependabot`; `none` on **none**   | question 8, that repo's row      |
+
+The forge read is §11(f)'s own — `github.com` or a host `gh auth status`
+lists is `github`, `gitlab.com` or a host `glab auth status` lists is
+`gitlab` — run **once per repo**, at question time, and reused by the forge
+pass; any other host, and a repo with no `origin`, passes **`none`**. A
+**none — decide later** at question 4 passes `none` on `secrets` too.
+
+**Every key is always present, and `none` is the spelling of no answer.**
+The materializer's own rule is that an axis the map leaves out reads as
+**true** — every path conditioned on it lands — so an omitted key is a
+silent yes, never a no; `init` therefore omits nothing and writes `none`
+wherever the answer was none or nothing could be read. On `forge`, `editor`
+and `secrets` that is `init`'s **no-match value** — the vocabulary names no
+`none` on those axes, so a condition against it is false and the file is
+skipped: a repo with no remote yet gets no forge-specific files, and gets
+them on the reshape that follows the remote, which the plan says on the
+skipped row. On `update_bot` it is **one of the three answers** a pack may
+name — `when: update_bot: none` is legal — so a file conditioned on it lands
+exactly when the row picked no bot. A pack that marks nothing `when:` is
+untouched by all four and lands whole.
+
+**The two questions' mechanics**, where SKILL.md states the rule and this
+file the reads behind it:
+
+- **Question 7's default** is read once, over every resolved repo: **yes**
+  where any of them carries a `.vscode/` directory — the directory the
+  fragment convention's two output files sit in — or where the `code`
+  binary answers `command -v`; **no** otherwise. The question names which
+  of the two decided it, or that neither did.
+- **Question 8's seed** is read per repo, from pass 1's root survey — the
+  same evidence the [tool-config table](tool-configs.md)'s two rows carry:
+  a file under any spelling the `renovate` row lists preselects `renovate`;
+  a `.github/dependabot.yml` preselects `dependabot`; a repo carrying
+  neither preselects `renovate`, the service whose policy the hygiene pack
+  ships. A repo carrying both is preselected to `renovate` and the row says
+  it found both, since the survey's own **keep both** rule already reports
+  the second policy and a preselection cannot pick for the user. In `blank`
+  mode there is no survey and the seed is `renovate`.
+
+**The skipped rows.** Each repo's section of the plan gains one heading,
+**Skipped**, under which every path the dry-run reports as skipped by a
+condition is listed — one line per path, naming the pack and the axis whose
+value decided it, `<path> — <pack>, <axis>: <value or none>`. A skipped
+path is not a conflict, not a keep and not a deferral: nothing is offered,
+nothing is recorded under `enforcement`, and nothing waits on a later run
+unless the axis value itself changes — a remote added, a different answer
+given — in which case the next reshape lands it as an ordinary write. The
+report counts skipped paths nowhere; the plan is where they are read.
 
 **Every conflict the dry-run lists is a row, in every mode.** The
 materializer's dry-run names each target path that already exists and that no
@@ -188,6 +254,16 @@ gets the node section on its **first** run, not after some later pin. A
 `blank` repo's read produced nothing, the step appends nothing, and that is
 correct: the baseline sections cover what every repo needs, and a section for
 a language nobody has is a guess.
+
+**One component in the read is not a language**: the secrets provider slug
+question 4 picked, passed through the read as it is — a `blank` repo's read
+carries it too, since it is an answer and not a reading of the tree — so the
+provider row the hygiene pack's table keeps beside the language rows resolves
+on the same terms. Its section is the pattern the table's cell names, under a
+banner named for the slug, and it is what keeps the pack's base ignore file
+free of any provider's machine-local file: the line lands only in a repo
+whose provider has one. A **none — decide later** answer carries no
+component and appends no provider section.
 
 ### The two runtime positions
 
