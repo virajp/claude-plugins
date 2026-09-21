@@ -626,7 +626,15 @@ and the protection on `develop` and `main` are set by `/vwf:init`'s forge pass
 on GitHub and GitLab, and keeps the **by-hand** form of both for any other
 forge. And the stack-specific ignore sections are **appended per repo** by
 `/vwf:init`, one section per technology, never frozen into the pack — a pack
-that hard-codes them ages the moment a language renames its build directory.
+that hard-codes them ages the moment a language renames its build directory. A
+repo that already has a `.gitignore` keeps it whole: `/vwf:init` merges
+**section by section**, appending each banner section of the base and of the
+stack whose patterns are not already present, patterns compared normalised (a
+leading or trailing `/` stripped, a `**/` prefix ignored) so one the file
+carries under another spelling is never doubled. `renovate.json` is the one
+hygiene file that **yields**: a policy the repo already carries under
+`.github/renovate.json`, `.renovaterc` or `renovate.json` wins, and the pack's
+is not landed.
 
 **`mise`** is the toolchain manager, and the rest of this section is its
 subject: how the toolchain is pinned, where env values live, and the task
@@ -1130,7 +1138,12 @@ before it lands:
   verdict.
 - **Drift is a feature with a viewport.** Your repo's copies may diverge from an
   upgraded pack by design; `/stackgen:stackgen-sync` is where the divergence
-  becomes a diff you decide about.
+  becomes a diff you decide about. The lockfile's per-file `hash:` has three
+  writers, and a differing hash is drift only when none of them ran: the
+  materializer at landing, `/vwf:init`'s replace-or-keep offer on either answer,
+  and `/vwf:init` again after every fill, `.gitignore` section append,
+  hook-fragment merge or editor block it writes — so a file it filled or you
+  chose to keep reads as current, not as drift.
 - **Repo config is a fenced target, not a free one.** A pack writes only the
   config files its own component owns — its gate's config included, since
   2026-09-05, and its editor *fragment* since 2026-09-06. The language manifest
