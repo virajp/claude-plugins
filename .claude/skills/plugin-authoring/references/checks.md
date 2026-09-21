@@ -145,13 +145,17 @@ much smaller than the one it replaced: whole families of assertion became
       glob that matches at least one file** under its own `config/` tier, and a
       `when:` map of **exactly one known axis** — `forge` (`github`, `gitlab`),
       `editor` (`vscode`), `secrets` (any provider slug), `update_bot`
-      (`renovate`, `dependabot`, `none`) — with a value that axis takes. The
-      materializer evaluates the key against the caller's answers and skips what
-      does not hold, reading only what it recognises: an axis or value outside
-      the vocabulary is a condition that never holds, so the file is skipped in
-      every repo and nothing says why; a path matching nothing is a condition
-      guarding no file, which is a rename that forgot the key. The finding names
-      the pack, the entry's index and its path.
+      (`renovate`, `dependabot`, `none`) — with a value that axis takes, and a
+      path that is relative and carries no `..` segment. The materializer
+      evaluates the key against the caller's answers, and an axis the caller did
+      not answer reads as true — the omitted key lands the file. So an axis
+      outside the vocabulary is one no caller ever answers: its condition can
+      never skip anything, and the file lands everywhere, silently. A value the
+      axis never takes is the mirror case — no answer ever satisfies it, so the
+      file lands nowhere; a path matching nothing is a condition guarding no
+      file, which is a rename that forgot the key; and an absolute path or a
+      climb is rule 13's fault stated on a glob — it reaches out of what the
+      pack lands. The finding names the pack, the entry's index and its path.
 
     The walk is its own rather than the plugin file reader's, because every one
     of these paths runs through a dot segment the reader's glob does not descend
@@ -238,19 +242,22 @@ much smaller than the one it replaced: whole families of assertion became
     reads is no finding, and a tree the scanner skips that no formatter excludes
     is one, naming `gitleaks.toml` and the entry: an allowlist entry with no
     generated tree behind it is a scanner quietly not scanning. Each entry is
-    **normalised** before the compare — a regex loses its `^` and `$` anchors,
-    its `\.` escapes and its `.*` (a glob's `*`); every entry then loses a
-    leading `/` or `**/` and a trailing `/`, `/*` or `/**`, the spellings of
-    "this directory, wherever it sits" that the four tools take — so `**/dist/`,
-    `**/dist/**`, `dist/*` and `^dist/` are one entry, `dist`. The formatters'
-    finding names the entry, the files that carry it and the files that do not.
-    A list absent from the tree is left out of the comparison rather than read
-    as empty, so a fixture holding one of the four files is not held to the
-    other three; a file present but carrying no list at all is its own finding.
-    Rule 15 reads those four paths and no others — a fifth list is a fifth entry
-    in `EXCLUSION_LISTS`, not a wider walk — and its two TOML readers are
-    deliberately narrow: `scripts/` carries no TOML parser, and a bracketed list
-    of string literals is all either file holds.
+    **normalised** before the compare — a regex loses its anchors (`^`, `$`, and
+    the `(^|/)` or `(?:^|/)` that means "at the root or under any directory", a
+    glob's `**/`), its `\.` escapes and its `[^/]*` or `.*` (a glob's `*`);
+    every entry then loses a leading `/` or `**/` and a trailing `/`, `/*` or
+    `/**`, the spellings of "this directory, wherever it sits" that the four
+    tools take — so `**/dist/`, `**/dist/**`, `dist/*`, `^dist/` and
+    `(^|/)dist/` are one entry, `dist`. The formatters' finding names the entry,
+    the files that carry it and the files that do not. A list absent from the
+    tree is left out of the comparison rather than read as empty, so a fixture
+    holding one of the four files is not held to the other three; a file present
+    but carrying no list at all, or one that cannot be parsed, is its own
+    finding naming the file — nothing else parses `dprint.json`, `taplo.toml` or
+    `gitleaks.toml`. Rule 15 reads those four paths and no others — a fifth list
+    is a fifth entry in `EXCLUSION_LISTS`, not a wider walk — and its two TOML
+    readers are deliberately narrow: `scripts/` carries no TOML parser, and a
+    bracketed list of string literals is all either file holds.
 
 ### The plugin-root trap (rules 6 and 13)
 

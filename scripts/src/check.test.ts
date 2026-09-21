@@ -618,6 +618,21 @@ describe("the pack config tier", () => {
     ]);
   });
 
+  it("flags a conditional path that climbs out of the config tier", () => {
+    // The glob is matched inside the pack's own tier; a `..` segment or an
+    // absolute path reaches files the pack does not land.
+    const root = tree(conditional(
+      "  - path: ../../../renovate.json\n    when: { forge: github }\n"
+        + "  - path: /etc/renovate.json\n    when: { forge: github }\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(
+        "(../../../renovate.json) climbs out of what the pack lands",
+      ),
+      expect.stringContaining("(/etc/renovate.json) climbs out of"),
+    ]);
+  });
+
   it("flags a conditional entry naming two axes at once", () => {
     // Two answers is two entries on the same path, never one map.
     const root = tree(conditional(
@@ -1338,6 +1353,41 @@ describe("the exclusion sets", () => {
     expect(messages(check(root))[0]).toContain(
       `exclusion \`*.lock\` is in ${dprint}, ${taplo} and not in ${preCommit}`,
     );
+  });
+
+  it("reads the anywhere anchor as a glob's leading double star", () => {
+    // gitleaks and pre-commit anchor a directory as `(^|/)dir/` so it matches
+    // at the root and under any parent — the regex spelling of `**/dir/` — and
+    // a segment wildcard as `[^/]*`, the regex spelling of `*`.
+    const root = tree(lists({
+      dprint: JSON.stringify({
+        excludes: ["**/.turbo/", "**/dist/", "**/*.lock"],
+      }),
+      taplo: "exclude = [ \"**/.turbo/**\", \"**/dist/**\", \"**/*.lock\" ]\n",
+      gitleaks:
+        "[allowlist]\npaths = [ '''(^|/)\\.turbo/''', '''(?:^|/)dist/''' ]\n",
+      preCommit: "exclude: (^|/)(\\.turbo|dist)/|(^|/)[^/]*\\.lock$\n"
+        + "repos:\n  - repo: local\n",
+    }));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags an exclusion list that cannot be read", () => {
+    // Nothing else parses dprint.json, taplo.toml or gitleaks.toml.
+    const root = tree(lists({ dprint: "{ \"excludes\": [\n" }));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(`${dprint}: exclusion list could not be read`),
+    ]);
+  });
+
+  it("keeps a bracket inside a quoted TOML entry", () => {
+    const root = tree(lists({
+      gitleaks: "[allowlist]\npaths = [\n  '''node_modules/*''',\n"
+        + "  '''dist/*''',\n  '''.*\\.lock''',\n  '''\\.env\\.[a-z]*''',\n]\n",
+    }));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("allowlists `.env.[a-z]*`"),
+    ]);
   });
 
   it("flags a dprint config that lost its excludes list", () => {

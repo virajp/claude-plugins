@@ -414,8 +414,8 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  *   no pack owns and a key outside the three is dropped without a word;
  * - every **`conditional:` entry** in the pack's `pack.yaml` names a path or
  *   glob that matches a file under its `config/` tier, and a `when:` of
- *   exactly one known axis with a value that axis takes — the materializer
- *   skips a file whose condition never holds, and reports nothing.
+ *   exactly one known axis with a value that axis takes — an axis no caller
+ *   answers is never evaluated, so the file lands everywhere, silently.
  *
  * The walk is its own rather than `plugin.files`: most of these paths run
  * through `.config/`, and the reader's glob does not descend into a dot
@@ -542,13 +542,16 @@ const PACK_CONDITION_AXES: ReadonlyMap<string, ReadonlySet<string> | null> =
 /**
  * What a pack's `conditional:` list is held to.
  *
- * The materializer evaluates the key against the caller's answers and skips
- * what does not hold — and it reads only what it recognises. So an axis outside
- * the vocabulary, or a value the axis never takes, is a condition that never
- * holds: the file is skipped in every repo and nothing reports why. A path or
- * glob that matches nothing under the pack's own `config/` tier is the mirror
- * case — a condition guarding a file that does not exist, which is a rename
- * that forgot the key.
+ * The materializer evaluates the key against the caller's answers, and an
+ * axis the caller did not answer reads as true — the omitted key lands the
+ * file. So an axis outside the vocabulary is one no caller ever answers: its
+ * condition can never skip anything, and the file lands everywhere, silently.
+ * A value the axis never takes is the mirror case — a condition no answer ever
+ * satisfies, so the file lands nowhere. A path or glob that matches nothing
+ * under the pack's own `config/` tier is a condition guarding a file that does
+ * not exist, which is a rename that forgot the key; and the path is matched
+ * inside that tier only — an absolute path or a `..` segment reaches out of
+ * what the pack lands, which is rule 13's fault stated on a glob.
  */
 function conditionalFaults(source: string, config: string): string[] {
   let document: unknown;
@@ -576,6 +579,13 @@ function conditionalFaults(source: string, config: string): string[] {
       return;
     }
     const at = `${label} (${entry.path})`;
+    if (isAbsolute(entry.path) || entry.path.split("/").includes("..")) {
+      faults.push(
+        `${at} climbs out of what the pack lands — a conditional path is `
+          + `relative to the config/ tier and stays inside it`,
+      );
+      return;
+    }
     const matches = existsSync(config)
       ? globSync(entry.path, { cwd: config }).length
       : 0;
@@ -1540,9 +1550,13 @@ const EXCLUSION_LISTS: readonly {
  * ones.
  */
 function tomlStringList(source: string, key: string): string[] | null {
-  const match = new RegExp(`^${key}\\s*=\\s*\\[([^\\]]*)\\]`, "ms").exec(
-    source,
-  );
+  // The array body is every literal up to the first `]` outside a literal, so
+  // a `]` inside a quoted entry (a regex character class) does not end it.
+  const match = new RegExp(
+    `^${key}\\s*=\\s*\\[((?:'''.*?'''|'[^']*'|"[^"]*"|[^\\]])*)\\]`,
+    "ms",
+  )
+    .exec(source);
   if (match === null) {
     return null;
   }
@@ -1555,14 +1569,18 @@ function tomlStringList(source: string, key: string): string[] | null {
  * The alternatives of pre-commit's global `exclude` regex, as entries.
  *
  * `^(a/|b/)` and `^a/|^b/` both read as two entries; a `(?x)` verbose pattern
- * has its whitespace and comments removed first. A prefix or suffix outside a
- * top-level group applies to every alternative inside it.
+ * has its whitespace and comments removed first, and the `(^|/)` anchor —
+ * "at the root or under any directory", a glob's two stars — reads as `^` before
+ * the grouping is looked at, so it never counts as a group of its own. A
+ * prefix or suffix outside a top-level group applies to every alternative
+ * inside it.
  */
 function regexAlternatives(pattern: string): string[] {
   let source = pattern;
   if (source.startsWith("(?x)")) {
     source = source.slice(4).replace(/#[^\n]*/g, "").replace(/\s+/g, "");
   }
+  source = source.replace(REGEX_ANYWHERE_ANCHOR, "^");
   const parts = splitTopLevel(source);
   if (parts.length > 1) {
     return parts.flatMap(regexAlternatives);
@@ -1574,6 +1592,9 @@ function regexAlternatives(pattern: string): string[] {
   const [, prefix = "", inner = "", suffix = ""] = group;
   return splitTopLevel(inner).map(alt => `${prefix}${alt}${suffix}`);
 }
+
+/** A regex's `(^|/)` or `(?:^|/)` — the anchor a glob spells with two stars. */
+const REGEX_ANYWHERE_ANCHOR = /\((?:\?:)?\^\|\/\)/g;
 
 /** Split a regex on `|` at nesting depth zero. */
 function splitTopLevel(source: string): string[] {
@@ -1607,7 +1628,8 @@ function splitTopLevel(source: string): string[] {
 /**
  * One entry in the shape every syntax reduces to.
  *
- * A regex loses its anchors, its `\.` escapes and its `.*` (a glob's `*`); every
+ * A regex loses its anchors — `^`, `$`, and the `(^|/)` that spells "anywhere"
+ * — its `\.` escapes and its `[^/]*` or `.*` (a glob's `*`); every
  * entry then loses a leading slash or `**` segment and a trailing slash, with
  * or without the one or two stars after it — the spellings of "this directory,
  * wherever it sits" that the four tools take. What survives is the name the
@@ -1617,9 +1639,10 @@ function normalizeExclusion(entry: string, syntax: "glob" | "regex"): string {
   let value = entry.trim();
   if (syntax === "regex") {
     value = value
+      .replace(REGEX_ANYWHERE_ANCHOR, "^")
       .replace(/^\^/, "")
       .replace(/\$$/, "")
-      .replace(/\.\*/g, "*")
+      .replace(/\[\^\/\]\*|\.\*/g, "*")
       .replace(/\\([./])/g, "$1");
   }
   value = value.replace(/^\/+/, "");
@@ -1668,8 +1691,14 @@ function checkExclusionSets(plugins: readonly Plugin[]): Finding[] {
       try {
         entries = list.entries(readText(absolute));
       }
-      catch {
-        continue; // a parse failure is rule 11's finding where it has one
+      catch (error) {
+        findings.push({
+          scope: plugin.dir,
+          message: `${list.path}: exclusion list could not be read — ${
+            firstLine(error)
+          }`,
+        });
+        continue;
       }
       if (entries === null) {
         findings.push({
