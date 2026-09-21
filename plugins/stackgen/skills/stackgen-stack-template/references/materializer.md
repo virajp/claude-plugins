@@ -15,6 +15,14 @@ to a repo, and every write it makes is consent-gated and committed once.
   invocation's `repo: <path>` line names, a path relative to the current
   repo's root. Every write below, and the lockfile, resolve under that
   root: read "the repo" throughout as that repo.
+- **The answers** — an optional `answers:` map passed into the invocation
+  beside the `repo:` line, in the same payload style: at most one value
+  per axis of the `conditional:` vocabulary
+  (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) — `forge`, `editor`,
+  `secrets`, `update_bot`. `/vwf:init` is the caller that holds all four
+  (the origin host, its editor and update-bot questions, the provider
+  picked at its secrets question) and passes them per repo; a caller that
+  passes none, or leaves an axis out, is read as below.
 
 ## Steps
 
@@ -111,7 +119,8 @@ to a repo, and every write it makes is consent-gated and committed once.
        `${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`. Nothing here reads
        or rewrites either editor file.
    - The lockfile update — every path above, with its component ref,
-     source and content hash, plus the **mode** for a `config/` file. The
+     source and content hash, plus the **mode** for a `config/` file, and
+     the `skipped:` list the evaluation below produces. The
      per-component record is what lets sync act on one component alone,
      and per file it is what makes `config/` precedence auditable: it
      names which component supplied the version that actually landed.
@@ -170,6 +179,39 @@ to a repo, and every write it makes is consent-gated and committed once.
    provides the server is the **generated local plugin**, a tier-3 target
    outside the repo, handled at its own consent line in step 3b.
 
+   **Conditional paths are evaluated here, after the set is assembled and
+   before the collision check.** A pack may declare, in its `pack.yaml`, a
+   `conditional:` list — a landed path or glob and a `when:` of one axis
+   to one value, from the fixed vocabulary `forge`, `editor`, `secrets`,
+   `update_bot` (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). For each
+   entry, match its path or glob against the component's `config/` paths
+   in the set, as they land, and evaluate `when:` against the `answers:`
+   the caller passed:
+
+   - **False** — the answer for that axis is present and differs — drops
+     every matched path from the landing set and writes it to the
+     lockfile's `skipped:` list as `{ path, pack, when }`
+     (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). A dropped path is
+     never a create and never a conflict: a file already sitting there is
+     the repo's own, unread and unlisted.
+   - **True** leaves the path in the set, an ordinary member from here on
+     — so a path both conditional and pre-existing is a conflict in step
+     2 only when its condition is true.
+   - **Unanswered** — the caller passed no `answers:`, or none for that
+     axis — reads as true: the path lands, exactly as every path did
+     before the key existed. A skip is an act of a known answer, never of
+     a missing one, and this is what keeps a caller that passes nothing
+     landing what it always landed.
+
+   A path named by more than one entry stays only when every condition
+   is true. The list is rewritten whole on every run from
+   that run's answers: a path skipped last time whose condition now holds
+   leaves `skipped:` and lands as a create; a path landed earlier whose
+   condition now reads false is **not removed** — it is listed in the plan
+   under the skips heading as landed earlier, its `entries:` record stays,
+   and removing it is the user's, through sync or removal, never a side
+   effect of an answer changing.
+
 2. **Collision check, against the lockfile.** Any target path that exists
    but is **not** in the target repo's own
    `.claude/stackgen/lock.yaml` — never a sibling repo's — is that
@@ -194,6 +236,14 @@ to a repo, and every write it makes is consent-gated and committed once.
    caller is told the slug is pinned but not materialized. Reporting the
    decline is the caller's, and the repo's unmaterialized state is what
    `/vwf:doctor` reports until a later run lands it.
+
+   **Skips are listed under their own heading**, never folded into the
+   creates or the conflicts: every path the evaluation in step 1 dropped,
+   with the pack and the `when:` it failed against — and, marked as such,
+   any path landed on an earlier run whose condition now reads false. The
+   heading is present even when empty, so a user reading a plan with no
+   issue forms in it sees *why* rather than a shorter list. Skips are not
+   deselectable — there is nothing to decline.
 
    **The reputation table is shown whole.** The generator vetted every
    concrete third-party name the component emits through

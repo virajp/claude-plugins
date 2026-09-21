@@ -178,6 +178,9 @@ user_mcp_servers: {} # user-scoped — the generated local plugin's mcpServers, 
 lsp_servers: {} # <name> -> the verbatim lspServers entry; extensionToLanguage mandatory — the generated local plugin's, tier 3
 harness:
   <capability>: { task: <name>, mechanism: <one line> } # what this component satisfies — or n/a
+conditional: # optional — config/ paths that land only when an answer holds; see below
+  - path: <a landed path or glob, repo-root relative>
+    when: { <axis>: <value> } # one axis, one value
 ```
 
 **Servers are three sibling keys, never one key with a scope field.**
@@ -189,6 +192,61 @@ twice, and a name appearing under both `mcp_servers:` and
 `user_mcp_servers:` halts the run. This changes no artifact: the landed set
 is still closed to skills, agents, hooks and rules, and these are payload
 the materializer writes elsewhere.
+
+### `conditional:` — files that land only when an answer holds
+
+A pack may declare that some of its `config/` files make sense only under
+an answer the caller already holds — the forge the repo pushes to, the
+editor in use, the secrets provider picked, the update bot the repo runs.
+`conditional:` is an optional list; each entry names a **landed path or
+glob** (repo-root relative, spelled as the file lands — so `renovate.json`,
+not `config/renovate.json`) and a `when:` map of **exactly one axis to one
+value**, drawn from a fixed vocabulary:
+
+| Axis         | Values                             | Answered by                                |
+| ------------ | ---------------------------------- | ------------------------------------------ |
+| `forge`      | `github`, `gitlab`                 | the origin host                            |
+| `editor`     | `vscode`                           | the editor question, once per product      |
+| `secrets`    | a capability-provider slug         | the secrets-provider question              |
+| `update_bot` | `renovate`, `dependabot`, `none`   | the update-bot question, per repo          |
+
+```yaml
+conditional:
+  - path: .github/ISSUE_TEMPLATE/*
+    when: { forge: github }
+  - path: renovate.json
+    when: { update_bot: renovate }
+  - path: .config/vscode.d/*.jsonc
+    when: { editor: vscode }
+```
+
+Those three are the hygiene pack's: the issue forms are GitHub's format
+and land nowhere else; the Renovate policy only where Renovate is the bot;
+the editor fragment only where the editor is in use — and the third
+applies to **every** pack that ships a `vscode.d/` fragment, each stating
+it in its own `pack.yaml`. The `secrets` axis works the same way — a file
+that only makes sense beside one provider, `when: { secrets: fnox }` — but
+no shipped pack carries such a file today: the provider's ignore line is an
+ignore-section row keyed on the provider slug, not a conditional file.
+
+Rules:
+
+- **A path not named under `conditional:` is unconditional.** The key
+  narrows; absence is the default every existing pack already has.
+- **A glob may name a whole set** — `.config/vscode.d/*.jsonc` is one
+  entry, not one per fragment. A glob is matched against the landed paths,
+  after the `p/_project/` rename, and every `path` or glob must match at
+  least one file in the pack's own `config/` tree.
+- **One axis per entry, one value per axis.** A file that depends on two
+  answers is two entries on the same path, both of which must hold. A
+  value outside the vocabulary, or an axis not in the table, is a pack
+  authoring error, and `p:plugins:check` rule 11 refuses the tree naming
+  the pack and the entry.
+- **The materializer evaluates, records and skips; nothing else reads the
+  key.** A false entry's paths leave the landing set and are written to the
+  lockfile's `skipped:` list with their condition, so `/vwf:doctor` never
+  reports one as missing and a later run whose answer changed re-evaluates
+  it. The evaluation is the materializer's step, in its own reference.
 
 The bundle-level lists the previous format carried per pack — `frameworks`,
 `dependencies`, `optional_languages`, `capabilities` — are **derived at
@@ -230,7 +288,10 @@ bundle declares one `kind` and these are three: `mise` (`toolchain-manager`),
 `repo-gates` (`repo-gate`) and `repo-hygiene` (`repo-hygiene`). Nothing about
 them is recorded in `.config/vwf.yaml` — nothing was chosen — only in
 `lock.yaml`, which is also what tells a caller whether the repo is shaped at
-all: all three slugs present, or not shaped.
+all: all three slugs present, or not shaped. `unconditional:` is the
+**bundle's** word — whether the composition is picked or fixed — and
+`conditional:` the **file's**, inside a pack: an unconditional bundle may
+still carry a pack whose issue forms land only on GitHub.
 
 **`default: true` marks the menu entry vwf preselects on that axis.** It is
 optional and boolean, and it changes nothing about what the bundle is — only

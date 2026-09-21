@@ -369,6 +369,10 @@ entries:
     source: pack/toolchain-manager/mise@0.1.0
     hash: <content hash — at landing, re-recorded by the composing skill after its fills>
     mode: "755" # preserved for .config/mise/tasks/** — mise runs the file itself
+skipped: # config/ paths a pack declared `conditional:` whose condition was false at the last run
+  - path: renovate.json
+    pack: repo-hygiene/repo-hygiene # <type>/<slug> — the pack whose conditional: entry matched
+    when: { update_bot: renovate } # the condition, as the pack states it — re-evaluated by a later run
 settings_keys: [] # exact settings.json keys stackgen added, with consent — a hooks entry is spelled `hooks.<Event>[<matcher>]`
 mcp_servers: [] # exact .mcp.json server keys stackgen added, with consent
 local_plugin: # the generated local plugin — absent when none was written
@@ -401,6 +405,18 @@ Rules the lockfile enforces:
 - **Anything not in the lockfile is not stackgen's** — never diffed, never
   overwritten, never removed. A landing set that collides with an unlisted
   path is a conflict for the user, not a write.
+- **A `skipped:` path is neither a create nor a conflict.** It is a
+  `config/` path a pack declared `conditional:` (the pack format) whose
+  condition read false against the answers the caller passed, so the
+  materializer left it out of the landing set on purpose and wrote it here
+  — `path`, the `pack` that declared it, and the `when` it failed — instead
+  of under `entries:`. It carries no hash, because nothing landed. Every
+  reader treats it as **intentionally absent**: `/vwf:doctor` never reports
+  it as missing, sync never diffs it, removal never looks for it, and a
+  file sitting at that path is the repo's own. The list is rewritten on
+  every run, from the answers of that run — a path whose condition now
+  holds leaves it and lands as an ordinary entry, subject to the same
+  collision check as any other create.
 - **Removal removes exactly the listed entries**, `settings_keys` and
   `mcp_servers`, nothing else — the same receipt invariant this repo's
   installer CLI lives by.
