@@ -189,11 +189,16 @@ alone. Read the convention for every literal it uses.
 
 ### Inputs
 
-Every `.config/vscode.d/*.jsonc` **that landed** in this repo — present
-after the packs have landed, and listed as landed by the materializer's
-dry-run — taken in the **composition order the materializer documents** — the
-same order the packs themselves landed in, so a later pack's opinion wins
-where two disagree, exactly as it does for a shared file.
+Every `.config/vscode.d/*.jsonc` **that landed** in this repo — present in
+the tree **and** carrying an `entries:` record in the lockfile, whichever run
+landed it — **minus** any path this run's dry-run reports as skipped, taken
+in the **composition order the materializer documents** — the same order the
+packs themselves landed in, a fragment an earlier run landed keeping its
+place in it, so a later pack's opinion wins where two disagree, exactly as
+it does for a shared file. The lockfile is the record, not this run's
+dry-run: a reshape fetches the three baselines and the provider alone, and
+a fragment a stack pin's materialize pass landed earlier is in no dry-run
+of this run yet is as much an input as any the run just landed.
 
 **A skipped fragment is not read.** Every editor fragment a pack ships is
 conditioned on the `editor` axis, and the materializer's conditional
