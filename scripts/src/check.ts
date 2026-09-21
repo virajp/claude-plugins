@@ -586,9 +586,13 @@ function conditionalFaults(source: string, config: string): string[] {
       );
       return;
     }
-    const matches = existsSync(config)
-      ? globSync(entry.path, { cwd: config }).length
-      : 0;
+    // Walked and matched by hand rather than `globSync`: neither it nor
+    // `path.matchesGlob` lets `**` enter a dot-directory, and every landed
+    // path here runs through `.config/`.
+    const matcher = landedGlob(entry.path);
+    const matches = [...filesUnder(config)]
+      .filter(absolute => matcher.test(relative(config, absolute)))
+      .length;
     if (matches === 0) {
       faults.push(`${at} matches no file under the pack's config/ tier`);
     }
@@ -618,6 +622,11 @@ function conditionalFaults(source: string, config: string): string[] {
           [...allowed].join(", ")
         }`,
       );
+    }
+    // `none` is the secrets question's no-provider answer, which init reads as
+    // "no match" — a file conditioned on it could never land.
+    else if (allowed === null && value === "none") {
+      faults.push(`${at} \`when.${axis}\` is "none", which names no provider`);
     }
   });
   return faults;
@@ -751,6 +760,27 @@ function editorFragmentFaults(source: string): string[] {
     faults.push("editor fragment's `extensions` is not a list of strings");
   }
   return faults;
+}
+
+/**
+ * A landed path or glob as a matcher over `config/`-relative paths. `**`
+ * matches any run of segments, dot-directories included; `*` and `?` stay
+ * inside one segment. Nothing else is a metacharacter.
+ */
+function landedGlob(pattern: string): RegExp {
+  const source = pattern
+    .split("/")
+    .map(segment =>
+      segment === "**"
+        ? "(?:[^/]+/)*"
+        : segment
+          .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+          .replace(/\*/g, "[^/]*")
+          .replace(/\?/g, "[^/]") + "/"
+    )
+    .join("")
+    .replace(/\/$/, "");
+  return new RegExp(`^${source}$`);
 }
 
 /** Every regular file under a directory, recursively; none when it is absent. */

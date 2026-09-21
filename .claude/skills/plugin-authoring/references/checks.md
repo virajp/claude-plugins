@@ -144,18 +144,21 @@ much smaller than the one it replaced: whole families of assertion became
     - every **`conditional:` entry** in the pack's `pack.yaml` names a **path or
       glob that matches at least one file** under its own `config/` tier, and a
       `when:` map of **exactly one known axis** — `forge` (`github`, `gitlab`),
-      `editor` (`vscode`), `secrets` (any provider slug), `update_bot`
-      (`renovate`, `dependabot`, `none`) — with a value that axis takes, and a
-      path that is relative and carries no `..` segment. The materializer
-      evaluates the key against the caller's answers, and an axis the caller did
-      not answer reads as true — the omitted key lands the file. So an axis
-      outside the vocabulary is one no caller ever answers: its condition can
-      never skip anything, and the file lands everywhere, silently. A value the
-      axis never takes is the mirror case — no answer ever satisfies it, so the
-      file lands nowhere; a path matching nothing is a condition guarding no
-      file, which is a rename that forgot the key; and an absolute path or a
-      climb is rule 13's fault stated on a glob — it reaches out of what the
-      pack lands. The finding names the pack, the entry's index and its path.
+      `editor` (`vscode`), `secrets` (any provider slug — never `none`, the
+      no-provider answer init reads as "no match"), `update_bot` (`renovate`,
+      `dependabot`, `none`) — with a value that axis takes, and a path that is
+      relative and carries no `..` segment. The materializer evaluates the key
+      against the caller's answers, and an axis the caller did not answer reads
+      as true — the omitted key lands the file. So an axis outside the
+      vocabulary is one no caller ever answers: its condition can never skip
+      anything, and the file lands everywhere, silently. A value the axis never
+      takes is the mirror case — no answer ever satisfies it, so the file lands
+      nowhere; a path matching nothing is a condition guarding no file, which is
+      a rename that forgot the key — the glob is matched by the checker's own
+      walk, so `**` enters dot-directories like `.config/`, which `globSync`
+      would not; and an absolute path or a climb is rule 13's fault stated on a
+      glob — it reaches out of what the pack lands. The finding names the pack,
+      the entry's index and its path.
 
     The walk is its own rather than the plugin file reader's, because every one
     of these paths runs through a dot segment the reader's glob does not descend

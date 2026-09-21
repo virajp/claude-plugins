@@ -583,6 +583,29 @@ describe("the pack config tier", () => {
     expect(messages(check(root))).toEqual([]);
   });
 
+  it("enters dot-directories when resolving a conditional glob", () => {
+    // Every landed path runs through `.config/`, and a `**` that stopped at a
+    // dot segment would refuse a fragment set that is there. (A leading `**`
+    // is quoted because bare it is a YAML alias.)
+    const root = tree(conditional(
+      "  - path: .config/vscode.d/*.jsonc\n    when: { editor: vscode }\n"
+        + "  - path: \"**/vscode.d/*.jsonc\"\n    when: { editor: vscode }\n"
+        + "  - path: \"**/*.jsonc\"\n    when: { editor: vscode }\n",
+    ));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a secrets condition on none, which names no provider", () => {
+    const root = tree(conditional(
+      "  - path: renovate.json\n    when: { secrets: none }\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(
+        "`when.secrets` is \"none\", which names no provider",
+      ),
+    ]);
+  });
+
   it("flags a conditional entry on an axis outside the vocabulary", () => {
     const root = tree(conditional(
       "  - path: renovate.json\n    when: { ci: github }\n",
