@@ -70,8 +70,9 @@ directory needs in the second, and nothing in either for a language the repo
 does not have. A setting for an absent runtime is a claim about the stack that
 is not true, and a hand-picked one is the edit that turns a pack-owned file
 into a diverged one; a marked position is what the content hash ignores, so
-the fill is never drift. `REPO_NAME`, `MERGE_MODEL`, `MEMBERS` and these two
-are the base's five, and the only marked positions in the config split.
+the fill is never drift. `REPO_NAME`, `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN`,
+`MEMBERS` and these two are the base's six, and the only marked positions in
+the config split.
 
 **Environment names are shared; values are split.** Development and production
 override the *same* keys rather than each inventing their own — the difference
@@ -140,11 +141,16 @@ CONTRIBUTING stub names the command instead. It is orthogonal to the merge tasks
 in any case — work flows feature → `develop` → `main` whatever the forge calls
 default.
 
-**How a branch lands is the repo's setting, not the lander's.** `MERGE_MODEL` in
-the base `[env]` reads `direct` — merge locally and push — or `pr`, which pushes
-the branch and opens a pull request through whichever forge CLI is present, and
-merges nothing locally. A repo-level value rather than a flag, because which one
-applies follows from the repo's review policy and not from who is landing.
+**How a branch lands is the repo's setting, not the lander's — and it is set
+per branch.** `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` in the base `[env]`
+each read `direct` — merge locally and push — or `pr`, which pushes the branch
+and opens a pull request through whichever forge CLI is present, and merges
+nothing locally; `code:merge:develop` reads the first, `code:merge:main` the
+second, and a file still carrying the single legacy `MERGE_MODEL` is read as
+both. Repo-level values rather than flags, because which one applies follows
+from the repo's review policy and not from who is landing; one per branch
+because `develop` and `main` carry different review policies more often than
+the same one.
 
 **One configuration per tool, and the task is where it lives.** Every gate hook
 calls `mise run code:<gate>` rather than the tool, and the three gate tasks take

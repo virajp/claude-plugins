@@ -287,25 +287,32 @@ and written into that task's two marked positions; the sixth each repo's
 **visibility**, `public` or `private`, defaulted from the forge, with the
 licence — public repos only — and the security contact — an advisories URL for a
 public repo, a free email or internal URL for a private one — asked under it as
-the seventh round), and closes with a consent-gated git pass (the first commit,
-the `develop`/`main` pair, the landing model it writes to `MERGE_MODEL`, the
-push, and — after the push, on one further consent for the product — the **forge
-pass**, which sets each pushed repo's default branch on the forge, protects
-`develop` and `main` there, and reaches the backlog skill's missing-project
-procedure for the base; those three are the only forge settings it touches,
-existing protection is left alone, and a forge it has no CLI for gets the
-by-hand list the hygiene pack's `CONTRIBUTING.md` keeps). The aggregator's
-member flags and the `setup-<slug>` aliases are named for the **member repos**,
-never for a project id. On a `shaped` repo it **adopts rather than flattens**: a
-root tool config a pack supersedes (`.pre-commit-config.yaml`, `.mise.toml`,
-`.gitleaks.toml`, … — the seven-row table in
-`plugins/vwf/skills/init/references/tool-configs.md`) is a plan row — move into
-`.config/` and offer, keep both, or delete on an explicit pick — a foreign hook
-manager (`core.hooksPath`, `.husky/`, lefthook) is a row defaulting to keep,
-`.gitignore` is merged section by section rather than offered, an unmapped
-helper function moves to a repo-owned `_scripts/local` sidecar, a task no pack
-ships — a file or an inline `[tasks.*]` table — is kept and listed, and a
-pack-owned file whose **content** diverged is offered as replace-or-keep —
+the seventh round), and closes with a consent-gated git pass (a read of where
+each repo stands — a member on no branch is a refused row naming the branch to
+check out; the landing model asked **one row per repo per branch**, `develop`
+and `main` each `direct` or `pr`, written to the two marked positions
+`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` — a file still carrying the single
+legacy `MERGE_MODEL` is read as both until the reshape rewrites it into the
+pair; the `develop`/`main` pair created beside a mainline of another name, the
+old branch left in place and reported; the `ops:` commit, on `develop` in every
+mode, never on `main`; the push, and — after the push, on one further consent
+for the product — the **forge pass**, which sets each pushed repo's default
+branch on the forge, protects `develop` and `main` there — a pull request
+required on whichever of the two has its landing model set to `pr` — and reaches
+the backlog skill's missing-project procedure for the base; those three are the
+only forge settings it touches, existing protection is left alone, and a forge
+it has no CLI for gets the by-hand list the hygiene pack's `CONTRIBUTING.md`
+keeps). The aggregator's member flags and the `setup-<slug>` aliases are named
+for the **member repos**, never for a project id. On a `shaped` repo it **adopts
+rather than flattens**: a root tool config a pack supersedes
+(`.pre-commit-config.yaml`, `.mise.toml`, `.gitleaks.toml`, … — the seven-row
+table in `plugins/vwf/skills/init/references/tool-configs.md`) is a plan row —
+move into `.config/` and offer, keep both, or delete on an explicit pick — a
+foreign hook manager (`core.hooksPath`, `.husky/`, lefthook) is a row defaulting
+to keep, `.gitignore` is merged section by section rather than offered, an
+unmapped helper function moves to a repo-owned `_scripts/local` sidecar, a task
+no pack ships — a file or an inline `[tasks.*]` table — is kept and listed, and
+a pack-owned file whose **content** diverged is offered as replace-or-keep —
 content being what survives two tests, the hash against the lock and then a
 splice of every marked position's current value into the pack's payload, so a
 file diverging only inside those positions is never offered and the owning pass
@@ -386,7 +393,11 @@ user-facing reference is `site/src/content/docs/installer/`, published at
 **`develop` takes the work; `main` is what users read** — Claude resolves the
 marketplace against the default branch, so `main` stays default and PRs target
 `develop`. `main` is merge-only, enforced by pre-commit locally and a ruleset
-remotely. No release task commits: all three tag what has already landed.
+remotely. The landing model the mise pack ships is **per branch** —
+`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`, `direct` or `pr` — but this repo's
+own `.config/mise.toml` still carries the legacy single `MERGE_MODEL`, read as
+both, until its next `/vwf:setup reshape`. No release task commits: all three
+tag what has already landed.
 
 Every plugin is pinned to its own tag in the marketplace manifest, which is what
 decouples **merged** from **released**. Three tag families, all namespaced:

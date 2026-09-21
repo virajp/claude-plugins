@@ -494,13 +494,19 @@ what a user sees when that key is the only thing that moved, never that row plus
 an offer of the file it sits in.
 
 **A position no pass owns is spliced on exactly the same terms and produces no
-row at all** — `MERGE_MODEL`, and any position a pack marks later that no pass
-reads. It is a value the repo set, so there is nothing for this pass to offer
-and no survey row to show; the git pass still writes `MERGE_MODEL` wherever this
-run lands or replaces the environment-block file, per §11(a), exactly as before.
-That is what lets one `[env]` block carry `REPO_NAME` and `MEMBERS` beside
-`MERGE_MODEL` and still reconstruct equal — a folder rename on a repo running
-`pr` is §9's replace row and nothing else.
+row at all** — the two landing-model positions, `MERGE_MODEL_DEVELOP` and
+`MERGE_MODEL_MAIN`, and any position a pack marks later that no pass reads.
+Each is a value the repo set, so there is nothing for this pass to offer and no
+survey row to show; the git pass still writes both wherever this run lands or
+replaces the environment-block file, per §11(a), exactly as before. That is
+what lets one `[env]` block carry `REPO_NAME` and `MEMBERS` beside the pair and
+still reconstruct equal — a folder rename on a repo landing `main` by `pr` is
+§9's replace row and nothing else. A kept file that still carries the retired
+single `MERGE_MODEL` is spliced on the same terms too: its one value is read as
+both positions' value, and every reader takes it that way until this run's
+fill — a keep never covers a marked position's value, as pass 6 says — writes
+that one value into both positions, retires the single key, and reports the
+line. `/vwf:doctor` (f) is what reports the legacy key in the meantime.
 
 **A record whose `source:` is `generated` has no pack payload**, so there is
 nothing to splice into: the second test is **skipped**, and test 1's mismatch
@@ -757,14 +763,20 @@ not the same kind of wait:
   ships it with a working value and marks it in a comment. Under submodule
   linkage, and on a single-project repo, it is correct as shipped and produces
   no row.
-- **`MERGE_MODEL` is never a create, and never a row at all.** It is the second
-  kind too — the pack ships the local landing model as a real value under its
-  comment — so it is filled from the moment the file landed, and a survey pass
-  has nothing to say about it however it now reads. The git pass is what asks
-  the question and writes the answer, in every repo whose environment-block
+- **`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` are never a create, and never
+  a row at all.** They are the second kind too — the pack ships the landing
+  model of each branch as a real value under its comment — so both are filled
+  from the moment the file landed, and a survey pass has nothing to say about
+  either however it now reads. The git pass is what asks the question, one row
+  per branch, and writes the two answers, in every repo whose environment-block
   file this run lands or replaces (per [new repo](new-repo.md) §11(a)); a
   survey pass does not pre-empt it, and never reports the landing model a user
-  chose — or the shipped one they kept — as a hole.
+  chose — or the shipped one they kept — as a hole. A kept file carrying the
+  retired single `MERGE_MODEL` instead of the pair is not a hole here either:
+  the git pass fills both positions from that one value — a keep never
+  covers a position's value — retires the single key, and says so on the
+  repo's line; the pair is asked afresh only where the file is landed or
+  replaced.
 
 The plugin task's **two lists** are checked in the same pass, against the
 confirmed answer to SKILL.md's **question 5** — which is asked on an existing
@@ -1117,6 +1129,44 @@ repo of the set that resolved to mode `blank` or `source` takes the
   file a pack task rewrites later, under its own update flag, reads as drift
   until the next reshape offers it and a keep re-records it — by design.
 
+### A detached member is refused before anything commits
+
+Every repo this run resolved is read for where it stands **before the git pass
+begins** — as the plan is composed, beside the survey, so the answer is a plan
+row and not a surprise at commit time. The read is one command per repo,
+`git symbolic-ref -q HEAD`, run in that repo's own tree: it prints the branch
+the repo is on, and prints nothing — exit 1 — when HEAD is detached. A member
+brought in as a submodule is detached by construction unless something checked
+a branch out after the clone, which is exactly what
+[membership](../../../assets/membership.md)'s clone step now does; a member
+cloned by hand, or checked out at a tag or a commit to look at something, sits
+detached until someone moves it.
+
+**A detached member is a refused plan row.** A commit made on a detached HEAD
+belongs to no branch: nothing lists it, the merge tasks cannot reach it, and
+the next checkout in that repo leaves it behind — so the shaping commit would
+be lost the moment anyone touched the member. The row states the member, the
+reason in one line, and the command that fixes it — `git checkout develop`
+where the member has a `develop`, else its mainline (`main`, or whatever branch
+the member's `origin/HEAD` names, `master` or `trunk` included) — and refuses
+that member for this run: its section of the plan is shown as deferred, its
+apply is skipped whole, nothing is staged in it, and the base does **not**
+stage a gitlink for it, since its recorded commit did not move. The report
+repeats the row under that member's heading, the command included, and the
+next run — after the checkout — picks the member up as any other. It is the
+one refusal in this pipeline that a user clears with a single command, which
+is why it is refused rather than worked around: checking a branch out on
+someone's behalf is a state change in a repo they may be mid-way through. A
+member the clone step reports as **diverged** — its recorded commit on no
+remote branch — takes the same row, with the divergence as its reason and
+its own unlock: fetch, land the recorded commit on the member's `develop` by
+hand — a merge or a rebase, never a force — and re-run.
+
+The base is read on the same terms, though it is the repo the run was invoked
+in and almost always on a branch. A detached base halts the whole run at the
+plan with the same line — there is nothing a shaping run can commit into a
+repository that no branch is tracking.
+
 ### The gate configuration commits first, alone
 
 An existing repo may already have its hooks wired, and that changes the order
@@ -1145,6 +1195,14 @@ in its own turn, before its own shaping commit. Doing it once for the run would
 leave every other repo's configuration modified-but-unstaged at the moment that
 repo came to commit, which is the abort this subsection exists to avoid.
 
+**It lands on `develop`, like every commit this run makes — so the branch work
+comes first, then the checkout, and only then is anything staged.** Do this
+repo's branch work — the bullet below, the new-repo table's rows read against
+a repo that has commits — and check `develop` out, so the gate commit and the
+shaping commit after it sit on the branch work flows through. A repo that was
+on `main` when the run started is on `develop` from here on, and the report
+says so; a repo that was on `develop` already stays put.
+
 Where this run wrote, merged into or moved any of: the gate's configuration
 file, the commit-message gate's configuration, or anything under the fragment
 directory — stage **those paths only** and commit them first, on their own,
@@ -1161,10 +1219,13 @@ whose hooks read a file the next commit is still going to change.
 
 Then the rest, exactly as the new-repo pipeline's **git pass** describes it
 ([new repo](new-repo.md) §11), which already reads across the resolved repos:
-the landing-model question and the three-answer commit question asked **once**
-for the whole run, each repo staging what this run wrote in it, the fixed
-shaping message per repo, the commits ordered members then base with the base's
-changed gitlinks staged into its own, the branches per repo, the push, and the
+the landing-model question — one row per repo per branch, `develop` and
+`main`, each `direct` or `pr`, written to `MERGE_MODEL_DEVELOP` and
+`MERGE_MODEL_MAIN` per §11(a) — and the three-answer commit question asked
+**once** for the whole run, each repo staging what this run wrote in it, the
+fixed shaping message per repo, the commits ordered members then base with the
+base's changed gitlinks staged into its own — each made on `develop`, checked
+out above — the push, and the
 **forge pass** after the last push — §11(f), read there and not restated here:
 the same eligibility, the same precondition, the same one consent for the
 product. Its consent line on this pipeline says one more thing, because a repo
@@ -1181,9 +1242,32 @@ that a repo taking this pipeline already existed:
   configuration went first: with the hooks live, the commit above is what
   makes the tree committable, and the shaping commit then runs through hooks
   that read a settled configuration.
-- The branch table's first row cannot apply — this repo has commits. Create
-  `develop` from `main` where `develop` is missing, `main` from `develop`
-  where `main` is missing, and nothing where both exist.
+- The branches come **before** the commits, not after — this repo has
+  commits, so there is something to branch from already, and the commits have
+  to land on `develop`. A missing local `develop` or `main` is created from
+  its **remote-tracking branch** where one exists — `origin/develop`,
+  `origin/main` — never fabricated from the other local branch; only with no
+  such remote branch does §11(d)'s table apply, read with its first row set
+  aside: create `develop` from `main` where `develop` is missing, `main` from
+  `develop` where `main` is missing, and nothing where both exist. A repo
+  whose mainline is neither — `master`, `trunk`, or any other name, read from
+  `origin/HEAD` or from the branch the repo is on — gets `main` created from
+  that mainline and `develop` from `main`; the old branch is left exactly
+  where it is, and the report names it as the one to retire by hand, since
+  the merge tasks and the forge pass now name the pair alone. Every row ends
+  with `develop` checked out — the table's "checked out" column reads
+  `develop` for every row, never "as it was". Git refuses the checkout for
+  two reasons, and either way that repo takes §11(c)'s **leave it** outcome
+  on its own — nothing committed, its line in the report saying the tree is
+  written and waiting — rather than a commit on the wrong branch. One: a file
+  this run wrote differs between the branch the repo was on and `develop`;
+  the unlock is the checkout itself, once the user has set that file aside.
+  Two: `develop` is checked out in **another worktree** of the same repo —
+  the main checkout, or a linked one under the tree's own worktree directory,
+  which is what a repo shaped by these packs looks like — and git holds a
+  branch in one tree at a time; the report names the worktree that holds
+  `develop`, and the unlock is running the shaping from that tree. A run
+  already on `develop`, in whichever tree, needs no switch at all.
 - A branch this run just created is one the forge has never seen protected,
   so its `Forge` line is a plain set; the branch the repo already had is the
   one the idempotence check is most likely to report as left alone.

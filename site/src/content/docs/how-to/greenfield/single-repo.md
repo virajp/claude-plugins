@@ -93,18 +93,22 @@ one yes. Relay is one repo, so every one of those questions is a single row; on
 a product with member repos the same seven rounds simply carry a row per repo
 where the answer can differ.
 
-It closes with a git pass: it asks how work lands in this repo — `direct`, which
-merges locally and pushes, or `pr` — writes that answer to `MERGE_MODEL`, then
-stages what it wrote and asks once whether to commit, commit and push, or leave
-it, creating `develop` and `main` along the way. If you chose *commit and push*,
-the **forge pass** follows on one more consent: it shows what it will set on the
-forge — the default branch (`develop` preselected), protection on `develop` and
-`main` (no force-push, no deletion, and a pull request required under `pr`), and
-the backlog project it hands you the browser to create — and applies it through
-the forge CLI, leaving any protection already there untouched. Without the CLI,
-or on a forge it has none for, it prints the same list for you to apply by hand
-— the form the hygiene pack's `CONTRIBUTING.md` keeps — and carries on. Its
-report prints, and setup carries on with its own work.
+It closes with a git pass: it asks how work lands in this repo, **one row per
+branch** — `direct`, which merges locally and pushes, or `pr`, which pushes the
+branch and opens a pull request; `develop` preselected `direct` and `main`
+preselected `pr` — writes the two answers to `MERGE_MODEL_DEVELOP` and
+`MERGE_MODEL_MAIN`, then stages what it wrote and asks once whether to commit,
+commit and push, or leave it. The commit lands on `develop` — Relay is brand
+new, so `develop` is its first branch and `main` is created from that first
+commit. If you chose *commit and push*, the **forge pass** follows on one more
+consent: it shows what it will set on the forge — the default branch (`develop`
+preselected), protection on `develop` and `main` (no force-push, no deletion,
+and a pull request required on whichever of the two you set to `pr`), and the
+backlog project it hands you the browser to create — and applies it through the
+forge CLI, leaving any protection already there untouched. Without the CLI, or
+on a forge it has none for, it prints the same list for you to apply by hand —
+the form the hygiene pack's `CONTRIBUTING.md` keeps — and carries on. Its report
+prints, and setup carries on with its own work.
 
 **Then setup does its half.** A repo with no manifest, no source directories and
 no `docs/blueprint/` is *blank*, and setup treats it as such: it asks nothing

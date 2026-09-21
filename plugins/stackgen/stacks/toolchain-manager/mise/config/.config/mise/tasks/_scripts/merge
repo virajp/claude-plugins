@@ -18,17 +18,19 @@
 # `develop` as the same commit with no record that a merge happened, and the
 # merge commit is what makes "what shipped" a question git can answer.
 #
-# **`MERGE_MODEL` chooses HOW the source reaches the destination, never
-# WHETHER.** The branch model above holds under both values, and every predicate
-# below runs under both:
+# **The landing model chooses HOW the source reaches the destination, never
+# WHETHER.** It is set per destination branch — `MERGE_MODEL_DEVELOP` for
+# `develop`, `MERGE_MODEL_MAIN` for `main` — and the branch model above holds
+# under both values, every predicate below running under both:
 #
-#   direct  the default: merge locally and push the destination. A solo repo, or
-#           one whose review happens before the branch lands.
+#   direct  merge locally and push the destination. A solo repo, or one whose
+#           review happens before the branch lands.
 #   pr      push the branch and open a pull request against the destination.
 #           Nothing merges locally; the forge is what merges.
 #
-# It is a marked position in `.config/mise.toml`, so the choice is the repo's
-# and this file names no forge until it has to open a request.
+# Both are marked positions in `.config/mise.toml`, so the choice is the repo's
+# and this file names no forge until it has to open a request. An older file
+# carrying the single `MERGE_MODEL` key is read as both values, with a warning.
 
 set -euo pipefail
 # shellcheck source=/dev/null
@@ -91,7 +93,8 @@ precommit_safety_net() {
   print_ok
 }
 
-# The `pr` half of `MERGE_MODEL`: publish the branch and let the forge merge it.
+# The `pr` half of the landing model: publish the branch and let the forge
+# merge it.
 #
 # Nothing is checked out and no branch is merged, so the main-worktree hop the
 # direct path needs does not apply here — the one thing this changes locally is
@@ -143,11 +146,23 @@ merge_to_destination_branch() {
   CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
   local SOURCE_BRANCH="${2:-${CURRENT_BRANCH}}"
 
-  # `direct` is both the default and the behaviour every repo had before the
-  # setting existed, so an unset or unfilled `MERGE_MODEL` merges locally exactly
-  # as before. Anything that is not `pr` reads as `direct` rather than erroring:
-  # a typo in a config value should not stand between a branch and its merge.
-  local MERGE_MODE="${MERGE_MODEL:-direct}"
+  # The model is the DESTINATION's: `MERGE_MODEL_DEVELOP` when landing on
+  # `develop`, `MERGE_MODEL_MAIN` when landing on `main`. A repo shaped before
+  # the pair existed carries the single `MERGE_MODEL`, which stands in for
+  # whichever is unset — read with a warning, so the reshape that writes the
+  # pair is not forgotten. `direct` is the behaviour every repo had before any
+  # setting existed, so nothing set at all merges locally exactly as before.
+  # Anything that is not `pr` reads as `direct` rather than erroring: a typo in
+  # a config value should not stand between a branch and its merge.
+  local MERGE_MODE=""
+  case "${DESTINATION_BRANCH}" in
+    develop) MERGE_MODE="${MERGE_MODEL_DEVELOP:-}" ;;
+    main) MERGE_MODE="${MERGE_MODEL_MAIN:-}" ;;
+  esac
+  if [ -z "${MERGE_MODE}" ] && [ -n "${MERGE_MODEL:-}" ]; then
+    print_warn "MERGE_MODEL is the legacy single key — read for '${DESTINATION_BRANCH}'; the reshape writes MERGE_MODEL_DEVELOP and MERGE_MODEL_MAIN."
+    MERGE_MODE="${MERGE_MODEL}"
+  fi
   [ "${MERGE_MODE}" = "pr" ] || MERGE_MODE="direct"
 
   if [ "${SOURCE_BRANCH}" = "main" ]; then

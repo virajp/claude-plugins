@@ -12,6 +12,9 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # including the ones inside members, which `git worktree list` will not.
 
 # Ahead/behind against the repo's own default branch, read from origin/HEAD.
+# The fallback is the literal `main` on purpose: branch names are fixed by the
+# branch model, and a repo with no origin/HEAD is measured against its release
+# branch rather than guessed at.
 default_branch() {
   local ref
   ref="$(git -C "$1" symbolic-ref -q refs/remotes/origin/HEAD 2>/dev/null || true)"
