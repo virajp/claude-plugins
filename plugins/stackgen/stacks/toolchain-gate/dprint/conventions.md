@@ -73,29 +73,6 @@ globs `*.jsonc`, so the rename costs nothing.
 The fence in `output-tree.md` was opened for gate config files on 2026-09-05;
 `package.json` and CI workflows remain outside it.
 
-**The default formatter is bound per language, never editor-wide.** The
-fragment sets `editor.defaultFormatter` inside a `[<language>]` scope for
-exactly the languages `.config/dprint.json`'s plugins cover, and `[toml]` to
-even-better-toml. An editor-wide binding would ask dprint to format a file it
-has no plugin for, and would silently override the formatter another pack
-binds for its own language — Dart's, in the analyzer pack — depending on
-composition order alone. The scoped list and the plugin list move together:
-add a plugin, add its language ids.
-
-**The even-better-toml fallback keys equal `.config/taplo.toml`.** The
-extension reads its `formatter.*` settings before the config file resolves, so
-a value that differs there formats the first save differently from the gate.
-
-**That filename is the one exception to the fragment convention's
-`<pack>.jsonc` rule, and it is forced:** dprint discovers a `dprint.jsonc`
-anywhere below the root as a sub-directory config, so a fragment named
-`dprint.jsonc` is read as a second dprint config with no `plugins` and every
-bare invocation exits 13, "No formatting plugins found". The merge algorithm
-globs `*.jsonc`, so the rename costs nothing.
-
-The fence in `output-tree.md` was opened for gate config files on 2026-09-05;
-`package.json` and CI workflows remain outside it.
-
 ## `**/.claude/` is excluded — do not delete that line
 
 The repo's agent tooling tree is **machine-owned end to end**, and the formatter
