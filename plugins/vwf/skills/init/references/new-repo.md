@@ -439,9 +439,11 @@ path that did not come out of the resolution is not made one by being nearby.
 ships all three as marked positions in that same environment block, each with a
 comment saying what it takes. `MEMBERS` is written here, literally, by the same
 rule `REPO_NAME` follows. `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` are
-**not written by this section at all**: §11(a) asks for them inside the git
-pass and writes them there, in every repo whose environment-block file this run
-lands or replaces and nowhere else.
+**asked and written by §11(a)**, inside the git pass, in every repo whose
+environment-block file this run lands or replaces; this section writes them
+in exactly one case — a **kept** file still carrying the retired single
+`MERGE_MODEL` line, which its fill rewrites in place into the two positions,
+as the paragraph above says.
 
 The pair is how work lands, **one value per long-lived branch**: the merge
 task for `develop` reads the first, the one for `main` reads the second, and
@@ -717,9 +719,9 @@ happened to be standing on. A fresh repository is on `develop` already, from
 order [existing repo](existing-repo.md)'s git pass keeps too.
 
 Then, into this repo's own index: every path in **this repo's** written /
-moved / renamed lists, and nothing else. Not `git add -A`: a repo that already had
-untracked work of its own does not get it swept into a commit whose message says
-the shape was laid down.
+moved / renamed lists, and nothing else. Not `git add -A`: a repo that already
+had untracked work of its own does not get it swept into a commit whose
+message says the shape was laid down.
 
 **Then one addition, in the base only, and it is the one thing `init` stages
 that it did not write**: every member path whose recorded commit moved because
