@@ -426,7 +426,8 @@ state, not a repo edit, which is the whole reason for the second test.
 **A marked position is where a repo-specific value lives, so a value sitting
 in one is never (e)'s finding** — owned or not. A position another predicate
 owns still gets that predicate's row and nothing more: (d)'s repo-name key,
-(f)'s `MERGE_MODEL` and `MEMBERS`, (b)'s member flag list and alias list each
+(f)'s `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and `MEMBERS`, (b)'s member
+flag list and alias list each
 report the value they found there. A position **no** predicate owns — the
 plugin task's two agent-plugin lists, the `_default` slot, any other a pack
 ships — is a value the repo set, and nothing reports it at all. Splicing by
@@ -479,24 +480,30 @@ set from whatever happens to sit in `.config/` instead — anything not in the
 lockfile is not the adapter's, which is the rule the materialization itself
 lives by.
 
-**(f) Two of the four marked positions beside `REPO_NAME`.** The toolchain
-pack ships four more positions marked in its base config — `MERGE_MODEL` and
-`MEMBERS` in the same `[env]` block, and the two runtime positions
-`RUNTIME_BLOCK` under `[settings]` and `PATH_ENTRIES` at the end of `[env]`,
-which `init` fills from its stack read and which are **legitimately empty** on
-a repo with no detected language, so this check reads neither of them, and
-(e) splices their values out like any other position's. `MERGE_MODEL` is read
-in **each** repo, from that repo's own block; `MEMBERS` is read on the **base
-alone**, since a member declares no members of its own unless it carries its
-own `.gitmodules`, in which case it is a base in its turn and this check
-reaches it as one. Each is read by a task rather than by vwf, so an unfilled
-one is wrong only where it is used — which is why it goes unnoticed until the
-day that task runs:
+**(f) Three of the five marked positions beside `REPO_NAME`.** The toolchain
+pack ships five more positions marked in its base config —
+`MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and `MEMBERS` in the same `[env]`
+block, and the two runtime positions `RUNTIME_BLOCK` under `[settings]` and
+`PATH_ENTRIES` at the end of `[env]`, which `init` fills from its stack read
+and which are **legitimately empty** on a repo with no detected language, so
+this check reads neither of them, and (e) splices their values out like any
+other position's. The two landing-model positions are read in **each** repo,
+from that repo's own block; `MEMBERS` is read on the **base alone**, since a
+member declares no members of its own unless it carries its own `.gitmodules`,
+in which case it is a base in its turn and this check reaches it as one. Each
+is read by a task rather than by vwf, so an unfilled one is wrong only where it
+is used — which is why it goes unnoticed until the day that task runs:
 
-- **`MERGE_MODEL`** — absent from the block, or holding anything other than
-  `direct` or `pr`, is one drift row. The merge tasks fall back to `direct`
-  when it is unset, so nothing breaks loudly; what breaks quietly is the repo
-  that meant `pr` and has been landing branches locally ever since.
+- **`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`** — one per branch, each
+  checked on its own: absent from the block, or holding anything other than
+  `direct` or `pr`, is one drift row naming the position. The merge tasks fall
+  back to `direct` for either destination when its position is unset, so
+  nothing breaks loudly; what breaks quietly is the repo that meant `pr` — the
+  shipped preselection for `main` — and has been landing that branch locally
+  ever since. A block carrying the **legacy single `MERGE_MODEL`** and neither
+  new position is one drift row reading `legacy MERGE_MODEL — reshape writes
+  the pair`: every reader takes that one value as both until the reshape, so
+  the row is the only thing that says the pair is missing.
 - **`MEMBERS`** — absent **or empty** on a product whose config reads
   `topology: multi-repo` with `linkage: siblings` is one drift row. Under that
   linkage the list is the only place the task library learns the member set,
@@ -551,16 +558,19 @@ allowed to read. Otherwise, three checks:
   `develop` or `main` is the one drift row here, naming the repo and the
   branch. Where protection exists but lacks one of the rules the pass would
   have set — **no force-push and no deletion**, always; **a pull request
-  required** when that repo's `MERGE_MODEL` reads `pr`, read from the same
-  `[env]` block (f) reads (on GitHub the ruleset rules `non_fast_forward`,
+  required** when that branch's own value reads `pr` — `MERGE_MODEL_DEVELOP`
+  for `develop`, `MERGE_MODEL_MAIN` for `main`, a legacy single `MERGE_MODEL`
+  standing in for both — read from the same `[env]` block (f) reads (on GitHub
+  the ruleset rules `non_fast_forward`,
   `deletion` and `pull_request`, or the classic `allow_force_pushes`,
   `allow_deletions` and `required_pull_request_reviews`; on GitLab
   `allow_force_push` and a `push_access_levels` list that lets nobody push
   directly, deletion being refused by protection itself) — doctor prints one
   **note** naming the branch and the missing rule, like the skip note: it is
   information, never drift, because a reshape would leave that protection
-  exactly as it is, so no remedy exists to point at. Under `direct` the
-  require-PR rule is neither expected nor noted when present. A branch the
+  exactly as it is, so no remedy exists to point at. On a branch whose value is
+  `direct` the require-PR rule is neither expected nor noted when present. A
+  branch the
   forge does not carry reports `not on the forge — not checked` for that
   branch: pushing it is the git pass's, and (c) already says whether it exists
   locally.

@@ -27,13 +27,15 @@ disable-model-invocation: false
 - **Initialize** every new worktree with its mise bootstrap task (Step 2d), and
   **end** every worktree with full coverage — land the branch (plus any
   submodule work and pointer updates), then remove it (Step 4)
-- **How a branch lands is the repo's choice, not this skill's.** The repo's
-  `MERGE_MODEL` decides: `direct` (the default) merges the branch to the
-  destination and pushes, as it always has; `pr` pushes the branch and opens a
-  pull request instead, merging nothing locally. The two task names are the same
-  in both modes — `mise x -- mise run code:merge:develop <branch>` and
-  `mise x -- mise run code:merge:main`. Step 4 reads the mode before it offers
-  its options
+- **How a branch lands is the repo's choice, not this skill's.** The repo sets
+  it **per destination**: `MERGE_MODEL_DEVELOP` for a branch landing on
+  `develop`, `MERGE_MODEL_MAIN` for `develop` landing on `main`, each `direct`
+  or `pr`. `direct` merges the branch to the destination and pushes, as it
+  always has; `pr` pushes the branch and opens a pull request instead, merging
+  nothing locally. The two task names are the same in both modes —
+  `mise x -- mise run code:merge:develop <branch>` reads the first variable,
+  `mise x -- mise run code:merge:main` the second. Step 4 reads the mode for
+  the destination it is about to land on before it offers its options
 - **The merge tasks refuse a dirty tree** — untracked files, uncommitted
   changes, or unpushed commits on the branch each stop the merge before it
   touches git. That is not a nuisance: whatever is uncommitted at merge time is
@@ -191,19 +193,28 @@ it without asking: take that action and skip the prompt below. This is the only
 way the prompt is bypassed.
 
 **Read the landing mode before you ask.** What the merge tasks do is the repo's
-setting, so resolve it first — an absent or empty value means `direct`:
+setting, held **per destination** — `MERGE_MODEL_DEVELOP` for a branch landing
+on `develop`, `MERGE_MODEL_MAIN` for `code:merge:main` — so resolve the one
+for the destination you are about to land on. A repo still carrying the legacy
+single `MERGE_MODEL` is read as **both** values until its next reshape writes
+the pair; with neither set, an absent or empty value means `direct` for either
+destination — the same fallback the merge tasks take:
 
 ```bash
-MERGE_MODEL=$(mise env -s bash 2>/dev/null \
-  | sed -n 's/^export MERGE_MODEL=//p' | tr -d '"')
-MERGE_MODEL=${MERGE_MODEL:-direct}
+env=$(mise env -s bash 2>/dev/null)
+read_env() { printf '%s\n' "$env" | sed -n "s/^export $1=//p" | tr -d '"'; }
+legacy=$(read_env MERGE_MODEL)                  # legacy single key, if any
+MERGE_MODEL_DEVELOP=$(read_env MERGE_MODEL_DEVELOP)
+MERGE_MODEL_MAIN=$(read_env MERGE_MODEL_MAIN)
+MERGE_MODEL_DEVELOP=${MERGE_MODEL_DEVELOP:-${legacy:-direct}}
+MERGE_MODEL_MAIN=${MERGE_MODEL_MAIN:-${legacy:-direct}}
 ```
 
 Otherwise, after a successful commit, ask the user to choose what to do next via
 `AskUserQuestion` with these three options — the first is the same in both
-modes, the other two are worded by the mode you just read:
+modes, the other two are worded by the mode you just read for this destination:
 
-**Under `direct`:**
+**Under `direct` for this destination:**
 
 - **Commit only** — stop here; leave the worktree as-is for continued work.
 - **Merge, push & clean up** — merge to the default branch in the main worktree,
@@ -212,7 +223,7 @@ modes, the other two are worded by the mode you just read:
   worktree, push changes, but leave the additional worktree open for continued
   work.
 
-**Under `pr`:**
+**Under `pr` for this destination:**
 
 - **Commit only** — stop here; leave the worktree as-is for continued work.
 - **Push & open PR & clean up** — push the branch and open a pull request, then
@@ -247,9 +258,9 @@ available.
 
 Read [Landing a branch](references/landing.md) and follow the sequence for the
 chosen option — submodules first, then the outer repo's pointers and its merge
-task; under `direct` that task merges and pushes, under `pr` it pushes and opens
-the pull request. **Clean up** additionally removes this worktree and sweeps
-stale ones, **keep worktree** leaves it in place.
+task; under `direct` for the destination that task merges and pushes, under
+`pr` it pushes and opens the pull request. **Clean up** additionally removes
+this worktree and sweeps stale ones, **keep worktree** leaves it in place.
 
 ---
 
