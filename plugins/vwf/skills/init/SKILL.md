@@ -76,7 +76,12 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
   user chose to keep so it is never re-offered, and `enforcement.editor_keys`
   beside it, where any run records the answer for an editor key the hand
   section already carried so it is never re-asked. `init` writes those two
-  keys into a file it never creates, and writes nothing else in it.
+  keys and nothing else in that file — and where the file does not exist
+  yet, it writes a **stub** to hold them: `config_format` and the
+  `enforcement` block alone, per [new repo](references/new-repo.md) §2, which
+  `/vwf:setup`'s migration and fill passes complete later. A keep or a
+  collision answer is therefore always recorded, never deferred for want of
+  the file.
 - **Never application code.** Not a source file, not a test, not a directory
   of either.
 - **Never a language manifest or a lockfile.** Those declare what the project
@@ -262,10 +267,11 @@ inventing a source for it would be a guess at somebody's remote.
 ## Which plugin the adapter resolves to
 
 Every adapter call below is `/<plugin>:<plugin>-<skill>`, and `<plugin>` comes
-from the roster in `.config/vwf.yaml` — a file `/vwf:setup` writes **after**
+from the roster in `.config/vwf.yaml` — a key `/vwf:setup` writes **after**
 `init` has run. So on the repo `init` exists for, that file usually is not
-there yet and the name cannot be read out of it. Resolve it this way, and say
-in one line which branch was taken:
+there yet — or is only the stub `init` itself leaves, which carries no roster
+— and the name cannot be read out of it. Resolve it this way, and say in one
+line which branch was taken:
 
 1. **The roster, where the config already has one.** A repo that has been
    through `/vwf:setup` names its adapter plugins there; use that list in its
@@ -534,7 +540,9 @@ against 6's answers, so they cannot share its round.
    in that repo or in any other. A `private` repo gets no row and no
    `LICENSE`: a licence grants the public rights a private repo is not
    offering, and a file granting them is a claim nobody made. A repo that
-   already carries a licence file keeps it whatever it answered.
+   already carries a licence file keeps it whatever it answered — and every
+   spelling counts as carrying one: `LICENSE`, `LICENSE.md`, `LICENCE` and
+   `COPYING` alike, per [readme and licence](references/readme-and-license.md).
 
    **6b — The security contact.** **One row per repo**, and the row's shape
    follows that repo's visibility. A `public` repo's row is defaulted to
@@ -599,13 +607,23 @@ does, as with `MERGE_MODEL`, there is simply no row. A record sourced
 the mismatch stands.
 
 Whichever pipeline runs, the same work happens in the same order at the end of
-each repo: the **fills** the packs marked — the project ids and their
-surfaces, the repo-name key from question 1's folder name, the commit gate's
-scopes from those same confirmed ids and its forge links where a remote exists,
-the two runtime positions from the stack read — then the **three merges**
-(ignore sections, the first of them from the same read, hook fragments, editor
-fragments), then the **git pass**, whose questions were asked once for the run
-and whose commit is that repo's own. The editor merge reads the existing file
+each repo, after that mode's landing and before the git pass. **Five steps are
+shared by every mode**, and they are written down once, in
+[new repo](references/new-repo.md), cited by section from wherever a pipeline
+reaches them: the **secrets provider** (§3), the **placeholders** (§4), the
+**readme stub, licence and security files** (§8), the **bootstrap** (§9) and
+the **aggregator offer** (§10) — the existing pipeline runs them from its
+post-landing paragraph, the new-repo pipeline in its numbered order, and no
+mode skips one or asks its question twice. Beside them the **fills** the packs
+marked — the project ids and their surfaces, the repo-name key from question
+1's folder name, the commit gate's scopes from those same confirmed ids and its
+forge links where a remote exists, the two runtime positions from the stack
+read — then the **three merges** (ignore sections, the first of them from the
+same read, hook fragments, editor fragments), then the **git pass**, whose
+questions were asked once for the run and whose commit is that repo's own.
+Between the merges and the git pass, `init` **re-records the lockfile hash** of
+every file it filled, appended to or merged, so nothing it wrote reads as drift
+on the next run. The editor merge reads the existing file
 whole, and a key the hand section already carries that the packs also compose
 is a **collision**: asked in one round inside the plan — keep mine, take the
 pack's, or union where the value is an object — recorded under
@@ -628,17 +646,22 @@ the base's lockfile never speaks for it.
 
 ## The report
 
-Every run ends with the same report — the ten file sections, then one git
-section for the whole run — each a count and its lines, and an empty section
-printed as `none`. A replace and a rewrite are counted only where they were
-applied. The two `kept` sections count what this run deliberately left alone,
-which is why they are printed at all: a file nobody touched reads the same as
-a file nobody looked at.
+Every run ends with the same report — the thirteen file sections, then one
+git section for the whole run — each a count and its lines, and an empty
+section printed as `none`. A replace and a rewrite are counted only where they
+were applied. The two `kept` sections count what this run deliberately left
+alone, which is why they are printed at all: a file nobody touched reads the
+same as a file nobody looked at. Three sections mirror the three plan rows the
+existing pipeline's pass 1 produces — the root tool configs, the hook manager
+and the projects — and each prints the decision the row carried: a root tool
+config the way it went, a hook manager kept or switched, a project directory
+with the id question 2 confirmed, listed here **once** and nowhere else.
 
-**The ten file sections repeat under one heading per repo**, the base first
-and then each member by its path, and every count is that repo's own — a run
-over four repos prints forty sections. Nothing is totalled across repos: a
-count a reader cannot attribute to a tree is a count they cannot check.
+**The thirteen file sections repeat under one heading per repo**, the base
+first and then each member by its path, and every count is that repo's own —
+a run over four repos prints fifty-two sections. Nothing is totalled across
+repos: a count a reader cannot attribute to a tree is a count they cannot
+check.
 
 ```text
 ── <repo> ──
@@ -646,6 +669,9 @@ Files written     <n>    + <path>            (one per line)
 Files replaced    <n>    <path>              (one per line)
 Files kept        <n>    <path> — <the reason recorded>
 Files moved       <n>    <old> → <new>
+Root tool configs <n>    <path> — moved → <new> | kept both | deleted
+Hook manager      <n>    <manager found> — kept | switched
+Projects          <n>    <directory> — <id>
 Tasks renamed     <n>    <old> → <new>
 Tasks kept        <n>    <path>              (repo-owned; + the contract note)
 Calls rewritten   <n>    <file:line> <old> → <new>
