@@ -412,16 +412,16 @@ A path the lockfile lists under `skipped:` has no `entries:` record — the two
 lists never share a path, and `skipped:` holds only what was never landed. It
 is intentionally absent — its pack declared a condition the repo's answer did
 not meet — and is **never** reported as missing; a later run whose answer
-changed re-evaluates it, which is the reshape landing it. Present on disk,
-a file at a skipped path is the repo's own — unread, unlisted, and never a
-row here, since no reshape could clear it while the answer stands. A path
-that **has** an `entries:` record — landed on an
-earlier run whose answer has since flipped, or never conditional — is checked
-by hash like any landed file, whatever its condition reads today. One row is
-read from the config rather than the lockfile: a repo whose config pins a
-secrets provider that has a row in the hygiene pack's provider table must
-carry that provider's ignore section in `.gitignore`; absent, it is one drift
-row naming the provider, remedy `/vwf:setup reshape`.
+changed re-evaluates it, which is the reshape landing it. Present on disk, a
+file at a skipped path is the repo's own — unread, unlisted, and never a row
+here, since no reshape could clear it while the answer stands. A path that
+**has** an `entries:` record — landed on an earlier run whose answer has since
+flipped, or never conditional — is checked by hash like any landed file,
+whatever its condition reads today. One row is read from the config rather
+than the lockfile: a repo whose config pins a secrets provider that has a row
+in the hygiene pack's provider table must carry that provider's ignore section
+in `.gitignore`; absent, it is one drift row naming the provider, remedy
+`/vwf:setup reshape`.
 
 The hash comparison stays the first and cheapest test, and a match ends it: a
 file matching its record raises nothing and nothing further is read. **A
