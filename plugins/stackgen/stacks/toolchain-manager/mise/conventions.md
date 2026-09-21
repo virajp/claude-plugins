@@ -61,6 +61,18 @@ repo — the agent launchers are the case — live in the user's **global** conf
 and read `$REPO_NAME`, so one definition serves every repo and changing the
 launcher is not a change to every repo that has one.
 
+**The runtime is a marked position too, and the base ships it empty.**
+`RUNTIME_BLOCK` under `[settings]` and `PATH_ENTRIES` at the end of `[env]` are
+the two slots the orchestrator fills from its stack read — the languages the
+repo's pins, lockfile or manifests name — one runtime settings line per
+detected language in the first, the `_.path` entries a project-local binary
+directory needs in the second, and nothing in either for a language the repo
+does not have. A setting for an absent runtime is a claim about the stack that
+is not true, and a hand-picked one is the edit that turns a pack-owned file
+into a diverged one; a marked position is what the content hash ignores, so
+the fill is never drift. `REPO_NAME`, `MERGE_MODEL`, `MEMBERS` and these two
+are the base's five, and the only marked positions in the config split.
+
 **Environment names are shared; values are split.** Development and production
 override the *same* keys rather than each inventing their own — the difference
 between the two layers is a value, never a vocabulary. Names here, values never
