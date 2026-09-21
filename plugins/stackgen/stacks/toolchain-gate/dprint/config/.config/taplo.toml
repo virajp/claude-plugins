@@ -12,6 +12,9 @@
 # global `exclude` spell in their own syntax, held equal by the toolkit's
 # checker. The secret scanner's allowlist is a subset: generated trees only.
 exclude = [
+  "**/*-lock.json",
+  "**/*-lock.yaml",
+  "**/*.lock",
   "**/.claude/**",
   "**/.git/**",
   "**/.turbo/**",
@@ -21,9 +24,6 @@ exclude = [
   "**/graphify-out/**",
   "**/node_modules/**",
   "**/target/**",
-  "**/*-lock.json",
-  "**/*-lock.yaml",
-  "**/*.lock",
 ]
 include = [ "**/*.toml" ]
 

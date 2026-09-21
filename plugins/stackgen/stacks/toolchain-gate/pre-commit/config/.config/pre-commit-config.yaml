@@ -65,11 +65,11 @@ repos:
     hooks:
       - id: git-config
         name: Required local git-config (forge identity, ssh signing)
-        description: Requires a per-repo identity equal to the forge variables —
-          user.name, user.email and user.signingkey from GITHUB_*, GITLAB_* or
-          GIT_* — with ssh-signed commits and tags. `--fix` writes those keys
-          from the variables and unsets gpg.program and gpg.ssh.program; an
-          unset variable fails the hook and writes nothing. A commit that
+        description: Requires a per-repo identity equal to the forge variables
+          — user.name, user.email and user.signingkey from GITHUB_*, GITLAB_*
+          or GIT_* — with ssh-signed commits and tags. `--fix` writes those
+          keys from the variables and unsets gpg.program and gpg.ssh.program;
+          an unset variable fails the hook and writes nothing. A commit that
           changed any key is refused — git read the old identity before the
           hook ran — and the re-run carries the corrected one.
         entry: mise x -- mise run code:git-config --fix
