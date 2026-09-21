@@ -1,0 +1,37 @@
+CODE-REVIEW ENGINE (high) — R5-late1 round 1 — late range ee88f359..7be02ec7 (engine is branch-scoped: 75b85ac8..7be02ec7); findings 6-9 already reported in R5-3.review.log, dropped at filter
+
+The `ReportFindings` tool is not available in this session (ToolSearch returns no match for it), so the findings are stated inline.
+
+**CODE-REVIEW ENGINE (high) — range `develop..HEAD` (75b85ac8..7be02ec7), plan/2026-09-20-branch-model**
+
+The shell delta (`_scripts/merge`, the two merge tasks, `code:worktrees`, the git-workflow `read_env` snippet) is sound: per-destination `case` with the legacy fallback and `direct` default, `set -u`-safe, only reached with `develop`/`main`; the `^export MERGE_MODEL=` anchor cannot match the `_DEVELOP`/`_MAIN` keys. The new findings are in the prose the skills execute.
+
+**New findings (5)**
+
+1. `plugins/vwf/skills/init/references/new-repo.md:712` — **medium**. (b) checks out `develop` in every member that has commits, after membership.md's clone step already put the member on the branch that *contains* the recorded gitlink commit. Under this repo's own landing model `code:merge:main` is `--no-ff`, so a base that bumped a member's gitlink after a member release records `main`'s merge commit — which `develop` does not contain. Membership correctly lands the member on `main`; (b) then creates `develop` from `origin/develop` and checks it out, moving the tree to a tip that is a *parent* of the recorded commit. The base's gitlink is moved backwards off the release pointer and the ops commit records it — the exact "resolve divergence by moving the tree" membership.md:139 forbids, done one step later by (b). (b) needs to refuse or defer when `develop` does not contain the recorded commit, or membership's pick must prefer `develop` only when it contains it *and* (b) must accept the branch membership chose.
+
+2. `plugins/vwf/skills/init/references/new-repo.md:832` — **low**. The mainline rule says "only where there is no remote is it the branch the repo is on — a `main` is never created from a feature branch the user happened to be standing on". With no remote, a repo on `feat/x` beside an existing `master` takes the "neither" row with mainline = `feat/x`: `main` is created from the feature branch, `develop` from that, the ops commit lands on it, and `master` is reported as "left — retire by hand". Same rule, second hole: a repo whose `origin` came from `git remote add` has no `refs/remotes/origin/HEAD` at all (only `clone` sets it), so "read from origin/HEAD" answers nothing while a remote exists; existing-repo.md:1254 already reads "from `origin/HEAD` or from the branch the repo is on", and `code:worktrees` in this same diff documents the missing-`origin/HEAD` fallback. The rule should prefer an existing local `master`/`trunk` (or `origin/HEAD` when set) over the current branch, and only then fall back.
+
+3. `plugins/vwf/skills/doctor/references/stack-checks.md:575` — **low**. "On a branch whose value is `direct` the require-PR rule is neither expected nor noted when present." The shipped default now writes the `pull_request` rule onto `main` at init. A user who later sets `MERGE_MODEL_MAIN = "direct"` — which `mise.toml`'s comment and task-library.md present as "nothing else changes" — gets every `code:merge:main` refused at `git push` by the ruleset, and doctor (g) is explicitly silent about the one forge fact that explains it. Pre-existing wording, but the default flip makes the scenario the common one; (g) should at least note "require-PR present, value `direct` — direct pushes will be refused".
+
+4. `plugins/vwf/skills/doctor/references/stack-checks.md:494` — **low**. Doctor (f) validates the two positions but nothing checks that the repo's `_scripts/merge` reads them. A reshape where `.config/mise.toml` is replaced (pair written, forge pass adds require-PR on `main` from `MERGE_MODEL_MAIN=pr`) but `_scripts/merge` is **kept** (a customised copy) leaves a script that reads only `MERGE_MODEL` → unset → `direct` for both, so `code:merge:main` pushes straight at a branch the forge now refuses. `kept_files` hides the script from (e), so no row anywhere names the mismatch.
+
+5. `plugins/vwf/skills/init/references/new-repo.md:935` and `plugins/vwf/skills/doctor/references/stack-checks.md:508` — **low**. Two passages now contradict 66cd3073. The forge pass reads "or the legacy `MERGE_MODEL` for both where a kept file still carries it" — but §7's fill rewrites a kept legacy line into the pair *before* the git pass, so by (f) no file carries it; the clause is unreachable and implies a kept file may still be on the single key at forge time. Doctor (f) says the reshape fills both positions "through the splice", while §7 (`:379-381`) now states the splice "is a read … and writes nothing" and the **fill** writes. Harmless to doctor's output, misleading to an implementer of §7.
+
+**Carried over from R5 round 3 — still present, unchanged since the loop was closed as contested**
+
+6. `plugins/vwf/skills/init/references/new-repo.md:726` — medium. (b) stages a member's gitlink only if that member *committed* this run; membership's tip checkout moves the gitlink before any commit, so an already-shaped cloned member (second developer's `/vwf:setup`) leaves the base with a modified, unstaged gitlink that the merge tasks then refuse.
+7. `plugins/vwf/skills/init/references/new-repo.md:636` / `:41-54` — medium-low. An existing repo with an unborn HEAD (`git init` then setup) is neither created by §1 nor read by the HEAD pass ("already has commits"), so the ops commit lands on `master`/`main` and `develop` is never created.
+8. `plugins/vwf/skills/init/references/new-repo.md:340` — low. §7 header still counts "Nine", "three repo-level", "seven in the toolchain files" against the ten the section now enumerates.
+9. `plugins/vwf/skills/init/references/new-repo.md:51-54` — low. §1 still says §11 creates the missing branch "after the commit question"; (b)/(d) now do it before staging on a repo with commits.
+
+**Restated**
+- `new-repo.md:712` — (b)'s `develop` checkout moves a member off a recorded `--no-ff` main merge commit that `develop` lacks; the divergence membership refuses is performed by (b)
+- `new-repo.md:832` — no-remote mainline = current branch creates `main` from a feature branch beside an existing `master`; `origin/HEAD` is unset on `git remote add` repos
+- `stack-checks.md:575` — doctor (g) silent on require-PR + `direct`, now the default-shipped path to a refused `code:merge:main`
+- `stack-checks.md:494` — kept old `_scripts/merge` beside a replaced `mise.toml` ignores the pair; nothing reports it
+- `new-repo.md:935` / `stack-checks.md:508` — forge-pass legacy clause unreachable after the §7 fill; doctor says "through the splice" where §7 says the splice writes nothing
+- `new-repo.md:726` — (carried) unstaged gitlink for a cloned member that commits nothing
+- `new-repo.md:636` — (carried) unborn-HEAD existing repo commits on `master`, no `develop`
+- `new-repo.md:340` — (carried) §7 header counts nine vs ten
+- `new-repo.md:51` — (carried) §1 ordering contradicts (b)/(d)

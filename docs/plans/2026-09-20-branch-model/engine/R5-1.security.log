@@ -1,0 +1,3 @@
+SECURITY ENGINE — R5 round 1 — range 75b85ac8..a0d3585c (branch delta; the engine's main-based diff was too wide, sub-task scoped to the delta)
+No high-confidence security findings in 75b85ac8..HEAD.
+Scope reviewed: mise.toml, _scripts/merge, code/merge/develop, code/merge/main, code/worktrees. Only logic change: per-destination MERGE_MODE resolution in _scripts/merge reads env vars (trusted), compares against literal pr, collapses everything else to direct; the warning interpolates DESTINATION_BRANCH, a fixed literal from the two task files.
