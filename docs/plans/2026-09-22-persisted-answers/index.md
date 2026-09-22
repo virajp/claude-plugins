@@ -10,9 +10,11 @@ backlog: []
 
 ## Status
 
-**RUNNING**
+**COMPLETE**
 
-RUNNING since 2026-09-22 in `.worktrees/2026-09-22-persisted-answers`
+COMPLETE 2026-09-22 — a2ad98b1, 70c8571a, 62ffc6cf, 2561d4be, 9bbdbf9b,
+a8de504e, b326e862 (plus three run-log commits). Folder left live: gaps G1 and
+G2 are open for reconciliation.
 
 APPROVED 2026-09-22 by the user
 
@@ -174,15 +176,15 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                                                                                 | Depends on         | Status  | Commit   |
-| -- | ---- | -------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ | ------- | -------- |
-| U1 | 1    | [01-config-schema.md](01-config-schema.md)   | edit | `plugins/vwf/assets/vwf-config.md`, `plugins/vwf/skills/setup/references/format-lineage.md`, `plugins/vwf/skills/setup/references/migrate-pipeline.md`                                                                               | —                  | green   | a2ad98b1 |
-| U2 | 1    | [02-init.md](02-init.md)                     | edit | `plugins/vwf/skills/init/SKILL.md`, `plugins/vwf/skills/init/references/new-repo.md`, `plugins/vwf/skills/init/references/existing-repo.md`, `plugins/vwf/skills/init/references/fragments-and-sections.md`                          | —                  | green   | 70c8571a |
-| U3 | 1    | [03-setup.md](03-setup.md)                   | edit | `plugins/vwf/skills/setup/SKILL.md`, `plugins/vwf/skills/setup/references/materialize.md`                                                                                                                                            | —                  | green   | 62ffc6cf |
-| U4 | 1    | [04-stackgen.md](04-stackgen.md)             | edit | `plugins/stackgen/assets/output-tree.md`, `plugins/stackgen/skills/stackgen-stack-template/SKILL.md`, `plugins/stackgen/skills/stackgen-stack-template/references/materializer.md`, `plugins/stackgen/skills/stackgen-sync/SKILL.md` | —                  | green   | 2561d4be |
-| U5 | 1    | [05-doctor.md](05-doctor.md)                 | edit | `plugins/vwf/skills/doctor/references/stack-checks.md`, `plugins/vwf/skills/doctor/SKILL.md`                                                                                                                                         | —                  | green   | 9bbdbf9b |
-| U6 | 2    | [06-docs.md](06-docs.md)                     | edit | `readme.md`, `CLAUDE.md`, `.claude/docs/**`, `.claude/skills/vwf-plugin/**`, `.claude/skills/stackgen-plugin/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-09-22-persisted-answers.md`                                | U1, U2, U3, U4, U5 | green   | a8de504e |
-| U7 | 3    | [07-gates-and-bump.md](07-gates-and-bump.md) | edit | `plugins/vwf/.claude-plugin/plugin.json`, `plugins/stackgen/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`                                                                                      | U6                 | pending |          |
+| Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                                                                                 | Depends on         | Status | Commit   |
+| -- | ---- | -------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ | ------ | -------- |
+| U1 | 1    | [01-config-schema.md](01-config-schema.md)   | edit | `plugins/vwf/assets/vwf-config.md`, `plugins/vwf/skills/setup/references/format-lineage.md`, `plugins/vwf/skills/setup/references/migrate-pipeline.md`                                                                               | —                  | green  | a2ad98b1 |
+| U2 | 1    | [02-init.md](02-init.md)                     | edit | `plugins/vwf/skills/init/SKILL.md`, `plugins/vwf/skills/init/references/new-repo.md`, `plugins/vwf/skills/init/references/existing-repo.md`, `plugins/vwf/skills/init/references/fragments-and-sections.md`                          | —                  | green  | 70c8571a |
+| U3 | 1    | [03-setup.md](03-setup.md)                   | edit | `plugins/vwf/skills/setup/SKILL.md`, `plugins/vwf/skills/setup/references/materialize.md`                                                                                                                                            | —                  | green  | 62ffc6cf |
+| U4 | 1    | [04-stackgen.md](04-stackgen.md)             | edit | `plugins/stackgen/assets/output-tree.md`, `plugins/stackgen/skills/stackgen-stack-template/SKILL.md`, `plugins/stackgen/skills/stackgen-stack-template/references/materializer.md`, `plugins/stackgen/skills/stackgen-sync/SKILL.md` | —                  | green  | 2561d4be |
+| U5 | 1    | [05-doctor.md](05-doctor.md)                 | edit | `plugins/vwf/skills/doctor/references/stack-checks.md`, `plugins/vwf/skills/doctor/SKILL.md`                                                                                                                                         | —                  | green  | 9bbdbf9b |
+| U6 | 2    | [06-docs.md](06-docs.md)                     | edit | `readme.md`, `CLAUDE.md`, `.claude/docs/**`, `.claude/skills/vwf-plugin/**`, `.claude/skills/stackgen-plugin/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-09-22-persisted-answers.md`                                | U1, U2, U3, U4, U5 | green  | a8de504e |
+| U7 | 3    | [07-gates-and-bump.md](07-gates-and-bump.md) | edit | `plugins/vwf/.claude-plugin/plugin.json`, `plugins/stackgen/.claude-plugin/plugin.json`, `site/package.json`, `.claude-plugin/marketplace.json`                                                                                      | U6                 | green  | b326e862 |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`. Every unit is `edit`; there is no `review` row (decision 8).
@@ -314,6 +316,16 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | — | reconcile | — | 1 | skipped | no `covers:` — no registry, environment,
 harness or `implementation:` stamp to write, and no `code` unit, so nothing to
 persist to mempalace beyond the folder's own record | |
+
+| 3 | U7 | opus | 1 | green | vwf 19.42.0 → 19.43.0 and stackgen 1.25.0 → 1.26.0
+by hand, site 1.1.38 → 1.1.39 via `mise run p:site:version` on a clean tree,
+`.claude-plugin/marketplace.json` regenerated. All nine wave-gate lines exit 0.
+No gap | b326e862 | | 3 | R3 | opus | 1 | pass | FINDINGS 0, CONTRACT clean,
+RULINGS clean — the three bumps match the Consent block, no component is 13 or
+17, no dev manifest staged, and wave 2's late count fix in `a8de504e` verified
+correct | | | — | reconcile | — | 2 | green | the full wave gate re-run over the
+finished tree: all nine lines green. No orchestrator-kept gate beyond it — the
+plan names none | |
 
 ## Launch
 
