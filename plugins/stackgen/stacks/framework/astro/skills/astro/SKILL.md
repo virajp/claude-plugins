@@ -1,12 +1,12 @@
 ---
 name: astro
-version: 0.1.0
+version: 0.2.0
 category: development
 description: Astro development — the four rendering modes and the two config
-  values they rest on, file routes and content collections, islands, the
-  build-output contract, and testing. Layers on top of the TypeScript baseline
-  rather than replacing it. Auto-applies when editing an Astro project's
-  pages, config or content.
+  values they rest on, file routes and content collections, MDX, the image
+  pipeline, layouts and slots, islands, the build-output contract, and
+  testing. Layers on top of the TypeScript baseline rather than replacing it.
+  Auto-applies when editing an Astro project's pages, config or content.
 license: MIT
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
@@ -35,6 +35,9 @@ one a project is; read the per-mode reference once it is decided.
 | A prerendered site with some request-time routes | [Hybrid](references/hybrid.md) |
 | A browser-routed application in an Astro shell | [CSR](references/csr.md) |
 | Routes, content collections, markdown, `src/` layout | [Content and routing](references/content-and-routing.md) |
+| Authoring content that embeds a component — `.mdx`, the integration | [MDX](references/mdx.md) |
+| Page shells, slots, and what a layout owns | [Layouts](references/layouts.md) |
 | The head — title, description, canonical, icons, sitemap, JSON-LD | [Head](references/head.md) |
+| Images from `src/`, `<Image>` from `astro:assets`, `getImage`, the pipeline, layout shift | [Images](references/images.md) |
 | Anything about `dist/` — deploy, post-build steps | [Build output](references/build-output.md) |
 | Writing or wiring tests | [Testing](references/testing.md) |

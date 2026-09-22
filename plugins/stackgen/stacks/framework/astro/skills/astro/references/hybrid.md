@@ -7,6 +7,11 @@ time except the ones exporting `prerender = false`, which render per request.
 server code is the same, the endpoints are the same — the only differences are
 which way the default points and, therefore, how many routes carry a marker.
 
+MDX, images and layouts are shared references. On a `prerender = false` route
+the image service runs at request time, on the server — see
+[`images.md`](images.md#per-mode); MDX's delta is in
+[`mdx.md`](mdx.md#per-mode), and [`layouts.md`](layouts.md) applies unchanged.
+
 ## `hybrid` is not a config value
 
 It was one until Astro 5, which removed `output: 'hybrid'` and merged its

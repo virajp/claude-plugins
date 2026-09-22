@@ -4,6 +4,11 @@
 unless it exports `prerender = true`. This is the mode for a project that
 reads a request, a session or a datastore on most of its routes.
 
+MDX, images and layouts are shared references. Images carry this mode's one
+real constraint — the image service runs at request time, on the server — in
+[`images.md`](images.md#per-mode); MDX's delta is in
+[`mdx.md`](mdx.md#per-mode), and [`layouts.md`](layouts.md) applies unchanged.
+
 ## The adapter is the deploy pairing's call
 
 An adapter teaches Astro to render on one kind of server, and which server is

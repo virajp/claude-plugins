@@ -8,6 +8,10 @@ This is Astro's default and the mode to start in. Adding an adapter later is a
 two-line config change ([`hybrid.md`](hybrid.md)); adding one now is a
 dependency that pays for nothing.
 
+MDX, images and layouts are shared references: the SSG entries in
+[`mdx.md`](mdx.md#per-mode) and [`images.md`](images.md#per-mode) say when
+each renders here, and [`layouts.md`](layouts.md) applies unchanged.
+
 ## What the build produces
 
 A directory of files — `./dist` — and that directory is the whole
