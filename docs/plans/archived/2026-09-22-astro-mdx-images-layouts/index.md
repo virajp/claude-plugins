@@ -9,9 +9,9 @@ backlog: [ B47 ]
 
 ## Status
 
-**RUNNING**
+**COMPLETE**
 
-RUNNING since 2026-09-23 in .worktrees/2026-09-22-astro-mdx-images-layouts
+COMPLETE 2026-09-23 — 5097542e 03343a34 c98c6ac8 577f498f 56950a19 d253c9c7
 
 ## Consent
 
@@ -173,7 +173,7 @@ scope the pack already emits — see D7. A unit adds nothing not listed here.
 | U3 | 1    | [03-layouts.md](03-layouts.md)               | edit | `plugins/stackgen/stacks/framework/astro/skills/astro/references/layouts.md`                                                                                                                                                                                                     | —          | green  | c98c6ac8 |
 | U4 | 2    | [04-wiring.md](04-wiring.md)                 | edit | `plugins/stackgen/stacks/framework/astro/skills/astro/SKILL.md`, and under `skills/astro/references/`: `ssg.md`, `ssr.md`, `hybrid.md`, `csr.md`, `content-and-routing.md`                                                                                                       | U1, U2, U3 | green  | 577f498f |
 | U5 | 3    | [05-docs.md](05-docs.md)                     | edit | `readme.md`, `CLAUDE.md`, `site/src/content/docs/**`, `.claude/skills/stackgen-plugin/SKILL.md`                                                                                                                                                                                  | U4         | green  | 56950a19 |
-| U6 | 4    | [06-gates-and-bump.md](06-gates-and-bump.md) | edit | `plugins/stackgen/stacks/framework/astro/pack.yaml`, `plugins/stackgen/stacks/bundles/astro-ssg.md`, `astro-ssr.md`, `astro-hybrid.md`, `astro-csr.md`, `plugins/stackgen/stacks/inventory.md`, `plugins/stackgen/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | U5         | green  |          |
+| U6 | 4    | [06-gates-and-bump.md](06-gates-and-bump.md) | edit | `plugins/stackgen/stacks/framework/astro/pack.yaml`, `plugins/stackgen/stacks/bundles/astro-ssg.md`, `astro-ssr.md`, `astro-hybrid.md`, `astro-csr.md`, `plugins/stackgen/stacks/inventory.md`, `plugins/stackgen/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | U5         | green  | d253c9c7 |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -338,8 +338,9 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | 3    | U5 docs    | opus  | 1     | pass        | edit; stackgen.md gains paragraph after the head passage (all four Astro bundles carry MDX/images/layouts since framework/astro 0.4.0 — true once U6 lands); choosing-your-stack.md:71 one sentence; readme/CLAUDE.md/stackgen-plugin skill checked, not falsified; GAP: docs-sync surveyor report reached the orchestrator, not U5 (forwarded; no finding beyond stackgen.md:117) | 56950a19 |
 | 3    | R3         | opus  | 1     | pass        | U5 in Owns; stackgen.md 0.4.0 cites pack version (true after U6); existing 'framework/astro 0.2.0 ships the head' verified against 698d38fd; readme/CLAUDE.md/stackgen-plugin skill correctly untouched; CONTRACT clean; RULINGS clean                                                                                                                                             | —        |
 | 4    | U6 bump    | —     | —     | dispatched  | GAP: Owns unchanged but edits widened — R2's DOCS FALSIFIED inventory.md:81 (generated from pack.yaml description, U6-owned) appended to U6: extend pack.yaml description to name MDX, images, layouts before regenerating                                                                                                                                                         | —        |
-| 4    | U6 bump    | opus  | 1     | pass        | edit; pack 0.3.0→0.4.0, four pins 0.4.0, stackgen 1.26.0→1.27.0, inventory.md + marketplace.json regenerated; pack.yaml summary gains 'It covers MDX, the image pipeline, and layouts and slots' (fixes inventory.md:81); vwf 19.43.1 and site 1.1.40 untouched; no 13/17; gate 9/9                                                                                                | —        |
+| 4    | U6 bump    | opus  | 1     | pass        | edit; pack 0.3.0→0.4.0, four pins 0.4.0, stackgen 1.26.0→1.27.0, inventory.md + marketplace.json regenerated; pack.yaml summary gains 'It covers MDX, the image pipeline, and layouts and slots' (fixes inventory.md:81); vwf 19.43.1 and site 1.1.40 untouched; no 13/17; gate 9/9                                                                                                | d253c9c7 |
 | 4    | R4         | opus  | 1     | pass        | 8 owned files only; versions exact (pack 0.4.0, 4 pins, stackgen 1.27.0, vwf/site unchanged, no 13/17); generators --check clean; stackgen.md 0.4.0 claim matches; conventions.md absent from diff; CONTRACT clean; RULINGS clean                                                                                                                                                  | —        |
+| —    | reconcile  | —     | —     | pass        | final wave gate 9/9 green over the finished tree; orchestrator gates: mdx, astro:assets, <Image, getImage each hit new refs + SKILL.md; conventions.md absent from branch diff; inventory --check green (pack version = four pins)                                                                                                                                                 | —        |
 
 ## Launch
 
