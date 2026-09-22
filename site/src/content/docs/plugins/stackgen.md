@@ -127,6 +127,16 @@ design system's Brand assets. The `public/` files themselves — `robots.txt`, t
 manifest, the rasterized icons, the social image — are written by `/vwf:execute`
 from that doctrine, not landed by the pack.
 
+**Every one of the four also carries MDX, images and layouts.** Since
+`framework/astro` **0.4.0** the pack's skill routes to three more references:
+MDX — when a page earns it over plain markdown, the `@astrojs/mdx` integration,
+MDX inside a content collection; the image pipeline — `src/` versus `public/`,
+`<Image>` and `getImage` from `astro:assets`, layout shift, and `sharp` as the
+default service; and layouts and slots — the shell-versus-route split, named
+slots, nesting, and layouts for collection entries. They are written once for
+the pack and state each mode's difference inline — images is the one where the
+four genuinely differ — so no bundle's composition changed.
+
 **The doctrine above the pack is a contract.**
 [`assets/contracts/web-head.md`](https://github.com/virajp/claude-plugins/blob/main/plugins/stackgen/assets/contracts/web-head.md)
 states, provider-neutrally, what **any** web framework pack — shipped or

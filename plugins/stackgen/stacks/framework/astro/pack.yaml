@@ -2,11 +2,12 @@ name: Astro
 summary: Astro as the content-first web framework that owns the build — file
   routes, content collections, islands only where interactivity demands it,
   and two config decisions (`output`, and whether an adapter is present) that
-  between them give four ways to render. It also carries the head doctrine
-  every page states itself through — title, description, canonical, icons,
-  sitemap and structured data — and lands the one task that rasterizes the
-  favicon set from the product's mark.
-version: 0.3.0
+  between them give four ways to render. It covers MDX, the image pipeline,
+  and layouts and slots, and carries the head doctrine every page states
+  itself through — title, description, canonical, icons, sitemap and
+  structured data — and lands the one task that rasterizes the favicon set
+  from the product's mark.
+version: 0.4.0
 type: framework
 category: meta-framework
 kind: language-bundle
