@@ -66,22 +66,29 @@ move, never as a question. The root `.graphifyignore` is part of the current
 shape too: Jotter has none, so the standard excludes land in the plan as one
 entry like any other.
 
-Three lineage rows are about recent formats rather than about old spellings, and
-they behave differently from each other. `config_format` **20**, the current
-one, added `enforcement.editor_keys` — the record of what `init` does with an
-editor key both your hand-written `.vscode` section and its composed block carry
-— and lands as an empty block with nothing to convert: a collision already in
-Jotter's `.vscode` files is asked on init's next composition, not here.
-`config_format` **19** added the `stylesheet` axis, so Jotter's project — which
-turns out to publish its own API from a browser surface — gains
-`stylesheet: unresolved`: nothing is converted, the key is written so the
-deferred decision is **visible**, and `/vwf:architecture` elicits it on its next
-run. A project declaring neither `site` nor `webapp` takes no key at all.
-`blueprint_format` **25** added the per-screen `Metadata` block on
-`site`/`webapp` platform files, and that one is **proposed, never auto-filled**:
-setup offers one block per Screens row — the title taken from the Screen cell,
-an empty description, `index: yes` for a `site` and `no` for a `webapp`,
-`image: default` — and you fill in what the pages actually say.
+Four lineage rows are about recent formats rather than about old spellings, and
+they behave differently from each other. `config_format` **21**, the current
+one, added the top-level `answers:` block — the four conditional answers
+(`editor` and `secrets` once for the product, `forge` and `update_bot` per repo)
+every caller of the materializer now evaluates a pack's conditional file
+against. Nothing converts: no surface wrote any of them into the tree before 21,
+so the values come from the reshape that performs the migration, which asks the
+editor and update-bot rounds as it always did and reads the forge and the
+provider from the repo. `config_format` **20** added `enforcement.editor_keys` —
+the record of what `init` does with an editor key both your hand-written
+`.vscode` section and its composed block carry — and lands as an empty block
+with nothing to convert: a collision already in Jotter's `.vscode` files is
+asked on init's next composition, not here. `config_format` **19** added the
+`stylesheet` axis, so Jotter's project — which turns out to publish its own API
+from a browser surface — gains `stylesheet: unresolved`: nothing is converted,
+the key is written so the deferred decision is **visible**, and
+`/vwf:architecture` elicits it on its next run. A project declaring neither
+`site` nor `webapp` takes no key at all. `blueprint_format` **25** added the
+per-screen `Metadata` block on `site`/`webapp` platform files, and that one is
+**proposed, never auto-filled**: setup offers one block per Screens row — the
+title taken from the Screen cell, an empty description, `index: yes` for a
+`site` and `no` for a `webapp`, `image: default` — and you fill in what the
+pages actually say.
 
 ### 3. Confirm the spellings that fan out
 

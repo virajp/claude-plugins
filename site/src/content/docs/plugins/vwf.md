@@ -955,12 +955,14 @@ three answers: **keep mine** (the block omits the key and your copy is untouched
 and hand entries merged into the block, your copy removed). The answer is
 recorded under `enforcement.editor_keys` in the base's `.config/vwf.yaml` — or
 in the stub `init` writes there when the file does not exist yet, so the answer
-is always recorded — and applies on every later run without asking; editing the
-block or your section is how you are asked again. A run with no collision asks
-nothing, and an extension id you already recommend is simply kept, unasked and
-unrecorded. `init` never names the editor; the fragment convention names the
-target, and a pack task is what installs the recommended extensions into a
-per-repo profile.
+is always recorded. It is a different record from `answers.editor`, which says
+whether an editor is in use at all and is what decides whether a fragment lands;
+neither reads the other. The choice applies on every later run without asking;
+editing the block or your section is how you are asked again. A run with no
+collision asks nothing, and an extension id you already recommend is simply
+kept, unasked and unrecorded. `init` never names the editor; the fragment
+convention names the target, and a pack task is what installs the recommended
+extensions into a per-repo profile.
 
 **One slug rule, two independent tokens.** The rule is the same for both — the
 name is lowercased, runs outside the slug alphabet collapse to a single `-`, and
@@ -1179,11 +1181,24 @@ question 4 picked — are what every fetch passes the materializer as an
 `answers:` map beside `repo:`, keyed `forge`, `editor`, `secrets` and
 `update_bot`. Every key is always present, and `none` is the spelling of no
 answer: on `forge`, `editor` and `secrets` it matches no pack's condition, so
-the file is skipped — a repo with no remote yet gets no forge-specific files,
-and gets them on the reshape that follows the remote; on `update_bot` it is one
-of the three legal answers, so a file conditioned on it lands exactly when no
-bot was picked. `init` evaluates nothing itself; the materializer does, and a
-pack that marks nothing conditional lands whole, as it always has.
+the file is skipped — a repo with no remote yet gets no forge-specific files; on
+`update_bot` it is one of the three legal answers, so a file conditioned on it
+lands exactly when no bot was picked. `init` evaluates nothing itself; the
+materializer does, and a pack that marks nothing conditional lands whole, as it
+always has.
+
+**The four answers are recorded**, in every mode, under a top-level `answers:`
+block in the base's `.config/vwf.yaml` — `editor` and `secrets` once for the
+product, `repos:` keyed by member path (`.` for the base) with `forge` and
+`update_bot` per repo, every key present. That record is what
+[`/vwf:setup`'s materialize pass](#the-materialize-pass) and
+`/stackgen:stackgen-sync` evaluate a conditional file against months later, so a
+landing decided here is honoured rather than re-decided from nothing. The
+**forge is re-read live** from `origin` by every one of them, so a remote that
+appeared after `init` ran is what the forge conditions are judged against, with
+nobody remembering a reshape; where the live host contradicts the record the
+caller rewrites that one value and says so, `/vwf:doctor` reports the drift, and
+the reshape it names is what lands the forge files that were skipped.
 
 **On a `shaped` repo it surveys, plans, and applies on one consent** — and on a
 product it does that for every repo at once, running the survey each repo's own
@@ -1346,12 +1361,13 @@ re-prints the whole plan with the new decisions and asks the same one question,
 so the consent stays single. Either answer then **re-records the file's hash**
 in the lockfile, after the fills, so a replaced or kept file reads as current —
 not as drift — to the next reshape and to `/vwf:doctor`. That key is one of the
-two things `init` writes into `.config/vwf.yaml`, and where the file does not
-exist yet — a repo `/vwf:setup` has not reached — `init` writes a **stub**
-holding `config_format` and the `enforcement` block alone, so the record always
-has a home and nothing is deferred; setup's own passes complete the file later.
-The helper library is the one file this never offers — pass 5 replaces it
-unconditionally, for the timing reason above.
+three things `init` writes into `.config/vwf.yaml` — the others are
+`enforcement.editor_keys` and the top-level `answers:` block — and where the
+file does not exist yet — a repo `/vwf:setup` has not reached — `init` writes a
+**stub** holding `config_format`, the `enforcement` block and the `answers`
+block alone, so the record always has a home and nothing is deferred; setup's
+own passes complete the file later. The helper library is the one file this
+never offers — pass 5 replaces it unconditionally, for the timing reason above.
 
 **Tasks you wrote yourself are kept and listed, never moved.** Every task in the
 library that no landed pack ships is yours — a task file, or an inline
@@ -1615,10 +1631,16 @@ ships, and doctor says which of the two a row is, because re-landing fixes one
 and the other is a file somebody meant to change. A file you chose to keep is
 skipped, since that decision is already recorded. With no adapter lockfile the
 content check reports `not checked — no lockfile` rather than passing or
-crashing: a repo that landed nothing has nothing to have drifted from. Every one
-of these is `drift` and none is blocking — a repo behind its baseline is out of
-date, not broken — and all of them share one remedy, `/vwf:setup reshape`,
-printed once.
+crashing: a repo that landed nothing has nothing to have drifted from. Beside
+them doctor reads three rows from the config rather than the lockfile: a
+recorded `answers.repos.<repo>.forge` the live `origin` host contradicts, or a
+`skipped:` row whose `when: forge` it contradicts — the files that axis skipped
+are waiting for the reshape to land them, and a repo with no remote at all is
+neither row — a config stamped `config_format` 21 carrying no `answers:` block
+at all, and a provider named by `answers.secrets` whose `.gitignore` section is
+missing. Every one of these is `drift` and none is blocking — a repo behind its
+baseline is out of date, not broken — and all of them share one remedy,
+`/vwf:setup reshape`, printed once.
 
 Nobody has to remember that schedule. Four commands bring you to the door
 themselves, each **offering** `reshape` the Step 0 way — one line naming the
@@ -1652,15 +1674,16 @@ it after upgrading vwf to bring the tree back to the current format.
 **`/vwf:setup reshape` is the shape pass alone.** It skips the mode fork
 entirely: `init` runs — surveying, showing its one plan, taking its own consents
 — its report prints verbatim, and setup stops. No validation, no stamp, no
-doctor, no commit; a re-shape writes exactly two keys into `.config/vwf.yaml` —
-`enforcement.kept_files`, the record of a pack-owned file you chose to keep, and
+doctor, no commit; a re-shape writes exactly three keys into `.config/vwf.yaml`
+— `enforcement.kept_files`, the record of a pack-owned file you chose to keep,
 `enforcement.editor_keys`, the record of what you chose for an editor key your
-hand-written `.vscode` section already carried — and nothing else in it, so a
-user who wants both runs `/vwf:setup` again afterwards. It is also the line
-`/vwf:doctor` prints for every repo-shape finding, so most runs of it arrive
-from a drift row — or from one of the commands that now offer it in-session:
-setup itself after its materialize pass, `/stackgen:stackgen-sync` after a
-re-sync, and `/vwf:recall`'s one drift line at session start (see
+hand-written `.vscode` section already carried, and the top-level `answers:`
+block, the four conditional answers the run asked or read — and nothing else in
+it, so a user who wants both runs `/vwf:setup` again afterwards. It is also the
+line `/vwf:doctor` prints for every repo-shape finding, so most runs of it
+arrive from a drift row — or from one of the commands that now offer it
+in-session: setup itself after its materialize pass, `/stackgen:stackgen-sync`
+after a re-sync, and `/vwf:recall`'s one drift line at session start (see
 [`/vwf:init`](#vwfinit), *When it runs again*). The shape pass includes init's
 **forge pass** — the default branch, the protection on `develop` and `main`, the
 base's backlog project — which is idempotent on a repo already set, so a reshape
@@ -1766,15 +1789,30 @@ name, dedupes by slug per repo, and asks the stack plugin for each one — the
 invocation carrying `repo: <path>`, the member whose `projects:` list holds that
 project, so a member's materialization lands in **that** member's tree and its
 own lockfile, never the base's. Two members pinning the same slug each get their
-own copies. Every landing sits behind the plugin's own consent line; a landing
-you decline leaves the pin untouched and is reported, an `unresolved` axis is
-skipped silently, and an absent axis is written `unresolved` as above. On the
-spine the pass runs before the doctor gate, so a stack that lands here is one
-the gate no longer reports as missing — and a decline is the expected way to
-reach doctor's blocking **pinned, not materialized**, which halts the spine and
-reverts the stamp like any other. In mode `current` there is no stamp to revert:
-the block is what `/vwf:doctor` reports on demand and what the next spine run
-stops on.
+own copies.
+
+**Every landing also carries the recorded answers.** Beside the `repo:` line the
+invocation passes the `answers:` map from the base config's `answers:` block —
+the editor and the secrets provider for the product, the forge and the update
+bot for the target repo — with the **forge re-read live** from that repo's
+`origin`. So a template pinned months after `/vwf:init` ran lands what that
+repo's answers allow rather than everything conditional, and the paths a
+condition dropped are listed in the report under their own heading, exactly as
+init lists its **Skipped** rows. A config still carrying no `answers:` block — a
+repo never reshaped since the key arrived — has the four inferred from the tree
+the way init seeds them, and the pass writes nothing into it. The one key it
+ever writes is a stale `answers.repos.<path>.forge`, rewritten in place and
+named in the report; landing the forge-conditioned files that staleness had
+skipped is `/vwf:setup reshape`'s, which `/vwf:doctor` points at.
+
+Every landing sits behind the plugin's own consent line; a landing you decline
+leaves the pin untouched and is reported, an `unresolved` axis is skipped
+silently, and an absent axis is written `unresolved` as above. On the spine the
+pass runs before the doctor gate, so a stack that lands here is one the gate no
+longer reports as missing — and a decline is the expected way to reach doctor's
+blocking **pinned, not materialized**, which halts the spine and reverts the
+stamp like any other. In mode `current` there is no stamp to revert: the block
+is what `/vwf:doctor` reports on demand and what the next spine run stops on.
 
 **The ordering of the shared spine is the point:** validate the bundle, *then*
 write the config, *then* run `/vwf:doctor` against it — a stamp written before

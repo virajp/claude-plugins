@@ -88,12 +88,18 @@ and offers `/vwf:init` when one is missing anywhere, or when any repo has
 drifted from doctor's baseline. What setup *does* fetch is every **pinned** axis
 — its materialize pass invokes `-stack-template` once per `(repo, slug)`, with
 the `repo:` line naming the member — which is the one landing path
-`/vwf:architecture` no longer takes. That pass passes **no `answers:` map**
-today, and neither does `stackgen-sync`, so a pinned pack's conditional files
-(the editor fragments of tsconfig, astro, pnpm, analysis-options, eslint, ruff)
-land there unconditionally whatever init was told — a home for the four answers
-in `.config/vwf.yaml` and the pass forwarding them is a follow-up plan, recorded
-in `docs/memory/decisions/2026-09-20-pack-intent-rendering.md`.
+`/vwf:architecture` no longer takes. Since `config_format` 21 that pass carries
+an **`answers:` map** beside the `repo:` line, and so does `stackgen-sync`: all
+three callers read the four axes from the base's `.config/vwf.yaml` `answers:`
+block — `editor` and `secrets` once for the product, `forge` and `update_bot`
+per repo — and re-read `forge` live from that repo's `origin`, so a pinned
+pack's conditional files (the editor fragments of tsconfig, astro, pnpm,
+analysis-options, eslint, ruff) land there only where init's answers allow. A
+caller reading a config that carries no block infers the four the way init seeds
+them and writes nothing; the one config key a caller other than `init` may write
+is `answers.repos.<path>.forge`, rewritten in place and reported when the live
+host contradicts the record. Landing the forge-conditioned files that staleness
+had skipped is `/vwf:setup reshape`'s, which `/vwf:doctor` names.
 
 A bundle's frontmatter may also carry **`default: true`**, since 2026-09-15:
 `stackgen-stack-menu` copies it onto every entry whose bundle carries it and
@@ -153,12 +159,23 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   conditions `.github/ISSUE_TEMPLATE/*` on `forge: github`, `renovate.json` on
   `update_bot: renovate` and its editor fragment on `editor: vscode`. The
   materializer evaluates each against the `answers:` map the caller passes
-  beside `repo:` — `/vwf:init` is the caller that holds all four; an axis left
-  out reads **true** and lands — and writes a never-landed false path to the
+  beside `repo:` — since `config_format` 21 all three callers pass a full map
+  read from the base config's `answers:` block, the forge re-read live from
+  `origin`; an axis left out reads **true** and lands, the fallback for a caller
+  none of this describes — and writes a never-landed false path to the
   lockfile's `skipped:` list as `{ path, pack, when }`, never a create and never
   a conflict, so `/vwf:doctor` never reports it missing and a file at that path
   is the repo's own; a path with an `entries:` record whose answer since flipped
-  keeps its record and is never removed. The provider's ignore line is **not** a
+  keeps its record and is never removed. A pack's `skipped:` rows **live and die
+  with its `entries:`**: removing or un-pinning the pack drops its rows too, so
+  the list never claims a path is intentionally absent for a condition nothing
+  evaluates any more. `stackgen-sync` evaluates the same conditions before it
+  classifies a pack's landing set, and gains three states beside its three — a
+  false path with no record is **skipped (condition)** and is its `skipped:`
+  row; a never-landed path whose condition now holds is **landable — condition
+  now true** and is offered as a create under the consent tier a new pack file
+  already takes; a landed path whose condition turned false is **kept**,
+  reported once and never removed. The provider's ignore line is **not** a
   conditional file: `fnox.local.toml` left the base `.gitignore` and is a
   provider row in the hygiene pack's ignore table (fnox, and doppler's
   `.doppler/`), appended under a banner named for the slug only where init's
