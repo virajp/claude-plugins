@@ -318,12 +318,23 @@ the member before it goes with it.
 union — is written under `enforcement.editor_keys` in the **base's**
 `.config/vwf.yaml`, merged into whatever the block already holds, on the same
 single consent as everything else and at the same point in the apply as the
-`kept_files` record. It is the second of the two keys `init` writes into that
-file. On a repo `/vwf:setup` has not reached, the file is the **stub config**
-SKILL.md describes — `config_format` and the `enforcement` block alone,
-written by this same run so the two keys have a home — and the answer is
-recorded there like anywhere else. Nothing about an editor answer is ever
-deferred: a run that asked is a run that recorded.
+`kept_files` record. It is the second of the three keys `init` writes into
+that file. On a repo `/vwf:setup` has not reached, the file is the **stub
+config** SKILL.md describes — `config_format`, the `enforcement` block and
+the `answers` block, written by this same run so the three keys have a home —
+and the answer is recorded there like anywhere else. Nothing about an editor
+answer is ever deferred: a run that asked is a run that recorded.
+
+**`answers.editor` and `enforcement.editor_keys` are two different things in
+two different blocks, and neither reads the other.** The **answer** — is an
+editor in use at all — lives under `answers.editor` and is what the
+materializer's conditional evaluation step reads to decide whether an editor
+fragment lands. The **collision record** lives here, under
+`enforcement.editor_keys`, and says only what the user chose for a settings
+key the hand section already carried. A product that answers `none` composes
+no block and so collides with nothing; a product that answers the editor may
+still record no collision, because the hand section carried no key the packs
+also compose.
 
 **Editing the block is how a user is re-asked.** A recorded answer applies
 for as long as the key collides; a key that stops colliding — the hand copy
