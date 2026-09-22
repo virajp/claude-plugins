@@ -443,10 +443,13 @@ one value per axis, `forge`, `editor`, `secrets` and `update_bot`.
    `${CLAUDE_PLUGIN_ROOT}/assets/templates/registry.yaml` carries, narrowed to
    the project's role where a registry names one and offered as their union
    where nothing does, plus a free **other** the user types. Offer **only** the
-   tokens that asset lists. A spelling the vocabulary has **retired** —
-   `console` among them — is on no list and is never offered; setup's
-   `references/format-lineage.md` is where each retired spelling is recorded
-   against what replaced it, and a user who wants one types it as **other**.
+   tokens that asset lists. **Word the free option as an invitation, not as a
+   fallback** — *other — type any id you want* — so a user who likes none of
+   the tokens can see that typing their own is an ordinary answer. A spelling
+   the vocabulary has **retired** — `console` among them — is on no list and
+   is never offered; setup's `references/format-lineage.md` is where each
+   retired spelling is recorded against what replaced it, and a user who wants
+   one types it as **other**.
 
    **Two projects in one repo that pick the same token** are proposed as
    `<token>-<directory-slug>` each, both rows shown that way — an id is a
@@ -465,12 +468,16 @@ one value per axis, `forge`, `editor`, `secrets` and `update_bot`.
    with is usually a row whose source they did not expect, and the source is
    the only thing that explains where the name came from.
 
-   The answer is **accept the list**, or a replacement for any row. A
-   replacement is slugified by the same rule the proposed ids were — the stack
-   adapter's `assets/ids.md`, which owns it — and is shown once more for
-   acceptance **only if slugifying changed what was typed**; a replacement that
-   is already its own slug is taken silently. Read the asset; never restate the
-   rule here.
+   The answer is **accept the list**, or a replacement for any row — and the
+   round must **say so where the user reads it**, not only here. Spell the
+   accept option *accept these ids*, and offer beside it *replace one or more
+   — type the ids you want*, so the free-text path is visible on the question
+   itself: a user who has to guess that a proposed list is editable will take
+   the list. A replacement is slugified by the same rule the proposed ids were
+   — the stack adapter's `assets/ids.md`, which owns it — and is shown once
+   more for acceptance **only if slugifying changed what was typed**; a
+   replacement that is already its own slug is taken silently. Read the asset;
+   never restate the rule here.
 
    What this question settles is what the plan shows and what §7 writes in
    each repo — the per-project task groups and, on **every** run including

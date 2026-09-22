@@ -1097,19 +1097,23 @@ materializer rather than a file:
   in the tree to propose from, so this same round asks which **platform token**
   each project's primary surface is — `service`, `worker`, `webapp`, `site`,
   `cli`, `iac` and the rest, offered as the closed per-role list plus a free
-  *other* you type — and proposes the token it picks. Two projects in one repo
-  that pick the same token are proposed as `<token>-<directory-slug>` each,
-  since an id is a directory name in the task library. Naming the source is the
-  point: a row you disagree with is usually a row whose source you did not
-  expect. Accept the list, or type a replacement for any row — a replacement is
-  slugged by the same rule and shown once more only if slugging changed it.
-  Nothing is written in any repo until this is answered: not a `p:<slug>:*`
-  group, not its alias, not a commit scope — and the scopes are filled on
-  **every** run, the first included, one per confirmed id, a registry being only
-  where the proposal was read from. `REPO_NAME` is **not** this question's; it
-  is question 1's, taking the repo's folder name. The aggregator's member flags
-  and the `setup-<slug>` aliases are not this question's either — they come from
-  the resolved member repos.
+  *other — type any id you want*, worded that way on purpose so the free entry
+  reads as an ordinary answer rather than an escape hatch — and proposes the
+  token it picks. Two projects in one repo that pick the same token are proposed
+  as `<token>-<directory-slug>` each, since an id is a directory name in the
+  task library. Naming the source is the point: a row you disagree with is
+  usually a row whose source you did not expect. Accept the list, or type a
+  replacement for any row — the two options are spelled *accept these ids* and
+  *replace one or more — type the ids you want*, so the free-text path is on the
+  question rather than something you have to guess at. A replacement is slugged
+  by the same rule and shown once more only if slugging changed it. Nothing is
+  written in any repo until this is answered: not a `p:<slug>:*` group, not its
+  alias, not a commit scope — and the scopes are filled on **every** run, the
+  first included, one per confirmed id, a registry being only where the proposal
+  was read from. `REPO_NAME` is **not** this question's; it is question 1's,
+  taking the repo's folder name. The aggregator's member flags and the
+  `setup-<slug>` aliases are not this question's either — they come from the
+  resolved member repos.
 - **The secrets provider** — the adapter's own menu, filtered to capability
   providers, plus *none — decide later*. Answered **once** and written into
   every repo: a product keeps its secrets in one place, and a member on a

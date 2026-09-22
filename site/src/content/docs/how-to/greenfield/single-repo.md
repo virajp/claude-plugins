@@ -79,8 +79,9 @@ each shown with its slug and where the name came from and yours to replace —
 with no registry and no sub-project directories yet (a sub-project directory
 being, on a first run, one that carries its own language manifest), Relay's one
 project is proposed from its **platform token**, which you pick from the closed
-list (`service`, `worker`, `webapp`, `site`, `cli`, `iac`, …) or type as
-*other*; which provider holds Relay's secrets, which **agent plugins this repo
+list (`service`, `worker`, `webapp`, `site`, `cli`, `iac`, …) or type as *other
+— type any id you want*, the option that says outright you are never stuck with
+the list; which provider holds Relay's secrets, which **agent plugins this repo
 requires** (a multi-select seeded by what is already registered on your machine,
 with *none* as the ordinary answer — `init` offers those rows minus the workflow
 plugin's own and its dependency's, since `setup:ai` installs those two either
