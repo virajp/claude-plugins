@@ -6,9 +6,7 @@ to pick the next runnable plan.
 
 ## Plans
 
-| Folder                                        | Kind   | Plan                                                                                      | Target repo | Priority | Status   | Requires                         | Backlog  |
-| --------------------------------------------- | ------ | ----------------------------------------------------------------------------------------- | ----------- | -------- | -------- | -------------------------------- | -------- |
-| `docs/plans/2026-09-20-pack-first-run-safety` | change | pack first-run safety — no task clobbers host state; git-config requires a forge identity | —           | 10       | COMPLETE | —                                | B28      |
-| `docs/plans/2026-09-20-branch-model`          | change | branch model — landing model per branch; the git pass reads where it stands               | —           | 40       | COMPLETE | 2026-09-20-init-brownfield-reads | B28, B53 |
-| `docs/plans/2026-09-20-pack-intent-rendering` | change | pack intent rendering — conditional files, the editor split, one exclusion set            | —           | 50       | COMPLETE | 2026-09-20-branch-model          | B28      |
-| `docs/plans/2026-09-22-persisted-answers`     | change | persisted answers — the four conditional axes recorded, every caller evaluates them       | —           | 60       | APPROVED | 2026-09-20-pack-intent-rendering | —        |
+| Folder                                                 | Kind   | Plan                                                                                | Target repo | Priority | Status   | Requires                         | Backlog |
+| ------------------------------------------------------ | ------ | ----------------------------------------------------------------------------------- | ----------- | -------- | -------- | -------------------------------- | ------- |
+| `docs/plans/archived/2026-09-20-pack-intent-rendering` | change | pack intent rendering — conditional files, the editor split, one exclusion set      | —           | 50       | COMPLETE | 2026-09-20-branch-model          | B28     |
+| `docs/plans/2026-09-22-persisted-answers`              | change | persisted answers — the four conditional axes recorded, every caller evaluates them | —           | 60       | APPROVED | 2026-09-20-pack-intent-rendering | —       |
