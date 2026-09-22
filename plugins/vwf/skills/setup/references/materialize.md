@@ -35,11 +35,16 @@ to read.
   `deploy_template`, plus `repo.stack.template` and, since `config_format` 19,
   each `projects.<name>.stylesheet`
   (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states").
+  Since `config_format` 21 it also carries the **`answers:`** block — the
+  four conditional axes, read here and passed to every landing ("The answers
+  map" below).
 - **Each repo's adapter lockfile** — `.claude/stackgen/lock.yaml`, the
   materialization record. Read the **slugs** its `entries:` carry and nothing
   else: which paths landed, with what hash, is the adapter's bookkeeping, and
   setup has no business reading it. An absent lockfile means nothing in that
-  repo is materialized.
+  repo is materialized. The one exception is the fallback for a config with
+  no `answers:` block, which reads the pinned provider slug off it and
+  nothing more.
 
 The axes live in the **base's** `.config/vwf.yaml` only. A member repo has no
 config of its own — it carries a back-link
@@ -97,6 +102,62 @@ repo: <path>
 
 `<path>` is the member's `path` relative to the base repo root. Absent means
 the current repo, so a base-targeted landing carries no such line.
+
+Beside it — **always**, base-targeted or not — the four answers, in the same
+payload style:
+
+```text
+answers:
+  forge: <forge>
+  editor: <editor>
+  secrets: <provider>
+  update_bot: <bot>
+```
+
+### The answers map
+
+Those are the conditional axes a pack's `conditional:` entries are evaluated
+against, and they are read from the **base's** `.config/vwf.yaml`
+(`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, the `answers:` block):
+`editor` and `secrets` once for the product, from `answers.editor` and
+`answers.secrets`; `forge` and `update_bot` from the `answers.repos:` entry
+keyed by the **target** repo's member path, spelled exactly as
+`enforcement.kept_files` spells one — `.` for the base. `none` is a legal
+value on every axis and is passed as it stands: it is an answer, not an
+absence.
+
+**The forge is re-read live.** Before each entry is invoked, read the target
+repo's `origin` host and pass **that** as the `forge` axis. The recorded
+value is the record, and the fallback for a repo whose remote answers
+nothing — so a repo whose `origin` appeared after init is evaluated against
+the forge it actually has, with nobody remembering a reshape.
+
+Where the live host **contradicts** the recorded value, rewrite that one
+value in place — `answers.repos.<path>.forge`, that key and nothing else —
+and name the rewrite in the report. It is the only config key this pass
+writes: the pass writes no `answers:` block of its own and touches no other
+key in one. Landing the forge-conditioned files the stale record had skipped
+is the **reshape's**, not this pass's: `/vwf:doctor`'s predicate (e) reports
+the staleness and names `/vwf:setup reshape`, so those files land there and
+never silently mid-pass.
+
+**A config with no `answers:` block** — a repo still at `config_format` 20 —
+is not a reason to pass nothing, which would read as unanswered and land
+every conditional path. Infer what init's own seeds would give, pass that
+map, and **write nothing**:
+
+- `forge` — the target repo's `origin` host, `none` where there is no
+  remote;
+- `editor` — a `.vscode/` directory in the target repo, or the editor binary
+  on `PATH`, else `none`;
+- `secrets` — the provider slug the target repo's adapter lockfile pins,
+  else `none`;
+- `update_bot` — a Renovate config or a Dependabot config in the target
+  repo, else `none`.
+
+Doctor's stamp check reports 20 → 21 as drift in its own right, and the
+reshape that follows is what asks the two questions and writes the block.
+This pass never writes one.
 
 **Each landing is the adapter's own consent line; setup adds no consent of its
 own.** The adapter lands one set and takes one commit per slug — that rule is
@@ -166,6 +227,14 @@ One block, carried back to the spine:
 
 - one line per entry in the landing list — the repo, the slug, and one of
   **landed**, **declined**, or **already materialized**;
+- **the skips the adapter returned**, under their own heading, one line each
+  — the path, the pack, and the `when:` that dropped it — listed exactly as
+  `/vwf:init`'s plan lists its **Skipped** rows, so a fragment an answer
+  dropped is visible rather than silently absent. A landing that skipped
+  nothing prints no heading;
+- one line per recorded `forge` the live host contradicted — the repo, the
+  value replaced, the value written, and `/vwf:setup reshape` as what lands
+  the files the stale record skipped;
 - one line per member skipped as absent, with its checkout line;
 - one line per axis written `unresolved`, naming the project and the axis;
 - the sentence **"architecture decides; setup pins"**, so a reader knows where

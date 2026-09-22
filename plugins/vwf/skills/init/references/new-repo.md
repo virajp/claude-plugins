@@ -105,12 +105,23 @@ itself; it passes values, spelled exactly as the axis takes them, and takes
 back what the dry-run lists as landed and as skipped. The four, for the repo
 this pass is running in:
 
-| Axis         | Value passed                                     | From                             |
-| ------------ | ------------------------------------------------ | -------------------------------- |
-| `forge`      | `github` or `gitlab`, from the `origin` host     | §11(f)'s precondition, step 1    |
-| `editor`     | `vscode` on a **yes**; `none` on a **no**        | question 7, once for the product |
-| `secrets`    | the provider slug, as the menu spelled it        | question 4, once for the product |
-| `update_bot` | `renovate` or `dependabot`; `none` on **none**   | question 8, that repo's row      |
+| Axis         | Value passed                                     | From                             | Source after the first run          |
+| ------------ | ------------------------------------------------ | -------------------------------- | ----------------------------------- |
+| `forge`      | `github` or `gitlab`, from the `origin` host     | §11(f)'s precondition, step 1    | the live host, always re-read       |
+| `editor`     | `vscode` on a **yes**; `none` on a **no**        | question 7, once for the product | `answers.editor`, re-asked seeded   |
+| `secrets`    | the provider slug, as the menu spelled it        | question 4, once for the product | `answers.secrets`, re-asked seeded  |
+| `update_bot` | `renovate` or `dependabot`; `none` on **none**   | question 8, that repo's row      | that repo's `answers.repos` entry   |
+
+**The block is written as part of the landing pass**, in every mode, and the
+fourth column is what a later run reads. Its shape is
+`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`'s top-level `answers:` — `editor`
+and `secrets` once for the product, `repos:` keyed by the member path exactly
+as `enforcement.kept_files` keys one (`.` for the base), each entry carrying
+`forge` and `update_bot`. The **forge is never taken from the record while
+`origin` can be read**: every run re-reads the live host and passes that, and
+the recorded value is the fallback only where the remote cannot be read at
+all. A recorded forge the live host contradicts is rewritten in place — that
+one value — and reported.
 
 The forge read is §11(f)'s own — `github.com` or a host `gh auth status`
 lists is `github`, `gitlab.com` or a host `glab auth status` lists is
@@ -179,15 +190,19 @@ reported as kept.
 **The record has a home in every mode, because `init` makes one.** Where no
 `.config/vwf.yaml` exists in the base — the ordinary case on a first run, since
 `/vwf:setup` is what writes the file in full — `init` writes a **stub** there,
-in the plan as one create row, carrying exactly two blocks and nothing else:
+in the plan as one create row, carrying exactly three blocks and nothing else:
 `config_format`, at the value `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`'s
-schema heading names, and `enforcement`, holding `kept_files` and
-`editor_keys`. No roster, no product name, no project — every other key is
+schema heading names, `enforcement`, holding `kept_files` and
+`editor_keys`, and `answers`, holding the four conditional answers this run
+holds. No roster, no product name, no project — every other key is
 `/vwf:setup`'s, and its migration and fill passes complete the stub on the run
-that follows, reading the two blocks it finds as their own. So a keep, and an
-editor-key answer under §6's collision rule, is always **recorded**, in a
-member's turn as much as the base's; there is no Deferred line for either
-record, and nothing is re-asked on the next reshape for want of the file.
+that follows, reading the three blocks it finds as their own. So a keep, an
+editor-key answer under §6's collision rule, and the conditional answers
+themselves are always **recorded**, in a member's turn as much as the base's;
+there is no Deferred line for any of the three records, and nothing is
+re-asked on the next reshape for want of the file. Where the file **does**
+exist, the same three keys are written into it in place — the `answers:`
+block on every run, whether or not the file already carried one.
 
 ## 3 — The secrets provider
 

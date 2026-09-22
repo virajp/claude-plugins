@@ -578,15 +578,28 @@ product's only one — so a keep inside a member is recorded there, keyed by the
 path relative to the base root with the member's path as its prefix
 (`backend/.config/…`), while a keep in the base keeps its plain spelling.
 
-**That key is one of the two things `init` writes into `.config/vwf.yaml` —
-the other is `enforcement.editor_keys`, the editor merge's.** The entry is
-written under the same single consent as everything else, merged into
-whatever the block already holds, and an absent `kept_files` block reads as
-empty. On a repo `/vwf:setup` has not reached there is no file yet, and
-`init` writes the **stub** SKILL.md describes — `config_format` and the
-`enforcement` block, nothing else — so the record has a home on the run that
-made it; `/vwf:setup`'s own passes complete the file later. Nothing about a
-keep is deferred on this account.
+**That key is one of the three things `init` writes into `.config/vwf.yaml` —
+the others are `enforcement.editor_keys`, the editor merge's, and the
+top-level `answers` block, the four conditional answers this run asked or
+read.** The entry is written under the same single consent as everything
+else, merged into whatever the block already holds, and an absent
+`kept_files` block reads as empty. On a repo `/vwf:setup` has not reached
+there is no file yet, and `init` writes the **stub** SKILL.md describes —
+`config_format`, the `enforcement` block and the `answers` block, nothing
+else — so the record has a home on the run that made it; `/vwf:setup`'s own
+passes complete the file later. Nothing about a keep is deferred on this
+account.
+
+**The `answers` block is recorded on this pipeline exactly as it is on the
+other**, and a reshape is where a product that has never carried one gains
+it: a config stamped at the format before the block existed has no `answers:`
+to read, so this run asks its two questions seeded as
+[new repo](new-repo.md) §2 describes and writes the block whole — `editor`
+and `secrets` once for the product, `repos:` keyed by the member path exactly
+as `kept_files` keys one, each entry carrying `forge` and `update_bot`. A
+config that already carries the block is rewritten from this run's answers on
+the same terms, and the forge is the live `origin` host rather than the
+recorded value wherever the remote can be read.
 
 **The helper library is the one file this pass never offers.** Every task
 file created here sources that library, so a kept copy missing a function the
@@ -650,9 +663,10 @@ such type, before the plan is printed, with the closed set of ten as the
 choices plus **keep as is**; a mapped answer is a rename row like the table's,
 and *keep as is* leaves the type in the configuration outside the closed set,
 listed in the plan as kept with the answer beside it. `init` records no
-answer for it — the two keys it writes are pass 6's and pass 7's — so a kept
-type is asked about again on the next run it is still there, which is one
-question, and the honest price of not growing a third record.
+answer for it — the three keys it writes are pass 6's, pass 7's and the
+`answers` block — so a kept type is asked about again on the next run it is
+still there, which is one question, and the honest price of not growing a
+fourth record.
 
 This maps the **configuration**, not the history. Commits already written keep
 their words; rewriting history to match a config change is never something
@@ -1290,6 +1304,12 @@ reports the move; a **directory that holds a project**, which is listed once
 under **Projects**, with its confirmed id, and nowhere else; and a kept-file
 record on a product whose base has no `.config/vwf.yaml`, since the stub
 gives it a home on the same run.
+
+**The report names the four answers recorded**, per repo, beside the values
+the plan said would be passed — so a reshape on a product whose config
+carried no `answers:` block visibly gains one, and a forge the run rewrote
+because the live `origin` host contradicted the record is a line of its own
+rather than a silent edit.
 
 `Files kept` names each offered file the user kept, with the reason recorded
 beside it, and `Tasks kept` lists every repo-owned task pass 10 found — with

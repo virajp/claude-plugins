@@ -212,7 +212,12 @@ skipping the whole handoff.
 In one paragraph, so a reader knows what the reference will say: setup groups
 the axes holding a slug the target repo's adapter lockfile does not name,
 dedupes by slug per repo, and invokes the adapter once per `(repo, slug)`,
-each landing behind the **adapter's own** consent line. A declined landing
+each landing behind the **adapter's own** consent line. Every landing carries
+the config's recorded `answers:` — the forge re-read live from that repo's
+`origin` — so a template pinned months after `/vwf:init` ran lands what that
+repo's answers allow, not everything. The pass never lands a forge-conditioned
+file a **stale** record would have skipped: `/vwf:doctor` reports the
+staleness and `/vwf:setup reshape` is what lands it. A declined landing
 leaves the pin untouched and is reported. An `unresolved` axis is skipped
 silently. An **absent** axis is written `unresolved` and the run continues — a
 slug is never rewritten.

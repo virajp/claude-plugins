@@ -30,10 +30,11 @@ are a pair and neither does the other's job: everything a repository needs
 before it has a product — the config layout, the task vocabulary, the gates,
 the ignore set, a licence — is this command's, and everything about
 `docs/blueprint/`, `.config/vwf.yaml` and the memory tree stays `/vwf:setup`'s
-— with two keys excepted, `enforcement.kept_files`, which records a pack-owned
-file the user chose to keep, and `enforcement.editor_keys`, which records what
-the user chose for an editor key the hand section already carried; both are
-things only a shaping run can know about.
+— with three keys excepted, `enforcement.kept_files`, which records a
+pack-owned file the user chose to keep, `enforcement.editor_keys`, which
+records what the user chose for an editor key the hand section already
+carried, and `answers`, which records the four conditional answers this run
+asked or read; all three are things only a shaping run can know about.
 Run `init` first on a repo that has neither.
 
 Nothing here knows what the repo is written in, and that is the design. Every
@@ -70,18 +71,22 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
   `_scripts/local` sidecar the existing-repo pipeline writes. No pack declares
   it, no pack ships it and `init` never replaces it — and nothing in it is
   authored, since every function it holds is carried verbatim out of the
-  repo's own helper file. It is a **move**, wearing a create's row. **Two keys
-  are neither either**: `enforcement.kept_files` in `.config/vwf.yaml`, where
-  any run — whatever mode the repo resolved — records a pack-owned file the
-  user chose to keep so it is never re-offered, and `enforcement.editor_keys`
+  repo's own helper file. It is a **move**, wearing a create's row. **Three
+  keys are neither either**: `enforcement.kept_files` in `.config/vwf.yaml`,
+  where any run — whatever mode the repo resolved — records a pack-owned file
+  the user chose to keep so it is never re-offered, `enforcement.editor_keys`
   beside it, where any run records the answer for an editor key the hand
-  section already carried so it is never re-asked. `init` writes those two
-  keys and nothing else in that file — and where the file does not exist
-  yet, it writes a **stub** to hold them: `config_format` and the
-  `enforcement` block alone, per [new repo](references/new-repo.md) §2, which
-  `/vwf:setup`'s migration and fill passes complete later. A keep or a
-  collision answer is therefore always recorded, never deferred for want of
-  the file.
+  section already carried so it is never re-asked, and the top-level
+  `answers` block, where any run records the four conditional answers it
+  holds — the editor and the secrets provider once for the product, the forge
+  and the update bot per repo — so every later caller of the materializer
+  evaluates a `when:` against the same values rather than against nothing.
+  `init` writes those three keys and nothing else in that file — and where
+  the file does not exist yet, it writes a **stub** to hold them:
+  `config_format`, the `enforcement` block and the `answers` block alone, per
+  [new repo](references/new-repo.md) §2, which `/vwf:setup`'s migration and
+  fill passes complete later. A keep, a collision answer or a conditional
+  answer is therefore always recorded, never deferred for want of the file.
 - **Never application code.** Not a source file, not a test, not a directory
   of either.
 - **Never a language manifest or a lockfile.** Those declare what the project
@@ -601,8 +606,12 @@ one value per axis, `forge`, `editor`, `secrets` and `update_bot`.
    files are **skipped**, listed in the plan under their own heading, and
    the editor merge in
    [fragments and sections](references/fragments-and-sections.md) then has no
-   fragment to read and composes nothing. Nothing about the answer is written
-   into the tree; a later run asks again, defaulted the same way.
+   fragment to read and composes nothing. The answer **is** written into the
+   tree — under `answers.editor` in `.config/vwf.yaml`, once for the product —
+   so a later caller of the materializer evaluates the axis against the same
+   value rather than against nothing. A reshape still asks, seeded by the
+   recorded value where there is one and by the two reads above where there is
+   not.
 8. **The update bot.** **One row per repo** in the one round: which hosted
    dependency-update service watches this repo — the one whose policy file
    the hygiene pack ships, the other one, or **none**. The options are the
@@ -637,6 +646,17 @@ read, since an axis the map leaves out lands every path conditioned on it —
 and lists every path a condition skipped under its own **Skipped** heading,
 one line per path naming the axis that decided it, so a file that did not land
 is a file the reader can see was not landed rather than one that was missed.
+
+The same four values are **recorded**, in every mode, as part of the pass that
+writes the config — the top-level `answers:` block of the base's
+`.config/vwf.yaml`, whose shape is
+`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`'s: `editor` and `secrets` once
+for the product, `repos:` keyed by the member path exactly as
+`enforcement.kept_files` keys one (`.` for the base), each entry carrying
+`forge` and `update_bot`. Every key is always present and `none` is the
+spelling of no answer, exactly as the map passed to the materializer spells
+it. The record is written on a repo whose config already exists as much as
+into the stub, and the plan carries it as one row.
 
 ## The pipelines
 
@@ -720,7 +740,12 @@ already follow. The secrets provider is fetched by whichever slug the user
 picked at question 4. **Every fetch carries the four answers** as its
 `answers:` map — the forge, the editor, the provider slug, the update bot —
 so the materializer's conditional evaluation step can decide a pack's
-conditional files; a pack with no `when:` lands whole, as it always has, and a
+conditional files. That map is the `answers:` block the config records, with
+the **forge refreshed from `origin`** on every run: the recorded forge is the
+record and the fallback for a repo whose remote cannot be read at all, and a
+recorded forge that no longer matches the live host is **rewritten in place**
+— that one value, nothing else — and said so in the run's own report. A pack
+with no `when:` lands whole, as it always has, and a
 file a condition skips is the plan's **Skipped** row, never a deferral:
 nothing is waiting on a later run, the repo simply is not the kind the file
 was for.

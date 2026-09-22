@@ -350,9 +350,17 @@ also compose is a **collision** — asked once per run inside the plan (keep min
 take the pack's, or union for an object-valued key or a nesting parent), never
 resolved by the file carrying the key twice, and recorded under
 `enforcement.editor_keys` beside it, spelled as `kept_files` spells its paths;
-those two are the only keys `init` writes into `.config/vwf.yaml` — into a
-**stub** (`config_format` plus the `enforcement` block) where the file does not
-exist yet — and `config_format` 20 is the bump that added the second. The five
+the four conditional answers themselves are recorded too, in every mode, under a
+**top-level `answers:`** block — the editor and the secrets provider once for
+the product, the forge and the update bot per repo, every key present and `none`
+the spelling of no answer — so every later caller of the materializer evaluates
+a `when:` against the same values rather than against nothing. Those three are
+the only keys `init` writes into `.config/vwf.yaml` — into a **stub**
+(`config_format` plus the `enforcement` and `answers` blocks) where the file
+does not exist yet — and `config_format` 20 is the bump that added
+`editor_keys`, 21 the bump that added `answers`. No other skill writes the
+block, with one exception: a caller that finds the recorded forge contradicted
+by the live `origin` host rewrites that one value and says so. The five
 post-landing steps (the secrets provider; the placeholders; the readme, licence
 and security files as one; the bootstrap; the aggregator offer) run in **every**
 mode, and `init` re-records the lockfile hash of every file it filled, appended
@@ -368,19 +376,21 @@ predicates (a)–(f) alone, never (g) — pointing at `/vwf:setup reshape`, so
 nobody has to remember to reshape. **Architecture decides the stack and setup
 pins it**: architecture records a slug and materializes nothing, then invokes
 `/vwf:setup` in-session, whose **materialize pass** — every mode, once per
-`(repo, slug)`, carrying the contract's `repo:` line — lands each pinned
-template in the member repo that project belongs to, writes `unresolved` on an
-axis it finds absent, and never rewrites a pin. A pin nobody landed is
-`/vwf:doctor`'s blocking *pinned, not materialized*. **Everything up to
-`blueprint` is done in full before planning** — `plan` hard-halts on a partial
-coverage stamp. The ad-hoc planner `change-plan` sits **beside** that line
-rather than in it: it plans work with no blueprint slice behind it — tooling,
-CI, docs, a refactor, a tree the blueprint does not describe — reads neither the
-blueprint nor the registry, and names the commands its plan folder gates on. The
-two planners share the folder shape (`assets/templates/plan-folder.md`), the
-interview checklist (`assets/plan-interview.md`) and the one plan index, whose
-contract and every write to it — the row, the Status block, the archive move —
-are the skill-invoked `plan-management`'s
+`(repo, slug)`, carrying the contract's `repo:` line and, beside it, the
+config's recorded `answers:` map with the forge re-read live from that repo's
+`origin` — lands each pinned template in the member repo that project belongs
+to, writes `unresolved` on an axis it finds absent, and never rewrites a pin. A
+pin nobody landed is `/vwf:doctor`'s blocking *pinned, not materialized*.
+**Everything up to `blueprint` is done in full before planning** — `plan`
+hard-halts on a partial coverage stamp. The ad-hoc planner `change-plan` sits
+**beside** that line rather than in it: it plans work with no blueprint slice
+behind it — tooling, CI, docs, a refactor, a tree the blueprint does not
+describe — reads neither the blueprint nor the registry, and names the commands
+its plan folder gates on. The two planners share the folder shape
+(`assets/templates/plan-folder.md`), the interview checklist
+(`assets/plan-interview.md`) and the one plan index, whose contract and every
+write to it — the row, the Status block, the archive move — are the
+skill-invoked `plan-management`'s
 (`skills/plan-management/references/plan-index.md`); and one executor,
 `execute`, runs both: each unit's `Kind` cell decides what runs over it — a
 `code` unit TDD and the coverage gate, a `review` row the two engines plus the

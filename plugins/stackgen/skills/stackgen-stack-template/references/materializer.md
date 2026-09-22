@@ -19,10 +19,14 @@ to a repo, and every write it makes is consent-gated and committed once.
   beside the `repo:` line, in the same payload style: at most one value
   per axis of the `conditional:` vocabulary
   (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) — `forge`, `editor`,
-  `secrets`, `update_bot`. `/vwf:init` is the caller that holds all four
-  (the origin host, its editor and update-bot questions, the provider
-  picked at its secrets question) and passes them per repo; a caller that
-  passes none, or leaves an axis out, is read as below.
+  `secrets`, `update_bot`. The map a caller passes comes from the target
+  product's `.config/vwf.yaml` `answers:` block — `editor` and `secrets`
+  once for the product, `forge` and `update_bot` per repo — with `forge`
+  re-read live from the repo's `origin` host, so a remote that appeared
+  since is evaluated against, not the record. `/vwf:init` is the caller
+  that asks the four and writes that block; `/vwf:setup`'s materialize
+  pass and `/stackgen:stackgen-sync` read it. A caller that passes none,
+  or leaves an axis out, is read as below.
 
 ## Steps
 
@@ -209,7 +213,11 @@ to a repo, and every write it makes is consent-gated and committed once.
      axis — reads as true: the path lands, exactly as every path did
      before the key existed. A skip is an act of a known answer, never of
      a missing one, and this is what keeps a caller that passes nothing
-     landing what it always landed.
+     landing what it always landed. The rule is **unchanged** now that
+     every caller this plugin knows about passes a full map read from
+     `.config/vwf.yaml`'s `answers:` block with the forge re-read live:
+     it is the fallback for a caller nobody here has met, not the path
+     those callers take.
 
    A path named by more than one entry stays only when every condition
    is true. A run evaluates only the packs of the slug it materializes,

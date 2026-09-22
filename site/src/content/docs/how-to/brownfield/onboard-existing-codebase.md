@@ -103,11 +103,12 @@ default, so the first commit runs under husky and the shipped gate is landed but
 not wired until you flip the row to *switch*; and, over every other file already
 sitting at a path a pack would land, a **replace-or-keep** row shown before the
 one consent — a keep is recorded under `enforcement.kept_files`, in a stub
-`.config/vwf.yaml` `init` writes since setup has not made one yet, so it is
-never re-offered. Bookable's `.gitignore` is neither replaced nor offered: the
-pack's sections are **merged** into it, each one it lacks appended, patterns
-compared normalised so `node_modules/` under Bookable's spelling is not doubled.
-A readme, a licence file under any spelling or a `SECURITY.md` already there is
+`.config/vwf.yaml` `init` writes since setup has not made one yet, carrying the
+`answers:` block of the run's four conditional answers beside it, so it is never
+re-offered. Bookable's `.gitignore` is neither replaced nor offered: the pack's
+sections are **merged** into it, each one it lacks appended, patterns compared
+normalised so `node_modules/` under Bookable's spelling is not doubled. A
+readme, a licence file under any spelling or a `SECURITY.md` already there is
 kept outright. Its **stack read** finds the `package.json` and lands the Node
 `.gitignore` section and the Node runtime settings on this first run, with no
 pin yet. (Had Bookable already been shaped once, it would carry the lockfile and

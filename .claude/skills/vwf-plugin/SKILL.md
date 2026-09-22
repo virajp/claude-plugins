@@ -111,58 +111,64 @@ secrets, §4 placeholders, §8 readme/licence/security, §9 bootstrap, §10
 aggregator) run, and `init` re-records the lockfile hash of every file it
 filled, appended to or merged — pass 6's replace and keep re-record too — as the
 last step before the git pass; a missing `.config/vwf.yaml` gets a stub
-(`config_format` + `enforcement`) so `kept_files` and `editor_keys` are never
-deferred. A **stack read** — pins, else lockfile components, else a fixed
-manifest table, first hit per language, six keys — drives the ignore sections
-and the toolchain config's `RUNTIME_BLOCK` / `PATH_ENTRIES`. There is **one plan
-with a section per repo and one consent**, and the apply order is members first
-so the base commits its gitlinks current. `init` materializes the three
-unconditional bundles through the stack adapter by the fixed slugs `mise`,
-`repo-gates` and `repo-hygiene` — per repo, each with its own lockfile — fills
-the marked positions those packs leave it (the member flags and their aliases,
-named for the **member repos** and never from a project id; the per-project
-groups, their aliases and the commit gate's scopes, all three from the project
-ids; the repo-name key, from that repo's own main-checkout folder name slugified
-and never from a project id; `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN`,
-`MEMBERS`, the two runtime positions from the stack read and the forge links,
-and the plugin task's two agent-plugin lists), runs **three** merges — ignore
-sections, pre-commit fragments, editor fragments — and writes a two-line readme
-stub; it names no tool, and every file it lays down is a pack's. The editor
-merge reads each `.vscode` file whole: a settings key or nesting parent the hand
-section already carries that the packs also compose is a **collision**, asked
-once per run inside the plan (keep mine, take the pack's, or union for an
-object-valued key or a nesting parent) and recorded under
-`enforcement.editor_keys` in the base's `.config/vwf.yaml` — with
-`enforcement.kept_files`, one of the two keys `init` writes there — so a hand
-key wins because the block **omits** it, never because the file carries it
-twice. Before any of that it asks **seven** questions — one round each for the
-whole product, a per-repo answer showing as a row inside its single round — the
-first naming each `blank` or `source` repo's folder, which is the one thing that
-fills `REPO_NAME`, and the second confirming every project id, the slug it
-resolves to and the source the name came from — the registry, a sub-project
-directory (defined once in init: the registry's `projects[].path`, or on a first
-run in `source` mode a non-root directory with its own manifest or one a
-workspace file lists), or the project's platform token — grouped by repo:
-nothing writes a `p:<slug>:*` group, its alias or a commit scope until that list
-is accepted, and the scopes are filled on **every** run, the first included, one
-per confirmed id. The fifth asks which agent plugins this product requires,
-seeded by running the plugin task's own inventory mode and written into those
-two lists. The sixth asks each repo's **visibility**, `public` or `private`,
-defaulted from the forge where the repo has an origin the forge CLI answers for
-and `private` otherwise, written nowhere in the tree; its two dependent parts
-are the seventh round — 6a the licence, rows for `public` repos only (a private
-repo gets no `LICENSE`), and 6b the security contact, a public repo's row
-defaulted to its advisories page and a private repo's a free email or internal
-URL with no default. The seventh asks the **editor** once for the product — is
-VS Code in use, defaulted yes where any resolved repo carries a `.vscode/` or
-the `code` binary is on `PATH` — and the eighth the **update bot** per repo,
-`renovate`, `dependabot` or `none`, seeded from the survey; those two are the
-eighth and ninth rounds, and with the forge read from each `origin` host and
-question 4's provider slug they are the `answers:` map every fetch passes the
-materializer beside `repo:` — every key present, `none` the no-match value on
-`forge`, `editor` and `secrets` and a legal answer on `update_bot` — against
+(`config_format` + `enforcement` + `answers`) so `kept_files`, `editor_keys` and
+the four conditional answers are never deferred. A **stack read** — pins, else
+lockfile components, else a fixed manifest table, first hit per language, six
+keys — drives the ignore sections and the toolchain config's `RUNTIME_BLOCK` /
+`PATH_ENTRIES`. There is **one plan with a section per repo and one consent**,
+and the apply order is members first so the base commits its gitlinks current.
+`init` materializes the three unconditional bundles through the stack adapter by
+the fixed slugs `mise`, `repo-gates` and `repo-hygiene` — per repo, each with
+its own lockfile — fills the marked positions those packs leave it (the member
+flags and their aliases, named for the **member repos** and never from a project
+id; the per-project groups, their aliases and the commit gate's scopes, all
+three from the project ids; the repo-name key, from that repo's own
+main-checkout folder name slugified and never from a project id;
+`MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN`, `MEMBERS`, the two runtime positions
+from the stack read and the forge links, and the plugin task's two agent-plugin
+lists), runs **three** merges — ignore sections, pre-commit fragments, editor
+fragments — and writes a two-line readme stub; it names no tool, and every file
+it lays down is a pack's. The editor merge reads each `.vscode` file whole: a
+settings key or nesting parent the hand section already carries that the packs
+also compose is a **collision**, asked once per run inside the plan (keep mine,
+take the pack's, or union for an object-valued key or a nesting parent) and
+recorded under `enforcement.editor_keys` in the base's `.config/vwf.yaml` — with
+`enforcement.kept_files` and the top-level `answers:` block, one of the three
+keys `init` writes there — so a hand key wins because the block **omits** it,
+never because the file carries it twice. Before any of that it asks **seven**
+questions — one round each for the whole product, a per-repo answer showing as a
+row inside its single round — the first naming each `blank` or `source` repo's
+folder, which is the one thing that fills `REPO_NAME`, and the second confirming
+every project id, the slug it resolves to and the source the name came from —
+the registry, a sub-project directory (defined once in init: the registry's
+`projects[].path`, or on a first run in `source` mode a non-root directory with
+its own manifest or one a workspace file lists), or the project's platform token
+— grouped by repo: nothing writes a `p:<slug>:*` group, its alias or a commit
+scope until that list is accepted, and the scopes are filled on **every** run,
+the first included, one per confirmed id. The fifth asks which agent plugins
+this product requires, seeded by running the plugin task's own inventory mode
+and written into those two lists. The sixth asks each repo's **visibility**,
+`public` or `private`, defaulted from the forge where the repo has an origin the
+forge CLI answers for and `private` otherwise, written nowhere in the tree; its
+two dependent parts are the seventh round — 6a the licence, rows for `public`
+repos only (a private repo gets no `LICENSE`), and 6b the security contact, a
+public repo's row defaulted to its advisories page and a private repo's a free
+email or internal URL with no default. The seventh asks the **editor** once for
+the product — is VS Code in use, defaulted yes where any resolved repo carries a
+`.vscode/` or the `code` binary is on `PATH` — and the eighth the **update bot**
+per repo, `renovate`, `dependabot` or `none`, seeded from the survey; those two
+are the eighth and ninth rounds, and with the forge read from each `origin` host
+and question 4's provider slug they are the `answers:` map every fetch passes
+the materializer beside `repo:` — every key present, `none` the no-match value
+on `forge`, `editor` and `secrets` and a legal answer on `update_bot` — against
 which a pack's `conditional:` files are evaluated, the skips listed per repo
-under a **Skipped** heading in the plan. 4, 5 and 7 are answered once for every
+under a **Skipped** heading in the plan. The same four are **recorded**, in
+every mode, in the base config's top-level `answers:` block — `editor` and
+`secrets` once for the product, `repos:` keyed as `kept_files` keys a path (`.`
+for the base) with `forge` and `update_bot` per repo — so the later callers
+evaluate a `when:` against the same values; the forge is re-read live from
+`origin` on every run and a record the live host contradicts is rewritten in
+place, that one value, and reported. 4, 5 and 7 are answered once for every
 repo, 2, 6, 6b and 8 carry a row per repo, 6a a row per public repo, and 1 and 3
 a row per repo that resolved `blank` or `source`. It then closes with a
 **consent-gated git pass**, whose two questions are asked once and applied to
@@ -221,9 +227,13 @@ a **pinned** stack is landed: **architecture decides, setup pins.** Its
 is the mode a repo architecture just wrote pins into resolves to — grouping the
 axes holding a slug the target repo's adapter lockfile does not name, deduping
 by slug per repo, and invoking `-stack-template` once per `(repo, slug)` with
-the contract's `repo:` line; an **absent** axis is written `unresolved` and a
-pinned slug is never rewritten. On the spine it runs before the doctor gate, and
-a declined landing is the expected way to reach doctor's blocking *pinned, not
+the contract's `repo:` line and the config's recorded `answers:` map beside it,
+the forge re-read live from that repo's `origin` — a template pinned months
+after `init` ran lands what that repo's answers allow, and a stale recorded
+forge is rewritten in place and left for `/vwf:setup reshape` to land the files
+it had skipped; an **absent** axis is written `unresolved` and a pinned slug is
+never rewritten. On the spine it runs before the doctor gate, and a declined
+landing is the expected way to reach doctor's blocking *pinned, not
 materialized*. **It runs none of the foundations** — it ends by printing the
 chain and offering to start `/vwf:product`, because each of those commands
 resolves its own mode and reports what it did, which a gate inside setup could
