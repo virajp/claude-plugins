@@ -424,10 +424,18 @@ Rules the lockfile enforces:
   other pack's kept — since a run materializes one slug and can judge no
   other pack's conditions; a path whose condition now holds leaves it and
   lands as an ordinary entry, subject to the same collision check as any
-  other create.
+  other create. **A pack's `skipped:` rows live and die with its
+  `entries:`**: a pack that is removed or un-pinned takes its rows with
+  it, so the list never carries the ghost of a pack the repo no longer
+  runs — a row left behind would go on telling every reader that a path
+  is intentionally absent for a condition nothing evaluates any more.
 - **Removal removes exactly the listed entries**, `settings_keys` and
   `mcp_servers`, nothing else — the same receipt invariant this repo's
-  installer CLI lives by.
+  installer CLI lives by — and drops the removed pack's `skipped:` rows
+  with its `entries:`. Those rows are the record of a decision about that
+  pack's paths; nothing lands and nothing is deleted on the way out, so
+  dropping them removes a claim, never a file, and a file sitting at a
+  dropped row's path was always the repo's own.
 - **The local plugin is removed by subtraction, not deletion.** Removal drops
   only the keys under `local_plugin.lsp_servers` and
   `local_plugin.mcp_servers` from the generated manifest — another repo's

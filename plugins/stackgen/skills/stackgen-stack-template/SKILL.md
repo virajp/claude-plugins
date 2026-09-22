@@ -174,11 +174,21 @@ check real.
   (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). The materializer
   evaluates every pack's `conditional:` entries against it in its step 1
   and skips the paths whose answer differs, recording them in the
-  lockfile's `skipped:` list; an axis the map leaves out, or a map not
-  passed at all, reads as **true** and lands the path, so a caller that
-  passes nothing lands what it always landed. `/vwf:init` is the caller
-  that holds all four and passes them per repo. These two lines are the
-  whole of the optional input beside the catalog paths.
+  lockfile's `skipped:` list. **Three callers pass the map now** —
+  `/vwf:init`, which asks the four questions and records them in the
+  base repo's `.config/vwf.yaml` under its `answers:` block (`editor`
+  and `secrets` once for the product, `forge` and `update_bot` per
+  repo); `/vwf:setup`'s materialize pass, which lands a pinned template
+  long after init ran; and `/stackgen:stackgen-sync`, which re-derives a
+  pack's landing set. Each reads that block, re-reads `forge` from the
+  repo's `origin` host live and passes that, and passes the full map per
+  repo; a caller that finds no block infers the four values from the
+  tree, passes those and writes nothing. An axis the map leaves out, or
+  a map not passed at all, reads as **true** and lands the path — the
+  **fallback** for a caller that passes none, which keeps a caller this
+  contract does not know about landing what it always landed, and not
+  the path the three above take. These two lines are the whole of the
+  optional input beside the catalog paths.
 - **The caller may pass context; this skill never reaches for another
   plugin's files.** vwf passes the principles-catalog paths into the
   invocation (the design-adapter payload style). If a generation run needs
