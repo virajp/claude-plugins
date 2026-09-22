@@ -6,6 +6,5 @@ to pick the next runnable plan.
 
 ## Plans
 
-| Folder                                         | Kind   | Plan                                              | Target repo | Priority | Status  | Requires | Backlog |
-| ---------------------------------------------- | ------ | ------------------------------------------------- | ----------- | -------- | ------- | -------- | ------- |
-| docs/plans/2026-09-22-astro-mdx-images-layouts | change | Astro pack — MDX, the image pipeline, and layouts | —           | 10       | RUNNING | —        | B47     |
+| Folder | Kind | Plan | Target repo | Priority | Status | Requires | Backlog |
+| ------ | ---- | ---- | ----------- | -------- | ------ | -------- | ------- |
