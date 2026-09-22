@@ -68,7 +68,8 @@ before 2026-09-06 — a pin on the old slug has to be re-pointed.) All four also
 carry the pack's **head doctrine** — the title, description, canonical address,
 social tags, favicon links, manifest, robots and sitemap a public page owes the
 outside — and land an `icons` task that rasterizes the whole favicon set from
-your one source mark. Nothing to decide there: it is the same for all four.
+your one source mark. Nothing to decide there: it is the same for all four. So
+is the pack's guidance on MDX, the image pipeline, and layouts and slots.
 
 **`html` is the fifth entry, and it is not Astro.** Pick it when the site is a
 handful of pages you write by hand — a landing page, a personal site — with no
