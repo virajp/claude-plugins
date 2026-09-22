@@ -35,13 +35,18 @@ offered to replace and the user kept — so the decision is settled once and
 neither `/vwf:init` nor `/vwf:doctor` raises it again. Since **format 20** it
 also records an **editor key** answer — what `/vwf:init` does with a key both
 a hand-written `.vscode` section and the composed block carry — so a collision
-is asked once and never again. Since **blueprint-format 6** this file replaces
+is asked once and never again. Since **format 21** a top-level `answers:` block
+records the **four conditional axes** — the editor and the secrets provider once
+for the product, the forge and the update bot per repo — so every caller of the
+materializer evaluates a pack's `conditional:` entry against the same answers,
+and a landing decided at `/vwf:init` is honoured by a pass that runs months
+later. Since **blueprint-format 6** this file replaces
 the old stamp at `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 20)
+## Schema (config_format 21)
 
 ```yaml
-config_format: 20 # this file's own schema version — setup migrates it
+config_format: 21 # this file's own schema version — setup migrates it
 blueprint_format: 25 # the docs/blueprint format stamp
 
 product:
@@ -115,6 +120,14 @@ enforcement: # vwf's enforcement opt-outs
   rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (assets/standard-flows.md); standard-entities/<project>/<slug> waives a mandatory standard entity (assets/standard-entities.md); baseline/<rule>[/<unit>] waives an engineering-baseline rule product-wide or scoped (assets/engineering-baseline.md; boundary-validation never product-wide); pipeline/<rule>[/<unit>] waives a delivery-pipeline rule (assets/delivery-pipeline.md)
   kept_files: {} # FORMAT 18. <path>: { reason: <one line> } — a file the landed packs OWN that this repo kept over the pack's, written by `/vwf:init` (consented, in its single plan) when a reshape offered that file as replace-or-keep and the answer was keep. The path is BASE-RELATIVE: a file the base owns is spelled exactly as its lockfile names it, and a file inside a member repo takes that member's path as prefix followed by the path the member's own lockfile names — this one block on the base records every repo's keeps, since a member carries only its back-link and no `.config/vwf.yaml` of its own. NOT a rule id and never under `rules:` — a path names no catalogued rule. Read by `init`, which never re-offers a recorded path, and by `/vwf:doctor`, whose content-drift check skips it; an absent block reads as empty, so a repo that has kept nothing records nothing
   editor_keys: {} # FORMAT 20. <file>: { <key>: keep | take | union } — what `/vwf:init`'s editor-block composition does with a COLLISION: a top-level settings key or a nesting parent present both in the hand-written section of a `.vscode/settings.json` and in the composed set. `<file>` is BASE-RELATIVE with the member prefix exactly as `kept_files` spells it — `.vscode/settings.json` for the base, `<member-path>/.vscode/settings.json` for a member — and `<key>` is the settings key or the nesting parent. NOT an extension id: a colliding id is the same id twice, so every choice yields the same file — init keeps it without asking and records nothing. `keep`: the block OMITS the key and the hand copy is untouched. `take`: the block carries the pack's value and init removes the hand copy. `union`: pack and hand entries composed into the block and the hand copy removed — offered only for an object-valued key or a nesting parent. Written by `/vwf:init` (consented, in its single plan) when a collision is answered; read by `init` alone, which applies a recorded answer on every later run without asking — editing the block is how a user is re-asked — and never by `/vwf:doctor`, which does not read `.vscode`. An absent block reads as empty, so a repo with no collision records nothing
+
+answers: # FORMAT 21. The FOUR CONDITIONAL AXES a pack's `conditional:` entries are evaluated against (stackgen's assets/pack-format.md) — recorded here so every caller of the materializer evaluates a conditional file against the SAME answers, and a landing decided at `/vwf:init` is honoured by a pass that runs months later rather than re-decided from an empty map (under the materializer's "an unanswered axis reads true" rule, an empty map lands every conditional path). The callers are `/vwf:init`, which asks them; `/vwf:setup`'s materialize pass, which lands a pinned template long after init ran; and `/stackgen:stackgen-sync`, which re-derives a pack's landing set. EVERY key below is always present, `none` where no answer was picked or nothing could be read
+  editor: vscode # PRODUCT-WIDE — the editor question, asked once per product. `vscode`, or `none` for no answer, which is what keeps every pack's editor fragment off this product
+  secrets: <slug> # PRODUCT-WIDE — the secrets-provider question. A capability-provider slug, or `none` for no answer. A pack may NOT name `none` on this axis (`p:plugins:check` rule 11 refuses `secrets: none` in a `when:`), so `none` here simply matches nothing
+  repos: # PER REPO — one entry per repo the product has. Keyed by the member path exactly as `enforcement.kept_files` spells one: `.` for the base, `<member-path>` for a member, so both blocks on the base record every repo
+    <member-path>:
+      forge: github # `github`, `gitlab`, or `none` for a repo whose `origin` named no known host. THE RECORD AND THE FALLBACK, never the source of truth: every caller re-reads `origin` at run time and passes THAT as the axis, using this value only where no remote can be read. A recorded value the live host contradicts is `/vwf:doctor` drift, remedy `/vwf:setup reshape` — so the forge files land at the reshape, never silently mid-pass
+      update_bot: renovate # `renovate`, `dependabot`, or `none` — the update-bot question, asked per repo. The ONE axis where `none` is an answer a pack may name in a `when:` (no bot) rather than merely the absence of one
 
 pipeline: # bounded knobs — see the hard floor below
   coverage_target: 100 # default coverage gate (per-project override above)
@@ -219,6 +232,7 @@ at answering the question, never at installing something.
 | `repo`               | `setup` / `architecture` (elicited)                                                                                                       | `doctor`, `plan`, `execute`                                                                                     |
 | `harness`            | `setup`; `execute` reconcile                                                                                                              | `plan` preflight, acceptance/ux verifiers, `verify`, `doctor`                                                   |
 | `enforcement`        | `setup` / `architecture` (consented); `init` (`kept_files` and `editor_keys` only, consented in its single plan)                          | `setup`, `architecture`, `blueprint`, the reviewers; `init` and `doctor` (`kept_files`); `init` alone (`editor_keys`) |
+| `answers`            | `init` alone (consented, in its single plan) — the THIRD key it owns, beside `enforcement.kept_files` and `enforcement.editor_keys`, and the only one outside `enforcement:`. No other skill writes the block, with ONE exception: a caller that reads a **stale forge** — the recorded `answers.repos.<path>.forge` differing from the live `origin` host — rewrites **that one value** and says so | `init`, `setup`'s materialize pass, `stackgen-sync` (the answers every `conditional:` entry is evaluated against), `doctor` (the drift rows and the provider ignore-section row) |
 | `pipeline`           | the user (hand-edited)                                                                                                                    | `execute`, and the external caps hook that delivers its resource-cap pause                                       |
 | `environments`       | `setup` / `verify` (confirmed)                                                                                                            | `verify`                                                                                                        |
 | `production_env`     | `setup` / `verify` (confirmed)                                                                                                            | `verify` (the release environment)                                                                              |
@@ -616,6 +630,33 @@ earlier than 65/90/80), never loosen.
   **untouched** and stays **25**: nothing under `docs/blueprint/` changes, the
   fourth config bump to ship without a paired blueprint bump, after `14`, `16`
   and `18`.
+
+- **`20 → 21` migration** (performed by `/vwf:setup`): **the file gains the
+  top-level `answers:` block, and nothing else moves.** Add the block where it
+  is absent and rewrite the stamp — the same shape `16 → 18` and `19 → 20` took
+  for the two `enforcement:` keys, one level up because the answers are not
+  enforcement opt-outs. **Nothing converts**: no surface wrote any of the four
+  answers into the tree before 21 — each was asked, used for one run, and
+  forgotten — so there is no old spelling to map. The values come from the
+  reshape that performs this migration, which asks the editor and update-bot
+  rounds as it always did and reads the forge and the provider from the repo;
+  the pass never invents an answer to fill a key.
+
+  A config still reading **20** is not broken for a caller. Every caller
+  handles the absent block by **inferring** what init's own seeds would give —
+  the forge from `origin`, the editor from a `.vscode/` directory or the editor
+  binary, the secrets provider from the lockfile's pinned provider, the update
+  bot from a renovate or dependabot file — passing that map and **writing
+  nothing**. So the gap degrades to today's seeds rather than to an empty map,
+  and the block is written on the next `/vwf:setup reshape`, which is what
+  `/vwf:doctor`'s existing stamp check points at when it reports 20 against 21.
+  A config stamped **21** carrying no `answers:` block is drift in its own
+  right — the stamp claims a record the file does not hold.
+
+  **Neither 13 nor 17 is in play on this bump.** `blueprint_format` is
+  **untouched** and stays **25**: nothing under `docs/blueprint/` changes, the
+  fifth config bump to ship without a paired blueprint bump, after `14`, `16`,
+  `18` and `20`.
 
 - **`10 → 11` migration** (performed by `/vwf:setup`): stacks stop being
   *enforced with an escape hatch* and become a **menu**, and the flat
