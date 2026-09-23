@@ -6,6 +6,7 @@ to pick the next runnable plan.
 
 ## Plans
 
-| Folder                                           | Kind   | Plan                                                              | Target repo | Priority | Status   | Requires | Backlog |
-| ------------------------------------------------ | ------ | ----------------------------------------------------------------- | ----------- | -------- | -------- | -------- | ------- |
-| docs/plans/2026-09-23-watch-tv-spatial-platforms | change | watch, tv and spatial platforms, and per-product device viewports | —           | 10       | APPROVED | —        | —       |
+| Folder                                           | Kind   | Plan                                                                           | Target repo | Priority | Status   | Requires                              | Backlog |
+| ------------------------------------------------ | ------ | ------------------------------------------------------------------------------ | ----------- | -------- | -------- | ------------------------------------- | ------- |
+| docs/plans/2026-09-23-watch-tv-spatial-platforms | change | watch, tv and spatial platforms, and per-product device viewports              | —           | 10       | APPROVED | —                                     | —       |
+| docs/plans/2026-09-23-swift-native-stack         | change | Native Swift stack — SwiftUI apps for every Apple platform, and Swift packages | —           | 20       | APPROVED | 2026-09-23-watch-tv-spatial-platforms | B56     |
