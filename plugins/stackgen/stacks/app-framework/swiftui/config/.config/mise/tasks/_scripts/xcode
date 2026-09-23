@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+#MISE description="The Xcode check and the project lookup the SwiftUI tasks share"
+#MISE hide=true
+
+# Sourced after `helpers`, whose print functions these use. Each function takes
+# the calling task's name as its first argument, so a message says which task
+# refused.
+
+# Fails unless a full Xcode is selected — and, when the repo pins one as
+# XCODE_VERSION in its mise [env], unless it is that version.
+#
+# `command -v xcodebuild` is no test: /usr/bin/xcodebuild is a stub every Mac
+# carries, and with only the Command Line Tools selected it exists and exits
+# non-zero. `xcodebuild -version` is the check that fails there, and its first
+# line — `Xcode 27.0` — is the selected version. mise cannot install Xcode, so a
+# mismatch is fixed by selecting the right one, never by this task.
+require_xcode() {
+  local task="$1" version_output selected
+  if ! version_output=$(xcodebuild -version 2>/dev/null); then
+    print_error "${task}: no Xcode is selected — xcodebuild -version failed."
+    print_yellow "Install Xcode, then select it: sudo xcode-select -s /Applications/Xcode.app"
+    exit 1
+  fi
+  selected=$(printf '%s\n' "${version_output}" | awk 'NR==1{print $2}')
+  if [ -n "${XCODE_VERSION:-}" ] && [ "${selected}" != "${XCODE_VERSION}" ]; then
+    print_error "${task}: this repo builds with Xcode ${XCODE_VERSION}, but Xcode ${selected} is selected."
+    print_yellow "Select Xcode ${XCODE_VERSION} with xcode-select -s, or point DEVELOPER_DIR at it, then re-run."
+    exit 1
+  fi
+}
+
+# Prints the one `*.xcodeproj` at the repo root. None, or more than one, is a
+# refusal: the tasks do not guess which project is the app. Called as
+# `project=$(find_xcodeproj <task>)`, so every message goes to stderr — stdout
+# is the answer.
+find_xcodeproj() {
+  local task="$1"
+  local projects=()
+  shopt -s nullglob
+  projects=(*.xcodeproj)
+  shopt -u nullglob
+  if [ "${#projects[@]}" -eq 0 ]; then
+    print_error "${task}: no *.xcodeproj at the repo root."
+    print_yellow "Create the app's project in Xcode (File > New > Project > App), save it at the repo root, commit it, then re-run." >&2
+    exit 1
+  fi
+  if [ "${#projects[@]}" -gt 1 ]; then
+    print_error "${task}: more than one *.xcodeproj at the repo root: ${projects[*]}."
+    print_yellow "The app is one project; move or remove the others, then re-run." >&2
+    exit 1
+  fi
+  printf '%s\n' "${projects[0]}"
+}

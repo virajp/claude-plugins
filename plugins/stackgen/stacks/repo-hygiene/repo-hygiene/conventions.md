@@ -108,7 +108,7 @@ its section is the pattern in the cell, under a banner named for the slug.
 | dart     | `Dart.gitignore`, plus `Flutter.gitignore` on Flutter |
 | go       | `Go.gitignore`                                        |
 | rust     | `Rust.gitignore`                                      |
-| swift    | `Swift.gitignore`, plus `Derived/` on a Tuist app     |
+| swift    | `Swift.gitignore`                                     |
 
 | Provider | Section appended                                                              |
 | -------- | ----------------------------------------------------------------------------- |
@@ -130,15 +130,14 @@ section, not per source. A Flutter repo is `dart` with the
 covers the package tooling, the Flutter one the app build output above it.
 
 Swift resolves the same way. The `swift` language token, the
-`swift-package` and `swift-swiftui` slugs, and a `Package.swift`,
-`Project.swift` or `Tuist.swift` the read finds are all `swift`, and name
-**one** `# ==== Swift ====` section — appended, never proposed. The upstream
-template covers SwiftPM's `.build/` but not Tuist's `Derived/`, the tree
-`tuist generate` writes beside each project, so a Tuist app — `swift-swiftui`
-pinned, or a `Project.swift` or `Tuist.swift` read — gets that one pattern
-appended under the same banner, its why above it, the way a Flutter repo gets
-its second template. `swift` as the Flutter pack's `platform-edge` token names
-no section: that repo is `dart`, and `Flutter.gitignore` covers its iOS host.
+`swift-package` and `swift-swiftui` slugs, and a `Package.swift` or a root
+`*.xcodeproj` directory the read finds are all `swift`, and name **one**
+`# ==== Swift ====` section — appended, never proposed. A Swift repo's
+generated trees — SwiftPM's `.build/`, Xcode's `xcuserdata/` — are upstream
+`Swift.gitignore`'s, so a SwiftUI app with its committed Xcode project needs
+no pattern beyond the template. `swift` as the Flutter pack's `platform-edge`
+token names no section: that repo is `dart`, and `Flutter.gitignore` covers its
+iOS host.
 
 A language absent from this table, or a pin that names no language, has **no
 row and needs none**. `language/bash` and `language/markdown` have no template

@@ -5,33 +5,35 @@
 
 #USAGE flag "--record" help="re-record every golden, then compare against the new ones"
 #USAGE flag "--target <target>" default="SnapshotTests" help="the snapshot test target to run"
-#USAGE flag "--device <device>" help="the simulator to render on, by name (default: Tuist's pick)"
-#USAGE flag "--os <os>" help="the simulator OS version to render on (default: Tuist's pick)"
+#USAGE flag "--scheme <scheme>" help="the scheme whose test action holds the target (default: the project's name)"
+#USAGE flag "--platform <platform>" help="the destination platform for one run (default: SIMULATOR_PLATFORM)"
+#USAGE flag "--device <device>" help="the simulator to render on, by name, for one run (default: SIMULATOR_DEVICE)"
+#USAGE flag "--os <os>" help="the simulator OS version to render on, for one run (default: SIMULATOR_OS)"
 
 set -euo pipefail
 # helpers ships in the toolchain-manager pack, not this one, so there is no
 # path here for -x to follow.
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/xcode"
 
 # The goldens are swift-snapshot-testing image snapshots, kept in a test target
 # of their own — `SnapshotTests` unless `--target` names another — so they run
-# apart from the unit tests and nothing else is judged by pixels.
-#
-# `tuist test` generates the project, picks a simulator for the target's
-# platform and runs xcodebuild. Selective testing is off: it skips a target
-# whose inputs have not changed since a passing run, and a golden run that
-# skips is a golden run that judged nothing. Inspect mode is off: the result
-# bundle, screenshots included, is not uploaded to a Tuist server.
+# apart from the unit tests and nothing else is judged by pixels. The target
+# runs through `xcodebuild test` on the committed project, limited to it by
+# `-only-testing`, in the scheme named after the project unless `--scheme`
+# names another. Build products and package checkouts stay under `.build/`.
 #
 # A golden is pixels from one simulator: another device or OS version renders
 # differently, and every comparison against it fails. So the repo pins the
-# simulator once, in its mise `[env]` — `TUIST_TEST_DEVICE`, and
-# `TUIST_TEST_OS` and `TUIST_TEST_PLATFORM` where needed — which `tuist test`
-# reads from the environment, so this task, the `ux-gate` skill and CI render
-# on the same one. `--device` and `--os` override the pin for one run, passed
-# through as given. With neither pin nor flag, Tuist picks a simulator on this
-# machine, which need not be the one the goldens were recorded on.
+# simulator once, in its mise `[env]` — SIMULATOR_PLATFORM (`iOS Simulator`,
+# say), SIMULATOR_DEVICE and SIMULATOR_OS — and this task builds the
+# `-destination` from them, so recording, comparing, the `ux-gate` skill and CI
+# render on the same one. `--platform`, `--device` and `--os` override the pin
+# for one run. A run with no pin is refused rather than left to whichever
+# simulator xcodebuild would pick. `macOS` is the one platform with no
+# simulator, and it needs neither a device nor an OS.
 #
 # The record mode reaches the test process through xcodebuild, which strips the
 # `TEST_RUNNER_` prefix from any variable carrying it and hands the rest to the
@@ -41,49 +43,60 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # evidence in three places: the reference is the committed file under the
 # test's `__Snapshots__` directory, the new render lands under
 # `.build/snapshot-artifacts/` — emptied first, so what is there is this
-# run's — and the diff is an attachment in the test result bundle.
+# run's — and the diff is an attachment in the result bundle, written to
+# `.build/golden.xcresult`, a fixed path, so it can be found.
 #
-# `-collect-test-diagnostics never` is passed through to xcodebuild: on a
-# failure it otherwise gathers a sysdiagnose-sized bundle from the simulator,
-# minutes per run, and every recording run fails by design.
+# `-collect-test-diagnostics never`: on a failure xcodebuild otherwise gathers
+# a sysdiagnose-sized bundle from the simulator, minutes per run, and every
+# recording run fails by design.
 #
 # `--record` writes every golden afresh (`all`) and then compares. The library
 # fails every assertion it records — so a recording is never mistaken for a
 # pass — which makes the recording run's exit status meaningless; the
 # comparison after it is the verdict, and it proves the new goldens reproduce.
 
-if ! command -v xcodebuild >/dev/null 2>&1; then
-  print_error "test:golden: xcodebuild is not on PATH."
-  print_yellow "Install Xcode, select it with xcode-select, then re-run."
+require_xcode "test:golden"
+project=$(find_xcodeproj "test:golden")
+scheme="${usage_scheme:-$(basename "${project}" .xcodeproj)}"
+
+platform="${usage_platform:-${SIMULATOR_PLATFORM:-}}"
+device="${usage_device:-${SIMULATOR_DEVICE:-}}"
+os="${usage_os:-${SIMULATOR_OS:-}}"
+
+if [ -z "${platform}" ]; then
+  print_error "test:golden: no simulator is pinned — SIMULATOR_PLATFORM is unset."
+  print_yellow "Set SIMULATOR_PLATFORM, SIMULATOR_DEVICE and SIMULATOR_OS in the repo's mise [env] (or pass --platform, --device and --os), then re-run."
   exit 1
 fi
-
-if ! command -v tuist >/dev/null 2>&1; then
-  print_error "test:golden: tuist is not on PATH."
-  print_yellow "Run mise install, which installs the Tuist this repo pins, then re-run."
+if [ "${platform}" == "macOS" ]; then
+  destination="platform=macOS"
+elif [ -z "${device}" ] || [ -z "${os}" ]; then
+  print_error "test:golden: the ${platform} pin is incomplete — SIMULATOR_DEVICE and SIMULATOR_OS are both required."
+  print_yellow "Set them in the repo's mise [env] (or pass --device and --os); xcrun simctl list devices available lists the choices."
   exit 1
+else
+  destination="platform=${platform},name=${device},OS=${os}"
 fi
 
 artifacts="${PWD}/.build/snapshot-artifacts"
-
-destination_args=()
-if [ -n "${usage_device:-}" ]; then
-  destination_args+=(--device "${usage_device}")
-fi
-if [ -n "${usage_os:-}" ]; then
-  destination_args+=(--os "${usage_os}")
-fi
+result_bundle=".build/golden.xcresult"
 
 run_goldens() {
+  rm -rf "${result_bundle}"
   TEST_RUNNER_SNAPSHOT_TESTING_RECORD="$1" \
     TEST_RUNNER_SNAPSHOT_ARTIFACTS="${artifacts}" \
-    tuist test \
-    --no-selective-testing \
-    --inspect-mode off \
-    ${destination_args[@]+"${destination_args[@]}"} \
-    --test-targets "${usage_target:-SnapshotTests}" \
-    -- -collect-test-diagnostics never
+    xcodebuild test \
+    -project "${project}" \
+    -scheme "${scheme}" \
+    -destination "${destination}" \
+    -only-testing:"${usage_target:-SnapshotTests}" \
+    -derivedDataPath .build/DerivedData \
+    -clonedSourcePackagesDirPath .build/SourcePackages \
+    -resultBundlePath "${result_bundle}" \
+    -collect-test-diagnostics never
 }
+
+print_subheader "Destination: ${destination}"
 
 if [[ "${usage_record:-false}" == "true" ]]; then
   print_header "Recording goldens ..."

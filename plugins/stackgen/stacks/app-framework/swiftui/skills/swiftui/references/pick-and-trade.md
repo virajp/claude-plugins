@@ -76,6 +76,16 @@ model. Layout of the targets is [project layout](project-layout.md)'s.
 
 **The Xcode version is a dependency.** A Swift language mode, an SDK and the
 simulators all come from the installed Xcode, and a new OS release moves them
-yearly. The project pins the Xcode it accepts and fails fast on any other —
-see [build & signing](build-and-signing.md) — and the yearly upgrade is
-planned work, not a surprise.
+yearly. The repo pins the Xcode it accepts and its tasks fail fast on any
+other — see [build & signing](build-and-signing.md) — and the yearly upgrade
+is planned work, not a surprise.
+
+**The project is a committed Xcode project, and no generator writes it.** Xcode
+has no command-line tool that creates a project, so a person creates it once in
+Xcode and the repo commits it — see [project layout](project-layout.md). The
+gain is that the project is exactly what Xcode opens, with no manifest language
+and no generate step between an edit and a build; synchronized folders mean a
+source file never touches the project. The cost is paid on the rarer changes:
+a new target, a new package or a build setting is made by hand in Xcode, or by
+careful editing of `project.pbxproj`, and reviewed as a diff of a file nobody
+writes by choice. For an app whose targets settle early, that trade is cheap.

@@ -1,35 +1,37 @@
 # SwiftUI — build, flavours & signing
 
-The build is declared in Tuist's manifests and run through the repo's tasks.
-Nothing about it is configured by clicking in Xcode — see
-[project layout](project-layout.md) for why that change would not survive.
+The build is the committed Xcode project, run through the repo's tasks. A
+project change is made in Xcode and committed, or made by an agent editing
+`project.pbxproj` with care — see [project layout](project-layout.md) for
+which changes need one at all.
 
 ## The pipeline
 
-Two Tuist steps, always in this order: `tuist install` resolves the external
-packages the dependency manifest declares, and `tuist generate` then writes the
-Xcode project and workspace from `Project.swift`. They go together because the
-generated project links what the install fetched — a project generated before
-the install describes a dependency graph that is not there.
+Every task that builds or resolves calls `xcodebuild` on the single root
+`.xcodeproj`, and `swift` for formatting — no other tool stands between the
+repo and Xcode. Packages are resolved by Xcode's own SwiftPM integration
+against the project, and their pinned versions are the `Package.resolved`
+committed inside it.
 
-The repo's `setup:deps:install` task is that pair: it runs `tuist install`,
-then `tuist generate` without opening Xcode. Run it after a fresh checkout,
-after any manifest change, and after the lockfile moves. Its `--frozen` flag
-resolves exactly what the lockfile records and fails when the manifest needs
-something else, rather than rewriting it — the mode CI runs. Build and test
-through the repo's tasks rather than the tools by hand; a CI job runs the same
-tasks.
+The repo's `setup:deps:install` task resolves the project's packages without
+opening Xcode. Run it after a fresh checkout, after a package is added or
+moved, and after the lockfile moves. Its `--frozen` flag resolves exactly what
+`Package.resolved` records and fails when the project needs something else,
+rather than rewriting it — the mode CI runs. Build and test through the repo's
+tasks rather than the tools by hand; a CI job runs the same tasks.
 
 ## The Xcode pin
 
 The Xcode version is part of the build's inputs: it decides the Swift compiler,
-the SDKs and the simulators. `Tuist.swift` declares the compatible Xcode
-versions, and Tuist refuses to generate against any other. Xcode is not
-installed by mise, and Tuist is — so the tasks check that `xcodebuild` and
-`tuist` are on the path before doing any work. A machine without Xcode, or one
-that has not run `mise install` yet, fails at the first line with what to
-install, not halfway through a build. Which Xcode is acceptable stays the pin's
-call, not the tasks'.
+the SDKs and the simulators. The repo pins it as `XCODE_VERSION` in its mise
+`[env]`, and every task that builds checks the selected Xcode against it before
+doing any work: `xcodebuild -version` must succeed — a Mac with only the
+Command Line Tools fails it, since they carry no `xcodebuild` that can build
+an app — and must report the pinned version. On a mismatch the task stops and
+names both the version it wants and the one selected, so the fix is switching
+Xcode, not reading a compiler error halfway through a build. Xcode is not
+installed by mise; the pin says which one, and installing it stays a person's
+step.
 
 Moving to a new Xcode is one change: update the pin, fix what the new compiler
 and SDK report, re-record goldens whose rendering the new SDK changed (and say
@@ -38,12 +40,14 @@ so in the change), and land it together.
 ## Configurations and schemes
 
 - **Configurations are Debug and Release**, plus one per extra flavour the
-  product needs — a staging build, a beta channel. Each configuration's
-  settings come from an `.xcconfig` the manifest references, so a setting is a
-  reviewed line in a file.
-- **Schemes are declared** in the manifest: one per app target and flavour,
-  naming the build, test and run actions and the configuration each uses.
-  Tuist's generated default schemes are fine until a flavour needs its own.
+  product needs — a staging build, a beta channel — each added in Xcode's
+  project settings. A configuration's settings come from an `.xcconfig` file
+  the project assigns to it, so a setting is a reviewed line in a file rather
+  than a value buried in `project.pbxproj`.
+- **Schemes are shared and committed**: one per app target and flavour, naming
+  the build, test and run actions and the configuration each uses. The scheme
+  Xcode creates with the app target is fine until a flavour needs its own;
+  mark every scheme the tasks or CI run as shared.
 - **Flavour differences are build settings, not code forks.** The API base URL,
   the bundle identifier suffix, the display name, the icon set — each is a
   setting the configuration fills, read by the app through its Info.plist or a
@@ -52,7 +56,8 @@ so in the change), and land it together.
 
 ## Info.plist, entitlements and capabilities
 
-Declared in the manifest, synthesized into `Derived/` on generate. Every
+Declared in the project — the target's Signing & Capabilities pane, its
+Info.plist keys and its entitlements file — and committed with it. Every
 capability the app uses — push, associated domains, App Groups, HealthKit,
 background modes, iCloud — is declared there with the usage-description strings
 the OS shows the user. A capability used in code but missing from the
@@ -65,7 +70,7 @@ that first uses it.
   in the repo; CI receives them from the repo's secrets provider and installs
   them into a temporary keychain for the job.
 - **The team id and bundle identifiers are configuration**, not secrets, and
-  live in the manifest or its `.xcconfig` files.
+  live in the project or its `.xcconfig` files.
 - **Local development uses automatic signing** against the developer's own
   team; release builds use the explicitly declared identity and profile, so a
   release never depends on whatever the building machine happened to have.

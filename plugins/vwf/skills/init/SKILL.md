@@ -338,9 +338,11 @@ earlier ones did not name:
    | `go.mod`                                | go       |
    | `Cargo.toml`                            | rust     |
    | `Package.swift`                         | swift    |
-   | `Project.swift` or `Tuist.swift`        | swift    |
+   | a root `*.xcodeproj` directory          | swift    |
 
-   A file not in this table is not a manifest, whatever it looks like, and a
+   A file not in this table is not a manifest, whatever it looks like — the
+   one directory it admits is an Xcode project at the top of the directory
+   being read, never deeper, whose dependency list lives inside it — and a
    language the table does not name is proposed in the plan rather than
    guessed.
 

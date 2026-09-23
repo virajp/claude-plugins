@@ -21,8 +21,7 @@ platforms:
 
 The native Apple app: **Swift · [SwiftUI](https://developer.apple.com/swiftui/)**,
 a single-package repo living as its own repo — a multi-repo member — built by
-Xcode from a [Tuist](https://tuist.dev)-defined project and shipping through
-the App Store.
+Xcode from a committed Xcode project and shipping through the App Store.
 
 **One template, every Apple platform.** SwiftUI is one UI framework across
 Apple's operating systems, so a project on this template declares whichever
@@ -44,7 +43,7 @@ app*, reaching CarPlay through the CarPlay framework's templates rather than
 through SwiftUI views; nothing new is provisioned for it. So `auto` is only
 ever declared **alongside** `mobile`, never alone, and never as its own
 project. `watch` and `tv` and `spatial` are real targets of their own, declared
-in the one Tuist project beside the others.
+in the one Xcode project beside the others.
 
 ## When to pick it over Flutter
 
@@ -61,19 +60,23 @@ native edge.
 - **Swift 6** and **SwiftUI**, from the host's Xcode: `xcodebuild` and
   `swift` must be on `PATH`, and `/vwf:doctor` blocks when they are not.
   **sourcekit-lsp** ships with it and is the language server.
-- **Tuist**, through mise, owns the project. The app's targets are declared in
-  `Project.swift` and `Tuist.swift` and generated; no committed `.xcodeproj`.
-  No pack lands those files — `tuist init` creates them — and the Xcode version
-  is pinned there, through `compatibleXcodeVersions`, so the tasks fail fast on
-  the wrong one.
-- **SwiftPM** resolves the dependencies, through Tuist's install step.
+- **A committed Xcode project** owns the app's targets. It is created once, by
+  a person, in Xcode — no generator, and no pack lands the `.xcodeproj`; the
+  tasks call `xcodebuild` and `swift` alone. The Xcode version is pinned by
+  `XCODE_VERSION` in the repo's mise `[env]`, and every task that builds checks
+  `xcodebuild -version` against it and fails fast on the wrong one.
+- **Packages are added through Xcode**, into the project, and locked in the
+  `Package.resolved` it keeps inside the `.xcodeproj`, which is committed. The
+  app's own dependencies live there. The **SwiftPM** component governs only a
+  local package the app splits out — a `Package.swift` of its own — never the
+  app's dependencies.
 - **swift-format** formats and **SwiftLint** lints, both reading their
   configuration from `.config/` and both running inside the repo's
   `code:format` and `code:lint` tasks.
 - **Goldens** through
   [swift-snapshot-testing](https://github.com/pointfreeco/swift-snapshot-testing),
-  a SwiftPM test dependency, under a `test:golden` task; the repo's `ux-gate`
-  skill renders them for review.
+  added through Xcode to a `SnapshotTests` unit-test target, under a
+  `test:golden` task; the repo's `ux-gate` skill renders them for review.
 - **Client SDKs for the backing services** the product selected — identity,
   push, analytics, crash reporting, app attestation, and storage as needed. The
   app authenticates against the identity provider and calls the `service` API

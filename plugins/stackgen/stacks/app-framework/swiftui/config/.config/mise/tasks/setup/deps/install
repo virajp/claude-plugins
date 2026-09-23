@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#MISE description="Resolve the app's dependencies and generate its Xcode project"
+#MISE description="Resolve the app's package dependencies"
 #MISE hide=true
 
 #USAGE flag "--frozen" help="fail rather than write the lockfile"
@@ -10,49 +10,38 @@ set -euo pipefail
 # path here for -x to follow.
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/xcode"
 
 # Fills the `setup:deps:install` slot.
 #
-# Xcode is not installed by mise, so it can be missing on a machine where every
-# other tool resolved; Tuist is mise's, pinned in this pack's conf.d fragment,
-# and missing only until `mise install` has run. Checking both first turns a
-# bare "command not found" into a message that says what to install. Which
-# Xcode is acceptable is not this task's call: `compatibleXcodeVersions` in
-# `Tuist.swift` pins it, and `tuist generate` refuses any other.
+# The app's packages are declared in its committed Xcode project, added through
+# Xcode's package UI, and pinned in the `Package.resolved` Xcode keeps inside
+# it. `xcodebuild -resolvePackageDependencies` fetches exactly what the project
+# declares. The checkouts go to `.build/SourcePackages` rather than Xcode's
+# per-user DerivedData, so every task finds them at one path and
+# `setup:deps:cleanup` removes them with the rest of `.build/`.
 #
-# `tuist install` resolves the external packages the project's `Package.swift`
-# declares — SwiftPM underneath — and `tuist generate` then writes the Xcode
-# project and workspace from `Project.swift`. They are one task, not two,
-# because the generated project links what the install fetched: a project
-# generated before the install describes a dependency graph that is not there.
-# `--no-open` keeps a task from launching Xcode.
+# Xcode is not installed by mise, so it is checked first: selected at all, and
+# the version the repo pins as XCODE_VERSION.
 #
-# `--force-resolved-versions` is SwiftPM's frozen mode, which `tuist install`
-# passes through: it resolves exactly what `Package.resolved` records and fails
-# when the manifest needs something else, rather than rewriting the lockfile.
+# `-onlyUsePackageVersionsFromResolvedFile` is the frozen mode: it resolves
+# exactly what `Package.resolved` records and fails when the project needs
+# something else, rather than rewriting the lockfile.
 #
 # No header: the aggregator `setup:deps:all` already frames each verb with its
 # own subheader, so one here would invert the hierarchy.
 
-if ! command -v xcodebuild >/dev/null 2>&1; then
-  print_error "setup:deps:install: xcodebuild is not on PATH."
-  print_yellow "Install Xcode, select it with xcode-select, then re-run."
-  exit 1
-fi
+require_xcode "setup:deps:install"
+project=$(find_xcodeproj "setup:deps:install")
 
-if ! command -v tuist >/dev/null 2>&1; then
-  print_error "setup:deps:install: tuist is not on PATH."
-  print_yellow "Run mise install, which installs the Tuist this repo pins, then re-run."
-  exit 1
-fi
-
-install_args=()
+resolve_args=()
 if [[ "${usage_frozen:-false}" == "true" ]]; then
-  install_args+=(--force-resolved-versions)
+  resolve_args+=(-onlyUsePackageVersionsFromResolvedFile)
 fi
 
 print_subheader "Resolving packages ..."
-tuist install ${install_args[@]+"${install_args[@]}"}
-
-print_subheader "Generating the Xcode project ..."
-tuist generate --no-open
+xcodebuild -resolvePackageDependencies \
+  -project "${project}" \
+  -clonedSourcePackagesDirPath .build/SourcePackages \
+  ${resolve_args[@]+"${resolve_args[@]}"}

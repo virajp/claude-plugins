@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#MISE description="Move the lockfile forward within the manifest's ranges"
+#MISE description="Move the lockfile forward within the project's ranges"
 #MISE hide=true
 
 set -euo pipefail
@@ -8,31 +8,22 @@ set -euo pipefail
 # path here for -x to follow.
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/xcode"
 
-# `tuist install --update` re-resolves every external package to the newest
-# version its declared range allows and rewrites `Package.resolved`, fetching
-# as it goes. The project is then generated again, because the generated
-# project links the packages by what was resolved — an update that leaves the
-# old project in place builds against a graph that no longer exists. The
-# lockfile diff is the review surface.
+# xcodebuild has no update verb: `-resolvePackageDependencies` honours
+# `Package.resolved` whenever it exists. So the lockfile is removed and the
+# project resolved again, which picks the newest version each package's
+# declared range allows and writes a fresh `Package.resolved`, fetching as it
+# goes. The lockfile diff is the review surface.
 #
 # One step, so no header: whatever called it — `setup:deps:all`, or a person —
 # frames it.
-#
-# Xcode is not mise's and Tuist is missing until `mise install` has run, so
-# both are checked first, as `setup:deps:install` checks them.
 
-if ! command -v xcodebuild >/dev/null 2>&1; then
-  print_error "setup:deps:upgrade: xcodebuild is not on PATH."
-  print_yellow "Install Xcode, select it with xcode-select, then re-run."
-  exit 1
-fi
+require_xcode "setup:deps:upgrade"
+project=$(find_xcodeproj "setup:deps:upgrade")
 
-if ! command -v tuist >/dev/null 2>&1; then
-  print_error "setup:deps:upgrade: tuist is not on PATH."
-  print_yellow "Run mise install, which installs the Tuist this repo pins, then re-run."
-  exit 1
-fi
-
-tuist install --update
-tuist generate --no-open
+rm -f "${project}/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+xcodebuild -resolvePackageDependencies \
+  -project "${project}" \
+  -clonedSourcePackagesDirPath .build/SourcePackages

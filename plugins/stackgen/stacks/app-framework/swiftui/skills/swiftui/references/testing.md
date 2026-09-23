@@ -8,11 +8,12 @@ are the **swift** skill's testing reference and apply here unchanged.
 
 ## Placement
 
-A test target per module, declared in `Project.swift` beside the module it
-covers; test files mirror the source files they test. Goldens are the
-exception: they live in a snapshot test target of their own — `SnapshotTests`
-unless the repo names another — so they run apart from the unit tests and
-nothing else is judged by pixels.
+A test target per module, added in Xcode beside the module it covers; test
+files mirror the source files they test, and a new test file needs no project
+edit (see [project layout](project-layout.md)). Goldens are the exception:
+they live in a snapshot test target of their own — a Unit Testing Bundle named
+`SnapshotTests`, created in Xcode when the project is — so they run apart from
+the unit tests and nothing else is judged by pixels.
 
 ## Unit tests: models are where the logic is
 
@@ -47,17 +48,20 @@ swift-dependencies is what keeps these tests hermetic.
 
 ## Goldens: swift-snapshot-testing
 
-View goldens use **swift-snapshot-testing** (Point-Free), a SwiftPM test
-dependency, run by the repo's `test:golden` task. The task checks that
-`xcodebuild` and `tuist` are on the path, then runs `tuist test` over the
-snapshot target alone — its `--target` flag names another — with selective
-testing off, because a golden run that skips an unchanged target judged
-nothing. It compares with recording off, so a view with no golden fails rather
-than quietly recording one. On a failed comparison the three images live in
-three places: the reference is the committed file under the test's
-`__Snapshots__` directory, the new render lands under
-`.build/snapshot-artifacts/` — emptied at the start of each run, so what is
-there is that run's — and the diff is an attachment in the test result bundle.
+View goldens use **swift-snapshot-testing** (Point-Free), a SwiftPM package
+added through Xcode's package dependencies and attached to the `SnapshotTests`
+target alone — never to the app or a framework target. The repo's
+`test:golden` task runs them: it checks the selected Xcode against the pin (see
+[build & signing](build-and-signing.md)), then runs `xcodebuild test` on the
+project limited to the snapshot target — its `--target` flag names another —
+so a golden run judges every golden and nothing else. It compares with
+recording off, so a view with no golden fails rather than quietly recording
+one. On a failed comparison the three images live in three places: the
+reference is the committed file under the test's `__Snapshots__` directory,
+the new render lands under `.build/snapshot-artifacts/` — emptied at the start
+of each run, so what is there is that run's — and the diff is an attachment in
+the run's result bundle, which the task always writes to
+`.build/golden.xcresult` so it is found in the same place every run.
 
 - **One golden per screen state** the flow's Screens contract names — empty,
   loading, loaded, error, and each variant the contract pins — rendered with
@@ -79,14 +83,22 @@ there is that run's — and the diff is an attachment in the test result bundle.
   image is reviewed in the diff like code.
 - **One simulator, one OS.** A golden is pixels from one simulator: another
   device or OS version renders differently, and every comparison against it
-  fails. The Xcode pin (see [build & signing](build-and-signing.md)) fixes the
-  toolchain but neither the device nor the runtime, and left to itself Tuist
-  picks a simulator on the machine it runs on. So goldens are recorded and
-  compared on one named simulator and OS, pinned once in the repo's mise
-  `[env]` through `TUIST_TEST_DEVICE` and `TUIST_TEST_OS` — plus
-  `TUIST_TEST_PLATFORM` for a target with several destinations — or passed to
-  `test:golden` as `--device` and `--os`. Moving either, or moving Xcode,
-  re-records in its own change.
+  fails. The Xcode pin fixes the toolchain but neither the device nor the
+  runtime. So goldens are recorded and compared on one named simulator, pinned
+  once in the repo's mise `[env]` as `SIMULATOR_DEVICE`, `SIMULATOR_OS` and
+  `SIMULATOR_PLATFORM`, from which `test:golden` builds its destination — so
+  recording, comparing, the UX gate and CI render on the same simulator.
+  A second platform's goldens run through `test:golden`'s one-run overrides,
+  `--platform`, `--device` and `--os` — macOS needs `--platform` alone, no
+  device — and a golden is compared on exactly the simulator it was recorded
+  on. Moving the pin, or moving Xcode, re-records in its own change.
+- **One run per changed platform.** A product on several platforms has goldens
+  for each, and a simulator renders one platform. The UX gate runs the goldens
+  on the pinned simulator, and on macOS as well when macOS is among the
+  changed platforms. Any other changed simulator platform has no pinned
+  simulator to render on, so the gate reports it `n/a` with a finding that it
+  is unpinned — never `ok`, since a comparison that did not happen passed
+  nothing — and never runs it on a simulator it picked itself.
 - **A platform the library cannot render is a stated gap.** Where there is no
   image strategy for a platform's views, say so in the gate's report; never
   count the absence as a pass.

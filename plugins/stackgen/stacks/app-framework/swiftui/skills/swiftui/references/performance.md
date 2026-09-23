@@ -48,8 +48,9 @@ full resolution in the row.
   else — warming caches, syncing, analytics setup — starts after the first
   screen is up, from a `task`.
 - **Fewer dynamic frameworks** shorten launch: prefer static linking for the
-  app's own modules and for dependencies that allow it, a product-type choice
-  made in `Tuist/Package.swift` and the manifest.
+  app's own modules and for dependencies that allow it, a choice made in each
+  framework target's Mach-O type and in which library product of a package the
+  project links.
 - Measure launch with Instruments' launch template and track it release to
   release.
 

@@ -52,7 +52,8 @@ feature or core module the app does.
 ## Dependency injection: swift-dependencies
 
 The pack's DI is **swift-dependencies** (Point-Free), which the app adds
-through SwiftPM in `Tuist/Package.swift`; no pack lands the dependency.
+through Xcode's package dependencies, pinned in the project's committed
+`Package.resolved`; no pack lands the dependency.
 
 - **Every client is registered as a dependency** with a live value, a test
   value and, where it matters for previews, a preview value. The test value is
