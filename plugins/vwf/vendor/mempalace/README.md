@@ -27,12 +27,10 @@ Two skills, and nothing else:
 | `skills/mempalace-recall/SKILL.md` | `templates/vwf/skills/mempalace-recall/` |
 
 Deliberately **not** taken: the Python package, the MCP server implementation,
-and the `integrations/` tree. vwf declares the MCP server over HTTP in its own
-`plugin.yaml`, and the daemon is installed out-of-band by whatever tool manager
-the machine uses — vwf neither installs nor supervises it. (`uv` is in vwf's
-`requires:` for **graphify's** Python runtime, per the comment in
-`plugin.yaml`; it is not there for mempalace, whatever the install path
-happens to be.) Only the agent-facing prose is vendored.
+and the `integrations/` tree. vwf declares the MCP server in its own
+`plugin.json` as a stdio command, and nothing is installed out of band beyond
+the `mempalace` tool itself, which the machine's tool manager provides. Only the
+agent-facing prose is vendored.
 
 **The auto-save hooks are not vendored either — they are reimplemented.**
 Upstream's `mempal_save_hook.sh` counts human messages by parsing
@@ -53,21 +51,22 @@ Also not taken: upstream's `.claude-plugin/hooks/hooks.json`. It references
 ## Local edits
 
 The **setup instructions** in `mempalace` are replaced, not amended. Upstream's
-Prerequisites documents `uv tool install` / `pip install` and the stdio shape;
-neither is the shape vwf uses, so a reader following upstream's prose ends up
-with a subprocess vwf never connects to. The replacement documents the setup
-vwf assumes: the mise-managed install (`"pipx:mempalace" = { version =
-"latest" }` in `[tools]`, preferably the development-environment config);
+Prerequisites documents `uv tool install` / `pip install` and the stdio shape.
+The transport is now the same — vwf spawns `mempalace-mcp` over stdio too —
+but vwf launches it through `mise x --` and configures it through the `env`
+block of `~/.claude/settings.json`, neither of which upstream's prose covers.
+The replacement documents the setup vwf assumes: the mise-managed install
+(`"pipx:mempalace" = { version = "latest" }` in `[tools]`, preferably the
+development-environment config);
 **qdrant as the backend** rather than the chroma default, because chroma does
 not support concurrent access — run as a loopback-bound container, with the
 image and port pinned in the skill's fenced run command; configuration
-through `~/.mempalace/config.json` plus `MEMPALACE_*` environment variables,
-including the per-setting precedence flip (the file wins the backend choice,
-env wins the qdrant connection settings), palace at
-`~/.local/share/mempalace`; and
-`mempalace-mcp` as a supervised HTTP daemon that needs no flags, since the
-config file is what a supervised daemon reliably reads whatever environment it
-inherited. Re-apply this on any resync.
+through `~/.mempalace/config.json` plus `MEMPALACE_*` environment variables in
+the settings `env` block, including the per-setting precedence flip (the file
+wins the backend choice, env wins the qdrant connection settings), palace at
+`~/.local/share/mempalace`; the optional embedder variables; and
+`mempalace-mcp` as a per-session stdio server — there is no daemon. Re-apply
+this on any resync.
 
 Two pointers, in `mempalace-recall`: upstream's `/mempalace-init` command is
 not shipped by vwf (only the two skills were taken), so both mentions of it —

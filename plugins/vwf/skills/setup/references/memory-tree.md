@@ -18,7 +18,7 @@ writes the banner and the three lines. Bare lines dropped anywhere in the file
 are what makes an ignore set unreadable and un-updatable, and they are what a
 second run duplicates. Per
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, every memory write goes to both this
-tree and mempalace, which is what makes the daemon optional. A pre-format-19
+tree and mempalace, which is what makes the server optional. A pre-format-19
 `docs/handoffs/next.md` moves to `docs/memory/handoff/next.md`.
 
 ## Write the mempalace config(s)

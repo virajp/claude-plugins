@@ -23,8 +23,9 @@ Before relying on recall, confirm MemPalace is installed and reachable:
 
 If the `mempalace_*` MCP tools are not available, tell the user the
 server is not connected and point them at the `mempalace` skill, whose
-setup section covers the install, the qdrant backend, and the HTTP
-daemon. Do not silently fall back to answering from model memory.
+setup section covers the install, the qdrant backend, and the `env`
+block in `~/.claude/settings.json`. Do not silently fall back to
+answering from model memory.
 
 ## Identity
 
@@ -85,8 +86,10 @@ question — not a system prompt or pasted conversation) plus optional
   answer. Offer to widen the search (drop the `wing` filter) or to file
   the new information.
 - **MCP error / server down.** Surface the error and suggest the user
-  run `mempalace status`, then check the daemon and the qdrant container
-  per the `mempalace` skill's setup. Never fall back to guessing.
+  run `mempalace status`, then check that the server started (the
+  `mempalace` MCP server in `/mcp`), that the settings `env` is set, and
+  the qdrant container, per the `mempalace` skill's setup. Never fall
+  back to guessing.
 - **Palace index corrupt / compactor error.** If the server reports an
   HNSW segment-writer error, a ChromaDB compaction failure, or stays
   "Not connected" after a write, the vector index is out of sync with
