@@ -1,0 +1,28 @@
+/code-review high — R2 round 4 — branch 2026-09-23-swift-tasks-git-compat (develop...HEAD, 646743ca)
+
+[
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/lint", "line": 135,
+   "summary": "The hand-rolled .git-entry walk does not match git's discovery; wherever git will not read the repo it found, both Swift gates now fail hard where they used to fall back to find.",
+   "failure_scenario": "Swift CI container as root over a checkout owned by another uid: walk finds ./.git, git ls-files exits 128 'detected dubious ownership', both tasks print 'git ls-files failed (exit 128)' every run. Same with GIT_CEILING_DIRECTORIES, a stale submodule/worktree .git file, or a logical $PWD whose symlinked parent has a .git git's physical getcwd never sees."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/lint", "line": 196,
+   "summary": "An empty list from a successful git ls-files still passes silently, though the comment at 126-127 says an empty list 'would pass what it never judged'.",
+   "failure_scenario": "A package under a parent repo that ignores it, or under $HOME with a dotfiles ~/.git whose .gitignore is '*': in_git=true, ls-files exits 0 empty, house linter and SwiftLint skipped, exit 0. code:format same at format:164."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/format", "line": 72,
+   "summary": "A set GIT_DIR forces in_git=true before the walk, so an inherited GIT_DIR beats the directory's own .git; with no GIT_WORK_TREE git treats cwd as that repo's work-tree root.",
+   "failure_scenario": "Git exports an absolute GIT_DIR to hooks run from a linked worktree; a hook running a member repo's code:lint lists the base repo's index relative to the member dir; -f drops the paths, globs match nothing, the gate passes silently."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/lint", "line": 60,
+   "summary": "shellcheck and actionlint still read git through 2>/dev/null || true and run before the loud check; the helpers' error-swallowing listing is left alone.",
+   "failure_scenario": "On git failure shellcheck/actionlint skip with 'nothing in scope', then the task fails at 157."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/format", "line": 70,
+   "summary": "Repo-detection walk and mktemp/ls-files/status/dedupe block copied between the two tasks; 2c makes four copies.",
+   "failure_scenario": "The next fix must be made in four places."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/lint", "line": 153,
+   "summary": "The temp file is removed only by trap EXIT, set after mktemp; an interrupt or a signal skipping the EXIT trap can leave a file in $TMPDIR with the repo's full file list.",
+   "failure_scenario": "Ctrl-C or CI SIGTERM during the hook leaves code-lint.XXXXXX behind; runs pile up. Trap INT and TERM too, or remove right after the loop."},
+  {"file": "site/src/content/docs/plugins/stackgen.md", "line": 275,
+   "summary": "Fix commits change plugin behaviour without the site manual in the same commit (also plugins/stackgen/stacks/readme.md:63).",
+   "failure_scenario": "Repo CLAUDE.md docs-ship-with-the-change; U3 scheduled later."},
+  {"file": "plugins/stackgen/stacks/language/swift/conventions.md", "line": 32,
+   "summary": "The code:format row says with no list it runs 'over every .swift file git does not ignore'; outside a repo or without git it walks with find. build-and-run.md:40 states it.",
+   "failure_scenario": "The two pack docs describe the task differently; a tarball checkout gets swift-format over ignored directories."}
+]
