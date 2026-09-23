@@ -1,0 +1,17 @@
+/security-review — R2 round 1 — branch 2026-09-23-swift-tasks-git-compat
+Scope note: the engine's branch diff against origin/main is 3.1 MB, mostly
+markdown reviewed by earlier plans; its sub-task reviewed the executable code
+in that delta with priority on 548fe140..HEAD (the two language/swift tasks).
+
+No high-confidence vulnerabilities found.
+
+Candidates considered and dropped:
+- Temp-file race or symlink attack on git_list (swift code/format:72, code/lint:124): mktemp creates the file atomically with mode 0600 and a random suffix, and trap rm -f removes it on exit. The only way to redirect it is through TMPDIR, which is trusted. Confidence 2.
+- Option injection through a file name (-rf or --config=...) in swift format and lint: every path from git or find reaches swift format and swiftlint with a ./ prefix (or is already absolute), and the house linter's targets carry the same prefix. Confidence 2.
+- eval "files+=(${usage_files:-})" (swift code/format:32, code/lint:35): the value is shell-quoted by mise/usage before it gets here; the pattern exists in 5 other packs, not new. Confidence 3.
+- dprint in swift code/format:108 takes the caller's files list without the ./ prefix; names come from the hook's staged list, matches the other packs. Confidence 3.
+- SECRETS_CONFIG path written unescaped into the gitleaks TOML overlay (mise code/sec): config/env value, trusted; overlay created with mktemp. Confidence 2.
+- mise setup/precommit reads core.hooksPath and only prints or compares it. Confidence 1.
+- _scripts/merge MERGE_MODEL_* values are env/config, only matched in a case. Confidence 1.
+
+scripts/src/check.ts not reviewed beyond the stat: repo-side checker tooling, does not ship to target repos.

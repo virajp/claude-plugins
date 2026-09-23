@@ -29,8 +29,8 @@ tasks pass each explicitly:
 
 | Task | Does |
 | --- | --- |
-| `code:format` | dprint and shfmt, then `swift format` over every `.swift` file git does not ignore, less the tasks' fixed exclusions — `.build/`, `.swiftpm/`, `Derived/`, `DerivedData/`, `*.generated.swift`, at any depth — (or the staged ones the hook passes) — in place under `--fix`, then a strict lint either way |
-| `code:lint` | shellcheck and actionlint over the staged files the hook passes (every file when none is passed); the house linter over every file git does not ignore; then `swiftlint lint --strict` over every `.swift` file git does not ignore, less the same exclusions — the house linter and SwiftLint whole-tree, whatever list the hook passes |
+| `code:format` | dprint and shfmt, then `swift format` — over the staged `.swift` files the hook passes, or with no list over every `.swift` file git does not ignore; either way less the tasks' fixed exclusions, `.build/`, `.swiftpm/`, `Derived/`, `DerivedData/` and `*.generated.swift` at any depth — in place under `--fix`, then a strict lint either way |
+| `code:lint` | shellcheck and actionlint over the staged files the hook passes (every tracked file when none is passed); the house linter over every file git does not ignore; then `swiftlint lint --strict` over every `.swift` file git does not ignore, less the same exclusions — the house linter and SwiftLint whole-tree, whatever list the hook passes |
 | `setup:deps:install` | `swift package resolve`; `--frozen` refuses to move `Package.resolved` |
 | `setup:deps:audit` | a stated no-op — SwiftPM ships no advisory command |
 | `setup:deps:cleanup` | removes `.build/` |

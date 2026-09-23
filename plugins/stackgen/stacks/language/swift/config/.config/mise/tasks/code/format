@@ -60,15 +60,34 @@ add_swift_target() {
   esac
 }
 
+# With no file list, the Swift sources are the ones git lists. Outside a git
+# work tree — no git, or git saying this is not a repository — they are found
+# by walking the tree. Any other git failure, a repository git refuses to read
+# or a listing that fails, stops the task: a walk that ignores `.gitignore`, or
+# an empty list, would pass what it never judged.
+in_git=false
+if [ ${#files[@]} -eq 0 ] && command -v git >/dev/null 2>&1; then
+  git_status=0
+  git_answer="$(LC_ALL=C git rev-parse --is-inside-work-tree 2>&1)" || git_status=$?
+  if [ "${git_status}" -eq 0 ]; then
+    if [ "${git_answer}" = "true" ]; then
+      in_git=true
+    fi
+  elif [[ "${git_answer}" != *"not a git repository"* ]]; then
+    print_error "git rev-parse failed (exit ${git_status}): ${git_answer}"
+    exit "${git_status}"
+  fi
+fi
+
 if [ ${#files[@]} -gt 0 ]; then
   for f in "${files[@]}"; do
     add_swift_target "${f}"
   done
-elif git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  # git's list goes to a file, not a process substitution, so a failing git
-  # fails the task instead of handing over an empty list. Mid-merge, a
-  # conflicted path is listed once per index stage; the list is sorted, so a
-  # path equal to the one before it is skipped.
+elif [ "${in_git}" = "true" ]; then
+  # git's list goes to a file, not a process substitution, so its exit status
+  # is seen. Mid-merge, a conflicted path is listed once per index stage and
+  # the stages sit together — the tracked and untracked blocks never share a
+  # path — so a path equal to the one before it is skipped.
   git_list="$(mktemp "${TMPDIR:-/tmp}/code-format.XXXXXX")"
   trap 'rm -f "${git_list}"' EXIT
   git_status=0
