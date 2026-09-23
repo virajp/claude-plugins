@@ -171,6 +171,7 @@ languages: # language and app-framework components only
       lsp: <how a language server is provided — or n/a>
       mise_tool: <the mise tool name — or n/a>
       manifest: <the manifest file doctor checks deps against — or n/a>
+      binaries: [ <name> ] # optional — executables needed on PATH that mise does not manage (xcodebuild, say); absent means none
 package_manager: <token> # package-manager components only
 artifact: <token> # deploy-target components, and deploy-side cloud-service ones
 mcp_servers: {} # design-tool and other components needing an MCP server — written into the project's .mcp.json behind tier-2 consent
@@ -388,7 +389,11 @@ which is the grain `stackgen-sync` acts at.
   bills and what breaks. API reference belongs to Context7 at use time.
 - **Facts are per language and honest.** `n/a` is an answer; an invented
   mise tool or manifest name surfaces as a doctor finding in every repo that
-  pins the pack.
+  pins the pack. A tool the stack cannot run without whose `mise_tool` is
+  `n/a` — Xcode's `xcodebuild`, which mise does not install — belongs in
+  `binaries`, so doctor reports it missing from `PATH` rather than skipping
+  the `n/a` silently — blocking once the project's template is pinned, a
+  degradation while its pin still reads `unresolved`.
 - **A generated pack may ship the `config/` tiers too.** Nothing about
   `config/.config/…`, `conf.d` or `pre-commit.d` is reserved to curated
   packs: a generated component that genuinely owns a config file may declare
