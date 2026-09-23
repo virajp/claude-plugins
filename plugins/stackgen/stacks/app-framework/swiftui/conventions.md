@@ -57,10 +57,10 @@ explicitly by the tasks.
 
 This pack ships a `config/.config/mise/tasks/` tree and a
 `config/.config/mise/conf.d/swiftui.toml` pin, landing at the repo's own
-`.config/mise/` behind the materializer's config consent line. An
-`app-framework` component composes **last**, so its task files win over the
-Swift language pack's of the same name. Most are the language pack's byte for
-byte; the ones below that name Tuist are this pack's own.
+`.config/mise/` behind the materializer's config consent line. It is the
+bundle's **whole** task set — no other component of the SwiftUI bundle ships a
+task — copied from the Swift language pack byte for byte wherever no Tuist step
+is needed; the ones below that name Tuist are this pack's own.
 
 | Task | Does |
 | --- | --- |
@@ -68,10 +68,10 @@ byte; the ones below that name Tuist are this pack's own.
 | `code:lint` | shellcheck and actionlint over the staged files, the house linter over every file git does not ignore, then `swiftlint lint --strict` over the same Swift scope |
 | `setup:deps:install` | fails fast when `xcodebuild` or `tuist` is missing, then `tuist install` and `tuist generate --no-open`; `--frozen` refuses to move `Package.resolved` |
 | `setup:deps:audit` | a stated no-op — SwiftPM ships no advisory command |
-| `setup:deps:cleanup` | `tuist clean dependencies` — this project's checkouts, never Tuist's shared caches — then removes `.build/`, `Tuist/.build/` and `Derived/` |
+| `setup:deps:cleanup` | removes `.build/`, `Tuist/.build/` (the package checkouts) and `Derived/` — never Tuist's shared caches |
 | `setup:deps:outdated` | `swift package update --dry-run` against `Tuist/Package.swift`, or a root `Package.swift` |
 | `setup:deps:upgrade` | `tuist install --update`, then `tuist generate --no-open` |
-| `test:golden` | the snapshot test target — `SnapshotTests`, or `--target` — through `tuist test`, comparing against the recorded goldens; `--record` records afresh, then compares |
+| `test:golden` | the snapshot test target — `SnapshotTests`, or `--target` — through `tuist test`, comparing against the recorded goldens; `--record` records afresh, then compares; `--device` and `--os` name the simulator, which recording and comparing must share |
 
 **`setup:deps:install` is fetch and generate in one task**, and the reason is
 causal: the generated project links what the install fetched, so a project

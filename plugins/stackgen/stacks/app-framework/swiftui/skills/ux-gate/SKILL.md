@@ -31,10 +31,22 @@ run boots and shuts itself. Never drive a simulator interactively.
 
 1. **Resolve the viewport** for each changed screen's platform:
    `design.viewports.<project>.<platform>` in `.config/vwf.yaml` when it is
-   set, otherwise the platform default the vwf UX reviewer resolves from its
-   own viewport table and passes in with the screens — never a size read back
-   from the goldens, which is what is being judged. Name the viewport you used
-   in every finding; a golden rendered at another size is not evidence for this one.
+   set, otherwise the platform default below, in points — the same defaults
+   vwf's design canvas uses. Never a size read back from the goldens, which is
+   what is being judged.
+
+   | Platform | Default viewport |
+   | --- | --- |
+   | `mobile` | 390×844, portrait |
+   | `tablet` | 834×1194, portrait |
+   | `desktop` | 1440×900 |
+   | `auto` | 800×480, landscape |
+   | `watch` | 208×248 |
+   | `tv` | 1920×1080, landscape |
+   | `spatial` | 1280×720, the default window |
+
+   Name the viewport you used in every finding; a golden rendered at another
+   size is not evidence for this one.
 2. **Visual** — run the repo's golden task, `mise run test:golden` (read the
    task list rather than assuming; a repo may name its snapshot target with
    `--target`). Never pass `--record`: recording overwrites the goldens the

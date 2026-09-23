@@ -5,6 +5,8 @@
 
 #USAGE flag "--record" help="re-record every golden, then compare against the new ones"
 #USAGE flag "--target <target>" default="SnapshotTests" help="the snapshot test target to run"
+#USAGE flag "--device <device>" help="the simulator to render on, by name (default: Tuist's pick)"
+#USAGE flag "--os <os>" help="the simulator OS version to render on (default: Tuist's pick)"
 
 set -euo pipefail
 # helpers ships in the toolchain-manager pack, not this one, so there is no
@@ -21,6 +23,12 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # whose inputs have not changed since a passing run, and a golden run that
 # skips is a golden run that judged nothing. Inspect mode is off: the result
 # bundle, screenshots included, is not uploaded to a Tuist server.
+#
+# A golden is pixels from one simulator: another device or OS version renders
+# differently, and every comparison against it fails. With no `--device` or
+# `--os`, Tuist picks a simulator on this machine, which need not be the one
+# the goldens were recorded on — so goldens should be recorded and verified on
+# the same named device, the two flags passed through to `tuist test` as given.
 #
 # The record mode reaches the test process through xcodebuild, which strips the
 # `TEST_RUNNER_` prefix from any variable carrying it and hands the rest to the
@@ -49,12 +57,21 @@ fi
 
 artifacts="${PWD}/.build/snapshot-artifacts"
 
+destination_args=()
+if [ -n "${usage_device:-}" ]; then
+  destination_args+=(--device "${usage_device}")
+fi
+if [ -n "${usage_os:-}" ]; then
+  destination_args+=(--os "${usage_os}")
+fi
+
 run_goldens() {
   TEST_RUNNER_SNAPSHOT_TESTING_RECORD="$1" \
     TEST_RUNNER_SNAPSHOT_ARTIFACTS="${artifacts}" \
     tuist test \
     --no-selective-testing \
     --inspect-mode off \
+    ${destination_args[@]+"${destination_args[@]}"} \
     --test-targets "${usage_target:-SnapshotTests}"
 }
 
