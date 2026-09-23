@@ -60,7 +60,7 @@ Notes:
 it declares at least one **screen platform**; which column applies is decided by
 *which* screen platforms it declares.
 
-| Slug              | device platforms<br>`mobile` `tablet` `desktop` `auto` | browser platforms<br>`site` `webapp` | Mandate                                                         |
+| Slug              | device platforms<br>`mobile` `tablet` `desktop` `auto` `watch` `tv` `spatial` | browser platforms<br>`site` `webapp` | Mandate                                                         |
 | ----------------- | ---------------- | ------------- | --------------------------------------------------------------- |
 | `splash`          | **mandatory**    | optional      | —                                                               |
 | `signin`          | conditional      | conditional   | required when the project has an Auth & identity capability     |
@@ -151,19 +151,22 @@ that reads it without an authorization entry of its own.
 ## The platform vocabulary
 
 Every platform token vwf knows lives in the registry's closed per-role lists
-(`${CLAUDE_PLUGIN_ROOT}/assets/templates/registry.yaml`). Of them, exactly **six are
+(`${CLAUDE_PLUGIN_ROOT}/assets/templates/registry.yaml`). Of them, exactly **nine are
 screen platforms**, used everywhere a screen surface is — flow platform files,
 the `docs/prompts/screens/` briefs, canvas page suffixes, `design.projects`
 pins, and the `docs/scratchpad/` render tree:
 
-| Platform  | What it is                                      | Kind    |
-| --------- | ----------------------------------------------- | ------- |
-| `mobile`  | Phone app or phone-sized layout                 | device  |
-| `tablet`  | Tablet layout (master-detail, multi-column)     | device  |
-| `desktop` | Natively installed desktop application          | device  |
-| `auto`    | In-car head unit — **CarPlay and Android Auto** | device  |
-| `site`    | Browser-delivered content surface               | browser |
-| `webapp`  | Browser-delivered application                   | browser |
+| Platform  | What it is                                               | Kind    |
+| --------- | -------------------------------------------------------- | ------- |
+| `mobile`  | Phone app or phone-sized layout                          | device  |
+| `tablet`  | Tablet layout (master-detail, multi-column)              | device  |
+| `desktop` | Natively installed desktop application                   | device  |
+| `auto`    | In-car head unit — **CarPlay and Android Auto**          | device  |
+| `watch`   | Wrist app — **watchOS and Wear OS**                      | device  |
+| `tv`      | Living-room app, remote-driven — **tvOS and Android TV** | device  |
+| `spatial` | Headset app — **visionOS, Android XR and Quest**         | device  |
+| `site`    | Browser-delivered content surface                        | browser |
+| `webapp`  | Browser-delivered application                            | browser |
 
 Format 22 split the old single `web` token into `site` and `webapp` and made
 both platforms rather than roles. They are two surfaces, not two implementations
@@ -182,13 +185,16 @@ require is the design system's **Terminal UX** section.
 Every **other** platform — `service`, `worker`, `packages`, and every `data` and
 `system` token, `plugin` included — is screenless in exactly the same way, and
 for the same reason: a flow of theirs is `index.md` alone. What was one exemption for `cli` is now
-the general rule, with the six above as the exception.
+the general rule, with the nine above as the exception.
 
 The vocabulary names **form factors, not vendors** — `mobile` already hides
 iOS/Android and `desktop` hides Windows/macOS/Linux, so `auto` hides CarPlay and
 Android Auto the same way. Their template differences (list / grid / map /
 now-playing and the driver-distraction rules) are recorded as deviations inside
-`auto.md`.
+`auto.md`. Likewise `watch` hides watchOS and Wear OS, `tv` hides tvOS and
+Android TV, and `spatial` hides visionOS, Android XR and Quest; each vendor's
+differences are deviations inside that platform's file. Unlike `auto`, which
+rides the `mobile` binary, each of the three may be declared alone.
 
 A project's implemented platforms are declared in the registry
 (`projects[].platforms`) and **only** there — since format 19 the key is gone

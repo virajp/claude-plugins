@@ -98,12 +98,12 @@ A project carries exactly one **`role`** — the coarse domain grouping — and
 seven-token role vocabulary with four roles plus platforms; every token that
 used to be a role lives on as a platform.
 
-| Role       | What it is                     | Platforms                                                                  |
-| ---------- | ------------------------------ | -------------------------------------------------------------------------- |
-| `backend`  | Server-side, cloud-hosted      | `packages` `service` `worker` `webapp`                                     |
-| `frontend` | User-facing surfaces           | `packages` `site` `webapp` `desktop` `mobile` `tablet` `auto` `cli`        |
-| `data`     | Data and ML systems            | `packages` `data-lake` `analytics` `ingestion` `ml-platform`               |
-| `system`   | Infrastructure and tooling     | `packages` `iac` `plugin` `misc` `cicd` `cli`                              |
+| Role       | What it is                     | Platforms                                                                                  |
+| ---------- | ------------------------------ | ------------------------------------------------------------------------------------------ |
+| `backend`  | Server-side, cloud-hosted      | `packages` `service` `worker` `webapp`                                                     |
+| `frontend` | User-facing surfaces           | `packages` `site` `webapp` `desktop` `mobile` `tablet` `auto` `watch` `tv` `spatial` `cli` |
+| `data`     | Data and ML systems            | `packages` `data-lake` `analytics` `ingestion` `ml-platform`                               |
+| `system`   | Infrastructure and tooling     | `packages` `iac` `plugin` `misc` `cicd` `cli`                                              |
 
 `doc_unit` defaults follow the **platforms**, not the role: `site`/`webapp` →
 `page`; `packages`, `iac`, `plugin`, `cli` → `module`; everything else →

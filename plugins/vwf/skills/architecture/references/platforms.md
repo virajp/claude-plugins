@@ -13,12 +13,12 @@ appears in `.config/vwf.yaml`. The closed per-role lists live in
 `${CLAUDE_PLUGIN_ROOT}/assets/templates/registry.yaml`, and the screen-platform
 semantics in `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`:
 
-| Role       | Offer                                                                        |
-| ---------- | ---------------------------------------------------------------------------- |
-| `backend`  | `packages`, `service`, `worker`, `webapp`                                    |
-| `frontend` | `packages`, `site`, `webapp`, `desktop`, `mobile`, `tablet`, `auto`, `cli`   |
-| `data`     | `packages`, `data-lake`, `analytics`, `ingestion`, `ml-platform`             |
-| `system`   | `packages`, `iac`, `plugin`, `misc`, `cicd`, `cli`                           |
+| Role       | Offer                                                                                                |
+| ---------- | ---------------------------------------------------------------------------------------------------- |
+| `backend`  | `packages`, `service`, `worker`, `webapp`                                                            |
+| `frontend` | `packages`, `site`, `webapp`, `desktop`, `mobile`, `tablet`, `auto`, `watch`, `tv`, `spatial`, `cli` |
+| `data`     | `packages`, `data-lake`, `analytics`, `ingestion`, `ml-platform`                                     |
+| `system`   | `packages`, `iac`, `plugin`, `misc`, `cicd`, `cli`                                                   |
 
 **A project may declare several.** One Flutter codebase shipping phone, tablet,
 desktop and the car is **one** project with `platforms: [mobile, tablet,
@@ -39,8 +39,19 @@ client that talks to *another* project's API is its own project, not a platform
 of that one — the test is whether it is a separate codebase, not whether it is
 a separate surface.
 
+Ask likewise whether the product ships to the wrist, the living-room screen or a
+headset, and offer the matching token. **`watch`** is the wrist app — watchOS
+and Wear OS; **`tv`** the living-room app driven by a remote — tvOS and Android
+TV; **`spatial`** the headset app — visionOS, Android XR and Quest. Unlike
+`auto`, none of the three rides another binary's surface: each can ship as a
+standalone app, so each **may be declared alone** — `platforms: [ watch ]` is a
+valid project — as well as beside `mobile` in one codebase. The
+`auto`-needs-`mobile` rule is `auto`'s alone.
+
 The vocabulary names form factors, not vendors — `mobile` already hides
-iOS/Android, so `auto` hides CarPlay/Android Auto the same way.
+iOS/Android, so `auto` hides CarPlay/Android Auto the same way, `watch` hides
+watchOS/Wear OS, `tv` hides tvOS/Android TV, and `spatial` hides
+visionOS/Android XR/Quest.
 
 ## What the platforms decide
 
@@ -48,7 +59,7 @@ Everything that used to key on `role` now keys on these:
 
 | Platform(s) | Obliges |
 | --- | --- |
-| `site` `webapp` `desktop` `mobile` `tablet` `auto` | **screen platforms** — design system mandatory, standard flows mandated, one `<platform>.md` per flow, `/vwf:screens` briefs, canvas pins, mockups |
+| `site` `webapp` `desktop` `mobile` `tablet` `auto` `watch` `tv` `spatial` | **screen platforms** — design system mandatory, standard flows mandated, one `<platform>.md` per flow, `/vwf:screens` briefs, canvas pins, mockups; all but `site` and `webapp` are **device** platforms — store-shipped, splash mandatory, goldens required |
 | `service` | `apis/<project>.openapi.yaml` and a health endpoint |
 | `iac` | registered, exempt from blueprint coverage, **always its own repo** |
 | `plugin` | **covered** — flows are the extension points, one per skill/command/hook, `index.md` alone, no standard-flow mandates |
