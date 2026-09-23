@@ -61,9 +61,11 @@ no `config/` tier), `toolchain-gate/swift-format` and `toolchain-gate/swiftlint`
 — two more gates meaningful for one toolchain. swift-format ships with the
 toolchain; SwiftLint is pinned through mise by the `conf.d/swiftlint.toml`
 its pack lands. `language/swift` owns the tasks, which take their file list
-from git, NUL-separated and `./`-prefixed, and skip SwiftLint when no Swift
-source is in scope. No pack lands `Package.swift`: `swift package init`
-creates it.
+from git, NUL-separated and `./`-prefixed — `code:format` the hook's staged
+list when one is passed — stop with an error when `git ls-files` fails, walk
+the tree with `find` when there is neither a `.git` entry nor `GIT_DIR`, or
+no git, and skip SwiftLint when no Swift source is in scope. No pack lands
+`Package.swift`: `swift package init` creates it.
 
 **Wave C — `app-framework/flutter`**, kind `app-framework`, with
 `package-manager/pub` and `toolchain-gate/analysis-options`. The one bundle

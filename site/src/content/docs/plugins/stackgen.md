@@ -273,12 +273,15 @@ creates. `toolchain-gate/swift-format` lands `.config/swift-format.json`, and
 `.config/mise/conf.d/swiftlint.toml`, which pins `aqua:realm/SwiftLint` at
 0.65.1 so `mise.toml` names no linter; each ships an editor fragment on
 `editor: vscode`. The `language/swift` pack supplies the tasks: `code:format`
-and `code:lint` take their file list from git — every file it does not ignore,
-read NUL-separated and passed `./`-prefixed, so no file name is read as a flag —
-and `code:lint` skips SwiftLint when no Swift source is in scope. Of the
-`setup:deps:*` tasks, `install`, `outdated` and `upgrade` run `swift package`;
-`cleanup` removes `.build/`, and `audit` is a stated no-op, since SwiftPM ships
-no advisory command.
+takes the staged files the hook passes and otherwise, like `code:lint`, takes
+its file list from git — every file it does not ignore, read NUL-separated and
+passed `./`-prefixed, so no file name is read as a flag, and a failed
+`git ls-files` stops the task with an error rather than judging an empty list;
+with neither a `.git` entry nor `GIT_DIR`, or no git installed, both walk the
+tree instead — and `code:lint` skips SwiftLint when no Swift source is in scope.
+Of the `setup:deps:*` tasks, `install`, `outdated` and `upgrade` run
+`swift package`; `cleanup` removes `.build/`, and `audit` is a stated no-op,
+since SwiftPM ships no advisory command.
 
 The `devtools` plugin then dissolved into stackgen and was deleted, closing the
 marketplace at two plugins. Its mise doctrine and its file-based task library
