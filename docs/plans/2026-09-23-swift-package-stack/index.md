@@ -10,9 +10,10 @@ backlog: []
 
 ## Status
 
-**RUNNING**
+**COMPLETE**
 
-RUNNING since 2026-09-23 in .claude/worktrees/2026-09-23-swift-package-stack
+COMPLETE 2026-09-23 — 67e28cbe 16059e30 cd378221 3d1b7f12 0afc04a1 f939372b
+adfa3f18; folder live for open gaps G1–G7
 
 ## Consent
 
@@ -308,6 +309,7 @@ None new; the chain's parked items live in plan 2d.
 | 3    | gate        | —     | —        | green                          | 9/9 wave gate lines                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | —        |
 | 4    | U6          | opus  | 1        | green                          | site 1.1.43 to 1.1.44 via bare p:site:version (tree already at 1.1.43 — GAP vs consent's 1.1.42→1.1.43, bump intent patch honoured); stackgen 1.29.0 to 1.30.0 by hand; marketplace regenerated (stackgen-v1.30.0); inventory unchanged; 9/9 gate                                                                                                                                                                                                                                                                                                  | —        |
 | 4    | R4w         | opus  | 1        | pass                           | contract clean; commit line uses site 1.1.44                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | —        |
+| —    | final gates | —     | —        | green                          | smoke (E16) fresh /tmp/spk-smoke3: install, init, deps:install, build, test, format --fix, format, lint, deps:cleanup, deps:outdated all 0; tasks 755; sourcekit-lsp identical; bundle platforms [packages], no default; citation grep empty; 9/9 wave gate                                                                                                                                                                                                                                                                                        | —        |
 
 ## Launch
 
