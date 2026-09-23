@@ -1,0 +1,5 @@
+/security-review — R4 round 1 — range ae17915e..517125d6 (the engine's own diff ran against main; narrowed to the row's range, everything else already on develop and reviewed by earlier rows)
+
+No high-confidence vulnerabilities found.
+
+Checked in git diff ae17915e..HEAD: the eval "files+=(${usage_files:-})" pattern in code/format and code/lint (identical in the swift and mise packs; input is shell-quoted CLI args — trusted); rm -rf .build Derived in setup/deps/cleanup (fixed paths from the task dir) and rm -rf "${artifacts}" in test/golden (always set, under ${PWD}/.build); the git / find file listing, ./ prefix and NUL handling; the mktemp/trap temp files; the args passed to swiftlint, swift format, dprint and tuist; the Tuist pin (aqua:tuist/tuist at exact 4.209.0 — aqua verifies checksums); pnpm dlx @askviraj/linter (pre-existing in the mise pack). Markdown files excluded per the engine brief.
