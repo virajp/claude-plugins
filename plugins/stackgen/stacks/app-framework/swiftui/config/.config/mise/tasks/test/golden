@@ -25,18 +25,27 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # bundle, screenshots included, is not uploaded to a Tuist server.
 #
 # A golden is pixels from one simulator: another device or OS version renders
-# differently, and every comparison against it fails. With no `--device` or
-# `--os`, Tuist picks a simulator on this machine, which need not be the one
-# the goldens were recorded on — so goldens should be recorded and verified on
-# the same named device, the two flags passed through to `tuist test` as given.
+# differently, and every comparison against it fails. So the repo pins the
+# simulator once, in its mise `[env]` — `TUIST_TEST_DEVICE`, and
+# `TUIST_TEST_OS` and `TUIST_TEST_PLATFORM` where needed — which `tuist test`
+# reads from the environment, so this task, the `ux-gate` skill and CI render
+# on the same one. `--device` and `--os` override the pin for one run, passed
+# through as given. With neither pin nor flag, Tuist picks a simulator on this
+# machine, which need not be the one the goldens were recorded on.
 #
 # The record mode reaches the test process through xcodebuild, which strips the
 # `TEST_RUNNER_` prefix from any variable carrying it and hands the rest to the
 # tests. A comparison runs with recording off (`never`), so a view with no
 # golden fails rather than quietly recording one — the library's own default
-# would record it and pass the next run. A failed comparison writes the
-# reference, the new render and their diff under `.build/snapshot-artifacts/`,
-# emptied first so what is there is this run's.
+# would record it and pass the next run. A failed comparison leaves its
+# evidence in three places: the reference is the committed file under the
+# test's `__Snapshots__` directory, the new render lands under
+# `.build/snapshot-artifacts/` — emptied first, so what is there is this
+# run's — and the diff is an attachment in the test result bundle.
+#
+# `-collect-test-diagnostics never` is passed through to xcodebuild: on a
+# failure it otherwise gathers a sysdiagnose-sized bundle from the simulator,
+# minutes per run, and every recording run fails by design.
 #
 # `--record` writes every golden afresh (`all`) and then compares. The library
 # fails every assertion it records — so a recording is never mistaken for a
@@ -72,7 +81,8 @@ run_goldens() {
     --no-selective-testing \
     --inspect-mode off \
     ${destination_args[@]+"${destination_args[@]}"} \
-    --test-targets "${usage_target:-SnapshotTests}"
+    --test-targets "${usage_target:-SnapshotTests}" \
+    -- -collect-test-diagnostics never
 }
 
 if [[ "${usage_record:-false}" == "true" ]]; then

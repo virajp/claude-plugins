@@ -71,7 +71,7 @@ is needed; the ones below that name Tuist are this pack's own.
 | `setup:deps:cleanup` | removes `.build/`, `Tuist/.build/` (the package checkouts) and `Derived/` — never Tuist's shared caches |
 | `setup:deps:outdated` | `swift package update --dry-run` against `Tuist/Package.swift`, or a root `Package.swift` |
 | `setup:deps:upgrade` | `tuist install --update`, then `tuist generate --no-open` |
-| `test:golden` | the snapshot test target — `SnapshotTests`, or `--target` — through `tuist test`, comparing against the recorded goldens; `--record` records afresh, then compares; `--device` and `--os` name the simulator, which recording and comparing must share |
+| `test:golden` | the snapshot test target — `SnapshotTests`, or `--target` — through `tuist test`, comparing against the recorded goldens; `--record` records afresh, then compares; the simulator is pinned once in the repo's mise `[env]` — `TUIST_TEST_DEVICE`, plus `TUIST_TEST_OS` and `TUIST_TEST_PLATFORM` where needed, which `tuist test` reads — so recording, comparing, `ux-gate` and CI share it; `--device` and `--os` override it for one run, and a run with no pin is reported by `ux-gate`, not trusted |
 
 **`setup:deps:install` is fetch and generate in one task**, and the reason is
 causal: the generated project links what the install fetched, so a project
@@ -80,8 +80,10 @@ generated before the install describes a dependency graph that is not there.
 **The goldens are swift-snapshot-testing image snapshots** of SwiftUI views,
 in a test target of their own, recorded into the repo beside the tests that
 own them. A comparison never records, so a view with no golden fails rather
-than passing on a golden it just wrote; a failed comparison leaves the
-reference, the new render and their diff under `.build/snapshot-artifacts/`,
-which the `ux-gate` skill hands to the reviewer.
+than passing on a golden it just wrote. A failed comparison leaves the
+reference as the committed file under the test's `__Snapshots__` directory,
+the new render under `.build/snapshot-artifacts/`, and the diff as an
+attachment in the test result bundle — the three the `ux-gate` skill hands to
+the reviewer.
 
 Full judgment: the `swiftui` skill's references.

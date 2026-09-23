@@ -47,26 +47,38 @@ run boots and shuts itself. Never drive a simulator interactively.
 
    Name the viewport you used in every finding; a golden rendered at another
    size is not evidence for this one.
-2. **Visual** — run the repo's golden task, `mise run test:golden` (read the
+2. **Check the simulator is pinned.** Goldens are pixels from one simulator,
+   so the repo pins it once, in its mise `[env]`: `TUIST_TEST_DEVICE`, and
+   `TUIST_TEST_OS` and `TUIST_TEST_PLATFORM` where the device name alone is
+   ambiguous. `tuist test` reads all three from the environment, so the golden
+   task, this gate and CI render on the same simulator. Read them with
+   `mise env`; when `TUIST_TEST_DEVICE` is unset, still run the steps below,
+   but report the unpinned simulator as a finding, and report any golden
+   verdict of that run as untrusted — a pass or a failure on whichever
+   simulator Tuist picked says nothing about the recorded one.
+3. **Visual** — run the repo's golden task, `mise run test:golden` (read the
    task list rather than assuming; a repo may name its snapshot target with
    `--target`). Never pass `--record`: recording overwrites the goldens the
    comparison is meant to judge. On a failed comparison, point the reviewer at
-   the reference, render and diff images under `.build/snapshot-artifacts/`.
+   the three images: the reference, the committed file under the test's
+   `__Snapshots__` directory; the new render, under
+   `.build/snapshot-artifacts/`; and the diff, an attachment in the test
+   result bundle.
 
    **A changed screen with no golden at all is not a pass.** The task compares
    with recording off, so a missing golden fails it; report that as a finding,
    so it reaches vwf as a spec gap rather than as silence.
-3. **Accessibility** — run the accessibility audit Xcode offers:
+4. **Accessibility** — run the accessibility audit Xcode offers:
    `XCUIApplication.performAccessibilityAudit()`, in the project's UI test
    target, over each changed screen an audit test reaches — run with
    `tuist test --no-selective-testing --inspect-mode off --test-targets <that target>`,
-   inspect mode off so the result bundle, screenshots and all, is never
-   uploaded to a Tuist server. Each audit
-   issue — contrast, element description, hit region,
-   Dynamic Type clipping, trait — is the equivalent of a WCAG A/AA violation;
-   report it at that severity so vwf can apply one rule across every stack. A
-   changed screen no audit test reaches is a finding too, not a pass.
-4. **Return** the payload below. Report what happened, not what should have.
+   on the same pinned simulator, inspect mode off so the result bundle,
+   screenshots and all, is never uploaded to a Tuist server. Each audit
+   issue — contrast, element description, hit region, Dynamic Type clipping,
+   trait — is the equivalent of a WCAG A/AA violation; report it at that
+   severity so vwf can apply one rule across every stack. A changed screen no
+   audit test reaches is a finding too, not a pass.
+5. **Return** the payload below. Report what happened, not what should have.
 
 ## Return contract
 
@@ -74,7 +86,7 @@ run boots and shuts itself. Never drive a simulator interactively.
 rendered: ok | n/a
 reason: <one line> # required when n/a
 viewport: <project>.<platform> -> <device or size> # one per platform checked
-artifacts: [ <path>, … ] # snapshot reference, failure and diff images
+artifacts: [ <path>, … ] # reference, new render, result bundle (the diff)
 findings:
   - severity: <critical | high | medium | low>
     screen: <screen>/<state>
