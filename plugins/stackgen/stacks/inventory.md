@@ -7,7 +7,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 `../assets/kinds.md`. The narrative — which wave landed what, and why — is
 [`readme.md`](readme.md); the shape of a pack is `../assets/pack-format.md`.
 
-**74 packs, 67 bundles, 13 kinds.**
+**75 packs, 68 bundles, 13 kinds.**
 
 ## Kinds
 
@@ -22,7 +22,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `workspace` | 0 | 3 |
 | `capability-provider` | 8 | 8 |
 | `ci-system` | 1 | 1 |
-| `app-framework` | 3 | 1 |
+| `app-framework` | 4 | 2 |
 | `deploy-target` | 1 | 2 |
 | `design-tool` | 4 | 4 |
 | `stylesheet` | 3 | 3 |
@@ -32,6 +32,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | Component | Name | Kind | Axis | Category | Capability | Version | Summary |
 | --------- | ---- | ---- | ---- | -------- | ---------- | ------- | ------- |
 | `app-framework/flutter` | Flutter | `app-framework` | project | cross-platform-ui |  | 0.4.0 | The cross-platform app SDK that owns the manifest, the build and the project layout — one codebase across mobile, tablet, desktop and in-car through the native edge. |
+| `app-framework/swiftui` | SwiftUI | `app-framework` | project | native-ui |  | 0.1.0 | The native Apple app stack — SwiftUI on Swift, the project declared in Tuist and generated, Xcode owning the build — one codebase across iPhone, iPad, Mac, CarPlay, Watch, TV and Vision. |
 | `capability-provider/audit-store-d1` | Audit store · Cloudflare D1 | `capability-provider` | backing | audit | audit-store | 0.1.0 | An isolated, append-only audit dataset in a D1 database of its own — written through one seam and read only by the console Worker that holds the binding. |
 | `capability-provider/audit-store-postgres` | Audit store · PostgreSQL | `capability-provider` | backing | audit | audit-store | 0.1.0 | An isolated, append-only audit schema inside the product's own PostgreSQL — insert-only to the application's role, readable by the console's reader role under policy, and removable only by the retention purge. |
 | `capability-provider/doppler` | Doppler | `capability-provider` | backing | secrets-manager |  | 1.0.0 | A vendor holds the secrets and the CLI injects them at the process boundary — onboarding is an org invite, and no key is ever distributed. |
@@ -167,6 +168,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `stitch` | Google Stitch | `design-tool` | design | `design-tool/stitch@0.1.0` |  |
 | `stylex` | StyleX | `stylesheet` | stylesheet | `stylesheet/stylex@0.1.0` |  |
 | `swift-package` | Swift · package | `language-bundle` | project | `language/swift@0.1.0`, `package-manager/swiftpm@0.1.0`, `toolchain-gate/swift-format@0.1.0`, `toolchain-gate/swiftlint@0.1.0` |  |
+| `swift-swiftui` | Swift · SwiftUI | `app-framework` | project | `app-framework/swiftui@0.1.0`, `package-manager/swiftpm@0.1.0`, `toolchain-gate/swift-format@0.1.0`, `toolchain-gate/swiftlint@0.1.0` |  |
 | `tailwindcss` | Tailwind CSS | `stylesheet` | stylesheet | `stylesheet/tailwindcss@0.1.0` |  |
 | `temporal` | Temporal | `capability-provider` | backing | `capability-provider/temporal@0.1.0` |  |
 | `typescript-cloudflare-agents` | TypeScript · Cloudflare Agents · Effect | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.0`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.0`, `framework/effect@0.1.0`, `framework/cloudflare-agents@0.1.0` |  |

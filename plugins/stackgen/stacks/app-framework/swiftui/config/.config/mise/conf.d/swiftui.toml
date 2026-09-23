@@ -1,0 +1,18 @@
+# The Tuist pin, and nothing else. It sits in conf.d/ so that mise.toml stays
+# free of the app stack's name: dropping the stack is deleting this file, with
+# no edit to a file the toolchain manager owns.
+#
+# conf.d has NO environment scoping — the directory is read by glob, so this
+# loads under every MISE_ENV. That is right for the tool that generates the
+# project: CI generates with the same version a developer does.
+#
+# The version is pinned rather than "latest", for two reasons. A Tuist release
+# can change what `tuist generate` writes, and a regenerated project nobody
+# asked for is a diff nobody can review. And Tuist's repository tags other
+# products beside the CLI, so a "latest" lookup can find no CLI version at all.
+# Moving the pin is its own change, with the project regenerated in the same
+# commit. Xcode is not pinned here — mise does not install it;
+# `compatibleXcodeVersions` in `Tuist.swift` does.
+
+[tools]
+"aqua:tuist/tuist" = { version = "4.209.0" }

@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+
+#MISE description="Compare the app's views against their recorded golden images"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--record" help="re-record every golden, then compare against the new ones"
+#USAGE flag "--target <target>" default="SnapshotTests" help="the snapshot test target to run"
+
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# The goldens are swift-snapshot-testing image snapshots, kept in a test target
+# of their own — `SnapshotTests` unless `--target` names another — so they run
+# apart from the unit tests and nothing else is judged by pixels.
+#
+# `tuist test` generates the project, picks a simulator for the target's
+# platform and runs xcodebuild. Selective testing is off: it skips a target
+# whose inputs have not changed since a passing run, and a golden run that
+# skips is a golden run that judged nothing. Inspect mode is off: this run's
+# images stay on this machine.
+#
+# The record mode reaches the test process through xcodebuild, which strips the
+# `TEST_RUNNER_` prefix from any variable carrying it and hands the rest to the
+# tests. A comparison runs with recording off (`never`), so a view with no
+# golden fails rather than quietly recording one — the library's own default
+# would record it and pass the next run. A failed comparison writes the
+# reference, the new render and their diff under `.build/snapshot-artifacts/`,
+# emptied first so what is there is this run's.
+#
+# `--record` writes every golden afresh (`all`) and then compares. The library
+# fails every assertion it records — so a recording is never mistaken for a
+# pass — which makes the recording run's exit status meaningless; the
+# comparison after it is the verdict, and it proves the new goldens reproduce.
+
+if ! command -v xcodebuild >/dev/null 2>&1; then
+  print_error "test:golden: xcodebuild is not on PATH."
+  print_yellow "Install Xcode, select it with xcode-select, then re-run."
+  exit 1
+fi
+
+if ! command -v tuist >/dev/null 2>&1; then
+  print_error "test:golden: tuist is not on PATH."
+  print_yellow "Run mise install, which installs the Tuist this repo pins, then re-run."
+  exit 1
+fi
+
+artifacts="${PWD}/.build/snapshot-artifacts"
+
+run_goldens() {
+  TEST_RUNNER_SNAPSHOT_TESTING_RECORD="$1" \
+    TEST_RUNNER_SNAPSHOT_ARTIFACTS="${artifacts}" \
+    tuist test \
+    --no-selective-testing \
+    --inspect-mode off \
+    --test-targets "${usage_target:-SnapshotTests}"
+}
+
+if [[ "${usage_record:-false}" == "true" ]]; then
+  print_header "Recording goldens ..."
+  run_goldens all || true
+fi
+
+print_header "Comparing goldens ..."
+rm -rf "${artifacts}"
+mkdir -p "${artifacts}"
+run_goldens never

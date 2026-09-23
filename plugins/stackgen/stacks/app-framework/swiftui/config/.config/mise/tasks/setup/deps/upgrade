@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+#MISE description="Move the lockfile forward within the manifest's ranges"
+#MISE hide=true
+
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# `tuist install --update` re-resolves every external package to the newest
+# version its declared range allows and rewrites `Package.resolved`, fetching
+# as it goes. The project is then generated again, because the generated
+# project links the packages by what was resolved — an update that leaves the
+# old project in place builds against a graph that no longer exists. The
+# lockfile diff is the review surface.
+#
+# One step, so no header: whatever called it — `setup:deps:all`, or a person —
+# frames it.
+
+tuist install --update
+tuist generate --no-open
