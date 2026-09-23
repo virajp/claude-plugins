@@ -115,7 +115,7 @@ directly against the Screens contract.
 ```yaml
 flow: <NNN>-<flow-slug>
 project: <registry-project>
-platform: mobile | tablet | desktop | auto | site | webapp
+platform: mobile | tablet | desktop | auto | watch | tv | spatial | site | webapp
 screens:
   - code: <NNN><letter> # the pinned screen code — the join key
     name: <screen name>
@@ -224,7 +224,7 @@ project: <registry-project>
 remarks:
   - surface: screen | state | design-system | project # what the remark bears on
     code: <NNN><letter> # the pinned screen code, or null when not recoverable
-    platform: mobile | tablet | desktop | auto | site | webapp # or null
+    platform: mobile | tablet | desktop | auto | watch | tv | spatial | site | webapp # or null
     kind: comment | change-request | observation
     remark: <what was said, close to how it was said>
     notes: [] # ambiguity, truncation, anything with no slot above

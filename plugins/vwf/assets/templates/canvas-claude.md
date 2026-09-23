@@ -45,7 +45,10 @@ their own conventions.
 
 ## Layout
 
-<!-- Keep only this platform's block; drop the others. -->
+<!-- Keep only this platform's block; drop the others. Each size below is the
+     platform's DEFAULT viewport. When .config/vwf.yaml sets
+     design.viewports.<project>.<platform>: <W>x<H>, write that size into the
+     kept block in place of the default. -->
 
 - **mobile** — every screen renders at **390×844** (portrait) in a phone frame:
   dark bezel **with the camera notch/cutout** for a true visual, toggleable via
@@ -63,6 +66,26 @@ their own conventions.
   grid / map / now-playing) and glanceable — minimal interaction while driving;
   the design system reaches only as far as the platform allows. Where CarPlay
   and Android Auto genuinely diverge, the flow's `auto.md` records it as a
+  deviation.
+- **watch** (watchOS and Wear OS together) — every screen renders at
+  **208×248** (the 46mm Apple Watch, in points) in a watch-face frame with its
+  rounded corners, toggleable via the `frame` tweak (default on); theme via
+  `darkMode` (default on). Screens are **glanceable** — one idea per screen,
+  short sessions, Digital Crown scrolling, complications where the flow pins
+  them. Where watchOS and Wear OS genuinely diverge (a round Wear OS face), the
+  flow's `watch.md` records it as a deviation.
+- **tv** (tvOS and Android TV together) — every screen renders at
+  **1920×1080** landscape (the tvOS point grid) in a TV frame with the
+  title-safe inset shown, toggleable via the `frame` tweak (default on); theme
+  via `darkMode` (default on). Screens are read from **ten feet** and driven by
+  **focus** with a remote — the focused element is always visible, there is no
+  touch and no pointer.
+- **spatial** (visionOS, Android XR and Quest together) — every screen renders
+  at **1280×720** (the visionOS default window) as a floating window with its
+  glass material, toggleable via the `frame` tweak (default on); theme via
+  `darkMode` (default on). Input is **gaze and pinch**; a flow that pins a
+  volume or an immersive space draws it as its own coded frame. Where the
+  platforms genuinely diverge, the flow's `spatial.md` records it as a
   deviation.
 
 ## Behavior conventions

@@ -31,11 +31,12 @@ returning anything: `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`.
 ## Inputs
 
 `$ARGUMENTS` is `<flow> <platform>` — the flow folder name (`<NNN>-<flow-slug>`)
-and one of `mobile` / `tablet` / `desktop` / `auto` / `site` / `webapp`. vwf
-also passes the **registry project** the flow belongs to, plus whatever canvas
-pins that tool needs — vwf passes the `design:` block's per-project,
-per-platform entries through without interpreting them, since which of them
-matter is the adapter's business and not vwf's.
+and one of `mobile` / `tablet` / `desktop` / `auto` / `watch` / `tv` /
+`spatial` / `site` / `webapp`. vwf also passes the **registry project** the
+flow belongs to, plus whatever canvas pins that tool needs — vwf passes the
+`design:` block's per-project, per-platform entries (the canvas pin, and a
+`design.viewports` override where one is set) through without interpreting
+them, since which of them matter is the adapter's business and not vwf's.
 
 ## 1. Resolve the project's design tool
 

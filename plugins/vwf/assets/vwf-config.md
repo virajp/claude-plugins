@@ -87,7 +87,7 @@ projects: # per-project REALIZATION + nuances — no role/path keys, ever (those
       ] # the BACKING axis, PER PROJECT since format 13 (was one product-wide `backing:` block). A LIST: one slug per capability the project needs — datastore, identity, queue, object storage, telemetry sink. `[]` when the project talks to no backing service at all (a `packages` platform, or a client app talking only to a `service`, usually does not). `unresolved` — the bare scalar, never an element — when the axis is deferred
       deploy_template: [
         <slug>,
-      ] # the DEPLOY axis, PER PROJECT since format 13 (was one product-wide `deploy:` block). A LIST since format 16, the same shape change `backing_template` made in 13: one slug per DELIVERY MECHANISM the project ships through, because a project routinely has more than one — a `cli` may publish to a package registry AND a container image AND a signed archive, and format 15 could record exactly one. Keyed on PLATFORM: a project whose platforms are all SCREEN platforms other than `site`/`webapp` — `mobile`, `tablet`, `desktop`, `auto` — records `[]`, since it ships through a store rather than to a deploy target, as does an `iac` platform, which IS the deploy path. A `cli` platform pins a deploy template for its package registry — WHICH one is the stack plugin's answer and vwf names NO slug here, on this axis or any other. `unresolved` when deferred
+      ] # the DEPLOY axis, PER PROJECT since format 13 (was one product-wide `deploy:` block). A LIST since format 16, the same shape change `backing_template` made in 13: one slug per DELIVERY MECHANISM the project ships through, because a project routinely has more than one — a `cli` may publish to a package registry AND a container image AND a signed archive, and format 15 could record exactly one. Keyed on PLATFORM: a project whose platforms are all SCREEN platforms other than `site`/`webapp` — `mobile`, `tablet`, `desktop`, `auto`, `watch`, `tv`, `spatial` — records `[]`, since it ships through a store rather than to a deploy target, as does an `iac` platform, which IS the deploy path. A `cli` platform pins a deploy template for its package registry — WHICH one is the stack plugin's answer and vwf names NO slug here, on this axis or any other. `unresolved` when deferred
       package_manager: <tool> # optional — overrides repo.stack.package_manager for a hybrid repo mixing managers
       languages: [
         <token>,
@@ -112,7 +112,7 @@ harness: # workspace-level capability inventory (see the harness contract)
   e2e_staging: false
   health: true
   screenshots: true
-  goldens: true # required when any project declares a DEVICE screen platform (desktop/mobile/tablet/auto) — see the harness contract
+  goldens: true # required when any project declares a DEVICE screen platform (desktop/mobile/tablet/auto/watch/tv/spatial) — see the harness contract
   test:load: false # required when a flow's declared peak rate meets the delivery-pipeline load-validation threshold, ahead of its first production release
 
 enforcement: # vwf's enforcement opt-outs
@@ -145,7 +145,10 @@ design: # CANVAS STATE only — ids and flow names, never content. The design TO
   design_system_id: <uuid> # UNIVERSAL — one per product: the design system /vwf:design-system imports from, as the design tool identifies it (its own canvas project); every mockup push binds it
   projects: # one canvas design-system project per registry UI project PER PLATFORM — each platform canvas carries its own conventions CLAUDE.md (device frame, layout), so two platforms NEVER share a project; the same platform of two registry projects may share a uuid, as the product needs
     <registry-project>:
-      <platform>: <uuid> # mobile | tablet | desktop | auto | site | webapp — the one vocabulary (assets/standard-flows.md), minus `cli`: a terminal surface has no canvas project
+      <platform>: <uuid> # mobile | tablet | desktop | auto | watch | tv | spatial | site | webapp — the one vocabulary (assets/standard-flows.md), minus `cli`: a terminal surface has no canvas project
+  viewports: # OPTIONAL, hand-edited — a per-product override of a DEVICE screen platform's canvas viewport, beside the canvas pin it sizes. Additive: an absent block, project or platform reads as the platform's DEFAULT (assets/templates/canvas-claude.md's Layout block — mobile 390x844, tablet 834x1194, desktop 1440x900, auto 800x480, watch 208x248, tv 1920x1080, spatial 1280x720), so it carries no config_format bump
+    <registry-project>:
+      <platform>: <W>x<H> # e.g. `watch: 205x251` — two positive integers in POINTS, width first. Valid only for a device platform (mobile | tablet | desktop | auto | watch | tv | spatial) that this project declares in the registry — never `site`, `webapp` or `cli`. Read, override first then default, by /vwf:screens (the brief's frame and the generated Layout block of each CLAUDE--<platform>.md) and by the pinned design adapter when it lays out or pushes a page
   flows_rendered: [] # flow PLATFORMS whose Screens have a current user-reviewed visual — entries are <project>/<NNN>-<flow>/<platform> (format 15: platform granularity, so a flow rendered for mobile but not auto is visibly partial); recorded by blueprint's §6a local render, by mockups (docs/scratchpad renders), and by screens import (canvas pages current), dropped by blueprint when a flow's Screens change unrendered; read by plan's soft visual-review advisory. Mockup renders live in the gitignored docs/scratchpad/<project>/<NNN>-<flow>/<platform>/ tree, NEVER on the canvas
 
 memory:
@@ -236,7 +239,7 @@ at answering the question, never at installing something.
 | `pipeline`           | the user (hand-edited)                                                                                                                    | `execute`, and the external caps hook that delivers its resource-cap pause                                       |
 | `environments`       | `setup` / `verify` (confirmed)                                                                                                            | `verify`                                                                                                        |
 | `production_env`     | `setup` / `verify` (confirmed)                                                                                                            | `verify` (the release environment)                                                                              |
-| `design`             | `design-system` (`design_system_id`); `screens` (`projects.*.*` pins — confirmed); `blueprint` / `mockups` / `screens` (`flows_rendered`) | `design-system`, `blueprint`, `mockups`, `screens`, `feedback`, `plan` (advisory) — the tool itself is `projects.<name>.design` |
+| `design`             | `design-system` (`design_system_id`); `screens` (`projects.*.*` pins — confirmed); `blueprint` / `mockups` / `screens` (`flows_rendered`); the user (`viewports` — hand-edited) | `design-system`, `blueprint`, `mockups`, `screens`, `feedback`, `plan` (advisory) — the tool itself is `projects.<name>.design` |
 | `docs_sync`          | the user (hand-edited)                                                                                                                    | the /vwf:docs-sync skill                                                                        |
 
 ## The hard floor (never configurable)
@@ -264,6 +267,15 @@ earlier than 65/90/80), never loosen.
   means **no sweep has stamped this repo** — `/vwf:plan` halts until
   `/vwf:blueprint` runs (self-healing on repos configured before config_format
   2).
+- **`design.viewports.<project>.<platform>`** overrides one device screen
+  platform's canvas viewport for one project, as `<W>x<H>` in points — two
+  positive integers. It is valid only for a device platform (`mobile`,
+  `tablet`, `desktop`, `auto`, `watch`, `tv`, `spatial`) the project declares;
+  a value on any other platform, or one that does not parse, is reported and
+  ignored. Every reader resolves the viewport the same way: the override when
+  set, else the platform's default in the canvas conventions template's Layout
+  block. The key is **additive** — absent means the default — so it needed no
+  `config_format` bump.
 - **A stamped config with no registry is a legal state**, not drift. `setup`
   writes this file at the end of its own run; `registry.yaml` arrives later,
   from `/vwf:architecture`. Between the two the product is
@@ -524,7 +536,8 @@ earlier than 65/90/80), never loosen.
      `[service, webapp]`), not noise.
   5. **`ui:`** keeps its name and its meaning inverts its trigger: it is now
      true when some project declares a **screen platform**
-     (`site`/`webapp`/`desktop`/`mobile`/`tablet`/`auto`), rather than when some
+     (`site`/`webapp`/`desktop`/`mobile`/`tablet`/`auto`/`watch`/`tv`/
+     `spatial`), rather than when some
      project carries a UI *role*. For every repo that already had a UI the value
      is unchanged; recompute it rather than copying it, since a `cli`-only
      project could previously be miscounted.
