@@ -21,9 +21,13 @@ Quoted from index.md:
   `Tuist.swift` and generated."
 - **E4** — "Topics 1–11 here; one reference per platform and the Apple core
   integrations in plan 2d; third-party integrations parked."
-- **E18** — "Units resolve Tuist, swift-snapshot-testing and Apple framework
-  APIs through Context7 … before writing about them — never from training
-  knowledge."
+- **E18** — "Units resolve Tuist, swift-snapshot-testing, swift-dependencies and
+  Apple framework APIs through Context7 … before writing about them — never from
+  training knowledge."
+- **E19** — "swift-dependencies (Point-Free), added by the app through SwiftPM:
+  topic 3 recommends it as the pack's DI, topic 10 covers `testValue` /
+  `previewValue` and `withDependencies` overrides; no pack lands a dependency on
+  it."
 
 ## Edits
 
@@ -37,7 +41,8 @@ Platform specifics stay a sentence here; depth per platform is plan 2d's.
    modules, the generated boundary (`Derived/`; the generated `.xcodeproj` is
    never committed).
 3. `standards-and-architecture.md` — Swift 6 strict concurrency, the app
-   architecture the pack recommends, dependency injection, module boundaries.
+   architecture the pack recommends, dependency injection through
+   swift-dependencies (E19), module boundaries.
 4. `state-management.md` — the Observation framework, the property wrappers,
    where state lives.
 5. `ui-composition.md` — view composition, theming against the design system's
@@ -51,7 +56,8 @@ Platform specifics stay a sentence here; depth per platform is plan 2d's.
 9. `build-and-signing.md` — Tuist configurations and schemes, signing,
    `compatibleXcodeVersions`, build flavours.
 10. `testing.md` — Swift Testing, XCTest/XCUITest, swift-snapshot-testing
-    goldens at the resolved viewport, coverage.
+    goldens at the resolved viewport, swift-dependencies test and preview values
+    and `withDependencies` overrides (E19), coverage.
 11. `performance.md` — launch time, view update cost, Instruments, binary size.
 
 No API surface listings — a listing is a reviewer gap (`kinds.md:1137-1140`).
