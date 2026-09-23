@@ -1,0 +1,10 @@
+/security-review — R2 round 3 — range 548fe140..eeb34f83
+
+No high-confidence vulnerabilities found.
+
+Dropped candidates:
+- Path traversal or spoofing through a planted .git entry (format:75-84, lint:139-148), confidence 2. A cloned repo cannot carry a .git path (git refuses to check one out); a parent .git or GIT_DIR is environment (trusted). A wrong answer only switches between git ls-files and find; neither runs anything from file content.
+- Walk loop never ending (same lines), confidence 1. PWD is absolute; stripping ${dir%/*} reaches empty, checks /.git and breaks. Would be DoS anyway (excluded).
+- Option injection through names from git ls-files (format:106-111, lint:162-188), confidence 2. Unchanged since cc6a2454; NUL-separated, every path ./-prefixed.
+- Temp-file race on mktemp (format:96, lint:152), confidence 1. Unchanged; exclusive create; TMPDIR trusted.
+- eval "files+=(${usage_files:-})" (format:32, lint:35), confidence 3. Unchanged, outside the delta; trusted, shell-quoted input.

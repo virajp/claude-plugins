@@ -1,0 +1,28 @@
+/code-review high — R2 round 2 — branch 2026-09-23-swift-tasks-git-compat (develop...HEAD)
+
+[
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/lint", "line": 140,
+   "summary": "The fallback test *\"not a git repository\"* also matches repositories git refuses to read (missing .git/HEAD, a .git file whose gitdir is gone, an unreadable .git), so a broken repo falls back to walking the tree instead of stopping. Same at code/format:76.",
+   "failure_scenario": "Reproduced against git 2.54: 'fatal: not a git repository (or any of the parent directories): .git' and 'fatal: not a git repository: (null)' (exit 128). A worktree mounted into a Swift Docker CI container hits this. code:format --fix then rewrites ignored/vendored Swift (Pods/, Carthage/Checkouts/); code:lint walks node_modules/.build. lint:121-125 and build-and-run.md:37-40 say this case stops."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/lint", "line": 135,
+   "summary": "git_answer=\"$(LC_ALL=C git rev-parse --is-inside-work-tree 2>&1)\" mixes stderr into the answer; any stderr on success makes it differ from 'true', so in_git=false with no error. Same at code/format:71.",
+   "failure_scenario": "Reproduced: GIT_TRACE=1 → exit 0 but answer starts 'trace: ...'; both tasks take the non-git branch in a healthy repo. A git warning does the same; rev-parse printing 'false' (bare repo, GIT_DIR without work tree) falls through silently."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/lint", "line": 133,
+   "summary": "The rev-parse probe, mktemp/trap/ls-files/status/print_error block and skip-duplicate loop are duplicated ~30 lines in code/format:68-106; 2c copies both byte for byte.",
+   "failure_scenario": "Findings 1 and 2 need the same fix in two files now, four after 2c. The dedup idioms already differ (continue vs != guard)."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/format", "line": 69,
+   "summary": "Each task runs git twice (rev-parse probe then ls-files). One git ls-files with stderr to the temp dir can decide all three outcomes: not a repo → walk; other failure → error; success → list.",
+   "failure_scenario": "Extra spawns, a probe/listing race, and the stderr-merge hazard of finding 2. F3 rejected 'a pre-flight probe running git twice', but the R2 loop-back keeps a probe as the gate."},
+  {"file": "plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise/tasks/_scripts/helpers", "line": 131,
+   "summary": "shell_files_in_scope keeps 2>/dev/null || true; under a failing git shellcheck checks nothing. F4 marks it out of scope; surfaced for altitude only.",
+   "failure_scenario": "Old git or dubious ownership: shellcheck/actionlint cover zero files silently."},
+  {"file": "plugins/stackgen/stacks/language/swift/skills/swift/references/build-and-run.md", "line": 23,
+   "summary": "code:format row says swift format runs 'over the Swift scope' (:29, every .swift file git lists); in hook mode it runs only over the staged files. conventions.md:32 states this correctly; the two docs disagree.",
+   "failure_scenario": "A reader expects hook-mode code:format --fix to check the whole Swift tree; an unstaged unformatted file passes the commit and fails CI's read-only code:format."},
+  {"file": "site/src/content/docs/plugins/stackgen.md", "line": 276,
+   "summary": "Plugin behaviour changed in 9a4b3403 and cc6a2454 with no matching site-manual edit; deferred to U3.",
+   "failure_scenario": "Repo CLAUDE.md: docs ship with the change. The manual's Swift passage (:275-278) lacks the stop-on-git-failure behaviour and the tasks-owned any-depth exclusion."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/lint", "line": 172,
+   "summary": "The one-file glob ./${path%?}[${path: -1}] splits the last byte under a C locale; a name ending in a multibyte char matches nothing and is skipped silently. Pre-existing, in the rewritten loop.",
+   "failure_scenario": "Docker CI with LANG unset: an extensionless tracked file ending in é is never linted."}
+]

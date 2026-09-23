@@ -1,0 +1,29 @@
+/code-review high — R2 round 3 — branch 2026-09-23-swift-tasks-git-compat (develop...HEAD, eeb34f83)
+Engine note: 8 candidate findings, none a clear crash; not verified per brief.
+
+[
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/lint", "line": 135,
+   "summary": "The home-made repo check (a .git entry above the logical ${PWD}, or GIT_DIR set) is not git's discovery: ignores GIT_CEILING_DIRECTORIES and GIT_DISCOVERY_ACROSS_FILESYSTEM, walks the logical path where git uses the physical one. Same at code/format:71.",
+   "failure_scenario": "Case 1: a non-repo package under a stray parent .git (dotfiles $HOME, or a ceiling/filesystem boundary) → in_git=true, ls-files exits 128, tasks fail where they used to walk. Case 2: symlinked checkout whose logical path has no .git but physical does → in_git=false, find ignores .gitignore, code:format --fix rewrites Pods/ and Carthage/Checkouts/."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/lint", "line": 177,
+   "summary": "Every ls-files entry, including submodule gitlinks and untracked nested repos, becomes a one-file glob (./apps/ap[i], ./member[/]) matching a directory or nothing.",
+   "failure_scenario": "vwf base repo with submodule members: gitlink apps/api → the linter walks the whole member incl. node_modules/.build, or fails on a directory target; a sibling member member/ from --others never matches [/] and is dropped silently. Pre-existing."},
+  {"file": "site/src/content/docs/plugins/stackgen.md", "line": 275,
+   "summary": "9a4b3403, cc6a2454, eeb34f83 change Swift task behaviour with no site-manual edit.",
+   "failure_scenario": "Repo CLAUDE.md docs-ship-with-the-change; U3 pending."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/format", "line": 70,
+   "summary": "~30 lines copied in both tasks (.git walk, mktemp/trap/ls-files/status/print_error, skip-adjacent loop); dedup idioms differ (!= guard vs continue).",
+   "failure_scenario": "2c makes four copies; fixes drift. Belongs as one helper in _scripts/helpers."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/format", "line": 113,
+   "summary": "The fallback walk, named by the new docs for 'no git installed' even inside a repo, skips only .build/.swiftpm/Derived/DerivedData; ignores .gitignore, does not skip .git/ or vendored trees.",
+   "failure_scenario": "A repo on a machine without git: code:format --fix rewrites vendored Swift in Pods/, Carthage/Checkouts/, node_modules. build-and-run.md:39 presents this as supported. Pre-existing."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/lint", "line": 54,
+   "summary": "shellcheck and actionlint still list via git ls-files 2>/dev/null || true (helpers:131, lint:87) and run before the strict listing; they check nothing when git fails.",
+   "failure_scenario": "Dubious ownership in Docker CI: shellcheck/actionlint check zero files, then the task stops. F4 exempts the helper."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/lint", "line": 196,
+   "summary": "code:lint runs the whole-tree house linter and SwiftLint on every call; pre-commit chunks long file lists, so the whole-tree work repeats per chunk.",
+   "failure_scenario": "A commit staging thousands of files calls code:lint --fix several times, each re-running the whole tree. Pre-existing."},
+  {"file": "plugins/stackgen/stacks/language/swift/skills/swift/references/build-and-run.md", "line": 36,
+   "summary": "New text says a repository is 'a .git entry here or above' and 'only with no .git entry, or no git installed, do both walk'; leaves out that a set GIT_DIR alone counts, and implies git failing is the only way to an empty list.",
+   "failure_scenario": "A stale exported GIT_DIR in a dir with no .git: in_git true, ls-files fails or lists another index; the docs promise a walk. An ls-files that succeeds empty still passes silently."}
+]

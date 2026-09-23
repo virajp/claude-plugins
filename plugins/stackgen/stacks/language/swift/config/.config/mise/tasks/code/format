@@ -37,9 +37,11 @@ else
   log_level="warn"
 fi
 
-# The Swift scope, in every mode, leaves out what `.config/swiftlint.yml`
-# excludes — build output, SwiftPM's and Xcode's derived trees, generated
-# sources — so the two Swift gates judge the same files. Every path is handed
+# The Swift scope, in every mode, leaves out a fixed list at any depth — build
+# output, SwiftPM's and Xcode's derived trees, generated sources — the same
+# list `code:lint` holds, so the two Swift gates judge the same files. It is
+# this task's, not `.config/swiftlint.yml`'s, which excludes `.build/` and
+# `.swiftpm/` at the repo root only. Every path is handed
 # over prefixed `./` (or absolute), so a name opening with `-` is never read as
 # an option; git's list is read NUL-separated with quoting off, so no name is
 # mangled or dropped.
@@ -58,14 +60,55 @@ add_swift_target() {
   esac
 }
 
+# With no file list, the Swift sources are the ones git lists. The tree is a
+# repository when a `.git` entry — a directory, or the file a worktree or
+# submodule has — sits here or in any directory above, or `GIT_DIR` is set;
+# git's own answer is not asked, so a repository git cannot read is still one.
+# Only with no such entry, or no git installed, are the sources found by
+# walking the tree. Inside one, a listing that fails stops the task: a walk
+# that ignores `.gitignore`, or an empty list, would pass what it never judged.
+in_git=false
+if [ ${#files[@]} -eq 0 ] && command -v git >/dev/null 2>&1; then
+  if [ -n "${GIT_DIR:-}" ]; then
+    in_git=true
+  fi
+  dir="${PWD}"
+  while [ "${in_git}" = "false" ]; do
+    if [ -e "${dir}/.git" ]; then
+      in_git=true
+    elif [ -z "${dir}" ]; then
+      break
+    else
+      dir="${dir%/*}"
+    fi
+  done
+fi
+
 if [ ${#files[@]} -gt 0 ]; then
   for f in "${files[@]}"; do
     add_swift_target "${f}"
   done
-elif git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+elif [ "${in_git}" = "true" ]; then
+  # git's list goes to a file, not a process substitution, so its exit status
+  # is seen. Mid-merge, a conflicted path is listed once per index stage and
+  # the stages sit together — the tracked and untracked blocks never share a
+  # path — so a path equal to the one before it is skipped.
+  git_list="$(mktemp "${TMPDIR:-/tmp}/code-format.XXXXXX")"
+  trap 'rm -f "${git_list}"' EXIT
+  git_status=0
+  git -c core.quotePath=off ls-files -z --cached --others --exclude-standard -- '*.swift' \
+    >"${git_list}" || git_status=$?
+  if [ "${git_status}" -ne 0 ]; then
+    print_error "git ls-files failed (exit ${git_status})"
+    exit "${git_status}"
+  fi
+  previous=""
   while IFS= read -r -d '' f; do
-    add_swift_target "${f}"
-  done < <(git -c core.quotePath=off ls-files -z --deduplicate --cached --others --exclude-standard -- '*.swift')
+    if [ "${f}" != "${previous}" ]; then
+      add_swift_target "${f}"
+    fi
+    previous="${f}"
+  done <"${git_list}"
 else
   while IFS= read -r -d '' f; do
     add_swift_target "${f}"
