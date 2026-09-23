@@ -94,12 +94,13 @@ three callers read the four axes from the base's `.config/vwf.yaml` `answers:`
 block — `editor` and `secrets` once for the product, `forge` and `update_bot`
 per repo — and re-read `forge` live from that repo's `origin`, so a pinned
 pack's conditional files (the editor fragments of tsconfig, astro, pnpm,
-analysis-options, eslint, ruff) land there only where init's answers allow. A
-caller reading a config that carries no block infers the four the way init seeds
-them and writes nothing; the one config key a caller other than `init` may write
-is `answers.repos.<path>.forge`, rewritten in place and reported when the live
-host contradicts the record. Landing the forge-conditioned files that staleness
-had skipped is `/vwf:setup reshape`'s, which `/vwf:doctor` names.
+analysis-options, eslint, ruff, swift-format, swiftlint) land there only where
+init's answers allow. A caller reading a config that carries no block infers the
+four the way init seeds them and writes nothing; the one config key a caller
+other than `init` may write is `answers.repos.<path>.forge`, rewritten in place
+and reported when the live host contradicts the record. Landing the
+forge-conditioned files that staleness had skipped is `/vwf:setup reshape`'s,
+which `/vwf:doctor` names.
 
 A bundle's frontmatter may also carry **`default: true`**, since 2026-09-15:
 `stackgen-stack-menu` copies it onto every entry whose bundle carries it and
@@ -179,59 +180,62 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   conditional file: `fnox.local.toml` left the base `.gitignore` and is a
   provider row in the hygiene pack's ignore table (fnox, and doppler's
   `.doppler/`), appended under a banner named for the slug only where init's
-  stack read carries that provider); **(d)** a provider's environment fragment
-  at `.config/mise/conf.d/<pack>.toml`, auto-loaded, so no component edits
-  `mise.toml`; **(e)** a hook fragment at `.config/pre-commit.d/<pack>.yaml`,
-  copied verbatim — **`/vwf:init` merges it**, nothing in stackgen edits the
-  pre-commit config, which is what keeps a fragment a fragment. A fragment is
-  for a **non-gate** check only: since 2026-09-12 a gate tool is configured
-  once, in a `code:*` task the base hooks call, so a pack needing a gate
-  overlays that task instead. Only `package-manager/uv` still ships a fragment,
-  for `uv lock --check`; **(f)** a deploy target's own config and its deploy
-  task, since 2026-09-05 — `cloud-service/workers-static-assets`, its
-  `workers-ssr` sibling and `cloud-service/containers` each ship
-  `wrangler.jsonc` at the root (the SSR and Containers ones both carrying
-  `main`, the Containers one adding a `containers` array, the Durable Object
-  binding that addresses it and the migration that declares the class) plus a
-  `.config/mise/tasks/p/_project/deploy` overlay, and the first two were the
-  first `cloud-provider`/`cloud-service` packs to ship a `config/` tree at all,
-  which is what put both types on the composition order (**last**, after
-  `capability-provider`); **(g)** a **project task a framework pack owns**,
-  since 2026-09-14 — the same `p/_project/` marked position and the same rename,
-  landed from the **project** axis rather than the deploy one: `framework/astro`
-  ships an `icons` overlay there, which rasterizes the favicon set from the
-  product's mark, and `framework/html` ships a byte-identical copy of it — rule
-  13 forbids a payload citing a sibling pack, and no tier offers a shared home
-  yet. The position is shared on purpose, so a pack adding a file to it names a
-  task no other pack in the same bundle already ships; and, since 2026-09-06,
-  **(h)** a pack's **editor fragment** at `.config/vscode.d/<pack>.jsonc`, three
-  keys only (`settings`, `nesting`, `extensions`) — **`/vwf:init` composes
-  them** into `.vscode/settings.json` and `.vscode/extensions.json`, which no
-  pack ever ships whole and which the convention in `assets/pack-format.md`
-  names (init itself never names an editor). The composed block sits first, and
-  the convention's rule since 2026-09-20 is that a key the file already carries
-  outside the block is a **collision** the composing skill **omits** from the
-  block — keep mine, take the pack's or union, asked once and recorded by vwf,
-  an identical extension id kept unasked — so a hand key wins without the file
-  ever holding a duplicate, never because the format tolerates one. Every one of
-  the **ten** fragments in the tree — repo-hygiene, dprint-editor, pre-commit,
-  eslint, ruff, tsconfig, analysis-options, mise, and since 2026-09-21 astro and
-  pnpm — is conditioned on `editor: vscode` in its pack's `pack.yaml`, so an
-  editor **no** at init lands none and the composing skill composes nothing. The
-  split is by ownership: the hygiene baseline carries **editor-wide keys alone**
-  (indentation and suggestion defaults, the generic excludes, todo-tree, the
-  non-stack nesting rows, the generic extensions), and every stack-naming key
-  sits in the fragment of the pack that pins that stack — `node_modules`, the
-  tsbuildinfo files, the template-string converter and `*.js` nesting in
-  tsconfig's; `.dart_tool` in analysis-options'; `.astro` in astro's; `.turbo`,
-  the pnpm lockfile and the `package.json` children in pnpm's (turbo is a
-  generated component the pnpm-turbo bundle carries, so its exclude lives beside
-  the manager); `yaml.*` and `redhat.vscode-yaml` in pre-commit's; the fish
-  extension dropped. `editor.defaultFormatter` is set **per language** in the
-  dprint fragment, one `[<language>]` scope per plugin `dprint.json` carries and
-  `[toml]` to even-better-toml, never editor-wide — an editor-wide binding
-  overrode Dart's formatter by composition order alone. The dprint gate's
-  fragment is the one filename exception, `dprint-editor.jsonc`: dprint
+  stack read carries that provider); **(d)** a mise fragment at
+  `.config/mise/conf.d/<pack>.toml`, auto-loaded, so no component edits
+  `mise.toml` — a provider's tool pin and environment values (doppler, fnox), a
+  shell alias (pnpm's `npx`), or a gate tool's pin (swiftlint's); **(e)** a hook
+  fragment at `.config/pre-commit.d/<pack>.yaml`, copied verbatim —
+  **`/vwf:init` merges it**, nothing in stackgen edits the pre-commit config,
+  which is what keeps a fragment a fragment. A fragment is for a **non-gate**
+  check only: since 2026-09-12 a gate tool is configured once, in a `code:*`
+  task the base hooks call, so a pack needing a gate overlays that task instead.
+  Only `package-manager/uv` still ships a fragment, for `uv lock --check`;
+  **(f)** a deploy target's own config and its deploy task, since 2026-09-05 —
+  `cloud-service/workers-static-assets`, its `workers-ssr` sibling and
+  `cloud-service/containers` each ship `wrangler.jsonc` at the root (the SSR and
+  Containers ones both carrying `main`, the Containers one adding a `containers`
+  array, the Durable Object binding that addresses it and the migration that
+  declares the class) plus a `.config/mise/tasks/p/_project/deploy` overlay, and
+  the first two were the first `cloud-provider`/`cloud-service` packs to ship a
+  `config/` tree at all, which is what put both types on the composition order
+  (**last**, after `capability-provider`); **(g)** a **project task a framework
+  pack owns**, since 2026-09-14 — the same `p/_project/` marked position and the
+  same rename, landed from the **project** axis rather than the deploy one:
+  `framework/astro` ships an `icons` overlay there, which rasterizes the favicon
+  set from the product's mark, and `framework/html` ships a byte-identical copy
+  of it — rule 13 forbids a payload citing a sibling pack, and no tier offers a
+  shared home yet. The position is shared on purpose, so a pack adding a file to
+  it names a task no other pack in the same bundle already ships; and, since
+  2026-09-06, **(h)** a pack's **editor fragment** at
+  `.config/vscode.d/<pack>.jsonc`, three keys only (`settings`, `nesting`,
+  `extensions`) — **`/vwf:init` composes them** into `.vscode/settings.json` and
+  `.vscode/extensions.json`, which no pack ever ships whole and which the
+  convention in `assets/pack-format.md` names (init itself never names an
+  editor). The composed block sits first, and the convention's rule since
+  2026-09-20 is that a key the file already carries outside the block is a
+  **collision** the composing skill **omits** from the block — keep mine, take
+  the pack's or union, asked once and recorded by vwf, an identical extension id
+  kept unasked — so a hand key wins without the file ever holding a duplicate,
+  never because the format tolerates one. Every one of the **twelve** fragments
+  in the tree — repo-hygiene, dprint-editor, pre-commit, eslint, ruff, tsconfig,
+  analysis-options, mise, since 2026-09-21 astro and pnpm, and since 2026-09-23
+  swift-format and swiftlint — is conditioned on `editor: vscode` in its pack's
+  `pack.yaml`, so an editor **no** at init lands none and the composing skill
+  composes nothing. The split is by ownership: the hygiene baseline carries
+  **editor-wide keys alone** (indentation and suggestion defaults, the generic
+  excludes, todo-tree, the non-stack nesting rows, the generic extensions), and
+  every stack-naming key sits in the fragment of the pack that pins that stack —
+  `node_modules`, the tsbuildinfo files, the template-string converter and
+  `*.js` nesting in tsconfig's; `.dart_tool` in analysis-options'; `.astro` in
+  astro's; `.turbo`, the pnpm lockfile and the `package.json` children in pnpm's
+  (turbo is a generated component the pnpm-turbo bundle carries, so its exclude
+  lives beside the manager); `.build`, `.swiftpm` and the `Package.swift`
+  nesting in swift-format's; `yaml.*` and `redhat.vscode-yaml` in pre-commit's;
+  the fish extension dropped. `editor.defaultFormatter` is set **per language**
+  in the dprint fragment, one `[<language>]` scope per plugin `dprint.json`
+  carries and `[toml]` to even-better-toml, never editor-wide — an editor-wide
+  binding overrode Dart's formatter by composition order alone. The dprint
+  gate's fragment is the one filename exception, `dprint-editor.jsonc`: dprint
   discovers any `dprint.jsonc` below the root as a sub-directory config, and one
   with no `plugins` array makes a bare `dprint check` exit 13. Note the second
   underscore rule: `config/_<name>/` at the top of the tier is pack-private and

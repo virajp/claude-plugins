@@ -260,6 +260,26 @@ arrived on 2026-09-15 as the fourth, under a category minted for it, `document`
 framework — and it is the pack the `html` bundle pins, the `site` platform's one
 entry beside the four Astro ones.
 
+**Swift** arrived on 2026-09-23 as the fourth language a language-bundle is
+rooted at, after TypeScript and the Markdown and Bash pair the
+`claude-code-plugin` bundle composes: `swift-package`, a Swift library on the
+`packages` platform, pins four new packs. `language/swift` is the root — the
+12-topic doctrine, the sourcekit-lsp declaration, and `binaries: [swift]`, since
+the toolchain is the host's rather than mise's and `/vwf:doctor` blocks when
+`swift` is not on `PATH`. `package-manager/swiftpm` carries SwiftPM's doctrine
+and lands no file; no pack lands `Package.swift`, which `swift package init`
+creates. `toolchain-gate/swift-format` lands `.config/swift-format.json`, and
+`toolchain-gate/swiftlint` lands `.config/swiftlint.yml` plus
+`.config/mise/conf.d/swiftlint.toml`, which pins `aqua:realm/SwiftLint` at
+0.65.1 so `mise.toml` names no linter; each ships an editor fragment on
+`editor: vscode`. The `language/swift` pack supplies the tasks: `code:format`
+and `code:lint` take their file list from git — every file it does not ignore,
+read NUL-separated and passed `./`-prefixed, so no file name is read as a flag —
+and `code:lint` skips SwiftLint when no Swift source is in scope. Of the
+`setup:deps:*` tasks, `install`, `outdated` and `upgrade` run `swift package`;
+`cleanup` removes `.build/`, and `audit` is a stated no-op, since SwiftPM ships
+no advisory command.
+
 The `devtools` plugin then dissolved into stackgen and was deleted, closing the
 marketplace at two plugins. Its mise doctrine and its file-based task library
 became the `toolchain-manager/mise` pack, its four repo gates the `repo-gates`
@@ -354,7 +374,7 @@ in shape while only content varies:
 
 | Kind                  | vwf axis               | Shape                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | --------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `language-bundle`     | project (+ repo facts) | the composition rooted at a `language` component — a **12-topic bar** behind a lean router skill → on-demand references, plus paths-scoped doctrine per config file the toolchain owns (archetype: the `language/typescript` bundle)                                                                                                                                                                                                                                                                 |
+| `language-bundle`     | project (+ repo facts) | the composition rooted at a `language` component — a **12-topic bar** behind a lean router skill → on-demand references, plus paths-scoped doctrine per config file the toolchain owns (archetypes: the `language/typescript` bundle, and `swift-package` rooted at `language/swift`)                                                                                                                                                                                                                |
 | `database`            | backing                | a **6-topic bar** on the instance component — pick & trade, data-model constraints, clause-by-clause satisfaction of the neutral datastore contract *by citation*, connection & access incl. credentials, cost shape, the Docker-composed `local_stack`                                                                                                                                                                                                                                              |
 | `capability-provider` | backing                | the same two halves as `database` — the neutral capability contract plus one provider component that realizes it, citing rather than restating                                                                                                                                                                                                                                                                                                                                                       |
 | `cloud-provider`      | backing + deploy       | **4 provider topics** (cost, IAM, local-dev map, networking & private plane) + **5 per `cloud-service` component**, plus a **deploy-target extension** — artifact/pipeline/health — where the service's category is `compute` or `static-hosting`, the two categories that are deploy targets (archetypes: the `cloud-provider/gcp` and `cloudflare-workers-static` bundles)                                                                                                                         |
@@ -517,24 +537,26 @@ parent file name to its children; and `extensions`, a list of recommended ids �
 and nothing else. What forced it is that a recommendation list only ever
 *prompts*, is per-workspace, and nothing merges a common set into it: a pack
 that ships a linter and says nothing about the editor ships a linter whose
-editor integration nobody turns on. Every fragment in the tree — ten of them:
+editor integration nobody turns on. Every fragment in the tree — twelve of them:
 the hygiene baseline, dprint-editor, pre-commit, eslint, ruff, tsconfig,
-analysis-options, mise, astro and pnpm — is **conditional on the editor**: its
-pack's `pack.yaml` names it under `when: { editor: vscode }`, so a repo whose
-init answer was *no* lands none and composes nothing. The split between them is
-by ownership. The hygiene baseline carries **editor-wide keys alone** —
-indentation and suggestion defaults, the generic excludes, todo-tree, the
-nesting rows no stack owns, the generic extensions — and every key that names a
-stack sits in the fragment of the pack that pins it: `node_modules`, the
-tsbuildinfo files, the template-string converter and `*.js` nesting in
-tsconfig's; `.dart_tool` in analysis-options'; `.astro` in astro's; `.turbo`,
-the pnpm lockfile and the `package.json` children in pnpm's, since Turbo is a
-generated component the pnpm-turbo bundle carries and has no pack of its own;
-the YAML language-server keys and their extension in pre-commit's. The default
-formatter is bound **per language** in the dprint fragment — one `[<language>]`
-scope for each plugin `.config/dprint.json` carries, `[toml]` to
-even-better-toml — never editor-wide, which would ask dprint to format a file it
-has no plugin for and override Dart's formatter by composition order alone.
+analysis-options, mise, astro, pnpm, swift-format and swiftlint — is
+**conditional on the editor**: its pack's `pack.yaml` names it under
+`when: { editor: vscode }`, so a repo whose init answer was *no* lands none and
+composes nothing. The split between them is by ownership. The hygiene baseline
+carries **editor-wide keys alone** — indentation and suggestion defaults, the
+generic excludes, todo-tree, the nesting rows no stack owns, the generic
+extensions — and every key that names a stack sits in the fragment of the pack
+that pins it: `node_modules`, the tsbuildinfo files, the template-string
+converter and `*.js` nesting in tsconfig's; `.dart_tool` in analysis-options';
+`.astro` in astro's; `.turbo`, the pnpm lockfile and the `package.json` children
+in pnpm's, since Turbo is a generated component the pnpm-turbo bundle carries
+and has no pack of its own; `.build`, `.swiftpm` and the `Package.swift` nesting
+in swift-format's; the YAML language-server keys and their extension in
+pre-commit's. The default formatter is bound **per language** in the dprint
+fragment — one `[<language>]` scope for each plugin `.config/dprint.json`
+carries, `[toml]` to even-better-toml — never editor-wide, which would ask
+dprint to format a file it has no plugin for and override Dart's formatter by
+composition order alone.
 
 Two files inside the fence are written **whole** by no pack, and both are
 composed by `/vwf:init`. The **pre-commit config**: a pack may contribute a
@@ -1012,28 +1034,29 @@ inside `code/*` and `setup/*` change with the tech stack.
 pack with a `config/` tree fills in its own half on top: `package-manager/pnpm`
 and `package-manager/uv` supply `setup/deps/*`, `toolchain-gate/ruff` and
 `app-framework/flutter` supply the `code/format` and `code/lint` their toolchain
-needs, and the secrets providers overlay `setup/secrets`. The pnpm pack also
-ships a root `.npmrc` setting `ignore-scripts=true` and `fund=false` — an
-install never runs a dependency's install-time code, and a package that
-genuinely has to build is allowed by name in the workspace file, so the
-exception is a reviewable line rather than a blanket switch — plus a `conf.d/`
-fragment aliasing `npx` to the manager's own runner, which keeps one store, one
-lockfile-aware resolver and one set of registry settings. Composition runs
-`toolchain-manager` first, then the `repo-gate` components, then `repo-hygiene`,
-then `package-manager`/`language`, then `app-framework`, then
-`capability-provider`, then `cloud-provider`, then `cloud-service`, so a later
-component's file wins and the lockfile records per file which component supplied
-it. The two ends are what the order is for: the manager goes **first** because
-it lays the baseline every overlay overlays, and the **deploy target goes last**
-because it is the most specific thing a repo pins — a `cloud-service` pack's
-root config and the `p:<id>:deploy` overlay beside it are the answer to how this
-repo actually ships, and nothing may overwrite that. A secrets overlay still
-outranks every language and framework pack, for the reason it always did: it is
-the most specific answer anything gives to `setup:secrets`. The two cloud types
-joined the order on 2026-09-05, when `cloud-service/workers-static-assets`
-became the first cloud pack to ship a `config/` tree at all;
-`cloud-service/workers-ssr` and `cloud-service/containers` followed with the
-same pair.
+needs, `language/swift` supplies both — `setup/deps/*` over SwiftPM and the
+`code/format` and `code/lint` that run swift-format and SwiftLint — and the
+secrets providers overlay `setup/secrets`. The pnpm pack also ships a root
+`.npmrc` setting `ignore-scripts=true` and `fund=false` — an install never runs
+a dependency's install-time code, and a package that genuinely has to build is
+allowed by name in the workspace file, so the exception is a reviewable line
+rather than a blanket switch — plus a `conf.d/` fragment aliasing `npx` to the
+manager's own runner, which keeps one store, one lockfile-aware resolver and one
+set of registry settings. Composition runs `toolchain-manager` first, then the
+`repo-gate` components, then `repo-hygiene`, then `package-manager`/`language`,
+then `app-framework`, then `capability-provider`, then `cloud-provider`, then
+`cloud-service`, so a later component's file wins and the lockfile records per
+file which component supplied it. The two ends are what the order is for: the
+manager goes **first** because it lays the baseline every overlay overlays, and
+the **deploy target goes last** because it is the most specific thing a repo
+pins — a `cloud-service` pack's root config and the `p:<id>:deploy` overlay
+beside it are the answer to how this repo actually ships, and nothing may
+overwrite that. A secrets overlay still outranks every language and framework
+pack, for the reason it always did: it is the most specific answer anything
+gives to `setup:secrets`. The two cloud types joined the order on 2026-09-05,
+when `cloud-service/workers-static-assets` became the first cloud pack to ship a
+`config/` tree at all; `cloud-service/workers-ssr` and
+`cloud-service/containers` followed with the same pair.
 
 **What no pack can know, and `/vwf:init` fills** — in the base repo and in every
 member repo it resolved, each from that repo's own answers. It is more than two
