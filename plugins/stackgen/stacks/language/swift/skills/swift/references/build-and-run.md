@@ -33,11 +33,11 @@ the same files. The shipped `.config/swiftlint.yml` excludes `.build/` and
 `.swiftpm/` at the repo root only; the any-depth exclusion is the tasks'. An
 `excluded:` entry you add to the config reaches SwiftLint, which is passed
 `--force-exclude`, but not `code:format`. Inside a git repository — a `.git`
-entry here or above — the scope is git's list, and when git cannot give it
-the gates that read it stop with an error rather than judge an empty list:
-`code:format` given no file list, and `code:lint` before the house linter and
-SwiftLint run. Only with no `.git` entry, or no git installed, do both walk
-the tree instead.
+entry here or above, or `GIT_DIR` set — the scope is git's list, and when git
+cannot give it the gates that read it stop with an error rather than judge an
+empty list: `code:format` given no file list, and `code:lint` before the house
+linter and SwiftLint run. Only with no `.git` entry and no `GIT_DIR`, or no
+git installed, do both walk the tree instead.
 
 `code:format` without `--fix` is read-only, so it is safe as a gate. The
 pre-commit hook calls `code:format --fix` with the staged files, so only those
