@@ -54,7 +54,8 @@ orchestrator passes both. Verify the contract and every platform file:
 - [ ] **Platforms table** — a screen-platform project's flow carries one row per
       `<platform>.md` on disk, each a resolving link, each platform declared by
       the registry project, each from the vocabulary (`mobile` / `tablet` /
-      `desktop` / `site` / `webapp` / `auto`). A file with no row, a row with no file, an
+      `desktop` / `site` / `webapp` / `auto` / `watch` / `tv` / `spatial`). A
+      file with no row, a row with no file, an
       undeclared platform, or a Platforms section on a **non-UI** flow is a gap.
       `cli` and `plugin` are platforms with no screens: neither takes a
       platform file nor appears in a Platforms table, so a flow of a project

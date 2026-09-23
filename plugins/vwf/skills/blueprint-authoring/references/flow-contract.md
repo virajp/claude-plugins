@@ -8,8 +8,9 @@ non-UI projects alike. Since **format 15** the folder holds two kinds of file:
   the journey is, who triggers it, its steps, diagram, jobs, and acceptance.
   **No screens.**
 - **`<platform>.md`** (type `vwf-flow-platform`) — one per platform that
-  implements the journey (`mobile` | `tablet` | `desktop` | `auto` | `site` |
-  `webapp`), holding **only** that platform's Screens + Components + deviations.
+  implements the journey (`mobile` | `tablet` | `desktop` | `auto` | `watch` |
+  `tv` | `spatial` | `site` | `webapp`), holding **only** that platform's
+  Screens + Components + deviations.
 
 A non-UI flow is `index.md` alone — as is a flow of a project whose platform is
 `cli`, a terminal surface with no screens. The goal-traceability spine runs
@@ -29,10 +30,11 @@ every platform.
 **Platforms are files, not flows.** An in-car take on a journey is
 `<flow>/auto.md`, not a separate flow — the pre-format-15 "in-car subset flow"
 with its `Subset of:` parent link is retired, and `auto` covers CarPlay and
-Android Auto together. Which platforms implement a flow is elicited and recorded
-in `index.md`'s **Platforms** table; steps and acceptance are **never forked**
-per platform (a platform that cannot perform a step omits its screens and says
-so in its note).
+Android Auto together — as `watch` covers watchOS and Wear OS, `tv` tvOS and
+Android TV, and `spatial` visionOS, Android XR and Quest. Which platforms
+implement a flow is elicited and recorded in `index.md`'s **Platforms** table;
+steps and acceptance are **never forked** per platform (a platform that cannot
+perform a step omits its screens and says so in its note).
 
 Fill every applicable section to the **no-two-reasonable-answers** bar. Omit
 Background Jobs if the registry has no worker.
@@ -118,13 +120,14 @@ pages; and `image: default | <slot>` — the picture a shared link shows, where
 screen supplies of its own. A `webapp` whose project does **not** declare the
 `seo` capability pins `title` alone; the other three are omitted, since nothing
 outside the product reads them. Every other screen platform (`mobile`,
-`tablet`, `desktop`, `auto`) carries no block at all. The product-wide values
-each page inherits — site name, default description, the social handle, the
-locale, the organisation facts — are **never** repeated per screen: they are
-`conventions.md#web-metadata`, and the visual assets behind them (the favicon
-mark, the social preview, the theme colour) are the design system's brand
-assets. The block is a contract on what the page *says about itself*, never on
-markup: no tag names, no framework, no file paths.
+`tablet`, `desktop`, `auto`, `watch`, `tv`, `spatial`) carries no block at
+all. The product-wide values each page inherits — site name, default
+description, the social handle, the locale, the organisation facts — are
+**never** repeated per screen: they are `conventions.md#web-metadata`, and
+the visual assets behind them (the favicon mark, the social preview, the theme
+colour) are the design system's brand assets. The block is a contract on what
+the page *says about itself*, never on markup: no tag names, no framework, no
+file paths.
 
 **Home rule.** Every screen is defined in exactly **one** flow — its home
 journey. Another flow that touches the same screen **links the home flow's row**

@@ -3,7 +3,7 @@ type: vwf-flow-platform
 title: <Flow name> — <platform>
 description: <one-line — this platform's take on the journey>
 status: draft # draft | reviewed | stable
-platform: mobile # mobile | tablet | desktop | site | webapp | auto — MUST match the filename
+platform: mobile # mobile | tablet | desktop | site | webapp | auto | watch | tv | spatial — MUST match the filename
 implementation: none # none | partial | complete — written by the pipeline only
 # optional, standardized: timestamp: <ISO 8601>  owner: [<project from registry>]  resource: <url|path>  tags: [<...>]
 ---
@@ -14,10 +14,12 @@ Flow contract: [<Flow name>](./index.md)
 
 <!-- ONE platform file per SCREEN platform that implements this journey, named
      for the platform (mobile.md | tablet.md | desktop.md | site.md |
-     webapp.md | auto.md) and
+     webapp.md | auto.md | watch.md | tv.md | spatial.md) and
      sitting beside index.md in the flow folder. `auto` covers CarPlay and
      Android Auto together — their template differences are recorded as
-     deviations here, never as separate files.
+     deviations here, never as separate files. Likewise `watch` covers watchOS
+     and Wear OS, `tv` tvOS and Android TV, and `spatial` visionOS, Android XR
+     and Quest.
 
      THIS FILE HOLDS ONLY SCREENS. Purpose, Serves:, trigger, steps, diagram,
      jobs, and acceptance live once in index.md and are never restated here —
@@ -96,8 +98,8 @@ Flow contract: [<Flow name>](./index.md)
 
 <!-- One Metadata block per Screens row, headed by the row's Code — on a `site`
      or `webapp` platform file ONLY (format 25). Delete the whole block on
-     mobile/tablet/desktop/auto: those surfaces state nothing about themselves
-     to the outside.
+     mobile/tablet/desktop/auto/watch/tv/spatial: those surfaces state nothing
+     about themselves to the outside.
 
      title       = what the page calls itself, and what a shared link announces.
      description = the one-sentence summary a search result or link preview
@@ -124,7 +126,13 @@ Flow contract: [<Flow name>](./index.md)
      density, omitted screens or actions and why, and (for `auto`) the OS
      template each screen maps to (list / grid / map / now-playing) plus the
      driver-distraction constraints, noting any CarPlay-vs-Android-Auto
-     difference. Omit the section when nothing deviates. -->
+     difference; (for `watch`) the glanceable content, the Digital Crown or
+     rotary input, the complications and widgets, the short-session shape;
+     (for `tv`) the focus order and focus state under a remote, the 10-foot
+     type and safe-area margins, no touch and no hover; (for `spatial`) gaze
+     and pinch, the window / volume / immersive-space surface each screen
+     uses, depth and placement, ornaments — each noting any vendor difference.
+     Omit the section when nothing deviates. -->
 
 - <deviation> — <why>
 
