@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+#MISE description="Report dependencies that have moved on"
+#MISE hide=true
+
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# `--dry-run` lists what `swift package update` would move, within the ranges
+# `Package.swift` declares, without touching `Package.resolved`. A dependency
+# whose next release falls outside its declared range is not listed — widening
+# a range is a manifest edit, and the review surface for it is that diff.
+
+swift package update --dry-run

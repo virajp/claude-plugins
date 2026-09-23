@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+#MISE description="Resolve the package's dependencies"
+#MISE hide=true
+
+#USAGE flag "--frozen" help="fail rather than write the lockfile"
+
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Fills the `setup:deps:install` slot.
+#
+# The Swift toolchain is not installed by mise — it comes from swift.org or
+# with Xcode — so it can be missing on a machine where every other tool
+# resolved. Checking first turns a bare "command not found" into a message
+# that says what to install.
+#
+# `--force-resolved-versions` is SwiftPM's frozen mode: it resolves exactly what
+# `Package.resolved` records and fails when the manifest needs something else,
+# rather than rewriting the lockfile.
+#
+# No header: the aggregator `setup:deps:all` already frames each verb with its
+# own subheader, so one here would invert the hierarchy.
+
+if ! command -v swift >/dev/null 2>&1; then
+  print_error "setup:deps:install: swift is not on PATH."
+  print_yellow "Install the Swift toolchain from swift.org, or Xcode on macOS, then re-run."
+  exit 1
+fi
+
+resolve_args=()
+if [[ "${usage_frozen:-false}" == "true" ]]; then
+  resolve_args+=(--force-resolved-versions)
+fi
+
+print_subheader "Resolving packages ..."
+swift package resolve ${resolve_args[@]+"${resolve_args[@]}"}

@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+
+#MISE description="Check or format the repo's files"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to format (default: the whole repo)"
+
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Overlays whatever the tiers below wrote. dprint keeps the repo's markdown,
+# YAML and JSON; swift-format, which ships inside the Swift toolchain as
+# `swift format`, takes the Swift sources. With no file list it takes
+# `Package.swift` and `Sources/` and `Tests/` — the manifest and the two trees
+# SwiftPM's layout puts code in, each only where it exists — and never
+# `.build/`, which is the build's output.
+#
+# swift-format reads `.config/swift-format.json`, passed explicitly: left to
+# itself it searches for a `.swift-format` file beside the sources, and the
+# repo keeps every tool config under `.config/`.
+#
+# This task is what the `format` pre-commit hook calls, which is why it takes an
+# optional file list: the hook passes the staged files, a person passes nothing
+# and gets the whole tree.
+
+files=()
+eval "files+=(${usage_files:-})"
+
+if [[ "${usage_debug:-false}" == "true" ]]; then
+  log_level="debug"
+else
+  log_level="warn"
+fi
+
+swift_targets=()
+if [ ${#files[@]} -gt 0 ]; then
+  for f in "${files[@]}"; do
+    case "${f}" in
+      *.swift)
+        if [ -f "${f}" ]; then
+          swift_targets+=("${f}")
+        fi
+        ;;
+    esac
+  done
+else
+  if [ -f Package.swift ]; then
+    swift_targets+=(Package.swift)
+  fi
+  for dir in Sources Tests; do
+    if [ -d "${dir}" ]; then
+      swift_targets+=("${dir}")
+    fi
+  done
+fi
+
+# `swift format` formats to stdout by default; `--in-place` rewrites. The
+# read-only mode is its own subcommand, `lint`, and `--strict` makes a finding
+# fail the run rather than print a warning and exit 0.
+if [[ "${usage_fix:-false}" == "true" ]]; then
+  action="fmt"
+  swift_format_args=(format --in-place)
+else
+  action="check"
+  swift_format_args=(lint --strict)
+fi
+
+print_header "Formatting files ..."
+
+print_subheader "Formatting with dprint ..."
+dprint "${action}" \
+  --config .config/dprint.json \
+  --allow-no-files \
+  --log-level "${log_level}" \
+  ${files[@]+"${files[@]}"}
+
+# The toolchain manager's shipped default, and an overlay keeps it: a commit
+# gets whatever this task does, so a tool that drops out of it stops running at
+# all. Silent when the binary is absent, and silent when nothing in scope is
+# shell. The flags match the ones the shell gate checks with, so formatting
+# here and checking there cannot disagree.
+if command -v shfmt >/dev/null 2>&1; then
+  shell_scope=()
+  while IFS= read -r shell_file; do
+    if [ -n "${shell_file}" ]; then
+      shell_scope+=("${shell_file}")
+    fi
+  done < <(shell_files_in_scope ${files[@]+"${files[@]}"})
+
+  if [ "${#shell_scope[@]}" -gt 0 ]; then
+    print_subheader "Formatting shell scripts ..."
+    if [ "${action}" = "fmt" ]; then
+      shfmt -w -i 2 -ci "${shell_scope[@]}"
+    else
+      # `-d` reports a diff and fails rather than rewriting, so a read-only run
+      # stays read-only.
+      shfmt -d -i 2 -ci "${shell_scope[@]}"
+    fi
+  fi
+fi
+
+if [ ${#swift_targets[@]} -gt 0 ]; then
+  print_subheader "Formatting Swift sources ..."
+  swift format "${swift_format_args[@]}" \
+    --configuration .config/swift-format.json \
+    --recursive \
+    --parallel \
+    "${swift_targets[@]}"
+fi
