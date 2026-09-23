@@ -231,7 +231,8 @@ None.
   and omit that both tasks walk the tree with `find` when there is no `.git`
   entry, no `GIT_DIR` or no git installed; `build-and-run.md:35-41` states it.
   Exit: the cap — the plan left the two docs' exact wording of the no-git case
-  unspecified. Non-blocking.
+  unspecified. Non-blocking. **Resolved 2026-09-23** in 12778549 — a note under
+  the task table names the git-repository test and the `find` walk.
 
 ## Run log
 
