@@ -1,0 +1,12 @@
+/security-review — R2 round 2 — range 548fe140..cc6a2454
+
+No high-confidence vulnerabilities found.
+
+Checked both files at cc6a2454, focused on what changed since 0d0e1e1b.
+
+Dropped candidates:
+- The git error text printed by print_error in code/format:77 and code/lint:141: quoted, never evaluated, written by git not a repo file; at worst log spoofing (excluded). Confidence 2.
+- The new git rev-parse check only chooses between git's list and a find walk; both prefix every name with ./; a cloned repo cannot change what it returns without controlling the (trusted) environment. Confidence 2.
+- The merged listing loop in code/lint (157-183): NUL-separated reads, quoted array elements each starting ./, glob metacharacters handled by the existing case; no eval, no word-splitting. Confidence 1.
+- The mktemp temp file and its cleanup trap: nothing new, random name. Confidence 1.
+- eval "files+=(${usage_files:-})" in code/format:32 and code/lint:35: predates the range; input is the mise/usage command line (trusted). Confidence 3.

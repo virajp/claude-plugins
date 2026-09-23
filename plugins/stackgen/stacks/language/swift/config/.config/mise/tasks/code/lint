@@ -118,29 +118,34 @@ fi
 # config excludes `.build/` and `.swiftpm/` at the repo root only — and
 # `--force-exclude` still applies the config's `excluded` to a named path.
 #
-# Outside a git work tree — no git, or git saying this is not a repository —
-# there is no list: the linter walks the tree itself and SwiftLint takes what
-# `find` gives. Any other git failure, a repository git refuses to read or a
-# listing that fails, stops the task: a walk that ignores `.gitignore`, or an
-# empty list, would pass what it never judged. git's list goes to a file, not
-# a process substitution, so its exit status is seen. Mid-merge, a conflicted
-# path is listed once per index stage and the stages sit together — the
-# tracked and untracked blocks never share a path — so a path equal to the one
-# before it is skipped.
+# The tree is a repository when a `.git` entry — a directory, or the file a
+# worktree or submodule has — sits here or in any directory above, or
+# `GIT_DIR` is set; git's own answer is not asked, so a repository git cannot
+# read is still one. Only with no such entry, or no git installed, is there no
+# list: the linter walks the tree itself and SwiftLint takes what `find`
+# gives. Inside one, a listing that fails stops the task: a walk that ignores
+# `.gitignore`, or an empty list, would pass what it never judged. git's list
+# goes to a file, not a process substitution, so its exit status is seen.
+# Mid-merge, a conflicted path is listed once per index stage and the stages
+# sit together — the tracked and untracked blocks never share a path — so a
+# path equal to the one before it is skipped.
 lint_targets=()
 swift_scope=()
 in_git=false
 if command -v git >/dev/null 2>&1; then
-  git_status=0
-  git_answer="$(LC_ALL=C git rev-parse --is-inside-work-tree 2>&1)" || git_status=$?
-  if [ "${git_status}" -eq 0 ]; then
-    if [ "${git_answer}" = "true" ]; then
-      in_git=true
-    fi
-  elif [[ "${git_answer}" != *"not a git repository"* ]]; then
-    print_error "git rev-parse failed (exit ${git_status}): ${git_answer}"
-    exit "${git_status}"
+  if [ -n "${GIT_DIR:-}" ]; then
+    in_git=true
   fi
+  dir="${PWD}"
+  while [ "${in_git}" = "false" ]; do
+    if [ -e "${dir}/.git" ]; then
+      in_git=true
+    elif [ -z "${dir}" ]; then
+      break
+    else
+      dir="${dir%/*}"
+    fi
+  done
 fi
 
 if [ "${in_git}" = "true" ]; then

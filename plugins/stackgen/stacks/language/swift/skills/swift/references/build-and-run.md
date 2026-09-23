@@ -20,7 +20,7 @@ The repo's tasks are the interface; the tools behind them are detail.
 | Task | Runs |
 | --- | --- |
 | `setup:deps:install` | `swift package resolve` — `--frozen` fails rather than move `Package.resolved` |
-| `code:format` | dprint and shfmt, then `swift format` with `.config/swift-format.json` over the Swift scope — rewritten in place under `--fix`, then a strict lint either way |
+| `code:format` | dprint and shfmt, then `swift format` with `.config/swift-format.json` over the Swift scope when no list is passed, or over the staged `.swift` files the hook passes, less the scope's exclusions — rewritten in place under `--fix`, then a strict lint either way |
 | `code:lint` | shellcheck and actionlint over the staged files the hook passes (every tracked file when none is passed), the house linter over every file git does not ignore, then `swiftlint lint --strict` with `.config/swiftlint.yml` over the Swift scope |
 | `setup:deps:outdated` | `swift package update --dry-run` |
 | `setup:deps:upgrade` | `swift package update` |
@@ -32,10 +32,12 @@ fixed list the tasks hold themselves, at any depth — `.build/`, `.swiftpm/`,
 the same files. The shipped `.config/swiftlint.yml` excludes `.build/` and
 `.swiftpm/` at the repo root only; the any-depth exclusion is the tasks'. An
 `excluded:` entry you add to the config reaches SwiftLint, which is passed
-`--force-exclude`, but not `code:format`. When git cannot list the Swift
-scope, the gates that read it stop with an error rather than judge an empty
-list: `code:format` given no file list, and `code:lint` before the house
-linter and SwiftLint run. Outside a git repository both walk the tree instead.
+`--force-exclude`, but not `code:format`. Inside a git repository — a `.git`
+entry here or above — the scope is git's list, and when git cannot give it
+the gates that read it stop with an error rather than judge an empty list:
+`code:format` given no file list, and `code:lint` before the house linter and
+SwiftLint run. Only with no `.git` entry, or no git installed, do both walk
+the tree instead.
 
 `code:format` without `--fix` is read-only, so it is safe as a gate. The
 pre-commit hook calls `code:format --fix` with the staged files, so only those
