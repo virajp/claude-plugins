@@ -119,14 +119,14 @@ with the Swift toolchain.
 
 ## Units
 
-| Id | Wave | Unit file                                          | Kind   | Owns                                                                                                                                                                  | Depends on | Status  | Commit |
-| -- | ---- | -------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-language-swift.md](01-language-swift.md)       | edit   | `plugins/stackgen/stacks/language/swift/**`                                                                                                                           | —          | green   |        |
-| U2 | 1    | [02-swiftpm-and-gates.md](02-swiftpm-and-gates.md) | edit   | `plugins/stackgen/stacks/package-manager/swiftpm/**`, `plugins/stackgen/stacks/toolchain-gate/swift-format/**`, `plugins/stackgen/stacks/toolchain-gate/swiftlint/**` | —          | green   |        |
-| U3 | 1    | [03-bundle.md](03-bundle.md)                       | edit   | `plugins/stackgen/stacks/bundles/swift-package.md`                                                                                                                    | —          | green   |        |
-| R4 | 2    | [04-review.md](04-review.md)                       | review | —                                                                                                                                                                     | U1         | pending |        |
-| U5 | 3    | [05-docs.md](05-docs.md)                           | edit   | `site/src/content/docs/**`, `.claude/skills/stackgen-plugin/**`, `.claude/docs/**`, `readme.md`, `CLAUDE.md`, `plugins/stackgen/stacks/readme.md`                     | all        | pending |        |
-| U6 | 4    | [06-gates-and-bump.md](06-gates-and-bump.md)       | edit   | `site/package.json`, `plugins/stackgen/.claude-plugin/plugin.json`, `plugins/stackgen/stacks/inventory.md`, `.claude-plugin/marketplace.json`                         | U5         | pending |        |
+| Id | Wave | Unit file                                          | Kind   | Owns                                                                                                                                                                  | Depends on | Status  | Commit   |
+| -- | ---- | -------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
+| U1 | 1    | [01-language-swift.md](01-language-swift.md)       | edit   | `plugins/stackgen/stacks/language/swift/**`                                                                                                                           | —          | green   | 67e28cbe |
+| U2 | 1    | [02-swiftpm-and-gates.md](02-swiftpm-and-gates.md) | edit   | `plugins/stackgen/stacks/package-manager/swiftpm/**`, `plugins/stackgen/stacks/toolchain-gate/swift-format/**`, `plugins/stackgen/stacks/toolchain-gate/swiftlint/**` | —          | green   | 67e28cbe |
+| U3 | 1    | [03-bundle.md](03-bundle.md)                       | edit   | `plugins/stackgen/stacks/bundles/swift-package.md`                                                                                                                    | —          | green   | 67e28cbe |
+| R4 | 2    | [04-review.md](04-review.md)                       | review | —                                                                                                                                                                     | U1         | pending |          |
+| U5 | 3    | [05-docs.md](05-docs.md)                           | edit   | `site/src/content/docs/**`, `.claude/skills/stackgen-plugin/**`, `.claude/docs/**`, `readme.md`, `CLAUDE.md`, `plugins/stackgen/stacks/readme.md`                     | all        | pending |          |
+| U6 | 4    | [06-gates-and-bump.md](06-gates-and-bump.md)       | edit   | `site/package.json`, `plugins/stackgen/.claude-plugin/plugin.json`, `plugins/stackgen/stacks/inventory.md`, `.claude-plugin/marketplace.json`                         | U5         | pending |          |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
