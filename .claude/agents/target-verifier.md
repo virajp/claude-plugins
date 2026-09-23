@@ -111,8 +111,8 @@ belongs to `claude` or to `graphify`, which is why it writes **no receipt**.
   installs `DEFAULT_INSTALL` (`vwf`) alone and lets the edge bring `stackgen`.
 - **MCP and LSP declarations** ride in the plugin manifest. Confirm they appear
   in the installed plugin, and note that a declared server is inert until its
-  transport is reachable — do not report an unconnected mempalace HTTP server as
-  a finding.
+  transport is reachable — do not report an unconnected mempalace MCP server
+  (stdio, spawned through `mise x -- mempalace-mcp`) as a finding.
 
 ## Procedure
 
