@@ -20,22 +20,26 @@ The repo's tasks are the interface; the tools behind them are detail.
 | Task | Runs |
 | --- | --- |
 | `setup:deps:install` | `swift package resolve` — `--frozen` fails rather than move `Package.resolved` |
-| `code:format` | dprint and shfmt, then `swift format` over `Package.swift`, `Sources/` and `Tests/` with `.config/swift-format.json` — in place under `--fix`, a strict lint otherwise |
-| `code:lint` | shellcheck, actionlint, the house linter, then `swiftlint lint --strict` with `.config/swiftlint.yml`, once any Swift file exists |
+| `code:format` | dprint and shfmt, then `swift format` with `.config/swift-format.json` over every `.swift` file git does not ignore — rewritten in place under `--fix`, then a strict lint either way |
+| `code:lint` | shellcheck, actionlint, the house linter over every file git does not ignore, then `swiftlint lint --strict` with `.config/swiftlint.yml` over every `.swift` file git does not ignore |
 | `setup:deps:outdated` | `swift package update --dry-run` |
 | `setup:deps:upgrade` | `swift package update` |
-| `setup:deps:cleanup` | `swift package clean`, then removes `.build/` |
+| `setup:deps:cleanup` | removes `.build/` |
 
-`code:format` without `--fix` is read-only, so it is safe as a gate. Both
-format and lint take a file list, which is how the pre-commit hook narrows
-them to the staged files.
+`code:format` without `--fix` is read-only, so it is safe as a gate. The
+pre-commit hook calls `code:format --fix` with the staged files, so only those
+are formatted — and the strict lint that follows the rewrite runs over the same
+files, so a finding the formatter cannot fix fails the commit rather than CI.
+The hook calls `code:lint --fix` with the staged files too, but lint ignores
+the list: the house linter's rules read across files and SwiftLint follows its
+config, so both always take the whole tree.
 
 ## Warnings
 
-Warnings are defects that have not failed yet. The linter runs `--strict`, and
-the formatter's lint mode is strict too, so a warning fails the gate rather
-than accumulating. Compiler warnings are treated the same way in review: a
-package ships clean.
+Warnings are defects that have not failed yet. SwiftLint runs `--strict` and
+swift-format's lint runs `--strict` on every path — read-only, and after the
+rewrite under `--fix` — so a warning fails the gate rather than accumulating.
+Compiler warnings are treated the same way in review: a package ships clean.
 
 ## Documentation
 

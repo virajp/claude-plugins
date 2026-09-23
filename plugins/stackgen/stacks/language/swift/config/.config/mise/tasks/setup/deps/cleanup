@@ -9,17 +9,15 @@ set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-# `swift package clean` deletes the build artifacts but keeps the dependency
-# checkouts under `.build/`; removing the directory takes those too, so the
-# next install resolves from nothing. `Package.resolved` is NOT deleted: it is
-# the committed lockfile, and SwiftPM re-resolves against it on its own.
+# `.build/` holds both the build artifacts and the dependency checkouts, so
+# removing it is the whole cleanup — the next install resolves from nothing.
+# `swift package clean` is not called: it clears only the artifacts, which this
+# already covers, and it needs `swift` on PATH and a `Package.swift`, which
+# `setup:deps:all` cannot promise, since it runs cleanup before install.
+# `Package.resolved` is NOT deleted: it is the committed lockfile, and SwiftPM
+# re-resolves against it on its own.
 #
-# No header: the aggregator `setup:deps:all` already frames each verb with its
-# own subheader, so one here would invert the hierarchy. The subheaders below
-# frame the steps inside this task.
+# One command, so no header: whatever called it — `setup:deps:all`, or a person
+# — frames it.
 
-print_subheader "Deleting build artifacts ..."
-swift package clean
-
-print_subheader "Deleting .build/ ..."
 rm -rf .build

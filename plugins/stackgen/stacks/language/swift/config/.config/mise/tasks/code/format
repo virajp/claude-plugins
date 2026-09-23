@@ -15,10 +15,10 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 # Overlays whatever the tiers below wrote. dprint keeps the repo's markdown,
 # YAML and JSON; swift-format, which ships inside the Swift toolchain as
-# `swift format`, takes the Swift sources. With no file list it takes
-# `Package.swift` and `Sources/` and `Tests/` — the manifest and the two trees
-# SwiftPM's layout puts code in, each only where it exists — and never
-# `.build/`, which is the build's output.
+# `swift format`, takes the Swift sources. With no file list it takes every
+# `.swift` file git tracks or would track — the manifest and any
+# `Package@swift-*.swift` beside it, `Sources/`, `Tests/`, `Plugins/`,
+# examples — and never an ignored tree such as `.build/`, the build's output.
 #
 # swift-format reads `.config/swift-format.json`, passed explicitly: left to
 # itself it searches for a `.swift-format` file beside the sources, and the
@@ -48,26 +48,22 @@ if [ ${#files[@]} -gt 0 ]; then
         ;;
     esac
   done
-else
-  if [ -f Package.swift ]; then
-    swift_targets+=(Package.swift)
-  fi
-  for dir in Sources Tests; do
-    if [ -d "${dir}" ]; then
-      swift_targets+=("${dir}")
+elif git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  while IFS= read -r f; do
+    if [ -f "${f}" ]; then
+      swift_targets+=("${f}")
     fi
-  done
+  done < <(git ls-files --cached --others --exclude-standard -- '*.swift')
+else
+  while IFS= read -r f; do
+    swift_targets+=("${f}")
+  done < <(find . -path ./.build -prune -o -name '*.swift' -print)
 fi
 
-# `swift format` formats to stdout by default; `--in-place` rewrites. The
-# read-only mode is its own subcommand, `lint`, and `--strict` makes a finding
-# fail the run rather than print a warning and exit 0.
 if [[ "${usage_fix:-false}" == "true" ]]; then
   action="fmt"
-  swift_format_args=(format --in-place)
 else
   action="check"
-  swift_format_args=(lint --strict)
 fi
 
 print_header "Formatting files ..."
@@ -104,11 +100,21 @@ if command -v shfmt >/dev/null 2>&1; then
   fi
 fi
 
+# `swift format format --in-place` rewrites what it can and exits 0 even when a
+# finding is one it cannot fix, so under `--fix` the strict lint runs after it
+# over the same files. Without that, the hook would pass a file the read-only
+# gate then fails. `--strict` makes a finding fail the run rather than print a
+# warning and exit 0.
 if [ ${#swift_targets[@]} -gt 0 ]; then
   print_subheader "Formatting Swift sources ..."
-  swift format "${swift_format_args[@]}" \
+  if [ "${action}" = "fmt" ]; then
+    swift format format --in-place \
+      --configuration .config/swift-format.json \
+      --parallel \
+      "${swift_targets[@]}"
+  fi
+  swift format lint --strict \
     --configuration .config/swift-format.json \
-    --recursive \
     --parallel \
     "${swift_targets[@]}"
 fi

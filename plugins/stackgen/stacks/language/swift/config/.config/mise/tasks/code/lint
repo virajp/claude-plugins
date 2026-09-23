@@ -14,11 +14,12 @@ set -euo pipefail
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 # Two gates over two kinds of file: the house linter takes the repo's config
-# files, and SwiftLint takes the Swift sources. SwiftLint reads
-# `.config/swiftlint.yml`, passed explicitly, and that config decides which
-# trees it walks — so it runs whole-tree even when a file list is given, the
-# way the house linter does. `--strict` turns a warning into a failure: a
-# warning nobody has to fix is a warning that accumulates.
+# files, and SwiftLint takes the Swift sources. Both run whole-tree even when a
+# file list is given, and "whole tree" means every file git tracks or would
+# track — neither tool reads `.gitignore`, and SwiftPM writes JSON and Swift
+# under `.build/` that is the build's output, not the repo's. SwiftLint reads
+# `.config/swiftlint.yml`, passed explicitly. `--strict` turns a warning into a
+# failure: a warning nobody has to fix is a warning that accumulates.
 #
 # `--fix` reaches the house linter only. SwiftLint's own autocorrect rewrites
 # layout, and layout is swift-format's — two tools rewriting one file disagree,
@@ -97,27 +98,57 @@ fi
 # rather than narrow it. It takes the whole tree even when a file list is
 # given.
 #
-# The linter does not read `.gitignore`, and SwiftPM writes JSON intermediates
-# under `.build/` that fail its rules. So the whole tree is spelled as targets:
-# `*` for the files at the root, then every top-level directory git does not
-# ignore. An ignored directory is never named, so it is never walked, and a new
-# build directory needs only its `.gitignore` line. A glob never warns about a
-# file the linter's own ignores cover, where a named path would.
-lint_targets=("*")
-for entry in * .[!.]* ..?*; do
-  if [ -d "${entry}" ] && [ "${entry}" != ".git" ] &&
-    ! git check-ignore -q "${entry}" 2>/dev/null; then
-    lint_targets+=("${entry}")
-  fi
-done
+# The linter has no `.gitignore` support and no negated targets, so the tree is
+# handed to it as the list git gives — tracked files plus untracked ones git
+# does not ignore — and an ignored path at any depth is never named. Each path
+# goes in as a one-file glob (its last character in brackets): a glob matching
+# a file the linter's own ignores cover, or a file type it has no rules for, is
+# skipped silently, where a plain path would print a warning for it. Outside a
+# git work tree there is no list, and the linter walks the tree itself.
+lint_targets=()
+in_git=false
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  in_git=true
+  while IFS= read -r target; do
+    lint_targets+=("${target}")
+  done < <(git ls-files --cached --others --exclude-standard |
+    sed -e 's/[][*?{}()!+@\\]/\\&/g' -e 's/\([A-Za-z0-9._-]\)$/[\1]/')
+fi
 
-print_subheader "Linting config files ..."
-pnpm dlx @askviraj/linter ${args[@]+"${args[@]}"} "${lint_targets[@]}"
+if [ "${in_git}" = "false" ] || [ "${#lint_targets[@]}" -gt 0 ]; then
+  print_subheader "Linting config files ..."
+  pnpm dlx @askviraj/linter ${args[@]+"${args[@]}"} ${lint_targets[@]+"${lint_targets[@]}"}
+fi
 
-# SwiftLint fails with "No lintable files" in a tree with no Swift source yet —
-# a freshly shaped repo before `swift package init` — so it is skipped until
-# there is one. The walk leaves out `.build/`, which is the build's output.
-if [ -n "$(find . -path ./.build -prune -o -name '*.swift' -print -quit)" ]; then
+# The same list, narrowed to Swift, is SwiftLint's — named explicitly, with
+# `--force-exclude` so the config's `excluded` still applies to a named path.
+swift_scope=()
+if [ "${in_git}" = "true" ]; then
+  while IFS= read -r swift_file; do
+    if [ -f "${swift_file}" ]; then
+      swift_scope+=("${swift_file}")
+    fi
+  done < <(git ls-files --cached --others --exclude-standard -- '*.swift')
+else
+  while IFS= read -r swift_file; do
+    swift_scope+=("${swift_file}")
+  done < <(find . -path ./.build -prune -o -name '*.swift' -print)
+fi
+
+# SwiftLint exits 1 with "No lintable files" when it has nothing to lint — a
+# repo before `swift package init`, or one whose every Swift file the config
+# excludes. That is an empty gate, not a failure, so it is reported and passed.
+if [ "${#swift_scope[@]}" -gt 0 ]; then
   print_subheader "Linting Swift sources ..."
-  swiftlint lint --strict --quiet --config .config/swiftlint.yml
+  if ! swiftlint_output="$(swiftlint lint --strict --quiet --force-exclude \
+    --config .config/swiftlint.yml "${swift_scope[@]}" 2>&1)"; then
+    if [[ "${swiftlint_output}" == *"No lintable files found"* ]]; then
+      print_yellow "Every Swift file is excluded by .config/swiftlint.yml; nothing to lint."
+    else
+      printf '%s\n' "${swiftlint_output}"
+      exit 1
+    fi
+  elif [ -n "${swiftlint_output}" ]; then
+    printf '%s\n' "${swiftlint_output}"
+  fi
 fi

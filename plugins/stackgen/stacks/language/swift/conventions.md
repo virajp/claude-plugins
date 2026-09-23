@@ -29,11 +29,11 @@ tasks pass each explicitly:
 
 | Task | Does |
 | --- | --- |
-| `code:format` | dprint and shfmt, then `swift format` over `Package.swift`, `Sources/` and `Tests/` — in place under `--fix`, a strict lint otherwise |
-| `code:lint` | shellcheck, actionlint and the house linter, then `swiftlint lint --strict` once any Swift file exists |
+| `code:format` | dprint and shfmt, then `swift format` over every `.swift` file git does not ignore (or the staged ones the hook passes) — in place under `--fix`, then a strict lint either way |
+| `code:lint` | shellcheck, actionlint and the house linter, then `swiftlint lint --strict` — both over the whole tree git does not ignore, whatever list the hook passes |
 | `setup:deps:install` | `swift package resolve`; `--frozen` refuses to move `Package.resolved` |
 | `setup:deps:audit` | a stated no-op — SwiftPM ships no advisory command |
-| `setup:deps:cleanup` | `swift package clean`, then removes `.build/` |
+| `setup:deps:cleanup` | removes `.build/` |
 | `setup:deps:outdated` | `swift package update --dry-run` |
 | `setup:deps:upgrade` | `swift package update` |
 
