@@ -10,9 +10,10 @@ backlog: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-09-23 by the user
+RUNNING since 2026-09-23 in
+.claude/worktrees/2026-09-23-mempalace-stdio-settings-env
 
 ## Consent
 
@@ -156,8 +157,8 @@ none.
 
 | Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                                                                    | Depends on | Status  | Commit |
 | -- | ---- | -------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-manifest.md](01-manifest.md)             | edit | `plugins/vwf/.claude-plugin/plugin.json` (the `mempalace` entry only), `scripts/src/check.ts` (the comment at `:1993-1997` only)                                                                                        | —          | pending |        |
-| U2 | 1    | [02-vwf-skills.md](02-vwf-skills.md)         | edit | `plugins/vwf/skills/mempalace/SKILL.md`, `plugins/vwf/skills/mempalace-recall/SKILL.md`, `plugins/vwf/vendor/mempalace/README.md`, `plugins/vwf/assets/memory.md`, `plugins/vwf/skills/setup/references/memory-tree.md` | —          | pending |        |
+| U1 | 1    | [01-manifest.md](01-manifest.md)             | edit | `plugins/vwf/.claude-plugin/plugin.json` (the `mempalace` entry only), `scripts/src/check.ts` (the comment at `:1993-1997` only)                                                                                        | —          | green   |        |
+| U2 | 1    | [02-vwf-skills.md](02-vwf-skills.md)         | edit | `plugins/vwf/skills/mempalace/SKILL.md`, `plugins/vwf/skills/mempalace-recall/SKILL.md`, `plugins/vwf/vendor/mempalace/README.md`, `plugins/vwf/assets/memory.md`, `plugins/vwf/skills/setup/references/memory-tree.md` | —          | green   |        |
 | U3 | 2    | [03-docs.md](03-docs.md)                     | edit | `readme.md`, `CLAUDE.md`, `.claude/docs/**`, `.claude/skills/vwf-plugin/**`, `.claude/agents/target-verifier.md`, `site/src/content/docs/**`, `docs/memory/decisions/2026-09-23-mempalace-stdio-settings-env.md`        | U1, U2     | pending |        |
 | U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md) | edit | `plugins/vwf/.claude-plugin/plugin.json` (the `version` only), `site/package.json`, `.claude-plugin/marketplace.json` (regenerated)                                                                                     | U3         | pending |        |
 
@@ -274,8 +275,15 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit          | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                                | Commit |
+| ---- | ------------- | ----- | ----- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight     | —     | 1     | pass        | node edit; wave gate 9/9 green (code:precommit green on 2nd pass after the status-line reflow); doctor blocking items clear (mise, graphify CLI, graph in main checkout; no vwf.yaml stack); no `code` unit, so no LSP or conventions step; format check skipped — no `covers:`; mempalace journal skipped — palace embedder mismatch | —      |
+| 1    | U1 manifest   | opus  | 1     | pass        | node edit; launch line now `mise x -- mempalace-mcp`, check.ts comment rewritten; DECIDED none; GAP none (noted only the shared worktree's other diffs)                                                                                                                                                                               | —      |
+| 1    | U2 vwf skills | opus  | 1     | pass        | node edit; 5 files — settings.json `env` sample, stdio server section, recall server-down path, vendored README transport, daemon→server; DECIDED dropped the README's stale uv/graphify parenthetical inside the rewritten passage; GAP none                                                                                         | —      |
+| 1    | smoke         | —     | 1     | pass        | orchestrator stdio smoke test: palace resolved to `$HOME/.local/share/mempalace`, no `~` dir in scratch; reply error is the expected embedder mismatch                                                                                                                                                                                | —      |
+| 1    | R1            | opus  | 1     | findings(6) | all U2: five fold-width lines over 80 (mempalace/SKILL.md:60,96; mempalace-recall/SKILL.md:27,90; vendor README:55,58 plus a stale wrapped span); SKILL.md:129 condition stated twice; CONTRACT clean, RULINGS clean; README parenthetical drop judged fine                                                                           | —      |
+| 1    | U2 vwf skills | opus  | 2     | pass        | node edit; R1 loop-back: all six fixed; DECIDED folded the Cursor bullet to 80 though its section uses one long line per bullet; left memory.md table row width as it was (one word swapped)                                                                                                                                          | —      |
+| 1    | R1            | opus  | 2     | pass        | all six round-1 findings resolved; both U2 DECIDED lines accepted; CONTRACT clean, RULINGS clean                                                                                                                                                                                                                                      | —      |
 
 ## Launch
 

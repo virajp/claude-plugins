@@ -44,7 +44,7 @@
     "mempalace": {
       "args": [
         "-c",
-        "mise x -- mempalace-mcp --palace $MEMPALACE_PALACE_PATH --backend $MEMPALACE_BACKEND --allow-insecure-no-token"
+        "mise x -- mempalace-mcp"
       ],
       "command": "sh",
       "type": "stdio"
