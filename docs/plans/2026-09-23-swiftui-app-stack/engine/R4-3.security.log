@@ -1,0 +1,5 @@
+/security-review — R4 round 3 — range ae17915e..ba994ef0 (narrowed to the row's range)
+
+No high-confidence vulnerabilities found.
+
+Checked in b9f3543e: test/golden — new --device and --os values go into a quoted bash array expanded with ${arr[@]+"${arr[@]}"}, one argument each to tuist test, no word-splitting, no eval; CLI flags trusted; --inspect-mode off still present. setup/deps/cleanup — tuist clean dependencies removed; rm -rf .build Tuist/.build Derived on fixed relative paths, no variables, run from the project root. ux-gate/SKILL.md — adds a default-viewport table only, no commands.
