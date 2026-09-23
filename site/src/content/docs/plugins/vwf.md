@@ -398,7 +398,8 @@ docs/
 │   │           ├── index.md     # the PLATFORM-AGNOSTIC contract: trigger, actors,
 │   │           │                #   steps, jobs, sequence diagram, acceptance
 │   │           └── <platform>.md # one per implemented platform (mobile, tablet,
-│   │                            #   desktop, web, auto) — screens (coded rows +
+│   │                            #   desktop, site, webapp, auto, watch, tv,
+│   │                            #   spatial) — screens (coded rows +
 │   │                            #   per-screen components blocks), plus a
 │   │                            #   per-screen Metadata block on site/webapp
 │   ├── entities/                # the supporting data contracts
@@ -430,7 +431,8 @@ docs/
 │           │                         # on regeneration)
 │           └── <NNN>-<flow>/    # the flow the briefs commission
 │               └── <platform>.md # ONE brief per platform (mobile.md, tablet.md,
-│                                 # desktop.md, web.md, auto.md) — mirrors the
+│                                 # desktop.md, site.md, webapp.md, auto.md,
+│                                 # watch.md, tv.md, spatial.md) — mirrors the
 │                                 # flow folder's platform files; always the
 │                                 # flow's full blueprint, regenerated in place
 └── runbooks/                    # operational runbooks (incident-response foundation)
@@ -651,10 +653,11 @@ An operator back-office is `backend` / `platforms: [service, webapp]` plus the
 `operator-rbac` capability (`webapp` sits under `backend` as well as `frontend`
 for exactly this shape), and picks whichever project template serves both of
 those platforms at once. A project shipping through a store rather than to a
-deploy target (`mobile`, `tablet`, `desktop`, `auto`) records `[]` on the deploy
-axis, as does an `iac` project — it *is* the deploy path. A `cli` project pins
-one, because a package registry is its target; **which** template that is is the
-stack plugin's answer, and vwf names no slug on this axis or any other.
+deploy target (`mobile`, `tablet`, `desktop`, `auto`, `watch`, `tv`, `spatial`)
+records `[]` on the deploy axis, as does an `iac` project — it *is* the deploy
+path. A `cli` project pins one, because a package registry is its target;
+**which** template that is is the stack plugin's answer, and vwf names no slug
+on this axis or any other.
 
 **`iac` is the one platform vwf constrains structurally.** A project declaring
 `iac` must live in **its own repo** — independent, or a member of the product's
@@ -1985,10 +1988,11 @@ next run picks it up.
 **Standard flows.** UI projects carry a canonical flow vocabulary with exact
 slugs — `splash`, `signin`, `home`, `onboarding`, `settings`, `notifications`,
 `profile`, `delete-account`, `recover-account`, `audit-history` — with per-role
-mandates: a project on a device platform (`mobile`/`tablet`/`desktop`/`auto`)
-must have `splash` and `home`; one on a browser platform (`site`/`webapp`) must
-have `home` (`splash` optional). A project with no screen platform — `cli`-only
-or `plugin`-only — is exempt: the standard slugs are screen journeys a terminal
+mandates: a project on a device platform
+(`mobile`/`tablet`/`desktop`/`auto`/`watch`/`tv`/`spatial`) must have `splash`
+and `home`; one on a browser platform (`site`/`webapp`) must have `home`
+(`splash` optional). A project with no screen platform — `cli`-only or
+`plugin`-only — is exempt: the standard slugs are screen journeys a terminal
 tool or an extension has no equivalent for. A project whose registry entry
 carries an **Auth & identity capability** must additionally have `signin` — and
 with it `profile`, `delete-account`, and `recover-account` (an account you can
@@ -2049,19 +2053,28 @@ So `home` is `100` in every product you ever blueprint, and its screens are
 always coded `100a`, `100b`, … Deviating takes a waiver, like any other enforced
 rule.
 
-**Seven platforms, one vocabulary** — `mobile`, `tablet`, `desktop` (a natively
+**Ten platforms, one vocabulary** — `mobile`, `tablet`, `desktop` (a natively
 installed app), `site` (a browser-delivered content surface), `webapp` (the
-browser-delivered application), `auto` (in-car), and `cli` (a shipped
+browser-delivered application), `auto` (in-car), `watch` (on the wrist), `tv`
+(the living-room screen), `spatial` (a headset), and `cli` (a shipped
 command-line or TUI tool). The names are form factors, not vendors: `mobile`
 already hides iOS/Android, so **`auto` covers CarPlay and Android Auto
 together**, with their template differences recorded as deviations inside
-`auto.md`. `cli` is the one platform with **no screens**: it takes no platform
-file and never reaches the design canvas, mockups, or the scratchpad — what it
-requires instead is the design system's **Terminal UX** section. An in-car
-journey is therefore a *platform file of the same flow* — `100-home/auto.md`,
-same number, same steps, its own screens — not a separate subset flow. Which
-platforms a flow implements is elicited per flow (signing in while driving makes
-no sense) and listed in the contract's Platforms table.
+`auto.md` — and likewise `watch` covers watchOS and Wear OS, `tv` covers tvOS
+and Android TV, and `spatial` covers visionOS, Android XR and Quest. Unlike
+`auto`, which is declared alongside `mobile`, each of those three may be
+declared alone, since each can ship as a standalone app. All four are device
+platforms, and each carries its own interaction rules in the blueprint contract:
+in-car screens for a driver, glanceable wrist screens driven by the crown and
+complications, focus-based navigation with a remote at ten feet, and gaze and
+pinch across windows, volumes and immersive spaces. `cli` is the one platform
+with **no screens**: it takes no platform file and never reaches the design
+canvas, mockups, or the scratchpad — what it requires instead is the design
+system's **Terminal UX** section. An in-car journey is therefore a *platform
+file of the same flow* — `100-home/auto.md`, same number, same steps, its own
+screens — not a separate subset flow. Which platforms a flow implements is
+elicited per flow (signing in while driving makes no sense) and listed in the
+contract's Platforms table.
 
 Per flow, `blueprint` elicits the journey with you under the
 **`blueprint-authoring`** doctrine — trigger and actors, the ordered steps,
@@ -2081,9 +2094,9 @@ catalog, and the product-wide ER diagram. Screens point at the design system;
 index) and `image` (the picture a shared link shows, `default` or a slot of the
 screen's own). A `webapp` pins all four only when its registry entry declares
 the `seo` capability; without it, `title` alone. A `site` carries the full set
-always — a site is public by definition. Mobile, tablet, desktop and `auto`
-platform files carry no such block at all: those surfaces state nothing about
-themselves to anyone outside the product.
+always — a site is public by definition. Mobile, tablet, desktop, `auto`,
+`watch`, `tv` and `spatial` platform files carry no such block at all: those
+surfaces state nothing about themselves to anyone outside the product.
 
 The **product-wide** half of that lives in two places, never repeated per
 screen: the text facts — site name, the default description a page falls back
@@ -2207,6 +2220,15 @@ standing tweak set (dark mode, device frame, one tweak per pinned sad and
 conditional state). Its generated sections regenerate; a **canvas-owned
 section** holds what you discover while designing, preserved across
 regenerations and folded back by `import`.
+
+Each device platform's frame has a default viewport — `mobile` 390×844, `tablet`
+834×1194, `desktop` 1440×900, `auto` 800×480, `watch` 208×248, `tv` 1920×1080,
+`spatial` 1280×720. A product overrides one per project in `.config/vwf.yaml`,
+beside the canvas pin, as `design.viewports.<project>.<platform>: <W>x<H>`
+(`390x844`); the briefs, the generated conventions file and both design adapters
+read the resolved size. Nothing writes the key — you edit it by hand — and an
+entry that is malformed or names a platform the project does not declare is
+reported by `/vwf:doctor` and ignored, falling back to the default.
 
 So a brief carries only the per-flow payload: the page name `<flow>--<platform>`
 (`100-home--mobile` — the sync key `import` matches back by), a one-line goal,

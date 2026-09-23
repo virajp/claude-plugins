@@ -56,7 +56,8 @@ adds. The agent returns the contradicted passages as findings; it never edits.
   patching sentence by sentence.
 - **App changelog** (only when the registry's `cross_cutting` accepted the
   change-logs foundation): when the scope alters user-visible behavior on a
-  device screen platform (`desktop`/`mobile`/`tablet`/`auto`), append a draft
+  device screen platform (`desktop`/`mobile`/`tablet`/`auto`/`watch`/`tv`/
+  `spatial`), append a draft
   entry to the app repo's `CHANGELOG.md` `[Unreleased]` section — user-facing
   language, not commit prose — per the product-foundations change-logs
   reference.

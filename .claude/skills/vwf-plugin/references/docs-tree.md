@@ -14,9 +14,9 @@ grouped by primary registry project and numbered in execution order** —
 projects alike — `index.md` holding the **platform-agnostic contract** (trigger,
 actors, steps, diagram, jobs, acceptance; no screens) beside one
 **`<platform>.md` per implemented platform** (`mobile`/`tablet`/`desktop`/
-`auto`/`site`/`webapp`) carrying that platform's Screens (rows coded
-`<NNN><letter>`, codes **shared across platform files**, each with its
-per-screen Components block, and — on `site`/`webapp` alone, since
+`auto`/`watch`/`tv`/`spatial`/`site`/`webapp`) carrying that platform's Screens
+(rows coded `<NNN><letter>`, codes **shared across platform files**, each with
+its per-screen Components block, and — on `site`/`webapp` alone, since
 `blueprint_format` 25 — a per-screen **Metadata** block headed by the row's
 code: `title`, `description`, `index` and `image`, with a `webapp` whose project
 does not declare `seo` pinning `title` alone); a non-UI flow is `index.md`
@@ -103,7 +103,7 @@ frontmatter + that every edge resolves. The doctrine lives in the
 blueprint-authoring skill's `frontmatter-and-links` reference.
 
 **Format versioning.** vwf ships the stamp in `assets/blueprint-format`
-(currently **24**). Since vwf 18 the stamps are **drift detectors only** —
+(currently **25**). Since vwf 18 the stamps are **drift detectors only** —
 nothing selects a migration by them. There is no `N → N+1` delta ladder for the
 blueprint format: a stale stamp sends `/vwf:setup` into its `migrate` mode,
 which **reconciles the tree against the current format's own sources**

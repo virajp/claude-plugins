@@ -48,7 +48,8 @@ found. Run `/vwf:architecture` first." Find the project named in the argument
 `docs/blueprint/flows/<project>/<flow>/` exists; halt naming the flows that
 do when none matches. Halt if the project is not in the registry, listing the
 projects that are. Halt if that project declares **no screen platform**
-(`site`, `webapp`, `desktop`, `mobile`, `tablet`, `auto`):
+(`site`, `webapp`, `desktop`, `mobile`, `tablet`, `auto`, `watch`, `tv`,
+`spatial`):
 
 > `<project>` has no screen surface, so there is nothing to design. A
 > text-only product elicits Terminal UX through `/vwf:design-system` directly.
@@ -164,8 +165,13 @@ per platform, and that file is what this mode reads.
    brief as its input and the design system as its read, narrowed by
    `taste-skill:soft-skill`, `taste-skill:minimalist-skill` or
    `taste-skill:brutalist-skill` where the design system points there; on a
-   `mobile`, `tablet` or `auto` platform the page is laid out at that
-   platform's viewport, not a desktop one. Write
+   **device** platform — `mobile`, `tablet`, `desktop`, `auto`, `watch`, `tv`
+   or `spatial` — the page is laid out at that platform's resolved viewport:
+   `design.viewports.<project>.<platform>` from `.config/vwf.yaml` when set
+   (`<W>x<H>`, in points), else the platform's default — mobile 390×844,
+   tablet 834×1194, desktop 1440×900, auto 800×480, watch 208×248, tv
+   1920×1080, spatial 1280×720 — never a desktop viewport on a smaller
+   device. Write
    `docs/design/<project>/screens/<flow>--<platform>/<CODE>.html` for every
    screen code the brief names, and only those. Each page is
    **self-contained**: inline `<style>` built from the design system's tokens,

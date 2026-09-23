@@ -58,6 +58,26 @@ Pin per screen / surface (each has more than one reasonable answer):
   template-constrained by the OS — custom layout and visual language do not
   apply; the design system reaches only as far as the platform allows (icons,
   accent color).
+- **Watch screens** (screens in a flow's `watch.md` platform file — watchOS and
+  Wear OS alike) — per watch screen: the **glanceable** content, readable in a
+  couple of seconds, against the phone screen; the Digital Crown (or rotary
+  input) for scrolling and value entry; which content surfaces as a
+  **complication or widget**, a first-class surface beside the app's own
+  screens; and the short-session shape — every task done in seconds, nothing
+  that needs a keyboard. Any watchOS-vs-Wear-OS difference lives in `watch.md`.
+- **TV screens** (screens in a flow's `tv.md` platform file — tvOS and Android
+  TV alike) — per TV screen: **focus-based navigation** with a remote — every
+  interactive element focusable, a visible focus state, a predictable focus
+  order; the **10-foot distance** — large type and safe-area margins at the
+  screen edge; and no touch and no hover as inputs. Any tvOS-vs-Android-TV
+  difference lives in `tv.md`.
+- **Spatial screens** (screens in a flow's `spatial.md` platform file —
+  visionOS, Android XR and Quest alike) — per spatial screen: **gaze and
+  pinch** as the primary input; which surface it uses — a **window**, a
+  **volume** or an **immersive space**; comfortable depth and ergonomic
+  placement in the field of view; and **ornaments** for controls attached to a
+  window's edge. Any difference between the three systems lives in
+  `spatial.md`.
 
 Out (realization): the component library, CSS, exact pixels — and anything
 already fixed by the design system. If a screen must break the design system,

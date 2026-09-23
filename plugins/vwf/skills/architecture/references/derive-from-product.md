@@ -42,11 +42,13 @@ read forward here. A persona
 who consumes authored content while signed out names `site`; one who works in a
 signed-in application in a browser names `webapp`; one who carries the product
 with them names `mobile`, and `tablet` too where the need calls for larger
-layouts; a persona that is *another program* names `service`; an administrator
-names the operator plane above. **Never assume a screen platform** — it makes
-the design system mandatory, so each one is confirmed explicitly, and a persona
-described only as reaching the product "on the web" is ambiguous between `site`
-and `webapp`: ask, never pick.
+layouts; one who glances at it on the wrist names `watch`, one who uses it from
+the sofa on a television names `tv`, and one who wears a headset names
+`spatial`; a persona that is *another program* names `service`; an
+administrator names the operator plane above. **Never assume a screen
+platform** — it makes the design system mandatory, so each one is confirmed
+explicitly, and a persona described only as reaching the product "on the web"
+is ambiguous between `site` and `webapp`: ask, never pick.
 
 **b. Roles, from who consumes each surface's output.** Group the surfaces into
 projects — several platforms on one codebase stay **one** project — and name
@@ -79,6 +81,9 @@ the section it came from:
 app · platforms [mobile, tablet]
   "Drivers work from the phone in their pocket, and dispatchers from a
    larger screen in the depot" — Target users
+coach · platforms [watch]
+  "Runners check their pace at a glance, without taking out a
+   phone" — Target users
 ```
 
 Without the quote the user cannot tell a reading from an invention, and an

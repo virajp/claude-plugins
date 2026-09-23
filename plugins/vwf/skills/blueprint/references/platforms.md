@@ -9,7 +9,8 @@ neither.
 
 Read the registry project's `platforms:` — the single source (it is not in
 `.config/vwf.yaml`) — and take its **screen platforms**: `site`, `webapp`,
-`desktop`, `mobile`, `tablet`, `auto`. Every other token it declares
+`desktop`, `mobile`, `tablet`, `auto`, `watch`, `tv`, `spatial`. Every other
+token it declares
 (`service`, `worker`, `packages`, `cli`, and every `data`/`system` platform) is
 screenless and contributes no platform file. When a project declares targets
 beyond its stack's default, the Screens elicitation covers what genuinely
@@ -25,8 +26,10 @@ A journey is one flow; each **screen** platform that implements it gets a
 registry project's declared screen platforms. A project whose platforms are all
 screenless produces `index.md` alone, however many of them there are. Most flows implement the project's
 primary platform only; `auto` in particular is selective (signing in or
-onboarding while driving makes no sense). Record the set in `index.md`'s
-**Platforms** table with a one-line note per platform on how its take differs.
+onboarding while driving makes no sense), and `watch`, `tv` and `spatial` are
+selective too — a long form belongs on the phone, not the wrist or the couch.
+Record the set in `index.md`'s **Platforms** table with a one-line note per
+platform on how its take differs.
 Steps, acceptance, and jobs stay in `index.md` and are **never forked per
 platform** — a platform that cannot perform a step omits the screens for it and
 says so in its note.
@@ -42,6 +45,39 @@ content subset vs the phone screen, and the driver-distraction constraints —
 recorded under the platform file's **Platform deviations**, noting any
 CarPlay-vs-Android-Auto difference there. In-car UIs are template-constrained by
 the OS; custom layout does not apply.
+
+## Watch (`watch`)
+
+`watch` covers **watchOS and Wear OS together**, the way `auto` covers both
+in-car systems. A watch take is a platform file, never its own flow. Its Screens
+elicitation pins the watch specifics per screen: the **glanceable** content —
+what the user reads in a couple of seconds — against the phone screen; the
+Digital Crown (or rotary input) as the input for scrolling and value entry;
+which content surfaces as a **complication or widget**, a first-class surface
+beside the app's own screens; and the short-session shape — every task done in
+seconds, nothing that needs a keyboard. Recorded under the platform file's
+**Platform deviations**, noting any watchOS-vs-Wear-OS difference there.
+
+## TV (`tv`)
+
+`tv` covers **tvOS and Android TV together**. A TV take is a platform file,
+never its own flow. Its Screens elicitation pins the TV specifics per screen:
+**focus-based navigation** with a remote — every interactive element focusable,
+a visible focus state, a predictable focus order across the screen; the
+**10-foot distance** — large type and the safe-area margins the screen edge
+needs; and no touch and no hover as inputs. Recorded under the platform file's
+**Platform deviations**, noting any tvOS-vs-Android-TV difference there.
+
+## Spatial (`spatial`)
+
+`spatial` covers **visionOS, Android XR and Quest together**. A spatial take is
+a platform file, never its own flow. Its Screens elicitation pins the spatial
+specifics per screen: **gaze and pinch** as the primary input; which of the
+three surfaces the screen uses — a **window**, a **volume**, or an **immersive
+space**; comfortable depth and ergonomic placement in the user's field of view;
+and **ornaments** for controls attached to a window's edge. Recorded under the
+platform file's **Platform deviations**, noting any difference between the
+three systems there.
 
 ## Doc unit
 

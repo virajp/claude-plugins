@@ -34,7 +34,10 @@ it.
      tweaks vs pinned states** (a pinned sad or conditional state with no tweak,
      or a state tweak the contract doesn't pin, is a delta), the **standing
      tweaks** (a frame missing its `darkMode` tweak, or its device `frame` tweak
-     — the right frame for the platform, camera cutout included on mobile/tablet
+     — the right frame for the platform (camera cutout included on
+     mobile/tablet; the watch-face, TV and floating-window frames on `watch`,
+     `tv` and `spatial`), sized to the platform's resolved viewport, the
+     `design.viewports.<project>.<platform>` override when set, else the default
      — is a delta: canvas rework, the contract does not change), **components vs
      the pinned Components blocks** (a pinned component with no element on the
      frame, an element the contract doesn't pin, or behavior/content against a

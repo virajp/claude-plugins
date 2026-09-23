@@ -60,7 +60,8 @@ components-and-anti-patterns, brand, terminal-ux, checklist).
 Read `docs/blueprint/registry.yaml`. **Halt if it does not exist:** "No registry
 found. Run `/vwf:architecture` first." If the registry has **no** project
 declaring a **screen platform** (`site`, `webapp`, `desktop`, `mobile`,
-`tablet`, `auto`), the run takes the **text-only path**: tell the user no
+`tablet`, `auto`, `watch`, `tv`, `spatial`), the run takes the **text-only
+path**: tell the user no
 project has a screen surface and ask whether to (a) **add the UI project to the
 registry first** via `/vwf:architecture` (then return here), or (b) proceed
 text-only. On (b), **skip §3 and §4 entirely** — the adapter exists for screens

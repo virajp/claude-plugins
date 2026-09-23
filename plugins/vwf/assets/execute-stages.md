@@ -53,7 +53,8 @@ so one boot of the local stack serves both. Each is conditional — skipped
 - `acceptance` — only when the folder's `index.md` "Acceptance criteria (from
   blueprint)" section carries criteria (skip on `none — no flow touched`).
 - `ux` — only when the slice changes screens on a **screen platform** (`site`,
-  `webapp`, `desktop`, `mobile`, `tablet`, `auto`). Every screen surface gets a real visual gate and a
+  `webapp`, `desktop`, `mobile`, `tablet`, `auto`, `watch`, `tv`, `spatial`).
+  Every screen surface gets a real visual gate and a
   real accessibility gate, delivered by the repo's own `ux-gate` skill in
   `.claude/skills/` — never a code-only read.
 

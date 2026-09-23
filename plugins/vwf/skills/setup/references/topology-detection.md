@@ -70,7 +70,7 @@ are what vwf branches on; the role is an index, never a gate.
 | Role | Platforms |
 | --- | --- |
 | `backend` | `packages` `service` `worker` `webapp` |
-| `frontend` | `packages` `site` `webapp` `desktop` `mobile` `tablet` `auto` `cli` |
+| `frontend` | `packages` `site` `webapp` `desktop` `mobile` `tablet` `auto` `watch` `tv` `spatial` `cli` |
 | `data` | `packages` `data-lake` `analytics` `ingestion` `ml-platform` |
 | `system` | `packages` `iac` `plugin` `misc` `cicd` `cli` |
 
@@ -103,10 +103,11 @@ would triplicate every flow doc.
 What each platform obliges:
 
 - **Screen platforms** — `site`, `webapp`, `desktop`, `mobile`, `tablet`,
-  `auto`. Any of them makes the design system **mandatory** — confirm the
-  surface explicitly, never assume it — mandates the standard flows, and gives
-  each of the project's flow folders one `<platform>.md`. Every other platform
-  is screenless and takes `index.md` alone.
+  `auto`, `watch`, `tv`, `spatial`. Any of them makes the design system
+  **mandatory** — confirm the surface explicitly, never assume it — mandates
+  the standard flows, and gives each of the project's flow folders one
+  `<platform>.md`. Every other platform is screenless and takes `index.md`
+  alone.
 - **`service`** — requires `apis/<project>.openapi.yaml` and a health endpoint.
   A project with `platforms: [service, webapp]` is what `fullstack` used to
   mean: one deployable publishing both an API contract and its own UI. SSR alone
@@ -146,6 +147,9 @@ obligations its platform carries, which hold in every language.
 | `mobile` | An app manifest declaring a store identifier and requested permissions, over phone-sized screen sources. |
 | `tablet` | The same app sources as `mobile`, carrying layouts that branch on width — master-detail, multi-column. Rarely found alone; it is declared **alongside** another screen platform. |
 | `auto` | Sources built against an in-car projection entrypoint, with screens drawn from a fixed template set (list, grid, map, now-playing) rather than free layout. |
+| `watch` | A wrist-app target: glanceable screens and complication sources, built for a watch OS — an Xcode target whose SDK is `watchos` (a `WKApplication` or `WKWatchKitApp` key in its Info.plist), or an Android module with `com.google.android.wearable` / `uses-feature android.hardware.type.watch`. May stand alone. |
+| `tv` | A living-room app target driven by focus and a remote, with no touch input — an Xcode target whose SDK is `appletvos`, or an Android manifest declaring `android.software.leanback`. May stand alone. |
+| `spatial` | A headset app target laying out windows, volumes or immersive spaces — an Xcode target whose SDK is `xros`, or an Android manifest declaring the XR feature (`android.software.xr.api.spatial`). May stand alone. |
 | `cli` | A manifest declaring an executable the end user runs, with argument parsing and one module per subcommand. A repo's own dev scripts are **not** this. |
 | `data-lake` | Storage layout rather than code: partitioned dataset paths, table or schema declarations read at query time, retention rules — and no entrypoint at all. |
 | `analytics` | Query and metric definitions over data that has already landed: modelled queries, scheduled aggregations, dashboard specs. |

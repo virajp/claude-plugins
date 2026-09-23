@@ -77,7 +77,7 @@ A flow's **platform file** carries one more key beside `status:` and
 `implementation:`:
 
 ```yaml
-platform: mobile # mobile | tablet | desktop | auto | site | webapp
+platform: mobile # mobile | tablet | desktop | auto | watch | tv | spatial | site | webapp
 ```
 
 Since **format 15** the platform lives in the **filename** (`mobile.md`,
@@ -98,6 +98,10 @@ Rules the reviewer enforces:
 - `auto` covers **CarPlay and Android Auto together**; their template
   differences are deviations inside `auto.md`, never separate files. The old
   `Subset of:` parent link is retired with the in-car subset flows.
+- `watch` covers **watchOS and Wear OS**, `tv` **tvOS and Android TV**, and
+  `spatial` **visionOS, Android XR and Quest** — the same form-factor rule:
+  a vendor difference is a deviation inside the one platform file, never a
+  separate file.
 - Screen **codes** are shared across a flow's platform files — `100a` is one
   screen concept; a platform lacking it omits the row, and a platform-only
   screen takes the next letter free across the whole flow.

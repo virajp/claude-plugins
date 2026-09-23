@@ -149,12 +149,12 @@ names a stack with no `conventions` for `plan` and `execute` to read and no
 `harness` block to check against — remedy `/vwf:setup`, which
 walks the axis back through the menu. A project whose
 platforms ship through a store rather than to a deploy target (`mobile`,
-`tablet`, `desktop`, `auto`) is correct with `deploy_template: []`, not
-missing, as is an `iac` platform, which *is* the deploy path. A project
-declaring `cli` **pins a deploy template for its package registry** — **which
-one is the stack plugin's answer**, and **vwf names no slug on this axis or any
-other**, so what this check asserts is that the axis is **answered**, never what
-it was answered with.
+`tablet`, `desktop`, `auto`, `watch`, `tv`, `spatial`) is correct with
+`deploy_template: []`, not missing, as is an `iac` platform, which *is* the
+deploy path. A project declaring `cli` **pins a deploy template for its
+package registry** — **which one is the stack plugin's answer**, and **vwf
+names no slug on this axis or any other**, so what this check asserts is that
+the axis is **answered**, never what it was answered with.
 
 **A project missing a required axis is a finding.** Every registry project needs
 a `template` and a `deploy_template`. On the two list axes *answered* means a
@@ -228,6 +228,18 @@ conventions written for something else. A project whose `template` reads
 resolved` and move on. The common case is a project that was
 `fullstack` before the migration and is now `[service, webapp]` — check the pin
 rather than assuming the migration got it right.
+
+**A viewport override must name something real.** A product may override a
+device screen platform's default canvas viewport per project, at
+`design.viewports.<project>.<platform>: <W>x<H>` in `.config/vwf.yaml` (the key
+is `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`'s). For every entry, check that
+`<project>` names a registry project, that `<platform>` is one that project
+declares, that it is a **device** screen platform (`desktop`, `mobile`,
+`tablet`, `auto`, `watch`, `tv`, `spatial`), and that the value is `<W>x<H>`
+with two positive integers. Each miss is a **finding** naming the key — never
+blocking: a stale override costs one canvas drawn at the default size, and the
+screens skill falls back to the default on any entry it cannot use. An absent
+`design.viewports` block is correct, not drift.
 
 **mise is mandatory once there is anything to run** — it is both vwf's task
 runner (every worktree init, pre-commit and merge goes through it) and the
