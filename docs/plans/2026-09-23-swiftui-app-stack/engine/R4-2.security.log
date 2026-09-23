@@ -1,0 +1,5 @@
+/security-review — R4 round 2 — range ae17915e..220621e9 (narrowed to the row's range, as round 1)
+
+No high-confidence vulnerabilities found.
+
+Checked: both prior findings fixed — skills/ux-gate/SKILL.md a11y tuist test now passes --inspect-mode off; test/golden comment now claims only that the result bundle is not uploaded to a Tuist server, and the flag is present in run_goldens. Commit 1955e286: setup:deps:cleanup rm -rf on fixed relative names (.build, Tuist/.build, Derived), no variable expansion; setup:deps:upgrade guards only test xcodebuild/tuist on PATH. Rest of pack: Tuist pinned exactly (aqua:tuist/tuist 4.209.0); test/golden rm -rf on a fixed path under .build/; eval "files+=(${usage_files:-})" and pnpm dlx @askviraj/linter byte-identical to reviewed language/swift tasks, inputs are trusted CLI args. No secrets, no new data leaving the machine.
