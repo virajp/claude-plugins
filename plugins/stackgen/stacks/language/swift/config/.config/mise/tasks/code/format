@@ -37,27 +37,40 @@ else
   log_level="warn"
 fi
 
+# The Swift scope, in every mode, leaves out what `.config/swiftlint.yml`
+# excludes — build output, SwiftPM's and Xcode's derived trees, generated
+# sources — so the two Swift gates judge the same files. Every path is handed
+# over prefixed `./` (or absolute), so a name opening with `-` is never read as
+# an option; git's list is read NUL-separated with quoting off, so no name is
+# mangled or dropped.
 swift_targets=()
+add_swift_target() {
+  case "/$1" in
+    */.build/* | */.swiftpm/* | */Derived/* | */DerivedData/* | *.generated.swift) ;;
+    *.swift)
+      if [ -f "$1" ]; then
+        case "$1" in
+          /* | ./*) swift_targets+=("$1") ;;
+          *) swift_targets+=("./$1") ;;
+        esac
+      fi
+      ;;
+  esac
+}
+
 if [ ${#files[@]} -gt 0 ]; then
   for f in "${files[@]}"; do
-    case "${f}" in
-      *.swift)
-        if [ -f "${f}" ]; then
-          swift_targets+=("${f}")
-        fi
-        ;;
-    esac
+    add_swift_target "${f}"
   done
 elif git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  while IFS= read -r f; do
-    if [ -f "${f}" ]; then
-      swift_targets+=("${f}")
-    fi
-  done < <(git ls-files --cached --others --exclude-standard -- '*.swift')
+  while IFS= read -r -d '' f; do
+    add_swift_target "${f}"
+  done < <(git -c core.quotePath=off ls-files -z --cached --others --exclude-standard -- '*.swift')
 else
-  while IFS= read -r f; do
-    swift_targets+=("${f}")
-  done < <(find . -path ./.build -prune -o -name '*.swift' -print)
+  while IFS= read -r -d '' f; do
+    add_swift_target "${f}"
+  done < <(find . \( -name .build -o -name .swiftpm -o -name Derived -o -name DerivedData \) -prune \
+    -o -name '*.swift' -print0)
 fi
 
 if [[ "${usage_fix:-false}" == "true" ]]; then

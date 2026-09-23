@@ -20,19 +20,24 @@ The repo's tasks are the interface; the tools behind them are detail.
 | Task | Runs |
 | --- | --- |
 | `setup:deps:install` | `swift package resolve` — `--frozen` fails rather than move `Package.resolved` |
-| `code:format` | dprint and shfmt, then `swift format` with `.config/swift-format.json` over every `.swift` file git does not ignore — rewritten in place under `--fix`, then a strict lint either way |
-| `code:lint` | shellcheck, actionlint, the house linter over every file git does not ignore, then `swiftlint lint --strict` with `.config/swiftlint.yml` over every `.swift` file git does not ignore |
+| `code:format` | dprint and shfmt, then `swift format` with `.config/swift-format.json` over the Swift scope — rewritten in place under `--fix`, then a strict lint either way |
+| `code:lint` | shellcheck, actionlint, the house linter over every file git does not ignore, then `swiftlint lint --strict` with `.config/swiftlint.yml` over the Swift scope |
 | `setup:deps:outdated` | `swift package update --dry-run` |
 | `setup:deps:upgrade` | `swift package update` |
 | `setup:deps:cleanup` | removes `.build/` |
+
+The **Swift scope** is every `.swift` file git tracks or would track, less what
+`.config/swiftlint.yml` excludes — `.build/`, `.swiftpm/`, `Derived/`,
+`DerivedData/` and `*.generated.swift` — so both Swift gates judge the same
+files.
 
 `code:format` without `--fix` is read-only, so it is safe as a gate. The
 pre-commit hook calls `code:format --fix` with the staged files, so only those
 are formatted — and the strict lint that follows the rewrite runs over the same
 files, so a finding the formatter cannot fix fails the commit rather than CI.
 The hook calls `code:lint --fix` with the staged files too, but lint ignores
-the list: the house linter's rules read across files and SwiftLint follows its
-config, so both always take the whole tree.
+the list: the house linter's rules read across files, so it always takes every
+file git does not ignore, and SwiftLint always takes the whole Swift scope.
 
 ## Warnings
 

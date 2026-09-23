@@ -29,8 +29,8 @@ tasks pass each explicitly:
 
 | Task | Does |
 | --- | --- |
-| `code:format` | dprint and shfmt, then `swift format` over every `.swift` file git does not ignore (or the staged ones the hook passes) — in place under `--fix`, then a strict lint either way |
-| `code:lint` | shellcheck, actionlint and the house linter, then `swiftlint lint --strict` — both over the whole tree git does not ignore, whatever list the hook passes |
+| `code:format` | dprint and shfmt, then `swift format` over every `.swift` file git does not ignore and SwiftLint does not exclude (or the staged ones the hook passes) — in place under `--fix`, then a strict lint either way |
+| `code:lint` | shellcheck, actionlint and the house linter over every file git does not ignore, then `swiftlint lint --strict` over the same Swift files `code:format` takes — whatever list the hook passes |
 | `setup:deps:install` | `swift package resolve`; `--frozen` refuses to move `Package.resolved` |
 | `setup:deps:audit` | a stated no-op — SwiftPM ships no advisory command |
 | `setup:deps:cleanup` | removes `.build/` |
