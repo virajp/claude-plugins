@@ -10,9 +10,9 @@ backlog: [ B56 ]
 
 ## Status
 
-**APPROVED**
+**ARCHIVED**
 
-APPROVED 2026-09-23 by the user
+ARCHIVED 2026-09-23 — not run; was APPROVED 2026-09-23 by the user
 
 ## Consent
 
