@@ -4,7 +4,7 @@ axis: design
 kind: design-tool
 default: true
 components:
-- design-tool/claude-code@0.2.0
+- design-tool/claude-code@0.3.0
 ---
 
 # Design — Claude Code
