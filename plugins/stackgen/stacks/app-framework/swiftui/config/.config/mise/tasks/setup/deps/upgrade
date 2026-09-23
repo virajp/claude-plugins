@@ -18,6 +18,21 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 #
 # One step, so no header: whatever called it — `setup:deps:all`, or a person —
 # frames it.
+#
+# Xcode is not mise's and Tuist is missing until `mise install` has run, so
+# both are checked first, as `setup:deps:install` checks them.
+
+if ! command -v xcodebuild >/dev/null 2>&1; then
+  print_error "setup:deps:upgrade: xcodebuild is not on PATH."
+  print_yellow "Install Xcode, select it with xcode-select, then re-run."
+  exit 1
+fi
+
+if ! command -v tuist >/dev/null 2>&1; then
+  print_error "setup:deps:upgrade: tuist is not on PATH."
+  print_yellow "Run mise install, which installs the Tuist this repo pins, then re-run."
+  exit 1
+fi
 
 tuist install --update
 tuist generate --no-open

@@ -19,8 +19,8 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # `tuist test` generates the project, picks a simulator for the target's
 # platform and runs xcodebuild. Selective testing is off: it skips a target
 # whose inputs have not changed since a passing run, and a golden run that
-# skips is a golden run that judged nothing. Inspect mode is off: this run's
-# images stay on this machine.
+# skips is a golden run that judged nothing. Inspect mode is off: the result
+# bundle, screenshots included, is not uploaded to a Tuist server.
 #
 # The record mode reaches the test process through xcodebuild, which strips the
 # `TEST_RUNNER_` prefix from any variable carrying it and hands the rest to the

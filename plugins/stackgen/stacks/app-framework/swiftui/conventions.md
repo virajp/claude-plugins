@@ -36,8 +36,9 @@ the project and fails before a build starts. Tuist itself is mise's, pinned in
 **No pack lands `Project.swift`, `Tuist.swift` or `Package.swift`.** `tuist
 init` creates them, and the repo owns them from then on. The generated
 `.xcodeproj`, `.xcworkspace` and `Derived/` are output: never edited by hand,
-never committed — a change to the project is a change to `Project.swift`,
-followed by a regeneration.
+and kept out of git — the repo's `.gitignore` must list all three, since no
+pack ignores the first two yet. A change to the project is a change to
+`Project.swift`, followed by a regeneration.
 
 **One project, several surfaces.** An app declares whichever of iPhone, iPad,
 Mac, CarPlay, Watch, TV and Vision it ships as destinations of its targets —
@@ -67,7 +68,7 @@ byte; the ones below that name Tuist are this pack's own.
 | `code:lint` | shellcheck and actionlint over the staged files, the house linter over every file git does not ignore, then `swiftlint lint --strict` over the same Swift scope |
 | `setup:deps:install` | fails fast when `xcodebuild` or `tuist` is missing, then `tuist install` and `tuist generate --no-open`; `--frozen` refuses to move `Package.resolved` |
 | `setup:deps:audit` | a stated no-op — SwiftPM ships no advisory command |
-| `setup:deps:cleanup` | `tuist clean dependencies` — this project's checkouts, never Tuist's shared caches — then removes `.build/` and `Derived/` |
+| `setup:deps:cleanup` | `tuist clean dependencies` — this project's checkouts, never Tuist's shared caches — then removes `.build/`, `Tuist/.build/` and `Derived/` |
 | `setup:deps:outdated` | `swift package update --dry-run` against `Tuist/Package.swift`, or a root `Package.swift` |
 | `setup:deps:upgrade` | `tuist install --update`, then `tuist generate --no-open` |
 | `test:golden` | the snapshot test target — `SnapshotTests`, or `--target` — through `tuist test`, comparing against the recorded goldens; `--record` records afresh, then compares |

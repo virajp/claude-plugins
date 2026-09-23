@@ -31,9 +31,10 @@ run boots and shuts itself. Never drive a simulator interactively.
 
 1. **Resolve the viewport** for each changed screen's platform:
    `design.viewports.<project>.<platform>` in `.config/vwf.yaml` when it is
-   set, otherwise the platform's default — the device the project's snapshot
-   tests already render for that platform. Name the viewport you used in every
-   finding; a golden rendered at another size is not evidence for this one.
+   set, otherwise the platform default the vwf UX reviewer resolves from its
+   own viewport table and passes in with the screens — never a size read back
+   from the goldens, which is what is being judged. Name the viewport you used
+   in every finding; a golden rendered at another size is not evidence for this one.
 2. **Visual** — run the repo's golden task, `mise run test:golden` (read the
    task list rather than assuming; a repo may name its snapshot target with
    `--target`). Never pass `--record`: recording overwrites the goldens the
@@ -46,7 +47,9 @@ run boots and shuts itself. Never drive a simulator interactively.
 3. **Accessibility** — run the accessibility audit Xcode offers:
    `XCUIApplication.performAccessibilityAudit()`, in the project's UI test
    target, over each changed screen an audit test reaches — run with
-   `tuist test --no-selective-testing --test-targets <that target>`. Each audit
+   `tuist test --no-selective-testing --inspect-mode off --test-targets <that target>`,
+   inspect mode off so the result bundle, screenshots and all, is never
+   uploaded to a Tuist server. Each audit
    issue — contrast, element description, hit region,
    Dynamic Type clipping, trait — is the equivalent of a WCAG A/AA violation;
    report it at that severity so vwf can apply one rule across every stack. A
