@@ -53,9 +53,11 @@ dependency, run by the repo's `test:golden` task. The task checks that
 snapshot target alone — its `--target` flag names another — with selective
 testing off, because a golden run that skips an unchanged target judged
 nothing. It compares with recording off, so a view with no golden fails rather
-than quietly recording one. A failed comparison leaves the reference, the new
-render and their diff under `.build/snapshot-artifacts/`, emptied at the start
-of each run so what is there is that run's.
+than quietly recording one. On a failed comparison the three images live in
+three places: the reference is the committed file under the test's
+`__Snapshots__` directory, the new render lands under
+`.build/snapshot-artifacts/` — emptied at the start of each run, so what is
+there is that run's — and the diff is an attachment in the test result bundle.
 
 - **One golden per screen state** the flow's Screens contract names — empty,
   loading, loaded, error, and each variant the contract pins — rendered with
@@ -75,10 +77,16 @@ of each run so what is there is that run's.
   assertion it records, so the recording pass's own result means nothing.
   Recording is never left on in a committed test, and a changed reference
   image is reviewed in the diff like code.
-- **One simulator, one OS.** References are only comparable when recorded and
-  verified on the same simulator model and OS version — which is what the
-  Xcode pin (see [build & signing](build-and-signing.md)) guarantees. A new
-  Xcode re-records in its own change.
+- **One simulator, one OS.** A golden is pixels from one simulator: another
+  device or OS version renders differently, and every comparison against it
+  fails. The Xcode pin (see [build & signing](build-and-signing.md)) fixes the
+  toolchain but neither the device nor the runtime, and left to itself Tuist
+  picks a simulator on the machine it runs on. So goldens are recorded and
+  compared on one named simulator and OS, pinned once in the repo's mise
+  `[env]` through `TUIST_TEST_DEVICE` and `TUIST_TEST_OS` — plus
+  `TUIST_TEST_PLATFORM` for a target with several destinations — or passed to
+  `test:golden` as `--device` and `--os`. Moving either, or moving Xcode,
+  re-records in its own change.
 - **A platform the library cannot render is a stated gap.** Where there is no
   image strategy for a platform's views, say so in the gate's report; never
   count the absence as a pass.
