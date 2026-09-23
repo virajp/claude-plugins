@@ -28,18 +28,19 @@ The repo's tasks are the interface; the tools behind them are detail.
 
 The **Swift scope** is every `.swift` file git tracks or would track, less the
 trees the shipped `.config/swiftlint.yml` excludes, at any depth — `.build/`,
-`.swiftpm/`, `Derived/`, `DerivedData/` and `*.generated.swift` — so both Swift
-gates judge the same files. The tasks hold that list themselves: an
+`.swiftpm/`, `Derived/`, `DerivedData/` and `*.generated.swift` — so both
+Swift gates judge the same files. The tasks hold that list themselves: an
 `excluded:` entry you add to the config reaches SwiftLint, which is passed
 `--force-exclude`, but not `code:format`.
 
 `code:format` without `--fix` is read-only, so it is safe as a gate. The
 pre-commit hook calls `code:format --fix` with the staged files, so only those
-are formatted — and the strict lint that follows the rewrite runs over the same
-files, so a finding the formatter cannot fix fails the commit rather than CI.
-The hook calls `code:lint --fix` with the staged files too, but lint ignores
-the list: the house linter's rules read across files, so it always takes every
-file git does not ignore, and SwiftLint always takes the whole Swift scope.
+are formatted — and the strict lint that follows the rewrite runs over the
+same files, so a finding the formatter cannot fix fails the commit rather than
+CI. The hook calls `code:lint --fix` with the staged files too, but lint
+ignores the list: the house linter's rules read across files, so it always
+takes every file git does not ignore, and SwiftLint always takes the whole
+Swift scope.
 
 ## Warnings
 

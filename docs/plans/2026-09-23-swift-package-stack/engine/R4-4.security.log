@@ -1,0 +1,2 @@
+security-review engine, R4 round 4, range db9da892..3d1b7f12 (focus 3d1b7f12)
+NO FINDINGS. --deduplicate on three ls-files calls; output stays NUL-terminated (git 2.54: paths with space and newline intact); flag only drops duplicates; ./ prefix, read -d '' loops and core.quotePath=off unchanged. Markdown rewording out of scope.
