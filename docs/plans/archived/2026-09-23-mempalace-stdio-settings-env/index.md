@@ -10,10 +10,9 @@ backlog: []
 
 ## Status
 
-**RUNNING**
+**COMPLETE**
 
-RUNNING since 2026-09-23 in
-.claude/worktrees/2026-09-23-mempalace-stdio-settings-env
+COMPLETE 2026-09-23 — 565fe128 6ada9044 08c22022 ea02abbc
 
 ## Consent
 
@@ -155,12 +154,12 @@ none.
 
 ## Units
 
-| Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                                                                    | Depends on | Status  | Commit   |
-| -- | ---- | -------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
-| U1 | 1    | [01-manifest.md](01-manifest.md)             | edit | `plugins/vwf/.claude-plugin/plugin.json` (the `mempalace` entry only), `scripts/src/check.ts` (the comment at `:1993-1997` only)                                                                                        | —          | green   | 565fe128 |
-| U2 | 1    | [02-vwf-skills.md](02-vwf-skills.md)         | edit | `plugins/vwf/skills/mempalace/SKILL.md`, `plugins/vwf/skills/mempalace-recall/SKILL.md`, `plugins/vwf/vendor/mempalace/README.md`, `plugins/vwf/assets/memory.md`, `plugins/vwf/skills/setup/references/memory-tree.md` | —          | green   | 6ada9044 |
-| U3 | 2    | [03-docs.md](03-docs.md)                     | edit | `readme.md`, `CLAUDE.md`, `.claude/docs/**`, `.claude/skills/vwf-plugin/**`, `.claude/agents/target-verifier.md`, `site/src/content/docs/**`, `docs/memory/decisions/2026-09-23-mempalace-stdio-settings-env.md`        | U1, U2     | green   | 08c22022 |
-| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md) | edit | `plugins/vwf/.claude-plugin/plugin.json` (the `version` only), `site/package.json`, `.claude-plugin/marketplace.json` (regenerated)                                                                                     | U3         | pending |          |
+| Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                                                                    | Depends on | Status | Commit   |
+| -- | ---- | -------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ | -------- |
+| U1 | 1    | [01-manifest.md](01-manifest.md)             | edit | `plugins/vwf/.claude-plugin/plugin.json` (the `mempalace` entry only), `scripts/src/check.ts` (the comment at `:1993-1997` only)                                                                                        | —          | green  | 565fe128 |
+| U2 | 1    | [02-vwf-skills.md](02-vwf-skills.md)         | edit | `plugins/vwf/skills/mempalace/SKILL.md`, `plugins/vwf/skills/mempalace-recall/SKILL.md`, `plugins/vwf/vendor/mempalace/README.md`, `plugins/vwf/assets/memory.md`, `plugins/vwf/skills/setup/references/memory-tree.md` | —          | green  | 6ada9044 |
+| U3 | 2    | [03-docs.md](03-docs.md)                     | edit | `readme.md`, `CLAUDE.md`, `.claude/docs/**`, `.claude/skills/vwf-plugin/**`, `.claude/agents/target-verifier.md`, `site/src/content/docs/**`, `docs/memory/decisions/2026-09-23-mempalace-stdio-settings-env.md`        | U1, U2     | green  | 08c22022 |
+| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md) | edit | `plugins/vwf/.claude-plugin/plugin.json` (the `version` only), `site/package.json`, `.claude-plugin/marketplace.json` (regenerated)                                                                                     | U3         | green  | ea02abbc |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`. Every unit is `edit`; there is no `review` row (decision 7).
@@ -289,9 +288,10 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | —    | acceptance        | —     | 1     | skipped     | why: no `covers:` — no blueprint slice, no acceptance criteria                                                                                                                                                                                                                                                                        | —        |
 | —    | ux                | —     | 1     | skipped     | why: no `covers:` — no Screens contract                                                                                                                                                                                                                                                                                               | —        |
 | —    | reconcile         | —     | 1     | skipped     | why: no `covers:` — no stamps, registry or harness to reconcile; no `code` unit, nothing to persist                                                                                                                                                                                                                                   | —        |
-| 3    | U4 gates and bump | opus  | 1     | pass        | node edit; site 1.1.40→1.1.41 via `p:site:version`, vwf 19.43.1→19.43.2 by hand, marketplace regenerated (pins `vwf-v19.43.2`); wave gate 9/9 green in-unit; DECIDED none; GAP none                                                                                                                                                   | —        |
+| 3    | U4 gates and bump | opus  | 1     | pass        | node edit; site 1.1.40→1.1.41 via `p:site:version`, vwf 19.43.1→19.43.2 by hand, marketplace regenerated (pins `vwf-v19.43.2`); wave gate 9/9 green in-unit; DECIDED none; GAP none                                                                                                                                                   | ea02abbc |
 | 3    | R3                | opus  | 1     | pass        | FINDINGS 0; CONTRACT clean; RULINGS clean; versions match Consent, marketplace diff is the generator's                                                                                                                                                                                                                                | —        |
 | 3    | smoke             | —     | 1     | pass        | orchestrator stdio smoke test after the bump: palace `$HOME/.local/share/mempalace`, no `~` dir                                                                                                                                                                                                                                       | —        |
+| —    | reconcile         | —     | 1     | pass        | final wave gate 9/9 over the finished tree (code:precommit green on 2nd pass — each first pass only reflows the orchestrator's Run log edits); orchestrator gate: stdio smoke test passed after waves 1 and 3                                                                                                                         | —        |
 
 ## Launch
 
