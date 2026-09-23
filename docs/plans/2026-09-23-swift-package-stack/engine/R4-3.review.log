@@ -1,0 +1,9 @@
+code-review engine (high), R4 round 3, focus cd378221; range db9da892..cd378221
+
+1. .../language/swift/config/.config/mise/tasks/code/format:68 — during an unresolved merge git ls-files --cached lists each conflicted path once per stage; no dedupe, so swift format format --in-place --parallel gets the file up to 3x (race, possible corruption); swiftlint (lint:156) reports each finding 3x. Fix: --deduplicate or sort -zu.
+2. .../tasks/code/format:49 (also format:72, lint:149, lint:160) — Swift exclusions hard-coded four times, not read from .config/swiftlint.yml; a user excluded: entry is honoured by swiftlint only; lists already differ (task drops .build/.swiftpm at any depth, swiftlint.yml at root only).
+3. plugins/stackgen/stacks/language/swift/conventions.md:33 — says code:lint's swiftlint runs over the same files code:format takes, whatever list the hook passes; false in hook mode (format staged only, lint whole scope); contradicts build-and-run.md:38-40.
+4. .../skills/swift/references/build-and-run.md:29 — defines the Swift scope as git list less what swiftlint.yml excludes; tasks subtract their own hard-coded list.
+5. .../tasks/code/lint:130 — every tracked path of any type becomes a one-file glob for the house linter; type filter applied only to metachar names; wasted walk/match, large argv.
+6. .../tasks/code/lint:125 — metachar names passed as plain paths bring back ESLint's "File ignored because of a matching ignore pattern" warning for files under built-in or linter.yaml ignores (.claude/**/*.md, .github/**/*.md, **/archived/**); comment claims no warning.
+7. .../tasks/code/lint:160 — non-git find fallback for swiftlint scope has no -type f / [ -f ]; format filters with -f; a dir named Foo.swift/ splits the gates.

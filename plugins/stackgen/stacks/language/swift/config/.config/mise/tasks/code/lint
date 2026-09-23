@@ -130,7 +130,7 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
         lint_targets+=("./${path%?}[${path: -1}]")
         ;;
     esac
-  done < <(git -c core.quotePath=off ls-files -z --cached --others --exclude-standard)
+  done < <(git -c core.quotePath=off ls-files -z --deduplicate --cached --others --exclude-standard)
 fi
 
 if [ "${in_git}" = "false" ] || [ "${#lint_targets[@]}" -gt 0 ]; then
@@ -153,7 +153,7 @@ if [ "${in_git}" = "true" ]; then
         fi
         ;;
     esac
-  done < <(git -c core.quotePath=off ls-files -z --cached --others --exclude-standard -- '*.swift')
+  done < <(git -c core.quotePath=off ls-files -z --deduplicate --cached --others --exclude-standard -- '*.swift')
 else
   while IFS= read -r -d '' swift_file; do
     swift_scope+=("${swift_file}")
