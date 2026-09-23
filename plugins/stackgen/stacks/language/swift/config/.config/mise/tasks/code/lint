@@ -1,0 +1,180 @@
+#!/usr/bin/env bash
+
+#MISE description="Lint the repo's files"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to lint (default: the whole repo)"
+
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Two gates over two kinds of file: the house linter takes the repo's config
+# files, and SwiftLint takes the Swift sources. Both run whole-tree even when a
+# file list is given, and "whole tree" means every file git tracks or would
+# track — neither tool reads `.gitignore`, and SwiftPM writes JSON and Swift
+# under `.build/` that is the build's output, not the repo's. SwiftLint reads
+# `.config/swiftlint.yml`, passed explicitly. `--strict` turns a warning into a
+# failure: a warning nobody has to fix is a warning that accumulates.
+#
+# `--fix` reaches the house linter only. SwiftLint's own autocorrect rewrites
+# layout, and layout is swift-format's — two tools rewriting one file disagree,
+# and a lint gate that rewrites cannot be run read-only.
+#
+# This task is also the repo's linting HOOK: the pre-commit gate calls
+# `code:lint --fix <files>` rather than a linter binary, so every tool a commit
+# lints with is configured once, here. That is why it takes an optional file
+# list — the hook passes the staged files, a person passes nothing and gets the
+# whole tree.
+
+files=()
+eval "files+=(${usage_files:-})"
+
+args=()
+if [[ "${usage_debug:-false}" == "true" ]]; then
+  args+=(--debug)
+fi
+if [[ "${usage_fix:-false}" == "true" ]]; then
+  args+=(--fix)
+fi
+
+print_header "Linting files ..."
+
+# The toolchain manager's two shipped defaults, and an overlay keeps them: a
+# commit gets whatever this task does, so a tool that drops out of it stops
+# running at all. Each costs nothing when its binary is absent or nothing in
+# scope is its file type.
+#
+# `-x` follows the sourced `_scripts/` libraries, so they are analysed the way
+# their callers actually see them.
+if command -v shellcheck >/dev/null 2>&1; then
+  shell_scope=()
+  while IFS= read -r shell_file; do
+    if [ -n "${shell_file}" ]; then
+      shell_scope+=("${shell_file}")
+    fi
+  done < <(shell_files_in_scope ${files[@]+"${files[@]}"})
+
+  if [ "${#shell_scope[@]}" -gt 0 ]; then
+    print_subheader "Checking shell scripts ..."
+    shellcheck -x "${shell_scope[@]}"
+  fi
+fi
+
+# actionlint wants the workflows, so the scope is filtered to them and it is
+# skipped when none is in scope.
+if command -v actionlint >/dev/null 2>&1; then
+  workflow_scope=()
+  if [ "${#files[@]}" -gt 0 ]; then
+    for candidate in "${files[@]}"; do
+      case "${candidate}" in
+        .github/workflows/*.yml | .github/workflows/*.yaml)
+          if [ -f "${candidate}" ]; then
+            workflow_scope+=("${candidate}")
+          fi
+          ;;
+      esac
+    done
+  else
+    while IFS= read -r workflow; do
+      if [ -n "${workflow}" ]; then
+        workflow_scope+=("${workflow}")
+      fi
+    done < <(git -C "${MISE_PROJECT_ROOT}" ls-files '.github/workflows/*.yml' '.github/workflows/*.yaml' 2>/dev/null || true)
+  fi
+
+  if [ "${#workflow_scope[@]}" -gt 0 ]; then
+    print_subheader "Checking workflows ..."
+    actionlint "${workflow_scope[@]}"
+  fi
+fi
+
+# The house linter's rules read across files — an unused export, a duplicate
+# key against its neighbours — so a staged subset would change its verdict
+# rather than narrow it. It takes the whole tree even when a file list is
+# given.
+#
+# The linter has no `.gitignore` support and no negated targets, so the tree is
+# handed to it as the list git gives — tracked files plus untracked ones git
+# does not ignore, read NUL-separated with quoting off so no name is mangled —
+# and an ignored path at any depth is never named. Every path is prefixed `./`,
+# so a name opening with `-` is never read as an option.
+#
+# Most paths go in as a one-file glob, the last character in brackets: a glob
+# matching a file the linter's own ignores cover, or a type it has no rules
+# for, is skipped silently, where a plain path prints a warning for it. A name
+# holding a glob metacharacter cannot be spelled that way, so it goes in as a
+# plain path — the linter treats an existing file as a file, whatever its name
+# — and only when its type is one the linter has rules for, so it cannot warn
+# about a type it never lints. Outside a git work tree there is no list, and
+# the linter walks the tree itself.
+lint_targets=()
+in_git=false
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  in_git=true
+  while IFS= read -r -d '' path; do
+    case "${path}" in
+      *[][*?{}\(\)!+@\\]*)
+        case "${path}" in
+          *.js | *.mjs | *.cjs | *.jsx | *.ts | *.mts | *.cts | *.tsx | *.astro | \
+            *.css | *.html | *.json | *.jsonc | *.md | *.toml | *.yaml | *.yml)
+            lint_targets+=("./${path}")
+            ;;
+        esac
+        ;;
+      *)
+        lint_targets+=("./${path%?}[${path: -1}]")
+        ;;
+    esac
+  done < <(git -c core.quotePath=off ls-files -z --deduplicate --cached --others --exclude-standard)
+fi
+
+if [ "${in_git}" = "false" ] || [ "${#lint_targets[@]}" -gt 0 ]; then
+  print_subheader "Linting config files ..."
+  pnpm dlx @askviraj/linter ${args[@]+"${args[@]}"} ${lint_targets[@]+"${lint_targets[@]}"}
+fi
+
+# The same list, narrowed to Swift, is SwiftLint's — each path prefixed `./`,
+# so a committed name like `--output=…` can never reach it as an option. The
+# trees and files `.config/swiftlint.yml` excludes are left out here too, and
+# `--force-exclude` still applies the config's `excluded` to a named path.
+swift_scope=()
+if [ "${in_git}" = "true" ]; then
+  while IFS= read -r -d '' swift_file; do
+    case "/${swift_file}" in
+      */.build/* | */.swiftpm/* | */Derived/* | */DerivedData/* | *.generated.swift) ;;
+      *)
+        if [ -f "${swift_file}" ]; then
+          swift_scope+=("./${swift_file}")
+        fi
+        ;;
+    esac
+  done < <(git -c core.quotePath=off ls-files -z --deduplicate --cached --others --exclude-standard -- '*.swift')
+else
+  while IFS= read -r -d '' swift_file; do
+    swift_scope+=("${swift_file}")
+  done < <(find . \( -name .build -o -name .swiftpm -o -name Derived -o -name DerivedData \) -prune \
+    -o -name '*.swift' ! -name '*.generated.swift' -print0)
+fi
+
+# SwiftLint exits 1 with "No lintable files" when it has nothing to lint — a
+# repo before `swift package init`, or one whose every Swift file the config
+# excludes. That is an empty gate, not a failure, so it is reported and passed.
+if [ "${#swift_scope[@]}" -gt 0 ]; then
+  print_subheader "Linting Swift sources ..."
+  if ! swiftlint_output="$(swiftlint lint --strict --quiet --force-exclude \
+    --config .config/swiftlint.yml "${swift_scope[@]}" 2>&1)"; then
+    if [[ "${swiftlint_output}" == *"No lintable files found"* ]]; then
+      print_yellow "Every Swift file is excluded by .config/swiftlint.yml; nothing to lint."
+    else
+      printf '%s\n' "${swiftlint_output}"
+      exit 1
+    fi
+  elif [ -n "${swiftlint_output}" ]; then
+    printf '%s\n' "${swiftlint_output}"
+  fi
+fi

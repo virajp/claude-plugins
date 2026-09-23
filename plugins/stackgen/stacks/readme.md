@@ -52,6 +52,19 @@ rather than a mistake: `dprint`/`gitleaks`/`grype`/`pre-commit` run over any
 repo and compose into `repo-gate`, while `eslint` and `tsconfig` are
 meaningful for exactly one toolchain and compose into its language bundle.
 
+**The Swift package stack made Swift the fourth language root on 2026-09-23**,
+after TypeScript and the Markdown and Bash pair the `claude-code-plugin`
+bundle composes. `swift-package`, `platforms: [packages]`, pins four packs:
+`language/swift` (the root, declaring `sourcekit-lsp` and `binaries: [swift]`,
+since the toolchain is the host's), `package-manager/swiftpm` (doctrine only,
+no `config/` tier), `toolchain-gate/swift-format` and `toolchain-gate/swiftlint`
+— two more gates meaningful for one toolchain. swift-format ships with the
+toolchain; SwiftLint is pinned through mise by the `conf.d/swiftlint.toml`
+its pack lands. `language/swift` owns the tasks, which take their file list
+from git, NUL-separated and `./`-prefixed, and skip SwiftLint when no Swift
+source is in scope. No pack lands `Package.swift`: `swift package init`
+creates it.
+
 **Wave C — `app-framework/flutter`**, kind `app-framework`, with
 `package-manager/pub` and `toolchain-gate/analysis-options`. The one bundle
 whose root is not a language: Flutter owns the manifest and the build, so Dart

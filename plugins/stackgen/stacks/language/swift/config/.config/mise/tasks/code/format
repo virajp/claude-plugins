@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+
+#MISE description="Check or format the repo's files"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to format (default: the whole repo)"
+
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Overlays whatever the tiers below wrote. dprint keeps the repo's markdown,
+# YAML and JSON; swift-format, which ships inside the Swift toolchain as
+# `swift format`, takes the Swift sources. With no file list it takes every
+# `.swift` file git tracks or would track — the manifest and any
+# `Package@swift-*.swift` beside it, `Sources/`, `Tests/`, `Plugins/`,
+# examples — and never an ignored tree such as `.build/`, the build's output.
+#
+# swift-format reads `.config/swift-format.json`, passed explicitly: left to
+# itself it searches for a `.swift-format` file beside the sources, and the
+# repo keeps every tool config under `.config/`.
+#
+# This task is what the `format` pre-commit hook calls, which is why it takes an
+# optional file list: the hook passes the staged files, a person passes nothing
+# and gets the whole tree.
+
+files=()
+eval "files+=(${usage_files:-})"
+
+if [[ "${usage_debug:-false}" == "true" ]]; then
+  log_level="debug"
+else
+  log_level="warn"
+fi
+
+# The Swift scope, in every mode, leaves out what `.config/swiftlint.yml`
+# excludes — build output, SwiftPM's and Xcode's derived trees, generated
+# sources — so the two Swift gates judge the same files. Every path is handed
+# over prefixed `./` (or absolute), so a name opening with `-` is never read as
+# an option; git's list is read NUL-separated with quoting off, so no name is
+# mangled or dropped.
+swift_targets=()
+add_swift_target() {
+  case "/$1" in
+    */.build/* | */.swiftpm/* | */Derived/* | */DerivedData/* | *.generated.swift) ;;
+    *.swift)
+      if [ -f "$1" ]; then
+        case "$1" in
+          /* | ./*) swift_targets+=("$1") ;;
+          *) swift_targets+=("./$1") ;;
+        esac
+      fi
+      ;;
+  esac
+}
+
+if [ ${#files[@]} -gt 0 ]; then
+  for f in "${files[@]}"; do
+    add_swift_target "${f}"
+  done
+elif git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  while IFS= read -r -d '' f; do
+    add_swift_target "${f}"
+  done < <(git -c core.quotePath=off ls-files -z --deduplicate --cached --others --exclude-standard -- '*.swift')
+else
+  while IFS= read -r -d '' f; do
+    add_swift_target "${f}"
+  done < <(find . \( -name .build -o -name .swiftpm -o -name Derived -o -name DerivedData \) -prune \
+    -o -name '*.swift' -print0)
+fi
+
+if [[ "${usage_fix:-false}" == "true" ]]; then
+  action="fmt"
+else
+  action="check"
+fi
+
+print_header "Formatting files ..."
+
+print_subheader "Formatting with dprint ..."
+dprint "${action}" \
+  --config .config/dprint.json \
+  --allow-no-files \
+  --log-level "${log_level}" \
+  ${files[@]+"${files[@]}"}
+
+# The toolchain manager's shipped default, and an overlay keeps it: a commit
+# gets whatever this task does, so a tool that drops out of it stops running at
+# all. Silent when the binary is absent, and silent when nothing in scope is
+# shell. The flags match the ones the shell gate checks with, so formatting
+# here and checking there cannot disagree.
+if command -v shfmt >/dev/null 2>&1; then
+  shell_scope=()
+  while IFS= read -r shell_file; do
+    if [ -n "${shell_file}" ]; then
+      shell_scope+=("${shell_file}")
+    fi
+  done < <(shell_files_in_scope ${files[@]+"${files[@]}"})
+
+  if [ "${#shell_scope[@]}" -gt 0 ]; then
+    print_subheader "Formatting shell scripts ..."
+    if [ "${action}" = "fmt" ]; then
+      shfmt -w -i 2 -ci "${shell_scope[@]}"
+    else
+      # `-d` reports a diff and fails rather than rewriting, so a read-only run
+      # stays read-only.
+      shfmt -d -i 2 -ci "${shell_scope[@]}"
+    fi
+  fi
+fi
+
+# `swift format format --in-place` rewrites what it can and exits 0 even when a
+# finding is one it cannot fix, so under `--fix` the strict lint runs after it
+# over the same files. Without that, the hook would pass a file the read-only
+# gate then fails. `--strict` makes a finding fail the run rather than print a
+# warning and exit 0.
+if [ ${#swift_targets[@]} -gt 0 ]; then
+  print_subheader "Formatting Swift sources ..."
+  if [ "${action}" = "fmt" ]; then
+    swift format format --in-place \
+      --configuration .config/swift-format.json \
+      --parallel \
+      "${swift_targets[@]}"
+  fi
+  swift format lint --strict \
+    --configuration .config/swift-format.json \
+    --parallel \
+    "${swift_targets[@]}"
+fi

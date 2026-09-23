@@ -7,13 +7,13 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 `../assets/kinds.md`. The narrative — which wave landed what, and why — is
 [`readme.md`](readme.md); the shape of a pack is `../assets/pack-format.md`.
 
-**70 packs, 66 bundles, 13 kinds.**
+**74 packs, 67 bundles, 13 kinds.**
 
 ## Kinds
 
 | Kind | Packs | Bundles |
 | ---- | ----: | ------: |
-| `language-bundle` | 12 | 14 |
+| `language-bundle` | 16 | 15 |
 | `database` | 1 | 1 |
 | `cloud-provider` | 31 | 26 |
 | `repo-gate` | 4 | 1 |
@@ -84,9 +84,11 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `framework/html` | HTML | `language-bundle` | project | document |  | 0.1.0 | A hand-authored HTML5 page tree with plain CSS and ES-module JavaScript as the whole of a static site — no framework, no components, no content model; Vite serves it in development and builds it into `./dist`, with a copy-only build as the documented opt-out. It also carries the head doctrine every page states itself through — title, description, canonical, icons, sitemap and structured data, repeated per page since no layout owns them — and lands the one task that rasterizes the favicon set from the product's mark. |
 | `language/bash` | Bash | `language-bundle` | project |  |  | 0.1.0 | Shell as a project's incidental second language — the hook scripts and small executables a markdown-authored project ships, held to portability and exit-code discipline rather than to a toolchain. |
 | `language/markdown` | Markdown | `language-bundle` | project |  |  | 0.1.0 | Markdown as a project's own language — the case where prose with frontmatter is the deliverable rather than documentation beside one, and the toolchain is the repo axis's rather than the language's. |
+| `language/swift` | Swift | `language-bundle` | project |  |  | 0.1.0 | The Swift package baseline — standards and public-API design, the error model, strict concurrency, Swift Testing, build and run, config and observability wiring. |
 | `language/typescript` | TypeScript | `language-bundle` | project |  |  | 0.1.0 | The Node/TypeScript language baseline — standards, error semantics, the async model, testing, build and run, config and observability wiring. |
 | `package-manager/pnpm` | pnpm | `language-bundle` | repo |  |  | 0.3.0 | Dependency installation, locking and workspace layout for the Node ecosystem — the manifest contract and the monorepo shape. |
 | `package-manager/pub` | pub | `app-framework` | repo |  |  | 0.1.0 | Dependency declaration and locking for a Flutter app — pubspec.yaml, which also carries the SDK constraints and native package-manager config. |
+| `package-manager/swiftpm` | SwiftPM | `language-bundle` | repo |  |  | 0.1.0 | Dependency declaration, resolution and locking for a Swift package — Package.swift as the manifest, Package.resolved as the lockfile, .build/ as the one build tree. |
 | `package-manager/uv` | uv | `language-bundle` | repo |  |  | 0.1.0 | Dependency resolution, locking, virtualenv management and process running for Python — one tool where the ecosystem historically had four. |
 | `repo-hygiene/repo-hygiene` | Repo hygiene | `repo-hygiene` | repo |  |  | 1.2.1 | The files a repository needs before it has a stack — the ignore set, the editor and attribute defaults, the licence and the security contact, and the dependency-update policy. |
 | `stylesheet/plain-css` | Plain CSS | `stylesheet` | stylesheet | plain |  | 0.1.0 | The design system's roles as CSS custom properties and hand-authored rules in cascade layers — no build step of its own, no generated classes, and nothing between the contract and the browser. |
@@ -99,6 +101,8 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `toolchain-gate/grype` | grype | `repo-gate` | repo |  |  | 1.0.1 | The repo's dependency vulnerability scanner — source per commit, artifact before release, ignores time-boxed. Ships .config/grype.yaml. |
 | `toolchain-gate/pre-commit` | pre-commit | `repo-gate` | repo |  |  | 1.1.5 | The local gate, and the wiring that makes local and CI run the identical command. Ships .config/pre-commit-config.yaml and .config/git-conventional-commits.yaml. |
 | `toolchain-gate/ruff` | Ruff | `language-bundle` | repo |  |  | 0.3.0 | The lint and format gate for Python — one tool for both halves, run through the project's uv environment rather than a global install. |
+| `toolchain-gate/swift-format` | swift-format | `language-bundle` | repo |  |  | 0.1.0 | The Swift formatter — swift-format, built into the toolchain as `swift format`, configured once under .config/. |
+| `toolchain-gate/swiftlint` | SwiftLint | `language-bundle` | repo |  |  | 0.1.0 | The correctness gate for Swift — SwiftLint through mise, strict, with every layout rule left to swift-format. |
 | `toolchain-gate/tsconfig` | tsconfig | `language-bundle` | project |  |  | 0.2.0 | The TypeScript compiler configuration — a strict shared base, per-project configs, the path alias and the emit variant. |
 | `toolchain-manager/mise` | mise | `toolchain-manager` | repo |  |  | 1.6.0 | The repo's toolchain manager — the .config/ five-file split selected by MISE_ENV, and the file-based task library everything else invokes, grouped into `setup:*` for bootstrap, `code:*` for gates and git, and `p:<project-id>:*` for a project's own commands. |
 
@@ -162,6 +166,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `repo-hygiene` | repo-hygiene | `repo-hygiene` | repo | `repo-hygiene/repo-hygiene@1.2.1` | yes |
 | `stitch` | Google Stitch | `design-tool` | design | `design-tool/stitch@0.1.0` |  |
 | `stylex` | StyleX | `stylesheet` | stylesheet | `stylesheet/stylex@0.1.0` |  |
+| `swift-package` | Swift · package | `language-bundle` | project | `language/swift@0.1.0`, `package-manager/swiftpm@0.1.0`, `toolchain-gate/swift-format@0.1.0`, `toolchain-gate/swiftlint@0.1.0` |  |
 | `tailwindcss` | Tailwind CSS | `stylesheet` | stylesheet | `stylesheet/tailwindcss@0.1.0` |  |
 | `temporal` | Temporal | `capability-provider` | backing | `capability-provider/temporal@0.1.0` |  |
 | `typescript-cloudflare-agents` | TypeScript · Cloudflare Agents · Effect | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.0`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.0`, `framework/effect@0.1.0`, `framework/cloudflare-agents@0.1.0` |  |

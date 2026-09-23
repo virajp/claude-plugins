@@ -1,0 +1,28 @@
+name: Swift
+summary: The Swift package baseline — standards and public-API design, the
+  error model, strict concurrency, Swift Testing, build and run, config and
+  observability wiring.
+version: 0.1.0
+type: language
+kind: language-bundle
+axis: project
+platforms: [ packages ]
+languages:
+  - token: swift
+    facts:
+      lsp: >-
+        sourcekit-lsp, shipped with the Swift toolchain; declared by this pack
+        as `sourcekit-lsp` and provisioned via the generated local plugin
+      mise_tool: >-
+        n/a — the Swift toolchain (swift.org or Xcode) provides swift, swift
+        format and sourcekit-lsp
+      manifest: Package.swift
+      binaries: [ swift ]
+lsp_servers:
+  sourcekit-lsp:
+    command: mise
+    args: [ x, --, sourcekit-lsp ]
+    extensionToLanguage:
+      ".swift": swift
+    startupTimeout: 1000
+harness: n/a

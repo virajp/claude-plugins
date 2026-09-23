@@ -10,11 +10,11 @@ floods no session with every stack's doctrine, because nothing under
 materializer copies it into a repo's `.claude/` tree.
 
 **Every pack in the tree is authored here.** The `toolchain-gate` type ships
-eight packs under `stacks/toolchain-gate/` — `analysis-options`, `dprint`,
-`eslint`, `gitleaks`, `grype`, `pre-commit`, `ruff` and `tsconfig` — and no
-curated plugin stands behind any pack: the tree is each pack's only home.
-This file is the contract every pack is folded into, so an author targets a
-shape the materializer already reads.
+ten packs under `stacks/toolchain-gate/` — `analysis-options`, `dprint`,
+`eslint`, `gitleaks`, `grype`, `pre-commit`, `ruff`, `swift-format`,
+`swiftlint` and `tsconfig` — and no curated plugin stands behind any pack:
+the tree is each pack's only home. This file is the contract every pack is
+folded into, so an author targets a shape the materializer already reads.
 
 ## Layout
 
