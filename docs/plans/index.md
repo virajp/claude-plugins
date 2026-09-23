@@ -6,5 +6,6 @@ to pick the next runnable plan.
 
 ## Plans
 
-| Folder | Kind | Plan | Target repo | Priority | Status | Requires | Backlog |
-| ------ | ---- | ---- | ----------- | -------- | ------ | -------- | ------- |
+| Folder                                           | Kind   | Plan                                                              | Target repo | Priority | Status   | Requires | Backlog |
+| ------------------------------------------------ | ------ | ----------------------------------------------------------------- | ----------- | -------- | -------- | -------- | ------- |
+| docs/plans/2026-09-23-watch-tv-spatial-platforms | change | watch, tv and spatial platforms, and per-product device viewports | —           | 10       | APPROVED | —        | —       |
