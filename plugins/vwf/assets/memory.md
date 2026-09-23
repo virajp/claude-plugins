@@ -21,7 +21,7 @@ mempalace **optional** rather than required:
 | Store         | Path                             | Strength                                             |
 | ------------- | -------------------------------- | ---------------------------------------------------- |
 | **mempalace** | the MCP server                   | semantic search across everything, ranked by meaning |
-| **markdown**  | `docs/memory/<room>/<drawer>.md` | always present, greppable, survives without a daemon |
+| **markdown**  | `docs/memory/<room>/<drawer>.md` | always present, greppable, survives without a server |
 
 **Recall reads mempalace first**, because semantic search finds things a keyword
 never would. When mempalace is unavailable, recall falls back to the markdown
@@ -275,7 +275,7 @@ already captures verbatim.
 **and** `docs/memory/<room>/<drawer>.md` with the same content. The orchestrator
 may additionally use `mempalace_kg_add` for an atomic fact that may later change
 (and `mempalace_kg_invalidate` it when it does) — the knowledge graph has no
-markdown counterpart, so it is the one part that is lost without the daemon.
+markdown counterpart, so it is the one part that is lost without the server.
 
 If mempalace is unreachable, write the markdown side and proceed. If the
 markdown write fails, that is a real error worth surfacing: it is the half that

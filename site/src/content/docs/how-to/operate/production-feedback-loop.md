@@ -100,7 +100,7 @@ back on the spine at [`/vwf:plan`](../../plugins/vwf.md#vwfplan). Relay defers
 instead — the ownership number is due this week, and the re-rank in step 3 is
 what will schedule the fix — so the item lands as a line in the flow doc's Open
 Questions, recording what production does against what the doc promises. That
-line is written whether or not the memory daemon is up, which is the property
+line is written whether or not the memory server is up, which is the property
 that makes deferring safe. [`/vwf:feedback`](../../plugins/vwf.md#vwffeedback).
 
 ### 3. Log the metric reading
@@ -313,7 +313,7 @@ at the screen, or, when the fix cycle is declined, an Open Questions line — so
 the item lives in the same tree as the contract it contradicts, and the next
 [`/vwf:blueprint`](../../plugins/vwf.md#vwfblueprint) or
 [`/vwf:plan`](../../plugins/vwf.md#vwfplan) run over that slice reads it. Memory
-is the fast path, not the record: with the daemon down the routing is unchanged
+is the fast path, not the record: with the server down the routing is unchanged
 and only the recall step is skipped, which is what makes it safe to defer.
 [Memory](../../plugins/vwf.md#memory).
 

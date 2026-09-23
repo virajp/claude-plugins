@@ -84,22 +84,22 @@ the `project` scope as a **degradation** with the remedy, every run, and skips
 the forge-state predicate with a note; init prints the by-hand list and carries
 on.
 
-**The memory server runs as your own daemon.** `vwf` declares mempalace over
-**HTTP** (`http://127.0.0.1:8765/mcp`), not as a stdio subprocess — start it
-with
-`mempalace-mcp --transport http --host 127.0.0.1 --port 8765 --palace "$HOME/.local/share/mempalace"`
-(loopback needs no token), under a process supervisor. Not `mempalace serve`:
-`serve` forks the real server as a child and holds PID 1 itself, so under a
-supervisor the server never sees `SIGTERM`. One daemon serves every agent
-instance at once, survives session restarts, and reconnects instead of dying
-with the session. If you separately install the upstream `mempalace` plugin,
-toggle **its** stdio server off in `/mcp` — two servers writing one palace lose
-each other's local graph state. See [mempalace](./mempalace.md).
+**The memory server is spawned per session.** `vwf` declares mempalace over
+**stdio** — Claude Code runs `mise x -- mempalace-mcp` once per session, so
+there is no daemon to run or supervise. What you install is the `mempalace` tool
+through mise and, for the Qdrant backend, Qdrant; what you configure is the
+`env` block of `~/.claude/settings.json` — `MEMPALACE_BACKEND`,
+`MEMPALACE_QDRANT_URL`, `MEMPALACE_PALACE_PATH` as `~/.local/share/mempalace`
+and `MEMPALACE_MAX_BACKUPS`. Claude passes those values literally, so write the
+path with `~` or absolute, never with `$HOME`. If you separately install the
+upstream `mempalace` plugin, toggle **its** stdio server off in `/mcp` — two
+servers writing one palace lose each other's local graph state. See
+[mempalace](./mempalace.md).
 
-Nothing else about memory needs installing. The two mempalace skills are
-**vendored into `vwf`** (`/vwf:mempalace`, `/vwf:mempalace-recall`) and its
-auto-save hooks are reimplemented here, so memory arrives with the plugin rather
-than depending on anything being reachable at install time.
+Nothing beyond that `env` block needs installing for memory. The two mempalace
+skills are **vendored into `vwf`** (`/vwf:mempalace`, `/vwf:mempalace-recall`)
+and its auto-save hooks are reimplemented here, so memory arrives with the
+plugin rather than depending on anything being reachable at install time.
 
 `vwf` also depends on one plugin — `stackgen` — resolved from the same
 `virajp-plugins` marketplace. Claude Code **auto-installs and auto-enables** it
@@ -201,12 +201,12 @@ adopting it.
   auto-install/enable needs Claude Code ≥ 2.1.143. See
   [Prerequisites](#prerequisites).
 - **Memory is written twice, so mempalace is optional.** Every memory write goes
-  to both `mempalace` (an **HTTP daemon you run** —
-  `mempalace-mcp --transport http`) and a markdown tree under `docs/memory/`.
-  Without the daemon nothing is lost, but recall degrades from semantic search
-  to grep, and says so. `decisions`, `planning`, `gaps` and `problems` are
-  committed; `handoff`, `doctor` and `runs` are gitignored, being one
-  developer's state rather than the team's.
+  to both `mempalace` (a **stdio server each session spawns**, configured in the
+  `env` block of `~/.claude/settings.json`) and a markdown tree under
+  `docs/memory/`. Without the server nothing is lost, but recall degrades from
+  semantic search to grep, and says so. `decisions`, `planning`, `gaps` and
+  `problems` are committed; `handoff`, `doctor` and `runs` are gitignored, being
+  one developer's state rather than the team's.
 - **Leans on review engines.** `execute` runs the `/code-review` and
   `/security-review` engines itself at each review row the plan places, over the
   branch delta since the previous one, and hands their findings to the code- and
@@ -3114,7 +3114,7 @@ mempalace under your project. In a new session:
 `recall` retrieves the handoff, reads the files it points to, summarizes where
 you left off, and offers to run the captured next prompt. Every handoff is
 written to **both** memory stores, so `recall` works with or without the
-mempalace daemon.
+mempalace server.
 
 Beside its format check, before it reads the palace, `recall` also runs a
 **shape check**: `/vwf:doctor baseline`, the named invocation that evaluates the
@@ -3321,7 +3321,7 @@ context is about to be lost. It honours mempalace's own opt-out
 (`MEMPALACE_HOOKS_AUTO_SAVE=false`, or `hooks.auto_save` in
 `~/.mempalace/config.json`), and `MEMPALACE_SAVE_INTERVAL` changes the count.
 
-See **[mempalace](./mempalace.md)** for the daemon, the hooks and what was
+See **[mempalace](./mempalace.md)** for the server, the hooks and what was
 vendored.
 
 ## Code intelligence
@@ -3587,14 +3587,15 @@ rules:
 
 `vwf` declares two, and they are the only MCP servers the workflow needs.
 
-### mempalace — memory, over HTTP
+### mempalace — memory, over stdio
 
-Declared as `type: http` against `http://127.0.0.1:8765/mcp` — a daemon you run
-yourself rather than a stdio subprocess the agent owns. The two skills that
-drive it are vendored into `vwf` under MIT, which is what lets memory ship on
-every target rather than only where a marketplace reaches. Setup, why HTTP, the
-second-server trap and the provenance record are in
-[Prerequisites](#prerequisites) above and [mempalace](./mempalace.md) in full.
+Declared as `type: stdio`, `command: "sh"` running `mise x -- mempalace-mcp` — a
+server Claude Code spawns per session, configured through the `env` block of
+`~/.claude/settings.json`. The two skills that drive it are vendored into `vwf`
+under MIT, which is what lets memory ship on every target rather than only where
+a marketplace reaches. Setup, why stdio, the second-server trap and the
+provenance record are in [Prerequisites](#prerequisites) above and
+[mempalace](./mempalace.md) in full.
 
 ### Context7 — current library docs
 
@@ -3633,7 +3634,7 @@ queries that library's documentation when a question is about a specific library
 - [readme.md](https://github.com/virajp/claude-plugins/blob/main/readme.md) —
   the marketplace overview and the full plugin list.
 - [mempalace](./mempalace.md) — the memory layer behind `/vwf:handoff` and
-  `/vwf:recall`: the daemon, the auto-save hooks, and what was vendored.
+  `/vwf:recall`: the server, the auto-save hooks, and what was vendored.
 - [stackgen](./stackgen.md) — a vwf dependency: the stack plugin that answers
   `/vwf:architecture`'s menu, and the source of the `design-tool` packs
   `/vwf:screens` and `/vwf:design-system` import through, materialized into the

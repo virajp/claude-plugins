@@ -42,8 +42,9 @@ run at all. Scopes and upgrades:
 
 **Then run `/vwf:doctor`.** Nothing is checked at install time, so doctor is
 what tells you whether the binaries vwf shells out to are actually on your
-`PATH` — see [Prerequisites](../../plugins/vwf.md#prerequisites). The memory
-daemon is yours to run.
+`PATH` — see [Prerequisites](../../plugins/vwf.md#prerequisites). For memory,
+set the `MEMPALACE_*` variables in the `env` block of `~/.claude/settings.json`
+— [mempalace](../../plugins/mempalace.md#running-the-server-stdio).
 
 Restart Claude Code, then `cd` into the empty Relay repo.
 

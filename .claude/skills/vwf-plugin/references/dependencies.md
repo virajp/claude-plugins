@@ -147,7 +147,8 @@ auto-enables** these dependencies at the same scope. Key rules:
 
 The memory layer arrives in three pieces, from three different places, and it is
 worth knowing which is which: **the skills are vendored**, **the MCP server is
-declared by vwf**, and **the daemon is a process you run yourself**.
+declared by vwf**, and **its environment is yours to set**, in Claude's
+settings.
 
 **Why vendored rather than depended on.** `mempalace` was a `url`-sourced entry
 and a vwf dependency, and a url-sourced plugin had no rendered bundle for the
@@ -172,48 +173,47 @@ resync must not skip.
 **The auto-save hooks are reimplemented, not vendored** — see Hooks below for
 why upstream's could not be wrapped.
 
-vwf declares its own mempalace server in its `plugin.json` — `"type": "http"`
-against `http://127.0.0.1:8765/mcp` — so the memory layer is a **long-lived
-process you run yourself**, not a stdio subprocess Claude Code owns:
+vwf declares its own mempalace server in its `plugin.json` — `type: "stdio"`,
+`command: "sh"`, and the one argument string `mise x -- mempalace-mcp` — so the
+memory layer is a **subprocess Claude Code spawns per session**, with no daemon
+to run, supervise or restart. The launch line carries **no flags on purpose**: a
+`--palace $MEMPALACE_PALACE_PATH` takes its value verbatim, so a `~` in it
+opened `<cwd>/~/…`, while mempalace expands `~` itself when it reads
+`MEMPALACE_PALACE_PATH` from the environment.
 
-```sh
-mempalace-mcp --transport http --host 127.0.0.1 --port 8765
-```
-
-Not `mempalace serve`: `serve` forks the real server as a child and holds PID 1
-itself, so under a supervisor the server never sees `SIGTERM`. The daemon needs
-no flags: it is configured through `~/.mempalace/config.json` (palace path,
-`backend: qdrant`, the qdrant URL) plus `MEMPALACE_*` environment variables —
-and the precedence **differs by setting**, which is the fact to reach for when
+Its environment is **the `env` block of `~/.claude/settings.json`** —
+`MEMPALACE_BACKEND`, `MEMPALACE_QDRANT_URL`, `MEMPALACE_PALACE_PATH` as
+`~/.local/share/mempalace`, `MEMPALACE_MAX_BACKUPS` — beside
+`~/.mempalace/config.json`. Claude passes those values literally: `$HOME` and
+`${HOME}` are never expanded there, and `~` survives to mempalace, which expands
+it. The precedence **differs by setting**, which is the fact to reach for when
 debugging. The backend choice runs `--backend` flag → config.json →
 `MEMPALACE_BACKEND` → chroma default (**file beats env**); the qdrant connection
 settings run `MEMPALACE_QDRANT_*` → config.json → defaults
-(`http://localhost:6333`, 10 s) (**env beats file**). So the file is what a
-supervised daemon reliably reads for the backend — but a stale
-`MEMPALACE_QDRANT_URL` in the *supervisor's* inherited environment still
-outranks a correct file, and fixing it means restarting the supervisor, not the
-daemon. Keep file and env stating the same values so the flip never bites.
-`MEMPALACE_MCP_HTTP_ALLOW_INSECURE_NO_TOKEN=1` is what lets the loopback daemon
-run tokenless. The full setup — the mise-managed install, the qdrant container,
-the config file and the env set — is the `mempalace` skill's Prerequisites,
+(`http://localhost:6333`, 10 s) (**env beats file**). Keep file and env stating
+the same values so the flip never bites. `MEMPALACE_EMBEDDING_MODEL` and
+`MEMPALACE_EMBEDDING_DEVICE` are optional; a palace is bound to the model it was
+built with — another fails with `EmbedderIdentityMismatchError` — and mempalace
+3.10.0's `repair` cannot re-embed a qdrant palace, so a switch means dumping and
+refiling. The full setup — the mise-managed install, the qdrant container, the
+config file and the `env` block — is the `mempalace` skill's Prerequisites,
 which is authoritative for it.
 
-Why: an stdio server is a child of the client, so when it dies the connection
-stays dead for the rest of the session. Over HTTP it reconnects, it survives
-session restarts, one daemon serves **every** Claude Code instance (all repos,
-all worktrees, in parallel), and its logs are yours to read.
-
-**Single-writer is no longer part of that argument, which is exactly what makes
-stdio look switchable again.** On Chroma a second writer corrupted the store; on
-Qdrant `palace.py`'s `_MULTI_PROCESS_WRITER_BACKENDS` opts the backend out, so
-`backend_requires_single_writer()` is false and the lease is never taken.
-Concurrent processes are safe *at the store* — and stdio is still wrong, because
-**`hallways.json` is a lockless read-modify-write**: `_save_hallways` replaces
-the whole file atomically but takes no lock, so one daemon serializes those
-writes in-process while N processes race and last-writer-wins silently drops
+**This reverses an earlier ruling.** vwf ran mempalace as one shared HTTP daemon
+on `127.0.0.1:8765` and held that stdio was wrong. Commit `9dbef1d1`
+(2026-09-23) moved the manifest to stdio, and the
+[stdio decision](../../../../docs/memory/decisions/2026-09-23-mempalace-stdio-settings-env.md)
+confirms it — chosen for **zero setup** — with two costs accepted rather than
+solved. **`hallways.json` is a lockless read-modify-write**: on Qdrant the store
+itself is safe for concurrent processes (`palace.py`'s
+`_MULTI_PROCESS_WRITER_BACKENDS` opts it out of the single-writer lease), but
+`_save_hallways` replaces the whole file atomically and takes no lock, so two
+sessions' servers rebuilding at once race and last-writer-wins silently drops
 entity edges. It is local JSON beside the palace, which Qdrant never sees;
-tunnels are the same shape. stdio would also spawn one server per session, each
-holding its own ~140 MB embedder.
+tunnels are the same shape. And **each session holds its own embedder**, ~140 MB
+apiece. Revisit the transport if mempalace adds a lock, or if lost hallway links
+ever show up. The daemon-era lessons — the supervisor's captured environment,
+the literal-`~` directory — live in that decision doc, not here.
 
 **If the upstream mempalace plugin is separately installed, its own stdio server
 must be turned off** — for that same hallway race, and because its docs say so
