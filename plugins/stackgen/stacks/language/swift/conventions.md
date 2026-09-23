@@ -37,6 +37,12 @@ tasks pass each explicitly:
 | `setup:deps:outdated` | `swift package update --dry-run` |
 | `setup:deps:upgrade` | `swift package update` |
 
+"Every file git does not ignore" holds inside a git repository — a `.git`
+entry here or above, or `GIT_DIR` set — where a failed `git ls-files` stops the
+task. With neither a `.git` entry nor `GIT_DIR`, or no git installed, both
+tasks take the Swift scope from a `find` walk of the tree instead, less the
+same exclusions, and `.gitignore` no longer applies.
+
 **A library reads no environment.** Configuration is a value the caller passes
 in; logging and metrics go through the ecosystem's API packages, never a
 backend.
