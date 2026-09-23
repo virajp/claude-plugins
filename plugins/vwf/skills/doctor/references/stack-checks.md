@@ -1,10 +1,13 @@
 # Stack Checks (§§3–5)
 
 Read this before running §3. It covers the three per-project stack checks:
-languages (LSP + toolchain), frameworks and dependencies against each manifest,
-and the repo/axis tooling. **Blocking** findings live in §3 (a language no
-installed plugin claims) and §5 (a `custom` template pin, a missing `mise`, an
-`iac` project inside another repo the user has not declined to extract).
+languages (LSP + toolchain + binaries), frameworks and dependencies against each
+manifest, and the repo/axis tooling. **Blocking** findings live in §3 (a
+language no installed plugin claims, a materialized `binaries` entry missing
+from `PATH` — each blocking once the project's `template` is pinned, a
+degradation while it reads `unresolved`) and §5 (a `custom` template pin, a
+missing `mise`, an `iac` project inside another repo the user has not declined
+to extract).
 
 ## An unresolved axis is a degradation, and it makes two others conditional
 
