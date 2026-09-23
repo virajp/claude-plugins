@@ -15,20 +15,20 @@ backlog: []
 
 **BLOCKED**
 
-BLOCKED at wave 2 — UNRESOLVED: E11 ("`tuist init` creates them") cannot hold
-with any mise-installed Tuist; user ruled 2026-09-23: stop and re-plan. U5, U6
-skipped. Worktree .worktrees/2026-09-23-swiftui-app-stack
+BLOCKED at wave 2 — the E11 ruling is now in the plan (Amendment 2026-09-24:
+Tuist dropped for a committed Xcode project); resume at wave 3. Worktree
+.worktrees/2026-09-23-swiftui-app-stack
 
 ## Consent
 
-| Action                                            | Granted                                                                                   |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Merge to the integration branch and push on green | yes                                                                                       |
-| After landing: `mise run p:plugins:local`         | run                                                                                       |
-| Release stackgen publicly                         | minor — 1.30.0 → 1.31.0, by hand in `plugins/stackgen/.claude-plugin/plugin.json`         |
-| Release site publicly                             | patch — 1.1.43 → 1.1.44, `mise run p:site:version` (bare, no positional, on a clean tree) |
-| Release vwf publicly                              | none                                                                                      |
-| Release installer publicly                        | none                                                                                      |
+| Action                                            | Granted                                                                                               |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Merge to the integration branch and push on green | yes                                                                                                   |
+| After landing: `mise run p:plugins:local`         | run                                                                                                   |
+| Release stackgen publicly                         | minor — 1.30.1 → 1.31.0, by hand in `plugins/stackgen/.claude-plugin/plugin.json`                     |
+| Release site publicly                             | patch — 1.1.45 → 1.1.46, `mise run p:site:version` (bare, no positional, on a clean tree)             |
+| Release vwf publicly                              | patch — 19.45.0 → 19.45.1, by hand in `plugins/vwf/.claude-plugin/plugin.json` (amendment 2026-09-24) |
+| Release installer publicly                        | none                                                                                                  |
 
 **The mode recorded here is the consent.** A `run` step runs on a green landing
 without a prompt; an `ask` step stops the run once before it, reports what it
@@ -46,10 +46,11 @@ plan of this chain (E17). `app-framework/swiftui` starts at 0.1.0.
 After this lands, a project can pin `swift-swiftui` — an `app-framework` bundle
 rooted at a new `app-framework/swiftui` pack (`category: native-ui`) covering
 `mobile`, `tablet`, `desktop`, `auto`, `watch`, `tv` and `spatial` — and
-stackgen materializes a working SwiftUI app repo: a Tuist-defined project, Xcode
-pinned through Tuist, the swiftpm and gate packs 2b landed, golden tests through
-swift-snapshot-testing, a `ux-gate` skill, and SwiftUI doctrine across topics
-1–11 of the app-framework bar.
+stackgen materializes a working SwiftUI app repo: a committed Xcode project
+created in Xcode (amended 2026-09-24; Tuist dropped), Xcode pinned through
+`XCODE_VERSION` in mise `[env]`, the swiftpm and gate packs 2b landed, golden
+tests through swift-snapshot-testing, a `ux-gate` skill, and SwiftUI doctrine
+across topics 1–11 of the app-framework bar.
 
 Plan **2c** of the four-plan chain for B56 (see plan 2a's Goal). It requires 2b,
 whose `language/swift` tasks this pack copies byte for byte where it needs no
@@ -115,39 +116,75 @@ Ids carried from the retired `2026-09-23-swift-native-stack` folder.
 | E18 | Library docs         | Units resolve Tuist, swift-snapshot-testing, swift-dependencies and Apple framework APIs through Context7 (`resolve-library-id` → `query-docs`) before writing about them — never from training knowledge                  | —                                                  | U1, U2 |
 | E19 | Dependency injection | swift-dependencies (Point-Free), added by the app through SwiftPM: topic 3 recommends it as the pack's DI, topic 10 covers `testValue` / `previewValue` and `withDependencies` overrides; no pack lands a dependency on it | Factory; SwiftUI environment alone                 | U2     |
 
+## Amendment 2026-09-24 — Tuist dropped for a committed Xcode project
+
+The run blocked at wave 2: `tuist init` fails from every mise-installed Tuist,
+so E11 could not hold. The user then ruled to drop Tuist altogether. Xcode has
+no CLI that creates a project (`xcodebuild` has no create verb, and
+`swift package init` has no app type). Given that, the user chose a committed
+`.xcodeproj` over XcodeGen. **Reversals:** E2 (Tuist over XcodeGen or a
+committed `.xcodeproj`), E6 (Xcode pinned by Tuist), E11 (`tuist init` creates
+the manifests), and the out-of-scope line "Editing 2b's packs", for repo-hygiene
+only. E2, E6 and E11 above are **superseded** by the rows below.
+
+**U1 is superseded by U7** (same Owns), and its status is `skipped` for that
+reason. A resume must not re-run U1, and must not re-run R4, which is green. It
+starts at wave 3. U1's Tuist commits stay in history, and U7 rewrites their
+files.
+
+| #    | Decision             | Ruling                                                                                                                                                                                                                                                                                                         | Rejected                                                                                                           | Unit           |
+| ---- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | -------------- |
+| E2′  | Project definition   | A committed `.xcodeproj`, created once by a person in Xcode; no project generator; tasks call `xcodebuild` and `swift` only; `conf.d/swiftui.toml` removed                                                                                                                                                     | Tuist (no mise build can run `tuist init`); XcodeGen; a `.swiftpm` app package (no watch/tv/vision/CarPlay); Bazel | U7, U8, U9, U5 |
+| E6′  | Xcode pin            | The repo sets `XCODE_VERSION` in its mise `[env]`; every task that builds checks `xcodebuild -version` against it and fails fast with an actionable message — which also catches a Command-Line-Tools-only Mac                                                                                                 | `xcodes` via mise; no pin                                                                                          | U7, U8, U9, U5 |
+| E11′ | Project creation     | No pack lands the `.xcodeproj`; doctrine says create it in Xcode, add a `SnapshotTests` unit-test target, and add swift-snapshot-testing through Xcode's package UI; `Package.resolved` is committed inside the project                                                                                        | a pack-shipped template; a project generator                                                                       | U7, U8, U9, U5 |
+| E20  | Golden simulator     | The golden simulator is pinned in mise `[env]` — `SIMULATOR_DEVICE`, `SIMULATOR_OS`, `SIMULATOR_PLATFORM`; `test:golden` builds the `-destination` from them, `--device` / `--os` / `--platform` override one run; the result bundle goes to a fixed path under `.build/` so the diff attachments are findable | Tuist's `TUIST_TEST_*` variables; unpinned                                                                         | U7, U8, U5     |
+| E21  | Multi-platform gate  | The ux-gate runs goldens once per changed platform and reports the rest `n/a`, never `ok`                                                                                                                                                                                                                      | one run on one destination                                                                                         | U7, U8         |
+| E22  | Manifest fact        | The swiftui pack's `manifest:` is `n/a` — the dependency list lives in `<Name>.xcodeproj/project.pbxproj`, a name the fact's single path cannot fix; closes G2                                                                                                                                                 | a glob (needs a doctor change)                                                                                     | U7             |
+| E23  | swiftpm component    | `package-manager/swiftpm` stays in the bundle; the bundle body says app dependencies live in the Xcode project, the swiftpm skill governs local packages                                                                                                                                                       | drop it from the bundle                                                                                            | U9             |
+| E24  | Tuist traces         | `/vwf:init` maps a root `*.xcodeproj` directory to swift in place of the `Project.swift` / `Tuist.swift` row; repo-hygiene drops its Tuist `Derived/` clause (pack 1.2.1 → 1.2.2, bundle pin follows)                                                                                                          | park both                                                                                                          | U10, U11, U5   |
+| E25  | `Derived` exclusions | The `Derived` exclusions in the five gate configs and the Swift task scripts stay — generic generated-tree names                                                                                                                                                                                               | strip them (reaches checker rule 15 and the byte-identical copies)                                                 | U11, U5        |
+| E26  | Smoke project        | The smoke agent hand-writes a minimal `project.pbxproj` (an iOS app plus `SnapshotTests`) in its scratch repo                                                                                                                                                                                                  | a person creates it in Xcode; a throwaway XcodeGen                                                                 | —              |
+| E27  | Wave-3 commit        | Wave 3 lands as **one** commit, the orchestrator running `mise run p:plugins:inventory` into it                                                                                                                                                                                                                | one commit per unit                                                                                                | —              |
+
 ## New dependencies
 
-None in this repo. Named in the payload the pack lands, by U1: **Tuist**
-(through mise) for project generation (E2), and **swift-snapshot-testing**
-(`pointfreeco/swift-snapshot-testing`, a SwiftPM test dependency) for goldens
-(E5). Named in the doctrine U2 writes: **swift-dependencies**
-(`pointfreeco/swift-dependencies`, a SwiftPM dependency the app adds) for
-dependency injection (E19).
+None in this repo. Named in the payload the pack lands:
+**swift-snapshot-testing** (`pointfreeco/swift-snapshot-testing`, a SwiftPM test
+dependency the app adds through Xcode) for goldens (E5). Named in the doctrine:
+**swift-dependencies** (`pointfreeco/swift-dependencies`, a SwiftPM dependency
+the app adds) for dependency injection (E19). Tuist is no longer named (E2′).
 
 ## Units
 
-| Id | Wave | Unit file                                    | Kind   | Owns                                                                                                                                                                                                                                                                                                                             | Depends on | Status     | Commit   |
-| -- | ---- | -------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ---------- | -------- |
-| U1 | 1    | [01-swiftui-core.md](01-swiftui-core.md)     | edit   | `plugins/stackgen/stacks/app-framework/swiftui/pack.yaml`, `plugins/stackgen/stacks/app-framework/swiftui/conventions.md`, `plugins/stackgen/stacks/app-framework/swiftui/config/**`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/SKILL.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/ux-gate/**` | —          | unresolved | e2aeb169 |
-| U2 | 1    | [02-swiftui-topics.md](02-swiftui-topics.md) | edit   | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/*.md` (the eleven topic files, top level only)                                                                                                                                                                                                          | —          | green      | e2aeb169 |
-| U3 | 1    | [03-bundle.md](03-bundle.md)                 | edit   | `plugins/stackgen/stacks/bundles/swift-swiftui.md`                                                                                                                                                                                                                                                                               | —          | green      | e2aeb169 |
-| R4 | 2    | [04-review.md](04-review.md)                 | review | —                                                                                                                                                                                                                                                                                                                                | U1         | green      |          |
-| U5 | 3    | [05-docs.md](05-docs.md)                     | edit   | `site/src/content/docs/**`, `.claude/skills/stackgen-plugin/**`, `.claude/docs/**`, `readme.md`, `CLAUDE.md`, `plugins/stackgen/stacks/readme.md`                                                                                                                                                                                | all        | skipped    |          |
-| U6 | 4    | [06-gates-and-bump.md](06-gates-and-bump.md) | edit   | `site/package.json`, `plugins/stackgen/.claude-plugin/plugin.json`, `plugins/stackgen/stacks/inventory.md`, `.claude-plugin/marketplace.json`                                                                                                                                                                                    | U5         | skipped    |          |
+| Id  | Wave | Unit file                                                | Kind   | Owns                                                                                                                                                                                                                                                                                                                             | Depends on                | Status  | Commit   |
+| --- | ---- | -------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------- | -------- |
+| U1  | 1    | [01-swiftui-core.md](01-swiftui-core.md)                 | edit   | `plugins/stackgen/stacks/app-framework/swiftui/pack.yaml`, `plugins/stackgen/stacks/app-framework/swiftui/conventions.md`, `plugins/stackgen/stacks/app-framework/swiftui/config/**`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/SKILL.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/ux-gate/**` | —                         | skipped | e2aeb169 |
+| U2  | 1    | [02-swiftui-topics.md](02-swiftui-topics.md)             | edit   | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/*.md` (the eleven topic files, top level only)                                                                                                                                                                                                          | —                         | green   | e2aeb169 |
+| U3  | 1    | [03-bundle.md](03-bundle.md)                             | edit   | `plugins/stackgen/stacks/bundles/swift-swiftui.md`                                                                                                                                                                                                                                                                               | —                         | green   | e2aeb169 |
+| R4  | 2    | [04-review.md](04-review.md)                             | review | —                                                                                                                                                                                                                                                                                                                                | U1                        | green   |          |
+| U7  | 3    | [07-swiftui-core-xcode.md](07-swiftui-core-xcode.md)     | edit   | `plugins/stackgen/stacks/app-framework/swiftui/pack.yaml`, `plugins/stackgen/stacks/app-framework/swiftui/conventions.md`, `plugins/stackgen/stacks/app-framework/swiftui/config/**`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/SKILL.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/ux-gate/**` | —                         | pending |          |
+| U8  | 3    | [08-swiftui-topics-xcode.md](08-swiftui-topics-xcode.md) | edit   | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/*.md` (the eleven topic files, top level only)                                                                                                                                                                                                          | —                         | pending |          |
+| U9  | 3    | [09-bundle-xcode.md](09-bundle-xcode.md)                 | edit   | `plugins/stackgen/stacks/bundles/swift-swiftui.md`                                                                                                                                                                                                                                                                               | —                         | pending |          |
+| U10 | 3    | [10-init-stack-read.md](10-init-stack-read.md)           | edit   | `plugins/vwf/skills/init/SKILL.md`                                                                                                                                                                                                                                                                                               | —                         | pending |          |
+| U11 | 3    | [11-repo-hygiene.md](11-repo-hygiene.md)                 | edit   | `plugins/stackgen/stacks/repo-hygiene/repo-hygiene/conventions.md`, `plugins/stackgen/stacks/repo-hygiene/repo-hygiene/pack.yaml`, `plugins/stackgen/stacks/bundles/repo-hygiene.md`                                                                                                                                             | —                         | pending |          |
+| R12 | 4    | [12-review.md](12-review.md)                             | review | —                                                                                                                                                                                                                                                                                                                                | U7                        | pending |          |
+| U5  | 5    | [05-docs.md](05-docs.md)                                 | edit   | `site/src/content/docs/**`, `.claude/skills/stackgen-plugin/**`, `.claude/skills/vwf-plugin/**`, `.claude/docs/**`, `readme.md`, `CLAUDE.md`, `plugins/stackgen/stacks/readme.md`                                                                                                                                                | U7, U8, U9, U10, U11, R12 | pending |          |
+| U6  | 6    | [06-gates-and-bump.md](06-gates-and-bump.md)             | edit   | `site/package.json`, `plugins/stackgen/.claude-plugin/plugin.json`, `plugins/vwf/.claude-plugin/plugin.json`, `plugins/stackgen/stacks/inventory.md`, `.claude-plugin/marketplace.json`                                                                                                                                          | U5                        | pending |          |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
 
 ## Shared-file rule
 
-| File                                                                                          | Why it collides                                    | Owner                                                                        |
-| --------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `plugins/stackgen/.claude-plugin/plugin.json`, `site/package.json`                            | several units bumping one version is a lost update | U6                                                                           |
-| `plugins/stackgen/stacks/inventory.md`                                                        | generated                                          | the orchestrator for the wave-1 commit (E14), then U6                        |
-| `.claude-plugin/marketplace.json`                                                             | generated                                          | U6                                                                           |
-| `swiftui/skills/swiftui/SKILL.md` vs its references                                           | the router links files another unit writes         | U1 writes the router against the fixed names below; U2 writes only the files |
-| `app-framework/swiftui` at 0.1.0 vs the bundle pin                                            | a pin names a version                              | fixed here; U1 writes it, U3 pins it                                         |
-| docs — `site/**`, `.claude/**`, `readme.md`, `CLAUDE.md`, `plugins/stackgen/stacks/readme.md` | n units editing one doc                            | U5                                                                           |
+| File                                                                                                         | Why it collides                                    | Owner                                                                             |
+| ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `plugins/stackgen/.claude-plugin/plugin.json`, `plugins/vwf/.claude-plugin/plugin.json`, `site/package.json` | several units bumping one version is a lost update | U6                                                                                |
+| `plugins/stackgen/stacks/inventory.md`                                                                       | generated                                          | the orchestrator for the wave-1 commit (E14) and the wave-3 commit (E27), then U6 |
+| U1's paths, U2's, U3's (amendment)                                                                           | superseded units, reworked                         | U7, U8, U9 — U1–U3 are never re-dispatched                                        |
+| `.claude-plugin/marketplace.json`                                                                            | generated                                          | U6                                                                                |
+| `swiftui/skills/swiftui/SKILL.md` vs its references                                                          | the router links files another unit writes         | U1 writes the router against the fixed names below; U2 writes only the files      |
+| `app-framework/swiftui` at 0.1.0 vs the bundle pin                                                           | a pin names a version                              | fixed here; U1 writes it, U3 pins it                                              |
+| docs — `site/**`, `.claude/**`, `readme.md`, `CLAUDE.md`, `plugins/stackgen/stacks/readme.md`                | n units editing one doc                            | U5                                                                                |
 
 **Fixed filenames** under
 `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/`,
@@ -162,8 +199,12 @@ topics 1–11 in order: `pick-and-trade.md`, `project-layout.md`,
 - **Wave 1 — U1, U2, U3.** Disjoint files, the router written against the
   filenames fixed above, the bundle pinning versions fixed here; lands as **one
   commit** with the regenerated inventory (E14).
-- **Wave 2 — R4.** **Wave 3 — U5**, docs. **Wave 4 — U6**, versions and
-  generators.
+- **Wave 2 — R4.**
+- **Wave 3 — U7, U8, U9, U10, U11** (amendment). Disjoint files: the pack, its
+  references, the bundle, `/vwf:init`, repo-hygiene. Lands as **one commit**
+  with the regenerated inventory (E27).
+- **Wave 4 — R12**, over `ba994ef0..HEAD`. **Wave 5 — U5**, docs. **Wave 6 —
+  U6**, versions and generators.
 
 ## Wave gate
 
@@ -179,31 +220,36 @@ topics 1–11 in order: `pick-and-trade.md`, `project-layout.md`,
 
 plus the wave review, plus every report read for `UNRESOLVED:`. The inventory
 freshness line is red between wave 1's unit returns and the orchestrator's
-regeneration (E14), and inside wave 4 between U6's edits and its regeneration —
-expected; each is green before its commit.
+regeneration (E14), likewise in wave 3 (E27), and inside wave 6 between U6's
+edits and its regeneration — expected; each is green before its commit.
 
 ## After landing
 
-| Step                       | Mode | Notes                                                                                                                                                           |
-| -------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mise run p:plugins:local` | run  | stages the changed stackgen into the dev marketplace under `X.Y.Z+N` and updates this machine's install; publishes nothing; a **restarted** session picks it up |
+| Step                       | Mode | Notes                                                                                                                                                                   |
+| -------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mise run p:plugins:local` | run  | stages the changed stackgen and vwf into the dev marketplace under `X.Y.Z+N` and updates this machine's install; publishes nothing; a **restarted** session picks it up |
 
 ## Gates the orchestrator keeps
 
-1. **Smoke test, in `/tmp`** (E16), after wave 1 and again after wave 4, outside
-   the repo and any worktree: a scratch git repo; land the payload of every
-   component `swift-swiftui.md` pins plus `toolchain-manager/mise`'s helper
-   library; `mise install`; `tuist init` for an iOS app;
-   `mise run setup:deps:install`; `tuist generate --no-open`;
-   `xcodebuild build -scheme <app> -destination 'generic/platform=iOS Simulator'`;
+1. **Smoke test, in `/tmp`** (E16, amended by E26), after wave 3 and again after
+   wave 6, outside the repo and any worktree: a scratch git repo; land the
+   payload of every component `swift-swiftui.md` pins plus
+   `toolchain-manager/mise`'s helper library; set `XCODE_VERSION` and the
+   `SIMULATOR_*` variables in the scratch repo's mise `[env]`; `mise install`;
+   hand-write a minimal `<App>.xcodeproj/project.pbxproj` — an iOS SwiftUI app
+   target, a `SnapshotTests` unit-test target, and a package reference to
+   swift-snapshot-testing — plus the app's sources and one snapshot test of its
+   root view; `mise run setup:deps:install`;
+   `xcodebuild build -scheme <App> -destination 'generic/platform=iOS Simulator'`;
    `mise run code:format`; `mise run code:lint`; `mise run test:golden`
    (recording first, then verifying). Pass: every command exits 0. Network
-   allowed for mise, Tuist and SwiftPM. A failure blocks the landing and goes to
-   the unit whose file failed.
+   allowed for mise and SwiftPM. A failure in a pack file blocks the landing and
+   goes to the unit whose file failed; a fault in the hand-written project is
+   the smoke agent's to fix.
 2. **Shared tasks** (E9). For every task path present in both
    `language/swift/config/.config/mise/tasks/` and
    `app-framework/swiftui/config/.config/mise/tasks/`, `cmp` the pair; every
-   differing pair is one U1's report names. `test -x` on every swiftui task.
+   differing pair is one U7's report names. `test -x` on every swiftui task.
    Pass: no unnamed difference, all executable.
 3. **LSP declaration** (E10). The `sourcekit-lsp` entry in
    `app-framework/swiftui/pack.yaml` is byte-identical to
@@ -214,6 +260,9 @@ expected; each is green before its commit.
    pack's `config/` and `skills/` for the plugin-root token, a bare `assets/`
    path or a path into a sibling pack is empty. Pass: exact list, no missing
    link, empty grep.
+5. **No Tuist** (amendment). A case-insensitive recursive grep for "tuist" over
+   `plugins`, `site/src/content/docs`, `.claude`, `readme.md` and `CLAUDE.md`
+   finds nothing. Pass: no hit.
 
 ## Unit contract
 
@@ -245,12 +294,18 @@ the unit could not proceed without; it blocks the unit and its dependents.
 - **Editing Flutter's packs**, including `flutter-ios`.
 - **UIKit- or AppKit-first doctrine** — interop only, topic 8.
 - **Editing 2b's packs** — the swiftui pack copies their tasks; a defect found
-  in one is a `GAP:`, not an edit.
+  in one is a `GAP:`, not an edit. **Except** repo-hygiene's Tuist clause (E24,
+  amendment reversal), U11's three files only.
 - **A public release** (E17).
 
 ## Parked
 
-None new; the chain's parked items live in plan 2d.
+- **G5**: the dprint pack does not exclude `*.xcassets/**`. The fix is a later
+  plan over the dprint, taplo, pre-commit and gitleaks exclusion lists (checker
+  rule 15).
+- **G3**, what remains: the swiftpm skill's wording when an app has no
+  `Package.swift`. Mostly moot under E2′ and E23.
+- The chain's other parked items live in plan 2d.
 
 ## Gaps surfaced during execution
 
@@ -290,6 +345,10 @@ None new; the chain's parked items live in plan 2d.
   check fails on the `Contents.json` files Xcode writes under `*.xcassets/`. The
   fix belongs in `toolchain-gate/dprint` and its sibling exclusion lists
   (checker rule 15), which this plan may not edit.
+- **Amendment 2026-09-24 and these gaps.** G1 dissolves: a committed project
+  generates nothing to ignore beyond what upstream `Swift.gitignore` covers. E22
+  closes G2. G4 finding 1 is fixed by E6′; findings 2 and 4 by E20 and E21;
+  finding 3 by U7 and U8; finding 5 is moot. G3 and G5 are parked.
 
 ## Run log
 
@@ -321,6 +380,7 @@ None new; the chain's parked items live in plan 2d.
 | 3    | U5 docs           | —     | —     | skipped     | why: depends on all units; U1 unresolved (E11)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | —        |
 | 4    | U6 gates-and-bump | —     | —     | skipped     | why: depends on U5                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | —        |
 | —    | block             | —     | —     | blocked     | why: U1 UNRESOLVED — E11 cannot hold with a mise-installed Tuist; user ruled "Stop and re-plan"; the R2 contract review round 2 and the R4 late re-run over 3ae5af85..ddfebfce were not run — a resume takes them first                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | —        |
+| —    | amendment         | —     | —     | pass        | 2026-09-24, /vwf:change-plan on the blocked folder: Tuist dropped for a committed `.xcodeproj` (E2′, E6′, E11′, E20–E27); U1 skipped (superseded by U7); new units U7–U11 (wave 3) and R12 (wave 4); U5 → wave 5, U6 → wave 6; vwf patch added to the consent; resume at wave 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | —        |
 
 ## Launch
 
