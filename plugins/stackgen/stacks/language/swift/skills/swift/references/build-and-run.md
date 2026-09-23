@@ -26,12 +26,14 @@ The repo's tasks are the interface; the tools behind them are detail.
 | `setup:deps:upgrade` | `swift package update` |
 | `setup:deps:cleanup` | removes `.build/` |
 
-The **Swift scope** is every `.swift` file git tracks or would track, less the
-trees the shipped `.config/swiftlint.yml` excludes, at any depth — `.build/`,
-`.swiftpm/`, `Derived/`, `DerivedData/` and `*.generated.swift` — so both
-Swift gates judge the same files. The tasks hold that list themselves: an
+The **Swift scope** is every `.swift` file git tracks or would track, less a
+fixed list the tasks hold themselves, at any depth — `.build/`, `.swiftpm/`,
+`Derived/`, `DerivedData/` and `*.generated.swift` — so both Swift gates judge
+the same files. The shipped `.config/swiftlint.yml` excludes `.build/` and
+`.swiftpm/` at the repo root only; the any-depth exclusion is the tasks'. An
 `excluded:` entry you add to the config reaches SwiftLint, which is passed
-`--force-exclude`, but not `code:format`.
+`--force-exclude`, but not `code:format`. When `git ls-files` fails, both
+tasks stop with an error rather than judge an empty list.
 
 `code:format` without `--fix` is read-only, so it is safe as a gate. The
 pre-commit hook calls `code:format --fix` with the staged files, so only those

@@ -112,11 +112,30 @@ fi
 # — and only when its type is one the linter has rules for, so it cannot warn
 # about a type it never lints. Outside a git work tree there is no list, and
 # the linter walks the tree itself.
+#
+# git's list goes to a file, not a process substitution, so a failing git
+# fails the task instead of handing over an empty list, and it is listed once
+# for both gates. Mid-merge, a conflicted path is listed once per index stage;
+# the list is sorted, so a path equal to the one before it is skipped.
 lint_targets=()
 in_git=false
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   in_git=true
+  git_list="$(mktemp "${TMPDIR:-/tmp}/code-lint.XXXXXX")"
+  trap 'rm -f "${git_list}"' EXIT
+  git_status=0
+  git -c core.quotePath=off ls-files -z --cached --others --exclude-standard \
+    >"${git_list}" || git_status=$?
+  if [ "${git_status}" -ne 0 ]; then
+    print_error "git ls-files failed (exit ${git_status})"
+    exit "${git_status}"
+  fi
+  previous=""
   while IFS= read -r -d '' path; do
+    if [ "${path}" = "${previous}" ]; then
+      continue
+    fi
+    previous="${path}"
     case "${path}" in
       *[][*?{}\(\)!+@\\]*)
         case "${path}" in
@@ -130,7 +149,7 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
         lint_targets+=("./${path%?}[${path: -1}]")
         ;;
     esac
-  done < <(git -c core.quotePath=off ls-files -z --deduplicate --cached --others --exclude-standard)
+  done <"${git_list}"
 fi
 
 if [ "${in_git}" = "false" ] || [ "${#lint_targets[@]}" -gt 0 ]; then
@@ -140,20 +159,26 @@ fi
 
 # The same list, narrowed to Swift, is SwiftLint's — each path prefixed `./`,
 # so a committed name like `--output=…` can never reach it as an option. The
-# trees and files `.config/swiftlint.yml` excludes are left out here too, and
+# same fixed list `code:format` holds is left out here, at any depth — the
+# config excludes `.build/` and `.swiftpm/` at the repo root only — and
 # `--force-exclude` still applies the config's `excluded` to a named path.
 swift_scope=()
 if [ "${in_git}" = "true" ]; then
+  previous=""
   while IFS= read -r -d '' swift_file; do
+    if [ "${swift_file}" = "${previous}" ]; then
+      continue
+    fi
+    previous="${swift_file}"
     case "/${swift_file}" in
       */.build/* | */.swiftpm/* | */Derived/* | */DerivedData/* | *.generated.swift) ;;
-      *)
+      *.swift)
         if [ -f "${swift_file}" ]; then
           swift_scope+=("./${swift_file}")
         fi
         ;;
     esac
-  done < <(git -c core.quotePath=off ls-files -z --deduplicate --cached --others --exclude-standard -- '*.swift')
+  done <"${git_list}"
 else
   while IFS= read -r -d '' swift_file; do
     swift_scope+=("${swift_file}")
