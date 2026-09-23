@@ -338,6 +338,7 @@ earlier ones did not name:
    | `go.mod`                                | go       |
    | `Cargo.toml`                            | rust     |
    | `Package.swift`                         | swift    |
+   | `Project.swift` or `Tuist.swift`        | swift    |
 
    A file not in this table is not a manifest, whatever it looks like, and a
    language the table does not name is proposed in the plan rather than

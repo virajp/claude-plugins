@@ -695,10 +695,12 @@ it, which manifest identifies it, which mise tool installs it — come from the
 **language plugin** that owns it. vwf holds no table of its own; the union of
 what the installed plugins declare **is** the vocabulary. `/vwf:doctor` reads
 the block back and checks the repo agrees: an LSP server and toolchain per
-declared language, every framework and dependency present in the project's
-manifest, the repo's package manager and tooling, harness task names, health
-paths. It reports drift in both directions, including a framework doing obvious
-structural work that your config never mentions.
+declared language, every binary a materialized template's `binaries` fact names
+resolving on `PATH` (blocking once the project's template is pinned, a
+degradation while it reads `unresolved`), every framework and dependency present
+in the project's manifest, the repo's package manager and tooling, harness task
+names, health paths. It reports drift in both directions, including a framework
+doing obvious structural work that your config never mentions.
 
 A language no installed plugin claims is reported as *unknown*, and since
 `config_format` **14** that is a **blocking** finding: `/vwf:setup` and
@@ -718,9 +720,10 @@ The one second door is the **materialized escape**: a materializing adapter (the
 [`stackgen`](./stackgen.md) plugin) can land a template directly in the repo's
 committed `.claude/` tree through consent-gated, reviewer-gated generation, and
 a language whose pin carries that template's emitted `language_facts` (LSP
-provision, mise tool, manifest) is *known* — doctor verifies against the facts
-instead of a language plugin. A token with neither stays blocking; nothing about
-the escape re-opens free text.
+provision, mise tool, manifest, and an optional `binaries` list — executables
+needed on `PATH` that mise does not manage) is *known* — doctor verifies against
+the facts instead of a language plugin. A token with neither stays blocking;
+nothing about the escape re-opens free text.
 
 That landing happens in **`/vwf:setup`'s materialize pass**, once per (repo,
 slug), never at the moment the pin is made — so a freshly recorded pin is
@@ -829,7 +832,7 @@ record.
 | `/vwf:plan [slice]`                     | Write a reviewable cycle-plan folder — a diff of blueprint vs code, deps chained as plans; interviews, records consent, commits and pushes it at hand-off                                                                                                                                        |
 | `/vwf:execute <folder>`                 | Run an approved plan folder of either kind unattended in a fresh session — TDD per `code` unit, code + security review at each `review` row, waves and review per `edit` unit, E2E + UX when the plan covers a slice, then land per the plan's consent; `next` picks the queue's runnable plan   |
 | `/vwf:plan-management`                  | Internal — the one writer of the plan queue: the index rows, every folder's Status block, the archive move; called by the planners and `execute`, or when you ask to archive or list                                                                                                             |
-| `/vwf:doctor [project ... \| baseline]` | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, manifests, harness, dependency audit, mempalace, graphify, the repo shape of every member, stamps; `baseline` runs the local repo-shape predicates alone                                                                           |
+| `/vwf:doctor [project ... \| baseline]` | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, required binaries, manifests, harness, dependency audit, mempalace, graphify, the repo shape of every member, stamps; `baseline` runs the local repo-shape predicates alone                                                        |
 | `/vwf:verify [env]`                     | Post-deploy: health-check + re-run acceptance criteria against the environment                                                                                                                                                                                                                   |
 | `/vwf:feedback [input]`                 | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat)                                                                                                                                                                                 |
 | `/vwf:backlog [verb]`                   | The prioritised list of work that cannot be picked up now — a GitHub Project named for the base repo, and this is its only writer                                                                                                                                                                |
@@ -1054,17 +1057,18 @@ else the lockfile's components, on a `shaped` repo; else, in `source` mode only,
 a language manifest at the root and in every sub-project directory, read by a
 fixed table and nothing looser — `package.json` → node, `pyproject.toml` or
 `requirements.txt` → python, `pubspec.yaml` → dart, `go.mod` → go, `Cargo.toml`
-→ rust, `Package.swift` → swift. Every source resolves to those six keys: a pin
-token or a lockfile component slug is mapped onto one by the hygiene pack's own
-template table, so a pin and a manifest naming the same language collapse to one
-hit, and a token, slug or manifest nothing maps is proposed in the plan rather
-than guessed. A `blank` repo reads nothing. The read drives three things and is
-the only thing that drives them: the `.gitignore` language sections — one per
-language found, so a `source` repo gets its section on the **first** run rather
-than after some later pin — the two runtime positions the toolchain pack marks
-in its base config, `RUNTIME_BLOCK` and `PATH_ENTRIES` (one runtime's settings
-lines per language, the path entry left empty where nothing needs one), and the
-sub-project proposals question 2 shows where no registry names them.
+→ rust, `Package.swift`, `Project.swift` or `Tuist.swift` → swift. Every source
+resolves to those six keys: a pin token or a lockfile component slug is mapped
+onto one by the hygiene pack's own template table, so a pin and a manifest
+naming the same language collapse to one hit, and a token, slug or manifest
+nothing maps is proposed in the plan rather than guessed. A `blank` repo reads
+nothing. The read drives three things and is the only thing that drives them:
+the `.gitignore` language sections — one per language found, so a `source` repo
+gets its section on the **first** run rather than after some later pin — the two
+runtime positions the toolchain pack marks in its base config, `RUNTIME_BLOCK`
+and `PATH_ENTRIES` (one runtime's settings lines per language, the path entry
+left empty where nothing needs one), and the sub-project proposals question 2
+shows where no registry names them.
 
 **Nine questions, each one round**, asked *before* the plan so one yes covers
 all of it. **A round is one round for the whole product**, however many repos

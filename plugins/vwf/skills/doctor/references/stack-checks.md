@@ -1,10 +1,13 @@
 # Stack Checks (§§3–5)
 
 Read this before running §3. It covers the three per-project stack checks:
-languages (LSP + toolchain), frameworks and dependencies against each manifest,
-and the repo/axis tooling. **Blocking** findings live in §3 (a language no
-installed plugin claims) and §5 (a `custom` template pin, a missing `mise`, an
-`iac` project inside another repo the user has not declined to extract).
+languages (LSP + toolchain + binaries), frameworks and dependencies against each
+manifest, and the repo/axis tooling. **Blocking** findings live in §3 (a
+language no installed plugin claims, a materialized `binaries` entry missing
+from `PATH` — each blocking once the project's `template` is pinned, a
+degradation while it reads `unresolved`) and §5 (a `custom` template pin, a
+missing `mise`, an `iac` project inside another repo the user has not declined
+to extract).
 
 ## An unresolved axis is a degradation, and it makes two others conditional
 
@@ -98,6 +101,14 @@ whole section reports `not checked — no stack resolved` for it:
   config (`.config/mise*.toml`, per the mise skill's five-file split) or
   resolves on `PATH`. Missing → finding, with the `mise use` line as the remedy.
   A `—` in the column means the toolchain is not mise-managed; skip silently.
+- **Binaries** — only where the language is known through materialized
+  `language_facts` that carry a `binaries` list (absent means none; a language
+  plugin's row has no such column). For each name, `command -v <name>`. Missing
+  → finding naming the binary, with the remedy that installs it (for
+  `xcodebuild`: install Xcode, then `sudo xcode-select -s` at it). **Blocking
+  once this project's `template` is pinned** — mise will not supply it, so the
+  skip above would otherwise hide it and the build fails on first run. **A
+  degradation while that `template` reads `unresolved`.**
 
 Report per language, not per project — one missing Dart LSP is one finding even
 when three projects declare `dart`.

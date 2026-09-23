@@ -3,10 +3,12 @@
     "lineWidth": 80
   },
   "excludes": [
+    "**/.build/",
     "**/.claude/",
     "**/.git/",
     "**/.turbo/",
     "**/.venv/",
+    "**/Derived/",
     "**/build/",
     "**/dist/",
     "**/graphify-out/",

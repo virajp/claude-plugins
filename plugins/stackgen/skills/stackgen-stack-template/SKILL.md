@@ -84,7 +84,7 @@ components: # the bundle's composition — the per-component dispatch record
 platforms: [ <platform> ] # project axis only
 languages: [ <token> ]
 language_facts: # per language — what /vwf:doctor verifies
-  <token>: { lsp: <how provided | n/a>, mise_tool: <name | n/a>, manifest: <file | n/a> }
+  <token>: { lsp: <how provided | n/a>, mise_tool: <name | n/a>, manifest: <file | n/a>, binaries: [ <name> ] } # binaries passed through from pack.yaml; omitted when the pack declares none
 optional_languages: []
 frameworks: [] # derived — the composition's framework component slugs
 dependencies: []

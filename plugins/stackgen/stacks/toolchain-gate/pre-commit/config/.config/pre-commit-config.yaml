@@ -47,10 +47,12 @@ default_stages: [pre-commit]
 # second copy inside one hook.
 exclude: |-
   (?x)
+  (^|/)\.build/|
   (^|/)\.claude/|
   (^|/)\.git/|
   (^|/)\.turbo/|
   (^|/)\.venv/|
+  (^|/)Derived/|
   (^|/)build/|
   (^|/)dist/|
   (^|/)graphify-out/|
