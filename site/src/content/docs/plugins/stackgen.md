@@ -579,12 +579,14 @@ ends a materialization by recommending `/vwf:setup`.
 `templates/<slug>.md` is what makes later fetches pure reads: frontmatter
 carries every payload field (kind, axis, the `components:` refs this bundle
 composes — `<type>/<slug>@<version>` or `@generated` — languages **with the
-facts `/vwf:doctor` verifies** — LSP provision, mise tool, manifest — plus
-harness tasks and mechanisms, with `frameworks`/`capabilities` derived from the
-composition), and the body is the `conventions:` prose `plan` sizes against and
-`execute` writes to. That emitted-facts block is the **materialized escape** in
-vwf's stack vocabulary: a language no shipped bundle covers is still *known*
-when its pin carries these facts.
+facts `/vwf:doctor` verifies** — LSP provision, mise tool, manifest, and the
+optional `binaries` list of executables the stack needs on `PATH` that mise does
+not manage, such as Xcode's `xcodebuild` — plus harness tasks and mechanisms,
+with `frameworks`/`capabilities` derived from the composition), and the body is
+the `conventions:` prose `plan` sizes against and `execute` writes to. That
+emitted-facts block is the **materialized escape** in vwf's stack vocabulary: a
+language no shipped bundle covers is still *known* when its pin carries these
+facts.
 
 In a multi-repo product the target repo defaults to the current one; the caller
 names a member repo to materialize there instead, as one optional `repo: <path>`
@@ -638,8 +640,9 @@ gate — ships `.config/linter.yaml`, the config it had always invoked and never
 supplied. The trees a gate skips are stated as **one exclusion set**: the
 formatter's `dprint.json` and `taplo.toml` and the hook config's global
 `exclude` — a `(?x)` block, one anchored alternative per line — spell the same
-twelve entries (`.claude`, `.git`, `.turbo`, `.venv`, `build`, `dist`,
-`graphify-out`, `node_modules`, `target` and the three lockfile globs) in their
+fourteen entries (`.build`, `.claude`, `.git`, `.turbo`, `.venv`, `Derived`,
+`build`, `dist`, `graphify-out`, `node_modules`, `target` and the three lockfile
+globs; `.build` and `Derived` are SwiftPM's and Tuist's output trees) in their
 own syntax, and the toolkit's checker holds the three equal after normalising
 the syntax away. The secret scanner's `[allowlist] paths` is held to a
 **subset** of it, never the reverse: gitleaks extends upstream's default config,
@@ -656,25 +659,25 @@ skips `.md`, because two trailing spaces are a Markdown hard break.
 needs and no tool owns: a sectioned `.gitignore` (with a graphify section that
 ignores `graphify-out/*` while keeping `GRAPH_REPORT.md`, plus one upstream
 template section per language `/vwf:init`'s stack read finds — a table keyed by
-language, `node`, `python`, `dart`, `go`, `rust`, `swift` — so a repo with a
-`package.json` gets its Node section on the first run — and one **provider row**
-beside the language rows, `fnox.local.toml` for fnox and `.doppler/` for
-doppler, appended under a banner named for the slug only where init's stack read
-carries that provider, so the base ignore file names no secrets manager),
-`.graphifyignore`, `.editorconfig`, `.gitattributes`, `SECURITY.md`,
-`CONTRIBUTING.md`, three `.github/ISSUE_TEMPLATE/` files, a root
-`renovate.json`, the chosen `LICENSE` on a repo `/vwf:init` was told is public,
-and the **editor baseline** — the `vscode.d/` fragment carrying the settings
-every repo wants regardless of stack, editor-wide keys alone, since a key that
-names a stack belongs to that stack's pack. Three of those are **conditional**,
-named in the pack's `conditional:` list with the one answer init already holds
-that lands them: the issue forms on `forge: github`, the Renovate policy on
-`update_bot: renovate`, the editor baseline on `editor: vscode`. A GitLab repo
-gets no GitHub issue forms, a Dependabot repo no Renovate policy, a repo edited
-elsewhere no VS Code fragment; each skipped path is listed in the plan and
-recorded in the lockfile, never reported missing. Init also **records** the four
-answers in the product's `.config/vwf.yaml`, so the later callers judge the same
-conditions the same way.
+language, `node`, `python`, `dart`, `go`, `rust`, `swift` (whose section also
+ignores Tuist's `Derived/` on a Tuist app) — so a repo with a `package.json`
+gets its Node section on the first run — and one **provider row** beside the
+language rows, `fnox.local.toml` for fnox and `.doppler/` for doppler, appended
+under a banner named for the slug only where init's stack read carries that
+provider, so the base ignore file names no secrets manager), `.graphifyignore`,
+`.editorconfig`, `.gitattributes`, `SECURITY.md`, `CONTRIBUTING.md`, three
+`.github/ISSUE_TEMPLATE/` files, a root `renovate.json`, the chosen `LICENSE` on
+a repo `/vwf:init` was told is public, and the **editor baseline** — the
+`vscode.d/` fragment carrying the settings every repo wants regardless of stack,
+editor-wide keys alone, since a key that names a stack belongs to that stack's
+pack. Three of those are **conditional**, named in the pack's `conditional:`
+list with the one answer init already holds that lands them: the issue forms on
+`forge: github`, the Renovate policy on `update_bot: renovate`, the editor
+baseline on `editor: vscode`. A GitLab repo gets no GitHub issue forms, a
+Dependabot repo no Renovate policy, a repo edited elsewhere no VS Code fragment;
+each skipped path is listed in the plan and recorded in the lockfile, never
+reported missing. Init also **records** the four answers in the product's
+`.config/vwf.yaml`, so the later callers judge the same conditions the same way.
 
 The seam with `repo-gates` is worth stating, because it is the reason the kind
 exists rather than folding in: **a gate scans, while hygiene declares what is
