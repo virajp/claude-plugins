@@ -2,7 +2,10 @@
 type: vwf-change-plan
 title: SwiftUI app stack — the swiftui pack, Tuist, goldens, topics 1–11,
   the swift-swiftui bundle
-requires: [ docs/plans/2026-09-23-swift-package-stack ]
+requires: [
+  docs/plans/2026-09-23-swift-package-stack,
+  docs/plans/2026-09-23-swift-tasks-git-compat,
+]
 backlog: []
 ---
 
