@@ -42,10 +42,11 @@ to read.
   materialization record. Read the **slugs** its `entries:` carry and nothing
   else: which paths landed, with what hash, is the adapter's bookkeeping, and
   setup has no business reading it. An absent lockfile means nothing in that
-  repo is materialized. Two exceptions: the fallback for a config with no
+  repo is materialized. Three exceptions: the fallback for a config with no
   `answers:` block, which reads the pinned provider slug off it and nothing
-  more; and the machine-env step below, which re-records the hash of each
-  file it fills.
+  more; the machine-env step below, which reads the hash recorded for a
+  pack's template entry before it runs that entry's `detect`; and the same
+  step's re-record of the hash of each file it fills.
 
 The axes live in the **base's** `.config/vwf.yaml` only. A member repo has no
 config of its own — it carries a back-link
@@ -180,30 +181,34 @@ and lands it **unfilled**; filling it is this step's.
 **When it runs.** For every entry this pass **landed**, once the adapter
 returns, read `machine_env` off the payload it returned. For every entry the
 landing list skipped as already materialized, fetch its payload — a pure
-read — and run the step the same way: a re-run shows every position's
-current value and keeps it unless the person changes it, and a landing an
-earlier run left unfilled is finished here. A payload with no `machine_env`
-is nothing to do. "Filled" is read off the landed file itself: a position
-still holding the value the pack's payload ships there is unfilled.
+read — and run the step the same way. A payload with no `machine_env` is
+nothing to do.
 
 **Per entry, in the order the pack declares them** — one question each, per
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`'s one decision per round:
 
-1. Run `detect` from the target repo's root, inside its toolchain environment
-   (`mise x -- sh -c '<detect>'`), stopped after 30 seconds. Its stdout,
-   trimmed, is the **detected value**; a non-zero exit, a timeout or empty
-   output is no value. **Only the landed pack's own command runs:** `detect`
-   is run only when the committed template entry it was read from
-   (`.claude/<adapter>/templates/<slug>.md`) still matches the hash its
-   adapter lockfile records. On a mismatch it is not run — the entry was
-   edited after landing, so it is nobody's consented command — and the
-   question is asked with no default, the drift named beside it.
-2. Ask `question`. A position already filled offers its **current value**
-   preselected, with the detected value beside it where the two differ; an
-   unfilled one offers the detected value preselected. Either way the person
-   may type another. A `detect` that produced no value offers no default and
-   **still asks** — the question is never skipped, and never answered for
-   the person.
+1. Run `detect` from the target repo's root, inside its toolchain
+   environment, stopped after 30 seconds. The command is held in a variable
+   and passed to the shell as **one argument** — `mise x -- sh -c "$cmd"` —
+   never spliced into a quoted string, so the quotes and `$` references a
+   detect command carries reach the shell intact. Its stdout, trimmed, is the
+   **detected value**; a non-zero exit, a timeout or empty output is no
+   value. **The command runs only while its entry matches what the lockfile
+   last recorded:** `detect` is run only when the committed template entry
+   it was read from (`.claude/<adapter>/templates/<slug>.md`) still hashes to
+   the value its adapter lockfile records. On a mismatch it is not run — the
+   entry changed after it was recorded — and there is no detected value; the
+   drift is named beside the question.
+2. Ask `question`. **Which value is preselected depends only on whether the
+   pack landed in this run.** On the landing run, the detected value is
+   preselected. On every later run, the position's **current value** is —
+   an empty one included, shown as empty, since an empty answer is an answer
+   (a platform the value does not apply to, say) — with the detected value
+   beside it where the two differ. With no detected value — a failed
+   `detect`, or one not run for drift — the landing run offers no default,
+   and a later run still preselects the current value: only the detected
+   default is withheld. Either way the person may type another, and the
+   question is never skipped, and never answered for the person.
 3. Write the answer into the marked position named for `name` in the file the
    pack landed, and nothing else in that file. An answer equal to the current
    value writes nothing. **The value is data, never syntax:** one containing a
@@ -225,7 +230,7 @@ the lockfile together in the target repo, one commit per pack, its message
 naming the slug and the variables filled: the answers were the consent, as
 the adapter's consent line was for the landing.
 
-The file is committed, so once filled the value is the **repo's**, not the
+The file is committed, so once answered the value is the **repo's**, not the
 machine's: a later run on any machine offers the committed value
 preselected, with that machine's detected value beside it where the two
 differ, and keeps it unless the person there picks or types another. For
@@ -303,7 +308,9 @@ One block, carried back to the spine:
   value replaced, the value written, and `/vwf:setup reshape` as what lands
   the files the stale record skipped;
 - one line per machine-env variable asked — the repo, the slug, the name, the
-  value written or kept, and `no default` where its `detect` produced none;
+  value written or kept, `no default` where its `detect` produced none, and
+  `detect not run — template entry drifted from its lockfile record` where
+  the drift gate withheld it;
 - one line per member skipped as absent, with its checkout line;
 - one line per axis written `unresolved`, naming the project and the axis;
 - the sentence **"architecture decides; setup pins"**, so a reader knows where

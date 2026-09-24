@@ -202,8 +202,9 @@ the whole report.
 does it is [materialize](references/materialize.md) — read it there, in full,
 rather than reconstructing it here. It is also where a landed pack's
 **machine env** is asked: each value the pack's `machine_env:` fact declares
-is detected on this machine, offered preselected, and written into the pack's
-own marked position — setup asks it, never `init`.
+is detected on this machine — only while the pack's template entry matches
+what its lockfile last recorded — offered as the default, and written into
+the pack's own marked position. Setup asks it, never `init`.
 
 It runs **once per run, in every mode**, on a `.config/vwf.yaml` that is
 already current: in `onboard` and `migrate` between the spine's steps 2 and 3

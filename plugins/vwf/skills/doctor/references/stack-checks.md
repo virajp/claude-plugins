@@ -107,17 +107,20 @@ whole section reports `not checked — no stack resolved` for it:
   plugin's row has no such column). An entry takes one of two forms. A **bare
   name** is looked up with `command -v <name>`; missing → finding naming the
   binary. A **map**, `{ name: <binary>, probe: "<command>" }`, has its `probe`
-  run instead — from the repo root, inside the repo's mise environment
-  (`mise x -- sh -c '<probe>'`), stdout and stderr discarded, stopped after 30
-  seconds — and exit 0 is required; anything else, a timeout included, is a
-  finding naming the binary, the probe and its exit status (or `timed out`).
-  **Only the landed pack's own command runs:** the probe is run only when the
+  run instead — from the repo root, inside the repo's mise environment, the
+  command held in a variable and passed to the shell as **one argument**
+  (`mise x -- sh -c "$cmd"`), never spliced into a quoted string, so the
+  quotes and `$` references a probe carries reach the shell intact; stdout
+  and stderr discarded, stopped after 30 seconds — and exit 0 is required;
+  anything else, a timeout included, is a finding naming the binary, the
+  probe and its exit status (or `timed out`). **The probe runs only while its
+  entry matches what the lockfile last recorded:** it is run only when the
   committed template entry it was read from
-  (`.claude/<adapter>/templates/<slug>.md`) still matches the hash its adapter
-  lockfile records. On a mismatch it is not run — the entry was edited after
-  landing, so the probe is nobody's consented command and doctor stays
-  report-only — and the binary is reported **probe not run**, the drift as the
-  reason, at the severity a failed probe would carry. A probe is what tells a
+  (`.claude/<adapter>/templates/<slug>.md`) still hashes to the value its
+  adapter lockfile records. On a mismatch it is not run — the entry changed
+  after it was recorded, and doctor stays report-only — and the binary is
+  reported **probe not run**, the drift as the reason, at the severity a
+  failed probe would carry. A probe is what tells a
   binary that is present but unusable from one that works — for example,
   `xcodebuild -version` exits non-zero on a machine that has only a stub on
   `PATH`, where `command -v` would pass. A map with no `probe` is a bare name.
@@ -292,17 +295,22 @@ on `PATH` or in mise config) and each entry in `tools` has its expected marker �
 a config file, a mise tool, or a manifest dependency. Absent `repo.stack` block
 → `10` drift; report and nudge `/vwf:setup`.
 
-**Where the lockfile is looked for comes from the pack.** When the materialized
-template payload carries a `lockfile:` list beside `package_manager` — paths
-or globs relative to the repo root — the lockfile is present when **any** entry
-matches at least one file; the finding, when none does, names every entry it
-tried. A glob reaches into a project bundle as readily as the root: a package
-manager whose lockfile an IDE keeps inside its project directory declares that
-path beside the root one (for example
-`*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`). A
-template payload with **no** `lockfile:` list keeps today's reading — the
-package manager's conventional lockfile at the repo root, judged from the
-token — and that is the only case read that way.
+**Where the lockfile is looked for comes from the pack.** A `lockfile:` list —
+paths or globs relative to the repo root — rides whichever template payload
+composes the package manager, on **any** axis: `repo.stack.template`, and a
+project's `template` as much, since a package manager can ship inside a
+project bundle only. So read it from **every pinned, materialized payload
+that carries one**, each in the repo that pin materialized in, not from
+`repo.stack` alone. The lockfile is present when **any** entry matches at
+least one file; the finding, when none does, names the slug and every entry
+it tried, at the severity of the `package_manager` check above. A glob
+reaches into a project bundle as readily as the root: a package manager whose
+lockfile an IDE keeps inside its project directory declares that path beside
+the root one (for example
+`*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`).
+Where **no** pinned payload carries a `lockfile:` list, `repo.stack` keeps
+today's reading — the package manager's conventional lockfile at the repo
+root, judged from the token — and that is the only case read that way.
 
 **`rtk` is recommended, never required.** vwf ships a `PreToolUse` Bash hook
 that pipes each command through `rtk hook claude` to cut token cost, and the

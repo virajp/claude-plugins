@@ -285,7 +285,7 @@ dependencies: [] # open, lowercase-kebab
 capabilities: [] # backing axis — capability-vocabulary.md tokens
 artifact: <token> # deploy axis
 package_manager: <token> # repo axis
-lockfile: [ <path | glob> ] # repo axis, optional — where the lockfile may sit; any match passes
+lockfile: [ <path | glob> ] # optional, any axis composing a package manager — where its lockfile may sit; any match passes
 machine_env: # optional — machine values /vwf:setup detects and asks for
   - { name: <ENV_VAR>, detect: "<command>", question: "<prompt>" }
 harness: # HOW this stack satisfies each capability
@@ -361,16 +361,20 @@ side of the contract is three rules:
   executables the stack needs on `PATH` that mise does not manage (Xcode's
   `xcodebuild`, say), absent meaning none. Each entry is a bare name, looked
   up on `PATH`, or a map `{ name: <binary>, probe: "<command>" }`, whose
-  probe `/vwf:doctor` runs and requires to exit 0. That is the **materialized
+  probe `/vwf:doctor` runs and requires to exit 0 — run only while the
+  template entry matches what the lockfile last recorded, and reported not
+  run otherwise. That is the **materialized
   escape** in `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`: a token
   those facts cover is *known* to `/vwf:doctor` without a claiming language
   plugin. Two more facts ride the payload outside `language_facts`:
-  **`lockfile:`**, beside `package_manager` — the repo-relative paths or
+  **`lockfile:`**, on whichever payload composes a package manager — the
+  repo axis's or a project template's alike — the repo-relative paths or
   globs where that package manager's lockfile may sit, any match passing
   `/vwf:doctor`'s lockfile check; and **`machine_env:`**, a list of
   `{ name, detect, question }` — the machine values `/vwf:setup`'s
-  materialize pass detects, asks and writes into the marked position the
-  pack landed for each `name`.
+  materialize pass asks for and writes into the marked position the pack
+  landed for each `name`, offering what `detect` prints as the default while
+  the template entry matches what the lockfile last recorded.
 - **A materialized fetch is a pure read.** Once a slug is materialized, every
   `-stack-template` call returns the committed payload from the repo — so
   `plan`'s and `execute`'s conventions resolution behaves exactly as
