@@ -1,0 +1,12 @@
+/code-review high engine, loop R12 round 3, range ba994ef0..d65320b5 (focused on 0b86e336 and d65320b5; G5, E9, G8, E20 excluded). Verbatim findings:
+
+1. ux-gate/SKILL.md:85 — the audit runs once per changed platform, but mobile, tablet and auto all map to the one pinned iOS simulator, so tablet and CarPlay screens are audited on the pinned iPhone and reported clean under their own a11y line; performAccessibilityAudit runs on the real device with no layout override.
+2. ux-gate/SKILL.md:119 — "rendered: ok means at least one changed platform ran" is ambiguous now the a11y audit runs where no golden runs; a desktop-only change with iOS pinned reports rendered: ok with no image compared, skipping vwf's rendered: n/a human gate.
+3. ux-gate/SKILL.md:106 — the new a11y: line (like viewport:) is not in vwf's ux-gate contract (stack-adapter.md, execute-ux-reviewer read rendered/reason/findings only) and the n/a finding has no required severity.
+4. ux-gate/SKILL.md:88 — the audit runs raw xcodebuild, skipping require_xcode's XCODE_VERSION check; it can now run where test:golden never runs.
+5. ux-gate/SKILL.md:89 — every per-platform audit writes to the same .build/a11y.xcresult and deletes it before the next, so only the last platform's bundle survives for artifacts.
+6. ux-gate/SKILL.md:87 — platform=macOS hard-coded as usable for desktop; wrong for Mac Catalyst (variant=Mac Catalyst) or a scheme with no macOS destination, with no n/a route.
+7. references/testing.md:107 — "macOS needs no pin" contradicts :91-92 ("a Mac-only app pins macOS") and test:golden's refusal with SIMULATOR_PLATFORM unset.
+8. test/golden:101 — with no pin, the --record refusal says the destination is not the pinned simulator and says drop the overrides, which leads into the no-pin refusal; should say no pin exists.
+9. ux-gate/SKILL.md:65 — step 3 says every other platform, macOS included, is not run; wrong when the pin is macOS (legal for a Mac-only app).
+10. conventions.md:99 — says "a run with no pin is refused", but a run with all three overrides and no pin compares normally.
