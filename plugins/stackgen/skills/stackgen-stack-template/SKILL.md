@@ -108,9 +108,13 @@ check real.
 
 `machine_env` is what the caller asks, not what this skill fills. The
 materializer lands the fragment holding those marked positions **unfilled**;
-`/vwf:setup`'s materialize pass runs each `detect`, offers the value
-preselected, writes the answer and re-records the file's lockfile hash
-(`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). It adds no consent tier —
+`/vwf:setup`'s materialize pass runs each `detect` — only while the
+committed entry matches the hash its lockfile records, asking with no
+default otherwise — offers the value preselected, refuses one its reader
+would not take literally, writes the answer and re-records the file's
+lockfile hash (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). A
+`binaries` probe is gated the same way in `/vwf:doctor`, which reports it
+not run on drift. It adds no consent tier —
 the fragment rides the `config/` line like any other.
 
 ## Rules

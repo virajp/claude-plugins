@@ -216,7 +216,10 @@ presence on `PATH` proves nothing: `/usr/bin/xcodebuild` exists on a Mac with
 only the Command Line Tools and fails the moment it is run, so the lookup
 passes and the build does not. Severity is the same in either form —
 blocking once the project's template is pinned, a degradation while its pin
-still reads `unresolved`.
+still reads `unresolved`. A probe is a command the repo's committed
+template entry carries, so doctor runs it only while that entry matches the
+hash its lockfile records; on drift it runs nothing and reports the probe
+as not run, at a failed probe's severity. The procedure is doctor's.
 
 ### `lockfile:` — where a package manager locks
 
@@ -260,8 +263,13 @@ its marked positions unfilled**; `/vwf:setup`'s materialize pass, the
 caller that lands the pack, runs each `detect`, offers the output
 preselected — the person may type another value — writes the answer into
 the marked position, and re-records the file's lockfile hash. A `detect`
-that fails or prints nothing offers no default and still asks. The values
-are the repo's committed pins, not per-machine overrides.
+that fails or prints nothing offers no default and still asks. Setup runs
+a `detect` only while the committed template entry matches the hash its
+lockfile records — on drift it runs none and asks with no default — and
+refuses a value the fragment's reader would not take literally (control
+characters, the reading tool's template or expansion characters, a quote
+it cannot escape). The procedure is setup's. The values are the repo's
+committed pins, not per-machine overrides.
 
 ### `conditional:` — files that land only when an answer holds
 
