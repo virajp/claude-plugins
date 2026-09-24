@@ -80,7 +80,10 @@ fragment what `/vwf:setup` detected on one machine — then delete the old line.
 The tasks and `ux-gate` refuse the stale state rather than trust it: each
 reads the fragment through `mise config get`, compares every pin it uses with
 the value there, and stops, naming both, when another source overrides it —
-or when the fragment is missing or lacks the pin.
+or when the fragment is missing, lacks the pin, holds it as anything but a
+plain string in its one `[env]` table, or holds a value with a template
+delimiter (`{{`, `{%`, `{#`) or a `$`, which mise would run or expand on
+every load.
 
 **One project, several surfaces.** An app declares whichever of iPhone, iPad,
 Mac, CarPlay, Watch, TV and Vision it ships as destinations of its targets —

@@ -30,10 +30,12 @@ Xcode against it before doing any work: `xcodebuild -version` must succeed —
 a Mac with only the Command Line Tools fails it, since they carry no
 `xcodebuild` that can build an app — and must report the pinned version. On a
 mismatch the task stops and names both the version it wants and the one
-selected, so the fix is switching
-Xcode, not reading a compiler error halfway through a build. An unset
-`XCODE_VERSION` is refused the same way, since an unpinned build checks
-nothing. Xcode is not installed by mise; the pin says which one, and
+selected, so the fix is switching Xcode, not reading a compiler error halfway
+through a build. An unset or empty `XCODE_VERSION` is refused the same way,
+since an unpinned build checks nothing, and so is a pin the fragment does not
+hold as a plain string, one holding a template delimiter (`{{`, `{%`, `{#`) or
+a `$`, or one another mise config overrides — the pack's `conventions.md`
+spells out each. Xcode is not installed by mise; the pin says which one, and
 installing it stays a person's step.
 
 Moving to a new Xcode is one change: update the pin, fix what the new compiler
