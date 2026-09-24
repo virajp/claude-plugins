@@ -385,7 +385,7 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  * What a stackgen pack ships to run in a target repo must be materializable
  * as-is.
  *
- * Eight assertions, all of them about a file whose failure mode in the target
+ * Nine assertions, all of them about a file whose failure mode in the target
  * repo is silence rather than an error:
  *
  * - a task file lands **executable** — `.config/mise/tasks/**` is a *file-based*
@@ -415,7 +415,10 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  * - every **`conditional:` entry** in the pack's `pack.yaml` names a path or
  *   glob that matches a file under its `config/` tier, and a `when:` of
  *   exactly one known axis with a value that axis takes — an axis no caller
- *   answers is never evaluated, so the file lands everywhere, silently.
+ *   answers is never evaluated, so the file lands everywhere, silently;
+ * - the pack's **`binaries`, `lockfile` and `machine_env` facts** take the
+ *   shapes `/vwf:doctor` and `/vwf:setup` read, and every `machine_env` name
+ *   is a key its `conf.d` fragment carries (`packFactFaults`).
  *
  * The walk is its own rather than `plugin.files`: most of these paths run
  * through `.config/`, and the reader's glob does not descend into a dot
@@ -520,9 +523,173 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       for (const message of conditionalFaults(readText(packYaml), config)) {
         at(`${path(packYaml)}: ${message}`);
       }
+      for (const message of packFactFaults(readText(packYaml), config)) {
+        at(`${path(packYaml)}: ${message}`);
+      }
     }
   }
   return findings;
+}
+
+/** Where a pack's `conf.d` fragments sit inside its `config/` tier. */
+const PACK_CONF_D = join(".config", "mise", "conf.d");
+
+/** A POSIX environment variable name. */
+const ENV_VAR_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+/**
+ * What a pack's three doctor- and setup-read facts are held to.
+ *
+ * - every `languages[].facts.binaries` entry is a bare name `/vwf:doctor` looks
+ *   up on PATH, or a map of exactly `name` and an optional `probe` it runs;
+ * - `lockfile` is a non-empty list of paths or globs relative to the repo root,
+ *   any match passing doctor's package-manager check;
+ * - every `machine_env` entry names an env var, the command that `detect`s its
+ *   value and the `question` setup asks — and when the pack ships a `conf.d`
+ *   fragment, the var is a key of an `[env]` table in one of them, since that
+ *   marked position is what setup fills.
+ *
+ * Each is read by a caller that trusts its shape: a probe that is not a string
+ * is never run, a lockfile glob that climbs out of the repo matches something
+ * the repo does not own, and a `machine_env` name no fragment carries is a
+ * question whose answer lands nowhere — all silently.
+ */
+function packFactFaults(source: string, config: string): string[] {
+  let document: unknown;
+  try {
+    document = parseYaml(source);
+  }
+  catch {
+    // conditionalFaults has already reported it.
+    return [];
+  }
+  if (!isPlainObject(document)) {
+    return [];
+  }
+  const faults: string[] = [];
+
+  const languages = Array.isArray(document.languages) ? document.languages : [];
+  languages.forEach((language: unknown, l) => {
+    const facts = isPlainObject(language) ? language.facts : undefined;
+    if (!isPlainObject(facts) || facts.binaries === undefined) {
+      return;
+    }
+    const label = `\`languages[${l}].facts.binaries\``;
+    if (!Array.isArray(facts.binaries)) {
+      faults.push(`${label} is not a list`);
+      return;
+    }
+    facts.binaries.forEach((entry: unknown, b) => {
+      const at = `${label}[${b}]`;
+      if (typeof entry === "string") {
+        if (entry === "") {
+          faults.push(`${at} is an empty name`);
+        }
+        return;
+      }
+      if (!isPlainObject(entry)) {
+        faults.push(`${at} is neither a name nor a { name, probe } map`);
+        return;
+      }
+      const extra = Object.keys(entry).filter(k =>
+        k !== "name" && k !== "probe"
+      );
+      if (extra.length > 0) {
+        faults.push(
+          `${at} carries ${extra.map(k => `\`${k}\``).join(", ")} — only `
+            + `\`name\` and \`probe\``,
+        );
+      }
+      if (typeof entry.name !== "string" || entry.name === "") {
+        faults.push(`${at} declares no \`name\``);
+      }
+      if (
+        entry.probe !== undefined
+        && (typeof entry.probe !== "string" || entry.probe === "")
+      ) {
+        faults.push(`${at} \`probe\` is not a non-empty string`);
+      }
+    });
+  });
+
+  if (document.lockfile !== undefined) {
+    const lockfile = document.lockfile;
+    if (!Array.isArray(lockfile) || lockfile.length === 0) {
+      faults.push("`lockfile` is not a non-empty list");
+    }
+    else {
+      lockfile.forEach((entry: unknown, index) => {
+        const label = `\`lockfile[${index}]\``;
+        if (typeof entry !== "string" || entry === "") {
+          faults.push(`${label} is not a path or glob`);
+        }
+        else if (isAbsolute(entry) || entry.split("/").includes("..")) {
+          faults.push(
+            `${label} (${entry}) climbs out of the repo — a lockfile path is `
+              + `relative to the repo root and stays inside it`,
+          );
+        }
+      });
+    }
+  }
+
+  if (document.machine_env !== undefined) {
+    if (!Array.isArray(document.machine_env)) {
+      faults.push("`machine_env` is not a list");
+      return faults;
+    }
+    const fragments = [...filesUnder(join(config, PACK_CONF_D))]
+      .filter(absolute => absolute.endsWith(".toml"));
+    const declared = new Set(
+      fragments.flatMap(absolute => tomlEnvKeys(readText(absolute))),
+    );
+    document.machine_env.forEach((entry: unknown, index) => {
+      const label = `\`machine_env[${index}]\``;
+      if (!isPlainObject(entry)) {
+        faults.push(`${label} is not a { name, detect, question } map`);
+        return;
+      }
+      const name = entry.name;
+      const at = typeof name === "string" ? `${label} (${name})` : label;
+      if (typeof name !== "string" || !ENV_VAR_NAME.test(name)) {
+        faults.push(`${at} \`name\` is not an env-var name`);
+      }
+      else if (fragments.length > 0 && !declared.has(name)) {
+        faults.push(
+          `${at} is a key of no \`[env]\` table in the pack's conf.d `
+            + `fragments — setup would ask and fill nothing`,
+        );
+      }
+      for (const key of ["detect", "question"]) {
+        if (typeof entry[key] !== "string" || entry[key] === "") {
+          faults.push(`${at} \`${key}\` is not a non-empty string`);
+        }
+      }
+    });
+  }
+  return faults;
+}
+
+/**
+ * The keys of every `[env]` table in a TOML document. Narrow on purpose, as
+ * the other TOML readers here are: a bare or quoted key at the start of a line
+ * under an `[env]` header, which is how a conf.d fragment spells its env.
+ */
+function tomlEnvKeys(source: string): string[] {
+  const keys: string[] = [];
+  let inEnv = false;
+  for (const line of source.split("\n")) {
+    const header = /^\s*\[([^[\]]+)\]\s*(?:#.*)?$/.exec(line);
+    if (header !== null) {
+      inEnv = header[1]?.trim() === "env";
+      continue;
+    }
+    const key = inEnv ? /^\s*(["']?)([A-Za-z0-9_]+)\1\s*=/.exec(line) : null;
+    if (key?.[2] !== undefined) {
+      keys.push(key[2]);
+    }
+  }
+  return keys;
 }
 
 /**

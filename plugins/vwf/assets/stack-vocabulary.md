@@ -47,15 +47,18 @@ variant in `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`): a language is
 **known** when the project's pin resolves to a materialized template whose
 payload carries **`language_facts`** for that token — the same three facts a
 language plugin would supply (how the LSP is provided, the mise tool, the
-manifest), plus one only a materializer carries, the optional
-`binaries: [<name>…]` — executables the stack needs on `PATH` that mise does
-not manage, absent meaning none — four facts in all, emitted into the template
-when it was materialized. `/vwf:doctor` then verifies the repo against those
-facts instead of against a language plugin, and `n/a` in a fact is an answer,
-not an absence. The escape changes nothing about the closed menu: the facts
-entered the config through a consent-gated materialization, not through free
-text. A token with **neither** a claiming plugin **nor** materialized facts
-stays `unknown`.
+manifest), plus one only a materializer carries, the optional `binaries` —
+executables the stack needs on `PATH` that mise does not manage, absent
+meaning none, each a bare name or a `{ name, probe }` map whose probe must
+exit 0 — four language facts in all, emitted into the template when it was
+materialized. Beside them the payload may carry two facts that are not per
+language: `lockfile:`, where the package manager's lockfile may sit, and
+`machine_env:`, the machine values `/vwf:setup` asks for — six facts in all.
+`/vwf:doctor` then verifies the repo against those facts instead of against a
+language plugin, and `n/a` in a fact is an answer, not an absence. The escape
+changes nothing about the closed menu: the facts entered the config through a
+consent-gated materialization, not through free text. A token with **neither**
+a claiming plugin **nor** materialized facts stays `unknown`.
 
 **Unknown is blocking, but only once the project has a stack.** Since
 `config_format` 16 a project's `template` may read `unresolved` — deferred, not

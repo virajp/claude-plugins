@@ -666,6 +666,115 @@ describe("the pack config tier", () => {
       expect.stringContaining("`when` names 2 axes — exactly one of"),
     ]);
   });
+
+  // Doctor runs a probe and reads a lockfile glob as the pack states them, and
+  // setup asks a machine_env question and fills the conf.d key it names — a
+  // malformed fact or a key no fragment carries fails in none of them.
+  const facts = (yaml: string, files: Record<string, string> = {}) => ({
+    alpha: {
+      files: {
+        "stacks/app-framework/swiftui/pack.yaml": `name: SwiftUI\n${yaml}`,
+        ...files,
+      },
+    },
+  });
+  const binaries = (list: string) =>
+    facts(
+      `languages:\n  - token: swift\n    facts:\n      binaries: ${list}\n`,
+    );
+  const confD = "stacks/app-framework/swiftui/config/.config/mise/conf.d";
+
+  it("accepts a binaries list of bare names and probe maps", () => {
+    const root = tree(binaries(
+      "[ swift, { name: xcodebuild, probe: \"xcodebuild -version\" }, "
+        + "{ name: xcrun } ]",
+    ));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a binaries entry that is neither a name nor a probe map", () => {
+    const root = tree(binaries(
+      "[ \"\", 3, { probe: \"x -v\" }, { name: x, probe: \"\" }, "
+        + "{ name: y, version: 1 } ]",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("`languages[0].facts.binaries`[0] is an empty"),
+      expect.stringContaining("[1] is neither a name nor a { name, probe }"),
+      expect.stringContaining("[2] declares no `name`"),
+      expect.stringContaining("[3] `probe` is not a non-empty string"),
+      expect.stringContaining("[4] carries `version` — only `name` and"),
+    ]);
+  });
+
+  it("accepts a lockfile list of relative paths and globs", () => {
+    const root = tree(facts(
+      "lockfile:\n  - Package.resolved\n"
+        + "  - \"*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/"
+        + "Package.resolved\"\n",
+    ));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags an empty lockfile list, and entries that climb out", () => {
+    const empty = tree(facts("lockfile: []\n"));
+    expect(messages(check(empty))).toEqual([
+      expect.stringContaining("`lockfile` is not a non-empty list"),
+    ]);
+    const root = tree(facts(
+      "lockfile:\n  - ../Package.resolved\n  - /Package.resolved\n  - 7\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("`lockfile[0]` (../Package.resolved) climbs out"),
+      expect.stringContaining("`lockfile[1]` (/Package.resolved) climbs out"),
+      expect.stringContaining("`lockfile[2]` is not a path or glob"),
+    ]);
+  });
+
+  it("accepts machine_env entries each keyed in a conf.d [env] table", () => {
+    const root = tree(facts(
+      "machine_env:\n"
+        + "  - { name: XCODE_VERSION, detect: \"xcodebuild -version\", "
+        + "question: Which Xcode? }\n"
+        + "  - { name: SIMULATOR_OS, detect: \"xcrun simctl list\", "
+        + "question: Which OS? }\n",
+      {
+        [`${confD}/swiftui.toml`]: "[tools]\nx = \"1\"\n\n[env]\n"
+          + "# A MARKED POSITION\nXCODE_VERSION = \"\"\n"
+          + "\"SIMULATOR_OS\" = \"\" # trailing\n",
+      },
+    ));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("accepts machine_env on a pack that ships no conf.d fragment", () => {
+    const root = tree(facts(
+      "machine_env:\n  - { name: X, detect: \"echo 1\", question: X? }\n",
+    ));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a malformed machine_env entry and a name no [env] carries", () => {
+    const root = tree(facts(
+      "machine_env:\n"
+        + "  - { name: 1BAD, detect: \"x\", question: q }\n"
+        + "  - { name: GOOD, detect: \"\" }\n"
+        + "  - { name: MISSING, detect: \"x\", question: q }\n"
+        + "  - just a string\n",
+      {
+        [`${confD}/swiftui.toml`]: "[env]\nGOOD = \"\"\n\n[tools]\n"
+          + "MISSING = \"1\"\n",
+      },
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("`machine_env[0]` (1BAD) `name` is not an env"),
+      expect.stringContaining("`machine_env[1]` (GOOD) `detect` is not a"),
+      expect.stringContaining("`machine_env[1]` (GOOD) `question` is not a"),
+      expect.stringContaining(
+        "`machine_env[2]` (MISSING) is a key of no `[env]` table",
+      ),
+      expect.stringContaining("`machine_env[3]` is not a { name, detect,"),
+    ]);
+  });
 });
 
 describe("frontmatter", () => {

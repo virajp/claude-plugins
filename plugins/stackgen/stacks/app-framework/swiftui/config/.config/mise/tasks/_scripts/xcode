@@ -8,8 +8,9 @@
 # refused.
 
 # Fails unless a full Xcode is selected, the repo pins one as XCODE_VERSION in
-# its mise [env], and the selected one is that version. An unset pin is a
-# refusal too: a build that checks nothing is not pinned.
+# .config/mise/conf.d/swiftui.toml, and the selected one is that version. An
+# unset or empty pin is a refusal too: a build that checks nothing is not
+# pinned.
 #
 # `command -v xcodebuild` is no test: /usr/bin/xcodebuild is a stub every Mac
 # carries, and with only the Command Line Tools selected it exists and exits
@@ -26,7 +27,7 @@ require_xcode() {
   selected=$(printf '%s\n' "${version_output}" | awk 'NR==1{print $2}')
   if [ -z "${XCODE_VERSION:-}" ]; then
     print_error "${task}: no Xcode is pinned — XCODE_VERSION is unset."
-    print_yellow "Add XCODE_VERSION = \"${selected}\" (or the version the repo builds with) to the [env] of the repo's mise config, then re-run."
+    print_yellow "Set XCODE_VERSION = \"${selected}\" (or the version the repo builds with) in the [env] of .config/mise/conf.d/swiftui.toml, then re-run."
     exit 1
   fi
   if [ "${selected}" != "${XCODE_VERSION}" ]; then

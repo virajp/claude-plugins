@@ -173,7 +173,7 @@ optional, and no reference restates a rule that lives above.
 
 | Sections                                                   | Reference                                                 | Covers                                                                                            |
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, required binaries on `PATH`, an unknown language, framework/dependency drift per manifest, the seven stack axes, a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, the recommended `rtk`, the recommended forge CLI, and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups and the commit scopes, the aggregator's member flags and aliases, the two branches, the repo-name environment key against the repo's folder, every pack-owned file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — the `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` (a legacy `MERGE_MODEL` read as both) and `MEMBERS` positions beside it (the two runtime positions beside those are read by no row), and the forge state — the default branch, both branches' protection, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
+| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, required binaries on `PATH` or their declared probes, an unknown language, framework/dependency drift per manifest, the seven stack axes, a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack` (its lockfile where the pack's `lockfile:` fact says), the recommended `rtk`, the recommended forge CLI, and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups and the commit scopes, the aggregator's member flags and aliases, the two branches, the repo-name environment key against the repo's folder, every pack-owned file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — the `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` (a legacy `MERGE_MODEL` read as both) and `MEMBERS` positions beside it (the two runtime positions beside those are read by no row), and the forge state — the default branch, both branches' protection, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
 | **6–7** — harness & health, memory config                  | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `mempalace.yaml` placement, wing/room contract and secret excludes, and the markdown mirror. **Blocking findings live here** |
 | **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, a graph per locally-present checkout, the refresh hook, staleness, the `.graphifyignore`. **Blocking findings live here** |
 
@@ -197,8 +197,8 @@ One table, findings first, grouped by kind — **blocking** (something
 defines: the graphify CLI, a graph missing from a locally-present checkout, an
 `iac` project inside another repo whose extraction the user has **not**
 declined on the record, `mise`, an **unknown** language and a `binaries` name
-missing from `PATH` — the last three **conditionally**, once a stack axis is
-pinned (§5, §3) — a project whose
+missing from `PATH` or failing its declared probe — the last three
+**conditionally**, once a stack axis is pinned (§5, §3) — a project whose
 pinned template its adapter never **materialized** in that project's target
 repo (§3) — the pin is an answer and the payload absent, a `custom` template
 pin, a project whose template does not cover every platform it declares, a
@@ -242,8 +242,8 @@ no-ops (§5), a forge CLI that is absent, unauthenticated or without the
 the repo-shape check unread (§5) — **or** a decision the user has not yet made or has declined on
 the record: an axis reading `unresolved`, whose dependent checks report `not
 checked — no stack resolved` (§§3–5), a `binaries` name missing from `PATH`
-while its project's `template` reads `unresolved` (§3), a declined graph
-build, and an `iac`
+or failing its probe while its project's `template` reads `unresolved` (§3),
+a declined graph build, and an `iac`
 extraction declined under `enforcement:`, each reported every run and never
 escalating back to blocking). Mark anything the §1 recall already carried as
 **known**, so a repeat run reads as a diff rather than a re-accusation. State

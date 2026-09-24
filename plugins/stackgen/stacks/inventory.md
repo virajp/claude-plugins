@@ -32,7 +32,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | Component | Name | Kind | Axis | Category | Capability | Version | Summary |
 | --------- | ---- | ---- | ---- | -------- | ---------- | ------- | ------- |
 | `app-framework/flutter` | Flutter | `app-framework` | project | cross-platform-ui |  | 0.4.0 | The cross-platform app SDK that owns the manifest, the build and the project layout — one codebase across mobile, tablet, desktop and in-car through the native edge. |
-| `app-framework/swiftui` | SwiftUI | `app-framework` | project | native-ui |  | 0.1.0 | The native Apple app stack — SwiftUI on Swift, the project a committed Xcode project, Xcode owning the build — one codebase across iPhone, iPad, Mac, CarPlay, Watch, TV and Vision. |
+| `app-framework/swiftui` | SwiftUI | `app-framework` | project | native-ui |  | 0.2.0 | The native Apple app stack — SwiftUI on Swift, the project a committed Xcode project, Xcode owning the build — one codebase across iPhone, iPad, Mac, CarPlay, Watch, TV and Vision. |
 | `capability-provider/audit-store-d1` | Audit store · Cloudflare D1 | `capability-provider` | backing | audit | audit-store | 0.1.0 | An isolated, append-only audit dataset in a D1 database of its own — written through one seam and read only by the console Worker that holds the binding. |
 | `capability-provider/audit-store-postgres` | Audit store · PostgreSQL | `capability-provider` | backing | audit | audit-store | 0.1.0 | An isolated, append-only audit schema inside the product's own PostgreSQL — insert-only to the application's role, readable by the console's reader role under policy, and removable only by the retention purge. |
 | `capability-provider/doppler` | Doppler | `capability-provider` | backing | secrets-manager |  | 1.0.0 | A vendor holds the secrets and the CLI injects them at the process boundary — onboarding is an org invite, and no key is ever distributed. |
@@ -89,18 +89,18 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `language/typescript` | TypeScript | `language-bundle` | project |  |  | 0.1.0 | The Node/TypeScript language baseline — standards, error semantics, the async model, testing, build and run, config and observability wiring. |
 | `package-manager/pnpm` | pnpm | `language-bundle` | repo |  |  | 0.3.0 | Dependency installation, locking and workspace layout for the Node ecosystem — the manifest contract and the monorepo shape. |
 | `package-manager/pub` | pub | `app-framework` | repo |  |  | 0.1.0 | Dependency declaration and locking for a Flutter app — pubspec.yaml, which also carries the SDK constraints and native package-manager config. |
-| `package-manager/swiftpm` | SwiftPM | `language-bundle` | repo |  |  | 0.1.0 | Dependency declaration, resolution and locking for a Swift package — Package.swift as the manifest, Package.resolved as the lockfile, .build/ as the one build tree. |
+| `package-manager/swiftpm` | SwiftPM | `language-bundle` | repo |  |  | 0.1.1 | Dependency declaration, resolution and locking for a Swift package — Package.swift as the manifest, Package.resolved as the lockfile, .build/ as the one build tree. |
 | `package-manager/uv` | uv | `language-bundle` | repo |  |  | 0.1.0 | Dependency resolution, locking, virtualenv management and process running for Python — one tool where the ecosystem historically had four. |
 | `repo-hygiene/repo-hygiene` | Repo hygiene | `repo-hygiene` | repo |  |  | 1.2.2 | The files a repository needs before it has a stack — the ignore set, the editor and attribute defaults, the licence and the security contact, and the dependency-update policy. |
 | `stylesheet/plain-css` | Plain CSS | `stylesheet` | stylesheet | plain |  | 0.1.0 | The design system's roles as CSS custom properties and hand-authored rules in cascade layers — no build step of its own, no generated classes, and nothing between the contract and the browser. |
 | `stylesheet/stylex` | StyleX | `stylesheet` | stylesheet | compile-time |  | 0.1.0 | Styles authored as typed objects in the component's own language and compiled to atomic CSS at build — the token mapping type-checked, the cascade replaced by explicit merge order, and nothing evaluated at runtime. |
 | `stylesheet/tailwindcss` | Tailwind CSS | `stylesheet` | stylesheet | utility |  | 0.1.0 | Utility classes generated from a token block — the design system's semantic roles declared once in CSS, and every style written at the call site as a class rather than in a stylesheet of its own. |
 | `toolchain-gate/analysis-options` | analysis_options | `app-framework` | project |  |  | 0.2.0 | The Dart analyzer and lint configuration for a Flutter app. |
-| `toolchain-gate/dprint` | dprint | `repo-gate` | repo |  |  | 1.1.1 | The repo's single formatter — one config, plugins pinned, generated trees excluded. Ships .config/dprint.json and .config/taplo.toml. |
+| `toolchain-gate/dprint` | dprint | `repo-gate` | repo |  |  | 1.1.2 | The repo's single formatter — one config, plugins pinned, generated trees excluded. Ships .config/dprint.json and .config/taplo.toml. |
 | `toolchain-gate/eslint` | ESLint | `language-bundle` | repo |  |  | 0.3.0 | The correctness gate for TypeScript and JavaScript — flat config, zero formatting rules, overrides scoped by glob. |
 | `toolchain-gate/gitleaks` | gitleaks | `repo-gate` | repo |  |  | 1.1.2 | The repo's secret scanner — working tree every commit, history once, allowlist by fingerprint. Ships .config/gitleaks.toml. |
 | `toolchain-gate/grype` | grype | `repo-gate` | repo |  |  | 1.0.1 | The repo's dependency vulnerability scanner — source per commit, artifact before release, ignores time-boxed. Ships .config/grype.yaml. |
-| `toolchain-gate/pre-commit` | pre-commit | `repo-gate` | repo |  |  | 1.1.5 | The local gate, and the wiring that makes local and CI run the identical command. Ships .config/pre-commit-config.yaml and .config/git-conventional-commits.yaml. |
+| `toolchain-gate/pre-commit` | pre-commit | `repo-gate` | repo |  |  | 1.1.6 | The local gate, and the wiring that makes local and CI run the identical command. Ships .config/pre-commit-config.yaml and .config/git-conventional-commits.yaml. |
 | `toolchain-gate/ruff` | Ruff | `language-bundle` | repo |  |  | 0.3.0 | The lint and format gate for Python — one tool for both halves, run through the project's uv environment rather than a global install. |
 | `toolchain-gate/swift-format` | swift-format | `language-bundle` | repo |  |  | 0.1.0 | The Swift formatter — swift-format, built into the toolchain as `swift format`, configured once under .config/. |
 | `toolchain-gate/swiftlint` | SwiftLint | `language-bundle` | repo |  |  | 0.1.0 | The correctness gate for Swift — SwiftLint through mise, strict, with every layout rule left to swift-format. |
@@ -163,12 +163,12 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `pnpm-turbo` | pnpm · Turborepo | `workspace` | repo | `package-manager/pnpm@0.3.0`, `build-orchestrator/turbo@generated` |  |
 | `pnpm-workspace` | pnpm · workspace | `workspace` | repo | `package-manager/pnpm@0.3.0` |  |
 | `postgres` | PostgreSQL | `database` | backing | `datastore/postgres@0.1.0` |  |
-| `repo-gates` | Repo gates | `repo-gate` | repo | `toolchain-gate/dprint@1.1.1`, `toolchain-gate/gitleaks@1.1.2`, `toolchain-gate/grype@1.0.1`, `toolchain-gate/pre-commit@1.1.5` | yes |
+| `repo-gates` | Repo gates | `repo-gate` | repo | `toolchain-gate/dprint@1.1.2`, `toolchain-gate/gitleaks@1.1.2`, `toolchain-gate/grype@1.0.1`, `toolchain-gate/pre-commit@1.1.6` | yes |
 | `repo-hygiene` | repo-hygiene | `repo-hygiene` | repo | `repo-hygiene/repo-hygiene@1.2.2` | yes |
 | `stitch` | Google Stitch | `design-tool` | design | `design-tool/stitch@0.1.0` |  |
 | `stylex` | StyleX | `stylesheet` | stylesheet | `stylesheet/stylex@0.1.0` |  |
-| `swift-package` | Swift · package | `language-bundle` | project | `language/swift@0.1.0`, `package-manager/swiftpm@0.1.0`, `toolchain-gate/swift-format@0.1.0`, `toolchain-gate/swiftlint@0.1.0` |  |
-| `swift-swiftui` | Swift · SwiftUI | `app-framework` | project | `app-framework/swiftui@0.1.0`, `package-manager/swiftpm@0.1.0`, `toolchain-gate/swift-format@0.1.0`, `toolchain-gate/swiftlint@0.1.0` |  |
+| `swift-package` | Swift · package | `language-bundle` | project | `language/swift@0.1.0`, `package-manager/swiftpm@0.1.1`, `toolchain-gate/swift-format@0.1.0`, `toolchain-gate/swiftlint@0.1.0` |  |
+| `swift-swiftui` | Swift · SwiftUI | `app-framework` | project | `app-framework/swiftui@0.2.0`, `package-manager/swiftpm@0.1.1`, `toolchain-gate/swift-format@0.1.0`, `toolchain-gate/swiftlint@0.1.0` |  |
 | `tailwindcss` | Tailwind CSS | `stylesheet` | stylesheet | `stylesheet/tailwindcss@0.1.0` |  |
 | `temporal` | Temporal | `capability-provider` | backing | `capability-provider/temporal@0.1.0` |  |
 | `typescript-cloudflare-agents` | TypeScript · Cloudflare Agents · Effect | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.0`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.0`, `framework/effect@0.1.0`, `framework/cloudflare-agents@0.1.0` |  |

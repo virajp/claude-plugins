@@ -59,7 +59,9 @@ stacks/<type>/<slug>/
 - **Fragments are named `<pack-name>.<ext>`, one per pack.**
   `.config/mise/conf.d/<pack>.toml` is an environment fragment the toolchain
   manager auto-loads, which is how a provider contributes variables without
-  editing `mise.toml`. `.config/pre-commit.d/<pack>.yaml` is a hook fragment
+  editing `mise.toml` — and where a value is the machine's to answer, how
+  a pack's `machine_env:` gets it filled (below).
+  `.config/pre-commit.d/<pack>.yaml` is a hook fragment
   — a standalone `repos:` list, valid YAML on its own — that the materializer
   copies **verbatim** and `/vwf:init` merges into
   `.config/pre-commit-config.yaml` between markers. The pack name in the
@@ -171,8 +173,11 @@ languages: # language and app-framework components only
       lsp: <how a language server is provided — or n/a>
       mise_tool: <the mise tool name — or n/a>
       manifest: <the manifest file doctor checks deps against — or n/a>
-      binaries: [ <name> ] # optional — executables needed on PATH that mise does not manage (xcodebuild, say); absent means none
+      binaries: [ <name> | { name: <name>, probe: <command> } ] # optional — executables mise does not manage (xcodebuild, say); absent means none; see below
 package_manager: <token> # package-manager components only
+lockfile: [ <path or glob> ] # package-manager components only — where the lockfile lives, repo-root relative; any match passes
+machine_env: # optional — env values detected from the machine, asked by /vwf:setup; see below
+  - { name: <ENV_VAR>, detect: <command>, question: <prompt> }
 artifact: <token> # deploy-target components, and deploy-side cloud-service ones
 mcp_servers: {} # design-tool and other components needing an MCP server — written into the project's .mcp.json behind tier-2 consent
 user_mcp_servers: {} # user-scoped — the generated local plugin's mcpServers, tier 3
@@ -193,6 +198,70 @@ twice, and a name appearing under both `mcp_servers:` and
 `user_mcp_servers:` halts the run. This changes no artifact: the landed set
 is still closed to skills, agents, hooks and rules, and these are payload
 the materializer writes elsewhere.
+
+### `binaries:` — a name, or a name and its probe
+
+A `binaries:` entry takes one of two forms, and one list may mix them:
+
+```yaml
+binaries:
+  - swift
+  - { name: xcodebuild, probe: "xcodebuild -version" }
+```
+
+A **bare name** is a `PATH` lookup, as it always was. A **map** carries
+exactly `name` and an optional `probe` — a shell command `/vwf:doctor` runs
+instead of the lookup, requiring exit 0. The probe is for a binary whose
+presence on `PATH` proves nothing: `/usr/bin/xcodebuild` exists on a Mac with
+only the Command Line Tools and fails the moment it is run, so the lookup
+passes and the build does not. Severity is the same in either form —
+blocking once the project's template is pinned, a degradation while its pin
+still reads `unresolved`.
+
+### `lockfile:` — where a package manager locks
+
+A package-manager pack declares where its lockfile lives, beside its
+`package_manager:` token: a non-empty list of repo-root-relative paths or
+globs, no `..`, and **any match passes**. `/vwf:doctor`'s
+`package_manager resolves` check reads it rather than guessing a filename
+from prose.
+
+```yaml
+package_manager: swiftpm
+lockfile:
+  - Package.resolved
+  - "*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+```
+
+The second entry is why the key is a list: an app's lockfile sits inside
+the Xcode project Xcode writes it into, a library's at the root, and one
+pack serves both.
+
+### `machine_env:` — values read from the machine, asked at setup
+
+A pack whose tasks read an environment value only the developer's machine
+can answer — the Xcode it builds with, the simulator it tests on —
+declares it as a pack-level `machine_env:` list:
+
+```yaml
+machine_env:
+  - name: XCODE_VERSION
+    detect: "xcodebuild -version | awk 'NR==1 {print $2}'"
+    question: Which Xcode version does this repo build with?
+```
+
+`name` is the environment variable, `detect` a shell command whose stdout
+is the default, and `question` the prompt. The pack **must** land a file
+holding a marked position named for each `name` — typically an `[env]`
+table in its own `config/.config/mise/conf.d/<pack>.toml` fragment (the
+conf.d passage above), each variable under a `# A MARKED POSITION` comment,
+shipped with an empty value. The **materializer lands that fragment with
+its marked positions unfilled**; `/vwf:setup`'s materialize pass, the
+caller that lands the pack, runs each `detect`, offers the output
+preselected — the person may type another value — writes the answer into
+the marked position, and re-records the file's lockfile hash. A `detect`
+that fails or prints nothing offers no default and still asks. The values
+are the repo's committed pins, not per-machine overrides.
 
 ### `conditional:` — files that land only when an answer holds
 
@@ -391,9 +460,10 @@ which is the grain `stackgen-sync` acts at.
   mise tool or manifest name surfaces as a doctor finding in every repo that
   pins the pack. A tool the stack cannot run without whose `mise_tool` is
   `n/a` — Xcode's `xcodebuild`, which mise does not install — belongs in
-  `binaries`, so doctor reports it missing from `PATH` rather than skipping
-  the `n/a` silently — blocking once the project's template is pinned, a
-  degradation while its pin still reads `unresolved`.
+  `binaries`, so doctor reports it missing rather than skipping the `n/a`
+  silently — blocking once the project's template is pinned, a degradation
+  while its pin still reads `unresolved`. Where being on `PATH` does not
+  prove the tool works, the entry carries a `probe` and doctor runs it.
 - **A generated pack may ship the `config/` tiers too.** Nothing about
   `config/.config/…`, `conf.d` or `pre-commit.d` is reserved to curated
   packs: a generated component that genuinely owns a config file may declare

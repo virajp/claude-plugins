@@ -29,10 +29,10 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/xcode"
 #
 # A golden is pixels from one simulator: another device or OS version renders
 # differently, and every comparison against it fails. So the repo pins the
-# simulator once, in its mise `[env]` — SIMULATOR_PLATFORM (`iOS Simulator`,
-# say), SIMULATOR_DEVICE and SIMULATOR_OS — and this task builds the
-# `-destination` from them, so recording, comparing, the `ux-gate` skill and CI
-# render on the same one. `--platform`, `--device` and `--os` override the pin
+# simulator once, in `.config/mise/conf.d/swiftui.toml` — SIMULATOR_PLATFORM
+# (`iOS Simulator`, say), SIMULATOR_DEVICE and SIMULATOR_OS — and this task
+# builds the `-destination` from them, so recording, comparing, the `ux-gate`
+# skill and CI render on the same one. `--platform`, `--device` and `--os` override the pin
 # for one run, and `--platform` comes with `--device` and `--os`, never
 # alone: a platform on the pin's device and OS names a simulator that does not
 # exist. A run with no pin is refused rather than left to whichever simulator
@@ -81,14 +81,14 @@ os="${usage_os:-${SIMULATOR_OS:-}}"
 
 if [ -z "${platform}" ]; then
   print_error "test:golden: no simulator is pinned — SIMULATOR_PLATFORM is unset."
-  print_yellow "Set SIMULATOR_PLATFORM, SIMULATOR_DEVICE and SIMULATOR_OS in the repo's mise [env] (or pass --platform, --device and --os), then re-run."
+  print_yellow "Set SIMULATOR_PLATFORM, SIMULATOR_DEVICE and SIMULATOR_OS in .config/mise/conf.d/swiftui.toml (or pass --platform, --device and --os), then re-run."
   exit 1
 fi
 if [ "${platform}" == "macOS" ]; then
   destination="platform=macOS"
 elif [ -z "${device}" ] || [ -z "${os}" ]; then
   print_error "test:golden: the ${platform} pin is incomplete — SIMULATOR_DEVICE and SIMULATOR_OS are both required."
-  print_yellow "Set them in the repo's mise [env] (or pass --device and --os); xcrun simctl list devices available lists the choices."
+  print_yellow "Set them in .config/mise/conf.d/swiftui.toml (or pass --device and --os); xcrun simctl list devices available lists the choices."
   exit 1
 else
   destination="platform=${platform},name=${device},OS=${os}"
@@ -99,7 +99,7 @@ if [[ "${usage_record:-false}" == "true" ]] &&
     { [ "${platform}" != "macOS" ] &&
       { [ "${device}" != "${SIMULATOR_DEVICE:-}" ] || [ "${os}" != "${SIMULATOR_OS:-}" ]; }; }; }; then
   print_error "test:golden: --record records on the pinned simulator only, and ${destination} is not it."
-  print_yellow "Drop --platform, --device and --os to record, or move the pin in the repo's mise [env] first."
+  print_yellow "Drop --platform, --device and --os to record, or move the pin in .config/mise/conf.d/swiftui.toml first."
   exit 1
 fi
 

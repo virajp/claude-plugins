@@ -85,11 +85,12 @@ the run's result bundle, which the task always writes to
   device or OS version renders differently, and every comparison against it
   fails. The Xcode pin fixes the toolchain but neither the device nor the
   runtime. So goldens are recorded and compared on one named simulator, pinned
-  once in the repo's mise `[env]` as `SIMULATOR_DEVICE`, `SIMULATOR_OS` and
-  `SIMULATOR_PLATFORM`, from which `test:golden` builds its destination — so
-  recording, comparing, the UX gate and CI render on the same simulator. A run
-  with no pin is refused, never left to pick a simulator. A Mac-only app pins
-  `macOS` as its platform, which needs no device or OS.
+  once in `.config/mise/conf.d/swiftui.toml` as `SIMULATOR_DEVICE`,
+  `SIMULATOR_OS` and `SIMULATOR_PLATFORM` — filled by `/vwf:setup` from this
+  machine and committed — from which `test:golden` builds its destination —
+  so recording, comparing, the UX gate and CI render on the same simulator. A
+  run with no pin is refused, never left to pick a simulator. A Mac-only app
+  pins `macOS` as its platform, which needs no device or OS.
 - **The goldens are the pinned platform's.** A simulator renders one platform,
   and the pin names one, so the recorded goldens belong to it. `--platform`,
   `--device` and `--os` override one run, for a look at another simulator;
@@ -98,14 +99,19 @@ the run's result bundle, which the task always writes to
   differs from the pin — goldens are recorded on the pin only, so a golden is
   only ever compared on the simulator it was recorded on. Moving the pin, or
   moving Xcode, re-records in its own change.
-- **The UX gate renders the pinned platform only.** Every other platform the
-  change touches is not run: the gate reports its goldens `n/a` with a finding
-  that it is not the pinned platform, never `ok`, since a comparison that did
-  not happen passed nothing.
-- **The accessibility audit runs wherever a destination is usable.** The gate
-  audits once per changed platform it can reach — the pinned simulator, or
-  macOS for desktop, which needs no pin — and reports every other changed
-  platform's audit `n/a` with a finding.
+- **The UX gate renders the pinned platform only.** The pinned platform is
+  the pinned device's own — read from its product family, iPhone `mobile`,
+  iPad `tablet`, Apple Watch `watch`, Apple TV `tv`, Apple Vision `spatial` —
+  or `desktop` on a `macOS` pin. Every other platform the change touches is
+  not run: the gate reports its goldens `n/a` with a finding that it is not
+  the pinned platform, never `ok`, since a comparison that did not happen
+  passed nothing. The gate reports `rendered: ok` only when some changed
+  platform's goldens were compared; a run that only audited is `n/a`.
+- **The accessibility audit runs on the pinned platform and `desktop`.** The
+  gate audits the pinned platform on the pin, and `desktop` on macOS, which
+  needs no simulator, each when it changed; every other changed platform —
+  `auto` always, `tablet` on an iPhone pin — is reported `n/a` with a
+  finding, never clean.
 - **A golden run never moves the lockfile.** `test:golden` resolves packages
   only at the versions `Package.resolved` records, so a comparison judges the
   code under review, not a dependency that moved underneath it.

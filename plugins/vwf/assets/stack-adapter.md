@@ -285,6 +285,9 @@ dependencies: [] # open, lowercase-kebab
 capabilities: [] # backing axis — capability-vocabulary.md tokens
 artifact: <token> # deploy axis
 package_manager: <token> # repo axis
+lockfile: [ <path | glob> ] # repo axis, optional — where the lockfile may sit; any match passes
+machine_env: # optional — machine values /vwf:setup detects and asks for
+  - { name: <ENV_VAR>, detect: "<command>", question: "<prompt>" }
 harness: # HOW this stack satisfies each capability
   <capability>: { task: <name>, mechanism: <one line> } # or `n/a`
 conventions: <prose> # layout, testing, placement — read by plan/execute
@@ -354,12 +357,20 @@ side of the contract is three rules:
 
 - **The payload may carry `language_facts`** — per language, the facts a
   language plugin would otherwise supply (LSP provision, mise tool, manifest;
-  `n/a` where honest), plus an optional fourth, `binaries: [<name>…]` — the
+  `n/a` where honest), plus an optional fourth, `binaries` — the
   executables the stack needs on `PATH` that mise does not manage (Xcode's
-  `xcodebuild`, say), absent meaning none. That is the **materialized
+  `xcodebuild`, say), absent meaning none. Each entry is a bare name, looked
+  up on `PATH`, or a map `{ name: <binary>, probe: "<command>" }`, whose
+  probe `/vwf:doctor` runs and requires to exit 0. That is the **materialized
   escape** in `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`: a token
   those facts cover is *known* to `/vwf:doctor` without a claiming language
-  plugin.
+  plugin. Two more facts ride the payload outside `language_facts`:
+  **`lockfile:`**, beside `package_manager` — the repo-relative paths or
+  globs where that package manager's lockfile may sit, any match passing
+  `/vwf:doctor`'s lockfile check; and **`machine_env:`**, a list of
+  `{ name, detect, question }` — the machine values `/vwf:setup`'s
+  materialize pass detects, asks and writes into the marked position the
+  pack landed for each `name`.
 - **A materialized fetch is a pure read.** Once a slug is materialized, every
   `-stack-template` call returns the committed payload from the repo — so
   `plan`'s and `execute`'s conventions resolution behaves exactly as

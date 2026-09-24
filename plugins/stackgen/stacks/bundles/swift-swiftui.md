@@ -3,8 +3,8 @@ name: Swift · SwiftUI
 axis: project
 kind: app-framework
 components:
-- app-framework/swiftui@0.1.0
-- package-manager/swiftpm@0.1.0
+- app-framework/swiftui@0.2.0
+- package-manager/swiftpm@0.1.1
 - toolchain-gate/swift-format@0.1.0
 - toolchain-gate/swiftlint@0.1.0
 platforms:
@@ -57,14 +57,17 @@ native edge.
 
 ## Stack
 
-- **Swift 6** and **SwiftUI**, from the host's Xcode: `xcodebuild` and
-  `swift` must be on `PATH`, and `/vwf:doctor` blocks when they are not.
+- **Swift 6** and **SwiftUI**, from the host's Xcode: `swift` must be on
+  `PATH` and `xcodebuild -version` must succeed — a Mac with only the Command
+  Line Tools fails it — and `/vwf:doctor` blocks when either does not.
   **sourcekit-lsp** ships with it and is the language server.
 - **A committed Xcode project** owns the app's targets. It is created once, by
   a person, in Xcode — no generator, and no pack lands the `.xcodeproj`; the
   tasks call `xcodebuild` and `swift` alone. The Xcode version is pinned by
-  `XCODE_VERSION` in the repo's mise `[env]`, and every task that builds checks
-  `xcodebuild -version` against it and fails fast on the wrong one.
+  `XCODE_VERSION` in the pack's `.config/mise/conf.d/swiftui.toml`, beside the
+  golden simulator's pin; `/vwf:setup` asks for each value as it lands the
+  pack, offering what this machine answers. Every task that builds checks
+  `xcodebuild -version` against the pin and fails fast on the wrong one.
 - **Packages are added through Xcode**, into the project, and locked in the
   `Package.resolved` it keeps inside the `.xcodeproj`, which is committed. The
   app's own dependencies live there. The **SwiftPM** component governs only a

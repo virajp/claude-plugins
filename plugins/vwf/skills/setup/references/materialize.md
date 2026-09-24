@@ -42,9 +42,10 @@ to read.
   materialization record. Read the **slugs** its `entries:` carry and nothing
   else: which paths landed, with what hash, is the adapter's bookkeeping, and
   setup has no business reading it. An absent lockfile means nothing in that
-  repo is materialized. The one exception is the fallback for a config with
-  no `answers:` block, which reads the pinned provider slug off it and
-  nothing more.
+  repo is materialized. Two exceptions: the fallback for a config with no
+  `answers:` block, which reads the pinned provider slug off it and nothing
+  more; and the machine-env step below, which re-records the hash of each
+  file it fills.
 
 The axes live in the **base's** `.config/vwf.yaml` only. A member repo has no
 config of its own — it carries a back-link
@@ -165,6 +166,58 @@ the adapter's and this pass does not change it. Setup does not batch two slugs
 into one gate, and does not present a plan of its own in front of the
 adapter's.
 
+## Ask the machine env
+
+Some values a stack needs are facts about the **machine** that builds it, not
+decisions anyone makes — a tool's installed version, a device the tests run
+on. A pack declares them in its `machine_env:` fact, which the template
+payload carries as a list of `{ name, detect, question }`: `name` an
+environment variable, `detect` a shell command whose stdout is the default,
+`question` the prompt. The pack lands a file with a marked position named for
+each `name` — typically a toolchain `conf.d` fragment's environment table —
+and lands it **unfilled**; filling it is this step's.
+
+**When it runs.** For every entry this pass **landed**, once the adapter
+returns, read `machine_env` off the payload it returned. For every entry the
+landing list skipped as already materialized, fetch its payload — a pure
+read — and run the step the same way: a re-run shows every position's
+current value and keeps it unless the person changes it, and a landing an
+earlier run left unfilled is finished here. A payload with no `machine_env`
+is nothing to do. "Filled" is read off the landed file itself: a position
+still holding the value the pack's payload ships there is unfilled.
+
+**Per entry, in the order the pack declares them** — one question each, per
+`${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`'s one decision per round:
+
+1. Run `detect` from the target repo's root, inside its toolchain environment
+   (`mise x -- sh -c '<detect>'`), stopped after 30 seconds. Its stdout,
+   trimmed, is the **detected value**; a non-zero exit, a timeout or empty
+   output is no value.
+2. Ask `question`. A position already filled offers its **current value**
+   preselected, with the detected value beside it where the two differ; an
+   unfilled one offers the detected value preselected. Either way the person
+   may type another. A `detect` that produced no value offers no default and
+   **still asks** — the question is never skipped, and never answered for
+   the person.
+3. Write the answer into the marked position named for `name` in the file the
+   pack landed, and nothing else in that file. An answer equal to the current
+   value writes nothing.
+
+Then, once per pack whose file changed, **re-record that file's hash** in the
+target repo's adapter lockfile — the same re-record `/vwf:init` makes of every
+file it fills, and the one lockfile write this pass makes — so the filled
+file does not read as drift on the next `/vwf:doctor`. Commit the file and
+the lockfile together in the target repo, one commit per pack, its message
+naming the slug and the variables filled: the answers were the consent, as
+the adapter's consent line was for the landing.
+
+The file is committed, so once filled the value is the **repo's**, not the
+machine's: a later run on any machine offers the committed value
+preselected, with that machine's detected value beside it where the two
+differ, and keeps it unless the person there picks or types another. For
+example, a mobile stack might declare its IDE version and a test device
+this way.
+
 ## A declined landing
 
 Record it in the report as **"declined — pin stays; `/vwf:setup` offers it
@@ -235,6 +288,8 @@ One block, carried back to the spine:
 - one line per recorded `forge` the live host contradicted — the repo, the
   value replaced, the value written, and `/vwf:setup reshape` as what lands
   the files the stale record skipped;
+- one line per machine-env variable asked — the repo, the slug, the name, the
+  value written or kept, and `no default` where its `detect` produced none;
 - one line per member skipped as absent, with its checkout line;
 - one line per axis written `unresolved`, naming the project and the axis;
 - the sentence **"architecture decides; setup pins"**, so a reader knows where

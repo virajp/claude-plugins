@@ -53,6 +53,7 @@ exclude: |-
   (^|/)\.turbo/|
   (^|/)\.venv/|
   (^|/)Derived/|
+  (^|/)[^/]*\.xcassets/|
   (^|/)build/|
   (^|/)dist/|
   (^|/)graphify-out/|

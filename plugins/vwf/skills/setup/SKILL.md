@@ -19,9 +19,10 @@ Bring any repo — new, existing, or written against an older vwf format — int
 the shape the rest of the workflow reads. `setup` is the Phase-0 bootstrapper of
 `setup → product → architecture → design-system → blueprint → plan → execute`,
 and the only vwf command that onboards. It is also where a **pinned** stack is
-materialized: `/vwf:architecture` decides the slug, setup lands it, and **the
-materialize pass runs in every mode** — which is why `/vwf:architecture` comes
-back here when it is done.
+materialized: `/vwf:architecture` decides the slug, setup lands it — asking the
+machine values the landed pack declares — and **the materialize pass runs in
+every mode** — which is why `/vwf:architecture` comes back here when it is
+done.
 
 **The mode is resolved once, in Step 0, and never re-derived.** Everything after
 it branches on the named mode. There is no progress key and no resume state:
@@ -199,7 +200,10 @@ the whole report.
 **Architecture decides; setup pins.** A slug on a stack axis is a decision
 `/vwf:architecture` made and wrote; landing it is setup's, and the pass that
 does it is [materialize](references/materialize.md) — read it there, in full,
-rather than reconstructing it here.
+rather than reconstructing it here. It is also where a landed pack's
+**machine env** is asked: each value the pack's `machine_env:` fact declares
+is detected on this machine, offered preselected, and written into the pack's
+own marked position — setup asks it, never `init`.
 
 It runs **once per run, in every mode**, on a `.config/vwf.yaml` that is
 already current: in `onboard` and `migrate` between the spine's steps 2 and 3

@@ -20,6 +20,16 @@ paths:
 resolution — keep the manifest declarative and let the lockfile carry the
 exact versions.
 
+**A `Package.resolved` inside an `.xcodeproj` is Xcode's.** The glob above
+also matches
+`<Name>.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`,
+the lockfile Xcode keeps for an app's dependencies. Those dependencies are
+the project's: resolve, update and inspect them through
+`mise run setup:deps:*`, never `swift package resolve` or `swift package
+update`, and never edit that file by hand. Everything below governs a
+`Package.swift` the repo owns — a package, or a local package an app splits
+out — and the `Package.resolved` beside it.
+
 ## The manifest
 
 ```swift
@@ -67,7 +77,8 @@ let package = Package(
   `branch:` and `revision:` only for a temporary fork, never merged to the
   integration branch.
 - Put the repository URL in a comment above the declaration.
-- Resolve and commit both files together:
+- Resolve and commit both files together — for a `Package.swift` the repo
+  owns; an app's dependency is added through Xcode:
 
 ```bash
 swift package resolve
@@ -75,6 +86,9 @@ git add Package.swift Package.resolved   # commit: "deps: add <package>"
 ```
 
 ## Rules
+
+These govern a `Package.swift` the repo owns and its `Package.resolved`; the
+lockfile inside an `.xcodeproj` goes through `mise run setup:deps:*`.
 
 - **Never edit `Package.resolved` by hand** — `swift package resolve` and
   `swift package update` write it.
@@ -114,6 +128,7 @@ git add Package.swift Package.resolved   # commit: "deps: add <package>"
 
 ## Workspace
 
-`n/a` for this pack. A Swift package is one `Package.swift` with its own
-targets; a repo holding several packages is the `workspace` bundle's concern,
-and no Swift workspace bundle ships.
+`n/a` for this pack. A Swift package the repo owns is one `Package.swift`
+with its own targets; a repo holding several packages is the `workspace`
+bundle's concern, and no Swift workspace bundle ships. An app's Xcode project
+is neither — its dependencies are Xcode's, as above.
