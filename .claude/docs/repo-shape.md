@@ -159,7 +159,7 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   and free of a 13 or 17 component, those two integers never being issued on any
   version line this repo maintains; dependencies resolving within the
   marketplace; hook scripts existing and executable; **a pack's `config/`
-  payload tier being materializable as-is** (eight assertions in one rule: exec
+  payload tier being materializable as-is** (nine assertions in one rule: exec
   bit *and* a known shebang on every file under `config/.config/mise/tasks/**`,
   because mise reports a 644 task as an *unknown* one rather than a permission
   error and execs the file directly; the same two on every `hooks/*.sh`, which
@@ -176,29 +176,35 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   reached it before; every `config/.config/vscode.d/*.jsonc` parsing as JSONC
   with only the three keys `settings`, `nesting` and `extensions`, since init
   composes them into an editor file no pack owns and a fourth key is dropped
-  without a word; and every `conditional:` entry in the pack's `pack.yaml`
-  naming a relative path or glob with no `..` segment that matches at least one
-  file under `config/` — resolved by the checker's own walk, so `**` enters
+  without a word; every `conditional:` entry in the pack's `pack.yaml` naming a
+  relative path or glob with no `..` segment that matches at least one file
+  under `config/` — resolved by the checker's own walk, so `**` enters
   dot-directories — and a `when:` of exactly one known axis, `forge`, `editor`,
   `secrets` or `update_bot`, with a value that axis takes, `secrets: none`
   refused, since an unknown axis is one no caller answers and its file lands
-  everywhere silently); **strict-YAML frontmatter** (every skill and agent a
-  plugin ships, and every `stacks/*/*/skills/*/SKILL.md` and
-  `stacks/*/*/agents/*.md` a pack ships — the larger half, and the half that
-  actually lands in a user's repo; a pack's `rules/*.md` is out, frontmatter
-  being optional there); relative links under `assets/examples/**`;
-  **root-relative reference resolution** (every such reference resolves inside
-  the plugin that wrote it — in the files a pack **lands** the rule stands
-  aside, because rule 13 owns those on stricter terms and one bad reference
-  should be one finding); **agent cross-reference resolution** in both
-  directions (every role-shaped `` `token` `` in a plugin's own prose names a
-  real agent, and every declared agent is referenced at least once — the two
-  directions cover each other on a rename); the vwf design-adapter contract (all
-  **three** import skills present and model-invocable); the vwf
-  **stack-adapter** contract (both `<plugin>-stack-menu` and
-  `<plugin>-stack-template` present, each carrying an explicit
-  `disable-model-invocation: false` **and** a `user-invocable: false` — an
-  adapter is vwf's to call, not a user's to type — on every plugin keyworded
+  everywhere silently; and the pack's three doctor- and setup-read facts in the
+  shapes their readers trust — every `binaries` entry a bare name or a map of
+  exactly `name` and an optional non-empty `probe`, `lockfile` a non-empty list
+  of relative paths or globs with no `..`, and every `machine_env` entry a
+  `name` that is an env-var name plus a non-empty `detect` and `question`, the
+  name a key of an `[env]` table in the pack's `conf.d` fragment when it ships
+  one, since a question whose answer lands nowhere fails silently);
+  **strict-YAML frontmatter** (every skill and agent a plugin ships, and every
+  `stacks/*/*/skills/*/SKILL.md` and `stacks/*/*/agents/*.md` a pack ships — the
+  larger half, and the half that actually lands in a user's repo; a pack's
+  `rules/*.md` is out, frontmatter being optional there); relative links under
+  `assets/examples/**`; **root-relative reference resolution** (every such
+  reference resolves inside the plugin that wrote it — in the files a pack
+  **lands** the rule stands aside, because rule 13 owns those on stricter terms
+  and one bad reference should be one finding); **agent cross-reference
+  resolution** in both directions (every role-shaped `` `token` `` in a plugin's
+  own prose names a real agent, and every declared agent is referenced at least
+  once — the two directions cover each other on a rename); the vwf
+  design-adapter contract (all **three** import skills present and
+  model-invocable); the vwf **stack-adapter** contract (both
+  `<plugin>-stack-menu` and `<plugin>-stack-template` present, each carrying an
+  explicit `disable-model-invocation: false` **and** a `user-invocable: false` —
+  an adapter is vwf's to call, not a user's to type — on every plugin keyworded
   `vwf-stack-adapter`, **and** the keyword declared by every plugin shipping
   either skill — the same two-directions-cover-each-other idiom, since
   `stackgen` is now the only adapter left and dropping that one keyword would
