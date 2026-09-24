@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+#MISE description="Report dependencies that have moved on"
+#MISE hide=true
+
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/xcode"
+
+# xcodebuild has no dry run, so this is one: the committed `Package.resolved`
+# is set aside, the project resolved afresh — the newest version each
+# package's declared range allows — and each pin that would move is listed as
+# `<package> <pinned> -> <newest>`. The original lockfile is put back on every
+# exit, and the fresh checkouts go to their own directory under `.build/`, so
+# nothing the other tasks use moves. A package whose next release falls outside
+# its declared range is not listed — widening a range is a project edit, and
+# the review surface for it is that diff. A pin on a branch or a revision has
+# no version and is not listed either.
+#
+# With no `Package.resolved` the app has no packages, and there is nothing that
+# could be outdated.
+
+require_xcode "setup:deps:outdated"
+project=$(find_xcodeproj "setup:deps:outdated")
+resolved="${project}/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+
+if [ ! -f "${resolved}" ]; then
+  print_yellow "setup:deps:outdated: no ${resolved}, so no packages to check."
+  exit 0
+fi
+
+pinned=$(mktemp)
+cp "${resolved}" "${pinned}"
+trap 'cp "${pinned}" "${resolved}"; rm -f "${pinned}"' EXIT
+
+# `identity` precedes its pin's `version` in the file Xcode writes, so each
+# version line is paired with the identity seen last.
+pins() {
+  sed -nE 's/^ *"(identity|version)" *: *"([^"]*)".*/\1 \2/p' "$1" |
+    awk '$1 == "identity" { id = $2 } $1 == "version" { print id, $2 }'
+}
+
+rm "${resolved}"
+xcodebuild -resolvePackageDependencies -quiet \
+  -project "${project}" \
+  -clonedSourcePackagesDirPath .build/outdated/SourcePackages
+
+awk '
+  NR == FNR { pinned[$1] = $2; next }
+  ($1 in pinned) && pinned[$1] != $2 { print $1, pinned[$1], "->", $2; moved++ }
+  END { if (!moved) print "Every pinned package is at the newest version its range allows." }
+' <(pins "${pinned}") <(pins "${resolved}")

@@ -127,6 +127,16 @@ design system's Brand assets. The `public/` files themselves — `robots.txt`, t
 manifest, the rasterized icons, the social image — are written by `/vwf:execute`
 from that doctrine, not landed by the pack.
 
+**Every one of the four also carries MDX, images and layouts.** Since
+`framework/astro` **0.4.0** the pack's skill routes to three more references:
+MDX — when a page earns it over plain markdown, the `@astrojs/mdx` integration,
+MDX inside a content collection; the image pipeline — `src/` versus `public/`,
+`<Image>` and `getImage` from `astro:assets`, layout shift, and `sharp` as the
+default service; and layouts and slots — the shell-versus-route split, named
+slots, nesting, and layouts for collection entries. They are written once for
+the pack and state each mode's difference inline — images is the one where the
+four genuinely differ — so no bundle's composition changed.
+
 **The doctrine above the pack is a contract.**
 [`assets/contracts/web-head.md`](https://github.com/virajp/claude-plugins/blob/main/plugins/stackgen/assets/contracts/web-head.md)
 states, provider-neutrally, what **any** web framework pack — shipped or
@@ -250,6 +260,50 @@ arrived on 2026-09-15 as the fourth, under a category minted for it, `document`
 framework — and it is the pack the `html` bundle pins, the `site` platform's one
 entry beside the four Astro ones.
 
+**Swift** arrived on 2026-09-23 as the fourth language a language-bundle is
+rooted at, after TypeScript and the Markdown and Bash pair the
+`claude-code-plugin` bundle composes: `swift-package`, a Swift library on the
+`packages` platform, pins four new packs. `language/swift` is the root — the
+12-topic doctrine, the sourcekit-lsp declaration, and `binaries: [swift]`, since
+the toolchain is the host's rather than mise's and `/vwf:doctor` blocks when
+`swift` is not on `PATH`. `package-manager/swiftpm` carries SwiftPM's doctrine
+and lands no file; no pack lands `Package.swift`, which `swift package init`
+creates. `toolchain-gate/swift-format` lands `.config/swift-format.json`, and
+`toolchain-gate/swiftlint` lands `.config/swiftlint.yml` plus
+`.config/mise/conf.d/swiftlint.toml`, which pins `aqua:realm/SwiftLint` at
+0.65.1 so `mise.toml` names no linter; each ships an editor fragment on
+`editor: vscode`. The `language/swift` pack supplies the tasks: `code:format`
+takes the staged files the hook passes and otherwise, like `code:lint`, takes
+its file list from git — every file it does not ignore, read NUL-separated and
+passed `./`-prefixed, so no file name is read as a flag, and a failed
+`git ls-files` stops the task with an error rather than judging an empty list;
+with neither a `.git` entry nor `GIT_DIR`, or no git installed, both walk the
+tree instead — and `code:lint` skips SwiftLint when no Swift source is in scope.
+Of the `setup:deps:*` tasks, `install`, `outdated` and `upgrade` run
+`swift package`; `cleanup` removes `.build/`, and `audit` is a stated no-op,
+since SwiftPM ships no advisory command.
+
+**SwiftUI** followed the same day as the second `app-framework` pack, and the
+first in the `native-ui` category. `app-framework/swiftui` is the root of the
+`swift-swiftui` bundle, which pins it with `package-manager/swiftpm`,
+`toolchain-gate/swift-format` and `toolchain-gate/swiftlint` and serves
+`mobile`, `tablet`, `desktop`, `auto`, `watch`, `tv` and `spatial` from one
+project — `auto` being CarPlay through the same iOS app, so it is declared
+beside `mobile` and never alone. The app is a **committed Xcode project**,
+created once by a person in Xcode: no pack lands the `.xcodeproj` and no
+generator writes one, so the tasks call `xcodebuild` and `swift` alone and the
+pack declares `binaries: [xcodebuild, swift]`. The repo pins its Xcode as
+`XCODE_VERSION` in its mise `[env]`, and every task that builds checks
+`xcodebuild -version` against it and fails fast. The app's dependencies are
+added through Xcode and locked in the `Package.resolved` the project keeps, so
+the swiftpm component governs only a local package the app splits out. Goldens
+run through swift-snapshot-testing in a `SnapshotTests` target under
+`test:golden`, on the simulator the repo pins as `SIMULATOR_DEVICE`,
+`SIMULATOR_OS` and `SIMULATOR_PLATFORM` in the same `[env]`, and the pack's
+`ux-gate` skill runs them once per changed platform, reporting the rest `n/a`.
+Its doctrine covers topics 1–11 of the app-framework bar; the per-platform
+references and the integrations come later.
+
 The `devtools` plugin then dissolved into stackgen and was deleted, closing the
 marketplace at two plugins. Its mise doctrine and its file-based task library
 became the `toolchain-manager/mise` pack, its four repo gates the `repo-gates`
@@ -344,7 +398,7 @@ in shape while only content varies:
 
 | Kind                  | vwf axis               | Shape                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | --------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `language-bundle`     | project (+ repo facts) | the composition rooted at a `language` component — a **12-topic bar** behind a lean router skill → on-demand references, plus paths-scoped doctrine per config file the toolchain owns (archetype: the `language/typescript` bundle)                                                                                                                                                                                                                                                                 |
+| `language-bundle`     | project (+ repo facts) | the composition rooted at a `language` component — a **12-topic bar** behind a lean router skill → on-demand references, plus paths-scoped doctrine per config file the toolchain owns (archetypes: the `language/typescript` bundle, and `swift-package` rooted at `language/swift`)                                                                                                                                                                                                                |
 | `database`            | backing                | a **6-topic bar** on the instance component — pick & trade, data-model constraints, clause-by-clause satisfaction of the neutral datastore contract *by citation*, connection & access incl. credentials, cost shape, the Docker-composed `local_stack`                                                                                                                                                                                                                                              |
 | `capability-provider` | backing                | the same two halves as `database` — the neutral capability contract plus one provider component that realizes it, citing rather than restating                                                                                                                                                                                                                                                                                                                                                       |
 | `cloud-provider`      | backing + deploy       | **4 provider topics** (cost, IAM, local-dev map, networking & private plane) + **5 per `cloud-service` component**, plus a **deploy-target extension** — artifact/pipeline/health — where the service's category is `compute` or `static-hosting`, the two categories that are deploy targets (archetypes: the `cloud-provider/gcp` and `cloudflare-workers-static` bundles)                                                                                                                         |
@@ -353,7 +407,7 @@ in shape while only content varies:
 | `repo-hygiene`        | repo                   | **exactly one component, standing alone** — the files every repo carries whatever wrote it. A **4-topic bar**, no router: the ignore set, the editor and attribute defaults, licensing and the security contact, and the dependency-update policy. Not a gate, and that is the distinction the kind holds: a gate *runs, finds something and fails*; hygiene runs nothing and *declares*. It also owns the **root allowlist** every other kind's `config/` tree is measured against                  |
 | `workspace`           | repo                   | the `package-manager` component that installs and locks the repo's members, plus a `build-orchestrator` where there is one — a **5-topic bar**, no router. The only repo-axis kind you **pick**: it is what `repo.stack.template` selects from. A single-package repo pins none, which is the kind's edge rather than a gap                                                                                                                                                                          |
 | `ci-system`           | cicd                   | the **release-trigger contract** + **exactly one** `ci-system` component, a **6-topic bar** behind a router skill with one reference per system. Three layers, none duplicated: vwf's delivery-pipeline rules say what a deploy must guarantee, the contract is the recommended mechanism above any one system, the component is how that system spells it. A second CI system in one bundle is a gap, not extra coverage                                                                            |
-| `app-framework`       | project                | rooted at the SDK that owns the manifest and build, carrying its languages as members with a `role` — one `primary`, any number of `platform-edge` (archetype: the `app-framework/flutter` bundle)                                                                                                                                                                                                                                                                                                   |
+| `app-framework`       | project                | rooted at the SDK that owns the manifest and build, carrying its languages as members with a `role` — one `primary`, any number of `platform-edge` (archetypes: the `app-framework/flutter` bundle, and `swift-swiftui` rooted at `app-framework/swiftui`)                                                                                                                                                                                                                                           |
 | `deploy-target`       | deploy                 | **one component, standing alone** — the only bundle with no second half. A **6-topic bar** covering pick & trade, the artifact, hygiene, promotion, config/secrets and health. Its discipline is a scope fence: the pipeline, the cloud and the local stack each belong to a kind that already owns them                                                                                                                                                                                             |
 | `design-tool`         | design                 | one component, standing alone — a **5-topic bar** on the three imports, reach & credentials, and the naming contract. Lands three skills at **fixed names** in the repo's `.claude/`, all mandatorily model-invocable, because a user-only one is invisible to vwf rather than a smaller feature. The tool's source may be a hosted canvas or a **committed directory** the imports read as files, and a pack may ship one extra, user-invocable authoring skill beyond the three the checker counts |
 | `stylesheet`          | stylesheet             | one component, standing alone — a **7-topic bar** on tokens, authoring, theming, responsive, the single integration hook, performance and (conditionally) testing. `tokens.md` is required of every pack in the kind: the mapping from the design system's semantic roles to something a component can reference is the one topic nothing else in the tree carries                                                                                                                                   |
@@ -421,14 +475,28 @@ than something that rides the landing:
   `p:<id>:deploy` task beside it; and any pack may drop an **editor fragment**
   into `.config/vscode.d/`, three keys wide, which `/vwf:init` composes —
   declares them in a `config/` tree mirroring the repo root, and they land
-  there. Everything else goes under `.config/`: a `config/` tree landing a root
-  path outside the **landable** tier of the fixed allowlist is a pack authoring
-  error the materializer refuses — that list also names the root files vwf
-  itself writes, `CLAUDE.md` and `mempalace.yaml`, which may sit at a shaped
-  root and which no pack may land. Two **directories** are allowlisted at that
-  root, `.config/` and `.github/`, and a CI workflow inside the second is
-  refused outright. Mode is preserved, because a task file arriving without its
-  exec bit fails as an *unknown task* rather than as a permission error.
+  there. A pack may also mark some of them **conditional**: an optional
+  `conditional:` list in its `pack.yaml`, each entry a `config/` path or glob
+  and a `when:` of one axis to one value — `forge` (`github`, `gitlab`),
+  `editor` (`vscode`), `secrets` (a provider slug), `update_bot` (`renovate`,
+  `dependabot`, `none`) — evaluated by the materializer against the `answers:`
+  map the caller passes beside `repo:`; a path whose answer differs is left out
+  of the landing set and written to the lockfile's `skipped:` list with its
+  condition, never a create and never a conflict, and an axis the caller did not
+  answer reads true. That last rule is a **fallback**, not the path anything
+  here takes: all three callers — `/vwf:init`, `/vwf:setup`'s materialize pass
+  and `/stackgen:stackgen-sync` — pass a full map, read from the product's
+  `.config/vwf.yaml` `answers:` block with the forge re-read live from the
+  repo's `origin`. A pack's `skipped:` rows live and die with its `entries:`, so
+  removing or un-pinning the pack drops them too. Everything else goes under
+  `.config/`: a `config/` tree landing a root path outside the **landable** tier
+  of the fixed allowlist is a pack authoring error the materializer refuses —
+  that list also names the root files vwf itself writes, `CLAUDE.md` and
+  `mempalace.yaml`, which may sit at a shaped root and which no pack may land.
+  Two **directories** are allowlisted at that root, `.config/` and `.github/`,
+  and a CI workflow inside the second is refused outright. Mode is preserved,
+  because a task file arriving without its exec bit fails as an *unknown task*
+  rather than as a permission error.
 
 The need still travels as `language_facts` in the template payload for
 `/vwf:doctor` to verify; the local plugin is what actually provides the server.
@@ -493,7 +561,26 @@ parent file name to its children; and `extensions`, a list of recommended ids �
 and nothing else. What forced it is that a recommendation list only ever
 *prompts*, is per-workspace, and nothing merges a common set into it: a pack
 that ships a linter and says nothing about the editor ships a linter whose
-editor integration nobody turns on.
+editor integration nobody turns on. Every fragment in the tree — twelve of them:
+the hygiene baseline, dprint-editor, pre-commit, eslint, ruff, tsconfig,
+analysis-options, mise, astro, pnpm, swift-format and swiftlint — is
+**conditional on the editor**: its pack's `pack.yaml` names it under
+`when: { editor: vscode }`, so a repo whose init answer was *no* lands none and
+composes nothing. The split between them is by ownership. The hygiene baseline
+carries **editor-wide keys alone** — indentation and suggestion defaults, the
+generic excludes, todo-tree, the nesting rows no stack owns, the generic
+extensions — and every key that names a stack sits in the fragment of the pack
+that pins it: `node_modules`, the tsbuildinfo files, the template-string
+converter and `*.js` nesting in tsconfig's; `.dart_tool` in analysis-options';
+`.astro` in astro's; `.turbo`, the pnpm lockfile and the `package.json` children
+in pnpm's, since Turbo is a generated component the pnpm-turbo bundle carries
+and has no pack of its own; `.build`, `.swiftpm` and the `Package.swift` nesting
+in swift-format's; the YAML language-server keys and their extension in
+pre-commit's. The default formatter is bound **per language** in the dprint
+fragment — one `[<language>]` scope for each plugin `.config/dprint.json`
+carries, `[toml]` to even-better-toml — never editor-wide, which would ask
+dprint to format a file it has no plugin for and override Dart's formatter by
+composition order alone.
 
 Two files inside the fence are written **whole** by no pack, and both are
 composed by `/vwf:init`. The **pre-commit config**: a pack may contribute a
@@ -503,9 +590,13 @@ through a `code:*` task the base config already calls, and only
 `package-manager/uv` still ships one. The **two editor files**: init deep-merges
 every `vscode.d/` fragment's `settings`, unions the `nesting` children per
 parent and the `extensions` list, and writes one marked block **first** in each
-file, so a key you add after it wins by ordinary later-key precedence and
-survives a second merge byte-for-byte. Nothing in stackgen edits either composed
-file, which is what keeps a fragment a fragment.
+file. A key you already carry outside the block is a **collision**: the block
+**omits** it, so your key wins without the file ever holding a duplicate, and
+what becomes of it — keep mine, take the pack's, or union — is asked once by
+init and recorded, an identical extension id simply kept; everything outside the
+block survives a second merge byte-for-byte unless you chose otherwise for that
+key. Nothing in stackgen edits either composed file, which is what keeps a
+fragment a fragment.
 
 One root file is a **shim** rather than a config: `dprint.json`, whose entire
 content is `{ "extends": ".config/dprint.json" }`. That formatter's config
@@ -534,12 +625,14 @@ ends a materialization by recommending `/vwf:setup`.
 `templates/<slug>.md` is what makes later fetches pure reads: frontmatter
 carries every payload field (kind, axis, the `components:` refs this bundle
 composes — `<type>/<slug>@<version>` or `@generated` — languages **with the
-facts `/vwf:doctor` verifies** — LSP provision, mise tool, manifest — plus
-harness tasks and mechanisms, with `frameworks`/`capabilities` derived from the
-composition), and the body is the `conventions:` prose `plan` sizes against and
-`execute` writes to. That emitted-facts block is the **materialized escape** in
-vwf's stack vocabulary: a language no shipped bundle covers is still *known*
-when its pin carries these facts.
+facts `/vwf:doctor` verifies** — LSP provision, mise tool, manifest, and the
+optional `binaries` list of executables the stack needs on `PATH` that mise does
+not manage, such as Xcode's `xcodebuild` — plus harness tasks and mechanisms,
+with `frameworks`/`capabilities` derived from the composition), and the body is
+the `conventions:` prose `plan` sizes against and `execute` writes to. That
+emitted-facts block is the **materialized escape** in vwf's stack vocabulary: a
+language no shipped bundle covers is still *known* when its pin carries these
+facts.
 
 In a multi-repo product the target repo defaults to the current one; the caller
 names a member repo to materialize there instead, as one optional `repo: <path>`
@@ -580,20 +673,59 @@ language. Each of those four packs now ships **its own config file** under
 `.config/` and a `vscode.d/` editor fragment. None of them ships a
 `pre-commit.d/` fragment any more: the gate config carries three tool-neutral
 hooks — `format`, `lint`, `sec` — that call `code:format`, `code:lint` and
-`code:sec`, and each tool is configured once, inside the task. The formatter
-also ships the root `dprint.json` shim described above, and the JS/TS linter
-gate — a language-bundle topic rather than a repo gate — ships
-`.config/linter.yaml`, the config it had always invoked and never supplied.
+`code:sec`, and each tool is configured once, inside the task. Both scanners
+document the same **baseline step for an existing repo**: run the scan, fix what
+can be fixed — rotate a real secret, upgrade a dependency — and record what
+remains, a gitleaks finding by fingerprint in the allowlist, a grype
+vulnerability id under `ignore:` in `.config/grype.yaml`, each with a one-line
+reason and when to re-check, then re-run until green. The thresholds stay where
+they are: a time-boxed ignore is the temporary silence, a lowered threshold the
+permanent one. The formatter also ships the root `dprint.json` shim described
+above, and the JS/TS linter gate — a language-bundle topic rather than a repo
+gate — ships `.config/linter.yaml`, the config it had always invoked and never
+supplied. The trees a gate skips are stated as **one exclusion set**: the
+formatter's `dprint.json` and `taplo.toml` and the hook config's global
+`exclude` — a `(?x)` block, one anchored alternative per line — spell the same
+fourteen entries (`.build`, `.claude`, `.git`, `.turbo`, `.venv`, `Derived`,
+`build`, `dist`, `graphify-out`, `node_modules`, `target` and the three lockfile
+globs; `.build` is SwiftPM's output tree and `Derived` a common name for a
+generated one) in their own syntax, and the toolkit's checker holds the three
+equal after normalising the syntax away. The secret scanner's
+`[allowlist] paths` is held to a **subset** of it, never the reverse: gitleaks
+extends upstream's default config, which already skips `.git`, `node_modules`
+and the named lockfiles, and `.claude/` is authored source a scanner must scan
+even though no formatter touches it in a shaped repo, where it is machine-owned.
+Its seven entries are anchored `(^|/)` — `.turbo/` joined them — so `\.turbo/`
+no longer matches a `foo.turbo.ts`. Widen a formatter list, widen all three;
+widen the allowlist only with a generated tree. One hook narrows further:
+`trailing-whitespace` skips `.md`, because two trailing spaces are a Markdown
+hard break.
 
 **`repo-hygiene`** is the newest kind on the repo axis, beside `repo-gate`,
 `toolchain-manager` and `workspace`. Its single pack ships the files every repo
 needs and no tool owns: a sectioned `.gitignore` (with a graphify section that
-ignores `graphify-out/*` while keeping `GRAPH_REPORT.md`), `.graphifyignore`,
-`.editorconfig`, `.gitattributes`, `SECURITY.md`, `CONTRIBUTING.md`, three
-`.github/ISSUE_TEMPLATE/` files, a root `renovate.json`, the chosen `LICENSE`,
-and the **editor baseline** — the largest `vscode.d/` fragment, since the
-settings every repo wants regardless of stack are hygiene by the same definition
-everything else here is.
+ignores `graphify-out/*` while keeping `GRAPH_REPORT.md`, plus one upstream
+template section per language `/vwf:init`'s stack read finds — a table keyed by
+language, `node`, `python`, `dart`, `go`, `rust`, `swift` (upstream's
+`Swift.gitignore` alone, which already covers SwiftPM's `.build/` and Xcode's
+`xcuserdata/`) — so a repo with a `package.json` gets its Node section on the
+first run — and one **provider row** beside the language rows, `fnox.local.toml`
+for fnox and `.doppler/` for doppler, appended under a banner named for the slug
+only where init's stack read carries that provider, so the base ignore file
+names no secrets manager), `.graphifyignore`, `.editorconfig`, `.gitattributes`,
+`SECURITY.md`, `CONTRIBUTING.md`, three `.github/ISSUE_TEMPLATE/` files, a root
+`renovate.json`, the chosen `LICENSE` on a repo `/vwf:init` was told is public,
+and the **editor baseline** — the `vscode.d/` fragment carrying the settings
+every repo wants regardless of stack, editor-wide keys alone, since a key that
+names a stack belongs to that stack's pack. Three of those are **conditional**,
+named in the pack's `conditional:` list with the one answer init already holds
+that lands them: the issue forms on `forge: github`, the Renovate policy on
+`update_bot: renovate`, the editor baseline on `editor: vscode`. A GitLab repo
+gets no GitHub issue forms, a Dependabot repo no Renovate policy, a repo edited
+elsewhere no VS Code fragment; each skipped path is listed in the plan and
+recorded in the lockfile, never reported missing. Init also **records** the four
+answers in the product's `.config/vwf.yaml`, so the later callers judge the same
+conditions the same way.
 
 The seam with `repo-gates` is worth stating, because it is the reason the kind
 exists rather than folding in: **a gate scans, while hygiene declares what is
@@ -602,10 +734,27 @@ different decisions, and a secret that is ignored is still a secret nothing ever
 scanned — writing them as one act is how that gets missed. Two consequences
 follow. The licence texts live under `config/_licenses/` as a **pack-private**
 payload that is never copied wholesale: a repo gets the one licence it chose,
-not a directory of them. And the stack-specific ignore sections are **appended
-per repo** by `/vwf:init`, one section per technology, never frozen into the
-pack — a pack that hard-codes them ages the moment a language renames its build
-directory.
+not a directory of them — and a repo init was told is **private** gets none,
+since a grant to the public has no reader there. `SECURITY.md`'s one contact
+slot takes the security contact as init was given it — an advisories URL for a
+public repo, an email or an internal URL for a private one — and the issue
+chooser's *Report a vulnerability* link takes a URL contact or is removed for an
+email or a decline. `CONTRIBUTING.md` records that the forge's default branch
+and the protection on `develop` and `main` are set by `/vwf:setup`'s forge pass
+on GitHub and GitLab, and keeps the **by-hand** form of both for any other
+forge. And the stack-specific ignore sections are **appended per repo** by
+`/vwf:init`, one section per technology, never frozen into the pack — a pack
+that hard-codes them ages the moment a language renames its build directory. A
+repo that already has a `.gitignore` keeps it whole: `/vwf:init` merges
+**section by section**, appending each banner section of the base and of the
+stack whose patterns are not already present, patterns compared normalised (a
+leading or trailing `/` stripped, a `**/` prefix ignored) so one the file
+carries under another spelling is never doubled. `renovate.json` is the one
+hygiene file that **yields**: a policy the repo already carries under
+`.github/renovate.json`, `.renovaterc` or `renovate.json` wins, and the pack's
+is not landed — and it is conditional besides, landing only where the repo's
+update-bot answer is `renovate`, so a repo on Dependabot or on no bot gets no
+second policy beside its own.
 
 **`mise`** is the toolchain manager, and the rest of this section is its
 subject: how the toolchain is pinned, where env values live, and the task
@@ -673,7 +822,14 @@ without any component editing `mise.toml`.
 linters, security scanners, and other dev tooling belong in `mise.dev.toml`, so
 a fresh checkout or a CI build does not pull them. `[tasks.init]` is the
 exception that lives in the base: file-based tasks must be executable under
-`MISE_ENV=ci` too.
+`MISE_ENV=ci` too. The runtime's settings are a **marked position** the base
+ships empty: `RUNTIME_BLOCK` under `[settings]` and `PATH_ENTRIES` at the end of
+`[env]` are filled by `/vwf:init` from its stack read — one runtime settings
+line per detected language, the `_.path` entry where a project-local binary
+directory needs it — and left empty for a language the repo does not have, since
+a setting for an absent runtime is a claim about the stack that is not true.
+With `REPO_NAME`, `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and `MEMBERS` they
+are the base's six marked positions.
 
 `mise.dev.toml` holds the **local values** of runtime env vars (verbose logging,
 local hosts, test credentials). `mise.ci.toml` carries the **production values**
@@ -724,10 +880,28 @@ inside `code/*` and `setup/*` change with the tech stack.
   staged filenames, `sec` passes `--staged` and lets gitleaks read the index. A
   repo customising a gate edits the task, never the hook, so every tool is
   configured exactly once. `code:sec` needs scanners from `mise.dev.toml` — run
-  it under the dev toolchain (`MISE_ENV=dev`). `code:count` is a size reading
-  rather than a metric: lines of **tracked** text grouped by extension, which is
-  the whole ignore story for free — no build output, no vendored tree, and no
-  second exclusion list to keep in step with `.gitignore`.
+  it under the dev toolchain (`MISE_ENV=dev`). Its full scan skips a `.env` file
+  through a throwaway overlay of the gitleaks config, for the `dir` scan alone —
+  the shipped `gitleaks.toml` stays strict, so a `.env` someone stages is still
+  caught — and a grype failure prints the remedy: the finding's vulnerability id
+  under `ignore:` in `.config/grype.yaml` with a one-line reason.
+  **`code:git-config` requires the forge identity, per repo**: the local
+  git-config must carry `user.name`, `user.email` and `user.signingkey` equal to
+  `GITHUB_USER_NAME`, `GITHUB_EMAIL` and `GITHUB_SIGNING_KEY` when the origin
+  host is `github.com` or a subdomain of it, the `GITLAB_` twins for
+  `gitlab.com`, and the `GIT_` twins for any other host or no remote — with
+  ssh-signed commits and tags and no `gpg.program` or `gpg.ssh.program`.
+  `--fix`, which the hook runs, writes those keys from the variables, refuses
+  before writing anything when one is unset, and exits 1 after a change
+  (*identity corrected — re-run the commit*), because git reads its identity
+  before a hook runs: the first commit on a fresh clone is refused while the
+  identity is written, and the re-run carries it. Export the three variables
+  where the hook can see them — the global mise `[env]` block is the one place a
+  GUI git client that never sources your shell profile still picks up, since the
+  hook runs under `mise x`. `code:count` is a size reading rather than a metric:
+  lines of **tracked** text grouped by extension, which is the whole ignore
+  story for free — no build output, no vendored tree, and no second exclusion
+  list to keep in step with `.gitignore`.
 - **`code/merge/*` — landing, with the predicates first.**
   `code:merge:develop <branch>` refuses a source that is `main` or `develop`,
   refuses a **destination branch that does not exist locally** — naming the
@@ -738,22 +912,48 @@ inside `code/*` and `setup/*` change with the tech stack.
   with one extra predicate: the source must be `develop`. A conflict leaves the
   tree mid-merge on purpose. (These were `merge:develop` and `merge:main`; a
   merge is one more thing a change runs through, like the gates.)
-- **`MERGE_MODEL` — what "land it" means on this repo.** What the merge tasks do
-  *after* the predicates is a repo-level value in `mise.toml`'s `[env]`, a
-  marked position `/vwf:init` fills, read as `direct` when unset. Under
-  **`direct`** the task hops to the main worktree, checks out the destination,
-  `git merge --no-ff` and `git push --follow-tags` — today's behaviour, and the
-  one mode that also refuses unpushed commits on the source. Under **`pr`**
-  nothing merges locally: the task pushes the branch with `--follow-tags` and
-  opens a pull request through whichever forge CLI is on PATH (`gh` first, then
-  `glab`), printing the branch and one "open the request on your forge" line
-  where neither is. A repo-level value rather than a flag, because which one
-  applies is a property of the repo's review policy, not of the person landing
-  the change.
+- **`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` — what "land it" means on each
+  branch.** What the merge tasks do *after* the predicates is set **per
+  destination branch** — two marked positions in `mise.toml`'s `[env]` that
+  `/vwf:init` fills: `MERGE_MODEL_DEVELOP`, which `code:merge:develop` reads and
+  which ships `direct`, and `MERGE_MODEL_MAIN`, which `code:merge:main` reads
+  and which ships `pr`. A destination whose position is unset reads as `direct`;
+  a file shaped before the pair existed still carries the single legacy
+  `MERGE_MODEL`, which the merge reads in place of whichever position is unset —
+  both, on such a file — with one warning naming it legacy, so a landing never
+  fails on an old file and the reshape that writes the pair is not forgotten.
+  Under **`direct`** the task hops to the main worktree, checks out the
+  destination, `git merge --no-ff` and `git push --follow-tags` — today's
+  behaviour, and the one mode that also refuses unpushed commits on the source.
+  Under **`pr`** nothing merges locally: the task pushes the branch with
+  `--follow-tags` and opens a pull request through whichever forge CLI is on
+  PATH (`gh` first, then `glab`), printing the branch and one "open the request
+  on your forge" line where neither is. Repo-level values rather than flags,
+  because which one applies is a property of the repo's review policy, not of
+  the person landing the change; and one per branch rather than one per repo,
+  because `develop` and `main` carry different review policies more often than
+  the same one — a solo repo that merges into `develop` locally still wants a
+  request as the record of what reached `main`.
 - **`setup/*` — bootstrap & upgrade.** `setup:all` is the entrypoint — run it on
   clone and to re-sync. It calls `setup:mise`, `setup:secrets`,
   `setup:external:start`, `setup:deps:all`, `setup:precommit`, `setup:ai` and
-  `setup:vscode` in order, and stays idempotent. `setup:ai` installs and
+  `setup:vscode` in order, and stays idempotent. **It never upgrades or
+  overwrites anything it did not create**: a pack task that would have to stops,
+  names what it found and prints the by-hand command, and every destructive step
+  sits behind a flag `setup:all` never passes. `setup:mise --upgrade` is what
+  runs `mise upgrade --local` and `dprint config update`, moving the tool pins
+  the lockfile records; `setup:precommit --update` is what runs
+  `pre-commit autoupdate`, moving the hook `rev:` lines; and
+  `setup:precommit --force` is what takes the hooks over from a **local**
+  `core.hooksPath`, a `.husky/` directory or a lefthook config, installing with
+  `--overwrite`. Without it `setup:precommit` refuses, prints the unset and the
+  install to run by hand plus the cleanup (delete the foreign files and drop a
+  husky `prepare` script — the task deletes nothing), and exits 1 — which halts
+  `setup:all` there on a brownfield clone until that cleanup is done, since the
+  orchestrator stops at a failing step. A `core.hooksPath` set in a global or
+  system git-config is named by scope and refused even under `--force`. A plain
+  install keeps a hand-written hook script as `.legacy` and chains it, and a
+  repo pre-commit already owns is never refused. `setup:ai` installs and
   reconciles the repo's agent plugins; it is bootstrap and re-sync like every
   other step here, which is why it is a `setup:*` task and not a gate. It drives
   **Claude's own `claude plugin` commands and nothing else** — no package
@@ -802,14 +1002,15 @@ inside `code/*` and `setup/*` change with the tech stack.
   profile flag combines with the install, uninstall and list flags only once the
   profile exists, and none of the three creates it.
 - **Nothing in the set edits a remote's settings.** There was a
-  `setup:default-branch` once; it is gone. Setting the forge's default branch is
-  a one-time act by whoever shapes the repo, not a task a machine re-runs, so
-  the library carries no task for it and `/vwf:init` never reaches the remote.
-  The `repo-hygiene` pack's `CONTRIBUTING.md` carries the one line instead —
+  `setup:default-branch` once; it is gone, and no task re-runs it. The forge's
+  default branch and the protection on `develop` and `main` are set by
+  `/vwf:init`'s **forge pass** on GitHub and GitLab, on its own consent, through
+  the forge CLI rather than a task; the `repo-hygiene` pack's `CONTRIBUTING.md`
+  keeps the by-hand form for any other forge —
   `gh repo edit --default-branch <branch>` or
-  `glab repo update --defaultBranch <branch>`. It is orthogonal to the merge
-  tasks either way: work flows feature → `develop` → `main` whichever branch the
-  forge calls default.
+  `glab repo update --defaultBranch <branch>`, and the two protection rules. It
+  is orthogonal to the merge tasks either way: work flows feature → `develop` →
+  `main` whichever branch the forge calls default.
 - **`setup/deps/*` — the package manager, and only that.** Five verbs, all five
   slots: `cleanup`, `install` (which honours `--frozen`, the lockfile-strict
   mode CI uses), `upgrade`, `outdated`, `audit`. `setup:deps:all` runs them in
@@ -859,8 +1060,12 @@ inside `code/*` and `setup/*` change with the tech stack.
 pack with a `config/` tree fills in its own half on top: `package-manager/pnpm`
 and `package-manager/uv` supply `setup/deps/*`, `toolchain-gate/ruff` and
 `app-framework/flutter` supply the `code/format` and `code/lint` their toolchain
-needs, and the secrets providers overlay `setup/secrets`. The pnpm pack also
-ships a root `.npmrc` setting `ignore-scripts=true` and `fund=false` — an
+needs, `language/swift` supplies both — `setup/deps/*` over SwiftPM and the
+`code/format` and `code/lint` that run swift-format and SwiftLint —
+`app-framework/swiftui` supplies the same set for an Xcode app, each task that
+builds checking `xcodebuild -version` against `XCODE_VERSION`, plus
+`test/golden` — and the secrets providers overlay `setup/secrets`. The pnpm pack
+also ships a root `.npmrc` setting `ignore-scripts=true` and `fund=false` — an
 install never runs a dependency's install-time code, and a package that
 genuinely has to build is allowed by name in the workspace file, so the
 exception is a reviewable line rather than a blanket switch — plus a `conf.d/`
@@ -902,13 +1107,23 @@ init authors from scratch:
   folder, never the base's. The per-repo launch aliases that read it live in
   your own global configuration — init publishes the value and never writes
   outside the repos it resolved;
-- **`MERGE_MODEL`**, beside it in the same `[env]` block: `direct` or `pr`, the
-  landing model the merge tasks read, asked inside init's git pass. Unset reads
-  as `direct`, so an unfilled repo behaves as it always did;
-- **`MEMBERS`**, beside those two: the product's other repositories as
+- **`MERGE_MODEL_DEVELOP`** and **`MERGE_MODEL_MAIN`**, beside it in the same
+  `[env]` block: `direct` or `pr` each, the landing model `code:merge:develop`
+  and `code:merge:main` respectively read, asked inside init's git pass one row
+  per repo per branch. Shipped `direct` and `pr`; an unset position reads as
+  `direct`, and a file still carrying the single legacy `MERGE_MODEL` is read as
+  both values until the reshape writes the pair;
+- **`MEMBERS`**, beside those three: the product's other repositories as
   space-separated paths relative to the repo root, filled from the members init
   resolved where the linkage is **siblings**. A submodule product leaves it
   exactly as shipped — `.gitmodules` answers instead;
+- the two **runtime positions** in the same base config — **`RUNTIME_BLOCK`**
+  under `[settings]` and **`PATH_ENTRIES`** at the end of `[env]` — both shipped
+  empty and filled from init's **stack read**: one runtime settings line per
+  detected language in the first, the `_.path` entry a project-local binary
+  directory needs in the second, and nothing in either for a language the repo
+  does not have. A repo with no detected language leaves both exactly as
+  shipped;
 - the commit gate's **scope list**, one scope per project id — filled on *any*
   run, the first included, from the ids init's second question confirmed. A
   project registry, where the repo has one, is only where those ids were
@@ -979,13 +1194,13 @@ toolkit will find it: vwf probes `setup:worktree`, the aggregators call
 
 ## Skills and the agent
 
-| Name                      | Kind                   | Does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `stackgen-stack-menu`     | adapter, skill-invoked | The packs + the one open `generate` entry, as a vwf menu payload. Answers the same in every product                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `stackgen-stack-template` | adapter, skill-invoked | The dispatch: materialized entry → pure read; a first pin — which arrives from `/vwf:setup`'s materialize pass — resolves the bundle's composition and dispatches **per component**, packs copied and uncovered components generated, landing once behind one consent gate in the repo the optional `repo:` line names. Unknown slug → error, never a guess                                                                                                                                                                                                                                               |
-| `stackgen-sync`           | user-only              | The explicit re-sync, **per component**: lockfile-anchored diff against current component packs, regeneration offered per generated component, the delta presented for consent. Repo edits never overwritten by default                                                                                                                                                                                                                                                                                                                                                                                   |
-| `stackgen-reputation`     | user **and** model     | A verdict on every name it is given — `/stackgen:stackgen-reputation <ecosystem>:<name> …`, the prefix one of `npm:`, `pypi:`, `pub:`, `action:` (owner/repo) or `image:` (registry/repo), an optional version or ref (`npm:left-pad@1.3.0`, `action:actions/checkout@v4`, `image:docker.io/library/nginx:1.27`) pinning what the advisory check runs against — one row per name reading `pass`, `warn` or `block`, with the signals that decided it, from public read APIs. The generator calls it over every concrete name a generated component emits; you call it on a name before typing it anywhere |
-| `stackgen-skill-reviewer` | subagent               | The stateless trust gate on generation: catalog fidelity, the **when-not-to-apply** checks, citations that resolve and support, honest emitted facts, **kind conformance**, **topic-bar coverage** against the composition, and every emitted name carrying a verdict-table row that does not read `block` — read off the table it is handed, never looked up                                                                                                                                                                                                                                             |
+| Name                      | Kind                   | Does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stackgen-stack-menu`     | adapter, skill-invoked | The packs + the one open `generate` entry, as a vwf menu payload. Answers the same in every product                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `stackgen-stack-template` | adapter, skill-invoked | The dispatch: materialized entry → pure read; a first pin — which arrives from `/vwf:setup`'s materialize pass — resolves the bundle's composition and dispatches **per component**, packs copied and uncovered components generated, landing once behind one consent gate in the repo the optional `repo:` line names. Unknown slug → error, never a guess                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `stackgen-sync`           | user-only              | The explicit re-sync, **per component**: lockfile-anchored diff against current component packs, regeneration offered per generated component, the delta presented for consent. Repo edits never overwritten by default. Conditional paths are evaluated first, against the config's `answers:` block with the forge re-read live — a false path with no record is `skipped (condition)` and never offered, a never-landed path whose condition now holds is offered as a create, and a landed path whose condition turned false is kept and reported once. Removing a pack drops its `skipped:` rows with its entries. Closes by **re-checking the repo shape** — `/vwf:setup`'s Step 0 check, in-session, over the base and every member against the lockfile just updated — and on drift offers `/vwf:setup reshape` and invokes it on a yes; clean says nothing. A fragment that moved is folded into the merged config there, by the reshape, never by the sync |
+| `stackgen-reputation`     | user **and** model     | A verdict on every name it is given — `/stackgen:stackgen-reputation <ecosystem>:<name> …`, the prefix one of `npm:`, `pypi:`, `pub:`, `action:` (owner/repo) or `image:` (registry/repo), an optional version or ref (`npm:left-pad@1.3.0`, `action:actions/checkout@v4`, `image:docker.io/library/nginx:1.27`) pinning what the advisory check runs against — one row per name reading `pass`, `warn` or `block`, with the signals that decided it, from public read APIs. The generator calls it over every concrete name a generated component emits; you call it on a name before typing it anywhere                                                                                                                                                                                                                                                                                                                                                            |
+| `stackgen-skill-reviewer` | subagent               | The stateless trust gate on generation: catalog fidelity, the **when-not-to-apply** checks, citations that resolve and support, honest emitted facts, **kind conformance**, **topic-bar coverage** against the composition, and every emitted name carrying a verdict-table row that does not read `block` — read off the table it is handed, never looked up                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 **"skill-invoked" is two frontmatter keys, not one.** The two adapter skills
 carry `disable-model-invocation: false`, so vwf can reach them by their
@@ -1060,7 +1275,12 @@ before it lands:
   verdict.
 - **Drift is a feature with a viewport.** Your repo's copies may diverge from an
   upgraded pack by design; `/stackgen:stackgen-sync` is where the divergence
-  becomes a diff you decide about.
+  becomes a diff you decide about. The lockfile's per-file `hash:` has three
+  writers, and a differing hash is drift only when none of them ran: the
+  materializer at landing, `/vwf:init`'s replace-or-keep offer on either answer,
+  and `/vwf:init` again after every fill, `.gitignore` section append,
+  hook-fragment merge or editor block it writes — so a file it filled or you
+  chose to keep reads as current, not as drift.
 - **Repo config is a fenced target, not a free one.** A pack writes only the
   config files its own component owns — its gate's config included, since
   2026-09-05, and its editor *fragment* since 2026-09-06. The language manifest

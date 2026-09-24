@@ -1,0 +1,17 @@
+/code-review high — R7-late2 round 1 — range 2e68927d..f9f52100 (branch-scoped engine)
+
+The `ReportFindings` tool is not available in this session (ToolSearch found no such tool), so the findings are stated here directly.
+
+## Review: `plan/2026-09-20-pack-intent-rendering` (develop...HEAD, 26 commits)
+
+I read every hunk (checker + tests, the nine pack.yaml `conditional:` blocks, the four exclusion lists, the editor-fragment split, pack-format/output-tree/materializer, init SKILL/new-repo/fragments-and-sections, doctor). Verified: `p:plugins:check` green, vitest 171 pass, and the shipped `(?x)` pre-commit `exclude` compiles under Python `re` and matches/misses the expected paths. The rule-15 normalisation was traced by hand across all four shipped lists and they do reduce to one set with gitleaks a strict subset. The `dprint-editor.jsonc` even-better-toml fallback keys now equal `taplo.toml` line for line.
+
+Findings (3):
+
+1. `plugins/vwf/skills/init/references/fragments-and-sections.md:192` — **medium**. The editor merge's input set was narrowed from "every `.config/vscode.d/*.jsonc` present" to fragments "listed as landed by the materializer's dry-run". A reshape fetches only the three unconditional bundles plus the provider, so a fragment landed on an earlier run by `/vwf:setup`'s materialize pass (`tsconfig.jsonc`, `astro.jsonc`, `pnpm.jsonc`, `eslint.jsonc`, `analysis-options.jsonc` — all with `entries:` records) is in no dry-run of this run and, on the literal reading, is dropped from the recomposed marked block. Scenario: a repo with a pinned Node stack answers editor **yes** at reshape and its `settings.json` block loses the `node_modules`/`tsbuildinfo` excludes, the `*.js` nesting and the template-string extension it had. The rule should be "present in the tree with a lockfile `entries:` record, minus any path this run's dry-run reports skipped".
+
+2. `plugins/stackgen/stacks/toolchain-gate/pre-commit/config/.config/pre-commit-config.yaml:48` — **low** (prior round rated this INFO under ruling 5a; restating because the scenario is concrete). The global `exclude` now strips lockfiles and `.claude/` from every filename-passing hook, including `check-merge-conflict`, `check-added-large-files` and `detect-private-key`. Before this change only `graphify-out/` was excluded. Scenario: a `pnpm-lock.yaml` with `<<<<<<<` markers commits clean and fails only at the next `pnpm install --frozen-lockfile`. The `sec` hook still covers secrets in those paths (`always_run`, no filenames), so only the non-secret checks are blinded.
+
+3. `plugins/vwf/skills/doctor/references/stack-checks.md:421` — **low**. The new config-read row says a repo pinning `fnox` "must carry that provider's ignore section in `.gitignore`". A repo shaped before this change already carries `fnox.local.toml` in the base section (landed from the old pack file) with no `# fnox` banner. If doctor keys on the banner/section, every existing fnox repo reads as drifted until reshape; if it keys on the pattern, it is fine — the text should say which, since the reshape will otherwise append a second `fnox.local.toml` line under the banner while the base section is replaced.
+
+Not findings, for the record: `CLAUDE.md:278` ("seven questions"), `site/.../vwf.md:1056`, "fourteen rules"/"seven assertions" are stale but are U8's pending Owns per the plan index; the `/vwf:setup` materialize pass and `stackgen-sync` passing no `answers:` is the already-recorded G-2 gap.

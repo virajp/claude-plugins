@@ -65,20 +65,24 @@ Start a new session — `/clear`, or a new window — and:
 Bare `/vwf:recall` does the same thing. It resolves the project the same way
 `handoff` did, reads the handoff back, and then **re-reads the files it points
 at**, so what you get is grounded in the current code rather than in yesterday's
-snapshot. It summarizes the goal, the state and the open steps, and then — for
-`next` alone — runs the continuation straight away instead of asking. One
-command, and Relay is back in `/vwf:blueprint` at the empty-state question.
+snapshot. Before it reads the palace rooms it also runs `/vwf:doctor baseline` —
+the local repo-shape predicates alone, no forge read — and prints one line if a
+repo has fallen behind, naming the repos and offering `/vwf:setup reshape`; when
+every repo is clean, or the repo was never shaped, it prints nothing and carries
+on. It summarizes the goal, the state and the open steps, and then — for `next`
+alone — runs the continuation straight away instead of asking. One command, and
+Relay is back in `/vwf:blueprint` at the empty-state question.
 
 The `next` handoff is behind two stores, written together. **mempalace** is the
-memory daemon: semantic search over everything vwf has filed, ranked by meaning.
+memory server: semantic search over everything vwf has filed, ranked by meaning.
 The **markdown mirror** under `docs/memory/` is the same content as ordinary
-files — always present, greppable, no daemon required. Either alone can resume
-`next`, which is why the daemon being down is a degradation and not a failure:
+files — always present, greppable, no server required. Either alone can resume
+`next`, which is why the server being down is a degradation and not a failure:
 recall falls back to the markdown side and **tells you the recall was
 degraded**, since a keyword sweep finds a drawer whose words you can guess, not
 one that merely means the same thing. How the stores split and what each holds:
-[Memory](../../plugins/vwf.md#memory); the daemon itself is
-[mempalace](../../plugins/mempalace.md#running-the-server-http-daemon).
+[Memory](../../plugins/vwf.md#memory); the server itself is
+[mempalace](../../plugins/mempalace.md#running-the-server-stdio).
 
 ### 3. Park a second strand under its own name
 
@@ -103,7 +107,7 @@ default for a strand you are returning to weeks later, in a repo that has moved
 underneath it.
 
 The two-surface guarantee in step 2 is `next`'s alone. A named handoff goes to
-mempalace, and to disk only as a fallback when the daemon is unreachable — so if
+mempalace, and to disk only as a fallback when the server is unreachable — so if
 `design-system-import` was filed while mempalace was up, the drawer is the copy
 that exists.
 

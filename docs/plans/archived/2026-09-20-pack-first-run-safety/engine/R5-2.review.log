@@ -1,0 +1,15 @@
+/code-review high — R5 round 2 — branch 2026-09-20-pack-first-run-safety (range b43a91ef..b869b325)
+
+Gates p:plugins:check and p:plugins:shellcheck green; scripts verified empirically in a temp repo (git 2.55, gitleaks 8.30.1): git-config check/fix cycle, the -- separator, the code:sec overlay (gitignored .env skipped in dir mode, base allowlist honoured, tracked secret still flagged, staged .env still caught, overlay cleaned up).
+
+## Findings
+
+1. Medium — …/mise/tasks/setup/precommit:32 — setup:precommit does not converge after --force, breaking setup:all's stated idempotency. The foreign-state probe treats a .husky/ directory or lefthook.yml/.lefthook.yml as foreign, but --force only unsets core.hooksPath and reinstalls; it never removes those tracked files. Scenario: a repo with lefthook.yml committed, user runs setup:precommit --force (succeeds), then the next plain mise run setup:all hits exit 1 at line 53 again and, because setup/all is set -euo pipefail, setup:ai and setup:vscode never run — on every re-sync, forever. Worse with husky: setup:deps:all (runs before setup:precommit in setup:all) runs pnpm install, whose prepare script re-sets core.hooksPath=.husky/_, so even the hooksPath half of the takeover is undone before the next run. The probe should recognise "already taken over" (pre-commit's own signature in .git/hooks/pre-commit and no hooksPath) or the docs must say --force also requires deleting the foreign config.
+
+2. Low — …/mise/tasks/setup/precommit:28 — the probe reads git config --local core.hooksPath, but pre-commit's own refusal reads the effective value, global and system included. Scenario: a machine with git config --global core.hooksPath ~/.git-hooks — the task's refusal message and by-hand lines never print; the plain path falls through to pre-commit's "Cowardly refusing" error, and --force's --local --unset-all does not clear it either, so --force also fails.
+
+3. Medium (docs) — …/toolchain-gate/dprint/skills/dprint/SKILL.md:100-105 — still says dprint config update "is a deliberate act run from setup:mise" and "a pin moves when a person runs setup:mise and at no other time". After this diff it is setup:mise --upgrade. Nothing in the plan's wave-1 units owns it (U6 does).
+
+4. Low (docs) — …/mise/skills/mise/references/task-library.md:176 (and the mirror in pre-commit/skills/pre-commit/SKILL.md:56) — the contract never states what value <FORGE>_SIGNING_KEY must hold. With gpg.format=ssh, git reads user.signingkey as a key-file path, or a public key only when prefixed key::. Scenario: a user exports GITHUB_SIGNING_KEY="ssh-ed25519 AAAA…", the hook writes it verbatim, the check passes, and the very first commit then fails inside git's ssh signing with "no such file".
+
+Nothing else misbehaved under test: origin-host parse strips userinfo before the port and handles scp form, bare paths and ssh.github.com; --fix refuses before writing when any variable is unset; [extend] path on the overlay preserves the base file's useDefault and [allowlist]; the grype non-zero exit surfaces the right remedy depending on whether .config/grype.yaml exists; the check-json exclude parses under rule 11.

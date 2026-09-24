@@ -101,11 +101,13 @@ without the Status it had. The reference specifies the procedure and both
 mutations.
 
 **A missing project** is created by the user, not by the skill: GitHub's API
-cannot instantiate a built-in template, and Team planning is one. `add` is the
-one verb that asks consent, hands over the browser with the URL and the two
-settings, waits for the word "done", and re-finds the project by title; every
-other verb reports "no backlog project yet — `/vwf:backlog add` creates it"
-and stops. The procedure is in the reference.
+cannot instantiate a built-in template, and Team planning is one. `add`, and
+`/vwf:init`'s forge pass, are the two callers that reach the missing-project
+procedure: each asks consent, hands over the browser with the URL and the two
+settings, waits for the word "done", re-finds the project by title and runs
+the field bootstrap — init then ends there, adding no item; every other verb
+reports "no backlog project yet — `/vwf:backlog add` creates it" and stops.
+Neither caller runs `gh project create`. The procedure is in the reference.
 
 ## Verbs
 
@@ -178,16 +180,21 @@ order.
 The backlog moves as plans are written and as they land, and the commands that
 do that work call this skill rather than touching the project:
 
-| Caller                    | When                                     | Verb                     |
-| ------------------------- | ---------------------------------------- | ------------------------ |
-| `/vwf:plan`               | at hand-off, once the folder is approved | `planned <ids> <folder>` |
-| `/vwf:change-plan`        | at hand-off, once the folder is approved | `planned <ids> <folder>` |
-| `/vwf:execute`            | at landing, after the final gate         | `done <ids>`             |
-| `plan-management archive` | archiving a plan whose ids are open      | `done <ids>`             |
+| Caller                    | When                                     | Verb                      |
+| ------------------------- | ---------------------------------------- | ------------------------- |
+| `/vwf:plan`               | at hand-off, once the folder is approved | `planned <ids> <folder>`  |
+| `/vwf:change-plan`        | at hand-off, once the folder is approved | `planned <ids> <folder>`  |
+| `/vwf:execute`            | at landing, after the final gate         | `done <ids>`              |
+| `plan-management archive` | archiving a plan whose ids are open      | `done <ids>`              |
+| `/vwf:init`               | the forge pass, base repo only, last     | missing-project procedure |
 
 Callers pass the ids from the plan's **`backlog:` frontmatter** — the list on
 the folder's `index.md`, cycle plan and change plan alike. Empty or absent
-means the plan covers no backlog item and nothing is called.
+means the plan covers no backlog item and nothing is called. `/vwf:init` is
+the exception: it passes no ids and calls no verb — it reaches the
+missing-project procedure so the product's project exists once the repo is
+shaped, reports a project already present and skips it, and prints the GitLab
+"not yet supported" line and continues when the forge is GitLab.
 
 ## What this skill never does
 

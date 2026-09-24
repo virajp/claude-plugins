@@ -1,0 +1,23 @@
+/code-review high — R5 round 1 — branch 2026-09-20-pack-first-run-safety (range b43a91ef..2767ab39)
+
+## Findings
+
+1. HIGH — plugins/stackgen/stacks/toolchain-gate/gitleaks/config/.config/gitleaks.toml:47 — the .env allowlist also disarms the commit gate.
+The allowlist is config-wide, and code:sec --staged runs gitleaks git --staged --config .config/gitleaks.toml with the same file. Scenario: a .env holding a real ghp_… token gets staged (a corrupted .gitignore — which has happened in this repo — or git add -A in a fresh member repo); before this change the sec hook failed; with the pack config it now reports "no leaks found" and the secret is committed. Confirmed with gitleaks 8.30.1: staged .env + .env.example with a GitHub PAT → 2 leaks without the config, 0 with it. ^\.env\..* also exempts .env.example / .env.sample, which are normally tracked files where pasted real values are a classic leak — the conventions/SKILL text calling all of them "gitignored files that exist to hold secrets outside the tree" (conventions.md:31) is not true for those. A fix that keeps the staged gate intact: leave .env* out of the shared config and have code:sec's full dir scan pass a second config that [extend] path's the base and adds the paths — the exemption then applies only to the mode that cannot honour .gitignore.
+
+2. MEDIUM — …/gitleaks/config/.config/gitleaks.toml:47-49 — the three new entries are anchored with ^, unlike every sibling (build/*, node_modules/*), so they only match at the scan root.
+code:sec runs gitleaks dir ., so root-level .env is exempted, but a monorepo sub-project's apps/web/.env or a Python service's services/api/.venv/ is still scanned — the exact "fails on a hash, not a credential" failure the surrounding comment describes, still present after this plan claims to close it (ruling 5 says .venv/ "beside node_modules/", i.e. unanchored). Confirmed: with the config, apps/web/.env and apps/web/.venv/y.txt still report leaks. (Tension with finding 1: unanchoring widens the staged-gate hole, another reason to scope the exemption to dir mode.)
+
+3. MEDIUM — …/mise/config/.config/mise/tasks/setup/precommit:53 — the new exit 1 aborts the whole bootstrap.
+setup:all runs under set -euo pipefail and calls mise run setup:precommit before setup:ai and setup:vscode, and before the --all member loop. Scenario: a brownfield JS repo with .husky/ (the case this plan exists for) runs setup:all → precommit refuses → plugins are never reconciled, the editor profile is never written, and no member repo is bootstrapped, with no message saying so. The plan ruled exit 1, but setup:all's own header comment ("re-running must converge, never error") and the docs added in this branch ("a clone that already has a hook manager is told, not overwritten") both promise the rest still runs. Either setup:all should tolerate that one exit code and report it at the end, or the refusal should be a warned skip rather than a hard failure.
+
+4. LOW — …/mise/config/.config/mise/tasks/code/sec:77 — the grype remedy names a file that may not exist.
+The message "add its vulnerability id under ignore: in .config/grype.yaml" is printed in both branches, including the else branch that only runs when .config/grype.yaml is absent. A repo that has the mise pack but not the grype pack is told to edit a file it does not have; the fallback branch should say to materialize the grype component instead.
+
+5. LOW — …/pre-commit/config/.config/pre-commit-config.yaml:51 — --fix inside the pre-commit hook takes effect one commit late.
+git commit has already loaded user.*, commit.gpgsign and gpg.format when it runs the hook, so on the first commit after a clone (or after switching remotes from a GIT_* host to github.com) the hook writes the identity, reports OK, and that commit still lands with the previous identity and unsigned. Pre-existing in shape (the old --fix also wrote config mid-commit), but the new contract makes it visible: the hook that "corrects the clone on its first commit" corrects the second. Worth either a printed note when --fix changed anything, or a git config --local check in setup:precommit so the identity is settled before any commit.
+
+## Verified clean
+
+- code/git-config check/fix paths: unset variables refuse and write nothing; fix writes six keys, unsets gpg.*program, re-validates; equality (not presence) is enforced; origin parsing handles git@, https://, ssh://, credentialed URLs and no remote.
+- setup/mise and setup/precommit flag plumbing (usage_* defaults), check-json exclude, pre-commit config validates, shellcheck/shfmt clean over the four scripts.

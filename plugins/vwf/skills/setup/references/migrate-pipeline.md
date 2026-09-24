@@ -27,7 +27,15 @@ Four sources define it, and none of them is a history:
    like any other. A config whose `enforcement:` block lacks `kept_files:` is
    one entry as well: it gains `kept_files: {}` and the stamp is rewritten with
    the rest, with no content to migrate, since nothing wrote that key before
-   `config_format` 18.
+   `config_format` 18. A block lacking `editor_keys:` is the same kind of
+   entry: it gains `editor_keys: {}`, with nothing to migrate, since nothing
+   wrote that key before `config_format` 20. A config with no **top-level**
+   `answers:` block is one entry on the same terms — it gains the block, from
+   the answers this run asks (the editor and update-bot rounds) and reads (the
+   forge from each `origin`, the provider from the lockfile), every key present
+   and `none` where no answer was picked; a block already there is left alone,
+   since nothing wrote it before `config_format` 21 and the pass invents no
+   answer to fill a key.
 2. **Resolve every unrecognised spelling through
    [format lineage](format-lineage.md)** before recording it as a gap. A tree
    written against an older format is usually *correct for that format* and

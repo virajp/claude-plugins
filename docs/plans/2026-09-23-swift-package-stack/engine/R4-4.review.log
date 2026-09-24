@@ -1,0 +1,12 @@
+code-review engine (high), R4 round 4, focus 3d1b7f12; range db9da892..3d1b7f12
+
+1. .../language/swift/config/.config/mise/tasks/code/format:68 — git ls-files --deduplicate needs git >= 2.31; on older git the call fails inside a process substitution (invisible to set -e/pipefail), the Swift list is empty, swift format lint is skipped, code:format exits 0 on a badly formatted tree (swift:*-focal git 2.25, Debian 11 git 2.30).
+2. .../tasks/code/lint:133 (and :156) — same git 2.31 dependency in both lint lists; in_git=true with empty lint_targets skips the house linter and swiftlint; code:lint passes green without linting anything.
+3. plugins/stackgen/stacks/language/swift/conventions.md:33 — rewritten code:lint row says the tools run whole-tree whatever list the hook passes, incl. shellcheck and actionlint, which take only the staged list (and tracked files only without a list).
+4. plugins/stackgen/stacks/language/swift/conventions.md:32 — code:format row still says swift format runs over files "SwiftLint does not exclude"; build-and-run.md now says a user excluded: entry reaches SwiftLint but not code:format — contradiction.
+5. .../skills/swift/references/build-and-run.md:31 — says the scope is chosen so both gates judge the same files, then that they diverge on user additions; omits the reverse (removing an entry is honoured by neither gate).
+6. .../references/build-and-run.md:30 — "less the trees the shipped swiftlint.yml excludes, at any depth" credits the config with any-depth exclusions it lacks (../.build, ../.swiftpm are root-only there).
+7. .../tasks/code/lint:87 — actionlint list and helpers' shell_files_in_scope still list conflicted paths once per stage during a merge; the Run log row claims --deduplicate on every ls-files call.
+8. docs/plans/2026-09-23-swift-package-stack/index.md:253 — R4 fix 3 row records cd378221 (round-2 commit); round-3 fix is 3d1b7f12. [orchestrator — corrected in the folder]
+9. docs/plans/2026-09-23-swift-package-stack/index.md:252 — R4 review 3 row gives engine finding 2 no disposition. [orchestrator — disposition added]
+10. .../tasks/code/lint:156 — second full git ls-files walk duplicates line 133's list; filter *.swift from the first.

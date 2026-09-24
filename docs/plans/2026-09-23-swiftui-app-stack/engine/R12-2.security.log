@@ -1,0 +1,8 @@
+/security-review engine, loop R12 round 2, range ba994ef0..1dcfb57a (sub-task scoped to 97474b13..HEAD, the swiftui tasks)
+
+No findings.
+
+- setup/deps/upgrade: mktemp gives a random 0600 file; the trap copies it back over a repo-local path (find_xcodeproj output plus a fixed suffix) then rm -f's it; rm "${resolved}" targets the same fixed path; quoting sound; the EXIT trap overrides no earlier trap.
+- _scripts/xcode: the XCODE_VERSION-unset refusal only prints; selected comes from xcodebuild -version and is only echoed.
+- test/golden: the --platform/--device/--os guard only compares strings and prints; -onlyUsePackageVersionsFromResolvedFile is a fixed, stricter argument.
+- No secrets, no network surface, nothing runs input from outside the repo.

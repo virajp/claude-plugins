@@ -1,0 +1,3 @@
+/security-review — R7-late1 round 1 — range e116e983..8d6c87f1
+
+NO FINDINGS — the range touches seven markdown files only (no `.ts`, payload config or hook script); the dprint `conventions.md` change removes the duplicated paragraphs from round 2, and the rest are reflows and the `skipped:` wording. No pattern, matcher or allowlist changed.

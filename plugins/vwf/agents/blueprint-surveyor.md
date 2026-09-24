@@ -95,10 +95,11 @@ condition; a unit may fail more than one (report the most blocking).
    with the number it should take.
 10. **Structural drift** — a flow folder with no `index.md`, a `device:` key on
     an `index.md`, a `<platform>.md` with no Platforms row (or the reverse), or
-    a platform outside the screen vocabulary (`mobile` / `tablet` / `desktop` / `site` / `webapp` /
-    `auto` / `cli`), or a `cli.md` / `plugin.md` file (neither a terminal
-    surface nor an extension point has screens, so neither takes a platform
-    file). These are format-15 holes; name the file.
+    a platform outside the screen vocabulary (`mobile` / `tablet` / `desktop` /
+    `site` / `webapp` / `auto` / `watch` / `tv` / `spatial` / `cli`), or a
+    `cli.md` / `plugin.md` file (neither a terminal surface nor an extension
+    point has screens, so neither takes a platform file). These are format-15
+    holes; name the file.
 11. **Missing standard entity** — per
     `${CLAUDE_PLUGIN_ROOT}/assets/standard-entities.md`: for each project
     declaring the capability an entry names as its trigger, that entry's entity

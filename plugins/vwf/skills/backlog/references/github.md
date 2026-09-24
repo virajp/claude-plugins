@@ -52,8 +52,8 @@ which answers `User` or `Organization`.
 
 ## Missing project
 
-Only `add` reaches this; every other verb stops with "no backlog project yet —
-`/vwf:backlog add` creates it".
+`add` and `/vwf:init`'s forge pass reach this; every other verb stops with "no
+backlog project yet — `/vwf:backlog add` creates it".
 
 1. Ask: "No backlog project `<repo>` exists under `<owner>`. Create it now?" —
    a no ends the verb.
@@ -67,6 +67,11 @@ Only `add` reaches this; every other verb stops with "no backlog project yet —
    project titled `<repo>` under `<owner>`; check the title and run
    `/vwf:backlog add` again".
 4. Run the field bootstrap, then continue with the `add`.
+
+When the caller is `/vwf:init`, the verb ends after the bootstrap with no item
+added — the forge pass wants the project to exist, not an entry in it. The
+third-miss stop in step 3 reads the same way for init: it reports and the forge
+pass continues.
 
 ## Fields
 

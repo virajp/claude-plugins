@@ -68,14 +68,15 @@ task.output = "interleave"
 task.timings = true                        # elapsed time after each task
 task.disable_spec_from_run_scripts = true  # flags come from #USAGE, not from a run
 
-# Node settings — only when the project uses Node
-node.compile        = false
-npm.package_manager = "pnpm"
-
-# Python settings — only when the project uses Python
-pipx.uvx            = true
-python.compile      = false
-python.uv_venv_auto = "create|source"
+# A MARKED POSITION — RUNTIME_BLOCK. One runtime settings line per language the
+# orchestrator's stack read detected, written below this comment; shipped empty.
+# A Node repo gets, for instance:
+#   node.compile        = false
+#   npm.package_manager = "pnpm"
+# and a Python one:
+#   pipx.uvx            = true
+#   python.compile      = false
+#   python.uv_venv_auto = "create|source"
 
 [env]
 # Only what is identical in every environment.
@@ -86,15 +87,22 @@ python.uv_venv_auto = "create|source"
 # name inside a linked worktree.
 REPO_NAME = "unfilled"
 
-# A marked position: how code:merge:* lands a branch on THIS repo.
+# Two marked positions: how a branch lands on THIS repo, one per destination —
+# code:merge:develop reads the first, code:merge:main the second.
 #   direct = merge locally and push   |   pr = push and open a pull request
-MERGE_MODEL = "direct"
+MERGE_MODEL_DEVELOP = "direct"
+MERGE_MODEL_MAIN    = "pr"
 
 # A marked position: this repo's member repos, as space-separated paths
 # relative to the repo root. Left empty when the members are submodules, which
 # `members()` reads from .gitmodules instead. A string, never an array — mise
 # env values are strings.
 MEMBERS = ""
+
+# A MARKED POSITION — PATH_ENTRIES. Project-local binaries on PATH without a
+# `<pm> exec` prefix, written below by the orchestrator from the same stack
+# read; shipped empty, and left empty when nothing the read found needs one.
+#   _.path = { path = "node_modules/.bin", tools = true }
 
 [tools]
 # Language RUNTIME only — the minimum to run/build the project anywhere. It
@@ -110,16 +118,31 @@ hide        = true
 run         = "find .config/mise/tasks/ -name '*' -type f -not -path '*/*.env' -exec chmod 755 {} \\;"
 ```
 
-**The base `[env]` carries three marked positions, and they are the only ones
-in any of the five files.** `REPO_NAME` is the repo's folder name, slugified —
-never a project id, which is the `p:<id>:*` group's token; `MERGE_MODEL` is
-how `code:merge:*` lands a branch here; `MEMBERS` is the member list for a
-product whose parts are linked as siblings rather than as submodules. Each ships
-with a working default, so an unfilled repo runs — `direct` is today's local
-merge, an empty `MEMBERS` means `members()` falls through to `.gitmodules` — and
-each is filled by the orchestrator rather than by hand. They sit in the **base**
-and not in `mise.dev.toml` because the tasks that read them run in the pipeline
-too.
+**The base carries six marked positions, and they are the only ones in any of
+the five files.** Four are `[env]` values: `REPO_NAME` is the repo's folder
+name, slugified — never a project id, which is the `p:<id>:*` group's token;
+`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` are how `code:merge:develop` and
+`code:merge:main` land a branch here, one landing model per destination — a
+file still carrying the single legacy `MERGE_MODEL` is read as both until the
+orchestrator writes the pair; `MEMBERS` is the member list for a product whose
+parts are linked as siblings rather than as submodules. Each ships with a
+working default, so an unfilled repo runs — `direct` into `develop` is today's
+local merge, `pr` into `main` opens the request, an empty `MEMBERS` means
+`members()` falls through to `.gitmodules` — and each is filled by the
+orchestrator rather than by hand. They sit in the **base** and not in
+`mise.dev.toml` because the tasks that read them run in the pipeline too.
+
+**The other two are slots, shipped empty, and the orchestrator fills both from
+its stack read** — the languages it learned from the repo's pins, its lockfile
+or its manifests. `RUNTIME_BLOCK`, under `[settings]`, takes one runtime
+settings line per detected language — the Node and Python lines the skeleton
+shows as examples — and nothing for a language the repo does not have: a
+setting for an absent runtime is a claim about the stack that is not true.
+`PATH_ENTRIES`, at the end of `[env]`, takes the `_.path` entries that put a
+project-local binary directory on PATH, `node_modules/.bin` being the Node
+case; it stays empty when nothing the read found needs one. Neither is edited
+by hand to pick a runtime: a marked position is what the orchestrator's content
+hash ignores, so filling one is never drift, where a hand edit outside one is.
 
 **Two more marked positions sit outside the TOML**, in the task library rather
 than the config: `EXTRA_MARKETPLACES` and `EXTRA_PLUGINS` in
@@ -171,9 +194,9 @@ worktrees = "mise run code:worktrees"
 [env]
 PRE_COMMIT_HOME = "$HOME/.cache/pre-commit"
 
-# Node-only, when the runtime is Node:
+# Node-only, when the runtime is Node (`_.path` is the base's PATH_ENTRIES, not
+# a dev value):
 # NODE_NO_WARNINGS = 1
-# _.path           = { path = "node_modules/.bin", tools = true }
 
 # The DEVELOPMENT values for anything the app reads at runtime. The NAMES must
 # match what mise.ci.toml overrides.

@@ -1,0 +1,15 @@
+# The SwiftLint pin, and nothing else. It sits in conf.d/ so that mise.toml
+# stays free of any linter's name: dropping the linter is deleting this file,
+# with no edit to a file the toolchain manager owns.
+#
+# conf.d has NO environment scoping — the directory is read by glob, so this
+# loads under every MISE_ENV. That is right for a gate: CI lints with the same
+# version a developer does.
+#
+# The version is pinned rather than "latest": a SwiftLint release adds and
+# changes rules, and under `--strict` a new rule is a failing build nobody
+# touched. Moving the pin is its own change, with the lint run in the same
+# commit.
+
+[tools]
+"aqua:realm/SwiftLint" = { version = "0.65.1" }

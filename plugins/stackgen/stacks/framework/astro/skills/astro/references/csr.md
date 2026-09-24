@@ -8,6 +8,12 @@ Astro prerenders a shell page, the application mounts into it as a
 from SSG — which is the first thing to know when reading such a project, and
 the reason this reference exists.
 
+MDX, images and layouts are shared references. Both MDX and `<Image>` stop at
+the prerendered shell and never reach the `client:only` application — see
+the CSR entries in [`mdx.md`](mdx.md#per-mode) and
+[`images.md`](images.md#per-mode); [`layouts.md`](layouts.md) applies
+unchanged.
+
 ## The shape
 
 **One shell page**, `src/pages/index.astro`, rendering the application root:

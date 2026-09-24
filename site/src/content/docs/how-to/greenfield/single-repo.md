@@ -42,8 +42,9 @@ run at all. Scopes and upgrades:
 
 **Then run `/vwf:doctor`.** Nothing is checked at install time, so doctor is
 what tells you whether the binaries vwf shells out to are actually on your
-`PATH` — see [Prerequisites](../../plugins/vwf.md#prerequisites). The memory
-daemon is yours to run.
+`PATH` — see [Prerequisites](../../plugins/vwf.md#prerequisites). For memory,
+set the `MEMPALACE_*` variables in the `env` block of `~/.claude/settings.json`
+— [mempalace](../../plugins/mempalace.md#running-the-server-stdio).
 
 Restart Claude Code, then `cd` into the empty Relay repo.
 
@@ -54,39 +55,71 @@ Restart Claude Code, then `cd` into the empty Relay repo.
 ```
 
 One command, and it does two things in order. **Step 0 runs first and finds no
-shape** — no `.config/` layout, no task library — so it says what is absent and
-offers [`init`](../../plugins/vwf.md#vwfinit), which is what lays it down. Say
-yes. `init` is not something you type: this offer and `/vwf:setup reshape` are
-the only two ways it is reached. Declining is legal and is recorded as a
-deferral, with `/vwf:setup reshape` as the unlock whenever you want it.
+shape** — no adapter lockfile, no config layout, no task library — so it says
+what is absent and offers [`init`](../../plugins/vwf.md#vwfinit), which is what
+lays it down. Say yes. `init` is not something you type: this offer and
+`/vwf:setup reshape` are the only two ways it is reached. Declining is legal and
+is recorded as a deferral, with `/vwf:setup reshape` as the unlock whenever you
+want it.
 
-On an empty repo `init` resolves to its **new** pipeline and shapes the repo
-before anything else runs: the config layout, the toolchain manager's five-file
-split, the task library grouped `setup:*` / `code:*` / `p:*`, the four repo
-gates with their configs and hook fragments, the hygiene files, and the licence
-Relay chose. It asks seven questions in one round each — the repo name, proposed
-from this repo's own folder name and the one thing that fills `REPO_NAME`, and a
-one-line brief (both proposed or skippable); the ids it will write task groups
-and commit scopes for, each shown with its slug and where the name came from and
-yours to replace — with no registry and no sub-project directories yet, Relay's
-one project is proposed from its **platform token**, which you pick from the
-closed list (`service`, `worker`, `webapp`, `site`, `cli`, `iac`, …) or type as
-*other*; which provider holds Relay's secrets, which **agent plugins this repo
+Relay's repo is empty — at most a readme, which is not evidence — so `init`
+resolves it to mode **`blank`**: no lockfile, no manifest, no source directory,
+no root tool config. It runs the new-repo landing alone, shaping the repo before
+anything else runs: the config layout, the toolchain manager's five-file split,
+the task library grouped `setup:*` / `code:*` / `p:*`, the four repo gates with
+their configs and hook fragments, the hygiene files, and the licence Relay
+chose. Its stack read finds nothing on a blank repo, so no `.gitignore` language
+section lands and the toolchain config's runtime positions stay empty until a
+stack is pinned. (Had the repo already carried a `package.json` or a `src/`
+directory, the mode would be **`source`**: the same landing, with every file
+already there offered as replace-or-keep rather than overwritten.) It asks nine
+questions in one round each — the repo name, proposed from this repo's own
+folder name and the one thing that fills `REPO_NAME`, and a one-line brief (both
+proposed or skippable); the ids it will write task groups and commit scopes for,
+each shown with its slug and where the name came from and yours to replace —
+with no registry and no sub-project directories yet (a sub-project directory
+being, on a first run, one that carries its own language manifest), Relay's one
+project is proposed from its **platform token**, which you pick from the closed
+list (`service`, `worker`, `webapp`, `site`, `cli`, `iac`, …) or type as *other
+— type any id you want*, the option that says outright you are never stuck with
+the list; which provider holds Relay's secrets, which **agent plugins this repo
 requires** (a multi-select seeded by what is already registered on your machine,
 with *none* as the ordinary answer — `init` offers those rows minus the workflow
 plugin's own and its dependency's, since `setup:ai` installs those two either
-way), the licence, and a security contact — then shows **one plan** and applies
-it on one yes. Relay is one repo, so every one of those questions is a single
-row; on a product with member repos the same seven rounds simply carry a row per
-repo where the answer can differ.
+way), and whether Relay is **public or private** — proposed from what the forge
+says where the repo already has an `origin`, `private` otherwise — with the
+seventh round shaped by that answer: the licence, asked only for a public repo,
+and a security contact, an advisories-page URL for a public repo or a free email
+or internal URL for a private one; then whether **VS Code** is the editor here,
+defaulted *yes* because the `code` binary is on your `PATH`, and which **update
+bot** watches Relay — `renovate`, `dependabot` or `none`, seeded `renovate` on a
+repo carrying no policy — then shows **one plan** and applies it on one yes.
+Those last two, with the forge read from Relay's `origin` and the provider you
+picked, decide the packs' conditional files: the Renovate policy lands because
+the bot is Renovate, the editor fragments because the editor is VS Code, and the
+GitHub issue forms where Relay's `origin` is on GitHub — a repo with no remote
+yet skips them and lands them on the reshape after you add one — and a path a
+condition skips is listed in the plan under **Skipped**, never silently missing.
+Relay is one repo, so every one of those questions is a single row; on a product
+with member repos the same nine rounds simply carry a row per repo where the
+answer can differ.
 
-It closes with a git pass: it asks how work lands in this repo — `direct`, which
-merges locally and pushes, or `pr` — writes that answer to `MERGE_MODEL`, then
-stages what it wrote and asks once whether to commit, commit and push, or leave
-it, creating `develop` and `main` along the way. It never touches the forge's
-own settings: which branch the remote calls default is a one-time act a
-maintainer performs, and the hygiene pack's `CONTRIBUTING.md` carries the line
-for it. Its report prints, and setup carries on with its own work.
+It closes with a git pass: it asks how work lands in this repo, **one row per
+branch** — `direct`, which merges locally and pushes, or `pr`, which pushes the
+branch and opens a pull request; `develop` preselected `direct` and `main`
+preselected `pr` — writes the two answers to `MERGE_MODEL_DEVELOP` and
+`MERGE_MODEL_MAIN`, then stages what it wrote and asks once whether to commit,
+commit and push, or leave it. The commit lands on `develop` — Relay is brand
+new, so `develop` is its first branch and `main` is created from that first
+commit. If you chose *commit and push*, the **forge pass** follows on one more
+consent: it shows what it will set on the forge — the default branch (`develop`
+preselected), protection on `develop` and `main` (no force-push, no deletion,
+and a pull request required on whichever of the two you set to `pr`), and the
+backlog project it hands you the browser to create — and applies it through the
+forge CLI, leaving any protection already there untouched. Without the CLI, or
+on a forge it has none for, it prints the same list for you to apply by hand —
+the form the hygiene pack's `CONTRIBUTING.md` keeps — and carries on. Its report
+prints, and setup carries on with its own work.
 
 **Then setup does its half.** A repo with no manifest, no source directories and
 no `docs/blueprint/` is *blank*, and setup treats it as such: it asks nothing

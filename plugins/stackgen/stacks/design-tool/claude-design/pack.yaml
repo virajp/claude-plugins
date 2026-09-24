@@ -1,7 +1,7 @@
 name: Claude Design
 summary: The canvas Anthropic hosts at claude.ai/design — designed pages live
   on a canvas project, reached over its own MCP server.
-version: 0.1.0
+version: 0.2.0
 type: design-tool
 kind: design-tool
 axis: design

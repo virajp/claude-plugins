@@ -14,9 +14,9 @@ grouped by primary registry project and numbered in execution order** —
 projects alike — `index.md` holding the **platform-agnostic contract** (trigger,
 actors, steps, diagram, jobs, acceptance; no screens) beside one
 **`<platform>.md` per implemented platform** (`mobile`/`tablet`/`desktop`/
-`auto`/`site`/`webapp`) carrying that platform's Screens (rows coded
-`<NNN><letter>`, codes **shared across platform files**, each with its
-per-screen Components block, and — on `site`/`webapp` alone, since
+`auto`/`watch`/`tv`/`spatial`/`site`/`webapp`) carrying that platform's Screens
+(rows coded `<NNN><letter>`, codes **shared across platform files**, each with
+its per-screen Components block, and — on `site`/`webapp` alone, since
 `blueprint_format` 25 — a per-screen **Metadata** block headed by the row's
 code: `title`, `description`, `index` and `image`, with a `webapp` whose project
 does not declare `seo` pinning `title` alone); a non-UI flow is `index.md`
@@ -103,7 +103,7 @@ frontmatter + that every edge resolves. The doctrine lives in the
 blueprint-authoring skill's `frontmatter-and-links` reference.
 
 **Format versioning.** vwf ships the stamp in `assets/blueprint-format`
-(currently **24**). Since vwf 18 the stamps are **drift detectors only** —
+(currently **25**). Since vwf 18 the stamps are **drift detectors only** —
 nothing selects a migration by them. There is no `N → N+1` delta ladder for the
 blueprint format: a stale stamp sends `/vwf:setup` into its `migrate` mode,
 which **reconciles the tree against the current format's own sources**
@@ -116,29 +116,31 @@ window: any stamp reconciles to the shipped one. **Do not restate the per-format
 history here** — what each past format changed is git's job; a second narrative
 copy is precisely the drift the density doctrine warns about, and it was 105
 lines of this file before format 16. The *current* shape is what this section
-describes throughout; the paired `config_format` (currently **19**, the bump
-that added the `stylesheet` axis) is described under `assets/vwf-config.md`, and
-its own `N → N+1` deltas do still live there — state-based reconciliation
-replaced the **blueprint** ladder only. **Neither line issues 13 or 17.** From
-`config_format` 18 and `blueprint_format` 24 onward a bump steps past both
-integers — the same rule a plugin version and this repo's package versions obey
-— so `config_format` went 16 → 18 when `enforcement.kept_files` arrived. Stamps
-issued before the rule stand and are read by the history, not by the rule:
-`config_format` 13 is real, and `blueprint_format` 13 is not. The lineage table
-in `skills/setup/references/format-lineage.md` is where that history lives.
+describes throughout; the paired `config_format` (currently **21**, the bump
+that added the top-level `answers:` block) is described under
+`assets/vwf-config.md`, and its own `N → N+1` deltas do still live there —
+state-based reconciliation replaced the **blueprint** ladder only. **Neither
+line issues 13 or 17.** From `config_format` 18 and `blueprint_format` 24 onward
+a bump steps past both integers — the same rule a plugin version and this repo's
+package versions obey — so `config_format` went 16 → 18 when
+`enforcement.kept_files` arrived. Stamps issued before the rule stand and are
+read by the history, not by the rule: `config_format` 13 is real, and
+`blueprint_format` 13 is not. The lineage table in
+`skills/setup/references/format-lineage.md` is where that history lives.
 
 The two stamps are separate number lines, which have now drifted apart in both
-directions: `14`, `16` and `18` shipped without a blueprint bump (the first
-closed the stack menu; the second gave each stack axis its `unresolved` state
-and made `deploy_template` a list; the third added `enforcement.kept_files`) and
-`21` shipped without a config bump (it only moved one config file). `22`/`15`
-shipped **together**, as `19`/`12` and `20`/`13` did — the config's `template`
-pin and `ui:` key both depend on the platform vocabulary, so a repo on one but
-not the other is a state neither migration expects. `23` and `24` each then
-shipped alone and purely additively: the first lifts the blueprint-coverage
-exemption for the `plugin` platform, retires no spelling, and needs no config
-key. `19`/`25` then shipped **together** again, and for the same kind of reason
-the earlier pairs did: the `stylesheet` axis is a config key and the per-screen
-`Metadata` block is a blueprint section, but the choice and the contract arrived
-in one change, so a repo on one but not the other is a state neither side
-expects.
+directions: config `14`, `16`, `18`, `20` and `21` shipped without a blueprint
+bump (the first closed the stack menu; the second gave each stack axis its
+`unresolved` state and made `deploy_template` a list; the third added
+`enforcement.kept_files`; the fourth added `enforcement.editor_keys`; the fifth
+added the top-level `answers:` block) and blueprint `21` shipped without a
+config bump (it only moved one config file). `22`/`15` shipped **together**, as
+`19`/`12` and `20`/`13` did — the config's `template` pin and `ui:` key both
+depend on the platform vocabulary, so a repo on one but not the other is a state
+neither migration expects. `23` and `24` each then shipped alone and purely
+additively: the first lifts the blueprint-coverage exemption for the `plugin`
+platform, retires no spelling, and needs no config key. `19`/`25` then shipped
+**together** again, and for the same kind of reason the earlier pairs did: the
+`stylesheet` axis is a config key and the per-screen `Metadata` block is a
+blueprint section, but the choice and the contract arrived in one change, so a
+repo on one but not the other is a state neither side expects.

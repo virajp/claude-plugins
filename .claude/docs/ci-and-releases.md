@@ -55,6 +55,16 @@ same for `refs/tags/*-v*`. Neither requires a PR or a green check, so
 `p:plugins:release`, `p:i:release`, `p:site:release` and `deps-update.yml` all
 still push directly.
 
+**The landing model is per branch in the pack, and legacy here.** The mise pack
+sets how a branch lands per destination — `MERGE_MODEL_DEVELOP` for
+`code:merge:develop`, `MERGE_MODEL_MAIN` for `code:merge:main`, each `direct`
+(merge locally and push) or `pr` (push and open a pull request); the pack ships
+`direct` and `pr`. This repo's own `.config/mise.toml` still carries the single
+legacy `MERGE_MODEL`, which every reader takes as both values — the merge tasks
+with a warning naming it legacy, git-workflow's Step 4 silently as the shared
+fallback, and doctor's predicate (f) as one drift row — until the next
+`/vwf:setup reshape` rewrites it into the pair and lands the new merge scripts.
+
 That is why **no release task commits**: `p:i:release`, `p:plugins:release` and
 `p:site:release` all tag what has already landed on `main`, and the version bump
 is an ordinary `develop` commit (`p:i:version` for the installer,

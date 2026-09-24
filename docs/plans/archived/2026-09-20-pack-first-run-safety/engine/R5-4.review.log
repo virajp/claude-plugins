@@ -1,0 +1,19 @@
+/code-review high — R5 round 4 — branch 2026-09-20-pack-first-run-safety (range b43a91ef..673d0fe0)
+
+Ran the three rewritten task scripts in scratch repos (gitleaks 8.30.1, pre-commit 4.6.2, git 2.54) and both plugin gates — green. Core logic holds: the gitleaks overlay skips .env in dir mode while the staged gate still catches a staged .env and the base allowlist survives the [extend] merge; setup:precommit refuses local/global hooksPath correctly, chains a hand-written hook as .legacy, and --force unsets only the local value; git-config --fix writes, re-validates, and refuses the triggering commit.
+
+Findings:
+
+1. pre-commit/skills/pre-commit/SKILL.md:81 and mise/skills/mise/references/task-library.md:190 — medium (docs). Both claim a bare "ssh-ed25519 AAAA…" in <FORGE>_SIGNING_KEY "is written verbatim and the first signed commit fails inside git". False: git help config (user.signingKey) says a raw key beginning with ssh- is treated as key::… for backward compatibility (deprecated, but works). Accurate statement: "deprecated — prefer key::"; the real failure case is a non-ssh- key type (ecdsa-sha2-…, sk-ssh-ed25519@openssh.com) without the key:: prefix.
+
+2. …/tasks/code/git-config:117 — low. git config --local -- "$key" value fails with exit 5 ("cannot overwrite multiple values with a single value") when the local key is multi-valued. Reproduced: --fix dies mid-loop under set -e with git's raw error, no remedy line, and every commit is blocked until the user hand-edits .git/config. --replace-all makes the fix converge.
+
+3. …/tasks/code/git-config:36 — low. Host match is case-sensitive; https://GitHub.com/org/repo resolves to GIT. A lowercase fold before the case closes it.
+
+4. …/tasks/code/git-config:133 — low. The hook also runs under code:precommit --all and the merge safety net (pre-commit run --all-files), where no commit is in flight. On a clone whose identity has not yet been written, --fix writes the keys, exits 1 "identity corrected — re-run the commit", and code:merge:develop fails with "A hook failed without changing anything, so it needs a fix by hand" — misleading, though a second run passes.
+
+5. …/tasks/setup/all:33 — low. setup:all runs setup:precommit under set -e with no flag, so on a brownfield repo with .husky/ or a hooksPath the refusal (intended, ruled) aborts setup:all before setup:ai and setup:vscode run; the header comment "re-running must converge, never error" is now false and no unit owns this file.
+
+6. pre-commit/config/.config/pre-commit-config.yaml:50 — low (design, note only). The hook is now hard-dependent on three exported environment variables. Commits from clients that do not source the shell profile (VS Code Source Control, GUI git clients) will be refused with "Cannot fix — unset: …". Follows ruling 2; the docs might name the mise global [env] block as the place to set them so mise x carries them into GUI-initiated hooks.
+
+No findings against the gitleaks overlay in code/sec, the grype remedy, setup:mise --upgrade, the check-json exclude, or the .venv allowlist entry.

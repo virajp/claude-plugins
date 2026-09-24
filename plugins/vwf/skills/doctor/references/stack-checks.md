@@ -1,10 +1,13 @@
 # Stack Checks (§§3–5)
 
 Read this before running §3. It covers the three per-project stack checks:
-languages (LSP + toolchain), frameworks and dependencies against each manifest,
-and the repo/axis tooling. **Blocking** findings live in §3 (a language no
-installed plugin claims) and §5 (a `custom` template pin, a missing `mise`, an
-`iac` project inside another repo the user has not declined to extract).
+languages (LSP + toolchain + binaries), frameworks and dependencies against each
+manifest, and the repo/axis tooling. **Blocking** findings live in §3 (a
+language no installed plugin claims, a materialized `binaries` entry missing
+from `PATH` — each blocking once the project's `template` is pinned, a
+degradation while it reads `unresolved`) and §5 (a `custom` template pin, a
+missing `mise`, an `iac` project inside another repo the user has not declined
+to extract).
 
 ## An unresolved axis is a degradation, and it makes two others conditional
 
@@ -98,6 +101,14 @@ whole section reports `not checked — no stack resolved` for it:
   config (`.config/mise*.toml`, per the mise skill's five-file split) or
   resolves on `PATH`. Missing → finding, with the `mise use` line as the remedy.
   A `—` in the column means the toolchain is not mise-managed; skip silently.
+- **Binaries** — only where the language is known through materialized
+  `language_facts` that carry a `binaries` list (absent means none; a language
+  plugin's row has no such column). For each name, `command -v <name>`. Missing
+  → finding naming the binary, with the remedy that installs it (for
+  `xcodebuild`: install Xcode, then `sudo xcode-select -s` at it). **Blocking
+  once this project's `template` is pinned** — mise will not supply it, so the
+  skip above would otherwise hide it and the build fails on first run. **A
+  degradation while that `template` reads `unresolved`.**
 
 Report per language, not per project — one missing Dart LSP is one finding even
 when three projects declare `dart`.
@@ -149,12 +160,12 @@ names a stack with no `conventions` for `plan` and `execute` to read and no
 `harness` block to check against — remedy `/vwf:setup`, which
 walks the axis back through the menu. A project whose
 platforms ship through a store rather than to a deploy target (`mobile`,
-`tablet`, `desktop`, `auto`) is correct with `deploy_template: []`, not
-missing, as is an `iac` platform, which *is* the deploy path. A project
-declaring `cli` **pins a deploy template for its package registry** — **which
-one is the stack plugin's answer**, and **vwf names no slug on this axis or any
-other**, so what this check asserts is that the axis is **answered**, never what
-it was answered with.
+`tablet`, `desktop`, `auto`, `watch`, `tv`, `spatial`) is correct with
+`deploy_template: []`, not missing, as is an `iac` platform, which *is* the
+deploy path. A project declaring `cli` **pins a deploy template for its
+package registry** — **which one is the stack plugin's answer**, and **vwf
+names no slug on this axis or any other**, so what this check asserts is that
+the axis is **answered**, never what it was answered with.
 
 **A project missing a required axis is a finding.** Every registry project needs
 a `template` and a `deploy_template`. On the two list axes *answered* means a
@@ -229,6 +240,18 @@ resolved` and move on. The common case is a project that was
 `fullstack` before the migration and is now `[service, webapp]` — check the pin
 rather than assuming the migration got it right.
 
+**A viewport override must name something real.** A product may override a
+device screen platform's default canvas viewport per project, at
+`design.viewports.<project>.<platform>: <W>x<H>` in `.config/vwf.yaml` (the key
+is `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`'s). For every entry, check that
+`<project>` names a registry project, that `<platform>` is one that project
+declares, that it is a **device** screen platform (`desktop`, `mobile`,
+`tablet`, `auto`, `watch`, `tv`, `spatial`), and that the value is `<W>x<H>`
+with two positive integers. Each miss is a **finding** naming the key — never
+blocking: a stale override costs one canvas drawn at the default size, and the
+screens skill falls back to the default on any entry it cannot use. An absent
+`design.viewports` block is correct, not drift.
+
 **mise is mandatory once there is anything to run** — it is both vwf's task
 runner (every worktree init, pre-commit and merge goes through it) and the
 toolchain manager the §3 checks resolve against. Missing from `PATH` →
@@ -280,6 +303,9 @@ not yet supported there, so the row reports the CLI state as information
 rather than a cost. An unsupported host reports `n/a — no forge CLI`. Like
 `rtk`, this is reported on every run: a machine without the CLI runs correctly
 and simply has no backlog to read, and nothing else says so until a verb fails.
+The same three answers decide whether predicate **(g)** below runs at all —
+it reuses them rather than probing a second time, and a miss here is what it
+reports as its skip reason.
 
 ## The repo shape against its baseline
 
@@ -290,11 +316,11 @@ that did not exist when the repo was shaped, and a fresh clone arrives with one
 branch. It drifts by moving, too — a pack-owned file the repo edited in place
 is no longer the file the pack ships. None of that stops the repo working, so
 **every finding here is `drift`, and none is blocking** — a repo behind its
-baseline is out of date, not broken. All six sub-checks carry the **same
+baseline is out of date, not broken. All seven sub-checks carry the **same
 remedy, `/vwf:setup reshape`**,
 which is why §9 prints that line once with the rows that led to it.
 
-**The six run per repo** — the base and every **locally-present** member,
+**The seven run per repo** — the base and every **locally-present** member,
 resolved the way `/vwf:init`'s **Step 0** resolves them: the paths
 `.gitmodules` declares union the `members:` list the config carries, deduped
 on realpath. That step owns the rule and it is not restated here; a path only
@@ -405,6 +431,30 @@ tier: the tree `/vwf:init` shapes, and the one this section is about. A file
 whose content no longer matches its recorded hash is one drift row naming the
 path, once the second test below confirms it; a recorded path that no longer
 exists at all is the same row, worded **removed**, and takes no second test.
+A path the lockfile lists under `skipped:` has no `entries:` record — the two
+lists never share a path, and `skipped:` holds only what was never landed. It
+is intentionally absent — its pack declared a condition the repo's answer did
+not meet — and is **never** reported as missing; a later run whose answer
+changed re-evaluates it, which is the reshape landing it. Present on disk, a
+file at a skipped path is the repo's own — unread, unlisted, and never a row
+here, since no reshape could clear it while the answer stands. A path that
+**has** an `entries:` record — landed on an earlier run whose answer has since
+flipped, or never conditional — is checked by hash like any landed file,
+whatever its condition reads today. Three rows are read from the config rather
+than the lockfile. A repo whose config's `answers.secrets` names a provider
+that has a row in the hygiene pack's provider table must carry that provider's
+ignore section in `.gitignore`; absent, it is one drift row naming the
+provider, remedy `/vwf:setup reshape`. A repo whose recorded
+`answers.repos.<repo>.forge` differs from the host its live `origin` remote
+names is one drift row naming both, same remedy — and so is a `skipped:` row
+whose `when: forge` names a host the live one contradicts, since the files
+that axis skipped are waiting for that reshape to land them. A repo with **no**
+remote at all is neither row: there is nothing live to contradict, and the
+recorded value stands. And a config stamped `config_format` 21 that carries no
+`answers:` block at all is a drift row on its own, same remedy — that block is
+what every caller now evaluates a conditional file against. A config stamped
+**20** is not this row's business: §2's stamp comparison already reports the
+format drift, and the callers infer the four answers meanwhile.
 
 The hash comparison stays the first and cheapest test, and a match ends it: a
 file matching its record raises nothing and nothing further is read. **A
@@ -423,7 +473,8 @@ state, not a repo edit, which is the whole reason for the second test.
 **A marked position is where a repo-specific value lives, so a value sitting
 in one is never (e)'s finding** — owned or not. A position another predicate
 owns still gets that predicate's row and nothing more: (d)'s repo-name key,
-(f)'s `MERGE_MODEL` and `MEMBERS`, (b)'s member flag list and alias list each
+(f)'s `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and `MEMBERS`, (b)'s member
+flag list and alias list each
 report the value they found there. A position **no** predicate owns — the
 plugin task's two agent-plugin lists, the `_default` slot, any other a pack
 ships — is a value the repo set, and nothing reports it at all. Splicing by
@@ -476,19 +527,33 @@ set from whatever happens to sit in `.config/` instead — anything not in the
 lockfile is not the adapter's, which is the rule the materialization itself
 lives by.
 
-**(f) The two marked positions beside `REPO_NAME`.** The same `[env]` block
-carries two more positions the toolchain pack ships marked. `MERGE_MODEL` is
-read in **each** repo, from that repo's own block; `MEMBERS` is read on the
-**base alone**, since a member declares no members of its own unless it
-carries its own `.gitmodules`, in which case it is a base in its turn and this
-check reaches it as one. Each is read by a task rather than by vwf, so an
-unfilled one is wrong only where it is used — which is why it goes unnoticed
-until the day that task runs:
+**(f) Three of the five marked positions beside `REPO_NAME`.** The toolchain
+pack ships five more positions marked in its base config —
+`MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and `MEMBERS` in the same `[env]`
+block, and the two runtime positions `RUNTIME_BLOCK` under `[settings]` and
+`PATH_ENTRIES` at the end of `[env]`, which `init` fills from its stack read
+and which are **legitimately empty** on a repo with no detected language, so
+this check reads neither of them, and (e) splices their values out like any
+other position's. The two landing-model positions are read in **each** repo,
+from that repo's own block; `MEMBERS` is read on the **base alone**, since a
+member declares no members of its own unless it carries its own `.gitmodules`,
+in which case it is a base in its turn and this check reaches it as one. Each
+is read by a task rather than by vwf, so an unfilled one is wrong only where it
+is used — which is why it goes unnoticed until the day that task runs:
 
-- **`MERGE_MODEL`** — absent from the block, or holding anything other than
-  `direct` or `pr`, is one drift row. The merge tasks fall back to `direct`
-  when it is unset, so nothing breaks loudly; what breaks quietly is the repo
-  that meant `pr` and has been landing branches locally ever since.
+- **`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`** — one per branch, each
+  checked on its own: absent from the block, or holding anything other than
+  `direct` or `pr`, is one drift row naming the position. The merge tasks fall
+  back to `direct` for either destination when its position is unset, so
+  nothing breaks loudly; what breaks quietly is the repo that meant `pr` — the
+  shipped preselection for `main` — and has been landing that branch locally
+  ever since. A block carrying the **legacy single `MERGE_MODEL`** and neither
+  new position is one drift row reading `legacy MERGE_MODEL — reshape writes
+  the pair`: every reader takes that one value as both until the reshape, so
+  the row is the only thing that says the pair is missing. The remedy holds
+  on a kept file too — a keep never covers a marked position's value, so the
+  reshape fills both positions from the legacy value through its fill
+  whether the file is replaced or kept.
 - **`MEMBERS`** — absent **or empty** on a product whose config reads
   `topology: multi-repo` with `linkage: siblings` is one drift row. Under that
   linkage the list is the only place the task library learns the member set,
@@ -503,7 +568,84 @@ until the day that task runs:
 `.config/mise.toml` absent altogether is (d)'s row for that repo, already
 printed — (f) adds nothing to it.
 
-Doctor **writes none of this** — no branch, no directory, no key, no scope, and
-no pack-owned file. It reports the rows, gives `/vwf:setup reshape` once as the
-remedy, and stops there, as it does with every other structural change in this
-file.
+**(g) Forge state.** The one sub-check that reads the **remote** rather than
+the checkout. `/vwf:init`'s **forge pass** — the last step of its git pass,
+run for a repo whose answer was *commit + push* — sets the repo's default
+branch on the forge, protects `develop` and `main` there, and hands the base's
+backlog project over to the user; the forge is the record for all three, and
+nothing in the tree says what it chose. So this predicate asks the forge, in
+**each** repo — the base and every locally-present member — through the same
+CLI the recommended forge-CLI check above already probed.
+
+**The skip rule comes first.** A repo with no `origin`, or one whose host's
+CLI is absent, unauthenticated for that host, or unsupported (`n/a — no forge
+CLI`), prints one note line under that repo — `forge state — not checked:
+<reason>` — and **no drift row**: the CLI's absence is already the degradation
+above, and a second row saying the same would read as two problems. A call the
+forge refuses — a ruleset listing on a repo the token has no admin on, a
+project listing without the `project` scope — is the same note for that one
+check, never drift: doctor cannot tell an absent setting from one it was not
+allowed to read. Otherwise, three checks:
+
+- **Default branch.** Read it from the forge — `gh repo view --json
+  defaultBranchRef --jq .defaultBranchRef.name` on GitHub, the default-branch
+  line of `glab repo view` on GitLab — and check it is one of the two branches
+  the forge pass offers, `develop` or `main`. Anything else — the forge's own
+  first-push default, typically — is one drift row naming the repo and the
+  branch the forge holds. Which of the two it should be is the user's answer at
+  the forge pass, recorded nowhere in the tree, so doctor never asserts
+  `develop` over `main` or the reverse.
+- **Protection.** On **both** `develop` and `main`, whether the branch is
+  protected on the forge at all. The pass leaves existing protection alone —
+  it never merges its rules into a ruleset or protection already present — so
+  a branch counts as protected when **any** ruleset or protection covers it,
+  by any name: on GitHub, any active ruleset (`gh api
+  repos/<owner>/<repo>/rulesets`) whose conditions include the branch, or
+  classic protection on it
+  (`gh api repos/<owner>/<repo>/branches/<branch>/protection`); on GitLab, a
+  `protected_branches` entry for the branch
+  (`glab api projects/:id/protected_branches`). **No protection at all** on
+  `develop` or `main` is the one drift row here, naming the repo and the
+  branch. Where protection exists but lacks one of the rules the pass would
+  have set — **no force-push and no deletion**, always; **a pull request
+  required** when that branch's own value reads `pr` — `MERGE_MODEL_DEVELOP`
+  for `develop`, `MERGE_MODEL_MAIN` for `main`, a legacy single `MERGE_MODEL`
+  standing in for both — read from the same `[env]` block (f) reads (on GitHub
+  the ruleset rules `non_fast_forward`,
+  `deletion` and `pull_request`, or the classic `allow_force_pushes`,
+  `allow_deletions` and `required_pull_request_reviews`; on GitLab
+  `allow_force_push` and a `push_access_levels` list that lets nobody push
+  directly, deletion being refused by protection itself) — doctor prints one
+  **note** naming the branch and the missing rule, like the skip note: it is
+  information, never drift, because a reshape would leave that protection
+  exactly as it is, so no remedy exists to point at. On a branch whose value is
+  `direct` the require-PR rule is neither expected nor noted when present. A
+  branch the
+  forge does not carry reports `not on the forge — not checked` for that
+  branch: pushing it is the git pass's, and (c) already says whether it exists
+  locally.
+- **Backlog project.** **Base only, once per product**, and printed under the
+  base's section. Resolve it exactly as the backlog skill's GitHub reference
+  does — owner and name from `gh repo view --json owner,name`, then
+  `gh project list --owner <owner>` filtered to an **open** project titled
+  `<repo>` (`${CLAUDE_PLUGIN_ROOT}/skills/backlog/references/github.md`,
+  "Resolving the project", which owns the rule and is not restated here). No
+  match is one drift row: `backlog project <repo> — absent`. Two open matches
+  is the skill's own stop, reported here as **information** naming both URLs,
+  never as drift, since the user has to pick and a reshape cannot. On a GitLab
+  remote print the skill's "not yet supported" line as information and check
+  nothing; on any other host the skip rule already applies.
+
+**Every row is `drift`, none is blocking**, and the remedy is the same one
+line as (a)–(f): `/vwf:setup reshape`, whose forge pass re-offers what is
+absent — the default branch and a protection for an unprotected branch through
+the CLI on one consent, the backlog project through the backlog skill's browser
+hand-over — and leaves what is already set untouched, which is why an existing
+protection short of a rule is a note and not a row. Doctor reads the forge and
+never writes to it; every command above is a read, and a network miss is the
+skip note, not a finding.
+
+Doctor **writes none of this** — no branch, no directory, no key, no scope, no
+pack-owned file, and no forge setting. It reports the rows, gives
+`/vwf:setup reshape` once as the remedy, and stops there, as it does with every
+other structural change in this file.

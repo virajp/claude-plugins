@@ -27,7 +27,9 @@ never created rather than being caught later. The config lives at
 config, which means every invocation carries `--config`:
 
 ```sh
-mise run setup:precommit        # autoupdate + install the hooks
+mise run setup:precommit        # install the hooks; refuses a foreign setup
+mise run setup:precommit --update   # also move every rev with autoupdate
+mise run setup:precommit --force    # unset core.hooksPath and overwrite
 mise run code:precommit         # run against changed files
 mise run code:precommit --all   # run against everything
 
@@ -39,10 +41,47 @@ script**, which is why `git commit` needs no flag afterwards while a manual
 `pre-commit run` still does. Re-run `setup:precommit` after moving the config;
 the old path stays baked in until you do.
 
-`setup:precommit` also clears any `core.hooksPath` the repo has set locally —
-`install` refuses outright while one is set, and a leftover path silently wins
-over pre-commit's installed hook, so the symptom is a gate that reports nothing
-rather than one that errors.
+`setup:precommit` never clobbers a hook setup it did not create. Before it
+installs anything it reads the **effective** `core.hooksPath` and looks for
+`.husky/` and a lefthook config in any of its forms (`lefthook` or `.lefthook`
+with `.yml`, `.yaml`, `.toml` or `.json`); if any is present it prints what
+it found and the two by-hand lines — the `core.hooksPath` unset and the
+`pre-commit install … --overwrite` call — plus the cleanup it leaves to you
+(delete `.husky/` or the lefthook file, drop a husky `prepare` script; the task
+deletes nothing), and exits 1. `--force` runs those two steps itself, unsetting
+the **local** value only: a `core.hooksPath` from a global or system git-config
+— set there alone or beside a local one — is named as such and refused even
+under `--force`. A repo whose installed hook already carries pre-commit's marker
+is not refused again for a tracked husky or lefthook file. The refusal matters
+because `install` fails outright while a `core.hooksPath` is set, and a leftover
+path silently wins over pre-commit's installed hook, so the symptom is a gate
+that reports nothing rather than one that errors. On the plain path `install`
+runs without `--overwrite`, so a hand-written `.git/hooks/pre-commit` is kept
+as `pre-commit.legacy` and chained rather than replaced; `--force` is what
+replaces it. `pre-commit autoupdate` runs only under `--update`; a plain
+`setup:precommit` leaves every `rev:` where the lockfile recorded it.
+
+## The git-config hook: a required per-repo identity
+
+The base config's first local hook, `git-config`, requires the repo's local
+`user.name`, `user.email` and `user.signingkey` to **equal** the forge variables
+— `GITHUB_USER_NAME`, `GITHUB_EMAIL` and `GITHUB_SIGNING_KEY` when the origin
+host is `github.com` or any subdomain of it (`ssh.github.com`), the `GITLAB_*`
+twins for `gitlab.com` and its subdomains, `GIT_*` for any other host or no
+remote — with `commit.gpgsign` and `tag.gpgsign` set to `true`,
+`gpg.format` set to `ssh`, and `gpg.program` and `gpg.ssh.program` absent. The
+hook runs `code:git-config --fix`: it writes the identity keys from the
+variables, fails naming any unset one and writing nothing partial, sets the two
+booleans and `gpg.format`, and unsets the two `gpg.*program` keys — the only two
+things it removes, and the rule itself. When it changed any key it prints
+"identity corrected — re-run the commit" and exits 1: git loads the identity
+before hooks run, so the triggering commit is refused rather than landed with
+the old one, and the re-run carries the correction. `<FORGE>_SIGNING_KEY`
+holds what git accepts as `user.signingkey` under `gpg.format=ssh`: prefer the
+path to the key file (`~/.ssh/id_ed25519.pub`) or the literal public key
+prefixed `key::`. A bare `ssh-ed25519 AAAA…` line still works as the deprecated
+form of `key::`; a literal key of another type (`sk-ssh-ed25519@openssh.com …`,
+`ecdsa-…`) without the prefix is read as a file path and fails.
 
 ## The config is a base, and packs extend it by fragment
 
@@ -155,9 +194,10 @@ lockfile freshness.
 ## Pin revs; update them deliberately
 
 Every third-party `repo:` entry carries a `rev:`. `pre-commit autoupdate` moves
-them, and it is run as a deliberate act (`setup:precommit`), not silently on
-each commit — an unpinned or auto-moving hook set means a commit can fail on a
-change nobody in the repo made.
+them, and it is run as a deliberate act (`setup:precommit --update`), never by
+a plain `setup:precommit` and not silently on each commit — an unpinned or
+auto-moving hook set means a commit can fail on a change nobody in the repo
+made.
 
 ## The commit convention lives here too
 

@@ -15,6 +15,18 @@ to a repo, and every write it makes is consent-gated and committed once.
   invocation's `repo: <path>` line names, a path relative to the current
   repo's root. Every write below, and the lockfile, resolve under that
   root: read "the repo" throughout as that repo.
+- **The answers** — an optional `answers:` map passed into the invocation
+  beside the `repo:` line, in the same payload style: at most one value
+  per axis of the `conditional:` vocabulary
+  (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) — `forge`, `editor`,
+  `secrets`, `update_bot`. The map a caller passes comes from the target
+  product's `.config/vwf.yaml` `answers:` block — `editor` and `secrets`
+  once for the product, `forge` and `update_bot` per repo — with `forge`
+  re-read live from the repo's `origin` host, so a remote that appeared
+  since is evaluated against, not the record. `/vwf:init` is the caller
+  that asks the four and writes that block; `/vwf:setup`'s materialize
+  pass and `/stackgen:stackgen-sync` read it. A caller that passes none,
+  or leaves an axis out, is read as below.
 
 ## Steps
 
@@ -111,10 +123,17 @@ to a repo, and every write it makes is consent-gated and committed once.
        `${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`. Nothing here reads
        or rewrites either editor file.
    - The lockfile update — every path above, with its component ref,
-     source and content hash, plus the **mode** for a `config/` file. The
+     source and content hash, plus the **mode** for a `config/` file, and
+     the `skipped:` list the evaluation below produces. The
      per-component record is what lets sync act on one component alone,
      and per file it is what makes `config/` precedence auditable: it
      names which component supplied the version that actually landed.
+     The hash written here is the landing hash, not the last word:
+     `/vwf:init` **re-records** the hash of every landed file it changes
+     after landing — its marked-position fills, the `.gitignore` section
+     appends, the hook-fragment merge, the editor block, and either answer
+     of its replace-or-keep offer — so a differing hash is content drift
+     only when no such writer ran.
 
    **Composition order, and why a bug in it is silent.** More than one
    component may write into one `config/` tree — `.config/mise/tasks/` is
@@ -164,6 +183,50 @@ to a repo, and every write it makes is consent-gated and committed once.
    provides the server is the **generated local plugin**, a tier-3 target
    outside the repo, handled at its own consent line in step 3b.
 
+   **Conditional paths are evaluated here, after the set is assembled and
+   before the collision check.** A pack may declare, in its `pack.yaml`, a
+   `conditional:` list — a landed path or glob and a `when:` of one axis
+   to one value, from the fixed vocabulary `forge`, `editor`, `secrets`,
+   `update_bot` (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). For each
+   entry, match its path or glob against the component's `config/` paths
+   in the set as the pack spells them — **before** the `p/_project/`
+   rename, the same spelling rule 11 resolved; the rename is applied to
+   whatever stays — and evaluate `when:` against the `answers:` the
+   caller passed:
+
+   - **False** — the answer for that axis is present and differs — drops
+     every matched path from the landing set. A dropped path this repo's
+     lockfile has **never landed** (no `entries:` record) is written to
+     the lockfile's `skipped:` list as `{ path, pack, when }`
+     (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`): never a create and
+     never a conflict, and a file already sitting there is the repo's
+     own, unread and unlisted. A dropped path that **has** an `entries:`
+     record — landed on an earlier run, the answer since flipped — is
+     **not** written to `skipped:`: it keeps its record, is not removed,
+     and is named in the plan under the skips heading as landed earlier,
+     condition now false — kept. A path is in `entries:` or in
+     `skipped:`, never both.
+   - **True** leaves the path in the set, an ordinary member from here on
+     — so a path both conditional and pre-existing is a conflict in step
+     2 only when its condition is true.
+   - **Unanswered** — the caller passed no `answers:`, or none for that
+     axis — reads as true: the path lands, exactly as every path did
+     before the key existed. A skip is an act of a known answer, never of
+     a missing one, and this is what keeps a caller that passes nothing
+     landing what it always landed. The rule is **unchanged** now that
+     every caller this plugin knows about passes a full map read from
+     `.config/vwf.yaml`'s `answers:` block with the forge re-read live:
+     it is the fallback for a caller nobody here has met, not the path
+     those callers take.
+
+   A path named by more than one entry stays only when every condition
+   is true. A run evaluates only the packs of the slug it materializes,
+   so it rewrites `skipped:` for **those packs alone** — their entries
+   replaced from that run's answers, every other pack's entries kept as
+   they were: a path skipped last time whose condition now holds leaves
+   the list and lands as a create. Removing a kept path is the user's,
+   through sync or removal, never a side effect of an answer changing.
+
 2. **Collision check, against the lockfile.** Any target path that exists
    but is **not** in the target repo's own
    `.claude/stackgen/lock.yaml` — never a sibling repo's — is that
@@ -188,6 +251,15 @@ to a repo, and every write it makes is consent-gated and committed once.
    caller is told the slug is pinned but not materialized. Reporting the
    decline is the caller's, and the repo's unmaterialized state is what
    `/vwf:doctor` reports until a later run lands it.
+
+   **Skips are listed under their own heading**, never folded into the
+   creates or the conflicts: every path the evaluation in step 1 dropped,
+   with the pack and the `when:` it failed against — and, marked "landed
+   earlier, condition now false — kept", any path with an `entries:`
+   record whose condition flipped, which stays where it is. The
+   heading is present even when empty, so a user reading a plan with no
+   issue forms in it sees *why* rather than a shorter list. Skips are not
+   deselectable — there is nothing to decline.
 
    **The reputation table is shown whole.** The generator vetted every
    concrete third-party name the component emits through

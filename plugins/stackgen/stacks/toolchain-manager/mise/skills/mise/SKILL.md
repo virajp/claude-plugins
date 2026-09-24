@@ -155,14 +155,25 @@ two differ in value and never in vocabulary.
   depending on where you stood.
   Aliases that vary only by repo (the agent launchers) belong in the user's
   **global** config reading `$REPO_NAME`, not here: one definition, per-repo
-  values. Two more marked positions sit beside it, both filled by the
-  orchestrator and both with a working default: **`MERGE_MODEL`**
-  (`direct` | `pr`) — whether `code:merge:*` merges locally and pushes, or
-  pushes and opens a pull request — and **`MEMBERS`**, the space-separated,
-  repo-relative paths of this repo's member repos, left empty when they are
-  submodules, which `members()` reads from `.gitmodules` instead. A string and
-  never an array: mise env values are strings. **Two more marked positions sit
-  outside the TOML**, in `.config/mise/tasks/setup/ai`: `EXTRA_MARKETPLACES`
+  values. Three more marked positions sit beside it, each filled by the
+  orchestrator and each with a working default: **`MERGE_MODEL_DEVELOP`** and
+  **`MERGE_MODEL_MAIN`** (`direct` | `pr`, one per long-lived branch) — whether
+  `code:merge:develop` and `code:merge:main` respectively merge locally and
+  push, or push and open a pull request; shipped `direct` and `pr`, and a file
+  still carrying the single legacy `MERGE_MODEL` is read as both values with a
+  warning — and **`MEMBERS`**, the space-separated, repo-relative paths of this
+  repo's member repos, left empty when they are submodules, which `members()`
+  reads from `.gitmodules` instead. A string and never an array: mise env
+  values are strings. The base's other two marked positions are the runtime's:
+  **`RUNTIME_BLOCK`** under `[settings]` and **`PATH_ENTRIES`** at the end of
+  `[env]`, both shipped **empty** and filled by the orchestrator from its
+  **stack read** — the languages the repo's pins, lockfile or manifests name —
+  one runtime settings line per detected language in the first, the `_.path`
+  entry a project-local binary directory needs in the second, and nothing in
+  either for a language the repo does not have.
+  These six are the only marked positions in the config split. **Two more
+  marked positions sit outside the TOML**, in `.config/mise/tasks/setup/ai`:
+  `EXTRA_MARKETPLACES`
   (rows `<source-ref>|<name>`) and `EXTRA_PLUGINS` (rows `<name>@<marketplace>`)
   — the plugin marketplaces and plugins this repo requires beyond the toolkit's
   own. Both default to empty, both are filled by the same orchestrator from a
@@ -224,6 +235,22 @@ different command.
   tools, secrets, `setup:deps:install --frozen`, nothing else. **vwf's
   git-workflow probes for `setup:worktree` by name** before falling back to
   `setup:all`, so a repo without it silently takes the slower path.
+- **No task clobbers state it did not create.** A task that would have to
+  unset, overwrite or upgrade something foreign stops, names it and prints the
+  by-hand command. Every destructive step is behind a flag passed on purpose —
+  `setup:precommit --force` (take over a foreign `core.hooksPath` or hook
+  manager), `setup:precommit --update` (`pre-commit autoupdate`),
+  `setup:mise --upgrade` (`mise upgrade --local` and the formatter's plugin
+  update) — and `setup:all` passes none of them.
+- **`code:git-config` requires a per-repo forge identity.** The local
+  git-config's `user.name`, `user.email` and `user.signingkey` must **equal**
+  `<FORGE>_USER_NAME`, `<FORGE>_EMAIL` and `<FORGE>_SIGNING_KEY`, with ssh
+  signing on for commits and tags and no `gpg.*program` override; `<FORGE>` is
+  `GITHUB` for an origin on `github.com` or a subdomain of it, `GITLAB` for
+  `gitlab.com` or a subdomain, `GIT` for any other host or no remote. `--fix`,
+  which the hook runs, sets the keys from the variables and never deletes an
+  identity. The full contract is in
+  [references/task-library.md](references/task-library.md).
 - **`code:all` needs the dev toolchain.** The formatter and the scanners are
   pinned in `mise.dev.toml`, so the aggregate gate runs under `MISE_ENV=dev` —
   in the pipeline too, wherever the pipeline runs the gate rather than the build.

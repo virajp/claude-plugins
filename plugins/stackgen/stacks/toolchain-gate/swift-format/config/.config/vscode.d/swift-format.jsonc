@@ -1,0 +1,48 @@
+// Editor fragment — the Swift formatter gate's contribution to the repo's
+// editor settings. `/vwf:init` merges every `.config/vscode.d/*.jsonc` into the
+// two editor files inside one marked block; a key written by hand after that
+// block wins.
+//
+// Scope: the Swift extension, the `[swift]` formatting binding, SwiftPM's
+// build tree and the manifest's nesting. Nothing about targets or run
+// configuration is here — those are the package's own.
+{
+  "extensions": [
+    "swiftlang.swift-vscode",
+  ],
+
+  "settings": {
+    // The extension formats through sourcekit-lsp, which finds a
+    // `.swift-format` file by walking up from the source file and cannot be
+    // pointed at `.config/swift-format.json`. Formatting on save would apply
+    // swift-format's defaults, not this repo's configuration, so Swift is not
+    // formatted on save: the `code:format` task is the formatter.
+    "[swift]": {
+      "editor.defaultFormatter": "swiftlang.swift-vscode",
+      "editor.formatOnSave": false,
+    },
+
+    // SwiftPM's build and cache trees, regenerable and hidden from the
+    // explorer, the watcher and search alike. The three maps are unions
+    // across fragments, so these rows add to the hygiene baseline's.
+    "files.exclude": {
+      "**/.build": true,
+      "**/.swiftpm": true,
+    },
+    "files.watcherExclude": {
+      "**/.build": true,
+      "**/.swiftpm": true,
+    },
+    "search.exclude": {
+      "**/.build": true,
+      "**/.swiftpm": true,
+    },
+  },
+
+  // The manifest is the file people open; the lockfile travels with it.
+  "nesting": {
+    "Package.swift": [
+      "Package.resolved",
+    ],
+  },
+}

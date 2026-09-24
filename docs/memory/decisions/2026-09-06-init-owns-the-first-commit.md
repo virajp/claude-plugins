@@ -88,6 +88,12 @@ verification-skipping flag is ever passed. *Rejected:* shipping the hook at
 `stages: [manual]`, on the precedent of `check-hooks-apply`; and guarding
 `develop` too.
 
+> **Superseded by**
+> [`2026-09-20-init-forge-pass.md`](./2026-09-20-init-forge-pass.md) — init's
+> forge pass now sets the default branch and branch protection through the forge
+> CLI, on consent; the by-hand line survives as the fallback for a forge with no
+> CLI.
+
 **The forge default** (D17). The user's ruling:
 
 > Ask user which branch must be default branch in remote … with `develop` being

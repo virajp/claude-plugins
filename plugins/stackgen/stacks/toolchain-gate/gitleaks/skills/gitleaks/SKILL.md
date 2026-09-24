@@ -95,6 +95,17 @@ future real instance of that credential type — and nothing reports that it
 happened. Prefer a path or a fingerprint; reach for a rule-level exemption only
 when the rule is genuinely wrong for this repo, and say why in a comment.
 
+The shipped file already allowlists the generated trees (`.venv/`, `build/`,
+`dist/`, `graphify-out/`, `node_modules/`, `target/`). `.env` is deliberately
+not among them: `gitleaks dir` does not honour `.gitignore`, so `code:sec`'s
+full scan skips a gitignored `.env` through a run-time overlay that extends the
+shipped file for `dir` mode only — an entry in the file itself is mode-wide and
+would let the staged gate wave through a `.env` someone did stage. The flip
+side: the full scan is not history coverage for `.env` files. Only the staged
+gate reads them, and one already committed — a tracked `.env.example`, or one
+that reached history past the hook — is found by a by-hand `gitleaks git` run
+over history.
+
 ## Where this stops
 
 Which secrets a product has and where they come from is stackgen's secrets

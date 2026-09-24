@@ -2,8 +2,14 @@ name: tsconfig
 summary: The TypeScript compiler configuration — a strict shared base,
   per-project
   configs, the path alias and the emit variant.
-version: 0.1.0
+version: 0.2.0
 type: toolchain-gate
 kind: language-bundle
 axis: project
 harness: n/a
+# The editor fragment lands only where init's editor answer is vscode; every
+# other file in config/ lands unconditionally. Paths are relative to config/.
+conditional:
+  - path: .config/vscode.d/tsconfig.jsonc
+    when:
+      editor: vscode

@@ -26,7 +26,15 @@ component for the parity rule this depends on.
 ## What this pack writes
 
 `.config/gitleaks.toml` — the scanner's config: `[extend] useDefault = true`,
-the commented rule template, and the allowlist of generated trees.
+the commented rule template, and the allowlist of generated trees — `.venv/`,
+`build/`, `dist/`, `graphify-out/`, `node_modules/`, `target/`. A gitignored
+`.env` is **not** on that list: `code:sec`'s full scan skips it through a
+run-time overlay that extends this file, because an entry here is mode-wide and
+would also blind the staged gate to a `.env` someone did stage. That overlay
+also means the full scan is not history coverage for `.env` files: only the
+staged gate reads them, and one already committed — a tracked `.env.example`,
+or one that got past the hook — is found by a by-hand `gitleaks git` run over
+history.
 
 The fence in `output-tree.md` was opened for gate config files on 2026-09-05;
 `package.json` and CI workflows remain outside it.

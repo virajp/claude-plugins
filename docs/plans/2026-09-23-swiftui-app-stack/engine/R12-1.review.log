@@ -1,0 +1,23 @@
+/code-review high engine, loop R12 round 1, range ba994ef0..97474b13 (engine diff: branch vs develop). Verbatim result:
+
+Left out: stale Tuist wording in site/src/content/docs/plugins/{vwf,stackgen}.md and .claude/skills/vwf-plugin/references/skills-and-agents.md (U5, wave 5).
+
+1. plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/code/format:128 — dprint (and the house linter in code:lint) handle every JSON file in the tree, including the Xcode asset-catalog *.xcassets/**/Contents.json files. The dprint pack's excludes have nothing for .xcassets, so the SwiftUI pack formats files Xcode owns. Failure: a new app from Xcode's template has Assets.xcassets Contents.json files written as "idiom" : "universal"; read-only code:format fails on first CI run; --fix rewrites them and Xcode rewrites them back, so every commit churns. The smoke test had no asset catalog.
+
+2. plugins/stackgen/stacks/app-framework/swiftui/skills/ux-gate/SKILL.md:65 — the gate runs mise run test:golden --platform macOS against the same SnapshotTests target and the same __Snapshots__ files recorded on the pinned iOS simulator; swift-snapshot-testing names snapshot files by test name, not platform. Failure: macOS renders compared with iPhone PNGs, every assertion fails; iOS-only target errors "Unable to find a destination"; test:golden --record --platform macOS overwrites the iOS goldens.
+
+3. plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/setup/deps/upgrade:26 — upgrade deletes the committed Package.resolved and does not put it back if the resolve fails; outdated sets a restoring trap, upgrade has none. Failure: offline or unresolvable range, set -e stops with the lockfile deleted; install --frozen then fails until git restore by hand.
+
+4. plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode:26 — the Xcode version check only runs when XCODE_VERSION is set; the pack lands no mise [env] fragment any more, so a fresh repo has no pin and the check silently does nothing. Failure: two developers on Xcode 26 and 27 record goldens with different SDK rendering and nothing refuses; test:golden refuses a missing SIMULATOR_PLATFORM but the E6′ Xcode pin is not enforced.
+
+5. plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/test/golden:78 — --platform alone still takes SIMULATOR_DEVICE and SIMULATOR_OS from the iOS pin, building an impossible destination. Failure: --platform 'watchOS Simulator' yields platform=watchOS Simulator,name=iPhone 17,OS=27.0; xcodebuild "Unable to find a destination"; the task does not say device and OS must be overridden too.
+
+6. plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/test/golden:88 — xcodebuild test runs without -onlyUsePackageVersionsFromResolvedFile or -disableAutomaticPackageResolution, so the golden run can re-resolve and rewrite the committed Package.resolved. Failure: in CI a branch whose package requirements no longer match Package.resolved passes test:golden while xcodebuild quietly edits the lockfile — opposite of the frozen install the swiftpm conventions require.
+
+7. plugins/stackgen/stacks/app-framework/swiftui/skills/ux-gate/SKILL.md:85 — the accessibility xcodebuild test leaves out -derivedDataPath .build/DerivedData and -clonedSourcePackagesDirPath .build/SourcePackages, which test:golden and setup:deps:install use. Failure: every gate run rebuilds into ~/Library/DerivedData and re-clones packages; ignores the frozen checkouts; build output outside what cleanup removes.
+
+8. plugins/stackgen/stacks/bundles/swift-swiftui.md:61 — the bundle says /vwf:doctor blocks when xcodebuild or swift is missing from PATH, but doctor's binaries check is a PATH lookup and every Mac has /usr/bin stubs. Failure: CLT-only Mac passes doctor; missing Xcode shows only when require_xcode fails. Fix belongs in the check (probe xcodebuild -version), not the bundle text.
+
+9. plugins/stackgen/stacks/bundles/swift-swiftui.md:7 — the bundle keeps package-manager/swiftpm; doctor's repo.stack check expects that package manager's lockfile, but a SwiftUI app keeps Package.resolved inside <Name>.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/. Failure: every correct SwiftUI app reports package_manager swiftpm unresolved — false drift, pointing at a wrong fix.
+
+10. plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/code/lint:201 — code:format, code:lint, setup:deps:audit and setup:deps:cleanup are byte copies of language/swift's and still describe a Swift package ("a repo before swift package init", "the manifest and any Package@swift-*.swift"). Two ~400-line copies must be fixed twice or the cmp gate fails.

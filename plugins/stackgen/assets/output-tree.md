@@ -362,13 +362,17 @@ entries:
     slug: generated/go # the template (bundle) it landed with
     component: language/go # the component ref — <type>/<slug> (assets/taxonomy.md)
     source: generated # or pack/<type>/<slug>@<version>
-    hash: <content hash at landing>
+    hash: <content hash — at landing, re-recorded by the composing skill after its fills>
   - path: .config/mise/tasks/code/format # a `config/` tier file — outside .claude/
     slug: generated/mise
     component: toolchain-manager/mise # which component's version won, per file
     source: pack/toolchain-manager/mise@0.1.0
-    hash: <content hash at landing>
+    hash: <content hash — at landing, re-recorded by the composing skill after its fills>
     mode: "755" # preserved for .config/mise/tasks/** — mise runs the file itself
+skipped: # config/ paths a pack declared `conditional:` whose condition was false at the last run
+  - path: renovate.json
+    pack: repo-hygiene/repo-hygiene # <type>/<slug> — the pack whose conditional: entry matched
+    when: { update_bot: renovate } # the condition, as the pack states it — re-evaluated by a later run
 settings_keys: [] # exact settings.json keys stackgen added, with consent — a hooks entry is spelled `hooks.<Event>[<matcher>]`
 mcp_servers: [] # exact .mcp.json server keys stackgen added, with consent
 local_plugin: # the generated local plugin — absent when none was written
@@ -391,12 +395,47 @@ Rules the lockfile enforces:
 - **Sync diffs against the lockfile, mechanically, per component**:
   unchanged / pack moved / repo edited are hash comparisons, not inference,
   and one component's drift never churns the rest of its bundle.
+- **`hash:` has three writers, and a differing hash is drift only when none
+  of them ran.** The materializer writes it at landing. The composing skill
+  (`/vwf:init`) **re-records** it after every change it makes to a landed
+  file — the marked-position fills, the `.gitignore` section appends, the
+  hook-fragment merge, the editor block — and its replace-or-keep offer
+  re-records it on either answer, so a file kept as the repo's own reads as
+  current, not as drift, the next time sync or the offer runs.
 - **Anything not in the lockfile is not stackgen's** — never diffed, never
   overwritten, never removed. A landing set that collides with an unlisted
   path is a conflict for the user, not a write.
+- **A `skipped:` path is neither a create nor a conflict.** It is a
+  `config/` path a pack declared `conditional:` (the pack format) whose
+  condition read false against the answers the caller passed, so the
+  materializer left it out of the landing set on purpose and wrote it here
+  — `path`, the `pack` that declared it, and the `when` it failed — instead
+  of under `entries:`. It carries no hash, because nothing landed. Every
+  reader treats it as **intentionally absent**: `/vwf:doctor` never reports
+  it as missing, sync never diffs it, removal never looks for it, and a
+  file sitting at that path is the repo's own. **A path is in `entries:`
+  or in `skipped:`, never both**: `skipped:` holds only paths the
+  materializer has never landed here. A path with an `entries:` record
+  whose condition later turns false keeps that record, is never written to
+  `skipped:` and is never removed by the evaluation — the dry-run plan
+  names it as landed earlier, condition now false, kept — so doctor reads
+  it as any other landed file. A run rewrites the list **for the packs it
+  evaluated** — their entries replaced from that run's answers, every
+  other pack's kept — since a run materializes one slug and can judge no
+  other pack's conditions; a path whose condition now holds leaves it and
+  lands as an ordinary entry, subject to the same collision check as any
+  other create. **A pack's `skipped:` rows live and die with its
+  `entries:`**: a pack that is removed or un-pinned takes its rows with
+  it, so the list never carries the ghost of a pack the repo no longer
+  runs — a row left behind would go on telling every reader that a path
+  is intentionally absent for a condition nothing evaluates any more.
 - **Removal removes exactly the listed entries**, `settings_keys` and
   `mcp_servers`, nothing else — the same receipt invariant this repo's
-  installer CLI lives by.
+  installer CLI lives by — and drops the removed pack's `skipped:` rows
+  with its `entries:`. Those rows are the record of a decision about that
+  pack's paths; nothing lands and nothing is deleted on the way out, so
+  dropping them removes a claim, never a file, and a file sitting at a
+  dropped row's path was always the repo's own.
 - **The local plugin is removed by subtraction, not deletion.** Removal drops
   only the keys under `local_plugin.lsp_servers` and
   `local_plugin.mcp_servers` from the generated manifest — another repo's

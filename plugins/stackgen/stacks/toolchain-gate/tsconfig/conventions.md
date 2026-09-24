@@ -20,8 +20,14 @@ One file, and it is not a compiler config: `.config/vscode.d/tsconfig.jsonc`,
 the editor fragment. The `tsconfig.json` files themselves are per-project and
 are written where the project is, not laid down from here. The fragment carries
 the `js/ts.*` keys that make the editor's own import machinery agree with the
-shared base — the path alias, the quote style, auto-import off — plus the
-nesting that folds `tsconfig.*.json` under `tsconfig.json`. No extension: the
-editor has TypeScript built in.
+shared base — the path alias, the quote style, auto-import off — the Node/TS
+excludes (`node_modules/` and the two `tsconfig*.tsbuildinfo` files, in all
+three exclude maps), the `template-string-converter.*` keys with the one
+extension that serves them, and the nesting that folds `tsconfig.*.json` under
+`tsconfig.json` and a `.js` file's source map and declarations under it. No
+extension for TypeScript itself: the editor has it built in.
+
+The fragment lands only where init's editor answer is vscode — `pack.yaml`'s
+`conditional:` names it.
 
 Full judgment: the `tsconfig` skill.

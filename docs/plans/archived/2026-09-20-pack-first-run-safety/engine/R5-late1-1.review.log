@@ -1,0 +1,14 @@
+/code-review high — R5-late1 round 1 — branch-scoped (develop...HEAD); the late loop's range is 673d0fe0..99aaf8e8 (docs only)
+
+Verified: p:plugins:check and p:plugins:shellcheck green; scripts driven in scratch repos (gitleaks 8.30.1 / pre-commit 4.6.2 / git 2.55) — git-config check/fix/refuse paths, origin parsing; code:sec overlay chain; setup/precommit refusals, --force scope, .legacy chaining, TAKEN_OVER, git-path hooks in a linked worktree.
+
+Findings (7):
+1. T/setup/precommit:103 via T/setup/all:50 — medium. setup:all runs setup:precommit with no flag under set -e, so the exit 1 on a foreign hook manager aborts the bootstrap before setup:ai/setup:vscode. = gap #2 (already recorded) — dropped by the dedupe.
+2. T/code/git-config:16-39 — low. A repo with no origin resolves to GIT_*, and the moment origin is added it flips to GITHUB_*/GITLAB_*. On the new-repo path (init wires hooks before the push adds the remote) every commit between hook wiring and the push demands GIT_*, then the first commit after the push is refused once while the identity is rewritten. No doc says a new repo needs both families until it has a remote. NEW.
+3. T/code/sec:91-100 — low. grype_status is non-zero both for findings above the threshold and for a scanner error (DB refresh failing offline), and the task prints the ignore: remedy for both. NEW.
+4. T/code/git-config:117 — low. multi-valued key exit 5. = gap #4 — dropped.
+5. T/code/git-config:36-37 — low. case-sensitive host. = gap #5 — dropped.
+6. T/code/git-config:132-134 — low. exit 1 under pre-commit run --all-files. = gap #6 — dropped.
+7. plugins/vwf/skills/init/references/existing-repo.md:901 — low, caller outside the diff. The existing-repo pipeline commits the gate configuration through live hooks and describes one attempt; with the pack landed, that commit is refused once on every adopted repo, and fails outright when the three forge variables — which init's seven questions never ask for — are unset. NEW (no branch commit touched the file; cause is U1's git-config).
+
+No issues in: the .env overlay mechanics, the .venv/* entry, the check-json exclude, --upgrade/--update gating, or the prose in the mise skill, task-library, pre-commit skill and conventions — each claim matches the code as tested.

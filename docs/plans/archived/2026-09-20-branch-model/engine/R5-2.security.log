@@ -1,0 +1,3 @@
+SECURITY ENGINE — R5 round 2 — range 75b85ac8..bfbd3aa9
+No high-confidence security findings in 75b85ac8..HEAD.
+Reviewed the non-markdown delta. Only behavioral change: merge_to_destination_branch selecting MERGE_MODE from MERGE_MODEL_DEVELOP/MERGE_MODEL_MAIN (legacy fallback) via case on the wrapper-supplied literal destination; value string-compared and echoed through print_warn; non-pr collapses to direct. No candidate reached confidence 8.

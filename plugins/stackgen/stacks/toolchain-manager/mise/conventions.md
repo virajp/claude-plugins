@@ -61,6 +61,19 @@ repo — the agent launchers are the case — live in the user's **global** conf
 and read `$REPO_NAME`, so one definition serves every repo and changing the
 launcher is not a change to every repo that has one.
 
+**The runtime is a marked position too, and the base ships it empty.**
+`RUNTIME_BLOCK` under `[settings]` and `PATH_ENTRIES` at the end of `[env]` are
+the two slots the orchestrator fills from its stack read — the languages the
+repo's pins, lockfile or manifests name — one runtime settings line per
+detected language in the first, the `_.path` entries a project-local binary
+directory needs in the second, and nothing in either for a language the repo
+does not have. A setting for an absent runtime is a claim about the stack that
+is not true, and a hand-picked one is the edit that turns a pack-owned file
+into a diverged one; a marked position is what the content hash ignores, so
+the fill is never drift. `REPO_NAME`, `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN`,
+`MEMBERS` and these two are the base's six, and the only marked positions in
+the config split.
+
 **Environment names are shared; values are split.** Development and production
 override the *same* keys rather than each inventing their own — the difference
 between the two layers is a value, never a vocabulary. Names here, values never
@@ -95,7 +108,27 @@ the recommendation list the repo composed, installing what is missing and
 rather than a global install, because accepting a recommendation globally leaves
 a repo's whole toolchain enabled in every other window forever — and because
 pruning is only safe once it is scoped to one profile. Silent on a machine
-without the editor.
+without the editor. The pack's own editor fragment,
+`.config/vscode.d/mise.jsonc`, lands only where init's editor answer is vscode
+— `pack.yaml`'s `conditional:` names it.
+
+**A task never clobbers what it did not create.** Foreign state — another hook
+manager's install, a `core.hooksPath` someone set, a lockfile or a plugin pin
+the repo tracks — is stopped at, named, and left for the one by-hand command the
+task prints. Every destructive step sits behind a flag passed on purpose:
+`setup:precommit --force`, `setup:precommit --update`, `setup:mise --upgrade`.
+`setup:all` passes none of them, so a bootstrap on any clone rewrites nothing
+outside the files the packs own.
+
+**The commit identity is per repo, required, and equal to the forge's.**
+`code:git-config`, which the hooks run, requires the local git-config to carry
+the identity and ssh-signing keys equal to `<FORGE>_USER_NAME`, `<FORGE>_EMAIL`
+and `<FORGE>_SIGNING_KEY` — `GITHUB_`, `GITLAB_` or `GIT_` by the origin host —
+and its `--fix` sets them from those variables rather than deleting anything: a
+machine states who it commits as once, in its environment, and every repo it
+touches is corrected to match. The correction refuses the commit that triggered
+it — git had already loaded its identity when the hook ran — and the re-run
+carries the new one.
 
 **The repo's agent plugins are the repo's, and a user's are theirs.**
 `setup:ai` installs and updates only what this repo requires, at **project**
@@ -110,11 +143,16 @@ CONTRIBUTING stub names the command instead. It is orthogonal to the merge tasks
 in any case — work flows feature → `develop` → `main` whatever the forge calls
 default.
 
-**How a branch lands is the repo's setting, not the lander's.** `MERGE_MODEL` in
-the base `[env]` reads `direct` — merge locally and push — or `pr`, which pushes
-the branch and opens a pull request through whichever forge CLI is present, and
-merges nothing locally. A repo-level value rather than a flag, because which one
-applies follows from the repo's review policy and not from who is landing.
+**How a branch lands is the repo's setting, not the lander's — and it is set
+per branch.** `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` in the base `[env]`
+each read `direct` — merge locally and push — or `pr`, which pushes the branch
+and opens a pull request through whichever forge CLI is present, and merges
+nothing locally; `code:merge:develop` reads the first, `code:merge:main` the
+second, and a file still carrying the single legacy `MERGE_MODEL` is read as
+both. Repo-level values rather than flags, because which one applies follows
+from the repo's review policy and not from who is landing; one per branch
+because `develop` and `main` carry different review policies more often than
+the same one.
 
 **One configuration per tool, and the task is where it lives.** Every gate hook
 calls `mise run code:<gate>` rather than the tool, and the three gate tasks take

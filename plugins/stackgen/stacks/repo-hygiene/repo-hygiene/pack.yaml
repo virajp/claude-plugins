@@ -2,7 +2,7 @@ name: Repo hygiene
 summary: The files a repository needs before it has a stack — the ignore set,
   the editor and attribute defaults, the licence and the security contact, and
   the dependency-update policy.
-version: 1.1.0
+version: 1.2.2
 type: repo-hygiene
 kind: repo-hygiene
 axis: repo
@@ -11,3 +11,15 @@ axis: repo
 # Hygiene runs no command, so like the gates it satisfies no vwf harness
 # capability.
 harness: n/a
+# Landed only when the answer init already holds matches; every other file in
+# config/ lands unconditionally. Paths are relative to config/.
+conditional:
+  - path: .github/ISSUE_TEMPLATE/*
+    when:
+      forge: github
+  - path: renovate.json
+    when:
+      update_bot: renovate
+  - path: .config/vscode.d/repo-hygiene.jsonc
+    when:
+      editor: vscode

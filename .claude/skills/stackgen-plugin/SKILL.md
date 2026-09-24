@@ -88,7 +88,19 @@ and offers `/vwf:init` when one is missing anywhere, or when any repo has
 drifted from doctor's baseline. What setup *does* fetch is every **pinned** axis
 — its materialize pass invokes `-stack-template` once per `(repo, slug)`, with
 the `repo:` line naming the member — which is the one landing path
-`/vwf:architecture` no longer takes.
+`/vwf:architecture` no longer takes. Since `config_format` 21 that pass carries
+an **`answers:` map** beside the `repo:` line, and so does `stackgen-sync`: all
+three callers read the four axes from the base's `.config/vwf.yaml` `answers:`
+block — `editor` and `secrets` once for the product, `forge` and `update_bot`
+per repo — and re-read `forge` live from that repo's `origin`, so a pinned
+pack's conditional files (the editor fragments of tsconfig, astro, pnpm,
+analysis-options, eslint, ruff, swift-format, swiftlint) land there only where
+init's answers allow. A caller reading a config that carries no block infers the
+four the way init seeds them and writes nothing; the one config key a caller
+other than `init` may write is `answers.repos.<path>.forge`, rewritten in place
+and reported when the live host contradicts the record. Landing the
+forge-conditioned files that staleness had skipped is `/vwf:setup reshape`'s,
+which `/vwf:doctor` names.
 
 A bundle's frontmatter may also carry **`default: true`**, since 2026-09-15:
 `stackgen-stack-menu` copies it onto every entry whose bundle carries it and
@@ -103,14 +115,17 @@ naming the platform they share. Two are flagged today. On the project axis it is
 nothing on any other platform's round; the other four entries on that round, the
 three remaining Astro bundles and `html` (the `framework/html` pack, a
 hand-authored page tree under the `document` category, since 2026-09-15), carry
-no flag. On the design axis it is `design-tool`'s `claude-code` — the terminal
-itself as a design tool, the fourth of that kind beside `claude-design`,
-`lovable` and `stitch`, and the first with a **file canvas**: a committed
-`docs/design/<project>/` its three import skills read as files, plus a fourth,
-user-invocable `design-session` skill that writes it — the design system and the
-logo, and since pack `0.2.0` a flow's screens (`screens <flow>`, from the brief
-`/vwf:screens prompt` wrote, into `screens/<flow>--<platform>/`) and a review
-round (`review <flow>`, which serves the canvas from the repo, waits for
+no flag. Neither app-framework bundle carries one either — `dart-flutter`
+(`cross-platform-ui`) and `swift-swiftui` (the `app-framework/swiftui` pack, the
+first under `native-ui`, since 2026-09-23) — so an app platform's round
+preselects nothing. On the design axis it is `design-tool`'s `claude-code` — the
+terminal itself as a design tool, the fourth of that kind beside
+`claude-design`, `lovable` and `stitch`, and the first with a **file canvas**: a
+committed `docs/design/<project>/` its three import skills read as files, plus a
+fourth, user-invocable `design-session` skill that writes it — the design system
+and the logo, and since pack `0.2.0` a flow's screens (`screens <flow>`, from
+the brief `/vwf:screens prompt` wrote, into `screens/<flow>--<platform>/`) and a
+review round (`review <flow>`, which serves the canvas from the repo, waits for
 **Done**, then applies every open comment). The server is the skill's own
 `scripts/serve.mjs`, a single-file Node program with no dependencies: it binds
 `127.0.0.1` on an ephemeral port, serves only the canvas, carries no auth and no
@@ -137,17 +152,48 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   library (`.config/mise*.toml`, `.config/mise/tasks/**`); **(b)** a gate's own
   config (`.config/dprint.json`, `.config/pre-commit-config.yaml`,
   `.config/gitleaks.toml`, `.config/grype.yaml`, …); **(c)** the hygiene files
-  (`.gitignore`, `.editorconfig`, `.gitattributes`, `SECURITY.md`,
-  `renovate.json` at the root, the licence texts); **(d)** a provider's
-  environment fragment at `.config/mise/conf.d/<pack>.toml`, auto-loaded, so no
-  component edits `mise.toml`; **(e)** a hook fragment at
-  `.config/pre-commit.d/<pack>.yaml`, copied verbatim — **`/vwf:init` merges
-  it**, nothing in stackgen edits the pre-commit config, which is what keeps a
-  fragment a fragment. A fragment is for a **non-gate** check only: since
-  2026-09-12 a gate tool is configured once, in a `code:*` task the base hooks
-  call, so a pack needing a gate overlays that task instead. Only
-  `package-manager/uv` still ships a fragment, for `uv lock --check`; **(f)** a
-  deploy target's own config and its deploy task, since 2026-09-05 —
+  (`.gitignore`, `.editorconfig`, `.gitattributes`, `SECURITY.md` — its one
+  contact slot taking a URL or an email — `renovate.json` at the root, the
+  licence texts — copied by `/vwf:init` for a repo that answered `public`, never
+  for a private one — and, since 2026-09-21, three of them **conditional**: a
+  pack's `pack.yaml` may carry a `conditional:` list, each entry a `config/`
+  path or glob and a `when:` of one axis to one value from the fixed vocabulary
+  `forge` (`github`, `gitlab`), `editor` (`vscode`), `secrets` (a provider
+  slug), `update_bot` (`renovate`, `dependabot`, `none`); the hygiene pack
+  conditions `.github/ISSUE_TEMPLATE/*` on `forge: github`, `renovate.json` on
+  `update_bot: renovate` and its editor fragment on `editor: vscode`. The
+  materializer evaluates each against the `answers:` map the caller passes
+  beside `repo:` — since `config_format` 21 all three callers pass a full map
+  read from the base config's `answers:` block, the forge re-read live from
+  `origin`; an axis left out reads **true** and lands, the fallback for a caller
+  none of this describes — and writes a never-landed false path to the
+  lockfile's `skipped:` list as `{ path, pack, when }`, never a create and never
+  a conflict, so `/vwf:doctor` never reports it missing and a file at that path
+  is the repo's own; a path with an `entries:` record whose answer since flipped
+  keeps its record and is never removed. A pack's `skipped:` rows **live and die
+  with its `entries:`**: removing or un-pinning the pack drops its rows too, so
+  the list never claims a path is intentionally absent for a condition nothing
+  evaluates any more. `stackgen-sync` evaluates the same conditions before it
+  classifies a pack's landing set, and gains three states beside its three — a
+  false path with no record is **skipped (condition)** and is its `skipped:`
+  row; a never-landed path whose condition now holds is **landable — condition
+  now true** and is offered as a create under the consent tier a new pack file
+  already takes; a landed path whose condition turned false is **kept**,
+  reported once and never removed. The provider's ignore line is **not** a
+  conditional file: `fnox.local.toml` left the base `.gitignore` and is a
+  provider row in the hygiene pack's ignore table (fnox, and doppler's
+  `.doppler/`), appended under a banner named for the slug only where init's
+  stack read carries that provider); **(d)** a mise fragment at
+  `.config/mise/conf.d/<pack>.toml`, auto-loaded, so no component edits
+  `mise.toml` — a provider's tool pin and environment values (doppler, fnox), a
+  shell alias (pnpm's `npx`), or a gate tool's pin (swiftlint's); **(e)** a hook
+  fragment at `.config/pre-commit.d/<pack>.yaml`, copied verbatim —
+  **`/vwf:init` merges it**, nothing in stackgen edits the pre-commit config,
+  which is what keeps a fragment a fragment. A fragment is for a **non-gate**
+  check only: since 2026-09-12 a gate tool is configured once, in a `code:*`
+  task the base hooks call, so a pack needing a gate overlays that task instead.
+  Only `package-manager/uv` still ships a fragment, for `uv lock --check`;
+  **(f)** a deploy target's own config and its deploy task, since 2026-09-05 —
   `cloud-service/workers-static-assets`, its `workers-ssr` sibling and
   `cloud-service/containers` each ship `wrangler.jsonc` at the root (the SSR and
   Containers ones both carrying `main`, the Containers one adding a `containers`
@@ -168,26 +214,60 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   `extensions`) — **`/vwf:init` composes them** into `.vscode/settings.json` and
   `.vscode/extensions.json`, which no pack ever ships whole and which the
   convention in `assets/pack-format.md` names (init itself never names an
-  editor). The dprint gate's fragment is the one filename exception,
-  `dprint-editor.jsonc`: dprint discovers any `dprint.jsonc` below the root as a
-  sub-directory config, and one with no `plugins` array makes a bare
-  `dprint check` exit 13. Note the second underscore rule: `config/_<name>/` at
-  the top of the tier is pack-private and never copied, but nested deeper
-  `p/_project/` is a **marked position**, copied and renamed to the pinned
-  project's id — **slugged** per `assets/ids.md`, which owns that rule and the
-  measured reason for it. Still fenced out: `package.json`, any language
-  manifest or lockfile, a **whole** editor file, and CI workflows — the last of
-  those refused *inside* `.github/`, which is otherwise an allowlisted root
-  directory beside `.config/`. What lands at the repo **root** is capped by a
-  fixed allowlist, whose doctrine is `assets/output-tree.md` and whose two tiers
-  do not both reach the checker: the **landable** tier is
-  `PACK_CONFIG_ROOT_FILES` in `scripts/src/check.ts`, enforced by
-  `p:plugins:check` rule 11, and beside it sits a second tier of root files
-  **vwf** writes — `CLAUDE.md` and `mempalace.yaml` — which may sit at a shaped
-  root and which no pack may land. `readme.md` is on the landable tier only
-  because a shaped repo has one — **no pack may ship it** — and `renovate.json`
-  joined that tier on 2026-09-10, at the root because Renovate's config
-  discovery never reaches `.config/`.
+  editor). The composed block sits first, and the convention's rule since
+  2026-09-20 is that a key the file already carries outside the block is a
+  **collision** the composing skill **omits** from the block — keep mine, take
+  the pack's or union, asked once and recorded by vwf, an identical extension id
+  kept unasked — so a hand key wins without the file ever holding a duplicate,
+  never because the format tolerates one. Every one of the **twelve** fragments
+  in the tree — repo-hygiene, dprint-editor, pre-commit, eslint, ruff, tsconfig,
+  analysis-options, mise, since 2026-09-21 astro and pnpm, and since 2026-09-23
+  swift-format and swiftlint — is conditioned on `editor: vscode` in its pack's
+  `pack.yaml`, so an editor **no** at init lands none and the composing skill
+  composes nothing. The split is by ownership: the hygiene baseline carries
+  **editor-wide keys alone** (indentation and suggestion defaults, the generic
+  excludes, todo-tree, the non-stack nesting rows, the generic extensions), and
+  every stack-naming key sits in the fragment of the pack that pins that stack —
+  `node_modules`, the tsbuildinfo files, the template-string converter and
+  `*.js` nesting in tsconfig's; `.dart_tool` in analysis-options'; `.astro` in
+  astro's; `.turbo`, the pnpm lockfile and the `package.json` children in pnpm's
+  (turbo is a generated component the pnpm-turbo bundle carries, so its exclude
+  lives beside the manager); `.build`, `.swiftpm` and the `Package.swift`
+  nesting in swift-format's; `yaml.*` and `redhat.vscode-yaml` in pre-commit's;
+  the fish extension dropped. `editor.defaultFormatter` is set **per language**
+  in the dprint fragment, one `[<language>]` scope per plugin `dprint.json`
+  carries and `[toml]` to even-better-toml, never editor-wide — an editor-wide
+  binding overrode Dart's formatter by composition order alone. The dprint
+  gate's fragment is the one filename exception, `dprint-editor.jsonc`: dprint
+  discovers any `dprint.jsonc` below the root as a sub-directory config, and one
+  with no `plugins` array makes a bare `dprint check` exit 13. Note the second
+  underscore rule: `config/_<name>/` at the top of the tier is pack-private and
+  never copied, but nested deeper `p/_project/` is a **marked position**, copied
+  and renamed to the pinned project's id — **slugged** per `assets/ids.md`,
+  which owns that rule and the measured reason for it. Still fenced out:
+  `package.json`, any language manifest or lockfile, a **whole** editor file,
+  and CI workflows — the last of those refused *inside* `.github/`, which is
+  otherwise an allowlisted root directory beside `.config/`. What lands at the
+  repo **root** is capped by a fixed allowlist, whose doctrine is
+  `assets/output-tree.md` and whose two tiers do not both reach the checker: the
+  **landable** tier is `PACK_CONFIG_ROOT_FILES` in `scripts/src/check.ts`,
+  enforced by `p:plugins:check` rule 11, and beside it sits a second tier of
+  root files **vwf** writes — `CLAUDE.md` and `mempalace.yaml` — which may sit
+  at a shaped root and which no pack may land. `readme.md` is on the landable
+  tier only because a shaped repo has one — **no pack may ship it** — and
+  `renovate.json` joined that tier on 2026-09-10, at the root because Renovate's
+  config discovery never reaches `.config/` — and since 2026-09-21 it
+  **yields**: a repo already carrying a policy under `.github/renovate.json`,
+  `.renovaterc` or `renovate.json` keeps its own and the pack's is not landed
+  (`/vwf:init`'s tool-config table owns the spellings; the hygiene pack's
+  conventions state the rule) — and since 2026-09-21 it is also **conditional**
+  on `update_bot: renovate`, so a repo whose init row picked `dependabot` or
+  `none` gets no `renovate.json` at all, the path listed under `skipped:` rather
+  than landed beside a Dependabot policy. The lockfile's per-file `hash:` is the
+  landing hash **re-recorded by `/vwf:init`** after its fills, appends, merges
+  and its replace-or-keep offer, so a differing hash is drift only when no such
+  writer ran — `assets/output-tree.md` and the materializer reference both say
+  so.
 
 **Three consent tiers**: the `.claude/` files ride the ordinary dry-run gate;
 `settings.json`, `.mcp.json` and a pack's `config/` tree are never written
@@ -213,7 +293,7 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
   component's conventions, in this composition's template". Never swap one path
   for another.
 - **The whole `config/` payload tier is checked before it ships.**
-  `p:plugins:check` rule 11 makes **seven** assertions: the exec bit and a known
+  `p:plugins:check` rule 11 makes **eight** assertions: the exec bit and a known
   shebang on every task file (mise reports a 644 task as an *unknown* one rather
   than a permission error) and on every `hooks/*.sh`; the **landable** tier of
   the root allowlist over the tier's top level — the vwf-owned tier never
@@ -222,11 +302,24 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
   `.github/`; that each `.config/pre-commit.d/*.yaml` parses with a top-level
   `repos:` list, and that the gate pack's **whole**
   `.config/pre-commit-config.yaml` does too — it is neither a fragment nor at
-  the tier's root, so nothing parsed it until it was named; and that each
-  `.config/vscode.d/*.jsonc` parses as JSONC carrying only the three keys.
-  `p:plugins:shellcheck` runs `shellcheck -x` and `shfmt -d` over the same
-  shell, in two groups — task libraries with the pack's `_scripts/` beside them,
-  hooks with no flags, since a hook lands alone and may declare `sh`.
+  the tier's root, so nothing parsed it until it was named; that each
+  `.config/vscode.d/*.jsonc` parses as JSONC carrying only the three keys; and
+  that every `conditional:` entry in the pack's `pack.yaml` names a relative
+  path or glob (no `..`) matching at least one file under `config/` — the
+  checker's own walk, so `**` enters `.config/` — and a `when:` of exactly one
+  vocabulary axis with a value it takes, `secrets: none` refused. Beside it,
+  rule 15 holds the gate packs' exclusion lists to one invariant: the dprint
+  pack's `dprint.json` and `taplo.toml` and the pre-commit pack's global
+  `exclude` (a `(?x)` block of anchored alternatives) state **one set** after
+  normalisation, and the gitleaks `[allowlist] paths` — every entry anchored
+  `(^|/)`, `.turbo/` among them since 2026-09-21 — is a **subset** of it, never
+  the reverse: the scanner extends upstream's default allowlist and must still
+  walk `.claude/`, which the formatters skip because in a shaped repo it is
+  machine-owned. Widen a formatter list, widen all three; widen the allowlist
+  only with a generated tree. `p:plugins:shellcheck` runs `shellcheck -x` and
+  `shfmt -d` over the same shell, in two groups — task libraries with the pack's
+  `_scripts/` beside them, hooks with no flags, since a hook lands alone and may
+  declare `sh`.
 - **Never format a payload file with this repo's dprint config.** The tier is
   excluded from it on purpose: the target repo formats these files with the
   *shipped* config, which omits settings this repo sets, so formatting one here

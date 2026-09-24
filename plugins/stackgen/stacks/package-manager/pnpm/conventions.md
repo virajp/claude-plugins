@@ -29,6 +29,15 @@ and — once its `hooks.yaml` entry is accepted into `.claude/settings.json` —
 resolves the repo's manager from its lockfile and rewrites the command to it.
 Declining the settings entry leaves the script landed and inert.
 
+**The editor fragment, `.config/vscode.d/pnpm.jsonc`,** hides the lockfile
+and the Turbo cache (`.turbo/`, in all three exclude maps — Turbo is a
+generated component with no pack of its own, carried by the pnpm-turbo bundle,
+so its exclude lives beside the manager it runs through) and nests everything
+that travels with `package.json` under it: the lockfile, the workspace file,
+`.npmrc`, the test, build and orchestrator configs, the hosting and secrets
+manifests. `node_modules/` is the tsconfig fragment's. The fragment lands only
+where init's editor answer is vscode — `pack.yaml`'s `conditional:` names it.
+
 ## The task library this pack owns
 
 This pack ships a `config/.config/mise/tasks/` tree — `code/format`,

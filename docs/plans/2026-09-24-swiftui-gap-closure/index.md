@@ -1,0 +1,319 @@
+---
+type: vwf-change-plan
+title: SwiftUI gap closure — binary probes, lockfile paths, machine env, the
+  ux-gate, swiftpm, asset catalogs
+requires: []
+backlog: []
+---
+
+# Plan — SwiftUI gap closure — binary probes, lockfile paths, machine env, the ux-gate, swiftpm, asset catalogs (2026-09-24)
+
+## Status
+
+**APPROVED**
+
+APPROVED 2026-09-24 by the user
+
+## Consent
+
+| Action                                            | Granted                                                                                   |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Merge to the integration branch and push on green | yes                                                                                       |
+| After landing: `mise run p:plugins:local`         | run                                                                                       |
+| Release stackgen publicly                         | minor — 1.31.0 → 1.32.0, by hand in `plugins/stackgen/.claude-plugin/plugin.json`         |
+| Release vwf publicly                              | minor — 19.45.1 → 19.46.0, by hand in `plugins/vwf/.claude-plugin/plugin.json`            |
+| Release site publicly                             | patch — 1.1.46 → 1.1.47, `mise run p:site:version` (bare, no positional, on a clean tree) |
+| Release installer publicly                        | none                                                                                      |
+
+**The mode recorded here is the consent.** A `run` step runs on a green landing
+without a prompt; an `ask` step stops the run once before it, reports what it
+would do, and waits. The mode is the interview's answer (item 17), and a release
+step recorded `run` is authorised by the interview's release question (item 18)
+— a release recorded `ask`, or with no step at all, is intent, not
+authorisation. Where a step stages something this session already loaded, it is
+picked up only by a **restarted** session.
+
+The `Release` rows are **intent, not authorisation**: no release step. The Swift
+chain batches its public release after `2026-09-23-swiftui-platform-doctrine`
+lands.
+
+## Goal
+
+After this lands, the gaps the landed plan `2026-09-23-swiftui-app-stack` left
+open are closed before `2026-09-23-swiftui-platform-doctrine` runs:
+
+- the swiftui ux-gate never reports `ok` for something it did not render or
+  audit (G9's two medium findings);
+- a pack can declare a **probe** for a binary, which `/vwf:doctor` runs instead
+  of a bare PATH lookup, and the swiftui pack probes `xcodebuild -version` — so
+  a Mac with only the Command Line Tools fails doctor (G7, first half);
+- a package-manager pack declares where its **lockfile** lives, and doctor reads
+  that instead of prose — swiftpm's includes the one inside an `.xcodeproj` (G7,
+  second half);
+- a pack declares **machine env** values with a command that detects each from
+  the machine; `/vwf:setup`'s materialize pass offers the detected values
+  preselected and writes them into the pack's own `conf.d` fragment — the
+  swiftui pack's `XCODE_VERSION` and `SIMULATOR_*` (G8);
+- the swiftpm skill stops giving `swift package resolve` advice for a lockfile
+  Xcode manages (G3);
+- asset catalogs (`*.xcassets`) are excluded from the formatters (G5).
+
+**Reversal:** the user first ruled G8 "at init time, per machine". The survey
+showed `/vwf:init` lands only the three unconditional bundles and the swiftui
+pack lands in `/vwf:setup`'s materialize pass, so the user re-ruled: setup's
+materialize pass asks, from a field the pack declares (F3).
+
+## Facts the survey established
+
+- **The `binaries` fact.** Specified at
+  `plugins/stackgen/assets/pack-format.md:174`
+  (`languages[].facts.binaries: [<name>]`) and `:392-396` (the principle);
+  taxonomy `plugins/stackgen/assets/taxonomy.md:21-25`. Declared only by
+  `stacks/language/swift/pack.yaml:20` (`[swift]`) and
+  `stacks/app-framework/swiftui/pack.yaml:24` (`[xcodebuild, swift]`); described
+  in `stacks/readme.md:58`, `:87`. Passed through by
+  `plugins/stackgen/skills/stackgen-stack-template/SKILL.md:86-87` into the
+  template payload's `language_facts.<token>.binaries`; also
+  `references/materializer.md:413`, `assets/output-tree.md:17`. It crosses the
+  adapter contract: `plugins/vwf/assets/stack-adapter.md:355-362`,
+  `plugins/vwf/assets/stack-vocabulary.md:48-56` ("four facts"). Doctor:
+  `plugins/vwf/skills/doctor/references/stack-checks.md:104-111` (`command -v`,
+  blocking once pinned, degradation while `unresolved`), summary `:4-6`;
+  `doctor/SKILL.md:176`, `:199`, `:244`. The checker validates no `facts` field
+  (`scripts/src/check.ts` reads only `conditional:`, `checkPackConfigTier`
+  `:415`, `:518`); `check.test.ts` has no test for it.
+- **Lockfiles.** `stack-checks.md:272-274` says only "`package_manager` resolves
+  (lockfile present, tool on PATH or in mise config)"; no pack declares a
+  lockfile name — swiftpm's `Package.resolved` appears only in prose
+  (`swiftpm/pack.yaml:3`, `swiftpm/conventions.md:13`). `pack-format.md:175` has
+  no lockfile field.
+- **Where a stack pack lands.** `/vwf:init` lands only the three unconditional
+  bundles (`plugins/vwf/skills/init/SKILL.md:6-7`); an app-framework pack lands
+  through `/vwf:setup`'s materialize pass (`setup/SKILL.md:22-23`, `:197`,
+  `setup/references/materialize.md`) via `stackgen-stack-template`
+  (`SKILL.md:137-152` the `config/` tier, `:172-186` the answers map). No pack
+  can declare a question today; `pack.yaml`'s fields are
+  `pack-format.md:157-186`, and `conditional:` (`:197+`) takes four fixed axes
+  only. Marked positions are listed in
+  `plugins/vwf/skills/init/references/new-repo.md:430-446` (no enumerable marker
+  syntax, `:444`); the only payload marker is a `# A MARKED POSITION` comment
+  (`toolchain-manager/mise/config/.config/mise.toml:78`). `conf.d` fragments
+  (doppler, fnox, pnpm, swiftlint) add env without editing `mise.toml`
+  (`pack-format.md:59-62`) and land verbatim today.
+- **SwiftUI's pin today.** `swiftui/conventions.md:49-57`, `:99`;
+  `pack.yaml:20`; `tasks/_scripts/xcode:10-35` (the message naming `[env]` at
+  `:29`); `tasks/test/golden:32-38`, `:78-103` (messages `:84`, `:91`, `:102`);
+  `tasks/setup/deps/install:26`; `skills/ux-gate/SKILL.md:53-61`;
+  `skills/swiftui/references/testing.md:88`, `build-and-signing.md:26`;
+  `bundles/swift-swiftui.md:66`; `stacks/readme.md:88`.
+- **The ux-gate.** `swiftui/skills/ux-gate/SKILL.md`: pin step `:52-58`, goldens
+  `:59-81`, audit `:82-97` (`a11y … n/a` at `:92`), return contract `:100-122`
+  (`viewport:` `:105`, `a11y:` `:106`), `rendered: ok` defined at `:119-121`.
+  vwf reads rendered, reason and findings only
+  (`plugins/vwf/assets/stack-adapter.md:390-419`,
+  `plugins/vwf/agents/execute-ux-reviewer.md:45-52`); `n/a` reaches the human
+  gate (`execute-ux-reviewer.md:99-102`). Default viewports:
+  `plugins/vwf/assets/templates/canvas-claude.md:53` (mobile), `:56` (tablet),
+  `:62` (auto).
+- **swiftpm.** `package-manager/swiftpm/pack.yaml` 0.1.0, no `paths:`; the skill
+  glob `skills/swiftpm/SKILL.md:13-14` (`**/Package.swift`,
+  `**/Package.resolved`) also matches the lockfile inside an Xcode project,
+  `<Name>.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`;
+  `swift package resolve` at `:73`, `:79`, `:84-86`; root-manifest assumption
+  `:117-119`, `conventions.md:7-11`, `:23-25`. Bundle sentence (E23 of the
+  landed plan): `bundles/swift-swiftui.md:68-73`.
+- **Exclusion lists (checker rule 15).**
+  `toolchain-gate/dprint/config/.config/dprint.json:5-20`,
+  `toolchain-gate/dprint/config/.config/taplo.toml:14-29`,
+  `toolchain-gate/pre-commit/config/.config/pre-commit-config.yaml:48-63`
+  (global `exclude`),
+  `toolchain-gate/gitleaks/config/.config/gitleaks.toml:46-54` (a subset by
+  design). `.build`, `Derived` are in the three formatter lists; `*.xcassets` in
+  none. Versions: dprint 1.1.1, pre-commit 1.1.5, gitleaks 1.1.2; only
+  `bundles/repo-gates.md` pins them. Rule 15: `scripts/src/check.ts:1536`
+  (`EXCLUSION_LISTS`), `:1712` (`normalizeExclusion`), `:1753`
+  (`checkExclusionSets`).
+- **Versions** (develop at `6ab8011d`): stackgen 1.31.0, vwf 19.45.1, site
+  1.1.46; swiftui pack 0.1.0, swiftpm 0.1.0.
+- **This machine.** Xcode 27.0; an iPhone 17 simulator on iOS 27.0 (the two
+  smoke runs of the landed plan used it).
+- **Backlog.** B63 ("declare the binaries fact on existing packs", P0, Backlog)
+  sits beside F1 and is parked, not covered.
+- **Commit convention.** Types `ops`, `docs`, `merge`, `feat`, `fix`,
+  `refactor`; no scopes.
+
+## Assumed decisions — confirm or override at review
+
+| #   | Decision              | Ruling                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Rejected                                                                                                 | Unit           |
+| --- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------- |
+| F1  | Binary probe          | A `binaries:` entry is a bare name (PATH lookup, as today) or a map `{ name: <binary>, probe: "<command>" }`; `/vwf:doctor` runs the probe and requires exit 0, with the same severity as today (blocking once pinned, degradation while `unresolved`). The swiftui pack declares `{ name: xcodebuild, probe: "xcodebuild -version" }` and a bare `swift`; `language/swift` stays `[swift]`                                                                                                                                                 | a separate `probes:` map; a probe required on every entry                                                | U1, U2, U3, U4 |
+| F2  | Lockfile paths        | A new `lockfile:` fact on a package-manager pack: a list of repo-relative paths or globs, any match passes. `/vwf:doctor`'s `package_manager resolves` check reads it. swiftpm declares `Package.resolved` and `*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`                                                                                                                                                                                                                                                      | an app pack overriding the lockfile; relaxing the check to a degradation                                 | U1, U2, U3, U5 |
+| F3  | Machine env           | A new `machine_env:` fact: a list of `{ name, detect, question }` — `name` an env var, `detect` a shell command whose stdout is the default, `question` the prompt. `/vwf:setup`'s materialize pass, when it lands a pack declaring it, runs each `detect`, offers the value preselected (the person may type another), fills the pack's marked position for that var, and re-records the file's lockfile hash. A `detect` that fails offers no default and still asks. Setup is the asker, not init (reversal of "at init time")           | an init round; both init and setup; the mise pack's `mise.toml` `[env]`; a gitignored `mise.local.toml`  | U1, U2, U3, U4 |
+| F4  | SwiftUI env fragment  | The swiftui pack ships `config/.config/mise/conf.d/swiftui.toml` holding an `[env]` table with `XCODE_VERSION`, `SIMULATOR_PLATFORM`, `SIMULATOR_DEVICE`, `SIMULATOR_OS`, each a marked position (`# A MARKED POSITION`), and declares the four in `machine_env:` with detect commands (`xcodebuild -version` for the Xcode version; `xcrun simctl list devices available` for the simulator). Every task refusal and every doc that names the `[env]` line names this file instead                                                         | appending to the mise pack's `mise.toml`; per-machine values                                             | U4             |
+| F5  | `rendered: ok`        | `rendered: ok` only when at least one changed platform's goldens were compared; a run where only the accessibility audit ran reports `rendered: n/a` with its reason, so vwf's `n/a` human gate fires                                                                                                                                                                                                                                                                                                                                       | —                                                                                                        | U4             |
+| F6  | Audit per platform    | The accessibility audit runs on the pinned simulator for **its own** vwf platform only, read from the pinned device's family (iPhone → `mobile`, iPad → `tablet`, Apple Watch → `watch`, Apple TV → `tv`, Apple Vision → `spatial`), plus `platform=macOS` for `desktop`. Every other changed platform — `auto` (CarPlay) always among them — is reported `a11y … n/a` with a finding, never clean                                                                                                                                          | per-platform simulator pins now (parked); tablet and auto always `n/a`                                   | U4             |
+| F7  | swiftpm skill         | The swiftpm skill says that when the lockfile sits inside an `.xcodeproj`, the app's dependencies are Xcode's: resolve, update and inspect them through `mise run setup:deps:*`, never `swift package resolve`/`update`; the skill still governs a local package's `Package.swift`                                                                                                                                                                                                                                                          | narrowing the glob (globs cannot exclude)                                                                | U5             |
+| F8  | Asset catalogs        | `*.xcassets` (normalised by rule 15) joins the dprint `excludes`, the taplo `exclude` and the pre-commit global `exclude`; gitleaks is unchanged (a subset by rule 15)                                                                                                                                                                                                                                                                                                                                                                      | adding it to gitleaks too                                                                                | U6             |
+| F9  | Pack versions         | `app-framework/swiftui` 0.1.0 → 0.2.0; `package-manager/swiftpm` 0.1.0 → 0.1.1; `toolchain-gate/dprint` 1.1.1 → 1.1.2; `toolchain-gate/pre-commit` 1.1.5 → 1.1.6. `bundles/swift-swiftui.md` pins swiftui@0.2.0 and swiftpm@0.1.1; `bundles/swift-package.md` pins swiftpm@0.1.1; `bundles/repo-gates.md` pins dprint@1.1.2 and pre-commit@1.1.6                                                                                                                                                                                            | —                                                                                                        | U4, U5, U6     |
+| F10 | Checker               | `p:plugins:check` validates the three facts wherever a pack declares them: every `binaries` entry a non-empty string or a map with exactly `name` (string) and optional `probe` (non-empty string); `lockfile` a non-empty list of relative paths or globs with no `..`; every `machine_env` entry a map with `name` (an env-var name), `detect` and `question` (non-empty strings), and — when the pack ships a `conf.d` fragment — the name present in it. Each fault one finding naming the pack and the entry; tests in `check.test.ts` | no validation                                                                                            | U2             |
+| F11 | Review row            | R7 covers U2 (checker source) and U4 (the shipped task scripts) — runnable code                                                                                                                                                                                                                                                                                                                                                                                                                                                             | no review row                                                                                            | R7             |
+| F12 | Wave-1 commit         | Wave 1 lands as **one** commit, the orchestrator running `mise run p:plugins:inventory` into it, so the checker rule and the facts it validates land together                                                                                                                                                                                                                                                                                                                                                                               | one commit per unit                                                                                      | —              |
+| F13 | Priority and ordering | `requires: []` — the landed plan's work is already on develop — so the derived priority is 10. The hand-off commit adds this folder to `2026-09-23-swiftui-platform-doctrine`'s `requires:`, whose row's Requires cell follows; its priority stays 50 (10 + the unarchived `2026-09-23-swiftui-app-stack` row's 40)                                                                                                                                                                                                                         | requiring `2026-09-23-swiftui-app-stack` (priority 50, the tie lost to the doctrine plan's earlier date) | —              |
+| F14 | Library docs          | Units resolve Apple CLI behaviour (`xcodebuild`, `xcrun simctl`) on this machine (`-help`, real output) and swift-snapshot-testing through Context7 before writing about them — never from training knowledge                                                                                                                                                                                                                                                                                                                               | —                                                                                                        | U3, U4         |
+
+## New dependencies
+
+None.
+
+## Units
+
+| Id | Wave | Unit file                                        | Kind   | Owns                                                                                                                                                                                                       | Depends on | Status  | Commit |
+| -- | ---- | ------------------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
+| U1 | 1    | [01-pack-format.md](01-pack-format.md)           | edit   | `plugins/stackgen/assets/pack-format.md`, `plugins/stackgen/assets/taxonomy.md`, `plugins/stackgen/assets/output-tree.md`, `plugins/stackgen/skills/stackgen-stack-template/**`                            | —          | pending |        |
+| U2 | 1    | [02-checker.md](02-checker.md)                   | edit   | `scripts/src/check.ts`, `scripts/src/check.test.ts`                                                                                                                                                        | —          | pending |        |
+| U3 | 1    | [03-vwf-doctor-setup.md](03-vwf-doctor-setup.md) | edit   | `plugins/vwf/skills/doctor/**`, `plugins/vwf/skills/setup/SKILL.md`, `plugins/vwf/skills/setup/references/materialize.md`, `plugins/vwf/assets/stack-adapter.md`, `plugins/vwf/assets/stack-vocabulary.md` | —          | pending |        |
+| U4 | 1    | [04-swiftui.md](04-swiftui.md)                   | edit   | `plugins/stackgen/stacks/app-framework/swiftui/**`, `plugins/stackgen/stacks/bundles/swift-swiftui.md`                                                                                                     | —          | pending |        |
+| U5 | 1    | [05-swiftpm.md](05-swiftpm.md)                   | edit   | `plugins/stackgen/stacks/package-manager/swiftpm/**`, `plugins/stackgen/stacks/bundles/swift-package.md`                                                                                                   | —          | pending |        |
+| U6 | 1    | [06-gate-packs.md](06-gate-packs.md)             | edit   | `plugins/stackgen/stacks/toolchain-gate/dprint/**`, `plugins/stackgen/stacks/toolchain-gate/pre-commit/**`, `plugins/stackgen/stacks/bundles/repo-gates.md`                                                | —          | pending |        |
+| R7 | 2    | [07-review.md](07-review.md)                     | review | —                                                                                                                                                                                                          | U2, U4     | pending |        |
+| U8 | 3    | [08-docs.md](08-docs.md)                         | edit   | `site/src/content/docs/**`, `.claude/skills/**`, `.claude/docs/**`, `readme.md`, `CLAUDE.md`, `plugins/stackgen/stacks/readme.md`                                                                          | all        | pending |        |
+| U9 | 4    | [09-gates-and-bump.md](09-gates-and-bump.md)     | edit   | `site/package.json`, `plugins/stackgen/.claude-plugin/plugin.json`, `plugins/vwf/.claude-plugin/plugin.json`, `plugins/stackgen/stacks/inventory.md`, `.claude-plugin/marketplace.json`                    | U8         | pending |        |
+
+Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
+`skipped`.
+
+## Shared-file rule
+
+| File                                                                                                         | Why it collides                                     | Owner                                                 |
+| ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------- | ----------------------------------------------------- |
+| `plugins/stackgen/.claude-plugin/plugin.json`, `plugins/vwf/.claude-plugin/plugin.json`, `site/package.json` | several units bumping one version is a lost update  | U9                                                    |
+| `plugins/stackgen/stacks/inventory.md`                                                                       | generated                                           | the orchestrator for the wave-1 commit (F12), then U9 |
+| `.claude-plugin/marketplace.json`                                                                            | generated                                           | U9                                                    |
+| the three fact shapes (F1, F2, F3)                                                                           | U1 specifies, U2 validates, U3 reads, U4/U5 declare | fixed in this file; every unit writes against it      |
+| pack versions vs bundle pins (F9)                                                                            | a pin names a version                               | fixed in this file; each pack's unit writes both      |
+| docs — `site/**`, `.claude/**`, `readme.md`, `CLAUDE.md`, `plugins/stackgen/stacks/readme.md`                | n units editing one doc                             | U8                                                    |
+| `docs/plans/2026-09-23-swiftui-platform-doctrine/index.md`, `docs/plans/index.md`                            | another plan's `requires:`; the plan index          | the planner's hand-off commit (F13), never a unit     |
+
+## Waves
+
+- **Wave 1 — U1–U6.** Disjoint paths; every unit writes against the fact shapes
+  and versions fixed above. Lands as **one** commit with the regenerated
+  inventory (F12).
+- **Wave 2 — R7**, over the branch delta since the branch base, covering U2 and
+  U4.
+- **Wave 3 — U8**, docs. **Wave 4 — U9**, versions and generators.
+
+## Wave gate
+
+    mise run p:plugins:marketplace -- --check
+    mise run p:plugins:inventory -- --check
+    mise run p:plugins:check
+    mise run p:plugins:shellcheck
+    mise run p:plugins:npm-normalize-test
+    pnpm vitest run
+    pnpm tsc --noEmit -p installer
+    pnpm tsc --noEmit -p scripts
+    mise run p:site:check
+
+plus the wave review, plus every report read for `UNRESOLVED:`. The inventory
+freshness line is red between wave 1's unit returns and the orchestrator's
+regeneration (F12), and inside wave 4 between U9's edits and its regeneration —
+expected; each is green before its commit.
+
+## After landing
+
+| Step                       | Mode | Notes                                                                                                                                                                   |
+| -------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mise run p:plugins:local` | run  | stages the changed stackgen and vwf into the dev marketplace under `X.Y.Z+N` and updates this machine's install; publishes nothing; a **restarted** session picks it up |
+
+## Gates the orchestrator keeps
+
+1. **Smoke test, in `/tmp`**, after wave 1 and again after wave 4, outside the
+   repo and any worktree: a scratch git repo; land the payload of every
+   component `swift-swiftui.md` pins plus `repo-gates`, `repo-hygiene` and
+   `toolchain-manager/mise`'s payloads; run each `detect` command the swiftui
+   pack's `machine_env:` declares and fill `conf.d/swiftui.toml`'s marked
+   positions with the output, as setup would; add the Swift `.gitignore` section
+   `/vwf:init` would add; `mise install`; a hand-written `<App>.xcodeproj` (an
+   iOS app, a hosted `SnapshotTests` target, a swift-snapshot-testing package
+   reference) **with an `Assets.xcassets` catalog as Xcode's template writes
+   it**; `mise run setup:deps:install`; `xcodebuild build`;
+   `mise run code:format`; `mise run code:lint`;
+   `mise run test:golden --record`, then `mise run test:golden`. Pass: every
+   command exits 0, with **no** manual `dprint fmt` on any asset catalog file.
+2. **Probe and lockfile, on this machine.** Each `probe` a pack declares exits 0
+   here; each `lockfile` glob swiftpm declares matches the smoke repo's
+   in-project `Package.resolved`. Pass: both hold.
+3. **No Tuist.** A case-insensitive recursive grep for "tuist" over `plugins`,
+   `site/src/content/docs`, `.claude` (excluding `.claude/worktrees`),
+   `readme.md` and `CLAUDE.md` finds nothing. Pass: no hit.
+4. **Shared tasks** (the landed plan's E9). `code/format`, `code/lint`,
+   `setup/deps/audit` and `setup/deps/cleanup` under
+   `app-framework/swiftui/config/.config/mise/tasks/` stay `cmp`-identical to
+   `language/swift`'s. Pass: no difference.
+
+## Unit contract
+
+Every unit prompt carries, in order: its ruling quoted from this file, its owned
+paths plus "touch nothing outside this list", the facts section, the shared-file
+rule, and the return block below. A unit never bumps a version, never runs a
+generator, never edits a doc, never adds a dependency this file does not list,
+never commits. A unit deletes with plain `rm`, never `git rm` — it stages
+nothing. A unit never runs `git checkout`, `git restore`, `git stash` or a
+formatter's `--fix` over any path outside its Owns, and never runs this repo's
+dprint over a `config/` payload file. A unit writes file content with its Write
+and Edit tools, never a shell heredoc (`cat` is aliased to `bat`).
+
+A unit returns exactly this block and nothing else — no file contents, no diff —
+kept under 1500 characters:
+
+    CHANGED: <path> — <one line>            (one per file)
+    DECIDED: <what> — <why>                 (choices made inside scope, or none)
+    DOCS FALSIFIED: <path> — <passage>      (reported, never edited; or none)
+    GAP: <what the plan left unspecified and the assumption taken>   (or none)
+    UNRESOLVED: <the ruling needed>         (or none)
+
+A `GAP:` is a hole in the plan the unit could proceed past on a stated
+assumption; it is recorded and the run continues. An `UNRESOLVED:` is a ruling
+the unit could not proceed without; it blocks the unit and its dependents.
+
+## Out of scope
+
+- **Per-platform simulator pins** — declined for now (F6); parked.
+- **Declaring `binaries` on the packs that lack it** (B63) — parked.
+- **The landed plan's G9 low findings and nits** — the macOS-pin wording, the
+  audit's `XCODE_VERSION` check, Mac Catalyst's `variant=`, the no-pin
+  `--record` message; the `a11y:`/`viewport:` lines joining vwf's ux-gate
+  contract (a ruling question). U4 may fix a low one only where its F5/F6 edit
+  rewrites that exact passage.
+- **Archiving `2026-09-23-swiftui-app-stack`** — that folder stays live until
+  its gaps are all closed; asked for in prose afterwards.
+- **A public release** — the chain batches it after the doctrine plan.
+
+## Parked
+
+- **Per-platform simulator pins.** Optional `SIMULATOR_DEVICE_<PLATFORM>`-style
+  pins (declared through F3's `machine_env:`) so tablet, watch, tv and spatial
+  get their own goldens and audit. The landed plan's U7 GAP asked for this
+  ruling.
+- **B63** — declare the `binaries` fact (now with optional probes, F1) on the
+  existing packs that need a non-mise binary.
+- **The landed plan's G9 low findings** listed under Out of scope.
+
+## Run log
+
+| Wave | Unit | Model | Round | Outcome | Detail | Commit |
+| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+
+## Launch
+
+This folder is already committed and pushed on the branch it was planned on, so
+the fresh session's worktree — cut from the integration branch — can see it.
+
+Run in a fresh session:
+
+/vwf:execute docs/plans/2026-09-24-swiftui-gap-closure
+
+or let the queue pick it, by priority:
+
+/vwf:execute next

@@ -1,0 +1,8 @@
+/security-review — R5-late1 round 1 — range 673d0fe0..99aaf8e8 (docs-only fix delta; analysis re-scoped by a sub-task)
+
+No high-confidence security findings in 673d0fe0..99aaf8e8.
+
+Rejected candidates:
+- "Bare ssh-… literal works as deprecated key::" — verified against git's is_literal_ssh_key (key:: prefix or ssh- prefix accepted; sk-/ecdsa- fall to path lookup); the prose is accurate.
+- <FORGE>_SIGNING_KEY in an env var — the guidance names only a public-key path or public-key literal, which is what user.signingkey takes under gpg.format=ssh (private key stays in ssh-agent).
+- Subdomain match wording — a suffix-match weakness would live in the task code, reviewed in prior rounds; these commits only describe it and the wording is the correct claim.

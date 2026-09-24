@@ -1,0 +1,3 @@
+/security-review — R7 round 4 — range 55be3bed..e116e983 (fix delta 645bb0e5..e116e983 examined)
+
+NO FINDINGS — `landedGlob` is still compiled as `^…$` over `config/`-relative paths from `filesUnder(config)`, behind the unchanged absolute/`..` refusal; the trailing-`**` branch `(?:[^/]+/)*[^/]+` cannot cross above the tier. `regexChars`/`topLevelGroups` only change how the checker parses this repo's committed `exclude` regex (a `]`-first class is the one misparse, and it only makes the checker refuse, never accept, a list). No payload pattern changed.

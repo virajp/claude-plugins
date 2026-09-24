@@ -412,8 +412,8 @@ Once the writes are confirmed, read both yourself. Check:
   retired. A flat list, an absent block, or a legacy `enforcement.stacks` block
   is drift — migrate it. Every entry **under `enforcement.rules`** names a known
   rule and carries a reason. That is the only child of `enforcement:` this check
-  reads: `kept_files` is keyed by path rather than by rule id, is `/vwf:init`'s
-  to write, and is not checked here.
+  reads: `kept_files` and `editor_keys` are keyed by path rather than by rule
+  id, are `/vwf:init`'s to write, and are not checked here.
 - No dependency cycle: the `depends_on` edges form a DAG.
 
 **On a finding:** surface it to the user, ask for the missing information, then

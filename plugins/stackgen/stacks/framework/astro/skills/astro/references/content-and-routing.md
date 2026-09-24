@@ -5,13 +5,13 @@ layout. These are the same in all four modes except where noted.
 
 ## `src/` layout
 
-| Directory         | Holds                                                     |
-| ----------------- | --------------------------------------------------------- |
-| `src/pages/`      | routes — one file, one URL. Nothing else lives here       |
-| `src/layouts/`    | page shells: `<head>`, navigation, the slot               |
-| `src/components/` | `.astro` components and framework islands                 |
-| `src/content/`    | content collections and their schema definition           |
-| `src/lib/`        | plain TypeScript — data access, transforms, helpers       |
+| Directory         | Holds                                                                    |
+| ----------------- | ------------------------------------------------------------------------ |
+| `src/pages/`      | routes — one file, one URL. Nothing else lives here                      |
+| `src/layouts/`    | page shells: `<head>`, navigation, the slot — [`layouts.md`](layouts.md) |
+| `src/components/` | `.astro` components and framework islands                                |
+| `src/content/`    | content collections and their schema definition                          |
+| `src/lib/`        | plain TypeScript — data access, transforms, helpers                      |
 
 `src/pages/` is a router, not a source directory: a helper file dropped there
 becomes a route. Put it in `src/lib/`.
@@ -88,6 +88,10 @@ published contract.
 
 Syntax highlighting also runs at build time, so a code block ships as styled
 markup with no client-side highlighter.
+
+These transforms cover markdown. A file that embeds a component is MDX, and
+the format — the integration, imports, a collection that takes `.mdx` — is
+[`mdx.md`](mdx.md)'s.
 
 ## Middleware
 

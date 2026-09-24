@@ -73,11 +73,13 @@ Read the one the step needs, not all of them.
 
 `$ARGUMENTS` carries at most one word. With `reshape`, setup **skips the
 detection below entirely**: invoke `/vwf:init` — which surveys **the base and
-every member**, shows its one plan and takes its own consents — print init's
-report verbatim, and **stop**. No mode fork, no validation, no stamp, no
-doctor, no commit; a re-shape never touches `.config/vwf.yaml`, because the
-spine below is a setup run's, and a user who wants both runs `/vwf:setup` again
-afterwards.
+every member**, decides each repo's mode from its tree (`blank`, `source` or
+`shaped` — a source-bearing repo is shaped as `source`, its existing files
+offered, never overwritten), shows its one plan and takes its own consents —
+print init's report verbatim, and **stop**. No mode fork, no validation, no
+stamp, no doctor, no commit; a re-shape never touches `.config/vwf.yaml`,
+because the spine below is a setup run's, and a user who wants both runs
+`/vwf:setup` again afterwards.
 
 A run of `/vwf:setup reshape` started **inside a member** is not a reshape of
 that member alone. init resolves the base per the membership asset
@@ -87,7 +89,10 @@ user happened to be standing in.
 
 `/vwf:setup reshape` is the line `/vwf:doctor` prints for every repo-shape
 finding, so most runs of it arrive from a drift row and should act on exactly
-what that row named.
+what that row named. The shape pass includes init's **forge pass** — the
+default branch, the protection on `develop` and `main`, the base's backlog
+project — which is idempotent on a repo already set, so a reshape that arrives
+from a forge-state row sets only what drifted.
 
 ## Step 0 — Resolve the mode
 
@@ -104,19 +109,21 @@ First, is the shape **there**: in **each** repo of that set, the stack adapter's
 lockfile records all three unconditional repo slugs — `mise`, `repo-gates` and
 `repo-hygiene` (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). Named exactly,
 never constructed: a slug assembled from configuration is one that can silently
-resolve to nothing. Second, is it **current**: the six predicates under **"The
-repo shape against its baseline"** in `/vwf:doctor`'s stack-checks reference,
-evaluated **per repo** on that repo's own artifacts — the pack versions the
-adapter lockfile records against what the adapter ships now, the registry's
-project ids behind the surfaces generated from them, the `develop`/`main` pair,
-the toolchain manager's repo-name key against the repo's folder, the bytes of
-the pack-owned files the packs landed against the lock, marked positions
-spliced out, and the marked positions init fills in that same environment
-block. Read the artifacts that section reads and
-evaluate them **by it**: the predicates are doctor's and are deliberately not
-restated here, so the two can never drift apart. Every repo recording all
-three slugs and holding all six predicates — say so in one line, naming the
-repos checked, and read on.
+resolve to nothing. Second, is it **current**: the seven predicates under
+**"The repo shape against its baseline"** in `/vwf:doctor`'s stack-checks
+reference, evaluated **per repo** on that repo's own artifacts — the pack
+versions the adapter lockfile records against what the adapter ships now, the
+registry's project ids behind the surfaces generated from them, the
+`develop`/`main` pair, the toolchain manager's repo-name key against the repo's
+folder, the bytes of the pack-owned files the packs landed against the lock,
+marked positions spliced out, the marked positions init fills in that same
+environment block, and — predicate (g), the forge state — the default branch
+as chosen, both branches protected, and the base's backlog project present,
+read from the forge when its CLI is on `PATH` and logged in. Read the
+artifacts that section reads and evaluate them **by it**: the predicates are
+doctor's and are deliberately not restated here, so the two can never drift
+apart. Every repo recording all three slugs and holding all seven predicates —
+say so in one line, naming the repos checked, and read on.
 
 **Otherwise some repo needs init, and setup offers it — once, for the whole
 product.** Any of the three slugs missing in a repo, that repo is **unshaped**:
@@ -128,18 +135,28 @@ still an offer, because the shape is per repo and the product is shaped only
 when all of them are. Both causes reach the same offer — init is what lays the
 shape down and what brings it forward — and on a yes invoke `/vwf:init`, which
 surveys the base and every member and shapes them in one run of its own, and
-continue once it returns. init is **skill-invoked**: hidden from the `/` menu
+continue once it returns. init decides each repo's mode from what its tree
+contains — `blank`, `source` or `shaped` — so a repo that already carries
+source is shaped as `source`: its existing files are offered, never
+overwritten. init is **skill-invoked**: hidden from the `/` menu
 and called from here alone, so this offer and `reshape` above are the
 only two ways it is reached. A **decline** is a recorded deferral on the terms
 in [the onboard pipeline](references/onboard-pipeline.md), named with its
 unlock (`/vwf:setup reshape`, run whenever), and the run continues to the mode
 table. setup never materializes a bundle itself and never halts on an unshaped
 or drifted repo: the repo shape and the vwf format are two different things,
-and a repo can be onboarded into one without the other.
+and a repo can be onboarded into one without the other. The check **repeats
+after the materialize pass**, once per run, so a pack version that pass moves
+in this run is caught in this run — see [the second shape
+check](#the-second-shape-check) under the pass.
 
 Read `.config/vwf.yaml`, then compare its `blueprint_format` and `config_format`
 against the shipped integers (`${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`, and the
 current `config_format` named in `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`).
+The latest config step, `20 → 21`, is the smallest kind: add the top-level
+`answers:` block when the file lacks it, bump the stamp, and move nothing
+else — no content converts, since nothing wrote the four answers into the tree
+before 21, and every key is written, `none` where no answer was picked.
 
 | `.config/vwf.yaml`                                       | Mode      |
 | -------------------------------------------------------- | --------- |
@@ -158,7 +175,13 @@ repo has no package or language manifest, no source directories, and no
 `docs/blueprint/` tree. A README, LICENSE, `.gitignore`, `.gitattributes`, and
 tooling-only configs (mise, formatter, linter, pre-commit — at the root or under
 `.config/`) are **not** code: a repo holding only those is blank. Anything else
-takes the code sub-path. Both are in the onboard pipeline.
+takes the code sub-path. Both are in the onboard pipeline. This fork chooses
+setup's onboard sub-path only: `/vwf:init` runs its **own** mode test per repo
+— `blank`, `source` or `shaped`, the table in
+`${CLAUDE_PLUGIN_ROOT}/skills/init/SKILL.md` — and nothing is handed down,
+since init takes no argument. The two tests differ on exactly one item: a
+root tool config is not code here, but it is `source` evidence there, because
+init has to read it before a pack lands beside it.
 
 **An old `docs/blueprint/` tree found under `onboard`** is handed to the migrate
 pipeline once detection is confirmed. The two are one reconciliation at
@@ -188,10 +211,34 @@ skipping the whole handoff.
 In one paragraph, so a reader knows what the reference will say: setup groups
 the axes holding a slug the target repo's adapter lockfile does not name,
 dedupes by slug per repo, and invokes the adapter once per `(repo, slug)`,
-each landing behind the **adapter's own** consent line. A declined landing
+each landing behind the **adapter's own** consent line. Every landing carries
+the config's recorded `answers:` — the forge re-read live from that repo's
+`origin` — so a template pinned months after `/vwf:init` ran lands what that
+repo's answers allow, not everything. The pass never lands a forge-conditioned
+file a **stale** record would have skipped: `/vwf:doctor` reports the
+staleness and `/vwf:setup reshape` is what lands it. A declined landing
 leaves the pin untouched and is reported. An `unresolved` axis is skipped
 silently. An **absent** axis is written `unresolved` and the run continues — a
 slug is never rewritten.
+
+### The second shape check
+
+The pass ends with **a second shape check** — the same two questions Step 0
+asked, is the shape *there* and is it *current*, over the same set of repos,
+evaluated against the adapter lockfile the pass has just written. It exists
+because Step 0 runs before the pass: a pack version the pass moved is drift
+Step 0 could not see, and without this check it would wait for the next run —
+the pass edits the lockfile Step 0 read. Read the artifacts Step 0
+names and evaluate them by the same doctor predicates; on any repo unshaped or
+behind, make the offer exactly as Step 0's paragraph makes it — the drifted
+repos, what each showed, the one question, `/vwf:init` on a yes, a recorded
+deferral on a decline — and continue. Every repo clean, print nothing: a clean
+second check is not a report line.
+
+It runs **once per setup invocation**, wherever the pass ran — before step 3 in
+`onboard` and `migrate`, before the report in `current` — and never a third
+time. A `reshape` invocation is the shape pass itself, runs no materialize
+pass, and does not run this check.
 
 ## The shared spine
 

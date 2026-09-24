@@ -1,0 +1,9 @@
+security-review engine, R4 round 3, range db9da892..cd378221 (filtered to the row's range)
+
+NO FINDINGS. Read code/format and code/lint in full, walked every path to a tool.
+- swiftlint: every path ./-prefixed; git list NUL-separated, quotePath off; no-git find output starts with ./.
+- swift format: add_swift_target prefixes ./ unless absolute or already ./ in all three branches incl. hook list; staged -x.swift / --output=...swift become ./-x.swift.
+- house linter: all targets start with ./; only fixed --debug and --fix options.
+- globs: one-file glob ./path[c] built only when the name holds none of [ ] * ? { } ( ) ! + @ \ — no brace/extglob/negation. Edge: a name ending in ^ gives [^], may match a sibling differing in its last char — scope change, not injection (confidence 3).
+- no new eval, every array expansion quoted.
+Pre-existing, excluded: unprefixed hook list to dprint (pnpm, flutter, ruff packs do the same), shfmt/shellcheck list from the mise pack's helpers.

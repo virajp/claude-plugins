@@ -71,7 +71,7 @@ a green landing without a prompt and stops once before each `ask` step.
 | [`site/CLAUDE.md`][scl]                                      | the website — the tree, the link rule, the gate, the release model, the design source, traps                                                                                                                                                                                                                                                                  |
 | [`.claude/skills/vwf-plugin/`][vwf]                          | vwf's own shape — skills, agents, assets, hooks, adding a skill, the docs tree it maintains                                                                                                                                                                                                                                                                   |
 | [`.claude/skills/stackgen-plugin/`][sg]                      | stackgen's own shape — the dispatch rule, packs and bundles, where output lands, consent                                                                                                                                                                                                                                                                      |
-| [`.claude/skills/plugin-authoring/`][auth]                   | the fourteen checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions                                                                                                                                                                                                                                                               |
+| [`.claude/skills/plugin-authoring/`][auth]                   | the fifteen checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions                                                                                                                                                                                                                                                                |
 | [`.claude/skills/release/`][rel]                             | the release ritual, the note format, the CI facts that make a failed publish legible                                                                                                                                                                                                                                                                          |
 | [`site/src/content/docs/plugins/vwf.md#vwfchange-plan`][chg] | planning a change to this repo with the ad-hoc planner — the interview, the folder; running it is [`/vwf:execute`][chge] — waves, the gate, after-landing steps; the how-to is [`how-to/operate/ad-hoc-change.md`][chgh]. A blueprint slice is the guarded planner, [`#vwfplan`][pln], run by the same [`#vwfexecute`][exe] — the same folder shape and index |
 
@@ -159,12 +159,12 @@ inventory and check in that order — freshness before validity:
   bundle whose `<type>/<slug>@<version>` pin is malformed, names no pack, or
   pins a version that pack no longer carries — `@generated` refs name no pack by
   design and are skipped.
-- **`p:plugins:check`** — validates the authored tree, fourteen rules. Rule 1
+- **`p:plugins:check`** — validates the authored tree, fifteen rules. Rule 1
   covers the manifest: `name` agreeing with the directory, and the `version`
   being plain semver **and** free of a 13 or 17 component — those two integers
   are never issued on any version line this repo maintains, and it is the
   component that counts, so `1.13.0` fails where `1.130.0` passes. Rule 11 is
-  the widest: it walks a stackgen pack's whole `config/` payload tier — seven
+  the widest: it walks a stackgen pack's whole `config/` payload tier — eight
   assertions. Exec bit and shebang on every task file, exec bit and shebang on
   every shipped hook script, the `config/` root against the **landable** tier of
   the hygiene allowlist (whose two allowed directories are `.config/` and
@@ -172,19 +172,32 @@ inventory and check in that order — freshness before validity:
   at a shaped root and which no pack may land), a CI workflow **refused** inside
   `.github/`, every `pre-commit.d/*.yaml` parsing with a top-level `repos:`
   list, the gate pack's whole `pre-commit-config.yaml` parsing on the same
-  terms, and every `vscode.d/*.jsonc` parsing as JSONC with only the three keys
-  `/vwf:init` composes. Rule 13 refuses a plugin-relative citation in anything a
-  pack **lands** — the token, a bare `assets/…` path, a `../` climb out of the
-  tree the file lands in, or a path into a sibling pack — since that file is
-  copied into a repo with no plugin, where each resolves to nothing silently.
-  Rule 14 is the newest: across `stacks/bundles/*.md`, at most one bundle per
-  axis **per platform** carries `default: true` — the entry vwf's architecture
-  menu preselects on a round — and the value is boolean. Two flagged bundles on
-  one axis conflict when either declares no `platforms:` list (it is offered on
-  every round of the axis) or their lists intersect; that is a preselection
-  decided by file order, and the finding names both files plus the platform they
-  share, or the one that declares no list. Disjoint platform lists are fine —
-  one default per platform.
+  terms, every `vscode.d/*.jsonc` parsing as JSONC with only the three keys
+  `/vwf:init` composes, and every `conditional:` entry in the pack's `pack.yaml`
+  naming a relative path or glob (no `..`) that matches at least one file under
+  `config/` — the checker's own walk, so `**` enters dot-directories — and a
+  `when:` of exactly one known axis (`forge`, `editor`, `secrets`, `update_bot`)
+  with a value that axis takes, `secrets: none` refused. Rule 13 refuses a
+  plugin-relative citation in anything a pack **lands** — the token, a bare
+  `assets/…` path, a `../` climb out of the tree the file lands in, or a path
+  into a sibling pack — since that file is copied into a repo with no plugin,
+  where each resolves to nothing silently. Rule 14: across
+  `stacks/bundles/*.md`, at most one bundle per axis **per platform** carries
+  `default: true` — the entry vwf's architecture menu preselects on a round —
+  and the value is boolean. Two flagged bundles on one axis conflict when either
+  declares no `platforms:` list (it is offered on every round of the axis) or
+  their lists intersect; that is a preselection decided by file order, and the
+  finding names both files plus the platform they share, or the one that
+  declares no list. Disjoint platform lists are fine — one default per platform.
+  Rule 15 is the newest: the three formatter exclusion lists the gate packs ship
+  — the dprint pack's `dprint.json` and `taplo.toml`, and the pre-commit pack's
+  global `exclude` — state one set after normalisation (anchors, `**/`, escapes
+  and trailing `/` stripped), and the gitleaks `[allowlist] paths` is a
+  **subset** of it, never the reverse: the scanner extends upstream's default
+  allowlist and must still walk `.claude/`, so the formatters' set is wider by
+  design. A formatter entry missing from a sibling list, a scanner entry no
+  formatter excludes, or a list that cannot be parsed is one finding naming the
+  file and the entry.
 - **`p:plugins:shellcheck`** — the shell gate over everything a pack ships as
   shell: `shellcheck -x` plus `shfmt -d` over the pack task libraries and their
   `_scripts/*`, and a second pass over `hooks/*.sh` with no flags, since a hook
@@ -269,43 +282,112 @@ config layout, the task vocabulary, the gates, the hygiene files — from
 stackgen's three unconditional bundles, resolving the members itself as the
 union of `.gitmodules` and the config's `members:` list, surveying all of them
 at once and applying **one plan with a section per repo on one consent**,
-members first so the base commits its gitlinks current. It asks seven questions
-(the first naming each new repo's folder, which is what fills `REPO_NAME`; the
-second confirming every project id, its slug and the source the name came from —
-the registry, a sub-project directory, or the project's platform token — grouped
-by repo, before any `p:<slug>:*` group or commit scope is written; the fifth
-asking which agent plugins this product requires, seeded by the plugin task's
-own inventory mode and written into that task's two marked positions), and
-closes with a consent-gated git pass (the first commit, the `develop`/`main`
-pair, and the landing model it writes to `MERGE_MODEL` — it never touches the
-forge's own settings, which a maintainer sets once by hand per the hygiene
-pack's `CONTRIBUTING.md`). The aggregator's member flags and the `setup-<slug>`
-aliases are named for the **member repos**, never for a project id. On an
-existing repo it **adopts rather than flattens**: an unmapped helper function
-moves to a repo-owned `_scripts/local` sidecar, a task no pack ships is kept and
-listed, and a pack-owned file whose **content** diverged is offered as
-replace-or-keep — content being what survives two tests, the hash against the
-lock and then a splice of every marked position's current value into the pack's
-payload, so a file diverging only inside those positions is never offered and
-the owning pass shows the change instead. A keep covers that content and never a
-marked position's value, and is recorded under `enforcement.kept_files` in the
-**base's** `.config/vwf.yaml`, keyed by the member path as prefix, the one key
-`init` writes into `.config/vwf.yaml`. `setup` then sets up **vwf** in the base,
-and offers `init` once for the whole product when any repo's shape is **missing
-or drifted**, on the six baseline predicates `/vwf:doctor` owns and now
-evaluates per repo. **Architecture decides the stack and setup pins it**:
-architecture records a slug and materializes nothing, then invokes `/vwf:setup`
-in-session, whose **materialize pass** — every mode, once per `(repo, slug)`,
-carrying the contract's `repo:` line — lands each pinned template in the member
-repo that project belongs to, writes `unresolved` on an axis it finds absent,
-and never rewrites a pin. A pin nobody landed is `/vwf:doctor`'s blocking
-*pinned, not materialized*. **Everything up to `blueprint` is done in full
-before planning** — `plan` hard-halts on a partial coverage stamp. The ad-hoc
-planner `change-plan` sits **beside** that line rather than in it: it plans work
-with no blueprint slice behind it — tooling, CI, docs, a refactor, a tree the
-blueprint does not describe — reads neither the blueprint nor the registry, and
-names the commands its plan folder gates on. The two planners share the folder
-shape (`assets/templates/plan-folder.md`), the interview checklist
+members first so the base commits its gitlinks current. Each repo's **mode** is
+decided from its tree, never a flag: `shaped` where the adapter lockfile exists,
+`source` where there is no lockfile but a language manifest, a source directory,
+a root tool config or a `.config/`, `blank` otherwise — and a **stack read**
+(pins, else lockfile components, else a fixed manifest table, first hit per
+language) drives the `.gitignore` language sections and the toolchain config's
+two runtime positions. It asks nine questions (the first naming each `blank` or
+`source` repo's folder, which is what fills `REPO_NAME`; the second confirming
+every project id, its slug and the source the name came from — the registry, a
+sub-project directory (the registry's `projects[].path`, or on a first run in
+`source` mode a non-root directory with its own manifest or one a workspace file
+lists), or the project's platform token — grouped by repo, before any
+`p:<slug>:*` group or commit scope is written; the fifth asking which agent
+plugins this product requires, seeded by the plugin task's own inventory mode
+and written into that task's two marked positions; the sixth each repo's
+**visibility**, `public` or `private`, defaulted from the forge, with the
+licence — public repos only — and the security contact — an advisories URL for a
+public repo, a free email or internal URL for a private one — asked under it as
+the seventh round; the eighth and ninth rounds the **editor** — once per
+product, is VS Code in use, defaulted from a `.vscode/` directory or the `code`
+binary — and the **update bot** — per repo, `renovate`, `dependabot` or `none`,
+seeded from the survey — whose answers, with the forge read from each origin
+host and the provider slug, are passed to the materializer as an `answers:` map
+beside `repo:`, `none` the no-match value on `forge`, `editor` and `secrets` and
+a legal `when:` value on `update_bot`, so a pack's `conditional:` files — the
+hygiene pack's GitHub issue forms, its Renovate policy, every pack's editor
+fragment — land only where the answer holds and are otherwise listed under a
+**Skipped** heading in the plan and under `skipped:` in the lockfile), and
+closes with a consent-gated git pass (a read of where each repo stands — a
+member on no branch is a refused row naming the branch to check out; the landing
+model asked **one row per repo per branch**, `develop` and `main` each `direct`
+or `pr`, written to the two marked positions `MERGE_MODEL_DEVELOP` and
+`MERGE_MODEL_MAIN` — a file still carrying the single legacy `MERGE_MODEL` is
+read as both until the reshape rewrites it into the pair; the `develop`/`main`
+pair created beside a mainline of another name, the old branch left in place and
+reported; the `ops:` commit, on `develop` in every mode, never on `main`; the
+push, and — after the push, on one further consent for the product — the **forge
+pass**, which sets each pushed repo's default branch on the forge, protects
+`develop` and `main` there — a pull request required on whichever of the two has
+its landing model set to `pr` — and reaches the backlog skill's missing-project
+procedure for the base; those three are the only forge settings it touches,
+existing protection is left alone, and a forge it has no CLI for gets the
+by-hand list the hygiene pack's `CONTRIBUTING.md` keeps). The aggregator's
+member flags and the `setup-<slug>` aliases are named for the **member repos**,
+never for a project id. On a `shaped` repo it **adopts rather than flattens**: a
+root tool config a pack supersedes (`.pre-commit-config.yaml`, `.mise.toml`,
+`.gitleaks.toml`, … — the seven-row table in
+`plugins/vwf/skills/init/references/tool-configs.md`) is a plan row — move into
+`.config/` and offer, keep both, or delete on an explicit pick — a foreign hook
+manager (`core.hooksPath`, `.husky/`, lefthook) is a row defaulting to keep,
+`.gitignore` is merged section by section rather than offered, an unmapped
+helper function moves to a repo-owned `_scripts/local` sidecar, a task no pack
+ships — a file or an inline `[tasks.*]` table — is kept and listed, and a
+pack-owned file whose **content** diverged is offered as replace-or-keep —
+content being what survives two tests, the hash against the lock and then a
+splice of every marked position's current value into the pack's payload, so a
+file diverging only inside those positions is never offered and the owning pass
+shows the change instead. The offer is **every mode's**: on a `source` or
+`blank` repo every path the materializer reports as a conflict gets the same row
+(a readme, licence or security file already there is kept outright). A keep
+covers that content and never a marked position's value, and is recorded under
+`enforcement.kept_files` in the **base's** `.config/vwf.yaml`, keyed by the
+member path as prefix. The editor merge reads each `.vscode` file whole, and a
+settings key or nesting parent the hand section already carries that the packs
+also compose is a **collision** — asked once per run inside the plan (keep mine,
+take the pack's, or union for an object-valued key or a nesting parent), never
+resolved by the file carrying the key twice, and recorded under
+`enforcement.editor_keys` beside it, spelled as `kept_files` spells its paths;
+the four conditional answers themselves are recorded too, in every mode, under a
+**top-level `answers:`** block — the editor and the secrets provider once for
+the product, the forge and the update bot per repo, every key present and `none`
+the spelling of no answer — so every later caller of the materializer evaluates
+a `when:` against the same values rather than against nothing. Those three are
+the only keys `init` writes into `.config/vwf.yaml` — into a **stub**
+(`config_format` plus the `enforcement` and `answers` blocks) where the file
+does not exist yet — and `config_format` 20 is the bump that added
+`editor_keys`, 21 the bump that added `answers`. No other skill writes the
+block, with one exception: a caller that finds the recorded forge contradicted
+by the live `origin` host rewrites that one value and says so. The five
+post-landing steps (the secrets provider; the placeholders; the readme, licence
+and security files as one; the bootstrap; the aggregator offer) run in **every**
+mode, and `init` re-records the lockfile hash of every file it filled, appended
+to or merged as its last step before the git pass. `setup` then sets up **vwf**
+in the base, and offers `init` once for the whole product when any repo's shape
+is **missing or drifted** — at Step 0 and again after its materialize pass — on
+the seven baseline predicates `/vwf:doctor` owns and now evaluates per repo —
+the seventh, (g), reading the forge state back (default branch, both branches
+protected, the base's backlog project) where the forge CLI answers;
+`/stackgen:stackgen-sync` ends by bringing the same offer in-session, and
+`/vwf:recall` prints one drift line from `/vwf:doctor baseline` — the local
+predicates (a)–(f) alone, never (g) — pointing at `/vwf:setup reshape`, so
+nobody has to remember to reshape. **Architecture decides the stack and setup
+pins it**: architecture records a slug and materializes nothing, then invokes
+`/vwf:setup` in-session, whose **materialize pass** — every mode, once per
+`(repo, slug)`, carrying the contract's `repo:` line and, beside it, the
+config's recorded `answers:` map with the forge re-read live from that repo's
+`origin` — lands each pinned template in the member repo that project belongs
+to, writes `unresolved` on an axis it finds absent, and never rewrites a pin. A
+pin nobody landed is `/vwf:doctor`'s blocking *pinned, not materialized*.
+**Everything up to `blueprint` is done in full before planning** — `plan`
+hard-halts on a partial coverage stamp. The ad-hoc planner `change-plan` sits
+**beside** that line rather than in it: it plans work with no blueprint slice
+behind it — tooling, CI, docs, a refactor, a tree the blueprint does not
+describe — reads neither the blueprint nor the registry, and names the commands
+its plan folder gates on. The two planners share the folder shape
+(`assets/templates/plan-folder.md`), the interview checklist
 (`assets/plan-interview.md`) and the one plan index, whose contract and every
 write to it — the row, the Status block, the archive move — are the
 skill-invoked `plan-management`'s
@@ -344,7 +426,11 @@ user-facing reference is `site/src/content/docs/installer/`, published at
 **`develop` takes the work; `main` is what users read** — Claude resolves the
 marketplace against the default branch, so `main` stays default and PRs target
 `develop`. `main` is merge-only, enforced by pre-commit locally and a ruleset
-remotely. No release task commits: all three tag what has already landed.
+remotely. The landing model the mise pack ships is **per branch** —
+`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`, `direct` or `pr` — but this repo's
+own `.config/mise.toml` still carries the legacy single `MERGE_MODEL`, read as
+both, until its next `/vwf:setup reshape`. No release task commits: all three
+tag what has already landed.
 
 Every plugin is pinned to its own tag in the marketplace manifest, which is what
 decouples **merged** from **released**. Three tag families, all namespaced:

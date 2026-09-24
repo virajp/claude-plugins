@@ -3,16 +3,20 @@
     "lineWidth": 80
   },
   "excludes": [
-    "**/node_modules/",
-    "**/dist/",
-    "**/build/",
-    "**/target/",
+    "**/.build/",
+    "**/.claude/",
+    "**/.git/",
     "**/.turbo/",
+    "**/.venv/",
+    "**/Derived/",
+    "**/build/",
+    "**/dist/",
+    "**/graphify-out/",
+    "**/node_modules/",
+    "**/target/",
     "**/*-lock.json",
     "**/*-lock.yaml",
-    "**/*.lock",
-    "**/graphify-out/",
-    "**/.claude/"
+    "**/*.lock"
   ],
   "exec": {
     "commands": [

@@ -33,10 +33,10 @@ raw                  = true     # streams output
 status.missing_tools = "always"
 
 # `all_compile = false` is the repo-wide form of the per-runtime `node.compile` /
-# `python.compile` lines further down: take the published binary for EVERY tool,
-# never build one. A tool that compiles turns a thirty-second install into a
-# twenty-minute one on the first machine that lacks a matching prebuild, and the
-# compiler toolchain it then needs is a dependency nothing in this repo declares.
+# `python.compile` lines RUNTIME_BLOCK below takes: the published binary for
+# EVERY tool, never a build. A tool that compiles turns a thirty-second install
+# into a twenty-minute one on the first machine that lacks a matching prebuild,
+# and the compiler toolchain it then needs is a dependency nothing here declares.
 
 # Freshness with a quarantine. Fuzzy pins ("latest", "26") resolve to the newest
 # release that is at least this old, so a version yanked hours after publication
@@ -75,18 +75,10 @@ task.timings = true
 # quieter source that can disagree with them.
 task.disable_spec_from_run_scripts = true
 
-# Runtime-specific settings blocks — keep ONLY the one matching this repo's
-# runtime, and delete the rest. A block for a runtime the repo does not have is
-# a setting nothing reads and a claim about the stack that is not true.
-#
-# Node:
-#   node.compile        = false
-#   npm.package_manager = "pnpm"
-#
-# Python:
-#   pipx.uvx            = true
-#   python.compile      = false
-#   python.uv_venv_auto = "create|source"
+# A MARKED POSITION — RUNTIME_BLOCK. The orchestrator that shapes this repo
+# writes one runtime settings line per language its stack read detected here,
+# directly below this comment (`node.compile = false` for Node, say); shipped
+# EMPTY, and left empty for a repo whose stack read found no language.
 
 [env]
 # Names shared with the variants; the VALUES live per layer. Only what is the
@@ -115,17 +107,20 @@ task.disable_spec_from_run_scripts = true
 # change to every repo that has one.
 REPO_NAME = "unfilled"
 
-# A MARKED POSITION. How a branch reaches its destination — `code:merge:develop`
-# and `code:merge:main` read it, and the branch model itself is the same under
-# both values:
+# TWO MARKED POSITIONS. How a branch reaches its destination, one value per
+# long-lived branch — the branch model itself is the same under both values:
 #
 #   direct  merge locally and push the destination branch
 #   pr      push the branch and open a pull request; nothing merges locally
 #
-# `direct` is the shipped default because it is what a repo with no reviewer
-# needs, and because it is what these tasks did before the setting existed. A
-# repo that gates landing on review sets `pr` and nothing else changes.
-MERGE_MODEL = "direct"
+# `MERGE_MODEL_DEVELOP` is what `code:merge:develop` reads, and ships `direct`:
+# what a repo with no reviewer needs, and what that task did before the setting
+# existed. `MERGE_MODEL_MAIN` is what `code:merge:main` reads, and ships `pr`:
+# `main` is the release branch, and a request is the record of what reached it.
+# An older file carrying the single `MERGE_MODEL` key is read as both values
+# until the orchestrator writes the pair.
+MERGE_MODEL_DEVELOP = "direct"
+MERGE_MODEL_MAIN    = "pr"
 
 # A MARKED POSITION. The repo's member repos, space separated, each path
 # relative to this repo's root — `MEMBERS = "backend frontend"`. It is what
@@ -140,9 +135,10 @@ MERGE_MODEL = "direct"
 # are split by the task library rather than by the parser.
 MEMBERS = ""
 
-# Project-local binaries on PATH without a `<pm> exec` prefix. Shipped commented
-# because it is a claim about the stack: uncomment it when a package-manager
-# component lands and this repo actually has a `node_modules/.bin`.
+# A MARKED POSITION — PATH_ENTRIES. Project-local binaries on PATH without a
+# `<pm> exec` prefix, written directly below this comment by the orchestrator
+# from the same stack read — the example is what a Node repo gets — and left
+# EMPTY, as shipped, when nothing the read found needs one.
 #   _.path = { path = "node_modules/.bin", tools = true }
 
 [tools]

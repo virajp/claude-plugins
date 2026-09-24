@@ -10,11 +10,11 @@ floods no session with every stack's doctrine, because nothing under
 materializer copies it into a repo's `.claude/` tree.
 
 **Every pack in the tree is authored here.** The `toolchain-gate` type ships
-eight packs under `stacks/toolchain-gate/` — `analysis-options`, `dprint`,
-`eslint`, `gitleaks`, `grype`, `pre-commit`, `ruff` and `tsconfig` — and no
-curated plugin stands behind any pack: the tree is each pack's only home.
-This file is the contract every pack is folded into, so an author targets a
-shape the materializer already reads.
+ten packs under `stacks/toolchain-gate/` — `analysis-options`, `dprint`,
+`eslint`, `gitleaks`, `grype`, `pre-commit`, `ruff`, `swift-format`,
+`swiftlint` and `tsconfig` — and no curated plugin stands behind any pack:
+the tree is each pack's only home. This file is the contract every pack is
+folded into, so an author targets a shape the materializer already reads.
 
 ## Layout
 
@@ -128,10 +128,17 @@ them, into `.vscode/settings.json` and `.vscode/extensions.json`:
   parent, every pack's extension ids, each id once.
 - Everything composed lands inside **one marked block per file**, placed
   **first**, between `// >>> vscode.d` and `// <<< vscode.d` on their own
-  lines. First is deliberate: JSON's own last-wins rule then makes a key a
-  person adds after the block beat the composed one, so a repo can
-  override any of this by typing below it and a re-run rewrites only what
-  is between the markers.
+  lines. A key the file already carries **outside** the block — a
+  `settings` key or a `nesting` parent — is a collision, and the composing
+  skill **omits** it from the block, so a hand key wins without the file
+  ever holding a duplicate. What becomes of such a key is the user's
+  choice at composition time — keep mine, take the pack's, or union —
+  asked once and recorded by the composing skill, so a later run applies
+  the answer without asking. An extension id the file already lists is
+  simply kept, unasked and unrecorded. The block still sits first, and
+  everything outside it still survives byte-for-byte unless the user chose
+  otherwise for that key; a re-run rewrites only what is between the
+  markers.
 
 **Ownership of the base.** The `repo-hygiene` pack's fragment carries the
 editor **baseline** — the nesting map, the exclude lists, the editor-wide
@@ -164,6 +171,7 @@ languages: # language and app-framework components only
       lsp: <how a language server is provided — or n/a>
       mise_tool: <the mise tool name — or n/a>
       manifest: <the manifest file doctor checks deps against — or n/a>
+      binaries: [ <name> ] # optional — executables needed on PATH that mise does not manage (xcodebuild, say); absent means none
 package_manager: <token> # package-manager components only
 artifact: <token> # deploy-target components, and deploy-side cloud-service ones
 mcp_servers: {} # design-tool and other components needing an MCP server — written into the project's .mcp.json behind tier-2 consent
@@ -171,6 +179,9 @@ user_mcp_servers: {} # user-scoped — the generated local plugin's mcpServers, 
 lsp_servers: {} # <name> -> the verbatim lspServers entry; extensionToLanguage mandatory — the generated local plugin's, tier 3
 harness:
   <capability>: { task: <name>, mechanism: <one line> } # what this component satisfies — or n/a
+conditional: # optional — config/ paths that land only when an answer holds; see below
+  - path: <a landed path or glob, repo-root relative>
+    when: { <axis>: <value> } # one axis, one value
 ```
 
 **Servers are three sibling keys, never one key with a scope field.**
@@ -182,6 +193,64 @@ twice, and a name appearing under both `mcp_servers:` and
 `user_mcp_servers:` halts the run. This changes no artifact: the landed set
 is still closed to skills, agents, hooks and rules, and these are payload
 the materializer writes elsewhere.
+
+### `conditional:` — files that land only when an answer holds
+
+A pack may declare that some of its `config/` files make sense only under
+an answer the caller already holds — the forge the repo pushes to, the
+editor in use, the secrets provider picked, the update bot the repo runs.
+`conditional:` is an optional list; each entry names a **path or glob**
+(spelled as the pack's `config/` tree spells it, relative to `config/` —
+so `renovate.json`, not `config/renovate.json`) and a `when:` map of
+**exactly one axis to one value**, drawn from a fixed vocabulary:
+
+| Axis         | Values                             | Answered by                                |
+| ------------ | ---------------------------------- | ------------------------------------------ |
+| `forge`      | `github`, `gitlab`                 | the origin host                            |
+| `editor`     | `vscode`                           | the editor question, once per product      |
+| `secrets`    | a capability-provider slug         | the secrets-provider question              |
+| `update_bot` | `renovate`, `dependabot`, `none`   | the update-bot question, per repo          |
+
+```yaml
+conditional:
+  - path: .github/ISSUE_TEMPLATE/*
+    when: { forge: github }
+  - path: renovate.json
+    when: { update_bot: renovate }
+  - path: .config/vscode.d/repo-hygiene.jsonc
+    when: { editor: vscode }
+```
+
+Those three are the hygiene pack's: the issue forms are GitHub's format
+and land nowhere else; the Renovate policy only where Renovate is the bot;
+the editor fragment only where the editor is in use — and the third
+applies to **every** pack that ships a `vscode.d/` fragment, each stating
+it in its own `pack.yaml` on its own fragment's name. The `secrets` axis
+works the same way — a file that only makes sense beside one provider,
+`when: { secrets: fnox }` — but no shipped pack carries such a file today:
+the provider's ignore line is an ignore-section row keyed on the provider
+slug, not a conditional file.
+
+Rules:
+
+- **A path not named under `conditional:` is unconditional.** The key
+  narrows; absence is the default every existing pack already has.
+- **A glob may name a whole set** — `.config/vscode.d/*.jsonc` is one
+  entry, not one per fragment. A `path` or glob is spelled as the pack's
+  own `config/` tree spells it — **before** the `p/_project/` rename — and
+  must match at least one file there; that pre-rename tree is what rule 11
+  resolves it against, and the materializer evaluates it on the same
+  pre-rename path and applies the rename after.
+- **One axis per entry, one value per axis.** A file that depends on two
+  answers is two entries on the same path, both of which must hold. A
+  value outside the vocabulary, or an axis not in the table, is a pack
+  authoring error, and `p:plugins:check` rule 11 refuses the tree naming
+  the pack and the entry.
+- **The materializer evaluates, records and skips; nothing else reads the
+  key.** A false entry's paths leave the landing set and are written to the
+  lockfile's `skipped:` list with their condition, so `/vwf:doctor` never
+  reports one as missing and a later run whose answer changed re-evaluates
+  it. The evaluation is the materializer's step, in its own reference.
 
 The bundle-level lists the previous format carried per pack — `frameworks`,
 `dependencies`, `optional_languages`, `capabilities` — are **derived at
@@ -223,7 +292,10 @@ bundle declares one `kind` and these are three: `mise` (`toolchain-manager`),
 `repo-gates` (`repo-gate`) and `repo-hygiene` (`repo-hygiene`). Nothing about
 them is recorded in `.config/vwf.yaml` — nothing was chosen — only in
 `lock.yaml`, which is also what tells a caller whether the repo is shaped at
-all: all three slugs present, or not shaped.
+all: all three slugs present, or not shaped. `unconditional:` is the
+**bundle's** word — whether the composition is picked or fixed — and
+`conditional:` the **file's**, inside a pack: an unconditional bundle may
+still carry a pack whose issue forms land only on GitHub.
 
 **`default: true` marks the menu entry vwf preselects on that axis.** It is
 optional and boolean, and it changes nothing about what the bundle is — only
@@ -317,7 +389,11 @@ which is the grain `stackgen-sync` acts at.
   bills and what breaks. API reference belongs to Context7 at use time.
 - **Facts are per language and honest.** `n/a` is an answer; an invented
   mise tool or manifest name surfaces as a doctor finding in every repo that
-  pins the pack.
+  pins the pack. A tool the stack cannot run without whose `mise_tool` is
+  `n/a` — Xcode's `xcodebuild`, which mise does not install — belongs in
+  `binaries`, so doctor reports it missing from `PATH` rather than skipping
+  the `n/a` silently — blocking once the project's template is pinned, a
+  degradation while its pin still reads `unresolved`.
 - **A generated pack may ship the `config/` tiers too.** Nothing about
   `config/.config/…`, `conf.d` or `pre-commit.d` is reserved to curated
   packs: a generated component that genuinely owns a config file may declare

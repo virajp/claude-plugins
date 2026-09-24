@@ -2,10 +2,16 @@ name: pre-commit
 summary: The local gate, and the wiring that makes local and CI run the
   identical command. Ships .config/pre-commit-config.yaml and
   .config/git-conventional-commits.yaml.
-version: 1.1.1
+version: 1.1.5
 type: toolchain-gate
 kind: repo-gate
 axis: repo
 # Topic 4 (hook running) and 5 (gate wiring & CI parity) of the repo-gate bar (assets/kinds.md).
 # Gates satisfy no vwf harness capability.
 harness: n/a
+# The editor fragment lands only where init's editor answer is vscode; every
+# other file in config/ lands unconditionally. Paths are relative to config/.
+conditional:
+  - path: .config/vscode.d/pre-commit.jsonc
+    when:
+      editor: vscode

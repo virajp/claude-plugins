@@ -2,14 +2,21 @@ name: Astro
 summary: Astro as the content-first web framework that owns the build — file
   routes, content collections, islands only where interactivity demands it,
   and two config decisions (`output`, and whether an adapter is present) that
-  between them give four ways to render. It also carries the head doctrine
-  every page states itself through — title, description, canonical, icons,
-  sitemap and structured data — and lands the one task that rasterizes the
-  favicon set from the product's mark.
-version: 0.2.0
+  between them give four ways to render. It covers MDX, the image pipeline,
+  and layouts and slots, and carries the head doctrine every page states
+  itself through — title, description, canonical, icons, sitemap and
+  structured data — and lands the one task that rasterizes the favicon set
+  from the product's mark.
+version: 0.4.0
 type: framework
 category: meta-framework
 kind: language-bundle
 axis: project
 # Topic 2 of the language-bundle bar — one artifact per detected framework.
 harness: n/a
+# The editor fragment lands only where init's editor answer is vscode; every
+# other file in config/ lands unconditionally. Paths are relative to config/.
+conditional:
+  - path: .config/vscode.d/astro.jsonc
+    when:
+      editor: vscode

@@ -51,7 +51,15 @@ being the same mobile binary reaching CarPlay and Android Auto through the
 pack's Swift and Kotlin edge, so it is declared alongside `mobile` and never
 alone. It does **not** serve `webapp`: the web output is a canvas-rendered
 application rather than a document, so a product with a web surface pins a web
-stack for it, as a `site` or `webapp` project of its own beside the app.
+stack for it, as a `site` or `webapp` project of its own beside the app. A
+native Apple app pins `swift-swiftui` instead — `app-framework/swiftui`, serving
+`mobile`, `tablet`, `desktop` and `auto` like Flutter plus `watch`, `tv` and
+`spatial`, from a committed Xcode project a person creates in Xcode, with the
+Xcode version pinned as `XCODE_VERSION` in the repo's mise `[env]`. Pick it when
+the app ships on Apple platforms alone or reaches one Flutter does not; pick
+Flutter when it must also ship on Android. A Swift library on the `packages`
+platform pins `swift-package` — SwiftPM, swift-format and SwiftLint over the
+host's Swift toolchain, which must be on `PATH`; it carries no app target.
 Anything else takes the **generate** entry — see below.
 
 **A `site` project picks between five entries** — four Astro bundles and `html`.
@@ -68,7 +76,8 @@ before 2026-09-06 — a pin on the old slug has to be re-pointed.) All four also
 carry the pack's **head doctrine** — the title, description, canonical address,
 social tags, favicon links, manifest, robots and sitemap a public page owes the
 outside — and land an `icons` task that rasterizes the whole favicon set from
-your one source mark. Nothing to decide there: it is the same for all four.
+your one source mark. Nothing to decide there: it is the same for all four. So
+is the pack's guidance on MDX, the image pipeline, and layouts and slots.
 
 **`html` is the fifth entry, and it is not Astro.** Pick it when the site is a
 handful of pages you write by hand — a landing page, a personal site — with no

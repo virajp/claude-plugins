@@ -65,15 +65,19 @@ ruling, verbatim:
   `pnpm.yaml` and `flutter.yaml` are deleted; import_sorter moved into flutter's
   `code/format` and the two analysis tools were already in its `code/lint`. Only
   `uv.yaml` survives, for `uv lock --check`, which gates nothing.
-- **`MERGE_MODEL`.** A marked position in `mise.toml`'s `[env]`, read as
-  `direct` when unset. `direct` is the local merge-and-push unchanged; `pr`
-  pushes the branch with `--follow-tags` and opens a pull request through `gh`
-  or `glab`, printing the branch and one instruction where neither is on PATH,
-  and merges nothing locally. Every predicate runs under both but one — the
-  unpushed-commits check is `direct`'s alone, since publishing the branch is
-  `pr`'s first act. A repo-level value rather than a flag, because which one
-  applies is a property of the repo's review policy, not of the person landing
-  the change.
+- **`MERGE_MODEL`.** **Superseded by**
+  [`2026-09-20-branch-model.md`](./2026-09-20-branch-model.md) — the single key
+  is retired for two positions, one per branch, `MERGE_MODEL_DEVELOP` and
+  `MERGE_MODEL_MAIN`; a repo still carrying it is read as both until its next
+  reshape, and doctor reports it as drift. As decided then: a marked position in
+  `mise.toml`'s `[env]`, read as `direct` when unset. `direct` is the local
+  merge-and-push unchanged; `pr` pushes the branch with `--follow-tags` and
+  opens a pull request through `gh` or `glab`, printing the branch and one
+  instruction where neither is on PATH, and merges nothing locally. Every
+  predicate runs under both but one — the unpushed-commits check is `direct`'s
+  alone, since publishing the branch is `pr`'s first act. A repo-level value
+  rather than a flag, because which one applies is a property of the repo's
+  review policy, not of the person landing the change.
 - **`MEMBERS`.** A second marked position beside it: space-separated paths
   relative to the repo root. `_scripts/helpers` gains `members()`, which reads
   `.gitmodules` where there is one and those paths otherwise, and both
@@ -82,6 +86,12 @@ ruling, verbatim:
   submodules.
 
 ## The D17 reversal
+
+> **Superseded by**
+> [`2026-09-20-init-forge-pass.md`](./2026-09-20-init-forge-pass.md) — init
+> reaches the forge again, through its CLI rather than a task; "names no forge
+> and inspects none" no longer holds for the init references, and the
+> `CONTRIBUTING.md` line is the by-hand fallback.
 
 D17 of `2026-09-06-init-owns-the-first-commit` had `init` ask which branch the
 remote should default to and run `mise run setup:default-branch <answer>`, so

@@ -1,0 +1,11 @@
+code-review engine (high), R4 round 2, focus 16059e30; range db9da892..16059e30
+
+1. .../language/swift/config/.config/mise/tasks/code/lint:115 — sed backslash-escapes glob metacharacters, but @askviraj/linter never matches an escaped pattern: config files with ( ) [ ] + ! @ { } in the path are silently not linted (reproduced: d(1).yaml, e[1].yaml, f+g.yaml with duplicate keys exit 0 through the pipeline, exit 1 named plainly).
+2. .../tasks/code/format:56 (and lint:114,131) — git ls-files without -z; core.quotePath C-quotes non-ASCII/tab paths, [ -f ] fails, file silently skipped (reproduced: é.yaml, Sources/Café.swift). Fix: -z with read -d '' or -c core.quotePath=off.
+3. .../tasks/code/format:56 — whole-tree format has no exclusions while swiftlint excludes Derived/, DerivedData/, .swiftpm, *.generated.swift; committed *.generated.swift fails code:format and --fix rewrites it. Widens R4-1 #5.
+4. .../tasks/code/lint:101 — wrong fix depth: per-path hand-escaped globs cause 1 and 2; still warns for paths ending outside [A-Za-z0-9._-] (notes~). Simpler: linter ignores for **/.build/** and **/.swiftpm/** (linter.yaml or linter default), call bare like pnpm/flutter overlays.
+5. .../tasks/code/lint:143 — swiftlint lints every Swift file on every commit (R4-1 #8); docs' reason "SwiftLint follows its config" no longer true with explicit paths; pre-commit partitions pass_filenames across ncpu so whole-tree work multiplies and --fix rewrites race. Narrow swift_scope to staged *.swift; fix build-and-run.md:35-36.
+6. .../tasks/code/lint:120 — every tracked+untracked path as argv to pnpm dlx linter (and swiftlint/swift-format lists) can exceed ARG_MAX on large repos (xcassets Contents.json).
+7. .../tasks/code/format:58 (lint:134) — non-git fallback find prunes only top-level .build; nested Examples/Demo/.build, .swiftpm, DerivedData reach swift-format; --fix rewrites dependency checkouts.
+8. .../tasks/code/lint:125 — Swift-file listing duplicated between format:51-61 and lint:125-136; lint runs git ls-files twice. Share a swift_files_in_scope helper.
+9. plugins/stackgen/stacks/toolchain-gate/swift-format/skills/swift-format/SKILL.md:38 — "Directly" examples show old scope (--recursive Sources Tests Package.swift) and in-place format without the strict lint after.

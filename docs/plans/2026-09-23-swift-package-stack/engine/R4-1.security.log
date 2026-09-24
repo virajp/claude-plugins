@@ -1,0 +1,7 @@
+security-review engine, R4 round 1, range db9da892..80126b11 (filtered to the row's range)
+NO FINDINGS.
+Checked: swift code/format, code/lint, setup/deps/* tasks, swiftlint.toml, swiftlint.yml, swift-format.json, both vscode.d fragments, four pack.yaml.
+eval of usage_files is the house pattern (flutter code/lint:33, mise pack tasks) - not new.
+pnpm dlx @askviraj/linter unpinned - same as flutter code/lint:99, not new.
+Swift file list filtered to existing *.swift, expansions quoted; lint targets quoted, gitignored dirs skipped; flag-shaped dir name only injects an option, confidence below 8.
+rm -rf .build is project-relative. SwiftLint pinned 0.65.1 via aqua.

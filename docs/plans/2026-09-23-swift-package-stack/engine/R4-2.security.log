@@ -1,0 +1,10 @@
+security-review engine, R4 round 2, range db9da892..16059e30 (filtered to the row's range)
+
+1 FINDING
+plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/lint:127-144 (swift_scope build + swiftlint call)
+Severity: MEDIUM. Category: option injection via file names -> file write outside the repo.
+Tracked .swift paths from git ls-files reach `swiftlint lint` as positional args with no ./ prefix and no -- terminator. A path whose first component starts with -- parses as an option; SwiftLint 0.65.1 has --output <path> and --write-baseline <path>, and swift-argument-parser accepts --opt=value.
+Exploit: a malicious repo commits directory `--output=` containing tmp/x.swift; git lists `--output=/tmp/x.swift`; the -f test passes (the file exists in the repo); every code:lint / pre-commit run writes SwiftLint's report to absolute /tmp/x.swift, overwriting any user-writable *.swift path. Reproduced locally (created /tmp/sl_pwned.swift).
+Fix: prefix each path with ./ (swift_scope+=("./${swift_file}")) or put -- before the paths; same hardening for the swift format calls in code/format:111-119.
+Confidence: 8
+Checked clean: eval of usage_files (house pattern); one-file globs for the linter (last char bracketed, git quoting defuses newlines); dprint/shfmt; cleanup rm -rf .build (fixed path).

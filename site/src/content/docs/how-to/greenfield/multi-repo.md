@@ -51,7 +51,10 @@ base has no members yet, so this run shapes one repo. The **shape** is per repo
 — each member carries its own `.config/`, its own task library and its own gates
 — but the **run** is per product: once the members exist, one `init` from the
 base surveys and shapes all of them in one plan and on one yes, and a member
-added later is picked up by the next `/vwf:setup reshape`.
+added later is picked up by the next `/vwf:setup reshape` — which you no longer
+have to remember: `/vwf:recall` prints one drift line at session start when a
+repo has fallen behind, and setup and `/stackgen:stackgen-sync` re-check the
+shape as they finish.
 
 The setup run is the spine's blank-repo bootstrap unchanged
 ([`/vwf:setup`](./single-repo.md#vwfsetup)): two questions, both proposed from
@@ -170,9 +173,13 @@ What is deliberately **not** recorded is which members are cloned on this
 machine. That is per-developer state that changes daily, so it is detected on
 every run — a twenty-repo product with three cloned is a normal configuration,
 not a degraded one. A member that is *not* cloned is not skipped by the shape
-pass either: `init` puts the clone command in its section of the plan, covered
-by the same one yes, and then surveys and shapes it in that same run; decline
-and nothing is cloned. Each member that *is* cloned gets its own
+pass either: `init` puts the clone sequence in its section of the plan, covered
+by the same one yes — the clone, then a checkout of the remote branch holding
+the recorded pointer commit, since a submodule arrives detached and `init`
+refuses to commit on a detached member — and then surveys and shapes it in that
+same run; decline and nothing is cloned. A member already present but standing
+on no branch is a refused row naming the branch to check out, its shaping
+deferred until you do. Each member that *is* cloned gets its own
 `.graphifyignore` from that run, since the file is per checkout like the graph
 it narrows — see [Code intelligence](../../plugins/vwf.md#code-intelligence).
 

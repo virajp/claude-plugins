@@ -354,9 +354,12 @@ side of the contract is three rules:
 
 - **The payload may carry `language_facts`** — per language, the facts a
   language plugin would otherwise supply (LSP provision, mise tool, manifest;
-  `n/a` where honest). That is the **materialized escape** in
-  `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`: a token those facts
-  cover is *known* to `/vwf:doctor` without a claiming language plugin.
+  `n/a` where honest), plus an optional fourth, `binaries: [<name>…]` — the
+  executables the stack needs on `PATH` that mise does not manage (Xcode's
+  `xcodebuild`, say), absent meaning none. That is the **materialized
+  escape** in `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`: a token
+  those facts cover is *known* to `/vwf:doctor` without a claiming language
+  plugin.
 - **A materialized fetch is a pure read.** Once a slug is materialized, every
   `-stack-template` call returns the committed payload from the repo — so
   `plan`'s and `execute`'s conventions resolution behaves exactly as

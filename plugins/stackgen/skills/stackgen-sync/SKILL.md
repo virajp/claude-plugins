@@ -55,6 +55,51 @@ user's clock.
    A pack that no longer exists in this stackgen version is reported, never
    deleted.
 
+   **Conditional paths are evaluated first, against the same answers the
+   materializer takes.** Read the product's `.config/vwf.yaml` `answers:`
+   block — `editor` and `secrets` once for the product, `forge` and
+   `update_bot` per repo — and re-read `forge` live from this repo's
+   `origin` host, so a remote that appeared since init ran is what the
+   forge conditions are judged against. A config carrying **no** block —
+   a repo never reshaped since the key existed — gets the four inferred
+   from the tree the way `/vwf:init` seeds them: the forge from
+   `origin`, the editor from a `.vscode/` directory or the editor
+   binary, the secrets provider from the lockfile's pinned provider, the
+   update bot from a renovate or dependabot file — and with no block to
+   correct, this skill **writes nothing** into that config: the block is
+   `/vwf:init`'s to write, and a missing one is drift `/vwf:doctor`
+   reports and the reshape fixes. Where a block **is** there and the
+   live host contradicts the recorded value, rewrite that one value in
+   place — `answers.repos.<path>.forge`, that key and nothing else —
+   and name the rewrite in the sync report. It is the only config key
+   this skill writes: it writes no `answers:` block of its own and
+   touches no other key in one. Evaluate each pack's `conditional:`
+   entries (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) against that map
+   before classifying its landing set — three more states beside the
+   three above, each reported in the delta:
+
+   - **skipped (condition)** — the condition reads false and the path
+     has no `entries:` record. Never offered, never reported missing; it
+     is a `skipped:` row, rewritten for the packs this run evaluated and
+     for no others, on exactly the terms the materializer rewrites them
+     (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`).
+   - **landable — condition now true** — the path has no `entries:`
+     record and its condition now holds. It is offered as a create,
+     under the consent line a new pack file already takes: a
+     `config/`-tier path on step 5's tier-2 line, a `.claude/` path on
+     the file plan, and the line says plainly that the path was skipped
+     before and its answer has changed. Taking it lands it as an
+     ordinary entry and drops its `skipped:` row; declining leaves the
+     row.
+   - **kept** — the path **has** an `entries:` record and its condition
+     has since turned false. It stays, is reported once as landed
+     earlier, condition now false, kept, and is never removed here.
+     Removing a landed file is the user's own act, never a side effect
+     of an answer changing.
+
+   An axis the map leaves out still reads **true** — the materializer's
+   rule, unchanged.
+
    A component's `config/` files diff on **exactly these terms** — same
    three states, same hashes, same per-component grain — with two things
    to carry through. **Mode is part of the file**: a
@@ -79,9 +124,9 @@ user's clock.
    than reconciled here. So compare the file **around** those regions and
    report drift there; never rewrite inside them, and never treat a
    fragment that has moved as a reason to edit the merged file — say the
-   fragment moved and that a re-run of init is what folds it in. Two
-   things writing between the same markers is the one way this file could
-   lose an edit.
+   fragment moved and leave the fold to the shape check that closes the
+   sync (step 7). Two things writing between the same markers is the one
+   way this file could lose an edit.
 
 3. **Offer regeneration per generated component.** A `generated` component
    has no pack to diff against; offer to re-run the generator for that
@@ -148,7 +193,27 @@ user's clock.
 6. **Apply and commit.** Write only what was selected, update the changed
    components' lockfile hashes and the `local_plugin` block, and commit as
    one commit via the repo's git workflow. The local plugin's own files
-   are on the machine, not in the commit.
+   are on the machine, not in the commit. The lockfile's `skipped:` list
+   is rewritten here too, for the packs step 2 evaluated and no others —
+   a taken *landable* path leaves it and gains an `entries:` record, a
+   *skipped (condition)* path is its row. And where this run removed a
+   pack's `entries:`, its `skipped:` rows go with them
+   (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`), so a pack the repo
+   no longer runs leaves no row claiming one of its paths is
+   intentionally absent.
+
+7. **Re-check the shape.** Once everything selected is written and
+   committed — or nothing was selected — run the shape check `/vwf:setup`
+   runs in its Step 0, in-session, over the base and every member: is
+   the shape there, and is it current, evaluated against the lockfile
+   this sync just updated. On drift, **offer** `/vwf:setup reshape` the
+   way Step 0 offers it — one line naming the drifted repos and the
+   failing predicate, then the question — and invoke `/vwf:setup reshape`
+   in-session on a yes; a decline ends the sync. A clean check says
+   nothing, and nothing reshapes unprompted. This is where a fragment
+   that moved in step 2 is folded into the merged config: the sync never
+   writes what init composes — the merged file, the regions between its
+   markers — the reshape does.
 
 ## Rules
 

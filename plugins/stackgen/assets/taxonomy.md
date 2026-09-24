@@ -20,7 +20,9 @@ The closed list. A component is exactly one of:
 
 - **`language`** — a programming language; the root a Language-Bundle
   composes around, and the one type that carries the per-language facts
-  `/vwf:doctor` verifies (LSP provision, mise tool, manifest).
+  `/vwf:doctor` verifies (LSP provision, mise tool, manifest, and the
+  optional `binaries` — executables needed on `PATH` that mise does not
+  manage).
 - **`package-manager`** — how a language's dependencies are installed and
   locked; contributes the `repo`-axis facts.
 - **`framework`** — a library that imposes structure inside a language: a

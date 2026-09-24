@@ -14,9 +14,11 @@ stitch), the revise-in-place rule, the interactive-journey mandate (wired
 navigation, the happy path clickable end to end and stitched into its index —
 never a static page), the **standing tweak set** on every coded frame:
 `darkMode` (default **on**), `frame` (default **on**, the device frame matched
-to the platform — the mobile and tablet frames include the camera notch/cutout
-for a true visual, desktop a browser-chrome frame, the in-car platforms the OS
-display frame with its template constraints), one tweak per pinned **sad
+to the platform and drawn at its **resolved viewport** — the mobile and tablet
+frames include the camera notch/cutout for a true visual, desktop a
+browser-chrome frame, the in-car platforms the OS display frame with its
+template constraints, `watch` a watch-face frame, `tv` a TV frame with its
+title-safe inset, `spatial` a floating window), one tweak per pinned **sad
 state**, and one tweak per pinned **conditional product state** (empty data,
 entity-state variants — product states, not sad paths) — plus stub treatment for
 out-of-flow screens, the product one-liner, and the goal vocabulary from
@@ -81,7 +83,9 @@ Components blocks, never left for the canvas to decide.
 3. **Maintain the canvas conventions file** — one per platform brief written:
    regenerate `docs/prompts/screens/<project>/CLAUDE--<platform>.md` from the
    adapter's conventions template (the product one-liner and goal vocabulary
-   from `product.md`, this platform's Layout block, the naming contract,
+   from `product.md`, this platform's Layout block — its size the resolved
+   viewport, `design.viewports.<project>.<platform>` from `.config/vwf.yaml`
+   when set, else the template's default — the naming contract,
    behavior conventions, and standing tweak set), **preserving the "Project
    conventions (canvas-owned)" section verbatim** (seeded empty in a new file).
 4. **Deliver the files — nothing else.** The brief files are the deliverable:

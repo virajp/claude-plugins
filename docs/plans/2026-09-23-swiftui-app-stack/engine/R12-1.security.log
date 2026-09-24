@@ -1,0 +1,9 @@
+/security-review engine, loop R12 round 1, range ba994ef0..97474b13 (run as a sub-task scoped to the swiftui task scripts and ux-gate; the skill's own diff is branch-vs-main)
+
+No findings.
+
+- Deletions: every rm targets a fixed path under .build/ or <project>/project.xcworkspace/.../Package.resolved; <project> is the single root *.xcodeproj find_xcodeproj finds, quoted everywhere.
+- Temp file: outdated uses mktemp with a restore-and-remove trap.
+- Injection: --scheme, --platform, --device, --os, --target and SIMULATOR_* are quoted single xcodebuild arguments, never eval; trusted input.
+- Package.resolved parsed with sed/awk only, values printed, never run.
+- Data exposure: result bundle and snapshot artifacts stay under local .build/; the ux-gate diff adds no upload, network call or eval.

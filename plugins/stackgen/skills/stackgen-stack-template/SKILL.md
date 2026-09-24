@@ -84,7 +84,7 @@ components: # the bundle's composition — the per-component dispatch record
 platforms: [ <platform> ] # project axis only
 languages: [ <token> ]
 language_facts: # per language — what /vwf:doctor verifies
-  <token>: { lsp: <how provided | n/a>, mise_tool: <name | n/a>, manifest: <file | n/a> }
+  <token>: { lsp: <how provided | n/a>, mise_tool: <name | n/a>, manifest: <file | n/a>, binaries: [ <name> ] } # binaries passed through from pack.yaml; omitted when the pack declares none
 optional_languages: []
 frameworks: [] # derived — the composition's framework component slugs
 dependencies: []
@@ -168,6 +168,27 @@ check real.
   (`<repo>/.claude/stackgen/lock.yaml`) resolve under that path; absent
   means the current repo. Each repo gets its own independent copies and
   its own lockfile — never one repo's copies pasted around.
+- **A caller may pass answers the same way**: an optional `answers:` map
+  beside the `repo:` line, at most one value per axis of the
+  `conditional:` vocabulary — `forge`, `editor`, `secrets`, `update_bot`
+  (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). The materializer
+  evaluates every pack's `conditional:` entries against it in its step 1
+  and skips the paths whose answer differs, recording them in the
+  lockfile's `skipped:` list. **Three callers pass the map now** —
+  `/vwf:init`, which asks the four questions and records them in the
+  base repo's `.config/vwf.yaml` under its `answers:` block (`editor`
+  and `secrets` once for the product, `forge` and `update_bot` per
+  repo); `/vwf:setup`'s materialize pass, which lands a pinned template
+  long after init ran; and `/stackgen:stackgen-sync`, which re-derives a
+  pack's landing set. Each reads that block, re-reads `forge` from the
+  repo's `origin` host live and passes that, and passes the full map per
+  repo; a caller that finds no block infers the four values from the
+  tree, passes those and writes nothing. An axis the map leaves out, or
+  a map not passed at all, reads as **true** and lands the path — the
+  **fallback** for a caller that passes none, which keeps a caller this
+  contract does not know about landing what it always landed, and not
+  the path the three above take. These two lines are the whole of the
+  optional input beside the catalog paths.
 - **The caller may pass context; this skill never reaches for another
   plugin's files.** vwf passes the principles-catalog paths into the
   invocation (the design-adapter payload style). If a generation run needs

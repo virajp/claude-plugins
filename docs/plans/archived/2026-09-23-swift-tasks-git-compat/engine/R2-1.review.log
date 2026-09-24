@@ -1,0 +1,31 @@
+/code-review high — R2 round 1 — branch 2026-09-23-swift-tasks-git-compat
+
+[
+  {"file": "plugins/stackgen/stacks/language/swift/skills/swift/references/build-and-run.md", "line": 24,
+   "summary": "G2 only half-fixed: the code:lint row still says shellcheck and actionlint run 'over every file git does not ignore', and lines 43-45 say 'lint ignores the list', contradicting the rewritten conventions.md:33 (they take the staged list).",
+   "failure_scenario": "A reader expects hook-mode code:lint to shellcheck the whole tree; shell_files_in_scope and the actionlint filter see only staged files. 2c copies this pack byte for byte."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/lint", "line": 122,
+   "summary": "Fail-loud is bypassed when git fails at 'git rev-parse --is-inside-work-tree' (stderr to /dev/null): in_git=false and the tasks fall back to find / a tree walk. code/format:67 same.",
+   "failure_scenario": "Swift Docker CI as root on a runner-owned checkout: rev-parse exits 128 'dubious ownership'; code:lint hands the house linter no targets, it walks .build/ and node_modules; code:format silently switches to find."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/lint", "line": 149,
+   "summary": "The house-linter loop builds its one-file glob from the path's last BYTE under a C/POSIX locale; a name ending in a multibyte UTF-8 char becomes a glob matching nothing, file skipped silently.",
+   "failure_scenario": "LANG unset: docs/café.md becomes './docs/caf\\xc3[\\xa9]', matches nothing, never linted. Pre-existing; the change touches the loop."},
+  {"file": "plugins/stackgen/stacks/language/swift/skills/swift/references/build-and-run.md", "line": 37,
+   "summary": "'When git ls-files fails, both tasks stop with an error rather than judge an empty list' overstates: hook mode never calls ls-files in code:format; shellcheck/actionlint already ran on lists from '2>/dev/null || true' listings.",
+   "failure_scenario": "On a failing git, shellcheck/shfmt quietly check nothing and lint fails only afterwards; a reader assumes shell scripts were covered."},
+  {"file": "plugins/stackgen/stacks/language/swift/conventions.md", "line": 33,
+   "summary": "code:lint row says shellcheck/actionlint check 'every file when none is passed' but the listings are plain 'git ls-files' (tracked only). code:format row's '(or the staged ones the hook passes)' after the exclusion list reads as another exclusion.",
+   "failure_scenario": "An untracked scripts/deploy.sh is never shellchecked by a bare code:lint, contradicting 'every file'."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/format", "line": 70,
+   "summary": "Comments say git's list 'is sorted' (format:70, lint:119); 'ls-files --cached --others' prints the --others block then the --cached block, each sorted. The adjacent skip is right only because the sets never overlap.",
+   "failure_scenario": "A maintainer (or 2c) trusts 'sorted' and adds an overlapping listing; duplicates slip past."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/lint", "line": 124,
+   "summary": "The ~15-line mktemp/trap/status/print_error/skip block is duplicated in format and lint; the any-depth exclusion list exists in four places.",
+   "failure_scenario": "A later fix must be made identically in several places; missing one breaks 'both Swift gates judge the same files'."},
+  {"file": "plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise/tasks/_scripts/helpers", "line": 131,
+   "summary": "Root cause fixed only in the Swift tasks; shell_files_in_scope in the shared helpers keeps the silent-empty behaviour plus '|| true'.",
+   "failure_scenario": "On git failure shfmt/shellcheck quietly check nothing in every pack."},
+  {"file": "plugins/stackgen/stacks/language/swift/config/.config/mise/tasks/code/lint", "line": 166,
+   "summary": "code:lint reads the temp file twice with two identical duplicate-skip loops; one loop could fill both arrays.",
+   "failure_scenario": "Two places to drift; house linter and SwiftLint could see different paths."}
+]

@@ -93,6 +93,20 @@ Before rebuilding context off the blueprint, run the preflight in
 do); if the repo's blueprint format is behind what vwf ships, nudge `/vwf:setup`
 (proceed unless a needed artifact is missing).
 
+### Shape check
+
+Beside the format check, and before the palace rooms are read in step 3, invoke
+`/vwf:doctor baseline` — the local baseline predicates (a)–(f) of the
+repo-shape check, evaluated per repo, file reads only; it never reads the forge
+and never runs doctor whole. When it reports drift, print **one line**: the
+drifted repos with their failing letters, and `/vwf:setup reshape` as the
+remedy — e.g. *shape drift: base (a) (e), api (c) — run `/vwf:setup reshape`*.
+When every repo is clean, or the base has no materializer lockfile (never
+shaped, `not shaped` in doctor's result), print **nothing**. This is an offer:
+recall never invokes `reshape` itself — the user runs it — and the line never
+stops the recall; it runs early so a change made outside vwf is seen before the
+session builds on it.
+
 ### 3. Rebuild context
 
 Read the handoff, then **read the files and docs it points to** (relevant files,

@@ -82,11 +82,15 @@ path** and its **`covers:` doc names** for your gap drawers.
 
 There is **one path**, not a web path and a native one. A slice on any screen
 platform — browser (`site`, `webapp`) or device (`desktop`, `mobile`, `tablet`,
-`auto`) — gets a real visual gate and a real accessibility gate, and
+`auto`, `watch`, `tv`, `spatial`) — gets a real visual gate and a real
+accessibility gate, and
 every one gets them the same way: from the repo's own `ux-gate` skill, which
 the pack owning that project's stack materialized. Whether that pack drives a
 browser, runs a snapshot suite or boots a simulator is its decision and none of
-your business.
+your business. A device screen is judged at its **resolved viewport** —
+`design.viewports.<project>.<platform>` in `.config/vwf.yaml` when set, else
+the platform's default in
+`${CLAUDE_PLUGIN_ROOT}/assets/templates/canvas-claude.md`.
 
 Two rules survive that delegation, and they are vwf's:
 

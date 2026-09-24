@@ -1,8 +1,8 @@
 <!-- Template for /vwf:screens prompt — written to
      docs/prompts/screens/<project>/<NNN>-<flow>/<platform>.md.
      ONE brief per flow per platform (mobile.md, tablet.md, desktop.md,
-     auto.md, site.md, webapp.md — mirroring the flow folder's platform
-     files), each
+     auto.md, watch.md, tv.md, spatial.md, site.md, webapp.md — mirroring the
+     flow folder's platform files), each
      commissioning exactly ONE interactive
      page. A compact wireframe-level design brief for a claude.ai/design
      canvas session, NOT a blueprint doc: no OKF frontmatter. The user pastes
@@ -14,7 +14,10 @@
      naming contract (pages, frame codes, the index--<platform> stitch),
      revise-in-place, the interactive-journey mandate, the standing tweak set
      (darkMode on, device frame on with the mobile/tablet camera cutout, a
-     tweak per pinned sad and conditional state), stub treatment — live in
+     tweak per pinned sad and conditional state), the device frame at the
+     platform's RESOLVED viewport (design.viewports.<project>.<platform> in
+     .config/vwf.yaml when set, else the platform's default), stub
+     treatment — live in
      the canvas project's own CLAUDE.md (its repo-side source is the sibling
      CLAUDE--<platform>.md, from the adapter's conventions template) and are never
      restated here; the brief carries only the per-flow payload. The page name
