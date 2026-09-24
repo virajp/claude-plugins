@@ -86,6 +86,13 @@ require_pin_source() {
       print_yellow "Write it as ${name} = \"<value>\" in that file's one [env] table, then re-run."
       exit 1
     fi
+    # mise renders every [env] value as a template, so a pin holding a
+    # template delimiter runs on every load; the raw value shows it.
+    if [[ "${pinned}" == *'{{'* || "${pinned}" == *'{%'* || "${pinned}" == *'{#'* ]]; then
+      print_error "${task}: ${name} in .config/mise/conf.d/swiftui.toml holds a template delimiter ({{, {% or {#), which mise would run on every load."
+      print_yellow "Replace it with the literal value — an Xcode version, a simulator name or an OS version — then re-run."
+      exit 1
+    fi
     if [ "${!name:-}" != "${pinned}" ]; then
       print_error "${task}: ${name} is \"${!name:-}\", but .config/mise/conf.d/swiftui.toml pins \"${pinned}\" — another source overrides it."
       print_yellow "Move the value the team intends into .config/mise/conf.d/swiftui.toml, then delete the ${name} line from .config/mise.toml's [env] (or wherever mise env shows it set), then re-run."
