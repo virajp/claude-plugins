@@ -334,6 +334,10 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | 2    | R7           | opus  | 2     | security pass        | no findings; round-1 [low] fix 95b1011f verified. VERDICT approve                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | —        |
 | 2    | R7           | opus  | 2     | review findings(7)   | changes-required; 7 < 9, converging. Covered (U4): xcode:53 require_pin_source skips trailing-comment/escaped lines (check turns itself off), false refusal on backslash (medium); ux-gate SKILL:57 no override check, audit can run on a stale simulator (medium); xcode:57 fix text should say move the value, not delete (low). 4 findings on uncovered units dropped (U3 materialize.md:193, :211, :186; U5 swiftpm pack.yaml:10 lockfile axis) — to the wave 2 contract review as F2/F3 rulings questions                                                                                                                                                                                                                   | —        |
 | 2    | U4           | opus  | 4     | green                | R7 round-2 fix: require_pin_source reads pins via mise config get --file conf.d/swiftui.toml (missing fragment/key refuses, never skips); ux-gate step 2 runs the same helper, non-zero = rendered n/a; refusal + conventions say move the team value then delete the old line; parser cases tested                                                                                                                                                                                                                                                                                                                                                                                                                              | e6af858e |
+| 2    | R7           | —     | 3     | engines              | range b14ada40..2091563e; /code-review high 10 (engine/R7-3-code-review.log) — e6af858e parsing confirmed working; new: setup-side migration, [[env]]/{value=} forms, choosing-your-stack.md:58 (to U8), 4 mise processes, no test; 5 repeats; /security-review none (engine/R7-3-security.log)                                                                                                                                                                                                                                                                                                                                                                                                                                  | —        |
+| 2    | R7           | opus  | 3     | security pass        | no findings. VERDICT approve                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | —        |
+| 2    | R7           | opus  | 3     | review findings(3)   | VERDICT approve; 3 < 7, converging. U4 low: xcode:61 [[env]] / {value=} forms falsely refused; golden:68 four mise config get processes; xcode:51 no automated test for require_pin_source (needs a repo test task outside U4 Owns)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | —        |
+| 2    | U4           | opus  | 5     | green                | R7 round-3 fix: one mise config get --file <fragment> env call; only a plain string under [env] counts, [[env]]/{value=}/missing/multi-line refused naming the pin; parser cases re-tested. xcode:51 test finding skipped (outside Owns). GAP: a pin holding both quote kinds is refused                                                                                                                                                                                                                                                                                                                                                                                                                                         | b410a71f |
 
 ## Gaps surfaced during execution
 
@@ -356,6 +360,24 @@ the unit could not proceed without; it blocks the unit and its dependents.
 - **G4 (R7 spec gaps, non-blocking, plan holes).** F2 leaves a dependency-free
   repo (no `Package.resolved` anywhere) failing doctor's lockfile check; F10
   lets a pack declare `machine_env` and ship no `conf.d` fragment to hold it.
+- **G5 (R7, findings on units no review row covers — U3, U5).** The review row
+  covers U2 and U4 only (F11), so these were dropped from its loop and handed to
+  the wave 2 contract review as F2/F3 rulings questions. Each is a real defect
+  against the Goal until that review or reconciliation settles it: (a)
+  `setup/references/materialize.md:193` and
+  `doctor/references/stack-checks.md:111` wrap the command as
+  `sh -c '<detect>'`, which a literal reading breaks on every shipped detect
+  (each holds single quotes); (b) setup re-records the filled fragment's hash,
+  so `/stackgen:stackgen-sync` later reads it as *pack moved* and copies the
+  empty payload over the pins; (c) a macOS pin's empty
+  `SIMULATOR_DEVICE`/`SIMULATOR_OS` read as unfilled, so an iPhone is
+  preselected on every setup run; (d) `lockfile:` sits on swiftpm, a
+  project-axis pack, while doctor reads it under the repo-axis `repo.stack`
+  check, so a SwiftUI app's in-project lockfile never reaches it (G7's second
+  half); (e) setup preselects the detected value rather than the value
+  `mise
+  env` resolves, so a 0.1.0 repo's committed pin is not carried into the
+  fragment.
 
 ## Launch
 
