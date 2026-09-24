@@ -1,0 +1,19 @@
+/code-review high engine, loop R12 round 2, range ba994ef0..1dcfb57a (engine diff: branch vs develop, focused on b15843fa and 1dcfb57a). Verbatim findings:
+
+1. plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/test/golden:115 — --record is still accepted together with the --platform/--device/--os overrides; that run writes another simulator's renders over the pinned platform's goldens. Failure: test:golden --record --platform macOS (or an iPad device) records into the same __Snapshots__/<test>.png files; the compare pass succeeds on the wrong simulator and the next pinned run fails every assertion. The comment at 40-42 warns but nothing refuses. Refuse --record whenever an override differs from the pin, or drop the overrides.
+
+2. plugins/stackgen/stacks/app-framework/swiftui/skills/ux-gate/SKILL.md:86 — the accessibility audit is now limited to the pinned destination, dropping a11y coverage for macOS and every other changed platform, and it is undefined when the pinned platform did not change. Failure: pin iOS, slice changes only Mac screens; step 3 runs nothing, performAccessibilityAudit() never runs, no rule says report a11y n/a. An audit compares against no goldens, so the golden-pin reasoning does not justify cutting it.
+
+3. plugins/stackgen/stacks/app-framework/swiftui/skills/ux-gate/SKILL.md:65 — macOS reported n/a with "its simulator is not pinned"; macOS has no simulator and the pin holds one platform, so an iPhone+Mac app gets a finding it can never act on and Mac screens are never visually checked. No supported path to per-platform goldens (platform-named snapshots or a second target). testing.md:100-103 repeats it.
+
+4. plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode:27 — unset XCODE_VERSION is now a hard refusal but no pack payload seeds the pin (no [env] fragment, no placeholder), so every freshly shaped SwiftUI repo fails its first install/upgrade/outdated/golden run and init's bootstrap. Root-cause fix: the pack lands XCODE_VERSION and SIMULATOR_* as a placeholder init's placeholder pass fills.
+
+5. plugins/stackgen/stacks/app-framework/swiftui/skills/ux-gate/SKILL.md:61 — step 3 groups by destination platform; mobile, tablet and auto all map to iOS Simulator, so tablet and CarPlay screens run on the pinned iPhone and can be reported ok under their own viewport line, contradicting step 1's "a golden rendered at another size is not evidence for this one".
+
+6. plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/test/golden:68 — the lone --platform guard refuses --platform even when it names the pinned platform, and silently ignores --device/--os when the platform resolves to macOS.
+
+7. plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/testing.md:94 — presents the overrides as "for a look at another simulator", then says a golden is only compared on the simulator it was recorded on; an override run compares against the committed goldens and cannot pass. conventions.md:99 has the same gap.
+
+8. plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/setup/deps/upgrade:29 — the set-aside-and-restore of Package.resolved and the resolved= path are copied between upgrade and outdated; belong in a shared helper in _scripts/xcode.
+
+9. plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/build-and-signing.md:34 — the inserted sentence leaves a ragged 21-character line ("nothing. Xcode is not") in a ~78-column paragraph; plugins/**/*.md is not formatted.

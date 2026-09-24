@@ -1,0 +1,5 @@
+/security-review engine, loop R12 round 3, range ba994ef0..d65320b5 (sub-task scoped to 1dcfb57a..HEAD)
+
+No findings.
+
+The only executable change is the --record guard in swiftui test/golden (lines 97-104): quoted string comparisons of platform/device/os against the SIMULATOR_* pin, then an error and exit; no eval, no new command, rm or path; values from trusted mise usage flags and env. It refuses more, so it lowers risk. The existing sinks around it (rm -rf of the fixed .build/golden.xcresult and ${PWD}/.build/snapshot-artifacts, quoted xcodebuild arguments) did not change. The other four files are markdown.

@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+#MISE description="Resolve the app's package dependencies"
+#MISE hide=true
+
+#USAGE flag "--frozen" help="fail rather than write the lockfile"
+
+set -euo pipefail
+# helpers ships in the toolchain-manager pack, not this one, so there is no
+# path here for -x to follow.
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/xcode"
+
+# Fills the `setup:deps:install` slot.
+#
+# The app's packages are declared in its committed Xcode project, added through
+# Xcode's package UI, and pinned in the `Package.resolved` Xcode keeps inside
+# it. `xcodebuild -resolvePackageDependencies` fetches exactly what the project
+# declares. The checkouts go to `.build/SourcePackages` rather than Xcode's
+# per-user DerivedData, so every task finds them at one path and
+# `setup:deps:cleanup` removes them with the rest of `.build/`.
+#
+# Xcode is not installed by mise, so it is checked first: selected at all, and
+# the version the repo pins as XCODE_VERSION.
+#
+# `-onlyUsePackageVersionsFromResolvedFile` is the frozen mode: it resolves
+# exactly what `Package.resolved` records and fails when the project needs
+# something else, rather than rewriting the lockfile.
+#
+# No header: the aggregator `setup:deps:all` already frames each verb with its
+# own subheader, so one here would invert the hierarchy.
+
+require_xcode "setup:deps:install"
+project=$(find_xcodeproj "setup:deps:install")
+
+resolve_args=()
+if [[ "${usage_frozen:-false}" == "true" ]]; then
+  resolve_args+=(-onlyUsePackageVersionsFromResolvedFile)
+fi
+
+print_subheader "Resolving packages ..."
+xcodebuild -resolvePackageDependencies \
+  -project "${project}" \
+  -clonedSourcePackagesDirPath .build/SourcePackages \
+  ${resolve_args[@]+"${resolve_args[@]}"}

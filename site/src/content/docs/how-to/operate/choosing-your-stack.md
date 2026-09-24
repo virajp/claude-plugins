@@ -51,10 +51,16 @@ being the same mobile binary reaching CarPlay and Android Auto through the
 pack's Swift and Kotlin edge, so it is declared alongside `mobile` and never
 alone. It does **not** serve `webapp`: the web output is a canvas-rendered
 application rather than a document, so a product with a web surface pins a web
-stack for it, as a `site` or `webapp` project of its own beside the app. A Swift
-library on the `packages` platform pins `swift-package` — SwiftPM, swift-format
-and SwiftLint over the host's Swift toolchain, which must be on `PATH`; it
-carries no app target. Anything else takes the **generate** entry — see below.
+stack for it, as a `site` or `webapp` project of its own beside the app. A
+native Apple app pins `swift-swiftui` instead — `app-framework/swiftui`, serving
+`mobile`, `tablet`, `desktop` and `auto` like Flutter plus `watch`, `tv` and
+`spatial`, from a committed Xcode project a person creates in Xcode, with the
+Xcode version pinned as `XCODE_VERSION` in the repo's mise `[env]`. Pick it when
+the app ships on Apple platforms alone or reaches one Flutter does not; pick
+Flutter when it must also ship on Android. A Swift library on the `packages`
+platform pins `swift-package` — SwiftPM, swift-format and SwiftLint over the
+host's Swift toolchain, which must be on `PATH`; it carries no app target.
+Anything else takes the **generate** entry — see below.
 
 **A `site` project picks between five entries** — four Astro bundles and `html`.
 The Astro four sit on the one `framework/astro` pack, all carrying React for

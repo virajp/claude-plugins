@@ -68,15 +68,26 @@ no git, and skip SwiftLint when no Swift source is in scope. No pack lands
 `Package.swift`: `swift package init` creates it.
 
 **Wave C — `app-framework/flutter`**, kind `app-framework`, with
-`package-manager/pub` and `toolchain-gate/analysis-options`. The one bundle
-whose root is not a language: Flutter owns the manifest and the build, so Dart
-is a `primary` member and Kotlin and Swift are `platform-edge` members with
-their own boundary-scoped skills.
+`package-manager/pub` and `toolchain-gate/analysis-options`. The first
+bundle whose root is not a language: Flutter owns the manifest and the build,
+so Dart is a `primary` member and Kotlin and Swift are `platform-edge` members
+with their own boundary-scoped skills.
 
 Its integration references are **wiring only** — 45 files kept from 160, the
 other 115 being API surface that Context7 serves current at use time. What was
 kept is setup order, platform configuration (manifest entries, entitlements,
 permissions) and anti-patterns: the half a per-package lookup gives piecemeal.
+
+**`app-framework/swiftui` made the second on 2026-09-23**, the first pack in
+the `native-ui` category, rooting the `swift-swiftui` bundle beside
+`package-manager/swiftpm`, `toolchain-gate/swift-format` and
+`toolchain-gate/swiftlint` across every Apple platform token. Xcode owns the
+build from a committed Xcode project a person creates once — no pack lands
+it and no generator writes it — so the pack declares
+`binaries: [xcodebuild, swift]`, its tasks check `xcodebuild -version`
+against the repo's `XCODE_VERSION`, and its `ux-gate` runs the
+swift-snapshot-testing goldens on the simulator the repo pins. It ships no
+integration references yet.
 
 **The UX gate is materialized, not delegated.** The two retired curated
 `-ux-gate` skills moved into their packs as an unprefixed `ux-gate`, landed
@@ -238,8 +249,9 @@ menu pick and the config key are one value rather than two that can disagree.
 curated option survives the merge — the eight TypeScript ones, the Flutter
 app, the provider-neutral container deploy and the Claude Code plugin
 template, the four Wave D added on what were then the two tool axes, the three
-the stylesheet axis added to them, the `secrets-manager` pair above, and the
-five Wave E added for the two clouds. Each names its components as refs,
+the stylesheet axis added to them, the `secrets-manager` pair above, the
+five Wave E added for the two clouds, and the two Swift ones of 2026-09-23,
+`swift-package` and the `swift-swiftui` app. Each names its components as refs,
 mixing shipped packs (copied verbatim) with `@generated` ones (researched on
 first fetch) — which is the dispatch rule working at bundle scale rather than
 a gap.
