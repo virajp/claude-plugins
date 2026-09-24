@@ -1,0 +1,9 @@
+/security-review — R7 round 4 — range b14ada40..9f776e7a
+
+No high-confidence vulnerabilities found in b14ada40..HEAD.
+
+Dropped candidates:
+- _scripts/xcode:70 grep with ^${name} = built from the pin name: names are hardcoded constants passed by the pack's own tasks; no untrusted path. Score 1.
+- _scripts/xcode:73-90 parsing of mise config get output: the parsed value is only compared with [ != ] and printed; never eval'd, executed or used as a path; the fragment is repo-committed config. Score 2.
+- swiftui.toml pins feeding xcodebuild -destination in test/golden: repo-committed config or CLI flags, trusted; passed as a quoted argument. Score 1.
+- scripts/src/check.ts new checker rules: repo tooling over maintainer-authored pack files; no untrusted input. Score 1.
