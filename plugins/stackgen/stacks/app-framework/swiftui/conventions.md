@@ -49,13 +49,16 @@ build afterwards to prove the file still loads.
 cannot install Xcode. The repo sets `XCODE_VERSION` (`27.0`, say — the version
 `xcodebuild -version` prints) in its mise `[env]`, and every task that builds
 or resolves checks the selected Xcode against it first and stops with the fix
-when they differ. The same check refuses a Mac with only the Command Line
-Tools, where `xcodebuild -version` fails.
+when they differ — or when `XCODE_VERSION` is unset, since an unpinned build
+checks nothing. The same check refuses a Mac with only the Command Line Tools,
+where `xcodebuild -version` fails.
 
 **The golden simulator is pinned there too.** `SIMULATOR_PLATFORM`
 (`iOS Simulator`, say), `SIMULATOR_DEVICE` (`iPhone 17`) and `SIMULATOR_OS`
 (`27.0`) in the same `[env]` name the one simulator every golden is recorded
-and compared on; `macOS` needs no device or OS.
+and compared on. A Mac-only app pins `macOS`, which needs no device or OS. The
+goldens are that one platform's: `ux-gate` renders only the pinned platform
+and reports every other changed platform `n/a`, `macOS` included.
 
 **One project, several surfaces.** An app declares whichever of iPhone, iPad,
 Mac, CarPlay, Watch, TV and Vision it ships as destinations of its targets —
@@ -92,8 +95,8 @@ under `.build/`.
 | `setup:deps:audit` | a stated no-op — SwiftPM ships no advisory command |
 | `setup:deps:cleanup` | removes `.build/` — the checkouts and the build products; `Package.resolved` stays |
 | `setup:deps:outdated` | resolves afresh with the committed `Package.resolved` set aside, lists each pin that would move as `<package> <pinned> -> <newest>`, and puts the lockfile back |
-| `setup:deps:upgrade` | removes `Package.resolved` and resolves again, so every package moves to the newest version its range allows |
-| `test:golden` | `xcodebuild test` on the project, limited to the snapshot target — `SnapshotTests`, or `--target` — in the project's scheme, or `--scheme`; the `-destination` is built from `SIMULATOR_PLATFORM`, `SIMULATOR_DEVICE` and `SIMULATOR_OS`, which `--platform`, `--device` and `--os` override for one run, and a run with no pin is refused; compares against the recorded goldens, `--record` records afresh and then compares; the result bundle is `.build/golden.xcresult` |
+| `setup:deps:upgrade` | removes `Package.resolved` and resolves again, so every package moves to the newest version its range allows; a failed resolve puts the old lockfile back |
+| `test:golden` | `xcodebuild test` on the project, limited to the snapshot target — `SnapshotTests`, or `--target` — in the project's scheme, or `--scheme`; the `-destination` is built from `SIMULATOR_PLATFORM`, `SIMULATOR_DEVICE` and `SIMULATOR_OS`, which `--platform`, `--device` and `--os` override for one run (`--platform` never alone), and a run with no pin is refused; `Package.resolved` is never moved; compares against the recorded goldens, `--record` records afresh and then compares; the result bundle is `.build/golden.xcresult` |
 
 **The goldens are swift-snapshot-testing image snapshots** of SwiftUI views,
 in the `SnapshotTests` target, recorded into the repo beside the tests that

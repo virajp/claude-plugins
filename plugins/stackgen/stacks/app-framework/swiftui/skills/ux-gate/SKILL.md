@@ -56,25 +56,25 @@ interactively.
    simulator. Read them with `mise env`. The task refuses to run without a
    pin; when the pin is unset, report `rendered: n/a` with that reason rather
    than choosing a simulator yourself.
-3. **Visual — once per changed destination platform.** Group the changed
-   screens by the destination platform step 1 gave them, and run the repo's
-   golden task once for each group (read the task list rather than assuming;
-   a repo may name its snapshot target with `--target`):
-   - the pinned platform: `mise run test:golden`, on the pin;
-   - `macOS`, when it is not the pinned platform:
-     `mise run test:golden --platform macOS`, which needs no device;
-   - any other simulator platform: the pin names one simulator, so there is no
-     recorded simulator to render on. Report that platform `n/a` in its
-     `viewport` line, with a finding that its simulator is not pinned — never
-     run it on a simulator you picked, and never report it `ok`.
+3. **Visual — per changed destination platform.** Group the changed screens
+   by the destination platform step 1 gave them:
+   - the pinned platform — the one `SIMULATOR_PLATFORM` names — runs the
+     repo's golden task once, `mise run test:golden`, on the pin (read the
+     task list rather than assuming; a repo may name its snapshot target with
+     `--target`);
+   - every other platform, `macOS` included, is not run. The goldens were
+     recorded on the pin, so a render on any other destination is compared
+     with goldens from another platform, or finds no destination the snapshot
+     target supports. Report that platform `n/a` in its `viewport` line, with
+     a finding that its simulator is not pinned — never run it on a
+     destination you picked, and never report it `ok`.
 
    An unchanged platform is not run and is not reported. Never pass
    `--record`: recording overwrites the goldens the comparison is meant to
    judge. On a failed comparison, point the reviewer at the three: the
    reference, the committed file under the test's `__Snapshots__` directory;
    the new render, under `.build/snapshot-artifacts/`; and the diff, an
-   attachment in the result bundle at `.build/golden.xcresult`. Each run
-   replaces both, so read them before the next group runs.
+   attachment in the result bundle at `.build/golden.xcresult`.
 
    **A changed screen with no golden at all is not a pass.** The task compares
    with recording off, so a missing golden fails it; report that as a finding,
@@ -82,8 +82,8 @@ interactively.
 4. **Accessibility** — run the accessibility audit Xcode offers:
    `XCUIApplication.performAccessibilityAudit()`, in the project's UI test
    target, over each changed screen an audit test reaches — run with
-   `xcodebuild test -project <Name>.xcodeproj -scheme <scheme> -destination <the destination step 3 used> -only-testing:<that target> -resultBundlePath .build/a11y.xcresult -collect-test-diagnostics never`,
-   once per destination platform step 3 ran, removing
+   `xcodebuild test -project <Name>.xcodeproj -scheme <scheme> -destination <the destination step 3 used> -only-testing:<that target> -derivedDataPath .build/DerivedData -clonedSourcePackagesDirPath .build/SourcePackages -onlyUsePackageVersionsFromResolvedFile -resultBundlePath .build/a11y.xcresult -collect-test-diagnostics never`,
+   on the pinned destination only, as in step 3, removing
    `.build/a11y.xcresult` first, since xcodebuild will not overwrite one. Each
    audit issue — contrast, element description, hit region, Dynamic Type
    clipping, trait — is the equivalent of a WCAG A/AA violation; report it at
