@@ -74,16 +74,15 @@ other changed platform, `auto` always among them, `n/a` with a finding.
 `[env]` win over a `conf.d` fragment, so a pin set there would silently
 override the one `/vwf:setup` fills. A repo shaped by this pack's 0.1.0 —
 whose refusals said to add the pins to the mise config's `[env]` — carries
-exactly those lines: on upgrading, move the value the team intends into
-`conf.d/swiftui.toml` — the old line holds the team's committed pin, the
-fragment what `/vwf:setup` detected on one machine — then delete the old line.
-The tasks and `ux-gate` refuse the stale state rather than trust it: each
-reads the fragment through `mise config get`, compares every pin it uses with
-the value there, and stops, naming both, when another source overrides it —
-or when the fragment is missing, has no `[env]` table mise can read, lacks
-the pin, holds it as anything but a plain string in its one `[env]` table, or
-holds a value with a template delimiter (`{{`, `{%`, `{#`) or a `$`, which
-mise would run or expand on every load.
+exactly those lines, and `/vwf:setup` **moves them**: when it asks for a pin
+it finds set in `.config/mise.toml`, it preselects that value (the team's
+committed pin), writes the answer into the fragment and removes the old line,
+in one commit. The tasks and `ux-gate` refuse the state setup has not moved
+yet: each stops when `.config/mise.toml`'s `[env]` sets a pin it reads,
+naming the line. It checks presence only, and only that file — a pin set in
+the environment or in a gitignored `mise.local.toml` is a machine's
+deliberate override (a CI job choosing another simulator, say) and is left
+alone. An unset or empty pin is refused as unpinned.
 
 **One project, several surfaces.** An app declares whichever of iPhone, iPad,
 Mac, CarPlay, Watch, TV and Vision it ships as destinations of its targets —

@@ -184,6 +184,19 @@ landing list skipped as already materialized, fetch its payload — a pure
 read — and run the step the same way. A payload with no `machine_env` is
 nothing to do.
 
+**A value set elsewhere moves in.** Before asking, look for each `name` set
+as a committed value in another file of the same tool's config — a line an
+earlier version of the pack, or a person, put there before the pack had a
+file of its own (for mise, an `[env]` key in `.config/mise.toml`, which mise
+lets win over a `conf.d` fragment). That value is the team's pin, so step 2
+preselects it — above the detected value and above the position's current
+value — and says where it was found; whatever the answer, it is written into
+the pack's file and the line in the other file is **removed**, so the value
+has one source. The question is the consent for both edits, and the
+question says so. A value set only in the environment or in a gitignored
+local config is a machine's deliberate override, not a committed pin, and is
+left alone.
+
 **Per entry, in the order the pack declares them** — one question each, per
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`'s one decision per round:
 
@@ -199,8 +212,9 @@ nothing to do.
    the value its adapter lockfile records. On a mismatch it is not run — the
    entry changed after it was recorded — and there is no detected value; the
    drift is named beside the question.
-2. Ask `question`. **Which value is preselected depends only on whether the
-   pack landed in this run.** On the landing run, the detected value is
+2. Ask `question`. A value set elsewhere, found above, is preselected first.
+   Otherwise **which value is preselected depends only on whether the pack
+   landed in this run.** On the landing run, the detected value is
    preselected. A pack whose every `machine_env` position still holds the
    value it shipped with counts as landing in this run too — an earlier
    landing was interrupted before its questions were answered, so nothing has
@@ -228,10 +242,12 @@ nothing to do.
 Then, once per pack whose file changed, **re-record that file's hash** in the
 target repo's adapter lockfile — the same re-record `/vwf:init` makes of every
 file it fills, and the one lockfile write this pass makes — so the filled
-file does not read as drift on the next `/vwf:doctor`. Commit the file and
-the lockfile together in the target repo, one commit per pack, its message
-naming the slug and the variables filled: the answers were the consent, as
-the adapter's consent line was for the landing.
+file does not read as drift on the next `/vwf:doctor`; a file a moved line
+was removed from is re-recorded the same way where the lockfile records it.
+Commit the files and the lockfile together in the target repo, one commit
+per pack, its message naming the slug, the variables filled and any line
+moved: the answers were the consent, as the adapter's consent line was for
+the landing.
 
 The file is committed, so once answered the value is the **repo's**, not the
 machine's: a later run on any machine offers the committed value
@@ -311,7 +327,8 @@ One block, carried back to the spine:
   value replaced, the value written, and `/vwf:setup reshape` as what lands
   the files the stale record skipped;
 - one line per machine-env variable asked — the repo, the slug, the name, the
-  value written or kept, `no default` where its `detect` produced none, and
+  value written or kept, `moved from <file>` where a value set elsewhere was
+  moved in, `no default` where its `detect` produced none, and
   `detect not run — template entry drifted from its lockfile record` where
   the drift gate withheld it;
 - one line per member skipped as absent, with its checkout line;

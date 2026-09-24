@@ -437,6 +437,16 @@ the unit could not proceed without; it blocks the unit and its dependents.
   `plugins/vwf/assets/stack-adapter.md:287` still comments `package_manager` as
   repo-axis though the lines under it now say any axis.
 
+**Reconciled 2026-09-25 (the user's rulings).** G1 accepted as is. G2 accepted —
+older than this plan, left for its own change. G3 closed and G6 fixed together:
+the per-task pin check is now a presence check on `.config/mise.toml`'s `[env]`
+alone, and `/vwf:setup`'s machine-env step moves a pin set there into the
+fragment, preselected, removing the old line — so a CI or `mise.local.toml`
+override passes, and G5 (e) closes with it. G4 (a) will not happen (a repo
+always has dependencies), so (b) is moot. G7 fixed. Still open: G5 (b) —
+`/stackgen:stackgen-sync` reads the setup-filled fragment as *pack moved* and
+would copy the empty payload over the pins.
+
 ## Launch
 
 This folder is already committed and pushed on the branch it was planned on, so

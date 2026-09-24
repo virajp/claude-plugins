@@ -1837,8 +1837,12 @@ a quoted string — a value carrying a newline or other control character, a
 template delimiter or expansion character of the tool reading the file (for mise
 `{{`, `{%`, `{#` or `$`), or a `'` together with a `"` or a `\` is refused and
 asked again — the file's lockfile hash is re-recorded, and the file and lockfile
-are committed together in the target repo. The value is the repo's committed pin
-from then on, not a per-machine override. `/vwf:init` never asks these.
+are committed together in the target repo. A value the repo already sets in
+another committed file of the same tool's config (for mise,
+`.config/mise.toml`'s `[env]`, which wins over the fragment) is preselected
+above the rest and moved in: the answer lands in the pack's file and the old
+line is removed in the same commit. The value is the repo's committed pin from
+then on, not a per-machine override. `/vwf:init` never asks these.
 
 Every landing sits behind the plugin's own consent line; a landing you decline
 leaves the pin untouched and is reported, an `unresolved` axis is skipped

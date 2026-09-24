@@ -304,15 +304,13 @@ the moment it runs. The repo pins its Xcode as `XCODE_VERSION` in
 empty and `/vwf:setup` fills as it lands the pack — each value detected on the
 machine, offered as the default, and written as the repo's committed pin — and
 every task that builds checks `xcodebuild -version` against it and fails fast.
-The fragment is the one source of the pins: the tasks and `ux-gate` read it
-through `mise config get` and stop, naming both values, when another source
-overrides a pin — `mise.toml`'s `[env]` wins over a `conf.d` fragment — or when
-the fragment is missing or has no `[env]` table mise can read, lacks the pin,
-holds it as anything but a plain string in its one `[env]` table, or holds a
-value with a template delimiter (`{{`, `{%`, `{#`) or a `$`. A repo shaped by
-the pack's 0.1.0 has its pins in `.config/mise.toml`'s `[env]`: on upgrading,
-move the value the team intends into `conf.d/swiftui.toml`, then delete the old
-line. The app's dependencies are added through Xcode and locked in the
+The fragment is the one source of the pins, and `mise.toml`'s `[env]` wins over
+a `conf.d` fragment, so the tasks and `ux-gate` stop when `.config/mise.toml`'s
+`[env]` still sets a pin, naming the line. A repo shaped by the pack's 0.1.0 has
+its pins there: `/vwf:setup` moves each into the fragment — preselecting the
+team's value — and removes the old line. A pin set in the environment or in a
+gitignored `mise.local.toml` is a machine's deliberate override and is left
+alone. The app's dependencies are added through Xcode and locked in the
 `Package.resolved` the project keeps — a path the swiftpm pack's `lockfile` fact
 names, so doctor finds it — and the swiftpm component governs only a local
 package the app splits out. Goldens run through swift-snapshot-testing in a
