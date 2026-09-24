@@ -2,7 +2,10 @@
 type: vwf-change-plan
 title: SwiftUI platform doctrine — per-platform references and Apple core
   integrations
-requires: [ docs/plans/2026-09-23-swiftui-app-stack ]
+requires: [
+  docs/plans/2026-09-23-swiftui-app-stack,
+  docs/plans/2026-09-24-swiftui-gap-closure,
+]
 backlog: [ B56 ]
 ---
 
