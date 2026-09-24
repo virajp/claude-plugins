@@ -283,6 +283,27 @@ Of the `setup:deps:*` tasks, `install`, `outdated` and `upgrade` run
 `swift package`; `cleanup` removes `.build/`, and `audit` is a stated no-op,
 since SwiftPM ships no advisory command.
 
+**SwiftUI** followed the same day as the second `app-framework` pack, and the
+first in the `native-ui` category. `app-framework/swiftui` is the root of the
+`swift-swiftui` bundle, which pins it with `package-manager/swiftpm`,
+`toolchain-gate/swift-format` and `toolchain-gate/swiftlint` and serves
+`mobile`, `tablet`, `desktop`, `auto`, `watch`, `tv` and `spatial` from one
+project — `auto` being CarPlay through the same iOS app, so it is declared
+beside `mobile` and never alone. The app is a **committed Xcode project**,
+created once by a person in Xcode: no pack lands the `.xcodeproj` and no
+generator writes one, so the tasks call `xcodebuild` and `swift` alone and the
+pack declares `binaries: [xcodebuild, swift]`. The repo pins its Xcode as
+`XCODE_VERSION` in its mise `[env]`, and every task that builds checks
+`xcodebuild -version` against it and fails fast. The app's dependencies are
+added through Xcode and locked in the `Package.resolved` the project keeps, so
+the swiftpm component governs only a local package the app splits out. Goldens
+run through swift-snapshot-testing in a `SnapshotTests` target under
+`test:golden`, on the simulator the repo pins as `SIMULATOR_DEVICE`,
+`SIMULATOR_OS` and `SIMULATOR_PLATFORM` in the same `[env]`, and the pack's
+`ux-gate` skill runs them once per changed platform, reporting the rest `n/a`.
+Its doctrine covers topics 1–11 of the app-framework bar; the per-platform
+references and the integrations come later.
+
 The `devtools` plugin then dissolved into stackgen and was deleted, closing the
 marketplace at two plugins. Its mise doctrine and its file-based task library
 became the `toolchain-manager/mise` pack, its four repo gates the `repo-gates`
@@ -386,7 +407,7 @@ in shape while only content varies:
 | `repo-hygiene`        | repo                   | **exactly one component, standing alone** — the files every repo carries whatever wrote it. A **4-topic bar**, no router: the ignore set, the editor and attribute defaults, licensing and the security contact, and the dependency-update policy. Not a gate, and that is the distinction the kind holds: a gate *runs, finds something and fails*; hygiene runs nothing and *declares*. It also owns the **root allowlist** every other kind's `config/` tree is measured against                  |
 | `workspace`           | repo                   | the `package-manager` component that installs and locks the repo's members, plus a `build-orchestrator` where there is one — a **5-topic bar**, no router. The only repo-axis kind you **pick**: it is what `repo.stack.template` selects from. A single-package repo pins none, which is the kind's edge rather than a gap                                                                                                                                                                          |
 | `ci-system`           | cicd                   | the **release-trigger contract** + **exactly one** `ci-system` component, a **6-topic bar** behind a router skill with one reference per system. Three layers, none duplicated: vwf's delivery-pipeline rules say what a deploy must guarantee, the contract is the recommended mechanism above any one system, the component is how that system spells it. A second CI system in one bundle is a gap, not extra coverage                                                                            |
-| `app-framework`       | project                | rooted at the SDK that owns the manifest and build, carrying its languages as members with a `role` — one `primary`, any number of `platform-edge` (archetype: the `app-framework/flutter` bundle)                                                                                                                                                                                                                                                                                                   |
+| `app-framework`       | project                | rooted at the SDK that owns the manifest and build, carrying its languages as members with a `role` — one `primary`, any number of `platform-edge` (archetypes: the `app-framework/flutter` bundle, and `swift-swiftui` rooted at `app-framework/swiftui`)                                                                                                                                                                                                                                           |
 | `deploy-target`       | deploy                 | **one component, standing alone** — the only bundle with no second half. A **6-topic bar** covering pick & trade, the artifact, hygiene, promotion, config/secrets and health. Its discipline is a scope fence: the pipeline, the cloud and the local stack each belong to a kind that already owns them                                                                                                                                                                                             |
 | `design-tool`         | design                 | one component, standing alone — a **5-topic bar** on the three imports, reach & credentials, and the naming contract. Lands three skills at **fixed names** in the repo's `.claude/`, all mandatorily model-invocable, because a user-only one is invisible to vwf rather than a smaller feature. The tool's source may be a hosted canvas or a **committed directory** the imports read as files, and a pack may ship one extra, user-invocable authoring skill beyond the three the checker counts |
 | `stylesheet`          | stylesheet             | one component, standing alone — a **7-topic bar** on tokens, authoring, theming, responsive, the single integration hook, performance and (conditionally) testing. `tokens.md` is required of every pack in the kind: the mapping from the design system's semantic roles to something a component can reference is the one topic nothing else in the tree carries                                                                                                                                   |
@@ -667,42 +688,44 @@ formatter's `dprint.json` and `taplo.toml` and the hook config's global
 `exclude` — a `(?x)` block, one anchored alternative per line — spell the same
 fourteen entries (`.build`, `.claude`, `.git`, `.turbo`, `.venv`, `Derived`,
 `build`, `dist`, `graphify-out`, `node_modules`, `target` and the three lockfile
-globs; `.build` and `Derived` are SwiftPM's and Tuist's output trees) in their
-own syntax, and the toolkit's checker holds the three equal after normalising
-the syntax away. The secret scanner's `[allowlist] paths` is held to a
-**subset** of it, never the reverse: gitleaks extends upstream's default config,
-which already skips `.git`, `node_modules` and the named lockfiles, and
-`.claude/` is authored source a scanner must scan even though no formatter
-touches it in a shaped repo, where it is machine-owned. Its seven entries are
-anchored `(^|/)` — `.turbo/` joined them — so `\.turbo/` no longer matches a
-`foo.turbo.ts`. Widen a formatter list, widen all three; widen the allowlist
-only with a generated tree. One hook narrows further: `trailing-whitespace`
-skips `.md`, because two trailing spaces are a Markdown hard break.
+globs; `.build` is SwiftPM's output tree and `Derived` a common name for a
+generated one) in their own syntax, and the toolkit's checker holds the three
+equal after normalising the syntax away. The secret scanner's
+`[allowlist] paths` is held to a **subset** of it, never the reverse: gitleaks
+extends upstream's default config, which already skips `.git`, `node_modules`
+and the named lockfiles, and `.claude/` is authored source a scanner must scan
+even though no formatter touches it in a shaped repo, where it is machine-owned.
+Its seven entries are anchored `(^|/)` — `.turbo/` joined them — so `\.turbo/`
+no longer matches a `foo.turbo.ts`. Widen a formatter list, widen all three;
+widen the allowlist only with a generated tree. One hook narrows further:
+`trailing-whitespace` skips `.md`, because two trailing spaces are a Markdown
+hard break.
 
 **`repo-hygiene`** is the newest kind on the repo axis, beside `repo-gate`,
 `toolchain-manager` and `workspace`. Its single pack ships the files every repo
 needs and no tool owns: a sectioned `.gitignore` (with a graphify section that
 ignores `graphify-out/*` while keeping `GRAPH_REPORT.md`, plus one upstream
 template section per language `/vwf:init`'s stack read finds — a table keyed by
-language, `node`, `python`, `dart`, `go`, `rust`, `swift` (whose section also
-ignores Tuist's `Derived/` on a Tuist app) — so a repo with a `package.json`
-gets its Node section on the first run — and one **provider row** beside the
-language rows, `fnox.local.toml` for fnox and `.doppler/` for doppler, appended
-under a banner named for the slug only where init's stack read carries that
-provider, so the base ignore file names no secrets manager), `.graphifyignore`,
-`.editorconfig`, `.gitattributes`, `SECURITY.md`, `CONTRIBUTING.md`, three
-`.github/ISSUE_TEMPLATE/` files, a root `renovate.json`, the chosen `LICENSE` on
-a repo `/vwf:init` was told is public, and the **editor baseline** — the
-`vscode.d/` fragment carrying the settings every repo wants regardless of stack,
-editor-wide keys alone, since a key that names a stack belongs to that stack's
-pack. Three of those are **conditional**, named in the pack's `conditional:`
-list with the one answer init already holds that lands them: the issue forms on
-`forge: github`, the Renovate policy on `update_bot: renovate`, the editor
-baseline on `editor: vscode`. A GitLab repo gets no GitHub issue forms, a
-Dependabot repo no Renovate policy, a repo edited elsewhere no VS Code fragment;
-each skipped path is listed in the plan and recorded in the lockfile, never
-reported missing. Init also **records** the four answers in the product's
-`.config/vwf.yaml`, so the later callers judge the same conditions the same way.
+language, `node`, `python`, `dart`, `go`, `rust`, `swift` (upstream's
+`Swift.gitignore` alone, which already covers SwiftPM's `.build/` and Xcode's
+`xcuserdata/`) — so a repo with a `package.json` gets its Node section on the
+first run — and one **provider row** beside the language rows, `fnox.local.toml`
+for fnox and `.doppler/` for doppler, appended under a banner named for the slug
+only where init's stack read carries that provider, so the base ignore file
+names no secrets manager), `.graphifyignore`, `.editorconfig`, `.gitattributes`,
+`SECURITY.md`, `CONTRIBUTING.md`, three `.github/ISSUE_TEMPLATE/` files, a root
+`renovate.json`, the chosen `LICENSE` on a repo `/vwf:init` was told is public,
+and the **editor baseline** — the `vscode.d/` fragment carrying the settings
+every repo wants regardless of stack, editor-wide keys alone, since a key that
+names a stack belongs to that stack's pack. Three of those are **conditional**,
+named in the pack's `conditional:` list with the one answer init already holds
+that lands them: the issue forms on `forge: github`, the Renovate policy on
+`update_bot: renovate`, the editor baseline on `editor: vscode`. A GitLab repo
+gets no GitHub issue forms, a Dependabot repo no Renovate policy, a repo edited
+elsewhere no VS Code fragment; each skipped path is listed in the plan and
+recorded in the lockfile, never reported missing. Init also **records** the four
+answers in the product's `.config/vwf.yaml`, so the later callers judge the same
+conditions the same way.
 
 The seam with `repo-gates` is worth stating, because it is the reason the kind
 exists rather than folding in: **a gate scans, while hygiene declares what is
@@ -1038,28 +1061,31 @@ pack with a `config/` tree fills in its own half on top: `package-manager/pnpm`
 and `package-manager/uv` supply `setup/deps/*`, `toolchain-gate/ruff` and
 `app-framework/flutter` supply the `code/format` and `code/lint` their toolchain
 needs, `language/swift` supplies both — `setup/deps/*` over SwiftPM and the
-`code/format` and `code/lint` that run swift-format and SwiftLint — and the
-secrets providers overlay `setup/secrets`. The pnpm pack also ships a root
-`.npmrc` setting `ignore-scripts=true` and `fund=false` — an install never runs
-a dependency's install-time code, and a package that genuinely has to build is
-allowed by name in the workspace file, so the exception is a reviewable line
-rather than a blanket switch — plus a `conf.d/` fragment aliasing `npx` to the
-manager's own runner, which keeps one store, one lockfile-aware resolver and one
-set of registry settings. Composition runs `toolchain-manager` first, then the
-`repo-gate` components, then `repo-hygiene`, then `package-manager`/`language`,
-then `app-framework`, then `capability-provider`, then `cloud-provider`, then
-`cloud-service`, so a later component's file wins and the lockfile records per
-file which component supplied it. The two ends are what the order is for: the
-manager goes **first** because it lays the baseline every overlay overlays, and
-the **deploy target goes last** because it is the most specific thing a repo
-pins — a `cloud-service` pack's root config and the `p:<id>:deploy` overlay
-beside it are the answer to how this repo actually ships, and nothing may
-overwrite that. A secrets overlay still outranks every language and framework
-pack, for the reason it always did: it is the most specific answer anything
-gives to `setup:secrets`. The two cloud types joined the order on 2026-09-05,
-when `cloud-service/workers-static-assets` became the first cloud pack to ship a
-`config/` tree at all; `cloud-service/workers-ssr` and
-`cloud-service/containers` followed with the same pair.
+`code/format` and `code/lint` that run swift-format and SwiftLint —
+`app-framework/swiftui` supplies the same set for an Xcode app, each task that
+builds checking `xcodebuild -version` against `XCODE_VERSION`, plus
+`test/golden` — and the secrets providers overlay `setup/secrets`. The pnpm pack
+also ships a root `.npmrc` setting `ignore-scripts=true` and `fund=false` — an
+install never runs a dependency's install-time code, and a package that
+genuinely has to build is allowed by name in the workspace file, so the
+exception is a reviewable line rather than a blanket switch — plus a `conf.d/`
+fragment aliasing `npx` to the manager's own runner, which keeps one store, one
+lockfile-aware resolver and one set of registry settings. Composition runs
+`toolchain-manager` first, then the `repo-gate` components, then `repo-hygiene`,
+then `package-manager`/`language`, then `app-framework`, then
+`capability-provider`, then `cloud-provider`, then `cloud-service`, so a later
+component's file wins and the lockfile records per file which component supplied
+it. The two ends are what the order is for: the manager goes **first** because
+it lays the baseline every overlay overlays, and the **deploy target goes last**
+because it is the most specific thing a repo pins — a `cloud-service` pack's
+root config and the `p:<id>:deploy` overlay beside it are the answer to how this
+repo actually ships, and nothing may overwrite that. A secrets overlay still
+outranks every language and framework pack, for the reason it always did: it is
+the most specific answer anything gives to `setup:secrets`. The two cloud types
+joined the order on 2026-09-05, when `cloud-service/workers-static-assets`
+became the first cloud pack to ship a `config/` tree at all;
+`cloud-service/workers-ssr` and `cloud-service/containers` followed with the
+same pair.
 
 **What no pack can know, and `/vwf:init` fills** — in the base repo and in every
 member repo it resolved, each from that repo's own answers. It is more than two

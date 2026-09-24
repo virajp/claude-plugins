@@ -115,14 +115,17 @@ naming the platform they share. Two are flagged today. On the project axis it is
 nothing on any other platform's round; the other four entries on that round, the
 three remaining Astro bundles and `html` (the `framework/html` pack, a
 hand-authored page tree under the `document` category, since 2026-09-15), carry
-no flag. On the design axis it is `design-tool`'s `claude-code` — the terminal
-itself as a design tool, the fourth of that kind beside `claude-design`,
-`lovable` and `stitch`, and the first with a **file canvas**: a committed
-`docs/design/<project>/` its three import skills read as files, plus a fourth,
-user-invocable `design-session` skill that writes it — the design system and the
-logo, and since pack `0.2.0` a flow's screens (`screens <flow>`, from the brief
-`/vwf:screens prompt` wrote, into `screens/<flow>--<platform>/`) and a review
-round (`review <flow>`, which serves the canvas from the repo, waits for
+no flag. Neither app-framework bundle carries one either — `dart-flutter`
+(`cross-platform-ui`) and `swift-swiftui` (the `app-framework/swiftui` pack, the
+first under `native-ui`, since 2026-09-23) — so an app platform's round
+preselects nothing. On the design axis it is `design-tool`'s `claude-code` — the
+terminal itself as a design tool, the fourth of that kind beside
+`claude-design`, `lovable` and `stitch`, and the first with a **file canvas**: a
+committed `docs/design/<project>/` its three import skills read as files, plus a
+fourth, user-invocable `design-session` skill that writes it — the design system
+and the logo, and since pack `0.2.0` a flow's screens (`screens <flow>`, from
+the brief `/vwf:screens prompt` wrote, into `screens/<flow>--<platform>/`) and a
+review round (`review <flow>`, which serves the canvas from the repo, waits for
 **Done**, then applies every open comment). The server is the skill's own
 `scripts/serve.mjs`, a single-file Node program with no dependencies: it binds
 `127.0.0.1` on an ephemeral port, serves only the canvas, carries no auth and no

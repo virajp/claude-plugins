@@ -1057,18 +1057,20 @@ else the lockfile's components, on a `shaped` repo; else, in `source` mode only,
 a language manifest at the root and in every sub-project directory, read by a
 fixed table and nothing looser — `package.json` → node, `pyproject.toml` or
 `requirements.txt` → python, `pubspec.yaml` → dart, `go.mod` → go, `Cargo.toml`
-→ rust, `Package.swift`, `Project.swift` or `Tuist.swift` → swift. Every source
-resolves to those six keys: a pin token or a lockfile component slug is mapped
-onto one by the hygiene pack's own template table, so a pin and a manifest
-naming the same language collapse to one hit, and a token, slug or manifest
-nothing maps is proposed in the plan rather than guessed. A `blank` repo reads
-nothing. The read drives three things and is the only thing that drives them:
-the `.gitignore` language sections — one per language found, so a `source` repo
-gets its section on the **first** run rather than after some later pin — the two
-runtime positions the toolchain pack marks in its base config, `RUNTIME_BLOCK`
-and `PATH_ENTRIES` (one runtime's settings lines per language, the path entry
-left empty where nothing needs one), and the sub-project proposals question 2
-shows where no registry names them.
+→ rust, `Package.swift` or a root `*.xcodeproj` directory → swift — the one
+directory the table admits, and only at the top of the directory being read,
+since an Xcode app keeps its dependency list inside it. Every source resolves to
+those six keys: a pin token or a lockfile component slug is mapped onto one by
+the hygiene pack's own template table, so a pin and a manifest naming the same
+language collapse to one hit, and a token, slug or manifest nothing maps is
+proposed in the plan rather than guessed. A `blank` repo reads nothing. The read
+drives three things and is the only thing that drives them: the `.gitignore`
+language sections — one per language found, so a `source` repo gets its section
+on the **first** run rather than after some later pin — the two runtime
+positions the toolchain pack marks in its base config, `RUNTIME_BLOCK` and
+`PATH_ENTRIES` (one runtime's settings lines per language, the path entry left
+empty where nothing needs one), and the sub-project proposals question 2 shows
+where no registry names them.
 
 **Nine questions, each one round**, asked *before* the plan so one yes covers
 all of it. **A round is one round for the whole product**, however many repos
