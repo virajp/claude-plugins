@@ -87,18 +87,23 @@ the run's result bundle, which the task always writes to
   runtime. So goldens are recorded and compared on one named simulator, pinned
   once in the repo's mise `[env]` as `SIMULATOR_DEVICE`, `SIMULATOR_OS` and
   `SIMULATOR_PLATFORM`, from which `test:golden` builds its destination — so
-  recording, comparing, the UX gate and CI render on the same simulator.
-  A second platform's goldens run through `test:golden`'s one-run overrides,
-  `--platform`, `--device` and `--os` — macOS needs `--platform` alone, no
-  device — and a golden is compared on exactly the simulator it was recorded
-  on. Moving the pin, or moving Xcode, re-records in its own change.
-- **One run per changed platform.** A product on several platforms has goldens
-  for each, and a simulator renders one platform. The UX gate runs the goldens
-  on the pinned simulator, and on macOS as well when macOS is among the
-  changed platforms. Any other changed simulator platform has no pinned
-  simulator to render on, so the gate reports it `n/a` with a finding that it
-  is unpinned — never `ok`, since a comparison that did not happen passed
-  nothing — and never runs it on a simulator it picked itself.
+  recording, comparing, the UX gate and CI render on the same simulator. A run
+  with no pin is refused, never left to pick a simulator. A Mac-only app pins
+  `macOS` as its platform, which needs no device or OS.
+- **The goldens are the pinned platform's.** A simulator renders one platform,
+  and the pin names one, so the recorded goldens belong to it. `--platform`,
+  `--device` and `--os` override one run, for a look at another simulator;
+  `--platform` naming anything but macOS is refused unless `--device` and
+  `--os` come with it, and a golden is only ever compared on the simulator it
+  was recorded on. Moving the pin, or moving Xcode, re-records in its own
+  change.
+- **The UX gate renders the pinned platform only.** Every other platform the
+  change touches — macOS included — is not run: the gate reports it `n/a`
+  with a finding that it is unpinned, never `ok`, since a comparison that did
+  not happen passed nothing.
+- **A golden run never moves the lockfile.** `test:golden` resolves packages
+  only at the versions `Package.resolved` records, so a comparison judges the
+  code under review, not a dependency that moved underneath it.
 - **A platform the library cannot render is a stated gap.** Where there is no
   image strategy for a platform's views, say so in the gate's report; never
   count the absence as a pass.
