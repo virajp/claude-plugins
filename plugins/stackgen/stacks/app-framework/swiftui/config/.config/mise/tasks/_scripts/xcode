@@ -44,12 +44,16 @@ require_xcode() {
 # of this pack — whose refusals said to add the pins to the mise config's
 # [env] — silently overrides the fragment /vwf:setup fills.
 #
-# The fragment is read by mise itself, `mise config get --file`, which parses
-# the TOML — comments, indentation and escapes included — rather than a line
-# pattern that would skip what it cannot match. A fragment that is missing, or
-# carries no such key, is a refusal: the fragment is the one source.
+# Each pin is a plain string under the fragment's one [env] table — the shape
+# /vwf:setup writes. The table is read once, by mise itself
+# (`mise config get --file … env`), which parses the TOML — comments,
+# indentation, escapes — and prints it back one `NAME = <string>` line per
+# plain key: a basic string ("…") where the value needs no escape, a literal
+# one ('…') where it does. Anything else — a missing fragment, an `[[env]]`
+# array, a `{ value = … }` table, a value mise prints any other way — is a
+# refusal naming the pin, never a skip: the fragment is the one source.
 require_pin_source() {
-  local task="$1" fragment name pinned
+  local task="$1" fragment table name line raw pinned plain
   fragment="${MISE_PROJECT_ROOT}/.config/mise/conf.d/swiftui.toml"
   shift
   if [ ! -f "${fragment}" ]; then
@@ -57,10 +61,29 @@ require_pin_source() {
     print_yellow "Re-land the SwiftUI pack through /vwf:setup, which writes it and asks for each pin, then re-run."
     exit 1
   fi
+  if ! table=$(mise config get --file "${fragment}" env); then
+    print_error "${task}: .config/mise/conf.d/swiftui.toml has no readable [env] table."
+    print_yellow "Fix the file (mise config get's error is above), then re-run."
+    exit 1
+  fi
   for name in "$@"; do
-    if ! pinned=$(mise config get --file "${fragment}" "env.${name}"); then
-      print_error "${task}: .config/mise/conf.d/swiftui.toml has no readable ${name} under [env]."
-      print_yellow "Set ${name} in that file's [env] (mise config get's error is above), then re-run."
+    line=$(printf '%s\n' "${table}" | grep -m1 "^${name} = " || true)
+    raw="${line#"${name} = "}"
+    # A literal string holds its value verbatim. A multi-line string (''' or
+    # """) leaves its own quote inside once the outer pair is stripped, and a
+    # basic string mise printed with an escape leaves a backslash: neither is
+    # a plain pin.
+    pinned="" plain=false
+    if [ "${#raw}" -ge 2 ]; then
+      pinned="${raw:1:${#raw}-2}"
+      case "${raw}" in
+        \'*\') [[ "${pinned}" == *\'* ]] || plain=true ;;
+        \"*\") [[ "${pinned}" == *[\"\\]* ]] || plain=true ;;
+      esac
+    fi
+    if [ -z "${line}" ] || [ "${plain}" != true ]; then
+      print_error "${task}: ${name} is not a plain string under [env] in .config/mise/conf.d/swiftui.toml${line:+ — mise reads it as: ${line}}."
+      print_yellow "Write it as ${name} = \"<value>\" in that file's one [env] table, then re-run."
       exit 1
     fi
     if [ "${!name:-}" != "${pinned}" ]; then
