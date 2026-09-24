@@ -110,12 +110,19 @@ whole section reports `not checked — no stack resolved` for it:
   run instead — from the repo root, inside the repo's mise environment
   (`mise x -- sh -c '<probe>'`), stdout and stderr discarded, stopped after 30
   seconds — and exit 0 is required; anything else, a timeout included, is a
-  finding naming the binary, the probe and its exit status (or `timed out`). A
-  probe is what tells a binary that is present but unusable from one that
-  works — for example, `xcodebuild -version` exits non-zero on a machine that
-  has only a stub on `PATH`, where `command -v` would pass. A map with no
-  `probe` is a bare name. Either finding carries the remedy that installs the
-  binary (for `xcodebuild`: install Xcode, then `sudo xcode-select -s` at it).
+  finding naming the binary, the probe and its exit status (or `timed out`).
+  **Only the landed pack's own command runs:** the probe is run only when the
+  committed template entry it was read from
+  (`.claude/<adapter>/templates/<slug>.md`) still matches the hash its adapter
+  lockfile records. On a mismatch it is not run — the entry was edited after
+  landing, so the probe is nobody's consented command and doctor stays
+  report-only — and the binary is reported **probe not run**, the drift as the
+  reason, at the severity a failed probe would carry. A probe is what tells a
+  binary that is present but unusable from one that works — for example,
+  `xcodebuild -version` exits non-zero on a machine that has only a stub on
+  `PATH`, where `command -v` would pass. A map with no `probe` is a bare name.
+  Either finding carries the remedy that installs the binary (for
+  `xcodebuild`: install Xcode, then `sudo xcode-select -s` at it).
   **Blocking once this project's `template` is pinned** — mise will not supply
   it, so the skip above would otherwise hide it and the build fails on first
   run. **A degradation while that `template` reads `unresolved`** — the same

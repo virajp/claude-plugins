@@ -192,7 +192,12 @@ still holding the value the pack's payload ships there is unfilled.
 1. Run `detect` from the target repo's root, inside its toolchain environment
    (`mise x -- sh -c '<detect>'`), stopped after 30 seconds. Its stdout,
    trimmed, is the **detected value**; a non-zero exit, a timeout or empty
-   output is no value.
+   output is no value. **Only the landed pack's own command runs:** `detect`
+   is run only when the committed template entry it was read from
+   (`.claude/<adapter>/templates/<slug>.md`) still matches the hash its
+   adapter lockfile records. On a mismatch it is not run — the entry was
+   edited after landing, so it is nobody's consented command — and the
+   question is asked with no default, the drift named beside it.
 2. Ask `question`. A position already filled offers its **current value**
    preselected, with the detected value beside it where the two differ; an
    unfilled one offers the detected value preselected. Either way the person
@@ -202,14 +207,15 @@ still holding the value the pack's payload ships there is unfilled.
 3. Write the answer into the marked position named for `name` in the file the
    pack landed, and nothing else in that file. An answer equal to the current
    value writes nothing. **The value is data, never syntax:** one containing a
-   newline or any other control character, a template delimiter of the tool
-   that reads the file (for mise, which renders every environment value as a
-   template: `{{`, `{%` or `{#`), or both a `'` and a `"` is refused and the
-   question asked again — a detected value that does so is offered as no
-   default — and every other value is written as a quoted string in the
-   file's own syntax, escaped by it (for a TOML file, a basic string with `"`
-   and `\` escaped), so no answer can end the string, add a key, or run as
-   code when the file is loaded.
+   newline or any other control character, a template delimiter or expansion
+   character of the tool that reads the file (for mise, which renders every
+   environment value as a template and, under the pack's shell expansion,
+   expands variables: `{{`, `{%`, `{#` or `$`), or a `'` together with a `"`
+   or a `\` is refused and the question asked again — a detected value that
+   does so is offered as no default — and every other value is written as a
+   quoted string in the file's own syntax, escaped by it (for a TOML file, a
+   basic string with `"` and `\` escaped), so no answer can end the string,
+   add a key, or run as code when the file is loaded.
 
 Then, once per pack whose file changed, **re-record that file's hash** in the
 target repo's adapter lockfile — the same re-record `/vwf:init` makes of every
