@@ -87,9 +87,10 @@ require_pin_source() {
       exit 1
     fi
     # mise renders every [env] value as a template, so a pin holding a
-    # template delimiter runs on every load; the raw value shows it.
-    if [[ "${pinned}" == *'{{'* || "${pinned}" == *'{%'* || "${pinned}" == *'{#'* ]]; then
-      print_error "${task}: ${name} in .config/mise/conf.d/swiftui.toml holds a template delimiter ({{, {% or {#), which mise would run on every load."
+    # template delimiter runs on every load, and with env_shell_expand on a
+    # `$` expands; the raw value shows either.
+    if [[ "${pinned}" == *'{{'* || "${pinned}" == *'{%'* || "${pinned}" == *'{#'* || "${pinned}" == *'$'* ]]; then
+      print_error "${task}: ${name} in .config/mise/conf.d/swiftui.toml holds a template delimiter ({{, {% or {#) or a \$, which mise would run or expand on every load."
       print_yellow "Replace it with the literal value — an Xcode version, a simulator name or an OS version — then re-run."
       exit 1
     fi
