@@ -60,6 +60,9 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/xcode"
 # fails every assertion it records — so a recording is never mistaken for a
 # pass — which makes the recording run's exit status meaningless; the
 # comparison after it is the verdict, and it proves the new goldens reproduce.
+# Recording is refused on any destination but the pin: the goldens are the
+# pinned simulator's, and an override run would overwrite them with renders
+# from elsewhere, then "prove" those.
 
 require_xcode "test:golden"
 project=$(find_xcodeproj "test:golden")
@@ -89,6 +92,15 @@ elif [ -z "${device}" ] || [ -z "${os}" ]; then
   exit 1
 else
   destination="platform=${platform},name=${device},OS=${os}"
+fi
+
+if [[ "${usage_record:-false}" == "true" ]] &&
+  { [ "${platform}" != "${SIMULATOR_PLATFORM:-}" ] ||
+    { [ "${platform}" != "macOS" ] &&
+      { [ "${device}" != "${SIMULATOR_DEVICE:-}" ] || [ "${os}" != "${SIMULATOR_OS:-}" ]; }; }; }; then
+  print_error "test:golden: --record records on the pinned simulator only, and ${destination} is not it."
+  print_yellow "Drop --platform, --device and --os to record, or move the pin in the repo's mise [env] first."
+  exit 1
 fi
 
 artifacts="${PWD}/.build/snapshot-artifacts"

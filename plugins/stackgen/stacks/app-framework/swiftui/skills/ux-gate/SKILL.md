@@ -66,7 +66,7 @@ interactively.
      recorded on the pin, so a render on any other destination is compared
      with goldens from another platform, or finds no destination the snapshot
      target supports. Report that platform `n/a` in its `viewport` line, with
-     a finding that its simulator is not pinned — never run it on a
+     a finding that it is not the pinned platform — never run it on a
      destination you picked, and never report it `ok`.
 
    An unchanged platform is not run and is not reported. Never pass
@@ -81,14 +81,20 @@ interactively.
    so it reaches vwf as a spec gap rather than as silence.
 4. **Accessibility** — run the accessibility audit Xcode offers:
    `XCUIApplication.performAccessibilityAudit()`, in the project's UI test
-   target, over each changed screen an audit test reaches — run with
-   `xcodebuild test -project <Name>.xcodeproj -scheme <scheme> -destination <the destination step 3 used> -only-testing:<that target> -derivedDataPath .build/DerivedData -clonedSourcePackagesDirPath .build/SourcePackages -onlyUsePackageVersionsFromResolvedFile -resultBundlePath .build/a11y.xcresult -collect-test-diagnostics never`,
-   on the pinned destination only, as in step 3, removing
-   `.build/a11y.xcresult` first, since xcodebuild will not overwrite one. Each
-   audit issue — contrast, element description, hit region, Dynamic Type
-   clipping, trait — is the equivalent of a WCAG A/AA violation; report it at
-   that severity so vwf can apply one rule across every stack. A changed
-   screen no audit test reaches is a finding too, not a pass.
+   target, over each changed screen an audit test reaches. The audit compares
+   against no goldens, so the pin does not limit it: run it **once per changed
+   platform that has a usable destination** — the pinned simulator for the
+   pinned platform, `platform=macOS` for `desktop` — with
+   `xcodebuild test -project <Name>.xcodeproj -scheme <scheme> -destination <that destination> -only-testing:<that target> -derivedDataPath .build/DerivedData -clonedSourcePackagesDirPath .build/SourcePackages -onlyUsePackageVersionsFromResolvedFile -resultBundlePath .build/a11y.xcresult -collect-test-diagnostics never`,
+   removing `.build/a11y.xcresult` before each run, since xcodebuild will not
+   overwrite one, and reading it before the next. Any other changed platform
+   — a simulator platform the pin does not name — has no destination this
+   gate may choose: report it `a11y: <project>.<platform> -> n/a: <reason>`,
+   with a finding, never as clean. Each audit issue — contrast, element
+   description, hit region, Dynamic Type clipping, trait — is the equivalent
+   of a WCAG A/AA violation; report it at that severity so vwf can apply one
+   rule across every stack. A changed screen no audit test reaches is a
+   finding too, not a pass.
 5. **Return** the payload below. Report what happened, not what should have.
 
 ## Return contract
@@ -97,6 +103,7 @@ interactively.
 rendered: ok | n/a
 reason: <one line> # required when n/a
 viewport: <project>.<platform> -> <device or size> | n/a: <reason> # one per changed platform
+a11y: <project>.<platform> -> <destination> | n/a: <reason> # one per changed platform
 artifacts: [ <path>, … ] # reference, new render, result bundle (the diff)
 findings:
   - severity: <critical | high | medium | low>
