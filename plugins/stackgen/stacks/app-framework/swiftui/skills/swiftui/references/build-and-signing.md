@@ -31,9 +31,8 @@ an app — and must report the pinned version. On a mismatch the task stops and
 names both the version it wants and the one selected, so the fix is switching
 Xcode, not reading a compiler error halfway through a build. An unset
 `XCODE_VERSION` is refused the same way, since an unpinned build checks
-nothing. Xcode is not
-installed by mise; the pin says which one, and installing it stays a person's
-step.
+nothing. Xcode is not installed by mise; the pin says which one, and
+installing it stays a person's step.
 
 Moving to a new Xcode is one change: update the pin, fix what the new compiler
 and SDK report, re-record goldens whose rendering the new SDK changed (and say

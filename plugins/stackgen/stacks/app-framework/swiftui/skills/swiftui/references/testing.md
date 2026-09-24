@@ -94,13 +94,18 @@ the run's result bundle, which the task always writes to
   and the pin names one, so the recorded goldens belong to it. `--platform`,
   `--device` and `--os` override one run, for a look at another simulator;
   `--platform` naming anything but macOS is refused unless `--device` and
-  `--os` come with it, and a golden is only ever compared on the simulator it
-  was recorded on. Moving the pin, or moving Xcode, re-records in its own
-  change.
+  `--os` come with it, and `--record` is refused whenever the destination
+  differs from the pin — goldens are recorded on the pin only, so a golden is
+  only ever compared on the simulator it was recorded on. Moving the pin, or
+  moving Xcode, re-records in its own change.
 - **The UX gate renders the pinned platform only.** Every other platform the
-  change touches — macOS included — is not run: the gate reports it `n/a`
-  with a finding that it is unpinned, never `ok`, since a comparison that did
+  change touches is not run: the gate reports its goldens `n/a` with a finding
+  that it is not the pinned platform, never `ok`, since a comparison that did
   not happen passed nothing.
+- **The accessibility audit runs wherever a destination is usable.** The gate
+  audits once per changed platform it can reach — the pinned simulator, or
+  macOS for desktop, which needs no pin — and reports every other changed
+  platform's audit `n/a` with a finding.
 - **A golden run never moves the lockfile.** `test:golden` resolves packages
   only at the versions `Package.resolved` records, so a comparison judges the
   code under review, not a dependency that moved underneath it.
