@@ -202,11 +202,14 @@ still holding the value the pack's payload ships there is unfilled.
 3. Write the answer into the marked position named for `name` in the file the
    pack landed, and nothing else in that file. An answer equal to the current
    value writes nothing. **The value is data, never syntax:** one containing a
-   newline or any other control character is refused and the question asked
-   again — a detected value that does so is offered as no default — and every
-   other value is written as a quoted string in the file's own syntax,
-   escaped by it (for a TOML file, a basic string with `"` and `\` escaped),
-   so no answer can end the string or add a key.
+   newline or any other control character, a template delimiter of the tool
+   that reads the file (for mise, which renders every environment value as a
+   template: `{{`, `{%` or `{#`), or both a `'` and a `"` is refused and the
+   question asked again — a detected value that does so is offered as no
+   default — and every other value is written as a quoted string in the
+   file's own syntax, escaped by it (for a TOML file, a basic string with `"`
+   and `\` escaped), so no answer can end the string, add a key, or run as
+   code when the file is loaded.
 
 Then, once per pack whose file changed, **re-record that file's hash** in the
 target repo's adapter lockfile — the same re-record `/vwf:init` makes of every
