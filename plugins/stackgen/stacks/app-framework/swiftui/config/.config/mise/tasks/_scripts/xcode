@@ -25,8 +25,9 @@ require_xcode() {
     exit 1
   fi
   selected=$(printf '%s\n' "${version_output}" | awk 'NR==1{print $2}')
+  require_pin_source "${task}" XCODE_VERSION
   if [ -z "${XCODE_VERSION:-}" ]; then
-    print_error "${task}: no Xcode is pinned — XCODE_VERSION is unset."
+    print_error "${task}: no Xcode is pinned — XCODE_VERSION is unset or empty."
     print_yellow "Set XCODE_VERSION = \"${selected}\" (or the version the repo builds with) in the [env] of .config/mise/conf.d/swiftui.toml, then re-run."
     exit 1
   fi
@@ -35,6 +36,28 @@ require_xcode() {
     print_yellow "Select Xcode ${XCODE_VERSION} with xcode-select -s, or point DEVELOPER_DIR at it, then re-run."
     exit 1
   fi
+}
+
+# Fails when a pin this task reads resolves to a value other than the one
+# .config/mise/conf.d/swiftui.toml writes. mise lets `.config/mise.toml`'s
+# [env] win over a conf.d fragment, so a line left there by an earlier version
+# of this pack — whose refusals said to add the pins to the mise config's
+# [env] — silently overrides the fragment /vwf:setup fills. A pin the fragment
+# does not carry as `NAME = "value"` is not compared.
+require_pin_source() {
+  local task="$1" fragment name pinned
+  fragment="${MISE_PROJECT_ROOT}/.config/mise/conf.d/swiftui.toml"
+  [ -f "${fragment}" ] || return 0
+  shift
+  for name in "$@"; do
+    grep -Eq "^${name}[[:space:]]*=[[:space:]]*\"[^\"]*\"[[:space:]]*$" "${fragment}" || continue
+    pinned=$(sed -nE "s/^${name}[[:space:]]*=[[:space:]]*\"([^\"]*)\"[[:space:]]*$/\1/p" "${fragment}")
+    if [ "${!name:-}" != "${pinned}" ]; then
+      print_error "${task}: ${name} is \"${!name:-}\", but .config/mise/conf.d/swiftui.toml pins \"${pinned}\" — another source overrides it."
+      print_yellow "Delete the ${name} line from .config/mise.toml's [env] (or wherever mise env shows it set) so the fragment is the one pin, then re-run."
+      exit 1
+    fi
+  done
 }
 
 # Prints the one `*.xcodeproj` at the repo root. None, or more than one, is a

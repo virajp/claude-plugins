@@ -70,6 +70,16 @@ pinned device's own platform (read from its product family — iPhone is
 `mobile`, iPad `tablet`) and on `desktop` through macOS, and reports every
 other changed platform, `auto` always among them, `n/a` with a finding.
 
+**The fragment is the one source of the pins.** mise lets `.config/mise.toml`'s
+`[env]` win over a `conf.d` fragment, so a pin set there would silently
+override the one `/vwf:setup` fills. A repo shaped by this pack's 0.1.0 —
+whose refusals said to add the pins to the mise config's `[env]` — carries
+exactly those lines: on upgrading, move each value into
+`conf.d/swiftui.toml` and delete the old line. The tasks refuse the stale
+state rather than trust it: each compares every pin it reads with the value
+the fragment writes and stops, naming both, when another source overrides
+it.
+
 **One project, several surfaces.** An app declares whichever of iPhone, iPad,
 Mac, CarPlay, Watch, TV and Vision it ships as destinations of its targets —
 one project, never one project per device. A web surface is not offered by

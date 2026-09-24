@@ -32,14 +32,15 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/xcode"
 # simulator once, in `.config/mise/conf.d/swiftui.toml` — SIMULATOR_PLATFORM
 # (`iOS Simulator`, say), SIMULATOR_DEVICE and SIMULATOR_OS — and this task
 # builds the `-destination` from them, so recording, comparing, the `ux-gate`
-# skill and CI render on the same one. `--platform`, `--device` and `--os` override the pin
-# for one run, and `--platform` comes with `--device` and `--os`, never
-# alone: a platform on the pin's device and OS names a simulator that does not
-# exist. A run with no pin is refused rather than left to whichever simulator
-# xcodebuild would pick. A Mac-only app pins `macOS`, the one platform with no
-# simulator, which needs neither a device nor an OS. The goldens are the
-# pinned platform's; running another platform against them compares renders
-# with goldens recorded elsewhere.
+# skill and CI render on the same one. `--platform`, `--device` and `--os`
+# override the pin for one run, and `--platform` comes with `--device` and
+# `--os`, never alone: a platform on the pin's device and OS names a simulator
+# that does not exist. A run with no pin is refused rather than left to
+# whichever simulator xcodebuild would pick, and so is a pin some other mise
+# config overrides — the fragment is the one source. A Mac-only app pins
+# `macOS`, the one platform with no simulator, which needs neither a device nor
+# an OS. The goldens are the pinned platform's; running another platform
+# against them compares renders with goldens recorded elsewhere.
 #
 # The record mode reaches the test process through xcodebuild, which strips the
 # `TEST_RUNNER_` prefix from any variable carrying it and hands the rest to the
@@ -65,6 +66,7 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/xcode"
 # from elsewhere, then "prove" those.
 
 require_xcode "test:golden"
+require_pin_source "test:golden" SIMULATOR_PLATFORM SIMULATOR_DEVICE SIMULATOR_OS
 project=$(find_xcodeproj "test:golden")
 scheme="${usage_scheme:-$(basename "${project}" .xcodeproj)}"
 
@@ -80,7 +82,7 @@ device="${usage_device:-${SIMULATOR_DEVICE:-}}"
 os="${usage_os:-${SIMULATOR_OS:-}}"
 
 if [ -z "${platform}" ]; then
-  print_error "test:golden: no simulator is pinned — SIMULATOR_PLATFORM is unset."
+  print_error "test:golden: no simulator is pinned — SIMULATOR_PLATFORM is unset or empty."
   print_yellow "Set SIMULATOR_PLATFORM, SIMULATOR_DEVICE and SIMULATOR_OS in .config/mise/conf.d/swiftui.toml (or pass --platform, --device and --os), then re-run."
   exit 1
 fi
