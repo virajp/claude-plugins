@@ -74,11 +74,13 @@ other changed platform, `auto` always among them, `n/a` with a finding.
 `[env]` win over a `conf.d` fragment, so a pin set there would silently
 override the one `/vwf:setup` fills. A repo shaped by this pack's 0.1.0 —
 whose refusals said to add the pins to the mise config's `[env]` — carries
-exactly those lines: on upgrading, move each value into
-`conf.d/swiftui.toml` and delete the old line. The tasks refuse the stale
-state rather than trust it: each compares every pin it reads with the value
-the fragment writes and stops, naming both, when another source overrides
-it.
+exactly those lines: on upgrading, move the value the team intends into
+`conf.d/swiftui.toml` — the old line holds the team's committed pin, the
+fragment what `/vwf:setup` detected on one machine — then delete the old line.
+The tasks and `ux-gate` refuse the stale state rather than trust it: each
+reads the fragment through `mise config get`, compares every pin it uses with
+the value there, and stops, naming both, when another source overrides it —
+or when the fragment is missing or lacks the pin.
 
 **One project, several surfaces.** An app declares whichever of iPhone, iPad,
 Mac, CarPlay, Watch, TV and Vision it ships as destinations of its targets —

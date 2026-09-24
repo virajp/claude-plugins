@@ -55,9 +55,24 @@ interactively.
    `SIMULATOR_DEVICE` and `SIMULATOR_OS`, from which the golden task builds
    the `-destination` — so the task, this gate and CI render on the same
    simulator. The same file pins `XCODE_VERSION`. Read all four with
-   `mise env`. When `SIMULATOR_PLATFORM` is empty, or a simulator pin lacks
-   its device or OS, report `rendered: n/a` with that reason rather than
-   choosing a simulator yourself. When `XCODE_VERSION` is empty, or the first
+   `mise env`, then apply the same override check the tasks do, from the
+   repo root:
+
+   ```sh
+   mise x -- bash -c 'MISE_PROJECT_ROOT="$PWD" &&
+     source .config/mise/tasks/_scripts/helpers &&
+     source .config/mise/tasks/_scripts/xcode &&
+     require_pin_source ux-gate XCODE_VERSION SIMULATOR_PLATFORM \
+       SIMULATOR_DEVICE SIMULATOR_OS'
+   ```
+
+   A non-zero exit — another mise config overriding a pin, a stale
+   `.config/mise.toml` line say — is `rendered: n/a` with the message it
+   printed as the reason, and nothing below runs: the audit would otherwise
+   render on a simulator the golden task refuses. When `SIMULATOR_PLATFORM`
+   is empty, or a simulator pin lacks its device or OS, report
+   `rendered: n/a` with that reason rather than choosing a simulator
+   yourself. When `XCODE_VERSION` is empty, or the first
    line of `xcodebuild -version` does not name it, report `rendered: n/a`
    with that reason and run nothing — the golden task refuses there, and the
    audit below calls `xcodebuild` directly, so this check is the only one it

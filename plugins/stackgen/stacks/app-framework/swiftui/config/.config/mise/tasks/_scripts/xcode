@@ -42,19 +42,30 @@ require_xcode() {
 # .config/mise/conf.d/swiftui.toml writes. mise lets `.config/mise.toml`'s
 # [env] win over a conf.d fragment, so a line left there by an earlier version
 # of this pack — whose refusals said to add the pins to the mise config's
-# [env] — silently overrides the fragment /vwf:setup fills. A pin the fragment
-# does not carry as `NAME = "value"` is not compared.
+# [env] — silently overrides the fragment /vwf:setup fills.
+#
+# The fragment is read by mise itself, `mise config get --file`, which parses
+# the TOML — comments, indentation and escapes included — rather than a line
+# pattern that would skip what it cannot match. A fragment that is missing, or
+# carries no such key, is a refusal: the fragment is the one source.
 require_pin_source() {
   local task="$1" fragment name pinned
   fragment="${MISE_PROJECT_ROOT}/.config/mise/conf.d/swiftui.toml"
-  [ -f "${fragment}" ] || return 0
   shift
+  if [ ! -f "${fragment}" ]; then
+    print_error "${task}: .config/mise/conf.d/swiftui.toml is missing — it is where this repo pins Xcode and the golden simulator."
+    print_yellow "Re-land the SwiftUI pack through /vwf:setup, which writes it and asks for each pin, then re-run."
+    exit 1
+  fi
   for name in "$@"; do
-    grep -Eq "^${name}[[:space:]]*=[[:space:]]*\"[^\"]*\"[[:space:]]*$" "${fragment}" || continue
-    pinned=$(sed -nE "s/^${name}[[:space:]]*=[[:space:]]*\"([^\"]*)\"[[:space:]]*$/\1/p" "${fragment}")
+    if ! pinned=$(mise config get --file "${fragment}" "env.${name}"); then
+      print_error "${task}: .config/mise/conf.d/swiftui.toml has no readable ${name} under [env]."
+      print_yellow "Set ${name} in that file's [env] (mise config get's error is above), then re-run."
+      exit 1
+    fi
     if [ "${!name:-}" != "${pinned}" ]; then
       print_error "${task}: ${name} is \"${!name:-}\", but .config/mise/conf.d/swiftui.toml pins \"${pinned}\" — another source overrides it."
-      print_yellow "Delete the ${name} line from .config/mise.toml's [env] (or wherever mise env shows it set) so the fragment is the one pin, then re-run."
+      print_yellow "Move the value the team intends into .config/mise/conf.d/swiftui.toml, then delete the ${name} line from .config/mise.toml's [env] (or wherever mise env shows it set), then re-run."
       exit 1
     fi
   done
