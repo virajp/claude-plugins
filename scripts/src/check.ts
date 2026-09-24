@@ -520,10 +520,24 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
 
     const packYaml = join(plugin.root, pack, "pack.yaml");
     if (existsSync(packYaml)) {
-      for (const message of conditionalFaults(readText(packYaml), config)) {
-        at(`${path(packYaml)}: ${message}`);
+      let document: unknown;
+      try {
+        document = parseYaml(readText(packYaml));
       }
-      for (const message of packFactFaults(readText(packYaml), config)) {
+      catch (error) {
+        at(
+          `${path(packYaml)}: pack.yaml is not valid YAML — ${
+            firstLine(error)
+          }`,
+        );
+        continue;
+      }
+      for (
+        const message of [
+          ...conditionalFaults(document, config),
+          ...packFactFaults(document, config),
+        ]
+      ) {
         at(`${path(packYaml)}: ${message}`);
       }
     }
@@ -554,15 +568,7 @@ const ENV_VAR_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
  * the repo does not own, and a `machine_env` name no fragment carries is a
  * question whose answer lands nowhere — all silently.
  */
-function packFactFaults(source: string, config: string): string[] {
-  let document: unknown;
-  try {
-    document = parseYaml(source);
-  }
-  catch {
-    // conditionalFaults has already reported it.
-    return [];
-  }
+function packFactFaults(document: unknown, config: string): string[] {
   if (!isPlainObject(document)) {
     return [];
   }
@@ -679,7 +685,10 @@ function tomlEnvKeys(source: string): string[] {
   const keys: string[] = [];
   let inEnv = false;
   for (const line of source.split("\n")) {
-    const header = /^\s*\[([^[\]]+)\]\s*(?:#.*)?$/.exec(line);
+    // Any header leaves `[env]`, an array-of-tables `[[…]]` included.
+    const header = /^\s*(?:\[\[[^[\]]+\]\]|\[([^[\]]+)\])\s*(?:#.*)?$/.exec(
+      line,
+    );
     if (header !== null) {
       inEnv = header[1]?.trim() === "env";
       continue;
@@ -720,14 +729,7 @@ const PACK_CONDITION_AXES: ReadonlyMap<string, ReadonlySet<string> | null> =
  * inside that tier only — an absolute path or a `..` segment reaches out of
  * what the pack lands, which is rule 13's fault stated on a glob.
  */
-function conditionalFaults(source: string, config: string): string[] {
-  let document: unknown;
-  try {
-    document = parseYaml(source);
-  }
-  catch (error) {
-    return [`pack.yaml is not valid YAML — ${firstLine(error)}`];
-  }
+function conditionalFaults(document: unknown, config: string): string[] {
   const conditional = (document as { conditional?: unknown; } | null)
     ?.conditional;
   if (conditional === undefined) {

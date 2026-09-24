@@ -746,6 +746,21 @@ describe("the pack config tier", () => {
     expect(messages(check(root))).toEqual([]);
   });
 
+  it("reads an array-of-tables header as leaving [env]", () => {
+    const root = tree(facts(
+      "machine_env:\n  - { name: AFTER, detect: \"x\", question: q }\n",
+      {
+        [`${confD}/swiftui.toml`]: "[env]\nBEFORE = \"\"\n\n[[hooks]]\n"
+          + "AFTER = \"1\"\n",
+      },
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(
+        "`machine_env[0]` (AFTER) is a key of no `[env]` table",
+      ),
+    ]);
+  });
+
   it("accepts machine_env on a pack that ships no conf.d fragment", () => {
     const root = tree(facts(
       "machine_env:\n  - { name: X, detect: \"echo 1\", question: X? }\n",
