@@ -4,6 +4,11 @@ SwiftPM is the only package manager, and it ships inside the Swift toolchain:
 there is nothing to install beside `swift`, and nothing to pin but the
 toolchain.
 
+Everything here governs a `Package.swift` the repo owns and the
+`Package.resolved` beside it; the `Package.resolved` Xcode keeps inside an
+`.xcodeproj` is the app's, resolved and updated through
+`mise run setup:deps:*`, never `swift package resolve` or `update`.
+
 **`Package.swift` is the manifest, and it is code.** It declares the tools
 version on its first line, the products, the targets and the dependencies.
 Keep it declarative — no environment reads, no conditional dependency lists —

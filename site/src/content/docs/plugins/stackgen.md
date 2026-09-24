@@ -267,8 +267,12 @@ rooted at, after TypeScript and the Markdown and Bash pair the
 12-topic doctrine, the sourcekit-lsp declaration, and `binaries: [swift]`, since
 the toolchain is the host's rather than mise's and `/vwf:doctor` blocks when
 `swift` is not on `PATH`. `package-manager/swiftpm` carries SwiftPM's doctrine
-and lands no file; no pack lands `Package.swift`, which `swift package init`
-creates. `toolchain-gate/swift-format` lands `.config/swift-format.json`, and
+and lands no file, and declares where its lockfile lives — `Package.resolved` at
+the root, or inside an `.xcodeproj` for an app — as a `lockfile` fact doctor's
+package-manager check reads; its skill sends an app whose lockfile Xcode manages
+to the `setup:deps:*` tasks rather than `swift package resolve`; no pack lands
+`Package.swift`, which `swift package init` creates.
+`toolchain-gate/swift-format` lands `.config/swift-format.json`, and
 `toolchain-gate/swiftlint` lands `.config/swiftlint.yml` plus
 `.config/mise/conf.d/swiftlint.toml`, which pins `aqua:realm/SwiftLint` at
 0.65.1 so `mise.toml` names no linter; each ships an editor fragment on
@@ -291,18 +295,34 @@ first in the `native-ui` category. `app-framework/swiftui` is the root of the
 project — `auto` being CarPlay through the same iOS app, so it is declared
 beside `mobile` and never alone. The app is a **committed Xcode project**,
 created once by a person in Xcode: no pack lands the `.xcodeproj` and no
-generator writes one, so the tasks call `xcodebuild` and `swift` alone and the
-pack declares `binaries: [xcodebuild, swift]`. The repo pins its Xcode as
-`XCODE_VERSION` in its mise `[env]`, and every task that builds checks
-`xcodebuild -version` against it and fails fast. The app's dependencies are
-added through Xcode and locked in the `Package.resolved` the project keeps, so
-the swiftpm component governs only a local package the app splits out. Goldens
-run through swift-snapshot-testing in a `SnapshotTests` target under
-`test:golden`, on the simulator the repo pins as `SIMULATOR_DEVICE`,
-`SIMULATOR_OS` and `SIMULATOR_PLATFORM` in the same `[env]`, and the pack's
-`ux-gate` skill runs them once per changed platform, reporting the rest `n/a`.
-Its doctrine covers topics 1–11 of the app-framework bar; the per-platform
-references and the integrations come later.
+generator writes one, so the tasks call `xcodebuild` and `swift` alone. The pack
+declares `swift` as a bare binary and `xcodebuild` with a **probe**,
+`xcodebuild -version`, which `/vwf:doctor` runs rather than looking the name up:
+a Mac with only the Command Line Tools has an `xcodebuild` on `PATH` that fails
+the moment it runs. The repo pins its Xcode as `XCODE_VERSION` in
+`.config/mise/conf.d/swiftui.toml`, a fragment the pack lands with its values
+empty and `/vwf:setup` fills as it lands the pack — each value detected on the
+machine, offered as the default, and written as the repo's committed pin — and
+every task that builds checks `xcodebuild -version` against it and fails fast.
+The fragment is the one source of the pins: the tasks and `ux-gate` read it
+through `mise config get` and stop, naming both values, when another source
+overrides a pin — `mise.toml`'s `[env]` wins over a `conf.d` fragment — or when
+the fragment is missing or has no `[env]` table mise can read, lacks the pin,
+holds it as anything but a plain string in its one `[env]` table, or holds a
+value with a template delimiter (`{{`, `{%`, `{#`) or a `$`. A repo shaped by
+the pack's 0.1.0 has its pins in `.config/mise.toml`'s `[env]`: on upgrading,
+move the value the team intends into `conf.d/swiftui.toml`, then delete the old
+line. The app's dependencies are added through Xcode and locked in the
+`Package.resolved` the project keeps — a path the swiftpm pack's `lockfile` fact
+names, so doctor finds it — and the swiftpm component governs only a local
+package the app splits out. Goldens run through swift-snapshot-testing in a
+`SnapshotTests` target under `test:golden`, on the simulator the repo pins as
+`SIMULATOR_DEVICE`, `SIMULATOR_OS` and `SIMULATOR_PLATFORM` in the same
+fragment, and the pack's `ux-gate` skill runs them for the pinned platform,
+audits accessibility on that platform and on `desktop`, and reports every other
+changed platform `n/a`; it reports `rendered: ok` only when some goldens were
+compared. Its doctrine covers topics 1–11 of the app-framework bar; the
+per-platform references and the integrations come later.
 
 The `devtools` plugin then dissolved into stackgen and was deleted, closing the
 marketplace at two plugins. Its mise doctrine and its file-based task library
@@ -626,13 +646,15 @@ ends a materialization by recommending `/vwf:setup`.
 carries every payload field (kind, axis, the `components:` refs this bundle
 composes — `<type>/<slug>@<version>` or `@generated` — languages **with the
 facts `/vwf:doctor` verifies** — LSP provision, mise tool, manifest, and the
-optional `binaries` list of executables the stack needs on `PATH` that mise does
-not manage, such as Xcode's `xcodebuild` — plus harness tasks and mechanisms,
-with `frameworks`/`capabilities` derived from the composition), and the body is
-the `conventions:` prose `plan` sizes against and `execute` writes to. That
-emitted-facts block is the **materialized escape** in vwf's stack vocabulary: a
-language no shipped bundle covers is still *known* when its pin carries these
-facts.
+optional `binaries` list of executables the stack needs that mise does not
+manage, each a bare name looked up on `PATH` or a name with a `probe` command
+doctor runs instead, such as Xcode's `xcodebuild` — plus the package manager's
+`lockfile` paths, the `machine_env` values `/vwf:setup` asks for, harness tasks
+and mechanisms, with `frameworks`/`capabilities` derived from the composition),
+and the body is the `conventions:` prose `plan` sizes against and `execute`
+writes to. That emitted-facts block is the **materialized escape** in vwf's
+stack vocabulary: a language no shipped bundle covers is still *known* when its
+pin carries these facts.
 
 In a multi-repo product the target repo defaults to the current one; the caller
 names a member repo to materialize there instead, as one optional `repo: <path>`
@@ -686,11 +708,12 @@ gate — ships `.config/linter.yaml`, the config it had always invoked and never
 supplied. The trees a gate skips are stated as **one exclusion set**: the
 formatter's `dprint.json` and `taplo.toml` and the hook config's global
 `exclude` — a `(?x)` block, one anchored alternative per line — spell the same
-fourteen entries (`.build`, `.claude`, `.git`, `.turbo`, `.venv`, `Derived`,
-`build`, `dist`, `graphify-out`, `node_modules`, `target` and the three lockfile
-globs; `.build` is SwiftPM's output tree and `Derived` a common name for a
-generated one) in their own syntax, and the toolkit's checker holds the three
-equal after normalising the syntax away. The secret scanner's
+fifteen entries (`.build`, `.claude`, `.git`, `.turbo`, `.venv`, `Derived`,
+`build`, `dist`, `graphify-out`, `node_modules`, `target`, `*.xcassets` and the
+three lockfile globs; `.build` is SwiftPM's output tree, `Derived` a common name
+for a generated one, and an asset catalog's `Contents.json` files Xcode's own,
+rewritten on its next edit) in their own syntax, and the toolkit's checker holds
+the three equal after normalising the syntax away. The secret scanner's
 `[allowlist] paths` is held to a **subset** of it, never the reverse: gitleaks
 extends upstream's default config, which already skips `.git`, `node_modules`
 and the named lockfiles, and `.claude/` is authored source a scanner must scan
@@ -1063,29 +1086,29 @@ and `package-manager/uv` supply `setup/deps/*`, `toolchain-gate/ruff` and
 needs, `language/swift` supplies both — `setup/deps/*` over SwiftPM and the
 `code/format` and `code/lint` that run swift-format and SwiftLint —
 `app-framework/swiftui` supplies the same set for an Xcode app, each task that
-builds checking `xcodebuild -version` against `XCODE_VERSION`, plus
-`test/golden` — and the secrets providers overlay `setup/secrets`. The pnpm pack
-also ships a root `.npmrc` setting `ignore-scripts=true` and `fund=false` — an
-install never runs a dependency's install-time code, and a package that
-genuinely has to build is allowed by name in the workspace file, so the
-exception is a reviewable line rather than a blanket switch — plus a `conf.d/`
-fragment aliasing `npx` to the manager's own runner, which keeps one store, one
-lockfile-aware resolver and one set of registry settings. Composition runs
-`toolchain-manager` first, then the `repo-gate` components, then `repo-hygiene`,
-then `package-manager`/`language`, then `app-framework`, then
-`capability-provider`, then `cloud-provider`, then `cloud-service`, so a later
-component's file wins and the lockfile records per file which component supplied
-it. The two ends are what the order is for: the manager goes **first** because
-it lays the baseline every overlay overlays, and the **deploy target goes last**
-because it is the most specific thing a repo pins — a `cloud-service` pack's
-root config and the `p:<id>:deploy` overlay beside it are the answer to how this
-repo actually ships, and nothing may overwrite that. A secrets overlay still
-outranks every language and framework pack, for the reason it always did: it is
-the most specific answer anything gives to `setup:secrets`. The two cloud types
-joined the order on 2026-09-05, when `cloud-service/workers-static-assets`
-became the first cloud pack to ship a `config/` tree at all;
-`cloud-service/workers-ssr` and `cloud-service/containers` followed with the
-same pair.
+builds checking `xcodebuild -version` against the `XCODE_VERSION` its
+`conf.d/swiftui.toml` fragment pins, plus `test/golden` — and the secrets
+providers overlay `setup/secrets`. The pnpm pack also ships a root `.npmrc`
+setting `ignore-scripts=true` and `fund=false` — an install never runs a
+dependency's install-time code, and a package that genuinely has to build is
+allowed by name in the workspace file, so the exception is a reviewable line
+rather than a blanket switch — plus a `conf.d/` fragment aliasing `npx` to the
+manager's own runner, which keeps one store, one lockfile-aware resolver and one
+set of registry settings. Composition runs `toolchain-manager` first, then the
+`repo-gate` components, then `repo-hygiene`, then `package-manager`/`language`,
+then `app-framework`, then `capability-provider`, then `cloud-provider`, then
+`cloud-service`, so a later component's file wins and the lockfile records per
+file which component supplied it. The two ends are what the order is for: the
+manager goes **first** because it lays the baseline every overlay overlays, and
+the **deploy target goes last** because it is the most specific thing a repo
+pins — a `cloud-service` pack's root config and the `p:<id>:deploy` overlay
+beside it are the answer to how this repo actually ships, and nothing may
+overwrite that. A secrets overlay still outranks every language and framework
+pack, for the reason it always did: it is the most specific answer anything
+gives to `setup:secrets`. The two cloud types joined the order on 2026-09-05,
+when `cloud-service/workers-static-assets` became the first cloud pack to ship a
+`config/` tree at all; `cloud-service/workers-ssr` and
+`cloud-service/containers` followed with the same pair.
 
 **What no pack can know, and `/vwf:init` fills** — in the base repo and in every
 member repo it resolved, each from that repo's own answers. It is more than two

@@ -164,7 +164,7 @@ inventory and check in that order — freshness before validity:
   being plain semver **and** free of a 13 or 17 component — those two integers
   are never issued on any version line this repo maintains, and it is the
   component that counts, so `1.13.0` fails where `1.130.0` passes. Rule 11 is
-  the widest: it walks a stackgen pack's whole `config/` payload tier — eight
+  the widest: it walks a stackgen pack's whole `config/` payload tier — nine
   assertions. Exec bit and shebang on every task file, exec bit and shebang on
   every shipped hook script, the `config/` root against the **landable** tier of
   the hygiene allowlist (whose two allowed directories are `.config/` and
@@ -177,8 +177,11 @@ inventory and check in that order — freshness before validity:
   naming a relative path or glob (no `..`) that matches at least one file under
   `config/` — the checker's own walk, so `**` enters dot-directories — and a
   `when:` of exactly one known axis (`forge`, `editor`, `secrets`, `update_bot`)
-  with a value that axis takes, `secrets: none` refused. Rule 13 refuses a
-  plugin-relative citation in anything a pack **lands** — the token, a bare
+  with a value that axis takes, `secrets: none` refused, and the pack's
+  `binaries`, `lockfile` and `machine_env` facts in the shapes doctor and setup
+  read — a binary a name or `{name, probe}`, a lockfile path with no `..`, and
+  each `machine_env` name a key of the pack's `conf.d` fragment. Rule 13 refuses
+  a plugin-relative citation in anything a pack **lands** — the token, a bare
   `assets/…` path, a `../` climb out of the tree the file lands in, or a path
   into a sibling pack — since that file is copied into a repo with no plugin,
   where each resolves to nothing silently. Rule 14: across

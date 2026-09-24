@@ -293,7 +293,7 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
   component's conventions, in this composition's template". Never swap one path
   for another.
 - **The whole `config/` payload tier is checked before it ships.**
-  `p:plugins:check` rule 11 makes **eight** assertions: the exec bit and a known
+  `p:plugins:check` rule 11 makes **nine** assertions: the exec bit and a known
   shebang on every task file (mise reports a 644 task as an *unknown* one rather
   than a permission error) and on every `hooks/*.sh`; the **landable** tier of
   the root allowlist over the tier's top level — the vwf-owned tier never
@@ -307,19 +307,23 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
   that every `conditional:` entry in the pack's `pack.yaml` names a relative
   path or glob (no `..`) matching at least one file under `config/` — the
   checker's own walk, so `**` enters `.config/` — and a `when:` of exactly one
-  vocabulary axis with a value it takes, `secrets: none` refused. Beside it,
-  rule 15 holds the gate packs' exclusion lists to one invariant: the dprint
-  pack's `dprint.json` and `taplo.toml` and the pre-commit pack's global
-  `exclude` (a `(?x)` block of anchored alternatives) state **one set** after
-  normalisation, and the gitleaks `[allowlist] paths` — every entry anchored
-  `(^|/)`, `.turbo/` among them since 2026-09-21 — is a **subset** of it, never
-  the reverse: the scanner extends upstream's default allowlist and must still
-  walk `.claude/`, which the formatters skip because in a shaped repo it is
-  machine-owned. Widen a formatter list, widen all three; widen the allowlist
-  only with a generated tree. `p:plugins:shellcheck` runs `shellcheck -x` and
-  `shfmt -d` over the same shell, in two groups — task libraries with the pack's
-  `_scripts/` beside them, hooks with no flags, since a hook lands alone and may
-  declare `sh`.
+  vocabulary axis with a value it takes, `secrets: none` refused; and that the
+  pack's `binaries`, `lockfile` and `machine_env` facts take the shapes doctor
+  and setup read — a binary a bare name or `{ name, probe }`, a lockfile a list
+  of relative paths or globs with no `..`, a `machine_env` entry a `name`,
+  `detect` and `question`, the name a key of the pack's `conf.d` fragment when
+  it ships one. Beside it, rule 15 holds the gate packs' exclusion lists to one
+  invariant: the dprint pack's `dprint.json` and `taplo.toml` and the pre-commit
+  pack's global `exclude` (a `(?x)` block of anchored alternatives) state **one
+  set** after normalisation, and the gitleaks `[allowlist] paths` — every entry
+  anchored `(^|/)`, `.turbo/` among them since 2026-09-21 — is a **subset** of
+  it, never the reverse: the scanner extends upstream's default allowlist and
+  must still walk `.claude/`, which the formatters skip because in a shaped repo
+  it is machine-owned. Widen a formatter list, widen all three; widen the
+  allowlist only with a generated tree. `p:plugins:shellcheck` runs
+  `shellcheck -x` and `shfmt -d` over the same shell, in two groups — task
+  libraries with the pack's `_scripts/` beside them, hooks with no flags, since
+  a hook lands alone and may declare `sh`.
 - **Never format a payload file with this repo's dprint config.** The tier is
   excluded from it on purpose: the target repo formats these files with the
   *shipped* config, which omits settings this repo sets, so formatting one here

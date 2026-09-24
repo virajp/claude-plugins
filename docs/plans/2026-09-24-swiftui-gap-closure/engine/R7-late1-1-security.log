@@ -1,0 +1,9 @@
+/security-review — R7-late1 round 1 — range 4a0b4958..20c547b8
+
+No high-confidence vulnerabilities found in 20c547b8.
+
+Dropped candidates:
+- Shell injection via the *'$'* glob (1): the $ is single-quoted, matched literally, never expanded.
+- Unintended expansion in the error text from \$ (1): escaped inside double quotes, printed literally.
+
+The commit only tightens an existing refusal check; no new input path, nothing new executed.

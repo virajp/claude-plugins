@@ -1,0 +1,75 @@
+/code-review high — R7 round 2 — range b14ada40..eb3b78eb
+
+I found 9 issues in this round. Three of them are new problems in the fixes themselves:
+
+- **`require_pin_source` misreads the fragment in two ways.** It can't read the escaped strings setup now writes. It also silently skips any line with a trailing comment.
+- **The task's own fix instruction is wrong for an upgraded repo.** A user who follows it has their committed pin replaced by whatever this machine detects.
+- **The ux-gate audit misses the new override check.** When an old `mise.toml` pin overrides the fragment, the audit runs on that stale simulator while `test:golden` refuses.
+
+Four round-1 findings are still in the tree. The run log dropped them as belonging to other units, and they aren't in the plan's Gaps list:
+
+- **The `sh -c '<detect>'` wording breaks every shipped detect.** A literal reading of the quoting fails all four detect commands, and doctor's probe line has the same wording.
+- **stackgen-sync can overwrite the filled pins with empty values.** On the next swiftui pack bump it treats the fragment as "pack moved" and selects it by default.
+- **The `lockfile:` fact never reaches a SwiftUI repo's check.** It is declared on swiftpm, which only ships inside project-axis bundles, while doctor reads it under `repo.stack`.
+- **A Mac-only app's empty device and OS pins are offered an iPhone on every setup run.** Every run also re-asks all four questions.
+
+The last two (the checker accepting `machine_env` with no fragment, and the missing lockfile in a repo with no dependencies) are already recorded as G4. I kept them at the bottom because they are still defects.
+
+```json
+[
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 193,
+    "summary": "Setup is still told to run each detect as `mise x -- sh -c '<detect>'`, but every shipped swiftui detect contains single quotes (the awk and jq programs), so a literal reading of this instruction breaks the quoting and every detect fails. Doctor's probe line (stack-checks.md:111) has the same wording.",
+    "failure_scenario": "Setup substitutes the XCODE_VERSION detect into sh -c '…'. The outer quote closes at `awk '`, the outer shell expands $1/$2, and the command exits 127. The three simulator detects fail the same way at `jq -er '`. Setup offers no default for any of the four pins. Round 1 raised this, routed it to the wave-2 rulings review, and it has not been fixed or recorded in the plan's Gaps section."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 211,
+    "summary": "Setup re-records the lockfile hash of the filled conf.d/swiftui.toml, but stackgen-sync (SKILL.md:52, :171) classifies by that hash alone. The next time the pack changes the fragment, sync calls the filled file 'pack moved', selects it by default, and copies the empty payload over the committed pins.",
+    "failure_scenario": "The swiftui pack bumps to 0.3.0 and edits a comment in swiftui.toml. /stackgen:stackgen-sync finds the repo file matching its recorded (filled) hash, so it is 'pack moved' and in the default selection. Applying it writes XCODE_VERSION = \"\" and empty SIMULATOR_* pins. Every build and golden task then refuses until someone re-runs /vwf:setup, and the committed pins are gone from the tree. This is not in the plan's Gaps section."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode",
+    "line": 53,
+    "summary": "require_pin_source parses the fragment with a raw-text regex that doesn't match what setup writes (fix 95b1011f escapes `\"` and `\\` in a TOML basic string). It also only matches an unindented `NAME = \"…\"` with nothing after the closing quote. Any line it can't match is silently skipped with `|| continue`, so the override check it adds switches itself off.",
+    "failure_scenario": "(a) A pin gets a trailing comment, `XCODE_VERSION = \"27.0\" # bumped for iOS 27`, as TOML allows. The grep misses, the pin is never compared, and a stale 0.1.0 `.config/mise.toml` value silently wins again. (b) Setup writes a value containing `\"`, which it escapes as `\\\"`; the `[^\"]*` regex misses and the check is skipped. (c) A value containing a backslash is written as `a\\\\b`. sed extracts the escaped text, mise's env holds the unescaped `a\\b`, and the task refuses with a false 'another source overrides it'."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode",
+    "line": 57,
+    "summary": "On a repo upgraded from 0.1.0, the override refusal tells the user to delete the `.config/mise.toml` pin line. By then setup has already filled the fragment from this machine's detected value, because it reads 'current value' off the empty fragment and not from the effective mise env, so deleting the line quietly replaces the repo's committed pin with this machine's value.",
+    "failure_scenario": "The team pins XCODE_VERSION=\"26.0\" in `.config/mise.toml` (0.1.0). Sync lands the empty conf.d fragment. Setup treats it as unfilled and preselects this machine's detected 27.0; the user accepts. test:golden refuses: env is 26.0, fragment is 27.0. The user follows the printed fix and deletes the mise.toml line. The pin has silently moved from 26.0 to 27.0, and the same happens to SIMULATOR_*, so the recorded goldens no longer match the pinned simulator. The conventions note says to move the value, but neither the task message nor setup does."
+  },
+  {
+    "file": "plugins/stackgen/stacks/package-manager/swiftpm/pack.yaml",
+    "line": 10,
+    "summary": "The new `lockfile:` fact is declared only on swiftpm. swiftpm ships only inside project-axis bundles (swift-swiftui, swift-package), while stack-adapter.md marks `lockfile` as repo-axis and doctor reads it under the `repo.stack` check. So an Xcode app's lockfile path never reaches the check it was added for.",
+    "failure_scenario": "A SwiftUI app keeps its lockfile at `App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`. Doctor's `repo.stack` package_manager check finds no `lockfile:` list on any repo-axis payload, because no Swift repo-axis bundle exists. It falls back to the conventional root `Package.resolved` and reports the lockfile missing for a correct repo. Gap G7's second half stays open. This is not in the plan's Gaps section."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 186,
+    "summary": "'Filled' means 'differs from the shipped value', and the shipped value is \"\". A macOS pin's SIMULATOR_DEVICE and SIMULATOR_OS are correctly empty, so they read as unfilled on every run and get the detected iPhone preselected. And because already-materialized entries are re-fetched every run, all four questions are asked on every /vwf:setup, including each one /vwf:architecture triggers.",
+    "failure_scenario": "A Mac-only app pins SIMULATOR_PLATFORM=macOS with device and OS empty. The next /vwf:setup preselects `iPhone 18 Pro` and `27.0` for the two 'unfilled' positions. Accepting the defaults writes an iPhone device into a macOS pin, and the next setup asks the same four questions again. Round 1 raised this; it is still unaddressed and not in the plan's Gaps section."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/skills/ux-gate/SKILL.md",
+    "line": 57,
+    "summary": "The ux-gate reads the pins with `mise env` and checks only that they are non-empty and that XCODE_VERSION matches `xcodebuild -version`. It never applies the new fragment-versus-env override check, even though its own text says the audit calls xcodebuild directly and 'this check is the only one it gets'.",
+    "failure_scenario": "A 0.1.0 `.config/mise.toml` still sets SIMULATOR_DEVICE=\"iPhone 16\" while conf.d/swiftui.toml pins \"iPhone 18 Pro\". test:golden refuses, but the ux-gate's accessibility audit builds its -destination from `mise env` and audits on the stale iPhone 16. It reports a11y results for a simulator that isn't the repo's pin."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 663,
+    "summary": "The machine_env name check runs only when `fragments.length > 0`. A pack that declares machine_env but ships no conf.d fragment (or any file) to hold those positions passes the checker, and a unit test asserts that this is fine. pack-format.md says the pack must land that file.",
+    "failure_scenario": "A new pack declares `machine_env: [{ name: FOO, detect: …, question: … }]` and ships no `config/.config/mise/conf.d/*.toml`. p:plugins:check is green. /vwf:setup asks the question and has no marked position to write into: the silent 'question whose answer lands nowhere' the function's own docstring says it prevents. The plan records this as G4 but it is still a checker gap."
+  },
+  {
+    "file": "plugins/vwf/skills/doctor/references/stack-checks.md",
+    "line": 288,
+    "summary": "The lockfile check requires at least one `lockfile:` entry to match a file, but SwiftPM and Xcode write no Package.resolved when there are no dependencies. A correct repo with no dependencies fails doctor's package-manager resolve check.",
+    "failure_scenario": "A new SwiftUI app that hasn't added a package yet, or a Swift library with no dependencies on swift-package, has no Package.resolved anywhere. Neither entry matches, and doctor reports the lockfile missing on a correct repo. Recorded as G4 but still a defect."
+  }
+]
+```

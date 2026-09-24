@@ -102,7 +102,7 @@ much smaller than the one it replaced: whole families of assertion became
    two-directions-cover-each-other-on-a-rename idiom rule 7 uses for agent
    cross-references.
 10. **The technology-free vwf guard.** Below.
-11. **A pack's `config/` payload tier is materializable as-is.** Eight
+11. **A pack's `config/` payload tier is materializable as-is.** Nine
     assertions, every one of them about a file whose failure mode in the
     *target* repo is silence rather than an error:
     - a **task file lands executable**. `config/.config/mise/tasks/**` is a
@@ -158,7 +158,20 @@ much smaller than the one it replaced: whole families of assertion became
       walk, so `**` enters dot-directories like `.config/`, which `globSync`
       would not; and an absolute path or a climb is rule 13's fault stated on a
       glob — it reaches out of what the pack lands. The finding names the pack,
-      the entry's index and its path.
+      the entry's index and its path;
+    - the pack's **three doctor- and setup-read facts** take the shapes their
+      readers trust: every `languages[].facts.binaries` entry is a bare name
+      (the `PATH` lookup) or a map of exactly `name` and an optional non-empty
+      `probe` (the command `/vwf:doctor` runs instead); `lockfile` is a
+      non-empty list of repo-relative paths or globs with no `..`; and every
+      `machine_env` entry is a map whose `name` is an env-var name and whose
+      `detect` and `question` are non-empty strings — and, when the pack ships a
+      `conf.d` fragment, whose name is a key of an `[env]` table in it, since
+      that marked position is what `/vwf:setup` fills. Each caller trusts the
+      shape: a probe that is not a string is never run, a glob that climbs out
+      matches something the repo does not own, and a name no fragment carries is
+      a question whose answer lands nowhere — all silently. The finding names
+      the pack and the entry.
 
     The walk is its own rather than the plugin file reader's, because every one
     of these paths runs through a dot segment the reader's glob does not descend

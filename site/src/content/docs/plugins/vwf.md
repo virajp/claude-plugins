@@ -696,11 +696,14 @@ it, which manifest identifies it, which mise tool installs it — come from the
 what the installed plugins declare **is** the vocabulary. `/vwf:doctor` reads
 the block back and checks the repo agrees: an LSP server and toolchain per
 declared language, every binary a materialized template's `binaries` fact names
-resolving on `PATH` (blocking once the project's template is pinned, a
-degradation while it reads `unresolved`), every framework and dependency present
-in the project's manifest, the repo's package manager and tooling, harness task
-names, health paths. It reports drift in both directions, including a framework
-doing obvious structural work that your config never mentions.
+resolving on `PATH` — or, where the entry carries a `probe`, that command
+exiting 0, run only while the template entry matches its lockfile hash (blocking
+once the project's template is pinned, a degradation while it reads
+`unresolved`), every framework and dependency present in the project's manifest,
+the repo's package manager and tooling — its lockfile found at one of the paths
+the package-manager pack's `lockfile` fact names — harness task names, health
+paths. It reports drift in both directions, including a framework doing obvious
+structural work that your config never mentions.
 
 A language no installed plugin claims is reported as *unknown*, and since
 `config_format` **14** that is a **blocking** finding: `/vwf:setup` and
@@ -721,9 +724,10 @@ The one second door is the **materialized escape**: a materializing adapter (the
 committed `.claude/` tree through consent-gated, reviewer-gated generation, and
 a language whose pin carries that template's emitted `language_facts` (LSP
 provision, mise tool, manifest, and an optional `binaries` list — executables
-needed on `PATH` that mise does not manage) is *known* — doctor verifies against
-the facts instead of a language plugin. A token with neither stays blocking;
-nothing about the escape re-opens free text.
+mise does not manage, each a name looked up on `PATH` or a name with a `probe`
+command) is *known* — doctor verifies against the facts instead of a language
+plugin. A token with neither stays blocking; nothing about the escape re-opens
+free text.
 
 That landing happens in **`/vwf:setup`'s materialize pass**, once per (repo,
 slug), never at the moment the pin is made — so a freshly recorded pin is
@@ -1817,6 +1821,23 @@ the way init seeds them, and the pass writes nothing into it. The one key it
 ever writes is a stale `answers.repos.<path>.forge`, rewritten in place and
 named in the report; landing the forge-conditioned files that staleness had
 skipped is `/vwf:setup reshape`'s, which `/vwf:doctor` points at.
+
+**Then it asks the machine env.** A pack can need values only the machine that
+builds it can answer — the SwiftUI pack's Xcode version and golden simulator —
+and declares each as a `machine_env` entry: an environment variable, a `detect`
+command and a question. The pack lands its file (for SwiftUI,
+`.config/mise/conf.d/swiftui.toml`) with those values empty; the pass runs each
+`detect` — only while the template entry matches its lockfile hash — and asks
+one question per value. On the landing run the detected value is preselected; on
+a later run the committed value is, with this machine's beside it where they
+differ, and a failed `detect` offers no default but still asks. The answer is
+written into the file's marked position as a quoted string — a value carrying a
+newline or other control character, a template delimiter or expansion character
+of the tool reading the file (for mise `{{`, `{%`, `{#` or `$`), or a `'`
+together with a `"` or a `\` is refused and asked again — the file's lockfile
+hash is re-recorded, and the file and lockfile are committed together in the
+target repo. The value is the repo's committed pin from then on, not a
+per-machine override. `/vwf:init` never asks these.
 
 Every landing sits behind the plugin's own consent line; a landing you decline
 leaves the pin untouched and is reported, an `unresolved` axis is skipped

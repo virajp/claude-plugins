@@ -1,0 +1,70 @@
+/code-review high — R7 round 1 — range b14ada40..233ef4ec
+
+I found 10 issues in `2026-09-24-swiftui-gap-closure`. I reviewed commits `b14ada40..233ef4ec` (only wave 1 has run so far) and there were no working-tree changes. `check.test.ts` passes (148 tests). I also ran the four `machine_env` detect commands directly on this machine and each printed a value: `27.0`, `iOS Simulator`, `iPhone 18 Pro`, `27.0`. I didn't include stale doc counts that unit U8 (wave 3) is already set to fix.
+
+Findings 1 and 2 are backed by local tests. Finding 1 is the most serious: if the detect commands are run exactly as setup's instructions write them, all four fail, so setup never offers a detected default.
+
+```json
+[
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 193,
+    "summary": "Setup is told to run each detect as `mise x -- sh -c '<detect>'`, but every shipped detect contains single quotes (the awk and jq programs), so pasting it into that quoted form breaks the shell quoting.",
+    "failure_scenario": "Pasting the XCODE_VERSION detect into sh -c '...' ends the quote at `awk '`. Run literally, the outer shell expands `$1`/`$2` and fails with `==: command not found` (exit 127). All four detects fail, so setup offers no default and asks every question blank, which defeats F3. Doctor's probe line (stack-checks.md:111, `sh -c '<probe>'`) has the same flaw for any probe that contains a quote."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/conf.d/swiftui.toml",
+    "line": 23,
+    "summary": "In mise, `.config/mise.toml` [env] overrides `.config/mise/conf.d/*.toml`, so an XCODE_VERSION or SIMULATOR_* pin already in the repo's mise.toml silently hides the new fragment. No migration step moves those values.",
+    "failure_scenario": "Tested locally: with A=\"\" in conf.d/x.toml and A=\"fromtoml\" in .config/mise.toml, `mise env` gives A=fromtoml. A repo that followed swiftui 0.1.0's refusal message ('Add XCODE_VERSION … to the [env] of the repo's mise config') upgrades to 0.2.0. Setup then reads and writes conf.d, and the new messages say to edit conf.d, but the old mise.toml value still wins. Moving the pin in conf.d changes nothing."
+  },
+  {
+    "file": "plugins/vwf/skills/doctor/references/stack-checks.md",
+    "line": 489,
+    "summary": "Doctor's content-drift splice only covers the marked positions listed in init's new-repo.md. The four new machine_env positions in conf.d/swiftui.toml are not in that list, so a hand-edited pin counts as pack-file drift.",
+    "failure_scenario": "A developer moves XCODE_VERSION by hand, as the fragment's own comment says to ('Moving one is its own change'), and commits. The hash no longer matches, and the splice has no positions to remove for this file, so doctor reports (e) content drift. Init's reshape then offers replace-or-keep, and choosing 'replace' resets all four pins to empty. A setup re-run that keeps the value writes nothing and does not re-record the hash, so the drift finding stays."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 206,
+    "summary": "Setup re-records the hash of the filled fragment, but stackgen-sync has no idea the file holds filled positions. When the pack next changes swiftui.toml, sync classifies the file as 'pack moved', selects it by default and copies the empty payload over it.",
+    "failure_scenario": "A later swiftui pack bump edits swiftui.toml. stackgen-sync sees the file still matching its recorded (filled) hash, so it counts as 'pack moved' and is pre-selected. Applying it writes XCODE_VERSION=\"\" and the SIMULATOR_* values as empty, and every build and golden task refuses until someone re-runs /vwf:setup. The committed pin values are lost from the tree."
+  },
+  {
+    "file": "plugins/vwf/skills/doctor/references/stack-checks.md",
+    "line": 288,
+    "summary": "The new `lockfile:` fact lives only on swiftpm, which ships inside the project-axis bundles (swift-swiftui, swift-package). Doctor's lockfile rule sits under the `repo.stack` check, and no Swift repo-axis bundle exists to carry it.",
+    "failure_scenario": "For a SwiftUI repo, the repo.stack template's payload has no `lockfile:` list, so doctor falls back to 'the conventional lockfile at the repo root', which is Package.resolved. An Xcode app keeps its lockfile at *.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved, so doctor still reports it missing and the second half of G7 stays open."
+  },
+  {
+    "file": "plugins/stackgen/stacks/package-manager/swiftpm/pack.yaml",
+    "line": 10,
+    "summary": "SwiftPM and Xcode write no Package.resolved when a package or app has no dependencies, yet the lockfile check requires at least one listed path to match.",
+    "failure_scenario": "A dependency-free library on swift-package, or a new SwiftUI app that has not added a package yet, has no Package.resolved anywhere. Doctor's 'package_manager resolves' check matches neither entry and reports a missing-lockfile finding for a repo that is correct."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 187,
+    "summary": "A position still holding the shipped empty value counts as 'unfilled'. On a macOS pin, SIMULATOR_DEVICE and SIMULATOR_OS are correctly empty, so they are unfilled forever. Every setup run also asks all four questions again, even when the values are already committed.",
+    "failure_scenario": "A Mac-only app pins SIMULATOR_PLATFORM=macOS with device and OS left empty. Every later /vwf:setup run (architecture also calls setup) treats device and OS as unfilled and preselects the detected `iPhone 18 Pro` / `27.0`. Accepting the default writes a device into a macOS pin. Each SwiftUI repo also gets four prompts on every run, with no way to skip them."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 657,
+    "summary": "The checker checks machine_env names only when the pack ships a conf.d fragment. A pack that declares machine_env but lands no file to hold those positions passes, even though pack-format.md says the pack must land that file.",
+    "failure_scenario": "A pack declares machine_env: [{name: FOO, …}] and ships no config/.config/mise/conf.d/*.toml. `fragments.length > 0` is false, so no finding is raised, and the unit test even treats this as correct. Setup then asks the question and has nowhere to write the answer. That is the silent failure the function's own docstring (line 555) says it prevents."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/pack.yaml",
+    "line": 45,
+    "summary": "The same five-line jq program that picks one simulator is copied three times (SIMULATOR_PLATFORM, SIMULATOR_DEVICE, SIMULATOR_OS). Only the final projection differs, and each copy runs `xcrun simctl list` again.",
+    "failure_scenario": "The three detects are only correct while they agree on the same simulator (the pack's own comment says so). If one copy is edited, for example to change which iPhone is chosen or the runtime filter, and the others are not, setup offers a device from one simulator and an OS from another. That produces a destination that does not exist, and test:golden fails. It also runs `simctl list` three times where once would do."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 525,
+    "summary": "pack.yaml is read and parsed twice, once in conditionalFaults and once in packFactFaults. Separately, tomlEnvKeys ignores `[[array]]` table headers, so it stays in [env] mode past one.",
+    "failure_scenario": "Every pack in the tree costs two readText and two parseYaml calls, where parsing once and passing the result to both checks would do. In a fragment with `[env]` followed by `[[x]]`, the keys after the `[[x]]` header are counted as env keys. A machine_env name then passes the check even though it is not in [env], so setup would write to the wrong table."
+  }
+]
+```

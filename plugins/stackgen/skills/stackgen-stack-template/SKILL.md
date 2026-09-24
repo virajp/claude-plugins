@@ -84,13 +84,16 @@ components: # the bundle's composition — the per-component dispatch record
 platforms: [ <platform> ] # project axis only
 languages: [ <token> ]
 language_facts: # per language — what /vwf:doctor verifies
-  <token>: { lsp: <how provided | n/a>, mise_tool: <name | n/a>, manifest: <file | n/a>, binaries: [ <name> ] } # binaries passed through from pack.yaml; omitted when the pack declares none
+  <token>: { lsp: <how provided | n/a>, mise_tool: <name | n/a>, manifest: <file | n/a>, binaries: [ <name> | { name: <name>, probe: <command> } ] } # binaries passed through from pack.yaml in either form; omitted when the pack declares none
 optional_languages: []
 frameworks: [] # derived — the composition's framework component slugs
 dependencies: []
 capabilities: [] # backing axis — the components' capability tokens
 artifact: <token> # deploy axis
 package_manager: <token> # repo axis
+lockfile: [ <path or glob> ] # beside package_manager — passed through from the package-manager pack; omitted when none declares it
+machine_env: # passed through from every component that declares it, for /vwf:setup to ask; omitted when none does
+  - { name: <ENV_VAR>, detect: <command>, question: <prompt> }
 harness:
   <capability>: { task: <name>, mechanism: <one line> } # or n/a
 conventions: |
@@ -102,6 +105,17 @@ covers is still *known* to vwf when its pin is a stackgen template carrying
 these emitted facts — doctor verifies against them instead of against a
 language plugin. Emitting them honestly (`n/a` included) is what keeps that
 check real.
+
+`machine_env` is what the caller asks, not what this skill fills. The
+materializer lands the fragment holding those marked positions **unfilled**;
+`/vwf:setup`'s materialize pass runs each `detect` — only while the
+committed entry matches the hash its lockfile records, asking with no
+default otherwise — offers the value preselected, refuses one its reader
+would not take literally, writes the answer and re-records the file's
+lockfile hash (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). A
+`binaries` probe is gated the same way in `/vwf:doctor`, which reports it
+not run on drift. It adds no consent tier —
+the fragment rides the `config/` line like any other.
 
 ## Rules
 

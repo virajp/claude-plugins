@@ -8,8 +8,9 @@
 # refused.
 
 # Fails unless a full Xcode is selected, the repo pins one as XCODE_VERSION in
-# its mise [env], and the selected one is that version. An unset pin is a
-# refusal too: a build that checks nothing is not pinned.
+# .config/mise/conf.d/swiftui.toml, and the selected one is that version. An
+# unset or empty pin is a refusal too: a build that checks nothing is not
+# pinned.
 #
 # `command -v xcodebuild` is no test: /usr/bin/xcodebuild is a stub every Mac
 # carries, and with only the Command Line Tools selected it exists and exits
@@ -24,9 +25,10 @@ require_xcode() {
     exit 1
   fi
   selected=$(printf '%s\n' "${version_output}" | awk 'NR==1{print $2}')
+  require_pin_source "${task}" XCODE_VERSION
   if [ -z "${XCODE_VERSION:-}" ]; then
-    print_error "${task}: no Xcode is pinned — XCODE_VERSION is unset."
-    print_yellow "Add XCODE_VERSION = \"${selected}\" (or the version the repo builds with) to the [env] of the repo's mise config, then re-run."
+    print_error "${task}: no Xcode is pinned — XCODE_VERSION is unset or empty."
+    print_yellow "Set XCODE_VERSION = \"${selected}\" (or the version the repo builds with) in the [env] of .config/mise/conf.d/swiftui.toml, then re-run."
     exit 1
   fi
   if [ "${selected}" != "${XCODE_VERSION}" ]; then
@@ -34,6 +36,70 @@ require_xcode() {
     print_yellow "Select Xcode ${XCODE_VERSION} with xcode-select -s, or point DEVELOPER_DIR at it, then re-run."
     exit 1
   fi
+}
+
+# Fails when a pin this task reads resolves to a value other than the one
+# .config/mise/conf.d/swiftui.toml writes. mise lets `.config/mise.toml`'s
+# [env] win over a conf.d fragment, so a line left there by an earlier version
+# of this pack — whose refusals said to add the pins to the mise config's
+# [env] — silently overrides the fragment /vwf:setup fills.
+#
+# Each pin is a plain string under the fragment's one [env] table — the shape
+# /vwf:setup writes. The table is read once, by mise itself
+# (`mise config get --file … env`), which parses the TOML — comments,
+# indentation, escapes — and prints it back one `NAME = <string>` line per
+# plain key: a basic string ("…") where the value needs no escape, a literal
+# one ('…') where it does. Anything else — a missing fragment, an `[[env]]`
+# array, a `{ value = … }` table, a value mise prints any other way — is a
+# refusal naming the pin, never a skip: the fragment is the one source.
+require_pin_source() {
+  local task="$1" fragment table name line raw pinned plain
+  fragment="${MISE_PROJECT_ROOT}/.config/mise/conf.d/swiftui.toml"
+  shift
+  if [ ! -f "${fragment}" ]; then
+    print_error "${task}: .config/mise/conf.d/swiftui.toml is missing — it is where this repo pins Xcode and the golden simulator."
+    print_yellow "Re-land the SwiftUI pack through /vwf:setup, which writes it and asks for each pin, then re-run."
+    exit 1
+  fi
+  if ! table=$(mise config get --file "${fragment}" env); then
+    print_error "${task}: .config/mise/conf.d/swiftui.toml has no readable [env] table."
+    print_yellow "Fix the file (mise config get's error is above), then re-run."
+    exit 1
+  fi
+  for name in "$@"; do
+    line=$(printf '%s\n' "${table}" | grep -m1 "^${name} = " || true)
+    raw="${line#"${name} = "}"
+    # A literal string holds its value verbatim. A multi-line string (''' or
+    # """) leaves its own quote inside once the outer pair is stripped, and a
+    # basic string mise printed with an escape leaves a backslash: neither is
+    # a plain pin.
+    pinned="" plain=false
+    if [ "${#raw}" -ge 2 ]; then
+      pinned="${raw:1:${#raw}-2}"
+      case "${raw}" in
+        \'*\') [[ "${pinned}" == *\'* ]] || plain=true ;;
+        \"*\") [[ "${pinned}" == *[\"\\]* ]] || plain=true ;;
+      esac
+    fi
+    if [ -z "${line}" ] || [ "${plain}" != true ]; then
+      print_error "${task}: ${name} is not a plain string under [env] in .config/mise/conf.d/swiftui.toml${line:+ — mise reads it as: ${line}}."
+      print_yellow "Write it as ${name} = \"<value>\" in that file's one [env] table, then re-run."
+      exit 1
+    fi
+    # mise renders every [env] value as a template, so a pin holding a
+    # template delimiter runs on every load, and with env_shell_expand on a
+    # `$` expands; the raw value shows either.
+    if [[ "${pinned}" == *'{{'* || "${pinned}" == *'{%'* || "${pinned}" == *'{#'* || "${pinned}" == *'$'* ]]; then
+      print_error "${task}: ${name} in .config/mise/conf.d/swiftui.toml holds a template delimiter ({{, {% or {#) or a \$, which mise would run or expand on every load."
+      print_yellow "Replace it with the literal value — an Xcode version, a simulator name or an OS version — then re-run."
+      exit 1
+    fi
+    if [ "${!name:-}" != "${pinned}" ]; then
+      print_error "${task}: ${name} is \"${!name:-}\", but .config/mise/conf.d/swiftui.toml pins \"${pinned}\" — another source overrides it."
+      print_yellow "Move the value the team intends into .config/mise/conf.d/swiftui.toml, then delete the ${name} line from .config/mise.toml's [env] (or wherever mise env shows it set), then re-run."
+      exit 1
+    fi
+  done
 }
 
 # Prints the one `*.xcodeproj` at the repo root. None, or more than one, is a

@@ -60,7 +60,9 @@ common failure is reported immediately rather than after the slow gate.
 
 **The exclusion set is stated once**, not restated per gate. Generated trees,
 vendored code and lockfiles are excluded for the same reason everywhere, and
-per-gate copies drift until one gate is scanning what the others skip. Across
+per-gate copies drift until one gate is scanning what the others skip. Xcode's
+asset catalogs (`*.xcassets`) count as generated: Xcode writes and rewrites
+the `Contents.json` inside them, so no hook should touch one. Across
 the gate packs that set is spelled three times — the formatter's `excludes`,
 the TOML formatter's `exclude` and this config's global `exclude` — each in its
 tool's own syntax, and the toolkit's checker holds the three equal after

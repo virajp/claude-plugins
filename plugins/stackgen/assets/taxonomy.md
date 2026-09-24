@@ -22,9 +22,11 @@ The closed list. A component is exactly one of:
   composes around, and the one type that carries the per-language facts
   `/vwf:doctor` verifies (LSP provision, mise tool, manifest, and the
   optional `binaries` — executables needed on `PATH` that mise does not
-  manage).
+  manage, each a bare name doctor looks up or a `{ name, probe }` map whose
+  probe command doctor runs instead).
 - **`package-manager`** — how a language's dependencies are installed and
-  locked; contributes the `repo`-axis facts.
+  locked; contributes the `repo`-axis facts, and declares its `lockfile:`
+  paths or globs, which doctor's resolve check reads.
 - **`framework`** — a library that imposes structure inside a language: a
   webserver, an ORM, a testing framework, a meta-framework. Note the
   containment: a `framework` is **subordinate** to the `language` component
@@ -94,6 +96,10 @@ The closed list. A component is exactly one of:
   pack must not decide it for them. Pinned per project, and asked only of
   a project declaring a `site` or `webapp` platform. Composes into a
   Stylesheet-Bundle.
+
+Any type may declare a pack-level **`machine_env:`** list — environment
+values detected from the developer's machine, which `/vwf:setup` asks for
+when it lands the pack (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`).
 
 ## Categories
 

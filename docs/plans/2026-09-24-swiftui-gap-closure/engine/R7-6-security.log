@@ -1,0 +1,7 @@
+/security-review — R7 round 6 — range b14ada40..4d843baf
+
+No high-confidence vulnerabilities found in b14ada40..HEAD.
+
+Dropped candidates:
+- Hash-gate bypass (2): one commit can edit both the template and its lockfile hash, but commit access already runs arbitrary code (committed mise tasks, hooks, [env] templates under mise x). The gate closes the new case: an uncommitted/local template edit, or a hand edit whose lockfile hash was not updated.
+- Value rule injection, materialize.md:209 (3): control chars, {{ {% {# $, and a ' with " or \ are refused; the rest is a TOML basic string with " and \ escaped — blocks string breakout, key injection, template rendering and variable expansion. A leading ~ only expands to home. No concrete untrusted-input path.

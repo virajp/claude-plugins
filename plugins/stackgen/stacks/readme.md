@@ -57,15 +57,17 @@ after TypeScript and the Markdown and Bash pair the `claude-code-plugin`
 bundle composes. `swift-package`, `platforms: [packages]`, pins four packs:
 `language/swift` (the root, declaring `sourcekit-lsp` and `binaries: [swift]`,
 since the toolchain is the host's), `package-manager/swiftpm` (doctrine only,
-no `config/` tier), `toolchain-gate/swift-format` and `toolchain-gate/swiftlint`
-— two more gates meaningful for one toolchain. swift-format ships with the
-toolchain; SwiftLint is pinned through mise by the `conf.d/swiftlint.toml`
-its pack lands. `language/swift` owns the tasks, which take their file list
-from git, NUL-separated and `./`-prefixed — `code:format` the hook's staged
-list when one is passed — stop with an error when `git ls-files` fails, walk
-the tree with `find` when there is neither a `.git` entry nor `GIT_DIR`, or
-no git, and skip SwiftLint when no Swift source is in scope. No pack lands
-`Package.swift`: `swift package init` creates it.
+no `config/` tier, and a `lockfile` fact naming `Package.resolved` at the
+root or inside an `.xcodeproj`), `toolchain-gate/swift-format` and
+`toolchain-gate/swiftlint` — two more gates meaningful for one toolchain.
+swift-format ships with the toolchain; SwiftLint is pinned through mise by
+the `conf.d/swiftlint.toml` its pack lands. `language/swift` owns the tasks,
+which take their file list from git, NUL-separated and `./`-prefixed —
+`code:format` the hook's staged list when one is passed — stop with an error
+when `git ls-files` fails, walk the tree with `find` when there is neither a
+`.git` entry nor `GIT_DIR`, or no git, and skip SwiftLint when no Swift
+source is in scope. No pack lands `Package.swift`: `swift package init`
+creates it.
 
 **Wave C — `app-framework/flutter`**, kind `app-framework`, with
 `package-manager/pub` and `toolchain-gate/analysis-options`. The first
@@ -83,9 +85,18 @@ the `native-ui` category, rooting the `swift-swiftui` bundle beside
 `package-manager/swiftpm`, `toolchain-gate/swift-format` and
 `toolchain-gate/swiftlint` across every Apple platform token. Xcode owns the
 build from a committed Xcode project a person creates once — no pack lands
-it and no generator writes it — so the pack declares
-`binaries: [xcodebuild, swift]`, its tasks check `xcodebuild -version`
-against the repo's `XCODE_VERSION`, and its `ux-gate` runs the
+it and no generator writes it — so the pack declares `swift` as a bare
+binary and `xcodebuild` with the probe `xcodebuild -version`, which doctor
+runs because a Command Line Tools stub is on `PATH` too. Its tasks check
+`xcodebuild -version` against the `XCODE_VERSION` in the
+`.config/mise/conf.d/swiftui.toml` it lands, and refuse a pin another
+source overrides, a fragment missing or unreadable, a pin missing or not a
+plain string there, or a value holding a template delimiter or `$` — the
+pack's conventions list each, and the 0.1.0 upgrade step (move the team's
+pin out of `.config/mise.toml`'s `[env]` into the fragment, then delete the
+old line). That pin and the three `SIMULATOR_*` pins beside it ship empty and
+are filled by `/vwf:setup`, which runs each `machine_env` entry's
+`detect` and offers the answer as the default. Its `ux-gate` runs the
 swift-snapshot-testing goldens on the simulator the repo pins. It ships no
 integration references yet.
 

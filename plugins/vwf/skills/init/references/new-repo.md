@@ -445,6 +445,14 @@ for the flag and alias lists, which stands where those lines go. There is no
 marker syntax a tool could enumerate, so the set is exactly the positions this
 section lists — read it from here, never from the payload.
 
+One other kind of marked position exists and is **not init's**: a pack's
+`machine_env:` values, marked in that pack's own `conf.d` fragment (the SwiftUI
+pack's `XCODE_VERSION` and `SIMULATOR_*`, say). Those packs land through
+`/vwf:setup`'s materialize pass, which asks and fills them and re-records the
+fragment's hash; init neither asks them nor splices them, so they are not in
+the set above, and a value later edited by hand reads as content drift on that
+fragment.
+
 The toolchain pack ships the flag list and the alias list as **commented
 templates in place**, each with a note saying the names come from the registry
 or the member directories — that is, from the members. Those comments are the

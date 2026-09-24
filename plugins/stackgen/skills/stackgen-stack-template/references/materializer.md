@@ -38,9 +38,11 @@ to a repo, and every write it makes is consent-gated and committed once.
    (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`):
 
    - `.claude/stackgen/templates/<slug>.md` — **one entry for the bundle**:
-     the payload fields (including `kind`, the `components:` refs and
-     per-language `facts`) as frontmatter, the components' conventions
-     prose as body.
+     the payload fields (including `kind`, the `components:` refs,
+     per-language `facts` with `binaries` entries in either form, a bare
+     name or a `{ name, probe }` map, `lockfile` beside
+     `package_manager`, and every component's `machine_env`) as
+     frontmatter, the components' conventions prose as body.
    - `.claude/stackgen/citations/<component-slug>.yaml` — per component:
      the research sources with URLs and fetch dates (generation; a pack
      lists its provenance here).
@@ -121,7 +123,12 @@ to a repo, and every write it makes is consent-gated and committed once.
        and composed into `.vscode/settings.json` and
        `.vscode/extensions.json` by the orchestrator alone, per
        `${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`. Nothing here reads
-       or rewrites either editor file.
+       or rewrites either editor file. A `.config/mise/conf.d/<pack>.toml`
+       fragment holding a pack's `machine_env:` marked positions lands
+       the same way too — verbatim, the positions **unfilled**. Filling
+       them is the caller's: `/vwf:setup`'s materialize pass detects and
+       asks each value after this landing. No new consent line; the
+       fragment rides the `config/` one.
    - The lockfile update — every path above, with its component ref,
      source and content hash, plus the **mode** for a `config/` file, and
      the `skipped:` list the evaluation below produces. The
@@ -132,8 +139,9 @@ to a repo, and every write it makes is consent-gated and committed once.
      `/vwf:init` **re-records** the hash of every landed file it changes
      after landing — its marked-position fills, the `.gitignore` section
      appends, the hook-fragment merge, the editor block, and either answer
-     of its replace-or-keep offer — so a differing hash is content drift
-     only when no such writer ran.
+     of its replace-or-keep offer — and `/vwf:setup` re-records the hash
+     of a fragment whose `machine_env:` positions it filled, so a
+     differing hash is content drift only when no such writer ran.
 
    **Composition order, and why a bug in it is silent.** More than one
    component may write into one `config/` tree — `.config/mise/tasks/` is
