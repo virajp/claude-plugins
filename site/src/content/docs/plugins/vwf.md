@@ -1828,16 +1828,17 @@ and declares each as a `machine_env` entry: an environment variable, a `detect`
 command and a question. The pack lands its file (for SwiftUI,
 `.config/mise/conf.d/swiftui.toml`) with those values empty; the pass runs each
 `detect` — only while the template entry matches its lockfile hash — and asks
-one question per value. On the landing run the detected value is preselected; on
-a later run the committed value is, with this machine's beside it where they
-differ, and a failed `detect` offers no default but still asks. The answer is
-written into the file's marked position as a quoted string — a value carrying a
-newline or other control character, a template delimiter or expansion character
-of the tool reading the file (for mise `{{`, `{%`, `{#` or `$`), or a `'`
-together with a `"` or a `\` is refused and asked again — the file's lockfile
-hash is re-recorded, and the file and lockfile are committed together in the
-target repo. The value is the repo's committed pin from then on, not a
-per-machine override. `/vwf:init` never asks these.
+one question per value. On the landing run — or a later run that finds every
+position still as shipped, because the landing stopped before its questions —
+the detected value is preselected; on a later run the committed value is, with
+this machine's beside it where they differ, and a failed `detect` offers no
+default but still asks. The answer is written into the file's marked position as
+a quoted string — a value carrying a newline or other control character, a
+template delimiter or expansion character of the tool reading the file (for mise
+`{{`, `{%`, `{#` or `$`), or a `'` together with a `"` or a `\` is refused and
+asked again — the file's lockfile hash is re-recorded, and the file and lockfile
+are committed together in the target repo. The value is the repo's committed pin
+from then on, not a per-machine override. `/vwf:init` never asks these.
 
 Every landing sits behind the plugin's own consent line; a landing you decline
 leaves the pin untouched and is reported, an `unresolved` axis is skipped

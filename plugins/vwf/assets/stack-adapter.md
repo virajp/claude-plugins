@@ -284,7 +284,7 @@ frameworks: [] # open, lowercase-kebab
 dependencies: [] # open, lowercase-kebab
 capabilities: [] # backing axis — capability-vocabulary.md tokens
 artifact: <token> # deploy axis
-package_manager: <token> # repo axis
+package_manager: <token> # any axis composing a package manager
 lockfile: [ <path | glob> ] # optional, any axis composing a package manager — where its lockfile may sit; any match passes
 machine_env: # optional — machine values /vwf:setup detects and asks for
   - { name: <ENV_VAR>, detect: "<command>", question: "<prompt>" }

@@ -201,10 +201,13 @@ nothing to do.
    drift is named beside the question.
 2. Ask `question`. **Which value is preselected depends only on whether the
    pack landed in this run.** On the landing run, the detected value is
-   preselected. On every later run, the position's **current value** is —
-   an empty one included, shown as empty, since an empty answer is an answer
-   (a platform the value does not apply to, say) — with the detected value
-   beside it where the two differ. With no detected value — a failed
+   preselected. A pack whose every `machine_env` position still holds the
+   value it shipped with counts as landing in this run too — an earlier
+   landing was interrupted before its questions were answered, so nothing has
+   been answered yet. On every later run, the position's **current value** is
+   — an empty one included, shown as empty, since an empty answer is an
+   answer (a platform the value does not apply to, say) — with the detected
+   value beside it where the two differ. With no detected value — a failed
    `detect`, or one not run for drift — the landing run offers no default,
    and a later run still preselects the current value: only the detected
    default is withheld. Either way the person may type another, and the
