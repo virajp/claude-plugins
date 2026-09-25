@@ -104,10 +104,15 @@ result — you cannot write code into a repo you do not have.
 shaped by `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`; `execute`
 reads folders only, and a single-file plan from an earlier release is not an
 input (finish it on the release that wrote it, or re-plan it). Read the
-frontmatter — `type:`, `covers:` when present, `requires:`, and `backlog:` (the
-ids the landing hands to `/vwf:backlog`, empty or absent when the plan covers
-no backlog item) — and the **Status**, **Consent**, **Units** and **Run log**
-blocks. Hold two facts from this read for every gate below: **has `covers:`**
+frontmatter — `type:`, `covers:` when present, `requires:`, `backlog:` (the
+ids the plan **finishes**, which the landing hands to `/vwf:backlog done`) and
+`backlog_pieces:` (the ids it lands **a piece of**, which the landing hands to
+`/vwf:backlog partial`), each empty or absent when the plan covers no such
+item, and absent read as empty — and the **Status**, **Consent**, **Units**,
+**Parked** and **Run log** blocks. A **`- Bnn:` Parked line** is a line under
+the folder's `## Parked` heading that begins `- B`, digits and a colon — the
+remainder of item `Bnn` that this plan does not land; other Parked prose is
+not read. Hold two facts from this read for every gate below: **has `covers:`**
 — a cycle plan, whose blueprint-bound steps run — and **has a `code` unit** —
 one or more Units table rows whose `Kind` is `code`. Then read the folder's
 **row** in the base repo's `docs/plans/index.md`, at the integration branch's
@@ -158,7 +163,7 @@ tip, the way the contract's *Reading the queue* reads it. Then:
   and its row), since it would land with no review; and an After landing
   table with no *Mode* column, or a step whose mode is neither `run` nor
   `ask` (re-record the step).
-- Status `APPROVED` with an `APPROVED` row → a fresh run. Four refusals are
+- Status `APPROVED` with an `APPROVED` row → a fresh run. Seven refusals are
   read off the folder here, before the claim, each stopping the run with the
   fix — amend the row and re-approve the plan — since execute runs what is
   written and infers no row. **A `code` unit no `review` row covers** — a row
@@ -175,7 +180,19 @@ tip, the way the contract's *Reading the queue* reads it. Then:
   its coverage must agree) — naming the row and the unit. **An After landing
   table with no *Mode* column, or a step whose mode is neither `run` nor
   `ask`** — the planner that wrote it re-records the step; a section reading
-  `none`, with no table, is valid and exempt.
+  `none`, with no table, is valid and exempt. The last three read the backlog
+  lists against Parked, since a landing turns `backlog:` into `Done` and
+  `backlog_pieces:` into `Partially done` and checks nothing else; each names
+  the id, and the fix is to move the id to the list its Parked lines say it
+  belongs on. **An id on both `backlog:` and `backlog_pieces:`** — the plan
+  cannot both finish the item and land a piece of it. **An id on `backlog:`
+  with a `- Bnn:` Parked line for it** — the plan says it finishes an item it
+  also says it leaves a remainder of; the refusal quotes each such line, and
+  the fix is the id on `backlog_pieces:` or the line dropped. **An id on
+  `backlog_pieces:` with no `- Bnn:` Parked line for it** — a piece with no
+  recorded remainder, which would leave the item `Partially done` with nothing
+  saying what is left; the fix is the line written or the id moved to
+  `backlog:`.
 
 The folder arrives **already committed** on the integration branch — the
 planner commits and pushes it at hand-off — so the worktree Setup step 1 cuts
@@ -221,20 +238,20 @@ blueprint artifact.
 
 ## Doc Paths
 
-| Doc           | Path                                                                            |
-| ------------- | ------------------------------------------------------------------------------- |
+| Doc           | Path                                                                                                                         |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Plan          | `docs/plans/<date>-<HHMM>-<slice>/` in the target repo, or `docs/plans/<date>-<name>/` in the base (`index.md` + unit files) |
-| Plan index    | `docs/plans/index.md` (base repo) — its one table                               |
-| Plan template | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`                         |
-| Membership    | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                                    |
-| Backlog       | a project on the base repo's forge, never a path — marked done via `/vwf:backlog` |
-| Registry      | `docs/blueprint/registry.yaml` — *cycle plans only*                             |
-| Flow (slice)  | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` — *cycle plans only*     |
-| Entity        | `docs/blueprint/entities/<entity>/` (`index.md` + schema) — *cycle plans only*  |
-| API contract  | `docs/blueprint/apis/<project>.openapi.yaml` — *cycle plans only*               |
-| Released APIs | `docs/blueprint/apis/released/` — *cycle plans only*                            |
-| Conventions   | `docs/blueprint/conventions.md` — *cycle plans only*                            |
-| Environment   | `docs/blueprint/environment.md` — *cycle plans only*                            |
+| Plan index    | `docs/plans/index.md` (base repo) — its one table                                                                            |
+| Plan template | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`                                                                      |
+| Membership    | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                                                                                 |
+| Backlog       | a project on the base repo's forge, never a path — marked done or partial via `/vwf:backlog`                                 |
+| Registry      | `docs/blueprint/registry.yaml` — *cycle plans only*                                                                          |
+| Flow (slice)  | `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` — *cycle plans only*                                                  |
+| Entity        | `docs/blueprint/entities/<entity>/` (`index.md` + schema) — *cycle plans only*                                               |
+| API contract  | `docs/blueprint/apis/<project>.openapi.yaml` — *cycle plans only*                                                            |
+| Released APIs | `docs/blueprint/apis/released/` — *cycle plans only*                                                                         |
+| Conventions   | `docs/blueprint/conventions.md` — *cycle plans only*                                                                         |
+| Environment   | `docs/blueprint/environment.md` — *cycle plans only*                                                                         |
 
 The *cycle plans only* rows are read on a plan with `covers:` and never
 otherwise.
@@ -317,8 +334,9 @@ otherwise.
   [blocking and resume](references/blocking.md), where a unit's `UNRESOLVED:`
   is the same thing.
 - **The backlog is never edited here.** The backlog project has one writer,
-  `/vwf:backlog`; this command only calls it at the landing with the plan's
-  `backlog:` ids, and no unit, subagent or reconcile pass touches the project.
+  `/vwf:backlog`; this command only calls it at the landing — `done` with the
+  plan's `backlog:` ids, `partial` with its `backlog_pieces:` ids — and no
+  unit, subagent or reconcile pass touches the project.
 - **All git via `/vwf:git-workflow`.** Never run raw git — the exceptions are
   the index row, whose claim and completion commits are the plain commands
   `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`
@@ -742,13 +760,16 @@ the gap list holding no blocking gap, prepare the landing commit:
 3. **The folder.** On `yes`, when the gap list is **empty**, invoke
    `plan-management archive <folder>` in the worktree — it moves the folder to
    `docs/plans/archived/`, leaves the `COMPLETE` block as written, closes the
-   `backlog:` ids through `/vwf:backlog done`, marks the run's mempalace
-   drawer archived, and edits no row, since the index never rides a run
-   branch. The folder is finished and the archive is its record. When any gap
-   is **open**, or on `no`, `archive` is not invoked: the folder stays live at
-   its path — as the working record of what needs reconciling, or for the hand
-   merge — and, when index.md's `backlog:` names ids, invoke
-   `/vwf:backlog done <ids>` here instead — that skill is the only writer of
+   `backlog:` ids through `/vwf:backlog done` and records the
+   `backlog_pieces:` ids through `/vwf:backlog partial`, marks the run's
+   mempalace drawer archived, and edits no row, since the index never rides a
+   run branch. The folder is finished and the archive is its record. When any
+   gap is **open**, or on `no`, `archive` is not invoked: the folder stays live
+   at its path — as the working record of what needs reconciling, or for the
+   hand merge — and the same split is made here instead: when index.md's
+   `backlog:` names ids, invoke `/vwf:backlog done <ids> <folder>`, and when
+   its `backlog_pieces:` names ids, invoke
+   `/vwf:backlog partial <ids> <folder>` — that skill is the only writer of
    the backlog project, and its edit touches nothing in the tree. Either way,
    commit all of it as one final `docs:` commit in the worktree.
 
@@ -887,7 +908,8 @@ and answered at the end.
 - Takes a `RUNNING` row, however stale — `unclaim` on the user's ask, once its
   worktree is gone, is the only release
 - Edits the backlog itself, or lets a unit do it — `/vwf:backlog` owns the
-  project, and the landing calls it
+  project, and the landing calls it, `done` for `backlog:` and `partial` for
+  `backlog_pieces:`
 - Edits a blueprint doc beyond the `implementation:` stamp, or runs a
   blueprint-bound step on a plan without `covers:`
 - Runs a gate the plan's *Wave gate* section does not name, or skips one it does
