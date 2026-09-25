@@ -68,11 +68,14 @@ mise run code:all             # aggregate: format → lint → sec
 Direct invocation (what those tasks wrap):
 
 ```sh
-# Lint — defaults to the current directory
-linter
-linter --fix                             # auto-fix what's mechanical
-linter src/ tests/                       # limit to targets
-linter --cache                           # only changed files
+# Lint — defaults to the current directory. Resolve the mise-pinned binary
+# as the tasks do: a bare `linter` can be shadowed by node_modules/.bin, and
+# is not on PATH outside an activated mise.
+linter="$(mise which linter --tool npm:@askviraj/linter)"
+"$linter"
+"$linter" --fix                          # auto-fix what's mechanical
+"$linter" src/ tests/                    # limit to targets
+"$linter" --cache                        # only changed files
 
 # Format
 dprint check --config dprint.json        # verify (CI / pre-commit)
