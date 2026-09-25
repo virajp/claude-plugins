@@ -195,7 +195,7 @@ fi
 
 if [ "${in_git}" = "false" ] || [ "${#lint_targets[@]}" -gt 0 ]; then
   print_subheader "Linting config files ..."
-  pnpm dlx @askviraj/linter ${args[@]+"${args[@]}"} ${lint_targets[@]+"${lint_targets[@]}"}
+  linter ${args[@]+"${args[@]}"} ${lint_targets[@]+"${lint_targets[@]}"}
 fi
 
 # SwiftLint exits 1 with "No lintable files" when it has nothing to lint — a

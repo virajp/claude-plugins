@@ -49,12 +49,12 @@ minimum_release_age = "10h"
 # (`mise upgrade`), and the pipeline installs from it (see mise.ci.toml).
 #
 # **One lockfile per config file that declares tools, named after that file's
-# stem.** `mise install` writes `mise.dev.lock` beside `mise.dev.toml`, and would
-# write `mise.lock` beside this file the moment `[tools]` below stops being
-# empty. With the split as shipped — an empty base and the dev tools — the only
-# file produced is `.config/mise.dev.lock`. All of them are tracked; only
-# `mise.local.lock`, the counterpart of the uncommitted `mise.local.toml`, is
-# ignored.
+# stem.** `mise install` writes `mise.dev.lock` beside `mise.dev.toml`, and
+# `mise.lock` beside this file, whose `[tools]` below carries the house linter.
+# With the split as shipped — the linter in the base and the dev tools — the
+# files produced are `.config/mise.lock` and `.config/mise.dev.lock`. All of
+# them are tracked; only `mise.local.lock`, the counterpart of the uncommitted
+# `mise.local.toml`, is ignored.
 lockfile = true
 
 # Interleave task output rather than buffering per task. Applies when `raw` is
@@ -142,7 +142,7 @@ MEMBERS = ""
 #   _.path = { path = "node_modules/.bin", tools = true }
 
 [tools]
-# EMPTY by default, and that is the contract: this pack is the toolchain
+# ONE tool by default, and that is the contract: this pack is the toolchain
 # manager, not the toolchain. The language runtime arrives with this repo's
 # language and package-manager components, which write their own tier; a
 # capability provider (a secret manager, say) ships its tool in its own
@@ -153,6 +153,15 @@ MEMBERS = ""
 # For example, a Node repo's package-manager component would carry:
 #   node = { version = "latest" }
 #   pnpm = { version = "latest" }
+#
+# The one tool is the house linter, which every language pack's `code:lint`
+# calls as `linter`. It is pinned here, once, at an EXACT version rather than
+# fetched per run: an unpinned fetch is whatever the registry serves that
+# minute, and one pin is one version every language pack agrees on. It lives in
+# the base because the pipeline runs `code:lint`. mise installs the package
+# without a package manager, but the binary is a Node script — it runs under the
+# `node` this repo's own components pin.
+"npm:@askviraj/linter" = "1.1.6"
 
 [tasks.init]
 # Mandatory, and it lives in the BASE rather than in dev on purpose: the

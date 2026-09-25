@@ -88,8 +88,12 @@ variant is loaded.
   release younger than ten hours, and `lockfile = true` records what a fuzzy pin
   resolved to — **one lockfile per config file that declares tools, named after
   that file's stem, and all of them tracked**. With the split as shipped that is
-  `.config/mise.dev.lock` alone; a runtime pinned in `mise.toml` adds
-  `.config/mise.lock` beside it. Only `mise.local.lock` is ignored.
+  `.config/mise.lock` and `.config/mise.dev.lock`; a runtime pinned in
+  `mise.toml` joins the first. Only `mise.local.lock` is ignored.
+  Its one shipped tool is the **house linter**, `npm:@askviraj/linter` at an
+  exact version, which every language pack's `code:lint` calls as `linter` —
+  one pin every language pack agrees on, in the base because the pipeline runs
+  `code:lint`. The binary is a Node script, so it runs under the repo's `node`.
   It also carries three settings that are policy rather than taste:
   `all_compile = false` (take the published binary for every tool, never build
   one), `task.timings = true` (an aggregate gate whose steps have no elapsed

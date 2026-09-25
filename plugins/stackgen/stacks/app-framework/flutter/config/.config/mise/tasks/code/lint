@@ -96,7 +96,7 @@ fi
 # rather than narrow it. It takes the whole tree even when a file list is
 # given.
 print_subheader "Linting config files ..."
-pnpm dlx @askviraj/linter ${args[@]+"${args[@]}"}
+linter ${args[@]+"${args[@]}"}
 
 print_subheader "Validating Dart dependencies ..."
 dart run dependency_validator

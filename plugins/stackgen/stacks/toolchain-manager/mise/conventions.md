@@ -33,6 +33,14 @@ tooling only a human needs, ci holds the pipeline's overrides.
 so a gate pinned there is a gate the pipeline cannot run. The dev file's job is
 what a laptop needs and a runner does not.
 
+**The house linter is the base's one tool.** `npm:@askviraj/linter` is pinned
+in `mise.toml` at an exact version, and every language pack's `code:lint` calls
+it as `linter`. One pin is one version every language pack agrees on, where a
+per-run fetch is whatever the registry serves that minute; it is in the base
+because the pipeline runs `code:lint`. mise installs it without a package
+manager, but the binary is a Node script, so it runs under the `node` the
+repo's own components pin.
+
 **Latest, but never brand new; and CI resolves nothing.** Fuzzy pins defer any
 release younger than `minimum_release_age`, and `lockfile = true` records what
 they resolved to. The pipeline sets `locked = true` and installs from that
@@ -41,10 +49,10 @@ release nobody has run never reaches a build.
 
 **One lockfile per config file that declares tools, and every one is tracked.**
 `mise install` writes a lock beside each config whose `[tools]` is non-empty,
-named after that file's stem: with the split as shipped — an empty base, nine
-dev tools — the only file produced is `.config/mise.dev.lock`, and a runtime
-pinned in `mise.toml` would add `.config/mise.lock` beside it. The single
-exception is `mise.local.lock`, the counterpart of the uncommitted
+named after that file's stem: with the split as shipped — the house linter in
+the base, nine dev tools — the files produced are `.config/mise.lock` and
+`.config/mise.dev.lock`, and a runtime pinned in `mise.toml` joins the first.
+The single exception is `mise.local.lock`, the counterpart of the uncommitted
 `mise.local.toml`, which the hygiene component already ignores.
 
 **`REPO_NAME` is the repo's folder name, slugified, and it is a literal.** The
