@@ -56,10 +56,10 @@ fi
 
 print_header "Formatting files ..."
 
-# Every path is handed over prefixed `./` (or absolute) and after `--`, so a
-# name opening with `-` is never read as an option. dprint reads each path as a
-# glob and has no literal form, so a name holding `*`, `[` or `{` may match
-# other files too — never escape one by hand.
+# Every path handed to dprint is prefixed `./` (or absolute) and passed after
+# `--`, so a name opening with `-` is never read as one of its options. dprint
+# reads each path as a glob and has no literal form, so a name holding `*`, `[`
+# or `{` may match other files too — never escape one by hand.
 dprint_files=()
 for f in ${files[@]+"${files[@]}"}; do
   case "${f}" in
