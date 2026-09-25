@@ -39,10 +39,10 @@ flutter, swift and swiftui packs calls it as `linter`. One pin is one version
 those packs agree on, where a per-run fetch is whatever the registry serves that
 minute; it is in the base because the pipeline runs `code:lint`. The binary is
 a Node script and needs a `node` on PATH: a Node repo's own pin, or — where the
-packs pin none, as swift, swiftui and flutter do not — the machine's. The tasks
-call it as `mise which linter --tool npm:@askviraj/linter`, never by bare name:
-a Node repo puts `node_modules/.bin` ahead of mise's tool bins, where a
-dependency's `linter` would shadow the pin.
+packs pin no `node`; swift, swiftui and flutter pin none — the machine's. The
+tasks call it as `mise which linter --tool npm:@askviraj/linter`, never by
+bare name: a Node repo puts `node_modules/.bin` ahead of mise's tool bins,
+where a dependency's `linter` would shadow the pin.
 
 **The installer is the machine's, and the pin's guarantees are aube's.** mise's
 npm backend defaults to its embedded aube; a machine may set
