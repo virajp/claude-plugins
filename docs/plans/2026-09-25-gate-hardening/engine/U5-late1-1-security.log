@@ -1,0 +1,4 @@
+/security-review — U5-late1 round 1 — range a6b7abe4^..a6b7abe4
+
+No findings.
+Notes: a6b7abe4 only rewrites bash comment lines in plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise/tasks/code/lint. No executable code, sourced path or dependency changed.

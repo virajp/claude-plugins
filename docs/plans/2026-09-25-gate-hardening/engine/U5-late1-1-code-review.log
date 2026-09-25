@@ -1,0 +1,9 @@
+/code-review high — U5-late1 round 1 — range a6b7abe4^..a6b7abe4 (comment-only change). Engine notes #2, #5, #6 are older problems the new wording makes visible; #7 depends on the plan's bump unit.
+
+1. toolchain-manager/mise/skills/mise/references/task-library.md:255 — still gives the old reason code:lint is a slot ("would drag a package manager into a docs-only repo"); the commit rewrote it in the task file only.
+2. toolchain-manager/mise/config/.config/mise/tasks/code/lint:20 — "calling it here would fail on any machine without node" also applies to swift, swiftui, flutter, whose code:lint call mise which linter with no node guard or pin.
+3. code/lint:18 — altitude: the base could call the pinned linter behind command -v node, as it does shellcheck and actionlint, instead of documenting the skip; five packs duplicate the mise which block.
+4. code/lint:17 — the premise "Every linter worth running is a language's own" contradicts swift/swiftui using the house linter for directory-wide config linting.
+5. mise.toml:200 — "It lives in the base because the pipeline runs code:lint", but the base code:lint never calls it; docs-only repos carry pin, lock, sidecar for an unused tool.
+6. mise.toml:175 — the runtime explanation lists uv among packs relying on the machine's node for the linter, but ruff (uv) code:lint never calls it and the caller list omits ruff.
+7. code/lint:21 — pack-owned payload changed without a mise pack version bump (pack.yaml 1.6.0).
