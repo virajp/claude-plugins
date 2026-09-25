@@ -10,7 +10,7 @@ status.missing_tools = "always"
 # with `mise install --locked`, which fails on a tool whose lock entry has no
 # URL for linux-x64 — the global mise config on the maintainer's machine locks
 # macos-arm64 alone, so this is set here, where `mise lock`, `mise install` and
-# `mise upgrade` all read it.
+# `mise lock --bump` all read it.
 lockfile_platforms = [ "linux-x64", "macos-arm64" ]
 
 # NodeJS settings

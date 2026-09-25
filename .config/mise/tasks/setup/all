@@ -4,6 +4,7 @@
 #MISE depends=["init"]
 
 #USAGE flag "--all" help="Also set up every member project"
+#USAGE flag "--upgrade" help="Dev only: bump every mise lockfile and update formatter plugins before installing"
 
 # One member flag per project is added here when this repo has members. The ids
 # come from the project registry when there is one, else the member directory
@@ -33,7 +34,11 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # clean machine is a step that breaks the second run.
 
 print_header "Setting up the toolchain ..."
-mise run setup:mise
+if [[ "${usage_upgrade:-false}" == "true" ]]; then
+  mise run setup:mise --upgrade
+else
+  mise run setup:mise
+fi
 
 print_header "Setting up secrets ..."
 mise run setup:secrets
