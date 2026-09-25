@@ -96,7 +96,13 @@ the fragment, as the pack's conventions say. That pin and the three
 `SIMULATOR_*` pins beside it ship empty and are filled by `/vwf:setup`,
 which runs each `machine_env` entry's `detect` and offers the answer as the
 default. Its `ux-gate` runs the swift-snapshot-testing goldens on the
-simulator the repo pins. It ships no integration references yet.
+simulator the repo pins. Its doctrine landed on 2026-09-25 with one
+reference per Apple platform — iOS and iPadOS, macOS, CarPlay, watchOS,
+tvOS, visionOS, each keyed by the vwf token it realises — and topic 12's
+wiring for Apple's core integrations: widgets and complications, App
+Intents, push notifications, StoreKit and Sign in with Apple. Like
+Flutter's, they are wiring only; third-party integrations are not covered
+yet.
 
 **The UX gate is materialized, not delegated.** The two retired curated
 `-ux-gate` skills moved into their packs as an unprefixed `ux-gate`, landed
