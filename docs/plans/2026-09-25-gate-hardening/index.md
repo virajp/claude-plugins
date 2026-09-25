@@ -266,6 +266,14 @@ the unit could not proceed without; it blocks the unit and its dependents.
 - **U5 — dprint's excludes and the aube sidecar**: the dprint pack's three
   exclusion lists (rule 15) do not cover `.config/mise/locks/`; no unit owns
   them. Non-blocking; needs its own plan.
+- **U5 — contested at the round cap** (4 rounds; the contract, not the loop,
+  left these open — the loop converged 7 → 6 → 4 → 3):
+  - (U1, MED) the prose calls the npm installer the machine's choice, but a
+    committed lock written by aube makes a pnpm-configured machine fail every
+    `mise x`; one installer per repo is the real constraint and nothing says so.
+  - (U1, LOW) the five `code:lint` tasks stop with mise's raw error when the
+    base pin is missing (a reshape "keep" of `.config/mise.toml`); nothing names
+    the cause.
 
 ## Run log
 
@@ -294,6 +302,9 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | 2    | U5        | opus  | 3     | review: findings(4)   | round-2 items verified fixed; mise which holds. U1: HIGH project-level aube setting leaks into global tools — drop it; MED aube sidecar .config/mise/locks/ must be committed and ignored; GAP mise.ci.toml is also the runtime layer, base pin reaches production installs; DOCS site stackgen.md:839 → U6. Dropped: engine 4, 5, 6, 9, 10                                                                                                                                              | —        |
 | 2    | U1        | opus  | 4     | green                 | U5 r3 fix: project-level aube setting removed; aube-only guarantees qualified; lock + .config/mise/locks/ sidecar committed together, never formatted — in mise.toml, mise.ci.toml, conventions, skills                                                                                                                                                                                                                                                                                  | 129b1bc4 |
 | 2    | U3        | opus  | 4     | green                 | U5 r3 fix: linter.yaml ignores .config/mise/locks/ (tested with 1.1.6); conventions list matches                                                                                                                                                                                                                                                                                                                                                                                         | 32e41109 |
+| 2    | U5        | opus  | 4     | security: findings(1) | range 7606e092..5b83fce6; round-3 MED resolved. LOW (U3): eslint SKILL.md:72 shows bare linter (shadowing, as guidance) — must fix. Engine #1-#3 fail closed, correctness gaps, not security                                                                                                                                                                                                                                                                                             | —        |
+| 2    | U5        | opus  | 4     | review: findings(3)   | cap reached (4). U1 MED: a committed lock fixes one installer for everyone, prose says machine's choice — contested. U3 LOW: eslint SKILL.md:72 bare linter — also a security finding, fixed (cap-exempt). U1 LOW: no readable error when the base pin is missing — contested. Dropped engine 1, 3-9 as recorded or out of scope                                                                                                                                                         | —        |
+| 2    | U3        | opus  | 5     | green                 | U5 r4 security fix: eslint SKILL.md direct-invocation examples resolve the pin via mise which                                                                                                                                                                                                                                                                                                                                                                                            | 786e8881 |
 
 ## Launch
 
