@@ -163,7 +163,7 @@ MEMBERS = ""
 #
 # The binary is a Node script: it needs a `node` on PATH. A repo whose
 # components pin one (a Node repo) runs it under that; a repo whose packs pin
-# none (swift, swiftui, flutter, uv) relies on the machine's own.
+# none (swift, swiftui, flutter) relies on the machine's own.
 #
 # The installer is the MACHINE's choice, never this file's: mise's npm backend
 # defaults to its embedded aube, and a machine may set `npm.package_manager` or
