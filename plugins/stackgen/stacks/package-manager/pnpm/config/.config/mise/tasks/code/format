@@ -56,12 +56,24 @@ fi
 
 print_header "Formatting files ..."
 
+# Every path is handed over prefixed `./` (or absolute) and after `--`, so a
+# name opening with `-` is never read as an option. dprint reads each path as a
+# glob and has no literal form, so a name holding `*`, `[` or `{` may match
+# other files too — never escape one by hand.
+dprint_files=()
+for f in ${files[@]+"${files[@]}"}; do
+  case "${f}" in
+    /* | ./*) dprint_files+=("${f}") ;;
+    *) dprint_files+=("./${f}") ;;
+  esac
+done
+
 print_subheader "Formatting with dprint ..."
 dprint "${action}" \
   --config .config/dprint.json \
   --allow-no-files \
   --log-level "${log_level}" \
-  ${files[@]+"${files[@]}"}
+  -- ${dprint_files[@]+"${dprint_files[@]}"}
 
 # The toolchain manager's shipped default, and an overlay keeps it: a commit
 # gets whatever this task does, so a tool that drops out of it stops running at

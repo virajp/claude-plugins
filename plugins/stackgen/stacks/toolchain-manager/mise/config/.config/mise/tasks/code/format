@@ -35,12 +35,24 @@ CONFIG="${MISE_PROJECT_ROOT}/.config/dprint.json"
 [[ "${usage_debug:-false}" == "true" ]] && LOG_LEVEL="debug" || LOG_LEVEL="warn"
 [[ "${usage_fix:-false}" == "true" ]] && ACTION="fmt" || ACTION="check"
 
+# Every path is handed over prefixed `./` (or absolute) and after `--`, so a
+# name opening with `-` is never read as an option. dprint reads each path as a
+# glob and has no literal form, so a name holding `*`, `[` or `{` may match
+# other files too — never escape one by hand.
+dprint_files=()
+for f in ${files[@]+"${files[@]}"}; do
+  case "${f}" in
+    /* | ./*) dprint_files+=("${f}") ;;
+    *) dprint_files+=("./${f}") ;;
+  esac
+done
+
 if [ -f "${CONFIG}" ]; then
   dprint "${ACTION}" \
     --config "${CONFIG}" \
     --allow-no-files \
     --log-level "${LOG_LEVEL}" \
-    ${files[@]+"${files[@]}"}
+    -- ${dprint_files[@]+"${dprint_files[@]}"}
 else
   print_warn "No .config/dprint.json — skipping the whitespace pass."
   print_yellow "The formatter component owns that file; materialize it first."
