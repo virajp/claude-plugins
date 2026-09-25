@@ -2367,9 +2367,14 @@ picks in.
 Its recall also reads the base repo's [backlog project](#vwfbacklog) through
 `/vwf:backlog list`, since the slice in front of it is often already an item
 there — and records the backlog as unreadable, with the reason, when `gh` cannot
-reach it. Matched ids go into the folder's `backlog:` frontmatter, and the
-hand-off marks them `planned` through `/vwf:backlog` — the only thing that
-writes the project — so no item is planned twice.
+reach it. For each matched id the interview asks whether this plan **finishes**
+the item or lands **one piece** of it: a finishing id goes into the folder's
+`backlog:` frontmatter, a piece id into `backlog_pieces:`, and a piece plan
+writes what remains as `- Bnn: <piece>` lines under *Parked* — at least one per
+piece id, naming the chained folder where one already covers the piece. The last
+plan of a chain moves the id to `backlog:`. The hand-off marks the ids of both
+lists `planned` through `/vwf:backlog` — the only thing that writes the project
+— so no item is planned twice.
 
 Nothing reaches disk before the **approval gate**: the goal and the chain
 position, the assumed-decisions table, the unit map, every new dependency, the
@@ -2422,13 +2427,14 @@ launch line.
 **The queue.** The one table of the base repo's `docs/plans/index.md` is where
 every approved plan of either kind waits: one row per folder — `Folder`, `Kind`,
 `Plan`, `Target repo`, `Priority`, `Status`, `Requires`, `Backlog` (the `Bnn`
-ids of the backlog project's items the plan covers) — with a status of
-`APPROVED`, `RUNNING` or `COMPLETE` and nothing else; the folder's own Status
-block keeps the run detail (`BLOCKED`, a pause, the worktree path), which the
-index never mirrors. The planner adds the row at hand-off; this skill flips it;
-every edit is a direct commit on the integration branch from the main checkout,
-never a worktree's, so the run branch never carries the file and two plans
-landing in parallel cannot conflict on it.
+ids of the backlog project's items the plan finishes, then those it lands a
+piece of, each written `Bnn (piece)`) — with a status of `APPROVED`, `RUNNING`
+or `COMPLETE` and nothing else; the folder's own Status block keeps the run
+detail (`BLOCKED`, a pause, the worktree path), which the index never mirrors.
+The planner adds the row at hand-off; this skill flips it; every edit is a
+direct commit on the integration branch from the main checkout, never a
+worktree's, so the run branch never carries the file and two plans landing in
+parallel cannot conflict on it.
 
 `next` reads that table, at the integration branch's tip, with **no Kind
 filter**, and takes the `APPROVED` row of lowest `Priority` whose every
@@ -2541,6 +2547,15 @@ What it does, by rule:
   its own — a non-green `code` unit with no covering `review` row ahead of it,
   and an after-landing step with a missing or unknown mode — each with the fix:
   edit the folder by hand in the worktree, then re-launch.
+- **The backlog lists agree with Parked.** A landing turns `backlog:` into
+  `Done` and `backlog_pieces:` into `Partially done` and checks nothing else, so
+  the preflight refuses a fresh run whose folder names an id on both lists, an
+  id on `backlog:` with a `- Bnn:` line under *Parked* (the plan says it
+  finishes an item it also leaves a remainder of — each such line is quoted), or
+  an id on `backlog_pieces:` with no such line (a piece with nothing recording
+  what is left). Each refusal names the id; the fix is the id moved to the list
+  its Parked lines say it belongs on, then the plan re-approved. An absent
+  `backlog_pieces:` reads as empty, so an older folder passes as written.
 - **The review runs at the review row, and only there.** A `code` unit is TDD →
   coverage → commit, and moves on. At a `review` row the run goes
   `engines → review ‖ security` over the row's range — the orchestrator runs the
@@ -2671,20 +2686,20 @@ or a recollection.
 **Then it lands per the consent block.** When the plan's *Merge to the
 integration branch and push on green* row reads `yes`, every gate line is green,
 every unit is green or an explained skip, and no gap blocks: the ids the
-folder's `backlog:` names are marked `done` through
-[`/vwf:backlog`](#vwfbacklog) — an edit to the forge project, nothing in the
-tree — the folder's Status is set `COMPLETE`, the branch is merged and pushed
-through [`/vwf:git-workflow`](#vwfgit-workflow) without a further prompt, and
-one more integration-branch commit — `docs: plan queue — <folder> complete` —
-sets the row `COMPLETE` and **sweeps**: every `COMPLETE` row already under
-`archived/` that no `APPROVED` or `RUNNING` row still requires leaves the table,
-its archived folder being the record. **Where the folder ends up depends on the
-gap list.** When no gap is open, the landing moves the folder whole to
-`docs/plans/archived/` and the row's `Folder` points there — it is finished and
-the archive is its record. When any gap is open, the folder stays live at its
-path as the working record of what needs reconciling, the row keeps the live
-path, and the report says to ask for the archive —
-[`plan-management`](#vwfplan-management)'s `archive` verb — after
+folder's `backlog:` names are marked `done`, and those its `backlog_pieces:`
+names `partial`, through [`/vwf:backlog`](#vwfbacklog) — an edit to the forge
+project, nothing in the tree — the folder's Status is set `COMPLETE`, the branch
+is merged and pushed through [`/vwf:git-workflow`](#vwfgit-workflow) without a
+further prompt, and one more integration-branch commit —
+`docs: plan queue — <folder> complete` — sets the row `COMPLETE` and **sweeps**:
+every `COMPLETE` row already under `archived/` that no `APPROVED` or `RUNNING`
+row still requires leaves the table, its archived folder being the record.
+**Where the folder ends up depends on the gap list.** When no gap is open, the
+landing moves the folder whole to `docs/plans/archived/` and the row's `Folder`
+points there — it is finished and the archive is its record. When any gap is
+open, the folder stays live at its path as the working record of what needs
+reconciling, the row keeps the live path, and the report says to ask for the
+archive — [`plan-management`](#vwfplan-management)'s `archive` verb — after
 reconciliation. When any condition fails, or consent said `no`, it **stops at
 the report** with what failed and the resume command, and you say *fix first*
 (name it; a `code` unit's coder is re-dispatched with the finding and the last
@@ -2746,18 +2761,18 @@ stays the planners'; the Run log stays `execute`'s; the backlog — a project on
 the base repo's forge — stays [`/vwf:backlog`](#vwfbacklog)'s, which this skill
 calls and never edits.
 
-| Verb                               | Does                                                                                                                                                                                                                                                                                                                                                                  | Called by                                                                                        |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `add <folder>`                     | The hand-off: Status `APPROVED`, the priority derived, the row appended to the one table (`Kind` from the folder's `type:`)                                                                                                                                                                                                                                           | `plan`, `change-plan`                                                                            |
-| `claim <folder>`                   | In the main checkout, on the integration branch: the row `APPROVED` → `RUNNING`; a row already `RUNNING`, or absent, is refused                                                                                                                                                                                                                                       | `execute`, before the worktree is cut                                                            |
-| `unclaim <folder>`                 | Releases a stale claim: refuses while the worktree the folder names still exists (naming `git worktree remove <path>` as your proof the run is gone), asks once, then resets the row and the folder's Status block to `APPROVED` in the main checkout and reports the commit — `docs: plan queue — <folder> unclaimed` — and the stale branch, which it never deletes | a session, on your word; `execute`, on its resume path when the worktree is gone and you say yes |
-| `status <folder> <state> [detail]` | The folder's Status block alone — `RUNNING`, `BLOCKED`, `COMPLETE` or `APPROVED` and the line under it; never mirrored to the row                                                                                                                                                                                                                                     | `execute`, at start, pause, block and landing                                                    |
-| `complete <folder>`                | After the merge: the row `COMPLETE`, its `Folder` re-pointed under `archived/` when the folder was moved, then the sweep                                                                                                                                                                                                                                              | `execute`, in the main checkout                                                                  |
-| `archive [folder]`                 | The completion check (every warning asks, none refuses), the whole-folder move, the Status block set `ARCHIVED <date> — not run; was <previous status>` unless it already reads `COMPLETE`, the row edit and sweep when run in the main checkout, `/vwf:backlog done` for any id still open, the mempalace `runs` drawer marked archived                              | `execute`, on a green landing with no open gap; a session, on your word                          |
-| `next`                             | The pick: every `APPROVED` row whose `Requires` are all satisfied, lowest `Priority`, then date, then name; a `RUNNING` row is never taken                                                                                                                                                                                                                            | `execute next`                                                                                   |
-| `resolve <folder>`                 | The `requires:` list by kind — a change requirement is a `COMPLETE` row or an archived folder, a cycle requirement every `covers:` doc stamped `implementation: complete`; an entry matching nothing is named, never re-pointed                                                                                                                                       | the planners at self-review; `execute` at preflight                                              |
-| `priority <folder \| requires…>`   | `10 + max` over the `Priority` of every unarchived plan the `requires:` list names, or `10` — from the folder, or from the entries themselves before the folder exists                                                                                                                                                                                                | the planners at their gate                                                                       |
-| `list`                             | The table by priority, `RUNNING` rows marked in flight, `COMPLETE` rows still at a live path marked awaiting archive, then any folder on disk with no row                                                                                                                                                                                                             | a session, on your word                                                                          |
+| Verb                               | Does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Called by                                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `add <folder>`                     | The hand-off: Status `APPROVED`, the priority derived, the row appended to the one table (`Kind` from the folder's `type:`)                                                                                                                                                                                                                                                                                                                                                           | `plan`, `change-plan`                                                                            |
+| `claim <folder>`                   | In the main checkout, on the integration branch: the row `APPROVED` → `RUNNING`; a row already `RUNNING`, or absent, is refused                                                                                                                                                                                                                                                                                                                                                       | `execute`, before the worktree is cut                                                            |
+| `unclaim <folder>`                 | Releases a stale claim: refuses while the worktree the folder names still exists (naming `git worktree remove <path>` as your proof the run is gone), asks once, then resets the row and the folder's Status block to `APPROVED` in the main checkout and reports the commit — `docs: plan queue — <folder> unclaimed` — and the stale branch, which it never deletes                                                                                                                 | a session, on your word; `execute`, on its resume path when the worktree is gone and you say yes |
+| `status <folder> <state> [detail]` | The folder's Status block alone — `RUNNING`, `BLOCKED`, `COMPLETE` or `APPROVED` and the line under it; never mirrored to the row                                                                                                                                                                                                                                                                                                                                                     | `execute`, at start, pause, block and landing                                                    |
+| `complete <folder>`                | After the merge: the row `COMPLETE`, its `Folder` re-pointed under `archived/` when the folder was moved, then the sweep                                                                                                                                                                                                                                                                                                                                                              | `execute`, in the main checkout                                                                  |
+| `archive [folder] [--force]`       | The completion check (every warning asks; the one refusal is a backlog list that contradicts itself, which `--force` overrides), the whole-folder move, the Status block set `ARCHIVED <date> — not run; was <previous status>` unless it already reads `COMPLETE`, the row edit and sweep when run in the main checkout, `/vwf:backlog done` for any `backlog:` id still open and `/vwf:backlog partial` for every `backlog_pieces:` id, the mempalace `runs` drawer marked archived | `execute`, on a green landing with no open gap; a session, on your word                          |
+| `next`                             | The pick: every `APPROVED` row whose `Requires` are all satisfied, lowest `Priority`, then date, then name; a `RUNNING` row is never taken                                                                                                                                                                                                                                                                                                                                            | `execute next`                                                                                   |
+| `resolve <folder>`                 | The `requires:` list by kind — a change requirement is a `COMPLETE` row or an archived folder, a cycle requirement every `covers:` doc stamped `implementation: complete`; an entry matching nothing is named, never re-pointed                                                                                                                                                                                                                                                       | the planners at self-review; `execute` at preflight                                              |
+| `priority <folder \| requires…>`   | `10 + max` over the `Priority` of every unarchived plan the `requires:` list names, or `10` — from the folder, or from the entries themselves before the folder exists                                                                                                                                                                                                                                                                                                                | the planners at their gate                                                                       |
+| `list`                             | The table by priority, `RUNNING` rows marked in flight, `COMPLETE` rows still at a live path marked awaiting archive, then any folder on disk with no row                                                                                                                                                                                                                                                                                                                             | a session, on your word                                                                          |
 
 **Archiving is asked for, not typed.** A landing whose gap list is empty
 archives its own folder. A folder the landing left live — a gap still open, a
@@ -2771,9 +2786,15 @@ changing repo, never overwriting an existing destination), gives its row the
 same `COMPLETE`-and-sweep edit a landing makes, marks the backlog items and
 reports the commit — `docs: archive plan <name>` — for
 [`/vwf:git-workflow`](#vwfgit-workflow). Finished is the usual case, not a
-requirement: an unrun plan is a warning you answer, not a refusal. A `requires:`
-entry names a folder by its **basename**, so `docs/plans/X` and
-`docs/plans/archived/X` are the same plan and no line is ever re-pointed.
+requirement: an unrun plan is a warning you answer, not a refusal. The one
+refusal is a folder whose backlog lists contradict themselves — an id on both
+`backlog:` and `backlog_pieces:`, or an id on `backlog:` with `- Bnn:` lines
+under *Parked* — since closing it `Done` would close an item the folder itself
+says is open; the refusal names the id and quotes the lines, and
+`archive <folder> --force` archives anyway, landing that id as a piece
+(`partial`, never `done`). A `requires:` entry names a folder by its
+**basename**, so `docs/plans/X` and `docs/plans/archived/X` are the same plan
+and no line is ever re-pointed.
 
 **Unclaiming is asked for the same way.** A `RUNNING` row whose session is gone
 — the window closed, the machine rebooted — is never stolen: `next` skips it and
@@ -2923,8 +2944,9 @@ working on yet. Nothing a feedback intake produces lands here.
 ```text
 /vwf:backlog                          # list, priority then id
 /vwf:backlog add "stylesheet axis for web frontends"
-/vwf:backlog next                     # the top Backlog item, and the command for it
+/vwf:backlog next                     # the top item to start, and the command for it
 /vwf:backlog move B07 P0
+/vwf:backlog partial B07 docs/plans/2026-09-20-x   # a plan landed one piece of B07
 ```
 
 **Where it lives.** On a GitHub remote the backlog is a **GitHub Project** owned
@@ -2954,27 +2976,37 @@ already looks.
 issue — titled `Bnn — <item>`, with the detail the plan interview starts from in
 its body. Ids are sequential and **never reused**: a closed id stays spent, and
 the next id is one past the highest over two sources — every item's title, done
-and closed included, and the `backlog:` frontmatter list of every plan folder
-under `docs/plans/` and `docs/plans/archived/` in the base repo — so an id a
-plan already carries is never issued again, even to a project that was created
-after it. `B01` only when both are empty. The project's own fields carry the
-state: **Priority** is the Team planning template's `P0` (pick first), `P1`,
-`P2`; **Status** runs `Backlog` → `In progress` → `Done`, or `Closed` for an
-item dropped without a plan. The template ships `Status` with `Ready` and
-`In review` as well; the skill trims the field to its four the first time it
-needs it, keeping `Backlog`, `In progress` and `Done` as the template spells and
-colours them and adding `Closed`. The trim removes an item's Status along with
-the option, so while any item sits in `Ready` or `In review` the skill stops,
-names each one, and asks you to move it to `Backlog` or `In progress` on the
-board first — it never moves an item itself. The replace also reissues the id of
-every option it keeps, which would clear every item's Status, so the skill
-records each item's Status to a temp file first, prints the path, writes every
-item back afterwards and prints the count restored — and stops naming the item
-and the file if any write fails. **Group** is a text field the skill adds once,
-naming the items that want one plan between them. An `In progress` item's body
-ends with `Planned in: <folder>` and a `Closed` one's with the reason. An item
-retitled in the browser without its `Bnn —` prefix is listed as unnumbered and
-warned about, never renumbered.
+and closed included, and the `backlog:` and `backlog_pieces:` frontmatter lists
+of every plan folder under `docs/plans/` and `docs/plans/archived/` in the base
+repo — so an id a plan already carries is never issued again, even to a project
+that was created after it. `B01` only when both are empty. The project's own
+fields carry the state: **Priority** is the Team planning template's `P0` (pick
+first), `P1`, `P2`; **Status** runs `Backlog` → `In progress` → `Partially done`
+→ `Done`, or `Closed` for an item dropped without a plan. `Partially done` is an
+item a plan landed **one piece** of — the plan named it on `backlog_pieces:`
+rather than on `backlog:`, which names only the items a plan finishes — and it
+stays open until the plan that finishes it lands. The template ships `Status`
+with `Ready` and `In review` as well; the skill reshapes the field to its five
+the first time it needs it, keeping `Backlog`, `In progress` and `Done` as the
+template spells and colours them and adding `Partially done` and `Closed`. A
+field an earlier version trimmed to four options gains `Partially done` the same
+way on the next verb. The reshape removes an item's Status along with the
+option, so while any item sits in `Ready` or `In review` the skill stops, names
+each one, and asks you to move it to `Backlog` or `In progress` on the board
+first — it never moves an item itself. The replace also reissues the id of every
+option it keeps, which would clear every item's Status, so the skill records
+each item's Status to a temp file first, prints the path, writes every item back
+afterwards and prints the count restored — and stops naming the item and the
+file if any write fails. **Group** is a text field the skill adds once, naming
+the items that want one plan between them. An item with a plan pending ends its
+body with `Planned in: <folder>[, <folder>…]` — the list of plan folders that
+cover it and have not landed, since several plans may each cover a piece of one
+item; `planned` appends a folder to it. Each plan that lands on the item moves
+its folder off that list onto a `Landed: <plan title> in <folder>` line —
+`partial` for a piece, `done` for the finish — so a `Partially done` item shows
+what has landed and a `Done` one keeps every such line. A `Closed` item's body
+ends with the reason. An item retitled in the browser without its `Bnn —` prefix
+is listed as unnumbered and warned about, never renumbered.
 
 **The first run.** A missing project is created by you, not by the skill:
 GitHub's API cannot instantiate a built-in template, and **Team planning** is
@@ -2982,7 +3014,7 @@ one. Two callers reach the missing-project procedure — `add`, and
 [`/vwf:init`](#vwfinit)'s forge pass: each asks your consent, prints the
 new-project URL and the two things to set on that page — the Team planning
 template and the title, the repo's name exactly — waits for you to say it is
-done, then finds the project by title, trims the `Status` field to the four
+done, then finds the project by title, reshapes the `Status` field to the five
 options and adds the `Group` field. `add` then continues with the item; init
 ends there, adding none, since the forge pass wants the project to exist rather
 than an entry in it — and it reports a project already present and skips it.
@@ -2994,26 +3026,36 @@ repo's `origin` host: GitHub is implemented; `gitlab.com`, or any host `glab`
 knows, ends every verb with "GitLab is not yet supported by /vwf:backlog"; any
 other host is unsupported and named.
 
-`next` names the top `Backlog` item by priority then id and the command that
-picks it up — [`/vwf:change-plan`](#vwfchange-plan) for work the blueprint does
-not describe, [`/vwf:plan`](#vwfplan) when the item names a slice — and asks
-which it is when the item does not say. `list` prints the items as a five-column
-table (Id, Item, Group, Priority, Status), `Done` and `Closed` folded into a
-trailing count, and ends with the project's URL. Ids are never renumbered, and
-an item is never deleted or archived by this skill.
+`next` names the top item by priority then id and the command that picks it up —
+[`/vwf:change-plan`](#vwfchange-plan) for work the blueprint does not describe,
+[`/vwf:plan`](#vwfplan) when the item names a slice — and asks which it is when
+the item does not say. Its candidates are every `Backlog` item and every
+`Partially done` item with no `Planned in:` line, ranked together; a partial
+item named this way comes with its `Landed:` lines, so the next plan starts from
+what remains rather than from the whole item. `list` prints the items as a
+five-column table (Id, Item, Group, Priority, Status), `Done` and `Closed`
+folded into a trailing count — a `Partially done` item is listed, its Status
+cell counting its landed pieces, `Partially done (2 landed)` — and ends with the
+project's URL. Ids are never renumbered, and an item is never deleted or
+archived by this skill.
 
 **This skill is the only thing that writes the project.** The commands that move
 items as plans are written and as they land call it rather than editing it, each
-passing the ids from its plan's `backlog:` frontmatter — the list on the
-folder's `index.md`, cycle plan and change plan alike, empty or absent when the
-plan covers no backlog item:
+passing the ids from its plan's two frontmatter lists on the folder's
+`index.md`, cycle plan and change plan alike — `backlog:`, the items the plan
+finishes, and `backlog_pieces:`, the items it lands one piece of — each empty or
+absent when the plan covers no such item:
 
-| Caller                                   | When                                      | Verb      |
-| ---------------------------------------- | ----------------------------------------- | --------- |
-| [`/vwf:plan`](#vwfplan)                  | at hand-off, once the folder is approved  | `planned` |
-| [`/vwf:change-plan`](#vwfchange-plan)    | at hand-off, once the folder is approved  | `planned` |
-| [`/vwf:execute`](#vwfexecute)            | at landing, per the folder's consent      | `done`    |
-| [`plan-management`](#vwfplan-management) | archiving a plan whose ids are still open | `done`    |
+| Caller                                   | When                                      | Verb                                                                   |
+| ---------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------- |
+| [`/vwf:plan`](#vwfplan)                  | at hand-off, once the folder is approved  | `planned`, both lists                                                  |
+| [`/vwf:change-plan`](#vwfchange-plan)    | at hand-off, once the folder is approved  | `planned`, both lists                                                  |
+| [`/vwf:execute`](#vwfexecute)            | at landing, per the folder's consent      | `done` for `backlog:`, `partial` for `backlog_pieces:`                 |
+| [`plan-management`](#vwfplan-management) | archiving a plan whose ids are still open | `done` for `backlog:`, `partial` for `backlog_pieces:` and a forced id |
+
+Both landing verbs take the folder — `done <ids> [folder]`, the folder optional
+for work that landed without a plan, and `partial <ids> <folder>` — so the item
+records which plan landed on it.
 
 It never commits — there is nothing in the tree to commit — never edits a file,
 never opens a repository issue, never creates the project itself, never invents
@@ -3101,32 +3143,36 @@ with nothing on disk and a one-line note the next attempt can recall.
 
 What it writes is `docs/plans/<date>-<name>/` — the **same folder shape**
 [`/vwf:plan`](#vwfplan) writes, from one template: an `index.md` with
-frontmatter `type: vwf-change-plan` and a `backlog:` list naming the ids this
-plan covers, plus one `NN-<unit>.md` per subagent unit, every unit `Kind: edit`.
-A change plan gets **no review row by default** — the wave review is its only
-check; a `Kind: review` row, the one at which `execute` runs `/code-review` and
-`/security-review`, is written only when the change lands runnable code —
-anything that executes rather than is read: shipped shell or hook scripts, build
-or tooling source, an installable package — with its reason in the decisions
-table. The row sits in a wave strictly later than the units it covers and still
-reviews the whole range since the previous row: a review finding on a file whose
-unit it does not cover is dropped and counted, a security finding is routed to
-that unit all the same. The sections the template marks *cycle plans only* — the
-slice, the acceptance criteria, the gaps — are omitted. Units in a wave own
-**disjoint paths** (the shared-file rule), a change that needs a new or altered
-check plans that as an owned edit rather than "update the gates", and the last
-two units are fixed: a docs unit and a gates-and-bump unit.
+frontmatter `type: vwf-change-plan`, a `backlog:` list naming the ids this plan
+finishes and a `backlog_pieces:` list naming those it lands one piece of — the
+interview asks which, per recalled id, and a piece id's remainder is written as
+`- Bnn: <piece>` lines under *Parked* — plus one `NN-<unit>.md` per subagent
+unit, every unit `Kind: edit`. A change plan gets **no review row by default** —
+the wave review is its only check; a `Kind: review` row, the one at which
+`execute` runs `/code-review` and `/security-review`, is written only when the
+change lands runnable code — anything that executes rather than is read: shipped
+shell or hook scripts, build or tooling source, an installable package — with
+its reason in the decisions table. The row sits in a wave strictly later than
+the units it covers and still reviews the whole range since the previous row: a
+review finding on a file whose unit it does not cover is dropped and counted, a
+security finding is routed to that unit all the same. The sections the template
+marks *cycle plans only* — the slice, the acceptance criteria, the gaps — are
+omitted. Units in a wave own **disjoint paths** (the shared-file rule), a change
+that needs a new or altered check plans that as an owned edit rather than
+"update the gates", and the last two units are fixed: a docs unit and a
+gates-and-bump unit.
 
 The **hand-off is five steps, in order**: the status is set to `APPROVED`; one
 row is appended to the **one table** of the base repo's `docs/plans/index.md` —
 folder, `Kind` `change`, title, the derived priority, `APPROVED`, the basenames
-it requires, the backlog ids — the one edit this skill ever makes to that file;
-[`/vwf:backlog planned`](#vwfbacklog) marks the ids the frontmatter names, with
-the folder as their `Planned in:` path — an edit to the forge project, nothing
-in the tree; the folder plus `docs/plans/index.md` is **committed and pushed**
-through [`/vwf:git-workflow`](#vwfgit-workflow) on the branch you are standing
-on, in place and with no worktree; and only then the launch line is printed. The
-push is not an extra: the fresh session's worktree is cut from the integration
+it requires, the backlog ids (a piece id written `Bnn (piece)`) — the one edit
+this skill ever makes to that file; [`/vwf:backlog planned`](#vwfbacklog) marks
+the ids both frontmatter lists name, adding the folder to their `Planned in:`
+list — an edit to the forge project, nothing in the tree; the folder plus
+`docs/plans/index.md` is **committed and pushed** through
+[`/vwf:git-workflow`](#vwfgit-workflow) on the branch you are standing on, in
+place and with no worktree; and only then the launch line is printed. The push
+is not an extra: the fresh session's worktree is cut from the integration
 branch, so it can see the folder only once the folder is committed there — an
 untracked folder ends up swept into some later wave's commit instead. The index
 row rides the same commit for the same reason. The approval you gave is the
