@@ -8,10 +8,9 @@ Report a vulnerability privately, through this channel and no other:
 
 That channel is private until a fix is published, which is what lets a fix ship
 before the details do — please do not open a public issue, a pull request or a
-discussion for a security report.
-Include what you did, what you observed, and the version you observed it on. A
-report is acknowledged, and you are told either the fix or the reason it is not
-one.
+discussion for a security report. Include what you did, what you observed, and
+the version you observed it on. A report is acknowledged, and you are told
+either the fix or the reason it is not one.
 
 ## Supported versions
 

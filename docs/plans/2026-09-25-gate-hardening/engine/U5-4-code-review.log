@@ -1,0 +1,12 @@
+/code-review high — U5 round 4 — develop...HEAD (15 commits). No mise commands run. #1, #3, #4, #8 are already listed as gaps.
+
+1. toolchain-gate/dprint/config/.config/dprint.json:20 — the committed aube sidecar .config/mise/locks/npm-askviraj-linter/<v>~<hash>/ is excluded only from linter.yaml; not from dprint excludes, pre-commit global exclude, gitleaks allowlist. format hook + end-of-file-fixer can rewrite its package.json; changed content breaks mise install --locked. The "never format it" prose is false; fix is one entry in all three rule-15 lists.
+2. pnpm/.../code/lint:100 — all five code:lint depend on a base mise.toml [tools] line that init offers as replace-or-keep; no fallback, no readable error. Keep at reshape or a deleted line → mise which exits non-zero under set -e, lint hook blocks every commit with mise's raw error.
+3. mise.ci.toml:23 — locked = true + base pin → first CI of every newly shaped/reshaped repo fails; nothing writes or commits mise.lock and sidecar.
+4. mise.toml:195 — altitude: pin in unconditional base [tools] though only five packs call it; should ship with callers as a conf.d fragment.
+5. pre-commit/config/.config/linter.yaml:44 — **/build/ and **/Derived/ ship to every repo; generic source dirs silently unlinted.
+6. pnpm/.../code/format:94 — flag-injection fix covers dprint only; shfmt -w, shellcheck -x, actionlint, sort-package-json still get raw paths.
+7. pnpm/.../code/format:63 — the dprint_files prefix loop pasted into six tasks plus swift's add_swift_target; one helper would hold the rule.
+8. eslint/config/.config/linter.yaml:1 — ownership moves eslint → pre-commit; materializer has no owner-change rule.
+9. pre-commit-config.yaml:111 — require_serial still runs whole-tree linter --fix once per partition.
+10. toolchain-gate/eslint/skills/eslint/SKILL.md:72 — "Direct invocation" shows bare linter, contradicting the never-bare-name rule; node_modules/.bin shadows it, or not found without mise activated. Show mise x -- linter or "$(mise which linter --tool npm:@askviraj/linter)".

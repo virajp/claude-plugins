@@ -1,0 +1,11 @@
+/security-review — U5 round 4 — range 7606e092..5b83fce6 (plugins/)
+
+No findings.
+
+- code/lint (pnpm, eslint, flutter, swift, swiftui): "$(mise which linter --tool npm:@askviraj/linter)", quoted; closes per-run registry fetch and node_modules/.bin shadowing; nothing untrusted reaches the command.
+- code/format: ./ prefix and -- stop leading-dash option injection; glob widening formats unstaged in-repo files at worst.
+- mise.toml: exact pin { version = "1.1.6", allow_low_downloads = true } — deliberate loosening for one owned package at a fixed version, lock and sidecar committed. Project-level npm.package_manager gone; the payload no longer changes the machine's global npm tools.
+- linter.yaml ignores and require_serial: no security impact.
+- mise.ci.toml, vscode.d/mise.jsonc, markdown: comments and docs only.
+
+Confidence nothing qualifying was added: 9/10.

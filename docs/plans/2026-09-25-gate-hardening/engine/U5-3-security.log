@@ -1,0 +1,8 @@
+/security-review — U5 round 3 — range 7606e092..9a3204b1 (plugins/)
+
+No findings.
+
+- mise which call in five code/lint (pnpm, eslint, flutter, swift, swiftui): fixed command; runs the pinned mise install, not the first linter on PATH, so node_modules/.bin/linter cannot substitute. Output quoted, one word. Missing tool → mise which fails or empty path fails to exec; nothing else runs. Arguments unchanged.
+- Supply chain, mise.toml: exact 1.1.6 pin, tracked mise.lock, locked = true in CI, replacing unpinned per-run pnpm dlx. npm.package_manager = "aube" fixes the installer; install scripts run only if listed in allow_builds (none). allow_low_downloads exempts only this first-party package; dependencies stay gated; documented as deliberate. Dependencies float within ranges until the lock records them — the CI lock closes that.
+- dprint arguments, six code/format: ./ prefix and -- remove leading-dash option reading. A fix.
+- pre-commit require_serial: not security. linter.yaml: ignore patterns only. mise.ci.toml and vscode jsonc: comments only.

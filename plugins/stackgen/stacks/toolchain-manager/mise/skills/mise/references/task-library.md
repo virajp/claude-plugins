@@ -251,9 +251,10 @@ belongs to a language does not.** That is the whole rule, and it is why
 `code:lint` ships shellcheck and actionlint yet is still a slot. Each of those
 says something true about a repo holding nothing but markdown, shell and
 workflows. The **language** linter is the part nobody can guess: every one worth
-running belongs to a language, and the one this ecosystem uses for prose would
-drag a package manager into a docs-only repo. So `code:lint` is a slot whose
-placeholder notice is the unfilled half, not the whole task.
+running belongs to a language. The house linter is pinned in the base
+`mise.toml`, but it is a Node script, and a docs-only repo pins no `node`, so
+calling it by default would fail on any machine without one. So `code:lint` is
+a slot whose placeholder notice is the unfilled half, not the whole task.
 
 ## `setup/*` — bootstrap & upgrade
 

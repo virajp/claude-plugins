@@ -1,0 +1,11 @@
+/security-review — U5 round 1 — range 7606e092..ac8ccd16 (plugins/)
+
+No findings.
+
+- code/format (flutter, swiftui, swift, pnpm, ruff, mise): paths now ./-prefixed unless absolute, passed after --; closes option injection from a leading-dash filename. dprint reads each path as a glob, so *, [ or { in a name can widen the set it formats — reformatting in-repo files only; no execution, no traversal.
+- code/lint (flutter, swiftui, swift, pnpm, eslint): pnpm dlx @askviraj/linter replaced by linter; arguments unchanged. swift/swiftui lint_targets had no -- separator before this diff — not new. A mise-installed exact pin (npm:@askviraj/linter = 1.1.6, lockfile, minimum_release_age) reduces supply-chain exposure versus a per-run registry fetch.
+- linter resolved from PATH: the shipped mise.toml keeps the node_modules/.bin _.path entry commented, so a cloned repo cannot shadow the pinned binary through the shipped config.
+- require_serial: true and the new .config/linter.yaml ignores: config only.
+- Markdown: out of scope.
+
+Confidence that the diff adds no HIGH or MEDIUM issue: 9/10.

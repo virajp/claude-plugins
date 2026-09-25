@@ -1,0 +1,4 @@
+/security-review — U5-late1 round 2 — range a6b7abe4^..ff3a0901
+
+No findings.
+Notes: comments and prose only — the mise.toml comment (uv dropped from the no-node list), the code/lint comment block, conventions.md, task-library.md, and the plan folder. No command, pin, path or install behaviour changed.

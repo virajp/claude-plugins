@@ -108,6 +108,7 @@ repos:
         entry: mise x -- mise run code:lint --fix
         language: system
         pass_filenames: true
+        require_serial: true
 
       - id: sec
         name: Secrets (mise run code:sec --staged)

@@ -1,0 +1,8 @@
+/security-review — U5 round 5 (security only; review stage at cap) — range 7606e092..1085d100 (plugins/)
+
+No findings.
+
+- Only change: documentation in toolchain-gate/eslint/skills/eslint/SKILL.md (~59-96); not executed by any task or hook.
+- The example linter="$(mise which linter --tool npm:@askviraj/linter)" then "$linter" runs the mise-pinned version (no run-time fetch) and avoids node_modules/.bin shadowing. Quoted expansion, literal arguments — no injection.
+- The pointer now names the pre-commit gate pack as shipping .config/linter.yaml; no effect on what runs.
+- No supply-chain, path-traversal or code-execution issue added.

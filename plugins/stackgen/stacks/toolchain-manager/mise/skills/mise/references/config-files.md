@@ -23,11 +23,12 @@ not cover, or when you are editing one that landed.
 
 The sixth row is not a sixth file to author: `mise install` writes **one lock
 per config file that declares tools**, named after that file's stem. With the
-split as shipped — an empty base `[tools]`, nine tools in `mise.dev.toml` — the
-only file produced is `mise.dev.lock`, and a runtime pinned in `mise.toml` would
-add `mise.lock` beside it. **They are tracked**, which is the whole point:
-`locked = true` in `mise.ci.toml` makes the pipeline a reader of what a laptop
-resolved. Only `mise.local.lock` is ignored, matching its config.
+split as shipped — the house linter in the base `[tools]`, nine tools in
+`mise.dev.toml` — the files produced are `mise.lock` and `mise.dev.lock`, and a
+runtime pinned in `mise.toml` joins the first. **They are tracked**, which is
+the whole point: `locked = true` in `mise.ci.toml` makes the pipeline a reader
+of what a laptop resolved. Only `mise.local.lock` is ignored, matching its
+config.
 
 mise loads `mise.toml` first, then deep-merges the active `MISE_ENV` variants on
 top, then `mise.local.toml` and `mise.<env>.local.toml` last of all. So a
@@ -109,6 +110,12 @@ MEMBERS = ""
 # arrives with the language and package-manager components, not with this one.
 node = { version = "latest" }
 pnpm = { version = "latest" }
+# The one tool this pack ships here: the house linter the pnpm, eslint,
+# flutter, swift and swiftui packs' `code:lint` calls as `linter`, at an EXACT
+# version. Under mise's default npm installer, embedded aube, a first install
+# is refused below a download threshold without the exemption, which covers
+# this package alone; another installer the machine picks ignores it.
+"npm:@askviraj/linter" = { version = "1.1.6", allow_low_downloads = true }
 
 [tasks.init]
 # Mandatory — chmod the file-based tasks under .config/mise/tasks/ executable.
