@@ -10,10 +10,10 @@ backlog: [ B52 ]
 
 ## Status
 
-**BLOCKED**
+**RUNNING**
 
-BLOCKED at wave 0 — inherited red preflight on develop: p:plugins:check fails
-(claude plugin validate --strict warns on unquoted CLAUDE_PLUGIN_ROOT in
+RUNNING since 2026-09-26 in .worktrees/2026-09-25-partial-backlog-items (claude
+plugin validate --strict warns on unquoted CLAUDE_PLUGIN_ROOT in
 plugins/vwf/hooks/hooks.json, Stop and PreCompact); worktree
 .worktrees/2026-09-25-partial-backlog-items
 
@@ -262,9 +262,10 @@ independent of this one.
 
 ## Run log
 
-| Wave | Unit      | Model | Round | Outcome | Detail                                                                                                                                                                                                    | Commit |
-| ---- | --------- | ----- | ----- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 0    | preflight | —     | 1     | failed  | inherited red on develop: p:plugins:check (validate --strict, vwf hooks.json unquoted placeholder in Stop and PreCompact); marketplace, inventory, code:precommit, p:site:check green; no unit dispatched | —      |
+| Wave | Unit      | Model | Round | Outcome | Detail                                                                                                                                                                                                                                                                         | Commit |
+| ---- | --------- | ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| 0    | preflight | —     | 1     | failed  | inherited red on develop: p:plugins:check (validate --strict, vwf hooks.json unquoted placeholder in Stop and PreCompact); marketplace, inventory, code:precommit, p:site:check green; no unit dispatched                                                                      | —      |
+| 0    | preflight | —     | 2     | pass    | resumed after develop 371933e5 quoted the hook placeholder; branch rebased onto it; all five wave-gate lines green; doctor-blocking tools present (mise, graphify, graph in main checkout); no code unit — LSP and conventions steps skipped; no covers — format check skipped | —      |
 
 ## Launch
 
