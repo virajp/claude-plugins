@@ -89,16 +89,14 @@ it and no generator writes it — so the pack declares `swift` as a bare
 binary and `xcodebuild` with the probe `xcodebuild -version`, which doctor
 runs because a Command Line Tools stub is on `PATH` too. Its tasks check
 `xcodebuild -version` against the `XCODE_VERSION` in the
-`.config/mise/conf.d/swiftui.toml` it lands, and refuse a pin another
-source overrides, a fragment missing or unreadable, a pin missing or not a
-plain string there, or a value holding a template delimiter or `$` — the
-pack's conventions list each, and the 0.1.0 upgrade step (move the team's
-pin out of `.config/mise.toml`'s `[env]` into the fragment, then delete the
-old line). That pin and the three `SIMULATOR_*` pins beside it ship empty and
-are filled by `/vwf:setup`, which runs each `machine_env` entry's
-`detect` and offers the answer as the default. Its `ux-gate` runs the
-swift-snapshot-testing goldens on the simulator the repo pins. It ships no
-integration references yet.
+`.config/mise/conf.d/swiftui.toml` it lands, and refuse an unset or empty
+pin, or one still set in `.config/mise.toml`'s `[env]` — which would
+override the fragment; `/vwf:setup` moves such a line (a 0.1.0 repo's) into
+the fragment, as the pack's conventions say. That pin and the three
+`SIMULATOR_*` pins beside it ship empty and are filled by `/vwf:setup`,
+which runs each `machine_env` entry's `detect` and offers the answer as the
+default. Its `ux-gate` runs the swift-snapshot-testing goldens on the
+simulator the repo pins. It ships no integration references yet.
 
 **The UX gate is materialized, not delegated.** The two retired curated
 `-ux-gate` skills moved into their packs as an unprefixed `ux-gate`, landed

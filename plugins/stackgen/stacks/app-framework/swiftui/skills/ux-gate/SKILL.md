@@ -55,7 +55,7 @@ interactively.
    `SIMULATOR_DEVICE` and `SIMULATOR_OS`, from which the golden task builds
    the `-destination` — so the task, this gate and CI render on the same
    simulator. The same file pins `XCODE_VERSION`. Read all four with
-   `mise env`, then apply the same override check the tasks do, from the
+   `mise env`, then apply the same stale-pin check the tasks do, from the
    repo root:
 
    ```sh
@@ -66,8 +66,8 @@ interactively.
        SIMULATOR_DEVICE SIMULATOR_OS'
    ```
 
-   A non-zero exit — another mise config overriding a pin, a stale
-   `.config/mise.toml` line say — is `rendered: n/a` with the message it
+   A non-zero exit — a pin still set in `.config/mise.toml`'s `[env]`,
+   which would override the fragment — is `rendered: n/a` with the message it
    printed as the reason, and nothing below runs: the audit would otherwise
    render on a simulator the golden task refuses. When `SIMULATOR_PLATFORM`
    is empty, or a simulator pin lacks its device or OS, report
