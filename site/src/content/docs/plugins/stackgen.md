@@ -275,7 +275,7 @@ to the `setup:deps:*` tasks rather than `swift package resolve`; no pack lands
 `toolchain-gate/swift-format` lands `.config/swift-format.json`, and
 `toolchain-gate/swiftlint` lands `.config/swiftlint.yml` plus
 `.config/mise/conf.d/swiftlint.toml`, which pins `aqua:realm/SwiftLint` at
-0.65.1 so `mise.toml` names no linter; each ships an editor fragment on
+0.65.1 so `mise.toml` does not name SwiftLint; each ships an editor fragment on
 `editor: vscode`. The `language/swift` pack supplies the tasks: `code:format`
 takes the staged files the hook passes and otherwise, like `code:lint`, takes
 its file list from git — every file it does not ignore, read NUL-separated and
@@ -710,15 +710,21 @@ vulnerability id under `ignore:` in `.config/grype.yaml`, each with a one-line
 reason and when to re-check, then re-run until green. The thresholds stay where
 they are: a time-boxed ignore is the temporary silence, a lowered threshold the
 permanent one. The formatter also ships the root `dprint.json` shim described
-above, and the JS/TS linter gate — a language-bundle topic rather than a repo
-gate — ships `.config/linter.yaml`, the config it had always invoked and never
-supplied. The trees a gate skips are stated as **one exclusion set**: the
-formatter's `dprint.json` and `taplo.toml` and the hook config's global
-`exclude` — a `(?x)` block, one anchored alternative per line — spell the same
-fifteen entries (`.build`, `.claude`, `.git`, `.turbo`, `.venv`, `Derived`,
-`build`, `dist`, `graphify-out`, `node_modules`, `target`, `*.xcassets` and the
-three lockfile globs; `.build` is SwiftPM's output tree, `Derived` a common name
-for a generated one, and an asset catalog's `Contents.json` files Xcode's own,
+above, and the hook gate ships `.config/linter.yaml`, the house linter's one
+config, read by every `code:lint` that runs it — whichever pack's task that is.
+Its `ignores:` list names the generated trees the stack packs produce (`build/`,
+`.dart_tool/`, `.build/`, `.swiftpm/`, `DerivedData/`, `Derived/`, `.venv/` and
+mise's sidecar lock tree `.config/mise/locks/`), since the linter does not read
+`.gitignore`; the JS/TS linter gate, which used to ship the file, ships it no
+more. The `lint` hook is `require_serial`, so one run goes at a time — a staged
+list too long for one command line still splits into sequential runs. The trees
+a gate skips are stated as **one exclusion set**: the formatter's `dprint.json`
+and `taplo.toml` and the hook config's global `exclude` — a `(?x)` block, one
+anchored alternative per line — spell the same fifteen entries (`.build`,
+`.claude`, `.git`, `.turbo`, `.venv`, `Derived`, `build`, `dist`,
+`graphify-out`, `node_modules`, `target`, `*.xcassets` and the three lockfile
+globs; `.build` is SwiftPM's output tree, `Derived` a common name for a
+generated one, and an asset catalog's `Contents.json` files Xcode's own,
 rewritten on its next edit) in their own syntax, and the toolkit's checker holds
 the three equal after normalising the syntax away. The secret scanner's
 `[allowlist] paths` is held to a **subset** of it, never the reverse: gitleaks
@@ -800,13 +806,13 @@ then the local file last of all — so each variant holds only deltas, never a
 copy of the base. Never duplicate a tool or setting across files; put it in the
 lowest layer that needs it.
 
-| File              | Loads when          | Holds                                                                         |
-| ----------------- | ------------------- | ----------------------------------------------------------------------------- |
-| `mise.toml`       | always (every env)  | shared `[settings]`, runtime `[tools]`, common `[env]`, `[tasks.init]`        |
-| `mise.dev.toml`   | `MISE_ENV=dev`      | dev-only tooling, shell aliases, local/dev env values                         |
-| `mise.ci.toml`    | `MISE_ENV=ci`       | CI/production-only settings + tools, the node-gpg workaround, prod env values |
-| `mise.test.toml`  | `MISE_ENV=dev,test` | test deltas, layered on top of dev — never selected alone                     |
-| `mise.local.toml` | always, last        | this machine's overrides — **never committed**, and never shipped             |
+| File              | Loads when          | Holds                                                                                           |
+| ----------------- | ------------------- | ----------------------------------------------------------------------------------------------- |
+| `mise.toml`       | always (every env)  | shared `[settings]`, runtime `[tools]` and the house linter pin, common `[env]`, `[tasks.init]` |
+| `mise.dev.toml`   | `MISE_ENV=dev`      | dev-only tooling, shell aliases, local/dev env values                                           |
+| `mise.ci.toml`    | `MISE_ENV=ci`       | CI/production-only settings + tools, the node-gpg workaround, prod env values                   |
+| `mise.test.toml`  | `MISE_ENV=dev,test` | test deltas, layered on top of dev — never selected alone                                       |
+| `mise.local.toml` | always, last        | this machine's overrides — **never committed**, and never shipped                               |
 
 Selecting the environment:
 
@@ -835,31 +841,40 @@ from the script it runs.
 **The lockfiles are tracked, and there is one per config that declares tools.**
 `lockfile = true` in the base makes `mise install` record what each fuzzy pin
 resolved to, in a file named after the declaring config's stem. With the split
-as shipped — an empty base `[tools]`, the dev tooling in `mise.dev.toml` — the
-only file produced is `.config/mise.dev.lock`; a runtime pinned in `mise.toml`
-would add `mise.lock` beside it. `locked = true` in `mise.ci.toml` is what makes
-the pipeline a reader of what a laptop resolved rather than a resolver of its
-own. Only `mise.local.lock` is ignored, matching its config. (Every pack doc
-used to say "`mise.lock`, committed", singular; the per-config rule is what
-`mise install` actually does, measured.)
+as shipped — the house linter in the base `[tools]`, the dev tooling in
+`mise.dev.toml` — the files produced are `.config/mise.lock` and
+`.config/mise.dev.lock`; a runtime pinned in `mise.toml` joins the first. Under
+mise's default npm installer, aube, the linter's entry in `mise.lock` points at
+a generated sidecar under `.config/mise/locks/` that fixes its dependency graph;
+the two are committed together, before the first CI push, or the pipeline fails
+at install. `locked = true` in `mise.ci.toml` is what makes the pipeline a
+reader of what a laptop resolved rather than a resolver of its own. Only
+`mise.local.lock` is ignored, matching its config. (Every pack doc used to say
+"`mise.lock`, committed", singular; the per-config rule is what `mise install`
+actually does, measured.)
 
 A path beside them is not part of the five-file count:
 `.config/mise/conf.d/<pack>.toml`, a directory mise auto-loads, where a secrets
 provider contributes its own `[env]` — and the package manager its `npx` alias —
 without any component editing `mise.toml`.
 
-`mise.toml` carries the language **runtime only** in `[tools]`. Formatters,
-linters, security scanners, and other dev tooling belong in `mise.dev.toml`, so
-a fresh checkout or a CI build does not pull them. `[tasks.init]` is the
-exception that lives in the base: file-based tasks must be executable under
-`MISE_ENV=ci` too. The runtime's settings are a **marked position** the base
-ships empty: `RUNTIME_BLOCK` under `[settings]` and `PATH_ENTRIES` at the end of
-`[env]` are filled by `/vwf:init` from its stack read — one runtime settings
-line per detected language, the `_.path` entry where a project-local binary
-directory needs it — and left empty for a language the repo does not have, since
-a setting for an absent runtime is a claim about the stack that is not true.
-With `REPO_NAME`, `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and `MEMBERS` they
-are the base's six marked positions.
+`mise.toml` carries the language **runtime only** in `[tools]`, plus one gate:
+the house linter, `npm:@askviraj/linter` pinned at an exact version, which the
+`code:lint` of the pnpm, eslint, flutter, swift and swiftui packs calls through
+`mise which` rather than fetching it per run — in the base because the pipeline
+runs `code:lint`. It is a Node script, so it needs a `node` on `PATH`: the
+repo's own pin, or the machine's. Other formatters, linters, security scanners
+and dev tooling belong in `mise.dev.toml`, so a fresh checkout or a CI build
+does not pull them. `[tasks.init]` is the exception that lives in the base:
+file-based tasks must be executable under `MISE_ENV=ci` too. The runtime's
+settings are a **marked position** the base ships empty: `RUNTIME_BLOCK` under
+`[settings]` and `PATH_ENTRIES` at the end of `[env]` are filled by `/vwf:init`
+from its stack read — one runtime settings line per detected language, the
+`_.path` entry where a project-local binary directory needs it — and left empty
+for a language the repo does not have, since a setting for an absent runtime is
+a claim about the stack that is not true. With `REPO_NAME`,
+`MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and `MEMBERS` they are the base's six
+marked positions.
 
 `mise.dev.toml` holds the **local values** of runtime env vars (verbose logging,
 local hosts, test credentials). `mise.ci.toml` carries the **production values**
@@ -1066,12 +1081,13 @@ inside `code/*` and `setup/*` change with the tech stack.
   formatter over the repo's markdown, and the secret and vulnerability scanners
   the gates bundle installs — because every repo has markdown and dependencies
   from the first commit. `code/lint` is the half-case: it keeps the marker for
-  the language linter nobody has pinned, and still ships **shellcheck** and
-  **actionlint** as defaults, as `code/format` ships **shfmt** beside dprint.
-  The line is what the tool reads: one that walks the tree by extension gets a
-  default, one that needs a pinned language toolchain stays a slot. An overlay
-  inherits both the argument surface and those defaults — it adds its linter, it
-  does not drop them.
+  the case where no language pack's linter runs in the repo — the house linter
+  is pinned in the base but wired only by a language pack's overlay — and still
+  ships **shellcheck** and **actionlint** as defaults, as `code/format` ships
+  **shfmt** beside dprint. The line is what the tool reads: one that walks the
+  tree by extension gets a default, one that needs a pinned language toolchain
+  stays a slot. An overlay inherits both the argument surface and those defaults
+  — it adds its linter, it does not drop them.
 - **`_scripts/helpers`, plus siblings.** The `_scripts/` directory is
   underscore-prefixed, so mise treats it as **not a task**. `helpers` is the
   shared shell library (colors plus `print_header` / `print_subheader` /
