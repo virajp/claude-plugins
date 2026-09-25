@@ -80,23 +80,28 @@ pass continues.
 returns `fields[]`, each with `id`, `name` and `type`; a single-select field
 also carries `options[]` with `id` and `name`. Read:
 
-- `Status` — its `id`, and the option ids of `Backlog`, `In progress`, `Done`
-  and `Closed`, once the bootstrap has shaped the field;
+- `Status` — its `id`, and the option ids of `Backlog`, `In progress`,
+  `Partially done`, `Done` and `Closed`, once the bootstrap has shaped the
+  field;
 - `Priority` — its `id`, and the option ids of `P0`, `P1`, `P2`;
 - `Group` — its `id`, once added.
 
 **Bootstrap** — idempotent; each step runs only when `field-list` shows the
 thing missing. The Team planning template ships `Status` with the options
 `Backlog`, `Ready`, `In progress`, `In review` and `Done`, and `Priority`; the
-skill trims `Status` to its four and adds `Group`. The hazard is generic:
-**any** replace of a single-select field's option list reissues every option's
-id, the kept names included, and an item's value is bound to the old id — so a
-trim that only guards the removed options still clears every item's Status.
+skill reshapes `Status` to its five and adds `Group`. A field an earlier
+version shaped to four — `Backlog`, `In progress`, `Done`, `Closed` — is not
+the five either, and takes the same steps to gain `Partially done`. The hazard
+is generic: **any** replace of a single-select field's option list reissues
+every option's id, the kept names included, and an item's value is bound to
+the old id — so a reshape that only guards the removed options still clears
+every item's Status.
 
-`Status` not exactly the four, in seven steps:
+`Status` not exactly the five, in seven steps:
 
-1. `field-list` — when `Status`'s options are exactly `Backlog`, `In progress`,
-   `Done` and `Closed`, order ignored, skip to `Group`.
+1. `field-list` — when `Status`'s options are exactly `Backlog`,
+   `In progress`, `Partially done`, `Done` and `Closed`, order ignored, skip
+   to `Group`.
 2. `item-list` filtered to `status == "Ready"` or `status == "In review"`:
 
        gh project item-list <number> --owner <owner> --format json --limit 500 \
@@ -132,8 +137,8 @@ trim that only guards the removed options still clears every item's Status.
          }
        }' -F id=<status-field-id> --jq '.data.node.options'
 
-5. Send exactly four options, inlined in the mutation text — `-F` passes
-   scalars only, so the option list is written into the query:
+5. Send exactly five options, in this order, inlined in the mutation text —
+   `-F` passes scalars only, so the option list is written into the query:
 
        gh api graphql -f query='
          mutation($fieldId: ID!) {
@@ -142,8 +147,11 @@ trim that only guards the removed options still clears every item's Status.
              singleSelectOptions: [
                {name: "Backlog", color: <as read>, description: "<as read>"},
                {name: "In progress", color: <as read>, description: "<as read>"},
+               {name: "Partially done", color: <as read, else PURPLE>,
+                description: "<as read, else Some pieces landed, more to do>"},
                {name: "Done", color: <as read>, description: "<as read>"},
-               {name: "Closed", color: GRAY, description: "Dropped without a plan"}
+               {name: "Closed", color: <as read, else GRAY>,
+                description: "<as read, else Dropped without a plan>"}
              ]
            }) {
              projectV2Field {
@@ -152,10 +160,12 @@ trim that only guards the removed options still clears every item's Status.
            }
          }' -F fieldId=<status-field-id>
 
-   `Backlog`, `In progress` and `Done` take the colour (an unquoted enum such
-   as `GRAY`) and the description step 4 returned for them, never the
-   placeholders above. Every option not sent — `Ready`, `In review`, anything
-   else the field carried — is deleted; that is the point of the trim. The
+   Every option step 4 returned takes the colour (an unquoted enum such as
+   `GRAY`) and the description it returned, never the placeholders above;
+   `Partially done` and `Closed`, when step 4 did not return them, take
+   `PURPLE` with "Some pieces landed, more to do" and `GRAY` with "Dropped
+   without a plan". Every option not sent — `Ready`, `In review`, anything
+   else the field carried — is deleted; that is the point of the reshape. The
    stop in step 2 covers the removed options and the restore in step 7 covers
    the kept ones; neither alone is safe.
 6. Run `field-list` again and read the option ids from it: a replace reissues
@@ -181,7 +191,7 @@ trim that only guards the removed options still clears every item's Status.
        done < "$snapshot"
        echo "restored $n of $total"
 
-   A status name the four options do not carry, or a non-zero exit from any
+   A status name the five options do not carry, or a non-zero exit from any
    `item-edit`, stops the verb naming the item id and the snapshot path — the
    field is never left half-restored silently, and no item is skipped; the
    user re-runs the remaining lines from the file. The verb ends by printing
@@ -241,13 +251,16 @@ to two digits:
 
 - every item title in the project, whatever its status — done and closed
   included;
-- every id in the `backlog:` frontmatter list of every plan folder directly
-  under `docs/plans/` and `docs/plans/archived/` in the base repo — the
-  `^backlog:` line of each `index.md`, its `[ … ]` list split on commas, each
-  entry matched with `^B([0-9]{2,})$`. Frontmatter lists only, never prose:
+- every id in the `backlog:` and `backlog_pieces:` frontmatter lists of every
+  plan folder directly under `docs/plans/` and `docs/plans/archived/` in the
+  base repo — the `^backlog:` and `^backlog_pieces:` lines of each
+  `index.md`, each `[ … ]` list split on commas, each entry matched with
+  `^B([0-9]{2,})$`. Frontmatter lists only, never prose — an id cited only as
+  a piece is spent as surely as a finished one:
 
-      grep -h '^backlog:' docs/plans/*/index.md docs/plans/archived/*/index.md \
-        | sed 's/^backlog:[[:space:]]*\[\(.*\)\].*/\1/' | tr ',' '\n' \
+      grep -hE '^backlog(_pieces)?:' \
+          docs/plans/*/index.md docs/plans/archived/*/index.md \
+        | sed 's/^backlog[a-z_]*:[[:space:]]*\[\(.*\)\].*/\1/' | tr ',' '\n' \
         | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -E '^B[0-9]{2,}$' \
         | sed 's/^B//' | sort -n | tail -1
 
@@ -281,21 +294,43 @@ and, when a group was named:
 
 **`move`** — the `Priority` edit above with the new option id.
 
-**`planned`, `done`, `close`** — the `Status` edit above with `In progress`,
-`Done` or `Closed`, then the body's last line. The body is replaced whole:
-read `content.body` from `item-list`, append the line after a blank line —
-`Planned in: <folder>` or the close reason — and write it back with the draft
-issue's own id:
+**`planned`, `partial`, `done`, `close`** — the `Status` edit above with
+`In progress`, `Partially done`, `Done` or `Closed`, then the body's closing
+lines. The body is replaced whole: read `content.body` from `item-list`,
+rewrite its closing lines, and write it back with the draft issue's own id:
 
     gh project item-edit --id <draft-issue-id> --title "<title, unchanged>" \
-      --body "<body with the line appended>"
+      --body "<body with the closing lines rewritten>"
 
-`planned` on an item whose body already ends with a `Planned in:` line naming
-a different folder asks before replacing that line. `close` runs the `Status`
-bootstrap first when `Closed` is absent.
+The closing lines, per verb — `Planned in:` is one comma-separated line, and
+each `Landed:` line sits above it:
 
-**`list`, `next`** — `item-list` alone; nothing is written. `list` ends with
-the project's `url` from the resolution.
+- `planned` — add `<folder>` to the `Planned in:` line, or append
+  `Planned in: <folder>` after a blank line when there is none. A folder
+  already listed is not added twice. An item whose Status is `Done` or
+  `Closed` asks before anything is edited.
+- `partial` and `done` — remove `<folder>` from `Planned in:`, dropping the
+  line when the list empties, and add `Landed: <plan title> in <folder>`
+  after the last existing `Landed:` line, or, with none, above `Planned in:`
+  or at the end after a blank line. `<plan title>` is the `title:` value of
+  `<folder>/index.md`'s frontmatter, folded onto one line. A `done` with no
+  folder rewrites no line.
+- `close` — append the reason after a blank line. `close` runs the `Status`
+  bootstrap first when `Closed` is absent.
+
+**`list`, `next`** — `item-list` alone; nothing is written. `list` reads each
+`Partially done` item's `content.body` and counts its lines beginning
+`Landed: ` for the Status cell, and ends with the project's `url` from the
+resolution. `next` filters to the candidates, then sorts by priority then id:
+
+    gh project item-list <number> --owner <owner> --format json --limit 500 \
+      --jq '.items[] | select(.status == "Backlog"
+              or (.status == "Partially done"
+                  and ((.content.body // "") | test("(?m)^Planned in: ")
+                       | not)))'
+
+and, when the top candidate is `Partially done`, prints its `Landed:` lines
+with the body.
 
 ## Errors
 

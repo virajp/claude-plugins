@@ -45,7 +45,7 @@ Header row, exactly:
 | `Priority`    | the derived integer — `10 + max(Priority of every unarchived plan in its requires:)`, or `10` when it requires none of them; never asked, never edited by hand |
 | `Status`      | `APPROVED`, `RUNNING` or `COMPLETE` — nothing else                                                               |
 | `Requires`    | the **basenames** of the folder's `requires:` entries, or `—`                                                    |
-| `Backlog`     | the ids from the folder's `backlog:` frontmatter — the `Bnn` prefixes of the backlog project's items — or `—`     |
+| `Backlog`     | the ids from the folder's `backlog:` frontmatter — the `Bnn` prefixes of the backlog project's items, the ones the plan finishes — then the ids from its `backlog_pieces:` frontmatter, the ones it lands a piece of, each written `Bnn (piece)`; `—` when both are empty, and an absent `backlog_pieces:` reads as empty |
 
 The three statuses:
 
