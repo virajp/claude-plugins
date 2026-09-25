@@ -269,7 +269,9 @@ lockfile records — on drift it runs none and asks with no default — and
 refuses a value the fragment's reader would not take literally (control
 characters, the reading tool's template or expansion characters, a quote
 it cannot escape). The procedure is setup's. The values are the repo's
-committed pins, not per-machine overrides.
+committed pins, not per-machine overrides, and `/stackgen:stackgen-sync`
+keeps them: when the pack changes that file, the repo's value of every
+`machine_env` name is carried into the new payload before it is written.
 
 ### `conditional:` — files that land only when an answer holds
 
