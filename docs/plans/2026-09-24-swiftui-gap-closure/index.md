@@ -443,9 +443,9 @@ the per-task pin check is now a presence check on `.config/mise.toml`'s `[env]`
 alone, and `/vwf:setup`'s machine-env step moves a pin set there into the
 fragment, preselected, removing the old line — so a CI or `mise.local.toml`
 override passes, and G5 (e) closes with it. G4 (a) will not happen (a repo
-always has dependencies), so (b) is moot. G7 fixed. Still open: G5 (b) —
-`/stackgen:stackgen-sync` reads the setup-filled fragment as *pack moved* and
-would copy the empty payload over the pins.
+always has dependencies), so (b) is moot. G7 fixed. G5 (b) fixed:
+`/stackgen:stackgen-sync` carries the repo's value of every `machine_env` name
+into the new payload before writing it. No gap is open.
 
 ## Launch
 
