@@ -59,7 +59,7 @@ narrows the task's shell and workflow gates.
 ```sh
 mise run code:format          # dprint check (verify) + sort-package-json --check
 mise run code:format --fix    # dprint fmt (apply) + sort-package-json
-mise run code:lint            # pnpm dlx @askviraj/linter, whole tree
+mise run code:lint            # linter (mise-pinned), whole tree
 mise run code:lint --fix      # apply the linter's auto-fixes
 mise run code:lint src/a.ts   # narrows the shell/workflow gates only
 mise run code:all             # aggregate: format → lint → sec
@@ -69,10 +69,10 @@ Direct invocation (what those tasks wrap):
 
 ```sh
 # Lint — defaults to the current directory
-pnpm dlx @askviraj/linter
-pnpm dlx @askviraj/linter --fix          # auto-fix what's mechanical
-pnpm dlx @askviraj/linter src/ tests/    # limit to targets
-pnpm dlx @askviraj/linter --cache        # only changed files
+linter
+linter --fix                             # auto-fix what's mechanical
+linter src/ tests/                       # limit to targets
+linter --cache                           # only changed files
 
 # Format
 dprint check --config dprint.json        # verify (CI / pre-commit)
@@ -87,9 +87,10 @@ The linter is **zero-config** — it ships an opinionated flat config, so no
 Only reach for config when a default genuinely misfires — never to make a real
 finding disappear.
 
-- **Linter:** edit `.config/linter.yaml` — this pack ships it, empty of
-  overrides, so the file to change already exists. Scope changes narrowly:
-  extra `ignores`, per-preset `overrides`
+- **Linter:** edit `.config/linter.yaml` — the pre-commit gate pack ships it,
+  empty of overrides and with an `ignores:` list of the generated trees the
+  stack packs produce, so the file to change already exists. Scope changes
+  narrowly: extra `ignores`, per-preset `overrides`
   (preset names: `javascript`, `typescript`, `astro`, `json`, `jsonc`,
   `markdown`, `markdown-typescript`, `yaml`, `toml`, `html`, `css`), or a
   `configs` entry that targets specific `files`. Prefer a `files`-scoped

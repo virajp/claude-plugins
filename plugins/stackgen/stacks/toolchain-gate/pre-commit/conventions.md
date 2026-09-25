@@ -80,17 +80,24 @@ makes local and CI run the same command.
 
 ## What this pack writes
 
-Three files, all under `.config/`. `pre-commit-config.yaml` is the base hook set
+Four files, all under `.config/`. `pre-commit-config.yaml` is the base hook set
 and the merge point every pack fragment lands in.
 `git-conventional-commits.yaml` is the commit convention the `commit-msg` hook
-enforces. `vscode.d/pre-commit.jsonc` is this pack's editor fragment: the
-nesting that folds the convention file under the hook config, and the YAML
-language server — `yaml.completion`, `yaml.hover`, `yaml.format.enable` off
-because the repo formatter owns YAML — with the `redhat.vscode-yaml` extension
-that serves those keys. The gate itself contributes no setting: it runs on
-commit, and an editor running the hooks would be a second definition of it.
-The fragment lands only where init's editor answer is vscode — `pack.yaml`'s
-`conditional:` names it.
+enforces. `linter.yaml` is the house linter's one config file, read by every
+`code:lint` that runs `@askviraj/linter` — whichever pack's task that is — so it
+ships with the gate rather than with any one of them. Its `ignores:` list is the
+generated trees the stack packs produce (`build/`, `.dart_tool/`, `.build/`,
+`.swiftpm/`, DerivedData, `.venv/`): the linter does not read `.gitignore`, so
+without the list a whole-tree `code:lint` walks build output. A language pack
+that adds a generated tree adds it to that list, with a trailing comment naming
+the pack; the eslint pack's skill guides every other edit to the file.
+`vscode.d/pre-commit.jsonc` is this pack's editor fragment: the nesting that
+folds the convention file under the hook config, and the YAML language server —
+`yaml.completion`, `yaml.hover`, `yaml.format.enable` off because the repo
+formatter owns YAML — with the `redhat.vscode-yaml` extension that serves those
+keys. The gate itself contributes no setting: it runs on commit, and an editor
+running the hooks would be a second definition of it. The fragment lands only
+where init's editor answer is vscode — `pack.yaml`'s `conditional:` names it.
 
 **Two positions in the convention file are marked for `/vwf:init` to fill, and
 the comments say when.** `commitScopes` is filled on **every** run, the first

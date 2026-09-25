@@ -1,6 +1,6 @@
 ---
-# The lint gate's config file — read by `@askviraj/linter`, which the
-# `code:lint` task and the `linter` pre-commit hook both invoke.
+# The lint gate's config file — read by `@askviraj/linter`, which every
+# `code:lint` task runs, and the `lint` pre-commit hook runs through it.
 #
 # The linter is ZERO-CONFIG without this file: it ships an opinionated flat
 # config covering every preset, and a repo that never opens this file gets the
@@ -24,10 +24,21 @@
 # real finding go away — that is the one use this file is not for.
 
 version: 1
-# ignores:
-#   - "**/generated/**"
-#   - "**/*.d.ts"
-#
+
+# The generated trees the stack packs produce. The linter does not read
+# `.gitignore`, so without these a whole-tree `code:lint` walks build output.
+# Its own defaults already skip `node_modules/`, `dist/`, `.turbo/`, `.astro/`,
+# `coverage/` and `graphify-out/`; list only what they miss. A language pack
+# that adds a generated tree adds it here, with the pack that produces it.
+ignores:
+  - "**/build/" # app-framework/flutter
+  - "**/.dart_tool/" # app-framework/flutter
+  - "**/.build/" # package-manager/swiftpm
+  - "**/.swiftpm/" # package-manager/swiftpm
+  - "**/DerivedData/" # app-framework/swiftui
+  - "**/Derived/" # app-framework/swiftui
+  - "**/.venv/" # package-manager/uv
+
 # overrides:
 #   typescript:
 #     rules:

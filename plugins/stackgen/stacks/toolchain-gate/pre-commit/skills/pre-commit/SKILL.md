@@ -147,6 +147,7 @@ That is why the base config ships exactly three gate hooks, all tool-neutral:
       entry: mise x -- mise run code:lint --fix
       language: system
       pass_filenames: true
+      require_serial: true
 
     - id: sec
       name: Secrets (mise run code:sec --staged)
@@ -166,6 +167,15 @@ this file.
 report; `--staged` is how `code:sec` is told to scan the index rather than the
 tree. The staged filenames follow for the first two and not for the third,
 which asks git for its own scope.
+
+`require_serial: true` on `lint` is what stops pre-commit splitting a long
+staged list into partitions and running the task once per partition: a
+`code:lint` has whole-tree steps, and each partition would repeat them.
+
+The linter those tasks run reads one config, `.config/linter.yaml`, which this
+pack ships beside the hook config. Its `ignores:` list names the generated trees
+the stack packs produce, since the linter does not read `.gitignore`; a language
+pack that adds a generated tree adds it there.
 
 `mise x --` is what makes the hook work in a bare shell: pre-commit does not run
 under the developer's activated environment, so without it `mise` — and the
