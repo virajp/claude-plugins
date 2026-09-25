@@ -5,6 +5,9 @@ windows, a menu bar and a keyboard, and judges an app by whether those three
 behave like every other Mac app. An iPad layout stretched onto a Mac window
 fails on all three.
 
+The `desktop` doctrine here and the gates assume a **native macOS target**.
+Mac Catalyst is not the desktop path, and the gates do not build it.
+
 ## Windows
 
 - **Declare every window as a scene.** A document or content window that can

@@ -82,7 +82,8 @@ yet: each stops when `.config/mise.toml`'s `[env]` sets a pin it reads,
 naming the line. It checks presence only, and only that file — a pin set in
 the environment or in a gitignored `mise.local.toml` is a machine's
 deliberate override (a CI job choosing another simulator, say) and is left
-alone. An unset or empty pin is refused as unpinned.
+alone. An unset or empty pin is refused as unpinned — by `test:golden` only
+when its run does not pass all three overrides.
 
 **One project, several surfaces.** An app declares whichever of iPhone, iPad,
 Mac, CarPlay, Watch, TV and Vision it ships as destinations of its targets —
@@ -121,7 +122,7 @@ under `.build/`.
 | `setup:deps:cleanup` | removes `.build/` — the checkouts and the build products; `Package.resolved` stays |
 | `setup:deps:outdated` | resolves afresh with the committed `Package.resolved` set aside, lists each pin that would move as `<package> <pinned> -> <newest>`, and puts the lockfile back |
 | `setup:deps:upgrade` | removes `Package.resolved` and resolves again, so every package moves to the newest version its range allows; a failed resolve puts the old lockfile back |
-| `test:golden` | `xcodebuild test` on the project, limited to the snapshot target — `SnapshotTests`, or `--target` — in the project's scheme, or `--scheme`; the `-destination` is built from `SIMULATOR_PLATFORM`, `SIMULATOR_DEVICE` and `SIMULATOR_OS` in `conf.d/swiftui.toml`, which `--platform`, `--device` and `--os` override for one run (`--platform` never alone), and a run with no pin is refused; `Package.resolved` is never moved; compares against the recorded goldens, `--record` records afresh and then compares, on the pin only — refused with an override that moves the destination; the result bundle is `.build/golden.xcresult` |
+| `test:golden` | `xcodebuild test` on the project, limited to the snapshot target — `SnapshotTests`, or `--target` — in the project's scheme, or `--scheme`; the `-destination` is built from `SIMULATOR_PLATFORM`, `SIMULATOR_DEVICE` and `SIMULATOR_OS` in `conf.d/swiftui.toml`, which `--platform`, `--device` and `--os` override for one run (`--platform` never alone), and a run with no pin and not all three overrides is refused; `Package.resolved` is never moved; compares against the recorded goldens, `--record` records afresh and then compares, on the pin only — refused with an override that moves the destination; the result bundle is `.build/golden.xcresult` |
 
 **The goldens are swift-snapshot-testing image snapshots** of SwiftUI views,
 in the `SnapshotTests` target, recorded into the repo beside the tests that
