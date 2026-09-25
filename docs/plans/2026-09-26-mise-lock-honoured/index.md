@@ -11,9 +11,9 @@ backlog_pieces: [ B54 ]
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-09-26 by the user
+RUNNING since 2026-09-26 in .worktrees/2026-09-26-mise-lock-honoured
 
 ## Consent
 
@@ -155,8 +155,8 @@ none
 
 | Id | Wave | Unit file                                    | Kind   | Owns                                                                                                                                                                                                                                                                                                                          | Depends on | Status  | Commit |
 | -- | ---- | -------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-pack-tasks.md](01-pack-tasks.md)         | edit   | `plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise/tasks/setup/mise`, `plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise/tasks/setup/all`, `plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise.toml`                                                                        | —          | pending |        |
-| U2 | 1    | [02-repo-tasks.md](02-repo-tasks.md)         | edit   | `.config/mise/tasks/setup/mise`, `.config/mise/tasks/setup/all`, `.config/mise.toml`                                                                                                                                                                                                                                          | —          | pending |        |
+| U1 | 1    | [01-pack-tasks.md](01-pack-tasks.md)         | edit   | `plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise/tasks/setup/mise`, `plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise/tasks/setup/all`, `plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise.toml`                                                                        | —          | green   |        |
+| U2 | 1    | [02-repo-tasks.md](02-repo-tasks.md)         | edit   | `.config/mise/tasks/setup/mise`, `.config/mise/tasks/setup/all`, `.config/mise.toml`                                                                                                                                                                                                                                          | —          | green   |        |
 | U3 | 2    | [03-review.md](03-review.md)                 | review | —                                                                                                                                                                                                                                                                                                                             | U1, U2     | pending |        |
 | U4 | 3    | [04-docs.md](04-docs.md)                     | edit   | `plugins/stackgen/stacks/toolchain-manager/mise/skills/mise/**`, `plugins/stackgen/stacks/toolchain-manager/mise/conventions.md`, `site/src/content/docs/plugins/stackgen.md`, `site/src/content/docs/plugins/vwf.md`, `docs/memory/decisions/2026-09-26-mise-lock-honoured.md` (new), `readme.md`, `CLAUDE.md`, `.claude/**` | U3         | pending |        |
 | U5 | 4    | [05-gates-and-bump.md](05-gates-and-bump.md) | edit   | `plugins/stackgen/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md`                                                                                                                                                                                                      | U4         | pending |        |
@@ -276,10 +276,26 @@ the unit could not proceed without; it blocks the unit and its dependents.
   plan must decide where each pack's `[env]` values and the `machine_env`
   positions move instead. The user chose to plan it after this one.
 
+## Gaps surfaced during execution
+
+- **G1 (wave 1, R1 round 1, plan-level, non-blocking)** — the pack's `setup:all`
+  forwards `--upgrade` to the member `setup:all` loop (U1); this repo's
+  `.config/mise/tasks/setup/all` does not (U2's Edit 2: "change nothing else";
+  decision 1 names only `setup:mise`). No effect here — this repo has no
+  members. Assumption: leave this repo's copy as is until its next
+  `/vwf:setup reshape`, which lands the pack file whole.
+
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                                                                                                     | Commit |
+| ---- | --------- | ----- | ----- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight | —     | 1     | green       | doctor: no blocking (repo has no `.config/vwf.yaml`, checks not scoped); all 7 wave gate lines green on a9f23b92; no `covers:` — format check, conventions fetch skipped; no `code` unit — LSP read skipped; mempalace read-only (peer writer) — journal skipped                                                                                                                                           | —      |
+| 1    | U1        | opus  | 1     | green       | pack `setup/mise`: dev-only `--upgrade` exit, `mise lock` when no `.config/mise*.lock`, `--bump --upgrade` per env, `install --locked`, `mise upgrade` gone; `setup/all` forwards `--upgrade` (also to the member loop); `mise.toml` comment. DECIDED: base `--bump --upgrade` only when no `mise.<env>.toml` (each env call relocks `mise.lock` too); `MISE_ENV=''` for SC1007                            | —      |
+| 1    | U2        | opus  | 1     | green       | repo `setup/mise` rewritten to the pack's shape (base + per-env `--bump --upgrade`, `test` as `dev,test`); `setup/all` gains `--upgrade` forwarded to `setup:mise` only; `mise.toml` comment. DECIDED: `#MISE hide=true`; `MISE_ENV=''`; member loop not forwarded (Edit 2 "change nothing else"). GAP: scratch ci/dev runs denied by permissions — left to the orchestrator's scratch-repo gate           | —      |
+| 1    | R1        | opus  | 1     | findings(3) | RULINGS: U1 departed from decision #4 (base `--bump --upgrade` skipped when env files exist, no evidence) → U1 loop-back, restore the base call; cross-unit drift: repo `setup/mise` ≠ pack file beyond helper names (decision 7) → U2 loop-back after U1; repo `setup/all` member loop not forwarding `--upgrade` — U2's Edit 2 limits it, repo has no members → recorded GAP, not looped. CONTRACT clean | —      |
+| 1    | U1        | opus  | 2     | green       | loop-back from R1: base `MISE_ENV='' mise lock --bump --upgrade` always first under `--upgrade`, then per env; conditional removed                                                                                                                                                                                                                                                                         | —      |
+| 1    | U2        | opus  | 2     | green       | loop-back from R1: repo `setup/mise` now byte-identical to the pack file (helpers provide all 4 functions it calls)                                                                                                                                                                                                                                                                                        | —      |
+| 1    | R1        | opus  | 2     | pass        | 0 findings; CONTRACT clean; RULINGS clean. GAP: repo `setup/all` member loop does not forward `--upgrade` (the pack's does) — U2 Edit 2 said change nothing else and decision 1 names `setup:mise` only; this repo has no members, so no effect                                                                                                                                                            | —      |
 
 ## Launch
 

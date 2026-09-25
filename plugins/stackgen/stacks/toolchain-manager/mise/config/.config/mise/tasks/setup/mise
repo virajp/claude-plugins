@@ -1,15 +1,24 @@
 #!/usr/bin/env bash
 
-#MISE description="Set up mise: reshim, doctor, install tools; --upgrade also moves them past their pins"
+#MISE description="Set up mise: reshim, doctor, install tools from the lockfile; --upgrade (dev only) bumps the lockfiles first"
 #MISE hide=true
 
-#USAGE flag "--upgrade" help="Also run mise upgrade --local and dprint config update, rewriting the pinned versions"
+#USAGE flag "--upgrade" help="Dev only: bump every environment's lockfile with mise lock --bump and update the formatter plugins with dprint config update"
 
 set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 UPGRADE="${usage_upgrade:-false}"
+
+# An upgrade moves the committed lockfiles, which is a developer's decision made
+# on a developer's machine — never the pipeline's, and never a deployed
+# runtime's. Refused before anything runs, so a wrong environment changes
+# nothing.
+if [ "$UPGRADE" = "true" ] && [[ ",${MISE_ENV:-}," != *",dev,"* ]]; then
+  print_error "--upgrade runs only in dev: MISE_ENV is '${MISE_ENV:-}', which does not include dev."
+  exit 1
+fi
 
 have_task() { mise tasks 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
 
@@ -19,21 +28,45 @@ mise reshim
 print_subheader "Running mise doctor ..."
 mise doctor --quiet --silent >/dev/null
 
-print_subheader "Installing mise tools ..."
-mise install
+CONFIG_DIR="${MISE_PROJECT_ROOT}/.config"
 
-# Everything below `mise install` rewrites a pinned version the shape lock
-# records — the tool pins in `mise.dev.toml`, the plugin URLs in `dprint.json` —
-# so it is an upgrade the user asks for with `--upgrade`, never a side effect of
-# setting a machine up.
+# A lockfile is written in exactly two cases: none exists yet, or the user asked
+# for `--upgrade`. Every other run installs what the committed lockfiles record
+# and moves nothing.
+if [ -z "$(find "$CONFIG_DIR" -maxdepth 1 -name 'mise*.lock' -print -quit)" ]; then
+  print_subheader "No lockfile under .config/ — running mise lock once ..."
+  mise lock
+fi
+
+# Every environment's lockfile moves together, so no environment is left
+# installing versions the others have moved past: the base config first, then
+# once per environment file. `test` layers on dev, so it is selected as
+# `dev,test`. `--upgrade` on `mise lock` is the lockfile FORMAT upgrade —
+# harmless when the format is already current.
 if [ "$UPGRADE" = "true" ]; then
-  print_subheader "Upgrading mise tools ..."
-  mise upgrade --local || true
+  print_subheader "Bumping the lockfiles ..."
+  print_yellow "  base"
+  MISE_ENV='' mise lock --bump --upgrade
+  while read -r env_file; do
+    env="${env_file##*/mise.}"
+    env="${env%.toml}"
+    [ "$env" = "test" ] && env="dev,test"
+    print_yellow "  MISE_ENV=${env}"
+    MISE_ENV="$env" mise lock --bump --upgrade
+  done < <(find "$CONFIG_DIR" -maxdepth 1 -name 'mise.*.toml' ! -name '*.local.*' | sort)
+fi
 
-  # The two tools that keep their own plugin or rule set outside mise's lockfile
-  # and so have to be refreshed here rather than by `mise upgrade`. Both are
-  # probed rather than assumed: the formatter's config is written by a gate pack,
-  # and the linter arrives as an optional `setup:lint` a linter pack fills.
+print_subheader "Installing mise tools from the lockfile ..."
+mise install --locked
+
+# Everything below rewrites a pinned version the shape lock records — the
+# plugin URLs in `dprint.json` — so it is an upgrade the user asks for with
+# `--upgrade`, never a side effect of setting a machine up.
+if [ "$UPGRADE" = "true" ]; then
+  # The two tools that keep their own plugin or rule set outside mise's
+  # lockfile, so `mise lock --bump` does not reach them. Both are probed rather
+  # than assumed: the formatter's config is written by a gate pack, and the
+  # linter arrives as an optional `setup:lint` a linter pack fills.
   # Whether this run has a terminal a command can prompt ON — which is not the
   # same question as `[ -t 0 ]`. A tool that asks for confirmation opens
   # `/dev/tty` directly rather than reading stdin, so it works with stdin piped
@@ -59,7 +92,7 @@ if [ "$UPGRADE" = "true" ]; then
     fi
   fi
 else
-  print_yellow "Tools left at their pinned versions — pass --upgrade to run mise upgrade --local and dprint config update."
+  print_yellow "Tools installed from the lockfile — pass --upgrade (dev only) to bump the lockfiles and update the formatter plugins."
 fi
 
 if have_task setup:lint; then
