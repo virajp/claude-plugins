@@ -29,11 +29,11 @@ rule as another rule identifier.
 Three files. `.config/mise/conf.d/swiftlint.toml` pins the tool — a fixed
 version, never `latest`, because under `--strict` a release that adds a rule
 is a failing build nobody touched. `.config/swiftlint.yml` is the
-configuration. SwiftLint resolves its
-`excluded:` paths **relative to the configuration file**, so every entry climbs
-one level to the repository root — a bare `.build` would name `.config/.build`
-and exclude nothing. It excludes SwiftPM's `.build/` and
-`.swiftpm/`, any `Derived` or `DerivedData` tree, and `*.generated.swift`.
+configuration. SwiftLint resolves its `excluded:` paths **relative to the
+configuration file**, so every entry climbs one level to the repository root —
+a bare `.build` would name `.config/.build` and exclude nothing. It excludes
+SwiftPM's `.build/` and `.swiftpm/`, any `Derived` or `DerivedData` tree, and
+`*.generated.swift`.
 
 The editor fragment is `.config/vscode.d/swiftlint.jsonc` — `swiftlint.*` keys
 only: it recommends the SwiftLint extension and points it at

@@ -89,8 +89,9 @@ the run's result bundle, which the task always writes to
   `SIMULATOR_OS` and `SIMULATOR_PLATFORM` — filled by `/vwf:setup` from this
   machine and committed — from which `test:golden` builds its destination —
   so recording, comparing, the UX gate and CI render on the same simulator. A
-  run with no pin is refused, never left to pick a simulator. A Mac-only app
-  pins `macOS` as its platform, which needs no device or OS.
+  run with no pin and not all three overrides is refused, never left to pick a
+  simulator. A Mac-only app pins `macOS` as its platform, which needs no device
+  or OS.
 - **The goldens are the pinned platform's.** A simulator renders one platform,
   and the pin names one, so the recorded goldens belong to it. `--platform`,
   `--device` and `--os` override one run, for a look at another simulator;

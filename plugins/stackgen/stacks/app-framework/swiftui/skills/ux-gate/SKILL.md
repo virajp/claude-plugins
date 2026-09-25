@@ -47,8 +47,8 @@ interactively.
    | `tv` | 1920×1080, landscape | `tvOS Simulator` |
    | `spatial` | 1280×720, the default window | `visionOS Simulator` |
 
-   Name the viewport you used in every finding; a golden rendered at another
-   size is not evidence for this one.
+   Name the viewport you used in every finding's `where`; a golden rendered
+   at another size is not evidence for this one.
 2. **Check the pins, and read the pinned platform.** Goldens are pixels from
    one simulator, so the repo pins it once, in
    `.config/mise/conf.d/swiftui.toml`: `SIMULATOR_PLATFORM`,
@@ -111,13 +111,14 @@ interactively.
    `desktop` too — is not run: the goldens were recorded on the pin, so a
    render on any other destination is compared with goldens from another
    platform, or finds no destination the snapshot target supports. Report
-   each such platform `n/a` in its `viewport` line, with a finding that it is
-   not the pinned platform — never run it on a destination you picked, and
-   never report it `ok`.
+   each such platform as a finding that it is not the pinned platform, its
+   `where` naming `<project>.<platform>` and its viewport — never run it on a
+   destination you picked, and never report it `ok`.
 
    An unchanged platform is not run and is not reported. Never pass
    `--record`: recording overwrites the goldens the comparison is meant to
-   judge. On a failed comparison, point the reviewer at the three: the
+   judge. On a failed comparison, point the reviewer at the three in the
+   finding's `where`, beside the golden's name and the viewport: the
    reference, the committed file under the test's `__Snapshots__` directory;
    the new render, under `.build/snapshot-artifacts/`; and the diff, an
    attachment in the result bundle at `.build/golden.xcresult`.
@@ -137,33 +138,41 @@ interactively.
    - **`desktop`**, on `platform=macOS`, which needs no simulator — once, not
      twice, when `desktop` is itself the pinned platform.
 
+   The `desktop` pass targets a native macOS app. A Mac Catalyst target,
+   which needs `variant=Mac Catalyst` in the destination, is not supported by
+   this gate.
+
    Each run is
    `xcodebuild test -project <Name>.xcodeproj -scheme <scheme> -destination <that destination> -only-testing:<that target> -derivedDataPath .build/DerivedData -clonedSourcePackagesDirPath .build/SourcePackages -onlyUsePackageVersionsFromResolvedFile -resultBundlePath .build/a11y.xcresult -collect-test-diagnostics never`,
    removing `.build/a11y.xcresult` before each run, since xcodebuild will not
    overwrite one, and reading it before the next. Every other changed
    platform — `auto` always, and any platform whose device family is not the
    pin's, `tablet` on an iPhone pin say — has no destination this gate may
-   choose: report it `a11y: <project>.<platform> -> n/a: <reason>`, with a
-   finding, never as clean. Each audit issue — contrast, element
-   description, hit region, Dynamic Type clipping, trait — is the equivalent
-   of a WCAG A/AA violation; report it at that severity so vwf can apply one
-   rule across every stack. A changed screen no audit test reaches is a
-   finding too, not a pass.
+   choose: report it as a finding that it was not audited, its `where`
+   naming `<project>.<platform>` and the reason, never as clean. Each audit
+   issue — contrast, element description, hit region, Dynamic Type clipping,
+   trait — is a finding, the equivalent of a WCAG A/AA violation; report it
+   at that severity so vwf can apply one rule across every stack, its
+   `where` naming the issue type and the destination it ran on. A changed
+   screen no audit test reaches is a finding too, not a pass.
 5. **Return** the payload below. Report what happened, not what should have.
 
 ## Return contract
 
+Exactly vwf's three keys — no other key carries anything. The device or
+viewport a result is for goes in `reason` when `n/a` and in each finding's
+`where`.
+
 ```yaml
 rendered: ok | n/a
-reason: <one line> # required when n/a
-viewport: <project>.<platform> -> <device or size> | n/a: <reason> # one per changed platform
-a11y: <project>.<platform> -> <destination> | n/a: <reason> # one per changed platform
-artifacts: [ <path>, … ] # reference, new render, result bundle (the diff)
+reason: <one line> # required when n/a; names the device or viewport
 findings:
   - severity: <critical | high | medium | low>
     screen: <screen>/<state>
     what: <the violation, in one line>
-    where: <audit issue type or golden name>
+    # <project>.<platform> on <device or viewport>; the audit issue type,
+    # or the golden's name and its three paths
+    where: <platform, device or viewport; issue type or golden and paths>
 ```
 
 **`n/a` is a legitimate answer and must be honest.** No snapshot test target,
@@ -175,10 +184,9 @@ goldens were compared** — the golden task ran on the pin and its comparison
 is in the findings. A run where only the accessibility audit ran — the pinned
 platform unchanged, say, and `desktop` audited — is `rendered: n/a`, its
 `reason` saying no goldens were compared, so vwf's human gate sees it; the
-audit's `a11y` lines and findings are still returned. A platform whose
-goldens did not run is `n/a` in its `viewport` line, never folded into the
-`ok`. Reporting `ok` for something this skill did not render is the one
-failure mode it exists to prevent.
+audit's findings are still returned. A platform whose goldens did not run is
+a finding, never folded into the `ok`. Reporting `ok` for something this
+skill did not render is the one failure mode it exists to prevent.
 
 ---
 

@@ -317,17 +317,19 @@ package the app splits out. Goldens run through swift-snapshot-testing in a
 `SnapshotTests` target under `test:golden`, on the simulator the repo pins as
 `SIMULATOR_DEVICE`, `SIMULATOR_OS` and `SIMULATOR_PLATFORM` in the same
 fragment, and the pack's `ux-gate` skill runs them for the pinned platform,
-audits accessibility on that platform and on `desktop`, and reports every other
-changed platform `n/a`; it reports `rendered: ok` only when some goldens were
-compared. Its doctrine covers the whole app-framework bar. Beside topics 1–11
-its router carries one reference per Apple platform, keyed by the vwf token it
-realises — iOS and iPadOS for `mobile` and `tablet`, macOS for `desktop`,
-CarPlay for `auto`, watchOS for `watch`, tvOS for `tv`, visionOS for `spatial` —
-and topic 12, the wiring for Apple's core integrations: widgets and
-complications, App Intents, push notifications, StoreKit and Sign in with Apple.
-Like Flutter's, those integration references are wiring only — setup order,
-platform configuration, anti-patterns — with the API surface left to Context7 at
-use time. Third-party integrations are not covered yet.
+audits accessibility on that platform and on `desktop` — a native macOS target;
+Mac Catalyst is not supported — and reports every other changed platform as a
+finding that it was not run; it returns only vwf's three keys, and reports
+`rendered: ok` only when some goldens were compared. Its doctrine covers the
+whole app-framework bar. Beside topics 1–11 its router carries one reference per
+Apple platform, keyed by the vwf token it realises — iOS and iPadOS for `mobile`
+and `tablet`, macOS for `desktop`, CarPlay for `auto`, watchOS for `watch`, tvOS
+for `tv`, visionOS for `spatial` — and topic 12, the wiring for Apple's core
+integrations: widgets and complications, App Intents, push notifications,
+StoreKit and Sign in with Apple. Like Flutter's, those integration references
+are wiring only — setup order, platform configuration, anti-patterns — with the
+API surface left to Context7 at use time. Third-party integrations are not
+covered yet.
 
 The `devtools` plugin then dissolved into stackgen and was deleted, closing the
 marketplace at two plugins. Its mise doctrine and its file-based task library

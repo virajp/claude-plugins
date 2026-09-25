@@ -5,8 +5,8 @@ kind: language-bundle
 components:
 - language/swift@0.1.0
 - package-manager/swiftpm@0.1.1
-- toolchain-gate/swift-format@0.1.0
-- toolchain-gate/swiftlint@0.1.0
+- toolchain-gate/swift-format@0.1.1
+- toolchain-gate/swiftlint@0.1.1
 platforms:
 - packages
 ---

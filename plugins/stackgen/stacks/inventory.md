@@ -102,8 +102,8 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `toolchain-gate/grype` | grype | `repo-gate` | repo |  |  | 1.0.1 | The repo's dependency vulnerability scanner — source per commit, artifact before release, ignores time-boxed. Ships .config/grype.yaml. |
 | `toolchain-gate/pre-commit` | pre-commit | `repo-gate` | repo |  |  | 1.1.6 | The local gate, and the wiring that makes local and CI run the identical command. Ships .config/pre-commit-config.yaml and .config/git-conventional-commits.yaml. |
 | `toolchain-gate/ruff` | Ruff | `language-bundle` | repo |  |  | 0.3.0 | The lint and format gate for Python — one tool for both halves, run through the project's uv environment rather than a global install. |
-| `toolchain-gate/swift-format` | swift-format | `language-bundle` | repo |  |  | 0.1.0 | The Swift formatter — swift-format, built into the toolchain as `swift format`, configured once under .config/. |
-| `toolchain-gate/swiftlint` | SwiftLint | `language-bundle` | repo |  |  | 0.1.0 | The correctness gate for Swift — SwiftLint through mise, strict, with every layout rule left to swift-format. |
+| `toolchain-gate/swift-format` | swift-format | `language-bundle` | repo |  |  | 0.1.1 | The Swift formatter — swift-format, built into the toolchain as `swift format`, configured once under .config/. |
+| `toolchain-gate/swiftlint` | SwiftLint | `language-bundle` | repo |  |  | 0.1.1 | The correctness gate for Swift — SwiftLint through mise, strict, with every layout rule left to swift-format. |
 | `toolchain-gate/tsconfig` | tsconfig | `language-bundle` | project |  |  | 0.2.0 | The TypeScript compiler configuration — a strict shared base, per-project configs, the path alias and the emit variant. |
 | `toolchain-manager/mise` | mise | `toolchain-manager` | repo |  |  | 1.6.0 | The repo's toolchain manager — the .config/ five-file split selected by MISE_ENV, and the file-based task library everything else invokes, grouped into `setup:*` for bootstrap, `code:*` for gates and git, and `p:<project-id>:*` for a project's own commands. |
 
@@ -167,8 +167,8 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `repo-hygiene` | repo-hygiene | `repo-hygiene` | repo | `repo-hygiene/repo-hygiene@1.2.2` | yes |
 | `stitch` | Google Stitch | `design-tool` | design | `design-tool/stitch@0.1.0` |  |
 | `stylex` | StyleX | `stylesheet` | stylesheet | `stylesheet/stylex@0.1.0` |  |
-| `swift-package` | Swift · package | `language-bundle` | project | `language/swift@0.1.0`, `package-manager/swiftpm@0.1.1`, `toolchain-gate/swift-format@0.1.0`, `toolchain-gate/swiftlint@0.1.0` |  |
-| `swift-swiftui` | Swift · SwiftUI | `app-framework` | project | `app-framework/swiftui@0.2.0`, `package-manager/swiftpm@0.1.1`, `toolchain-gate/swift-format@0.1.0`, `toolchain-gate/swiftlint@0.1.0` |  |
+| `swift-package` | Swift · package | `language-bundle` | project | `language/swift@0.1.0`, `package-manager/swiftpm@0.1.1`, `toolchain-gate/swift-format@0.1.1`, `toolchain-gate/swiftlint@0.1.1` |  |
+| `swift-swiftui` | Swift · SwiftUI | `app-framework` | project | `app-framework/swiftui@0.2.0`, `package-manager/swiftpm@0.1.1`, `toolchain-gate/swift-format@0.1.1`, `toolchain-gate/swiftlint@0.1.1` |  |
 | `tailwindcss` | Tailwind CSS | `stylesheet` | stylesheet | `stylesheet/tailwindcss@0.1.0` |  |
 | `temporal` | Temporal | `capability-provider` | backing | `capability-provider/temporal@0.1.0` |  |
 | `typescript-cloudflare-agents` | TypeScript · Cloudflare Agents · Effect | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.0`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.0`, `framework/effect@0.1.0`, `framework/cloudflare-agents@0.1.0` |  |
