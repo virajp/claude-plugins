@@ -10,9 +10,9 @@ backlog: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-09-25 by the user
+RUNNING since 2026-09-25 in .claude/worktrees/2026-09-25-swift-gap-closure
 
 ## Consent
 
@@ -221,8 +221,16 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                                                                                | Commit |
+| ---- | --------- | ----- | ----- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight | —     | 1     | green       | doctor blocking predicates clear (mise, graphify CLI, graph); no `covers:` so format check skipped; edit units only so LSP and conventions fetch skipped; all nine wave gate lines pass                                                                                                                                                                                               | —      |
+| 1    | U1        | opus  | 1     | green       | .build/ ignored via upstream Swift section, .swiftpm/ left to repo; swift-format SKILL quotes task's real calls (file set = tracked plus untracked-not-ignored, per ls-files); swiftlint paragraph reflowed. DOCS FALSIFIED none; GAP none                                                                                                                                            |        |
+| 1    | U3        | opus  | 1     | green       | reflowed all five §9 paragraphs to 80 columns, words unchanged; rejoined a split code span onto one line. DOCS FALSIFIED none; GAP none                                                                                                                                                                                                                                               |        |
+| 1    | U2        | opus  | 1     | green       | Catalyst unsupported stated in ux-gate and macos.md; ux-gate returns vwf's three keys only (also dropped `artifacts:`, per A4's exactly-three reading; paths go in the failed finding's `where`); golden refusal names given overrides, comment reworded; conventions :85 and :124 reworded. DOCS FALSIFIED: site swiftui pages may cite viewport/a11y lines — handed to U4; GAP none |        |
+| 1    | R1        | opus  | 1     | findings(6) | golden:103 pinned-case message garbled by `:-` expansion [U2]; folds over 80 at golden:42, ux-gate SKILL:156,:186 [U2], swift-format SKILL:49 [U1]; testing.md:91 still says no-pin refused, and conventions:85 overrides wording spans ux-gate [U2]. CONTRACT clean, RULINGS clean                                                                                                   |        |
+| 1    | U1        | opus  | 2     | green       | R1 loop-back: swift-format SKILL :48-52 refolded to 80 columns, words unchanged                                                                                                                                                                                                                                                                                                       |        |
+| 1    | U2        | opus  | 2     | green       | R1 loop-back: golden refusal message picked by if/else (logic unchanged), comment refolded; ux-gate paragraphs refolded, `where:` example shortened with comment; testing.md A5 wording; conventions:85 scoped to test:golden. SKILL.md:146 left wide (one-line code span)                                                                                                            |        |
+| 1    | R1        | opus  | 2     | pass        | all six round-1 findings resolved; golden refusal condition byte-identical; CONTRACT clean, RULINGS clean                                                                                                                                                                                                                                                                             |        |
 
 ## Launch
 

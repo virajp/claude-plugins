@@ -30,21 +30,26 @@ mise run code:format          # check — exits non-zero on any unformatted file
 mise run code:format --fix    # rewrite in place
 ```
 
-Directly, when the task is not the point:
+Underneath, the task hands `swift format` the Swift files git lists — tracked,
+plus untracked ones not ignored — by name, never by walking a directory list.
+`--fix` formats them in place, then lints the same files; the check lints only:
 
 ```bash
+swift format format --in-place \
+  --configuration .config/swift-format.json \
+  --parallel \
+  <files>
 swift format lint --strict \
   --configuration .config/swift-format.json \
-  --recursive Sources Tests Package.swift
-swift format --in-place \
-  --configuration .config/swift-format.json \
-  --recursive Sources Tests Package.swift
+  --parallel \
+  <files>
 ```
 
-`lint --strict` turns every finding into an error, which is what makes it a
-gate. Without `--configuration` the tool searches upward for a `.swift-format`
-file, finds none, and formats with upstream's defaults — so a bare
-`swift format` is never the gate's answer.
+`format --in-place` exits 0 even on a finding it cannot fix, which is why the
+strict lint follows it under `--fix`. `lint --strict` turns every finding into
+an error, which is what makes it a gate. Without `--configuration` the tool
+searches upward for a `.swift-format` file, finds none, and formats with
+upstream's defaults — so a bare `swift format` is never the gate's answer.
 
 ## The house layout
 
