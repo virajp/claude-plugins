@@ -91,9 +91,11 @@ variant is loaded.
   `.config/mise.lock` and `.config/mise.dev.lock`; a runtime pinned in
   `mise.toml` joins the first. Only `mise.local.lock` is ignored.
   Its one shipped tool is the **house linter**, `npm:@askviraj/linter` at an
-  exact version, which every language pack's `code:lint` calls as `linter` —
-  one pin every language pack agrees on, in the base because the pipeline runs
-  `code:lint`. The binary is a Node script, so it runs under the repo's `node`.
+  exact version with `allow_low_downloads = true` (a first install is refused
+  without it), which the `code:lint` of the pnpm, eslint, flutter, swift and
+  swiftui packs calls as `linter` — one pin those packs agree on, in the base
+  because the pipeline runs `code:lint`. The binary is a Node script and needs
+  a `node` on PATH — the repo's own pin where it has one, else the machine's.
   It also carries three settings that are policy rather than taste:
   `all_compile = false` (take the published binary for every tool, never build
   one), `task.timings = true` (an aggregate gate whose steps have no elapsed

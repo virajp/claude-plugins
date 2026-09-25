@@ -142,9 +142,10 @@ MEMBERS = ""
 #   _.path = { path = "node_modules/.bin", tools = true }
 
 [tools]
-# ONE tool by default, and that is the contract: this pack is the toolchain
-# manager, not the toolchain. The language runtime arrives with this repo's
-# language and package-manager components, which write their own tier; a
+# No runtime, and that is the contract: this pack is the toolchain manager, not
+# the toolchain. Its one pin below is a gate, not a runtime. The language
+# runtime arrives with this repo's language and package-manager components,
+# which write their own tier; a
 # capability provider (a secret manager, say) ships its tool in its own
 # `.config/mise/conf.d/<provider>.toml` fragment rather than editing this file.
 # mise auto-loads `conf.d/*.toml`, so a provider can be added and removed
@@ -154,14 +155,26 @@ MEMBERS = ""
 #   node = { version = "latest" }
 #   pnpm = { version = "latest" }
 #
-# The one tool is the house linter, which every language pack's `code:lint`
-# calls as `linter`. It is pinned here, once, at an EXACT version rather than
-# fetched per run: an unpinned fetch is whatever the registry serves that
-# minute, and one pin is one version every language pack agrees on. It lives in
-# the base because the pipeline runs `code:lint`. mise installs the package
-# without a package manager, but the binary is a Node script — it runs under the
-# `node` this repo's own components pin.
-"npm:@askviraj/linter" = "1.1.6"
+# The one pin is the house linter, which the `code:lint` of the pnpm, eslint,
+# flutter, swift and swiftui packs calls as `linter`. It is pinned here, once,
+# at an EXACT version rather than fetched per run: an unpinned fetch is
+# whatever the registry serves that minute, and one pin is one version those
+# packs agree on. It lives in the base because the pipeline runs `code:lint`.
+#
+# mise installs the package without a package manager, but the binary is a
+# Node script: it needs a `node` on PATH. A repo whose components pin one (a
+# Node repo) runs it under that; a repo whose packs pin none (swift, swiftui,
+# flutter, uv) relies on the machine's own.
+#
+# `allow_low_downloads` is required, not a loosening: mise's installer refuses
+# a package under its weekly-download threshold on a first, unlocked install,
+# and this one is below it. The exemption covers this package alone — its
+# dependencies stay gated, and the malicious-package check still runs.
+#
+# The pin fixes this package only; its dependencies resolve within its own
+# ranges at install time. Their lifecycle scripts run only when listed in
+# `allow_builds`, and none is.
+"npm:@askviraj/linter" = { version = "1.1.6", allow_low_downloads = true }
 
 [tasks.init]
 # Mandatory, and it lives in the BASE rather than in dev on purpose: the

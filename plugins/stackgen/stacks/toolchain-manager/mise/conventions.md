@@ -34,12 +34,18 @@ so a gate pinned there is a gate the pipeline cannot run. The dev file's job is
 what a laptop needs and a runner does not.
 
 **The house linter is the base's one tool.** `npm:@askviraj/linter` is pinned
-in `mise.toml` at an exact version, and every language pack's `code:lint` calls
-it as `linter`. One pin is one version every language pack agrees on, where a
-per-run fetch is whatever the registry serves that minute; it is in the base
-because the pipeline runs `code:lint`. mise installs it without a package
-manager, but the binary is a Node script, so it runs under the `node` the
-repo's own components pin.
+in `mise.toml` at an exact version, and the `code:lint` of the pnpm, eslint,
+flutter, swift and swiftui packs calls it as `linter`. One pin is one version
+those packs agree on, where a per-run fetch is whatever the registry serves that
+minute; it is in the base because the pipeline runs `code:lint`. mise installs
+it without a package manager, but the binary is a Node script and needs a
+`node` on PATH: a Node repo's own pin, or — where the packs pin none, as swift,
+swiftui, flutter and uv do not — the machine's. The pin carries
+`allow_low_downloads = true` because mise's installer refuses a package under
+its weekly-download threshold on a first, unlocked install; the exemption is
+this package's alone. The pin also fixes this package only: its dependencies
+resolve within its own ranges at install time, and their lifecycle scripts run
+only when listed in `allow_builds`, which the pin leaves empty.
 
 **Latest, but never brand new; and CI resolves nothing.** Fuzzy pins defer any
 release younger than `minimum_release_age`, and `lockfile = true` records what

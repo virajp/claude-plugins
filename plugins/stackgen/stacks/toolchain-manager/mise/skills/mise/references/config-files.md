@@ -110,9 +110,11 @@ MEMBERS = ""
 # arrives with the language and package-manager components, not with this one.
 node = { version = "latest" }
 pnpm = { version = "latest" }
-# The one tool this pack ships here: the house linter every `code:lint` calls
-# as `linter`, at an EXACT version — one pin every language pack agrees on.
-"npm:@askviraj/linter" = "1.1.6"
+# The one tool this pack ships here: the house linter the pnpm, eslint,
+# flutter, swift and swiftui packs' `code:lint` calls as `linter`, at an EXACT
+# version. A first install is refused below a download threshold without the
+# exemption, which covers this package alone.
+"npm:@askviraj/linter" = { version = "1.1.6", allow_low_downloads = true }
 
 [tasks.init]
 # Mandatory — chmod the file-based tasks under .config/mise/tasks/ executable.
