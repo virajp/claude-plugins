@@ -7,8 +7,8 @@ description: pre-commit as the local gate — config at
   .config/pre-commit.d/, the commit convention it enforces at commit-msg, hooks
   that call mise tasks so the same command runs locally and in CI, revs pinned
   and updated deliberately, and `files:` scoping so a hook fires only for what
-  it validates. Auto-applies when editing a pre-commit config, a hook fragment
-  or the commit convention.
+  it validates. Auto-applies when editing a pre-commit config, a hook fragment,
+  the commit convention or the linter config it ships.
 license: MIT
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
@@ -17,6 +17,7 @@ paths:
   - "**/.config/pre-commit-config.yaml"
   - "**/.config/pre-commit.d/*.yaml"
   - "**/.config/git-conventional-commits.yaml"
+  - "**/.config/linter.yaml"
 ---
 
 # pre-commit — the local gate
@@ -178,6 +179,13 @@ The linter those tasks run reads one config, `.config/linter.yaml`, which this
 pack ships beside the hook config. Its `ignores:` list names the generated trees
 the stack packs produce, since the linter does not read `.gitignore`; a language
 pack that adds a generated tree adds it there.
+
+The one rule for editing it: `ignores:` is for **generated** trees — output a
+tool writes and rewrites, never source someone reads. An entry that skips a
+source path, or an override that turns a rule off to get green, makes a real
+finding disappear, and that is the one use the file is not for. Fix the code;
+where a rule is genuinely wrong for one location, scope the change to that
+`files` glob rather than widening it.
 
 `mise x --` is what makes the hook work in a bare shell: pre-commit does not run
 under the developer's activated environment, so without it `mise` — and the
