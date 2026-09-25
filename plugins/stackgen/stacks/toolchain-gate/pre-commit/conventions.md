@@ -87,12 +87,14 @@ enforces. `linter.yaml` is the house linter's one config file, read by every
 `code:lint` that runs `@askviraj/linter` — whichever pack's task that is — so it
 ships with the gate rather than with any one of them. Its `ignores:` list is the
 generated trees the stack packs produce (`build/`, `.dart_tool/`, `.build/`,
-`.swiftpm/`, `DerivedData/`, `Derived/`, `.venv/`): the linter does not read
-`.gitignore`, so without the list a whole-tree `code:lint` walks build output. A
-language pack that adds a generated tree adds it to that list, with a trailing
-comment naming the pack. This pack's `pre-commit` skill auto-applies to the file
-wherever it lands, and carries the rule for editing it; the eslint pack's skill,
-where that pack is pinned, adds the rule-override detail.
+`.swiftpm/`, `DerivedData/`, `Derived/`, `.venv/`, and mise's sidecar lock tree
+`.config/mise/locks/`, whose files a `--fix` must never rewrite under the digest
+`mise.lock` records): the linter does not read `.gitignore`, so without the list
+a whole-tree `code:lint` walks build output. A language pack that adds a
+generated tree adds it to that list, with a trailing comment naming the pack.
+This pack's `pre-commit` skill auto-applies to the file wherever it lands, and
+carries the rule for editing it; the eslint pack's skill, where that pack is
+pinned, adds the rule-override detail.
 `vscode.d/pre-commit.jsonc` is this pack's editor fragment: the nesting that
 folds the convention file under the hook config, and the YAML language server —
 `yaml.completion`, `yaml.hover`, `yaml.format.enable` off because the repo

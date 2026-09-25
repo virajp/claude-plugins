@@ -48,6 +48,8 @@ ignores:
   - "**/DerivedData/" # app-framework/swiftui
   - "**/Derived/" # app-framework/swiftui
   - "**/.venv/" # package-manager/uv
+  # mise's sidecar lock tree; a --fix rewrite breaks the digest mise.lock pins
+  - "**/.config/mise/locks/" # toolchain-manager/mise
 
 # overrides:
 #   typescript:
