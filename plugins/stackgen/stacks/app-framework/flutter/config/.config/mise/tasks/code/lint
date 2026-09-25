@@ -96,7 +96,12 @@ fi
 # rather than narrow it. It takes the whole tree even when a file list is
 # given.
 print_subheader "Linting config files ..."
-linter ${args[@]+"${args[@]}"}
+# The pinned binary by its mise path, never the bare name: a Node repo puts
+# `node_modules/.bin` ahead of mise's tool bins on PATH, so a dependency's
+# `linter` — or the package as a devDependency at another version — would
+# shadow the pin in the base `mise.toml` without a word.
+linter_bin="$(mise which linter --tool npm:@askviraj/linter)"
+"${linter_bin}" ${args[@]+"${args[@]}"}
 
 print_subheader "Validating Dart dependencies ..."
 dart run dependency_validator

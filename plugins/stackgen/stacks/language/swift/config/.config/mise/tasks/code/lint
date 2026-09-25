@@ -194,8 +194,13 @@ else
 fi
 
 if [ "${in_git}" = "false" ] || [ "${#lint_targets[@]}" -gt 0 ]; then
+  # The pinned binary by its mise path, never the bare name: a Node repo puts
+  # `node_modules/.bin` ahead of mise's tool bins on PATH, so a dependency's
+  # `linter` — or the package as a devDependency at another version — would
+  # shadow the pin in the base `mise.toml` without a word.
+  linter_bin="$(mise which linter --tool npm:@askviraj/linter)"
   print_subheader "Linting config files ..."
-  linter ${args[@]+"${args[@]}"} ${lint_targets[@]+"${lint_targets[@]}"}
+  "${linter_bin}" ${args[@]+"${args[@]}"} ${lint_targets[@]+"${lint_targets[@]}"}
 fi
 
 # SwiftLint exits 1 with "No lintable files" when it has nothing to lint — a

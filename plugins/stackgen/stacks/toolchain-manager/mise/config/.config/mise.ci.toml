@@ -11,8 +11,11 @@
 # newer version is a build nobody can reproduce afterwards.
 #
 # There is one lockfile per config file that declares tools, named after that
-# file's stem — with the split as shipped, `mise.dev.lock` alone. All of them
-# are tracked, so the pipeline reads the same versions a laptop resolved.
+# file's stem — with the split as shipped, `mise.lock` (the house linter in the
+# base) and `mise.dev.lock`. All of them are tracked, so the pipeline reads the
+# same versions a laptop resolved. A tool no committed lock records is refused
+# here: run `mise install` and commit `.config/mise.lock` before the first CI
+# push, or the linter pin fails the pipeline.
 locked = true
 
 # Per-runtime CI workarounds go here and nowhere else.

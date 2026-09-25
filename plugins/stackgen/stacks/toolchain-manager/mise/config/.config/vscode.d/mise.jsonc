@@ -22,8 +22,8 @@
   // equal weight and the base is no longer obviously the base.
   //
   // There is one lockfile per config file that declares tools, named after
-  // that file's stem: `mise.dev.lock` with the shipped split, and `mise.lock`
-  // as well the moment the base pins a runtime. The base's own lock is listed
+  // that file's stem: `mise.lock` and `mise.dev.lock` with the shipped split,
+  // the base's lock recording the house linter. The base's own lock is listed
   // literally because it matches no `mise.*.lock` glob — the glob needs a
   // middle segment the base does not have.
   "nesting": {

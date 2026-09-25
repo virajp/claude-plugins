@@ -52,6 +52,7 @@ activate_aggressive  = true     # let mise shims win on PATH
 all_compile          = false    # never build a tool from source
 env_shell_expand     = true     # expand $VARS in [env]
 gpg_verify           = true     # verify tool signatures (see the CI exception)
+npm.package_manager  = "aube"   # npm: tools install by mise's embedded aube
 raw                  = true     # streams output
 status.missing_tools = "always"
 

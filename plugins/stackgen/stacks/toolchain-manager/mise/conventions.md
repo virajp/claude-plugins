@@ -37,15 +37,25 @@ what a laptop needs and a runner does not.
 in `mise.toml` at an exact version, and the `code:lint` of the pnpm, eslint,
 flutter, swift and swiftui packs calls it as `linter`. One pin is one version
 those packs agree on, where a per-run fetch is whatever the registry serves that
-minute; it is in the base because the pipeline runs `code:lint`. mise installs
-it without a package manager, but the binary is a Node script and needs a
-`node` on PATH: a Node repo's own pin, or — where the packs pin none, as swift,
-swiftui, flutter and uv do not — the machine's. The pin carries
-`allow_low_downloads = true` because mise's installer refuses a package under
-its weekly-download threshold on a first, unlocked install; the exemption is
-this package's alone. The pin also fixes this package only: its dependencies
-resolve within its own ranges at install time, and their lifecycle scripts run
-only when listed in `allow_builds`, which the pin leaves empty.
+minute; it is in the base because the pipeline runs `code:lint`. The base's
+`npm.package_manager = "aube"` makes mise's embedded aube the installer on
+every machine, and what follows holds for aube. It installs the package without
+a package manager, but the binary is a Node script and needs a `node` on PATH:
+a Node repo's own pin, or — where the packs pin none, as swift, swiftui,
+flutter and uv do not — the machine's. The pin carries
+`allow_low_downloads = true` because aube refuses a package under its
+weekly-download threshold on a first, unlocked install; the exemption is this
+package's alone. The pin also fixes this package only: its dependencies resolve
+within its own ranges at install time, and their lifecycle scripts run only
+when listed in `allow_builds`, which the pin leaves empty. The tasks call it as
+`mise which linter --tool npm:@askviraj/linter`, never by bare name: a Node
+repo puts `node_modules/.bin` ahead of mise's tool bins, where a dependency's
+`linter` would shadow the pin.
+
+**Commit `.config/mise.lock` before the first CI push.** `locked = true` in
+`mise.ci.toml` refuses a tool no committed lock records, and the linter pin is
+one — so a repo that takes it runs `mise install` and commits the lock first,
+or its pipeline fails at install.
 
 **Latest, but never brand new; and CI resolves nothing.** Fuzzy pins defer any
 release younger than `minimum_release_age`, and `lockfile = true` records what
