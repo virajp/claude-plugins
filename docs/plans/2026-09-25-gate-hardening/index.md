@@ -12,9 +12,9 @@ backlog: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-09-25 by the user
+RUNNING since 2026-09-25 18:58 in .claude/worktrees/2026-09-25-gate-hardening
 
 ## Consent
 
@@ -118,15 +118,15 @@ swift and swiftui tasks. No reversal.
 
 ## Units
 
-| Id | Wave | Unit file                                      | Kind   | Owns                                                                                                                                                                                                                                                                                                                                                                          | Depends on | Status  | Commit |
-| -- | ---- | ---------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-linter-pin.md](01-linter-pin.md)           | edit   | `plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise.toml`, `plugins/stackgen/stacks/toolchain-manager/mise/conventions.md`, `plugins/stackgen/stacks/toolchain-manager/mise/skills/**`, `code/lint` under `config/.config/mise/tasks/` of `package-manager/pnpm`, `app-framework/flutter`, `toolchain-gate/eslint`, `language/swift`, `app-framework/swiftui` | —          | pending |        |
-| U2 | 1    | [02-dprint-paths.md](02-dprint-paths.md)       | edit   | `code/format` under `config/.config/mise/tasks/` of `package-manager/pnpm`, `app-framework/flutter`, `toolchain-gate/ruff`, `language/swift`, `app-framework/swiftui`, `toolchain-manager/mise` (all under `plugins/stackgen/stacks/`)                                                                                                                                        | —          | pending |        |
-| U3 | 1    | [03-lint-config.md](03-lint-config.md)         | edit   | `plugins/stackgen/stacks/toolchain-gate/pre-commit/**` except `pack.yaml`, `plugins/stackgen/stacks/toolchain-gate/eslint/config/.config/linter.yaml`, `plugins/stackgen/stacks/toolchain-gate/eslint/conventions.md`, `plugins/stackgen/stacks/toolchain-gate/eslint/skills/**`, `plugins/stackgen/stacks/package-manager/pnpm/conventions.md`                               | —          | pending |        |
-| U4 | 1    | [04-hygiene-payload.md](04-hygiene-payload.md) | edit   | `plugins/stackgen/stacks/repo-hygiene/repo-hygiene/config/SECURITY.md`, `plugins/stackgen/stacks/repo-hygiene/repo-hygiene/config/CONTRIBUTING.md`                                                                                                                                                                                                                            | —          | pending |        |
-| U5 | 2    | [05-review.md](05-review.md)                   | review | —                                                                                                                                                                                                                                                                                                                                                                             | U1, U2, U3 | pending |        |
-| U6 | 3    | [06-docs.md](06-docs.md)                       | edit   | `site/src/content/docs/**`, `.claude/skills/stackgen-plugin/**`, `.claude/skills/plugin-authoring/**`, `.claude/docs/**`, `readme.md`, `CLAUDE.md`, `plugins/stackgen/stacks/readme.md`                                                                                                                                                                                       | U4, U5     | pending |        |
-| U7 | 4    | [07-gates-and-bump.md](07-gates-and-bump.md)   | edit   | every `plugins/stackgen/stacks/*/*/pack.yaml` of a pack the branch changed, `plugins/stackgen/stacks/bundles/*.md`, `plugins/stackgen/stacks/inventory.md`, `.claude-plugin/marketplace.json`                                                                                                                                                                                 | U6         | pending |        |
+| Id | Wave | Unit file                                      | Kind   | Owns                                                                                                                                                                                                                                                                                                                                                                          | Depends on | Status  | Commit   |
+| -- | ---- | ---------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
+| U1 | 1    | [01-linter-pin.md](01-linter-pin.md)           | edit   | `plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise.toml`, `plugins/stackgen/stacks/toolchain-manager/mise/conventions.md`, `plugins/stackgen/stacks/toolchain-manager/mise/skills/**`, `code/lint` under `config/.config/mise/tasks/` of `package-manager/pnpm`, `app-framework/flutter`, `toolchain-gate/eslint`, `language/swift`, `app-framework/swiftui` | —          | green   | e1df8c5a |
+| U2 | 1    | [02-dprint-paths.md](02-dprint-paths.md)       | edit   | `code/format` under `config/.config/mise/tasks/` of `package-manager/pnpm`, `app-framework/flutter`, `toolchain-gate/ruff`, `language/swift`, `app-framework/swiftui`, `toolchain-manager/mise` (all under `plugins/stackgen/stacks/`)                                                                                                                                        | —          | green   | e8a97ef7 |
+| U3 | 1    | [03-lint-config.md](03-lint-config.md)         | edit   | `plugins/stackgen/stacks/toolchain-gate/pre-commit/**` except `pack.yaml`, `plugins/stackgen/stacks/toolchain-gate/eslint/config/.config/linter.yaml`, `plugins/stackgen/stacks/toolchain-gate/eslint/conventions.md`, `plugins/stackgen/stacks/toolchain-gate/eslint/skills/**`, `plugins/stackgen/stacks/package-manager/pnpm/conventions.md`                               | —          | green   | baae5b84 |
+| U4 | 1    | [04-hygiene-payload.md](04-hygiene-payload.md) | edit   | `plugins/stackgen/stacks/repo-hygiene/repo-hygiene/config/SECURITY.md`, `plugins/stackgen/stacks/repo-hygiene/repo-hygiene/config/CONTRIBUTING.md`                                                                                                                                                                                                                            | —          | green   | 76e2703c |
+| U5 | 2    | [05-review.md](05-review.md)                   | review | —                                                                                                                                                                                                                                                                                                                                                                             | U1, U2, U3 | pending |          |
+| U6 | 3    | [06-docs.md](06-docs.md)                       | edit   | `site/src/content/docs/**`, `.claude/skills/stackgen-plugin/**`, `.claude/skills/plugin-authoring/**`, `.claude/docs/**`, `readme.md`, `CLAUDE.md`, `plugins/stackgen/stacks/readme.md`                                                                                                                                                                                       | U4, U5     | pending |          |
+| U7 | 4    | [07-gates-and-bump.md](07-gates-and-bump.md)   | edit   | every `plugins/stackgen/stacks/*/*/pack.yaml` of a pack the branch changed, `plugins/stackgen/stacks/bundles/*.md`, `plugins/stackgen/stacks/inventory.md`, `.claude-plugin/marketplace.json`                                                                                                                                                                                 | U6         | pending |          |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -229,10 +229,30 @@ the unit could not proceed without; it blocks the unit and its dependents.
 - **Archiving the three Swift-chain folders** — once this plan lands, asked for
   in prose.
 
+## Gaps surfaced during execution
+
+- **U1 — the linter needs `node` at run time.** mise installs the `npm:` tool,
+  but the binary is a Node script; swift and flutter repos pin no node. True
+  before under `pnpm dlx` too, so not a regression; assumed out of scope, no
+  tool added. Non-blocking.
+- **U3 — the pre-commit pack's `pack.yaml` summary** names only two shipped
+  files; `.config/linter.yaml` is now a third. `pack.yaml` is U7's; handed to U7
+  with its bump. Non-blocking.
+
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                             | Commit   |
+| ---- | --------- | ----- | ----- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| 0    | preflight | —     | 1     | green       | wave gate 9/9 green; doctor blocking predicates clear (mise, graphify CLI, graph); no .config/vwf.yaml, no code unit — LSP and conventions steps skipped; format check skipped (no covers:)                                                                        | —        |
+| 1    | U4        | opus  | 1     | green       | SECURITY.md 11-14 and CONTRIBUTING.md 22-23, 31-32, 45-46 re-wrapped with the shipped dprint config; dprint check exit 0; line breaks only                                                                                                                         | 76e2703c |
+| 1    | U1        | opus  | 1     | green       | linter 1.1.6 pinned in base mise.toml [tools]; five code/lint call `linter`; lockfile passages (mise.lock now tracked) corrected in pack prose. GAP: linter needs node on PATH; swift/flutter pin no node — pre-existing under pnpm dlx, assumed out of scope      | e1df8c5a |
+| 1    | U2        | opus  | 1     | green       | six code/format pass dprint `./`-prefixed paths after `--` (dprint has no literal form, per Context7); swift/swiftui still byte-identical; `-x.md` repro fixed                                                                                                     | e8a97ef7 |
+| 1    | U3        | opus  | 1     | green       | linter.yaml moved to pre-commit pack with active ignores (build/, .dart_tool/, .build/, .swiftpm/, DerivedData/, Derived/, .venv/); eslint copy removed; lint hook require_serial; prose updated. GAP: pre-commit pack.yaml summary names two files — handed to U7 | baae5b84 |
+| 1    | R1        | opus  | 1     | findings(4) | fold width: mise/conventions.md:55, mise config-files.md:28 [U1]; pre-commit/conventions.md:94 [U3] — looped back. Docs: site plugins/stackgen.md:714 says eslint ships linter.yaml — DOCS FALSIFIED to U6 (already its Owns). CONTRACT clean, RULINGS clean       | —        |
+| 1    | U1        | opus  | 2     | green       | R1 loop-back: mise conventions.md and config-files.md lock paragraphs refolded to 80                                                                                                                                                                               | e1df8c5a |
+| 1    | U3        | opus  | 2     | green       | R1 loop-back: pre-commit conventions.md "What this pack writes" paragraph refolded to 80                                                                                                                                                                           | baae5b84 |
+| 1    | R1        | opus  | 2     | pass        | three fold fixes verified; 25 paths each in one Owns                                                                                                                                                                                                               | —        |
+| 1    | gate      | —     | 1     | green       | wave gate 9/9 green; no UNRESOLVED                                                                                                                                                                                                                                 | —        |
 
 ## Launch
 
