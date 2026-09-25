@@ -24,6 +24,14 @@ idiomatic answer given the repo, do not ask — state it and move on.
    through `requires:`.
    *Cycle plans:* scope is the resolved dependency chain, one folder per chain
    element, each `requires:` the one before it — not a split the user draws.
+
+2a. **Finishes or a piece.** For each backlog id the recall matched: does this
+plan finish the item, or land one piece of it? A finishing id goes on
+`backlog:` — landing sets it `Done`; a piece id goes on `backlog_pieces:` —
+landing sets it `Partially done` — and what remains is written as
+`- Bnn: <piece>` Parked lines, at least one per piece id (section F). The last
+plan of a chain moves the id to `backlog:`.
+
 3. **Non-goals.** What the user is explicitly not asking for, especially the
    adjacent thing the survey found. Goes to *Out of scope* with the reason.
 4. **Reversals.** Does any part contradict a standing decision — a memory, a
@@ -152,7 +160,11 @@ table says why.
 
 Anything raised during A–E that belongs to a later plan is written to the
 *Parked* list before the next question is asked — never carried only in
-conversation.
+conversation. A Parked entry that belongs to a backlog item begins with its id —
+`- Bnn: <piece>` — naming the chained folder where one already covers the
+piece. Every `backlog_pieces:` id needs at least one such line, and a
+`backlog:` id may have none; the executor's preflight refuses a folder that
+breaks either, or names one id on both lists.
 
 ## G. The gate
 
