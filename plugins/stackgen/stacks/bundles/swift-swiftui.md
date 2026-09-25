@@ -5,8 +5,8 @@ kind: app-framework
 components:
 - app-framework/swiftui@0.2.0
 - package-manager/swiftpm@0.1.1
-- toolchain-gate/swift-format@0.1.0
-- toolchain-gate/swiftlint@0.1.0
+- toolchain-gate/swift-format@0.1.1
+- toolchain-gate/swiftlint@0.1.1
 platforms:
 - mobile
 - tablet
