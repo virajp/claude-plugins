@@ -254,6 +254,18 @@ the unit could not proceed without; it blocks the unit and its dependents.
   materializer has no rule for a path changing its owning component (round 2,
   contract gap, unverified). A repo whose lock records it under eslint may see
   it as a stale row or a removal. Non-blocking; needs its own plan.
+- **U5 — B1 reaches the runtime layer** (round 3, contract gap): `mise.ci.toml`
+  is also the deployed runtime's layer, so the base pin installs a Node dev
+  tool, and needs `node` and the lock, in every production install. Ruling B1
+  stands; recorded for reconciliation.
+- **U5 — the machine's global mise lock** (round 3): the round-3 engine's
+  `mise install` under the round-2 `npm.package_manager = "aube"` setting
+  rewrote the user's `~/.config/mise/mise.lock`; restored with the user's
+  consent (two `aube =` lines and `locks/` removed), and the setting removed in
+  the fix.
+- **U5 — dprint's excludes and the aube sidecar**: the dprint pack's three
+  exclusion lists (rule 15) do not cover `.config/mise/locks/`; no unit owns
+  them. Non-blocking; needs its own plan.
 
 ## Run log
 
@@ -278,6 +290,10 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | 2    | U5        | opus  | 2     | review: findings(6)   | round-1 #1-#6 verified fixed. U1: MED locked CI fails with no mise.lock entry after reshape (reproduced); LOW stale mise.ci.toml:14, vscode.d/mise.jsonc:25; LOW mise.toml:151 fold + aube-only claims; GAP B1 pin in blank/uv repos, mise default code:lint says no linter pinned. U3: LOW conventions.md:93 eslint-skill claim, SKILL paths omit linter.yaml, list omits Derived/; GAP linter.yaml owner change has no materializer rule. Dropped: engine 4, 9 (security covers 9), 10 | —        |
 | 2    | U1        | opus  | 3     | green                 | U5 r2 fix: five code/lint run "$(mise which linter --tool npm:@askviraj/linter)" (mise x still took a node_modules/.bin fake); npm.package_manager = aube pinned in [settings]; lock-before-CI in conventions + mise.ci.toml; jsonc and mise code/lint messages corrected; fold fixed                                                                                                                                                                                                    | 86bcbc4a |
 | 2    | U3        | opus  | 3     | green                 | U5 r2 fix: pre-commit skill paths add linter.yaml with the edit rule; conventions ignores list matches the file; eslint-only claim removed                                                                                                                                                                                                                                                                                                                                               | e77c9f1a |
+| 2    | U5        | opus  | 3     | security: findings(3) | range 7606e092..9a3204b1. MED (U1): project-level npm.package_manager = aube rewrites the global mise lock (reproduced on this machine by the engine, restored with the user's consent) — remove it, qualify the claim. LOW (U1): sidecar .config/mise/locks/ missing from ignores. LOW (U1): commit prose omits the sidecar. mise which fix confirmed                                                                                                                                   | —        |
+| 2    | U5        | opus  | 3     | review: findings(4)   | round-2 items verified fixed; mise which holds. U1: HIGH project-level aube setting leaks into global tools — drop it; MED aube sidecar .config/mise/locks/ must be committed and ignored; GAP mise.ci.toml is also the runtime layer, base pin reaches production installs; DOCS site stackgen.md:839 → U6. Dropped: engine 4, 5, 6, 9, 10                                                                                                                                              | —        |
+| 2    | U1        | opus  | 4     | green                 | U5 r3 fix: project-level aube setting removed; aube-only guarantees qualified; lock + .config/mise/locks/ sidecar committed together, never formatted — in mise.toml, mise.ci.toml, conventions, skills                                                                                                                                                                                                                                                                                  | 129b1bc4 |
+| 2    | U3        | opus  | 4     | green                 | U5 r3 fix: linter.yaml ignores .config/mise/locks/ (tested with 1.1.6); conventions list matches                                                                                                                                                                                                                                                                                                                                                                                         | 32e41109 |
 
 ## Launch
 
