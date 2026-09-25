@@ -91,11 +91,17 @@ variant is loaded.
   `.config/mise.lock` and `.config/mise.dev.lock`; a runtime pinned in
   `mise.toml` joins the first. Only `mise.local.lock` is ignored.
   Its one shipped tool is the **house linter**, `npm:@askviraj/linter` at an
-  exact version with `allow_low_downloads = true` (a first install is refused
-  without it), which the `code:lint` of the pnpm, eslint, flutter, swift and
-  swiftui packs calls as `linter` — one pin those packs agree on, in the base
-  because the pipeline runs `code:lint`. The binary is a Node script and needs
-  a `node` on PATH — the repo's own pin where it has one, else the machine's.
+  exact version with `allow_low_downloads = true`, which the `code:lint` of
+  the pnpm, eslint, flutter, swift and swiftui packs calls as `linter` — one
+  pin those packs agree on, in the base because the pipeline runs `code:lint`.
+  The binary is a Node script and needs a `node` on PATH — the repo's own pin
+  where it has one, else the machine's. The installer is the **machine's**
+  choice and no shipped file sets it: mise defaults to its embedded aube, and
+  only under aube does the exemption matter (a first install below its
+  download threshold is refused without it), do dependencies stay gated, and
+  do lifecycle scripts wait for `allow_builds`. Under aube the lock's entry
+  also points at a generated sidecar under `.config/mise/locks/`, committed
+  with the lock — an install without it fails — and never formatted or linted.
   It also carries three settings that are policy rather than taste:
   `all_compile = false` (take the published binary for every tool, never build
   one), `task.timings = true` (an aggregate gate whose steps have no elapsed

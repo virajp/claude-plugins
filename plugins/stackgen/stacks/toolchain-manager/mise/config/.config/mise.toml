@@ -29,7 +29,6 @@ activate_aggressive  = true     # let mise shims win on PATH
 all_compile          = false    # never build a tool from source
 env_shell_expand     = true     # expand $VARS in [env]
 gpg_verify           = true     # verify tool signatures (see the CI exception)
-npm.package_manager  = "aube"   # npm: tools install by mise's embedded aube
 raw                  = true     # streams output
 status.missing_tools = "always"
 
@@ -162,27 +161,33 @@ MEMBERS = ""
 # whatever the registry serves that minute, and one pin is one version those
 # packs agree on. It lives in the base because the pipeline runs `code:lint`.
 #
-# Every claim below holds for mise's embedded aube installer, and
-# `npm.package_manager = "aube"` in [settings] above makes it the installer
-# whatever a machine's own settings say — `npm.shell_out` included.
+# The binary is a Node script: it needs a `node` on PATH. A repo whose
+# components pin one (a Node repo) runs it under that; a repo whose packs pin
+# none (swift, swiftui, flutter, uv) relies on the machine's own.
 #
-# aube installs the package without a package manager, but the binary is a
-# Node script: it needs a `node` on PATH. A repo whose components pin one (a
-# Node repo) runs it under that; a repo whose packs pin none (swift, swiftui,
-# flutter, uv) relies on the machine's own.
+# The installer is the MACHINE's choice, never this file's: mise's npm backend
+# defaults to its embedded aube, and a machine may set `npm.package_manager` or
+# `npm.shell_out` to use npm, pnpm or bun instead. A project file that set the
+# installer would reach the machine's global tools too, so none does. What
+# follows holds only when the machine's npm backend is the embedded aube:
 #
-# `allow_low_downloads` is required, not a loosening: aube refuses a package
-# under its weekly-download threshold on a first, unlocked install, and this
-# one is below it. The exemption covers this package alone — its dependencies
-# stay gated, and the malicious-package check still runs.
+#   - it installs the package without a separate package manager;
+#   - `allow_low_downloads` is required, not a loosening — aube refuses a
+#     package under its weekly-download threshold on a first, unlocked install,
+#     and this one is below it; the exemption covers this package alone, its
+#     dependencies stay gated, and the malicious-package check still runs;
+#   - dependency lifecycle scripts run only when listed in `allow_builds`, and
+#     none is.
+# Under another installer those three do not hold, and the option is ignored.
 #
-# The pin fixes this package only; its dependencies resolve within its own
-# ranges at install time. Their lifecycle scripts run only when listed in
-# `allow_builds`, and none is.
-#
-# `locked = true` in mise.ci.toml refuses it until `.config/mise.lock` records
-# it: a repo that takes this pin runs `mise install` and commits the lock before
-# its first CI push.
+# The lock is TWO things, committed together. `.config/mise.lock` records the
+# pin, and under aube points at a sidecar directory,
+# `.config/mise/locks/npm-askviraj-linter/<version>~<hash>/`, holding the
+# `package.json` and `aube-lock.yaml` that fix the dependency graph. An install
+# with the entry and no sidecar fails, locked or not — and `locked = true` in
+# mise.ci.toml refuses a tool no committed lock records. So a repo that takes
+# this pin runs `mise install` and commits the lock AND its sidecar before its
+# first CI push. The sidecar is generated: never format or lint it.
 #
 # The tasks call it through `mise which`, never by bare name: a Node repo puts
 # `node_modules/.bin` ahead of mise's tool bins, where another `linter` would

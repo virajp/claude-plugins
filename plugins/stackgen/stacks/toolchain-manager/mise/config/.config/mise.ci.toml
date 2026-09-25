@@ -15,7 +15,11 @@
 # base) and `mise.dev.lock`. All of them are tracked, so the pipeline reads the
 # same versions a laptop resolved. A tool no committed lock records is refused
 # here: run `mise install` and commit `.config/mise.lock` before the first CI
-# push, or the linter pin fails the pipeline.
+# push, or the linter pin fails the pipeline. Under mise's default npm
+# installer (aube) the linter's entry also points at a generated sidecar,
+# `.config/mise/locks/npm-askviraj-linter/<version>~<hash>/`, which is
+# committed with the lock — without it the install fails, locked or not. The
+# sidecar is generated: never format or lint it.
 locked = true
 
 # Per-runtime CI workarounds go here and nowhere else.

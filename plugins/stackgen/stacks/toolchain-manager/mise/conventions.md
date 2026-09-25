@@ -37,25 +37,34 @@ what a laptop needs and a runner does not.
 in `mise.toml` at an exact version, and the `code:lint` of the pnpm, eslint,
 flutter, swift and swiftui packs calls it as `linter`. One pin is one version
 those packs agree on, where a per-run fetch is whatever the registry serves that
-minute; it is in the base because the pipeline runs `code:lint`. The base's
-`npm.package_manager = "aube"` makes mise's embedded aube the installer on
-every machine, and what follows holds for aube. It installs the package without
-a package manager, but the binary is a Node script and needs a `node` on PATH:
-a Node repo's own pin, or — where the packs pin none, as swift, swiftui,
-flutter and uv do not — the machine's. The pin carries
-`allow_low_downloads = true` because aube refuses a package under its
-weekly-download threshold on a first, unlocked install; the exemption is this
-package's alone. The pin also fixes this package only: its dependencies resolve
-within its own ranges at install time, and their lifecycle scripts run only
-when listed in `allow_builds`, which the pin leaves empty. The tasks call it as
-`mise which linter --tool npm:@askviraj/linter`, never by bare name: a Node
-repo puts `node_modules/.bin` ahead of mise's tool bins, where a dependency's
-`linter` would shadow the pin.
+minute; it is in the base because the pipeline runs `code:lint`. The binary is
+a Node script and needs a `node` on PATH: a Node repo's own pin, or — where the
+packs pin none, as swift, swiftui, flutter and uv do not — the machine's. The
+tasks call it as `mise which linter --tool npm:@askviraj/linter`, never by bare
+name: a Node repo puts `node_modules/.bin` ahead of mise's tool bins, where a
+dependency's `linter` would shadow the pin.
 
-**Commit `.config/mise.lock` before the first CI push.** `locked = true` in
-`mise.ci.toml` refuses a tool no committed lock records, and the linter pin is
-one — so a repo that takes it runs `mise install` and commits the lock first,
-or its pipeline fails at install.
+**The installer is the machine's, and the pin's guarantees are aube's.** mise's
+npm backend defaults to its embedded aube; a machine may set
+`npm.package_manager` or `npm.shell_out` to use npm, pnpm or bun instead. No
+shipped file sets the installer — a project-level setting reaches the machine's
+global tools too. Only when the machine's backend is the embedded aube does the
+pin install with no separate package manager, does `allow_low_downloads = true`
+matter (aube refuses a package under its weekly-download threshold on a first,
+unlocked install; the exemption is this package's alone and its dependencies
+stay gated), and do dependency lifecycle scripts run only when listed in
+`allow_builds`, which the pin leaves empty. Under another installer none of
+that holds.
+
+**Commit the lock and its sidecar before the first CI push.** Under aube,
+`.config/mise.lock`'s linter entry points at a generated sidecar,
+`.config/mise/locks/npm-askviraj-linter/<version>~<hash>/`, whose
+`package.json` and `aube-lock.yaml` fix the dependency graph; an install with
+the entry and no sidecar fails, locked or not. `locked = true` in
+`mise.ci.toml` refuses a tool no committed lock records. So a repo that takes
+the pin runs `mise install` and commits the lock and the sidecar together, or
+its pipeline fails at install. The sidecar is generated: never format or lint
+it.
 
 **Latest, but never brand new; and CI resolves nothing.** Fuzzy pins defer any
 release younger than `minimum_release_age`, and `lockfile = true` records what

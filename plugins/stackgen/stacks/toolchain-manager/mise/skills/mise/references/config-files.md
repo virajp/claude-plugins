@@ -52,7 +52,6 @@ activate_aggressive  = true     # let mise shims win on PATH
 all_compile          = false    # never build a tool from source
 env_shell_expand     = true     # expand $VARS in [env]
 gpg_verify           = true     # verify tool signatures (see the CI exception)
-npm.package_manager  = "aube"   # npm: tools install by mise's embedded aube
 raw                  = true     # streams output
 status.missing_tools = "always"
 
@@ -113,8 +112,9 @@ node = { version = "latest" }
 pnpm = { version = "latest" }
 # The one tool this pack ships here: the house linter the pnpm, eslint,
 # flutter, swift and swiftui packs' `code:lint` calls as `linter`, at an EXACT
-# version. A first install is refused below a download threshold without the
-# exemption, which covers this package alone.
+# version. Under mise's default npm installer, embedded aube, a first install
+# is refused below a download threshold without the exemption, which covers
+# this package alone; another installer the machine picks ignores it.
 "npm:@askviraj/linter" = { version = "1.1.6", allow_low_downloads = true }
 
 [tasks.init]
