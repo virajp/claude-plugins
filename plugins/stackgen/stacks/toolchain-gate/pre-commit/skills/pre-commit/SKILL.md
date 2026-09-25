@@ -168,9 +168,11 @@ report; `--staged` is how `code:sec` is told to scan the index rather than the
 tree. The staged filenames follow for the first two and not for the third,
 which asks git for its own scope.
 
-`require_serial: true` on `lint` is what stops pre-commit splitting a long
-staged list into partitions and running the task once per partition: a
-`code:lint` has whole-tree steps, and each partition would repeat them.
+`require_serial: true` on `lint` makes pre-commit run the task in one process
+at a time rather than in parallel. It does not stop the split: a staged list
+past the command-line length limit is still cut into partitions, and the task
+runs once per partition — but one after another, so two whole-tree `code:lint`
+steps never race over the same files.
 
 The linter those tasks run reads one config, `.config/linter.yaml`, which this
 pack ships beside the hook config. Its `ignores:` list names the generated trees

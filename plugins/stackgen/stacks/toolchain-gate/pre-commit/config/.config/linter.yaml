@@ -1,6 +1,7 @@
 ---
-# The lint gate's config file — read by `@askviraj/linter`, which every
-# `code:lint` task runs, and the `lint` pre-commit hook runs through it.
+# The lint gate's config file — read by `@askviraj/linter`, which the
+# `code:lint` task of the pnpm, eslint, flutter, swift and swiftui packs runs,
+# and the `lint` pre-commit hook runs through it.
 #
 # The linter is ZERO-CONFIG without this file: it ships an opinionated flat
 # config covering every preset, and a repo that never opens this file gets the
@@ -30,6 +31,15 @@ version: 1
 # Its own defaults already skip `node_modules/`, `dist/`, `.turbo/`, `.astro/`,
 # `coverage/` and `graphify-out/`; list only what they miss. A language pack
 # that adds a generated tree adds it here, with the pack that produces it.
+#
+# Patterns resolve from the repo root, where a bare `build/` would match the
+# root directory alone. Every entry is `**/`-prefixed instead, because a
+# generated tree sits at its PROJECT root, and in a monorepo that is any depth;
+# the syntax has no way to say "beside a pubspec.yaml". The cost is on the two
+# generic names, `build/` and `Derived/`: a source directory so named, at any
+# depth, goes unlinted. The other names are tool-specific and carry no such
+# cost. A repo with such a source directory negates it below, e.g.
+# `- "!src/build/"`.
 ignores:
   - "**/build/" # app-framework/flutter
   - "**/.dart_tool/" # app-framework/flutter
