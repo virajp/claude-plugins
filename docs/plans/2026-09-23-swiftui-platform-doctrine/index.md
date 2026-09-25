@@ -13,9 +13,10 @@ backlog: [ B56 ]
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-09-23 by the user
+RUNNING since 2026-09-25 09:50 in
+.claude/worktrees/2026-09-23-swiftui-platform-doctrine
 
 ## Consent
 
@@ -98,8 +99,8 @@ None.
 
 | Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                                                                                                         | Depends on | Status  | Commit |
 | -- | ---- | -------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------- | ------ |
-| U1 | 1    | [01-platforms.md](01-platforms.md)           | edit | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/platforms/**`                                                                                                                                                                       | —          | pending |        |
-| U2 | 1    | [02-integrations.md](02-integrations.md)     | edit | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/**`                                                                                                                                                                    | —          | pending |        |
+| U1 | 1    | [01-platforms.md](01-platforms.md)           | edit | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/platforms/**`                                                                                                                                                                       | —          | green   |        |
+| U2 | 1    | [02-integrations.md](02-integrations.md)     | edit | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/**`                                                                                                                                                                    | —          | green   |        |
 | U3 | 2    | [03-router.md](03-router.md)                 | edit | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/SKILL.md`                                                                                                                                                                                      | U1, U2     | pending |        |
 | U4 | 3    | [04-docs.md](04-docs.md)                     | edit | `site/src/content/docs/**`, `.claude/skills/stackgen-plugin/**`, `.claude/docs/**`, `readme.md`, `CLAUDE.md`, `plugins/stackgen/stacks/readme.md`, `docs/memory/decisions/2026-09-23-swift-native-stack.md`                                                  | U3         | pending |        |
 | U5 | 4    | [05-gates-and-bump.md](05-gates-and-bump.md) | edit | `site/package.json`, `plugins/stackgen/.claude-plugin/plugin.json`, `plugins/stackgen/stacks/app-framework/swiftui/pack.yaml`, `plugins/stackgen/stacks/bundles/swift-swiftui.md`, `plugins/stackgen/stacks/inventory.md`, `.claude-plugin/marketplace.json` | U4         | pending |        |
@@ -213,8 +214,15 @@ Carried from the retired `2026-09-23-swift-native-stack` folder:
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                               | Commit |
+| ---- | --------- | ----- | ----- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight | —     | 1     | green       | doctor: no blocking finding (mise, graphify 0.9.65, graph in main checkout; no vwf.yaml stacks); all 9 wave-gate lines pass on develop 942b994a; recall: nothing beyond the plan; no code unit, conventions fetch skipped                                            | —      |
+| 1    | U1        | opus  | 1     | green       | six platforms/ files; links only to sibling topics + one U2 file via ../ (rule 13 allowed); Context7-checked; no API listings; dropped an unbacked Mac Catalyst sentence. GAP: CarPlay template-depth cap stated without a number (Context7 gave none)               |        |
+| 1    | U2        | opus  | 1     | green       | five integrations/ files; prose style matching topics 1–11, not Flutter's code blocks; sibling links only; claims Context7 could not confirm cut or softened (App Shortcuts cap, relay sending-domain rule, web flow Services ID)                                    |        |
+| 1    | R1        | opus  | 1     | findings(4) | U1 visionos.md:15 volume not resizable (wrong since visionOS 2); U1 macos.md:57 unbacked iPad Settings sentence; U2 widgets:45 Mac group-id prefix overstated; U2 five anti-pattern tables use unpadded separators unlike topics 1–11. CONTRACT clean, RULINGS clean | —      |
+| 1    | U1        | opus  | 2     | green       | visionos.md volume resizability corrected (visionOS 2, Context7-confirmed); macos.md iPad Settings sentence kept — Apple's menu-bar page states it verbatim                                                                                                          |        |
+| 1    | U2        | opus  | 2     | green       | macOS App Group line softened (team-id prefix, provisioned `group.`, or Mac App Store — macOS 15 notes); five anti-pattern tables padded                                                                                                                             |        |
+| 1    | R1        | opus  | 2     | pass        | all four round-1 findings hold; nothing regressed; CONTRACT clean, RULINGS clean                                                                                                                                                                                     | —      |
 
 ## Launch
 
