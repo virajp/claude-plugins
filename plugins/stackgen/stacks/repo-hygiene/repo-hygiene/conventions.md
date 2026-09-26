@@ -142,10 +142,11 @@ iOS host.
 A language absent from this table, or a pin that names no language, has **no
 row and needs none**. `language/bash` and `language/markdown` have no template
 upstream at all; `framework/effect` is Node, already appended for the language
-that pins it; and `toolchain-manager/mise`, the toolchain gates,
-`datastore/postgres`, `ci-system/github-actions`, the cloud packs, the deploy
-targets and the design tools write nothing an ignore file has to learn — the
-base sections already cover them. Absence here is an answer, not an omission.
+that pins it; and the mise base `stackgen:tool-config` lands, the toolchain
+gates, `datastore/postgres`, `ci-system/github-actions`, the cloud packs, the
+deploy targets and the design tools write nothing an ignore file has to learn
+— the base sections already cover them. Absence here is an answer, not an
+omission.
 
 **A detected language with no row is proposed, never guessed.** The
 initializer names the template it would fetch and waits for a yes; a wrong

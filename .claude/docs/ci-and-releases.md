@@ -2,10 +2,10 @@
 
 ## mise environments
 
-The mise config is split by `MISE_ENV`, all under `.config/`, in the mise pack's
-layout: settings-only top-level files, one section file per table in
-`.config/mise/conf.d/`, and `.config/miserc.toml` turning on `env_conf_d` so a
-`<section>.<env>.toml` loads only under that environment.
+The mise config is split by `MISE_ENV`, all under `.config/`, in the layout
+`stackgen:tool-config` lands: settings-only top-level files, one section file
+per table in `.config/mise/conf.d/`, and `.config/miserc.toml` turning on
+`env_conf_d` so a `<section>.<env>.toml` loads only under that environment.
 
 - `.config/mise.toml` — **generic**, loaded everywhere: settings only
   (`lockfile_platforms`, `task.run_auto_install = false`, the Node runtime
@@ -58,15 +58,16 @@ same for `refs/tags/*-v*`. Neither requires a PR or a green check, so
 `p:plugins:release`, `p:i:release`, `p:site:release` and `deps-update.yml` all
 still push directly.
 
-**The landing model is per branch in the pack, and legacy here.** The mise pack
-sets how a branch lands per destination — `MERGE_MODEL_DEVELOP` for
-`code:merge:develop`, `MERGE_MODEL_MAIN` for `code:merge:main`, each `direct`
-(merge locally and push) or `pr` (push and open a pull request); the pack ships
-`direct` and `pr`. This repo's own `.config/mise/conf.d/env.toml` still carries
-the single legacy `MERGE_MODEL`, which every reader takes as both values — the
-merge tasks with a warning naming it legacy, git-workflow's Step 4 silently as
-the shared fallback, and doctor's predicate (f) as one drift row — until the
-next `/vwf:setup reshape` rewrites it into the pair and lands the new merge
+**The landing model is per branch in the skill, and legacy here.** The mise base
+`stackgen:tool-config` lands sets how a branch lands per destination —
+`MERGE_MODEL_DEVELOP` for `code:merge:develop`, `MERGE_MODEL_MAIN` for
+`code:merge:main`, each `direct` (merge locally and push) or `pr` (push and open
+a pull request); its defaults are `direct` and `pr`. This repo's own
+`.config/mise/conf.d/env.toml` still carries the single legacy `MERGE_MODEL`,
+which every reader takes as both values — the merge tasks with a warning naming
+it legacy, git-workflow's Step 4 silently as the shared fallback, and doctor's
+predicate (f) as one drift row — until the next `/vwf:setup reshape`, whose
+`/stackgen:tool-config all` rewrites it into the pair and lands the new merge
 scripts.
 
 That is why **no release task commits**: `p:i:release`, `p:plugins:release` and

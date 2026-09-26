@@ -253,8 +253,9 @@ machine_env:
 
 `name` is the environment variable, `detect` a shell command whose stdout
 is the default, and `question` the prompt. Each `name` **must** be set by
-a `mise … env` line in the pack's `tool-config:` list, with an empty
-value. The materializer runs that call, so the key lands **unset**;
+a `mise add env <KEY>="" to <scope>` line in the pack's `tool-config:`
+list — an empty value; `p:plugins:check` rule 11 refuses a name no such
+line sets. The materializer runs that call, so the key lands **unset**;
 `/vwf:setup`'s materialize pass, the caller that lands the pack, runs each
 `detect`, offers the output preselected — the person may type another
 value — and writes the answer with

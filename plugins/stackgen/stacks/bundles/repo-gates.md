@@ -26,11 +26,11 @@ charter. **No gate ships a hook fragment**: pre-commit is the runner, and
 the other three are reached through the tool-neutral hooks its own
 `pre-commit-config.yaml` carries — each calling a `code:*` task, never a
 binary — so the `.config/pre-commit.d/` merge `/vwf:init` runs has no input
-from any of the three unconditional bundles — its fragments come from packs
-outside them, and the uv pack's is the one in the tree today. The earlier
-line stopped at naming the file as a prerequisite, which left
-every repo hand-writing the config the skill assumes and no two repos
-agreeing on it.
+from either unconditional bundle or from `stackgen:tool-config` — its
+fragments come from packs outside them, and the uv pack's is the one in the
+tree today. The earlier line stopped at naming the file as a prerequisite,
+which left every repo hand-writing the config the skill assumes and no two
+repos agreeing on it.
 
 **This is not a menu pick.** There is exactly one pack per slot, and a
 one-entry menu is theatre. The frontmatter carries `unconditional: true`, so

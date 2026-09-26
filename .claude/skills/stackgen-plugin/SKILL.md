@@ -29,7 +29,14 @@ emits, and a person can run `/stackgen:stackgen-reputation <ecosystem>:<name> �
 on a name before typing it anywhere; it returns `pass`, `warn` or `block` per
 name from public read APIs over `WebFetch`, and is the only network stackgen
 touches beyond Context7. Since `devtools` dissolved into it, stackgen also
-carries the repo's own toolchain manager and gate doctrine as packs.
+carries the repo's own gate doctrine as packs. `skills/tool-config` is invocable
+both ways too: `/stackgen:tool-config` owns the mise config — its layout, task
+library and doctrine sit in its `assets/mise/` and `references/mise.md` — writes
+each requester's lines between `# >>> <requester>` / `# <<< <requester>`
+markers, shows drift with take theirs, keep mine or merge, and records
+`source: tool-config/<tool>@<version>` in the lockfile. `/vwf:init` calls it as
+`all` with its answers, the materializer runs each pack's `tool-config:` list
+through it, and `/vwf:setup` fills a `machine_env` value with its `set env`.
 
 **Each asset is authoritative for its own subject.** This file is a map; do not
 restate a count or a rule that an asset below already owns.
@@ -78,16 +85,17 @@ bundle, so a later re-sync can act on one component alone. Packs are **assets,
 not live skills** — installing stackgen floods no session with every stack's
 doctrine.
 
-`mise`, `repo-gates` and `repo-hygiene` are **unconditional** bundles: left out
-of the menu payload and fetched by `/vwf:init` at their fixed slugs, because a
-repo that has picked no stack still has to run its gates by name. `init` fetches
-them **per repo** — the base and every member repo it resolved, each landing its
-own lockfile — so a member is shaped on its own evidence. `/vwf:setup` no longer
-fetches **those three**: it checks each repo's adapter lockfile for all of them
-and offers `/vwf:init` when one is missing anywhere, or when any repo has
-drifted from doctor's baseline. What setup *does* fetch is every **pinned** axis
-— its materialize pass invokes `-stack-template` once per `(repo, slug)`, with
-the `repo:` line naming the member — which is the one landing path
+`repo-gates` and `repo-hygiene` are **unconditional** bundles: left out of the
+menu payload and fetched by `/vwf:init` at their fixed slugs, because a repo
+that has picked no stack still has to run its gates by name. `init` fetches them
+**per repo** — the base and every member repo it resolved, each landing its own
+lockfile — so a member is shaped on its own evidence. `/vwf:setup` no longer
+fetches **those two**: it checks each repo's adapter lockfile for them and for
+the `tool-config/…` records `/stackgen:tool-config all` writes, and offers
+`/vwf:init` when one is missing anywhere, or when any repo has drifted from
+doctor's baseline. What setup *does* fetch is every **pinned** axis — its
+materialize pass invokes `-stack-template` once per `(repo, slug)`, with the
+`repo:` line naming the member — which is the one landing path
 `/vwf:architecture` no longer takes. Since `config_format` 21 that pass carries
 an **`answers:` map** beside the `repo:` line, and so does `stackgen-sync`: all
 three callers read the four axes from the base's `.config/vwf.yaml` `answers:`
@@ -147,10 +155,10 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   language server is to *be* a plugin. User scope is safe because every
   generated `lspServers` entry **must** carry an `extensionToLanguage` map;
 - a pack's own **`config/` tree**, mirroring the repo root, for the repo config
-  a component genuinely owns — **mode preserved**, so a task file lands 755.
-  Eight kinds of entry: **(a)** the toolchain manager's own config and its task
-  library (`.config/miserc.toml`, `.config/mise*.toml`, the section files in
-  `.config/mise/conf.d/`, `.config/mise/tasks/**`); **(b)** a gate's own config
+  a component genuinely owns — **mode preserved**, so a task file lands 755. Six
+  kinds of entry since 2026-09-26: **(a)** is retired — the toolchain manager's
+  own config and task library are `stackgen:tool-config`'s, landed from its
+  `assets/mise/`, never a pack's `config/` tree; **(b)** a gate's own config
   (`.config/dprint.json`, `.config/pre-commit-config.yaml`,
   `.config/gitleaks.toml`, `.config/grype.yaml`, …); **(c)** the hygiene files
   (`.gitignore`, `.editorconfig`, `.gitattributes`, `SECURITY.md` — its one
@@ -184,17 +192,19 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   conditional file: `fnox.local.toml` left the base `.gitignore` and is a
   provider row in the hygiene pack's ignore table (fnox, and doppler's
   `.doppler/`), appended under a banner named for the slug only where init's
-  stack read carries that provider); **(d)** a mise fragment at
-  `.config/mise/conf.d/<pack>.toml`, auto-loaded, so no component edits
-  `mise.toml` — a provider's tool pin and environment values (doppler, fnox), a
-  shell alias (pnpm's `npx`), or a gate tool's pin (swiftlint's); **(e)** a hook
-  fragment at `.config/pre-commit.d/<pack>.yaml`, copied verbatim —
-  **`/vwf:init` merges it**, nothing in stackgen edits the pre-commit config,
-  which is what keeps a fragment a fragment. A fragment is for a **non-gate**
-  check only: since 2026-09-12 a gate tool is configured once, in a `code:*`
-  task the base hooks call, so a pack needing a gate overlays that task instead.
-  Only `package-manager/uv` still ships a fragment, for `uv lock --check`;
-  **(f)** a deploy target's own config and its deploy task, since 2026-09-05 —
+  stack read carries that provider); **(d)** is retired too — a mise
+  `conf.d/<pack>.toml` fragment is refused by rule 11; a provider's tool pin and
+  environment values (doppler, fnox), a shell alias (pnpm's `npx`) or a gate
+  tool's pin (swiftlint's) is a line of the pack's `tool-config:` list, which
+  the materializer runs through `/stackgen:tool-config`, and a pack dropped from
+  a composition gets that skill's `remove <pack>`; **(e)** a hook fragment at
+  `.config/pre-commit.d/<pack>.yaml`, copied verbatim — **`/vwf:init` merges
+  it**, nothing in stackgen edits the pre-commit config, which is what keeps a
+  fragment a fragment. A fragment is for a **non-gate** check only: since
+  2026-09-12 a gate tool is configured once, in a `code:*` task the base hooks
+  call, so a pack needing a gate overlays that task instead. Only
+  `package-manager/uv` still ships a fragment, for `uv lock --check`; **(f)** a
+  deploy target's own config and its deploy task, since 2026-09-05 —
   `cloud-service/workers-static-assets`, its `workers-ssr` sibling and
   `cloud-service/containers` each ship `wrangler.jsonc` at the root (the SSR and
   Containers ones both carrying `main`, the Containers one adding a `containers`
@@ -223,23 +233,24 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   never because the format tolerates one. Every one of the **twelve** fragments
   in the tree — repo-hygiene, dprint-editor, pre-commit, eslint, ruff, tsconfig,
   analysis-options, mise, since 2026-09-21 astro and pnpm, and since 2026-09-23
-  swift-format and swiftlint — is conditioned on `editor: vscode` in its pack's
-  `pack.yaml`, so an editor **no** at init lands none and the composing skill
-  composes nothing. The split is by ownership: the hygiene baseline carries
-  **editor-wide keys alone** (indentation and suggestion defaults, the generic
-  excludes, todo-tree, the non-stack nesting rows, the generic extensions), and
-  every stack-naming key sits in the fragment of the pack that pins that stack —
-  `node_modules`, the tsbuildinfo files, the template-string converter and
-  `*.js` nesting in tsconfig's; `.dart_tool` in analysis-options'; `.astro` in
-  astro's; `.turbo`, the pnpm lockfile and the `package.json` children in pnpm's
-  (turbo is a generated component the pnpm-turbo bundle carries, so its exclude
-  lives beside the manager); `.build`, `.swiftpm` and the `Package.swift`
-  nesting in swift-format's; `yaml.*` and `redhat.vscode-yaml` in pre-commit's;
-  the fish extension dropped. `editor.defaultFormatter` is set **per language**
-  in the dprint fragment, one `[<language>]` scope per plugin `dprint.json`
-  carries and `[toml]` to even-better-toml, never editor-wide — an editor-wide
-  binding overrode Dart's formatter by composition order alone. The dprint
-  gate's fragment is the one filename exception, `dprint-editor.jsonc`: dprint
+  swift-format and swiftlint — is conditioned on `editor: vscode`, in its pack's
+  `pack.yaml` or, for mise's, by `stackgen:tool-config`'s `editor` argument, so
+  an editor **no** at init lands none and the composing skill composes nothing.
+  The split is by ownership: the hygiene baseline carries **editor-wide keys
+  alone** (indentation and suggestion defaults, the generic excludes, todo-tree,
+  the non-stack nesting rows, the generic extensions), and every stack-naming
+  key sits in the fragment of the pack that pins that stack — `node_modules`,
+  the tsbuildinfo files, the template-string converter and `*.js` nesting in
+  tsconfig's; `.dart_tool` in analysis-options'; `.astro` in astro's; `.turbo`,
+  the pnpm lockfile and the `package.json` children in pnpm's (turbo is a
+  generated component the pnpm-turbo bundle carries, so its exclude lives beside
+  the manager); `.build`, `.swiftpm` and the `Package.swift` nesting in
+  swift-format's; `yaml.*` and `redhat.vscode-yaml` in pre-commit's; the fish
+  extension dropped. `editor.defaultFormatter` is set **per language** in the
+  dprint fragment, one `[<language>]` scope per plugin `dprint.json` carries and
+  `[toml]` to even-better-toml, never editor-wide — an editor-wide binding
+  overrode Dart's formatter by composition order alone. The dprint gate's
+  fragment is the one filename exception, `dprint-editor.jsonc`: dprint
   discovers any `dprint.jsonc` below the root as a sub-directory config, and one
   with no `plugins` array makes a bare `dprint check` exit 13. Note the second
   underscore rule: `config/_<name>/` at the top of the tier is pack-private and
@@ -294,7 +305,8 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
   component's conventions, in this composition's template". Never swap one path
   for another.
 - **The whole `config/` payload tier is checked before it ships.**
-  `p:plugins:check` rule 11 makes **nine** assertions: the exec bit and a known
+  `p:plugins:check` rule 11 makes **ten** assertions, over each pack's tier and
+  each `skills/tool-config/assets/<tool>/` tree alike: the exec bit and a known
   shebang on every task file (mise reports a 644 task as an *unknown* one rather
   than a permission error) and on every `hooks/*.sh`; the **landable** tier of
   the root allowlist over the tier's top level — the vwf-owned tier never
@@ -312,8 +324,11 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
   pack's `binaries`, `lockfile` and `machine_env` facts take the shapes doctor
   and setup read — a binary a bare name or `{ name, probe }`, a lockfile a list
   of relative paths or globs with no `..`, a `machine_env` entry a `name`,
-  `detect` and `question`, the name a key of the pack's `conf.d` fragment when
-  it ships one. Beside it, rule 15 holds the gate packs' exclusion lists to one
+  `detect` and `question`, the name set by a `mise add env` entry of the pack's
+  `tool-config:` list, and each such entry parsing as `mise add tool`,
+  `mise add env` or `mise add alias` with a legal name and scope, a template
+  delimiter only in an `add env` value; and no mise `conf.d` fragment in the
+  tier at all. Beside it, rule 15 holds the gate packs' exclusion lists to one
   invariant: the dprint pack's `dprint.json` and `taplo.toml` and the pre-commit
   pack's global `exclude` (a `(?x)` block of anchored alternatives) state **one
   set** after normalisation, and the gitleaks `[allowlist] paths` — every entry

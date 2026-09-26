@@ -17,11 +17,12 @@ reviewer's impact analysis, topology detection) out of brute-force Grep sweeps.
 > - **A graph is per-checkout**, and its absence *at a checkout root* is equally
 >   blocking — `/vwf:setup` is what resolves it, behind consent.
 >   In a `multi-repo` product that means **one graph per repo**, refreshed by
->   that repo's own hook, and the gate covers **every locally-present** repo: the
->   base and each member that is actually cloned here. An **absent** member is
->   not a finding — it is the recorded blind spot from the membership contract
->   (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`), and gating on a repo the user
->   declined to clone would halt a run they already consented to narrow.
+>   that repo's own `code:graph` task, and the gate covers **every
+>   locally-present** repo: the base and each member that is actually cloned
+>   here. An **absent** member is not a finding — it is the recorded blind spot
+>   from the membership contract
+>   (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`), and gating on a repo the
+>   user declined to clone would halt a run they already consented to narrow.
 >
 > **A worktree with no local `graphify-out/` is not an absence.** Resolving to
 > the main checkout's graph (see Worktrees) is the normal, expected path and is
@@ -96,11 +97,12 @@ and AMBIGUOUS as leads to check, not facts.
 
 ## Freshness — the graph is the last commit
 
-The post-commit hook rebuilds the graph when code lands, so the graph reflects
-the repo **as of the last commit**. Uncommitted work — the diff under review,
-the coder's in-progress changes — is never in it. Read the diff and any files
-you are changing directly; use the graph for the pre-change surroundings (call
-sites, dependents, reuse candidates, entry points).
+The repo's `code:graph` task, run by hand after a commit, rebuilds the graph,
+so at best it reflects the repo **as of the last commit**. Uncommitted work —
+the diff under review, the coder's in-progress changes — is never in it. Read
+the diff and any files you are changing directly; use the graph for the
+pre-change surroundings (call sites, dependents, reuse candidates, entry
+points).
 
 ## Worktrees
 

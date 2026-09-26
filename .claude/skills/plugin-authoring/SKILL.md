@@ -52,8 +52,10 @@ mise run p:plugins:shellcheck         # the shell a pack ships, if you touched a
 
 `p:plugins:shellcheck` runs `shellcheck -x` and `shfmt -d -i 2 -ci` over
 **both** shell tiers a pack ships — `config/.config/mise/tasks/**` and `hooks/`
-— and pre-commit fires it on
-`^plugins/[^/]+/stacks/[^/]+/[^/]+/(config|hooks)/`.
+— plus the task library `stackgen:tool-config` lands from
+`skills/tool-config/assets/<tool>/.config/mise/tasks/**`, and pre-commit fires
+it on
+`^plugins/([^/]+/stacks/[^/]+/[^/]+/(config|hooks)|stackgen/skills/tool-config/assets)/`.
 
 `--check` on the two generators is what CI and pre-commit run. It exists because
 each output is generated **and** committed, so a source edited without a
@@ -78,6 +80,8 @@ the two files that still have the problem.
    **directory**, so a new payload file type cannot silently re-acquire the
    defect; when a payload file genuinely needs formatting, run the **shipped**
    config over it, never this repo's.
+   `plugins/stackgen/skills/tool-config/assets/` is excluded on the same terms:
+   it is the payload `stackgen:tool-config` lands.
 3. **A dependency stays inside this marketplace.** Add the name to
    `dependencies` in `plugin.json` with `"marketplace": "virajp-plugins"`; the
    marketplace entry is generated from it, and `p:plugins:check` asserts it
@@ -111,10 +115,11 @@ the `stackgen-plugin` skill still owns is what those scripts are *for*. The host
 rules in full are stackgen's `assets/artifact-doctrine.md` §4.
 
 The payload's other two halves have rules of their own. Rule 13 covers its
-**prose**: no citation a pack lands may be plugin-relative, because the file is
-copied into a repo where no plugin is installed and the path resolves to nothing
-without a word. Rule 4 covers its **frontmatter**, parsing every pack skill and
-pack agent under `stacks/*/*/` on the same strict terms as a plugin's own.
+**prose**: no citation a pack or `stackgen:tool-config` lands may be
+plugin-relative, because the file is copied into a repo where no plugin is
+installed and the path resolves to nothing without a word. Rule 4 covers its
+**frontmatter**, parsing every pack skill and pack agent under `stacks/*/*/` on
+the same strict terms as a plugin's own.
 
 ## References
 
