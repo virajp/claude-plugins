@@ -3,10 +3,10 @@ name: Swift · SwiftUI
 axis: project
 kind: app-framework
 components:
-- app-framework/swiftui@0.2.0
+- app-framework/swiftui@0.3.0
 - package-manager/swiftpm@0.1.1
 - toolchain-gate/swift-format@0.1.1
-- toolchain-gate/swiftlint@0.1.1
+- toolchain-gate/swiftlint@0.2.0
 platforms:
 - mobile
 - tablet
@@ -64,10 +64,12 @@ native edge.
 - **A committed Xcode project** owns the app's targets. It is created once, by
   a person, in Xcode — no generator, and no pack lands the `.xcodeproj`; the
   tasks call `xcodebuild` and `swift` alone. The Xcode version is pinned by
-  `XCODE_VERSION` in the pack's `.config/mise/conf.d/swiftui.toml`, beside the
-  golden simulator's pin; `/vwf:setup` asks for each value as it lands the
-  pack, offering what this machine answers. Every task that builds checks
-  `xcodebuild -version` against the pin and fails fast on the wrong one.
+  `XCODE_VERSION`, beside the golden simulator's pin, each added by the
+  pack's `tool-config:` calls in its `# >>> swiftui` block of
+  `.config/mise/conf.d/env.toml`; `/vwf:setup` asks for each value as it
+  lands the pack, offering what this machine answers. Every task that builds
+  checks `xcodebuild -version` against the pin and fails fast on the wrong
+  one.
 - **Packages are added through Xcode**, into the project, and locked in the
   `Package.resolved` it keeps inside the `.xcodeproj`, which is committed. The
   app's own dependencies live there. The **SwiftPM** component governs only a

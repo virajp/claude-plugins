@@ -18,7 +18,8 @@ paths:
 # SwiftLint
 
 SwiftLint is the Swift correctness gate. It is installed through mise
-(`aqua:realm/SwiftLint`, pinned in `.config/mise/conf.d/swiftlint.toml`),
+(`aqua:realm/SwiftLint`, pinned in the `swiftlint` block of
+`.config/mise/conf.d/tools.toml`, which `/stackgen:tool-config` writes),
 configured at `.config/swiftlint.yml`, and run strict: a warning fails the
 gate exactly as an error does. Moving the pin is its own change, with the
 whole-tree lint run and its fixes in the same commit — a new release adds

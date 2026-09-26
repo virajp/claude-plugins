@@ -25,14 +25,13 @@ thing development and the deployed environments share, so
 `docs/blueprint/environment.md` is the join, and a process must **fail loudly**
 on a missing variable rather than defaulting.
 
-**The CLI's pin and its two environment variables live in this pack's own
-file**, `.config/mise/conf.d/doppler.toml` — never in `mise.toml`, which stays
-free of any provider's name so that swapping the secrets manager is deleting
-one file and landing another. The toolchain manager's `conf.d/` has no
-environment scoping, so the pin is unconditional and CI installs a CLI it
-never calls; that cost buys the provider owning its own pin, and the rule
-above — every task runs without Doppler — is what actually keeps CI
-independent.
+**The CLI's pin and its two environment variables are this pack's
+`tool-config:` calls** in `pack.yaml`, which `/stackgen:tool-config` writes
+into a `doppler` block, so swapping the secrets manager is removing one
+requester's blocks. The pin goes to every environment, so CI installs a CLI it
+never calls; the rule above — every task runs without Doppler — is what
+actually keeps CI independent. `DOPPLER_PROJECT` is the repository directory's
+basename, taken from `config_root`.
 
 **A committed plaintext secrets file is a leak, not a convenience.** This pack
 offers no encrypt-into-git mode, so it emits no scanner allowlist and claims no
@@ -46,10 +45,10 @@ is this pack's business and never reaches a blueprint doc.
 
 | Lands at                             | Is                                            |
 | ------------------------------------ | --------------------------------------------- |
-| `.config/mise/conf.d/doppler.toml`   | the CLI pin, `DOPPLER_PROJECT`, `DOPPLER_CONFIG` |
 | `.config/mise/tasks/setup/secrets`   | the fill for the toolchain manager's slot     |
 
-Nothing else. There is no `doppler.yaml` in the repo: the CLI honours
+Nothing else; the pin and the two variables are `tool-config:` calls, not a
+landed file. There is no `doppler.yaml` in the repo: the CLI honours
 `DOPPLER_PROJECT` and `DOPPLER_CONFIG` from the environment, and
 `doppler setup --scope` records the mapping outside the tree — so the repo
 carries the two names and not a second config file that could disagree with

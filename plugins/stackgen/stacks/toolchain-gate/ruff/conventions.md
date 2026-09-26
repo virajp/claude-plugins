@@ -35,9 +35,10 @@ resolve from the project root and a staged subset would answer differently from
 CI.
 
 **Composition order, when more than one component writes this tree:**
-`toolchain-manager`, then `package-manager` / `language`, then
-`toolchain-gate`, then `app-framework` — a later component's file wins, and
-the lockfile records per file which component supplied what landed.
+the mise base `stackgen:tool-config` lands, then `package-manager` /
+`language`, then `toolchain-gate`, then `app-framework` — a later component's
+file wins, and the lockfile records per file which component supplied what
+landed.
 
 ## The editor fragment
 

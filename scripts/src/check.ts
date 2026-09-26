@@ -267,23 +267,21 @@ function* hookCommands(
   }
 }
 
-/** Where a pack's `config/` tier puts the file-based mise task library. */
-const PACK_MISE_TASKS = join("config", ".config", "mise", "tasks");
-/** Where a pack's `config/` tier puts its pre-commit hook fragment. */
-const PACK_HOOK_FRAGMENTS = join("config", ".config", "pre-commit.d");
+/** Where a landed tree puts the file-based mise task library. */
+const PACK_MISE_TASKS = join(".config", "mise", "tasks");
+/** Where a landed tree puts its pre-commit hook fragment. */
+const PACK_HOOK_FRAGMENTS = join(".config", "pre-commit.d");
 /**
  * Where the pre-commit gate pack puts the **whole** config the fragments merge
  * into. Not a fragment and not at the `config/` root, so the fragment walk
  * above never reaches it — and until it was named here nothing parsed it at
  * all.
  */
-const PACK_PRE_COMMIT_CONFIG = join(
-  "config",
-  ".config",
-  "pre-commit-config.yaml",
-);
-/** Where a pack's `config/` tier puts its editor-settings fragment. */
-const PACK_EDITOR_FRAGMENTS = join("config", ".config", "vscode.d");
+const PACK_PRE_COMMIT_CONFIG = join(".config", "pre-commit-config.yaml");
+/** Where a landed tree puts its editor-settings fragment. */
+const PACK_EDITOR_FRAGMENTS = join(".config", "vscode.d");
+/** Where `stackgen:tool-config` keeps one landed tree per tool. */
+const TOOL_CONFIG_ASSETS = "skills/tool-config/assets";
 /** Where a pack keeps the hook scripts that land in `.claude/hooks/`. */
 const PACK_HOOKS = "hooks";
 /**
@@ -418,7 +416,11 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  *   answers is never evaluated, so the file lands everywhere, silently;
  * - the pack's **`binaries`, `lockfile` and `machine_env` facts** take the
  *   shapes `/vwf:doctor` and `/vwf:setup` read, and every `machine_env` name
- *   is a key its `conf.d` fragment carries (`packFactFaults`).
+ *   is set by a `mise add env` call in its `tool-config:` list, each call one
+ *   of the verbs a pack may ask for (`packFactFaults`).
+ *
+ * A pack's `config/` tier holding a mise `conf.d` fragment is a finding too, and
+ * each `stackgen:tool-config` asset tree is walked as a landed tree.
  *
  * The walk is its own rather than `plugin.files`: most of these paths run
  * through `.config/`, and the reader's glob does not descend into a dot
@@ -429,10 +431,8 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
   const at = (message: string) => findings.push({ scope: plugin.dir, message });
   const path = (absolute: string) => relative(plugin.root, absolute);
 
-  for (const pack of globSync("stacks/*/*", { cwd: plugin.root })) {
-    for (
-      const absolute of filesUnder(join(plugin.root, pack, PACK_MISE_TASKS))
-    ) {
+  const landedTree = (tree: string) => {
+    for (const absolute of filesUnder(join(tree, PACK_MISE_TASKS))) {
       if ((statSync(absolute).mode & 0o111) === 0) {
         at(`mise task file is not executable: ${path(absolute)}`);
       }
@@ -445,6 +445,58 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       }
     }
 
+    if (existsSync(tree)) {
+      for (const entry of readdirSync(tree, { withFileTypes: true })) {
+        const allowed = entry.isDirectory()
+          ? PACK_CONFIG_ROOT_DIRS.has(entry.name) || entry.name.startsWith("_")
+          : PACK_CONFIG_ROOT_FILES.has(entry.name);
+        if (!allowed) {
+          at(
+            `pack config/ tier holds an unallowlisted root entry — everything `
+              + `else belongs under .config/: ${path(join(tree, entry.name))}`,
+          );
+        }
+      }
+
+      for (const absolute of filesUnder(join(tree, PACK_CONFIG_FORGE_FENCE))) {
+        at(
+          `pack config/ tier ships a CI workflow — a pack states which task CI `
+            + `runs and never writes the workflow: ${path(absolute)}`,
+        );
+      }
+    }
+
+    for (const absolute of filesUnder(join(tree, PACK_EDITOR_FRAGMENTS))) {
+      if (!absolute.endsWith(".jsonc")) {
+        continue;
+      }
+      for (const message of editorFragmentFaults(readText(absolute))) {
+        at(`${path(absolute)}: ${message}`);
+      }
+    }
+
+    const preCommit = join(tree, PACK_PRE_COMMIT_CONFIG);
+    if (existsSync(preCommit)) {
+      for (const message of preCommitFaults(readText(preCommit), "config")) {
+        at(`${path(preCommit)}: ${message}`);
+      }
+    }
+
+    for (const absolute of filesUnder(join(tree, PACK_HOOK_FRAGMENTS))) {
+      if (!/\.ya?ml$/.test(absolute)) {
+        continue;
+      }
+      for (const message of preCommitFaults(readText(absolute), "fragment")) {
+        at(`${path(absolute)}: ${message}`);
+      }
+    }
+  };
+
+  for (const tree of toolConfigTrees(plugin)) {
+    landedTree(join(plugin.root, tree));
+  }
+
+  for (const pack of globSync("stacks/*/*", { cwd: plugin.root })) {
     for (const absolute of filesUnder(join(plugin.root, pack, PACK_HOOKS))) {
       if (PACK_HOOK_METADATA.test(absolute)) {
         continue;
@@ -462,60 +514,15 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     }
 
     const config = join(plugin.root, pack, "config");
-    if (existsSync(config)) {
-      for (const entry of readdirSync(config, { withFileTypes: true })) {
-        const allowed = entry.isDirectory()
-          ? PACK_CONFIG_ROOT_DIRS.has(entry.name) || entry.name.startsWith("_")
-          : PACK_CONFIG_ROOT_FILES.has(entry.name);
-        if (!allowed) {
-          at(
-            `pack config/ tier holds an unallowlisted root entry — everything `
-              + `else belongs under .config/: ${
-                path(join(config, entry.name))
-              }`,
-          );
-        }
-      }
+    landedTree(config);
 
-      for (
-        const absolute of filesUnder(join(config, PACK_CONFIG_FORGE_FENCE))
-      ) {
-        at(
-          `pack config/ tier ships a CI workflow — a pack states which task CI `
-            + `runs and never writes the workflow: ${path(absolute)}`,
-        );
-      }
-    }
-
-    for (
-      const absolute of filesUnder(
-        join(plugin.root, pack, PACK_EDITOR_FRAGMENTS),
-      )
-    ) {
-      if (!absolute.endsWith(".jsonc")) {
-        continue;
-      }
-      for (const message of editorFragmentFaults(readText(absolute))) {
-        at(`${path(absolute)}: ${message}`);
-      }
-    }
-
-    const preCommit = join(plugin.root, pack, PACK_PRE_COMMIT_CONFIG);
-    if (existsSync(preCommit)) {
-      for (const message of preCommitFaults(readText(preCommit), "config")) {
-        at(`${path(preCommit)}: ${message}`);
-      }
-    }
-
-    for (
-      const absolute of filesUnder(join(plugin.root, pack, PACK_HOOK_FRAGMENTS))
-    ) {
-      if (!/\.ya?ml$/.test(absolute)) {
-        continue;
-      }
-      for (const message of preCommitFaults(readText(absolute), "fragment")) {
-        at(`${path(absolute)}: ${message}`);
-      }
+    for (const absolute of filesUnder(join(config, PACK_CONF_D))) {
+      at(
+        `pack config/ tier ships a mise conf.d fragment — a pack asks for its `
+          + `mise lines through \`tool-config:\` in pack.yaml: ${
+            path(absolute)
+          }`,
+      );
     }
 
     const packYaml = join(plugin.root, pack, "pack.yaml");
@@ -535,7 +542,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       for (
         const message of [
           ...conditionalFaults(document, config),
-          ...packFactFaults(document, config),
+          ...packFactFaults(document),
         ]
       ) {
         at(`${path(packYaml)}: ${message}`);
@@ -559,16 +566,17 @@ const ENV_VAR_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
  * - `lockfile` is a non-empty list of paths or globs relative to the repo root,
  *   any match passing doctor's package-manager check;
  * - every `machine_env` entry names an env var, the command that `detect`s its
- *   value and the `question` setup asks — and when the pack ships a `conf.d`
- *   fragment, the var is a key of an `[env]` table in one of them, since that
- *   marked position is what setup fills.
+ *   value and the `question` setup asks — and the var is set by a `mise add
+ *   env` call in the pack's `tool-config:` list, since that is what setup fills;
+ * - every `tool-config:` entry parses as one of the three verbs a pack may ask
+ *   for (`toolConfigFaults`).
  *
  * Each is read by a caller that trusts its shape: a probe that is not a string
  * is never run, a lockfile glob that climbs out of the repo matches something
  * the repo does not own, and a `machine_env` name no fragment carries is a
  * question whose answer lands nowhere — all silently.
  */
-function packFactFaults(document: unknown, config: string): string[] {
+function packFactFaults(document: unknown): string[] {
   if (!isPlainObject(document)) {
     return [];
   }
@@ -639,16 +647,28 @@ function packFactFaults(document: unknown, config: string): string[] {
     }
   }
 
+  const calls = document["tool-config"];
+  const declared = new Set<string>();
+  if (calls !== undefined && !isStringList(calls)) {
+    faults.push("`tool-config` is not a list of instructions");
+  }
+  else if (calls !== undefined) {
+    (calls as string[]).forEach((call, index) => {
+      const { fault, key } = toolConfigCall(call);
+      if (fault !== undefined) {
+        faults.push(`\`tool-config[${index}]\` (${call}) ${fault}`);
+      }
+      else if (key !== undefined) {
+        declared.add(key);
+      }
+    });
+  }
+
   if (document.machine_env !== undefined) {
     if (!Array.isArray(document.machine_env)) {
       faults.push("`machine_env` is not a list");
       return faults;
     }
-    const fragments = [...filesUnder(join(config, PACK_CONF_D))]
-      .filter(absolute => absolute.endsWith(".toml"));
-    const declared = new Set(
-      fragments.flatMap(absolute => tomlEnvKeys(readText(absolute))),
-    );
     document.machine_env.forEach((entry: unknown, index) => {
       const label = `\`machine_env[${index}]\``;
       if (!isPlainObject(entry)) {
@@ -660,10 +680,10 @@ function packFactFaults(document: unknown, config: string): string[] {
       if (typeof name !== "string" || !ENV_VAR_NAME.test(name)) {
         faults.push(`${at} \`name\` is not an env-var name`);
       }
-      else if (fragments.length > 0 && !declared.has(name)) {
+      else if (!declared.has(name)) {
         faults.push(
-          `${at} is a key of no \`[env]\` table in the pack's conf.d `
-            + `fragments — setup would ask and fill nothing`,
+          `${at} is set by no \`mise add env\` call in the pack's `
+            + `\`tool-config:\` list — setup would ask and fill nothing`,
         );
       }
       for (const key of ["detect", "question"]) {
@@ -676,29 +696,66 @@ function packFactFaults(document: unknown, config: string): string[] {
   return faults;
 }
 
+/** A `to …` scope: every environment, or one of the three suffixes. */
+const TOOL_CONFIG_SCOPE = String
+  .raw`to (?:all environments|(?:dev|ci|test)(?: environment)?)`;
+/** A value, quoted as a TOML basic string or bare — a bare one never opens a quote. */
+const TOOL_CONFIG_VALUE = String.raw`("(?:[^"\\]|\\.)*"|[^"\s]\S*)`;
+/** The three verbs a pack may ask for; the materializer appends `for <pack>`. */
+const TOOL_CONFIG_VERBS = {
+  tool: new RegExp(
+    String.raw`^mise add tool ([A-Za-z0-9@:/._-]+) ([A-Za-z0-9._+-]+) `
+      + `${TOOL_CONFIG_SCOPE}$`,
+  ),
+  env: new RegExp(
+    String.raw`^mise add env (\S+?)=${TOOL_CONFIG_VALUE} ${TOOL_CONFIG_SCOPE}$`,
+  ),
+  alias: new RegExp(
+    String.raw`^mise add alias (\S+?)=${TOOL_CONFIG_VALUE}`
+      + String.raw`(?: to dev(?: environment)?)?$`,
+  ),
+};
+/** A Tera delimiter: mise renders it, so only a pack's own env value may carry one. */
+const TERA_DELIMITER = /\{\{|\{%|\{#/;
+/** An alias name: a TOML bare key, so `-` is allowed after the first character. */
+const ALIAS_NAME = /^[A-Za-z_][A-Za-z0-9_-]*$/;
+
 /**
- * The keys of every `[env]` table in a TOML document. Narrow on purpose, as
- * the other TOML readers here are: a bare or quoted key at the start of a line
- * under an `[env]` header, which is how a conf.d fragment spells its env.
+ * One `tool-config:` entry against the verb grammar: the env key it sets, or
+ * why it is refused.
  */
-function tomlEnvKeys(source: string): string[] {
-  const keys: string[] = [];
-  let inEnv = false;
-  for (const line of source.split("\n")) {
-    // Any header leaves `[env]`, an array-of-tables `[[…]]` included.
-    const header = /^\s*(?:\[\[[^[\]]+\]\]|\[([^[\]]+)\])\s*(?:#.*)?$/.exec(
-      line,
-    );
-    if (header !== null) {
-      inEnv = header[1]?.trim() === "env";
-      continue;
-    }
-    const key = inEnv ? /^\s*(["']?)([A-Za-z0-9_]+)\1\s*=/.exec(line) : null;
-    if (key?.[2] !== undefined) {
-      keys.push(key[2]);
-    }
+function toolConfigCall(call: string): { fault?: string; key?: string; } {
+  const words = call.trim().replace(/\s+/g, " ");
+  if (TOOL_CONFIG_VERBS.tool.test(words)) {
+    return {};
   }
-  return keys;
+  const env = TOOL_CONFIG_VERBS.env.exec(words);
+  const alias = env === null ? TOOL_CONFIG_VERBS.alias.exec(words) : null;
+  const match = env ?? alias;
+  if (match === null) {
+    return {
+      fault: "matches none of `mise add tool <name> <version> to <scope>`, "
+        + "`mise add env <KEY>=<value> to <scope>` or "
+        + "`mise add alias <name>=<command> [to dev]`",
+    };
+  }
+  const name = match[1] ?? "";
+  const pattern = env !== null ? ENV_VAR_NAME : ALIAS_NAME;
+  if (!pattern.test(name)) {
+    return {
+      fault: `names \`${name}\`, which is not a \`${pattern.source}\` name`,
+    };
+  }
+  if (alias !== null && TERA_DELIMITER.test(words)) {
+    return { fault: "carries a template delimiter outside an `add env` value" };
+  }
+  return env !== null ? { key: name } : {};
+}
+
+/** Every `stackgen:tool-config` asset tree, plugin-relative. */
+function toolConfigTrees(plugin: Plugin): string[] {
+  return globSync(`${TOOL_CONFIG_ASSETS}/*`, { cwd: plugin.root })
+    .filter(tree => statSync(join(plugin.root, tree)).isDirectory());
 }
 
 /**
@@ -1247,6 +1304,9 @@ function checkLandedCitations(plugin: Plugin): Finding[] {
 
 /** Is this plugin-relative path one of the files a pack lands? */
 function isLandedPath(path: string): boolean {
+  if (path.startsWith(`${TOOL_CONFIG_ASSETS}/`)) {
+    return true;
+  }
   const parts = path.split("/");
   const [stacks, type, slug, tier] = parts;
   if (stacks !== "stacks" || type === undefined || slug === undefined) {
@@ -1269,6 +1329,11 @@ function isLandedPath(path: string): boolean {
  * {@link checkPackConfigTier} walks its own way.
  */
 function* landedFiles(plugin: Plugin): Generator<LandedFile> {
+  for (const tree of toolConfigTrees(plugin)) {
+    for (const found of filesUnder(join(plugin.root, tree))) {
+      yield { path: relative(plugin.root, found), absolute: found };
+    }
+  }
   for (const pack of globSync("stacks/*/*", { cwd: plugin.root })) {
     const absolute = join(plugin.root, pack);
     if (pack.startsWith("stacks/bundles/")) {
@@ -1344,6 +1409,10 @@ function blankFences(body: string): string {
  */
 function landingRootOf(path: string): string | null {
   const parts = path.split("/");
+  // A tool-config asset tree lands whole as the repo root.
+  if (path.startsWith(`${TOOL_CONFIG_ASSETS}/`)) {
+    return parts.slice(0, 4).join("/");
+  }
   return parts[3] === "skills" && parts.length > 5
     ? parts.slice(0, 4).join("/")
     : null;

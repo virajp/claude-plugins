@@ -164,27 +164,32 @@ inventory and check in that order — freshness before validity:
   being plain semver **and** free of a 13 or 17 component — those two integers
   are never issued on any version line this repo maintains, and it is the
   component that counts, so `1.13.0` fails where `1.130.0` passes. Rule 11 is
-  the widest: it walks a stackgen pack's whole `config/` payload tier — nine
-  assertions. Exec bit and shebang on every task file, exec bit and shebang on
-  every shipped hook script, the `config/` root against the **landable** tier of
-  the hygiene allowlist (whose two allowed directories are `.config/` and
-  `.github/`; the list's other tier is the root files vwf writes, which may sit
-  at a shaped root and which no pack may land), a CI workflow **refused** inside
-  `.github/`, every `pre-commit.d/*.yaml` parsing with a top-level `repos:`
-  list, the gate pack's whole `pre-commit-config.yaml` parsing on the same
-  terms, every `vscode.d/*.jsonc` parsing as JSONC with only the three keys
-  `/vwf:init` composes, and every `conditional:` entry in the pack's `pack.yaml`
-  naming a relative path or glob (no `..`) that matches at least one file under
-  `config/` — the checker's own walk, so `**` enters dot-directories — and a
-  `when:` of exactly one known axis (`forge`, `editor`, `secrets`, `update_bot`)
-  with a value that axis takes, `secrets: none` refused, and the pack's
-  `binaries`, `lockfile` and `machine_env` facts in the shapes doctor and setup
-  read — a binary a name or `{name, probe}`, a lockfile path with no `..`, and
-  each `machine_env` name a key of the pack's `conf.d` fragment. Rule 13 refuses
-  a plugin-relative citation in anything a pack **lands** — the token, a bare
-  `assets/…` path, a `../` climb out of the tree the file lands in, or a path
-  into a sibling pack — since that file is copied into a repo with no plugin,
-  where each resolves to nothing silently. Rule 14: across
+  the widest: it walks a stackgen pack's whole `config/` payload tier, and each
+  `stackgen:tool-config` asset tree as one — ten assertions. Exec bit and
+  shebang on every task file, exec bit and shebang on every shipped hook script,
+  the `config/` root against the **landable** tier of the hygiene allowlist
+  (whose two allowed directories are `.config/` and `.github/`; the list's other
+  tier is the root files vwf writes, which may sit at a shaped root and which no
+  pack may land), a CI workflow **refused** inside `.github/`, every
+  `pre-commit.d/*.yaml` parsing with a top-level `repos:` list, the gate pack's
+  whole `pre-commit-config.yaml` parsing on the same terms, every
+  `vscode.d/*.jsonc` parsing as JSONC with only the three keys `/vwf:init`
+  composes, and every `conditional:` entry in the pack's `pack.yaml` naming a
+  relative path or glob (no `..`) that matches at least one file under `config/`
+  — the checker's own walk, so `**` enters dot-directories — and a `when:` of
+  exactly one known axis (`forge`, `editor`, `secrets`, `update_bot`) with a
+  value that axis takes, `secrets: none` refused, and the pack's `binaries`,
+  `lockfile` and `machine_env` facts in the shapes doctor and setup read — a
+  binary a name or `{name, probe}`, a lockfile path with no `..`, and each
+  `machine_env` name set by a `mise add env` entry in the pack's `tool-config:`
+  list — every entry of which must parse as `mise add tool`, `mise add env` or
+  `mise add alias` with a legal name and scope, a template delimiter allowed
+  only in an `add env` value. A mise `conf.d` fragment in a pack's `config/`
+  tier is a finding: a pack asks the skill instead. Rule 13 refuses a
+  plugin-relative citation in anything a pack or the skill **lands** — the
+  token, a bare `assets/…` path, a `../` climb out of the tree the file lands
+  in, or a path into a sibling pack — since that file is copied into a repo with
+  no plugin, where each resolves to nothing silently. Rule 14: across
   `stacks/bundles/*.md`, at most one bundle per axis **per platform** carries
   `default: true` — the entry vwf's architecture menu preselects on a round —
   and the value is boolean. Two flagged bundles on one axis conflict when either
@@ -222,8 +227,8 @@ Beside them the local gate runs **three tool-neutral hooks** — `format`, `lint
 and `sec` — each of which calls a mise task (`code:format --fix`,
 `code:lint --fix`, `code:sec --staged`) rather than a tool. dprint, shfmt,
 shellcheck, actionlint, the house linter and gitleaks are configured **once**,
-inside those tasks; no hook names a binary. This repo takes the same shape the
-mise pack ships, so its own commits prove the hook-to-task path.
+inside those tasks; no hook names a binary. This repo takes the same shape
+`stackgen:tool-config` lands, so its own commits prove the hook-to-task path.
 
 What each rule asserts, and what the checker deliberately no longer checks, is
 in [`repo-shape.md`][repo].
@@ -265,10 +270,10 @@ in [`repo-shape.md`][repo].
 Two plugins ship. Each row's linked home is authoritative; the cells are an
 index.
 
-| Plugin     | Is                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, `init` (the repo-shape orchestrator, reached through `/vwf:setup`), the two planners `plan` and `change-plan`, one executor `execute`, writing and running one plan folder shape, the guarded `rtk` hook, the two mempalace auto-save hooks, and two MCP servers. Names **no** technology. Depends on `stackgen` alone. → [`vwf-plugin`][vwf] |
-| `stackgen` | The principles-driven stack materializer — shipped packs for the covered path, a Context7-researched generator for the uncovered tail, and the repo's own toolchain manager, gates and hygiene since `devtools` dissolved into it. Its packs ship the **config files** too, which `/vwf:init` lays down. → [`stackgen-plugin`][sg]                                                                                            |
+| Plugin     | Is                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, `init` (the repo-shape orchestrator, reached through `/vwf:setup`), the two planners `plan` and `change-plan`, one executor `execute`, writing and running one plan folder shape, the guarded `rtk` hook, the two mempalace auto-save hooks, and two MCP servers. Names **no** technology. Depends on `stackgen` alone. → [`vwf-plugin`][vwf]                                               |
+| `stackgen` | The principles-driven stack materializer — shipped packs for the covered path, a Context7-researched generator for the uncovered tail, and the repo's own toolchain manager, gates and hygiene since `devtools` dissolved into it. `stackgen:tool-config` owns the mise config, and a pack asks it for lines through `tool-config:` in its `pack.yaml`; the gate and hygiene packs still ship their **config files**. `/vwf:init` lays both down. → [`stackgen-plugin`][sg] |
 
 Full inventory, the native manifest shape, and the generated marketplace
 manifest: [`.claude/docs/plugins.md`][plug]. Authoring doctrine that applies to
@@ -281,58 +286,61 @@ The workflow runs `setup` → `product` → `architecture` → `design-system` �
 **skill-invoked**, hidden from the `/` menu and reached only from inside `setup`
 — Step 0's offer, or `/vwf:setup reshape`, which runs the shape pass alone.
 `init` shapes the **base repo and every member repo the product has** — the
-config layout, the task vocabulary, the gates, the hygiene files — from
-stackgen's three unconditional bundles, resolving the members itself as the
-union of `.gitmodules` and the config's `members:` list, surveying all of them
-at once and applying **one plan with a section per repo on one consent**,
-members first so the base commits its gitlinks current. Each repo's **mode** is
-decided from its tree, never a flag: `shaped` where the adapter lockfile exists,
-`source` where there is no lockfile but a language manifest, a source directory,
-a root tool config or a `.config/`, `blank` otherwise — and a **stack read**
-(pins, else lockfile components, else a fixed manifest table, first hit per
-language) drives the `.gitignore` language sections and the toolchain config's
-two runtime positions. It asks nine questions (the first naming each `blank` or
-`source` repo's folder, which is what fills `REPO_NAME`; the second confirming
-every project id, its slug and the source the name came from — the registry, a
-sub-project directory (the registry's `projects[].path`, or on a first run in
-`source` mode a non-root directory with its own manifest or one a workspace file
-lists), or the project's platform token — grouped by repo, before any
-`p:<slug>:*` group or commit scope is written; the fifth asking which agent
-plugins this product requires, seeded by the plugin task's own inventory mode
-and written into that task's two marked positions; the sixth each repo's
-**visibility**, `public` or `private`, defaulted from the forge, with the
-licence — public repos only — and the security contact — an advisories URL for a
-public repo, a free email or internal URL for a private one — asked under it as
-the seventh round; the eighth and ninth rounds the **editor** — once per
-product, is VS Code in use, defaulted from a `.vscode/` directory or the `code`
-binary — and the **update bot** — per repo, `renovate`, `dependabot` or `none`,
-seeded from the survey — whose answers, with the forge read from each origin
-host and the provider slug, are passed to the materializer as an `answers:` map
-beside `repo:`, `none` the no-match value on `forge`, `editor` and `secrets` and
-a legal `when:` value on `update_bot`, so a pack's `conditional:` files — the
-hygiene pack's GitHub issue forms, its Renovate policy, every pack's editor
-fragment — land only where the answer holds and are otherwise listed under a
-**Skipped** heading in the plan and under `skipped:` in the lockfile), and
-closes with a consent-gated git pass (a read of where each repo stands — a
-member on no branch is a refused row naming the branch to check out; the landing
-model asked **one row per repo per branch**, `develop` and `main` each `direct`
-or `pr`, written to the two marked positions `MERGE_MODEL_DEVELOP` and
-`MERGE_MODEL_MAIN` — a file still carrying the single legacy `MERGE_MODEL` is
-read as both until the reshape rewrites it into the pair; the `develop`/`main`
-pair created beside a mainline of another name, the old branch left in place and
-reported; the `ops:` commit, on `develop` in every mode, never on `main`; the
-push, and — after the push, on one further consent for the product — the **forge
-pass**, which sets each pushed repo's default branch on the forge, protects
-`develop` and `main` there — a pull request required on whichever of the two has
-its landing model set to `pr` — and reaches the backlog skill's missing-project
+config layout, the task vocabulary, the gates, the hygiene files — through
+`/stackgen:tool-config all`, which lands the mise config with init's answers as
+its arguments, then stackgen's two unconditional bundles, `repo-gates` and
+`repo-hygiene`, resolving the members itself as the union of `.gitmodules` and
+the config's `members:` list, surveying all of them at once and applying **one
+plan with a section per repo on one consent**, members first so the base commits
+its gitlinks current. Each repo's **mode** is decided from its tree, never a
+flag: `shaped` where the adapter lockfile exists, `source` where there is no
+lockfile but a language manifest, a source directory, a root tool config or a
+`.config/`, `blank` otherwise — and a **stack read** (pins, else lockfile
+components, else a fixed manifest table, first hit per language) drives the
+`.gitignore` language sections and the `runtimes` argument. It asks nine
+questions (the first naming each `blank` or `source` repo's folder, which is
+what the `repo` argument carries; the second confirming every project id, its
+slug and the source the name came from — the registry, a sub-project directory
+(the registry's `projects[].path`, or on a first run in `source` mode a non-root
+directory with its own manifest or one a workspace file lists), or the project's
+platform token — grouped by repo, before any `p:<slug>:*` group or commit scope
+is written; the fifth asking which agent plugins this product requires, seeded
+by the plugin task's own inventory mode and passed to the skill as
+`plugin_sources` and `plugins`, which fill that task's two marked positions; the
+sixth each repo's **visibility**, `public` or `private`, defaulted from the
+forge, with the licence — public repos only — and the security contact — an
+advisories URL for a public repo, a free email or internal URL for a private one
+— asked under it as the seventh round; the eighth and ninth rounds the
+**editor** — once per product, is VS Code in use, defaulted from a `.vscode/`
+directory or the `code` binary — and the **update bot** — per repo, `renovate`,
+`dependabot` or `none`, seeded from the survey — whose answers, with the forge
+read from each origin host and the provider slug, are passed to the materializer
+as an `answers:` map beside `repo:`, `none` the no-match value on `forge`,
+`editor` and `secrets` and a legal `when:` value on `update_bot`, so a pack's
+`conditional:` files — the hygiene pack's GitHub issue forms, its Renovate
+policy, every pack's editor fragment — land only where the answer holds and are
+otherwise listed under a **Skipped** heading in the plan and under `skipped:` in
+the lockfile), and closes with a consent-gated git pass (a read of where each
+repo stands — a member on no branch is a refused row naming the branch to check
+out; the landing model asked **one row per repo per branch**, `develop` and
+`main` each `direct` or `pr`, passed to the skill as `merge_model_develop` and
+`merge_model_main`, which fill `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` — a
+file still carrying the single legacy `MERGE_MODEL` is read as both until the
+skill's `all` rewrites it into the pair; the `develop`/`main` pair created
+beside a mainline of another name, the old branch left in place and reported;
+the `ops:` commit, on `develop` in every mode, never on `main`; the push, and —
+after the push, on one further consent for the product — the **forge pass**,
+which sets each pushed repo's default branch on the forge, protects `develop`
+and `main` there — a pull request required on whichever of the two has its
+landing model set to `pr` — and reaches the backlog skill's missing-project
 procedure for the base; those three are the only forge settings it touches,
 existing protection is left alone, and a forge it has no CLI for gets the
 by-hand list the hygiene pack's `CONTRIBUTING.md` keeps). The aggregator's
 member flags and the `setup-<slug>` aliases are named for the **member repos**,
 never for a project id. On a `shaped` repo it **adopts rather than flattens**: a
-root tool config a pack supersedes (`.pre-commit-config.yaml`, `.mise.toml`,
-`.gitleaks.toml`, … — the seven-row table in
-`plugins/vwf/skills/init/references/tool-configs.md`) is a plan row — move into
+root tool config a pack supersedes (`.pre-commit-config.yaml`, `.gitleaks.toml`,
+… — the six-row table in `plugins/vwf/skills/init/references/tool-configs.md`; a
+root `.mise.toml` is the skill's own migration) is a plan row — move into
 `.config/` and offer, keep both, or delete on an explicit pick — a foreign hook
 manager (`core.hooksPath`, `.husky/`, lefthook) is a row defaulting to keep,
 `.gitignore` is merged section by section rather than offered, an unmapped
@@ -342,9 +350,10 @@ pack-owned file whose **content** diverged is offered as replace-or-keep —
 content being what survives two tests, the hash against the lock and then a
 splice of every marked position's current value into the pack's payload, so a
 file diverging only inside those positions is never offered and the owning pass
-shows the change instead. The offer is **every mode's**: on a `source` or
-`blank` repo every path the materializer reports as a conflict gets the same row
-(a readme, licence or security file already there is kept outright). A keep
+shows the change instead. A file `stackgen:tool-config` owns is never offered:
+the skill shows its own drift rows. The offer is **every mode's**: on a `source`
+or `blank` repo every path the materializer reports as a conflict gets the same
+row (a readme, licence or security file already there is kept outright). A keep
 covers that content and never a marked position's value, and is recorded under
 `enforcement.kept_files` in the **base's** `.config/vwf.yaml`, keyed by the
 member path as prefix. The editor merge reads each `.vscode` file whole, and a
@@ -429,7 +438,7 @@ user-facing reference is `site/src/content/docs/installer/`, published at
 **`develop` takes the work; `main` is what users read** — Claude resolves the
 marketplace against the default branch, so `main` stays default and PRs target
 `develop`. `main` is merge-only, enforced by pre-commit locally and a ruleset
-remotely. The landing model the mise pack ships is **per branch** —
+remotely. The landing model `stackgen:tool-config` lands is **per branch** —
 `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`, `direct` or `pr` — but this repo's
 own `.config/mise/conf.d/env.toml` still carries the legacy single
 `MERGE_MODEL`, read as both, until its next `/vwf:setup reshape`. No release

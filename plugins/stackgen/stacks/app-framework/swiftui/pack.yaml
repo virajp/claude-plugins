@@ -2,7 +2,7 @@ name: SwiftUI
 summary: The native Apple app stack — SwiftUI on Swift, the project a
   committed Xcode project, Xcode owning the build — one codebase across iPhone,
   iPad, Mac, CarPlay, Watch, TV and Vision.
-version: 0.2.0
+version: 0.3.0
 type: app-framework
 category: native-ui
 kind: app-framework
@@ -17,8 +17,8 @@ languages:
         pack as `sourcekit-lsp` and provisioned via the generated local plugin
       mise_tool: >-
         n/a — Swift comes with Xcode, which mise does not install; the repo
-        pins the Xcode it builds with as XCODE_VERSION in this pack's
-        .config/mise/conf.d/swiftui.toml
+        pins the Xcode it builds with as XCODE_VERSION, one of this pack's
+        tool-config: calls
       manifest: >-
         n/a — the dependency list lives in <Name>.xcodeproj/project.pbxproj,
         a path whose name is the app's, which this fact cannot fix
@@ -29,11 +29,11 @@ languages:
         - name: xcodebuild
           probe: "xcodebuild -version"
         - swift
-# The four pins conf.d/swiftui.toml carries, each a marked position /vwf:setup
-# fills from this machine when it lands the pack. Each detect prints the one
-# value or exits non-zero. The simulator three read `xcrun simctl`'s JSON with
-# jq, which macOS ships at /usr/bin/jq, and agree on one simulator: the first
-# available iPhone on the newest iOS runtime that has one.
+# The four pins this pack's tool-config: calls add empty, each filled by
+# /vwf:setup from this machine when it lands the pack. Each detect prints the
+# one value or exits non-zero. The simulator three read `xcrun simctl`'s JSON
+# with jq, which macOS ships at /usr/bin/jq, and agree on one simulator: the
+# first available iPhone on the newest iOS runtime that has one.
 machine_env:
   - name: XCODE_VERSION
     detect: >-
@@ -89,3 +89,9 @@ harness:
       swift-snapshot-testing image snapshots of SwiftUI views, run through
       xcodebuild test on the pinned simulator — recorded under --record,
       compared otherwise
+# Asks /stackgen:tool-config for the four machine_env pins, shipped empty.
+tool-config:
+  - mise add env XCODE_VERSION="" to all environments
+  - mise add env SIMULATOR_PLATFORM="" to all environments
+  - mise add env SIMULATOR_DEVICE="" to all environments
+  - mise add env SIMULATOR_OS="" to all environments

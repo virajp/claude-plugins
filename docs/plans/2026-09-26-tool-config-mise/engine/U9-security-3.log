@@ -1,0 +1,5 @@
+security-review engine, loop U9, round 3, range 09b0fd10..609115f0
+
+No findings.
+
+7eb82f3e / 609115f0: alias-name pattern [A-Za-z_][A-Za-z0-9_-]* stays within TOML bare-key characters; the name is captured lazily to the first = and validated whole; a bare value cannot start with a quote and every value is written as an escaped TOML basic string (mise.md:387-389); {# closes the comment-delimiter gap, checked over the whole call string.

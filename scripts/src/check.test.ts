@@ -668,8 +668,8 @@ describe("the pack config tier", () => {
   });
 
   // Doctor runs a probe and reads a lockfile glob as the pack states them, and
-  // setup asks a machine_env question and fills the conf.d key it names — a
-  // malformed fact or a key no fragment carries fails in none of them.
+  // setup asks a machine_env question and fills the key a tool-config call sets
+  // — a malformed fact or a key no call sets fails in none of them.
   const facts = (yaml: string, files: Record<string, string> = {}) => ({
     alpha: {
       files: {
@@ -730,64 +730,214 @@ describe("the pack config tier", () => {
     ]);
   });
 
-  it("accepts machine_env entries each keyed in a conf.d [env] table", () => {
+  it("accepts machine_env entries each set by a tool-config env call", () => {
     const root = tree(facts(
       "machine_env:\n"
         + "  - { name: XCODE_VERSION, detect: \"xcodebuild -version\", "
         + "question: Which Xcode? }\n"
         + "  - { name: SIMULATOR_OS, detect: \"xcrun simctl list\", "
-        + "question: Which OS? }\n",
-      {
-        [`${confD}/swiftui.toml`]: "[tools]\nx = \"1\"\n\n[env]\n"
-          + "# A MARKED POSITION\nXCODE_VERSION = \"\"\n"
-          + "\"SIMULATOR_OS\" = \"\" # trailing\n",
-      },
+        + "question: Which OS? }\n"
+        + "tool-config:\n"
+        + "  - mise add tool aqua:realm/SwiftLint 0.65.1 to all environments\n"
+        + "  - mise add env XCODE_VERSION=\"\" to all environments\n"
+        + "  - mise add env SIMULATOR_OS=\"\" to dev\n",
     ));
     expect(messages(check(root))).toEqual([]);
   });
 
-  it("reads an array-of-tables header as leaving [env]", () => {
+  it("flags a machine_env name no tool-config env call sets", () => {
+    // A tool line naming the key, or a call with no tool-config list at all,
+    // leaves setup asking a question whose answer lands nowhere.
     const root = tree(facts(
-      "machine_env:\n  - { name: AFTER, detect: \"x\", question: q }\n",
-      {
-        [`${confD}/swiftui.toml`]: "[env]\nBEFORE = \"\"\n\n[[hooks]]\n"
-          + "AFTER = \"1\"\n",
-      },
+      "machine_env:\n"
+        + "  - { name: X, detect: \"echo 1\", question: X? }\n"
+        + "  - { name: Y, detect: \"echo 1\", question: Y? }\n"
+        + "tool-config:\n  - mise add tool X latest to all environments\n"
+        + "  - mise add env Y=\"1\" to ci environment\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining(
-        "`machine_env[0]` (AFTER) is a key of no `[env]` table",
+        "`machine_env[0]` (X) is set by no `mise add env` call",
+      ),
+    ]);
+    const bare = tree(facts(
+      "machine_env:\n  - { name: X, detect: \"echo 1\", question: X? }\n",
+    ));
+    expect(messages(check(bare))).toEqual([
+      expect.stringContaining("(X) is set by no `mise add env` call"),
+    ]);
+  });
+
+  it("flags a tool-config value that is not a list of instructions", () => {
+    const root = tree(facts("tool-config: mise add env X=1\n"));
+    expect(messages(check(root))).toEqual([
+      "stacks/app-framework/swiftui/pack.yaml: "
+      + "`tool-config` is not a list of instructions",
+    ]);
+  });
+
+  it("flags a mise conf.d fragment in a pack's config/ tier", () => {
+    // A pack asks stackgen:tool-config for its mise lines; a landed fragment
+    // is a second writer of a file the skill owns.
+    const root = tree(facts("tool-config:\n  - mise add tool x 1 to dev\n", {
+      [`${confD}/swiftui.toml`]: "[env]\nX = \"1\"\n",
+    }));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(
+        `ships a mise conf.d fragment — a pack asks for its mise lines `
+          + `through \`tool-config:\` in pack.yaml: ${confD}/swiftui.toml`,
       ),
     ]);
   });
 
-  it("accepts machine_env on a pack that ships no conf.d fragment", () => {
-    const root = tree(facts(
-      "machine_env:\n  - { name: X, detect: \"echo 1\", question: X? }\n",
-    ));
-    expect(messages(check(root))).toEqual([]);
-  });
-
-  it("flags a malformed machine_env entry and a name no [env] carries", () => {
+  it("flags a malformed machine_env entry", () => {
     const root = tree(facts(
       "machine_env:\n"
         + "  - { name: 1BAD, detect: \"x\", question: q }\n"
         + "  - { name: GOOD, detect: \"\" }\n"
-        + "  - { name: MISSING, detect: \"x\", question: q }\n"
-        + "  - just a string\n",
-      {
-        [`${confD}/swiftui.toml`]: "[env]\nGOOD = \"\"\n\n[tools]\n"
-          + "MISSING = \"1\"\n",
-      },
+        + "  - just a string\n"
+        + "tool-config:\n  - mise add env GOOD=\"\" to all environments\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining("`machine_env[0]` (1BAD) `name` is not an env"),
       expect.stringContaining("`machine_env[1]` (GOOD) `detect` is not a"),
       expect.stringContaining("`machine_env[1]` (GOOD) `question` is not a"),
-      expect.stringContaining(
-        "`machine_env[2]` (MISSING) is a key of no `[env]` table",
+      expect.stringContaining("`machine_env[2]` is not a { name, detect,"),
+    ]);
+  });
+
+  it("accepts the three verbs, a shipped env template and a folded line", () => {
+    // mise renders every env value as a template, so a pack's own value may be
+    // one; YAML folds a continued plain scalar into one line of words.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - mise add tool aqua:realm/SwiftLint 0.65.1 to all environments\n"
+        + "  - mise add alias npx=\"pnpm dlx\" to dev environment\n"
+        + "  - mise add alias ll=ls\n"
+        + "  - mise add env P=\"{{ config_root | split(pat='/') | last }}\" to\n"
+        + "    all environments\n",
+    ));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a tool-config entry outside the verb grammar", () => {
+    // `set env` and `remove` are the setup's and the materializer's verbs; a
+    // pack's line has no `for`, since the materializer appends it.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - mise set env X=1\n"
+        + "  - mise remove swiftui\n"
+        + "  - mise add env X=1\n"
+        + "  - mise add env X=1 to all environments for swiftui\n"
+        + "  - mise add tool x 1 to prod environment\n"
+        + "  - mise add alias x=y to ci environment\n"
+        + "  - dprint add plugin x\n",
+    ));
+    expect(messages(check(root))).toEqual(
+      [0, 1, 2, 3, 4, 5, 6].map(index =>
+        expect.stringContaining(`\`tool-config[${index}]\``)
       ),
-      expect.stringContaining("`machine_env[3]` is not a { name, detect,"),
+    );
+    expect(messages(check(root)).every(m => m.includes("matches none of")))
+      .toBe(true);
+  });
+
+  it("flags a tool-config key or alias name that is not a name", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - mise add env 1BAD=x to dev\n"
+        + "  - mise add env \"{{x}}\"=1 to dev\n"
+        + "  - mise add alias -ab=c\n"
+        + "  - mise add env A-B=c to dev\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("names `1BAD`, which is not a"),
+      expect.stringContaining("names `\"{{x}}\"`, which is not a"),
+      expect.stringContaining("names `-ab`, which is not a"),
+      expect.stringContaining("names `A-B`, which is not a"),
+    ]);
+  });
+
+  it("accepts a hyphenated alias name, as a TOML bare key", () => {
+    // The mise base writes `setup-<slug>` aliases itself.
+    const root = tree(facts("tool-config:\n  - mise add alias setup-web=x\n"));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a value that opens a quote and never closes it", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - mise add env X=\"abc to dev\n"
+        + "  - mise add alias y=\"pnpm dlx to dev\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("`tool-config[0]`"),
+      expect.stringContaining("`tool-config[1]`"),
+    ]);
+    expect(messages(check(root)).every(m => m.includes("matches none of")))
+      .toBe(true);
+  });
+
+  it("flags a template delimiter outside an add env value", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - mise add alias x=\"{{ env.HOME }}\"\n"
+        + "  - mise add alias y=\"{% if a %}b{% endif %}\" to dev\n"
+        + "  - mise add tool \"{{x}}\" 1 to dev\n"
+        + "  - 'mise add alias z=\"{# note #}ls\"'\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("`tool-config[0]` (mise add alias x="),
+      expect.stringContaining("`tool-config[1]` (mise add alias y="),
+      expect.stringContaining("`tool-config[2]` (mise add tool"),
+      expect.stringContaining("`tool-config[3]` (mise add alias z="),
+    ]);
+    const [alias, block, tool, comment] = messages(check(root));
+    expect(alias).toContain("template delimiter outside an `add env` value");
+    expect(block).toContain("template delimiter outside an `add env` value");
+    expect(tool).toContain("matches none of");
+    expect(comment).toContain("template delimiter outside an `add env` value");
+  });
+
+  it("counts a machine_env name as set only by an add env call", () => {
+    const root = tree(facts(
+      "machine_env:\n  - { name: X, detect: \"echo 1\", question: X? }\n"
+        + "tool-config:\n  - mise add alias X=y\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("(X) is set by no `mise add env` call"),
+    ]);
+  });
+
+  // stackgen:tool-config's asset trees land whole as a repo root, so they are
+  // held to the same bar as a pack's config/ tier.
+  const assets = "skills/tool-config/assets/mise";
+
+  it("walks a tool-config asset tree as a landed tree", () => {
+    const task = `${assets}/.config/mise/tasks/code/graph`;
+    const clean = tree({
+      stackgen: {
+        files: {
+          [task]: "#!/usr/bin/env bash\n",
+          [`${assets}/.config/mise/conf.d/tools.toml`]: "[tools]\n",
+        },
+        executable: [task],
+      },
+    });
+    expect(messages(check(clean))).toEqual([]);
+    const root = tree({
+      stackgen: {
+        files: {
+          [task]: "#!/bin/zsh\n# see ${CLAUDE_PLUGIN_ROOT}/assets/x.md\n",
+          [`${assets}/.prettierrc`]: "{}\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      `mise task file is not executable: ${task}`,
+      expect.stringContaining("does not start with one of"),
+      expect.stringContaining("unallowlisted root entry"),
+      expect.stringContaining("expands to nothing"),
     ]);
   });
 });

@@ -3,7 +3,7 @@ name: Doppler
 axis: backing
 kind: capability-provider
 components:
-- capability-provider/doppler@1.0.0
+- capability-provider/doppler@1.1.0
 ---
 
 # Backing — Doppler

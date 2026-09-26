@@ -175,24 +175,17 @@ claude plugin autoremove --scope "${SCOPE}" --yes >/dev/null
 
 # The code-intelligence tool the workflow plugin treats as mandatory — its own
 # entry gate reports a missing CLI or a missing graph as blocking, so a repo
-# with the plugin and no wiring has a plugin that refuses to run. Both commands
-# are idempotent, so this self-heals a wiring that has since been broken.
+# with the plugin and no wiring has a plugin that refuses to run. The command
+# is idempotent, so this self-heals a wiring that has since been broken.
+# The graph refresh is code:graph, run by hand.
 if command -v graphify >/dev/null 2>&1; then
   print_subheader "Wiring graphify ..."
   graphify install --platform claude >/dev/null
   print_yellow "- wired for claude"
-  # The second command attaches a post-commit hook, so it only means anything
-  # inside a work tree.
-  if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    graphify hook install >/dev/null
-    print_yellow "- post-commit hook installed"
-  else
-    print_yellow "- not inside a git repository — skipped the post-commit hook"
-  fi
 else
   print_warn "graphify is not on PATH — skipping its wiring."
   print_yellow "The workflow plugin reports this as blocking. Install it and re-run:"
-  print_yellow "  mise use -g pipx:graphifyy@latest"
+  print_yellow "  MISE_ENV=dev mise run setup:all"
 fi
 
 # The statusline is a per-MACHINE package like the CLI itself, not a plugin and

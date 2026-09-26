@@ -7,7 +7,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 `../assets/kinds.md`. The narrative — which wave landed what, and why — is
 [`readme.md`](readme.md); the shape of a pack is `../assets/pack-format.md`.
 
-**75 packs, 68 bundles, 13 kinds.**
+**74 packs, 67 bundles, 13 kinds.**
 
 ## Kinds
 
@@ -17,7 +17,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `database` | 1 | 1 |
 | `cloud-provider` | 31 | 26 |
 | `repo-gate` | 4 | 1 |
-| `toolchain-manager` | 1 | 1 |
+| `toolchain-manager` | 0 | 0 |
 | `repo-hygiene` | 1 | 1 |
 | `workspace` | 0 | 3 |
 | `capability-provider` | 8 | 8 |
@@ -32,11 +32,11 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | Component | Name | Kind | Axis | Category | Capability | Version | Summary |
 | --------- | ---- | ---- | ---- | -------- | ---------- | ------- | ------- |
 | `app-framework/flutter` | Flutter | `app-framework` | project | cross-platform-ui |  | 0.4.2 | The cross-platform app SDK that owns the manifest, the build and the project layout — one codebase across mobile, tablet, desktop and in-car through the native edge. |
-| `app-framework/swiftui` | SwiftUI | `app-framework` | project | native-ui |  | 0.2.0 | The native Apple app stack — SwiftUI on Swift, the project a committed Xcode project, Xcode owning the build — one codebase across iPhone, iPad, Mac, CarPlay, Watch, TV and Vision. |
+| `app-framework/swiftui` | SwiftUI | `app-framework` | project | native-ui |  | 0.3.0 | The native Apple app stack — SwiftUI on Swift, the project a committed Xcode project, Xcode owning the build — one codebase across iPhone, iPad, Mac, CarPlay, Watch, TV and Vision. |
 | `capability-provider/audit-store-d1` | Audit store · Cloudflare D1 | `capability-provider` | backing | audit | audit-store | 0.1.0 | An isolated, append-only audit dataset in a D1 database of its own — written through one seam and read only by the console Worker that holds the binding. |
 | `capability-provider/audit-store-postgres` | Audit store · PostgreSQL | `capability-provider` | backing | audit | audit-store | 0.1.0 | An isolated, append-only audit schema inside the product's own PostgreSQL — insert-only to the application's role, readable by the console's reader role under policy, and removable only by the retention purge. |
-| `capability-provider/doppler` | Doppler | `capability-provider` | backing | secrets-manager |  | 1.0.0 | A vendor holds the secrets and the CLI injects them at the process boundary — onboarding is an org invite, and no key is ever distributed. |
-| `capability-provider/fnox` | fnox | `capability-provider` | backing | secrets-manager |  | 1.0.0 | The local-first secrets manager — you hold them, encrypted into git or referenced in your own cloud, and onboarding is a public key plus a re-encrypt. |
+| `capability-provider/doppler` | Doppler | `capability-provider` | backing | secrets-manager |  | 1.1.0 | A vendor holds the secrets and the CLI injects them at the process boundary — onboarding is an org invite, and no key is ever distributed. |
+| `capability-provider/fnox` | fnox | `capability-provider` | backing | secrets-manager |  | 1.1.0 | The local-first secrets manager — you hold them, encrypted into git or referenced in your own cloud, and onboarding is a public key plus a re-encrypt. |
 | `capability-provider/notion` | Notion | `capability-provider` | backing | workspace |  | 0.1.0 | The workspace a team already writes in — its docs, specs and tickets reached by the agent through one hosted server the person authorises once. |
 | `capability-provider/oidc` | OIDC issuer | `capability-provider` | backing | identity | third-party-auth | 0.1.0 | Identity as an open protocol rather than a product — any issuer speaking OpenID Connect, self-hosted or managed. |
 | `capability-provider/otel-lgtm` | OpenTelemetry · Grafana OTel-LGTM | `capability-provider` | backing | telemetry | distributed-tracing | 0.1.0 | The telemetry sink that needs no cloud — the product exports OTLP and an LGTM stack terminates it, run wherever the product runs. |
@@ -87,7 +87,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `language/markdown` | Markdown | `language-bundle` | project |  |  | 0.1.0 | Markdown as a project's own language — the case where prose with frontmatter is the deliverable rather than documentation beside one, and the toolchain is the repo axis's rather than the language's. |
 | `language/swift` | Swift | `language-bundle` | project |  |  | 0.1.2 | The Swift package baseline — standards and public-API design, the error model, strict concurrency, Swift Testing, build and run, config and observability wiring. |
 | `language/typescript` | TypeScript | `language-bundle` | project |  |  | 0.1.0 | The Node/TypeScript language baseline — standards, error semantics, the async model, testing, build and run, config and observability wiring. |
-| `package-manager/pnpm` | pnpm | `language-bundle` | repo |  |  | 0.3.2 | Dependency installation, locking and workspace layout for the Node ecosystem — the manifest contract and the monorepo shape. |
+| `package-manager/pnpm` | pnpm | `language-bundle` | repo |  |  | 0.4.0 | Dependency installation, locking and workspace layout for the Node ecosystem — the manifest contract and the monorepo shape. |
 | `package-manager/pub` | pub | `app-framework` | repo |  |  | 0.1.0 | Dependency declaration and locking for a Flutter app — pubspec.yaml, which also carries the SDK constraints and native package-manager config. |
 | `package-manager/swiftpm` | SwiftPM | `language-bundle` | repo |  |  | 0.1.1 | Dependency declaration, resolution and locking for a Swift package — Package.swift as the manifest, Package.resolved as the lockfile, .build/ as the one build tree. |
 | `package-manager/uv` | uv | `language-bundle` | repo |  |  | 0.1.0 | Dependency resolution, locking, virtualenv management and process running for Python — one tool where the ecosystem historically had four. |
@@ -103,18 +103,17 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `toolchain-gate/pre-commit` | pre-commit | `repo-gate` | repo |  |  | 1.1.7 | The local gate, and the wiring that makes local and CI run the identical command. Ships .config/pre-commit-config.yaml, .config/git-conventional-commits.yaml and .config/linter.yaml. |
 | `toolchain-gate/ruff` | Ruff | `language-bundle` | repo |  |  | 0.3.1 | The lint and format gate for Python — one tool for both halves, run through the project's uv environment rather than a global install. |
 | `toolchain-gate/swift-format` | swift-format | `language-bundle` | repo |  |  | 0.1.1 | The Swift formatter — swift-format, built into the toolchain as `swift format`, configured once under .config/. |
-| `toolchain-gate/swiftlint` | SwiftLint | `language-bundle` | repo |  |  | 0.1.1 | The correctness gate for Swift — SwiftLint through mise, strict, with every layout rule left to swift-format. |
+| `toolchain-gate/swiftlint` | SwiftLint | `language-bundle` | repo |  |  | 0.2.0 | The correctness gate for Swift — SwiftLint through mise, strict, with every layout rule left to swift-format. |
 | `toolchain-gate/tsconfig` | tsconfig | `language-bundle` | project |  |  | 0.2.0 | The TypeScript compiler configuration — a strict shared base, per-project configs, the path alias and the emit variant. |
-| `toolchain-manager/mise` | mise | `toolchain-manager` | repo |  |  | 1.7.0 | The repo's toolchain manager — settings-only .config/mise*.toml files, one section file per table in .config/mise/conf.d/ scoped by MISE_ENV, one lock for every environment, and the file-based task library everything else invokes, grouped into `setup:*` for bootstrap, `code:*` for gates and git, and `p:<project-id>:*` for a project's own commands. |
 
 ## Bundles
 
 | Bundle | Name | Kind | Axis | Components | Unconditional |
 | ------ | ---- | ---- | ---- | ---------- | ------------- |
-| `astro-csr` | Astro (CSR) | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.2`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/astro@0.4.0`, `framework/react@generated` |  |
-| `astro-hybrid` | Astro (Hybrid) | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.2`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/astro@0.4.0`, `framework/react@generated`, `framework/effect@0.1.0` |  |
-| `astro-ssg` | Astro (SSG) | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.2`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/astro@0.4.0`, `framework/react@generated` |  |
-| `astro-ssr` | Astro (SSR) | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.2`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/astro@0.4.0`, `framework/react@generated`, `framework/effect@0.1.0` |  |
+| `astro-csr` | Astro (CSR) | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.4.0`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/astro@0.4.0`, `framework/react@generated` |  |
+| `astro-hybrid` | Astro (Hybrid) | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.4.0`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/astro@0.4.0`, `framework/react@generated`, `framework/effect@0.1.0` |  |
+| `astro-ssg` | Astro (SSG) | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.4.0`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/astro@0.4.0`, `framework/react@generated` |  |
+| `astro-ssr` | Astro (SSR) | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.4.0`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/astro@0.4.0`, `framework/react@generated`, `framework/effect@0.1.0` |  |
 | `audit-store-d1` | Audit store · Cloudflare D1 | `capability-provider` | backing | `capability-provider/audit-store-d1@0.1.0` |  |
 | `audit-store-postgres` | Audit store · PostgreSQL | `capability-provider` | backing | `capability-provider/audit-store-postgres@0.1.0` |  |
 | `bun` | bun · workspaces | `workspace` | repo | `package-manager/bun@generated` |  |
@@ -145,37 +144,36 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `cloudflare-zero-trust` | Cloudflare Zero Trust Access | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/zero-trust-access@0.1.0` |  |
 | `container-generic` | OCI image · any container host | `deploy-target` | deploy | `deploy-target/container-image@0.1.0` |  |
 | `dart-flutter` | Dart · Flutter | `app-framework` | project | `app-framework/flutter@0.4.2`, `package-manager/pub@0.1.0`, `toolchain-gate/analysis-options@0.2.0` |  |
-| `doppler` | Doppler | `capability-provider` | backing | `capability-provider/doppler@1.0.0` |  |
-| `fnox` | fnox | `capability-provider` | backing | `capability-provider/fnox@1.0.0` |  |
+| `doppler` | Doppler | `capability-provider` | backing | `capability-provider/doppler@1.1.0` |  |
+| `fnox` | fnox | `capability-provider` | backing | `capability-provider/fnox@1.1.0` |  |
 | `gcp-cloud-run` | Google Cloud · Cloud Run · Artifact Registry | `cloud-provider` | deploy | `cloud-provider/gcp@0.1.0`, `cloud-service/cloud-run@0.1.0` |  |
 | `gcp-cloud-sql` | Google Cloud · Cloud SQL | `cloud-provider` | backing | `cloud-provider/gcp@0.1.0`, `cloud-service/cloud-sql@0.1.0`, `cloud-service/firebase-auth@0.1.0`, `cloud-service/firebase-storage@0.1.0` |  |
 | `gcp-firebase` | Google Cloud · Firebase | `cloud-provider` | backing | `cloud-provider/gcp@0.1.0`, `cloud-service/firestore@0.1.0`, `cloud-service/firebase-auth@0.1.0`, `cloud-service/firebase-storage@0.1.0`, `cloud-service/firebase-messaging@0.1.0` |  |
 | `gcp-gke` | Google Cloud · GKE Autopilot · Artifact Registry | `cloud-provider` | deploy | `cloud-provider/gcp@0.1.0`, `cloud-service/gke@0.1.0` |  |
 | `github-actions` | GitHub Actions | `ci-system` | cicd | `ci-system/github-actions@0.2.0` |  |
-| `html` | HTML | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.2`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/html@0.1.0` |  |
+| `html` | HTML | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.4.0`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/html@0.1.0` |  |
 | `lovable` | Lovable | `design-tool` | design | `design-tool/lovable@0.1.0` |  |
-| `mise` | mise | `toolchain-manager` | repo | `toolchain-manager/mise@1.7.0` | yes |
 | `notion` | Notion | `capability-provider` | backing | `capability-provider/notion@0.1.0` |  |
 | `npm-package` | Package registry · npm | `deploy-target` | deploy | `deploy-target/npm-registry@generated` |  |
 | `oidc` | OIDC issuer | `capability-provider` | backing | `capability-provider/oidc@0.1.0` |  |
 | `otel-lgtm` | OpenTelemetry · Grafana OTel-LGTM | `capability-provider` | backing | `capability-provider/otel-lgtm@0.1.0` |  |
 | `plain-css` | Plain CSS | `stylesheet` | stylesheet | `stylesheet/plain-css@0.1.0` |  |
-| `pnpm-turbo` | pnpm · Turborepo | `workspace` | repo | `package-manager/pnpm@0.3.2`, `build-orchestrator/turbo@generated` |  |
-| `pnpm-workspace` | pnpm · workspace | `workspace` | repo | `package-manager/pnpm@0.3.2` |  |
+| `pnpm-turbo` | pnpm · Turborepo | `workspace` | repo | `package-manager/pnpm@0.4.0`, `build-orchestrator/turbo@generated` |  |
+| `pnpm-workspace` | pnpm · workspace | `workspace` | repo | `package-manager/pnpm@0.4.0` |  |
 | `postgres` | PostgreSQL | `database` | backing | `datastore/postgres@0.1.0` |  |
 | `repo-gates` | Repo gates | `repo-gate` | repo | `toolchain-gate/dprint@1.1.3`, `toolchain-gate/gitleaks@1.1.2`, `toolchain-gate/grype@1.0.1`, `toolchain-gate/pre-commit@1.1.7` | yes |
 | `repo-hygiene` | repo-hygiene | `repo-hygiene` | repo | `repo-hygiene/repo-hygiene@1.2.4` | yes |
 | `stitch` | Google Stitch | `design-tool` | design | `design-tool/stitch@0.1.0` |  |
 | `stylex` | StyleX | `stylesheet` | stylesheet | `stylesheet/stylex@0.1.0` |  |
-| `swift-package` | Swift · package | `language-bundle` | project | `language/swift@0.1.2`, `package-manager/swiftpm@0.1.1`, `toolchain-gate/swift-format@0.1.1`, `toolchain-gate/swiftlint@0.1.1` |  |
-| `swift-swiftui` | Swift · SwiftUI | `app-framework` | project | `app-framework/swiftui@0.2.0`, `package-manager/swiftpm@0.1.1`, `toolchain-gate/swift-format@0.1.1`, `toolchain-gate/swiftlint@0.1.1` |  |
+| `swift-package` | Swift · package | `language-bundle` | project | `language/swift@0.1.2`, `package-manager/swiftpm@0.1.1`, `toolchain-gate/swift-format@0.1.1`, `toolchain-gate/swiftlint@0.2.0` |  |
+| `swift-swiftui` | Swift · SwiftUI | `app-framework` | project | `app-framework/swiftui@0.3.0`, `package-manager/swiftpm@0.1.1`, `toolchain-gate/swift-format@0.1.1`, `toolchain-gate/swiftlint@0.2.0` |  |
 | `tailwindcss` | Tailwind CSS | `stylesheet` | stylesheet | `stylesheet/tailwindcss@0.1.0` |  |
 | `temporal` | Temporal | `capability-provider` | backing | `capability-provider/temporal@0.1.0` |  |
-| `typescript-cloudflare-agents` | TypeScript · Cloudflare Agents · Effect | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.2`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/effect@0.1.0`, `framework/cloudflare-agents@0.1.0` |  |
-| `typescript-effect-cli` | TypeScript · Effect CLI | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.2`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/effect@0.1.0` |  |
-| `typescript-effect-hono` | TypeScript · Hono · Effect | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.2`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/effect@0.1.0`, `framework/hono@generated` |  |
-| `typescript-effect-temporal` | TypeScript · Temporal · Effect | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.2`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/effect@0.1.0`, `framework/temporal@generated` |  |
-| `typescript-effect` | TypeScript · Effect | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.2`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/effect@0.1.0` |  |
-| `typescript-hono-refine` | TypeScript · Hono + Effect · React + Refine | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.2`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/hono@generated`, `framework/effect@0.1.0`, `framework/react@generated`, `framework/refine@generated` |  |
-| `typescript-parseargs-cli` | TypeScript · parseArgs CLI | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.2`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2` |  |
-| `typescript-pulumi` | TypeScript · Pulumi | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.2`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/pulumi@generated` |  |
+| `typescript-cloudflare-agents` | TypeScript · Cloudflare Agents · Effect | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.4.0`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/effect@0.1.0`, `framework/cloudflare-agents@0.1.0` |  |
+| `typescript-effect-cli` | TypeScript · Effect CLI | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.4.0`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/effect@0.1.0` |  |
+| `typescript-effect-hono` | TypeScript · Hono · Effect | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.4.0`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/effect@0.1.0`, `framework/hono@generated` |  |
+| `typescript-effect-temporal` | TypeScript · Temporal · Effect | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.4.0`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/effect@0.1.0`, `framework/temporal@generated` |  |
+| `typescript-effect` | TypeScript · Effect | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.4.0`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/effect@0.1.0` |  |
+| `typescript-hono-refine` | TypeScript · Hono + Effect · React + Refine | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.4.0`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/hono@generated`, `framework/effect@0.1.0`, `framework/react@generated`, `framework/refine@generated` |  |
+| `typescript-parseargs-cli` | TypeScript · parseArgs CLI | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.4.0`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2` |  |
+| `typescript-pulumi` | TypeScript · Pulumi | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.4.0`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/pulumi@generated` |  |

@@ -3,7 +3,7 @@ name: fnox
 axis: backing
 kind: capability-provider
 components:
-- capability-provider/fnox@1.0.0
+- capability-provider/fnox@1.1.0
 ---
 
 # Backing — fnox

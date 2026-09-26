@@ -1,0 +1,16 @@
+code-review engine (/code-review high), loop U9, round 2, range 09b0fd10..927dd5b3
+
+Closed: round-1 #9 (256f8d90). Still open: round-1 #1-#8, #10 (#8 materializer.md:336 and #10 setup/ai hook uninstall cut for the cap).
+
+1. plugins/vwf/skills/doctor/references/code-intelligence.md:32 — doctor still requires graphify's post-commit hook (graphify hook install) that setup:ai no longer installs; plugins/vwf/assets/graphify.md:99 still says the post-commit hook rebuilds the graph. Neither file is in any unit's Owns.
+2. plugins/vwf/skills/setup/references/materialize.md:186 — still open (r1 #2).
+3. plugins/stackgen/skills/stackgen-sync/SKILL.md:61 — still open (r1 #3).
+4. plugins/vwf/skills/doctor/references/stack-checks.md:399 — still open (r1 #1).
+5. plugins/stackgen/assets/kinds.md:353 — still open (r1 #4).
+6. plugins/stackgen/skills/tool-config/assets/mise/.config/mise/conf.d/tools.dev.toml:16 — still open (r1 #5), awaiting the user's ruling.
+7. plugins/vwf/skills/init/references/existing-repo.md:81 — still open (r1 #6).
+8. plugins/stackgen/skills/tool-config/SKILL.md:63 — still open (r1 #7): :63/:113 never touch a user line vs mise.md:413 set env with no for rewrites it.
+9. scripts/src/check.ts:719 — new: TERA_DELIMITER /\{\{|\{%/ misses {# which mise.md:388-390 refuses.
+10. scripts/src/check.ts:741 — new: alias names held to [A-Za-z_][A-Za-z0-9_]* (mise.md:381) but the base writes hyphenated setup-<slug> aliases (mise.md:111, :334) and TOML bare keys allow -.
+
+Cut for the cap: plugins/stackgen/assets/pack-format.md:256 still says mise … env without to <scope>; checker accepts an unbalanced quoted value (mise add env X="abc to dev); checker rejects mise version specs like ref:main or prefix:1.2; code:graph body still written as a post-commit hook (looks only at the last commit when run by hand).

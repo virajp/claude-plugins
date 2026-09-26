@@ -148,7 +148,7 @@ repos:
         entry: mise x -- mise run p:plugins:shellcheck
         language: system
         pass_filenames: false
-        files: ^plugins/[^/]+/stacks/[^/]+/[^/]+/(config|hooks)/
+        files: ^plugins/([^/]+/stacks/[^/]+/[^/]+/(config|hooks)|stackgen/skills/tool-config/assets)/
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

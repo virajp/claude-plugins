@@ -30,7 +30,6 @@ stacks/<type>/<slug>/
 │   └── hooks.yaml       #   the settings.json hook entries it needs (consent-gated)
 └── config/              # optional: repo config files — tree mirrors the repo root
     ├── .config/…        #   e.g. .config/mise/tasks/code/format (consent-gated)
-    ├── .config/mise/conf.d/<pack>.toml       #   env fragment, auto-loaded
     ├── .config/pre-commit.d/<pack>.yaml      #   hook fragment, merged by /vwf:init
     ├── .config/vscode.d/<pack>.jsonc         #   editor fragment, merged by /vwf:init
     └── _<name>/…        #   pack-private payload — NEVER copied
@@ -57,17 +56,14 @@ stacks/<type>/<slug>/
   `${CLAUDE_PLUGIN_ROOT}/assets/ids.md` defines, never the raw name — and
   the materializer's copy rules are where that behaviour is specified.
 - **Fragments are named `<pack-name>.<ext>`, one per pack.**
-  `.config/mise/conf.d/<pack>.toml` is an environment fragment the toolchain
-  manager auto-loads, which is how a provider contributes variables without
-  editing `mise.toml` — and where a value is the machine's to answer, how
-  a pack's `machine_env:` gets it filled (below).
   `.config/pre-commit.d/<pack>.yaml` is a hook fragment
   — a standalone `repos:` list, valid YAML on its own — that the materializer
   copies **verbatim** and `/vwf:init` merges into
   `.config/pre-commit-config.yaml` between markers. The pack name in the
   filename is what makes a fragment attributable at a glance and keeps two
-  packs from colliding on one path. **Editor fragments** are the third of
-  these, and have their own shape — below.
+  packs from colliding on one path. **Editor fragments** are the second of
+  these, and have their own shape — below. A pack ships no
+  `.config/mise/conf.d/` fragment any more; it lists `tool-config:` calls.
 
 `<type>` is a component type from
 `${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`. The slug is unique within the
@@ -88,7 +84,7 @@ merging never owning — the rules, the per-file lockfile record, the
 composition order when two components write one tree, the root allowlist and
 the four things the tier still may not write are
 `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. A gate pack **does** ship the
-config file it governs, and a provider pack its environment fragment; what
+config file it governs; a provider's environment is a `tool-config:` call; what
 stays out is a language manifest, a CI workflow, a **whole** editor file
 and CLAUDE.md — a pack contributes to the editor through the fragment
 below, never by shipping `.vscode/settings.json`. **Mode is preserved**:
@@ -163,7 +159,7 @@ version: <semver — what sync diffs against, per component>
 type: <component type> # assets/taxonomy.md
 category: <token> # required where the type has categories
 capability: <token> # the vwf capability realized — where one applies
-kind: language-bundle | database | cloud-provider | repo-gate | toolchain-manager | repo-hygiene | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool | stylesheet # the bundle kind it composes into (assets/kinds.md)
+kind: language-bundle | database | cloud-provider | repo-gate | repo-hygiene | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool | stylesheet # the bundle kind it composes into (assets/kinds.md)
 axis: project | backing | deploy | repo | design | cicd | stylesheet # omitted by cloud-provider components, which compose into both a backing- and a deploy-axis bundle; each bundle naming one declares its own
 platforms: [ <platform> ] # language components only — the bundle root
 languages: # language and app-framework components only
@@ -178,6 +174,8 @@ package_manager: <token> # package-manager components only
 lockfile: [ <path or glob> ] # package-manager components only — where the lockfile lives, repo-root relative; any match passes
 machine_env: # optional — env values detected from the machine, asked by /vwf:setup; see below
   - { name: <ENV_VAR>, detect: <command>, question: <prompt> }
+tool-config: # optional — /stackgen:tool-config calls; see below
+  - <tool> <instruction>
 artifact: <token> # deploy-target components, and deploy-side cloud-service ones
 mcp_servers: {} # design-tool and other components needing an MCP server — written into the project's .mcp.json behind tier-2 consent
 user_mcp_servers: {} # user-scoped — the generated local plugin's mcpServers, tier 3
@@ -254,24 +252,41 @@ machine_env:
 ```
 
 `name` is the environment variable, `detect` a shell command whose stdout
-is the default, and `question` the prompt. The pack **must** land a file
-holding a marked position named for each `name` — typically an `[env]`
-table in its own `config/.config/mise/conf.d/<pack>.toml` fragment (the
-conf.d passage above), each variable under a `# A MARKED POSITION` comment,
-shipped with an empty value. The **materializer lands that fragment with
-its marked positions unfilled**; `/vwf:setup`'s materialize pass, the
-caller that lands the pack, runs each `detect`, offers the output
-preselected — the person may type another value — writes the answer into
-the marked position, and re-records the file's lockfile hash. A `detect`
+is the default, and `question` the prompt. Each `name` **must** be set by
+a `mise add env <KEY>="" to <scope>` line in the pack's `tool-config:`
+list — an empty value; `p:plugins:check` rule 11 refuses a name no such
+line sets. The materializer runs that call, so the key lands **unset**;
+`/vwf:setup`'s materialize pass, the caller that lands the pack, runs each
+`detect`, offers the output preselected — the person may type another
+value — and writes the answer with
+`/stackgen:tool-config mise set env <KEY>=<value> for <pack>`. A `detect`
 that fails or prints nothing offers no default and still asks. Setup runs
 a `detect` only while the committed template entry matches the hash its
 lockfile records — on drift it runs none and asks with no default — and
-refuses a value the fragment's reader would not take literally (control
-characters, the reading tool's template or expansion characters, a quote
-it cannot escape). The procedure is setup's. The values are the repo's
-committed pins, not per-machine overrides, and `/stackgen:stackgen-sync`
-keeps them: when the pack changes that file, the repo's value of every
-`machine_env` name is carried into the new payload before it is written.
+refuses a value mise would not take literally (control characters, its
+template or expansion characters, a quote it cannot escape). The procedure
+is setup's. The values are the repo's committed pins, not per-machine
+overrides, and they live in the pack's tool-config block, which is never
+drift.
+
+### `tool-config:` — what a pack asks of the universal tools
+
+A pack that needs a tool pin, an env value or an alias in the toolchain
+manager's files lists the instructions under `tool-config:`, one per line,
+each starting with the tool:
+
+```yaml
+tool-config:
+  - mise add tool swiftlint 0.65.1 to all environments
+  - mise add env XCODE_VERSION="" to all environments
+```
+
+The materializer runs each line as `/stackgen:tool-config <line> for
+<pack>` after copying the pack, under the `config/` consent line. The skill
+writes the lines between `# >>> <pack>` and `# <<< <pack>` markers. A pack
+dropped from a composition gets `/stackgen:tool-config <tool> remove <pack>`
+for each tool it called. The grammar is the skill's
+(`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`).
 
 ### `conditional:` — files that land only when an answer holds
 
@@ -366,12 +381,13 @@ a slot with exactly one pack, where a one-entry menu would be theatre and
 where a repo that has picked no stack still needs the thing. It has two
 readers: `stackgen-stack-menu` **excludes** such a bundle from the payload
 it returns, and `/vwf:init` fetches it by **fixed slug**, never a slug
-constructed from configuration. Three bundles carry it today, because a
-bundle declares one `kind` and these are three: `mise` (`toolchain-manager`),
-`repo-gates` (`repo-gate`) and `repo-hygiene` (`repo-hygiene`). Nothing about
+constructed from configuration. Two bundles carry it today, because a
+bundle declares one `kind` and these are two: `repo-gates` (`repo-gate`) and
+`repo-hygiene` (`repo-hygiene`); the toolchain manager is
+`stackgen:tool-config`'s, not a bundle. Nothing about
 them is recorded in `.config/vwf.yaml` — nothing was chosen — only in
 `lock.yaml`, which is also what tells a caller whether the repo is shaped at
-all: all three slugs present, or not shaped. `unconditional:` is the
+all: both slugs present, or not shaped. `unconditional:` is the
 **bundle's** word — whether the composition is picked or fixed — and
 `conditional:` the **file's**, inside a pack: an unconditional bundle may
 still carry a pack whose issue forms land only on GitHub.
@@ -475,7 +491,7 @@ which is the grain `stackgen-sync` acts at.
   while its pin still reads `unresolved`. Where being on `PATH` does not
   prove the tool works, the entry carries a `probe` and doctor runs it.
 - **A generated pack may ship the `config/` tiers too.** Nothing about
-  `config/.config/…`, `conf.d` or `pre-commit.d` is reserved to curated
+  `config/.config/…` or `pre-commit.d` is reserved to curated
   packs: a generated component that genuinely owns a config file may declare
   one, and it lands through the same consent line and the same lockfile
   record. Teaching the generator to **emit** them is a separate piece of work

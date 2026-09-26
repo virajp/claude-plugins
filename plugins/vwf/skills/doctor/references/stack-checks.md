@@ -285,9 +285,11 @@ manage and no harness task to run, so halting `setup` and `execute` over it
 would block a product on day one for a stack nobody has chosen yet. A repo with
 neither `.config/mise.toml` nor `.config/mise/conf.d/` is the same finding one
 level up, at the same severity: report it and nudge `/vwf:setup reshape`, the
-one repo-shape remedy. Setup materializes no tooling itself — `/vwf:init` does,
-laying down the three unconditional bundles `mise`, `repo-gates` and
-`repo-hygiene` by their fixed slugs through the stack adapter's
+one repo-shape remedy, naming `/stackgen:tool-config all` as what it runs.
+Setup materializes no tooling itself — `/vwf:init` does, calling
+`/stackgen:tool-config all` for every universal tool the skill owns, then
+laying down the unconditional bundles that remain, `repo-gates` and
+`repo-hygiene`, by their fixed slugs through the stack adapter's
 `-stack-template` skill. That is the coarsest form of one question — is this
 repo still shaped the way `/vwf:init` shapes one — and the section at the end
 of this file is the fuller version of the same check: this one fires when the
@@ -394,11 +396,15 @@ off the payload. A component no pinned template names is read from
 `stacks/<type>/<slug>/pack.yaml` inside the installed adapter plugin's own
 tree, located from `claude plugin list` the way this section locates `mise` —
 vwf's own plugin-root token names vwf and can never spell another plugin's
-root. A recorded version **older** than the shipped one is one drift row
-naming the component and both versions. A **newer** recorded version is not a
-finding here: the adapter went backwards, which is the sync skill's
-conversation, not doctor's. **No lockfile at all** on the base is `missing`
-rather than drift, with the same remedy — the shape was never laid down here.
+root. An entry sourced `tool-config/<tool>@<version>` was written by the
+adapter's `tool-config` skill, and its version is the adapter's own: compare
+it against the installed adapter plugin's version, read from
+`claude plugin list`. A recorded version **older** than the shipped one is one
+drift row naming the component and both versions. A **newer** recorded
+version is not a finding here: the adapter went backwards, which is the sync
+skill's conversation, not doctor's. **No lockfile at all** on the base is
+`missing` rather than drift, with the same remedy — the shape was never laid
+down here.
 A **member** with no lockfile is not a second `missing` row: it reads `not
 checked — no lockfile` under that member, which says the same thing once, and
 the product's one `reshape` is what lands it there.
@@ -527,6 +533,13 @@ a mixed file tractable: `.config/mise/conf.d/env.toml` carries the repo-name
 key and `MEMBERS` beside positions no predicate reads, and splicing only the
 owned half would leave the rest diverging and report the whole file as content
 drift.
+
+**A record sourced `tool-config/<tool>@<version>` has no pack payload**: its
+payload is the adapter's `tool-config` skill's,
+`skills/tool-config/assets/<tool>/` inside the installed adapter plugin's
+tree, located as (a) locates a pack. The second test reconstructs from that
+path the same way. Only the tool's own block counts: another requester's block
+and a line outside every block are the skill's to show, never (e)'s.
 
 **A record whose `source:` is `generated` has no pack payload** to reconstruct
 from, so there is nothing to splice: the second test is skipped, and test 1's

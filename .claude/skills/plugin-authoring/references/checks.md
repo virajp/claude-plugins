@@ -102,9 +102,12 @@ much smaller than the one it replaced: whole families of assertion became
    two-directions-cover-each-other-on-a-rename idiom rule 7 uses for agent
    cross-references.
 10. **The technology-free vwf guard.** Below.
-11. **A pack's `config/` payload tier is materializable as-is.** Nine
-    assertions, every one of them about a file whose failure mode in the
-    *target* repo is silence rather than an error:
+11. **A pack's `config/` payload tier is materializable as-is.** Ten assertions,
+    every one of them about a file whose failure mode in the *target* repo is
+    silence rather than an error. The landed-tree assertions run over each
+    `stackgen:tool-config` asset tree (`skills/tool-config/assets/<tool>/`)
+    exactly as over a pack's `config/`, since the skill lands it whole at the
+    repo root:
     - a **task file lands executable**. `config/.config/mise/tasks/**` is a
       *file-based* task library — mise runs each file directly — so one landing
       644 fails as an **unknown task** rather than as a permission error, which
@@ -165,13 +168,24 @@ much smaller than the one it replaced: whole families of assertion became
       `probe` (the command `/vwf:doctor` runs instead); `lockfile` is a
       non-empty list of repo-relative paths or globs with no `..`; and every
       `machine_env` entry is a map whose `name` is an env-var name and whose
-      `detect` and `question` are non-empty strings — and, when the pack ships a
-      `conf.d` fragment, whose name is a key of an `[env]` table in it, since
-      that marked position is what `/vwf:setup` fills. Each caller trusts the
-      shape: a probe that is not a string is never run, a glob that climbs out
-      matches something the repo does not own, and a name no fragment carries is
-      a question whose answer lands nowhere — all silently. The finding names
-      the pack and the entry.
+      `detect` and `question` are non-empty strings — and whose name is set by a
+      `mise add env` entry of the pack's `tool-config:` list, since that line is
+      what `/vwf:setup` fills. Each caller trusts the shape: a probe that is not
+      a string is never run, a glob that climbs out matches something the repo
+      does not own, and a name no call sets is a question whose answer lands
+      nowhere — all silently. The finding names the pack and the entry;
+    - every **`tool-config:` entry** parses as one of the three verbs a pack may
+      ask for — `mise add tool <name> <version> to <scope>`,
+      `mise add env <KEY>=<value> to <scope>` or
+      `mise add alias <name>=<command> [to dev]` — the scope all environments or
+      `dev`, `ci` or `test`; an env key an env-var name, an alias name a TOML
+      bare key; a value quoted as a TOML basic string or bare and never opening
+      a quote; and a template delimiter (`{{`, `{%`, `{#`) only inside an
+      `add env` value, since mise renders it. The materializer runs each line
+      through `/stackgen:tool-config`, so a line that does not parse is one the
+      skill refuses at landing, in someone else's repo. And a pack's `config/`
+      tier holding any mise `conf.d/` fragment is a finding: a pack asks for its
+      mise lines through `tool-config:` and never lands the file.
 
     The walk is its own rather than the plugin file reader's, because every one
     of these paths runs through a dot segment the reader's glob does not descend
@@ -188,11 +202,13 @@ much smaller than the one it replaced: whole families of assertion became
 13. **A landed pack file cites nothing by plugin path.** A pack's landed tiers —
     `skills/`, `agents/`, `rules/`, `hooks/`, `config/`, its `conventions.md`
     and a bundle's body — are copied into a target repo **verbatim**, and that
-    repo has no plugin installed. Inside the plugin every citation in them
-    resolves, which is exactly why rule 6 was silent about all of them; after
-    landing not one does, and nothing reports it — the reader is sent to a path
-    that is not there. Four forms, matched separately because they fail and are
-    fixed differently:
+    repo has no plugin installed. So is every file under
+    `skills/tool-config/assets/<tool>/`, which `stackgen:tool-config` lands
+    whole at the repo root; the rule reads it as one landed tree. Inside the
+    plugin every citation in them resolves, which is exactly why rule 6 was
+    silent about all of them; after landing not one does, and nothing reports it
+    — the reader is sent to a path that is not there. Four forms, matched
+    separately because they fail and are fixed differently:
     - the **literal `${CLAUDE_PLUGIN_ROOT}`**, anywhere and even with no path
       after it, since outside a plugin the host expands it to nothing. This form
       is checked in every landed file, not only prose: a task script or a config

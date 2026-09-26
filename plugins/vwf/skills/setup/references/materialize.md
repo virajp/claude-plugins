@@ -42,11 +42,10 @@ to read.
   materialization record. Read the **slugs** its `entries:` carry and nothing
   else: which paths landed, with what hash, is the adapter's bookkeeping, and
   setup has no business reading it. An absent lockfile means nothing in that
-  repo is materialized. Three exceptions: the fallback for a config with no
+  repo is materialized. Two exceptions: the fallback for a config with no
   `answers:` block, which reads the pinned provider slug off it and nothing
-  more; the machine-env step below, which reads the hash recorded for a
-  pack's template entry before it runs that entry's `detect`; and the same
-  step's re-record of the hash of each file it fills.
+  more; and the machine-env step below, which reads the hash recorded for a
+  pack's template entry before it runs that entry's `detect`.
 
 The axes live in the **base's** `.config/vwf.yaml` only. A member repo has no
 config of its own — it carries a back-link
@@ -174,9 +173,9 @@ decisions anyone makes — a tool's installed version, a device the tests run
 on. A pack declares them in its `machine_env:` fact, which the template
 payload carries as a list of `{ name, detect, question }`: `name` an
 environment variable, `detect` a shell command whose stdout is the default,
-`question` the prompt. The pack lands a file with a marked position named for
-each `name` — typically a toolchain `conf.d` fragment's environment table —
-and lands it **unfilled**; filling it is this step's.
+`question` the prompt. The pack does not land a file for them: its
+`tool-config:` list adds each `name` empty, through `/stackgen:tool-config`,
+inside the pack's own block, and filling it is this step's.
 
 **When it runs.** For every entry this pass **landed**, once the adapter
 returns, read `machine_env` off the payload it returned. For every entry the
@@ -185,13 +184,14 @@ read — and run the step the same way. A payload with no `machine_env` is
 nothing to do.
 
 **A value set elsewhere moves in.** Before asking, look for each `name` set
-as a committed value in another file of the same tool's config — a line an
-earlier version of the pack, or a person, put there before the pack had a
-file of its own (for mise, an `[env]` key in `.config/mise.toml`, which mise
-lets win over a `conf.d` fragment). That value is the team's pin, so step 2
+as a committed value anywhere in the same tool's config **outside the pack's
+block** — a line an earlier version of the pack, or a person, put there
+before the pack had a block of its own (for mise, an `[env]` key in
+`.config/mise.toml`, or a `conf.d/<pack>.toml` fragment an older pack
+landed). That value is the team's pin, so step 2
 preselects it — above the detected value and above the position's current
 value — and says where it was found; whatever the answer, it is written into
-the pack's file and the line in the other file is **removed**, so the value
+the pack's block and the line outside it is **removed**, so the value
 has one source. The question is the consent for both edits, and the
 question says so. A value set only in the environment or in a gitignored
 local config is a machine's deliberate override, not a committed pin, and is
@@ -226,28 +226,27 @@ left alone.
    and a later run still preselects the current value: only the detected
    default is withheld. Either way the person may type another, and the
    question is never skipped, and never answered for the person.
-3. Write the answer into the marked position named for `name` in the file the
-   pack landed, and nothing else in that file. An answer equal to the current
-   value writes nothing. **The value is data, never syntax:** one containing a
-   newline or any other control character, a template delimiter or expansion
-   character of the tool that reads the file (for mise, which renders every
-   environment value as a template and, under the pack's shell expansion,
-   expands variables: `{{`, `{%`, `{#` or `$`), or a `'` together with a `"`
-   or a `\` is refused and the question asked again — a detected value that
-   does so is offered as no default — and every other value is written as a
-   quoted string in the file's own syntax, escaped by it (for a TOML file, a
-   basic string with `"` and `\` escaped), so no answer can end the string,
-   add a key, or run as code when the file is loaded.
+3. Hand the answer to the skill:
+   `/stackgen:tool-config <tool> set env <name>=<value> for <pack>`, `<tool>`
+   the one the pack's own `tool-config:` call adding `name` names. The skill
+   writes that value in the pack's block and nothing else. An answer equal to
+   the current value writes nothing. **The value is data, never syntax:** one
+   containing a newline or any other control character, a template delimiter
+   or expansion character of the tool that reads the file (for mise, which
+   renders every environment value as a template and, under the pack's shell
+   expansion, expands variables: `{{`, `{%`, `{#` or `$`), or a `'` together
+   with a `"` or a `\` is refused and the question asked again — a detected
+   value that does so is offered as no default — and every other value is
+   handed over to be written as a quoted string in the file's own syntax,
+   escaped by it (for a TOML file, a basic string with `"` and `\` escaped),
+   so no answer can end the string, add a key, or run as code when the file
+   is loaded.
 
-Then, once per pack whose file changed, **re-record that file's hash** in the
-target repo's adapter lockfile — the same re-record `/vwf:init` makes of every
-file it fills, and the one lockfile write this pass makes — so the filled
-file does not read as drift on the next `/vwf:doctor`; a file a moved line
-was removed from is re-recorded the same way where the lockfile records it.
-Commit the files and the lockfile together in the target repo, one commit
-per pack, its message naming the slug, the variables filled and any line
-moved: the answers were the consent, as the adapter's consent line was for
-the landing.
+The skill records what it wrote in the adapter lockfile itself, and a
+`machine_env` value is never its drift, so this pass writes no lockfile.
+Commit what the skill changed in the target repo, one commit per pack, its
+message naming the slug, the variables filled and any line moved: the
+answers were the consent, as the adapter's consent line was for the landing.
 
 The file is committed, so once answered the value is the **repo's**, not the
 machine's: a later run on any machine offers the committed value

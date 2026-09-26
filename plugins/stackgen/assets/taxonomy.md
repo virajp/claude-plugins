@@ -41,18 +41,11 @@ The closed list. A component is exactly one of:
   language is what the SDK brought.
 - **`toolchain-gate`** — a repo-level gate: formatter, linter, secret
   scanner, vulnerability scanner, hook runner.
-- **`toolchain-manager`** — the repo's developer toolchain manager, doing
-  three jobs: it **pins** the tool versions the repo runs on, **holds** the
-  environment values those tools and tasks read, and **runs** the repo's
-  tasks. Distinct from the `toolchain-gate`, which *is* one gate — a
-  manager gates nothing and runs the gates instead. Distinct from the
-  `build-orchestrator`, which schedules work across a workspace's packages
-  with caching and dependency ordering; a manager is a flat task namespace,
-  and an orchestrator typically runs beneath it. Distinct from the
-  `package-manager`, which installs and locks a *language's dependencies*
-  rather than tools. A component that does only one of the three jobs — a
-  pinner that runs nothing, a task runner that pins nothing — records the
-  others `n/a`; contributes the `repo`-axis facts.
+- **The toolchain manager is no type** since 2026-09-26: the repo's mise
+  config and task library are written by `stackgen:tool-config`
+  (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`), and a pack asks it
+  for tool pins, environment values and aliases through `tool-config:` in its
+  `pack.yaml`.
 - **`repo-hygiene`** — the files a repository carries **whatever it is
   written in**: the ignore set, the editor and attribute defaults, the
   licence and the security contact, and the dependency-update policy. Not a
@@ -227,27 +220,21 @@ the token the project config already holds**. Picking from the menu and writing
 exist because a template no menu can offer is not an error — it is invisible,
 which is how a CI-system pack shipped that nothing could ever materialize.
 - A **Repo-Gate-Bundle** is the `toolchain-gate` components that apply to
-  the whole repository rather than to one toolchain in it — one of the four
+  the whole repository rather than to one toolchain in it — one of the three
   compositions rooted at the `repo` axis. A gate meaningful for exactly one
   toolchain is **not** here: it belongs to that language's bundle, which is
   what keeps a polyglot repo from materializing the same scanner once per
   language.
-- A **Toolchain-Manager-Bundle** is exactly one `toolchain-manager`
-  component, also on the **`repo`** axis. Like a Deploy-Bundle it has no
-  second half — there is no category above the manager to write doctrine at
-  — and like a CI-Bundle it is **exactly one**: a repo with two task
-  runners has two vocabularies for the same commands, and only one of them
-  is the one anything else invokes.
 - A **Repo-Hygiene-Bundle** is exactly one `repo-hygiene` component,
-  standing alone like a Deploy-Bundle — the third composition on the
-  **`repo`** axis, and the newest. There is no second half because there is
+  standing alone like a Deploy-Bundle — the second composition on the
+  **`repo`** axis. There is no second half because there is
   no category above "the files every repo has" to write doctrine at, and the
   fence that keeps it honest is its kind's scope rather than a pairing.
 - A **Workspace-Bundle** is the `package-manager` component that installs
   and locks the repo's members plus a `build-orchestrator` component where
-  the repo has one — the fourth composition on the **`repo`** axis, and the
-  only one of the four a user picks: `repo.stack.template` is what selects
-  it, while the other three are `unconditional:` baselines. A single-package
+  the repo has one — the third composition on the **`repo`** axis, and the
+  only one of the three a user picks: `repo.stack.template` is what selects
+  it, while the other two are `unconditional:` baselines. A single-package
   repo pins none, which is the edge rather than a gap. The
   `package-manager` component appears in two kinds' compositions the way
   `toolchain-gate` does — it carries `language-bundle` topics 7–8 there and

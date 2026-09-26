@@ -109,8 +109,8 @@ the directory and the registration down only when the last key goes.
 ## The fourth target — repo config files
 
 `.claude/`, `.mcp.json` and the local plugin are the three targets above, and
-a repo's own configuration is none of them. A toolchain manager's config and
-its file-based task library are repo files a component genuinely owns, so a
+a repo's own configuration is none of them. A gate's config file and a task
+overlay are repo files a component genuinely owns, so a
 pack declares them in a **`config/` tree that mirrors the repo root**
 (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`):
 
@@ -126,9 +126,9 @@ stacks/<type>/<slug>/
 **What the tier covers**, since it is wider than the toolchain manager it
 started as:
 
-- **(a) The toolchain manager's config split and its task library** — the
-  `miserc.toml` and `mise.*.toml` layers, the section files under
-  `.config/mise/conf.d/`, and every file under `.config/mise/tasks/`.
+- **(a) Task overlays** — a file under `.config/mise/tasks/` a pack ships
+  over the baseline library. The mise files themselves, and that baseline,
+  are written by `stackgen:tool-config`, not copied (since 2026-09-26).
 - **(b) A gate's own config file** — `.config/dprint.json`,
   `.config/taplo.toml`, `.config/pre-commit-config.yaml`,
   `.config/git-conventional-commits.yaml`, `.config/gitleaks.toml`,
@@ -139,12 +139,8 @@ started as:
   and `renovate.json` — at the root, since Renovate's config discovery
   never reaches `.config/`. Everything landing at the **repo root** is on
   the fixed allowlist below; everything else goes under `.config/`.
-- **(d) Environment fragments a provider contributes** —
-  `.config/mise/conf.d/<pack>.toml`, which the manager auto-loads, so a
-  provider adds its own variables without any component editing the
-  manager's own `mise.toml`. A fragment holding a pack's `machine_env:`
-  marked positions lands with them **unfilled**; `/vwf:setup` fills them
-  and re-records the file's hash.
+- **(d) Retired 2026-09-26.** A provider's environment is a `tool-config:`
+  call in its `pack.yaml`, not a `conf.d/<pack>.toml` it copies.
 - **(e) Hook fragments** — `.config/pre-commit.d/<pack>.yaml`, each a
   standalone `repos:` list. The materializer **copies these verbatim and
   stops**; `/vwf:init` is what merges them into
@@ -253,22 +249,22 @@ The rules mirror the ones the other targets already have:
   invisible exec bit has cleared every other gate in this repo before.
 
 **Composition order, since more than one component may write one tree.**
-By component type: `toolchain-manager`, then `toolchain-gate` (the
+By component type: `toolchain-gate` (the
 `repo-gate` kind's components), then `repo-hygiene`, then
 `package-manager` / `language`, then `app-framework`, then
 `capability-provider`, then `cloud-provider`, then `cloud-service` — a
 later component's file wins, and the lockfile records per file which
 component supplied the version that landed.
 
-The two ends are what the order is for. The **manager goes first** because
-it ships the baseline every overlay overlays — the whole task library,
-including the slots a stack fills in. The **deploy target goes last**
-because it is the most specific thing a repo pins: a `cloud-service` pack's
-`wrangler.jsonc`, and the `p/<id>/deploy` overlay beside it, are the answer
-to how this repo actually ships, and nothing may overwrite that. The
+The two ends are what the order is for. The baseline every overlay overlays —
+the whole task library, including the slots a stack fills in — is
+`stackgen:tool-config`'s, written before any pack lands. The **deploy target
+goes last** because it is the most specific thing a repo pins: a `cloud-service`
+pack's `wrangler.jsonc`, and the `p/<id>/deploy` overlay beside it, are the
+answer to how this repo actually ships, and nothing may overwrite that. The
 **secrets provider still outranks everything before it**, for the reason it
-always did — a secrets overlay is the most specific answer anything gives
-to `setup/secrets`, whatever a language pack thought that task should do.
+always did — a secrets overlay is the most specific answer anything gives to
+`setup/secrets`, whatever a language pack thought that task should do.
 
 The two cloud types were absent from this order until 2026-09-05, for a
 plain reason rather than an oversight: no `cloud-provider` or
@@ -284,18 +280,17 @@ the same reason: the alternative is that the one thing which writes a repo's
 config lives in a plugin that exists for no other reason.
 
 **The fence, and where it now runs.** The tier originally stopped at the
-toolchain manager: a gate pack named its config file as a prerequisite and
-wrote nothing. That line was **opened on 2026-09-05, deliberately and once**,
-for gate and provider config files — the (b), (c), (d), (e) and (f) rows
-above — because a gate that ships its doctrine and not its config leaves
-every repo to hand-write the file the doctrine describes, which is the
-failure the tier exists to prevent. Row (f) is that one opening reaching the
-cloud types later the same day, when the first `cloud-service` pack shipped a
-`config/` tree: a deploy target that ships its doctrine and not its config
-leaves the repo hand-writing that file too. Row (g) is the same argument
-arriving on the **project** axis: a framework whose doctrine names a task the
-repo must have, and then ships no task, has described a command rather than
-given one.
+toolchain manager: a gate pack named its config file as a prerequisite and wrote
+nothing. That line was **opened on 2026-09-05, deliberately and once**, for gate
+and provider config files — the (b), (c), (d), (e) and (f) rows above, (d) since
+retired — because a gate that ships its doctrine and not its config leaves every
+repo to hand-write the file the doctrine describes, which is the failure the
+tier exists to prevent. Row (f) is that one opening reaching the cloud types
+later the same day, when the first `cloud-service` pack shipped a `config/`
+tree: a deploy target that ships its doctrine and not its config leaves the repo
+hand-writing that file too. Row (g) is the same argument arriving on the
+**project** axis: a framework whose doctrine names a task the repo must have,
+and then ships no task, has described a command rather than given one.
 
 Four things stay **outside** the fence, and they are the whole of it:
 
@@ -323,11 +318,12 @@ argument this list exists to answer. Moving one of the four is a decision on
 the record, never an implementer's call.
 
 **The lockfile is what tells a caller the repo is shaped.** `/vwf:init` lays
-the tier down by fetching the three `unconditional:` bundles by fixed slug —
-`mise`, `repo-gates`, `repo-hygiene`
+the tier down by calling `stackgen:tool-config`, then fetching the two
+`unconditional:` bundles by fixed slug — `repo-gates`, `repo-hygiene`
 (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) — and every landing is
-recorded here. So the shape test is a lockfile read: **all three slugs
-present = shaped**, any missing = not, and nothing has to infer a repo's
+recorded here. So the shape test is a lockfile read: **both slugs and
+the `tool-config/mise` entries present = shaped**, any missing = not, and
+nothing has to infer a repo's
 state from which files happen to sit in it. That matters because `.config/`
 holds the repo's own files too, and presence in the tree has never meant
 stackgen put it there.
@@ -375,11 +371,14 @@ entries:
     source: generated # or pack/<type>/<slug>@<version>
     hash: <content hash — at landing, re-recorded by the composing skill after its fills>
   - path: .config/mise/tasks/code/format # a `config/` tier file — outside .claude/
-    slug: generated/mise
-    component: toolchain-manager/mise # which component's version won, per file
-    source: pack/toolchain-manager/mise@0.1.0
+    slug: swift-package
+    component: language/swift # which component's version won, per file
+    source: pack/language/swift@<version>
     hash: <content hash — at landing, re-recorded by the composing skill after its fills>
     mode: "755" # preserved for .config/mise/tasks/** — mise runs the file itself
+  - path: .config/mise/conf.d/tools.toml # written by the skill, not copied
+    source: tool-config/mise@<stackgen version> # sync leaves it alone
+    hash: <content hash>
 skipped: # config/ paths a pack declared `conditional:` whose condition was false at the last run
   - path: renovate.json
     pack: repo-hygiene/repo-hygiene # <type>/<slug> — the pack whose conditional: entry matched
