@@ -89,11 +89,16 @@ The arguments:
 | ------------------------------------------ | ------------------------------------------------- | ------------------------------------- |
 | `repo`                                     | the repo's folder slug                            | question 1, or the key already held   |
 | `members`                                  | member paths, in resolved order; empty where none | Step 0's resolution                   |
-| `linkage`                                  | `siblings` or `submodules`                        | the membership asset                  |
+| `linkage`                                  | `siblings` or `submodule`                         | the membership asset                  |
 | `merge_model_develop`, `merge_model_main`  | `direct` or `pr`, the §11(a) preselection         | §11(a); re-passed if the answer moves |
 | `runtimes`                                 | the language keys the stack read produced         | SKILL.md's stack read, per §5         |
 | `plugin_sources`, `plugins`                | question 5's confirmed rows; empty on **none**    | question 5                            |
 | `forge`, `editor`, `secrets`, `update_bot` | the four answers, spelled as the table below      | the table below                       |
+
+**How a value is spelled.** A list is comma-separated with no spaces —
+`members=backend,web`. An empty value is the bare key — `members=`. An
+omitted key keeps the repo's current value, so `init` passes every key on
+every call and writes `key=` wherever the answer is empty.
 
 **Then the unconditional bundles that remain**, by their fixed slugs, through
 the stack adapter (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`), invoking
@@ -299,10 +304,11 @@ component and appends no provider section.
 ### The runtimes
 
 The same read is the `runtimes` argument §2 passes to
-`/stackgen:tool-config all` — the language keys, nothing else, empty on a
-`blank` repo. The skill owns the two runtime positions and what each language
-writes there. A changed read is a changed argument on the next run, and the
-skill shows the row.
+`/stackgen:tool-config all` — the language keys, nothing else, spelled per
+§2: `runtimes=node,python`, and `runtimes=` on a `blank` repo. The skill
+owns the two runtime positions and what each language writes there. A
+changed read is a changed argument on the next run, and the skill shows the
+row.
 
 ## 6 — The hook fragments
 
@@ -453,7 +459,7 @@ its value, never a splice:
 - **`members`** and **`linkage`** — the resolved member repos, in resolved
   order. The skill writes one member flag and one alias each, named by that
   member's own slug and never by a project id, and the member-path key only
-  under sibling linkage. A repo with no members passes an empty list, and the
+  under sibling linkage. A repo with no members passes `members=`, and the
   templates stay as shipped.
 - **`merge_model_develop`** and **`merge_model_main`** — §11(a)'s. §2 passes
   its preselection, and §11(a) calls the skill again where an answer differs.
@@ -461,7 +467,8 @@ its value, never a splice:
 - **`runtimes`** — §5's.
 - **`plugin_sources`** and **`plugins`** — question 5's confirmed rows and
   only those. The workflow's own plugin and its dependency never reach them,
-  since question 5 drops both rows. A **none** passes both empty.
+  since question 5 drops both rows. A **none** passes `plugin_sources=` and
+  `plugins=`.
 
 The repo-name key exists for the per-repo launch aliases the user keeps in
 their **own global configuration**, reading the value the repo publishes.
@@ -656,8 +663,9 @@ A repo may answer differently from its siblings — each one's merge tasks read
 their own copy.
 
 **Where a row's answer differs from what §2 passed**, call
-`/stackgen:tool-config all` again in that repo, with the same arguments and
-the answered pair. The skill writes it; count each changed row as a fill. A
+`/stackgen:tool-config all` again in that repo, with every argument §2
+passed and the answered pair — `merge_model_develop=pr merge_model_main=pr`,
+say. The skill writes it; count each changed row as a fill. A
 row answered as preselected needs no second call. Migrating the retired
 single key into the pair is the skill's, on either call.
 
