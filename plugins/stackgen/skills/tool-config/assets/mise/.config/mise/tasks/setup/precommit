@@ -111,13 +111,6 @@ if [ "$UPDATE" = "true" ]; then
   pre-commit autoupdate --config "${CONFIG}"
 fi
 
-# The hook TYPES are not passed here. `default_install_hook_types` in the config
-# is what declares them, so the commit-msg hook arrives with the config rather
-# than with whoever last edited this line.
-#
-# Without `--overwrite`, pre-commit keeps a hook script it did not write as
-# `<hook>.legacy` and chains it, so a hand-written hook survives; `--force` is
-# what replaces it.
 # graphify's raw hook pins a Python path; remove it first so it is not chained as post-commit.legacy.
 POST_COMMIT="$(git rev-parse --git-path hooks)/post-commit"
 if [ -f "$POST_COMMIT" ] && grep -q "# graphify-hook-start" "$POST_COMMIT" && command -v graphify >/dev/null 2>&1; then
@@ -125,6 +118,13 @@ if [ -f "$POST_COMMIT" ] && grep -q "# graphify-hook-start" "$POST_COMMIT" && co
   graphify hook uninstall
 fi
 
+# The hook TYPES are not passed here. `default_install_hook_types` in the config
+# is what declares them, so the commit-msg hook arrives with the config rather
+# than with whoever last edited this line.
+#
+# Without `--overwrite`, pre-commit keeps a hook script it did not write as
+# `<hook>.legacy` and chains it, so a hand-written hook survives; `--force` is
+# what replaces it.
 print_subheader "Installing pre-commit hooks ..."
 if [ "$FORCE" = "true" ]; then
   git config --local --unset-all core.hooksPath || true

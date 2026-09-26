@@ -29,7 +29,7 @@ version: 1
 # The generated trees the stack packs produce. The linter does not read
 # `.gitignore`, so without these a whole-tree `code:lint` walks build output.
 # Its own defaults already skip `node_modules/`, `dist/`, `.turbo/`, `.astro/`,
-# `coverage/` and `graphify-out/`; list only what they miss.
+# `coverage/` and `graphify-out/`; graphify-out/ is listed anyway, so the skip holds whatever the defaults do.
 # A pack that produces a generated tree adds it through `pre-commit add linter-ignore`.
 #
 # Patterns resolve from the repo root, where a bare `build/` would match the
