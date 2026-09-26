@@ -123,12 +123,13 @@ to a repo, and every write it makes is consent-gated and committed once.
        and composed into `.vscode/settings.json` and
        `.vscode/extensions.json` by the orchestrator alone, per
        `${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`. Nothing here reads
-       or rewrites either editor file. A `.config/mise/conf.d/<pack>.toml`
-       fragment holding a pack's `machine_env:` marked positions lands
-       the same way too — verbatim, the positions **unfilled**. Filling
-       them is the caller's: `/vwf:setup`'s materialize pass detects and
-       asks each value after this landing. No new consent line; the
-       fragment rides the `config/` one.
+       or rewrites either editor file.
+   - **The tool-config calls a component declares** — each line of its
+     `pack.yaml` `tool-config:` list
+     (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`), run in step 5 as
+     `/stackgen:tool-config <line> for <pack>`. The skill writes the
+     toolchain manager's files; no pack copies one.
+     A `machine_env:` value is left unset here; `/vwf:setup` fills it.
    - The lockfile update — every path above, with its component ref,
      source and content hash, plus the **mode** for a `config/` file, and
      the `skipped:` list the evaluation below produces. The
@@ -139,19 +140,20 @@ to a repo, and every write it makes is consent-gated and committed once.
      `/vwf:init` **re-records** the hash of every landed file it changes
      after landing — its marked-position fills, the `.gitignore` section
      appends, the hook-fragment merge, the editor block, and either answer
-     of its replace-or-keep offer — and `/vwf:setup` re-records the hash
-     of a fragment whose `machine_env:` positions it filled, so a
-     differing hash is content drift only when no such writer ran.
+     of its replace-or-keep offer — so a differing hash is content drift
+     only when no such writer ran. What tool-config writes is recorded
+     by that skill, as `source: tool-config/<tool>@<version>`.
 
    **Composition order, and why a bug in it is silent.** More than one
    component may write into one `config/` tree — `.config/mise/tasks/` is
    the first destination that happens for. Compose by component type in
-   the order `toolchain-manager`, then `toolchain-gate`, then
+   the order `toolchain-gate`, then
    `repo-hygiene`, then `package-manager` / `language`, then
    `app-framework`, then `capability-provider`, then `cloud-provider`,
    then `cloud-service`; a **later component's file wins**, and the
-   lockfile records per file which one that was. The manager is first
-   because it ships the baseline library every overlay overlays; the
+   lockfile records per file which one that was. The baseline library
+   every overlay overlays is `stackgen:tool-config`'s, written before any
+   pack lands; the
    secrets provider still outranks every language pack on `setup/secrets`;
    and the deploy target sits after even it, because how a repo ships is
    the most specific thing it pins. The two cloud types joined the order
@@ -164,8 +166,9 @@ to a repo, and every write it makes is consent-gated and committed once.
    **The fence: stackgen writes only what a pack declares in `config/`.**
    Landing a config tree does not make stackgen the owner of a repo's
    configuration. What a pack **may** declare now includes the gate config
-   files and the provider environment fragments the tier was opened for on
-   2026-09-05; what stays outside is unchanged and enumerated
+   files the tier was opened for on 2026-09-05 (a provider's environment
+   is a `tool-config:` call since 2026-09-26); what stays outside is
+   unchanged and enumerated
    (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`): a language manifest, a
    CI workflow, editor settings — no pack ships one, there being no editor
    setting that would point at a config under `.config/` — and
@@ -330,6 +333,9 @@ to a repo, and every write it makes is consent-gated and committed once.
    the gate, because the failure it prevents is a user discovering it a
    week later as a missing task.
 
+   **The tool-config calls ride the `config/` line.** List each call
+   under it, spelled as it will run; declining the line skips them too.
+
 4. **The local plugin — its own gate, and a larger one.** A component that
    declares an `lsp_servers:` entry, or a `user_mcp_servers:` one, is
    served by the generated local plugin at
@@ -367,8 +373,10 @@ to a repo, and every write it makes is consent-gated and committed once.
    **Say plainly that this is the developer's machine, not the repo.**
    Collaborators pulling the commit get none of it.
 
-5. **Write and commit.** On approval: write the set, update the lockfile,
-   then commit as **one commit** via the repo's git workflow (the vwf
+5. **Write and commit.** On approval: write the set, run each consented
+   `tool-config:` call as `/stackgen:tool-config <line> for <pack>`,
+   update the lockfile, then commit as **one commit** via the repo's git
+   workflow (the vwf
    git-workflow skill when present; plain `git add <paths>` + a conventional
    commit otherwise — never `git add -A`). The commit is what makes the
    output repo-owned: collaborators pull files, not a plugin obligation.
@@ -408,6 +416,9 @@ to a repo, and every write it makes is consent-gated and committed once.
   diff and the user takes it.
 - **The lockfile is the ownership boundary** — sync diffs against it, and
   paths outside it are invisible to every stackgen write path.
+- **A pack dropped from a composition takes its tool-config blocks with
+  it.** Run `/stackgen:tool-config <tool> remove <pack>` once for each
+  tool its `tool-config:` list called.
 - **Four targets, and nothing else.** Inside `.claude/`, nothing lands
   outside the output vocabulary. Outside `.claude/` but inside the repo,
   there are exactly two: `.mcp.json`, and the repo config files a
@@ -420,7 +431,8 @@ to a repo, and every write it makes is consent-gated and committed once.
   source ships; it goes to the local plugin, and the need still travels as
   `language_facts` in the payload for `/vwf:doctor` to read.
 - **The `config/` tier is what a pack declares, and no more.** A gate's own
-  config file and a provider's environment fragment are inside it; the
+  config file is inside it; the toolchain manager's files are
+  `stackgen:tool-config`'s; the
   repo's manifests, its CI workflows, its editor settings and its CLAUDE.md
   are not (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`), and neither is
   any root path off the allowlist.

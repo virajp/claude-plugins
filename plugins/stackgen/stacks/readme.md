@@ -61,7 +61,7 @@ no `config/` tier, and a `lockfile` fact naming `Package.resolved` at the
 root or inside an `.xcodeproj`), `toolchain-gate/swift-format` and
 `toolchain-gate/swiftlint` — two more gates meaningful for one toolchain.
 swift-format ships with the toolchain; SwiftLint is pinned through mise by
-the `conf.d/swiftlint.toml` its pack lands. `language/swift` owns the tasks,
+its pack's `tool-config:` call. `language/swift` owns the tasks,
 which take their file list from git, NUL-separated and `./`-prefixed —
 `code:format` the hook's staged list when one is passed — stop with an error
 when `git ls-files` fails, walk the tree with `find` when there is neither a
@@ -80,29 +80,25 @@ other 115 being API surface that Context7 serves current at use time. What was
 kept is setup order, platform configuration (manifest entries, entitlements,
 permissions) and anti-patterns: the half a per-package lookup gives piecemeal.
 
-**`app-framework/swiftui` made the second on 2026-09-23**, the first pack in
-the `native-ui` category, rooting the `swift-swiftui` bundle beside
+**`app-framework/swiftui` made the second on 2026-09-23**, the first pack in the
+`native-ui` category, rooting the `swift-swiftui` bundle beside
 `package-manager/swiftpm`, `toolchain-gate/swift-format` and
 `toolchain-gate/swiftlint` across every Apple platform token. Xcode owns the
-build from a committed Xcode project a person creates once — no pack lands
-it and no generator writes it — so the pack declares `swift` as a bare
-binary and `xcodebuild` with the probe `xcodebuild -version`, which doctor
-runs because a Command Line Tools stub is on `PATH` too. Its tasks check
-`xcodebuild -version` against the `XCODE_VERSION` in the
-`.config/mise/conf.d/swiftui.toml` it lands, and refuse an unset or empty
-pin, or one still set in `.config/mise.toml`'s `[env]` — which would
-override the fragment; `/vwf:setup` moves such a line (a 0.1.0 repo's) into
-the fragment, as the pack's conventions say. That pin and the three
-`SIMULATOR_*` pins beside it ship empty and are filled by `/vwf:setup`,
-which runs each `machine_env` entry's `detect` and offers the answer as the
-default. Its `ux-gate` runs the swift-snapshot-testing goldens on the
-simulator the repo pins. Its doctrine landed on 2026-09-25 with one
-reference per Apple platform — iOS and iPadOS, macOS, CarPlay, watchOS,
-tvOS, visionOS, each keyed by the vwf token it realises — and topic 12's
-wiring for Apple's core integrations: widgets and complications, App
-Intents, push notifications, StoreKit and Sign in with Apple. Like
-Flutter's, they are wiring only; third-party integrations are not covered
-yet.
+build from a committed Xcode project a person creates once — no pack lands it
+and no generator writes it — so the pack declares `swift` as a bare binary and
+`xcodebuild` with the probe `xcodebuild -version`, which doctor runs because a
+Command Line Tools stub is on `PATH` too. Its tasks check `xcodebuild -version`
+against the `XCODE_VERSION` mise exports, set by its pack's `tool-config:` call,
+and refuse an unset or empty pin. That pin and the three `SIMULATOR_*` pins
+beside it land empty and are filled by `/vwf:setup`, which runs each
+`machine_env` entry's `detect` and offers the answer as the default. Its
+`ux-gate` runs the swift-snapshot-testing goldens on the simulator the repo
+pins. Its doctrine landed on 2026-09-25 with one reference per Apple platform —
+iOS and iPadOS, macOS, CarPlay, watchOS, tvOS, visionOS, each keyed by the vwf
+token it realises — and topic 12's wiring for Apple's core integrations: widgets
+and complications, App Intents, push notifications, StoreKit and Sign in with
+Apple. Like Flutter's, they are wiring only; third-party integrations are not
+covered yet.
 
 **The UX gate is materialized, not delegated.** The two retired curated
 `-ux-gate` skills moved into their packs as an unprefixed `ux-gate`, landed
