@@ -20,6 +20,21 @@ if [ "$UPGRADE" = "true" ] && [[ ",${MISE_ENV:-}," != *",dev,"* ]]; then
   exit 1
 fi
 
+CONFIG_DIR="${MISE_PROJECT_ROOT}/.config"
+
+# A lockfile is written in exactly two cases: none exists yet on a developer's
+# machine, or the user asked for `--upgrade`. Outside dev a missing lockfile is
+# an error, never a prompt to re-resolve "latest": the pipeline installs what a
+# developer committed, or nothing. Refused before anything runs.
+NO_LOCKFILE=false
+if [ -z "$(find "$CONFIG_DIR" -maxdepth 1 -name 'mise*.lock' -print -quit)" ]; then
+  NO_LOCKFILE=true
+  if [[ ",${MISE_ENV:-}," != *",dev,"* ]]; then
+    print_error "No lockfile under .config/ (expected .config/mise*.lock): MISE_ENV is '${MISE_ENV:-}', which does not include dev. Run setup in dev to create it, and commit it."
+    exit 1
+  fi
+fi
+
 have_task() { mise tasks 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
 
 print_subheader "Reshimming mise ..."
@@ -28,12 +43,7 @@ mise reshim
 print_subheader "Running mise doctor ..."
 mise doctor --quiet --silent >/dev/null
 
-CONFIG_DIR="${MISE_PROJECT_ROOT}/.config"
-
-# A lockfile is written in exactly two cases: none exists yet, or the user asked
-# for `--upgrade`. Every other run installs what the committed lockfiles record
-# and moves nothing.
-if [ -z "$(find "$CONFIG_DIR" -maxdepth 1 -name 'mise*.lock' -print -quit)" ]; then
+if [ "$NO_LOCKFILE" = "true" ]; then
   print_subheader "No lockfile under .config/ — running mise lock once ..."
   mise lock
 fi
