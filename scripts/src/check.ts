@@ -416,7 +416,8 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  *   answers is never evaluated, so the file lands everywhere, silently;
  * - the pack's **`binaries`, `lockfile` and `machine_env` facts** take the
  *   shapes `/vwf:doctor` and `/vwf:setup` read, and every `machine_env` name
- *   is set by a `mise … env` call in its `tool-config:` list (`packFactFaults`).
+ *   is set by a `mise add env` call in its `tool-config:` list, each call one
+ *   of the verbs a pack may ask for (`packFactFaults`).
  *
  * A pack's `config/` tier holding a mise `conf.d` fragment is a finding too, and
  * each `stackgen:tool-config` asset tree is walked as a landed tree.
@@ -565,8 +566,10 @@ const ENV_VAR_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
  * - `lockfile` is a non-empty list of paths or globs relative to the repo root,
  *   any match passing doctor's package-manager check;
  * - every `machine_env` entry names an env var, the command that `detect`s its
- *   value and the `question` setup asks — and the var is set by a `mise … env`
- *   call in the pack's `tool-config:` list, since that is what setup fills.
+ *   value and the `question` setup asks — and the var is set by a `mise add
+ *   env` call in the pack's `tool-config:` list, since that is what setup fills;
+ * - every `tool-config:` entry parses as one of the three verbs a pack may ask
+ *   for (`toolConfigFaults`).
  *
  * Each is read by a caller that trusts its shape: a probe that is not a string
  * is never run, a lockfile glob that climbs out of the repo matches something
@@ -645,8 +648,20 @@ function packFactFaults(document: unknown): string[] {
   }
 
   const calls = document["tool-config"];
+  const declared = new Set<string>();
   if (calls !== undefined && !isStringList(calls)) {
     faults.push("`tool-config` is not a list of instructions");
+  }
+  else if (calls !== undefined) {
+    (calls as string[]).forEach((call, index) => {
+      const { fault, key } = toolConfigCall(call);
+      if (fault !== undefined) {
+        faults.push(`\`tool-config[${index}]\` (${call}) ${fault}`);
+      }
+      else if (key !== undefined) {
+        declared.add(key);
+      }
+    });
   }
 
   if (document.machine_env !== undefined) {
@@ -654,9 +669,6 @@ function packFactFaults(document: unknown): string[] {
       faults.push("`machine_env` is not a list");
       return faults;
     }
-    const declared = new Set(
-      (isStringList(calls) ? calls as string[] : []).flatMap(miseEnvKeys),
-    );
     document.machine_env.forEach((entry: unknown, index) => {
       const label = `\`machine_env[${index}]\``;
       if (!isPlainObject(entry)) {
@@ -670,7 +682,7 @@ function packFactFaults(document: unknown): string[] {
       }
       else if (!declared.has(name)) {
         faults.push(
-          `${at} is set by no \`mise … env\` call in the pack's `
+          `${at} is set by no \`mise add env\` call in the pack's `
             + `\`tool-config:\` list — setup would ask and fill nothing`,
         );
       }
@@ -684,11 +696,58 @@ function packFactFaults(document: unknown): string[] {
   return faults;
 }
 
-/** The env keys a `mise … env KEY=value …` instruction sets. */
-function miseEnvKeys(instruction: string): string[] {
-  const args = /^\s*mise\s.*?\benv\s+(.+)$/.exec(instruction)?.[1] ?? "";
-  return [...args.matchAll(/(?<![\w"'])([A-Za-z_][A-Za-z0-9_]*)=/g)]
-    .map(match => match[1] ?? "");
+/** A `to …` scope: every environment, or one of the three suffixes. */
+const TOOL_CONFIG_SCOPE = String
+  .raw`to (?:all environments|(?:dev|ci|test)(?: environment)?)`;
+/** A value, quoted as a TOML basic string or bare. */
+const TOOL_CONFIG_VALUE = String.raw`("(?:[^"\\]|\\.)*"|\S+)`;
+/** The three verbs a pack may ask for; the materializer appends `for <pack>`. */
+const TOOL_CONFIG_VERBS = {
+  tool: new RegExp(
+    String.raw`^mise add tool ([A-Za-z0-9@:/._-]+) ([A-Za-z0-9._+-]+) `
+      + `${TOOL_CONFIG_SCOPE}$`,
+  ),
+  env: new RegExp(
+    String.raw`^mise add env (\S+?)=${TOOL_CONFIG_VALUE} ${TOOL_CONFIG_SCOPE}$`,
+  ),
+  alias: new RegExp(
+    String.raw`^mise add alias (\S+?)=${TOOL_CONFIG_VALUE}`
+      + String.raw`(?: to dev(?: environment)?)?$`,
+  ),
+};
+/** A Tera delimiter: mise renders it, so only a pack's own env value may carry one. */
+const TERA_DELIMITER = /\{\{|\{%/;
+
+/**
+ * One `tool-config:` entry against the verb grammar: the env key it sets, or
+ * why it is refused.
+ */
+function toolConfigCall(call: string): { fault?: string; key?: string; } {
+  const words = call.trim().replace(/\s+/g, " ");
+  if (TOOL_CONFIG_VERBS.tool.test(words)) {
+    return {};
+  }
+  const env = TOOL_CONFIG_VERBS.env.exec(words);
+  const alias = env === null ? TOOL_CONFIG_VERBS.alias.exec(words) : null;
+  const match = env ?? alias;
+  if (match === null) {
+    return {
+      fault: "matches none of `mise add tool <name> <version> to <scope>`, "
+        + "`mise add env <KEY>=<value> to <scope>` or "
+        + "`mise add alias <name>=<command> [to dev]`",
+    };
+  }
+  const name = match[1] ?? "";
+  if (!ENV_VAR_NAME.test(name)) {
+    return {
+      fault:
+        `names \`${name}\`, which is not a \`[A-Za-z_][A-Za-z0-9_]*\` name`,
+    };
+  }
+  if (alias !== null && TERA_DELIMITER.test(words)) {
+    return { fault: "carries a template delimiter outside an `add env` value" };
+  }
+  return env !== null ? { key: name } : {};
 }
 
 /** Every `stackgen:tool-config` asset tree, plugin-relative. */
