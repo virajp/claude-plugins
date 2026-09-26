@@ -58,7 +58,7 @@ gates, the hygiene files — is `/vwf:init`'s, not setup's. Step 0 only
 `tool-config/…` records `/stackgen:tool-config all` writes and the two
 unconditional slugs `repo-gates` and `repo-hygiene`, and offers init
 when any is missing — and makes the same offer when all are recorded
-but the repo has fallen **behind its baseline**, on doctor's six predicates.
+but the repo has fallen **behind its baseline**, on doctor's seven predicates.
 On a multi-repo product both questions are asked of the base **and of every
 locally-present member**, and the one offer covers whichever of them came back
 unshaped or behind.

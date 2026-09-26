@@ -397,10 +397,13 @@ off the payload. A component no pinned template names is read from
 tree, located from `claude plugin list` the way this section locates `mise` —
 vwf's own plugin-root token names vwf and can never spell another plugin's
 root. An entry sourced `tool-config/<tool>@<version>` was written by the
-adapter's `tool-config` skill, and its version is the adapter's own: compare
-it against the installed adapter plugin's version, read from
-`claude plugin list`. A recorded version **older** than the shipped one is one
-drift row naming the component and both versions. A **newer** recorded
+adapter's `tool-config` skill, and its version is **not compared** here: the
+adapter plugin's version moves on every release whether the tool's blocks
+changed or not, so a comparison would report drift nobody can see. Those
+records are checked by content, under (e), block by block, and nothing about
+them is (a)'s. For a **pack** record — and only a pack record — a recorded
+version **older** than the shipped one is one drift row naming the component
+and both versions. A **newer** recorded
 version is not a finding here: the adapter went backwards, which is the sync
 skill's conversation, not doctor's. **No lockfile at all** on the base is
 `missing` rather than drift, with the same remedy — the shape was never laid
@@ -475,8 +478,10 @@ read, so a wrong one is quietly wrong everywhere it is used.
 repo, where anything may edit it; what it holds *today* is the question (a)
 does not ask. The lockfile answers it without re-reading the adapter: every
 `entries:` record carries a `hash:` — the content at the version this repo
-locked — so the check is a hash comparison against the file on disk. Take
-every record whose `path` lands **outside `.claude/`**, which is the `config/`
+locked — so the check is a hash comparison against the file on disk, for
+every record but a `tool-config/…` one, which is compared by content below.
+Take every record whose `path` lands **outside `.claude/`**, which is the
+`config/`
 tier: the tree `/vwf:init` shapes, and the one this section is about. A file
 whose content no longer matches its recorded hash is one drift row naming the
 path, once the second test below confirms it; a recorded path that no longer
@@ -537,9 +542,16 @@ drift.
 **A record sourced `tool-config/<tool>@<version>` has no pack payload**: its
 payload is the adapter's `tool-config` skill's,
 `skills/tool-config/assets/<tool>/` inside the installed adapter plugin's
-tree, located as (a) locates a pack. The second test reconstructs from that
-path the same way. Only the tool's own block counts: another requester's block
-and a line outside every block are the skill's to show, never (e)'s.
+tree, located as (a) locates a pack, and read as the installed plugin ships it
+— the record's version is not consulted, since (a) no longer compares it.
+Such a record is checked **block by block and never by hash**: each block the
+tool owns is compared on its own against what the skill would write now, by
+the skill's own drift comparison (its `SKILL.md`, "Drift") — words outside
+quoted strings, quoted strings exactly — so a reformat that only moves
+whitespace is not drift. A diverging block is its own row, which is the only
+check such a record gets. Only the tool's own blocks count: another
+requester's block and a line outside every block are the skill's to show,
+never (e)'s.
 
 **A record whose `source:` is `generated` has no pack payload** to reconstruct
 from, so there is nothing to splice: the second test is skipped, and test 1's
