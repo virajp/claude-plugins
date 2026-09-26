@@ -128,8 +128,9 @@ syntax, into the formatter's `excludes`, the TOML formatter's `exclude` and
 the hook runner's global `exclude`; with `generated` it writes them into the
 secret scanner's path allowlist too. So the formatters' three lists state one
 set and the scanner's is a subset of it by construction, never by care. A
-path is a directory name (`node_modules`, `.config/mise/locks`) or a file
-glob (`*.lock`, `*-lock.json`), matched at any depth; `generated` is for a
+path holding a `*` or a `?` is a file glob (`*.lock`, `*-lock.json`); any
+other is a directory (`node_modules`, `.config/mise/locks`); both match at
+any depth; `generated` is for a
 tree a tool writes and no one reviews, never a lockfile or authored source.
 An exclude asked of one tool alone — `dprint add exclude …` — is refused,
 naming this verb. Its removal is `remove <requester>` on each tool it wrote.
@@ -167,9 +168,15 @@ two `# >>> uv` blocks in one file. `remove` takes every one. A block is
 written where the tool reads it — for a sectioned file, inside the section —
 and a new block goes after the last block in its position, so the base comes
 first and the packs follow in the order they asked. One blank line separates
-two adjacent blocks, and a block's own lines carry no blank line at either
-end. A comment directly above a key, with no blank line between, belongs to
-that key's block.
+two adjacent blocks — except inside a list, where one block's closing marker
+is followed directly by the next one's opening marker — and a block's own
+lines carry no blank line at either end. A comment directly above a key, with
+no blank line between, belongs to that key's block. **Entries inside a block
+are written sorted**, in the order the shipped formatter leaves them — taplo
+sorts a TOML array, so its entries take that order, never the call's — and
+where no formatter sorts (a JSON list, a regex), directories first, then
+globs, each alphabetical, as the assets are. So a landed file passes its own
+format check.
 
 **The base follows the same per-position rule.** Where the whole file below
 the frame is one position — a mise section file — the base is one block
