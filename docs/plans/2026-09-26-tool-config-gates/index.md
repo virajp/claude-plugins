@@ -379,6 +379,13 @@ the unit could not proceed without; it blocks the unit and its dependents.
 22. **Decision 12 vs the comment fold width** (U9-late1, plan gap) — "one line"
     per comment conflicts with the ~80-column width the wave review holds
     shipped assets to; the plan does not say which wins.
+23. **U9-late1 oscillation** (convergence guard, rounds 1–2) — the `code:graph`
+    single-flight lock keeps surfacing new low races as each is fixed: the
+    put-back after moving a live takeover leaves a microsecond window for a
+    third run (`code/graph:90-95`), and a commit landing during a rebuild is
+    skipped rather than deferred, so the graph trails it (`code/graph:82-84`).
+    The loop, not the contract, failed to settle; a simpler design (e.g. a
+    re-run marker, or `flock` where present) is the reconciliation to weigh.
 
 ## Run log
 
@@ -439,6 +446,8 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | 3    | U9 review          | opus         | 1     | findings(3)  | node review; re-run 1 (U9-late1), range c297b5f0^..c297b5f0; 2 on uncovered U2 dropped → gap 21 (post-commit hook without always_run, pre-commit.md:205 + check.ts:821; grype reason vs for-suffix, grype.md:45); loop-back U8 code/graph:81 stale takeover-dir cleanup race + bare rmdir under set -e (+U12 copy)                                                                                                                                                                                                                                                           | —                   |
 | 3    | U8 assets          | opus         | 10    | pass         | node edit; U9-late1 fix: stale takeover cleared by mv (one winner), all cleanups non-fatal, every skip exits 0; 6×3 concurrent runs clean; GAP: put-back branch untested (microsecond window)                                                                                                                                                                                                                                                                                                                                                                                | 703fe19a            |
 | 3    | U12 this-repo      | opus         | 7     | pass         | node edit; U9-late1: code/graph re-copied, cmp identical                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | f832d767            |
+| 3    | U9 review          | opus         | 2     | pass         | node security; re-run 1 (U9-late1), range c297b5f0^..f832d767; approve                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | —                   |
+| 3    | U9 review          | opus         | 2     | findings(2)  | node review; re-run 1 (U9-late1), range c297b5f0^..f832d767; approve; convergence guard tripped (1 → 2): code/graph:90-95 put-back window lets a third run in (microseconds); code/graph:82-84 a commit during a rebuild is dropped, not deferred — oscillation gap 23                                                                                                                                                                                                                                                                                                       | —                   |
 
 ## Launch
 

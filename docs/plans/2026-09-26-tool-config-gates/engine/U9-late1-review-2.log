@@ -1,0 +1,74 @@
+The review found 10 issues on `2026-09-26-tool-config-gates`. The most serious are:
+
+1. JS repos whose package manager is generated rather than a shipped pack (the bun bundle) lose the `node_modules` allowlist entry, so the full `code:sec` secret scan will fail on them.
+2. The new `*.xcassets` exclude fails to cover the files inside an Xcode asset catalog.
+3. `code:graph`'s lock can stay held forever if a PID is reused.
+
+Checks run: `vitest run scripts/src/check.test.ts` passed (165 tests) and `mise run p:plugins:check` passed. Nothing was changed.
+
+Stale docs in `CLAUDE.md`, `readme.md`, the site and `.claude/**`, and the unbumped pack versions, are owned by units U10 and U11, which haven't run yet. I reported the docs rule only as a low-severity conventions note (finding 9).
+
+```json
+[
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/gitleaks/.config/gitleaks.toml",
+    "line": 46,
+    "summary": "Dropping node_modules/.turbo/.venv from the base allowlist makes coverage depend on a pack asking for it, but generated components never ask: the bun bundle is `package-manager/bun@generated`, and generator.md never mentions `tool-config:`.",
+    "failure_scenario": "Take a bun (or npm/yarn) workspace shaped after this change. `code:sec`'s full scan runs `gitleaks dir .`, which ignores .gitignore, so it walks node_modules. The default generic-api-key rule fires on hashes in minified vendor code and the gate fails in CI. On develop the base allowlist covered node_modules for every repo."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/pack.yaml",
+    "line": 100,
+    "summary": "`all add exclude *.xcassets` is classed as a file glob because it holds a `*`. The pre-commit spelling is therefore `(^|/)[^/]*\\.xcassets$`, anchored at `$`, which matches the catalog directory name but none of the files inside it. The retired pack's spelling was `(^|/)[^/]*\\.xcassets/`.",
+    "failure_scenario": "A commit touches `App/Assets.xcassets/AppIcon.appiconset/Contents.json`. The global exclude does not match it, so check-json, end-of-file-fixer, trailing-whitespace and mixed-line-ending all rewrite Xcode-owned JSON. Xcode rewrites it back on the next IDE edit, which is exactly the churn dprint.md says the exclude exists to prevent."
+  },
+  {
+    "file": ".config/mise/tasks/code/graph",
+    "line": 76,
+    "summary": "A lock whose pid file holds a PID counts as held for as long as `kill -0` succeeds. There is no age cap, so after a killed rebuild or a reboot, a reused PID holds the lock forever. The same code is in the shipped asset copy.",
+    "failure_scenario": "A rebuild is SIGKILLed or the machine reboots mid-rebuild, so the EXIT trap never runs and `.git/graphify-refresh.lock/pid` survives. After the reboot a long-lived process gets that PID. Every later post-commit prints 'a refresh is already running — skipped' and the graph is never refreshed again until someone deletes the lock by hand."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/pre-commit/.config/pre-commit-config.yaml",
+    "line": 129,
+    "summary": "graphify-refresh only runs at `post-commit`. git runs post-commit only for `git commit`, not for `git merge`, `git pull` or a checkout. graphify's own hooks, which this replaces, also covered post-checkout.",
+    "failure_scenario": "vwf lands a plan with `git merge --no-ff` in the main checkout (the merge helper, line 295), and the plan's own commits were made in a linked worktree, where code:graph exits at once. The landed code never triggers a rebuild. The same holds for work pulled from a teammate, so the graph stays behind until an unrelated direct commit happens. Adding `post-merge` (and `post-checkout`) stages would close this."
+  },
+  {
+    "file": ".config/mise/tasks/code/graph",
+    "line": 83,
+    "summary": "A commit that arrives while a rebuild is running is dropped. No re-run is recorded, so the newest commit is never reflected in the graph.",
+    "failure_scenario": "Two commits land in quick succession, for example an executor's per-unit commits in the main checkout. Commit 1 starts a multi-minute `graphify update`. Commit 2 finds a live PID and skips. When rebuild 1 finishes, the graph reflects commit 1 or a mixed state, and commit 2's changes stay out until some later commit."
+  },
+  {
+    "file": ".config/mise/tasks/code/graph",
+    "line": 132,
+    "summary": "The parent writes `$!` into `${LOCK}/pid` after starting the detached child. If the child has already finished and released the lock, the write either fails (the redirect error still reaches stderr despite `2>/dev/null`) or overwrites the PID of a new run that has since taken the lock.",
+    "failure_scenario": "`graphify update` exits almost at once (a bad flag, or a missing graph), and its trap removes the lock. Run B then takes the lock and writes its PID. Run A's line 132 overwrites it with A's dead child PID. B's release no longer matches, so B leaves the lock behind, and a third run treats it as stale and starts a second rebuild while B's is still running."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit",
+    "line": 134,
+    "summary": "The graphify-hook removal has three gaps: `graphify hook uninstall` runs under `set -e`; only `post-commit` and `post-checkout` are checked, never `post-commit.legacy`; and the hooks dir comes from `git rev-parse --git-path hooks`, which follows core.hooksPath.",
+    "failure_scenario": "(a) An installed graphify without the `hook uninstall` subcommand, or one that errors, aborts setup:precommit before `pre-commit install`, leaving the repo with no gate hooks at all. (b) graphify's block already chained as `post-commit.legacy` by an earlier `pre-commit install --hook-type post-commit` is never stripped. doctor reports it as drift, and its remedy (`/vwf:setup reshape`, which runs this task) never clears it. (c) With husky's core.hooksPath and `--force`, the strip looks in `.husky/` while graphify's hooks sit in `.git/hooks/`."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 768,
+    "summary": "The requester-suffix refusal only fires when the stripped line matches a gate verb. A mise verb carrying `for <pack>` gets the generic 'matches none of …' message instead of the suffix diagnosis.",
+    "failure_scenario": "A pack writes `mise add tool swiftlint 0.65.1 to all environments for swiftui`. The checker reports that it matches no grammar and lists all eight verbs, pointing the author at the wrong fix. Stripping a `for <slug>` suffix once, before any verb matching, would give one uniform rule instead of a special case for gate verbs only."
+  },
+  {
+    "file": "CLAUDE.md",
+    "line": 168,
+    "summary": "Rule 11 changed behaviour (the pre-commit.d fragment parse and the whole-config parse were dropped, and a pre-commit.d file is now a finding), but CLAUDE.md still says 'ten assertions', including 'every pre-commit.d/*.yaml parsing' and 'the gate pack's whole pre-commit-config.yaml parsing'.",
+    "failure_scenario": "Violates the repo-root CLAUDE.md rule \"Docs ship with the change. Any change to plugin behavior must reconcile readme.md, this file, and the manual under site/src/content/docs/ in the same commit\". c3b9c1c0 is not a commit in this repo; it probably refers to c032583e ('checker and inventory follow the gates into tool-config'). That commit and c55cfbe9 change the checker and the pack layout while .claude/docs/repo-shape.md:162-173 and .claude/skills/stackgen-plugin/SKILL.md:213,327 stay stale. Note: U10 is still pending and owns these files."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 425,
+    "summary": "With preCommitFaults removed, nothing asserts any more that the shipped `assets/pre-commit/.config/pre-commit-config.yaml` has a top-level `repos:` list. Rule 15 only parses its `exclude` key.",
+    "failure_scenario": "A future edit to the skill's verbose-regex exclude or its marker blocks leaves the file parseable but mis-indents `repos:` (for example under `exclude:`). The checker stays green, and every repo `all` lands in has a hook config that runs no hooks. This is intentional per Decision 8, but that same asset remains shipped and is now unguarded."
+  }
+]
+```
