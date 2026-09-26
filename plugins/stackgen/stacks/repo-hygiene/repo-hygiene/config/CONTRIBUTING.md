@@ -7,7 +7,7 @@ out of it and put it here instead.
 ## Setup
 
 ```sh
-mise run setup:all
+MISE_ENV=dev mise run setup:all
 ```
 
 That is the whole of it: the toolchain manager installs the pinned tools,
@@ -28,13 +28,13 @@ Three lines, and they do not vary with which branch the forge calls default:
 `mise run code:merge:develop` and `mise run code:merge:main` are the two moves.
 They run the gates over the whole tree before they touch anything, so a merge
 that would break the branch fails before it starts rather than after. What they
-then do is set **per branch** in `.config/mise.toml`: `MERGE_MODEL_DEVELOP` for
-the first move, `MERGE_MODEL_MAIN` for the second, each `direct` or `pr`.
-`direct` merges locally and pushes — your branch is on the destination the
-moment the task returns; `pr` pushes the branch and opens a pull request
-instead, merging nothing — your branch lands when a maintainer merges that
-request. The two can differ: a repo that lands features directly on `develop`
-and still requires a pull request for `main` is the usual shape.
+then do is set **per branch** in `.config/mise/conf.d/env.toml`:
+`MERGE_MODEL_DEVELOP` for the first move, `MERGE_MODEL_MAIN` for the second,
+each `direct` or `pr`. `direct` merges locally and pushes — your branch is on
+the destination the moment the task returns; `pr` pushes the branch and opens a
+pull request instead, merging nothing — your branch lands when a maintainer
+merges that request. The two can differ: a repo that lands features directly on
+`develop` and still requires a pull request for `main` is the usual shape.
 
 The forge's own settings — the default branch, and protection on `develop` and
 `main` — are set by `/vwf:setup`'s forge pass on GitHub and GitLab, and no task

@@ -43,7 +43,8 @@ mise.local.toml
 .config/mise.local.toml
 .config/mise.*.local.toml
 .config/mise/config.*.local.toml
-mise.local.lock
+.config/mise/conf.d/*.local.toml
+.config/mise/mise.local.lock
 
 # ==== Secrets and env ====
 # A value never enters the tree. .env.example is the names-only template and
