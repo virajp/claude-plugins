@@ -280,7 +280,6 @@ describe("hook scripts", () => {
 describe("the pack config tier", () => {
   const pack = "stacks/toolchain-manager/mise/config";
   const task = `${pack}/.config/mise/tasks/code/format`;
-  const fragment = `${pack}/.config/pre-commit.d/mise.yaml`;
 
   it("accepts an executable task, and ignores the rest of the pack", () => {
     // The `config/` tier mirrors the repo root, so a pack ships plenty there
@@ -293,7 +292,6 @@ describe("the pack config tier", () => {
           [`${pack}/wrangler.jsonc`]: "{}\n",
           [`${pack}/_licenses/MIT.txt`]: "MIT\n",
           [`${pack}/.config/dprint.json`]: "{}\n",
-          [fragment]: "repos:\n  - repo: local\n",
           // The five root entries a tool discovers only from the repo root, or
           // that a human reads there: the dprint shim, the package-manager
           // file, the contributing guide, graphify's ignore file, and the forge
@@ -518,40 +516,15 @@ describe("the pack config tier", () => {
     ]);
   });
 
-  it("flags a pack's whole pre-commit config with no repos list", () => {
-    // The gate pack ships the base config the fragments merge into, and it sits
-    // under `.config/` rather than in `pre-commit.d/`, so nothing else sees it.
+  it("flags a pre-commit.d file in a pack's config/ tier", () => {
+    // A pack asks tool-config for its hooks; a fragment is merged by nothing.
+    const fragment = `${pack}/.config/pre-commit.d/mise.yaml`;
     const root = tree({
-      alpha: {
-        files: {
-          "stacks/toolchain-gate/pre-commit/config/.config/pre-commit-config.yaml":
-            "default_stages: [pre-commit]\n",
-        },
-      },
+      alpha: { files: { [fragment]: "repos:\n  - repo: local\n" } },
     });
     expect(messages(check(root))).toEqual([
-      expect.stringContaining("pre-commit config declares no top-level"),
-    ]);
-  });
-
-  it("flags a hook fragment that is not valid YAML", () => {
-    // The fragments are concatenated into one pre-commit config by init, so a
-    // malformed one breaks a file no pack owns and nothing here would see.
-    const root = tree({
-      alpha: { files: { [fragment]: "repos:\n  - repo: local\n   bad\n" } },
-    });
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("pre-commit fragment is not valid YAML"),
-    ]);
-  });
-
-  it("flags a hook fragment with no top-level repos list", () => {
-    // `repos:` is the only key the concatenation can merge on.
-    const root = tree({
-      alpha: { files: { [fragment]: "hooks:\n  - id: one\n" } },
-    });
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("declares no top-level `repos` list"),
+      `pack config/ tier ships a pre-commit.d file — a pack asks for its hooks `
+      + `through \`tool-config:\` in pack.yaml: ${fragment}`,
     ]);
   });
 
@@ -831,7 +804,7 @@ describe("the pack config tier", () => {
         + "  - mise add env X=1 to all environments for swiftui\n"
         + "  - mise add tool x 1 to prod environment\n"
         + "  - mise add alias x=y to ci environment\n"
-        + "  - dprint add plugin x\n",
+        + "  - dprint add plugin x for swiftui\n",
     ));
     expect(messages(check(root))).toEqual(
       [0, 1, 2, 3, 4, 5, 6].map(index =>
@@ -840,6 +813,35 @@ describe("the pack config tier", () => {
     );
     expect(messages(check(root)).every(m => m.includes("matches none of")))
       .toBe(true);
+  });
+
+  it("accepts the gate verbs a pack may ask for", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - dprint add plugin typescript\n"
+        + "  - all add exclude x\n"
+        + "  - all add exclude generated node_modules .turbo\n"
+        + "  - all add exclude *-lock.json *-lock.yaml\n"
+        + "  - pre-commit add linter-ignore .dart_tool\n"
+        + "  - pre-commit add hook https://github.com/astral-sh/uv-pre-commit "
+        + "uv-lock --stage pre-commit\n",
+    ));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags an exclude asked of one gate tool alone", () => {
+    // Rule 15's lists agree only while every exclude writes all of them.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - dprint add exclude x\n"
+        + "  - pre-commit add exclude x\n"
+        + "  - gitleaks add allowlist x\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("adds an exclude through `dprint` alone"),
+      expect.stringContaining("adds an exclude through `pre-commit` alone"),
+      expect.stringContaining("adds an exclude through `gitleaks` alone"),
+    ]);
   });
 
   it("flags a tool-config key or alias name that is not a name", () => {
@@ -1587,15 +1589,16 @@ describe("the exclusion sets", () => {
   // reads only its own list. The three formatter lists must agree; the scanner's
   // allowlist is held to a subset of them, since upstream's default config
   // already skips part of the set and authored source must stay scanned.
-  const gate = "stacks/toolchain-gate";
-  const dprint = `${gate}/dprint/config/.config/dprint.json`;
-  const taplo = `${gate}/dprint/config/.config/taplo.toml`;
-  const gitleaks = `${gate}/gitleaks/config/.config/gitleaks.toml`;
-  const preCommit = `${gate}/pre-commit/config/.config/pre-commit-config.yaml`;
+  const gate = "skills/tool-config/assets";
+  const dprint = `${gate}/dprint/.config/dprint.json`;
+  const taplo = `${gate}/dprint/.config/taplo.toml`;
+  const gitleaks = `${gate}/gitleaks/.config/gitleaks.toml`;
+  const preCommit = `${gate}/pre-commit/.config/pre-commit-config.yaml`;
 
   const lists = (overrides: Partial<Record<string, string>> = {}) => ({
     stackgen: {
       files: {
+        "skills/tool-config/SKILL.md": skill("tool-config"),
         [dprint]: overrides.dprint ?? JSON.stringify({
           excludes: ["**/node_modules/", "**/dist/", "**/*.lock", "**/.env.*"],
         }),
@@ -1726,6 +1729,17 @@ describe("the exclusion sets", () => {
     }));
     expect(messages(check(root))).toEqual([
       expect.stringContaining("allowlists `.env.[a-z]*`"),
+    ]);
+  });
+
+  it("flags a list the tool-config skill no longer carries", () => {
+    // A moved file used to end the comparison silently; now it is named.
+    const files = lists().stackgen.files as Record<string, string>;
+    const { [taplo]: _dropped, ...rest } = files;
+    const root = tree({ stackgen: { files: rest } });
+    expect(messages(check(root))).toEqual([
+      `${taplo}: exclusion list is missing — the tool-config skill ships all `
+      + "four lists",
     ]);
   });
 
