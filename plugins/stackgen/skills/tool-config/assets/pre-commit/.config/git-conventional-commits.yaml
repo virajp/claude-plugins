@@ -27,12 +27,7 @@ convention:
   # MARKED POSITION — one scope per sub-project, so a reader can tell which
   # part of the repo a commit touched without opening it.
   #
-  # `/vwf:init` fills this on EVERY run, the first one included, with the
-  # project ids its second question confirmed — one scope per project, each
-  # the same id that project's `p:<id>:*` task group takes. A project
-  # registry, where the repo has one, is where that proposal came from, not
-  # a precondition for filling the list: the empty list below is what this
-  # pack ships, never a first-run state init leaves behind.
+  # stackgen:tool-config fills this from its `scopes` argument, one project id per scope.
   # ---------------------------------------------------------------------
   #
   # A scope that stops existing stays listed with a comment saying so —
@@ -80,12 +75,9 @@ changelog:
 
   # ---------------------------------------------------------------------
   # MARKED POSITION — the changelog links, left commented because they name the
-  # forge and the repository, which this pack cannot know.
+  # forge and the repository, which no shipped file can know.
   #
-  # `/vwf:init` fills these and uncomments them on ANY run where the repo has a
-  # remote — the first one included, since a cloned or already-pushed repo has
-  # one from the start. A repo with no remote yet keeps them as shipped, and
-  # the next init run after `git remote add` fills them.
+  # stackgen:tool-config fills and uncomments these from `origin`; with no remote they stay as shipped.
   #
   # Without them the notes still generate, just without links.
   # ---------------------------------------------------------------------

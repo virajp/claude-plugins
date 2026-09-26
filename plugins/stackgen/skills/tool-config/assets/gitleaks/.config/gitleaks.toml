@@ -44,11 +44,9 @@ useDefault = true
 # so the next instance of that credential type is still caught.
 [allowlist]
 paths = [
-  '''(^|/)\.turbo/''',
-  '''(^|/)\.venv/''',
+  # >>> gitleaks
   '''(^|/)build/''',
   '''(^|/)dist/''',
   '''(^|/)graphify-out/''',
-  '''(^|/)node_modules/''',
-  '''(^|/)target/''',
+  # <<< gitleaks
 ]

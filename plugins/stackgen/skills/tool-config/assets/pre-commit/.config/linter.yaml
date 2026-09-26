@@ -10,7 +10,7 @@
 # hand and a `--init` run nobody remembers to make.
 #
 # It ships EMPTY of overrides on purpose. Every commented block below is the
-# shape of an override, not a rule this pack has an opinion about.
+# shape of an override, not a rule stackgen:tool-config has an opinion about.
 #
 # Where each kind of change goes:
 #   ignores   — paths the gate should not read at all
@@ -29,8 +29,8 @@ version: 1
 # The generated trees the stack packs produce. The linter does not read
 # `.gitignore`, so without these a whole-tree `code:lint` walks build output.
 # Its own defaults already skip `node_modules/`, `dist/`, `.turbo/`, `.astro/`,
-# `coverage/` and `graphify-out/`; list only what they miss. A language pack
-# that adds a generated tree adds it here, with the pack that produces it.
+# `coverage/` and `graphify-out/`; list only what they miss.
+# A pack that produces a generated tree adds it through `pre-commit add linter-ignore`.
 #
 # Patterns resolve from the repo root, where a bare `build/` would match the
 # root directory alone. Every entry is `**/`-prefixed instead, because a
@@ -41,15 +41,12 @@ version: 1
 # cost. A repo with such a source directory negates it below, e.g.
 # `- "!src/build/"`.
 ignores:
-  - "**/build/" # app-framework/flutter
-  - "**/.dart_tool/" # app-framework/flutter
-  - "**/.build/" # package-manager/swiftpm
-  - "**/.swiftpm/" # package-manager/swiftpm
-  - "**/DerivedData/" # app-framework/swiftui
-  - "**/Derived/" # app-framework/swiftui
-  - "**/.venv/" # package-manager/uv
+  # >>> pre-commit
+  - "**/build/"
+  - "**/graphify-out/"
   # mise's sidecar lock tree; a --fix rewrite breaks the digest mise.lock pins
-  - "**/.config/mise/locks/" # stackgen:tool-config
+  - "**/.config/mise/locks/"
+  # <<< pre-commit
 
 # overrides:
 #   typescript:

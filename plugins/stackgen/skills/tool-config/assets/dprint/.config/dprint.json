@@ -1,23 +1,11 @@
 {
-  "dockerfile": {
-    "lineWidth": 80
-  },
   "excludes": [
-    "**/.build/",
     "**/.claude/",
     "**/.config/mise/locks/",
     "**/.git/",
-    "**/.turbo/",
-    "**/.venv/",
-    "**/Derived/",
-    "**/*.xcassets/",
     "**/build/",
     "**/dist/",
     "**/graphify-out/",
-    "**/node_modules/",
-    "**/target/",
-    "**/*-lock.json",
-    "**/*-lock.yaml",
     "**/*.lock"
   ],
   "exec": {
@@ -38,10 +26,6 @@
     ],
     "lineWidth": 80
   },
-  "malva": {
-    "formatComments": true,
-    "ignoreCommentDirective": "dprint-ignore"
-  },
   "markdown": {
     "emphasisKind": "asterisks",
     "tags": {
@@ -55,34 +39,13 @@
     },
     "textWrap": "always"
   },
-  "markup": {
-    "formatComments": true,
-    "ignoreCommentDirective": "dprint-fmt-ignore",
-    "preferAttrsSingleLine": true,
-    "scriptIndent": true,
-    "styleIndent": true
-  },
   "newLineKind": "lf",
   "plugins": [
     "https://plugins.dprint.dev/markdown-0.22.1.wasm",
-    "https://plugins.dprint.dev/dockerfile-0.4.0.wasm",
-    "https://plugins.dprint.dev/g-plane/markup_fmt-v0.27.3.wasm",
     "https://plugins.dprint.dev/g-plane/pretty_yaml-v0.6.0.wasm",
-    "https://plugins.dprint.dev/g-plane/malva-v0.16.0.wasm",
-    "https://plugins.dprint.dev/typescript-0.96.1.wasm",
     "https://plugins.dprint.dev/json-0.21.3.wasm",
     "https://plugins.dprint.dev/exec-0.6.2.json@df98f54ffd3092b8a841aedd6d098a2651f16d0a796a40535774f1a8b4b9d463"
   ],
-  "typescript": {
-    "indentWidth": 2,
-    "lineWidth": 80,
-    "newLineKind": "lf",
-    "quoteProps": "asNeeded",
-    "quoteStyle": "alwaysDouble",
-    "semiColons": "always",
-    "trailingCommas": "onlyMultiLine",
-    "useTabs": false
-  },
   "yaml": {
     "dashSpacing": "oneSpace",
     "formatComments": true,

@@ -4,7 +4,7 @@
 # commit is the command that runs in CI.
 #
 # The config lives under `.config/` with the rest of the repo's tooling, which
-# pre-commit does not discover: every invocation carries
+# the hook runner does not discover: every invocation carries
 # `--config .config/pre-commit-config.yaml`. `setup:precommit` installs the
 # hooks with that path baked in, so `git commit` needs no flag; `pre-commit run`
 # by hand still does.
@@ -17,9 +17,11 @@ minimum_pre_commit_version: "3.2.0"
 # `commit-msg` is here for the conventional-commits hook. A hook type that is
 # not installed is not a hook that fails — it is a hook that never runs, and
 # nothing reports it.
+# `post-commit` is here for the graphify-refresh hook.
 default_install_hook_types:
   - pre-commit
   - commit-msg
+  - post-commit
 
 # Stated once so each hook below only says what differs from it.
 default_stages: [pre-commit]
@@ -45,24 +47,18 @@ default_stages: [pre-commit]
 # That is expected: the exclusion is a standing rule about a tree, not a claim
 # that the tree exists today. Add each further generated tree here — never a
 # second copy inside one hook.
+# Lines after the first open with `|`; an appended block edits none above it.
 exclude: |-
   (?x)
-  (^|/)\.build/|
-  (^|/)\.claude/|
-  (^|/)\.config/mise/locks/|
-  (^|/)\.git/|
-  (^|/)\.turbo/|
-  (^|/)\.venv/|
-  (^|/)Derived/|
-  (^|/)[^/]*\.xcassets/|
-  (^|/)build/|
-  (^|/)dist/|
-  (^|/)graphify-out/|
-  (^|/)node_modules/|
-  (^|/)target/|
-  (^|/)[^/]*-lock\.json$|
-  (^|/)[^/]*-lock\.yaml$|
-  (^|/)[^/]*\.lock$
+  # >>> pre-commit
+  (^|/)\.claude/
+  |(^|/)\.config/mise/locks/
+  |(^|/)\.git/
+  |(^|/)build/
+  |(^|/)dist/
+  |(^|/)graphify-out/
+  |(^|/)[^/]*\.lock$
+  # <<< pre-commit
 
 repos:
   - repo: local
@@ -121,6 +117,16 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+
+      - id: graphify-refresh
+        name: Refresh the graphify graph (mise run code:graph)
+        description: Rebuilds the knowledge graph in the background after each
+          commit; the task skips a worktree, a rebase and a missing graphify.
+        entry: mise x -- mise run code:graph
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [post-commit]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -232,10 +238,3 @@ repos:
         description: Catches an exclusion whose reason expired, which is the
           failure mode nobody re-reads because it keeps working.
         stages: [manual]
-
-# Fragments from `.config/pre-commit.d/*.yaml` are appended by `/vwf:init` as
-# entries at the end of the `repos:` list above, each between a
-# `# >>> pre-commit.d/<name>.yaml` and a matching `# <<< pre-commit.d/<name>.yaml`
-# marker. A re-run replaces what is between a pair and leaves everything
-# outside the markers byte for byte; do not hand-edit there, and put a repo's
-# own hooks before the first marker.

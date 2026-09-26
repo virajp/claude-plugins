@@ -5,7 +5,7 @@
 //
 // Nesting, and the YAML language server. The gate itself contributes no
 // setting: an editor that ran the hooks would be a second definition of the
-// gate, which is the one thing this pack's conventions forbid. The YAML keys
+// gate, which is the one thing stackgen:tool-config forbids. The YAML keys
 // are here because the hook config is the YAML file every repo on this gate
 // carries, and the server's schema-aware completion and hover are what make
 // editing it safe.
