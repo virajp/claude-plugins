@@ -96,9 +96,9 @@ to **`source`**, not to the full existing-repo survey and not to the empty-repo
 landing either. That mode runs the new-repo landing plus the survey passes that
 have something to read, and what the plan shows Bookable is what a brownfield
 repo actually has: a **root tool config** row for the `.pre-commit-config.yaml`
-— *move*, by default, into `.config/` where the gate pack reads it, then offered
-against the pack's as a replace-or-keep row so the hooks Bookable wrote are read
-before the pack's land; a **hook manager** row for `.husky/` — *keep*, by
+— *move*, by default, into `.config/` where `stackgen:tool-config` lands it,
+then shown as that skill's conflict row so the hooks Bookable wrote are read
+before the skill's land; a **hook manager** row for `.husky/` — *keep*, by
 default, so the first commit runs under husky and the shipped gate is landed but
 not wired until you flip the row to *switch*; and, over every other file already
 sitting at a path a pack would land, a **replace-or-keep** row shown before the

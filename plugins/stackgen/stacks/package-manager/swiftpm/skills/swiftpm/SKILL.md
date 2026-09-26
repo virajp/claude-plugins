@@ -112,7 +112,7 @@ lockfile inside an `.xcodeproj` goes through `mise run setup:deps:*`.
   review shows exactly what code moved.
 - **SwiftPM ships no audit command**, and this pack adds none. Advisories for
   Swift packages reach a repo through the forge — GitHub's dependency graph
-  reads `Package.resolved` — and through whichever repo-gate scanner reads it,
+  reads `Package.resolved` — and through whichever gate scanner reads it,
   never through a tool this pack installs.
 - **Check by hand before adding or moving a dependency:** the repository is
   the one the package's own documentation names (a URL typo is a different

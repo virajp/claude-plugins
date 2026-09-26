@@ -67,7 +67,7 @@ edits. You never write files.
    lines, so their absence from the artifact set is correct and never a
    gap; what they must satisfy is check 9.
 8. **Coverage.** For a kind whose topic bar is settled in `assets/kinds.md`
-   (today: `language-bundle`, `database`, `cloud-provider`, `repo-gate`,
+   (today: `language-bundle`, `database`, `cloud-provider`,
    `capability-provider`, `ci-system`, `app-framework` and `deploy-target`),
    walk the
    bar topic by topic against the **composition** — whichever components

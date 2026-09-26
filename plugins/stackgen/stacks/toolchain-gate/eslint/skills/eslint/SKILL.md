@@ -90,7 +90,7 @@ The linter is **zero-config** — it ships an opinionated flat config, so no
 Only reach for config when a default genuinely misfires — never to make a real
 finding disappear.
 
-- **Linter:** edit `.config/linter.yaml` — the pre-commit gate pack ships it,
+- **Linter:** edit `.config/linter.yaml` — `stackgen:tool-config` lands it,
   empty of overrides and with an `ignores:` list of the generated trees the
   stack packs produce, so the file to change already exists. Scope changes
   narrowly: extra `ignores`, per-preset `overrides`

@@ -102,12 +102,12 @@ much smaller than the one it replaced: whole families of assertion became
    two-directions-cover-each-other-on-a-rename idiom rule 7 uses for agent
    cross-references.
 10. **The technology-free vwf guard.** Below.
-11. **A pack's `config/` payload tier is materializable as-is.** Ten assertions,
-    every one of them about a file whose failure mode in the *target* repo is
-    silence rather than an error. The landed-tree assertions run over each
-    `stackgen:tool-config` asset tree (`skills/tool-config/assets/<tool>/`)
-    exactly as over a pack's `config/`, since the skill lands it whole at the
-    repo root:
+11. **A pack's `config/` payload tier is materializable as-is.** Seven
+    assertions, every one of them about a file whose failure mode in the
+    *target* repo is silence rather than an error. The landed-tree assertions
+    run over each `stackgen:tool-config` asset tree
+    (`skills/tool-config/assets/<tool>/`) exactly as over a pack's `config/`,
+    since the skill lands it whole at the repo root:
     - a **task file lands executable**. `config/.config/mise/tasks/**` is a
       *file-based* task library — mise runs each file directly — so one landing
       644 fails as an **unknown task** rather than as a permission error, which
@@ -134,13 +134,6 @@ much smaller than the one it replaced: whole families of assertion became
       of the two. The forge directory is on the list for that same reason and
       the workflow is carved back out of it: a pack states which task CI runs,
       and the workflow is the repo's release model's;
-    - a **pre-commit fragment parses** and declares a top-level `repos:` list,
-      because `/vwf:init` concatenates the fragments into one config and a
-      malformed one breaks a file no pack owns;
-    - the gate pack's **whole pre-commit config parses** and declares `repos:`
-      too. It is neither a fragment nor at the `config/` root, so the fragment
-      walk never reached it — and until it was named, nothing parsed the base
-      the fragments merge into at all;
     - an **editor fragment parses as JSONC** and carries only `settings`,
       `nesting` and `extensions`. `/vwf:init` composes the fragments into editor
       files no pack owns, and a fourth key is dropped without a word;
@@ -174,18 +167,24 @@ much smaller than the one it replaced: whole families of assertion became
       a string is never run, a glob that climbs out matches something the repo
       does not own, and a name no call sets is a question whose answer lands
       nowhere — all silently. The finding names the pack and the entry;
-    - every **`tool-config:` entry** parses as one of the three verbs a pack may
-      ask for — `mise add tool <name> <version> to <scope>`,
+    - every **`tool-config:` entry** parses as one of the verbs a pack may ask
+      for — `mise add tool <name> <version> to <scope>`,
       `mise add env <KEY>=<value> to <scope>` or
       `mise add alias <name>=<command> [to dev]` — the scope all environments or
       `dev`, `ci` or `test`; an env key an env-var name, an alias name a TOML
       bare key; a value quoted as a TOML basic string or bare and carrying no
       quote anywhere; and a template delimiter (`{{`, `{%`, `{#`) only inside an
-      `add env` value, since mise renders it. The materializer runs each line
-      through `/stackgen:tool-config`, so a line that does not parse is one the
-      skill refuses at landing, in someone else's repo. And a pack's `config/`
-      tier holding any mise `conf.d/` fragment is a finding: a pack asks for its
-      mise lines through `tool-config:` and never lands the file.
+      `add env` value, since mise renders it — or one of the gate verbs,
+      `dprint add plugin <name>`, `all add exclude [generated] <paths>`,
+      `pre-commit add linter-ignore <paths>`,
+      `pre-commit add hook <repo> <id> <stage> [key=value …]` or
+      `grype add ignore <id> [reason]`. An exclude asked of one tool alone is a
+      finding: only `all add exclude` keeps rule 15's lists one set. The
+      materializer runs each line through `/stackgen:tool-config`, so a line
+      that does not parse is one the skill refuses at landing, in someone else's
+      repo. And a pack's `config/` tier holding any mise `conf.d/` fragment or
+      any `pre-commit.d/` file is a finding: a pack asks for those lines through
+      `tool-config:` and never lands the file.
 
     The walk is its own rather than the plugin file reader's, because every one
     of these paths runs through a dot segment the reader's glob does not descend
@@ -256,34 +255,34 @@ much smaller than the one it replaced: whole families of assertion became
     existed — and it does not check that the flagged bundle's components
     resolve, which `p:plugins:inventory` owns.
 15. **The formatters' exclusion lists state one set, and the scanner's allowlist
-    is a subset of it.** The gate packs ship four lists of the trees a gate
-    skips — `dprint.json`'s `excludes` and `taplo.toml`'s `exclude` (both in the
-    dprint pack, both globs) and pre-commit's global `exclude` (one regex, whose
-    top-level alternatives are the entries; a `(?x)` verbose pattern has its
-    whitespace and comments removed first) are the **formatters'** three and
-    must agree; the gitleaks `[allowlist] paths` (regexes) is the **scanner's**
-    and is held to a subset of them instead. The formatters' convention is
-    stated once in the pre-commit pack's conventions and copied three times in
-    three syntaxes, so the drift is an entry added to some of the lists and not
-    the rest — and no tool reports it, since each reads only its own list: the
-    formatter simply formats the tree. The scanner is held the other way round
-    because the pack extends upstream's default config, whose built-in allowlist
-    already skips `.git`, `node_modules` and the named lockfiles, and `.claude/`
-    is authored source a scanner must scan — so the formatters' set is wider
-    than the scanner's by design, a formatter-excluded tree the scanner still
-    reads is no finding, and a tree the scanner skips that no formatter excludes
-    is one, naming `gitleaks.toml` and the entry: an allowlist entry with no
-    generated tree behind it is a scanner quietly not scanning. Each entry is
-    **normalised** before the compare — a regex loses its anchors (`^`, `$`, and
-    the `(^|/)` or `(?:^|/)` that means "at the root or under any directory", a
-    glob's `**/`), its `\.` escapes and its `[^/]*` or `.*` (a glob's `*`);
-    every entry then loses a leading `/` or `**/` and a trailing `/`, `/*` or
-    `/**`, the spellings of "this directory, wherever it sits" that the four
-    tools take — so `**/dist/`, `**/dist/**`, `dist/*`, `^dist/` and
-    `(^|/)dist/` are one entry, `dist`. The formatters' finding names the entry,
-    the files that carry it and the files that do not. A list absent from the
-    tree is left out of the comparison rather than read as empty, so a fixture
-    holding one of the four files is not held to the other three; a file present
+    is a subset of it.** `stackgen:tool-config` ships four lists of the trees a
+    gate skips, under `skills/tool-config/assets/{dprint,pre-commit,gitleaks}/`
+    — `dprint.json`'s `excludes` and `taplo.toml`'s `exclude` (both dprint's,
+    both globs) and pre-commit's global `exclude` (one regex, whose top-level
+    alternatives are the entries; a `(?x)` verbose pattern has its whitespace
+    and comments removed first) are the **formatters'** three and must agree;
+    the gitleaks `[allowlist] paths` (regexes) is the **scanner's** and is held
+    to a subset of them instead. The skill writes every entry through one verb,
+    `all add exclude`, in three syntaxes, so the drift is an entry added to some
+    of the lists and not the rest — and no tool reports it, since each reads
+    only its own list: the formatter simply formats the tree. The scanner is
+    held the other way round because the asset extends upstream's default
+    config, whose built-in allowlist already skips `.git`, `node_modules` and
+    the named lockfiles, and `.claude/` is authored source a scanner must scan —
+    so the formatters' set is wider than the scanner's by design, a
+    formatter-excluded tree the scanner still reads is no finding, and a tree
+    the scanner skips that no formatter excludes is one, naming `gitleaks.toml`
+    and the entry: an allowlist entry with no generated tree behind it is a
+    scanner quietly not scanning. Each entry is **normalised** before the
+    compare — a regex loses its anchors (`^`, `$`, and the `(^|/)` or `(?:^|/)`
+    that means "at the root or under any directory", a glob's `**/`), its `\.`
+    escapes and its `[^/]*` or `.*` (a glob's `*`); every entry then loses a
+    leading `/` or `**/` and a trailing `/`, `/*` or `/**`, the spellings of
+    "this directory, wherever it sits" that the four tools take — so `**/dist/`,
+    `**/dist/**`, `dist/*`, `^dist/` and `(^|/)dist/` are one entry, `dist`. The
+    formatters' finding names the entry, the files that carry it and the files
+    that do not. In the plugin carrying the skill a missing list is a finding,
+    since a moved file would otherwise end the check silently; a file present
     but carrying no list at all, or one that cannot be parsed, is its own
     finding naming the file — nothing else parses `dprint.json`, `taplo.toml` or
     `gitleaks.toml`. Rule 15 reads those four paths and no others — a fifth list

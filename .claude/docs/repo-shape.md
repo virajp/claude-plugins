@@ -159,7 +159,7 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   and free of a 13 or 17 component, those two integers never being issued on any
   version line this repo maintains; dependencies resolving within the
   marketplace; hook scripts existing and executable; **a pack's `config/`
-  payload tier being materializable as-is** (ten assertions in one rule, the
+  payload tier being materializable as-is** (seven assertions in one rule, the
   landed-tree ones also run over each `skills/tool-config/assets/<tool>/` tree
   `stackgen:tool-config` lands: exec bit *and* a known shebang on every file
   under `config/.config/mise/tasks/**`, because mise reports a 644 task as an
@@ -170,46 +170,44 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   whose sibling tier — the root files vwf writes, `CLAUDE.md` and
   `mempalace.yaml` — no pack may land; a **CI workflow refused inside
   `.github/`**, since a pack names the task CI runs and never the workflow;
-  every `config/.config/pre-commit.d/*.yaml` parsing with a top-level `repos:`
-  list, since `/vwf:init` concatenates them into a file no pack owns; the gate
-  pack's **whole** `config/.config/pre-commit-config.yaml` parsing on the same
-  terms, from the base end, since it is neither a fragment nor at the tier's
-  root and nothing reached it before; every `config/.config/vscode.d/*.jsonc`
-  parsing as JSONC with only the three keys `settings`, `nesting` and
-  `extensions`, since init composes them into an editor file no pack owns and a
-  fourth key is dropped without a word; every `conditional:` entry in the pack's
-  `pack.yaml` naming a relative path or glob with no `..` segment that matches
-  at least one file under `config/` — resolved by the checker's own walk, so
-  `**` enters dot-directories — and a `when:` of exactly one known axis,
-  `forge`, `editor`, `secrets` or `update_bot`, with a value that axis takes,
-  `secrets: none` refused, since an unknown axis is one no caller answers and
-  its file lands everywhere silently; and the pack's three doctor- and
-  setup-read facts in the shapes their readers trust — every `binaries` entry a
-  bare name or a map of exactly `name` and an optional non-empty `probe`,
-  `lockfile` a non-empty list of relative paths or globs with no `..`, and every
-  `machine_env` entry a `name` that is an env-var name plus a non-empty `detect`
-  and `question`, the name set by a `mise add env` entry of the pack's
-  `tool-config:` list, since a question whose answer lands nowhere fails
-  silently; every `tool-config:` entry parsing as `mise add tool`,
+  every `config/.config/vscode.d/*.jsonc` parsing as JSONC with only the three
+  keys `settings`, `nesting` and `extensions`, since init composes them into an
+  editor file no pack owns and a fourth key is dropped without a word; every
+  `conditional:` entry in the pack's `pack.yaml` naming a relative path or glob
+  with no `..` segment that matches at least one file under `config/` — resolved
+  by the checker's own walk, so `**` enters dot-directories — and a `when:` of
+  exactly one known axis, `forge`, `editor`, `secrets` or `update_bot`, with a
+  value that axis takes, `secrets: none` refused, since an unknown axis is one
+  no caller answers and its file lands everywhere silently; and the pack's three
+  doctor- and setup-read facts in the shapes their readers trust — every
+  `binaries` entry a bare name or a map of exactly `name` and an optional
+  non-empty `probe`, `lockfile` a non-empty list of relative paths or globs with
+  no `..`, and every `machine_env` entry a `name` that is an env-var name plus a
+  non-empty `detect` and `question`, the name set by a `mise add env` entry of
+  the pack's `tool-config:` list, since a question whose answer lands nowhere
+  fails silently; every `tool-config:` entry parsing as `mise add tool`,
   `mise add env` or `mise add alias` with a legal name and scope, a template
-  delimiter only in an `add env` value; and no mise `conf.d` fragment in the
-  tier, since a pack asks the skill instead); **strict-YAML frontmatter** (every
-  skill and agent a plugin ships, and every `stacks/*/*/skills/*/SKILL.md` and
-  `stacks/*/*/agents/*.md` a pack ships — the larger half, and the half that
-  actually lands in a user's repo; a pack's `rules/*.md` is out, frontmatter
-  being optional there); relative links under `assets/examples/**`;
-  **root-relative reference resolution** (every such reference resolves inside
-  the plugin that wrote it — in the files a pack **lands** the rule stands
-  aside, because rule 13 owns those on stricter terms and one bad reference
-  should be one finding); **agent cross-reference resolution** in both
-  directions (every role-shaped `` `token` `` in a plugin's own prose names a
-  real agent, and every declared agent is referenced at least once — the two
-  directions cover each other on a rename); the vwf design-adapter contract (all
-  **three** import skills present and model-invocable); the vwf
-  **stack-adapter** contract (both `<plugin>-stack-menu` and
-  `<plugin>-stack-template` present, each carrying an explicit
-  `disable-model-invocation: false` **and** a `user-invocable: false` — an
-  adapter is vwf's to call, not a user's to type — on every plugin keyworded
+  delimiter only in an `add env` value, or as one of the gate verbs
+  (`dprint add plugin`, `all add exclude [generated]`,
+  `pre-commit add linter-ignore`, `pre-commit add hook`, `grype add ignore`), an
+  exclude asked of one tool alone refused; and no mise `conf.d` fragment and no
+  `pre-commit.d` file in the tier, since a pack asks the skill instead);
+  **strict-YAML frontmatter** (every skill and agent a plugin ships, and every
+  `stacks/*/*/skills/*/SKILL.md` and `stacks/*/*/agents/*.md` a pack ships — the
+  larger half, and the half that actually lands in a user's repo; a pack's
+  `rules/*.md` is out, frontmatter being optional there); relative links under
+  `assets/examples/**`; **root-relative reference resolution** (every such
+  reference resolves inside the plugin that wrote it — in the files a pack
+  **lands** the rule stands aside, because rule 13 owns those on stricter terms
+  and one bad reference should be one finding); **agent cross-reference
+  resolution** in both directions (every role-shaped `` `token` `` in a plugin's
+  own prose names a real agent, and every declared agent is referenced at least
+  once — the two directions cover each other on a rename); the vwf
+  design-adapter contract (all **three** import skills present and
+  model-invocable); the vwf **stack-adapter** contract (both
+  `<plugin>-stack-menu` and `<plugin>-stack-template` present, each carrying an
+  explicit `disable-model-invocation: false` **and** a `user-invocable: false` —
+  an adapter is vwf's to call, not a user's to type — on every plugin keyworded
   `vwf-stack-adapter`, **and** the keyword declared by every plugin shipping
   either skill — the same two-directions-cover-each-other idiom, since
   `stackgen` is now the only adapter left and dropping that one keyword would
@@ -231,19 +229,20 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   decided by file order, and the finding names both files plus the platform they
   share, or the one that declares no list); and **the formatters' exclusion
   lists state one set, and the scanner's allowlist is a subset of it** (the
-  dprint pack's `dprint.json` `excludes` and `taplo.toml` `exclude`, both globs,
-  and the pre-commit pack's global `exclude`, one regex whose top-level
+  `dprint.json` `excludes` and `taplo.toml` `exclude` under
+  `skills/tool-config/assets/dprint/`, both globs, and the global `exclude`
+  under `skills/tool-config/assets/pre-commit/`, one regex whose top-level
   alternatives are the entries, a `(?x)` block stripped of its whitespace and
   comments first, are the **formatters'** three and are held equal after
   normalisation — anchors, `**/`, `\.` escapes, `[^/]*` and a trailing `/`, `/*`
   or `/**` stripped, so `**/dist/`, `dist/*` and `(^|/)dist/` are one entry; the
   gitleaks `[allowlist] paths` is the **scanner's** and is held to a subset of
-  their union instead, since the pack extends upstream's default allowlist and
+  their union instead, since the asset extends upstream's default allowlist and
   `.claude/` is authored source a scanner must scan — a finding names the entry
-  and the files that carry it and do not; a list absent from the tree is left
-  out of the compare, a file present but unparseable is its own finding). The
-  retired-vocabulary and plugin-path rules are the two that report a **line
-  number**, being the two that fire on a sentence rather than a file.
+  and the files that carry it and do not; in the plugin carrying the skill a
+  missing list is a finding, and a file present but unparseable is its own
+  finding). The retired-vocabulary and plugin-path rules are the two that report
+  a **line number**, being the two that fire on a sentence rather than a file.
 
   Two of those are worth the extra sentence. The technology-free guard bans vwf
   naming a concrete technology **only where the mention prescribes**, which is
@@ -265,9 +264,9 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   `-s bash` would wave through the bashisms it forbids. `shfmt -d -i 2 -ci` runs
   over both, and over the task library under
   `plugins/stackgen/skills/tool-config/assets/`, grouped with the task
-  libraries. Its flags must agree with what the pre-commit pack's gate ships — a
-  mismatch here rewrites a payload file into something the target repo rejects,
-  which is how it first went wrong.
+  libraries. Its flags must agree with what the pre-commit asset's gate ships —
+  a mismatch here rewrites a payload file into something the target repo
+  rejects, which is how it first went wrong.
 - **`p:plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed (the BSD-sed portability guarantee), for **both**
   package managers: each table runs in a temp dir seeded with the lockfile that
