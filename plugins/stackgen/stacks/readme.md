@@ -6,7 +6,8 @@ shape `../assets/pack-format.md` defines (`<type>/<slug>/pack.yaml` + prose
 + optional skills/agents).
 
 **Wave A — `toolchain-gate/`, kind `repo-gate`:** `dprint`, `gitleaks`,
-`grype`, `pre-commit`.
+`grype`, `pre-commit`. Moved into `stackgen:tool-config` on 2026-09-26, with
+the `repo-gate` kind retired; no pack or bundle carries them now.
 
 **Wave B — `datastore/`, kind `database`:** `postgres`. And
 `capability-provider/`, kind `capability-provider`: `oidc` (identity),
@@ -47,10 +48,9 @@ directories: `language/typescript`, `package-manager/pnpm`,
 `toolchain-gate/tsconfig` (topic 9), `toolchain-gate/eslint` (topic 10) and
 `framework/effect` (topic 2).
 
-Note `toolchain-gate` appears under **two** kinds, which is the seam working
-rather than a mistake: `dprint`/`gitleaks`/`grype`/`pre-commit` run over any
-repo and compose into `repo-gate`, while `eslint` and `tsconfig` are
-meaningful for exactly one toolchain and compose into its language bundle.
+Note `toolchain-gate` composes into its toolchain's bundle, never into a
+repo-wide one: `eslint` and `tsconfig` are meaningful for exactly one
+toolchain. The gates that run over any repo are `stackgen:tool-config`'s.
 
 **The Swift package stack made Swift the fourth language root on 2026-09-23**,
 after TypeScript and the Markdown and Bash pair the `claude-code-plugin`
@@ -377,9 +377,9 @@ is a cloud's, so its flavour arrives from `cloud-service/firebase-storage`,
 contract sits in `../assets/contracts/` regardless, because the clauses are
 the same whoever provides it.
 
-`eslint` is deliberately absent: it is JS/TS-only, so it is topic 10 of the
-TypeScript language bundle rather than a repo gate. See the `repo-gate` seam
-in `../assets/kinds.md`.
+`eslint` was never a repo gate: it is JS/TS-only, so it is topic 10 of the
+TypeScript language bundle. See the retired
+`repo-gate` note in `../assets/kinds.md`.
 
 **The inventory is [`inventory.md`](inventory.md)** — generated from this tree
 by `mise run p:plugins:inventory`, never typed by hand, and guarded by `--check`

@@ -33,6 +33,8 @@ Repo-level tooling for a pnpm workspace, shared across its `projects/*` and
 - **dprint** formats (one root config, symlinked into each member); **ESLint**
   lints; **gitleaks** and **grype** gate security — all wired through
   pre-commit: format → lint → tests.
+  The gates are `stackgen:tool-config`'s; this bundle's packs add their
+  plugins and excludes.
 
 ## Tooling & config
 

@@ -39,8 +39,11 @@ The closed list. A component is exactly one of:
   rather than the reverse, and its scaffolder takes the native language as a
   flag. A type is warranted where the SDK is what a project pins and the
   language is what the SDK brought.
-- **`toolchain-gate`** — a repo-level gate: formatter, linter, secret
-  scanner, vulnerability scanner, hook runner.
+- **`toolchain-gate`** — a gate meaningful for one toolchain: its linter,
+  its formatter, its compiler config. The repo-wide gates — the formatter,
+  the two scanners and the hook runner — are no type since 2026-09-26:
+  `stackgen:tool-config` writes them, and a pack asks it for a plugin, a
+  hook, an exclude or an ignore through `tool-config:`.
 - **The toolchain manager is no type** since 2026-09-26: the repo's mise
   config and task library are written by `stackgen:tool-config`
   (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`), and a pack asks it
@@ -50,7 +53,7 @@ The closed list. A component is exactly one of:
   written in**: the ignore set, the editor and attribute defaults, the
   licence and the security contact, and the dependency-update policy. Not a
   gate — it checks nothing and fails nothing; it is the ground the gates run
-  over, which is why folding it into `toolchain-gate` would have put a
+  over, which is why folding it into the gates would have put a
   licence file behind a scanner's doctrine. Exactly one per repo, and it
   realizes no vwf capability: there is no seam here, because nothing in a
   blueprint chooses an `.editorconfig`.
@@ -219,22 +222,16 @@ the token the project config already holds**. Picking from the menu and writing
 `projects.<name>.design` are one act rather than two that can disagree. They
 exist because a template no menu can offer is not an error — it is invisible,
 which is how a CI-system pack shipped that nothing could ever materialize.
-- A **Repo-Gate-Bundle** is the `toolchain-gate` components that apply to
-  the whole repository rather than to one toolchain in it — one of the three
-  compositions rooted at the `repo` axis. A gate meaningful for exactly one
-  toolchain is **not** here: it belongs to that language's bundle, which is
-  what keeps a polyglot repo from materializing the same scanner once per
-  language.
 - A **Repo-Hygiene-Bundle** is exactly one `repo-hygiene` component,
-  standing alone like a Deploy-Bundle — the second composition on the
+  standing alone like a Deploy-Bundle — the first composition on the
   **`repo`** axis. There is no second half because there is
   no category above "the files every repo has" to write doctrine at, and the
   fence that keeps it honest is its kind's scope rather than a pairing.
 - A **Workspace-Bundle** is the `package-manager` component that installs
   and locks the repo's members plus a `build-orchestrator` component where
-  the repo has one — the third composition on the **`repo`** axis, and the
-  only one of the three a user picks: `repo.stack.template` is what selects
-  it, while the other two are `unconditional:` baselines. A single-package
+  the repo has one — the second composition on the **`repo`** axis, and the
+  one a user picks: `repo.stack.template` is what selects it, while hygiene
+  is an `unconditional:` baseline. A single-package
   repo pins none, which is the edge rather than a gap. The
   `package-manager` component appears in two kinds' compositions the way
   `toolchain-gate` does — it carries `language-bundle` topics 7–8 there and

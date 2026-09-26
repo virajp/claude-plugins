@@ -7,7 +7,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 `../assets/kinds.md`. The narrative — which wave landed what, and why — is
 [`readme.md`](readme.md); the shape of a pack is `../assets/pack-format.md`.
 
-**70 packs, 66 bundles, 12 kinds.**
+**70 packs, 66 bundles, 11 kinds.**
 
 ## Kinds
 
@@ -16,7 +16,6 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `language-bundle` | 16 | 15 |
 | `database` | 1 | 1 |
 | `cloud-provider` | 31 | 26 |
-| `repo-gate` | 0 | 0 |
 | `repo-hygiene` | 1 | 1 |
 | `workspace` | 0 | 3 |
 | `capability-provider` | 8 | 8 |

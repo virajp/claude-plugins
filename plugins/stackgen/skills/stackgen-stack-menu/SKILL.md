@@ -36,11 +36,11 @@ comparison. Choosing is the user's job and presenting the choice is vwf's.
    **Skip every `unconditional: true` bundle.** Those are the repo baseline —
    one pack per slot, where a one-entry menu is theatre and where a repo that
    has picked no stack still needs the thing. `/vwf:init` materializes them
-   by **fixed slug** — `repo-gates` and `repo-hygiene` — never a slug
+   by **fixed slug** — `repo-hygiene` — never a slug
    constructed from configuration, and never through this menu. Listing one
    here would offer a choice that is not one, and would let a user decline a
-   baseline nothing else can supply. The toolchain manager is no bundle:
-   `stackgen:tool-config` writes it.
+   baseline nothing else can supply. The toolchain manager and the gates are
+   no bundle: `stackgen:tool-config` writes them.
 
    **Never list bare components.** `stacks/<type>/<slug>/pack.yaml` files are
    the parts a bundle composes, not options — offering them would ask the user
@@ -80,7 +80,7 @@ templates:
 generate:
   pin: generated/<technology-slug>
   axes: [ project, backing, deploy, repo, design, cicd, stylesheet ]
-  kinds: [ language-bundle, database, cloud-provider, repo-gate, capability-provider, ci-system, app-framework, deploy-target, design-tool, stylesheet ] # the generatable kinds
+  kinds: [ language-bundle, database, cloud-provider, capability-provider, ci-system, app-framework, deploy-target, design-tool, stylesheet ] # the generatable kinds
   summary: Generate principles-grounded skills and conventions for any stack
     no pack covers. Explicit, reviewed, consent-gated — never a silent run.
 ```
@@ -88,8 +88,8 @@ generate:
 **`kinds:` omits `repo-hygiene` and `workspace` deliberately**, and the
 omission is a recorded decision rather than an oversight — an unstated gap
 here reads as one either way, which is why it is written down. Neither is
-generatable **today** (`toolchain-manager` is no kind since 2026-09-26; its
-files are `stackgen:tool-config`'s):
+generatable **today** (`toolchain-manager` and `repo-gate` are no kind since
+2026-09-26; their files are `stackgen:tool-config`'s):
 
 - **`repo-hygiene`** — there is no uncovered tail. The kind's whole content
   is the files every repo has regardless of what it is written in, which one

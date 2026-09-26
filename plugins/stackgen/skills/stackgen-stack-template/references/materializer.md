@@ -113,22 +113,20 @@ to a repo, and every write it makes is consent-gated and committed once.
        `.github/` and `.gitlab/` and never `.config/`. `dprint.json` is a
        **shim** whose only content is `extends` into `.config/`, exactly
        as `eslint.config.mjs` is.
-     - **A `.config/pre-commit.d/<pack>.yaml` fragment lands as a file and
-       stops there.** It is an ordinary landing-set member with an
-       ordinary lockfile entry; merging the fragments into
-       `.config/pre-commit-config.yaml` is `/vwf:init`'s work, and nothing
-       in this procedure reads or rewrites that file. A
-       `.config/vscode.d/<pack>.jsonc` **editor fragment** lands the same
-       way and under the same rule: copied verbatim, recorded per file,
-       and composed into `.vscode/settings.json` and
-       `.vscode/extensions.json` by the orchestrator alone, per
+     - **A `.config/vscode.d/<pack>.jsonc` editor fragment lands as a
+       file and stops there.** It is an ordinary landing-set member with
+       an ordinary lockfile entry, composed into `.vscode/settings.json`
+       and `.vscode/extensions.json` by the orchestrator alone, per
        `${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`. Nothing here reads
-       or rewrites either editor file.
+       or rewrites either editor file. A pack ships no pre-commit hook
+       fragment; its hook is a `tool-config:` line.
    - **The tool-config calls a component declares** — each line of its
      `pack.yaml` `tool-config:` list
      (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`), previewed in step 3
      and run in step 5 as `/stackgen:tool-config <line> for <pack>`. The
-     skill writes the toolchain manager's files; no pack copies one.
+     skill writes the toolchain manager's and the gates' files — mise,
+     dprint, pre-commit, gitleaks, grype — and no pack copies one. A
+     pack's plugin, hook, exclude and ignore lines run like its mise lines.
      A `machine_env:` value is left unset here; `/vwf:setup` fills it.
    - The lockfile update — every path above, with its component ref,
      source and content hash, plus the **mode** for a `config/` file, and
@@ -139,7 +137,7 @@ to a repo, and every write it makes is consent-gated and committed once.
      The hash written here is the landing hash, not the last word:
      `/vwf:init` **re-records** the hash of every landed file it changes
      after landing — its marked-position fills, the `.gitignore` section
-     appends, the hook-fragment merge, the editor block, and either answer
+     appends, the editor block, and either answer
      of its replace-or-keep offer — so a differing hash is content drift
      only when no such writer ran. What tool-config writes is recorded
      by that skill, as `source: tool-config/<tool>@<version>`.

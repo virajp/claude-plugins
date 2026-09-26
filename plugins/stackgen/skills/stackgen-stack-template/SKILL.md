@@ -77,7 +77,7 @@ Return **only** this, filled from `.claude/stackgen/templates/<slug>.md`:
 ```yaml
 slug: <the requested slug>
 axis: project | backing | deploy | repo | design | cicd | stylesheet
-kind: language-bundle | database | cloud-provider | repo-gate | repo-hygiene | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool | stylesheet # assets/kinds.md
+kind: language-bundle | database | cloud-provider | repo-hygiene | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool | stylesheet # assets/kinds.md
 components: # the bundle's composition — the per-component dispatch record
   - <type>/<slug>@<pack version> # pack-sourced
   - <type>/<slug>@generated # generated
@@ -153,23 +153,19 @@ drift. It adds no consent tier.
   artifact kind**: copied verbatim, gated on its own tier-2 consent line,
   merging rather than owning, recorded per file in the lockfile with the
   component that supplied it, and executable where mise requires it. The
-  tier covers a gate's own config file and a pack's editor fragment
+  tier covers a toolchain gate's own config file and a pack's editor fragment
   (`.config/vscode.d/<pack>.jsonc`); what it
   still may not write — a language manifest, a CI workflow, a **whole**
   editor file, CLAUDE.md — and the allowlist of what may land
   at the repo **root** are
   `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. The procedure is the
   materializer.
-- **The universal tools are not slugs.** No `mise` bundle exists; the
-  toolchain manager's files are `stackgen:tool-config`'s, and a pack asks
-  for what it needs through its `tool-config:` list, which the materializer
-  previews inside its one consent and then runs with those answers.
-- **A fragment is copied, never merged, by this skill.** A
-  `.config/pre-commit.d/<pack>.yaml` lands verbatim as its own file;
-  folding the fragments into `.config/pre-commit-config.yaml` is
-  `/vwf:init`'s step, between its own markers. Nothing here reads or
-  rewrites that file — a materializer that merged it would own a file two
-  other things also write.
+- **The universal tools are not slugs.** No `mise` or gates bundle exists;
+  the toolchain manager's and the gates' files are `stackgen:tool-config`'s,
+  and a pack asks for what it needs — a tool pin, a formatter plugin, a
+  hook, an exclude, an ignore — through its `tool-config:` list, which the
+  materializer previews inside its one consent and then runs with those
+  answers. No pre-commit hook fragment is landed or merged.
 - **A `config/_<name>/` directory is pack-private and is never copied**
   (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). It is payload a reader
   picks from — the licence texts are the case — so landing the directory
