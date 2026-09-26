@@ -11,9 +11,10 @@ backlog_pieces: [ B54 ]
 
 ## Status
 
-**RUNNING**
+**COMPLETE**
 
-RUNNING since 2026-09-26 in .worktrees/2026-09-26-mise-lock-honoured
+COMPLETE 2026-09-26 — 16c74a5a 4b1fda92 808ad65b 3f17e9cc 15816ae1 df8f8479
+78a142dd 619f5f23
 
 ## Consent
 
