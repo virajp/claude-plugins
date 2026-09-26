@@ -2,7 +2,7 @@ name: SwiftPM
 summary: Dependency declaration, resolution and locking for a Swift package —
   Package.swift as the manifest, Package.resolved as the lockfile, .build/ as
   the one build tree.
-version: 0.1.1
+version: 0.2.0
 type: package-manager
 package_manager: swiftpm
 # The root one is a package's; the one inside an Xcode project is the app's,
@@ -16,3 +16,7 @@ axis: repo
 # task: the dependency tasks call `swift package`, and they are the language
 # pack's, which owns the toolchain they run.
 harness: n/a
+# The lines this pack asks /stackgen:tool-config for.
+tool-config:
+  - all add exclude generated .build .swiftpm
+  - pre-commit add linter-ignore .build .swiftpm

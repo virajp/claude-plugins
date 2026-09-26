@@ -8,7 +8,7 @@ vocabulary.
 
 This bundle is **unconditional**: there is exactly one pack for the slot, so
 nothing is picked and nothing is recorded in `.config/vwf.yaml`. It is fetched
-by the fixed slug `repo-hygiene`, the way `mise` and `repo-gates` are.
+by the fixed slug `repo-hygiene`.
 
 ## What this pack writes
 

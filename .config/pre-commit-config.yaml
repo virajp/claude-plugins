@@ -14,12 +14,13 @@
 # unknown stages and runs nothing.
 minimum_pre_commit_version: "3.2.0"
 
-# `commit-msg` is here for the conventional-commits hook. A hook type that is
-# not installed is not a hook that fails — it is a hook that never runs, and
-# nothing reports it.
+# `commit-msg` is here for the conventional-commits hook, `post-commit` for
+# graphify-refresh. A hook type that is not installed is not a hook that fails
+# — it is a hook that never runs, and nothing reports it.
 default_install_hook_types:
   - pre-commit
   - commit-msg
+  - post-commit
 
 # Stated once so each hook below only says what differs from it.
 default_stages: [ pre-commit ]
@@ -91,7 +92,16 @@ repos:
         pass_filenames: false
         always_run: true
 
-  # This repo's OWN hooks, above the fragment marker at the bottom of the file.
+      # Refreshes the graphify graph after each commit, replacing graphify's raw git hook.
+      - id: graphify-refresh
+        name: Refresh the graphify graph (mise run code:graph)
+        entry: mise x -- mise run code:graph
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [ post-commit ]
+
+  # This repo's OWN hooks.
   # None of them is a gate tool — each runs a `p:plugins:*` task that validates
   # or regenerates something only this repo has — so none of them belongs in
   # `code:format`, `code:lint` or `code:sec`.
@@ -262,8 +272,3 @@ repos:
         description: Catches an exclusion whose reason expired, which is the
           failure mode nobody re-reads because it keeps working.
         stages: [ manual ]
-
-# Fragments from `.config/pre-commit.d/*.yaml` are merged below this line by
-# `/vwf:init`, each between a `# >>> pre-commit.d/<name>.yaml` and a matching
-# `# <<< pre-commit.d/<name>.yaml` marker. A re-run replaces what is between a
-# pair; do not hand-edit there, and put a repo's own hooks above this line.

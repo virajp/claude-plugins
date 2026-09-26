@@ -81,9 +81,9 @@ project, on their own consent, and nothing else the forge holds.
 
 **First, `/stackgen:tool-config all`**, once per repo, with this run's answers
 as `key=value` arguments. It lands every tool the skill owns — the toolchain
-manager's files and its task library among them — and fills their marked
-positions from the arguments. `init` names no tool and splices nothing there.
-The arguments:
+manager's files, its task library and the gates among them — and fills their
+marked positions from the arguments. `init` names no tool and splices nothing
+there. The arguments:
 
 | Key                                        | Value                                             | From                                  |
 | ------------------------------------------ | ------------------------------------------------- | ------------------------------------- |
@@ -93,6 +93,7 @@ The arguments:
 | `merge_model_develop`, `merge_model_main`  | `direct` or `pr`, the §11(a) preselection         | §11(a); re-passed if the answer moves |
 | `runtimes`                                 | the language keys the stack read produced         | SKILL.md's stack read, per §5         |
 | `plugin_sources`, `plugins`                | question 5's confirmed rows; empty on **none**    | question 5                            |
+| `scopes`                                   | the commit gate's scopes; empty where none        | §7, per existing repo §11             |
 | `forge`, `editor`, `secrets`, `update_bot` | the four answers, spelled as the table below      | the table below                       |
 
 **How a value is spelled.** A list is comma-separated with no spaces —
@@ -115,12 +116,11 @@ meets a row that changed since the preview, so `init` answers every row the
 preview returned, and a refused call is shown again in the report, never
 retried with guessed answers.
 
-**Then the unconditional bundles that remain**, by their fixed slugs, through
-the stack adapter (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`), invoking
-`/<plugin>:<plugin>-stack-template <slug>` once per slug. Fetch them in the
-**composition order the materializer documents** — the gates, then hygiene —
-because a later component's file wins where two write the same path, and
-getting the order wrong silently lands the wrong version of a shared file.
+**Then the one unconditional bundle that remains**, hygiene, by its fixed
+slug, through the stack adapter
+(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`), invoking
+`/<plugin>:<plugin>-stack-template <slug>` once; the gates are the skill's,
+landed by the call above.
 
 The skill's rows and each landing carry their own consent line. **A decline is
 a deferral, not a halt**: record what was skipped and name its unlock — run
@@ -327,10 +327,8 @@ row.
 
 ## 6 — The hook fragments
 
-Merge every fragment the landed packs dropped into the gate config, per
-[fragments and sections](fragments-and-sections.md). On a new repo this is the
-first merge, so every fragment present is appended; the algorithm is the same
-one a re-run uses.
+Retired — `init` merges no hook; a pack asks
+`/stackgen:tool-config pre-commit add hook … for <pack>` instead.
 
 ## 7 — The project ids, the repo name, and the positions they fill
 
@@ -431,19 +429,19 @@ nothing downstream re-derives them either.
 
 **Three lists fill three surfaces, and no two of them are the same list.** The
 per-project **task groups** — and, on **every** run, the first one included,
-the commit gate's **scopes** — take the **project ids** resolved above, for the
-repo being shaped. A registry, where the repo has one, is where the proposal
-those ids came from was read; it is not a condition on the scope fill, which
-takes whatever question 2 confirmed either way — the fill itself is stated
-once, for both pipelines, in [existing repo](existing-repo.md) §11. `REPO_NAME`
-takes the repo's **folder name**, slugified, as question 1 confirmed it — one
-value per repo, on no list at all. The bootstrap aggregator's **member flags**
-and the **shell aliases** that shorten them take the **member repos** — one
-flag and one alias each, in the resolved order, each named by that member's
-own slug, passed as the `members` argument. Where that slug comes from is the
-skill's to say, not this section's: its toolchain reference states both
-positions come from the member list and never from the project ids the `p:`
-group uses.
+the commit gate's **scopes** — take the **project ids** resolved above, for
+the repo being shaped. A registry, where the repo has one, is where the
+proposal those ids came from was read; it is not a condition on the scope
+fill, which takes whatever question 2 confirmed either way — the `scopes`
+argument is stated once, for both pipelines, in [existing
+repo](existing-repo.md) §11. `REPO_NAME` takes the repo's **folder name**,
+slugified, as question 1 confirmed it — one value per repo, on no list at all.
+The bootstrap aggregator's **member flags** and the **shell aliases** that
+shorten them take the **member repos** — one flag and one alias each, in the
+resolved order, each named by that member's own slug, passed as the `members`
+argument. Where that slug comes from is the skill's to say, not this
+section's: its toolchain reference states both positions come from the member
+list and never from the project ids the `p:` group uses.
 
 They are different lists because those two positions widen the scope to a
 **repo**, not to a project: the flag makes the aggregator recurse into a member
@@ -461,8 +459,8 @@ resolved**, at the top of the run, and nothing here re-resolves them.
 **Every marked position in a file the tool-config skill lands is the
 skill's**, filled from §2's arguments: the repo-name key, the landing pair,
 the member-path key, the aggregator's member flags, the shell aliases, the
-plugin task's two lists and the two runtime positions. `init` owes each one
-its value, never a splice:
+plugin task's two lists, the two runtime positions and the commit gate's
+scopes. `init` owes each one its value, never a splice:
 
 - **`repo`** — this repo's folder name, slugified, as question 1 confirmed it.
   A `shaped` repo skips that question; its folder slug is read and compared by
@@ -484,6 +482,8 @@ its value, never a splice:
   only those. The workflow's own plugin and its dependency never reach them,
   since question 5 drops both rows. A **none** passes `plugin_sources=` and
   `plugins=`.
+- **`scopes`** — this repo's confirmed ids, per
+  [existing repo](existing-repo.md) §11; the forge links are the skill's.
 
 The repo-name key exists for the per-repo launch aliases the user keeps in
 their **own global configuration**, reading the value the repo publishes.
@@ -493,9 +493,7 @@ repos it resolved as the base and its members.
 A pack's `machine_env:` values are not `init`'s either. `/vwf:setup` sets them
 through the same skill when that pack lands.
 
-What stays `init`'s is the `_default` slot below, and the commit gate's scope
-list and forge links, which [existing repo](existing-repo.md) §11 fills in
-every mode.
+What stays `init`'s is the `_default` slot below.
 
 ### The `_default` slot
 
@@ -768,12 +766,13 @@ run just installed will read it against, and shaping a repo is operations, not
 a feature.
 
 **The new-repo first commit precedes hook wiring by construction, and that is
-the whole answer to the branch guard.** The gates pack ships a hook that
-refuses commits on the protected branch; it is wired only when the bootstrap
-aggregator runs, and on this path §10 offers that aggregator *after* this
-commit — §9 made the library discoverable and wired nothing. So the guard is
-not in place yet and never sees the first commit. Nothing is disabled, nothing
-is skipped, and the hook ships exactly as the pack wrote it. On an existing
+the whole answer to the branch guard.** The gates `/stackgen:tool-config`
+lands carry a hook that refuses commits on the protected branch; it is wired
+only when the bootstrap aggregator runs, and on this path §10 offers that
+aggregator *after* this commit — §9 made the library discoverable and wired
+nothing. So the guard is not in place yet and never sees the first commit.
+Nothing is disabled, nothing is skipped, and the hook ships exactly as the
+skill wrote it. On an existing
 repo the hooks may already be wired, which is why that pipeline commits the
 gate configuration first and on its own.
 

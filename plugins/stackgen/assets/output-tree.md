@@ -129,11 +129,11 @@ started as:
 - **(a) Task overlays** — a file under `.config/mise/tasks/` a pack ships
   over the baseline library. The mise files themselves, and that baseline,
   are written by `stackgen:tool-config`, not copied (since 2026-09-26).
-- **(b) A gate's own config file** — `.config/dprint.json`,
-  `.config/taplo.toml`, `.config/pre-commit-config.yaml`,
-  `.config/git-conventional-commits.yaml`, `.config/gitleaks.toml`,
-  `.config/grype.yaml`. A gate whose doctrine ships without the file that
-  configures it is doctrine about a gate nobody has.
+- **(b) A gate's own config file** — `.config/swiftlint.yml`,
+  `.config/swift-format.json`. A gate whose doctrine ships without the file
+  that configures it is doctrine about a gate nobody has. The repo-wide
+  gates' files — dprint, pre-commit, gitleaks, grype — are written by
+  `stackgen:tool-config`, not copied (since 2026-09-26).
 - **(c) The hygiene files a repo carries whatever its stack is** —
   `.gitignore`, `.editorconfig`, `.gitattributes`, `SECURITY.md`, `LICENSE`,
   and `renovate.json` — at the root, since Renovate's config discovery
@@ -141,11 +141,8 @@ started as:
   the fixed allowlist below; everything else goes under `.config/`.
 - **(d) Retired 2026-09-26.** A provider's environment is a `tool-config:`
   call in its `pack.yaml`, not a `conf.d/<pack>.toml` it copies.
-- **(e) Hook fragments** — `.config/pre-commit.d/<pack>.yaml`, each a
-  standalone `repos:` list. The materializer **copies these verbatim and
-  stops**; `/vwf:init` is what merges them into
-  `.config/pre-commit-config.yaml`, between its markers. Nothing in stackgen
-  edits that file, which is what keeps a fragment a fragment.
+- **(e) Retired 2026-09-26.** A pack's pre-commit hook is a `tool-config:`
+  call in its `pack.yaml`, not a hook fragment it copies.
 - **(f) A deploy target's own config and its deploy task** — a root
   `wrangler.jsonc` and a `.config/mise/tasks/p/_project/deploy` overlay,
   which `cloud-service/workers-static-assets` was the first
@@ -249,8 +246,7 @@ The rules mirror the ones the other targets already have:
   invisible exec bit has cleared every other gate in this repo before.
 
 **Composition order, since more than one component may write one tree.**
-By component type: `toolchain-gate` (the
-`repo-gate` kind's components), then `repo-hygiene`, then
+By component type: `toolchain-gate`, then `repo-hygiene`, then
 `package-manager` / `language`, then `app-framework`, then
 `capability-provider`, then `cloud-provider`, then `cloud-service` — a
 later component's file wins, and the lockfile records per file which
@@ -280,17 +276,18 @@ the same reason: the alternative is that the one thing which writes a repo's
 config lives in a plugin that exists for no other reason.
 
 **The fence, and where it now runs.** The tier originally stopped at the
-toolchain manager: a gate pack named its config file as a prerequisite and wrote
-nothing. That line was **opened on 2026-09-05, deliberately and once**, for gate
-and provider config files — the (b), (c), (d), (e) and (f) rows above, (d) since
-retired — because a gate that ships its doctrine and not its config leaves every
-repo to hand-write the file the doctrine describes, which is the failure the
-tier exists to prevent. Row (f) is that one opening reaching the cloud types
-later the same day, when the first `cloud-service` pack shipped a `config/`
-tree: a deploy target that ships its doctrine and not its config leaves the repo
-hand-writing that file too. Row (g) is the same argument arriving on the
-**project** axis: a framework whose doctrine names a task the repo must have,
-and then ships no task, has described a command rather than given one.
+toolchain manager: a gate pack named its config file as a prerequisite and
+wrote nothing. That line was **opened on 2026-09-05, deliberately and once**,
+for gate and provider config files — the (b), (c), (d), (e) and (f) rows
+above, (d) and (e) since retired — because a gate that ships its doctrine and
+not its config leaves every repo to hand-write the file the doctrine
+describes, which is the failure the tier exists to prevent. Row (f) is that
+one opening reaching the cloud types later the same day, when the first
+`cloud-service` pack shipped a `config/` tree: a deploy target that ships its
+doctrine and not its config leaves the repo hand-writing that file too. Row
+(g) is the same argument arriving on the **project** axis: a framework whose
+doctrine names a task the repo must have, and then ships no task, has
+described a command rather than given one.
 
 Four things stay **outside** the fence, and they are the whole of it:
 
@@ -318,11 +315,11 @@ argument this list exists to answer. Moving one of the four is a decision on
 the record, never an implementer's call.
 
 **The lockfile is what tells a caller the repo is shaped.** `/vwf:init` lays
-the tier down by calling `stackgen:tool-config`, then fetching the two
-`unconditional:` bundles by fixed slug — `repo-gates`, `repo-hygiene`
+the tier down by calling `stackgen:tool-config`, then fetching the
+`unconditional:` bundle by fixed slug — `repo-hygiene`
 (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) — and every landing is
-recorded here. So the shape test is a lockfile read: **both slugs and
-the `tool-config/mise` entries present = shaped**, any missing = not, and
+recorded here. So the shape test is a lockfile read: **the slug and the
+`tool-config/*` entries present = shaped**, any missing = not, and
 nothing has to infer a repo's
 state from which files happen to sit in it. That matters because `.config/`
 holds the repo's own files too, and presence in the tree has never meant
@@ -409,7 +406,7 @@ Rules the lockfile enforces:
   of them ran.** The materializer writes it at landing. The composing skill
   (`/vwf:init`) **re-records** it after every change it makes to a landed
   file — the marked-position fills, the `.gitignore` section appends, the
-  hook-fragment merge, the editor block — and its replace-or-keep offer
+  editor block — and its replace-or-keep offer
   re-records it on either answer, so a file kept as the repo's own reads as
   current, not as drift, the next time sync or the offer runs.
 - **Anything not in the lockfile is not stackgen's** — never diffed, never

@@ -2,7 +2,7 @@ name: Tailwind CSS
 summary: Utility classes generated from a token block — the design system's
   semantic roles declared once in CSS, and every style written at the call site
   as a class rather than in a stylesheet of its own.
-version: 0.1.0
+version: 0.2.0
 type: stylesheet
 category: utility
 kind: stylesheet
@@ -10,6 +10,9 @@ axis: stylesheet
 # The bundle slug IS the projects.<name>.stylesheet token, so the pin and the
 # config key are one value rather than two that can disagree.
 # A stylesheet approach satisfies no harness capability: nothing here is booted,
-# stood up or probed. The lint gate it can feed is a task the repo's gate
-# bundle runs and owns.
+# stood up or probed. The lint gate it can feed is a task stackgen:tool-config
+# lands and owns.
 harness: n/a
+# The lines this pack asks /stackgen:tool-config for.
+tool-config:
+  - dprint add plugin malva

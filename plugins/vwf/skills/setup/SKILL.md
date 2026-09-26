@@ -108,8 +108,8 @@ everything below reads as it always did.
 
 First, is the shape **there**: in **each** repo of that set, the stack adapter's
 lockfile records what `/stackgen:tool-config all` writes — entries sourced
-`tool-config/<tool>@<version>` — and the two remaining unconditional repo
-slugs, `repo-gates` and `repo-hygiene`
+`tool-config/<tool>@<version>`, the gates among them — and the one remaining
+unconditional repo slug, `repo-hygiene`
 (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). Named exactly, never
 constructed: a slug assembled from configuration is one that can silently
 resolve to nothing. Second, is it **current**: the seven predicates under
@@ -315,9 +315,10 @@ point, since a stamp written before validation describes a tree nothing checked:
    **only** vwf command that builds graphs. After the commit, if
    `graphify-out/graph.json` is missing and the CLI is on `PATH`, offer —
    consent-gated; it is a long build — to build it against the **main
-   checkout's** root, never the worktree. No refresh hook is installed:
-   graphify's own hook pins a Python path, so the repo's `code:graph` task
-   refreshes the graph, run by hand. A decline is honored without
+   checkout's** root, never the worktree. The refresh hook is the repo's
+   pre-commit `graphify-refresh` hook at `post-commit`, which runs `code:graph`
+   and which `/stackgen:tool-config all` lands; never graphify's own raw git
+   hook, which pins a Python path. A decline is honored without
    re-asking. Before building, confirm the `.graphifyignore` the pipeline
    wrote is present at the root the build runs from — a commit still local
    to the worktree has not put it there, and a graph built without it indexes

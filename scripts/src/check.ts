@@ -26,6 +26,7 @@ import {
   statSync,
 } from "node:fs";
 import {
+  basename,
   isAbsolute,
   join,
   relative,
@@ -269,19 +270,14 @@ function* hookCommands(
 
 /** Where a landed tree puts the file-based mise task library. */
 const PACK_MISE_TASKS = join(".config", "mise", "tasks");
-/** Where a landed tree puts its pre-commit hook fragment. */
+/** Where retired pre-commit hook fragments sat; a pack asks the skill now. */
 const PACK_HOOK_FRAGMENTS = join(".config", "pre-commit.d");
-/**
- * Where the pre-commit gate pack puts the **whole** config the fragments merge
- * into. Not a fragment and not at the `config/` root, so the fragment walk
- * above never reaches it — and until it was named here nothing parsed it at
- * all.
- */
-const PACK_PRE_COMMIT_CONFIG = join(".config", "pre-commit-config.yaml");
 /** Where a landed tree puts its editor-settings fragment. */
 const PACK_EDITOR_FRAGMENTS = join(".config", "vscode.d");
 /** Where `stackgen:tool-config` keeps one landed tree per tool. */
 const TOOL_CONFIG_ASSETS = "skills/tool-config/assets";
+/** The skill file that marks a plugin as the owner of those trees. */
+const TOOL_CONFIG_SKILL = "skills/tool-config/SKILL.md";
 /** Where a pack keeps the hook scripts that land in `.claude/hooks/`. */
 const PACK_HOOKS = "hooks";
 /**
@@ -342,7 +338,7 @@ const PACK_CONFIG_ROOT_FILES = new Set([
   "LICENSE",
   "SECURITY.md",
   // dprint's config discovery is root-only and `--config` is the CLI's only
-  // override, so the gate pack ships a root shim that `extends` `.config/`.
+  // override, so tool-config's dprint tree ships a root shim extending it.
   "dprint.json",
   "eslint.config.mjs",
   "fnox.toml",
@@ -383,7 +379,7 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  * What a stackgen pack ships to run in a target repo must be materializable
  * as-is.
  *
- * Nine assertions, all of them about a file whose failure mode in the target
+ * Seven assertions, all of them about a file whose failure mode in the target
  * repo is silence rather than an error:
  *
  * - a task file lands **executable** — `.config/mise/tasks/**` is a *file-based*
@@ -401,12 +397,6 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  *   it — and inside the one forge directory the list admits, a **workflow file
  *   is refused**: a pack states which task CI runs and never writes the
  *   workflow;
- * - a **pre-commit fragment parses** and declares `repos:`, because `/vwf:init`
- *   concatenates the fragments into one pre-commit config and a malformed one
- *   breaks a file no pack owns;
- * - the gate pack's **whole pre-commit config** — which is neither a fragment
- *   nor at the `config/` root, so nothing else here reaches it — parses and
- *   declares `repos:` on the same reasoning, from the base end;
  * - an **editor fragment** parses as JSONC and carries only `settings`,
  *   `nesting` and `extensions`, because init merges the fragments into a file
  *   no pack owns and a key outside the three is dropped without a word;
@@ -419,8 +409,9 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  *   is set by a `mise add env` call in its `tool-config:` list, each call one
  *   of the verbs a pack may ask for (`packFactFaults`).
  *
- * A pack's `config/` tier holding a mise `conf.d` fragment is a finding too, and
- * each `stackgen:tool-config` asset tree is walked as a landed tree.
+ * A pack's `config/` tier holding a mise `conf.d` fragment or a `pre-commit.d`
+ * file is a finding too, and each `stackgen:tool-config` asset tree is walked
+ * as a landed tree.
  *
  * The walk is its own rather than `plugin.files`: most of these paths run
  * through `.config/`, and the reader's glob does not descend into a dot
@@ -474,29 +465,15 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
         at(`${path(absolute)}: ${message}`);
       }
     }
-
-    const preCommit = join(tree, PACK_PRE_COMMIT_CONFIG);
-    if (existsSync(preCommit)) {
-      for (const message of preCommitFaults(readText(preCommit), "config")) {
-        at(`${path(preCommit)}: ${message}`);
-      }
-    }
-
-    for (const absolute of filesUnder(join(tree, PACK_HOOK_FRAGMENTS))) {
-      if (!/\.ya?ml$/.test(absolute)) {
-        continue;
-      }
-      for (const message of preCommitFaults(readText(absolute), "fragment")) {
-        at(`${path(absolute)}: ${message}`);
-      }
-    }
   };
 
   for (const tree of toolConfigTrees(plugin)) {
     landedTree(join(plugin.root, tree));
   }
 
-  for (const pack of globSync("stacks/*/*", { cwd: plugin.root })) {
+  const packs = globSync("stacks/*/*", { cwd: plugin.root });
+  const slugs = new Set(packs.map(pack => basename(pack)));
+  for (const pack of packs) {
     for (const absolute of filesUnder(join(plugin.root, pack, PACK_HOOKS))) {
       if (PACK_HOOK_METADATA.test(absolute)) {
         continue;
@@ -525,6 +502,13 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       );
     }
 
+    for (const absolute of filesUnder(join(config, PACK_HOOK_FRAGMENTS))) {
+      at(
+        `pack config/ tier ships a pre-commit.d file — a pack asks for its `
+          + `hooks through \`tool-config:\` in pack.yaml: ${path(absolute)}`,
+      );
+    }
+
     const packYaml = join(plugin.root, pack, "pack.yaml");
     if (existsSync(packYaml)) {
       let document: unknown;
@@ -542,7 +526,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       for (
         const message of [
           ...conditionalFaults(document, config),
-          ...packFactFaults(document),
+          ...packFactFaults(document, slugs),
         ]
       ) {
         at(`${path(packYaml)}: ${message}`);
@@ -568,15 +552,18 @@ const ENV_VAR_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
  * - every `machine_env` entry names an env var, the command that `detect`s its
  *   value and the `question` setup asks — and the var is set by a `mise add
  *   env` call in the pack's `tool-config:` list, since that is what setup fills;
- * - every `tool-config:` entry parses as one of the three verbs a pack may ask
- *   for (`toolConfigFaults`).
+ * - every `tool-config:` entry parses as one of the verbs a pack may ask for,
+ *   and an exclude goes through `all add exclude` alone (`toolConfigCall`).
  *
  * Each is read by a caller that trusts its shape: a probe that is not a string
  * is never run, a lockfile glob that climbs out of the repo matches something
  * the repo does not own, and a `machine_env` name no fragment carries is a
  * question whose answer lands nowhere — all silently.
  */
-function packFactFaults(document: unknown): string[] {
+function packFactFaults(
+  document: unknown,
+  slugs: ReadonlySet<string>,
+): string[] {
   if (!isPlainObject(document)) {
     return [];
   }
@@ -654,7 +641,7 @@ function packFactFaults(document: unknown): string[] {
   }
   else if (calls !== undefined) {
     (calls as string[]).forEach((call, index) => {
-      const { fault, key } = toolConfigCall(call);
+      const { fault, key } = toolConfigCall(call, slugs);
       if (fault !== undefined) {
         faults.push(`\`tool-config[${index}]\` (${call}) ${fault}`);
       }
@@ -715,6 +702,43 @@ const TOOL_CONFIG_VERBS = {
       + String.raw`(?: to dev(?: environment)?)?$`,
   ),
 };
+/** The dprint plugins the skill's plugin table defines. */
+const DPRINT_PLUGINS =
+  "markdown|pretty_yaml|json|exec|typescript|malva|markup_fmt|dockerfile";
+/** The keys `pre-commit add hook` writes, each `key=value`, quoted or bare. */
+const HOOK_PAIR = String.raw`(name|description|entry|language|files|exclude|`
+  + String.raw`types|args|pass_filenames|always_run|require_serial|rev)=`
+  + String.raw`("(?:[^"\\]|\\.)*"|[^\s"]+)`;
+/** `pre-commit add hook`, its repo captured; `hookFault` reads the pairs. */
+const TOOL_CONFIG_HOOK = new RegExp(
+  String.raw`^pre-commit add hook (local|https://\S+) [A-Za-z0-9_-]+ `
+    + `(?:pre-commit|commit-msg|post-commit|manual)(?: ${HOOK_PAIR})*$`,
+);
+/** The gate verbs a pack may ask for; `tail` marks a free-text end. */
+const TOOL_CONFIG_GATE_VERBS: readonly { pattern: RegExp; tail: boolean; }[] = [
+  {
+    pattern: new RegExp(`^dprint add plugin (?:${DPRINT_PLUGINS})$`),
+    tail: false,
+  },
+  {
+    pattern: new RegExp(
+      String.raw`^all add exclude (?!generated$)(?:generated )?`
+        + String.raw`(?:(?!for(?: |$))[^\s"]+(?: |$))+$`,
+    ),
+    tail: false,
+  },
+  {
+    pattern: /^pre-commit add linter-ignore(?: (?!for(?: |$))[^\s"]+)+$/,
+    tail: false,
+  },
+  { pattern: TOOL_CONFIG_HOOK, tail: true },
+  { pattern: /^grype add ignore [A-Za-z0-9-]+(?: .+)?$/, tail: true },
+];
+/** A requester suffix: the materializer appends it, a pack never writes it. */
+const TOOL_CONFIG_FOR = / for \S+$/;
+/** An exclude asked of one tool, which would leave rule 15's lists disagreeing. */
+const TOOL_CONFIG_LONE_EXCLUDE =
+  /^(dprint|pre-commit|gitleaks) add (?:exclude|excludes|allowlist)\b/;
 /** A Tera delimiter: mise renders it, so only a pack's own env value may carry one. */
 const TERA_DELIMITER = /\{\{|\{%|\{#/;
 /** An alias name: a TOML bare key, so `-` is allowed after the first character. */
@@ -722,12 +746,42 @@ const ALIAS_NAME = /^[A-Za-z_][A-Za-z0-9_-]*$/;
 
 /**
  * One `tool-config:` entry against the verb grammar: the env key it sets, or
- * why it is refused.
+ * why it is refused. `slugs` names every pack, so a tail verb's `for <pack>`
+ * reads as a suffix rather than text.
  */
-function toolConfigCall(call: string): { fault?: string; key?: string; } {
+function toolConfigCall(
+  call: string,
+  slugs: ReadonlySet<string>,
+): { fault?: string; key?: string; } {
   const words = call.trim().replace(/\s+/g, " ");
   if (TOOL_CONFIG_VERBS.tool.test(words)) {
     return {};
+  }
+  const lone = TOOL_CONFIG_LONE_EXCLUDE.exec(words);
+  if (lone !== null) {
+    return {
+      fault: `adds an exclude through \`${lone[1]}\` alone — ask `
+        + "`all add exclude [generated] <paths>`, which writes every list",
+    };
+  }
+  const verb = TOOL_CONFIG_GATE_VERBS.find(v => v.pattern.test(words));
+  const bare = words.replace(TOOL_CONFIG_FOR, "");
+  const suffix = words.slice(bare.length + " for ".length);
+  if (
+    bare !== words
+    && (verb === undefined || !verb.tail || slugs.has(suffix))
+    && TOOL_CONFIG_GATE_VERBS.some(v => v.pattern.test(bare))
+  ) {
+    return {
+      fault: "ends in a `for <requester>` suffix — the materializer appends "
+        + "it, so a pack's line never carries one",
+    };
+  }
+  if (verb !== undefined) {
+    const fault = verb.pattern === TOOL_CONFIG_HOOK
+      ? hookFault(words)
+      : undefined;
+    return fault === undefined ? {} : { fault };
   }
   const env = TOOL_CONFIG_VERBS.env.exec(words);
   const alias = env === null ? TOOL_CONFIG_VERBS.alias.exec(words) : null;
@@ -735,8 +789,13 @@ function toolConfigCall(call: string): { fault?: string; key?: string; } {
   if (match === null) {
     return {
       fault: "matches none of `mise add tool <name> <version> to <scope>`, "
-        + "`mise add env <KEY>=<value> to <scope>` or "
-        + "`mise add alias <name>=<command> [to dev]`",
+        + "`mise add env <KEY>=<value> to <scope>`, "
+        + "`mise add alias <name>=<command> [to dev]`, "
+        + "`dprint add plugin <name>`, "
+        + "`all add exclude [generated] <paths>`, "
+        + "`pre-commit add linter-ignore <paths>`, "
+        + "`pre-commit add hook <repo> <id> <stage> [key=value …]` or "
+        + "`grype add ignore <id> [reason]`",
     };
   }
   const name = match[1] ?? "";
@@ -752,6 +811,43 @@ function toolConfigCall(call: string): { fault?: string; key?: string; } {
     return { fault: "carries a template delimiter outside an `add env` value" };
   }
   return env !== null ? { key: name } : {};
+}
+
+/**
+ * What the skill refuses of a hook the grammar admits: a `local` hook needs a
+ * name, an entry run through `mise x -- ` and `language=system`, and no `rev`;
+ * a URL repo needs a `rev`.
+ */
+function hookFault(words: string): string | undefined {
+  const local = TOOL_CONFIG_HOOK.exec(words)?.[1] === "local";
+  const pairs = new Map<string, string>();
+  for (const [, key, value] of words.matchAll(new RegExp(HOOK_PAIR, "g"))) {
+    pairs.set(
+      key ?? "",
+      (value ?? "").replace(/^"([\s\S]*)"$/, "$1"),
+    );
+  }
+  if (!local) {
+    return pairs.has("rev")
+      ? undefined
+      : "is a URL repo hook with no `rev=` — the skill pins a tag";
+  }
+  if (pairs.has("rev")) {
+    return "is a `local` hook carrying `rev=`, which only a URL repo takes";
+  }
+  const missing: string[] = [];
+  if (!pairs.has("name")) {
+    missing.push("`name=`");
+  }
+  if (!(pairs.get("entry") ?? "").startsWith("mise x -- ")) {
+    missing.push("an `entry=` beginning `mise x -- `");
+  }
+  if (pairs.get("language") !== "system") {
+    missing.push("`language=system`");
+  }
+  return missing.length === 0
+    ? undefined
+    : `is a \`local\` hook lacking ${missing.join(", ")}`;
 }
 
 /** Every `stackgen:tool-config` asset tree, plugin-relative. */
@@ -858,28 +954,6 @@ function conditionalFaults(document: unknown, config: string): string[] {
     }
   });
   return faults;
-}
-
-/**
- * What a pre-commit YAML a pack ships gets held to, fragment or whole config.
- *
- * The same two assertions either way — it parses, and it carries a top-level
- * `repos:` list — because the merge that produces the target repo's config is
- * a concatenation on that key: a document without it contributes nothing and
- * says nothing about having contributed nothing.
- */
-function preCommitFaults(source: string, noun: string): string[] {
-  let document: unknown;
-  try {
-    document = parseYaml(source);
-  }
-  catch (error) {
-    return [`pre-commit ${noun} is not valid YAML — ${firstLine(error)}`];
-  }
-  const repos = (document as { repos?: unknown; } | null)?.repos;
-  return Array.isArray(repos)
-    ? []
-    : [`pre-commit ${noun} declares no top-level \`repos\` list`];
 }
 
 /**
@@ -1761,8 +1835,8 @@ function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
 }
 
 /**
- * The four exclusion lists the gate packs ship, each in its tool's own syntax,
- * and the reader that lifts the entries out of each.
+ * The four exclusion lists tool-config's gate assets ship, each in its tool's
+ * own syntax, and the reader that lifts the entries out of each.
  *
  * dprint and taplo take globs; gitleaks and pre-commit take regexes — the
  * pre-commit one a single pattern, so its alternatives are the entries. The two
@@ -1780,7 +1854,7 @@ const EXCLUSION_LISTS: readonly {
   readonly entries: (source: string) => string[] | null;
 }[] = [
   {
-    path: "stacks/toolchain-gate/dprint/config/.config/dprint.json",
+    path: `${TOOL_CONFIG_ASSETS}/dprint/.config/dprint.json`,
     syntax: "glob",
     role: "formatter",
     entries: source => {
@@ -1789,20 +1863,19 @@ const EXCLUSION_LISTS: readonly {
     },
   },
   {
-    path: "stacks/toolchain-gate/dprint/config/.config/taplo.toml",
+    path: `${TOOL_CONFIG_ASSETS}/dprint/.config/taplo.toml`,
     syntax: "glob",
     role: "formatter",
     entries: source => tomlStringList(source, "exclude"),
   },
   {
-    path: "stacks/toolchain-gate/gitleaks/config/.config/gitleaks.toml",
+    path: `${TOOL_CONFIG_ASSETS}/gitleaks/.config/gitleaks.toml`,
     syntax: "regex",
     role: "scanner",
     entries: source => tomlStringList(source, "paths"),
   },
   {
-    path:
-      "stacks/toolchain-gate/pre-commit/config/.config/pre-commit-config.yaml",
+    path: `${TOOL_CONFIG_ASSETS}/pre-commit/.config/pre-commit-config.yaml`,
     syntax: "regex",
     role: "formatter",
     entries: source => {
@@ -1986,19 +2059,28 @@ function normalizeExclusion(entry: string, syntax: "glob" | "regex"): string {
  * A tree the scanner skips that no formatter excludes is: an allowlist entry
  * with no generated tree behind it is a scanner quietly not scanning.
  *
- * A list that is absent from the tree is left out of the comparison rather
- * than treated as empty, so a pack fixture holding one of the four files is
- * not held to the other three.
+ * The plugin carrying the tool-config skill must carry all four lists: a list
+ * missing there is a finding, since a moved file would otherwise end the check
+ * silently. In any other plugin the rule has nothing to compare.
  */
 function checkExclusionSets(plugins: readonly Plugin[]): Finding[] {
   const findings: Finding[] = [];
 
   for (const plugin of plugins) {
+    const owner = existsSync(join(plugin.root, TOOL_CONFIG_SKILL));
     const present = new Map<string, Set<string>>();
     let scanner: { path: string; set: Set<string>; } | null = null;
     for (const list of EXCLUSION_LISTS) {
       const absolute = join(plugin.root, list.path);
       if (!existsSync(absolute)) {
+        if (owner) {
+          findings.push({
+            scope: plugin.dir,
+            message:
+              `${list.path}: exclusion list is missing — the tool-config `
+              + `skill ships all four lists`,
+          });
+        }
         continue;
       }
       let entries: string[] | null;

@@ -3,7 +3,7 @@ summary: A Docker image running beside a Worker and addressed through a
   Durable Object — the deploy target for a process that needs a real
   filesystem, a runtime the Workers sandbox cannot host, or more CPU than
   an invocation is allowed, while the Worker stays the front door.
-version: 0.1.3
+version: 0.2.0
 type: cloud-service
 category: compute
 # `capability` is deliberately unset, as `cloud-service/workers-ssr` and
@@ -49,3 +49,6 @@ harness:
       can refuse connections locally without it. There is still no backing
       engine to compose behind a readiness gate, so the harness answer
       stays `n/a`
+# The lines this pack asks /stackgen:tool-config for.
+tool-config:
+  - dprint add plugin dockerfile

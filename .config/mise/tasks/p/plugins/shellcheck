@@ -41,9 +41,9 @@
 #
 # shfmt runs in diff mode with exactly `-i 2 -ci` and nothing else. Those two
 # flags are the canonical format for shell in this repo and in what it ships:
-# the same pair appears in the `shfmt` hook of
-# `plugins/stackgen/stacks/toolchain-gate/pre-commit/config/.config/pre-commit-config.yaml`,
-# which is the gate that runs in a materialized repo. Keep the two in step — a
+# the same pair appears in the `code:format` task that the `format` hook of
+# `plugins/stackgen/skills/tool-config/assets/pre-commit/.config/pre-commit-config.yaml`
+# runs, which is the gate in a materialized repo. Keep the two in step — a
 # flag here that the shipped hook does not set (`-bn` and `-kp` were both tried,
 # and `-bn` rejects the task library's trailing-pipe continuations while `-kp`
 # then preserves the column padding that results) makes this gate fail on files

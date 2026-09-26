@@ -1,0 +1,45 @@
+# TOML formatting. dprint has no TOML plugin, so `.config/dprint.json` routes
+# every .toml file through taplo via its `exec` escape hatch. This file is what
+# that call reads, and it is the only place TOML layout is decided — a second
+# taplo config anywhere in the tree is a second opinion.
+#
+# `align_entries` and `reorder_keys` together make a TOML diff readable: keys
+# land in a stable order, so a changed value shows as one line rather than as a
+# reshuffled block.
+
+# The one exclusion set the three formatter lists share, in glob form — the
+# same set, at any depth, that `.config/dprint.json` and the hook config's
+# global `exclude` spell in their own syntax, held equal by the toolkit's
+# checker. The secret scanner's allowlist is a subset: generated trees only.
+exclude = [
+  # >>> dprint
+  "**/*.lock",
+  "**/.claude/**",
+  "**/.config/mise/locks/**",
+  "**/.git/**",
+  "**/build/**",
+  "**/dist/**",
+  "**/graphify-out/**",
+  # <<< dprint
+]
+include = [ "**/*.toml" ]
+
+[formatting]
+align_comments        = true
+align_entries         = true
+allowed_blank_lines   = 1
+array_auto_collapse   = true
+array_auto_expand     = true
+array_trailing_comma  = true
+column_width          = 80
+compact_arrays        = false
+compact_entries       = false
+compact_inline_tables = false
+crlf                  = false
+indent_entries        = false
+indent_tables         = false
+inline_table_expand   = true
+reorder_arrays        = true
+reorder_inline_tables = true
+reorder_keys          = true
+trailing_newline      = true

@@ -28,7 +28,6 @@ it finds.
 declares `kind: language-bundle`, but there is no `language/python` component
 and no python bundle for it to compose into, so no materialization can land it
 today. Authoring the python language bundle against the 12-topic bar, with
-per-topic research, is its own wave — this is not a bug to fix in passing. The
-four repo-gate packs have had the same status since Wave A.
+per-topic research, is its own wave — this is not a bug to fix in passing.
 
 The gates that run against this environment are the `ruff` pack.

@@ -72,14 +72,14 @@ the two files that still have the problem.
    `CLAUDE.md`, `readme.md` and `docs/` **are** formatted.
 2. **`plugins/*/stacks/*/*/config/` is excluded too, and for a different
    reason.** That tier is **payload** — copied byte-for-byte into a target repo,
-   where the *gate pack's own* dprint config formats it. That config
-   deliberately omits the `bracketSpacing`/`braceSpacing` this repo sets, so a
-   payload file formatted here comes out different from what the shipped config
-   produces, and a freshly initialised repo fails its own first `--all-files`
-   hook run on a file nobody touched. It has happened. The exclusion is on the
-   **directory**, so a new payload file type cannot silently re-acquire the
-   defect; when a payload file genuinely needs formatting, run the **shipped**
-   config over it, never this repo's.
+   where the dprint config *`stackgen:tool-config` lands* formats it. That
+   config deliberately omits the `bracketSpacing`/`braceSpacing` this repo sets,
+   so a payload file formatted here comes out different from what the shipped
+   config produces, and a freshly initialised repo fails its own first
+   `--all-files` hook run on a file nobody touched. It has happened. The
+   exclusion is on the **directory**, so a new payload file type cannot silently
+   re-acquire the defect; when a payload file genuinely needs formatting, run
+   the **shipped** config over it, never this repo's.
    `plugins/stackgen/skills/tool-config/assets/` is excluded on the same terms:
    it is the payload `stackgen:tool-config` lands.
 3. **A dependency stays inside this marketplace.** Add the name to

@@ -60,7 +60,7 @@ fragment**, because the gate config's `format` and `lint` hooks call the two
 tasks with the staged files. dprint and the sorter narrow to what they are
 given; the house linter does not — its rules are cross-file, so it runs the
 whole tree either way, and every exclusion it needs lives in
-`.config/linter.yaml`, which the pre-commit gate pack ships.
+`.config/linter.yaml`, which `stackgen:tool-config` lands.
 
 **Composition order, since more than one component writes this tree:**
 the mise base `stackgen:tool-config` writes, then `package-manager` /

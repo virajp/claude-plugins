@@ -3,8 +3,8 @@ name: Swift · SwiftUI
 axis: project
 kind: app-framework
 components:
-- app-framework/swiftui@0.3.0
-- package-manager/swiftpm@0.1.1
+- app-framework/swiftui@0.4.0
+- package-manager/swiftpm@0.2.0
 - toolchain-gate/swift-format@0.1.1
 - toolchain-gate/swiftlint@0.2.0
 platforms:

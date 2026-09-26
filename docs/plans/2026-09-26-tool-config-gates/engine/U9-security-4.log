@@ -1,0 +1,4 @@
+No high-confidence vulnerabilities found.
+Dropped candidates:
+- assets/mise/.config/mise/tasks/code/graph:62-104 (and .config/mise/tasks/code/graph, 27d7b259): stale-lock takeover rm -rf/rmdir/mkdir under the owner-only .git; pid only fed to kill -0; residual race excluded. (2)
+- scripts/src/check.ts:724-772 (f0fb200d): validation only tightened; Set.has + regex; nothing executed or read from input. (1)

@@ -38,9 +38,10 @@ automatically (with a note).
 A repo shaped by [`/vwf:init`](#vwfinit) does not need that one-shot at all: its
 task library carries `setup:ai`, which registers the marketplace, installs the
 plugins the repo declares at **project** scope, wires graphify for the agent —
-never graphify's own git hook, which pins a Python path; the repo's `code:graph`
-task refreshes the graph, run by hand — and runs on every checkout. The full
-description is [stackgen's task library](./stackgen.md#the-task-library).
+never graphify's own git hook, which pins a Python path; the repo's pre-commit
+`graphify-refresh` hook runs `code:graph` after each commit — and runs on every
+checkout. The full description is
+[stackgen's task library](./stackgen.md#the-task-library).
 
 Separately, `brew install virajp/tap/claude-status` installs the statusline —
 and with it the caps hook that delivers `/vwf:execute`'s resource-cap pause.
@@ -918,12 +919,12 @@ gates and its own lockfile, and it is shaped or not on its own evidence. What is
 repo, and one yes.
 
 **It names no tool, and that is the design.** Every file it lays down comes from
-the stack adapter. The toolchain manager's config comes from
+the stack adapter. The toolchain manager's config and the repo gates come from
 [`/stackgen:tool-config all`](./stackgen.md#stackgentool-config), which `init`
-calls with its answers as arguments — previewed first, the skill's rows shown in
-init's plan, then run with those rows' answers on the same consent; the repo
-gates and the repo hygiene come from two bundles fetched by fixed slugs, both
-*unconditional*, so a repo that has picked no stack still gets them. `init`
+calls with its answers as arguments, the commit scopes among them — previewed
+first, the skill's rows shown in init's plan, then run with those rows' answers
+on the same consent; the repo hygiene comes from one bundle fetched by fixed
+slug, *unconditional*, so a repo that has picked no stack still gets it. `init`
 decides *when* the packs land, *what* you are asked, and how an existing tree is
 reconciled against what they ship. With no stack-adapter plugin installed it
 **halts** with the install command rather than printing an empty plan that reads
@@ -934,7 +935,8 @@ What a shaped repo has when it is done: a sectioned `.gitignore`, a lowercase
 settings files, its `conf.d` section files and its one tracked lock, a
 file-based task library grouped `setup:*`, `code:*` and `p:<project>:*` over a
 shared helper library, pre-commit with the full hook set and conventional
-commits wired for release notes, the security and dependency gates configured,
+commits wired for release notes, a post-commit hook that refreshes the
+code-intelligence graph, the security and dependency gates configured,
 `.editorconfig`, `.gitattributes`, a Renovate config, `CONTRIBUTING.md`, issue
 templates under `.github/`, an ignore file for the code-intelligence graph, and
 composed editor settings and extension recommendations. Some of its contents
@@ -1229,21 +1231,21 @@ borrows the passes below that have something to read). The survey walks eleven
 checks — root files against the allowlist, the readme's casing, task names
 against the pack's *legacy-name table*, task shebangs, the helper library's name
 and whether its contents still match the pack's, the files a pack owns that the
-repo lacks or has changed, ignore sections and hook fragments, commit types,
-per-project task groups, the tasks the repo owns that no pack ships, and the
-positions the packs ship marked for it to fill — the gate configs, and the
-plugin task's two agent-plugin lists, which are compared row for row against
-question 5's confirmed answer, with both sides shown in the plan when they
-differ, since that is the one position a user may have hand-edited. Pass 1 has
-one case worth knowing: where a gate pack declares both a config under
+repo lacks or has changed, ignore sections, commit types, per-project task
+groups, the tasks the repo owns that no pack ships, and the positions the packs
+ship marked for it to fill — the gate configs, and the plugin task's two
+agent-plugin lists, which are compared row for row against question 5's
+confirmed answer, with both sides shown in the plan when they differ, since that
+is the one position a user may have hand-edited. Pass 1 has one case worth
+knowing: where `stackgen:tool-config` or a pack lands both a config under
 `.config/` and a two-line stand-in of the same name at the root — the stand-in
 existing because that tool's config discovery is root-only — your **real**
 config moves into `.config/` and the stand-in takes its place, with the plan
 saying the settings survive the move. Not every key does, and the plan says
-which: a gate pack's own skill names the key that is **not** inherited through
+which: the owner's own reference names the key that is **not** inherited through
 the stand-in, where an extended file declaring it is a fatal diagnostic rather
 than a warning, so the move drops it. Dropping it **widens** what the gate
-covers, since the pack's own pinned plugin list is then what defines the file
+covers, since the owner's own pinned plugin list is then what defines the file
 set. So the move row carries **sub-lines** — one for the dropped key, and one
 per **exclusion** the drop makes necessary, each naming the files that exclusion
 keeps out of the gate. Never a restored key, which puts the diagnostic back, and
@@ -1721,33 +1723,33 @@ base and runs from there, so what gets reshaped is the product.
 product it asks its two things of **every repo** — the base and every member
 present on this machine, the same set `/vwf:doctor` evaluates. Is the shape
 *there* — that repo's stack-adapter lockfile records the `tool-config/…` entries
-`/stackgen:tool-config all` writes and the two unconditional slugs, `repo-gates`
-and `repo-hygiene` — and is it *current*, against the seven repo-shape
-predicates `/vwf:doctor` owns, evaluated on that repo's own artifacts (the pack
-versions the lockfile recorded, the registry ids behind the surfaces generated
-from them, the `develop`/`main` pair, the repo-name environment key, the content
-of the pack-owned files that landed — against the lock, marked positions spliced
-out — the marked positions beside that key, and the forge state — default
-branch, both branches protected, the base's backlog project — read from the
-forge when its CLI is on `PATH` and logged in). Any of those missing in any
-repo, or any predicate failing in any repo, and setup says which repos are
-absent or behind and what each showed, and offers [`/vwf:init`](#vwfinit) **once
-for the whole product** — a base that is current while one member is behind is
-still an offer, because the shape is per repo and the product is shaped only
-when all of them are. `init` is what lays the shape down and what brings it
-forward, and it surveys and shapes every repo in one run of its own. That seam
-is why `init` stays model-invocable — and it is hidden from the `/` menu, so
-this offer and `reshape` above are the only two ways it is reached. An
-**absent** member is a blind spot, never a finding. Declining is a recorded
-deferral, not a halt: the repo shape and the vwf format are two different
-things, and a repo can be onboarded into one without the other. The check is not
-Step 0's alone: it **repeats once after the materialize pass**, against the
-lockfile that pass has just written, so a pack version the run itself moved is
-offered in the same run rather than the next — see
-[the second shape check](#the-second-shape-check) below. Setup itself never
-lands the baseline — `/stackgen:tool-config all` and the two unconditional
-bundles are `init`'s. The **pinned** stacks are a different matter, and they are
-setup's: see [the materialize pass](#the-materialize-pass) below.
+`/stackgen:tool-config all` writes and the one unconditional slug,
+`repo-hygiene` — and is it *current*, against the seven repo-shape predicates
+`/vwf:doctor` owns, evaluated on that repo's own artifacts (the pack versions
+the lockfile recorded, the registry ids behind the surfaces generated from them,
+the `develop`/`main` pair, the repo-name environment key, the content of the
+pack-owned files that landed — against the lock, marked positions spliced out —
+the marked positions beside that key, and the forge state — default branch, both
+branches protected, the base's backlog project — read from the forge when its
+CLI is on `PATH` and logged in). Any of those missing in any repo, or any
+predicate failing in any repo, and setup says which repos are absent or behind
+and what each showed, and offers [`/vwf:init`](#vwfinit) **once for the whole
+product** — a base that is current while one member is behind is still an offer,
+because the shape is per repo and the product is shaped only when all of them
+are. `init` is what lays the shape down and what brings it forward, and it
+surveys and shapes every repo in one run of its own. That seam is why `init`
+stays model-invocable — and it is hidden from the `/` menu, so this offer and
+`reshape` above are the only two ways it is reached. An **absent** member is a
+blind spot, never a finding. Declining is a recorded deferral, not a halt: the
+repo shape and the vwf format are two different things, and a repo can be
+onboarded into one without the other. The check is not Step 0's alone: it
+**repeats once after the materialize pass**, against the lockfile that pass has
+just written, so a pack version the run itself moved is offered in the same run
+rather than the next — see [the second shape check](#the-second-shape-check)
+below. Setup itself never lands the baseline — `/stackgen:tool-config all` and
+the unconditional bundle are `init`'s. The **pinned** stacks are a different
+matter, and they are setup's: see [the materialize pass](#the-materialize-pass)
+below.
 
 **Step 0 resolves one of three entry paths**, once, from what is on disk, and
 nothing after it re-derives the mode:
@@ -3461,9 +3463,9 @@ detection, `feedback`'s "which flow owns this bug", and execute's coder (reuse
 discovery) and reviewers (impact analysis, call-path threat modeling) — with raw
 file reads reserved for verification: the graph orients, the file is the
 evidence. The graph reflects at best the last commit (the repo's `code:graph`
-task refreshes it, run by hand), so the uncommitted diff is always read
-directly, and execute's worktrees reach back to the main checkout's graph for
-pre-change context.
+task refreshes it from a post-commit hook), so the uncommitted diff is always
+read directly, and execute's worktrees reach back to the main checkout's graph
+for pre-change context.
 
 **graphify is mandatory**, and the check happens at the entry gate: a missing
 CLI, or no graph reachable from either the current checkout or the main one, is
@@ -3471,10 +3473,10 @@ a blocking finding that `/vwf:setup` and `/vwf:execute` halt on. A worktree
 reaching back to the main checkout's graph is the normal path, not an absence.
 Past the gate it still degrades rather than crashes — an unreachable graph falls
 back to direct reads. `/vwf:setup` is the one command that builds a graph
-(consent-gated, at the end of onboarding) and installs no refresh hook —
-graphify's own hook pins a Python path, so the repo's `code:graph` task
-refreshes the graph, run by hand; a recorded decline is a settled choice, not an
-unmet mandate.
+(consent-gated, at the end of onboarding). The refresh is the repo's pre-commit
+`graphify-refresh` hook at `post-commit`, which runs `code:graph` and which
+`/stackgen:tool-config all` lands — never graphify's own hook, which pins a
+Python path; a recorded decline is a settled choice, not an unmet mandate.
 
 **What the graph indexes is narrowed by `.graphifyignore`.** graphify already
 honours `.gitignore`, so nothing git excludes — `docs/scratchpad/`, build

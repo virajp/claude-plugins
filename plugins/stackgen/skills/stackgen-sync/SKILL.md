@@ -35,17 +35,18 @@ user's clock.
    **Entries are not all under `.claude/`.** A component may have landed
    repo config files from its `config/` tree — a gate's own config file,
    the hygiene files at the repo root, a task overlay, a
-   `.config/pre-commit.d/` hook fragment, a `.config/vscode.d/` editor
-   fragment, a deploy target's root config — and those are ordinary
-   lockfile entries carrying a `path`, a `component`, a `hash` and a
-   `mode`. Inventory them with the rest; they differ only in where they sit
-   and in the consent line they take. What may sit at the repo **root** is
-   the allowlist in `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`, which is
-   the one statement of it — never re-list it here.
+   `.config/vscode.d/` editor fragment, a deploy target's root config —
+   and those are ordinary lockfile entries carrying a `path`, a
+   `component`, a `hash` and a `mode`. Inventory them with the rest; they
+   differ only in where they sit and in the consent line they take. What
+   may sit at the repo **root** is the allowlist in
+   `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`, which is the one
+   statement of it — never re-list it here.
 
    **Entries recorded `source: tool-config/…` are not this skill's.** The
-   toolchain manager's files are `stackgen:tool-config`'s; list them as
-   such and diff nothing in them.
+   toolchain manager's and the gates' files — mise, dprint, pre-commit,
+   gitleaks, grype — are `stackgen:tool-config`'s; list them as such and
+   diff nothing in them.
 
 2. **Diff pack-sourced components.** For each component, re-derive its
    landing set from the current pack
@@ -122,18 +123,6 @@ user's clock.
    lockfile says supplied it. A file whose supplying component **changed** is a
    real delta, reported as such: it means precedence moved, not that the pack
    did.
-
-   **`.config/pre-commit-config.yaml` is diffed outside its markers
-   only.** The fragments a pack ships land as
-   `.config/pre-commit.d/<pack>.yaml` files and are diffed there, like any
-   other entry; the merged config is `/vwf:init`'s output, and the regions
-   between its `# >>>` and `# <<<` markers are re-merged by init rather
-   than reconciled here. So compare the file **around** those regions and
-   report drift there; never rewrite inside them, and never treat a
-   fragment that has moved as a reason to edit the merged file — say the
-   fragment moved and leave the fold to the shape check that closes the
-   sync (step 7). Two things writing between the same markers is the one
-   way this file could lose an edit.
 
 3. **Offer regeneration per generated component.** A `generated` component
    has no pack to diff against; offer to re-run the generator for that
@@ -217,10 +206,10 @@ user's clock.
    way Step 0 offers it — one line naming the drifted repos and the
    failing predicate, then the question — and invoke `/vwf:setup reshape`
    in-session on a yes; a decline ends the sync. A clean check says
-   nothing, and nothing reshapes unprompted. This is where a fragment
-   that moved in step 2 is folded into the merged config: the sync never
-   writes what init composes — the merged file, the regions between its
-   markers — the reshape does.
+   nothing, and nothing reshapes unprompted. This is where an editor
+   fragment that moved in step 2 is folded into the `.vscode` files: the
+   sync never writes what init composes — the composed file, the block
+   between its markers — the reshape does.
 
 ## Rules
 

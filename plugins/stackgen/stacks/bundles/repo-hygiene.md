@@ -23,28 +23,28 @@ Fixed, never constructed: a name assembled from configuration is one that
 can silently resolve to nothing, which is the rule the `ux-gate` and
 design-adapter seams already follow.
 
-The reason it is unconditional is the same one that makes the other two
-baselines unconditional, and it bites harder here: **a repo has these files
-before it has a stack.** An empty repository with no language chosen still
-needs to know what not to commit, and a pack only reaches a repo when
-someone picks a bundle. Left to the menu, the first commit of every new repo
-would carry whatever the machine dropped into it.
+The reason it is unconditional is the same one that makes the gates and
+the toolchain manager baselines, and it bites harder here: **a repo has
+these files before it has a stack.** An empty repository with no language
+chosen still needs to know what not to commit, and a pack only reaches a
+repo when someone picks a bundle. Left to the menu, the first commit of
+every new repo would carry whatever the machine dropped into it.
 
 Nothing is recorded in `.config/vwf.yaml` for it — nothing was chosen, so
 there is no choice to record. The landing goes in `lock.yaml`, like any
-other materialization; this slug is also one of the three whose presence
-there is what tells a caller the repo is shaped at all.
+other materialization; this slug, beside the `tool-config/*` entries, is
+what tells a caller the repo is shaped at all.
 
-**The seam with [Repo gates](repo-gates.md).** A gate *scans*; hygiene
+**The seam with the gates (`stackgen:tool-config`).** A gate *scans*; hygiene
 *declares what is not there to scan*. An ignore rule and a scanner allowlist
 look alike and are opposites: ignoring a file keeps it out of the commit,
 allowlisting one tells the scanner to accept it in. Writing them as one
 decision is how a secret ends up committed and unflagged, so the two live
-in different packs on purpose.
+in different places on purpose.
 
-**The seam with [mise](mise.md).** The toolchain manager's local override
-files are hygiene's to ignore and the manager's to document. Each writes one
-half, and neither infers the other's.
+**The seam with mise (`stackgen:tool-config`).** The toolchain manager's
+local override files are hygiene's to ignore and the manager's to document.
+Each writes one half, and neither infers the other's.
 
 **One per repo, and stack sections are appended rather than shipped.** The
 pack carries the generic sections every repo needs; the per-technology ones

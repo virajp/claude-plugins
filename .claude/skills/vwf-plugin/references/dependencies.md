@@ -30,21 +30,21 @@ The memory layer and The vendored guidelines below.
 
 **stackgen is load-bearing at `init` and at `setup`, not only at
 `architecture`.** `/vwf:init` first calls `/stackgen:tool-config all`, which
-lands the toolchain manager's config with init's answers as its arguments, then
-materializes two **unconditional** bundles through the stack adapter, by the
-fixed slugs `repo-gates` and `repo-hygiene` — the repo gates the `devtools`
-plugin used to scaffold, plus the hygiene files that had no home at all. Fixed
-rather than constructed, because a name assembled from configuration can
-silently resolve to nothing, which is the same failure a skill vwf cannot see
-already has. With no stack adapter installed, `init` **halts** with the install
-command rather than printing an empty plan that reads like an already-shaped
-repo. All of it lands **per repo** — the base and every member `init` resolved,
-each recording its own lockfile — so a member is shaped on its own evidence.
-`/vwf:setup` no longer fetches any of them: it checks **each repo's** adapter
-lockfile for the two slugs and the `tool-config/…` records — and each repo's
-shape against doctor's seven baseline predicates — and offers `/vwf:init` once
-when any of them is missing or behind, which is why `init` is model-invocable
-and, being hidden from the `/` menu, reached no other way. Note that `mise`
+lands the toolchain manager's config and the repo gates the `devtools` plugin
+used to scaffold with init's answers as its arguments, then materializes one
+**unconditional** bundle through the stack adapter, by the fixed slug
+`repo-hygiene` — the hygiene files that had no home at all. Fixed rather than
+constructed, because a name assembled from configuration can silently resolve to
+nothing, which is the same failure a skill vwf cannot see already has. With no
+stack adapter installed, `init` **halts** with the install command rather than
+printing an empty plan that reads like an already-shaped repo. All of it lands
+**per repo** — the base and every member `init` resolved, each recording its own
+lockfile — so a member is shaped on its own evidence. `/vwf:setup` no longer
+fetches any of them: it checks **each repo's** adapter lockfile for the
+`repo-hygiene` slug and the `tool-config/…` records — and each repo's shape
+against doctor's seven baseline predicates — and offers `/vwf:init` once when
+any of them is missing or behind, which is why `init` is model-invocable and,
+being hidden from the `/` menu, reached no other way. Note that `mise`
 legitimately appears in two different meanings: the **tool**
 `stackgen:tool-config` configures, and the **binary** `mise`, which is a mandate
 `/vwf:doctor` blocks on once a stack axis is pinned.

@@ -57,7 +57,7 @@ minimum_release_age = "10h"
 lockfile = true
 
 # Every platform the lock carries a URL for — the CI runners are linux-x64.
-lockfile_platforms = ["linux-x64", "macos-arm64"]
+lockfile_platforms = [ "linux-x64", "macos-arm64" ]
 
 # `mise run` installs nothing before a task body: `setup:mise` owns installs.
 task.run_auto_install = false

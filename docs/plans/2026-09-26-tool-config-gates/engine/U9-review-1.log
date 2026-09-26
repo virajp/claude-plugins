@@ -1,0 +1,64 @@
+```json
+[
+  {
+    "file": ".config/mise/conf.d/tools.dev.toml",
+    "line": 19,
+    "summary": "The branch adds `\"pipx:graphifyy\" = \"latest\"` to this repo's dev tools but leaves `.config/mise/mise.lock` without an entry for it, so `setup:mise`'s `mise install --locked` now fails in dev.",
+    "failure_scenario": "Confirmed: `MISE_ENV=dev mise install --locked --dry-run` in this worktree exits with 'pipx:graphifyy@latest is not in the lockfile'. `setup:mise`, and every `setup:all` in dev, aborts under `set -e` before `mise doctor` and the later setup steps run. The value is also spelled differently from every other entry in the file and from mise.md, which uses `{ version = \"latest\" }`."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/pack.yaml",
+    "line": 100,
+    "summary": "`all add exclude *.xcassets` is read as a file glob (it contains `*`), so pre-commit gets the regex `(^|/)[^/]*\\.xcassets$`. That only matches a path ending in `.xcassets`, never the files inside the asset catalog directory. The old base spelled it as a directory, `(^|/)[^/]*\\.xcassets/`.",
+    "failure_scenario": "Confirmed in Python: `App/Assets.xcassets/AppIcon.appiconset/Contents.json` matches the old regex and does not match the new one. Every SwiftUI repo's hooks (format, lint, check-json, trailing whitespace) now reformat the `Contents.json` files Xcode rewrites, which dprint.md names as the reason for this exclude. Rule 15 strips `$` and `/` before comparing, so the checker cannot see the difference. taplo's `**/*.xcassets` has the same problem."
+  },
+  {
+    "file": ".config/mise/tasks/code/graph",
+    "line": 57,
+    "summary": "The post-commit hook now starts a detached `graphify update .` after every main-checkout commit, with no lock or single-flight guard, so two quick commits run two rebuilds that write `graphify-out/` at the same time.",
+    "failure_scenario": "The landing flow makes several `git commit`s on develop in the main checkout within seconds (claim, run log, archive). Each fires graphify-refresh, and the overlapping `graphify update` processes race on graph.json and the cache, leaving a corrupt or half-written graph that recall and reviewers then read. Also, on a first commit `HEAD~1` does not exist, the fallback diff is empty, and the task exits without building."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 700,
+    "summary": "`TOOL_CONFIG_GATE_VERBS` does not match the skill's verb grammar: it accepts calls the skill refuses and refuses a verb the skill defines.",
+    "failure_scenario": "Accepted but refused by the skill: `pre-commit add hook` without a stage or with a URL repo and no `rev=` (the new test at check.test.ts:827 even uses `--stage pre-commit`, which is not in the grammar); `dprint add plugin <any-name>` (for example a typo like `markup-fmt`); `all add exclude generated` with no paths. All pass the checker and only fail at materialize time, when the pack lands without its plugin or hook. Refused although defined: `grype add ignore <id>`, which grype.md and the SKILL description allow, is flagged as 'matches none'. Also, the whole-pre-commit-config `repos:` validation was dropped entirely."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/existing-repo.md",
+    "line": 190,
+    "summary": "For gate configs now owned by tool-config, init says the moved brownfield file is 'that skill's conflict row in its preview'. The skill never defines such a row for a whole, unrecorded file sitting at a path it lands.",
+    "failure_scenario": "A brownfield repo has its own `.pre-commit-config.yaml`; pass 1 runs `git mv` to `.config/pre-commit-config.yaml`. tool-config's conflict rows cover only pins, env keys, aliases and hook ids (answers keep-existing/overwrite), and its migration covers only repos the retired pack shaped. With no replace/keep row, `all` either silently treats the whole file as user lines and splices its base in, or overwrites it. Either way the replace-or-keep decision pass 6 used to offer is lost (tool-configs.md:23 says the same)."
+  },
+  {
+    "file": "plugins/stackgen/stacks/package-manager/pnpm/conventions.md",
+    "line": 63,
+    "summary": "Text this branch made false is left in files no unit owns: pnpm conventions and `toolchain-gate/eslint/skills/eslint/SKILL.md:93` still say `.config/linter.yaml` is shipped by 'the pre-commit gate pack', which this branch deletes.",
+    "failure_scenario": "U10's widened Owns list covers the eslint and ruff conventions, uv conventions and the swiftpm skill, but not pnpm/conventions.md or eslint's SKILL.md. After landing, these shipped docs send an agent to a pack that no longer exists; the eslint SKILL.md is also copied into target repos. This is the 'plan needs an owner for cross-pack falsified passages' failure again."
+  },
+  {
+    "file": "plugins/vwf/skills/init/SKILL.md",
+    "line": 317,
+    "summary": "init still says 'the three slugs below are fixed', and its frontmatter description still says 'the stack adapter's unconditional bundles' (plural), but only one unconditional slug, `repo-hygiene`, remains.",
+    "failure_scenario": "A reader or agent following SKILL.md looks for three fixed slugs, where `repo-gates` no longer exists. The user-visible skill description also still describes landing multiple unconditional bundles."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit",
+    "line": 123,
+    "summary": "The raw graphify hook is removed only when `graphify` is on PATH, and the new block is inserted between the `Without --overwrite…` comment and the install command that comment describes.",
+    "failure_scenario": "On a machine where graphify was uninstalled but its raw post-commit hook remains, non-force `pre-commit install` chains that hook as `post-commit.legacy`. Every commit then runs the broken pinned-Python hook next to graphify-refresh. The misplaced comment now reads as documentation for the graphify block. The hooks dir is also recomputed with `git rev-parse --git-path hooks` even though `HOOK_FILE` already derived it."
+  },
+  {
+    "file": "plugins/vwf/skills/doctor/references/code-intelligence.md",
+    "line": 35,
+    "summary": "Doctor reports a raw graphify git hook as drift with the remedy `/vwf:setup reshape`, but the hook is only removed by the task library's `setup:precommit`, which reshape (init → `tool-config all`) does not run.",
+    "failure_scenario": "The user runs `/vwf:setup reshape` as told; the config lands but `.git/hooks/post-commit` still holds graphify's raw hook, so the next doctor run reports the same drift. The fix that works is `mise run setup:precommit`, and doctor never names it."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/pre-commit/.config/linter.yaml",
+    "line": 46,
+    "summary": "The base ignores add `**/graphify-out/`, directly under a comment saying the linter's own defaults already skip `graphify-out/` and to 'list only what they miss'.",
+    "failure_scenario": "Either the comment or the entry is wrong. A maintainer following the comment deletes the entry, and rule-style reasoning about what the base holds (pre-commit.md §1 lists it) then disagrees with the asset. Cleanup cost only."
+  }
+]
+```

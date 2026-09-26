@@ -1,10 +1,10 @@
 # Fragments and Sections
 
-The three merge algorithms both pipelines share. All three are
+The two merge algorithms both pipelines share. Both are
 **re-runnable**: a second run over an already-merged file changes nothing,
 which is what makes the empty-plan invariant hold.
 
-All three run **per repo** — the base and every member the run resolved — each
+Both run **per repo** — the base and every member the run resolved — each
 against that repo's own `.config/`, so every path below is relative to the
 repo being shaped, a member's fragments never reach the base's files, and the
 idempotency notes hold per repo.
@@ -119,60 +119,8 @@ plane is a repo somebody can finish shaping later.
 
 ## Hook fragments
 
-Each pack that contributes to the commit gate drops a standalone fragment —
-its own `repos:` list — and the materializer copies it verbatim and stops.
-Merging them into the gate's single configuration file is `init`'s job alone.
-
-The paths and markers below are the packs' spelling, and the contract between
-them and this step.
-
-### The markers
-
-One pair per fragment, and the fragment's filename is what names them:
-
-```text
-# >>> pre-commit.d/<name>.yaml
-  … the fragment's entries …
-# <<< pre-commit.d/<name>.yaml
-```
-
-### The algorithm
-
-1. **Collect** every `.config/pre-commit.d/*.yaml` in this repo, sorted by
-   filename. The sort is what makes the merged file byte-stable across runs
-   and across machines.
-2. **For each fragment**, take its `repos:` entries and place them between its
-   marker pair inside the gate config's top-level `repos:` list:
-   - markers **present** → replace everything between them;
-   - markers **absent** → append the pair, and its entries, at the end of the
-     list.
-3. **Preserve everything outside the markers byte-for-byte.** The base config
-   is the gate pack's, and a repo may have added its own entries to it. This
-   step owns the marked blocks and nothing else — no reordering, no
-   reformatting, no comment stripping. A merge that rewrites the whole file is
-   a merge that silently reverts somebody's edit.
-4. **A fragment whose file is gone** leaves its markers behind on the next
-   run. Remove the pair and its contents — an orphaned block runs hooks for a
-   pack the repo no longer has, and it fails as a missing hook rather than as
-   a stale merge.
-5. **Validate.** Run the gate's own configuration validator against the merged
-   file, passing the path explicitly — the file does not sit where the tool
-   looks by default, which is exactly why every caller passes the path. A
-   validation failure is a **halt** for this step: report the error verbatim
-   and leave the previous file in place, restoring it if it was already
-   written. A gate config that does not parse is a gate that does not run, and
-   it fails at the next commit rather than here.
-6. **Re-hash.** The gate config is the gate pack's, and the lockfile hash it
-   landed under no longer describes the merged file. `init` re-records it in
-   the existing-repo pipeline's re-hash step — the last before the git pass —
-   so a merged gate config is never read as a diverged one on the next run.
-
-### Idempotency
-
-Steps 2 and 3 together are what make a re-run a no-op: the same fragments,
-sorted the same way, produce the same blocks between the same markers, and
-everything else in the file was never touched. That is the property the
-existing-repo pipeline's empty plan rests on.
+Retired — `init` merges no hook; a pack asks
+`/stackgen:tool-config pre-commit add hook … for <pack>` instead.
 
 ## Editor fragments
 

@@ -3,7 +3,7 @@ name: pnpm · workspace
 axis: repo
 kind: workspace
 components:
-- package-manager/pnpm@0.4.0
+- package-manager/pnpm@0.5.0
 ---
 
 # Monorepo — pnpm · workspace
@@ -39,6 +39,8 @@ config file and a daemon that buy nothing back.
 - **dprint** formats (one root config); **ESLint** lints; **gitleaks** and
   **grype** gate security — all wired through pre-commit, which calls the same
   task-runner tasks CI does, so one command runs in both places.
+  The gates are `stackgen:tool-config`'s; this bundle's packs add their
+  plugins and excludes.
 
 ## Tooling & config
 
