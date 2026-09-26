@@ -29,10 +29,12 @@ three remain **degradations**. Check:
   member is **not** a finding: it is the blind spot the membership contract
   already recorded (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`), and blocking on a
   repo the user declined to clone would halt a run they consented to narrow.
-- **No raw refresh hook.** graphify's own `graphify hook install` hook pins a
-  Python path and breaks on upgrade, so none is expected; the graph is
-  refreshed by the repo's `code:graph` task, run by hand, and its absence is
-  not a finding. The staleness check below catches a graph nobody refreshed.
+- **The refresh hook.** The graph is refreshed by the repo's pre-commit
+  `graphify-refresh` hook at stage `post-commit`, which runs `code:graph`.
+  A raw graphify git hook in `.git/hooks/` (never run `graphify hook install`
+  — it pins a Python path and breaks on upgrade) is **drift**, never a pass:
+  remedy `/vwf:setup reshape`. The staleness check below catches a graph
+  nobody refreshed.
 - **Staleness.** Compare `graph.json`'s mtime to the last commit date of the
   checkout that holds it. Behind → report how far, with `graphify update` as the
   remedy for the user to run.

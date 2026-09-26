@@ -97,12 +97,12 @@ and AMBIGUOUS as leads to check, not facts.
 
 ## Freshness — the graph is the last commit
 
-The repo's `code:graph` task, run by hand after a commit, rebuilds the graph,
-so at best it reflects the repo **as of the last commit**. Uncommitted work —
-the diff under review, the coder's in-progress changes — is never in it. Read
-the diff and any files you are changing directly; use the graph for the
-pre-change surroundings (call sites, dependents, reuse candidates, entry
-points).
+The repo's pre-commit `post-commit` hook runs `code:graph` after each commit
+(never `graphify hook install`), so at best it reflects the repo **as of the
+last commit**. Uncommitted work — the diff under review, the coder's
+in-progress changes — is never in it. Read the diff and any files you are
+changing directly; use the graph for the pre-change surroundings (call sites,
+dependents, reuse candidates, entry points).
 
 ## Worktrees
 

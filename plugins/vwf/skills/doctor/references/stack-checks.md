@@ -287,9 +287,9 @@ neither `.config/mise.toml` nor `.config/mise/conf.d/` is the same finding one
 level up, at the same severity: report it and nudge `/vwf:setup reshape`, the
 one repo-shape remedy, naming `/stackgen:tool-config all` as what it runs.
 Setup materializes no tooling itself — `/vwf:init` does, calling
-`/stackgen:tool-config all` for every universal tool the skill owns, then
-laying down the unconditional bundles that remain, `repo-gates` and
-`repo-hygiene`, by their fixed slugs through the stack adapter's
+`/stackgen:tool-config all` for every universal tool the skill owns, the
+gates included, then laying down the one unconditional bundle that remains,
+`repo-hygiene`, by its fixed slug through the stack adapter's
 `-stack-template` skill. That is the coarsest form of one question — is this
 repo still shaped the way `/vwf:init` shapes one — and the section at the end
 of this file is the fuller version of the same check: this one fires when the
