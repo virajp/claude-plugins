@@ -8,6 +8,7 @@
     "*/build/",
     "plugins/**/*.md",
     "plugins/*/stacks/*/*/config/",
+    "plugins/stackgen/skills/tool-config/assets/",
     "**/.astro/",
     "site/dist/**",
     "**/.turbo/",

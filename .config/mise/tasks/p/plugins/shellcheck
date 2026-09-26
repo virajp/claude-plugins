@@ -77,6 +77,11 @@ for pack in plugins/*/stacks/*/*; do
     roots+=("$pack/config/.config/mise/tasks")
   [ -d "$pack/hooks" ] && hook_dirs+=("$pack/hooks")
 done
+# A stackgen:tool-config asset tree is a landed repo root, like a pack's config/.
+for tree in plugins/stackgen/skills/tool-config/assets/*; do
+  [ -d "$tree/.config" ] && TASK_FLAGS+=(-P "$tree")
+  [ -d "$tree/.config/mise/tasks" ] && roots+=("$tree/.config/mise/tasks")
+done
 shopt -u nullglob
 
 if [ "${#roots[@]}" -eq 0 ] && [ "${#hook_dirs[@]}" -eq 0 ]; then
