@@ -1,11 +1,12 @@
 # Tools every MISE_ENV needs; a tool one environment alone needs goes in tools.<env>.toml, never in both.
 
 [tools]
-# No runtime, and that is the contract: this is the mise base stackgen:tool-config writes,
-# not the toolchain. Its one pin below is a gate, not a runtime. The language
-# runtime arrives with this repo's language and package-manager components,
-# which write their own tier; a capability provider (a secret manager, say)
-# adds its tool through its pack's tool-config: calls, in its own # >>> block.
+# No runtime, and that is the contract: this is the mise base
+# stackgen:tool-config writes, not the toolchain. Its one pin below is a gate,
+# not a runtime. The language runtime arrives with this repo's language and
+# package-manager components, which write their own tier; a capability
+# provider (a secret manager, say) adds its tool through its pack's
+# tool-config: calls, in its own # >>> block.
 #
 # For example, a Node repo's package-manager component would carry:
 #   node = { version = "latest" }

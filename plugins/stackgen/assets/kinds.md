@@ -350,7 +350,7 @@ the others rather than about a tool of its own. A repo with no hook runner
 records topic 5 `n/a` and loses the parity guarantee with it, which is worth
 saying out loud rather than discovering later.
 
-## `toolchain-manager` — retired 2026-09-26
+## Retired 2026-09-26: `toolchain-manager`
 
 The toolchain manager is no kind any more. Its files — the mise config
 split, the section files and the task library — are written by

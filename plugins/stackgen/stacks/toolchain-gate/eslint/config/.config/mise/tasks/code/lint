@@ -8,7 +8,7 @@
 #USAGE arg "[files]" var=#true help="files to lint (default: the whole repo)"
 
 set -euo pipefail
-# helpers ships in the toolchain-manager pack, not this one, so there is no
+# helpers ships with stackgen:tool-config, not this pack, so there is no
 # path here for -x to follow.
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"

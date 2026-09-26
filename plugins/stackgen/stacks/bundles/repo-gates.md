@@ -7,7 +7,7 @@ components:
 - toolchain-gate/dprint@1.1.3
 - toolchain-gate/gitleaks@1.1.2
 - toolchain-gate/grype@1.0.1
-- toolchain-gate/pre-commit@1.1.7
+- toolchain-gate/pre-commit@1.1.8
 ---
 
 # Repo — the four gates
