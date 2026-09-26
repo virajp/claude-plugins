@@ -1,0 +1,3 @@
+security-review engine, U3 round 3, range 3f17e9cc..df8f8479 (fix delta; full range a9f23b92..df8f8479)
+
+No high-confidence vulnerabilities found. What I checked: the full diff 3f17e9cc..df8f8479 outside docs/plans. The IS_DEV refactor in both copies of setup/mise (the pack's and this repo's) behaves exactly as before: the same MISE_ENV glob match, which runs no untrusted input through eval and adds no expansion. The --upgrade and missing-lockfile guards still refuse outside dev. Adding locked = true to .config/mise.ci.toml makes the supply chain safer, because CI now installs only what the lockfiles record and fails instead of resolving newer versions.

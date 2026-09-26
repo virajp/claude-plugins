@@ -1,0 +1,9 @@
+code-review engine (high), U3 round 3, focus 15816ae1 + df8f8479 (range a9f23b92..df8f8479)
+
+Engine note: IS_DEV refactor behaves as before; isolated check that `mise -E dev run` passes MISE_ENV=dev; `locked = true` works in CI's ci env; `MISE_ENV=ci mise lock --bump --upgrade` still bumps under it.
+
+1. .github/workflows/plugins.yml:44 — df8f8479's locked = true ties every CI job to the lockfiles being readable by whatever mise version jdx/mise-action@v4 installs; nothing pins that version (no `version:` input, no `min_version`). A newer mise needing lock fields the older writer did not record → locked mode fails on a push that changed no tool.
+2. .config/mise.ci.toml:9 — New comment says "`lockfile = true` in the base keeps them current on a laptop", but this repo's .config/mise.toml never sets lockfile (only the pack's does); copied without checking this repo.
+3. .claude/docs/ci-and-releases.md:17 — CI section lists what mise.ci.toml sets but not the new locked = true; not in U4's passage list.
+4. .config/mise.ci.toml:14 — Comment says mise.lock, mise.dev.lock and mise.ci.lock are tracked 'so the pipeline reads the same versions a laptop resolved', but the pipeline never reads mise.dev.lock; shellcheck/shfmt are locked separately in mise.dev.lock and mise.ci.lock and bumped in separate calls, so they can diverge.
+5. plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise/tasks/setup/mise:14 — The dev-membership check is still copied into setup/external/{pull,start,stop} (pack and repo); _scripts/helpers has no shared helper (e.g. in_dev).
