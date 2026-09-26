@@ -1,0 +1,5 @@
+# /security-review — loop U6, round 2, range 1d332056..03777385
+
+NO FINDINGS
+
+Checked: setup/{all,mise,worktree} in repo and pack — UPGRADE_ARGS safely expanded, lock_envs from repo-owned filenames, mise run --cd over members, no eval or traversal; missing-lock refusal outside dev holds; install --locked kept, doctor after it, run_auto_install=false strengthens; gpg_verify, all_compile=false, locked=true (ci), minimum_release_age=10h, lockfile=true, npm linter pin carried over; node.gpg_verify=false in ci predates the range; merged lock 15 tools, 28 checksums (taplo the accepted exception); hygiene ignores still cover local overrides, gitattributes linguist-only; miserc sets env_conf_d only.
