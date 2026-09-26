@@ -19,7 +19,7 @@
         "source": "git-subdir",
         "url": "https://github.com/virajp/claude-plugins.git",
         "path": "plugins/stackgen",
-        "ref": "stackgen-v1.33.0"
+        "ref": "stackgen-v1.34.0"
       },
       "strict": true,
       "tags": [
@@ -31,7 +31,7 @@
         "materializer",
         "vwf-stack-adapter"
       ],
-      "version": "1.33.0"
+      "version": "1.34.0"
     },
     {
       "author": {
@@ -51,7 +51,7 @@
         "source": "git-subdir",
         "url": "https://github.com/virajp/claude-plugins.git",
         "path": "plugins/vwf",
-        "ref": "vwf-v19.46.0"
+        "ref": "vwf-v19.47.0"
       },
       "strict": true,
       "tags": [
@@ -74,7 +74,7 @@
         "git-workflow",
         "vwf-design-adapter"
       ],
-      "version": "19.46.0"
+      "version": "19.47.0"
     }
   ]
 }

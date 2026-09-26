@@ -4,7 +4,7 @@ axis: repo
 kind: toolchain-manager
 unconditional: true
 components:
-- toolchain-manager/mise@1.6.1
+- toolchain-manager/mise@1.7.0
 ---
 
 # Repo — mise
@@ -14,14 +14,15 @@ the tool versions everything else is executed under, it **holds** the
 environment values those tools and tasks read, and it **runs** the repo's
 tasks from a file-based library whose directory layout is a task's name.
 
-**The config is a five-file split and the tasks are three groups.** The
-layers are the base every environment loads, the development one, the CI
-one, the test one — deltas layered on development rather than a fourth full
-set — and a fifth, gitignored, for the values that are one machine's alone.
-Nothing is pinned in two layers, because a tool pinned twice is a version
-that can disagree with itself on somebody else's machine. The task library
-is grouped `setup:*` (bring a checkout or a worktree to a working state),
-`code:*` (the gates and the git procedures that run over the whole repo) and
+**The config is split by section and the tasks are three groups.** The
+top-level files hold settings alone; each table sits in a section file in
+`.config/mise/conf.d/`, loaded by every environment or, suffixed, by one —
+development, CI, test — and one machine's own values go in the gitignored
+top-level `.config/mise.local.toml`. Every environment locks into one
+lockfile, and nothing is pinned twice, since a tool pinned twice can disagree
+with itself on somebody else's machine. The task library is grouped
+`setup:*` (bring a checkout or a worktree to a working state), `code:*` (the
+gates and the git procedures that run over the whole repo) and
 `p:<project>:*` (one group per member of the repo, so a task's name says
 which thing it acts on). The groups are the contract: every caller outside
 this pack — the gates beneath it, the pipeline above it, vwf's own harness —
