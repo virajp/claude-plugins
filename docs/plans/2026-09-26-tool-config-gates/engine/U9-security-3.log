@@ -1,0 +1,7 @@
+No high-confidence vulnerabilities found.
+Dropped candidates:
+- assets/mise/.config/mise/tasks/code/graph (nohup bash -c; also .config/mise/tasks/code/graph): script string single-quoted and fixed; lock path and flags passed as positional args, never parsed as code. (1)
+- code/graph lock takeover: lock in the repo's own .git; pid race theoretical / DoS, excluded. (2)
+- assets/mise/.config/mise/tasks/setup/precommit strip_graphify_block: predictable ${file}.tmp but inside .git/hooks, not a shared dir; writer there already controls hooks. (2)
+- setup/precommit awk -v values: hardcoded markers. (1)
+- scripts/src/check.ts hookFault / suffix check: regex validation of authored YAML, nothing executed. (1)

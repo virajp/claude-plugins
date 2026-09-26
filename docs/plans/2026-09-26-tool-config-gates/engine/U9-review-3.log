@@ -1,0 +1,66 @@
+The review found 10 problems. The most serious is an after-landing step that will install a broken hook. Checks run: `p:plugins:check` passes on the branch. U10 (docs) and U11 (gates and version bump) are still pending, so stale prose that U10 already owns is not listed below.
+
+```json
+[
+  {
+    "file": "docs/plans/2026-09-26-tool-config-gates/index.md",
+    "line": 26,
+    "summary": "The `run` after-landing step `pre-commit install --hook-type post-commit` leaves out `--config .config/pre-commit-config.yaml`, so the post-commit hook it installs points at a config file that does not exist.",
+    "failure_scenario": "With an explicit `--hook-type`, pre-commit does not read the config and writes `hook-impl --config=.pre-commit-config.yaml` into `.git/hooks/post-commit`. This repo has no root `.pre-commit-config.yaml`, and the flag `--skip-on-missing-config` is not added. So every later commit in the main checkout prints 'No .pre-commit-config.yaml file was found' and exits 1, and `graphify-refresh` never runs. The step runs on a green landing with no prompt. The existing pre-commit and commit-msg hooks were installed with `--config=.config/pre-commit-config.yaml`."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/pre-commit/.config/pre-commit-config.yaml",
+    "line": 121,
+    "summary": "`graphify-refresh` only runs at `post-commit`, but work lands in the main checkout through `git merge --no-ff`, which fires post-merge, not post-commit. graphify's post-checkout hook is removed and nothing replaces it.",
+    "failure_scenario": "`_scripts/merge` lands every branch with `git merge --no-ff --no-edit` in the main checkout, and git does not run post-commit for a merge. Commits made in a linked worktree exit early in `code:graph`. So after each `/vwf:execute` landing the graph stays at the last direct commit on develop. The old raw hooks refreshed it on post-checkout as well. The graph silently falls behind, and it only shows up later as doctor's staleness degradation."
+  },
+  {
+    "file": "plugins/stackgen/stacks/bundles/bun.md",
+    "line": 35,
+    "summary": "The smaller base exclude set removes `node_modules` and `.venv`, but no shipped pack adds them back for bun repos or Python repos.",
+    "failure_scenario": "The bun bundle's only component is `package-manager/bun@generated`, which has no `all add exclude generated node_modules` line. The uv pack says in its own comments that no bundle can compose it. In a bun repo, `code:sec`'s `gitleaks dir` scan (which the asset notes ignores `.gitignore`) walks `node_modules/`. The default `generic-api-key` rule then fires on high-entropy strings in vendored code and fails the security gate. The old base allowlisted `node_modules`, `.turbo` and `.venv` for every repo."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit",
+    "line": 135,
+    "summary": "`setup:precommit` calls `graphify hook uninstall` without asking. The plan's own U8 log records that this also removes `merge=graphify` from the tracked `.gitattributes`, and any failure aborts the hook install under `set -e`.",
+    "failure_scenario": "A person runs `mise run setup:precommit` on a machine that still has graphify's raw hooks. The task edits the tracked `.gitattributes`, which dirties the tree, and the merge helper then refuses to run. If the installed graphify has no `hook uninstall` or it exits non-zero, the task stops before `pre-commit install`, and the repo has no hooks at all. The task's own `strip_graphify_block` fallback does neither of these things, so what happens depends on whether graphify is on PATH."
+  },
+  {
+    "file": ".config/mise/tasks/code/graph",
+    "line": 75,
+    "summary": "Taking over a stale lock is not atomic. A second run can `rm -rf` a lock another run has just re-acquired, and then both rebuild at once. The same code is in the shipped asset.",
+    "failure_scenario": "The lock holds a dead PID. Runs A and B both read it and both fail `kill -0`. A runs `rm -rf` and `mkdir`, which succeeds, and writes its PID. B then runs `rm -rf`, deleting A's live lock, and its `mkdir` succeeds. Two `graphify update .` processes now write `graphify-out/` at the same time. This is exactly what the single-flight lock was added to prevent."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 723,
+    "summary": "Marking the hook and grype verbs `tail: true` lets a pack line that carries a requester suffix pass the checker. Separately, `all add exclude for <x>` is read as two directory names.",
+    "failure_scenario": "`grype add ignore CVE-1 for uv` passes the checker, and the materializer then appends a second `for uv`, so the skill receives `… for uv for uv`. `all add exclude for pnpm` also passes: the suffix check strips it to `all add exclude`, which matches no verb, so nothing is reported. The result is excludes for directories literally named `for` and `pnpm` in all four lists."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 469,
+    "summary": "Removing `preCommitFaults` means nothing checks that the shipped `tool-config/assets/pre-commit/.config/pre-commit-config.yaml` still has a top-level `repos:` list. Rule 15 only reads its `exclude`.",
+    "failure_scenario": "The skill now appends `# >>> <requester>` blocks into this file's `repos:`. If an edit to the asset breaks or renames `repos:` but the YAML still parses, `p:plugins:check` stays green. The target repo's hook config then runs no hooks: a disabled gate that reports nothing, which is the failure the removed assertion existed to catch."
+  },
+  {
+    "file": ".config/mise/tasks/setup/precommit",
+    "line": 13,
+    "summary": "This repo's own `setup:precommit` never received the graphify-hook removal the shipped asset got. It relies on `--overwrite`, which only touches the hook types in `default_install_hook_types`.",
+    "failure_scenario": "On any other clone of this repo set up with `graphify hook install`, running `mise run setup:precommit` replaces post-commit but leaves graphify's raw post-checkout hook, since post-checkout is not an installed type. That hook's pinned Python path breaks on upgrade, and doctor's new code-intelligence check reports it as drift. The after-landing step only fixes the maintainer's machine."
+  },
+  {
+    "file": "CLAUDE.md",
+    "line": 174,
+    "summary": "Conventions: root CLAUDE.md says 'Docs ship with the change … in the same commit', but behavior-changing commits here (c55cfbe9, 82ac7cf9, c032583e) land without the CLAUDE.md, readme or site updates. CLAUDE.md:174 still describes rule 11 parsing `pre-commit.d/*.yaml` and the gate pack's whole pre-commit config.",
+    "failure_scenario": "The rule quoted from /Users/virajpatel/Projects/github.com/virajp/claude-plugins/CLAUDE.md is: 'Any change to plugin behavior must reconcile readme.md, this file, and the manual under site/src/content/docs/ in the same commit — stale docs are more harmful than no docs'. Until U10 lands, every intermediate commit on develop describes checker rules, packs (`toolchain-gate/dprint` and the others) and a `repo-gates` bundle that no longer exist."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 761,
+    "summary": "Cleanup: `toolConfigCall` picks the hook check by comparing `verb.pattern === TOOL_CONFIG_HOOK`, and `hookFault` runs the same regex again. A per-verb `check` callback in `TOOL_CONFIG_GATE_VERBS` would be simpler.",
+    "failure_scenario": "Adding a second verb that needs checks after the grammar match (for example grype's required reason, which the skill's doctrine asks for) means another pattern-identity branch in `toolConfigCall`. The table and the dispatch then drift apart. Today it costs a redundant regex execution on every hook line."
+  }
+]
+```
