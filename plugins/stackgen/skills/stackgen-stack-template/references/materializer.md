@@ -126,9 +126,9 @@ to a repo, and every write it makes is consent-gated and committed once.
        or rewrites either editor file.
    - **The tool-config calls a component declares** — each line of its
      `pack.yaml` `tool-config:` list
-     (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`), run in step 5 as
-     `/stackgen:tool-config <line> for <pack>`. The skill writes the
-     toolchain manager's files; no pack copies one.
+     (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`), previewed in step 3
+     and run in step 5 as `/stackgen:tool-config <line> for <pack>`. The
+     skill writes the toolchain manager's files; no pack copies one.
      A `machine_env:` value is left unset here; `/vwf:setup` fills it.
    - The lockfile update — every path above, with its component ref,
      source and content hash, plus the **mode** for a `config/` file, and
@@ -335,6 +335,12 @@ to a repo, and every write it makes is consent-gated and committed once.
 
    **The tool-config calls ride the `config/` line.** List each call
    under it, spelled as it will run; declining the line skips them too.
+   For each line of a pack's `tool-config:` list run
+   `/stackgen:tool-config preview <line> for <pack>`, which writes
+   nothing, and show the rows it returns — conflict and drift rows
+   included — under that call, answered inside this one consent. A call
+   whose preview returns no row writes nothing and shows none. `preview`
+   is this gate's word, never a line in a pack's list.
 
 4. **The local plugin — its own gate, and a larger one.** A component that
    declares an `lsp_servers:` entry, or a `user_mcp_servers:` one, is
@@ -375,8 +381,13 @@ to a repo, and every write it makes is consent-gated and committed once.
 
 5. **Write and commit.** On approval: write the set, run each consented
    `tool-config:` call as `/stackgen:tool-config <line> for <pack>`,
-   update the lockfile, then commit as **one commit** via the repo's git
-   workflow (the vwf
+   with `answers=` last answering every row its preview returned at step 3
+   — `ok` for each plan row the consent approved, the user's pick for each
+   other row; the form is the skill's Consent section
+   (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`) — so the skill
+   asks no second time. A call it refuses is shown again. Update the
+   lockfile, then commit as **one commit**
+   via the repo's git workflow (the vwf
    git-workflow skill when present; plain `git add <paths>` + a conventional
    commit otherwise — never `git add -A`). The commit is what makes the
    output repo-owned: collaborators pull files, not a plugin obligation.

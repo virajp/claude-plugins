@@ -163,7 +163,7 @@ drift. It adds no consent tier.
 - **The universal tools are not slugs.** No `mise` bundle exists; the
   toolchain manager's files are `stackgen:tool-config`'s, and a pack asks
   for what it needs through its `tool-config:` list, which the materializer
-  runs.
+  previews inside its one consent and then runs with those answers.
 - **A fragment is copied, never merged, by this skill.** A
   `.config/pre-commit.d/<pack>.yaml` lands verbatim as its own file;
   folding the fragments into `.config/pre-commit-config.yaml` is
