@@ -700,20 +700,31 @@ const TOOL_CONFIG_VERBS = {
 const DPRINT_PLUGINS =
   "markdown|pretty_yaml|json|exec|typescript|malva|markup_fmt|dockerfile";
 /** The keys `pre-commit add hook` writes, each `key=value`, quoted or bare. */
-const HOOK_PAIR = String.raw`(?:name|description|entry|language|files|exclude|`
+const HOOK_PAIR = String.raw`(name|description|entry|language|files|exclude|`
   + String.raw`types|args|pass_filenames|always_run|require_serial|rev)=`
-  + String.raw`(?:"(?:[^"\\]|\\.)*"|[^\s"]+)`;
-/** The gate verbs a pack may ask for, beside the mise three. */
-const TOOL_CONFIG_GATE_VERBS = [
-  new RegExp(`^dprint add plugin (?:${DPRINT_PLUGINS})$`),
-  /^all add exclude (?!generated$)(?:generated )?[^\s"]+(?: [^\s"]+)*$/,
-  /^pre-commit add linter-ignore(?: [^\s"]+)+$/,
-  new RegExp(
-    String.raw`^pre-commit add hook (?:local|https://\S+) [A-Za-z0-9_-]+ `
-      + `(?:pre-commit|commit-msg|post-commit|manual)(?: ${HOOK_PAIR})*$`,
-  ),
-  /^grype add ignore [A-Za-z0-9-]+(?: .+)?$/,
+  + String.raw`("(?:[^"\\]|\\.)*"|[^\s"]+)`;
+/** `pre-commit add hook`, its repo captured; `hookFault` reads the pairs. */
+const TOOL_CONFIG_HOOK = new RegExp(
+  String.raw`^pre-commit add hook (local|https://\S+) [A-Za-z0-9_-]+ `
+    + `(?:pre-commit|commit-msg|post-commit|manual)(?: ${HOOK_PAIR})*$`,
+);
+/** The gate verbs a pack may ask for; `tail` marks a free-text end. */
+const TOOL_CONFIG_GATE_VERBS: readonly { pattern: RegExp; tail: boolean; }[] = [
+  {
+    pattern: new RegExp(`^dprint add plugin (?:${DPRINT_PLUGINS})$`),
+    tail: false,
+  },
+  {
+    pattern:
+      /^all add exclude (?!generated$)(?:generated )?[^\s"]+(?: [^\s"]+)*$/,
+    tail: false,
+  },
+  { pattern: /^pre-commit add linter-ignore(?: [^\s"]+)+$/, tail: false },
+  { pattern: TOOL_CONFIG_HOOK, tail: true },
+  { pattern: /^grype add ignore [A-Za-z0-9-]+(?: .+)?$/, tail: true },
 ];
+/** A requester suffix: the materializer appends it, a pack never writes it. */
+const TOOL_CONFIG_FOR = / for \S+$/;
 /** An exclude asked of one tool, which would leave rule 15's lists disagreeing. */
 const TOOL_CONFIG_LONE_EXCLUDE =
   /^(dprint|pre-commit|gitleaks) add (?:exclude|excludes|allowlist)\b/;
@@ -738,11 +749,23 @@ function toolConfigCall(call: string): { fault?: string; key?: string; } {
         + "`all add exclude [generated] <paths>`, which writes every list",
     };
   }
+  const verb = TOOL_CONFIG_GATE_VERBS.find(v => v.pattern.test(words));
+  const bare = words.replace(TOOL_CONFIG_FOR, "");
   if (
-    TOOL_CONFIG_GATE_VERBS.some(verb => verb.test(words))
-    && !/ for \S+$/.test(words)
+    bare !== words
+    && (verb === undefined || !verb.tail)
+    && TOOL_CONFIG_GATE_VERBS.some(v => v.pattern.test(bare))
   ) {
-    return {};
+    return {
+      fault: "ends in a `for <requester>` suffix — the materializer appends "
+        + "it, so a pack's line never carries one",
+    };
+  }
+  if (verb !== undefined) {
+    const fault = verb.pattern === TOOL_CONFIG_HOOK
+      ? hookFault(words)
+      : undefined;
+    return fault === undefined ? {} : { fault };
   }
   const env = TOOL_CONFIG_VERBS.env.exec(words);
   const alias = env === null ? TOOL_CONFIG_VERBS.alias.exec(words) : null;
@@ -772,6 +795,43 @@ function toolConfigCall(call: string): { fault?: string; key?: string; } {
     return { fault: "carries a template delimiter outside an `add env` value" };
   }
   return env !== null ? { key: name } : {};
+}
+
+/**
+ * What the skill refuses of a hook the grammar admits: a `local` hook needs a
+ * name, an entry run through `mise x -- ` and `language=system`, and no `rev`;
+ * a URL repo needs a `rev`.
+ */
+function hookFault(words: string): string | undefined {
+  const local = TOOL_CONFIG_HOOK.exec(words)?.[1] === "local";
+  const pairs = new Map<string, string>();
+  for (const [, key, value] of words.matchAll(new RegExp(HOOK_PAIR, "g"))) {
+    pairs.set(
+      key ?? "",
+      (value ?? "").replace(/^"([\s\S]*)"$/, "$1"),
+    );
+  }
+  if (!local) {
+    return pairs.has("rev")
+      ? undefined
+      : "is a URL repo hook with no `rev=` — the skill pins a tag";
+  }
+  if (pairs.has("rev")) {
+    return "is a `local` hook carrying `rev=`, which only a URL repo takes";
+  }
+  const missing: string[] = [];
+  if (!pairs.has("name")) {
+    missing.push("`name=`");
+  }
+  if (!(pairs.get("entry") ?? "").startsWith("mise x -- ")) {
+    missing.push("an `entry=` beginning `mise x -- `");
+  }
+  if (pairs.get("language") !== "system") {
+    missing.push("`language=system`");
+  }
+  return missing.length === 0
+    ? undefined
+    : `is a \`local\` hook lacking ${missing.join(", ")}`;
 }
 
 /** Every `stackgen:tool-config` asset tree, plugin-relative. */

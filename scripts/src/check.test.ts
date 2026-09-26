@@ -834,6 +834,58 @@ describe("the pack config tier", () => {
     expect(messages(check(root))).toEqual([]);
   });
 
+  it("flags a hook the skill refuses though the grammar admits it", () => {
+    // A local hook runs outside mise's environment; a URL repo floats unpinned.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - pre-commit add hook local x pre-commit entry=\"mise x -- y\" "
+        + "language=system\n"
+        + "  - pre-commit add hook local x pre-commit name=x entry=y "
+        + "language=system\n"
+        + "  - pre-commit add hook local x pre-commit name=x "
+        + "entry=\"mise x -- y\" language=node\n"
+        + "  - pre-commit add hook local x pre-commit name=x "
+        + "entry=\"mise x -- y\" language=system rev=v1\n"
+        + "  - pre-commit add hook https://github.com/x/y z pre-commit\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("`local` hook lacking `name=`"),
+      expect.stringContaining("lacking an `entry=` beginning `mise x -- `"),
+      expect.stringContaining("lacking `language=system`"),
+      expect.stringContaining("`local` hook carrying `rev=`"),
+      expect.stringContaining("URL repo hook with no `rev=`"),
+    ]);
+  });
+
+  it("flags a requester suffix, and reads a trailing for in text", () => {
+    // The materializer appends `for <pack>`; free text may say "for".
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - dprint add plugin malva for astro\n"
+        + "  - all add exclude generated .venv for uv\n"
+        + "  - pre-commit add linter-ignore .venv for uv\n"
+        + "  - pre-commit add hook https://github.com/x/y z pre-commit rev=v1 "
+        + "for uv\n",
+    ));
+    expect(messages(check(root))).toEqual(
+      [0, 1, 2, 3].map(index =>
+        expect.stringContaining(
+          `\`tool-config[${index}]\``,
+        )
+      ),
+    );
+    expect(messages(check(root)).every(m => m.includes("`for <requester>`")))
+      .toBe(true);
+    const text = tree(facts(
+      "tool-config:\n"
+        + "  - grype add ignore CVE-1 not exploitable for now\n"
+        + "  - pre-commit add hook local x pre-commit name=x "
+        + "entry=\"mise x -- y\" language=system "
+        + "description=\"Checks lockfile for drift\"\n",
+    ));
+    expect(messages(check(text))).toEqual([]);
+  });
+
   it("flags a gate verb outside the skill's grammar", () => {
     // A stage nothing installs never runs; an unknown plugin or key is refused.
     const root = tree(facts(
