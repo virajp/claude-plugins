@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#MISE description="Refresh the graphify knowledge graph, run by hand (code only, no LLM)"
+#MISE description="Refresh the graphify knowledge graph, run by the graphify-refresh post-commit hook (code only, no LLM)"
 #MISE dir="{{ config_root }}"
 
 #USAGE flag "--force" help="Rebuild even when the last commit only touched graphify-out/"
@@ -9,7 +9,7 @@ set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-# The graph refresh, run by hand; graphify's own raw git hook pins a Python path, so it is never installed.
+# Run by pre-commit's graphify-refresh hook at post-commit; graphify's own raw git hook pins a Python path, so setup:precommit removes it.
 
 if [ "${GRAPHIFY_SKIP_HOOK:-0}" = "1" ]; then
   exit 0
