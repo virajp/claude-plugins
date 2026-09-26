@@ -99,8 +99,10 @@ whole section reports `not checked — no stack resolved` for it:
   (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`) — never a suggestion to
   drop the token, which would only hide the project.
 - **Toolchain** — the row names a mise tool. Check it appears in the repo's mise
-  config (`.config/mise*.toml`, per the mise skill's five-file split) or
+  tool pins (`.config/mise/conf.d/tools*.toml`, `.local` variants excluded) or
   resolves on `PATH`. Missing → finding, with the `mise use` line as the remedy.
+  A tool found only in `.config/mise.toml` or a `.config/mise.<env>.toml` is
+  **the tool outside `conf.d`** row under the baseline check below, not a miss.
   A `—` in the column means the toolchain is not mise-managed; skip silently.
 - **Binaries** — only where the language is known through materialized
   `language_facts` that carry a `binaries` list (absent means none; a language
@@ -281,14 +283,15 @@ claimed**, remedy `curl https://mise.run | sh`. With **no** axis pinned anywhere
 and no capability claimed, it is a **degradation**: there is no toolchain to
 manage and no harness task to run, so halting `setup` and `execute` over it
 would block a product on day one for a stack nobody has chosen yet. A repo with
-no `.config/mise*.toml` at all is the same finding one level up, at the same
-severity: report it and nudge `/vwf:setup reshape`, the one repo-shape remedy.
-Setup materializes no tooling itself — `/vwf:init` does, laying down the three
-unconditional bundles `mise`, `repo-gates` and `repo-hygiene` by their fixed
-slugs through the stack adapter's `-stack-template` skill. That is the coarsest
-form of one question — is this repo still shaped the way `/vwf:init` shapes one
-— and the section at the end of this file is the fuller version of the same
-check: this one fires when the shape is absent, that one when it is behind.
+neither `.config/mise.toml` nor `.config/mise/conf.d/` is the same finding one
+level up, at the same severity: report it and nudge `/vwf:setup reshape`, the
+one repo-shape remedy. Setup materializes no tooling itself — `/vwf:init` does,
+laying down the three unconditional bundles `mise`, `repo-gates` and
+`repo-hygiene` by their fixed slugs through the stack adapter's
+`-stack-template` skill. That is the coarsest form of one question — is this
+repo still shaped the way `/vwf:init` shapes one — and the section at the end
+of this file is the fuller version of the same check: this one fires when the
+shape is absent, that one when it is behind.
 
 Then check `repo.stack`: the `package_manager` resolves (lockfile present, tool
 on `PATH` or in mise config) and each entry in `tools` has its expected marker —
@@ -355,8 +358,10 @@ branch. It drifts by moving, too — a pack-owned file the repo edited in place
 is no longer the file the pack ships. None of that stops the repo working, so
 **every finding here is `drift`, and none is blocking** — a repo behind its
 baseline is out of date, not broken. All seven sub-checks carry the **same
-remedy, `/vwf:setup reshape`**,
-which is why §9 prints that line once with the rows that led to it.
+remedy, `/vwf:setup reshape`**, which is why §9 prints that line once with the
+rows that led to it — with two exceptions in (f)'s layout rows: a duplicate
+tool pin is fixed by hand, and a tool outside `conf.d` is moved by doctor
+itself, on the user's consent.
 
 **The seven run per repo** — the base and every **locally-present** member,
 resolved the way `/vwf:init`'s **Step 0** resolves them: the paths
@@ -422,16 +427,16 @@ suspect the adapter.
 
 **The aggregator's member flags and its aliases are a different list, and it
 is not this one.** The base's bootstrap aggregator carries one member flag per
-**member repo**, and `.config/mise.dev.toml` carries one `setup-<member>`
-alias beside each — both named for the members, never for a project id. That
-split is stated in the same **§7** cited above, and it is why a member holding
-three projects is still one flag. Compare the two lists on the **base**
-against the member set this check resolved: a resolved member with no flag, or
-none with an alias where the alias block exists at all, is one drift row; a
-flag or an alias named for a **project id** on a product that has members is a
-drift row worded **"named from project ids"**, which one reshape rewrites. A
-repo whose alias block was never laid down is not drifting from it, exactly as
-above.
+**member repo**, and `.config/mise/conf.d/shell_alias.dev.toml` carries one
+`setup-<member>` alias beside each — both named for the members, never for a
+project id. That split is stated in the same **§7** cited above, and it is why
+a member holding three projects is still one flag. Compare the two lists on
+the **base** against the member set this check resolved: a resolved member
+with no flag, or none with an alias where the alias block exists at all, is
+one drift row; a flag or an alias named for a **project id** on a product that
+has members is a drift row worded **"named from project ids"**, which one
+reshape rewrites. A repo whose alias block was never laid down is not drifting
+from it, exactly as above.
 
 **(c) Branches.** In **each** repo, ask that repo for `refs/heads/develop` —
 `git show-ref --verify --quiet` — and the same for `refs/heads/main`. Either
@@ -442,12 +447,13 @@ which creates the missing branch. A repo with no commit yet has neither branch
 and reports one row saying that, not two — and a member is its own repository,
 so a base carrying both branches says nothing about the member beside it.
 
-**(d) The environment key.** In each repo, that repo's own `.config/mise.toml`
-sets `REPO_NAME`, and its value is **that repo's folder name, slugified** —
-the basename of that repo's **main checkout** directory, run through the
-adapter's `assets/ids.md`. It is not a project id and never has to match one:
-the `p/<slug>/` groups (b) reads are named for the projects, this key for the
-folder they sit in. A member names its **own** folder, never the base's.
+**(d) The environment key.** In each repo, that repo's own
+`.config/mise/conf.d/env.toml` sets `REPO_NAME`, and its value is **that
+repo's folder name, slugified** — the basename of that repo's **main
+checkout** directory, run through the adapter's `assets/ids.md`. It is not a
+project id and never has to match one: the `p/<slug>/` groups (b) reads are
+named for the projects, this key for the folder they sit in. A member names its
+**own** folder, never the base's.
 
 Read the folder from the **main checkout**, not from the working directory: a
 linked worktree's directory is named for its branch, so resolve the common
@@ -517,9 +523,9 @@ report the value they found there. A position **no** predicate owns — the
 plugin task's two agent-plugin lists, the `_default` slot, any other a pack
 ships — is a value the repo set, and nothing reports it at all. Splicing by
 what the pack **marks** rather than by what a predicate **owns** is what makes
-a mixed file tractable: `.config/mise.toml` carries the repo-name key and
-`MEMBERS` beside positions no predicate reads, and splicing only the owned
-half would leave the rest diverging and report the whole file as content
+a mixed file tractable: `.config/mise/conf.d/env.toml` carries the repo-name
+key and `MEMBERS` beside positions no predicate reads, and splicing only the
+owned half would leave the rest diverging and report the whole file as content
 drift.
 
 **A record whose `source:` is `generated` has no pack payload** to reconstruct
@@ -566,18 +572,19 @@ lockfile is not the adapter's, which is the rule the materialization itself
 lives by.
 
 **(f) Three of the five marked positions beside `REPO_NAME`.** The toolchain
-pack ships five more positions marked in its base config —
-`MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and `MEMBERS` in the same `[env]`
-block, and the two runtime positions `RUNTIME_BLOCK` under `[settings]` and
-`PATH_ENTRIES` at the end of `[env]`, which `init` fills from its stack read
-and which are **legitimately empty** on a repo with no detected language, so
-this check reads neither of them, and (e) splices their values out like any
-other position's. The two landing-model positions are read in **each** repo,
-from that repo's own block; `MEMBERS` is read on the **base alone**, since a
-member declares no members of its own unless it carries its own `.gitmodules`,
-in which case it is a base in its turn and this check reaches it as one. Each
-is read by a task rather than by vwf, so an unfilled one is wrong only where it
-is used — which is why it goes unnoticed until the day that task runs:
+pack ships five more marked positions — `MERGE_MODEL_DEVELOP`,
+`MERGE_MODEL_MAIN` and `MEMBERS` in the same `conf.d/env.toml`, and the two
+runtime positions `RUNTIME_BLOCK` at the end of `.config/mise.toml`'s
+`[settings]` and `PATH_ENTRIES` at the end of `conf.d/env.toml`, which `init`
+fills from its stack read and which are **legitimately empty** on a repo with
+no detected language, so this check reads neither of them, and (e) splices
+their values out like any other position's. The two landing-model positions
+are read in **each** repo, from that repo's own block; `MEMBERS` is read on the
+**base alone**, since a member declares no members of its own unless it carries
+its own `.gitmodules`, in which case it is a base in its turn and this check
+reaches it as one. Each is read by a task rather than by vwf, so an unfilled
+one is wrong only where it is used — which is why it goes unnoticed until the
+day that task runs:
 
 - **`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`** — one per branch, each
   checked on its own: absent from the block, or holding anything other than
@@ -603,8 +610,28 @@ is used — which is why it goes unnoticed until the day that task runs:
   own file and is blocking; this one asks only whether the repo's own tasks
   can see the same list.
 
-`.config/mise.toml` absent altogether is (d)'s row for that repo, already
-printed — (f) adds nothing to it.
+`.config/mise/conf.d/env.toml` absent altogether is (d)'s row for that repo,
+already printed — (f) adds nothing to it.
+
+**The mise layout is (f)'s too**, read in **each** repo, three rows:
+
+- **Old layout.** Any one of three is one drift row, **mise config on the old
+  layout**: a `.config/mise.toml` or `.config/mise.<env>.toml` carrying a
+  table other than `[settings]` (top-level keys are fine); a
+  `.config/mise*.lock` present; or `.config/miserc.toml` absent or lacking
+  `env_conf_d = true`. The reshape migrates it. On that row (d)
+  and (f) read their positions from the `[env]` block wherever it sits, and
+  the two rows below are not raised — the migration moves every table at once.
+- **One tool, two pins.** A tool pinned in more than one
+  `.config/mise/conf.d/tools*.toml` is one drift row naming the tool and the
+  files. The one lock keeps a single version, so the other environment's
+  locked install fails. The fix is one pin — in `tools.toml` when two
+  environments need it — made by hand; doctor names it and moves nothing.
+- **A tool outside `conf.d`.** A `[tools]` entry in `.config/mise.toml` or a
+  `.config/mise.<env>.toml` is one drift row naming the tool and the file.
+  Doctor offers the move — into `conf.d/tools.toml` from `mise.toml`, into
+  `conf.d/tools.<env>.toml` from `mise.<env>.toml` — and makes it only on the
+  user's consent, per tool.
 
 **(g) Forge state.** The one sub-check that reads the **remote** rather than
 the checkout. `/vwf:init`'s **forge pass** — the last step of its git pass,
@@ -648,12 +675,12 @@ allowed to read. Otherwise, three checks:
   have set — **no force-push and no deletion**, always; **a pull request
   required** when that branch's own value reads `pr` — `MERGE_MODEL_DEVELOP`
   for `develop`, `MERGE_MODEL_MAIN` for `main`, a legacy single `MERGE_MODEL`
-  standing in for both — read from the same `[env]` block (f) reads (on GitHub
-  the ruleset rules `non_fast_forward`,
-  `deletion` and `pull_request`, or the classic `allow_force_pushes`,
-  `allow_deletions` and `required_pull_request_reviews`; on GitLab
-  `allow_force_push` and a `push_access_levels` list that lets nobody push
-  directly, deletion being refused by protection itself) — doctor prints one
+  standing in for both — read from the same `conf.d/env.toml` (f) reads (on
+  GitHub the ruleset rules `non_fast_forward`, `deletion` and `pull_request`,
+  or the classic `allow_force_pushes`, `allow_deletions` and
+  `required_pull_request_reviews`; on GitLab `allow_force_push` and a
+  `push_access_levels` list that lets nobody push directly, deletion being
+  refused by protection itself) — doctor prints one
   **note** naming the branch and the missing rule, like the skip note: it is
   information, never drift, because a reshape would leave that protection
   exactly as it is, so no remedy exists to point at. On a branch whose value is
@@ -686,4 +713,5 @@ skip note, not a finding.
 Doctor **writes none of this** — no branch, no directory, no key, no scope, no
 pack-owned file, and no forge setting. It reports the rows, gives
 `/vwf:setup reshape` once as the remedy, and stops there, as it does with every
-other structural change in this file.
+other structural change in this file. The one exception is (f)'s tool move,
+made on the user's consent; a duplicate pin is fixed by hand.

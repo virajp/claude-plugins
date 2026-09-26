@@ -1,9 +1,10 @@
 name: mise
-summary: The repo's toolchain manager — the .config/ five-file split selected
-  by MISE_ENV, and the file-based task library everything else invokes, grouped
-  into `setup:*` for bootstrap, `code:*` for gates and git, and
-  `p:<project-id>:*` for a project's own commands.
-version: 1.6.1
+summary: The repo's toolchain manager — settings-only .config/mise*.toml
+  files, one section file per table in .config/mise/conf.d/ scoped by MISE_ENV,
+  one lock for every environment, and the file-based task library everything
+  else invokes, grouped into `setup:*` for bootstrap, `code:*` for gates and
+  git, and `p:<project-id>:*` for a project's own commands.
+version: 1.7.0
 type: toolchain-manager
 kind: toolchain-manager
 axis: repo

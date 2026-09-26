@@ -1,0 +1,5 @@
+# /security-review — loop U6, round 3, range 1d332056..689a7f4e
+
+NO FINDINGS
+
+Checked 406516ba and 689a7f4e: comment-only — setup/all member-loop comment rewrapped in both copies, no executable line changed; one TOML comment above [env] in .config/mise/conf.d/env.toml stating the no-secrets rule.

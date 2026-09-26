@@ -1,0 +1,10 @@
+# Tasks defined inline; the file-based task library lives in mise/tasks/.
+
+[tasks.init]
+# Mandatory, and it lives in the BASE rather than in dev on purpose: the
+# file-based tasks under .config/mise/tasks/ must be executable under
+# MISE_ENV=ci too, not only on a developer laptop. mise runs a task file
+# directly, so one without its exec bit fails as an *unknown task*.
+description = "Initialize mise tasks"
+hide        = true
+run         = "find .config/mise/tasks/ -name '*' -type f -not -path '*/*.env' -exec chmod 755 {} \\;"

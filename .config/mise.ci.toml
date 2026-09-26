@@ -1,18 +1,7 @@
-# CI-only environment — loaded when MISE_ENV=ci (set by the GitHub workflows in
-# .github/workflows/). The common runtime CI needs (node, pnpm) lives in
-# mise.toml; only what CI needs on top of it is declared here. Add CI-specific
-# tools here as the pipelines grow — they will NOT leak into the dev
-# environment.
+# CI-only settings — loaded when MISE_ENV=ci (set by the GitHub workflows).
 
 [settings]
-# Install exactly what the lockfiles record and fail rather than resolve.
-# `lockfile = true` in the base keeps them current on a laptop; this line is
-# what makes the pipeline a reader of them. A CI run that silently resolves a
-# newer version is a build nobody can reproduce afterwards.
-#
-# There is one lockfile per config file that declares tools, named after that
-# file's stem — here `mise.lock`, `mise.dev.lock` and `mise.ci.lock`, all
-# tracked, so the pipeline reads the same versions a laptop resolved.
+# Install exactly what .config/mise/mise.lock records, and fail rather than resolve.
 locked = true
 
 # mise's bundled Node release-key import (gpg --import) fails on the Ubuntu CI
@@ -22,10 +11,3 @@ locked = true
 # CI; the Node tarball is still SHA256-checksum verified (node.verify). Local dev
 # (mise.toml) keeps full gpg verification.
 node.gpg_verify = false
-
-[tools]
-# `p:plugins:shellcheck`'s two binaries — CI resolves them from this layer, not
-# from the `mise x shellcheck@latest shfmt@latest` wrapper in plugins.yml, whose
-# ad-hoc install does not survive the inner `mise run`.
-shellcheck = { version = "latest" }
-shfmt      = { version = "latest" }

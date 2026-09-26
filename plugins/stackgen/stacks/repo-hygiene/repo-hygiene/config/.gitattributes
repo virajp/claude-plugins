@@ -6,7 +6,7 @@
 # language in the repository statistics.
 *.lock          linguist-generated
 pnpm-lock.yaml  linguist-generated
-mise.lock       linguist-generated
+.config/mise/mise.lock  linguist-generated
 
 # The knowledge graph is regenerated, never merged by hand. The `graphify`
 # merge driver is registered by the graph tooling, not by this file — without

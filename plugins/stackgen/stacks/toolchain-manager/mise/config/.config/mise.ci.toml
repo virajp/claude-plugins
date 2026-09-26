@@ -2,20 +2,18 @@
 #
 # One variant, two roles: the pipeline and production read the same layer, so
 # the production overrides live here rather than in a fourth file nothing
-# selects.
+# selects. CI-only tools and values go in `mise/conf.d/tools.ci.toml` / `env.ci.toml`.
 
 [settings]
-# Install exactly what the lockfiles record and fail rather than resolve.
-# `lockfile = true` in the base keeps them current on a laptop; this line is
-# what makes the pipeline a reader of them. A CI run that silently resolves a
+# Install exactly what the lockfile records and fail rather than resolve.
+# `lockfile = true` in the base keeps it current on a laptop; this line is
+# what makes the pipeline a reader of it. A CI run that silently resolves a
 # newer version is a build nobody can reproduce afterwards.
 #
-# There is one lockfile per config file that declares tools, named after that
-# file's stem — with the split as shipped, `mise.lock` (the house linter in the
-# base) and `mise.dev.lock`. All of them are tracked, so the pipeline reads the
-# same versions a laptop resolved. A tool no committed lock records is refused
-# here: run `mise install` and commit `.config/mise.lock` before the first CI
-# push, or the linter pin fails the pipeline. Under mise's default npm
+# The one lock, `.config/mise/mise.lock`, holds every environment's tools, so
+# the pipeline reads the versions a laptop resolved. A tool it does not record
+# is refused here: run `MISE_ENV=dev mise run setup:all` and commit the lock
+# before the first CI push, or the linter pin fails the pipeline. Under mise's default npm
 # installer (aube) the linter's entry also points at a generated sidecar,
 # `.config/mise/locks/npm-askviraj-linter/<version>~<hash>/`, which is
 # committed with the lock — without it the install fails, locked or not. The
@@ -29,14 +27,3 @@ locked = true
 # the tarball is still SHA256-verified, and the general gpg_verify = true in
 # mise.toml stays intact. Uncomment for a Node project:
 #   node.gpg_verify = false
-
-[tools]
-# Usually empty — CI reuses the runtime from mise.toml. Add a tool here only if
-# the pipeline genuinely needs it and development does not.
-
-[env]
-# Empty by default. What belongs here: CI-only and production VALUES for keys
-# mise.dev.toml already names locally (`LOG_LEVEL`, `RUNTIME_ENV`, a deploy
-# target). What never belongs here: a secret. Tokens and credentials are
-# injected by the CI provider or resolved by the pinned secret manager at run
-# time — a value committed to this file is a value in the repo's history.

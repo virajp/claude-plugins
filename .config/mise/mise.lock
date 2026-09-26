@@ -20,20 +20,20 @@ url_api = "https://api.github.com/repos/rhysd/actionlint/releases/assets/3849248
 provenance = "github-attestations"
 
 [[tools.doppler]]
-version = "3.76.5"
+version = "3.76.6"
 backend = "github:DopplerHQ/cli"
 specifiers = ["latest"]
 
 [tools.doppler."platforms.linux-x64"]
-checksum = "sha256:1b2f412d984920d665daf233ab6c15b364df9339b5c5b5224d5e8ee4e0a70154"
-url = "https://github.com/DopplerHQ/cli/releases/download/3.76.5/doppler_3.76.5_linux_amd64.tar.gz"
-url_api = "https://api.github.com/repos/DopplerHQ/cli/releases/assets/514702541"
+checksum = "sha256:67e4e020761adf3ffe5a030712d61721b4e2752182670bf90de5a2a88e4961e3"
+url = "https://github.com/DopplerHQ/cli/releases/download/3.76.6/doppler_3.76.6_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/DopplerHQ/cli/releases/assets/580040608"
 provenance = "github-attestations"
 
 [tools.doppler."platforms.macos-arm64"]
-checksum = "sha256:91c4bab5bbd3b630dea8c96e9c0a39cf9e59bf7772f34ab979bea66ccee9560a"
-url = "https://github.com/DopplerHQ/cli/releases/download/3.76.5/doppler_3.76.5_macOS_arm64.tar.gz"
-url_api = "https://api.github.com/repos/DopplerHQ/cli/releases/assets/514702542"
+checksum = "sha256:0023854e5e19a871234b9b705287483265eb65a64c0560b3eaafa7143ecc4e4b"
+url = "https://github.com/DopplerHQ/cli/releases/download/3.76.6/doppler_3.76.6_macOS_arm64.tar.gz"
+url_api = "https://api.github.com/repos/DopplerHQ/cli/releases/assets/580040607"
 provenance = "github-attestations"
 
 [[tools.dprint]]
@@ -45,11 +45,13 @@ specifiers = ["latest"]
 checksum = "sha256:1d26357d8bc66898d4ecc7dafca3d2971cfe222ba487228bd2ce5c3b3a309c33"
 url = "https://github.com/dprint/dprint/releases/download/0.57.4/dprint-x86_64-unknown-linux-gnu.zip"
 url_api = "https://api.github.com/repos/dprint/dprint/releases/assets/546351175"
+provenance = "github-attestations"
 
 [tools.dprint."platforms.macos-arm64"]
 checksum = "sha256:f9e752812791f258e89ff88a7affd05c793b0db3d929718651eae7df5f19eb2e"
 url = "https://github.com/dprint/dprint/releases/download/0.57.4/dprint-aarch64-apple-darwin.zip"
 url_api = "https://api.github.com/repos/dprint/dprint/releases/assets/546351171"
+provenance = "github-attestations"
 
 [[tools.gitleaks]]
 version = "8.30.1"
@@ -67,19 +69,19 @@ url = "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8
 url_api = "https://api.github.com/repos/gitleaks/gitleaks/releases/assets/378332059"
 
 [[tools.grype]]
-version = "0.118.0"
+version = "0.119.0"
 backend = "aqua:anchore/grype"
 specifiers = ["latest"]
 
 [tools.grype."platforms.linux-x64"]
-checksum = "sha256:1d444c5e7360471815f7158f71935fcecc68a3c417d85c7344f770854300bba2"
-url = "https://github.com/anchore/grype/releases/download/v0.118.0/grype_0.118.0_linux_amd64.tar.gz"
-url_api = "https://api.github.com/repos/anchore/grype/releases/assets/532808761"
+checksum = "sha256:3fa2dc4b924621ab65404cf08d0b8438d896d80ab949c9d5a4ca283c36004c9b"
+url = "https://github.com/anchore/grype/releases/download/v0.119.0/grype_0.119.0_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/anchore/grype/releases/assets/570620608"
 
 [tools.grype."platforms.macos-arm64"]
-checksum = "sha256:938f050bb5076c8aa761867b39843abad2414dfe4cc82b7d36886e634f49c640"
-url = "https://github.com/anchore/grype/releases/download/v0.118.0/grype_0.118.0_darwin_arm64.tar.gz"
-url_api = "https://api.github.com/repos/anchore/grype/releases/assets/532808803"
+checksum = "sha256:500c9b2b6c089d21481815f57a553fabbd441ec7d1e79d95e3aaf40c3bfc7e36"
+url = "https://github.com/anchore/grype/releases/download/v0.119.0/grype_0.119.0_darwin_arm64.tar.gz"
+url_api = "https://api.github.com/repos/anchore/grype/releases/assets/570630905"
 
 [[tools.jq]]
 version = "1.8.2"
@@ -96,6 +98,60 @@ provenance = "github-attestations"
 checksum = "sha256:2d75340ba57a4b4b4c8708a21c2dc8e958a48aaa8bba13b27f77f6e4c0eca07e"
 url = "https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-macos-arm64"
 url_api = "https://api.github.com/repos/jqlang/jq/releases/assets/453012783"
+provenance = "github-attestations"
+
+[[tools.node]]
+version = "26.10.0"
+backend = "core:node"
+specifiers = ["latest"]
+
+[tools.node.options]
+compile = "false"
+
+[tools.node."platforms.linux-x64"]
+checksum = "sha256:cb5c9ce9c80d7b8821e3a258543c71b939138cf17c74d5cc44bbe85d6dbc5ad8"
+url = "https://nodejs.org/dist/v26.10.0/node-v26.10.0-linux-x64.tar.gz"
+
+[tools.node."platforms.macos-arm64"]
+checksum = "sha256:751fdf7439f115d87ee2a8f3f18c065b6151852068e3e666ac60ac2996f75ac9"
+url = "https://nodejs.org/dist/v26.10.0/node-v26.10.0-darwin-arm64.tar.gz"
+
+[[tools.osv-scanner]]
+version = "2.6.0"
+backend = "aqua:google/osv-scanner"
+specifiers = ["latest"]
+
+[tools.osv-scanner."platforms.linux-x64"]
+checksum = "sha256:ca69b3d3cd08f889a49dc0a383122f71cc528b83803671df5fd874d97485b108"
+url = "https://github.com/google/osv-scanner/releases/download/v2.6.0/osv-scanner_linux_amd64"
+url_api = "https://api.github.com/repos/google/osv-scanner/releases/assets/562414718"
+
+[tools.osv-scanner."platforms.linux-x64".provenance.slsa]
+url = "https://github.com/google/osv-scanner/releases/download/v2.6.0/multiple.intoto.jsonl"
+
+[tools.osv-scanner."platforms.macos-arm64"]
+checksum = "sha256:98c460dcd37de25819babd757d04542045b6243113e209edcd4d89fedb0256b4"
+url = "https://github.com/google/osv-scanner/releases/download/v2.6.0/osv-scanner_darwin_arm64"
+url_api = "https://api.github.com/repos/google/osv-scanner/releases/assets/562414648"
+
+[tools.osv-scanner."platforms.macos-arm64".provenance.slsa]
+url = "https://github.com/google/osv-scanner/releases/download/v2.6.0/multiple.intoto.jsonl"
+
+[[tools.pnpm]]
+version = "12.6.0"
+backend = "aqua:pnpm/pnpm"
+specifiers = ["latest"]
+
+[tools.pnpm."platforms.linux-x64"]
+checksum = "sha256:3f4c66f668d0e84219679982d095b30da68325e1fac9284e7f5dc1584bd3d13e"
+url = "https://github.com/pnpm/pnpm/releases/download/v12.6.0/pnpm-linux-x64.tar.gz"
+url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/581813243"
+provenance = "github-attestations"
+
+[tools.pnpm."platforms.macos-arm64"]
+checksum = "sha256:1030f38e14fa2e6c87fe6ab0313a3bf3b794a961504f4439bad2ca2110d3583e"
+url = "https://github.com/pnpm/pnpm/releases/download/v12.6.0/pnpm-darwin-arm64.tar.gz"
+url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/581813250"
 provenance = "github-attestations"
 
 [[tools.pre-commit]]
@@ -119,13 +175,13 @@ backend = "core:python"
 specifiers = ["latest"]
 
 [tools.python."platforms.linux-x64"]
-checksum = "sha256:3959f92825141e04adf44982d3a83ee57af0877e893b0796e04c1468749d9b04"
-url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260901/cpython-3.14.7+20260901-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz"
+checksum = "sha256:bd0d0568ccded07bbf1c87727230dc5dd0187e706a87da23c4de78388a229b78"
+url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260924/cpython-3.14.7+20260924-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz"
 provenance = "github-attestations"
 
 [tools.python."platforms.macos-arm64"]
-checksum = "sha256:4632cb1a6edad9e73d3c81b6d2e69131637d995173e3e85005df14102b0592ba"
-url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260901/cpython-3.14.7+20260901-aarch64-apple-darwin-install_only_stripped.tar.gz"
+checksum = "sha256:f0fb6b233971672dd7add4efa90f8c209a63253e457ffabd0148b9f734638319"
+url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260924/cpython-3.14.7+20260924-aarch64-apple-darwin-install_only_stripped.tar.gz"
 provenance = "github-attestations"
 
 [[tools.shellcheck]]
@@ -172,18 +228,18 @@ url = "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-darwin-aa
 url_api = "https://api.github.com/repos/tamasfe/taplo/releases/assets/257323110"
 
 [[tools.uv]]
-version = "0.12.15"
+version = "0.12.19"
 backend = "aqua:astral-sh/uv"
 specifiers = ["latest"]
 
 [tools.uv."platforms.linux-x64"]
-checksum = "sha256:f97935763c04be3e692460a7aaeaaab8fc3b78fcf8b389da820b38ae7423a638"
-url = "https://github.com/astral-sh/uv/releases/download/0.12.15/uv-x86_64-unknown-linux-gnu.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/565630898"
+checksum = "sha256:23bf5552d220e0842b65c862097b2ebaeba0064b74eda5e565e77fd25969d8c8"
+url = "https://github.com/astral-sh/uv/releases/download/0.12.19/uv-x86_64-unknown-linux-gnu.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/587159011"
 provenance = "github-attestations"
 
 [tools.uv."platforms.macos-arm64"]
-checksum = "sha256:dc304b9ed1b24174572290fba60ac3f6fe63c73a671f0439e62a91375841964d"
-url = "https://github.com/astral-sh/uv/releases/download/0.12.15/uv-aarch64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/565630750"
+checksum = "sha256:a9a8df1eedeb192f2e47e40e2faabfb387db4b850209118786d42f89dde3e0ba"
+url = "https://github.com/astral-sh/uv/releases/download/0.12.19/uv-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/587158826"
 provenance = "github-attestations"

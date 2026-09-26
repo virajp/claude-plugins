@@ -1,40 +1,6 @@
-# Development-only environment — loaded when MISE_ENV=dev (set on the
-# maintainer's machine). These tools are NOT installed in CI (which uses
-# MISE_ENV=ci); the common node + pnpm runtime lives in mise.toml.
+# Development-only settings — loaded when MISE_ENV=dev; the tools are in mise/conf.d/.
 
 [settings]
-# Only relevant to the python/uv dev tools below.
+# Only relevant to the python/uv dev tools in mise/conf.d/tools.dev.toml.
 python.compile      = false
 python.uv_venv_auto = "create|source"
-
-[tools]
-# Development tools
-doppler    = { version = "latest" }
-pre-commit = { version = "latest" }
-
-# Formatter
-dprint = { postinstall = "dprint completions fish | source", version = "latest" }
-taplo  = { version = "latest" }
-
-# Security tools
-gitleaks = { version = "latest" }
-grype    = { version = "latest" }
-
-# Shell gates — `p:plugins:shellcheck` lints and format-checks every shell file
-# a stackgen pack ships: the task library under `config/.config/mise/tasks/` and
-# the hook scripts under `hooks/`. And actionlint the workflows. Those files are
-# executed in someone else's repo, where nothing else ever reads them, so this
-# is the only place a bad one is caught.
-actionlint = { version = "latest" }
-shellcheck = { version = "latest" }
-shfmt      = { version = "latest" }
-
-# AI Tools
-jq     = { version = "latest" }
-python = { version = "latest" }
-uv     = { version = "latest" }
-
-[shell_alias]
-precommit = "mise run code:precommit"
-setup     = "mise run setup:all"
-worktrees = "mise run code:worktrees"

@@ -208,15 +208,18 @@ missing `mempalace.yaml` or one carrying no secret excludes; callers must halt),
 against the baseline `/vwf:init` lays down**, run **per repo — the base and each
 locally-present member** (§5): a pack version behind, a registry id with no task
 group or commit scope, a member with no aggregator flag or alias or a list still
-named from project ids, a missing `develop` or `main`, a repo-name key that is
-unfilled or not the folder's slug, a pack-owned file the repo edited away from
-the hash the lockfile recorded and still diverging once every marked position is
-spliced out, a recorded `answers.repos.<repo>.forge` the live `origin` host
-contradicts or a `skipped:` row whose `when: forge` it contradicts, a config
-stamped `config_format` 21 that carries no `answers:` block at all, an absent or
-invalid `MERGE_MODEL_DEVELOP` or `MERGE_MODEL_MAIN` (or a legacy `MERGE_MODEL`
-standing in for both), an absent or empty `MEMBERS` under siblings linkage, and
-— read from the forge, only where its CLI answers — a default branch that is
+named from project ids, a missing `develop` or `main`, a repo-name key in
+`conf.d/env.toml` that is unfilled or not the folder's slug, a pack-owned file
+the repo edited away from the hash the lockfile recorded and still diverging
+once every marked position is spliced out, a recorded
+`answers.repos.<repo>.forge` the live `origin` host contradicts or a `skipped:`
+row whose `when: forge` it contradicts, a config stamped `config_format` 21 that
+carries no `answers:` block at all, an absent or invalid `MERGE_MODEL_DEVELOP`
+or `MERGE_MODEL_MAIN` (or a legacy `MERGE_MODEL` standing in for both), an
+absent or empty `MEMBERS` under siblings linkage, the mise config on the old
+layout, a tool pinned in two `conf.d/tools*.toml` files
+or in a top-level mise file (the move into `conf.d` offered, made on consent),
+and — read from the forge, only where its CLI answers — a default branch that is
 neither `develop` nor `main`, `develop` or `main` with no protection on the
 forge at all, or no backlog project for the base. Each row is printed under the
 repo it was found in, and an **absent** member is a blind spot rather than a

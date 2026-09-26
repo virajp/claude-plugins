@@ -4,7 +4,7 @@
 #MISE depends=["init"]
 
 #USAGE flag "--all" help="Also set up every member project"
-#USAGE flag "--upgrade" help="Dev only: bump every environment's mise lockfile and update the formatter plugins"
+#USAGE flag "--upgrade" help="Dev only: bump the mise lockfile for every environment and update the formatter plugins"
 
 # One flag per MEMBER REPO is added here when this repo has members — each
 # submodule, or each path the `MEMBERS` list names — each flag named by that
@@ -22,6 +22,12 @@
 set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# MISE_ENV decides which conf.d files load and which lock environments exist; guessing it is wrong.
+if [ -z "${MISE_ENV:-}" ]; then
+  print_error "MISE_ENV is unset. On a developer machine run: MISE_ENV=dev mise run setup:all"
+  exit 1
+fi
 
 # The entry point a human runs — on clone, and to re-sync a machine afterwards.
 # Aliased as `setup` in `[shell_alias]`.
@@ -72,10 +78,10 @@ mise run setup:vscode
 #
 # The member list comes from `_scripts/helpers`' `members`, which answers for
 # either linkage — the repo's submodules, or the `MEMBERS` list in
-# `.config/mise.toml` — so this loop covers both and `code:worktrees` walks the
-# same members this does. A repo that wants a member set up on its OWN flag
-# rather than on `--all` adds one `mise run --cd <path>` per id beside the loop,
-# guarded by that id's flag.
+# `.config/mise/conf.d/env.toml` — so this loop covers both and
+# `code:worktrees` walks the same members this does. A repo that wants a member
+# set up on its OWN flag rather than on `--all` adds one `mise run --cd <path>`
+# per id beside the loop, guarded by that id's flag.
 
 if [[ "${usage_all:-false}" == "true" ]]; then
   while read -r member; do

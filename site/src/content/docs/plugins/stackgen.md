@@ -797,22 +797,32 @@ subject: how the toolchain is pinned, where env values live, and the task
 library everything else runs through. It lands as a `config/` tree — the config
 files and the task library itself — plus a paths-scoped doctrine skill.
 
-### The five-file split
+### The config split
 
-mise config lives under `.config/`, where mise resolves `MISE_ENV` variants. A
-repo splits its config across five files, four of which the pack ships. mise
-loads `mise.toml` first, then deep-merges the active `MISE_ENV` variants on top,
-then the local file last of all — so each variant holds only deltas, never a
-copy of the base. Never duplicate a tool or setting across files; put it in the
-lowest layer that needs it.
+mise config lives under `.config/`, where mise resolves `MISE_ENV` variants. The
+top-level files hold `[settings]` and top-level keys only; every other section
+is its own file in `.config/mise/conf.d/`. mise loads `mise.toml` first, then
+deep-merges the active `MISE_ENV` variants on top, then the local file last of
+all — so each variant holds only deltas, never a copy of the base. Never
+duplicate a tool or setting across files; put it in the lowest layer that needs
+it.
 
-| File              | Loads when          | Holds                                                                                           |
-| ----------------- | ------------------- | ----------------------------------------------------------------------------------------------- |
-| `mise.toml`       | always (every env)  | shared `[settings]`, runtime `[tools]` and the house linter pin, common `[env]`, `[tasks.init]` |
-| `mise.dev.toml`   | `MISE_ENV=dev`      | dev-only tooling, shell aliases, local/dev env values                                           |
-| `mise.ci.toml`    | `MISE_ENV=ci`       | CI/production-only settings + tools, the node-gpg workaround, prod env values                   |
-| `mise.test.toml`  | `MISE_ENV=dev,test` | test deltas, layered on top of dev — never selected alone                                       |
-| `mise.local.toml` | always, last        | this machine's overrides — **never committed**, and never shipped                               |
+| File                               | Loads when             | Holds                                                             |
+| ---------------------------------- | ---------------------- | ----------------------------------------------------------------- |
+| `miserc.toml`                      | before the rest        | `env_conf_d = true` and nothing else                              |
+| `mise.toml`                        | always (every env)     | shared `[settings]` and `min_version`                             |
+| `mise.dev.toml`                    | `MISE_ENV=dev`         | dev-only settings                                                 |
+| `mise.ci.toml`                     | `MISE_ENV=ci`          | CI/production settings, `locked = true`, the node-gpg workaround  |
+| `mise.test.toml`                   | `MISE_ENV=dev,test`    | test deltas, layered on top of dev — never selected alone         |
+| `mise.local.toml`                  | always, last           | this machine's overrides — **never committed**, and never shipped |
+| `mise/conf.d/<section>.toml`       | always                 | one section for every environment                                 |
+| `mise/conf.d/<section>.<env>.toml` | `MISE_ENV` has `<env>` | one section for one environment                                   |
+
+The pack ships `env.toml`, `tools.toml` and `tasks.toml` for every environment,
+and `env.dev.toml`, `tools.dev.toml` and `shell_alias.dev.toml` for dev. A
+section with no content ships no file. `miserc.toml`'s `env_conf_d = true` is
+what scopes a dotted name to its environment. `MISE_ENV` itself is set by your
+shell, never by a file.
 
 Selecting the environment:
 
@@ -822,13 +832,14 @@ Selecting the environment:
   overrides apply.
 - `MISE_ENV` is a **comma list and the last entry wins**, which is what makes
   `MISE_ENV=dev,test` a delta on dev rather than a fourth full config.
-- With `MISE_ENV` unset, only `mise.toml` loads — the minimal, portable base.
+- With `MISE_ENV` unset, only the base and the undotted `conf.d` files load.
+  `setup:all` refuses to run then, naming `MISE_ENV=dev mise run setup:all`.
 
 A repo with no CI/CD, no deploy target and no separate test environment needs
-only `mise.toml`. The others cost nothing empty and are shipped anyway, so the
-answer to "where does this go" never requires creating a file first.
-`mise.local.toml` is the exception: it is gitignored by the hygiene pack and
-documented in `mise.toml`'s banner, never written for you.
+only the base. The others cost little and are shipped anyway, so the answer to
+"where does this go" never requires creating a file first. `mise.local.toml` is
+the exception: it is gitignored by the hygiene pack and documented in
+`mise.toml`'s banner, never written for you.
 
 **Three of the base `[settings]` are worth naming**, because each answers a
 failure people hit rather than a preference: `all_compile = false` never builds
@@ -836,49 +847,48 @@ a tool from source, so a missing prebuilt binary fails loudly instead of
 starting a long compile nobody asked for; `task.timings = true` prints elapsed
 time after each task; and `task.disable_spec_from_run_scripts = true` makes a
 task's flags come from its `#USAGE` header alone, rather than being inferred
-from the script it runs.
+from the script it runs. `task.run_auto_install = false` leaves every install to
+`setup:mise`.
 
-**The lockfiles are tracked, and there is one per config that declares tools.**
-`lockfile = true` in the base makes `mise install` record what each fuzzy pin
-resolved to, in a file named after the declaring config's stem. With the split
-as shipped — the house linter in the base `[tools]`, the dev tooling in
-`mise.dev.toml` — the files produced are `.config/mise.lock` and
-`.config/mise.dev.lock`; a runtime pinned in `mise.toml` joins the first. Under
-mise's default npm installer, aube, the linter's entry in `mise.lock` points at
-a generated sidecar under `.config/mise/locks/` that fixes its dependency graph;
+**One lock holds every environment's tools, and it is tracked.**
+`lockfile = true` in the base records what each fuzzy pin resolved to, in
+`.config/mise/mise.lock`, for `linux-x64` and `macos-arm64`. `setup:mise` writes
+it with one `mise lock` under `MISE_ENV` set to every environment the config
+files carry; a single-environment `mise lock` would drop the rest. A tool is
+pinned in one file only: one two environments need goes in `tools.toml`. Under
+mise's default npm installer, aube, the linter's entry in the lock points at a
+generated sidecar under `.config/mise/locks/` that fixes its dependency graph;
 the two are committed together, before the first CI push, or the pipeline fails
 at install. `locked = true` in `mise.ci.toml` is what makes the pipeline a
-reader of what a laptop resolved rather than a resolver of its own. Only
-`mise.local.lock` is ignored, matching its config. (Every pack doc used to say
-"`mise.lock`, committed", singular; the per-config rule is what `mise install`
-actually does, measured.)
+reader of what a laptop resolved rather than a resolver of its own. Only the
+local lock is ignored.
 
-A path beside them is not part of the five-file count:
-`.config/mise/conf.d/<pack>.toml`, a directory mise auto-loads, where a secrets
+Beside the section files, `.config/mise/conf.d/<pack>.toml` is where a secrets
 provider contributes its own `[env]` — and the package manager its `npx` alias —
-without any component editing `mise.toml`.
+without any component editing a section file.
 
-`mise.toml` carries the language **runtime only** in `[tools]`, plus one gate:
-the house linter, `npm:@askviraj/linter` pinned at an exact version, which the
+`conf.d/tools.toml` carries the language **runtime only**, plus one gate: the
+house linter, `npm:@askviraj/linter` pinned at an exact version, which the
 `code:lint` of the pnpm, eslint, flutter, swift and swiftui packs calls through
 `mise which` rather than fetching it per run — in the base because the pipeline
 runs `code:lint`. It is a Node script, so it needs a `node` on `PATH`: the
 repo's own pin, or the machine's. Other formatters, linters, security scanners
-and dev tooling belong in `mise.dev.toml`, so a fresh checkout or a CI build
-does not pull them. `[tasks.init]` is the exception that lives in the base:
+and dev tooling belong in `conf.d/tools.dev.toml`, so a CI build does not pull
+them. `[tasks.init]`, in `conf.d/tasks.toml`, loads in every environment:
 file-based tasks must be executable under `MISE_ENV=ci` too. The runtime's
-settings are a **marked position** the base ships empty: `RUNTIME_BLOCK` under
-`[settings]` and `PATH_ENTRIES` at the end of `[env]` are filled by `/vwf:init`
-from its stack read — one runtime settings line per detected language, the
-`_.path` entry where a project-local binary directory needs it — and left empty
-for a language the repo does not have, since a setting for an absent runtime is
-a claim about the stack that is not true. With `REPO_NAME`,
-`MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and `MEMBERS` they are the base's six
-marked positions.
+settings are a **marked position** shipped empty: `RUNTIME_BLOCK` under
+`mise.toml`'s `[settings]` and `PATH_ENTRIES` at the end of `conf.d/env.toml`
+are filled by `/vwf:init` from its stack read — one runtime settings line per
+detected language, the `_.path` entry where a project-local binary directory
+needs it — and left empty for a language the repo does not have, since a setting
+for an absent runtime is a claim about the stack that is not true. With
+`REPO_NAME`, `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and `MEMBERS`, all in
+`conf.d/env.toml`, they are the six marked positions.
 
-`mise.dev.toml` holds the **local values** of runtime env vars (verbose logging,
-local hosts, test credentials). `mise.ci.toml` carries the **production values**
-of those same keys. Dev and prod differ only in value, not in variable name.
+`conf.d/env.dev.toml` holds the **local values** of runtime env vars (verbose
+logging, local hosts, test credentials). `conf.d/env.ci.toml` carries the
+**production values** of those same keys. Dev and prod differ only in value, not
+in variable name.
 
 ### CI node-gpg workaround
 
@@ -924,7 +934,7 @@ inside `code/*` and `setup/*` change with the tech stack.
   call **them** rather than the tools they wrap: `format` and `lint` pass the
   staged filenames, `sec` passes `--staged` and lets gitleaks read the index. A
   repo customising a gate edits the task, never the hook, so every tool is
-  configured exactly once. `code:sec` needs scanners from `mise.dev.toml` — run
+  configured exactly once. `code:sec` needs scanners from `tools.dev.toml` — run
   it under the dev toolchain (`MISE_ENV=dev`). Its full scan skips a `.env` file
   through a throwaway overlay of the gitleaks config, for the `dir` scan alone —
   the shipped `gitleaks.toml` stays strict, so a `.env` someone stages is still
@@ -959,7 +969,7 @@ inside `code/*` and `setup/*` change with the tech stack.
   merge is one more thing a change runs through, like the gates.)
 - **`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` — what "land it" means on each
   branch.** What the merge tasks do *after* the predicates is set **per
-  destination branch** — two marked positions in `mise.toml`'s `[env]` that
+  destination branch** — two marked positions in `conf.d/env.toml` that
   `/vwf:init` fills: `MERGE_MODEL_DEVELOP`, which `code:merge:develop` reads and
   which ships `direct`, and `MERGE_MODEL_MAIN`, which `code:merge:main` reads
   and which ships `pr`. A destination whose position is unset reads as `direct`;
@@ -980,21 +990,20 @@ inside `code/*` and `setup/*` change with the tech stack.
   the same one — a solo repo that merges into `develop` locally still wants a
   request as the record of what reached `main`.
 - **`setup/*` — bootstrap & upgrade.** `setup:all` is the entrypoint — run it on
-  clone and to re-sync. It calls `setup:mise`, `setup:secrets`,
+  clone and to re-sync, as `MISE_ENV=dev mise run setup:all`; it exits 1 when
+  `MISE_ENV` is unset. It calls `setup:mise`, `setup:secrets`,
   `setup:external:start`, `setup:deps:all`, `setup:precommit`, `setup:ai` and
   `setup:vscode` in order, and stays idempotent. **It never upgrades or
   overwrites anything it did not create**: a pack task that would have to stops,
   names what it found and prints the by-hand command, and every destructive step
   sits behind a flag. Tools install from the committed lockfile — `setup:mise`
-  runs `mise install --locked` every time and never `mise upgrade` — and a
-  lockfile is written only in dev: once by `mise lock` when no
-  `.config/mise*.lock` exists yet, or by `setup:all --upgrade`, the one flag
-  `setup:all` passes on and only when you pass it, which reaches
-  `setup:mise --upgrade`: `mise lock --bump --upgrade` for the base config and
-  each environment file, then `dprint config update`. Outside dev (`MISE_ENV`
-  without `dev`, or unset) a missing lockfile and `--upgrade` each stop the task
-  before it runs anything. mise's own install of a missing tool, which runs
-  before any task body, still records what it resolved in dev.
+  runs `mise install --locked` every time and never `mise upgrade` — and the
+  lock is written only in dev: once by one `mise lock` over every environment
+  when no `.config/mise/mise.lock` exists yet, or by `setup:all --upgrade`, the
+  one flag `setup:all` passes on and only when you pass it, which reaches
+  `setup:mise --upgrade`: one `mise lock --bump --upgrade` over every
+  environment, then `dprint config update`. Outside dev a missing lock and
+  `--upgrade` each stop the task before it runs anything.
   `setup:precommit --update` is what runs `pre-commit autoupdate`, moving the
   hook `rev:` lines; and `setup:precommit --force` is what takes the hooks over
   from a **local** `core.hooksPath`, a `.husky/` directory or a lefthook config,
@@ -1089,12 +1098,12 @@ inside `code/*` and `setup/*` change with the tech stack.
   the gates bundle installs — because every repo has markdown and dependencies
   from the first commit. `code/lint` is the half-case: it keeps the marker for
   the case where no language pack's linter runs in the repo — the house linter
-  is pinned in the base but wired only by a language pack's overlay — and still
-  ships **shellcheck** and **actionlint** as defaults, as `code/format` ships
-  **shfmt** beside dprint. The line is what the tool reads: one that walks the
-  tree by extension gets a default, one that needs a pinned language toolchain
-  stays a slot. An overlay inherits both the argument surface and those defaults
-  — it adds its linter, it does not drop them.
+  is pinned in `conf.d/tools.toml` but wired only by a language pack's overlay —
+  and still ships **shellcheck** and **actionlint** as defaults, as
+  `code/format` ships **shfmt** beside dprint. The line is what the tool reads:
+  one that walks the tree by extension gets a default, one that needs a pinned
+  language toolchain stays a slot. An overlay inherits both the argument surface
+  and those defaults — it adds its linter, it does not drop them.
 - **`_scripts/helpers`, plus siblings.** The `_scripts/` directory is
   underscore-prefixed, so mise treats it as **not a task**. `helpers` is the
   shared shell library (colors plus `print_header` / `print_subheader` /
@@ -1104,9 +1113,9 @@ inside `code/*` and `setup/*` change with the tech stack.
   (their shared body), `placeholder` (what a slot prints) and `helpers.mjs`,
   which mirrors the print API for a Node task. One underscore, not two — the
   directory already says *library*.
-- **`[tasks.init]`.** A toml task in `mise.toml` that chmods every file under
-  `.config/mise/tasks/` executable. It lives in the base so tasks run in every
-  env, CI included; `setup:all` and others declare `#MISE depends=["init"]`.
+- **`[tasks.init]`.** A toml task in `conf.d/tasks.toml` that chmods every file
+  under `.config/mise/tasks/` executable. It loads in every env, CI included;
+  `setup:all` and others declare `#MISE depends=["init"]`.
 
 **Who fills the slots.** The `mise` pack ships the common contract — the
 `code/*` gates, `setup/worktree`, `setup/*` and the helpers — and every other

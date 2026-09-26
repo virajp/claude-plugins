@@ -1,0 +1,21 @@
+# /code-review high — loop U6, round 2, branch 2026-09-26-mise-conf-d-layout (range 1d332056..03777385)
+
+1. plugins/vwf/skills/init/references/existing-repo.md:226 — The reshape migration deletes the old `.config/mise*.lock` files and then runs `mise lock` with no lock in place, so every `latest` pin is resolved again and every tool is silently upgraded. Scenario: this repo's own migration (17dea467) moved node 26.9.0→26.10.0, pnpm 12.4.2→12.6.0, uv 0.12.15→0.12.19, doppler, grype. Fix: seed `.config/mise/mise.lock` from the old locks before `mise lock` without `--bump`.
+
+2. plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise/tasks/setup/mise:75 — An existing lock can never take a newly pinned tool (written only when missing or under --upgrade; run_auto_install = false). Still an open GAP from round 1.
+
+3. plugins/vwf/skills/init/references/existing-repo.md:219 — The migration maps `mise.<env>.toml` [tools] to `tools.<env>.toml` table by table and never removes duplicates, so a tool pinned in two old environment files lands pinned in two conf.d files (this repo's shellcheck/shfmt; U5 hoisted by hand). Breaks ruling 5; doctor then flags it.
+
+4. plugins/vwf/skills/doctor/references/stack-checks.md:619 — The old-layout test (and existing-repo.md:208) does not exclude `.local` files; reshape would move private tables into committed conf.d files and rm the local lock.
+
+5. plugins/stackgen/stacks/repo-hygiene/repo-hygiene/config/.gitignore:47 — `.config/mise.local.lock` (and a root `mise.local.lock`) no longer ignored.
+
+6. plugins/vwf/skills/init/references/existing-repo.md:217 — "any other [<section>] → conf.d/<section>.toml" is ambiguous for dotted headers: `[tasks.build]` → `conf.d/tasks.build.toml`, loaded only under MISE_ENV=build, and lock_envs picks up "build"; `[settings.python]` marks a migrated repo as old layout.
+
+7. plugins/vwf/skills/doctor/references/stack-checks.md:103 — The Toolchain miss remedy is still "the `mise use` line", which writes the top-level `.config/mise.toml` that the new (f) row flags; should be `mise use --path .config/mise/conf.d/tools.toml X`.
+
+8. plugins/vwf/skills/readme/SKILL.md:73 — The generated README runs `mise install` before `MISE_ENV=dev mise run setup:all`; on a lockless checkout that writes a base-only lock, so setup:mise never writes the union lock and `install --locked` fails for dev tools. Drop the separate step.
+
+9. plugins/vwf/skills/init/references/existing-repo.md:217 — every [shell_alias] → shell_alias.dev.toml, contradicting the per-environment rule.
+
+10. plugins/vwf/skills/init/references/existing-repo.md:226 — the migration restates the union lock algorithm in prose instead of calling setup:mise.

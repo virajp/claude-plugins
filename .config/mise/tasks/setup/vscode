@@ -23,10 +23,10 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # extension" a thing this task can act on: pruning globally would uninstall a
 # neighbouring repo's tools.
 #
-# **The profile name is `$REPO_NAME`** — the slug in `.config/mise.toml`'s
-# `[env]`, the same token the `p:<id>:*` task group carries. Reading it rather
-# than deriving one is what keeps the profile stable inside a linked worktree,
-# whose directory is named after the branch.
+# **The profile name is `$REPO_NAME`** — the repo's folder name, slugified, as
+# `.config/mise/conf.d/env.toml` records it. Reading it rather than deriving one
+# is what keeps the profile stable inside a linked worktree, whose directory is
+# named after the branch.
 #
 # **Everything here is best-effort and silent when it does not apply.** It runs
 # from `setup:all`, which a machine without the editor must still finish.
@@ -39,8 +39,8 @@ if ! command -v "${EDITOR_CLI}" >/dev/null 2>&1; then
 fi
 
 if [ -z "${REPO_NAME:-}" ] || [ "${REPO_NAME}" = "unfilled" ]; then
-  print_warn "REPO_NAME is not filled in .config/mise.toml — skipping the editor profile."
-  print_yellow "It is the marked position the orchestrator fills with this repo's id."
+  print_warn "REPO_NAME is not filled in .config/mise/conf.d/env.toml — skipping the editor profile."
+  print_yellow "It is the marked position the orchestrator fills with the repo's folder name, slugified."
   exit 0
 fi
 

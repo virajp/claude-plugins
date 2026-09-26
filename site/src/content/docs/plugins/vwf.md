@@ -927,26 +927,26 @@ exactly like an already-shaped repo.
 
 What a shaped repo has when it is done: a sectioned `.gitignore`, a lowercase
 `readme.md`, every tool config under `.config/`, the toolchain manager's
-five-file split and its tracked lockfile, a file-based task library grouped
-`setup:*`, `code:*` and `p:<project>:*` over a shared helper library, pre-commit
-with the full hook set and conventional commits wired for release notes, the
-security and dependency gates configured, `.editorconfig`, `.gitattributes`, a
-Renovate config, `CONTRIBUTING.md`, issue templates under `.github/`, an ignore
-file for the code-intelligence graph, and composed editor settings and extension
-recommendations. Some of its contents follow the answers rather than the shape:
-a secrets provider where you named one — answer *none — decide later* and the
-packs' slot simply stays unfilled and announces itself — a `SECURITY.md` unless
-you declined the security contact, and a `LICENSE` on a repo you called `public`
-unless you answered *none* — a `private` repo gets no licence row and no
-`LICENSE`. And some are **conditional files** the packs declare against an
-answer init already holds: the issue templates land only where the repo's
-`origin` is GitHub, the Renovate config only where the update-bot answer is
-`renovate`, every editor fragment — and so the composed editor files — only
-where the editor answer is *yes*, and the secrets provider's ignore line
-(`fnox.local.toml`, doppler's `.doppler/`) only in a repo that runs that
-provider. A path a condition skipped is listed in the plan under a **Skipped**
-heading and recorded in the lockfile, so `/vwf:doctor` never reports it missing
-and a file you put at that path is yours.
+settings files, its `conf.d` section files and its one tracked lock, a
+file-based task library grouped `setup:*`, `code:*` and `p:<project>:*` over a
+shared helper library, pre-commit with the full hook set and conventional
+commits wired for release notes, the security and dependency gates configured,
+`.editorconfig`, `.gitattributes`, a Renovate config, `CONTRIBUTING.md`, issue
+templates under `.github/`, an ignore file for the code-intelligence graph, and
+composed editor settings and extension recommendations. Some of its contents
+follow the answers rather than the shape: a secrets provider where you named one
+— answer *none — decide later* and the packs' slot simply stays unfilled and
+announces itself — a `SECURITY.md` unless you declined the security contact, and
+a `LICENSE` on a repo you called `public` unless you answered *none* — a
+`private` repo gets no licence row and no `LICENSE`. And some are **conditional
+files** the packs declare against an answer init already holds: the issue
+templates land only where the repo's `origin` is GitHub, the Renovate config
+only where the update-bot answer is `renovate`, every editor fragment — and so
+the composed editor files — only where the editor answer is *yes*, and the
+secrets provider's ignore line (`fnox.local.toml`, doppler's `.doppler/`) only
+in a repo that runs that provider. A path a condition skipped is listed in the
+plan under a **Skipped** heading and recorded in the lockfile, so `/vwf:doctor`
+never reports it missing and a file you put at that path is yours.
 
 **The editor files are composed, not shipped.** No pack writes one whole,
 because two packs with an opinion about the same file is a lost update; each
@@ -1487,9 +1487,9 @@ The toolchain pack's preselections are `direct` for `develop` and `pr` for
 `develop` and is where a review gate earns its keep. A repo whose file the run
 replaces is preselected from what that file carries. Each answer is written
 literally to that repo's `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` in
-`.config/mise.toml`, so the file it writes is in what the same pass stages. A
-repo that kept that file is not asked — but a kept file still carrying the
-single legacy `MERGE_MODEL` has that line rewritten in place into the two
+`.config/mise/conf.d/env.toml`, so the file it writes is in what the same pass
+stages. A repo that kept that file is not asked — but a kept file still carrying
+the single legacy `MERGE_MODEL` has that line rewritten in place into the two
 positions, each carrying the one value, reported as *legacy `MERGE_MODEL`
 `<value>` — written to both positions*; until that run, every reader takes the
 one value for both branches.

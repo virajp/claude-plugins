@@ -4,7 +4,7 @@
 #MISE depends=["init"]
 
 #USAGE flag "--all" help="Also set up every member project"
-#USAGE flag "--upgrade" help="Dev only: bump every mise lockfile and update formatter plugins before installing"
+#USAGE flag "--upgrade" help="Dev only: bump the mise lockfile and update formatter plugins before installing"
 
 # One member flag per project is added here when this repo has members. The ids
 # come from the project registry when there is one, else the member directory
@@ -21,6 +21,11 @@ set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
+if [ -z "${MISE_ENV:-}" ]; then
+  print_error "MISE_ENV is unset. Run: MISE_ENV=dev mise run setup:all"
+  exit 1
+fi
+
 # The entry point a human runs — on clone, and to re-sync a machine afterwards.
 # Aliased as `setup` in `[shell_alias]`.
 #
@@ -33,12 +38,11 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # re-sync command as much as the bootstrap one, so a step that only works on a
 # clean machine is a step that breaks the second run.
 
+UPGRADE_ARGS=()
+[[ "${usage_upgrade:-false}" == "true" ]] && UPGRADE_ARGS+=("--upgrade")
+
 print_header "Setting up the toolchain ..."
-if [[ "${usage_upgrade:-false}" == "true" ]]; then
-  mise run setup:mise --upgrade
-else
-  mise run setup:mise
-fi
+mise run setup:mise ${UPGRADE_ARGS[@]+"${UPGRADE_ARGS[@]}"}
 
 print_header "Setting up secrets ..."
 mise run setup:secrets
@@ -75,16 +79,16 @@ mise run setup:vscode
 #
 # The member list comes from `_scripts/helpers`' `members`, which answers for
 # either linkage — the repo's submodules, or the `MEMBERS` list in
-# `.config/mise.toml` — so this loop covers both and `code:worktrees` walks the
-# same members this does. A repo that wants a member set up on its OWN flag
-# rather than on `--all` adds one `mise run --cd <path>` per id beside the loop,
-# guarded by that id's flag.
+# `.config/mise/conf.d/env.toml` — so this loop covers both and
+# `code:worktrees` walks the same members this does. A repo that wants a member
+# set up on its OWN flag rather than on `--all` adds one `mise run --cd <path>`
+# per id beside the loop, guarded by that id's flag.
 
 if [[ "${usage_all:-false}" == "true" ]]; then
   while read -r member; do
     [ -n "$member" ] || continue
     print_header "Setting up ${member} ..."
-    mise run --cd "${MISE_PROJECT_ROOT}/${member}" setup:all
+    mise run --cd "${MISE_PROJECT_ROOT}/${member}" setup:all ${UPGRADE_ARGS[@]+"${UPGRADE_ARGS[@]}"}
   done < <(members)
 fi
 

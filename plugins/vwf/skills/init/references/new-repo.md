@@ -282,10 +282,12 @@ component and appends no provider section.
 
 ### The two runtime positions
 
-The toolchain pack's base config carries **two marked positions** the stack
-read fills, in the same file the environment block sits in: `RUNTIME_BLOCK`,
-the per-runtime settings, and `PATH_ENTRIES`, the project-local binaries the
-shell finds without a runner prefix. The pack's comment at each position
+The toolchain pack carries **two marked positions** the stack read fills, in
+two files: `RUNTIME_BLOCK`, the per-runtime settings, at the end of
+`[settings]` in `.config/mise.toml`, and `PATH_ENTRIES`, the project-local
+binaries the shell finds without a runner prefix, at the end of the
+environment-block file, `.config/mise/conf.d/env.toml`. Each file is spliced
+on its own. The pack's comment at each position
 names the lines each runtime takes; this step writes, from the same read §5
 used, **one runtime's lines per language the read produced** at the first,
 and at the second the entry a language needs — **left empty** where no
@@ -445,6 +447,14 @@ for the flag and alias lists, which stands where those lines go. There is no
 marker syntax a tool could enumerate, so the set is exactly the positions this
 section lists — read it from here, never from the payload.
 
+**Where each sits**, in the toolchain pack's `conf.d` layout:
+`REPO_NAME`, `MERGE_MODEL_DEVELOP`/`MAIN`, `MEMBERS` and `PATH_ENTRIES` in
+`.config/mise/conf.d/env.toml`, the environment-block file; the alias list in
+`.config/mise/conf.d/shell_alias.dev.toml`; `RUNTIME_BLOCK` in
+`.config/mise.toml`'s `[settings]`; the member flags and the plugin task's two
+lists in their task files. No position sits in a `[tools]` or `[env]` table of
+a top-level `.config/mise*.toml` file — those hold `[settings]` only.
+
 One other kind of marked position exists and is **not init's**: a pack's
 `machine_env:` values, marked in that pack's own `conf.d` fragment (the SwiftUI
 pack's `XCODE_VERSION` and `SIMULATOR_*`, say). Those packs land through
@@ -453,7 +463,8 @@ fragment's hash; init neither asks them nor splices them, so they are not in
 the set above, and a value later edited by hand reads as content drift on that
 fragment.
 
-The toolchain pack ships the flag list and the alias list as **commented
+The toolchain pack ships the flag list and the alias list — the latter in
+`conf.d/shell_alias.dev.toml`, since aliases are dev-only — as **commented
 templates in place**, each with a note saying the names come from the registry
 or the member directories — that is, from the members. Those comments are the
 pack asking `init` for the one thing no pack can know, and filling them is not
@@ -508,14 +519,14 @@ one thing a user needs to see here is that lines they have seen before are
 going away.
 
 **The third is the repo's folder name**, `REPO_NAME`, a marked position in the
-toolchain manager's environment block. It takes **this repo's folder name,
-slugified** — the basename of its main checkout, proposed by SKILL.md's
-**question 1**, then accepted or replaced there — and it is written
-**literally**, never derived at read time from the directory the config sits
-in: a linked worktree's config root is named for the branch, so a derived value
-would change identity every time somebody cut one. That is also why the
-proposal reads the **main checkout's** basename rather than the working
-directory's.
+toolchain manager's environment block, `conf.d/env.toml`. It takes **this
+repo's folder name, slugified** — the basename of its main checkout, proposed
+by SKILL.md's **question 1**, then accepted or replaced there — and it is
+written **literally**, never derived at read time from the directory the
+config sits in: a linked worktree's config root is named for the branch, so a
+derived value would change identity every time somebody cut one. That is
+also why the proposal reads the **main checkout's** basename rather than the
+working directory's.
 
 **No project id reaches this key**, and the two are routinely different: a repo
 whose folder is `acme-shop` and whose one project is a service carries
@@ -535,14 +546,14 @@ no longer the edge. The resolved set is. Nothing outside it is written, and a
 path that did not come out of the resolution is not made one by being nearby.
 
 **The fourth, fifth and sixth are repo-level too**, and the toolchain pack
-ships all three as marked positions in that same environment block, each with a
-comment saying what it takes. `MEMBERS` is written here, literally, by the same
-rule `REPO_NAME` follows. `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` are
-**asked and written by §11(a)**, inside the git pass, in every repo whose
-environment-block file this run lands or replaces; this section writes them
-in exactly one case — a **kept** file still carrying the retired single
-`MERGE_MODEL` line, which its fill rewrites in place into the two positions,
-as the paragraph above says.
+ships all three as marked positions in that same environment block,
+`conf.d/env.toml`, each with a comment saying what it takes. `MEMBERS` is
+written here, literally, by the same rule `REPO_NAME` follows.
+`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` are **asked and written by
+§11(a)**, inside the git pass, in every repo whose environment-block file
+this run lands or replaces; this section writes them in exactly one case — a
+**kept** file still carrying the retired single `MERGE_MODEL` line, which its
+fill rewrites in place into the two positions, as the paragraph above says.
 
 The pair is how work lands, **one value per long-lived branch**: the merge
 task for `develop` reads the first, the one for `main` reads the second, and
@@ -593,11 +604,12 @@ inventory prints them anyway, like every other installed plugin — question 5
 is where those two rows are **dropped**, before the question is even offered,
 so an answer cannot carry them here.
 
-**The ninth and tenth are the two runtime positions** — `RUNTIME_BLOCK` and
-`PATH_ENTRIES` in the toolchain pack's base config — and they are **§5's** to
-fill, from the stack read, not this section's. They are listed here for the
-one reason the landing pair is: the splice above has to know every position a
-file carries, and a value at either of them is a fill, never content.
+**The ninth and tenth are the two runtime positions** — `RUNTIME_BLOCK` in
+`.config/mise.toml` and `PATH_ENTRIES` in `conf.d/env.toml` — and they are
+**§5's** to fill, from the stack read, not this section's. They are listed
+here for the one reason the landing pair is: the splice above has to know
+every position a file carries, and a value at either of them is a fill, never
+content.
 
 ### The `_default` slot
 
@@ -703,6 +715,8 @@ reaches the secrets provider, and on a fresh repository it is long — so it is
 an **offer**, never automatic, and a decline needs no re-asking.
 
 Whichever way it goes, name the task so a user who declined knows what to run.
+Run and name it as `MISE_ENV=dev mise run setup:all`: the aggregator refuses
+an unset `MISE_ENV`, since which tools install and lock depends on it.
 
 ## 11 — The git pass
 
@@ -1030,7 +1044,8 @@ from these reads, in this order:
   the record, and doctor's predicate (g) reads it back from there.
 - **The protection, both branches, always**: no force-push and no deletion.
   Then **per branch, from that branch's own value** — `MERGE_MODEL_DEVELOP`
-  for `develop`, `MERGE_MODEL_MAIN` for `main`, as the file carries them:
+  for `develop`, `MERGE_MODEL_MAIN` for `main`, as `conf.d/env.toml` carries
+  them:
   where the value is **`pr`**, additionally **require a pull request**, with
   no approval count, because the landing model says that branch lands through
   a request, so a direct push to it is exactly what the forge should refuse.

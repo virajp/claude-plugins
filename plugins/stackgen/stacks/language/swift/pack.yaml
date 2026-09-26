@@ -2,7 +2,7 @@ name: Swift
 summary: The Swift package baseline — standards and public-API design, the
   error model, strict concurrency, Swift Testing, build and run, config and
   observability wiring.
-version: 0.1.1
+version: 0.1.2
 type: language
 kind: language-bundle
 axis: project

@@ -9,11 +9,16 @@ one anything else invokes.
 **All of it lives under `.config/`.** mise resolves `MISE_ENV` variants there,
 so the config never clutters the repo root.
 
-**Five files, selected by `MISE_ENV`.** `mise.toml` always; `mise.dev.toml`
-under `MISE_ENV=dev`; `mise.ci.toml` under `MISE_ENV=ci`, which covers both the
-pipeline and the deployed runtime; `mise.test.toml` as a delta on dev under
-`MISE_ENV=dev,test`; and `mise.local.toml`, which is never committed and never
-shipped. mise loads the base first and deep-merges the active variants on top,
+**Top-level files hold settings; sections live in `conf.d`.** `mise.toml`
+always; `mise.dev.toml` under `MISE_ENV=dev`; `mise.ci.toml` under
+`MISE_ENV=ci`, which covers both the pipeline and the deployed runtime;
+`mise.test.toml` as a delta on dev under `MISE_ENV=dev,test`; and
+`mise.local.toml`, which is never committed and never shipped. Each holds
+`[settings]` and top-level keys only. Every other section is its own file in
+`.config/mise/conf.d/`: `<section>.toml` for every environment,
+`<section>.<env>.toml` for one. `.config/miserc.toml` sets `env_conf_d = true`,
+which turns that scoping on; `MISE_ENV` itself is the user's shell's, never a
+file's. mise loads the base first and deep-merges the active variants on top,
 so a variant holds **deltas only**.
 
 **A fresh checkout trusts nothing.** mise refuses to read a config file it has
@@ -26,23 +31,24 @@ file and leaves the rest of the split for the next command to fail on.
 **Nothing is duplicated across layers.** A tool pinned twice is a version that
 can disagree with itself, and the disagreement surfaces on someone else's
 machine. Each tool, setting and env value goes in the lowest layer that needs
-it: the base holds the runtime and anything the pipeline runs, dev holds the
-tooling only a human needs, ci holds the pipeline's overrides.
+it: `conf.d/tools.toml` holds the runtime and anything the pipeline runs,
+`tools.dev.toml` the tooling only a human needs, ci its overrides. A tool is
+pinned in one file only; one two environments need goes in `tools.toml`.
 
-**A tool CI runs belongs in the base.** `MISE_ENV=ci` never loads the dev file,
-so a gate pinned there is a gate the pipeline cannot run. The dev file's job is
-what a laptop needs and a runner does not.
+**A tool CI runs belongs in `tools.toml`.** `MISE_ENV=ci` never loads a
+`*.dev.toml` file, so a gate pinned there is a gate the pipeline cannot run.
+The dev files' job is what a laptop needs and a runner does not.
 
-**The house linter is the base's one tool.** `npm:@askviraj/linter` is pinned
-in `mise.toml` at an exact version, and the `code:lint` of the pnpm, eslint,
-flutter, swift and swiftui packs calls it as `linter`. One pin is one version
-those packs agree on, where a per-run fetch is whatever the registry serves that
-minute; it is in the base because the pipeline runs `code:lint`. The binary is
-a Node script and needs a `node` on PATH: a Node repo's own pin, or — where the
-packs pin no `node`; swift, swiftui and flutter pin none — the machine's. The
-tasks call it as `mise which linter --tool npm:@askviraj/linter`, never by
-bare name: a Node repo puts `node_modules/.bin` ahead of mise's tool bins,
-where a dependency's `linter` would shadow the pin.
+**The house linter is the base's one tool.** `npm:@askviraj/linter` is pinned in
+`conf.d/tools.toml` at an exact version, and the `code:lint` of the pnpm,
+eslint, flutter, swift and swiftui packs calls it as `linter`. One pin is one
+version those packs agree on, where a per-run fetch is whatever the registry
+serves that minute; it is in the base because the pipeline runs `code:lint`. The
+binary is a Node script and needs a `node` on PATH: a Node repo's own pin, or —
+where the packs pin no `node`; swift, swiftui and flutter pin none — the
+machine's. The tasks call it as `mise which linter --tool npm:@askviraj/linter`,
+never by bare name: a Node repo puts `node_modules/.bin` ahead of mise's tool
+bins, where a dependency's `linter` would shadow the pin.
 
 **The installer is the machine's, and the pin's guarantees are aube's.** mise's
 npm backend defaults to its embedded aube; a machine may set
@@ -57,7 +63,7 @@ stay gated), and do dependency lifecycle scripts run only when listed in
 that holds.
 
 **Commit the lock and its sidecar before the first CI push.** Under aube,
-`.config/mise.lock`'s linter entry points at a generated sidecar,
+`.config/mise/mise.lock`'s linter entry points at a generated sidecar,
 `.config/mise/locks/npm-askviraj-linter/<version>~<hash>/`, whose
 `package.json` and `aube-lock.yaml` fix the dependency graph; an install with
 the entry and no sidecar fails, locked or not. `locked = true` in
@@ -72,40 +78,39 @@ they resolved to. The pipeline sets `locked = true` and installs from that
 record. So moving a version forward is a deliberate act with a diff, and a
 release nobody has run never reaches a build.
 
-**One lockfile per config file that declares tools, and every one is tracked.**
-`mise install` writes a lock beside each config whose `[tools]` is non-empty,
-named after that file's stem: with the split as shipped — the house linter in
-the base, nine dev tools — the files produced are `.config/mise.lock` and
-`.config/mise.dev.lock`, and a runtime pinned in `mise.toml` joins the first.
-The single exception is `mise.local.lock`, the counterpart of the uncommitted
-`mise.local.toml`, which the hygiene component already ignores.
+**One lockfile for every environment, and it is tracked.** Every tool in
+`conf.d` locks into `.config/mise/mise.lock`. `setup:mise` writes it with one
+`mise lock` under `MISE_ENV` set to every environment suffix the config files
+carry, comma-joined; a single-environment `mise lock` drops the other
+environments' tools. The one untracked lock is the local one, which the hygiene
+component ignores.
 
 **`REPO_NAME` is the repo's folder name, slugified, and it is a literal.** The
-base `[env]` carries it as a marked position the orchestrator fills with the
-slug of the repo's own main-checkout directory — **not** a project id, which is
-what the `p:<id>:*` task group carries instead. The two tokens are independent,
-and a single-project repo whose folder spells its project id is a coincidence.
-`setup:all`'s member flags and the `setup-<slug>` aliases take a third: one per
-**member repo**, that member's own slug. It is never derived at load time: the
-obvious shorthand, the basename of the config root, is the **branch** name
-inside a linked worktree, so anything reading it would silently address a
-different repo depending on where you were standing. Aliases that vary only by
-repo — the agent launchers are the case — live in the user's **global** config
-and read `$REPO_NAME`, so one definition serves every repo and changing the
-launcher is not a change to every repo that has one.
+`[env]` in `conf.d/env.toml` carries it as a marked position the orchestrator
+fills with the slug of the repo's own main-checkout directory — **not** a
+project id, which is what the `p:<id>:*` task group carries instead. The two
+tokens are independent, and a single-project repo whose folder spells its
+project id is a coincidence. `setup:all`'s member flags and the `setup-<slug>`
+aliases take a third: one per **member repo**, that member's own slug. It is
+never derived at load time: the obvious shorthand, the basename of the config
+root, is the **branch** name inside a linked worktree, so anything reading it
+would silently address a different repo depending on where you were standing.
+Aliases that vary only by repo — the agent launchers are the case — live in the
+user's **global** config and read `$REPO_NAME`, so one definition serves every
+repo and changing the launcher is not a change to every repo that has one.
 
 **The runtime is a marked position too, and the base ships it empty.**
-`RUNTIME_BLOCK` under `[settings]` and `PATH_ENTRIES` at the end of `[env]` are
-the two slots the orchestrator fills from its stack read — the languages the
-repo's pins, lockfile or manifests name — one runtime settings line per
-detected language in the first, the `_.path` entries a project-local binary
-directory needs in the second, and nothing in either for a language the repo
-does not have. A setting for an absent runtime is a claim about the stack that
-is not true, and a hand-picked one is the edit that turns a pack-owned file
-into a diverged one; a marked position is what the content hash ignores, so
-the fill is never drift. `REPO_NAME`, `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN`,
-`MEMBERS` and these two are the base's six, and the only marked positions in
-the config split.
+`RUNTIME_BLOCK` under `mise.toml`'s `[settings]` and `PATH_ENTRIES` at the end
+of `conf.d/env.toml` are the two slots the orchestrator fills from its stack
+read — the languages the repo's pins, lockfile or manifests name — one runtime
+settings line per detected language in the first, the `_.path` entries a
+project-local binary directory needs in the second, and nothing in either for a
+language the repo does not have. A setting for an absent runtime is a claim
+about the stack that is not true, and a hand-picked one is the edit that turns a
+pack-owned file into a diverged one; a marked position is what the content hash
+ignores, so the fill is never drift. `REPO_NAME`, `MERGE_MODEL_DEVELOP`,
+`MERGE_MODEL_MAIN`, `MEMBERS` and these two are the six, and the only marked
+positions in the config split.
 
 **Environment names are shared; values are split.** Development and production
 override the *same* keys rather than each inventing their own — the difference
@@ -156,15 +161,14 @@ packs own.
 
 **Tools install from the lockfile; a lockfile moves only on request.**
 `setup:mise` runs `mise install --locked` on every run and never
-`mise upgrade`. It writes a lockfile in two cases, both in dev only: no
-`.config/mise*.lock` exists yet, when it runs `mise lock` once, or the user
-passed `--upgrade` (`setup:all --upgrade` reaches it), when it runs
-`mise lock --bump --upgrade` for the base config and once per
-`mise.<env>.toml`, `test` as `dev,test`, so every environment's lockfile moves
-together. Outside dev — `MISE_ENV` without `dev`, or unset — a missing lockfile
-and `--upgrade` each exit 1 before any step. mise's own install of a missing
-tool before a task body runs still records what it resolved in dev, where
-`locked` is off; the rule above is the task's.
+`mise upgrade`. It writes the lock in two cases, both in dev only: no
+`.config/mise/mise.lock` exists yet, when it runs `mise lock` once over every
+environment, or the user passed `--upgrade` (`setup:all --upgrade` reaches it),
+when it runs `mise lock --bump --upgrade` over every environment. Outside dev a
+missing lock and `--upgrade` each exit 1 before any step. `setup:all` exits 1
+when `MISE_ENV` is unset, naming `MISE_ENV=dev mise run setup:all`.
+`task.run_auto_install = false`, so `mise run` installs nothing before a task
+body; `setup:mise` owns installs.
 
 **The commit identity is per repo, required, and equal to the forge's.**
 `code:git-config`, which the hooks run, requires the local git-config to carry
@@ -190,7 +194,7 @@ in any case — work flows feature → `develop` → `main` whatever the forge c
 default.
 
 **How a branch lands is the repo's setting, not the lander's — and it is set
-per branch.** `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` in the base `[env]`
+per branch.** `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` in `conf.d/env.toml`
 each read `direct` — merge locally and push — or `pr`, which pushes the branch
 and opens a pull request through whichever forge CLI is present, and merges
 nothing locally; `code:merge:develop` reads the first, `code:merge:main` the
