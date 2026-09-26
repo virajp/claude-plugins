@@ -7,7 +7,7 @@ summary: A hand-authored HTML5 page tree with plain CSS and ES-module
   icons, sitemap and structured data, repeated per page since no layout owns
   them — and lands the one task that rasterizes the favicon set from the
   product's mark.
-version: 0.1.0
+version: 0.2.0
 type: framework
 category: document
 kind: language-bundle

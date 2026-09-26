@@ -7,7 +7,7 @@ summary: Astro as the content-first web framework that owns the build — file
   itself through — title, description, canonical, icons, sitemap and
   structured data — and lands the one task that rasterizes the favicon set
   from the product's mark.
-version: 0.4.0
+version: 0.5.0
 type: framework
 category: meta-framework
 kind: language-bundle

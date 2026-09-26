@@ -2,7 +2,7 @@ name: Plain CSS
 summary: The design system's roles as CSS custom properties and hand-authored
   rules in cascade layers — no build step of its own, no generated classes, and
   nothing between the contract and the browser.
-version: 0.1.0
+version: 0.2.0
 type: stylesheet
 category: plain
 kind: stylesheet

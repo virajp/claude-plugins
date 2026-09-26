@@ -2,7 +2,7 @@ name: Tailwind CSS
 summary: Utility classes generated from a token block — the design system's
   semantic roles declared once in CSS, and every style written at the call site
   as a class rather than in a stylesheet of its own.
-version: 0.1.0
+version: 0.2.0
 type: stylesheet
 category: utility
 kind: stylesheet

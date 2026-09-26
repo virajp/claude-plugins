@@ -3,7 +3,7 @@ name: StyleX
 axis: stylesheet
 kind: stylesheet
 components:
-- stylesheet/stylex@0.1.0
+- stylesheet/stylex@0.2.0
 ---
 
 # Stylesheet — StyleX

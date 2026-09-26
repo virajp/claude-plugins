@@ -2,7 +2,7 @@ name: Cloud Run · Artifact Registry
 summary: Serverless containers — scale to zero, no cluster to operate, one
   service per deployable project. The default compute target here, and the right
   answer until a workload genuinely does not fit it.
-version: 0.1.0
+version: 0.2.0
 type: cloud-service
 category: compute
 kind: cloud-provider

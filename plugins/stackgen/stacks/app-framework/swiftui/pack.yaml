@@ -2,7 +2,7 @@ name: SwiftUI
 summary: The native Apple app stack — SwiftUI on Swift, the project a
   committed Xcode project, Xcode owning the build — one codebase across iPhone,
   iPad, Mac, CarPlay, Watch, TV and Vision.
-version: 0.3.0
+version: 0.4.0
 type: app-framework
 category: native-ui
 kind: app-framework

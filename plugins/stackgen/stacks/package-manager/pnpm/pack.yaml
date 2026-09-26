@@ -1,7 +1,7 @@
 name: pnpm
 summary: Dependency installation, locking and workspace layout for the Node
   ecosystem — the manifest contract and the monorepo shape.
-version: 0.4.0
+version: 0.5.0
 type: package-manager
 package_manager: pnpm
 kind: language-bundle

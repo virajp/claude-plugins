@@ -2,7 +2,7 @@ name: SwiftPM
 summary: Dependency declaration, resolution and locking for a Swift package —
   Package.swift as the manifest, Package.resolved as the lockfile, .build/ as
   the one build tree.
-version: 0.1.1
+version: 0.2.0
 type: package-manager
 package_manager: swiftpm
 # The root one is a package's; the one inside an Xcode project is the app's,

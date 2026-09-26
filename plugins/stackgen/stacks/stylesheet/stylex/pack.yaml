@@ -2,7 +2,7 @@ name: StyleX
 summary: Styles authored as typed objects in the component's own language and
   compiled to atomic CSS at build — the token mapping type-checked, the
   cascade replaced by explicit merge order, and nothing evaluated at runtime.
-version: 0.1.0
+version: 0.2.0
 type: stylesheet
 category: compile-time
 kind: stylesheet
