@@ -378,7 +378,9 @@ a second line; the words are what count.
 
 Checked before anything is shown, and a call that fails is refused whole:
 
-- **An env key or an alias name** matches `[A-Za-z_][A-Za-z0-9_]*`.
+- **An env key** matches `[A-Za-z_][A-Za-z0-9_]*`.
+- **An alias name** matches `[A-Za-z_][A-Za-z0-9_-]*` — a `-` after the first
+  character, as in `setup-<slug>`.
 - **A tool name** takes letters, digits and `:`, `/`, `.`, `-`, `_`, `@` —
   an optional backend prefix and its path, `aqua:realm/SwiftLint` — and
   nothing else: no `=`, `]`, quote, space or control character.
