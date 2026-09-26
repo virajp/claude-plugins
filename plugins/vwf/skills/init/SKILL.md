@@ -3,9 +3,10 @@ name: init
 description: Bootstrap a new repo, or reshape an existing one and every member
   repo it has, to the standard layout — every tool config under .config/, the
   toolchain manager's file split and its task library, the repo gates, the
-  hygiene files and a secrets provider — materialized from the stack adapter's
-  three unconditional bundles. Surveys the whole product, shows one plan with a
-  section per repo, applies on one consent. Stack-agnostic; it orchestrates the
+  hygiene files and a secrets provider — landed through stackgen's tool-config
+  skill and the stack adapter's unconditional bundles. Surveys the whole
+  product, shows one plan with a section per repo, applies on one consent.
+  Stack-agnostic; it orchestrates the
   packs and writes no tool config of its own. Invoked by /vwf:setup — its Step 0
   offer, or /vwf:setup reshape — and never typed by a user.
 model: sonnet
@@ -45,6 +46,14 @@ against what they ship. If this skill ever names a tool, that naming is the
 bug — say "the toolchain pack", "the gates pack", "the hygiene pack", "the
 secrets provider pack", "the task-name contract", "the legacy-name table".
 
+**Every tool `/stackgen:tool-config all` owns lands through that skill, not the
+adapter.** "The toolchain pack" below means what that call lands and what the
+skill's own reference documents. `init` passes it the answers as `key=value`
+arguments — [new repo](references/new-repo.md) §2 lists them — and the skill
+fills its own marked positions from them. Its files are its own. It shows
+their drift rows itself and records them in the adapter's lockfile as
+`source: tool-config/…`. `init` never offers, splices or re-hashes them.
+
 ## Hard rules
 
 - **Writes only what a pack declares, plus the fills those packs leave for
@@ -66,7 +75,8 @@ secrets provider pack", "the task-name contract", "the legacy-name table".
   composed editor block.
   Filling one is exactly `init`'s job and is not authoring pack content — what
   the rule forbids is inventing pack-owned content from scratch, at a path or
-  a position no pack marked.
+  a position no pack marked. A position in a file the tool-config skill owns
+  is filled by passing its value as an argument, never by a splice.
   **One file is neither, and it is the only file**: the repo-owned
   `_scripts/local` sidecar the existing-repo pipeline writes. No pack declares
   it, no pack ships it and `init` never replaces it — and nothing in it is
@@ -211,7 +221,7 @@ that holds decides:
 
 | The repo carries                                                                                                      | Mode       |
 | --------------------------------------------------------------------------------------------------------------------- | ---------- |
-| the stack adapter's **lockfile** — written when a pack first landed                                                   | **shaped** |
+| the stack adapter's **lockfile** — bundle slugs or `source: tool-config/…` records                                    | **shaped** |
 | no lockfile, but a **language manifest**, a **source directory**, a **root tool config**, or a `.config/` without one | **source** |
 | none of those                                                                                                         | **blank**  |
 
@@ -349,7 +359,7 @@ earlier ones did not name:
 **One vocabulary, whatever the source.** The read's answer is a set drawn
 from the six keys in that table's `Language` column — `node`, `python`,
 `dart`, `go`, `rust`, `swift` — and nothing else, so the hygiene table and
-the runtime positions key on one spelling. Sources 1 and 2 do not speak it
+the `runtimes` argument key on one spelling. Sources 1 and 2 do not speak it
 natively: a config `languages` token and a lockfile component slug (a
 `language/…`, `package-manager/…` or `app-framework/…` entry) are each
 **mapped onto one key first**, by the table the hygiene pack keeps under
@@ -375,11 +385,9 @@ answered and what it found.
   keeps resolves beside the language rows — a provider whose files keep
   something machine-local gets its ignore section only in a repo that runs
   it, and a **none** answer carries nothing;
-- the **two runtime positions** the toolchain pack marks — `RUNTIME_BLOCK` in
-  the settings-only `.config/mise.toml` and `PATH_ENTRIES` in the section
-  file `.config/mise/conf.d/env.toml` — which §5 fills from the same read,
-  one runtime's lines per language and the path entry empty where no language
-  needs one;
+- the **runtimes** argument `init` passes to `/stackgen:tool-config all`,
+  per [new repo](references/new-repo.md) §5 — the language keys the read
+  produced, from which the skill fills its two runtime positions;
 - the **sub-project proposals** question 2 shows, where no registry names
   them.
 
@@ -710,13 +718,13 @@ in `blank` and `source` mode too, shown before the consent and recorded under
 records it. A `blank` repo rarely has one; when it does, it is never a silent
 skip. **What counts as diverged is two tests**: the
 file's hash against the lockfile's record, and, on a mismatch, the pack's
-payload with the repo's current values spliced in at **every** position
-[new repo](references/new-repo.md) §7 enumerates that the file carries, owned
-or not. A file diverging only inside those positions
-is not offered at all — where a pass owns one it shows the row, and where none
-does, as with the two landing-model positions, there is simply no row. A
+payload with the repo's current values spliced in at **every** marked
+position the file carries — the commit gate's scopes and forge links, the
+ones left in adapter payloads. A file diverging only inside those positions
+is not offered at all; the pass that owns the position shows the row. A
 record sourced `generated` has no payload to splice into, so the second test
-is skipped and the mismatch stands.
+is skipped and the mismatch stands. A record sourced `tool-config/…` is never
+offered here: the skill shows its own drift rows.
 
 Whichever pipeline runs, the same work happens in the same order at the end of
 each repo, after that mode's landing and before the git pass. **Five steps are
@@ -727,11 +735,10 @@ reaches them: the **secrets provider** (§3), the **placeholders** (§4), the
 the **aggregator offer** (§10) — the existing pipeline runs them from its
 post-landing paragraph, the new-repo pipeline in its numbered order, and no
 mode skips one or asks its question twice. Beside them the **fills** the packs
-marked — the project ids and their surfaces, the repo-name key from question
-1's folder name, the commit gate's scopes from those same confirmed ids and its
-forge links where a remote exists, the two runtime positions from the stack
-read — then the **three merges** (ignore sections, the first of them from the
-same read, hook fragments, editor fragments), then the **git pass**, whose
+marked — the `_default` slot per project id, the commit gate's scopes from
+those same confirmed ids and its forge links where a remote exists — then the
+**three merges** (ignore sections, the first of them from the stack read, hook
+fragments, editor fragments), then the **git pass**, whose
 questions were asked once for the run and whose commit is that repo's own.
 Between the merges and the git pass, `init` **re-records the lockfile hash** of
 every file it filled, appended to or merged, so nothing it wrote reads as drift
@@ -743,12 +750,16 @@ pack's, or union where the value is an object — recorded under
 the file carrying the key twice. The report comes last, once, when every
 repo is done.
 
-Both pipelines materialize the same three baselines. They are fetched by the
-**fixed slugs** `mise`, `repo-gates` and `repo-hygiene` — fixed, never
+Both pipelines land the same baselines, in one order. **First
+`/stackgen:tool-config all`**, with the answers as its arguments — it lands
+every tool that skill owns, so `init` names none of them. **Then the
+unconditional bundles that remain**, fetched through the adapter by the
+**fixed slugs** `repo-gates` and `repo-hygiene` — fixed, never
 constructed: a name assembled from configuration is one that can silently
 resolve to nothing, which is the rule the `ux-gate` and design-adapter seams
 already follow. The secrets provider is fetched by whichever slug the user
-picked at question 4. **Every fetch carries the four answers** as its
+picked at question 4. **Every call carries the four answers** — the skill's
+as arguments, each fetch's as its
 `answers:` map — the forge, the editor, the provider slug, the update bot —
 so the materializer's conditional evaluation step can decide a pack's
 conditional files. That map is the `answers:` block the config records, with
