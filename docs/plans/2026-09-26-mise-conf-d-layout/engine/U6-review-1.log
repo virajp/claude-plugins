@@ -1,0 +1,21 @@
+# /code-review high — loop U6, round 1, branch 2026-09-26-mise-conf-d-layout (range 1d332056..17dea467)
+
+1. plugins/stackgen/stacks/repo-hygiene/repo-hygiene/config/.gitignore:47 — The change replaces the any-depth `mise.local.lock` ignore with `.config/mise/mise.local.lock`. mise writes the local lock beside the local config, at `.config/mise.local.lock`, and that path is no longer ignored. Scenario: reproduced with an isolated HOME and mise 2026.9.13; private [tools] in .config/mise.local.toml, `MISE_ENV=dev mise install` writes .config/mise.local.lock, untracked and not ignored; the new pattern matches nothing mise wrote.
+
+2. plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise/tasks/setup/mise:74 — An existing lock can no longer take a new tool. The lock is written only when it is missing or under `--upgrade`, and `task.run_auto_install = false` removes the auto-install that used to extend it, so a newly pinned tool makes `setup:all` fail. Scenario: reproduced; add `shellcheck = "0.10.0"` to conf.d/tools.dev.toml with a lock present, `MISE_ENV=dev mise run setup:all` fails "shellcheck@0.10.0 is not in the lockfile"; --upgrade re-resolves every latest pin; a hand-run `MISE_ENV=dev mise lock` drops other environments' tools. Suggested: a plain `MISE_ENV=$LOCK_ENVS mise lock` in dev before the install adds the tool without moving any locked version.
+
+3. plugins/vwf/skills/doctor/references/stack-checks.md:618 — The old-layout test does not exclude `.local` files: any `.config/mise*.lock` counts, and so does a non-settings table in `.config/mise.<env>.toml`. A gitignored `.config/mise.local.toml` with [tools], and the `.config/mise.local.lock` mise writes for it, always read as the old layout. Same gap in existing-repo.md:210. Scenario: permanent drift row; reshape would rm the machine-local lock and move private tables into conf.d; "one tool, two pins" counts a legitimate conf.d/tools.local.toml override.
+
+4. plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise/tasks/_scripts/merge:59 — The safety net's remedy still says `mise run setup:all`, which now exits 1 when MISE_ENV is unset — exactly when pre-commit is missing. This repo's own _scripts/merge:57 has the same line.
+
+5. plugins/vwf/skills/init/references/existing-repo.md:217 — The migration sends every [shell_alias] table to conf.d/shell_alias.dev.toml, even one from the base mise.toml, narrowing all-environment aliases to dev; contradicts the next rule (mise.<env>.toml table → <section>.<env>.toml) for a [shell_alias] in mise.ci.toml.
+
+6. plugins/vwf/skills/doctor/references/stack-checks.md:625 — "one tool, two pins" and the Toolchain lookup read only conf.d/tools*.toml, skipping pack fragments in the same directory (doppler.toml, fnox.toml, swiftlint.toml) that also pin tools into the one lock.
+
+7. plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise/tasks/setup/mise:52 — `sort -u` builds the lock MISE_ENV list alphabetically, but mise merges left to right, last wins; lock-time precedence is alphabetical, not the real layer order. Scenario: mise.prod.toml + mise.dev.toml, or one tool in tools.ci.toml and tools.dev.toml — the lock records whichever sorts last.
+
+8. plugins/vwf/skills/init/references/existing-repo.md:226 — The migration restates the union-lock algorithm in prose instead of calling `MISE_ENV=dev mise run setup:mise`, whose missing-lock branch already does it; the rule now lives in three places.
+
+9. .config/mise/tasks/setup/vscode:42 — Messages still point at old files: setup/vscode "not filled in .config/mise.toml", p/plugins/shellcheck:62 "comes from .config/mise.dev.toml", and the mise pack.yaml summary still says "the .config/ five-file split".
+
+10. plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise.toml:52 — CLAUDE.md's docs-ship-with-the-change rule: commits 477c3f35, 0022110a, 8b467736 leave site/src/content/docs/plugins/stackgen.md:812-853 and CLAUDE.md describing the old layout until the U7 docs commit lands.

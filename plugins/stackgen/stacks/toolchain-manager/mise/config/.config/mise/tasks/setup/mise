@@ -41,6 +41,7 @@ fi
 
 # The one lock holds every environment's tools, so it is written with every
 # environment active at once; a single-environment `mise lock` drops the rest.
+# The list is alphabetical though mise merges last-wins: order is moot only because a tool is pinned in one file.
 lock_envs() {
   {
     find "$CONFIG_DIR" -maxdepth 1 -name 'mise.*.toml' ! -name '*.local.toml'
