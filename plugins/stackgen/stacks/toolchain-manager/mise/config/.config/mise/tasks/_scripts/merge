@@ -28,7 +28,7 @@
 #   pr      push the branch and open a pull request against the destination.
 #           Nothing merges locally; the forge is what merges.
 #
-# Both are marked positions in `.config/mise.toml`, so the choice is the repo's
+# Both are marked positions in `.config/mise/conf.d/env.toml`, so the choice is the repo's
 # and this file names no forge until it has to open a request. An older file
 # carrying the single `MERGE_MODEL` key is read as both values, with a warning.
 

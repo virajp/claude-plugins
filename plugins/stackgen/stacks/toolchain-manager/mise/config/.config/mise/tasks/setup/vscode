@@ -24,7 +24,7 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # neighbouring repo's tools.
 #
 # **The profile name is `$REPO_NAME`** — the repo's folder name, slugified, as
-# `.config/mise.toml`'s `[env]` records it. Reading it rather than deriving one
+# `.config/mise/conf.d/env.toml` records it. Reading it rather than deriving one
 # is what keeps the profile stable inside a linked worktree, whose directory is
 # named after the branch.
 #
@@ -39,7 +39,7 @@ if ! command -v "${EDITOR_CLI}" >/dev/null 2>&1; then
 fi
 
 if [ -z "${REPO_NAME:-}" ] || [ "${REPO_NAME}" = "unfilled" ]; then
-  print_warn "REPO_NAME is not filled in .config/mise.toml — skipping the editor profile."
+  print_warn "REPO_NAME is not filled in .config/mise/conf.d/env.toml — skipping the editor profile."
   print_yellow "It is the marked position the orchestrator fills with the repo's folder name, slugified."
   exit 0
 fi

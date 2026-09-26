@@ -1,0 +1,16 @@
+# Shell aliases — dev only: they need `mise activate`, which CI never runs.
+
+[shell_alias]
+# Short names for the three commands a human types most. Aliases need
+# `mise activate` in the shell, and CI never loads this file — so nothing in the
+# pipeline may depend on one.
+precommit = "mise run code:precommit"
+setup     = "mise run setup:all"
+worktrees = "mise run code:worktrees"
+
+# One alias per MEMBER REPO, when this repo has members — each submodule, or
+# each path the `MEMBERS` list names — named by that member's own slug, never by
+# a project id. The pack cannot know the slugs, so these are a template —
+# `setup:all`'s own member flags come from the same list:
+#   setup-backend  = "mise run setup:all --backend"
+#   setup-frontend = "mise run setup:all --frontend"

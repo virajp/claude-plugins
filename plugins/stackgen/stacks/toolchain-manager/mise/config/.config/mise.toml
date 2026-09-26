@@ -1,6 +1,8 @@
 # The common base — loaded in EVERY environment, MISE_ENV set or not.
 #
-# Five files, one job each, all of them under `.config/`:
+# Top-level files hold `[settings]` and top-level keys only; every other section
+# is its own file in `mise/conf.d/` — `<section>.toml` for every environment,
+# `<section>.<env>.toml` for one (miserc.toml turns that scoping on):
 #
 #   mise.toml        this file — always loaded, whatever MISE_ENV says
 #   mise.dev.toml    MISE_ENV=dev   — the developer laptop
@@ -15,14 +17,15 @@
 # a setting across the layers: a tool pinned twice is a version that can
 # disagree with itself, and the disagreement surfaces on someone else's machine.
 #
-# **A tool the PIPELINE runs lives here, not in mise.dev.toml.** `MISE_ENV=ci`
-# never loads the dev file, so a gate pinned there is a gate CI cannot run. The
-# dev file is for what only a human needs.
+# A tool is pinned in ONE file: `conf.d/tools.toml` when two environments need it.
 #
 # **`mise.local.toml` is gitignored and nothing ships one.** It is where a
 # machine-specific path, a personal project handle or a locally built runtime
 # goes — anything true of one laptop and no other. The same applies to
-# `mise.<env>.local.toml` for a per-environment private override.
+# `mise.<env>.local.toml` and `conf.d/*.local.toml` for a private override.
+
+# The version `env_conf_d` in miserc.toml was tested on.
+min_version = "2026.9.13"
 
 [settings]
 activate_aggressive  = true     # let mise shims win on PATH
@@ -49,14 +52,15 @@ minimum_release_age = "10h"
 # (`mise run setup:all --upgrade`, in dev), and the pipeline installs from it
 # (see mise.ci.toml).
 #
-# **One lockfile per config file that declares tools, named after that file's
-# stem.** `mise install` writes `mise.dev.lock` beside `mise.dev.toml`, and
-# `mise.lock` beside this file, whose `[tools]` below carries the house linter.
-# With the split as shipped — the linter in the base and the dev tools — the
-# files produced are `.config/mise.lock` and `.config/mise.dev.lock`. All of
-# them are tracked; only `mise.local.lock`, the counterpart of the uncommitted
-# `mise.local.toml`, is ignored.
+# ONE lock, `.config/mise/mise.lock`, holds every environment's tools; `setup:mise`
+# writes it with one `mise lock` over every environment, never a single one.
 lockfile = true
+
+# Every platform the lock carries a URL for — the CI runners are linux-x64.
+lockfile_platforms = ["linux-x64", "macos-arm64"]
+
+# `mise run` installs nothing before a task body: `setup:mise` owns installs.
+task.run_auto_install = false
 
 # Interleave task output rather than buffering per task. Applies when `raw` is
 # off; with `raw = true` above, mise streams straight through and this is inert
@@ -80,126 +84,3 @@ task.disable_spec_from_run_scripts = true
 # writes one runtime settings line per language its stack read detected here,
 # directly below this comment (`node.compile = false` for Node, say); shipped
 # EMPTY, and left empty for a repo whose stack read found no language.
-
-[env]
-# Names shared with the variants; the VALUES live per layer. Only what is the
-# same everywhere belongs here.
-
-# A MARKED POSITION. The orchestrator that shapes this repo replaces "unfilled"
-# with this repo's FOLDER NAME, slugified: the name of the main checkout's own
-# directory, lowercased, every run of characters outside [a-z0-9] replaced by a
-# single "-", leading and trailing "-" trimmed. So a checkout in `virajp.dev/`
-# becomes `virajp-dev`. It is NOT a project id — the `p:<id>:*` task group
-# carries that, and the two are independent; `setup:all`'s member flags and the
-# `setup-<slug>` aliases carry a third token, the MEMBER REPOS' own slugs. The
-# slug rule and its reasons are stackgen's `assets/ids.md`.
-#
-# **It is a literal, and it is never derived at load time.** The obvious
-# shorthand — reading the basename of the config root — is wrong in a linked
-# worktree, whose directory is named after the BRANCH. A `REPO_NAME` that
-# changes with the branch you are standing on is worse than none: everything
-# reading it (a launcher, an editor profile) silently addresses a different repo.
-#
-# **Aliases that vary only by repo do not live here.** The Claude launchers are
-# the case: `cc`, `cco`, `ccf` and their siblings are the same command in every
-# repo with one token different, so they belong in the user's GLOBAL mise config
-# reading `$REPO_NAME` — one definition, per-repo values. Shipping them here
-# would copy the same alias into every repo and make a change to the launcher a
-# change to every repo that has one.
-REPO_NAME = "unfilled"
-
-# TWO MARKED POSITIONS. How a branch reaches its destination, one value per
-# long-lived branch — the branch model itself is the same under both values:
-#
-#   direct  merge locally and push the destination branch
-#   pr      push the branch and open a pull request; nothing merges locally
-#
-# `MERGE_MODEL_DEVELOP` is what `code:merge:develop` reads, and ships `direct`:
-# what a repo with no reviewer needs, and what that task did before the setting
-# existed. `MERGE_MODEL_MAIN` is what `code:merge:main` reads, and ships `pr`:
-# `main` is the release branch, and a request is the record of what reached it.
-# An older file carrying the single `MERGE_MODEL` key is read as both values
-# until the orchestrator writes the pair.
-MERGE_MODEL_DEVELOP = "direct"
-MERGE_MODEL_MAIN    = "pr"
-
-# A MARKED POSITION. The repo's member repos, space separated, each path
-# relative to this repo's root — `MEMBERS = "backend frontend"`. It is what
-# `setup:all --all` recurses into and what `code:worktrees` walks.
-#
-# **Left EMPTY for a repo whose members are submodules**, which are read from
-# `.gitmodules` instead: git already holds that list, and a second copy of it
-# here would only let the two disagree. Empty is also the right value for a
-# single-project repo, which has no members at all.
-#
-# One string rather than a list: TOML `[env]` values are strings, so the words
-# are split by the task library rather than by the parser.
-MEMBERS = ""
-
-# A MARKED POSITION — PATH_ENTRIES. Project-local binaries on PATH without a
-# `<pm> exec` prefix, written directly below this comment by the orchestrator
-# from the same stack read — the example is what a Node repo gets — and left
-# EMPTY, as shipped, when nothing the read found needs one.
-#   _.path = { path = "node_modules/.bin", tools = true }
-
-[tools]
-# No runtime, and that is the contract: this pack is the toolchain manager, not
-# the toolchain. Its one pin below is a gate, not a runtime. The language
-# runtime arrives with this repo's language and package-manager components,
-# which write their own tier; a capability provider (a secret manager, say)
-# ships its tool in its own `.config/mise/conf.d/<provider>.toml` fragment
-# rather than editing this file.
-# mise auto-loads `conf.d/*.toml`, so a provider can be added and removed
-# without a single line of this file changing.
-#
-# For example, a Node repo's package-manager component would carry:
-#   node = { version = "latest" }
-#   pnpm = { version = "latest" }
-#
-# The one pin is the house linter, which the `code:lint` of the pnpm, eslint,
-# flutter, swift and swiftui packs calls as `linter`. It is pinned here, once,
-# at an EXACT version rather than fetched per run: an unpinned fetch is
-# whatever the registry serves that minute, and one pin is one version those
-# packs agree on. It lives in the base because the pipeline runs `code:lint`.
-#
-# The binary is a Node script: it needs a `node` on PATH. A repo whose
-# components pin one (a Node repo) runs it under that; a repo whose packs pin
-# none (swift, swiftui, flutter) relies on the machine's own.
-#
-# The installer is the MACHINE's choice, never this file's: mise's npm backend
-# defaults to its embedded aube, and a machine may set `npm.package_manager` or
-# `npm.shell_out` to use npm, pnpm or bun instead. A project file that set the
-# installer would reach the machine's global tools too, so none does. What
-# follows holds only when the machine's npm backend is the embedded aube:
-#
-#   - it installs the package without a separate package manager;
-#   - `allow_low_downloads` is required, not a loosening — aube refuses a
-#     package under its weekly-download threshold on a first, unlocked install,
-#     and this one is below it; the exemption covers this package alone, its
-#     dependencies stay gated, and the malicious-package check still runs;
-#   - dependency lifecycle scripts run only when listed in `allow_builds`, and
-#     none is.
-# Under another installer those three do not hold, and the option is ignored.
-#
-# The lock is TWO things, committed together. `.config/mise.lock` records the
-# pin, and under aube points at a sidecar directory,
-# `.config/mise/locks/npm-askviraj-linter/<version>~<hash>/`, holding the
-# `package.json` and `aube-lock.yaml` that fix the dependency graph. An install
-# with the entry and no sidecar fails, locked or not — and `locked = true` in
-# mise.ci.toml refuses a tool no committed lock records. So a repo that takes
-# this pin runs `mise install` and commits the lock AND its sidecar before its
-# first CI push. The sidecar is generated: never format or lint it.
-#
-# The tasks call it through `mise which`, never by bare name: a Node repo puts
-# `node_modules/.bin` ahead of mise's tool bins, where another `linter` would
-# shadow this one.
-"npm:@askviraj/linter" = { version = "1.1.6", allow_low_downloads = true }
-
-[tasks.init]
-# Mandatory, and it lives in the BASE rather than in dev on purpose: the
-# file-based tasks under .config/mise/tasks/ must be executable under
-# MISE_ENV=ci too, not only on a developer laptop. mise runs a task file
-# directly, so one without its exec bit fails as an *unknown task*.
-description = "Initialize mise tasks"
-hide        = true
-run         = "find .config/mise/tasks/ -name '*' -type f -not -path '*/*.env' -exec chmod 755 {} \\;"

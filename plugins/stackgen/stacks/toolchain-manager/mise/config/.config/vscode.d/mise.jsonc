@@ -16,21 +16,12 @@
     "hverlin.mise-vscode",
   ],
 
-  // The split is five config files and their lockfiles, all named after one
-  // base. Nesting them under it is what keeps `.config/` readable — otherwise
-  // the environment variants and the generated locks sit as six siblings of
-  // equal weight and the base is no longer obviously the base.
-  //
-  // There is one lockfile per config file that declares tools, named after
-  // that file's stem: `mise.lock` and `mise.dev.lock` with the shipped split,
-  // the base's lock recording the house linter. The base's own lock is listed
-  // literally because it matches no `mise.*.lock` glob — the glob needs a
-  // middle segment the base does not have.
+  // The top-level files and miserc.toml nest under the base in `.config/`; the
+  // section files and the one lock already sit together in `.config/mise/`.
   "nesting": {
     "mise.toml": [
       "mise.*.toml",
-      "mise.*.lock",
-      "mise.lock",
+      "miserc.toml",
     ],
   },
 }

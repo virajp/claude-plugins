@@ -1,0 +1,22 @@
+# Tools only the developer laptop needs (MISE_ENV=dev).
+
+[tools]
+# Development tools only — never the language runtime, which the package-manager
+# component pins in tools.toml. These are what the shipped task library actually
+# shells out to: code:format runs dprint, code:sec runs the scanners,
+# setup:precommit runs pre-commit, and the shell gate reads every task file in
+# this library. Because they live here, the aggregate gate needs the dev
+# toolchain loaded — `MISE_ENV=dev mise run code:all`.
+actionlint = { version = "latest" }
+dprint     = { version = "latest" }
+gitleaks   = { version = "latest" }
+grype      = { version = "latest" }
+jq         = { version = "latest" }
+pre-commit = { version = "latest" }
+shellcheck = { version = "latest" }
+shfmt      = { version = "latest" }
+taplo      = { version = "latest" }
+
+# No secret-manager tool here. The pinned capability provider ships its own
+# `[tools]` entry in `.config/mise/conf.d/<provider>.toml`, so swapping
+# providers never touches this file.
