@@ -13,3 +13,6 @@ conditional:
   - path: .config/vscode.d/pnpm.jsonc
     when:
       editor: vscode
+# The mise lines this pack asks /stackgen:tool-config for.
+tool-config:
+  - mise add alias npx="pnpm dlx" to dev environment

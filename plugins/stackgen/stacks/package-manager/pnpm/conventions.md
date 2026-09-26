@@ -18,10 +18,10 @@ manager reads them from: `ignore-scripts=true`, so an install never executes a
 dependency's install-time code, and `fund=false`, so it never prints a banner
 over what it did. A dependency that genuinely has to build is allowed by name
 in `pnpm-workspace.yaml` — the exception is a reviewable line, not a switch.
-Beside it, `.config/mise/conf.d/pnpm.toml` aliases `npx` to `pnpm dlx`, so a
-one-off package runs through this manager's store, resolver and registry
-settings rather than another tool's; the file sits in `conf.d/` for the same
-reason the secrets provider's does — `mise.toml` names no package manager.
+Beside it, the pack's `tool-config:` call in `pack.yaml` asks
+`/stackgen:tool-config` to alias `npx` to `pnpm dlx` in dev, so a one-off
+package runs through this manager's store, resolver and registry settings
+rather than another tool's.
 
 **An agent's `npm`/`npx` command is rewritten before it runs.** This pack
 ships `hooks/npm-normalize.sh`, which lands at `.claude/hooks/npm-normalize.sh`
@@ -63,11 +63,11 @@ whole tree either way, and every exclusion it needs lives in
 `.config/linter.yaml`, which the pre-commit gate pack ships.
 
 **Composition order, since more than one component writes this tree:**
-`toolchain-manager`, then `package-manager` / `language`, then `toolchain-gate`,
-then `app-framework` — a later component's file wins, recorded per file in the
-lockfile. So this pack's `code/format` replaces the `toolchain-manager`
-baseline's, and a `toolchain-gate` or `app-framework` component's would replace
-this one's.
+the mise base `stackgen:tool-config` writes, then `package-manager` /
+`language`, then `toolchain-gate`, then `app-framework` — a later component's
+file wins, recorded per file in the lockfile. So this pack's `code/format`
+replaces the mise base's, and a `toolchain-gate` or `app-framework`
+component's would replace this one's.
 
 **The `setup/deps/*` verbs are `install`, `outdated`, `audit`, `upgrade` and
 `cleanup` — all five slots.** `install` is `pnpm install --recursive`, because a

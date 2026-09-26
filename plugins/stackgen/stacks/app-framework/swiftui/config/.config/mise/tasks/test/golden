@@ -11,7 +11,7 @@
 #USAGE flag "--os <os>" help="the simulator OS version to render on, for one run (default: SIMULATOR_OS)"
 
 set -euo pipefail
-# helpers ships in the toolchain-manager pack, not this one, so there is no
+# helpers ships with stackgen:tool-config, not this pack, so there is no
 # path here for -x to follow.
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
@@ -29,15 +29,14 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/xcode"
 #
 # A golden is pixels from one simulator: another device or OS version renders
 # differently, and every comparison against it fails. So the repo pins the
-# simulator once, in `.config/mise/conf.d/swiftui.toml` — SIMULATOR_PLATFORM
+# simulator once, in the environment mise exports — SIMULATOR_PLATFORM
 # (`iOS Simulator`, say), SIMULATOR_DEVICE and SIMULATOR_OS — and this task
 # builds the `-destination` from them, so recording, comparing, the `ux-gate`
 # skill and CI render on the same one. `--platform`, `--device` and `--os`
 # override the pin for one run, and `--platform` comes with `--device` and
 # `--os`, never alone: a platform on the pin's device and OS names a simulator
 # that does not exist. A run with no pin and not all three overrides is refused
-# rather than left to whichever simulator xcodebuild would pick, and so is a pin
-# some other mise config overrides — the fragment is the one source. A Mac-only
+# rather than left to whichever simulator xcodebuild would pick. A Mac-only
 # app pins `macOS`, the one platform with no simulator, which needs neither a
 # device nor an OS. The goldens are the pinned platform's; running another
 # platform against them compares renders with goldens recorded elsewhere.
@@ -66,7 +65,6 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/xcode"
 # from elsewhere, then "prove" those.
 
 require_xcode "test:golden"
-require_pin_source "test:golden" SIMULATOR_PLATFORM SIMULATOR_DEVICE SIMULATOR_OS
 project=$(find_xcodeproj "test:golden")
 scheme="${usage_scheme:-$(basename "${project}" .xcodeproj)}"
 
@@ -83,14 +81,14 @@ os="${usage_os:-${SIMULATOR_OS:-}}"
 
 if [ -z "${platform}" ]; then
   print_error "test:golden: no simulator is pinned — SIMULATOR_PLATFORM is unset or empty."
-  print_yellow "Set SIMULATOR_PLATFORM, SIMULATOR_DEVICE and SIMULATOR_OS in .config/mise/conf.d/swiftui.toml (or pass --platform, --device and --os), then re-run."
+  print_yellow "Run /stackgen:tool-config mise set env SIMULATOR_PLATFORM=<platform> for swiftui, and SIMULATOR_DEVICE and SIMULATOR_OS the same way (or pass --platform, --device and --os), then re-run."
   exit 1
 fi
 if [ "${platform}" == "macOS" ]; then
   destination="platform=macOS"
 elif [ -z "${device}" ] || [ -z "${os}" ]; then
   print_error "test:golden: the ${platform} pin is incomplete — SIMULATOR_DEVICE and SIMULATOR_OS are both required."
-  print_yellow "Set them in .config/mise/conf.d/swiftui.toml (or pass --device and --os); xcrun simctl list devices available lists the choices."
+  print_yellow "Run /stackgen:tool-config mise set env SIMULATOR_DEVICE=<device> for swiftui, and SIMULATOR_OS the same way (or pass --device and --os); xcrun simctl list devices available lists the choices."
   exit 1
 else
   destination="platform=${platform},name=${device},OS=${os}"
@@ -103,10 +101,10 @@ if [[ "${usage_record:-false}" == "true" ]] &&
   overrides="${usage_platform:+ --platform \"${usage_platform}\"}${usage_device:+ --device \"${usage_device}\"}${usage_os:+ --os \"${usage_os}\"}"
   if [ -n "${SIMULATOR_PLATFORM:-}" ]; then
     print_error "test:golden: --record records only on a pinned simulator, and the overrides${overrides} move the destination off the pin, to ${destination}."
-    print_yellow "Drop --platform, --device and --os to record on the pin, or move the pin in .config/mise/conf.d/swiftui.toml first."
+    print_yellow "Drop --platform, --device and --os to record on the pin, or move the pin with /stackgen:tool-config mise set env <KEY>=<value> for swiftui first."
   else
     print_error "test:golden: --record records only on a pinned simulator, and the overrides${overrides} name no pin — none is set."
-    print_yellow "Pin the simulator to record on in .config/mise/conf.d/swiftui.toml first."
+    print_yellow "Pin the simulator to record on with /stackgen:tool-config mise set env <KEY>=<value> for swiftui first."
   fi
   exit 1
 fi

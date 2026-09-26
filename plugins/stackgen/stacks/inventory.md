@@ -7,7 +7,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 `../assets/kinds.md`. The narrative — which wave landed what, and why — is
 [`readme.md`](readme.md); the shape of a pack is `../assets/pack-format.md`.
 
-**75 packs, 68 bundles, 13 kinds.**
+**74 packs, 67 bundles, 13 kinds.**
 
 ## Kinds
 
@@ -17,7 +17,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `database` | 1 | 1 |
 | `cloud-provider` | 31 | 26 |
 | `repo-gate` | 4 | 1 |
-| `toolchain-manager` | 1 | 1 |
+| `toolchain-manager` | 0 | 0 |
 | `repo-hygiene` | 1 | 1 |
 | `workspace` | 0 | 3 |
 | `capability-provider` | 8 | 8 |
@@ -105,7 +105,6 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `toolchain-gate/swift-format` | swift-format | `language-bundle` | repo |  |  | 0.1.1 | The Swift formatter — swift-format, built into the toolchain as `swift format`, configured once under .config/. |
 | `toolchain-gate/swiftlint` | SwiftLint | `language-bundle` | repo |  |  | 0.1.1 | The correctness gate for Swift — SwiftLint through mise, strict, with every layout rule left to swift-format. |
 | `toolchain-gate/tsconfig` | tsconfig | `language-bundle` | project |  |  | 0.2.0 | The TypeScript compiler configuration — a strict shared base, per-project configs, the path alias and the emit variant. |
-| `toolchain-manager/mise` | mise | `toolchain-manager` | repo |  |  | 1.7.0 | The repo's toolchain manager — settings-only .config/mise*.toml files, one section file per table in .config/mise/conf.d/ scoped by MISE_ENV, one lock for every environment, and the file-based task library everything else invokes, grouped into `setup:*` for bootstrap, `code:*` for gates and git, and `p:<project-id>:*` for a project's own commands. |
 
 ## Bundles
 
@@ -154,7 +153,6 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `github-actions` | GitHub Actions | `ci-system` | cicd | `ci-system/github-actions@0.2.0` |  |
 | `html` | HTML | `language-bundle` | project | `language/typescript@0.1.0`, `package-manager/pnpm@0.3.2`, `toolchain-gate/tsconfig@0.2.0`, `toolchain-gate/eslint@0.3.2`, `framework/html@0.1.0` |  |
 | `lovable` | Lovable | `design-tool` | design | `design-tool/lovable@0.1.0` |  |
-| `mise` | mise | `toolchain-manager` | repo | `toolchain-manager/mise@1.7.0` | yes |
 | `notion` | Notion | `capability-provider` | backing | `capability-provider/notion@0.1.0` |  |
 | `npm-package` | Package registry · npm | `deploy-target` | deploy | `deploy-target/npm-registry@generated` |  |
 | `oidc` | OIDC issuer | `capability-provider` | backing | `capability-provider/oidc@0.1.0` |  |

@@ -42,9 +42,11 @@ member's secrets are rotated.
 | Lands at                           | Is                                          |
 | ---------------------------------- | ------------------------------------------- |
 | `fnox.toml`                        | the providers and the declared secret names |
-| `.config/mise/conf.d/fnox.toml`    | the CLI pin                                 |
 | `.config/mise/tasks/setup/secrets` | the fill for the toolchain manager's slot   |
 | `hooks/fnox-ciphertext-guard.sh`   | the gate the encrypt-into-git mode requires |
+
+The CLI pin is not a file this pack lands: its `tool-config:` call in
+`pack.yaml` asks `/stackgen:tool-config` for it.
 
 **`fnox.toml` at the repository root is an accepted exception**, and the only
 one this pack takes. fnox searches upward from the working directory; a copy

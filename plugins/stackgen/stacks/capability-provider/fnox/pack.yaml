@@ -14,3 +14,6 @@ axis: backing
 # readiness gate, so it satisfies no harness capability. What it contributes is
 # the injector that WRAPS every harness task; see the local-stack reference.
 harness: n/a
+# The mise lines this pack asks /stackgen:tool-config for.
+tool-config:
+  - mise add tool fnox latest to all environments
