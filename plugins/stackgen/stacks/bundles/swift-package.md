@@ -6,7 +6,7 @@ components:
 - language/swift@0.1.2
 - package-manager/swiftpm@0.1.1
 - toolchain-gate/swift-format@0.1.1
-- toolchain-gate/swiftlint@0.1.1
+- toolchain-gate/swiftlint@0.2.0
 platforms:
 - packages
 ---
