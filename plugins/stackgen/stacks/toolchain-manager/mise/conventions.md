@@ -150,8 +150,21 @@ manager's install, a `core.hooksPath` someone set, a lockfile or a plugin pin
 the repo tracks — is stopped at, named, and left for the one by-hand command the
 task prints. Every destructive step sits behind a flag passed on purpose:
 `setup:precommit --force`, `setup:precommit --update`, `setup:mise --upgrade`.
-`setup:all` passes none of them, so a bootstrap on any clone rewrites nothing
-outside the files the packs own.
+`setup:all` passes `--upgrade` on when the user passes it and the other two
+never, so a plain bootstrap on any clone rewrites nothing outside the files the
+packs own.
+
+**Tools install from the lockfile; a lockfile moves only on request.**
+`setup:mise` runs `mise install --locked` on every run and never
+`mise upgrade`. It writes a lockfile in two cases, both in dev only: no
+`.config/mise*.lock` exists yet, when it runs `mise lock` once, or the user
+passed `--upgrade` (`setup:all --upgrade` reaches it), when it runs
+`mise lock --bump --upgrade` for the base config and once per
+`mise.<env>.toml`, `test` as `dev,test`, so every environment's lockfile moves
+together. Outside dev — `MISE_ENV` without `dev`, or unset — a missing lockfile
+and `--upgrade` each exit 1 before any step. mise's own install of a missing
+tool before a task body runs still records what it resolved in dev, where
+`locked` is off; the rule above is the task's.
 
 **The commit identity is per repo, required, and equal to the forge's.**
 `code:git-config`, which the hooks run, requires the local git-config to carry

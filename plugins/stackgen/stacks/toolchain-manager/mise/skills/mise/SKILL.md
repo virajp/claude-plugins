@@ -252,8 +252,14 @@ different command.
   by-hand command. Every destructive step is behind a flag passed on purpose —
   `setup:precommit --force` (take over a foreign `core.hooksPath` or hook
   manager), `setup:precommit --update` (`pre-commit autoupdate`),
-  `setup:mise --upgrade` (`mise upgrade --local` and the formatter's plugin
-  update) — and `setup:all` passes none of them.
+  `setup:mise --upgrade` (dev only: `mise lock --bump --upgrade` for every
+  environment's lockfile and the formatter's plugin update) — and `setup:all`
+  passes on `--upgrade` alone, only when the user passed it.
+- **Tools install from the lockfile.** `setup:mise` runs
+  `mise install --locked` on every run and never `mise upgrade`. It writes a
+  lockfile only in dev — `mise lock` once when no `.config/mise*.lock` exists,
+  or the bump under `--upgrade`; outside dev a missing lockfile, or
+  `--upgrade`, exits 1 before any step.
 - **`code:git-config` requires a per-repo forge identity.** The local
   git-config's `user.name`, `user.email` and `user.signingkey` must **equal**
   `<FORGE>_USER_NAME`, `<FORGE>_EMAIL` and `<FORGE>_SIGNING_KEY`, with ssh

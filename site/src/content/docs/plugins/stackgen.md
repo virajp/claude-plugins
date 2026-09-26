@@ -985,37 +985,44 @@ inside `code/*` and `setup/*` change with the tech stack.
   `setup:vscode` in order, and stays idempotent. **It never upgrades or
   overwrites anything it did not create**: a pack task that would have to stops,
   names what it found and prints the by-hand command, and every destructive step
-  sits behind a flag `setup:all` never passes. `setup:mise --upgrade` is what
-  runs `mise upgrade --local` and `dprint config update`, moving the tool pins
-  the lockfile records; `setup:precommit --update` is what runs
-  `pre-commit autoupdate`, moving the hook `rev:` lines; and
-  `setup:precommit --force` is what takes the hooks over from a **local**
-  `core.hooksPath`, a `.husky/` directory or a lefthook config, installing with
-  `--overwrite`. Without it `setup:precommit` refuses, prints the unset and the
-  install to run by hand plus the cleanup (delete the foreign files and drop a
-  husky `prepare` script — the task deletes nothing), and exits 1 — which halts
-  `setup:all` there on a brownfield clone until that cleanup is done, since the
-  orchestrator stops at a failing step. A `core.hooksPath` set in a global or
-  system git-config is named by scope and refused even under `--force`. A plain
-  install keeps a hand-written hook script as `.legacy` and chains it, and a
-  repo pre-commit already owns is never refused. `setup:ai` installs and
-  reconciles the repo's agent plugins; it is bootstrap and re-sync like every
-  other step here, which is why it is a `setup:*` task and not a gate. It drives
-  **Claude's own `claude plugin` commands and nothing else** — no package
-  runner, no wrapper CLI — and it checks before it writes: a marketplace already
-  registered under a name is *updated*, whatever source it was registered from,
-  and only one that is absent is *added*. That one rule is what makes the task
-  behave identically on a machine pointed at the published marketplace and on
-  one pointed at a local checkout of it, which a wrapper with a hardcoded source
-  cannot do. Scope is **project** by default, because the plugin set is the
-  repo's: it installs or updates each required plugin at that scope, prunes with
-  `autoremove` at that scope alone, and never installs, updates or removes a
-  user-scope plugin — `--user` is the flag for the rare repo that wants the
-  other scope, and it flips every one of those. Two **marked positions** —
-  further marketplaces, and the plugins to install from them — carry whatever
-  the repo needs beyond the workflow plugin, which the task installs
-  unconditionally with its dependencies; `/vwf:init` fills them from one
-  confirmed answer, seeded by the task's own **`--inventory`** mode, which
+  sits behind a flag. Tools install from the committed lockfile — `setup:mise`
+  runs `mise install --locked` every time and never `mise upgrade` — and a
+  lockfile is written only in dev: once by `mise lock` when no
+  `.config/mise*.lock` exists yet, or by `setup:all --upgrade`, the one flag
+  `setup:all` passes on and only when you pass it, which reaches
+  `setup:mise --upgrade`: `mise lock --bump --upgrade` for the base config and
+  each environment file, then `dprint config update`. Outside dev (`MISE_ENV`
+  without `dev`, or unset) a missing lockfile and `--upgrade` each stop the task
+  before it runs anything. mise's own install of a missing tool, which runs
+  before any task body, still records what it resolved in dev.
+  `setup:precommit --update` is what runs `pre-commit autoupdate`, moving the
+  hook `rev:` lines; and `setup:precommit --force` is what takes the hooks over
+  from a **local** `core.hooksPath`, a `.husky/` directory or a lefthook config,
+  installing with `--overwrite`. Without it `setup:precommit` refuses, prints
+  the unset and the install to run by hand plus the cleanup (delete the foreign
+  files and drop a husky `prepare` script — the task deletes nothing), and exits
+  1 — which halts `setup:all` there on a brownfield clone until that cleanup is
+  done, since the orchestrator stops at a failing step. A `core.hooksPath` set
+  in a global or system git-config is named by scope and refused even under
+  `--force`. A plain install keeps a hand-written hook script as `.legacy` and
+  chains it, and a repo pre-commit already owns is never refused. `setup:ai`
+  installs and reconciles the repo's agent plugins; it is bootstrap and re-sync
+  like every other step here, which is why it is a `setup:*` task and not a
+  gate. It drives **Claude's own `claude plugin` commands and nothing else** —
+  no package runner, no wrapper CLI — and it checks before it writes: a
+  marketplace already registered under a name is *updated*, whatever source it
+  was registered from, and only one that is absent is *added*. That one rule is
+  what makes the task behave identically on a machine pointed at the published
+  marketplace and on one pointed at a local checkout of it, which a wrapper with
+  a hardcoded source cannot do. Scope is **project** by default, because the
+  plugin set is the repo's: it installs or updates each required plugin at that
+  scope, prunes with `autoremove` at that scope alone, and never installs,
+  updates or removes a user-scope plugin — `--user` is the flag for the rare
+  repo that wants the other scope, and it flips every one of those. Two **marked
+  positions** — further marketplaces, and the plugins to install from them —
+  carry whatever the repo needs beyond the workflow plugin, which the task
+  installs unconditionally with its dependencies; `/vwf:init` fills them from
+  one confirmed answer, seeded by the task's own **`--inventory`** mode, which
   prints what this machine already has — one line per registered marketplace
   **other than the toolkit's own**, then one line per installed plugin with its
   marketplace and its scope — and exits, printing nothing else on stdout. It is

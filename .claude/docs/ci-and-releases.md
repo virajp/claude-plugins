@@ -15,12 +15,14 @@ resolves env variants):
   shipped defaults over this repo's own shell too. The CI layer declares them as
   well.
 - `.config/mise.ci.toml` — loaded when `MISE_ENV=ci` (the workflows set this):
-  CI-only tools/settings. It declares `shellcheck` and `shfmt` for
-  `p:plugins:shellcheck`, and sets `node.gpg_verify = false` to work around a
-  mise-on-Linux bug where its bundled Node release-key import fails on the CI
-  runner's gpg with "no valid OpenPGP data found" (the Node tarball is still
-  SHA256-checksum verified). Same mise version verifies fine on macOS; see
-  jdx/mise discussion #10553.
+  CI-only tools/settings. It sets `locked = true`, so CI installs exactly what
+  the committed `mise.lock` and `mise.ci.lock` record and fails rather than
+  resolving a version (the lockfiles move only on a dev machine). It declares
+  `shellcheck` and `shfmt` for `p:plugins:shellcheck`, and sets
+  `node.gpg_verify = false` to work around a mise-on-Linux bug where its bundled
+  Node release-key import fails on the CI runner's gpg with "no valid OpenPGP
+  data found" (the Node tarball is still SHA256-checksum verified). Same mise
+  version verifies fine on macOS; see jdx/mise discussion #10553.
 
 The `mise x shellcheck@latest shfmt@latest` wrapper still standing around that
 task in `plugins.yml` is now **redundant**, and the task-groups plan drops it
