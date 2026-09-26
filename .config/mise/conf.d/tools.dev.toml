@@ -15,6 +15,7 @@ grype    = { version = "latest" }
 actionlint = { version = "latest" }
 
 # AI Tools
-jq     = { version = "latest" }
-python = { version = "latest" }
-uv     = { version = "latest" }
+jq               = { version = "latest" }
+"pipx:graphifyy" = "latest"
+python           = { version = "latest" }
+uv               = { version = "latest" }
