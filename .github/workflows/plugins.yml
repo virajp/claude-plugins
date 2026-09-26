@@ -58,10 +58,9 @@ jobs:
       - name: Static validation of plugins/
         run: mise run p:plugins:check
 
-      # The shell half. `shellcheck` and `shfmt` live in mise.dev.toml — the
-      # maintainer's environment — and this job runs with MISE_ENV=ci, so they
-      # are fetched for the length of the step rather than added to the CI tool
-      # set, which exists to stay small.
+      # The shell half. `shellcheck` and `shfmt` are pinned in
+      # .config/mise/conf.d/tools.toml, so MISE_ENV=ci resolves them; the
+      # `mise x` wrapper below is redundant.
       - name: shellcheck and shfmt over every shell file a pack ships
         run: |
           mise x shellcheck@latest shfmt@latest -- mise run p:plugins:shellcheck

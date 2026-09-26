@@ -144,8 +144,8 @@ until someone reads two tasks side by side.
 
 | Task                                                  | Does                                                                        |
 | ----------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `setup:all [--all] [--upgrade] [--<slug>…]`           | the bootstrap orchestrator — the order below; `--<slug>` per member; `--upgrade` passed on to `setup:mise` and every member |
-| `setup:mise [--upgrade]`                              | reshim, doctor, `mise install --locked`, the linter if present; `mise lock` first only in dev with no lockfile (outside dev a missing lockfile exits 1); every environment's lockfile bumped and the formatter plugins updated only under `--upgrade`, dev only |
+| `setup:all [--all] [--upgrade] [--<slug>…]`           | the bootstrap orchestrator — the order below; exits 1 when `MISE_ENV` is unset; `--<slug>` per member; `--upgrade` passed on to `setup:mise` and every member |
+| `setup:mise [--upgrade]`                              | reshim, `mise install --locked`, doctor, the linter if present; one `mise lock` over every environment first only in dev with no lock (outside dev a missing lock exits 1); the lock bumped and the formatter plugins updated only under `--upgrade`, dev only |
 | `setup:secrets`                                       | **slot** — the pinned secret manager's setup                                |
 | `setup:external:{start,stop,pull}`                    | **slots** — local services; each a no-op outside a dev shell                |
 | `setup:deps:all`                                      | `cleanup → install → upgrade → outdated → audit`                            |
@@ -207,9 +207,9 @@ system git-config is named by scope and refused even under `--force`; without
 the flag a hand-written hook script is kept as `.legacy` and chained, and a repo
 pre-commit already owns installs again without complaint), `--update`
 (`setup:precommit` runs `pre-commit autoupdate`, which moves the `rev:` lines),
-`--upgrade` (`setup:mise` runs `mise lock --bump --upgrade` for the base config
-and once per environment file, then `dprint config update`, which move the
-lockfiles and the plugin pins; refused outside dev). `setup:all` passes
+`--upgrade` (`setup:mise` runs one `mise lock --bump --upgrade` over every
+environment, then `dprint config update`, which move the lock and the plugin
+pins; refused outside dev). `setup:all` passes
 `--force` and `--update` never, and `--upgrade` only when the user passed it to
 `setup:all`, so a plain bootstrap on any clone rewrites nothing outside the
 files the packs own.
@@ -253,10 +253,11 @@ belongs to a language does not.** That is the whole rule, and it is why
 `code:lint` ships shellcheck and actionlint yet is still a slot. Each of those
 says something true about a repo holding nothing but markdown, shell and
 workflows. The **language** linter is the part nobody can guess: every one worth
-running belongs to a language. The house linter is pinned in the base
-`mise.toml`, but it is a Node script, and a docs-only repo pins no `node`, so
-calling it by default would fail on any machine without one. So `code:lint` is
-a slot whose placeholder notice is the unfilled half, not the whole task.
+running belongs to a language. The house linter is pinned in
+`conf.d/tools.toml`, but it is a Node script, and a docs-only repo pins no
+`node`, so calling it by default would fail on any machine without one. So
+`code:lint` is a slot whose placeholder notice is the unfilled half, not the
+whole task.
 
 ## `setup/*` — bootstrap & upgrade
 
@@ -272,9 +273,10 @@ mise trust --all
 ```
 
 from the repo root. **`--all` is the form that matters.** Bare `mise trust`
-trusts a single file, and this pack ships up to five config files plus whatever
-`conf.d/*.toml` a capability provider added, so a bare run leaves the rest
-untrusted and the next command fails on a different one.
+trusts a single file, and this pack ships several config files plus the
+`conf.d/*.toml` section files and whatever a capability provider added, so a
+bare run leaves the rest untrusted and the next command fails on a different
+one.
 
 What untrusted costs depends on mise's `paranoid` setting, and neither column
 is a working repo:
@@ -304,7 +306,7 @@ at all, only the tasks it calls in order:
 
 ```text
 setup:all  (--all recurses into every member; --upgrade is passed on)
-  ├─ setup:mise            # reshim · doctor · install --locked    (common)
+  ├─ setup:mise            # reshim · install --locked · doctor    (common)
   ├─ setup:secrets         # the pinned secret manager             (SLOT)
   ├─ setup:external:start  # local services                        (SLOT)
   ├─ setup:deps:all        # the package manager's five verbs      (SLOTS)
@@ -319,19 +321,21 @@ the re-sync command as much as the bootstrap one, so a step that only works on a
 clean machine is a step that breaks the second run.
 
 **And keep it non-destructive: `setup:all` passes no flag the user did not
-pass.** Tools install from the committed lockfile, `mise install --locked`, on
-every run. A lockfile is written in two cases only: none exists under
-`.config/` yet and the run is in dev (`MISE_ENV` includes `dev`), when
-`setup:mise` runs `mise lock` once — outside dev a missing lockfile exits 1
-before any step, naming it, so a pipeline installs what a developer committed
-or nothing; or the user runs `setup:all --upgrade` in dev, which `setup:all`
-passes on to `setup:mise` and to every member, and which bumps every
-environment's lockfile with `mise lock --bump --upgrade` — the base config,
-then each `mise.<env>.toml`, `test` selected as `dev,test` — and updates the
-formatter's plugin pins. Outside dev `--upgrade` exits 1 before any step.
-Nothing runs `mise upgrade`. That is what the task does; mise itself installs a
-missing tool before any `mise run` task body starts, and in dev, where
-`locked` is off, that install records what it resolved too. Moving the hook
+pass.** Tools install from the committed lock, `mise install --locked`, on
+every run. The lock, `.config/mise/mise.lock`, holds every environment's tools
+and is written in two cases only: none exists yet and the run is in dev
+(`MISE_ENV` includes `dev`), when `setup:mise` runs `mise lock` once under
+`MISE_ENV` set to every environment suffix the config files carry — outside dev
+a missing lock exits 1 before any step, naming it, so a pipeline installs what a
+developer committed or nothing; or the user runs `setup:all --upgrade` in dev,
+which `setup:all` passes on to `setup:mise` and to every member, and which
+bumps the lock with one `mise lock --bump --upgrade` over the same environments
+and updates the formatter's plugin pins. Outside dev `--upgrade` exits 1 before
+any step. A single-environment `mise lock` would drop the other environments'
+tools, so none is run. Nothing runs `mise upgrade`, and
+`task.run_auto_install = false` stops mise installing before a task body.
+`setup:all` itself exits 1 when `MISE_ENV` is unset, naming
+`MISE_ENV=dev mise run setup:all`. Moving the hook
 `rev:` lines is `setup:precommit --update`; taking over a
 `core.hooksPath` or a husky / lefthook install another tool left is
 `setup:precommit --force`. Without them `setup:precommit` stops on an effective
@@ -372,7 +376,7 @@ because a caller passes it without knowing the repo's shape.
 every task that walks members calls it — `setup:all --all` and `code:worktrees`
 today. It answers from whichever linkage this repo uses: `.gitmodules` when the
 members are submodules, and otherwise the words of **`MEMBERS`**, the marked
-position in `mise.toml`'s `[env]` that the orchestrator fills with each member's
+position in `conf.d/env.toml` that the orchestrator fills with each member's
 repo-relative path. One function, so a product linked as siblings rather than as
 submodules is found by every caller at once instead of by the one that happened
 to learn the second linkage.
@@ -496,7 +500,7 @@ installation and no plugin reconciliation. `--frozen` on purpose — a worktree 
 a place to work on a branch, not a place to move the lockfile.
 
 The tool half is frozen by the same logic and needs no flag for it: `mise
-install` honours the tracked `mise.<env>.lock` files and writes nothing new, so
+install` honours the tracked `.config/mise/mise.lock` and writes nothing new, so
 `git status` is clean after the task and a version cannot move because of which
 worktree ran first.
 
@@ -590,7 +594,7 @@ makes "what shipped" a question git can answer.
 Every predicate above runs under both values but one: the unpushed-commits check
 is `direct`'s alone. What happens *after* them is not shared at all, and the
 landing model is set **per destination branch** — two marked positions in
-`mise.toml`'s `[env]` the orchestrator fills: **`MERGE_MODEL_DEVELOP`**, which
+`conf.d/env.toml` the orchestrator fills: **`MERGE_MODEL_DEVELOP`**, which
 `code:merge:develop` reads and which ships `direct`, and **`MERGE_MODEL_MAIN`**,
 which `code:merge:main` reads and which ships `pr`. A destination whose position
 is unset or empty reads as `direct`, so a repo with neither behaves exactly as
@@ -657,7 +661,7 @@ of what this project *is*, and that no contract can name in advance.
    name never has to be re-learned because the repo grew.
 
 **Two surfaces, two tokens.** The `p:<id>:*` group carries the **project id**;
-`REPO_NAME` in `.config/mise.toml`'s `[env]` carries the **repo's folder name,
+`REPO_NAME` in `.config/mise/conf.d/env.toml` carries the **repo's folder name,
 slugified**. They are independent — a single-project repo whose folder spells
 its project id is a coincidence, not a rule — and the orchestrator shows and
 has you confirm each before it is written. This library derives neither itself.

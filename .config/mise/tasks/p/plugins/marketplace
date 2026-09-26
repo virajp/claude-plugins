@@ -47,7 +47,7 @@
 # finds with an empty staging directory, and `--check` fails on one it finds.
 #
 # Run with no build step: node strips the TypeScript types directly. That needs
-# node >= 22.6, which .config/mise.toml already pins.
+# node >= 22.6, which .config/mise/conf.d/tools.toml already pins.
 
 set -euo pipefail
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"

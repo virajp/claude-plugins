@@ -65,8 +65,8 @@ want it.
 Relay's repo is empty — at most a readme, which is not evidence — so `init`
 resolves it to mode **`blank`**: no lockfile, no manifest, no source directory,
 no root tool config. It runs the new-repo landing alone, shaping the repo before
-anything else runs: the config layout, the toolchain manager's five-file split,
-the task library grouped `setup:*` / `code:*` / `p:*`, the four repo gates with
+anything else runs: the config layout, the toolchain manager's config split, the
+task library grouped `setup:*` / `code:*` / `p:*`, the four repo gates with
 their configs and hook fragments, the hygiene files, and the licence Relay
 chose. Its stack read finds nothing on a blank repo, so no `.gitignore` language
 section lands and the toolchain config's runtime positions stay empty until a

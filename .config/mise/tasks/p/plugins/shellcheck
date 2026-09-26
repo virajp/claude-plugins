@@ -59,7 +59,7 @@ cd "$MISE_PROJECT_ROOT"
 for tool in shellcheck shfmt; do
   if ! command -v "$tool" >/dev/null 2>&1; then
     print_error "$tool is not on PATH"
-    print_warn "It comes from .config/mise.dev.toml — run with MISE_ENV=dev, or"
+    print_warn "It is pinned in .config/mise/conf.d/tools.toml — run \`mise install\`, or"
     print_warn "\`mise x shellcheck@latest shfmt@latest -- mise run p:plugins:shellcheck\`"
     exit 1
   fi

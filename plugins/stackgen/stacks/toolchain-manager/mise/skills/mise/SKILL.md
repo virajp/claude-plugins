@@ -2,12 +2,13 @@
 name: mise
 version: 1.0.0
 category: development
-description: mise as the repo's toolchain manager — the .config/ five-file
-  split (mise.toml / mise.dev.toml / mise.ci.toml / mise.test.toml / the
-  gitignored mise.local.toml) selected by MISE_ENV, runtime-vs-dev-vs-ci tool
-  placement, the env-value split, the mandatory file-based task library and its
-  setup/code/p groups, and the CI parity rules. Auto-applies when editing any
-  mise config or task file.
+description: mise as the repo's toolchain manager — settings-only .config/
+  mise.toml / mise.dev.toml / mise.ci.toml / mise.test.toml (and the gitignored
+  mise.local.toml) selected by MISE_ENV, one section file per table in
+  .config/mise/conf.d/, one lock for every environment, runtime-vs-dev-vs-ci
+  tool placement, the env-value split, the mandatory file-based task library
+  and its setup/code/p groups, and the CI parity rules. Auto-applies when
+  editing any mise config or task file.
 license: MIT
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
@@ -21,6 +22,7 @@ paths:
   - "**/.config/mise.dev.toml"
   - "**/.config/mise.ci.toml"
   - "**/.config/mise.test.toml"
+  - "**/.config/miserc.toml"
   - "**/.config/mise/conf.d/**"
   - "**/.config/mise/tasks/**"
 ---
@@ -37,7 +39,7 @@ matches the file you are about to touch.
 
 | Read                                       | Before                                         |
 | ------------------------------------------ | ---------------------------------------------- |
-| [Config files](references/config-files.md) | writing or editing any of the five TOML files  |
+| [Config files](references/config-files.md) | writing or editing any mise TOML file          |
 | [Task library](references/task-library.md) | writing or editing anything under `tasks/`     |
 
 ## 1. Tool pinning & the config split
@@ -50,11 +52,20 @@ surfaces on someone else's machine. Put each tool, setting and env value in the
 
 | File              | Loaded when         | Holds                                                     |
 | ----------------- | ------------------- | --------------------------------------------------------- |
-| `mise.toml`       | always (every env)  | shared `[settings]`, runtime `[tools]`, `[tasks.init]`    |
-| `mise.dev.toml`   | `MISE_ENV=dev`      | dev-only tooling, shell aliases, local env values         |
-| `mise.ci.toml`    | `MISE_ENV=ci`       | CI/production overrides, per-runtime CI workarounds       |
+| `miserc.toml`     | before the rest     | `env_conf_d = true` and nothing else                      |
+| `mise.toml`       | always (every env)  | shared `[settings]` and top-level keys                    |
+| `mise.dev.toml`   | `MISE_ENV=dev`      | dev-only settings                                         |
+| `mise.ci.toml`    | `MISE_ENV=ci`       | CI/production settings, per-runtime CI workarounds        |
 | `mise.test.toml`  | `MISE_ENV=dev,test` | test deltas only, layered on top of dev                   |
 | `mise.local.toml` | always, last        | **never committed** — one machine's private overrides     |
+
+The top-level files hold `[settings]` and top-level keys only. Every other
+section is its own file in `.config/mise/conf.d/`: `<section>.toml` for every
+environment, `<section>.<env>.toml` for one. As shipped: `env.toml`,
+`tools.toml`, `tasks.toml`, `env.dev.toml`, `tools.dev.toml` and
+`shell_alias.dev.toml`. A section with no content ships no file.
+`miserc.toml`'s `env_conf_d = true` is what scopes a dotted name to its
+environment; `MISE_ENV` itself is set by the user's shell, never a file.
 
 mise loads `mise.toml` first, then **deep-merges** the active `MISE_ENV`
 variants on top, then the `.local` files last of all. `MISE_ENV` is a comma list
@@ -68,28 +79,23 @@ than a fourth full config.
 - **Pipelines** set `MISE_ENV=ci` in the workflow env, so the CI/production
   overrides apply.
 - **Tests** run under `MISE_ENV=dev,test` — never `test` alone.
-- With `MISE_ENV` **unset**, only `mise.toml` loads — the minimal, portable
-  base.
+- With `MISE_ENV` **unset**, only `mise.toml` and the undotted `conf.d` files
+  load — the minimal, portable base. `setup:all` refuses to run then.
 
-A repo with **no CI/CD and no deploy target** effectively uses only `mise.toml`;
-the other files ship empty so the answer to "where does this go" never requires
-creating a file first. Guard variant-only behaviour in a task by testing for
-membership — `[[ ",${MISE_ENV:-}," == *",dev,"* ]]` — rather than assuming a
-variant is loaded.
+A repo with **no CI/CD and no deploy target** effectively uses only the base;
+the other files ship near-empty so the answer to "where does this go" never
+requires creating a file first. Guard variant-only behaviour in a task by
+testing for membership — `[[ ",${MISE_ENV:-}," == *",dev,"* ]]` — rather than
+assuming a variant is loaded.
 
 ### What goes where
 
-- **`mise.toml`** — `[tools]` here is the **runtime**, and it arrives with the
-  language and package-manager components, not with this one. It also holds
-  everything the **pipeline** runs: `MISE_ENV=ci` never loads the dev file, so a
-  tool pinned there is a tool CI cannot reach. `[tasks.init]` lives here for the
-  same reason — the file-based tasks must be executable under `MISE_ENV=ci` too.
-  It is also where the freshness policy lives: `minimum_release_age` defers a
-  release younger than ten hours, and `lockfile = true` records what a fuzzy pin
-  resolved to — **one lockfile per config file that declares tools, named after
-  that file's stem, and all of them tracked**. With the split as shipped that is
-  `.config/mise.lock` and `.config/mise.dev.lock`; a runtime pinned in
-  `mise.toml` joins the first. Only `mise.local.lock` is ignored.
+- **`conf.d/tools.toml`** — the **runtime**, which arrives with the language
+  and package-manager components, not with this one, and everything the
+  **pipeline** runs: `MISE_ENV=ci` never loads a `*.dev.toml` file, so a tool
+  pinned there is a tool CI cannot reach. A tool is pinned in one file only.
+  `conf.d/tasks.toml` holds `[tasks.init]` for the same reason — the file-based
+  tasks must be executable under `MISE_ENV=ci` too.
   Its one shipped tool is the **house linter**, `npm:@askviraj/linter` at an
   exact version with `allow_low_downloads = true`, which the `code:lint` of
   the pnpm, eslint, flutter, swift and swiftui packs calls as `linter` — one
@@ -102,15 +108,22 @@ variant is loaded.
   do lifecycle scripts wait for `allow_builds`. Under aube the lock's entry
   also points at a generated sidecar under `.config/mise/locks/`, committed
   with the lock — an install without it fails — and never formatted or linted.
+- **`mise.toml`** — the freshness policy: `minimum_release_age` defers a
+  release younger than ten hours, and `lockfile = true` records what a fuzzy pin
+  resolved to — **one lock, `.config/mise/mise.lock`, for every environment,
+  tracked**. `lockfile_platforms` names `linux-x64` and `macos-arm64`, and
+  `task.run_auto_install = false` leaves installs to `setup:mise`. `min_version`
+  is the mise release `env_conf_d` was tested on.
   It also carries three settings that are policy rather than taste:
   `all_compile = false` (take the published binary for every tool, never build
   one), `task.timings = true` (an aggregate gate whose steps have no elapsed
   time is a slowdown nobody can attribute), and
   `task.disable_spec_from_run_scripts = true` (a task's flags come from its
   `#USAGE` header, never from executing it to find out).
-- **`mise.dev.toml`** — everything a human needs locally that a pipeline does
-  not: formatters, linters, scanners, the shell gates, pre-commit. It also holds
-  the repo's **shell aliases**, of which three are part of the contract:
+- **`conf.d/tools.dev.toml`** — everything a human needs locally that a
+  pipeline does not: formatters, linters, scanners, pre-commit.
+  `conf.d/shell_alias.dev.toml` holds the repo's **shell aliases**, of which
+  three are part of the contract:
 
   ```toml
   [shell_alias]
@@ -122,18 +135,19 @@ variant is loaded.
   plus one `setup-<slug>` per **member repo**, from the same list `setup:all`'s
   member flags come from — this repo's members, never its project ids.
 - **`mise.ci.toml`** — `locked = true`, so the pipeline installs from the
-  tracked lockfiles and fails rather than resolving; the deployed runtime's env
-  values; and any per-runtime CI workaround (topic 5). **Never a secret.**
-- **`mise.test.toml`** — only the keys a test run has to differ on.
+  tracked lock and fails rather than resolving, and any per-runtime CI
+  workaround (topic 5). The deployed runtime's env values go in
+  `conf.d/env.ci.toml`. **Never a secret.**
+- **`mise.test.toml`** — only the settings a test run has to differ on.
 - **`mise.local.toml`** — nothing ships one; it is gitignored and written by
   hand, for what is true of one machine and no other.
 
 ### The `conf.d/` tier
 
-mise auto-loads `.config/mise/conf.d/*.toml`. That is where a **capability
-provider** — a secret manager, say — puts its own `[tools]` pin and `[env]`
-defaults, in one file it owns end to end. Swapping providers then deletes one
-file and adds one, and `mise.toml` never changes.
+mise auto-loads `.config/mise/conf.d/*.toml`. Beside the section files, that is
+where a **capability provider** — a secret manager, say — puts its own `[tools]`
+pin and `[env]` defaults, in one file it owns end to end. Swapping providers
+then deletes one file and adds one, and no section file changes.
 
 ### Prerequisites this component names but does not own
 
@@ -154,8 +168,8 @@ result and no-ops when it is absent.
 production override the *same* keys rather than each inventing their own, so the
 two differ in value and never in vocabulary.
 
-- `mise.toml` `[env]` — only what is identical everywhere — today nothing but
-  the marked positions — starting with **`REPO_NAME`**: a marked position the
+- `conf.d/env.toml` — only what is identical everywhere — today nothing but the
+  marked positions — starting with **`REPO_NAME`**: a marked position the
   orchestrator fills with this repo's **folder name, slugified** — the main
   checkout's own directory, proposed by `/vwf:init`'s first question, shown and
   confirmed before it is written. It is **not** a project id: the `p:<id>:*`
@@ -164,38 +178,37 @@ two differ in value and never in vocabulary.
   repo**, named by that member's own slug. `REPO_NAME` is **a literal, never
   derived at load time** — the basename of the config root is the *branch* name
   inside a linked worktree, so a derived value would address a different repo
-  depending on where you stood.
-  Aliases that vary only by repo (the agent launchers) belong in the user's
-  **global** config reading `$REPO_NAME`, not here: one definition, per-repo
-  values. Three more marked positions sit beside it, each filled by the
-  orchestrator and each with a working default: **`MERGE_MODEL_DEVELOP`** and
-  **`MERGE_MODEL_MAIN`** (`direct` | `pr`, one per long-lived branch) — whether
-  `code:merge:develop` and `code:merge:main` respectively merge locally and
-  push, or push and open a pull request; shipped `direct` and `pr`, and a file
-  still carrying the single legacy `MERGE_MODEL` is read as both values with a
-  warning — and **`MEMBERS`**, the space-separated, repo-relative paths of this
-  repo's member repos, left empty when they are submodules, which `members()`
-  reads from `.gitmodules` instead. A string and never an array: mise env
-  values are strings. The base's other two marked positions are the runtime's:
-  **`RUNTIME_BLOCK`** under `[settings]` and **`PATH_ENTRIES`** at the end of
-  `[env]`, both shipped **empty** and filled by the orchestrator from its
-  **stack read** — the languages the repo's pins, lockfile or manifests name —
-  one runtime settings line per detected language in the first, the `_.path`
-  entry a project-local binary directory needs in the second, and nothing in
-  either for a language the repo does not have.
-  These six are the only marked positions in the config split. **Two more
-  marked positions sit outside the TOML**, in `.config/mise/tasks/setup/ai`:
-  `EXTRA_MARKETPLACES`
-  (rows `<source-ref>|<name>`) and `EXTRA_PLUGINS` (rows `<name>@<marketplace>`)
-  — the plugin marketplaces and plugins this repo requires beyond the toolkit's
-  own. Both default to empty, both are filled by the same orchestrator from a
+  depending on where you stood. Aliases that vary only by repo (the agent
+  launchers) belong in the user's **global** config reading `$REPO_NAME`, not
+  here: one definition, per-repo values. Three more marked positions sit beside
+  it, each filled by the orchestrator and each with a working default:
+  **`MERGE_MODEL_DEVELOP`** and **`MERGE_MODEL_MAIN`** (`direct` | `pr`, one per
+  long-lived branch) — whether `code:merge:develop` and `code:merge:main`
+  respectively merge locally and push, or push and open a pull request; shipped
+  `direct` and `pr`, and a file still carrying the single legacy `MERGE_MODEL`
+  is read as both values with a warning — and **`MEMBERS`**, the
+  space-separated, repo-relative paths of this repo's member repos, left empty
+  when they are submodules, which `members()` reads from `.gitmodules` instead.
+  A string and never an array: mise env values are strings. The other two marked
+  positions are the runtime's: **`RUNTIME_BLOCK`** under `mise.toml`'s
+  `[settings]` and **`PATH_ENTRIES`** at the end of `conf.d/env.toml`, both
+  shipped **empty** and filled by the orchestrator from its **stack read** — the
+  languages the repo's pins, lockfile or manifests name — one runtime settings
+  line per detected language in the first, the `_.path` entry a project-local
+  binary directory needs in the second, and nothing in either for a language the
+  repo does not have. These six are the only marked positions in the config
+  split. **Two more marked positions sit outside the TOML**, in
+  `.config/mise/tasks/setup/ai`: `EXTRA_MARKETPLACES` (rows
+  `<source-ref>|<name>`) and `EXTRA_PLUGINS` (rows `<name>@<marketplace>`) — the
+  plugin marketplaces and plugins this repo requires beyond the toolkit's own.
+  Both default to empty, both are filled by the same orchestrator from a
   confirmed answer seeded by `setup:ai`'s `--inventory` mode, and both keep
   their template comment so a reshape can re-derive them.
-- `mise.dev.toml` `[env]` — the **development** values: verbose logging, local
+- `conf.d/env.dev.toml` — the **development** values: verbose logging, local
   hosts, emulator endpoints, test credentials.
-- `mise.ci.toml` `[env]` — the CI and **production** values for those same keys.
+- `conf.d/env.ci.toml` — the CI and **production** values for those same keys.
   One variant, two roles: it covers the pipeline and the deployed runtime both.
-- `mise.test.toml` `[env]` — only the keys a test run flips.
+- `conf.d/env.test.toml` — only the keys a test run flips.
 
 Never invent project-specific env vars, and never commit a secret to any of
 them. If none differ between local and production, leave the override sections
@@ -252,14 +265,17 @@ different command.
   by-hand command. Every destructive step is behind a flag passed on purpose —
   `setup:precommit --force` (take over a foreign `core.hooksPath` or hook
   manager), `setup:precommit --update` (`pre-commit autoupdate`),
-  `setup:mise --upgrade` (dev only: `mise lock --bump --upgrade` for every
-  environment's lockfile and the formatter's plugin update) — and `setup:all`
+  `setup:mise --upgrade` (dev only: one `mise lock --bump --upgrade` over
+  every environment and the formatter's plugin update) — and `setup:all`
   passes on `--upgrade` alone, only when the user passed it.
 - **Tools install from the lockfile.** `setup:mise` runs
-  `mise install --locked` on every run and never `mise upgrade`. It writes a
-  lockfile only in dev — `mise lock` once when no `.config/mise*.lock` exists,
-  or the bump under `--upgrade`; outside dev a missing lockfile, or
-  `--upgrade`, exits 1 before any step.
+  `mise install --locked` on every run and never `mise upgrade`. It writes the
+  lock only in dev — one `mise lock` over every environment when no
+  `.config/mise/mise.lock` exists, or the bump under `--upgrade`; outside dev a
+  missing lock, or `--upgrade`, exits 1 before any step. A single-environment
+  `mise lock` drops the other environments' tools, so none is ever run.
+- **`setup:all` refuses an unset `MISE_ENV`.** It exits 1 naming
+  `MISE_ENV=dev mise run setup:all`, the command a developer runs.
 - **`code:git-config` requires a per-repo forge identity.** The local
   git-config's `user.name`, `user.email` and `user.signingkey` must **equal**
   `<FORGE>_USER_NAME`, `<FORGE>_EMAIL` and `<FORGE>_SIGNING_KEY`, with ssh
@@ -270,8 +286,9 @@ different command.
   identity. The full contract is in
   [references/task-library.md](references/task-library.md).
 - **`code:all` needs the dev toolchain.** The formatter and the scanners are
-  pinned in `mise.dev.toml`, so the aggregate gate runs under `MISE_ENV=dev` —
-  in the pipeline too, wherever the pipeline runs the gate rather than the build.
+  pinned in `conf.d/tools.dev.toml`, so the aggregate gate runs under
+  `MISE_ENV=dev` — in the pipeline too, wherever the pipeline runs the gate
+  rather than the build.
 - **`code:precommit` runs before staging.** The hooks rewrite files, and running
   them against the working tree is what folds those rewrites into the commit
   that caused them instead of a follow-up "fix hooks" commit.
@@ -301,9 +318,9 @@ different command.
 
 ## Materializing this into a repo
 
-The five config files and the common task library ship as this component's
-`config/` payload and are **copied**, not hand-written. What still takes
-judgment after they land:
+The config files, the `conf.d` section files and the common task library ship as
+this component's `config/` payload and are **copied**, not hand-written. What
+still takes judgment after they land:
 
 - **Do not fill a slot by hand.** `code/lint`, `setup/secrets`,
   `setup/deps/*` and `setup/external/*` stay as shipped unless a stack overlay

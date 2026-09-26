@@ -149,8 +149,9 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
 - a pack's own **`config/` tree**, mirroring the repo root, for the repo config
   a component genuinely owns — **mode preserved**, so a task file lands 755.
   Eight kinds of entry: **(a)** the toolchain manager's own config and its task
-  library (`.config/mise*.toml`, `.config/mise/tasks/**`); **(b)** a gate's own
-  config (`.config/dprint.json`, `.config/pre-commit-config.yaml`,
+  library (`.config/miserc.toml`, `.config/mise*.toml`, the section files in
+  `.config/mise/conf.d/`, `.config/mise/tasks/**`); **(b)** a gate's own config
+  (`.config/dprint.json`, `.config/pre-commit-config.yaml`,
   `.config/gitleaks.toml`, `.config/grype.yaml`, …); **(c)** the hygiene files
   (`.gitignore`, `.editorconfig`, `.gitattributes`, `SECURITY.md` — its one
   contact slot taking a URL or an email — `renovate.json` at the root, the

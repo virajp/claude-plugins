@@ -431,9 +431,9 @@ marketplace against the default branch, so `main` stays default and PRs target
 `develop`. `main` is merge-only, enforced by pre-commit locally and a ruleset
 remotely. The landing model the mise pack ships is **per branch** —
 `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`, `direct` or `pr` — but this repo's
-own `.config/mise.toml` still carries the legacy single `MERGE_MODEL`, read as
-both, until its next `/vwf:setup reshape`. No release task commits: all three
-tag what has already landed.
+own `.config/mise/conf.d/env.toml` still carries the legacy single
+`MERGE_MODEL`, read as both, until its next `/vwf:setup reshape`. No release
+task commits: all three tag what has already landed.
 
 Every plugin is pinned to its own tag in the marketplace manifest, which is what
 decouples **merged** from **released**. Three tag families, all namespaced:

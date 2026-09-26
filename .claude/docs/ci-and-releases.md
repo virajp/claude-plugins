@@ -2,44 +2,45 @@
 
 ## mise environments
 
-The mise config is split by `MISE_ENV` (all under `.config/`, where mise
-resolves env variants):
+The mise config is split by `MISE_ENV`, all under `.config/`, in the mise pack's
+layout: settings-only top-level files, one section file per table in
+`.config/mise/conf.d/`, and `.config/miserc.toml` turning on `env_conf_d` so a
+`<section>.<env>.toml` loads only under that environment.
 
-- `.config/mise.toml` — **generic**, loaded everywhere: the common `node` +
-  `pnpm` runtime plus settings/env/`tasks.init`.
+- `.config/mise.toml` — **generic**, loaded everywhere: settings only
+  (`lockfile_platforms`, `task.run_auto_install = false`, the Node runtime
+  settings) and `min_version`. `conf.d/tools.toml` holds the common `node` +
+  `pnpm` runtime, `osv-scanner`, and `shellcheck` and `shfmt` — the two binaries
+  of `p:plugins:shellcheck` and the shipped defaults of `code:lint` and
+  `code:format`, which both dev and CI need. `conf.d/env.toml` and
+  `conf.d/tasks.toml` hold the env values and `tasks.init`.
 - `.config/mise.dev.toml` — loaded when `MISE_ENV=dev` (the maintainer's machine
-  has this exported): the full dev toolchain (doppler, pre-commit, dprint,
-  taplo, gitleaks, grype, actionlint, shellcheck, shfmt, jq, python, uv) + shell
-  aliases. `shellcheck` and `shfmt` are `p:plugins:shellcheck`'s two binaries —
-  and, since the gate hooks call tasks, `code:lint`'s and `code:format`'s
-  shipped defaults over this repo's own shell too. The CI layer declares them as
-  well.
-- `.config/mise.ci.toml` — loaded when `MISE_ENV=ci` (the workflows set this):
-  CI-only tools/settings. It sets `locked = true`, so CI installs exactly what
-  the committed `mise.lock` and `mise.ci.lock` record and fails rather than
-  resolving a version (the lockfiles move only on a dev machine). It declares
-  `shellcheck` and `shfmt` for `p:plugins:shellcheck`, and sets
-  `node.gpg_verify = false` to work around a mise-on-Linux bug where its bundled
-  Node release-key import fails on the CI runner's gpg with "no valid OpenPGP
-  data found" (the Node tarball is still SHA256-checksum verified). Same mise
-  version verifies fine on macOS; see jdx/mise discussion #10553.
+  has this exported): the Python settings. `conf.d/tools.dev.toml` holds the dev
+  toolchain (doppler, pre-commit, dprint, taplo, gitleaks, grype, actionlint,
+  jq, python, uv), `conf.d/shell_alias.dev.toml` the aliases.
+- `.config/mise.ci.toml` — loaded when `MISE_ENV=ci` (the workflows set this).
+  It sets `locked = true`, so CI installs exactly what the committed
+  `.config/mise/mise.lock` records and fails rather than resolving a version
+  (the lock moves only on a dev machine). It also sets `node.gpg_verify = false`
+  to work around a mise-on-Linux bug where its bundled Node release-key import
+  fails on the CI runner's gpg with "no valid OpenPGP data found" (the Node
+  tarball is still SHA256-checksum verified). Same mise version verifies fine on
+  macOS; see jdx/mise discussion #10553.
+
+**One lock for every environment.** `setup:mise` writes `.config/mise/mise.lock`
+with one `mise lock` over every environment the config files carry, only when it
+is missing or under `--upgrade` in dev. A single-environment `mise lock` drops
+the other environments' tools. `taplo` is the one entry with no checksum:
+upstream publishes none.
 
 The `mise x shellcheck@latest shfmt@latest` wrapper still standing around that
-task in `plugins.yml` is now **redundant**, and the task-groups plan drops it
-when it rewrites that line. It never worked in the first place: the inner
-`mise run` rebuilds PATH from the config-resolved toolset and drops the ad-hoc
-install, so `shfmt` reached a shim with no version under `MISE_ENV=ci` and the
-workflow died on `No version is set for shim: shfmt`. `shellcheck` survived only
-because the runner image ships one. Declaring both in the CI layer is what
-actually resolves them.
+task in `plugins.yml` is **redundant**: both tools now resolve from
+`conf.d/tools.toml` under `MISE_ENV=ci`. It never worked in the first place: the
+inner `mise run` rebuilds PATH from the config-resolved toolset and drops the
+ad-hoc install.
 
-Keep common tools in `mise.toml` (don't duplicate across dev/ci); put
-environment-specific tools in the matching env file. `shellcheck` and `shfmt`
-are the one **named exception**, and a temporary one: both sit in
-`mise.dev.toml` and `mise.ci.toml` at the same `latest` pin, because the change
-that unblocked CI could not also edit `mise.toml` — that file belongs to the
-task-groups plan, which is where the two are meant to end up. Read the
-duplication as a debt with an owner, not as the rule being relaxed.
+Pin each tool in one file only: a tool two environments need goes in
+`conf.d/tools.toml`, an environment's own in `conf.d/tools.<env>.toml`.
 
 ## The branch model, and the three tag families
 
@@ -61,11 +62,12 @@ still push directly.
 sets how a branch lands per destination — `MERGE_MODEL_DEVELOP` for
 `code:merge:develop`, `MERGE_MODEL_MAIN` for `code:merge:main`, each `direct`
 (merge locally and push) or `pr` (push and open a pull request); the pack ships
-`direct` and `pr`. This repo's own `.config/mise.toml` still carries the single
-legacy `MERGE_MODEL`, which every reader takes as both values — the merge tasks
-with a warning naming it legacy, git-workflow's Step 4 silently as the shared
-fallback, and doctor's predicate (f) as one drift row — until the next
-`/vwf:setup reshape` rewrites it into the pair and lands the new merge scripts.
+`direct` and `pr`. This repo's own `.config/mise/conf.d/env.toml` still carries
+the single legacy `MERGE_MODEL`, which every reader takes as both values — the
+merge tasks with a warning naming it legacy, git-workflow's Step 4 silently as
+the shared fallback, and doctor's predicate (f) as one drift row — until the
+next `/vwf:setup reshape` rewrites it into the pair and lands the new merge
+scripts.
 
 That is why **no release task commits**: `p:i:release`, `p:plugins:release` and
 `p:site:release` all tag what has already landed on `main`, and the version bump
@@ -158,7 +160,7 @@ loads the working tree for that session, no install and no cache.
 - **`plugins.yml`** — validates the plugin toolkit on every push to `main` or
   `develop` and every PR: `p:plugins:marketplace --check`, then
   `p:plugins:inventory --check`, then `p:plugins:check`, then
-  `p:plugins:shellcheck` (whose two binaries `mise.ci.toml` declares; the
+  `p:plugins:shellcheck` (whose two binaries `conf.d/tools.toml` declares; the
   `mise x` wrapper still wrapping that line is redundant), then the vitest
   suites, then `p:plugins:npm-normalize-test`, then `tsc --noEmit` per project.
   The order matters — proving the two committed generated files are what their

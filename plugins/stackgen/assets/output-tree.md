@@ -127,7 +127,8 @@ stacks/<type>/<slug>/
 started as:
 
 - **(a) The toolchain manager's config split and its task library** — the
-  `mise.*.toml` layers and every file under `.config/mise/tasks/`.
+  `miserc.toml` and `mise.*.toml` layers, the section files under
+  `.config/mise/conf.d/`, and every file under `.config/mise/tasks/`.
 - **(b) A gate's own config file** — `.config/dprint.json`,
   `.config/taplo.toml`, `.config/pre-commit-config.yaml`,
   `.config/git-conventional-commits.yaml`, `.config/gitleaks.toml`,
