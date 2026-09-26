@@ -70,12 +70,12 @@ Gather the facts before writing:
   `serverless.yml`), and cloud SDKs/services in dependencies or config (AWS,
   GCP, Azure, Firebase, Supabase, Vercel, Cloudflare, Neon, PlanetScale, …).
 - **Local development.** The toolchain manager (this marketplace standardizes on
-  **mise** — prefer `mise install` then `mise run setup:all`, the single
-  bootstrap entrypoint, over the `setup:*` steps it already orders), env setup
-  (`.env.example`, doppler, mise `[env]`), and prerequisites. Note
+  **mise** — prefer `mise install` then `MISE_ENV=dev mise run setup:all`, the
+  single bootstrap entrypoint, over the `setup:*` steps it already orders), env
+  setup (`.env.example`, doppler, mise `[env]`), and prerequisites. Note
   `mise run setup:worktree` too where the repo has one — it is the lighter
-  bootstrap a fresh worktree runs, and a contributor who does not know it exists
-  runs the slow path forever.
+  bootstrap a fresh worktree runs, and a contributor who does not know it
+  exists runs the slow path forever.
 - **Task runner.** Detect the repo's runner — mise (`mise.toml` /
   `.config/mise*.toml` → `mise tasks`), `package.json` `scripts`, a `Makefile`,
   or a `justfile` — preferring mise when more than one is present. Read the
@@ -106,8 +106,9 @@ Write/update the README with the eight sections above, per the
 - **List of projects** as a table: `| Project | Path | Stack | Purpose |`.
 - **Infrastructure** as a table: `| Tool / Service | Used for |`.
 - **Local Development** as ordered, copy-pasteable steps — clone,
-  `mise install`, env setup, `mise run setup:all`, and how to run it; plus
-  `mise run setup:worktree` for a fresh worktree when the repo defines it.
+  `mise install`, env setup, `MISE_ENV=dev mise run setup:all`, and how to run
+  it; plus `mise run setup:worktree` for a fresh worktree when the repo defines
+  it.
 - **Projects** — per project: what it is, its stack, how to run/test it, and its
   key tasks.
 - **Important tasks** as a table: `| Task | What it does |` — use real names
