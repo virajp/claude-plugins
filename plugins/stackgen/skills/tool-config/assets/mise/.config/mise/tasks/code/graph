@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#MISE description="Refresh the graphify knowledge graph after a commit (code only, no LLM)"
+#MISE description="Refresh the graphify knowledge graph, run by hand (code only, no LLM)"
 #MISE dir="{{ config_root }}"
 
 #USAGE flag "--force" help="Rebuild even when the last commit only touched graphify-out/"
