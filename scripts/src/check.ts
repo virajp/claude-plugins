@@ -26,6 +26,7 @@ import {
   statSync,
 } from "node:fs";
 import {
+  basename,
   isAbsolute,
   join,
   relative,
@@ -470,7 +471,9 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     landedTree(join(plugin.root, tree));
   }
 
-  for (const pack of globSync("stacks/*/*", { cwd: plugin.root })) {
+  const packs = globSync("stacks/*/*", { cwd: plugin.root });
+  const slugs = new Set(packs.map(pack => basename(pack)));
+  for (const pack of packs) {
     for (const absolute of filesUnder(join(plugin.root, pack, PACK_HOOKS))) {
       if (PACK_HOOK_METADATA.test(absolute)) {
         continue;
@@ -523,7 +526,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       for (
         const message of [
           ...conditionalFaults(document, config),
-          ...packFactFaults(document),
+          ...packFactFaults(document, slugs),
         ]
       ) {
         at(`${path(packYaml)}: ${message}`);
@@ -557,7 +560,10 @@ const ENV_VAR_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
  * the repo does not own, and a `machine_env` name no fragment carries is a
  * question whose answer lands nowhere — all silently.
  */
-function packFactFaults(document: unknown): string[] {
+function packFactFaults(
+  document: unknown,
+  slugs: ReadonlySet<string>,
+): string[] {
   if (!isPlainObject(document)) {
     return [];
   }
@@ -635,7 +641,7 @@ function packFactFaults(document: unknown): string[] {
   }
   else if (calls !== undefined) {
     (calls as string[]).forEach((call, index) => {
-      const { fault, key } = toolConfigCall(call);
+      const { fault, key } = toolConfigCall(call, slugs);
       if (fault !== undefined) {
         faults.push(`\`tool-config[${index}]\` (${call}) ${fault}`);
       }
@@ -715,11 +721,16 @@ const TOOL_CONFIG_GATE_VERBS: readonly { pattern: RegExp; tail: boolean; }[] = [
     tail: false,
   },
   {
-    pattern:
-      /^all add exclude (?!generated$)(?:generated )?[^\s"]+(?: [^\s"]+)*$/,
+    pattern: new RegExp(
+      String.raw`^all add exclude (?!generated$)(?:generated )?`
+        + String.raw`(?:(?!for(?: |$))[^\s"]+(?: |$))+$`,
+    ),
     tail: false,
   },
-  { pattern: /^pre-commit add linter-ignore(?: [^\s"]+)+$/, tail: false },
+  {
+    pattern: /^pre-commit add linter-ignore(?: (?!for(?: |$))[^\s"]+)+$/,
+    tail: false,
+  },
   { pattern: TOOL_CONFIG_HOOK, tail: true },
   { pattern: /^grype add ignore [A-Za-z0-9-]+(?: .+)?$/, tail: true },
 ];
@@ -735,9 +746,13 @@ const ALIAS_NAME = /^[A-Za-z_][A-Za-z0-9_-]*$/;
 
 /**
  * One `tool-config:` entry against the verb grammar: the env key it sets, or
- * why it is refused.
+ * why it is refused. `slugs` names every pack, so a tail verb's `for <pack>`
+ * reads as a suffix rather than text.
  */
-function toolConfigCall(call: string): { fault?: string; key?: string; } {
+function toolConfigCall(
+  call: string,
+  slugs: ReadonlySet<string>,
+): { fault?: string; key?: string; } {
   const words = call.trim().replace(/\s+/g, " ");
   if (TOOL_CONFIG_VERBS.tool.test(words)) {
     return {};
@@ -751,9 +766,10 @@ function toolConfigCall(call: string): { fault?: string; key?: string; } {
   }
   const verb = TOOL_CONFIG_GATE_VERBS.find(v => v.pattern.test(words));
   const bare = words.replace(TOOL_CONFIG_FOR, "");
+  const suffix = words.slice(bare.length + " for ".length);
   if (
     bare !== words
-    && (verb === undefined || !verb.tail)
+    && (verb === undefined || !verb.tail || slugs.has(suffix))
     && TOOL_CONFIG_GATE_VERBS.some(v => v.pattern.test(bare))
   ) {
     return {

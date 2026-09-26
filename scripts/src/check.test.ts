@@ -886,6 +886,43 @@ describe("the pack config tier", () => {
     expect(messages(check(text))).toEqual([]);
   });
 
+  it("flags a pack slug after for on a free-text verb", () => {
+    // A reason ending in a pack slug is a suffix the materializer would double.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - grype add ignore CVE-1 for swiftui\n"
+        + "  - grype add ignore CVE-1 not exploitable for uv\n"
+        + "  - grype add ignore CVE-1 not exploitable for now\n",
+      { "stacks/package-manager/uv/pack.yaml": "name: uv\n" },
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("`tool-config[0]` (grype add ignore CVE-1 for"),
+      expect.stringContaining("`tool-config[1]` (grype add ignore CVE-1 not"),
+    ]);
+    expect(messages(check(root)).every(m => m.includes("`for <requester>`")))
+      .toBe(true);
+  });
+
+  it("refuses an exclude or ignore path spelled for", () => {
+    // Otherwise `for pnpm` reads as two paths and the suffix goes unseen.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - all add exclude for pnpm\n"
+        + "  - all add exclude generated for pnpm\n"
+        + "  - pre-commit add linter-ignore for\n",
+    ));
+    expect(messages(check(root))).toEqual(
+      [0, 1, 2].map(index =>
+        expect.stringContaining(`\`tool-config[${index}]\``)
+      ),
+    );
+    const paths = tree(facts(
+      "tool-config:\n  - all add exclude format fork\n"
+        + "  - pre-commit add linter-ignore for.d\n",
+    ));
+    expect(messages(check(paths))).toEqual([]);
+  });
+
   it("flags a gate verb outside the skill's grammar", () => {
     // A stage nothing installs never runs; an unknown plugin or key is refused.
     const root = tree(facts(
