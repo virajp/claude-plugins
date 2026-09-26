@@ -12,11 +12,11 @@ dprint     = { version = "latest" }
 gitleaks   = { version = "latest" }
 grype      = { version = "latest" }
 jq         = { version = "latest" }
-pre-commit = { version = "latest" }
-shellcheck = { version = "latest" }
-shfmt      = { version = "latest" }
-taplo      = { version = "latest" }
+# The PyPI name really is graphifyy, double y.
+"pipx:graphifyy" = { version = "latest" }
+pre-commit       = { version = "latest" }
+shellcheck       = { version = "latest" }
+shfmt            = { version = "latest" }
+taplo            = { version = "latest" }
 
-# No secret-manager tool here. The pinned capability provider ships its own
-# `[tools]` entry in `.config/mise/conf.d/<provider>.toml`, so swapping
-# providers never touches this file.
+# No secret-manager tool here; the provider's pack asks for it through its tool-config: calls.

@@ -5,10 +5,7 @@
 # the toolchain. Its one pin below is a gate, not a runtime. The language
 # runtime arrives with this repo's language and package-manager components,
 # which write their own tier; a capability provider (a secret manager, say)
-# ships its tool in its own `.config/mise/conf.d/<provider>.toml` fragment
-# rather than editing this file.
-# mise auto-loads `conf.d/*.toml`, so a provider can be added and removed
-# without a single line of this file changing.
+# adds its tool through its pack's tool-config: calls, in its own # >>> block.
 #
 # For example, a Node repo's package-manager component would carry:
 #   node = { version = "latest" }
@@ -51,4 +48,4 @@
 # The tasks call it through `mise which`, never by bare name: a Node repo puts
 # `node_modules/.bin` ahead of mise's tool bins, where another `linter` would
 # shadow this one.
-"npm:@askviraj/linter" = { version = "1.1.6", allow_low_downloads = true }
+"npm:@askviraj/linter" = { allow_low_downloads = true, version = "1.1.6" }
