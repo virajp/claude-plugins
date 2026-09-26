@@ -11,11 +11,14 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 UPGRADE="${usage_upgrade:-false}"
 
+IS_DEV=false
+[[ ",${MISE_ENV:-}," == *",dev,"* ]] && IS_DEV=true
+
 # An upgrade moves the committed lockfiles, which is a developer's decision made
 # on a developer's machine — never the pipeline's, and never a deployed
 # runtime's. Refused before anything runs, so a wrong environment changes
 # nothing.
-if [ "$UPGRADE" = "true" ] && [[ ",${MISE_ENV:-}," != *",dev,"* ]]; then
+if [ "$UPGRADE" = "true" ] && [ "$IS_DEV" = "false" ]; then
   print_error "--upgrade runs only in dev: MISE_ENV is '${MISE_ENV:-}', which does not include dev."
   exit 1
 fi
@@ -29,7 +32,7 @@ CONFIG_DIR="${MISE_PROJECT_ROOT}/.config"
 NO_LOCKFILE=false
 if [ -z "$(find "$CONFIG_DIR" -maxdepth 1 -name 'mise*.lock' -print -quit)" ]; then
   NO_LOCKFILE=true
-  if [[ ",${MISE_ENV:-}," != *",dev,"* ]]; then
+  if [ "$IS_DEV" = "false" ]; then
     print_error "No lockfile under .config/ (expected .config/mise*.lock): MISE_ENV is '${MISE_ENV:-}', which does not include dev. Run setup in dev to create it, and commit it."
     exit 1
   fi
