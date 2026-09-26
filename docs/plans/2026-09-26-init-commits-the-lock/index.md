@@ -3,7 +3,7 @@ type: vwf-change-plan
 title: init commits the lock — the first CI run of a shaped repo finds its
   mise lock
 requires:
-  - docs/plans/2026-09-26-mise-conf-d-packs
+  - docs/plans/2026-09-26-mise-config-skill
 backlog: [ B67 ]
 backlog_pieces: []
 ---

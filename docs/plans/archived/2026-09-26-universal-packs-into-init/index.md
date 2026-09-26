@@ -13,9 +13,11 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**ARCHIVED**
 
-APPROVED 2026-09-26 by the user
+ARCHIVED 2026-09-26 — not run; was APPROVED. Superseded by the user's ruling
+that a stackgen mise skill composes mise config (no packs move into init);
+re-planned.
 
 ## Consent
 
