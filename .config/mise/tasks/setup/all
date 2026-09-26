@@ -80,9 +80,9 @@ mise run setup:vscode
 # The member list comes from `_scripts/helpers`' `members`, which answers for
 # either linkage — the repo's submodules, or the `MEMBERS` list in
 # `.config/mise/conf.d/env.toml` — so this loop covers both and
-# `code:worktrees` walks the same members this does. A repo that wants a member set up on its OWN flag
-# rather than on `--all` adds one `mise run --cd <path>` per id beside the loop,
-# guarded by that id's flag.
+# `code:worktrees` walks the same members this does. A repo that wants a member
+# set up on its OWN flag rather than on `--all` adds one `mise run --cd <path>`
+# per id beside the loop, guarded by that id's flag.
 
 if [[ "${usage_all:-false}" == "true" ]]; then
   while read -r member; do
