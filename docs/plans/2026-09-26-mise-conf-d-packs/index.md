@@ -130,6 +130,7 @@ is retired — B1 began it, this plan finishes it.
 | 9  | Review row    | One `Kind: review` row (U6): shell tasks and the checker change.                                                                                                                                                                                                                                       | the wave review alone                              | U6    |
 | 10 | Release       | No bump; rides vwf `20.0.0` and stackgen `2.0.0`; `/release` is an `ask` step.                                                                                                                                                                                                                         | a bump; release on green                           | U8    |
 | 11 | Comments      | Any comment or sentence a unit adds is one line (B65).                                                                                                                                                                                                                                                 | —                                                  | all   |
+| 12 | Pack bumps    | A pack whose content changes bumps its `pack.yaml` version, every bundle pin and `inventory.md` in one commit: pnpm `0.3.1` → `0.4.0`, swiftlint `0.1.1` → `0.2.0`, fnox `1.0.0` → `1.1.0`, doppler `1.0.0` → `1.1.0`, swiftui `0.2.0` → `0.3.0`.                                                      | leaving pack versions unchanged                    | U8    |
 
 ## New dependencies
 
@@ -153,10 +154,11 @@ Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 
 ## Shared-file rule
 
-| File                                                                      | Why it collides  | Owner   |
-| ------------------------------------------------------------------------- | ---------------- | ------- |
-| `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md` | generated        | U8 only |
-| every human-facing doc outside `plugins/`                                 | n units, one doc | U7 only |
+| File                                                                      | Why it collides                                          | Owner                                                      |
+| ------------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------- |
+| `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md` | generated                                                | U8 only                                                    |
+| the five packs' `pack.yaml` `version:` lines, every bundle pinning them   | a version, its pins and the inventory land in one commit | U8 only (U1 and U4 edit the rest of those files in wave 1) |
+| every human-facing doc outside `plugins/`                                 | n units, one doc                                         | U7 only                                                    |
 
 ## Waves
 

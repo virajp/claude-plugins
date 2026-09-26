@@ -2,7 +2,8 @@
 type: vwf-change-plan
 title: mise lock sidecar exclusions — no formatter or hook rewrites
   .config/mise/locks/
-requires: []
+requires:
+  - docs/plans/2026-09-26-mise-conf-d-layout
 backlog: [ B69 ]
 backlog_pieces: []
 ---
@@ -41,9 +42,10 @@ After this lands, no formatter and no pre-commit hook rewrites a file under
 records — in a shaped repo or in this one.
 
 The framing: B69, from the gate-hardening run's gaps
-(`docs/plans/archived/2026-09-25-gate-hardening`). Not a reversal. It runs
-beside `docs/plans/2026-09-26-mise-conf-d-layout` (B1) and shares no path with
-it; the sidecar path is the same before and after B1.
+(`docs/plans/archived/2026-09-25-gate-hardening`). Not a reversal. It requires
+`docs/plans/2026-09-26-mise-conf-d-layout` (B1): both regenerate `inventory.md`
+with their pack bumps, so they run in turn. The sidecar path is the same before
+and after B1.
 
 ## Facts the survey established
 
@@ -75,13 +77,14 @@ it; the sidecar path is the same before and after B1.
 
 ## Assumed decisions — confirm or override at review
 
-| # | Decision        | Ruling                                                                                                                                                                                         | Rejected                                                   | Unit |
-| - | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ---- |
-| 1 | The three lists | The dprint pack's `dprint.json` and `taplo.toml` excludes gain `**/.config/mise/locks/`; the pre-commit pack's global `exclude` gains the equivalent `(^\|/)\.config/mise/locks/` alternative. | —                                                          | U1   |
-| 2 | Gitleaks        | Unchanged — per B69's security note, committed lock data is still scanned.                                                                                                                     | adding it to the gitleaks allowlist                        | U1   |
-| 3 | This repo       | This repo's `.config/dprint.json`, `.config/taplo.toml` and `.config/pre-commit-config.yaml` gain the same entry.                                                                              | packs only                                                 | U2   |
-| 4 | Review row      | None: config lists, nothing runnable ships.                                                                                                                                                    | a `Kind: review` row                                       | —    |
-| 5 | Release         | No bump; rides stackgen `1.34.0` from B1.                                                                                                                                                      | a patch bump that collides with B1's bump in `plugin.json` | U4   |
+| # | Decision        | Ruling                                                                                                                                                                                                                                                                                                | Rejected                                                                         | Unit |
+| - | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ---- |
+| 1 | The three lists | The dprint pack's `dprint.json` and `taplo.toml` excludes gain `**/.config/mise/locks/`; the pre-commit pack's global `exclude` gains the equivalent `(^\|/)\.config/mise/locks/` alternative.                                                                                                        | —                                                                                | U1   |
+| 2 | Gitleaks        | Unchanged — per B69's security note, committed lock data is still scanned.                                                                                                                                                                                                                            | adding it to the gitleaks allowlist                                              | U1   |
+| 3 | This repo       | This repo's `.config/dprint.json`, `.config/taplo.toml` and `.config/pre-commit-config.yaml` gain the same entry.                                                                                                                                                                                     | packs only                                                                       | U2   |
+| 4 | Review row      | None: config lists, nothing runnable ships.                                                                                                                                                                                                                                                           | a `Kind: review` row                                                             | —    |
+| 5 | Release         | No bump; rides stackgen `1.34.0` from B1.                                                                                                                                                                                                                                                             | a patch bump that collides with B1's bump in `plugin.json`                       | U4   |
+| 6 | Pack bumps      | A pack whose content changes bumps its `pack.yaml` version, its bundle pin and `inventory.md` in one commit: dprint `1.1.2` → `1.1.3`, pre-commit `1.1.6` → `1.1.7`. This plan requires `docs/plans/2026-09-26-mise-conf-d-layout`, so the two regenerate `inventory.md` in turn, never concurrently. | leaving pack versions unchanged; running beside B1 (both rewrite `inventory.md`) | U4   |
 
 ## New dependencies
 
@@ -94,17 +97,18 @@ none
 | U1 | 1    | [01-packs.md](01-packs.md)         | edit | `plugins/stackgen/stacks/toolchain-gate/dprint/config/.config/dprint.json`, `plugins/stackgen/stacks/toolchain-gate/dprint/config/.config/taplo.toml`, `plugins/stackgen/stacks/toolchain-gate/pre-commit/config/.config/pre-commit-config.yaml`                                                       | —          | pending |        |
 | U2 | 1    | [02-this-repo.md](02-this-repo.md) | edit | `.config/dprint.json`, `.config/taplo.toml`, `.config/pre-commit-config.yaml`                                                                                                                                                                                                                          | —          | pending |        |
 | U3 | 2    | [03-docs.md](03-docs.md)           | edit | `plugins/stackgen/stacks/toolchain-gate/dprint/conventions.md`, `plugins/stackgen/stacks/toolchain-gate/dprint/skills/**`, `plugins/stackgen/stacks/toolchain-gate/pre-commit/conventions.md`, `plugins/stackgen/stacks/toolchain-gate/pre-commit/skills/**`, `.claude/**`, `site/src/content/docs/**` | U1, U2     | pending |        |
-| U4 | 3    | [04-gates.md](04-gates.md)         | edit | `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md` (owned so the generators have a home; expected unchanged)                                                                                                                                                                    | U3         | pending |        |
+| U4 | 3    | [04-gates.md](04-gates.md)         | edit | `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md`, the `version:` line of the dprint and pre-commit `pack.yaml`, `plugins/stackgen/stacks/bundles/repo-gates.md`                                                                                                               | U3         | pending |        |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
 
 ## Shared-file rule
 
-| File                                                                      | Why it collides  | Owner   |
-| ------------------------------------------------------------------------- | ---------------- | ------- |
-| `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md` | generated        | U4 only |
-| every human-facing doc                                                    | n units, one doc | U3 only |
+| File                                                                            | Why it collides                                         | Owner   |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------- | ------- |
+| `.claude-plugin/marketplace.json`, `plugins/stackgen/stacks/inventory.md`       | generated                                               | U4 only |
+| the dprint and pre-commit `pack.yaml` `version:` lines, `bundles/repo-gates.md` | a version, its pin and the inventory land in one commit | U4 only |
+| every human-facing doc                                                          | n units, one doc                                        | U3 only |
 
 ## Waves
 
