@@ -34,9 +34,21 @@ both ways too: `/stackgen:tool-config` owns the mise config — its layout, task
 library and doctrine sit in its `assets/mise/` and `references/mise.md` — writes
 each requester's lines between `# >>> <requester>` / `# <<< <requester>`
 markers, shows drift with take theirs, keep mine or merge, and records
-`source: tool-config/<tool>@<version>` in the lockfile. `/vwf:init` calls it as
-`all` with its answers, the materializer runs each pack's `tool-config:` list
-through it, and `/vwf:setup` fills a `machine_env` value with its `set env`.
+`source: tool-config/<tool>@<version>` in the lockfile — a version doctor no
+longer compares, the content test being the check. Any call may open with
+`preview`, which returns the call's rows numbered `r1`, `r2`, … and writes
+nothing; the real call then carries `answers=<id>:<answer>,…` last — one answer
+for every previewed row, `ok` for a plain plan row, and a call missing any row
+refused whole — and asks nothing, so a caller with one consent of its own shows
+the skill's rows inside it. A line outside every block is written only by a
+person's own call or a conflict row they settled — `set env` finding the key
+outside the pack's block is one, `move-in` or `keep-both` — `move-in` or
+`keep-existing` when the line sits in the pack's own file, since a TOML table
+holds a key once. `/vwf:init` previews `all` with its answers, shows the rows in
+its plan and runs `all … answers=` on the one consent, the materializer previews
+each pack's `tool-config:` list in its dry-run and runs it at the write step,
+and `/vwf:setup` fills a `machine_env` value with its `set env` and re-runs
+every landed pack's list on each run.
 
 **Each asset is authoritative for its own subject.** This file is a map; do not
 restate a count or a rule that an asset below already owns.

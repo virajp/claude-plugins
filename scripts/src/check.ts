@@ -699,8 +699,8 @@ function packFactFaults(document: unknown): string[] {
 /** A `to …` scope: every environment, or one of the three suffixes. */
 const TOOL_CONFIG_SCOPE = String
   .raw`to (?:all environments|(?:dev|ci|test)(?: environment)?)`;
-/** A value, quoted as a TOML basic string or bare — a bare one never opens a quote. */
-const TOOL_CONFIG_VALUE = String.raw`("(?:[^"\\]|\\.)*"|[^"\s]\S*)`;
+/** A value, quoted as a TOML basic string or bare — a bare one carries no quote. */
+const TOOL_CONFIG_VALUE = String.raw`("(?:[^"\\]|\\.)*"|[^"\s]+)`;
 /** The three verbs a pack may ask for; the materializer appends `for <pack>`. */
 const TOOL_CONFIG_VERBS = {
   tool: new RegExp(
@@ -743,7 +743,9 @@ function toolConfigCall(call: string): { fault?: string; key?: string; } {
   const pattern = env !== null ? ENV_VAR_NAME : ALIAS_NAME;
   if (!pattern.test(name)) {
     return {
-      fault: `names \`${name}\`, which is not a \`${pattern.source}\` name`,
+      fault: `names \`${name}\`, which is not a \`${
+        pattern.source.slice(1, -1)
+      }\` name`,
     };
   }
   if (alias !== null && TERA_DELIMITER.test(words)) {

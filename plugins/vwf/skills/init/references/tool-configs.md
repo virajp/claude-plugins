@@ -5,13 +5,14 @@ the survey does with each. The existing-repo pipeline's **pass 1** reads this
 table: beside the allowlist and the rename map it walks the root and the
 inside of `.github/` for every spelling in the second column, and each hit is
 one **plan row** whose outcomes — move by default, keep both, delete only on
-the user's explicit pick — pass 1 states and this file does not restate. The
-table is the list of what to look for and the shape the move takes; the
-offer, the consent and the report are the pipeline's.
+the user's explicit pick — pass 1 states and this file does not restate; a
+`handed` row's hit is the one exception, and is no row of init's. The table is
+the list of what to look for and the shape the move takes; the offer, the
+consent and the report are the pipeline's.
 
 The first column is the tool, the second its known root spellings, the third
 the path the pack's `config/` tree lands the same tool's configuration at, and
-the fourth the merge shape — one of two:
+the fourth the merge shape — one of three:
 
 - **`move-and-offer`** — the repo's file becomes the `.config/` copy, and that
   copy is then offered through pass 6 against the pack's, exactly as any
@@ -24,6 +25,11 @@ the fourth the merge shape — one of two:
   tool whose discovery is root-first and whose pack file is itself a root
   file: moving the repo's copy under `.config/` would put it where the tool
   never looks.
+- **`handed`** — the file is `/stackgen:tool-config all`'s to fold, by its
+  own migration, and init writes no row of its own for it: not a move, not a
+  keep, not a stray. The skill's rows — what it splits, what it deletes — are
+  printed in the repo's section under **Tool-config rows**, per pass 1's
+  toolchain migration, and the one consent covers them.
 
 | Tool       | Root spellings                                          | Pack path                                                     | Merge shape      |
 | ---------- | ------------------------------------------------------- | ------------------------------------------------------------- | ---------------- |
@@ -33,6 +39,7 @@ the fourth the merge shape — one of two:
 | dprint     | `.dprint.json`, root `dprint.json`                      | `.config/dprint.json`; root `dprint.json` is the pack's shim  | `move-and-offer` |
 | renovate   | `.github/renovate.json`, `.renovaterc`, `renovate.json` | root `renovate.json`                                          | `yield`          |
 | dependabot | `.github/dependabot.yml`                                | none — the pack ships no Dependabot file                      | `keep both`      |
+| mise       | `.mise.toml`, root `mise.toml`                          | `.config/mise/` — split by the skill, not moved               | `handed`         |
 
 Two rows need a word:
 
@@ -55,8 +62,10 @@ Two rows need a word:
   file is `conditional:` on `update_bot: renovate`, so it lands only where
   that answer stands and is a **Skipped** row otherwise.
 
-A tool `/stackgen:tool-config` owns has no row: its own migration reads that
-tool's root spellings, per the existing-repo pipeline's toolchain migration.
-Any other tool with no row here is not on the survey's list: a root file for
-it is off the allowlist and is reported, as pass 1 says, never moved. Adding a
-tool to the packs means adding its row here in the same change.
+A tool `/stackgen:tool-config` owns has a `handed` row listing every root
+spelling its migration folds, so the survey recognises the file without
+acting on it — the skill's toolchain reference names the spellings, and this
+row follows it. A tool with no row here is not on the survey's list: a root
+file for it is off the allowlist and is reported, as pass 1 says, never moved.
+Adding a tool to the packs, or a spelling to the skill's migration, means
+adding its row here in the same change.

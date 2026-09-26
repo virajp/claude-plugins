@@ -179,8 +179,8 @@ much smaller than the one it replaced: whole families of assertion became
       `mise add env <KEY>=<value> to <scope>` or
       `mise add alias <name>=<command> [to dev]` — the scope all environments or
       `dev`, `ci` or `test`; an env key an env-var name, an alias name a TOML
-      bare key; a value quoted as a TOML basic string or bare and never opening
-      a quote; and a template delimiter (`{{`, `{%`, `{#`) only inside an
+      bare key; a value quoted as a TOML basic string or bare and carrying no
+      quote anywhere; and a template delimiter (`{{`, `{%`, `{#`) only inside an
       `add env` value, since mise renders it. The materializer runs each line
       through `/stackgen:tool-config`, so a line that does not parse is one the
       skill refuses at landing, in someone else's repo. And a pack's `config/`

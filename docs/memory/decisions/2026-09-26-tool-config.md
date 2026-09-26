@@ -63,3 +63,38 @@ simply use the skill to install for which they will call
 T2 (`docs/plans/2026-09-26-tool-config-gates`) moves dprint, pre-commit,
 gitleaks and grype. T3 (`docs/plans/2026-09-26-tool-config-hygiene`) moves
 repo-hygiene and finishes B66.
+
+## Follow-up 2026-09-26: gaps closed
+
+The gaps the plan run surfaced, ruled by the user and closed on branch
+`2026-09-26-tool-config-gaps`:
+
+- **G4** — doctor (a) no longer compares a `tool-config/…` record's version;
+  (e)'s content test, block by block, is the check.
+- **G5** — `set env … for <pack>` finding the key outside the pack's block is a
+  conflict row, **move in** or **keep both** (**keep existing** instead when the
+  line is in the pack's own file — a TOML table holds a key once); setup removes
+  no line itself.
+- **G6** — setup re-runs every landed pack's `tool-config:` list on each run;
+  stackgen-sync's remedy is `/vwf:setup`, not `reshape`.
+- **G7** — the retired kind's heading no longer matches inventory's reader: 12
+  kinds.
+- **G8** — init's tool-config table gains a `handed` mise row; a root
+  `.mise.toml` is neither stray nor init's row.
+- **G9** — a line outside every block is written only by a person's own call or
+  a conflict row they settled, never by a pack's call or the materializer.
+- **G10** — `preview` returns a call's rows without writing; `answers=` hands
+  the picks back — every row answered, plan rows `ok`, else the call is refused
+  whole — so the materializer's dry-run and init's plan show them inside their
+  consent.
+- **G11** — the leftover graphify raw hook is folded into T2's plan.
+- **G12** — `latest` dev pins accepted; no edit.
+- **G13** — the mise base pins `uv` beside `pipx:graphifyy` (d1cbcc96).
+- **G14** — one alias per name, a clash a conflict row (d1cbcc96); a quoted
+  value is read exactly, a bare one carries no quote and is escaped on write.
+- **G15** — already closed in the plan run (U10's widened Owns).
+- **G16** — payload comments naming the retired pack now name
+  `stackgen:tool-config`; those packs patch-bumped and re-pinned.
+- **G17** — setup's onboard pipeline says seven predicates.
+- **G18** — a file's frame ends at the first blank line, a comment directly
+  above a key is that key's; drift compares words outside quoted strings.

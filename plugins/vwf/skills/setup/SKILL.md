@@ -207,7 +207,14 @@ rather than reconstructing it here. It is also where a landed pack's
 is detected on this machine — only while the pack's template entry matches
 what its lockfile last recorded — offered as the default, and written into
 the pack's own block through `/stackgen:tool-config`. Setup asks it, never
-`init`.
+`init`. A value also set outside the pack's block is the skill's **conflict
+row** — `move-in`, or `keep-both` (`keep-existing` when the line shares
+the pack's file) — relayed inside setup's question: setup previews the
+call, shows the rows, and passes each answer back as `answers=<id>:<answer>`;
+it removes no line itself. And every run re-runs each already-landed pack's
+`tool-config:` list through the skill, so a call a newer pack changed reaches
+the repo as a drift or conflict row; an unchanged call writes nothing and
+shows nothing.
 
 It runs **once per run, in every mode**, on a `.config/vwf.yaml` that is
 already current: in `onboard` and `migrate` between the spine's steps 2 and 3

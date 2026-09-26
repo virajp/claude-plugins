@@ -15,7 +15,8 @@ backlog_pieces: [ B66 ]
 
 COMPLETE 2026-09-26 — c75e22b9 7fbb61da e9629bea ea4b87ea 67955fd3 42f74a4f
 8c789df5 c5e5258c 256f8d90 be820d96 927dd5b3 7eb82f3e 609115f0 b85343d3
-3d193abc; folder live — 18 gaps recorded, 13 and 14 need a ruling
+3d193abc; folder live — 18 gaps, all closed on branch
+2026-09-26-tool-config-gaps
 
 ## Consent
 
@@ -277,7 +278,13 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Gaps surfaced during execution
 
-Each is open unless marked otherwise. Source in brackets.
+All closed 2026-09-26 on branch `2026-09-26-tool-config-gaps`, on the user's
+ruling to take every recommendation: 13 pins uv; 14 adds the alias conflict row
+and fixes the checker leftovers; 4–10, 16–18 are fixed as the decision doc
+`docs/memory/decisions/2026-09-26-tool-config.md` records under "Follow-up"; 11
+is folded into T2 (`setup:precommit` uninstalls the raw hook before installing
+its own); 12 is accepted (the lock pins CI). 1–3 and 15 were resolved during the
+run. Source in brackets.
 
 1. [run, wave 1] The plan let only U11 regenerate `inventory.md`, but the
    pre-commit inventory hook refuses a stacks-touching commit while it is stale.

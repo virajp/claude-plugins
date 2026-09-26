@@ -375,7 +375,12 @@ side of the contract is three rules:
   materialize pass asks for and sets through `/stackgen:tool-config`, in the
   block the pack's own `tool-config:` calls added for each `name`, offering
   what `detect` prints as the default while the template entry matches what
-  the lockfile last recorded.
+  the lockfile last recorded. The same pass re-runs every already-landed
+  pack's `tool-config:` list on each run, so a call a newer pack changed
+  reaches the repo, and relays the skill's rows — a drift or conflict row,
+  including a machine value also set outside the pack's block, answered
+  `move-in`, or `keep-both` (`keep-existing` when that line shares the
+  pack's file) — inside its own consent.
 - **A materialized fetch is a pure read.** Once a slug is materialized, every
   `-stack-template` call returns the committed payload from the repo — so
   `plan`'s and `execute`'s conventions resolution behaves exactly as

@@ -59,9 +59,10 @@ user's clock.
    deleted.
 
    **A pack whose `tool-config:` list changed is reported, not applied.**
-   Name the pack and the calls added or dropped, and point at
-   `/vwf:setup reshape`, which runs them. `machine_env` values live in
-   tool-config's blocks, so no pin is carried here.
+   Name the pack and the calls added, dropped or changed, and give the
+   remedy as "run `/vwf:setup`": its materialize pass re-runs every landed
+   pack's list on each run, so no reshape is needed. `machine_env` values
+   live in tool-config's blocks, so no pin is carried here.
 
    **Conditional paths are evaluated first, against the same answers the
    materializer takes.** Read the product's `.config/vwf.yaml` `answers:`

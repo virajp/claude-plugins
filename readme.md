@@ -301,8 +301,8 @@ belong to no pack: they are written by `/stackgen:tool-config`, a skill you can
 also run yourself
 (`/stackgen:tool-config mise add tool <name> <version> to dev environment`),
 which keeps each requester's lines between its own `# >>> <name>` markers and
-never touches a line outside them — a pack asks it for a tool pin, an
-environment value or an alias through `tool-config:` in its `pack.yaml`.
+writes a line outside them only on your approval — a pack asks it for a tool
+pin, an environment value or an alias through `tool-config:` in its `pack.yaml`.
 Language manifests, CI workflow files and a **whole** editor file stay outside
 that fence: the first two declare what the project *is*, the third is composed
 from every pack's slice and belongs to no single one, and no pack decides any of

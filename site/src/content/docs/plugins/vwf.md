@@ -920,13 +920,14 @@ repo, and one yes.
 **It names no tool, and that is the design.** Every file it lays down comes from
 the stack adapter. The toolchain manager's config comes from
 [`/stackgen:tool-config all`](./stackgen.md#stackgentool-config), which `init`
-calls with its answers as arguments; the repo gates and the repo hygiene come
-from two bundles fetched by fixed slugs, both *unconditional*, so a repo that
-has picked no stack still gets them. `init` decides *when* the packs land,
-*what* you are asked, and how an existing tree is reconciled against what they
-ship. With no stack-adapter plugin installed it **halts** with the install
-command rather than printing an empty plan that reads exactly like an
-already-shaped repo.
+calls with its answers as arguments — previewed first, the skill's rows shown in
+init's plan, then run with those rows' answers on the same consent; the repo
+gates and the repo hygiene come from two bundles fetched by fixed slugs, both
+*unconditional*, so a repo that has picked no stack still gets them. `init`
+decides *when* the packs land, *what* you are asked, and how an existing tree is
+reconciled against what they ship. With no stack-adapter plugin installed it
+**halts** with the install command rather than printing an empty plan that reads
+exactly like an already-shaped repo.
 
 What a shaped repo has when it is done: a sectioned `.gitignore`, a lowercase
 `readme.md`, every tool config under `.config/`, the toolchain manager's
@@ -1289,18 +1290,19 @@ outcomes: **move** — the default — moves your file to the pack's `.config/` 
 with `git mv`, before anything is created, and then offers it through the
 replace-or-keep row below against the pack's, so what you wrote is read and
 compared before the pack's lands and a keep there keeps it. The toolchain
-manager's root file — `.mise.toml` or a root `mise.toml` — has no row: it is
+manager's root file — `.mise.toml` or a root `mise.toml` — is the table's
+`handed` row: not a stray and no row of init's, since it is
 `/stackgen:tool-config all`'s own migration, which folds it into the split
-files, each move one row in the plan; **keep both** leaves your file where it is
-beside the pack's and reports it under `Deferred` as **unread by the gate**,
-since the gate passes the `.config/` path explicitly; **delete** is reachable
-only by flipping the row yourself and is never proposed. The dependency-update
-policy is the one **yield**: the pack lands `renovate.json` at the root because
-that tool's discovery never reaches `.config/`, so a policy you already carry
-under any of its spellings wins, the pack's is **not landed** and the row says
-so — `.github/dependabot.yml` is a different service's file and reads
-`keep both`, and it seeds question 8's row to `dependabot`, which skips the
-pack's `renovate.json` rather than landing it beside yours. An entry your
+files, each move one of the skill's rows in the plan; **keep both** leaves your
+file where it is beside the pack's and reports it under `Deferred` as **unread
+by the gate**, since the gate passes the `.config/` path explicitly; **delete**
+is reachable only by flipping the row yourself and is never proposed. The
+dependency-update policy is the one **yield**: the pack lands `renovate.json` at
+the root because that tool's discovery never reaches `.config/`, so a policy you
+already carry under any of its spellings wins, the pack's is **not landed** and
+the row says so — `.github/dependabot.yml` is a different service's file and
+reads `keep both`, and it seeds question 8's row to `dependabot`, which skips
+the pack's `renovate.json` rather than landing it beside yours. An entry your
 `.gitignore` ignores is build output, skipped without a row; `.git/` is exempt
 by name; and a directory holding its own manifest or source is a **project**,
 listed once under `Projects` with the id question 2 confirmed and never under
@@ -1617,52 +1619,54 @@ the repo notices when it moves; the re-run's forge pass is idempotent — what
 still holds is reported and left alone, only what drifted is offered), and
 **whenever `/vwf:doctor` says so**. Doctor's repo-shape check is what notices
 between runs, on seven subjects: the pack versions the adapter's lockfile
-recorded against what it ships now (a `tool-config/…` entry against the
-installed stackgen version, its file re-tested against the skill's own assets),
-each registry id against its task group and commit scope, both branches, the
-repo-name key against that repo's own **folder name, slugified**, the
-**content** of every pack-owned file against the hash the lockfile records — the
-landing's, re-recorded by `init` after every fill, append or merge it made — a
-mismatch re-tested with every marked position spliced out before it counts as a
-row, on init's own two tests, so a filled position is the shaped state and never
-a finding here — and three of the five marked positions beside the repo-name key
-— `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`, each checked on its own, a block
-still carrying the legacy single `MERGE_MODEL` and neither new position being
-one drift row reading *legacy `MERGE_MODEL` — reshape writes the pair*, and
-`MEMBERS` on a product whose members are wired as plain siblings; the other two,
-`RUNTIME_BLOCK` and `PATH_ENTRIES`, are filled from init's stack read and are
-legitimately empty on a repo with no language, so no row reads them — and the
-**forge state**, predicate (g), read from the forge where its CLI answers for
-the origin host: the default branch one of `develop` or `main`, each of the two
-branches carrying some protection — a pull request required on a branch whose
-own value is `pr` noted when missing, never drift — and, for the base alone, the
-backlog project present. Where the CLI is absent, not logged in or refuses a
-read, that repo gets one `not checked` note and no row; an existing protection
-short of one of the pass's rules is a note too, never drift, since a reshape
-would leave it exactly as it is. **All seven run per repo** — the base and every
-locally-present member, resolved the way `init` resolves them — with every row
-printed under the repo it was found in and one remedy for the whole product,
-since `reshape` walks the members too. A member this machine does not carry is a
-blind spot rather than a finding, reading `not present, not checked`. Beside the
-id check sits its counterpart on the base alone, comparing the aggregator's
-member flags and `setup-<slug>` aliases against the resolved member set — a
-member with no flag is a row, and so is a flag named from a project id. A repo
-drifts by standing still and also by moving: a pack-owned file you edited in
-place is no longer the file the pack ships, and doctor says which of the two a
-row is, because re-landing fixes one and the other is a file somebody meant to
-change. A file you chose to keep is skipped, since that decision is already
-recorded. With no adapter lockfile the content check reports
-`not checked — no lockfile` rather than passing or crashing: a repo that landed
-nothing has nothing to have drifted from. Beside them doctor reads three rows
-from the config rather than the lockfile: a recorded
-`answers.repos.<repo>.forge` the live `origin` host contradicts, or a `skipped:`
-row whose `when: forge` it contradicts — the files that axis skipped are waiting
-for the reshape to land them, and a repo with no remote at all is neither row —
-a config stamped `config_format` 21 carrying no `answers:` block at all, and a
-provider named by `answers.secrets` whose `.gitignore` section is missing. Every
-one of these is `drift` and none is blocking — a repo behind its baseline is out
-of date, not broken — and all of them share one remedy, `/vwf:setup reshape`,
-printed once.
+recorded against what it ships now (a `tool-config/…` entry's version is not
+compared — stackgen's version moves on every release whether the blocks changed
+or not — its file re-tested block by block against the skill's own assets
+instead, by the skill's word comparison — words outside quoted strings, a quoted
+string exactly — never a hash), each registry id against its task group and
+commit scope, both branches, the repo-name key against that repo's own **folder
+name, slugified**, the **content** of every pack-owned file against the hash the
+lockfile records — the landing's, re-recorded by `init` after every fill, append
+or merge it made — a mismatch re-tested with every marked position spliced out
+before it counts as a row, on init's own two tests, so a filled position is the
+shaped state and never a finding here — and three of the five marked positions
+beside the repo-name key — `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`, each
+checked on its own, a block still carrying the legacy single `MERGE_MODEL` and
+neither new position being one drift row reading *legacy `MERGE_MODEL` — reshape
+writes the pair*, and `MEMBERS` on a product whose members are wired as plain
+siblings; the other two, `RUNTIME_BLOCK` and `PATH_ENTRIES`, are filled from
+init's stack read and are legitimately empty on a repo with no language, so no
+row reads them — and the **forge state**, predicate (g), read from the forge
+where its CLI answers for the origin host: the default branch one of `develop`
+or `main`, each of the two branches carrying some protection — a pull request
+required on a branch whose own value is `pr` noted when missing, never drift —
+and, for the base alone, the backlog project present. Where the CLI is absent,
+not logged in or refuses a read, that repo gets one `not checked` note and no
+row; an existing protection short of one of the pass's rules is a note too,
+never drift, since a reshape would leave it exactly as it is. **All seven run
+per repo** — the base and every locally-present member, resolved the way `init`
+resolves them — with every row printed under the repo it was found in and one
+remedy for the whole product, since `reshape` walks the members too. A member
+this machine does not carry is a blind spot rather than a finding, reading
+`not present, not checked`. Beside the id check sits its counterpart on the base
+alone, comparing the aggregator's member flags and `setup-<slug>` aliases
+against the resolved member set — a member with no flag is a row, and so is a
+flag named from a project id. A repo drifts by standing still and also by
+moving: a pack-owned file you edited in place is no longer the file the pack
+ships, and doctor says which of the two a row is, because re-landing fixes one
+and the other is a file somebody meant to change. A file you chose to keep is
+skipped, since that decision is already recorded. With no adapter lockfile the
+content check reports `not checked — no lockfile` rather than passing or
+crashing: a repo that landed nothing has nothing to have drifted from. Beside
+them doctor reads three rows from the config rather than the lockfile: a
+recorded `answers.repos.<repo>.forge` the live `origin` host contradicts, or a
+`skipped:` row whose `when: forge` it contradicts — the files that axis skipped
+are waiting for the reshape to land them, and a repo with no remote at all is
+neither row — a config stamped `config_format` 21 carrying no `answers:` block
+at all, and a provider named by `answers.secrets` whose `.gitignore` section is
+missing. Every one of these is `drift` and none is blocking — a repo behind its
+baseline is out of date, not broken — and all of them share one remedy,
+`/vwf:setup reshape`, printed once.
 
 Nobody has to remember that schedule. Four commands bring you to the door
 themselves, each **offering** `reshape` the Step 0 way — one line naming the
@@ -1841,18 +1845,31 @@ because the landing stopped before its questions — the detected value is
 preselected; on a later run the committed value is, with this machine's beside
 it where they differ, and a failed `detect` offers no default but still asks.
 The answer is handed to
-`/stackgen:tool-config mise set env <KEY>=<value> for <pack>`, which writes it
-in the pack's block as a quoted string and records the lockfile itself — a value
-carrying a newline or other control character, a template delimiter or expansion
-character of the tool reading the file (for mise `{{`, `{%`, `{#` or `$`), or a
-`'` together with a `"` or a `\` is refused and asked again — and what the skill
-changed is committed in the target repo. A value the repo already sets anywhere
-in the same tool's config outside the pack's block (for mise,
-`.config/mise.toml`'s `[env]`, or a `conf.d/<pack>.toml` fragment an older pack
-landed) is preselected above the rest and moved in: the answer lands in the
-pack's block and the old line is removed in the same commit. The value is the
-repo's committed pin from then on, not a per-machine override. `/vwf:init` never
-asks these.
+`/stackgen:tool-config mise set env <KEY>=<value> for <pack>`, previewed first
+so the skill's rows are asked inside setup's question and handed back with
+`answers=`, and the skill writes it in the pack's block as a quoted string and
+records the lockfile itself — a value carrying a newline or other control
+character, a template delimiter or expansion character of the tool reading the
+file (for mise `{{`, `{%`, `{#` or `$`), or a `'` together with a `"` or a `\`
+is refused and asked again — and what the skill changed is committed in the
+target repo. A value the repo already sets outside the pack's block (for mise, a
+line in any `conf.d/env*.toml`, or an `[env]` table in an old top-level mise
+file) is the skill's **conflict row**: that value is preselected above the rest,
+and the row is asked as one more round of the same question — **move in** (the
+outside line is removed and the answer lands in the pack's block) or **keep
+both** (the row names which one mise's precedence makes win) — or, where the
+line sits in the pack's own file, **move in** or **keep existing**, since a TOML
+table cannot hold a key twice. Setup removes no line itself, and nothing is
+written until you pick. The value is the repo's committed pin from then on, not
+a per-machine override. `/vwf:init` never asks these.
+
+**Every run re-runs each landed pack's `tool-config:` list** through the skill,
+the same preview-then-run, so a call a newer stackgen release added or changed
+reaches a repo that landed the pack before it — no reshape needed. An unchanged
+call writes nothing and shows nothing; a changed one is a drift or conflict row
+inside the pass's consent, and declining it keeps what the repo has. A call a
+newer pack dropped is left to `/stackgen:stackgen-sync`, and its block goes when
+the pack leaves the composition.
 
 Every landing sits behind the plugin's own consent line; a landing you decline
 leaves the pin untouched and is reported, an `unresolved` axis is skipped
