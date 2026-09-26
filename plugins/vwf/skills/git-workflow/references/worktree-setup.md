@@ -109,11 +109,15 @@ fi
 `setup:all`: members checked out, tools installed, secrets set up, dependencies
 installed **from the lockfile** and nothing else. A worktree shares the
 machine's tools, hooks and running services with the checkout it was cut from,
-so re-doing the tool upgrade, the hook installation and the plugin
+so re-doing the hook installation, the external services and the plugin
 reconciliation costs minutes and changes nothing. The frozen install is the part
 that matters most — a worktree is a place to work on a branch, not a place to
-move the lockfile, and a fallback to `setup:all` here is exactly what quietly
-resolves one.
+move a lockfile. A fallback to `setup:all` does not bump the tool lockfile — its
+`setup:mise` installs with `mise install --locked`, bumps only under `--upgrade`
+in dev, and writes one only where none exists, in dev — though in dev mise's own
+install of a missing tool, before any task body runs, can still write or extend
+it. And its dependency step runs the package manager's upgrade verb, which is
+what quietly resolves the dependency lockfile.
 
 The name is probed, never constructed. A repo carrying an older spelling of the
 task is not broken, but this probe will not find it and the run silently takes

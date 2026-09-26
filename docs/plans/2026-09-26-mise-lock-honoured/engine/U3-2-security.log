@@ -1,0 +1,7 @@
+security-review engine, U3 round 2, range a9f23b92..3f17e9cc (scoped to the in-range diff)
+
+No high-confidence vulnerabilities found.
+
+What I checked: both copies of setup/mise and setup/all (the repo's own and the pack payload) plus the mise.toml comments, over a9f23b92..3f17e9cc. The round-2 fix holds. When no .config/mise*.lock exists and MISE_ENV has no dev, the task exits non-zero before reshim, doctor, lock or install. --upgrade outside dev is also refused before anything runs. Every path installs with mise install --locked, and nothing runs the unpinned mise upgrade any more. The MISE_ENV values come from repo filenames and are quoted, and the flag is passed through a quoted array, so there is no injection.
+
+One low note, below the reporting bar: the lockfile check passes if any mise*.lock exists. An environment whose own lockfile is missing could still pass the check, but --locked would then fail the install rather than resolve latest.

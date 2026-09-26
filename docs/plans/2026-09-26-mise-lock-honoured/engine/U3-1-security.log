@@ -1,0 +1,4 @@
+security-review engine, U3 round 1, range a9f23b92..d0665861 (scoped to the in-range diff; the engine's whole-branch-vs-main diff is 1.3MB, every file outside this range belongs to earlier plans' rows)
+
+No high-confidence vulnerabilities found.
+Checked: command injection via the find-derived env names passed to MISE_ENV (repo-owned filenames, quoted, no eval); path traversal in CONFIG_DIR and member --cd; the UPGRADE_ARGS array expansion; the dev-only MISE_ENV guard; /dev/tty probing; and supply-chain integrity. The supply-chain picture is net positive. Before this diff, mise install ran without a lock check and mise upgrade --local || true ran unconditionally. Now installs use mise install --locked. Lockfile bumps happen only with an explicit --upgrade in dev. dprint config update still keeps its interactive checksum prompt and is never forced with -y.

@@ -46,7 +46,8 @@ minimum_release_age = "10h"
 
 # Record every resolved version in a lockfile, which IS committed. That is what
 # makes "latest" reproducible: humans move the lockfile forward deliberately
-# (`mise upgrade`), and the pipeline installs from it (see mise.ci.toml).
+# (`mise run setup:all --upgrade`, in dev), and the pipeline installs from it
+# (see mise.ci.toml).
 #
 # **One lockfile per config file that declares tools, named after that file's
 # stem.** `mise install` writes `mise.dev.lock` beside `mise.dev.toml`, and
