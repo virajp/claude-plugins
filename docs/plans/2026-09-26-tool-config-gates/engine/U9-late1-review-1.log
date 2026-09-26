@@ -1,0 +1,66 @@
+I found 10 issues on `2026-09-26-tool-config-gates`, compared against `develop`. The docs unit (U10) and the version bumps (U11) haven't run yet, so I didn't count missing bumps or pending doc work as bugs. Several findings are gaps the plan already lists (11, 14 and 17). I kept them because the defects are still in the tree. Findings 3, 4, 5, 7 and 8 are new, and so are the eslint, uv, ruff and repo-hygiene files named in finding 8.
+
+```json
+[
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/pack.yaml",
+    "line": 100,
+    "summary": "`all add exclude *.xcassets` has no `/`, so the skill treats it as a file glob. The hook config then writes `(^|/)[^/]*\\.xcassets$`, which matches no file inside an asset catalog. The old base excluded the directory with `(^|/)[^/]*\\.xcassets/`.",
+    "failure_scenario": "A SwiftUI repo commits `Assets.xcassets/AppIcon.appiconset/Contents.json`. The pre-commit hooks (end-of-file fixer, trailing whitespace, check-json, format) now run on it and rewrite it, and Xcode rewrites it back on the next edit. Rule 15 normalises the entry the same in all three lists, so it can't see the difference. The grammar has no way to spell a directory glob."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/existing-repo.md",
+    "line": 190,
+    "summary": "A brownfield root gate config (`.pre-commit-config.yaml`, `.gitleaks.toml`, `.grype.yaml`, `dprint.json`) is moved into `.config/` and then handed to \"that skill's conflict row\". The tool-config skill defines conflict rows only for a clashing pin, env key, alias or hook id, never for a whole unrecorded file at a path it lands.",
+    "failure_scenario": "Reshaping a repo with its own `.pre-commit-config.yaml`: the `git mv` puts it at `.config/pre-commit-config.yaml`, then `tool-config all` runs with no row that asks keep or replace. The repo's hooks are either overwritten by the base or kept as unmarked user lines around a base the skill splices in. Pass 6's replace-or-keep offer is gone for these four tools."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/references/pre-commit.md",
+    "line": 205,
+    "summary": "`add hook` accepts stage `post-commit` without requiring `always_run=true`, and the checker's `hookFault` (scripts/src/check.ts:821) doesn't enforce it either. pre-commit skips a post-commit hook that lacks it, because post-* hooks get no files.",
+    "failure_scenario": "A pack asks `pre-commit add hook local foo post-commit name=x entry=\"mise x -- mise run foo\" language=system`. The grammar and `hookFault` accept it and the skill writes it, but it never fires and nothing reports it. That is the same silent no-op the stage rule exists to prevent."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/references/grype.md",
+    "line": 45,
+    "summary": "`add ignore <id> [reason]` takes the rest of the line as the reason, but a trailing `for <requester>` is also the requester suffix, and any lowercase word counts as a slug. The skill never says how to tell the two apart. The checker only handles pack slugs.",
+    "failure_scenario": "A person types `grype add ignore CVE-2024-1 not reachable, recheck for now`. The skill can read `now` as the requester and write a `# >>> now` block instead of the user's own line. `remove now` would later delete it, and the reason loses its last words."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 425,
+    "summary": "Removing `PACK_PRE_COMMIT_CONFIG` and `preCommitFaults` means nothing checks that the shipped `assets/pre-commit/.config/pre-commit-config.yaml` has a top-level `repos:` list. Rule 15 parses the file but reads only `exclude`, and no post-write validation replaced init's `validate-config` step either.",
+    "failure_scenario": "An edit to the asset drops or renames `repos:` (for example, a bad block splice while testing the new markers). `p:plugins:check` passes, and every repo `tool-config all` shapes gets a config whose hooks never run."
+  },
+  {
+    "file": ".config/mise/tasks/code/graph",
+    "line": 23,
+    "summary": "The graph refresh is wired only to `post-commit` in the main checkout. Worktree commits exit early, and a non-fast-forward `git merge` runs `post-merge`, not `post-commit`, so the refresh never fires.",
+    "failure_scenario": "In this repo every plan runs in `.worktrees/*` and lands with `git merge` on develop in the main checkout. None of those commits refreshes `graphify-out/`, so the graph goes stale and the doctor staleness check flags it after each landing, even though the change was meant to replace graphify's raw hook."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/code/graph",
+    "line": 81,
+    "summary": "The stale-takeover cleanup is a separate check-then-`rmdir`, so it can remove a takeover dir another run has just created. Also, `rmdir \"${TAKEOVER}\"` at lines 92, 99 and 104 has no `|| true` and runs under `set -e`.",
+    "failure_scenario": "A killed run leaves an 11-minute-old takeover dir, and two commits fire hooks together. Run A deletes it and runs `mkdir`; run B's earlier `find` still says stale, so B's `rmdir` removes A's fresh dir and B's `mkdir` succeeds. Both then `rm -rf` the lock and start two rebuilds. The loser's final `rmdir` fails and the hook exits non-zero."
+  },
+  {
+    "file": "plugins/stackgen/stacks/toolchain-gate/eslint/conventions.md",
+    "line": 11,
+    "summary": "Shipped pack prose still names the deleted gate packs, and neither gap 13 nor any unit's Owns covers these files.",
+    "failure_scenario": "eslint/conventions.md:11 says \"See the `dprint` repo-gate pack\", and :30 says \"the pre-commit gate pack ships it\". uv/conventions.md:32 and ruff/conventions.md:59 say \"four repo-gate packs have had the same status\", and repo-hygiene/conventions.md:11 says \"the way `mise` and `repo-gates` are\". An agent reading them looks for packs and a bundle that no longer exist."
+  },
+  {
+    "file": "CLAUDE.md",
+    "line": 174,
+    "summary": "This breaks the repo CLAUDE.md rule \"Docs ship with the change. Any change to plugin behavior must reconcile `readme.md`, this file, and the manual under `site/src/content/docs/` in the same commit\". The checker and pack commits (c032583e, d1db5033) landed while CLAUDE.md still describes the retired behavior.",
+    "failure_scenario": "CLAUDE.md:174 still lists rule 11 as parsing \"every `pre-commit.d/*.yaml` … the gate pack's whole `pre-commit-config.yaml`\", which the checker no longer does. :201 still points rule 15 at \"the dprint pack's `dprint.json` … the pre-commit pack's global `exclude`\", which are deleted paths. The fixes wait on wave-4 U10, so every commit up to then ships wrong docs."
+  },
+  {
+    "file": "plugins/vwf/skills/doctor/references/code-intelligence.md",
+    "line": 36,
+    "summary": "Doctor reports a raw graphify git hook as drift with remedy `/vwf:setup reshape`, but only the `setup:precommit` task removes those hooks. Reshape runs `tool-config all`, which rewrites config files, not `.git/hooks`.",
+    "failure_scenario": "A repo with graphify's raw `post-commit` or `post-checkout` hook runs the suggested `/vwf:setup reshape`. The hooks stay, doctor keeps reporting the same drift, and the raw hook keeps running beside `graphify-refresh`."
+  }
+]
+```
