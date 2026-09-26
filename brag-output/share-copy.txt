@@ -1,0 +1,1 @@
+vwf takes a vague idea to a reviewed release in four slash commands: /vwf:product, /vwf:blueprint, /vwf:plan, /vwf:execute. It asks you one question at a time, builds unattended under strict TDD, and never merges until you approve. pnpx @virajp.dev/claude-plugins --all

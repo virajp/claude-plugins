@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>vwf — brag composition</title>
+<style>
+@font-face { font-family: "Schibsted Grotesk"; font-weight: 400; src: url(schibsted-grotesk-latin-400-normal.woff2); }
+@font-face { font-family: "Schibsted Grotesk"; font-weight: 500; src: url(schibsted-grotesk-latin-500-normal.woff2); }
+@font-face { font-family: "Schibsted Grotesk"; font-weight: 700; src: url(schibsted-grotesk-latin-700-normal.woff2); }
+@font-face { font-family: "Geist Mono"; font-weight: 400; src: url(geist-mono-latin-400-normal.woff2); }
+@font-face { font-family: "Geist Mono"; font-weight: 500; src: url(geist-mono-latin-500-normal.woff2); }
+:root {
+  --ink: #15161a; --ink-2: #1b1d23; --ink-3: #22252d; --line: #2b2f39; --line-2: #3a3f4b;
+  --paper: #f4f5f8; --mist: #b9bdc9; --muted: #7d8392;
+  --blue: #1e3f8f; --blue-2: #2a52b8; --blue-3: #7aa0f2;
+  --sans: "Schibsted Grotesk", system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--ink); }
+body { font-family: var(--sans); color: var(--paper); -webkit-font-smoothing: antialiased; }
+.scene { position: absolute; inset: 0; opacity: 0; }
+.dots { background-image: radial-gradient(rgba(255,255,255,.07) 1.4px, transparent 1.4px); background-size: 32px 32px; }
+.dots-blue { background-color: var(--blue); background-image: radial-gradient(rgba(255,255,255,.26) 1.4px, transparent 1.4px); background-size: 32px 32px; }
+.label { font: 500 18px var(--mono); letter-spacing: .06em; color: var(--muted); text-transform: lowercase; }
+
+/* 1 hook */
+#s1 h1 { position: absolute; left: 128px; top: 300px; width: 900px; font-size: 92px; line-height: 1.04; letter-spacing: -.025em; font-weight: 700; }
+#s1 h1 span { display: inline-block; opacity: 0; }
+#s1 .draw { position: absolute; right: 150px; top: 190px; width: 700px; height: 700px; }
+#s1 .note { position: absolute; font: 400 20px var(--mono); letter-spacing: .04em; color: rgba(244,245,248,.8); opacity: 0; }
+#s1 .brand { position: absolute; left: 128px; top: 96px; display: flex; gap: 16px; align-items: center; font: 500 22px var(--mono); color: rgba(244,245,248,.85); }
+
+/* terminal */
+.cap { position: absolute; left: 128px; top: 360px; width: 660px; font-size: 74px; line-height: 1.06; letter-spacing: -.02em; font-weight: 700; }
+.cap .l2 { display: block; margin-top: 28px; font-size: 44px; line-height: 1.15; color: var(--blue-3); font-weight: 500; letter-spacing: -.01em; }
+.term { position: absolute; left: 820px; top: 230px; width: 980px; height: 620px; background: var(--ink-2); border: 1px solid var(--line-2); box-shadow: 0 40px 120px rgba(0,0,0,.45); }
+.term .bar { height: 56px; border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 24px; gap: 10px; }
+.term .bar i { width: 12px; height: 12px; border: 1.5px solid var(--line-2); border-radius: 50%; }
+.term .bar span { margin-left: 16px; font: 400 17px var(--mono); color: var(--muted); }
+.term .body { padding: 36px 40px; font: 400 24px/1.7 var(--mono); color: var(--mist); }
+.term .ln { opacity: 0; white-space: pre; }
+.prompt { color: var(--paper); }
+.prompt b { color: var(--blue-3); font-weight: 500; }
+.caret { display: inline-block; width: 13px; height: 28px; background: var(--paper); vertical-align: -5px; margin-left: 2px; }
+.q { color: var(--paper); font-family: var(--sans); font-size: 30px; font-weight: 500; margin: 18px 0 14px; }
+.q em { font-style: normal; color: var(--blue-3); }
+.opt { padding: 6px 18px; margin: 4px 0; border: 1px solid transparent; }
+.opt.on { border-color: var(--blue-3); background: rgba(122,160,242,.08); color: var(--paper); }
+.ok { color: var(--blue-3); }
+.dim { color: var(--muted); }
+.row { display: grid; grid-template-columns: 90px 150px 1fr 40px; }
+.gate { margin-top: 26px; border: 1.5px solid var(--blue-3); padding: 22px 26px; color: var(--paper); background: rgba(30,63,143,.35); opacity: 0; }
+.gate .t { font: 500 30px var(--sans); }
+.gate .s { font: 400 20px var(--mono); color: var(--mist); margin-top: 6px; }
+
+/* 3 rail */
+#s3 .cap { top: 380px; }
+#s3 .steps { position: absolute; left: 860px; top: 150px; width: 900px; }
+#s3 .st { display: grid; grid-template-columns: 40px 1fr; gap: 36px; height: 196px; position: relative; opacity: 0; }
+#s3 .st .dot { width: 22px; height: 22px; border: 2.5px solid var(--paper); border-radius: 50%; background: var(--ink); margin: 14px 0 0 9px; position: relative; z-index: 2; }
+#s3 .line { position: absolute; left: 19px; top: 38px; width: 2px; background: var(--line-2); z-index: 1; transform-origin: top; }
+#s3 h3 { font-size: 50px; font-weight: 700; letter-spacing: -.015em; }
+#s3 h3 code { font: 400 24px var(--mono); color: var(--blue-3); margin-left: 20px; letter-spacing: 0; }
+#s3 .st p { font-size: 25px; color: var(--mist); margin-top: 10px; }
+
+/* 5 outro */
+#s5 .wrap { position: absolute; left: 0; right: 0; top: 250px; display: flex; flex-direction: column; align-items: center; }
+#s5 .top { display: flex; align-items: center; gap: 44px; }
+#s5 .word { font-size: 210px; font-weight: 700; letter-spacing: -.04em; line-height: 1; }
+#s5 .sub { margin-top: 40px; font-size: 38px; color: rgba(244,245,248,.88); font-weight: 400; }
+#s5 .code { margin-top: 64px; background: var(--ink); border: 1px solid rgba(244,245,248,.25); padding: 26px 40px; font: 400 34px var(--mono); color: var(--paper); }
+#s5 .code b { color: var(--blue-3); font-weight: 400; }
+#s5 .url { margin-top: 36px; font: 500 26px var(--mono); letter-spacing: .04em; color: rgba(244,245,248,.8); }
+#s5 > * > * { opacity: 0; }
+</style>
+</head>
+<body>
+
+<!-- 1: the hook, the hero's blue sheet and its construction drawing -->
+<div class="scene dots-blue" id="s1">
+  <div class="brand"><svg width="30" height="30" viewBox="0 0 64 64" fill="none"><g stroke="#fff" stroke-width="5" stroke-linecap="round"><line x1="10" y1="18" x2="32" y2="56"/><line x1="54" y1="18" x2="32" y2="56"/></g></svg>vwf · Claude Code plugin</div>
+  <h1 id="h1"></h1>
+  <div class="draw">
+    <svg width="700" height="700" viewBox="0 0 64 64" fill="none">
+      <g stroke="#fff" stroke-width=".22" opacity=".45" id="guides">
+        <line x1="10" y1="0" x2="10" y2="64" pathLength="1"/>
+        <line x1="32" y1="0" x2="32" y2="64" pathLength="1"/>
+        <line x1="54" y1="0" x2="54" y2="64" pathLength="1"/>
+        <line x1="0" y1="8" x2="64" y2="8" pathLength="1"/>
+        <line x1="0" y1="18" x2="64" y2="18" pathLength="1"/>
+        <line x1="0" y1="56" x2="64" y2="56" pathLength="1"/>
+      </g>
+      <g stroke="#fff" stroke-width="2.2" stroke-linecap="round" id="strokes">
+        <line x1="10" y1="8" x2="54" y2="8" pathLength="1"/>
+        <line x1="10" y1="4.5" x2="10" y2="11.5" pathLength="1"/>
+        <line x1="54" y1="4.5" x2="54" y2="11.5" pathLength="1"/>
+        <line x1="10" y1="18" x2="32" y2="56" pathLength="1"/>
+        <line x1="54" y1="18" x2="32" y2="56" pathLength="1"/>
+      </g>
+      <g stroke="#fff" stroke-width="2.2" id="nodes">
+        <circle cx="10" cy="18" r="3.4" fill="#1e3f8f"/>
+        <circle cx="54" cy="18" r="3.4" fill="#1e3f8f"/>
+        <circle cx="32" cy="56" r="3.4" fill="#fff"/>
+      </g>
+    </svg>
+    <span class="note" style="left:0;top:250px">product</span>
+    <span class="note" style="right:-70px;top:250px">blueprint</span>
+    <span class="note" style="left:50%;top:668px;transform:translateX(-50%)">merge gate</span>
+  </div>
+</div>
+
+<!-- 2: /vwf:product, one question -->
+<div class="scene dots" id="s2">
+  <div class="cap" id="c2">Asks one question at a time.</div>
+  <div class="term" id="t2">
+    <div class="bar"><i></i><i></i><i></i><span>claude — ~/relay</span></div>
+    <div class="body">
+      <div class="ln prompt" style="opacity:1">&gt; <span id="ty2"></span><span class="caret" id="k2"></span></div>
+      <div class="ln q" id="q2">Who is <em>Relay</em> for, first?</div>
+      <div class="ln opt" id="o1">1. Small teams juggling shared tasks</div>
+      <div class="ln opt" id="o2">2. Solo freelancers tracking their own work</div>
+      <div class="ln opt" id="o3">3. Enterprise project offices</div>
+      <div class="ln" id="r2" style="margin-top:22px"><span class="ok">✓</span> Recorded in <span class="prompt">docs/blueprint/product.md</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- 3: the landing's phases rail -->
+<div class="scene dots" id="s3">
+  <div class="cap" id="c3">Four phases, one slash command each.</div>
+  <div class="steps">
+    <div class="st"><div class="line"></div><div class="dot"></div><div><h3>Product<code>/vwf:product</code></h3><p>Pin the outcome contract.</p></div></div>
+    <div class="st"><div class="line"></div><div class="dot"></div><div><h3>Blueprint<code>/vwf:blueprint</code></h3><p>An always-current blueprint of the whole product.</p></div></div>
+    <div class="st"><div class="line"></div><div class="dot"></div><div><h3>Plan<code>/vwf:plan</code></h3><p>Diff the blueprint against the real code, one slice.</p></div></div>
+    <div class="st"><div class="dot"></div><div><h3>Execute<code>/vwf:execute</code></h3><p>Implement it autonomously under strict TDD.</p></div></div>
+  </div>
+</div>
+
+<!-- 4: /vwf:execute next, unattended, stops at the gate -->
+<div class="scene dots" id="s4">
+  <div class="cap" id="c4"><span id="c4a">Then builds unattended.</span><span class="l2" id="c4b">Never merges until you approve.</span></div>
+  <div class="term" id="t4">
+    <div class="bar"><i></i><i></i><i></i><span>claude — ~/relay</span></div>
+    <div class="body">
+      <div class="ln prompt" style="opacity:1">&gt; <span id="ty4"></span><span class="caret" id="k4"></span></div>
+      <div class="ln dim" id="u0" style="margin:14px 0 8px">claimed 2026-09-26-relay-tasks · RUNNING</div>
+      <div class="ln row" id="u1"><span class="dim">U1</span><span class="dim">code</span><span>tests first, red → green</span><span class="ok">✓</span></div>
+      <div class="ln row" id="u2"><span class="dim">U2</span><span class="dim">code</span><span>coverage gate</span><span class="ok">✓</span></div>
+      <div class="ln row" id="u3"><span class="dim">R1</span><span class="dim">review</span><span>code + security</span><span class="ok">✓</span></div>
+      <div class="ln row" id="u4"><span class="dim">A1</span><span class="dim">accept</span><span>E2E, per criterion</span><span class="ok">✓</span></div>
+      <div class="gate" id="gate"><div class="t">Merge gate<span class="caret" id="k4b" style="margin-left:14px;height:26px;width:12px"></span></div><div class="s">awaiting your approval</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 5: outro on the blue sheet -->
+<div class="scene dots-blue" id="s5">
+  <div class="wrap">
+    <div class="top" id="o5a"><img src="../../site/public/brand/vwf-mark-white.svg" width="190" height="190" alt=""><span class="word">vwf</span></div>
+    <div class="sub" id="o5b">Four phases from a vague idea to a reviewed release.</div>
+    <div class="code" id="o5c">pnpx <b>@virajp.dev/claude-plugins</b> --all</div>
+    <div class="url" id="o5d">claude-plugins.virajp.dev</div>
+  </div>
+</div>
+
+<script>
+const B = 60 / 112 * 4;               // one bar at 112 bpm
+const S = [0, 2 * B, 4 * B, 6 * B, 8 * B, 21]; // scene bounds, on the bar
+const $ = id => document.getElementById(id);
+const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const eo = x => 1 - Math.pow(1 - cl(x), 3);
+const eio = x => { x = cl(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const p = (t, a, d) => cl((t - a) / d);
+const rise = (el, k, dy = 24) => { el.style.opacity = eo(k); el.style.transform = `translateY(${(1 - eo(k)) * dy}px)`; };
+const type = (el, s, k) => { el.textContent = s.slice(0, Math.round(cl(k) * s.length)); };
+const blink = (t) => (Math.floor(t * 2.2) % 2 === 0 ? 1 : 0);
+
+const words = "Four phases from a vague idea to a reviewed release.".split(" ");
+$("h1").innerHTML = words.map(w => `<span>${w}</span>`).join(" ");
+const wEls = [...$("h1").children];
+const guides = [...document.querySelectorAll("#guides line")];
+const strokes = [...document.querySelectorAll("#strokes line")];
+const nodes = [...document.querySelectorAll("#nodes circle")];
+const notes = [...document.querySelectorAll("#s1 .note")];
+const steps = [...document.querySelectorAll("#s3 .st")];
+
+// scene envelope: in over `i`, out over `o`
+function env(el, t, a, b, i = .3, o = .28) {
+  const v = Math.min(eio(p(t, a, i)), 1 - eio(p(t, b - o, o)));
+  el.style.opacity = t < a || t > b ? 0 : v;
+  return t - a;
+}
+
+window.render = function (t) {
+  // 1
+  let s = env($("s1"), t, S[0], S[1], .001, .3);
+  wEls.forEach((w, i) => rise(w, p(s, .1 + i * .075, .4), 36));
+  $("s1").querySelector(".brand").style.opacity = eo(p(s, .9, .5));
+  guides.forEach((g, i) => { g.style.strokeDasharray = 1; g.style.strokeDashoffset = 1 - eio(p(s, .05 + i * .1, .8)); });
+  strokes.forEach((g, i) => { g.style.strokeDasharray = 1; g.style.strokeDashoffset = 1 - eio(p(s, .8 + i * .16, .5)); });
+  nodes.forEach((n, i) => {
+    const k = p(s, 1.7 + i * .14, .35);
+    const sc = k <= 0 ? 0 : 1 + Math.sin(k * Math.PI) * .35 * (1 - k) + (eo(k) - 1);
+    n.style.transformBox = "fill-box"; n.style.transformOrigin = "center";
+    n.style.transform = `scale(${Math.max(0, sc)})`;
+  });
+  notes.forEach((n, i) => { n.style.opacity = eo(p(s, 2.1 + i * .15, .35)); });
+  $("s1").querySelector(".draw").style.transform = `scale(${1.04 - .04 * eo(p(s, 0, 4))})`;
+
+  // 2
+  s = env($("s2"), t, S[1], S[2]);
+  rise($("c2"), p(s, .15, .45));
+  rise($("t2"), p(s, .05, .5), 40);
+  type($("ty2"), "/vwf:product", p(s, .45, .5));
+  $("k2").style.opacity = s < 1.1 ? 1 : 0;
+  rise($("q2"), p(s, 1.15, .35), 12);
+  ["o1", "o2", "o3"].forEach((id, i) => rise($(id), p(s, 1.45 + i * .12, .3), 10));
+  const sel = s < 2.2 ? 0 : s < 2.65 ? 1 : 0;
+  ["o1", "o2", "o3"].forEach((id, i) => $(id).classList.toggle("on", s > 1.8 && i === sel));
+  if (s > 3.05) ["o2", "o3"].forEach(id => $(id).style.opacity = 1 - eo(p(s, 3.05, .25)) * .65);
+  rise($("r2"), p(s, 3.1, .3), 10);
+
+  // 3
+  s = env($("s3"), t, S[2], S[3]);
+  rise($("c3"), p(s, .15, .45));
+  steps.forEach((st, i) => {
+    rise(st, p(s, .35 + i * .45, .4), 20);
+    const on = s > .55 + i * .45;
+    st.querySelector(".dot").style.background = on ? "var(--paper)" : "var(--ink)";
+    st.querySelector(".dot").style.boxShadow = on ? `0 0 0 ${8 * (1 - eo(p(s, .55 + i * .45, .5)))}px rgba(122,160,242,.35)` : "none";
+    const ln = st.querySelector(".line");
+    if (ln) ln.style.height = 186 * eio(p(s, .65 + i * .45, .4)) + "px";
+  });
+
+  // 4
+  s = env($("s4"), t, S[3], S[4]);
+  rise($("c4a"), p(s, .15, .45));
+  rise($("c4b"), p(s, 2.1, .45), 16);
+  rise($("t4"), p(s, .05, .5), 40);
+  type($("ty4"), "/vwf:execute next", p(s, .4, .5));
+  $("k4").style.opacity = s < 1.05 ? 1 : 0;
+  rise($("u0"), p(s, 1.0, .3), 10);
+  ["u1", "u2", "u3", "u4"].forEach((id, i) => {
+    rise($(id), p(s, 1.35 + i * .38, .3), 10);
+    $(id).lastElementChild.style.opacity = eo(p(s, 1.55 + i * .38, .15));
+  });
+  const g = p(s, 3.0, .4);
+  $("gate").style.opacity = eo(g);
+  $("gate").style.transform = `scale(${.97 + .03 * eo(g)})`;
+  $("k4b").style.opacity = blink(s);
+
+  // 5
+  s = env($("s5"), t, S[4], S[5], .35, .6);
+  rise($("o5a"), p(s, .2, .5), 30);
+  rise($("o5b"), p(s, .55, .45), 20);
+  rise($("o5c"), p(s, .85, .45), 20);
+  rise($("o5d"), p(s, 1.15, .45), 20);
+};
+window.ready = Promise.all([document.fonts.ready, ...[...document.images].map(i => i.decode())]).then(() => { render(0); return true; });
+</script>
+</body>
+</html>

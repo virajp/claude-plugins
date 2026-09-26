@@ -158,6 +158,7 @@ repos:
         description: A binary committed by accident is cheap to refuse and
           expensive to remove — it stays in history after the delete.
         args: [ "--maxkb=1024" ]
+        exclude: \.(mp4|wav|m4a)$
       - id: check-case-conflict
         name: Check for case-conflicting filenames
         description: Two paths differing only in case collide on macOS and
