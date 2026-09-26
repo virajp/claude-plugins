@@ -218,14 +218,16 @@ mid-rebase or on a commit that touched only `graphify-out/` — and exits 0
 when the tool is missing, so a commit never fails on it. `setup:ai` wires the
 tool for the agent with `graphify install --platform claude` and installs no
 git hook of its own: graphify's raw hooks pin a Python path and break on the
-next upgrade. No hook runs `code:graph`: it is run by hand after a commit.
+next upgrade. The hook runner's `graphify-refresh` hook runs `code:graph` after
+every commit ([pre-commit's](pre-commit.md#6-the-graph-refresh-hook)).
 
 ### Prerequisites named but not owned
 
 The task library reaches for `.config/dprint.json`,
 `.config/pre-commit-config.yaml`, `.config/gitleaks.toml` and
-`.config/grype.yaml`. Those files belong to the gate packs, and each task
-no-ops with a warning when its config is absent. `setup:vscode` reads one
+`.config/grype.yaml`. Those files are the other tools' of this skill, landed by
+the same `all`, and each task no-ops with a warning when its config is
+absent. `setup:vscode` reads one
 more, `.vscode/extensions.json`, which `/vwf:init` composes from every
 `.config/vscode.d/*.jsonc` fragment, this skill's included. Name any the repo
 still needs; never write one from here.
@@ -881,8 +883,8 @@ repo without it silently takes the slower path.
 
 #### The hooks call the tasks
 
-**Every gate hook runs a task, never a tool.** The gate pack's hook config
-carries three tool-neutral hooks:
+**Every gate hook runs a task, never a tool.** The hook config
+([pre-commit's](pre-commit.md)) carries three tool-neutral hooks:
 
 | Hook id  | Entry                                  | Passes               |
 | -------- | -------------------------------------- | -------------------- |
@@ -966,9 +968,9 @@ external counter is needed.
 
 #### `code:graph` — the graph refresh
 
-See [the graph tool](#the-graph-tool). It is run by hand after a commit,
-never by `code:all`, and `--force` rebuilds even when the last commit touched
-only `graphify-out/`.
+See [the graph tool](#the-graph-tool). The `post-commit` hook runs it after
+every commit, never `code:all`, and `--force` rebuilds even when the last
+commit touched only `graphify-out/`.
 
 ### `p:<id>:*` — one project's own commands
 
@@ -1022,8 +1024,8 @@ it.
   linter the repo already configures.
 - **`p:<id>:*` is authored, not copied.** Fill it from what the repo actually
   runs.
-- **Name the missing prerequisites** — the gate config files — rather than
-  writing them from here.
+- **Name the missing prerequisites** — a gate config file `all` did not land
+  — rather than writing one from this reference.
 - **Leave the `MISE_ENV` guards intact.** They keep local-only side effects
   out of CI.
 
@@ -1083,7 +1085,7 @@ worktrees from the main checkout.
   `setup:ai` works at project scope only.
 
 **This tool gates nothing and defines no build.** What each gate *checks*
-belongs to the gate packs; the CI system's workflow syntax belongs to the CI
+belongs to the gate tools' references and the packs that overlay the tasks; the CI system's workflow syntax belongs to the CI
 system; a language's build commands belong to that language — the tasks wrap
 them rather than define them.
 
