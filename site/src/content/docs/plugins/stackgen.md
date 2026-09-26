@@ -830,11 +830,15 @@ three argument shapes:
 
 **Each requester's lines sit between its own markers** — `# >>> swiftui` and
 `# <<< swiftui`, `//` in JSONC — inside the section file the tool reads. Lines
-outside every block are yours, and the skill never touches them. A file exists
-only while it has content. **Drift is tested by content, never by a hash**: a
-block differing from what its requester would write now is one row — take
-theirs, keep mine for this run, or merge — and the skill never picks for you. A
-filled marked position and a pack's `machine_env` value are never drift.
+outside every block are yours, and the skill never touches them without asking.
+**A clash is a conflict row, never a silent overwrite**: a tool, env key or
+alias name that another block or your own line already holds is shown before
+anything is written — for an alias, keep the existing or overwrite it — and
+nothing records the answer, so the next run that meets it asks again. A file
+exists only while it has content. **Drift is tested by content, never by a
+hash**: a block differing from what its requester would write now is one row —
+take theirs, keep mine for this run, or merge — and the skill never picks for
+you. A filled marked position and a pack's `machine_env` value are never drift.
 `remove <requester>` deletes that requester's blocks and nothing else. Every
 path it writes is a `lock.yaml` entry sourced `tool-config/<tool>@<version>`,
 the version stackgen's own. It never commits; the caller does.
@@ -932,16 +936,17 @@ runs `code:lint`. It is a Node script, so it needs a `node` on `PATH`: the
 repo's own pin, or the machine's. Other formatters, linters, security scanners
 and dev tooling belong in `conf.d/tools.dev.toml`, so a CI build does not pull
 them. graphify is one of them: `"pipx:graphifyy"`, dev only, since a pipeline
-never builds the graph. `[tasks.init]`, in `conf.d/tasks.toml`, loads in every
-environment: file-based tasks must be executable under `MISE_ENV=ci` too. The
-runtime's settings are a **marked position** shipped empty: `RUNTIME_BLOCK`
-under `mise.toml`'s `[settings]` and `PATH_ENTRIES` at the end of
-`conf.d/env.toml` are filled from the `runtimes` argument `/vwf:init` passes
-from its stack read — one runtime settings line per detected language, the
-`_.path` entry where a project-local binary directory needs it — and left empty
-for a language the repo does not have, since a setting for an absent runtime is
-a claim about the stack that is not true. With `REPO_NAME`,
-`MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and `MEMBERS`, all in
+never builds the graph, with `uv` beside it because mise's pipx backend installs
+through uv — so a repo with no Python still gets the graph tool. `[tasks.init]`,
+in `conf.d/tasks.toml`, loads in every environment: file-based tasks must be
+executable under `MISE_ENV=ci` too. The runtime's settings are a **marked
+position** shipped empty: `RUNTIME_BLOCK` under `mise.toml`'s `[settings]` and
+`PATH_ENTRIES` at the end of `conf.d/env.toml` are filled from the `runtimes`
+argument `/vwf:init` passes from its stack read — one runtime settings line per
+detected language, the `_.path` entry where a project-local binary directory
+needs it — and left empty for a language the repo does not have, since a setting
+for an absent runtime is a claim about the stack that is not true. With
+`REPO_NAME`, `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and `MEMBERS`, all in
 `conf.d/env.toml`, they are the six marked positions.
 
 `conf.d/env.dev.toml` holds the **local values** of runtime env vars (verbose

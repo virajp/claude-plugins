@@ -18,5 +18,7 @@ pre-commit       = { version = "latest" }
 shellcheck       = { version = "latest" }
 shfmt            = { version = "latest" }
 taplo            = { version = "latest" }
+# mise's pipx backend installs through uv, so graphifyy needs no Python.
+uv = { version = "latest" }
 
 # No secret-manager tool here; the provider's pack asks for it through its tool-config: calls.

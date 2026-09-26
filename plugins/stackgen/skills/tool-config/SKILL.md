@@ -111,9 +111,10 @@ they asked. One blank line separates two adjacent blocks, and a block's own
 lines carry no blank line at either end.
 
 **Lines outside every block are the user's, and are never touched** — not
-rewritten, not reordered, not removed. The one exception is a file's own
-frame — its header comment, and the table line a section file opens with —
-written when the file is created and removed with it. A file whose
+rewritten, not reordered, not removed. Two exceptions: a file's own frame —
+its header comment, and the table line a section file opens with — written
+when the file is created and removed with it; and a user line the user
+chose to overwrite on a conflict row. A file whose
 format has no comments — plain JSON — carries no markers; the lock entry
 records which keys each requester wrote instead.
 
@@ -134,7 +135,10 @@ create, write, fold, move or delete, and each block that drifted — and writes
 nothing until they are approved. A caller that gathers one consent for a whole
 plan — `/vwf:init`'s plan, the materializer's dry-run — shows the rows
 inside its own and hands back the answers; the skill asks no second time. A call
-typed by a person is its own consent round.
+typed by a person is its own consent round. A call that would write a pin, an
+env key or an alias name another block or a user line already holds is a
+**conflict row** — never a silent overwrite — settled by the user as the
+tool's reference says.
 
 ## Drift
 
@@ -196,6 +200,6 @@ the file, so the two never disagree.
 ## What it never does
 
 - Writes a line outside a block, or a path another source owns.
-- Resolves a drifted block without the user's answer.
+- Resolves a drifted block or a conflict row without the user's answer.
 - Commits. The caller commits what it landed, the way it commits everything
   else.

@@ -210,6 +210,8 @@ manager at run time. A value committed here is in the history.
 
 `"pipx:graphifyy" = { version = "latest" }` is in the base's
 `conf.d/tools.dev.toml` — dev only, since a pipeline never builds the graph.
+`uv = { version = "latest" }` sits beside it: mise's pipx backend installs
+through uv, so a repo with no Python still installs the graph tool.
 The PyPI name really is `graphifyy`, double y; never correct it. `code:graph`
 refreshes the graph — code only, detached, a no-op in a linked worktree,
 mid-rebase or on a commit that touched only `graphify-out/` — and exits 0
@@ -417,7 +419,16 @@ for that key, and is refused where there is none.
 
 **`add alias`** writes `<name> = "<command>"`. Dev only —
 `to dev environment` is accepted and any other environment refused, since a
-pipeline never activates a shell.
+pipeline never activates a shell. **One alias per name**: `[shell_alias]` is
+one table, so a name already set in `conf.d/shell_alias.dev.toml` — by the
+mise block's own `setup-<slug>` aliases, another pack's block, or a user line
+— is never written a second time. The call is shown as a conflict row naming
+the name, whose alias it is and both commands, with two answers: **keep the
+existing** (the new alias is not written) or **overwrite** (the existing line
+is removed from its block or the user's lines and the new one written in the
+requester's block). The user picks; nothing is written until they do, and
+nothing records the answer, so a later run that meets the same clash asks
+again.
 
 **`upgrade`** runs `MISE_ENV=dev mise run setup:all --upgrade`: the one lock
 bumped across every environment, the formatter's plugins updated, the same
