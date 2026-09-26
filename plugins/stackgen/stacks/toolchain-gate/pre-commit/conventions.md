@@ -89,8 +89,9 @@ ships with the gate rather than with any one of them. Its `ignores:` list is the
 generated trees the stack packs produce (`build/`, `.dart_tool/`, `.build/`,
 `.swiftpm/`, `DerivedData/`, `Derived/`, `.venv/`, and mise's sidecar lock tree
 `.config/mise/locks/`, whose files a `--fix` must never rewrite under the digest
-`mise.lock` records): the linter does not read `.gitignore`, so without the list
-a whole-tree `code:lint` walks build output. A language pack that adds a
+`mise.lock` records — the three formatter lists exclude it too): the linter
+does not read `.gitignore`, so without the list a whole-tree `code:lint` walks
+build output. A language pack that adds a
 generated tree adds it to that list, with a trailing comment naming the pack.
 This pack's `pre-commit` skill auto-applies to the file wherever it lands, and
 carries the rule for editing it; the eslint pack's skill, where that pack is
