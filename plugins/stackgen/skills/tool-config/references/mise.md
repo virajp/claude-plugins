@@ -374,6 +374,22 @@ block when the call has none. `<env>` is `dev`, `ci` or `test`, and
 `to <env>` without the trailing word reads the same. A call may continue onto
 a second line; the words are what count.
 
+### What a call may carry
+
+Checked before anything is shown, and a call that fails is refused whole:
+
+- **An env key or an alias name** matches `[A-Za-z_][A-Za-z0-9_]*`.
+- **A tool name** takes letters, digits and `:`, `/`, `.`, `-`, `_`, `@` —
+  an optional backend prefix and its path, `aqua:realm/SwiftLint` — and
+  nothing else: no `=`, `]`, quote, space or control character.
+- **Every value** — an env value, an alias command, a version — is written as
+  a TOML basic string, with `\`, `"` and every control character escaped.
+  Nothing a call carries is ever written as bare TOML.
+- **A template is legal only in `add env … for <requester>`**, a pack's own
+  shipped line. `set env`, and `add env` with no `for`, refuse a value holding
+  `{{`, `{%` or `{#`: mise renders every env value as a template on every
+  load, so a typed or detected value would run for every developer and in CI.
+
 **`add tool`** writes `<name> = { version = "<version>" }`, the name quoted
 when it is not a bare TOML key (`"aqua:realm/SwiftLint"`, `"pipx:graphifyy"`).
 A version is a mise version spec — an exact version, a prefix, or `latest`.
@@ -382,9 +398,8 @@ in any tools file — another block or a user line — the call is not written
 and is shown as a conflict row naming the file and whose pin it is; the user
 settles it, and a pin two environments need moves to `tools.toml`.
 
-**`add env`** writes `<KEY> = "<value>"` as a TOML basic string, `\` and `"`
-escaped; the value may be given quoted or bare. mise renders every env value
-as a template, so a requester's own value may be one —
+**`add env`** writes `<KEY> = "<value>"`; the value may be given quoted or
+bare. A requester's own value may be a template —
 `"{{ config_root | split(pat='/') | last }}"` — while a machine value, which
 `set env` takes from a person, never is. A key already set in the same file by
 another block is a conflict row, as for a tool. **A key the requesting pack's

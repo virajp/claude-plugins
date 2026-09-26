@@ -49,6 +49,9 @@ else — `/stackgen:tool-config mise repo=scratch`.
 **`<tool> <instruction>`** runs one verb of that tool's reference against the
 repo the call runs in. The verbs, their spelling and the files each writes are
 the reference's; an instruction no verb matches is refused, naming the verbs.
+What a name, a key or a value may hold is the reference's too — mise's is
+[what a call may carry](references/mise.md#what-a-call-may-carry) — and a
+call that breaks it is refused before anything is shown.
 Every tool also takes `remove <requester>` — below — whatever its reference
 adds.
 
