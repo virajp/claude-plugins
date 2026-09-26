@@ -54,9 +54,10 @@ the repo cannot support. Their absence is the **structure-pending** state, which
 
 The repo shape — the toolchain manager's config and task library, the repo
 gates, the hygiene files — is `/vwf:init`'s, not setup's. Step 0 only
-**checks** for it, reading the stack adapter's lockfile for the three
-unconditional slugs `mise`, `repo-gates` and `repo-hygiene`, and offers init
-when any is missing — and makes the same offer when all three are recorded
+**checks** for it, reading the stack adapter's lockfile for the
+`tool-config/…` records `/stackgen:tool-config all` writes and the two
+unconditional slugs `repo-gates` and `repo-hygiene`, and offers init
+when any is missing — and makes the same offer when all are recorded
 but the repo has fallen **behind its baseline**, on doctor's six predicates.
 On a multi-repo product both questions are asked of the base **and of every
 locally-present member**, and the one offer covers whichever of them came back

@@ -107,9 +107,11 @@ a blind spot, never a finding. On a single-repo product the set is one repo and
 everything below reads as it always did.
 
 First, is the shape **there**: in **each** repo of that set, the stack adapter's
-lockfile records all three unconditional repo slugs — `mise`, `repo-gates` and
-`repo-hygiene` (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). Named exactly,
-never constructed: a slug assembled from configuration is one that can silently
+lockfile records what `/stackgen:tool-config all` writes — entries sourced
+`tool-config/<tool>@<version>` — and the two remaining unconditional repo
+slugs, `repo-gates` and `repo-hygiene`
+(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). Named exactly, never
+constructed: a slug assembled from configuration is one that can silently
 resolve to nothing. Second, is it **current**: the seven predicates under
 **"The repo shape against its baseline"** in `/vwf:doctor`'s stack-checks
 reference, evaluated **per repo** on that repo's own artifacts — the pack
@@ -123,11 +125,11 @@ as chosen, both branches protected, and the base's backlog project present,
 read from the forge when its CLI is on `PATH` and logged in. Read the
 artifacts that section reads and evaluate them **by it**: the predicates are
 doctor's and are deliberately not restated here, so the two can never drift
-apart. Every repo recording all three slugs and holding all seven predicates —
+apart. Every repo recording all of them and holding all seven predicates —
 say so in one line, naming the repos checked, and read on.
 
 **Otherwise some repo needs init, and setup offers it — once, for the whole
-product.** Any of the three slugs missing in a repo, that repo is **unshaped**:
+product.** Any of those records missing in a repo, that repo is **unshaped**:
 say what is absent. Any predicate failing in a repo, that repo is **behind its
 baseline**: name which, in the words doctor's rows use. The offer fires when
 **any** repo in the set is unshaped or behind, and it names **which repos** and
@@ -204,7 +206,8 @@ rather than reconstructing it here. It is also where a landed pack's
 **machine env** is asked: each value the pack's `machine_env:` fact declares
 is detected on this machine — only while the pack's template entry matches
 what its lockfile last recorded — offered as the default, and written into
-the pack's own marked position. Setup asks it, never `init`.
+the pack's own block through `/stackgen:tool-config`. Setup asks it, never
+`init`.
 
 It runs **once per run, in every mode**, on a `.config/vwf.yaml` that is
 already current: in `onboard` and `migrate` between the spine's steps 2 and 3
@@ -216,7 +219,8 @@ skipping the whole handoff.
 In one paragraph, so a reader knows what the reference will say: setup groups
 the axes holding a slug the target repo's adapter lockfile does not name,
 dedupes by slug per repo, and invokes the adapter once per `(repo, slug)`,
-each landing behind the **adapter's own** consent line. Every landing carries
+each landing behind the **adapter's own** consent line; the adapter runs the
+pack's own `tool-config:` calls as part of it. Every landing carries
 the config's recorded `answers:` — the forge re-read live from that repo's
 `origin` — so a template pinned months after `/vwf:init` ran lands what that
 repo's answers allow, not everything. The pass never lands a forge-conditioned
