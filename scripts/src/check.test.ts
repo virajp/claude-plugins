@@ -851,7 +851,9 @@ describe("the pack config tier", () => {
         + "  - mise add env A-B=c to dev\n",
     ));
     expect(messages(check(root))).toEqual([
-      expect.stringContaining("names `1BAD`, which is not a"),
+      expect.stringContaining(
+        "names `1BAD`, which is not a `[A-Za-z_][A-Za-z0-9_]*` name",
+      ),
       expect.stringContaining("names `\"{{x}}\"`, which is not a"),
       expect.stringContaining("names `-ab`, which is not a"),
       expect.stringContaining("names `A-B`, which is not a"),
@@ -868,7 +870,21 @@ describe("the pack config tier", () => {
     const root = tree(facts(
       "tool-config:\n"
         + "  - mise add env X=\"abc to dev\n"
-        + "  - mise add alias y=\"pnpm dlx to dev\n",
+        + "  - mise add alias y=\"ls to dev\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("`tool-config[0]`"),
+      expect.stringContaining("`tool-config[1]`"),
+    ]);
+    expect(messages(check(root)).every(m => m.includes("matches none of")))
+      .toBe(true);
+  });
+
+  it("flags a bare value that carries a quote", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - mise add env X=abc\" to dev\n"
+        + "  - mise add alias y=ls\" to dev\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining("`tool-config[0]`"),
