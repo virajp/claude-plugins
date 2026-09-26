@@ -752,7 +752,10 @@ repo is done.
 
 Both pipelines land the same baselines, in one order. **First
 `/stackgen:tool-config all`**, with the answers as its arguments — it lands
-every tool that skill owns, so `init` names none of them. **Then the
+every tool that skill owns, so `init` names none of them. The survey runs it
+as `preview all` and shows its rows in the plan; the real call carries
+`answers=` for every row, per new-repo §2, so the skill asks no second
+time. **Then the
 unconditional bundles that remain**, fetched through the adapter by the
 **fixed slugs** `repo-gates` and `repo-hygiene` — fixed, never
 constructed: a name assembled from configuration is one that can silently

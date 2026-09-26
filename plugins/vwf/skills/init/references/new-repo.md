@@ -100,6 +100,21 @@ The arguments:
 omitted key keeps the repo's current value, so `init` passes every key on
 every call and writes `key=` wherever the answer is empty.
 
+**Preview in the survey, answer on the consent.** The call is `init`'s plan
+row, never a consent round of its own, per the skill's *Consent and the
+rows* section. During the survey, `init` runs
+`/stackgen:tool-config preview all <the same key=value arguments>` in each
+repo and prints the rows it returns — numbered `r1`, `r2`, … — in that
+repo's section under **Tool-config rows**. Each conflict or drift row is
+asked inside the plan, with the answer names the preview gave it. On the one
+consent, `init` runs `/stackgen:tool-config all <the same arguments>` with
+`answers=<id>:<answer>,…` last — `ok` for every create, write, fold, move or
+delete row, the user's pick for every conflict or drift row. The skill
+refuses the whole call when `answers=` misses a row, names an unknown one or
+meets a row that changed since the preview, so `init` answers every row the
+preview returned, and a refused call is shown again in the report, never
+retried with guessed answers.
+
 **Then the unconditional bundles that remain**, by their fixed slugs, through
 the stack adapter (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`), invoking
 `/<plugin>:<plugin>-stack-template <slug>` once per slug. Fetch them in the
@@ -107,7 +122,7 @@ the stack adapter (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`), invoking
 because a later component's file wins where two write the same path, and
 getting the order wrong silently lands the wrong version of a shared file.
 
-The skill's call and each landing carry their own consent line. **A decline is
+The skill's rows and each landing carry their own consent line. **A decline is
 a deferral, not a halt**: record what was skipped and name its unlock — run
 `/vwf:setup reshape` with the write consented — then continue with the rest
 of the pipeline. This is the same rule `/vwf:setup`'s tooling step follows,
@@ -665,7 +680,9 @@ their own copy.
 **Where a row's answer differs from what §2 passed**, call
 `/stackgen:tool-config all` again in that repo, with every argument §2
 passed and the answered pair — `merge_model_develop=pr merge_model_main=pr`,
-say. The skill writes it; count each changed row as a fill. A
+say — previewed first and answered as §2 says, its rows shown under this
+question and covered by its answer. The skill writes it; count each changed
+row as a fill. A
 row answered as preselected needs no second call. Migrating the retired
 single key into the pair is the skill's, on either call.
 

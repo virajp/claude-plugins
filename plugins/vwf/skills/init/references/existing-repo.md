@@ -78,6 +78,13 @@ An entry the repo's **`.gitignore` ignores**: a root entry the ignore file
 already excludes is build output or a local artefact, not configuration, and
 is skipped without a row.
 
+**A `handed` spelling is in neither.** A root file the table's `handed` row
+lists — the toolchain manager's own root config — is not a stray, and it is
+not a plan row of this pass either: it enters no rename map, gets no move,
+keep or delete row, and is reported nowhere by init. The tool-config skill's
+migration folds it, and that call's rows cover it, per the toolchain
+migration below, whose rows init's survey preview returns.
+
 A root **entry** matching **no** pack declaration, none of the table's
 spellings and **not** on the allowlist is **reported, not moved**. It belongs
 to something outside this toolkit, and guessing a destination for it is how a
@@ -165,7 +172,8 @@ The move-and-shim case is one tool's; this step is the same shape for every
 tool a pack ships, and it is what reads a brownfield repo's own gate before
 the pack's lands over it. The [tool-config table](tool-configs.md) carries one
 row per such tool — the tool, its known root spellings, the `.config/` path
-the pack lands, and the merge shape. For each row, look for every spelling at
+the pack lands, and the merge shape. For each row but a `handed` one, whose
+file the toolchain migration below covers, look for every spelling at
 the root **and inside `.github/`** — the one allowlisted directory a tool's
 discovery also reads, and which the allowlist survey above reads as a single
 entry, so a policy file inside it is never seen by that survey at all. Each
@@ -199,12 +207,14 @@ one tool is how one of them is silently ignored.
 A repo whose lockfile records the toolchain manager's bundle slug — the one
 `/stackgen:tool-config all` replaced — or whose toolchain files predate the
 skill's layout, is migrated by that call, never by a pass here. The skill
-reads the old files, a root manager config and each pack's old fragment
-among them, and shows its own rows: what it folds, what it moves, and every
+reads the old files, a root manager config — the spellings the tool-config
+table's `handed` row lists — and each pack's old fragment among them, and
+its survey preview returns the rows: what it folds, what it moves, and every
 block that differs, as take theirs / keep mine / merge. `init` prints those
-rows in the repo's section under **Tool-config rows**, and the one consent
-covers them. A repo already on the skill's layout, with nothing drifted, gets
-no row.
+rows in the repo's section under **Tool-config rows**, the one consent
+covers them, and the real call carries the answers, per
+[new repo](new-repo.md) §2. A repo already on the skill's layout, with
+nothing drifted, gets no row.
 
 #### The hook manager
 
@@ -702,12 +712,14 @@ gets its `_default` slot as a create.
 **The skill's positions are compared by the skill.** This pass computes the
 values `/stackgen:tool-config all` takes, per [new repo](new-repo.md) §2 —
 the folder slug for `repo`, the resolved members, the landing pair the repo
-already carries, question 5's confirmed rows — and passes them. The skill
-compares each with what its file holds and shows the row: a
+already carries, question 5's confirmed rows — and passes them to the
+skill's `preview all` in the survey, per [new repo](new-repo.md) §2. The
+skill compares each with what its file holds and returns the row: a
 `repo-name key: <old> → <new>` replace, member flags and aliases rewritten
 from project ids to members, a plugin list gaining or losing rows. `init`
-prints those rows in this repo's section under **Tool-config rows**, and the
-one consent covers them.
+prints those rows in this repo's section under **Tool-config rows**, asks
+each conflict or drift row inside the plan, and the one consent covers
+them.
 
 The folder slug is this repo's main checkout basename, slugified by the same
 asset. Never leave a rename to `/vwf:doctor` alone: the launch aliases in the
@@ -900,9 +912,11 @@ was printed. A `take` or `union` sub-line lists the hand lines the apply
 removes, since those are the one edit outside the block and the user reads
 them before the one consent rather than after.
 
-**Tool-config rows** are the skill's own, printed as it shows them — each
-drift row with its take theirs / keep mine / merge choice — and settled on
-the same one consent.
+**Tool-config rows** are the skill's own, printed as its `preview all`
+returns them, each under its `r<n>` id — each drift row with its take
+theirs / keep mine / merge choice, each conflict row with its two answers —
+and settled on the same one consent, which becomes the real call's
+`answers=`.
 
 ```text
 Moves        <n>
@@ -982,8 +996,11 @@ repo of the set that resolved to mode `blank` or `source` takes the
   6's offer is what decides between them. A root tool config the user picked
   **delete** for is removed with plain `rm` here.
 - **`/stackgen:tool-config all`** runs next, with the arguments pass 9
-  computed and its rows settled on the one consent. It lands the toolchain
-  files and folds the old ones, per pass 1's toolchain migration.
+  computed and `answers=` carrying every row its survey preview returned —
+  `ok` for each create, write, fold, move or delete row, the user's pick
+  for each conflict or drift row — per [new repo](new-repo.md) §2, so the
+  skill asks nothing. It lands the toolchain files and folds the old ones,
+  per pass 1's toolchain migration.
   `_scripts/local` is written **before** it, since the call replaces the
   helper file.
 - **Creates** are the materializer's, by fixed slug, exactly as the new-repo
