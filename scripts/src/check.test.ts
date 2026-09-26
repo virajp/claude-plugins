@@ -823,10 +823,38 @@ describe("the pack config tier", () => {
         + "  - all add exclude generated node_modules .turbo\n"
         + "  - all add exclude *-lock.json *-lock.yaml\n"
         + "  - pre-commit add linter-ignore .dart_tool\n"
-        + "  - pre-commit add hook https://github.com/astral-sh/uv-pre-commit "
-        + "uv-lock --stage pre-commit\n",
+        + "  - 'pre-commit add hook local uv-lock-check pre-commit "
+        + "name=\"uv lockfile is current\" entry=\"mise x -- uv lock --check\" "
+        + "files=\"(^|.*/)pyproject\\.toml$\" language=system "
+        + "pass_filenames=false'\n"
+        + "  - pre-commit add hook https://github.com/x/y z post-commit rev=v1\n"
+        + "  - grype add ignore CVE-2024-1234\n"
+        + "  - grype add ignore GHSA-abcd-1234 not reachable from our code\n",
     ));
     expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a gate verb outside the skill's grammar", () => {
+    // A stage nothing installs never runs; an unknown plugin or key is refused.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - pre-commit add hook local x\n"
+        + "  - pre-commit add hook local x --stage pre-commit\n"
+        + "  - pre-commit add hook local x pre-push\n"
+        + "  - pre-commit add hook local x pre-commit color=red\n"
+        + "  - pre-commit add hook ftp://x y pre-commit\n"
+        + "  - dprint add plugin biome\n"
+        + "  - all add exclude\n"
+        + "  - all add exclude generated\n"
+        + "  - grype add ignore\n",
+    ));
+    expect(messages(check(root))).toEqual(
+      [0, 1, 2, 3, 4, 5, 6, 7, 8].map(index =>
+        expect.stringContaining(`\`tool-config[${index}]\``)
+      ),
+    );
+    expect(messages(check(root)).every(m => m.includes("matches none of")))
+      .toBe(true);
   });
 
   it("flags an exclude asked of one gate tool alone", () => {

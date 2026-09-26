@@ -696,12 +696,23 @@ const TOOL_CONFIG_VERBS = {
       + String.raw`(?: to dev(?: environment)?)?$`,
   ),
 };
+/** The dprint plugins the skill's plugin table defines. */
+const DPRINT_PLUGINS =
+  "markdown|pretty_yaml|json|exec|typescript|malva|markup_fmt|dockerfile";
+/** The keys `pre-commit add hook` writes, each `key=value`, quoted or bare. */
+const HOOK_PAIR = String.raw`(?:name|description|entry|language|files|exclude|`
+  + String.raw`types|args|pass_filenames|always_run|require_serial|rev)=`
+  + String.raw`(?:"(?:[^"\\]|\\.)*"|[^\s"]+)`;
 /** The gate verbs a pack may ask for, beside the mise three. */
 const TOOL_CONFIG_GATE_VERBS = [
-  /^dprint add plugin [a-z0-9_-]+$/,
-  /^all add exclude(?: generated)?(?: [^\s"]+)+$/,
+  new RegExp(`^dprint add plugin (?:${DPRINT_PLUGINS})$`),
+  /^all add exclude (?!generated$)(?:generated )?[^\s"]+(?: [^\s"]+)*$/,
   /^pre-commit add linter-ignore(?: [^\s"]+)+$/,
-  /^pre-commit add hook \S+ \S+(?: .+)?$/,
+  new RegExp(
+    String.raw`^pre-commit add hook (?:local|https://\S+) [A-Za-z0-9_-]+ `
+      + `(?:pre-commit|commit-msg|post-commit|manual)(?: ${HOOK_PAIR})*$`,
+  ),
+  /^grype add ignore [A-Za-z0-9-]+(?: .+)?$/,
 ];
 /** An exclude asked of one tool, which would leave rule 15's lists disagreeing. */
 const TOOL_CONFIG_LONE_EXCLUDE =
@@ -743,8 +754,9 @@ function toolConfigCall(call: string): { fault?: string; key?: string; } {
         + "`mise add alias <name>=<command> [to dev]`, "
         + "`dprint add plugin <name>`, "
         + "`all add exclude [generated] <paths>`, "
-        + "`pre-commit add linter-ignore <paths>` or "
-        + "`pre-commit add hook <repo> <id> …`",
+        + "`pre-commit add linter-ignore <paths>`, "
+        + "`pre-commit add hook <repo> <id> <stage> [key=value …]` or "
+        + "`grype add ignore <id> [reason]`",
     };
   }
   const name = match[1] ?? "";
