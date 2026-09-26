@@ -13,6 +13,7 @@
     "**/.turbo/",
     "**/*-lock.json",
     "**/*-lock.yaml",
+    "**/.config/mise/locks/",
     "**/.claude/skills/flutter-interoperating-with-native-apis",
     "site/public/**/*.svg"
   ],

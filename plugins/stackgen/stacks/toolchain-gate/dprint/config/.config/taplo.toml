@@ -18,6 +18,7 @@ exclude = [
   "**/*.xcassets/**",
   "**/.build/**",
   "**/.claude/**",
+  "**/.config/mise/locks/**",
   "**/.git/**",
   "**/.turbo/**",
   "**/.venv/**",

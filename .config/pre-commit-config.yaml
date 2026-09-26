@@ -36,7 +36,7 @@ default_stages: [ pre-commit ]
 # That is expected: the exclusion is a standing rule about a tree, not a claim
 # that the tree exists today. Add each further generated tree here — never a
 # second copy inside one hook.
-exclude: ^graphify-out/
+exclude: ^graphify-out/|(^|/)\.config/mise/locks/
 
 repos:
   - repo: local

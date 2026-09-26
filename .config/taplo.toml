@@ -1,7 +1,13 @@
 # Taplo TOML linter & formatter configuration
 # See https://taplo.tamasfe.dev/ for more details
 
-exclude = [ "**/.git/**", "**/build/**", "**/dist/**", "**/node_modules/**" ]
+exclude = [
+"**/.config/mise/locks/**",
+"**/.git/**",
+"**/build/**",
+"**/dist/**",
+"**/node_modules/**",
+]
 include = [ "**/*.toml" ]
 
 [formatting]

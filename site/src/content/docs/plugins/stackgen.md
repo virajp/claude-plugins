@@ -714,14 +714,15 @@ above, and the hook gate ships `.config/linter.yaml`, the house linter's one
 config, read by every `code:lint` that runs it — whichever pack's task that is.
 Its `ignores:` list names the generated trees the stack packs produce (`build/`,
 `.dart_tool/`, `.build/`, `.swiftpm/`, `DerivedData/`, `Derived/`, `.venv/` and
-mise's sidecar lock tree `.config/mise/locks/`), since the linter does not read
-`.gitignore`; the JS/TS linter gate, which used to ship the file, ships it no
-more. The `lint` hook is `require_serial`, so one run goes at a time — a staged
-list too long for one command line still splits into sequential runs. The trees
-a gate skips are stated as **one exclusion set**: the formatter's `dprint.json`
-and `taplo.toml` and the hook config's global `exclude` — a `(?x)` block, one
-anchored alternative per line — spell the same fifteen entries (`.build`,
-`.claude`, `.git`, `.turbo`, `.venv`, `Derived`, `build`, `dist`,
+mise's sidecar lock tree `.config/mise/locks/`, which the formatter lists
+exclude too), since the linter does not read `.gitignore`; the JS/TS linter
+gate, which used to ship the file, ships it no more. The `lint` hook is
+`require_serial`, so one run goes at a time — a staged list too long for one
+command line still splits into sequential runs. The trees a gate skips are
+stated as **one exclusion set**: the formatter's `dprint.json` and `taplo.toml`
+and the hook config's global `exclude` — a `(?x)` block, one anchored
+alternative per line — spell the same sixteen entries (`.build`, `.claude`,
+`.config/mise/locks`, `.git`, `.turbo`, `.venv`, `Derived`, `build`, `dist`,
 `graphify-out`, `node_modules`, `target`, `*.xcassets` and the three lockfile
 globs; `.build` is SwiftPM's output tree, `Derived` a common name for a
 generated one, and an asset catalog's `Contents.json` files Xcode's own,

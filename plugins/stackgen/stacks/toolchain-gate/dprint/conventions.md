@@ -19,7 +19,8 @@ formatting a template rewrites the placeholders it exists to carry. The agent
 tooling tree is the other one, and it gets its own section below. Xcode's
 asset catalogs (`*.xcassets`) are excluded as generated too: Xcode writes and
 rewrites every `Contents.json` inside them, so a formatted one is rewritten
-back on the next edit in the IDE. The set
+back on the next edit in the IDE. So is mise's sidecar lock tree
+`.config/mise/locks/`: `mise.lock` records its digest. The set
 is the **one exclusion set** the three formatter lists share — this file,
 `taplo.toml`'s `exclude` and the hook config's global `exclude` spell the same
 set, at any depth, in their own syntax, and the toolkit's checker holds the
