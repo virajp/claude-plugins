@@ -61,8 +61,14 @@ mkdir -p "$(dirname "${LOG}")"
 LOCK="${GIT_DIR_ABS}/graphify-refresh.lock"
 if ! mkdir "${LOCK}" 2>/dev/null; then
   holder="$(cat "${LOCK}/pid" 2>/dev/null || true)"
-  if [ -n "${holder}" ] && kill -0 "${holder}" 2>/dev/null; then
-    print_yellow "graphify: a refresh is already running — skipped (lock: ${LOCK})"
+  if [ -n "${holder}" ]; then
+    if kill -0 "${holder}" 2>/dev/null; then
+      print_yellow "graphify: a refresh is already running — skipped (lock: ${LOCK})"
+      exit 0
+    fi
+  # No PID yet means another run is between its mkdir and its write, unless the lock is over ten minutes old.
+  elif [ -z "$(find "${LOCK}" -maxdepth 0 -mmin +10 2>/dev/null)" ]; then
+    print_yellow "graphify: a refresh is starting — skipped (lock: ${LOCK})"
     exit 0
   fi
   # The holder is gone (a killed rebuild), so the lock is stale: take it over.
@@ -72,16 +78,18 @@ if ! mkdir "${LOCK}" 2>/dev/null; then
     exit 0
   fi
 fi
-# This task holds the lock until the rebuild's own PID replaces it below.
+# This task holds the lock until the rebuild writes its own PID over it.
 echo "$$" >"${LOCK}/pid"
 
 print_yellow "graphify: refreshing the graph in the background (log: ${LOG})"
-# Detached so the commit returns at once; a full rebuild can take minutes, and the lock goes when it ends.
-(
-  trap '' HUP
-  trap 'rm -rf "${LOCK}"' EXIT
-  graphify update . ${force[@]+"${force[@]}"}
-) >>"${LOG}" 2>&1 </dev/null &
+# Detached so the commit returns at once; the rebuild removes the lock on exit only while the lock is still its own.
+# shellcheck disable=SC2016
+nohup bash -c 'lock="$1"
+shift
+release() { [ "$(cat "${lock}/pid" 2>/dev/null)" = "$$" ] && rm -rf "${lock}"; }
+trap release EXIT
+echo "$$" >"${lock}/pid"
+graphify update . "$@"' graphify-refresh "${LOCK}" ${force[@]+"${force[@]}"} >>"${LOG}" 2>&1 </dev/null &
 echo "$!" >"${LOCK}/pid" 2>/dev/null || true
 disown
 exit 0
