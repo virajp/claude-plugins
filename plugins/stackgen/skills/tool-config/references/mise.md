@@ -242,11 +242,13 @@ the repo root:
 | `mise/tasks/**`                                     | whole files, verbatim, mode `755`      |
 | `vscode.d/mise.jsonc`                               | one `mise` block, `//` markers — only when `editor=vscode` |
 
-**The frame is what opens a file before any block**: its header comment — the
-leading run of comment and blank lines, ending at the first line that is
-neither — and in a section file the table line — `[tools]` in `tools.toml`,
-`[env]` in `env.toml`. A top-level file's frame is its header comment alone,
-since `min_version` must precede `[settings]`; the `mise` block holds both.
+**The frame is what opens a file before any block**: its leading comment
+run, up to the first blank line, and in a section file the table line —
+`[tools]` in `tools.toml`, `[env]` in `env.toml`. A comment directly above a
+key, with no blank line between, is that key's and sits in its block — so the
+comment naming the release `env_conf_d` was tested on stays above
+`min_version`. A top-level file's frame is its header comment alone, since
+`min_version` must precede `[settings]`; the `mise` block holds both.
 `tasks.toml` has no single table: its blocks hold whole `[tasks.<name>]`
 tables. Everything below the frame in an asset is the `mise` block, with its
 marked positions filled from the arguments; an asset with nothing below its
@@ -372,9 +374,10 @@ installs them unconditionally.
 | `lock`                                           | the lock, when none exists                |
 
 Each writes into the requester's block, `for <requester>`, or outside every
-block when the call has none. `<env>` is `dev`, `ci` or `test`, and
-`to <env>` without the trailing word reads the same. A call may continue onto
-a second line; the words are what count.
+block when the call has none — a call only a person types, written on their
+approval. `<env>` is `dev`, `ci` or `test`, and `to <env>` without the
+trailing word reads the same. A call may continue onto a second line; outside
+a quoted value the words are what count, and a quoted value is read exactly.
 
 ### What a call may carry
 
@@ -387,8 +390,12 @@ Checked before anything is shown, and a call that fails is refused whole:
   an optional backend prefix and its path, `aqua:realm/SwiftLint` — and
   nothing else: no `=`, `]`, quote, space or control character.
 - **Every value** — an env value, an alias command, a version — is written as
-  a TOML basic string, with `\`, `"` and every control character escaped.
-  Nothing a call carries is ever written as bare TOML.
+  a TOML basic string. Nothing a call carries is ever written as bare TOML.
+- **A value given quoted**, `"…"`, is read as a TOML basic string exactly as
+  written, its escapes already in place, and written verbatim; one that does
+  not parse as a basic string is refused. **A value given bare** holds no
+  quote and no space anywhere, is raw, and is escaped on write — `\`, `"` and
+  every control character.
 - **A template is legal only in `add env … for <requester>`**, a pack's own
   shipped line. `set env`, and `add env` with no `for`, refuse a value holding
   `{{`, `{%` or `{#`: mise renders every env value as a template on every
@@ -403,7 +410,7 @@ and is shown as a conflict row naming the file and whose pin it is; the user
 settles it, and a pin two environments need moves to `tools.toml`.
 
 **`add env`** writes `<KEY> = "<value>"`; the value may be given quoted or
-bare. A requester's own value may be a template —
+bare, as above. A requester's own value may be a template —
 `"{{ config_root | split(pat='/') | last }}"` — while a machine value, which
 `set env` takes from a person, never is. A key already set in the same file by
 another block is a conflict row, as for a tool. **A key the requesting pack's
@@ -416,6 +423,22 @@ setting the key is refused. It is how `/vwf:setup` fills a pack's machine
 value — `set env XCODE_VERSION=26.1 for swiftui`. An answer equal to the
 current value writes nothing. With no `for`, it rewrites the user's own line
 for that key, and is refused where there is none.
+
+**A key also set outside the requester's block is a conflict row.** When
+`set env <KEY>=<value> for <requester>` finds `KEY` set by a user line in any
+`conf.d/env*.toml`, or in an `[env]` table of an old top-level mise file —
+`.config/mise.toml`, `.config/mise.<env>.toml`, a root `mise.toml` or
+`.mise.toml` — the row names the file, the line and both values, with two
+answers: **move in** (the outside line is removed and the value written in
+the requester's block) or **keep both** (both lines stay, and the row names
+the one that wins). mise's load order decides the winner: a top-level mise
+file overrides every `conf.d` file, and between two `conf.d` files the later
+in alphabetical order wins — `env.dev.toml` over `env.toml`. A user line in
+the same file as the block cannot stay beside it, since a TOML table holds a
+key once: that row offers **move in** or `keep-existing` (the block's value is
+not written). Nothing is written until the user picks, and nothing records the
+answer. A caller never removes the outside line itself: it relays this row
+inside its own consent.
 
 **`add alias`** writes `<name> = "<command>"`. Dev only —
 `to dev environment` is accepted and any other environment refused, since a
