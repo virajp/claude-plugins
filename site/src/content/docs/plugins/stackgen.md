@@ -306,30 +306,33 @@ each value detected on the machine, offered as the default, and written as the
 repo's committed pin through `/stackgen:tool-config mise set env` — and every
 task that builds checks `xcodebuild -version` against it and fails fast. The
 tasks read the pins from the environment mise exports, never from a file. A
-value the repo already sets elsewhere in its mise config — `.config/mise.toml`'s
-`[env]`, or the `conf.d/swiftui.toml` fragment an older pack landed — is moved
-into the block by `/vwf:setup`, preselecting the team's value, and the old line
-removed. A pin set in the environment or in a gitignored `mise.local.toml` is a
-machine's deliberate override and is left alone. The app's dependencies are
-added through Xcode and locked in the `Package.resolved` the project keeps — a
-path the swiftpm pack's `lockfile` fact names, so doctor finds it — and the
-swiftpm component governs only a local package the app splits out. Goldens run
-through swift-snapshot-testing in a `SnapshotTests` target under `test:golden`,
-on the simulator the repo pins as `SIMULATOR_DEVICE`, `SIMULATOR_OS` and
-`SIMULATOR_PLATFORM` in the same fragment, and the pack's `ux-gate` skill runs
-them for the pinned platform, audits accessibility on that platform and on
-`desktop` — a native macOS target; Mac Catalyst is not supported — and reports
-every other changed platform as a finding that it was not run; it returns only
-vwf's three keys, and reports `rendered: ok` only when some goldens were
-compared. Its doctrine covers the whole app-framework bar. Beside topics 1–11
-its router carries one reference per Apple platform, keyed by the vwf token it
-realises — iOS and iPadOS for `mobile` and `tablet`, macOS for `desktop`,
-CarPlay for `auto`, watchOS for `watch`, tvOS for `tv`, visionOS for `spatial` —
-and topic 12, the wiring for Apple's core integrations: widgets and
-complications, App Intents, push notifications, StoreKit and Sign in with Apple.
-Like Flutter's, those integration references are wiring only — setup order,
-platform configuration, anti-patterns — with the API surface left to Context7 at
-use time. Third-party integrations are not covered yet.
+value the repo already sets elsewhere in its mise config — a line in any
+`conf.d/env*.toml`, or an `[env]` table in an old top-level mise file — is
+preselected as the team's value, and the skill shows it as a conflict row inside
+`/vwf:setup`'s question: move it into the block, the old line removed, or keep
+both — keep existing instead where the line sits in the block's own file, since
+a TOML table cannot hold a key twice. A pin set in the environment or in a
+gitignored `mise.local.toml` is a machine's deliberate override and is left
+alone. The app's dependencies are added through Xcode and locked in the
+`Package.resolved` the project keeps — a path the swiftpm pack's `lockfile` fact
+names, so doctor finds it — and the swiftpm component governs only a local
+package the app splits out. Goldens run through swift-snapshot-testing in a
+`SnapshotTests` target under `test:golden`, on the simulator the repo pins as
+`SIMULATOR_DEVICE`, `SIMULATOR_OS` and `SIMULATOR_PLATFORM` in the same
+fragment, and the pack's `ux-gate` skill runs them for the pinned platform,
+audits accessibility on that platform and on `desktop` — a native macOS target;
+Mac Catalyst is not supported — and reports every other changed platform as a
+finding that it was not run; it returns only vwf's three keys, and reports
+`rendered: ok` only when some goldens were compared. Its doctrine covers the
+whole app-framework bar. Beside topics 1–11 its router carries one reference per
+Apple platform, keyed by the vwf token it realises — iOS and iPadOS for `mobile`
+and `tablet`, macOS for `desktop`, CarPlay for `auto`, watchOS for `watch`, tvOS
+for `tv`, visionOS for `spatial` — and topic 12, the wiring for Apple's core
+integrations: widgets and complications, App Intents, push notifications,
+StoreKit and Sign in with Apple. Like Flutter's, those integration references
+are wiring only — setup order, platform configuration, anti-patterns — with the
+API surface left to Context7 at use time. Third-party integrations are not
+covered yet.
 
 The `devtools` plugin then dissolved into stackgen and was deleted, closing the
 marketplace at two plugins. Its mise doctrine and its file-based task library
@@ -805,12 +808,12 @@ One skill owns the configuration of the tools every repo runs, whatever its
 stack — mise today. Its static files and templates sit in the skill's
 `assets/mise/`, laid out as they land; its doctrine and verbs in
 `references/mise.md`. No mise skill is copied into your repo any more. It takes
-three argument shapes:
+three argument shapes, each of which `preview` may open:
 
 ```text
-/stackgen:tool-config <tool> <instruction> [for <requester>]
-/stackgen:tool-config all [key=value …]
-/stackgen:tool-config <tool> key=value [key=value …]
+/stackgen:tool-config [preview] <tool> <instruction> [for <requester>] [answers=…]
+/stackgen:tool-config [preview] all [key=value …] [answers=…]
+/stackgen:tool-config [preview] <tool> key=value [key=value …] [answers=…]
 ```
 
 - **`all`** lands every tool the skill owns, filling each marked position from
@@ -826,22 +829,45 @@ three argument shapes:
   and `remove <requester>`. Anything else is refused, naming the verbs.
 - **`for <requester>`** names whose lines these are. A pack's calls carry its
   slug; the base is the tool's own name. A call with no `for` writes your own
-  line.
+  line, and only a call you type does that.
+- **`preview`** builds the rows the same call would show — every create, write,
+  fold, move and delete, every drift and conflict row — numbers them `r1`, `r2`,
+  … and returns them, writing nothing and asking nothing. A caller that gathers
+  one consent for a whole plan previews each call, shows the rows inside its own
+  question, then makes the real call with the answers.
+- **`answers=<id>:<answer>,…`**, always the last argument and never on a
+  preview, hands those answers back — `take-theirs`, `keep-mine`, `merge`,
+  `keep-existing`, `overwrite`, `move-in` or `keep-both`, whichever the row
+  offers, and `ok` for a plain create, write, fold, move or delete row. Every
+  previewed row needs an answer: a call missing any row, naming an unknown one,
+  or meeting a row changed since the preview is refused whole, nothing written,
+  and the rows shown again. A call carrying a matching `answers=` asks nothing.
+  A call without it is its own consent round.
+- **A value** given bare is raw and escaped on write; one given quoted is read
+  as a TOML basic string exactly as written and written verbatim.
 
 **Each requester's lines sit between its own markers** — `# >>> swiftui` and
 `# <<< swiftui`, `//` in JSONC — inside the section file the tool reads. Lines
-outside every block are yours, and the skill never touches them without asking.
+outside every block are yours: a pack's call and the materializer never write,
+reorder or remove one — only a call you typed, or a conflict row you settled.
 **A clash is a conflict row, never a silent overwrite**: a tool, env key or
 alias name that another block or your own line already holds is shown before
 anything is written — for an alias, keep the existing or overwrite it — and
-nothing records the answer, so the next run that meets it asks again. A file
-exists only while it has content. **Drift is tested by content, never by a
-hash**: a block differing from what its requester would write now is one row —
-take theirs, keep mine for this run, or merge — and the skill never picks for
-you. A filled marked position and a pack's `machine_env` value are never drift.
-`remove <requester>` deletes that requester's blocks and nothing else. Every
-path it writes is a `lock.yaml` entry sourced `tool-config/<tool>@<version>`,
-the version stackgen's own. It never commits; the caller does.
+nothing records the answer, so the next run that meets it asks again. A value
+`set env` finds set outside the pack's block — your line in an environment
+fragment, or an `[env]` table in an old top-level mise file — is a conflict row
+too, answered **move in** (your line removed, the value written in the pack's
+block) or **keep both** (the row names which one mise's precedence makes win) —
+or, when your line sits in the pack's own file, **move in** or **keep
+existing**, since a TOML table cannot hold a key twice. A file exists only while
+it has content. **Drift is tested by content, never by a hash** — words outside
+quoted strings, so spacing is never drift, and a quoted string exactly: a block
+differing from what its requester would write now is one row — take theirs, keep
+mine for this run, or merge — and the skill never picks for you. A filled marked
+position and a pack's `machine_env` value are never drift. `remove <requester>`
+deletes that requester's blocks and nothing else. Every path it writes is a
+`lock.yaml` entry sourced `tool-config/<tool>@<version>`, the version stackgen's
+own. It never commits; the caller does.
 
 **A pack asks for what it needs** through a `tool-config:` list in its
 `pack.yaml`, one instruction per line:
@@ -852,11 +878,13 @@ tool-config:
   - mise add env XCODE_VERSION="" to all environments
 ```
 
-The materializer runs each line as `/stackgen:tool-config <line> for <pack>`,
-listed under the `config/` consent line, and runs `remove <pack>` when a pack is
+The materializer previews each line as `/stackgen:tool-config <line> for <pack>`
+in its dry-run, shows the returned rows under the `config/` consent line, then
+runs the calls with those answers, and runs `remove <pack>` when a pack is
 dropped. [`/vwf:setup`](./vwf.md#vwfsetup) fills a `machine_env` value with
-`set env <KEY>=<value> for <pack>`. A pack never ships a `conf.d` fragment: the
-checker refuses one.
+`set env <KEY>=<value> for <pack>`, and re-runs every landed pack's list on each
+run, so a call a newer pack changed reaches your repo without a reshape. A pack
+never ships a `conf.d` fragment: the checker refuses one.
 
 ### The config split
 
@@ -1325,14 +1353,14 @@ toolkit will find it: vwf probes `setup:worktree`, the aggregators call
 
 ## Skills and the agent
 
-| Name                      | Kind                   | Does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `stackgen-stack-menu`     | adapter, skill-invoked | The packs + the one open `generate` entry, as a vwf menu payload. Answers the same in every product                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `stackgen-stack-template` | adapter, skill-invoked | The dispatch: materialized entry → pure read; a first pin — which arrives from `/vwf:setup`'s materialize pass — resolves the bundle's composition and dispatches **per component**, packs copied and uncovered components generated, landing once behind one consent gate in the repo the optional `repo:` line names. Unknown slug → error, never a guess                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `stackgen-sync`           | user-only              | The explicit re-sync, **per component**: lockfile-anchored diff against current component packs, regeneration offered per generated component, the delta presented for consent. Repo edits never overwritten by default. Entries sourced `tool-config/…` are that skill's and never diffed here; a pack whose `tool-config:` list changed is reported and pointed at `/vwf:setup reshape`. Conditional paths are evaluated first, against the config's `answers:` block with the forge re-read live — a false path with no record is `skipped (condition)` and never offered, a never-landed path whose condition now holds is offered as a create, and a landed path whose condition turned false is kept and reported once. Removing a pack drops its `skipped:` rows with its entries. Closes by **re-checking the repo shape** — `/vwf:setup`'s Step 0 check, in-session, over the base and every member against the lockfile just updated — and on drift offers `/vwf:setup reshape` and invokes it on a yes; clean says nothing. A fragment that moved is folded into the merged config there, by the reshape, never by the sync |
-| `tool-config`             | user **and** model     | Owns the mise config: `/stackgen:tool-config all [key=value …]` lands it, `<tool> <instruction> [for <requester>]` runs one verb, each requester's lines kept between its own markers and drift shown as take theirs, keep mine or merge. Called by `/vwf:init`, by the materializer for a pack's `tool-config:` list and by `/vwf:setup` for a `machine_env` value; yours to run as well                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `stackgen-reputation`     | user **and** model     | A verdict on every name it is given — `/stackgen:stackgen-reputation <ecosystem>:<name> …`, the prefix one of `npm:`, `pypi:`, `pub:`, `action:` (owner/repo) or `image:` (registry/repo), an optional version or ref (`npm:left-pad@1.3.0`, `action:actions/checkout@v4`, `image:docker.io/library/nginx:1.27`) pinning what the advisory check runs against — one row per name reading `pass`, `warn` or `block`, with the signals that decided it, from public read APIs. The generator calls it over every concrete name a generated component emits; you call it on a name before typing it anywhere                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `stackgen-skill-reviewer` | subagent               | The stateless trust gate on generation: catalog fidelity, the **when-not-to-apply** checks, citations that resolve and support, honest emitted facts, **kind conformance**, **topic-bar coverage** against the composition, and every emitted name carrying a verdict-table row that does not read `block` — read off the table it is handed, never looked up                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Name                      | Kind                   | Does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stackgen-stack-menu`     | adapter, skill-invoked | The packs + the one open `generate` entry, as a vwf menu payload. Answers the same in every product                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `stackgen-stack-template` | adapter, skill-invoked | The dispatch: materialized entry → pure read; a first pin — which arrives from `/vwf:setup`'s materialize pass — resolves the bundle's composition and dispatches **per component**, packs copied and uncovered components generated, landing once behind one consent gate in the repo the optional `repo:` line names. Unknown slug → error, never a guess                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `stackgen-sync`           | user-only              | The explicit re-sync, **per component**: lockfile-anchored diff against current component packs, regeneration offered per generated component, the delta presented for consent. Repo edits never overwritten by default. Entries sourced `tool-config/…` are that skill's and never diffed here; a pack whose `tool-config:` list changed is reported and pointed at `/vwf:setup`, whose materialize pass re-runs it. Conditional paths are evaluated first, against the config's `answers:` block with the forge re-read live — a false path with no record is `skipped (condition)` and never offered, a never-landed path whose condition now holds is offered as a create, and a landed path whose condition turned false is kept and reported once. Removing a pack drops its `skipped:` rows with its entries. Closes by **re-checking the repo shape** — `/vwf:setup`'s Step 0 check, in-session, over the base and every member against the lockfile just updated — and on drift offers `/vwf:setup reshape` and invokes it on a yes; clean says nothing. A fragment that moved is folded into the merged config there, by the reshape, never by the sync |
+| `tool-config`             | user **and** model     | Owns the mise config: `/stackgen:tool-config all [key=value …]` lands it, `<tool> <instruction> [for <requester>]` runs one verb, `preview` returns a call's rows without writing and `answers=` hands their answers back, each requester's lines kept between its own markers and drift shown as take theirs, keep mine or merge. Called by `/vwf:init`, by the materializer for a pack's `tool-config:` list and by `/vwf:setup` for a `machine_env` value; yours to run as well                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `stackgen-reputation`     | user **and** model     | A verdict on every name it is given — `/stackgen:stackgen-reputation <ecosystem>:<name> …`, the prefix one of `npm:`, `pypi:`, `pub:`, `action:` (owner/repo) or `image:` (registry/repo), an optional version or ref (`npm:left-pad@1.3.0`, `action:actions/checkout@v4`, `image:docker.io/library/nginx:1.27`) pinning what the advisory check runs against — one row per name reading `pass`, `warn` or `block`, with the signals that decided it, from public read APIs. The generator calls it over every concrete name a generated component emits; you call it on a name before typing it anywhere                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `stackgen-skill-reviewer` | subagent               | The stateless trust gate on generation: catalog fidelity, the **when-not-to-apply** checks, citations that resolve and support, honest emitted facts, **kind conformance**, **topic-bar coverage** against the composition, and every emitted name carrying a verdict-table row that does not read `block` — read off the table it is handed, never looked up                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 **"skill-invoked" is two frontmatter keys, not one.** The two adapter skills
 carry `disable-model-invocation: false`, so vwf can reach them by their
