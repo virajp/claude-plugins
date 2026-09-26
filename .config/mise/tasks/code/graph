@@ -59,24 +59,49 @@ mkdir -p "$(dirname "${LOG}")"
 
 # One rebuild at a time: mkdir is atomic, and the lock holds the PID of whoever owns it.
 LOCK="${GIT_DIR_ABS}/graphify-refresh.lock"
-if ! mkdir "${LOCK}" 2>/dev/null; then
+TAKEOVER="${LOCK}.takeover"
+
+# Held means a live PID, or no PID yet on a lock under ten minutes old (a run between its mkdir and its write).
+lock_is_held() {
+  local holder
   holder="$(cat "${LOCK}/pid" 2>/dev/null || true)"
   if [ -n "${holder}" ]; then
-    if kill -0 "${holder}" 2>/dev/null; then
+    kill -0 "${holder}" 2>/dev/null
+  else
+    [ -d "${LOCK}" ] && [ -z "$(find "${LOCK}" -maxdepth 0 -mmin +10 2>/dev/null)" ]
+  fi
+}
+
+if ! mkdir "${LOCK}" 2>/dev/null; then
+  if lock_is_held; then
+    print_yellow "graphify: a refresh is already running — skipped (lock: ${LOCK})"
+    exit 0
+  fi
+  # A takeover left by a killed run is itself stale after ten minutes.
+  if [ -n "$(find "${TAKEOVER}" -maxdepth 0 -mmin +10 2>/dev/null)" ]; then
+    rmdir "${TAKEOVER}" 2>/dev/null || true
+  fi
+  # Only the run that makes the takeover dir may replace a stale lock, so two runs never both take it.
+  if ! mkdir "${TAKEOVER}" 2>/dev/null; then
+    print_yellow "graphify: another run is taking over the lock — skipped (lock: ${LOCK})"
+    exit 0
+  fi
+  # Re-checked under the takeover: another run may have replaced the lock since the first read.
+  if ! mkdir "${LOCK}" 2>/dev/null; then
+    if lock_is_held; then
+      rmdir "${TAKEOVER}"
       print_yellow "graphify: a refresh is already running — skipped (lock: ${LOCK})"
       exit 0
     fi
-  # No PID yet means another run is between its mkdir and its write, unless the lock is over ten minutes old.
-  elif [ -z "$(find "${LOCK}" -maxdepth 0 -mmin +10 2>/dev/null)" ]; then
-    print_yellow "graphify: a refresh is starting — skipped (lock: ${LOCK})"
-    exit 0
+    rm -rf "${LOCK}"
+    # A plain run may win the freed lock first; it is then that run's rebuild.
+    if ! mkdir "${LOCK}" 2>/dev/null; then
+      rmdir "${TAKEOVER}"
+      print_yellow "graphify: another run took the lock first — skipped (lock: ${LOCK})"
+      exit 0
+    fi
   fi
-  # The holder is gone (a killed rebuild), so the lock is stale: take it over.
-  rm -rf "${LOCK}"
-  if ! mkdir "${LOCK}" 2>/dev/null; then
-    print_yellow "graphify: another run took the lock first — skipped (lock: ${LOCK})"
-    exit 0
-  fi
+  rmdir "${TAKEOVER}"
 fi
 # This task holds the lock until the rebuild writes its own PID over it.
 echo "$$" >"${LOCK}/pid"
