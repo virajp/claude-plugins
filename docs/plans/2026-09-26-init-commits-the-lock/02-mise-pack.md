@@ -2,12 +2,13 @@
 
 - **Wave:** 1
 - **Depends on:** —
-- **Owns:** `plugins/vwf/skills/init/packs/mise/**`
+- **Owns:** `plugins/stackgen/skills/tool-config/assets/mise/**`,
+  `plugins/stackgen/skills/tool-config/references/mise.md`
 - **Model:** opus
 - **Kind:** edit
-- **Read first:** `packs/mise/config/.config/mise/tasks/setup/mise` whole;
-  `packs/mise/skills/mise/references/task-library.md` (the `setup:mise` row);
-  index.md's Facts.
+- **Read first:** `assets/mise/.config/mise/tasks/setup/mise` whole;
+  `plugins/stackgen/skills/tool-config/references/mise.md` (the `setup:mise`
+  verb); index.md's Facts.
 - **Lazy-load:** `mise lock --help`.
 
 ## Ruling
@@ -23,8 +24,8 @@
    set: skip reshim, doctor and install; run the existing missing-lock branch
    (the environment union) and exit 0; refuse `--lock-only` together with
    `--upgrade` with a one-line error.
-2. **`skills/mise/references/task-library.md`** — the `setup:mise` row lists
-   `--lock-only`, one line.
+2. **`references/mise.md`** — the `setup:mise` row lists `--lock-only`, one
+   line.
 
 ## Verification
 
@@ -36,7 +37,7 @@
 
 - Payload excluded from this repo's dprint; `plugins/**/*.md` not formatted;
   keep exec bits.
-- Touch nothing outside `packs/mise/**`.
+- Touch nothing outside the owned paths.
 - Delete with `rm`, never `git rm`; no `git checkout`/`restore`.
 
 ## Commit

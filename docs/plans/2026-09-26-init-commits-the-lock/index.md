@@ -3,7 +3,7 @@ type: vwf-change-plan
 title: init commits the lock — the first CI run of a shaped repo finds its
   mise lock
 requires:
-  - docs/plans/2026-09-26-mise-config-skill
+  - docs/plans/2026-09-26-tool-config-hygiene
 backlog: [ B67 ]
 backlog_pieces: []
 ---
@@ -45,10 +45,9 @@ The framing: B67, from the gate-hardening gaps
 (`docs/plans/archived/2026-09-25-gate-hardening`): CI's first run failed until
 the lock and its aube sidecar were committed together, and init's bootstrap ran
 no `mise install`. After B1 (`docs/plans/2026-09-26-mise-conf-d-layout`) the
-lock is one file written only when missing; after M
-(`docs/plans/2026-09-26-universal-packs-into-init`) the mise pack is init's;
-after B2 (`docs/plans/2026-09-26-mise-conf-d-packs`) init merges every pack's
-tools. Not a reversal.
+lock is one file written only when missing; after T1
+(`docs/plans/2026-09-26-tool-config-mise`) `stackgen:tool-config` owns mise;
+after T1–T3 packs ask `stackgen:tool-config` for their tools. Not a reversal.
 
 ## Facts the survey established
 
@@ -61,19 +60,21 @@ tools. Not a reversal.
   §11(b) (near :809) stages "every path in this repo's written / moved / renamed
   lists, and nothing else"; a lock written by a later aggregator is not in those
   lists. `existing-repo.md` has no mise-lock handling. §10 (near :685–706)
-  offers the bootstrap aggregator after the commit. Line numbers move with M and
-  B2.
+  offers the bootstrap aggregator after the commit. Line numbers move with
+  T1–T3.
 - **B1's lock rules**: one `.config/mise/mise.lock`; written only when missing
   or under `--upgrade` (dev); one `mise lock` with `MISE_ENV` set to the union
   of every environment suffix found; `task.run_auto_install = false`, so running
   the task installs nothing before its body.
 - **`setup:mise`** lives at
-  `plugins/vwf/skills/init/packs/mise/config/.config/mise/tasks/setup/mise`
-  after M; this repo's `.config/mise/tasks/setup/mise` is byte-identical to it.
-- **Gates**: `p:plugins:shellcheck` covers `init/packs/*` after M.
+  `plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/mise`
+  after T1 (`docs/plans/2026-09-26-tool-config-mise`); this repo's
+  `.config/mise/tasks/setup/mise` is byte-identical to it.
+- **Gates**: `p:plugins:shellcheck` covers
+  `plugins/stackgen/skills/tool-config/assets/*` after T1.
 - **Commit convention**: `ops`, `docs`, `merge`, `feat`, `fix`, `refactor`; no
-  scopes. **Versions**: vwf `20.0.0` after M, tagged only if `/release` ran at
-  B2's landing.
+  scopes. **Versions**: vwf `20.0.0` after T1, tagged only if `/release` ran at
+  T3's landing.
 
 ## Assumed decisions — confirm or override at review
 
@@ -95,7 +96,7 @@ none
 | Id | Wave | Unit file                                    | Kind   | Owns                                                                                                                                        | Depends on | Status  | Commit |
 | -- | ---- | -------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
 | U1 | 1    | [01-init.md](01-init.md)                     | edit   | `plugins/vwf/skills/init/SKILL.md`, `plugins/vwf/skills/init/references/new-repo.md`, `plugins/vwf/skills/init/references/existing-repo.md` | —          | pending |        |
-| U2 | 1    | [02-mise-pack.md](02-mise-pack.md)           | edit   | `plugins/vwf/skills/init/packs/mise/**`                                                                                                     | —          | pending |        |
+| U2 | 1    | [02-mise-pack.md](02-mise-pack.md)           | edit   | `plugins/stackgen/skills/tool-config/assets/mise/**`                                                                                        | —          | pending |        |
 | U3 | 1    | [03-this-repo.md](03-this-repo.md)           | edit   | `.config/mise/tasks/setup/mise`                                                                                                             | —          | pending |        |
 | U4 | 2    | [04-review.md](04-review.md)                 | review | —                                                                                                                                           | U2, U3     | pending |        |
 | U5 | 3    | [05-docs.md](05-docs.md)                     | edit   | `.claude/**`, `CLAUDE.md`, `readme.md`, `site/src/content/docs/**`                                                                          | U1, U4     | pending |        |
