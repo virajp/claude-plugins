@@ -10,4 +10,4 @@ to pick the next runnable plan.
 | ------------------------------------------- | ------ | ---------------------------------------------------------------------------------- | ----------- | -------- | -------- | -------- | ----------- |
 | docs/plans/2026-09-25-partial-backlog-items | change | partial backlog items — a plan that lands one piece leaves its item Partially done | —           | 10       | COMPLETE | —        | B52         |
 | docs/plans/2026-09-26-mise-lock-honoured    | change | mise lock honoured — setup:all installs from the lockfile, --upgrade moves it      | —           | 10       | COMPLETE | —        | B54 (piece) |
-| docs/plans/2026-09-26-mise-lock-gaps        | change | mise lock gaps — only setup:mise writes a lockfile, and setup:all needs MISE_ENV   | —           | 10       | APPROVED | —        | B54 (piece) |
+| docs/plans/2026-09-26-mise-conf-d-layout    | change | mise conf.d layout — section files, one lock for every environment                 | —           | 10       | APPROVED | —        | B54 (piece) |

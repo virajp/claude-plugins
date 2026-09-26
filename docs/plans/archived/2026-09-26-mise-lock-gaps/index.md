@@ -11,9 +11,10 @@ backlog_pieces: [ B54 ]
 
 ## Status
 
-**APPROVED**
+**ARCHIVED**
 
-APPROVED 2026-09-26 by the user
+ARCHIVED 2026-09-26 — not run; was APPROVED. Superseded by
+docs/plans/2026-09-26-mise-conf-d-layout (B1), which carries its rulings.
 
 ## Consent
 
