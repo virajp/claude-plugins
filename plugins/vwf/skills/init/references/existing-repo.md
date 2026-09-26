@@ -133,46 +133,48 @@ a repository of its own.
 
 #### The move-and-shim case
 
-One shape needs saying because a naive move breaks it. Where a gate pack
-declares **both** a file in the configuration directory *and* a file of the
-same basename at the root — the root one being a two-line stand-in that does
-nothing but point at the other — the root file is not a config that failed to
-move. It is the pack's answer to a tool whose config discovery is root-only
-and cannot be redirected.
+One shape needs saying because a naive move breaks it. Where
+`/stackgen:tool-config` or a pack lands **both** a file in the configuration
+directory *and* a file of the same basename at the root — the root one being a
+two-line stand-in that does nothing but point at the other — the root file is
+not a config that failed to move. It is the owner's answer to a tool whose
+config discovery is root-only and cannot be redirected.
 
 So: a **real** configuration file of that basename at the root moves to where
-the pack's `config/` tree declares it, exactly as pass 1 says, and the pack's
-stand-in takes its place at the root. Record it as a **rename** row plus the
-create the stand-in already is, and say in the plan that the settings survive
-the move — they are read through the stand-in.
+its owner lands it, exactly as pass 1 says, and the owner's stand-in takes its
+place at the root. Record it as a **rename** row plus the create the stand-in
+already is, and say in the plan that the settings survive the move — they are
+read through the stand-in.
 
-**Not every key survives it, though, and the pack says which.** A gate pack
-that ships a stand-in states, in its own skill, what the file it points at may
+**Not every key survives it, though, and the owner says which.** An owner that
+ships a stand-in states, in its own reference, what the file it points at may
 not carry: at least one key is *not inherited* through the pointing mechanism,
 and an extended file declaring it is a fatal config diagnostic — so every bare
 invocation of that tool fails, not only the one that reads the moved config.
-Read that pack's skill for which key and why; it is the authority, and this
-file names neither the tool nor the key on purpose. The move **drops** the
-key, and the plan says so as its own line.
+Read that owner's reference for which key and why; it is the authority, and
+this file names neither the tool nor the key on purpose. The move **drops**
+the key, and the plan says so as its own line.
 
 Dropping it **widens** what the gate covers, which is the other half of the
-same trap: with the key gone, the pack's own pinned plugin list defines the
-file set, so files the repo had kept out of the gate by omission now enter it.
-The survey re-derives the covered set after the drop, the plan lists every
-file that newly enters, and each is narrowed away with an **exclusion** —
-never by restoring the dropped key, which puts the fatal diagnostic back.
+same trap: with the key gone, the owner's pinned plugin list defines the file
+set, so files the repo had kept out of the gate by omission now enter it. The
+survey re-derives the covered set after the drop, the plan lists every file
+that newly enters, and each is narrowed away with an **exclusion** —
+`/stackgen:tool-config all add exclude <paths>`, on the one consent — never by
+restoring the dropped key, which puts the fatal diagnostic back.
 
-Tell the two apart by content, never by name: the pack's stand-in is the file
-the pack ships, byte for byte, and the survey has that file in hand. Anything
+Tell the two apart by content, never by name: the stand-in is the file its
+owner ships, byte for byte, and the survey has that file in hand. Anything
 else of that basename is the repo's own and is the thing being moved.
 
 #### Root tool configs
 
 The move-and-shim case is one tool's; this step is the same shape for every
-tool a pack ships, and it is what reads a brownfield repo's own gate before
-the pack's lands over it. The [tool-config table](tool-configs.md) carries one
-row per such tool — the tool, its known root spellings, the `.config/` path
-the pack lands, and the merge shape. For each row but a `handed` one, whose
+tool a pack or `/stackgen:tool-config` ships, and it is what reads a
+brownfield repo's own gate before the shipped one lands over it. The
+[tool-config table](tool-configs.md) carries one row per such tool — the
+tool, its known root spellings, the `.config/` path its owner lands, that
+owner, and the merge shape. For each row but a `handed` one, whose
 file the toolchain migration below covers, look for every spelling at
 the root **and inside `.github/`** — the one allowlisted directory a tool's
 discovery also reads, and which the allowlist survey above reads as a single
@@ -184,8 +186,10 @@ the plan and applied on the one consent:
   path the table names, as a `git mv`, and is then **offered through pass 6
   under that path**, against the pack's file — so what the repo wrote is read
   and compared before anything lands over it, and a keep there keeps it.
-  That is the table's `move-and-offer` shape.
-- **keep both** — the repo's file stays where it is and the pack's lands in
+  That is the table's `move-and-offer` shape. Where the table's owner is
+  `/stackgen:tool-config`, the offer is that skill's conflict row in its
+  preview, not pass 6's.
+- **keep both** — the repo's file stays where it is and the owner's lands in
   `.config/`. The row says that the tool's own root-first discovery reads the
   root file and that the gate, which passes the `.config/` path explicitly,
   does not — and the report lists it under Deferred as **unread by the
@@ -221,8 +225,9 @@ nothing drifted, gets no row.
 Read, in the repo this pass runs in, the local `core.hooksPath`
 (`git config --local core.hooksPath`), a `.husky/` directory, and a
 `lefthook.yml` or `.lefthook.yml` at the root. Any hit means the repo's hooks
-are wired to something other than the gate the packs ship, and it is one
-**plan row**, `switch hook manager to pre-commit`, whose **default is keep**.
+are wired to something other than the gate `/stackgen:tool-config` lands, and
+it is one **plan row**, `switch hook manager to pre-commit`, whose **default
+is keep**.
 A hook manager somebody installed is a decision on the same footing as a
 diverged file, and switching it silently is how a team's existing hooks stop
 running the morning after a reshape.
@@ -460,10 +465,9 @@ shaped repo would ever produce an empty plan.
 - **The lockfile records nothing for it** — the repo acquired that file some
   other way — compare against the **pack's** bytes instead, on exactly the same
   terms, and **after the fills**, never raw: take the pack's payload with the
-  placeholders of [new repo](new-repo.md) §4 filled from this run's sources and
-  the commit gate's scope list filled from question 2's confirmed ids, the way
-  a landing would leave it. The raw payload carries `<REPO_URL>` and an empty
-  scope list, so a file that is exactly what a landing would have written
+  placeholders of [new repo](new-repo.md) §4 filled from this run's sources,
+  the way a landing would leave it. The raw payload carries `<REPO_URL>`, so
+  a file that is exactly what a landing would have written
   reads as diverged against it and is re-offered on every run. There is no
   landing to compare to, and this is the nearest thing. Every path the
   conflict list hands here in `blank` or `source` mode is this case, since
@@ -483,9 +487,8 @@ offering the file:
 - Take the **pack's** shipped payload for that file, at the version the
   lockfile pins — the stack adapter's pack, reachable from the plugin.
 - Splice into it the repo file's **current** value at **every marked
-  position the file carries** — §11's scope list and forge links, the ones
-  left in adapter payloads — reading each value the way that position's own
-  comment describes it.
+  position the file carries** — any a pack payload still ships — reading
+  each value the way that position's own comment describes it.
 - Hash the result, and compare it with the repo file's hash.
 
 **Equal**, and the repo file is the pack's file with nothing changed outside
@@ -496,11 +499,11 @@ exactly as before.
 
 **Every marked position is spliced, and ownership decides only who shows the
 change.** A marked position is by definition where a repo-specific value lives,
-so a value sitting in one is never content drift for this pass. **§11** owns
-the commit gate's scope list and its forge links and shows their rows. One
-edit is then one row, the owning pass's, never that row plus an offer of the
-file it sits in. The positions in files the tool-config skill owns are not
-spliced here: those files never reach this pass.
+so a value sitting in one is never content drift for this pass. One edit is
+then one row, the owning pass's, never that row plus an offer of the file it
+sits in. The positions in files the tool-config skill owns — the commit
+gate's scopes and forge links among them — are not spliced here: those files
+never reach this pass.
 
 **A record whose `source:` is `generated` has no pack payload**, so there is
 nothing to splice into: the second test is **skipped**, and test 1's mismatch
@@ -512,7 +515,7 @@ on the same single consent:
 
 - **replace** — the pack's file lands over the repo's, and every marked
   position that file carries is then filled from the confirmed answers to
-  SKILL.md's questions, exactly as §11 fills them on a fresh landing. That
+  SKILL.md's questions, exactly as a fresh landing fills them. That
   is what makes a replace safe on a file whose positions the repo had
   already filled: they are re-filled, not lost — and `init` then **records
   the file's post-fill hash in the lockfile**, under that path's `entries:`
@@ -619,8 +622,6 @@ this pass by name and treated the same way.
 
 ### 7 — Fragments and sections
 
-- **Hook fragments** — for every landed pack that ships one, whether the gate
-  configuration already carries its marked block. A missing one is a merge.
 - **Ignore sections** — for every language the stack read produced
   (SKILL.md's *The stack read*), whether the ignore file already carries that
   section's banner. A missing one is an append.
@@ -634,8 +635,9 @@ this pass by name and treated the same way.
   about, before the plan is printed; a `take` or `union` sub-line names the
   hand lines it removes.
 
-All three are detailed in
-[fragments and sections](fragments-and-sections.md).
+Both are detailed in
+[fragments and sections](fragments-and-sections.md); a pack's hook is
+`/stackgen:tool-config`'s block, never a merge here.
 
 ### 8 — Commit types
 
@@ -712,14 +714,14 @@ gets its `_default` slot as a create.
 **The skill's positions are compared by the skill.** This pass computes the
 values `/stackgen:tool-config all` takes, per [new repo](new-repo.md) §2 —
 the folder slug for `repo`, the resolved members, the landing pair the repo
-already carries, question 5's confirmed rows — and passes them to the
-skill's `preview all` in the survey, per [new repo](new-repo.md) §2. The
-skill compares each with what its file holds and returns the row: a
+already carries, question 5's confirmed rows, §11's scope list — and passes
+them to the skill's `preview all` in the survey, per [new repo](new-repo.md)
+§2. The skill compares each with what its file holds and returns the row: a
 `repo-name key: <old> → <new>` replace, member flags and aliases rewritten
-from project ids to members, a plugin list gaining or losing rows. `init`
-prints those rows in this repo's section under **Tool-config rows**, asks
-each conflict or drift row inside the plan, and the one consent covers
-them.
+from project ids to members, a plugin list gaining or losing rows, a scope
+list that moved. `init` prints those rows in this repo's section under
+**Tool-config rows**, asks each conflict or drift row inside the plan, and
+the one consent covers them.
 
 The folder slug is this repo's main checkout basename, slugified by the same
 asset. Never leave a rename to `/vwf:doctor` alone: the launch aliases in the
@@ -795,13 +797,13 @@ here would be exactly the guess the shebang pass refuses: the contract can
 say that a name is not one of its own, and cannot say what the repo meant by
 it.
 
-### 11 — The gate-config fills
+### 11 — The commit-scope argument
 
-Two positions the commit gate's packs ship **marked, with a comment naming
-what `init` fills them from**. Only one of them is a wait: the commit-scope
-list is filled on every run, the first included, from the ids question 2
-confirmed, while the forge links wait on the repo having a remote. The
-shipped comments say which is which:
+The commit gate's configuration is `/stackgen:tool-config`'s, and `init` fills
+no position in it. What stays `init`'s is **deriving the scope list**, which
+it passes to `/stackgen:tool-config all` as `scopes=`, per
+[new repo](new-repo.md) §2; the forge links are the skill's own, read from
+the repo's origin.
 
 - **The scope list takes the ids question 2 confirmed**, on any run and the
   first one included. Where the base carries a registry those are its ids,
@@ -810,45 +812,21 @@ shipped comments say which is which:
   was shown every row and accepted it has declared the list, which is the
   thing a scope needs. A registry is where a proposal may be read from, never
   a condition on the fill.
-- **The forge links fill on *any* run where the repo has a remote** — the
-  first one included, since a cloned or already-pushed repo has one from the
-  start. Only a repo with no remote yet keeps them as shipped, and the next
-  run after the remote is added fills them. They ship **commented out**, so
-  filling them means uncommenting them too; a filled line left commented is
-  the same as no link.
-
-| The fill        | Its source                                              | Fillable                 | When it stays as shipped                            |
-| --------------- | ------------------------------------------------------- | ------------------------ | --------------------------------------------------- |
-| commit scopes   | the project ids of pass 9, as question 2 confirmed them | on any run               | question 2 confirmed no id for this repo            |
-| the forge links | this repo's own origin, via `git remote get-url origin` | on any run with a remote | no origin remote                                    |
-
-**The two fills read from different places.** The scope list takes a repo's
-**own** confirmed ids — the rows question 2 showed under that repo's heading —
-and where the base carries a registry, that registry is what those rows resolved
-from for every repo in the set: a member carries no configuration of that kind,
-its file being the back-link the membership asset defines
-(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`), so a member's scopes are the
-projects that one registry places in it. The forge links are genuinely **per
-repo**: each repo's own origin, read inside that repo, since a member has its
-own remote and filling its links from the base's would point every link in it
-at another repo's forge.
-
-Rules for both:
-
+- **Each repo passes its own** confirmed ids — the rows question 2 showed
+  under that repo's heading. Where the base carries a registry, that registry
+  is what those rows resolved from for every repo in the set: a member
+  carries no configuration of that kind, its file being the back-link the
+  membership asset defines (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`), so
+  a member's scopes are the projects that one registry places in it.
 - **The confirmed ids are the only scope source.** A scope names a project
-  somebody declared, so nothing `init` merely *inferred* reaches this position
-  — never a directory listing on its own, and never the repo's name, which is
-  not a project at all and is no longer an id source anywhere. What makes the
-  ids declarable is question 2: every row was shown with its source and
-  accepted or replaced. Where that question confirmed no id for a repo, leave
-  the position exactly as the pack ships it and say in the plan that the fill
-  is waiting on `/vwf:architecture` and `/vwf:setup`.
-- **Never delete the comment.** It is what a later run reads to find the
-  position, and it is the record of where the values came from.
-- **Each fill is its own plan row**, `+ <what>` with its source named, so the
-  user sees a config being completed rather than a file quietly changing.
-- The exact spelling of both positions — the key names, the value shape — is
-  the packs', read from the shipped file in place. Nothing here re-spells it.
+  somebody declared, so nothing `init` merely *inferred* reaches this
+  argument — never a directory listing on its own, and never the repo's
+  name, which is not a project at all and is no longer an id source
+  anywhere. Where question 2 confirmed no id for a repo, pass `scopes=` and
+  say in the plan that the scopes are waiting on `/vwf:architecture` and
+  `/vwf:setup`.
+- **A changed list is the skill's row**, shown in the repo's section under
+  **Tool-config rows**, never a row of `init`'s.
 
 ## Plan
 
@@ -992,15 +970,16 @@ repo of the set that resolved to mode `blank` or `source` takes the
 - **Moves** use `git mv`, so the rename is in the index and the history
   follows the file. The readme move is a move like any other, and so is a
   root tool config's — it runs **before** the creates, so the repo's file is
-  already at its `.config/` path when the pack's would land there, and pass
-  6's offer is what decides between them. A root tool config the user picked
-  **delete** for is removed with plain `rm` here.
+  already at its `.config/` path when the shipped one would land there, and
+  pass 6's offer — or the skill's conflict row, where the tool-config table
+  names the skill the owner — is what decides between them. A root tool
+  config the user picked **delete** for is removed with plain `rm` here.
 - **`/stackgen:tool-config all`** runs next, with the arguments pass 9
   computed and `answers=` carrying every row its survey preview returned —
   `ok` for each create, write, fold, move or delete row, the user's pick
   for each conflict or drift row — per [new repo](new-repo.md) §2, so the
-  skill asks nothing. It lands the toolchain files and folds the old ones,
-  per pass 1's toolchain migration.
+  skill asks nothing. It lands the toolchain files and the gates, and folds
+  the old ones, per pass 1's toolchain migration.
   `_scripts/local` is written **before** it, since the call replaces the
   helper file.
 - **Creates** are the materializer's, by fixed slug, exactly as the new-repo
@@ -1032,7 +1011,7 @@ repo of the set that resolved to mode `blank` or `source` takes the
   there afterwards* — fill first and the replace overwrites the fill, which
   is the quiet way a run reports work it did not do. So: every replace and
   every accepted **offered** row lands, and only then does the fill pass of
-  §9 and §11 run over the tree.
+  §9 run over the tree.
 - **A kept file keeps its content, and the fill pass still reaches the marked
   positions inside it.** The keep itself needs no write; only its **record**
   does, and the offered row's keep outcome is what lists
@@ -1041,7 +1020,7 @@ repo of the set that resolved to mode `blank` or `source` takes the
   in the **base's** `.config/vwf.yaml`, spelled as §6 says, merged into the
   block rather than replacing it.
   Where that file does not exist, `init` writes the **stub** §6 names, and
-  the record goes into it. Beyond that record, the fills §9 and §11 own, and
+  the record goes into it. Beyond that record, the fills §9 owns, and
   the re-hash below, nothing about a kept file is applied here. The
   collision round's answers are written at the same point and on the same
   terms — one `enforcement.editor_keys.<file>.<key>` entry per answer, the
@@ -1067,8 +1046,8 @@ repo of the set that resolved to mode `blank` or `source` takes the
   file above is in its final place and before anything is committed.
 - **The re-hash is the last step before the git pass**, and it writes only
   the lockfile. Every file this run **filled, appended to or merged** — the
-  slots §9 and the positions §11 wrote, the placeholders §4 filled, the ignore
-  sections, the hook fragments, the editor block — plus every file pass 6
+  slots §9 wrote, the placeholders §4 filled, the ignore sections, the
+  editor block — plus every file pass 6
   **replaced or kept**, is hashed as it now stands and that hash recorded
   under its `entries:` record in the materializer's lockfile, creating the
   record for a kept file that had none. The materializer's own hash is the
@@ -1155,17 +1134,16 @@ shaping commit after it sit on the branch work flows through. A repo that was
 on `main` when the run started is on `develop` from here on, and the report
 says so; a repo that was on `develop` already stays put.
 
-Where this run wrote, merged into or moved any of: the gate's configuration
-file, the commit-message gate's configuration, or anything under the fragment
-directory — stage **those paths only** and commit them first, on their own,
-with the fixed message:
+Where this run — `/stackgen:tool-config all` included — wrote or moved either
+of the gate's configuration file and the commit-message gate's configuration,
+stage **those paths only** and commit them first, on their own, with the fixed
+message:
 
 ```text
 ops: update the pre-commit configuration
 ```
 
-They travel together because they are one change: the fragment merge is what
-the gate config's marked blocks hold, and the commit-message gate's
+They travel together because they are one change: the commit-message gate's
 configuration is what the gate config invokes. Splitting them leaves a commit
 whose hooks read a file the next commit is still going to change.
 

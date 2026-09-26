@@ -46,13 +46,14 @@ against what they ship. If this skill ever names a tool, that naming is the
 bug — say "the toolchain pack", "the gates pack", "the hygiene pack", "the
 secrets provider pack", "the task-name contract", "the legacy-name table".
 
-**Every tool `/stackgen:tool-config all` owns lands through that skill, not the
-adapter.** "The toolchain pack" below means what that call lands and what the
-skill's own reference documents. `init` passes it the answers as `key=value`
-arguments — [new repo](references/new-repo.md) §2 lists them — and the skill
-fills its own marked positions from them. Its files are its own. It shows
-their drift rows itself and records them in the adapter's lockfile as
-`source: tool-config/…`. `init` never offers, splices or re-hashes them.
+**Every tool `/stackgen:tool-config all` owns lands through that skill, not
+the adapter.** "The toolchain pack" and "the gates pack" below mean what that
+call lands and what the skill's own references document. `init` passes it the
+answers as `key=value` arguments — [new repo](references/new-repo.md) §2 lists
+them — and the skill fills its own marked positions from them. Its files are
+its own. It shows their drift rows itself and records them in the adapter's
+lockfile as `source: tool-config/…`. `init` never offers, splices or re-hashes
+them.
 
 ## Hard rules
 
@@ -71,12 +72,14 @@ their drift rows itself and records them in the adapter's lockfile as
   aggregator's member flags, the shell aliases, the per-project task groups,
   the repo-name key, the landing-model key and the member-path key, the
   toolchain config's runtime block and path entries, the commit gate's scope
-  list and forge links, the plugin task's two agent-plugin lists, and the
-  composed editor block.
+  list, the plugin task's two agent-plugin lists, and the composed editor
+  block.
   Filling one is exactly `init`'s job and is not authoring pack content — what
   the rule forbids is inventing pack-owned content from scratch, at a path or
   a position no pack marked. A position in a file the tool-config skill owns
-  is filled by passing its value as an argument, never by a splice.
+  is filled by passing its value as an argument, never by a splice — the
+  scope list as `scopes=` — and the commit gate's forge links are that
+  skill's own, read from the repo's origin, never `init`'s.
   **One file is neither, and it is the only file**: the repo-owned
   `_scripts/local` sidecar the existing-repo pipeline writes. No pack declares
   it, no pack ships it and `init` never replaces it — and nothing in it is
@@ -493,7 +496,8 @@ one value per axis, `forge`, `editor`, `secrets` and `update_bot`.
 
    What this question settles is what the plan shows and what §7 writes in
    each repo — the per-project task groups and, on **every** run including
-   the first, the commit gate's scopes, one per confirmed id. A registry,
+   the first, the commit gate's scopes, one per confirmed id, passed to
+   `/stackgen:tool-config all` as `scopes=`. A registry,
    where the repo has one, is only where this question's proposal was read
    from; the scopes take the ids it confirmed either way, and a repo with no
    registry fills them on its first run like any other. Nothing downstream
@@ -695,7 +699,7 @@ its neighbours still call the old names.
 | -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | [new repo](references/new-repo.md)                             | modes **blank** and **source** — and the git pass                             |
 | [existing repo](references/existing-repo.md)                   | mode **shaped**; and the passes **source** borrows, cited there by number     |
-| [fragments and sections](references/fragments-and-sections.md) | every mode — the three merge algorithms                                       |
+| [fragments and sections](references/fragments-and-sections.md) | every mode — the two merge algorithms                                         |
 | [readme and licence](references/readme-and-license.md)         | every mode — the stub and the files                                           |
 
 **The existing-repo pipeline adopts rather than flattens**, and three rules
@@ -716,14 +720,13 @@ conflict — a file at a pack's path that no lockfile records — is one such ro
 in `blank` and `source` mode too, shown before the consent and recorded under
 `enforcement.kept_files` on a keep exactly as the existing pipeline's pass 6
 records it. A `blank` repo rarely has one; when it does, it is never a silent
-skip. **What counts as diverged is two tests**: the
-file's hash against the lockfile's record, and, on a mismatch, the pack's
-payload with the repo's current values spliced in at **every** marked
-position the file carries — the commit gate's scopes and forge links, the
-ones left in adapter payloads. A file diverging only inside those positions
-is not offered at all; the pass that owns the position shows the row. A
-record sourced `generated` has no payload to splice into, so the second test
-is skipped and the mismatch stands. A record sourced `tool-config/…` is never
+skip. **What counts as diverged is two tests**: the file's hash against the
+lockfile's record, and, on a mismatch, the pack's payload with the repo's
+current values spliced in at **every** marked position the file carries — any
+an adapter payload still ships. A file diverging only inside those positions
+is not offered at all; the pass that owns the position shows the row. A record
+sourced `generated` has no payload to splice into, so the second test is
+skipped and the mismatch stands. A record sourced `tool-config/…` is never
 offered here: the skill shows its own drift rows.
 
 Whichever pipeline runs, the same work happens in the same order at the end of
@@ -735,10 +738,9 @@ reaches them: the **secrets provider** (§3), the **placeholders** (§4), the
 the **aggregator offer** (§10) — the existing pipeline runs them from its
 post-landing paragraph, the new-repo pipeline in its numbered order, and no
 mode skips one or asks its question twice. Beside them the **fills** the packs
-marked — the `_default` slot per project id, the commit gate's scopes from
-those same confirmed ids and its forge links where a remote exists — then the
-**three merges** (ignore sections, the first of them from the stack read, hook
-fragments, editor fragments), then the **git pass**, whose
+marked — the `_default` slot per project id — then the **two merges** (ignore
+sections, the first of them from the stack read, and editor fragments), then
+the **git pass**, whose
 questions were asked once for the run and whose commit is that repo's own.
 Between the merges and the git pass, `init` **re-records the lockfile hash** of
 every file it filled, appended to or merged, so nothing it wrote reads as drift
@@ -751,29 +753,27 @@ the file carrying the key twice. The report comes last, once, when every
 repo is done.
 
 Both pipelines land the same baselines, in one order. **First
-`/stackgen:tool-config all`**, with the answers as its arguments — it lands
-every tool that skill owns, so `init` names none of them. The survey runs it
-as `preview all` and shows its rows in the plan; the real call carries
-`answers=` for every row, per new-repo §2, so the skill asks no second
-time. **Then the
-unconditional bundles that remain**, fetched through the adapter by the
-**fixed slugs** `repo-gates` and `repo-hygiene` — fixed, never
-constructed: a name assembled from configuration is one that can silently
-resolve to nothing, which is the rule the `ux-gate` and design-adapter seams
-already follow. The secrets provider is fetched by whichever slug the user
-picked at question 4. **Every call carries the four answers** — the skill's
-as arguments, each fetch's as its
-`answers:` map — the forge, the editor, the provider slug, the update bot —
-so the materializer's conditional evaluation step can decide a pack's
+`/stackgen:tool-config all`**, with the answers as its arguments — the commit
+gate's scopes among them — it lands every tool that skill owns, the gates
+included, so `init` names none of them. The survey runs it as `preview all`
+and shows its rows in the plan; the real call carries `answers=` for every
+row, per new-repo §2, so the skill asks no second time. **Then the one
+unconditional bundle that remains**, fetched through the adapter by the
+**fixed slug** `repo-hygiene` — fixed, never constructed: a name assembled
+from configuration is one that can silently resolve to nothing, which is the
+rule the `ux-gate` and design-adapter seams already follow. The secrets
+provider is fetched by whichever slug the user picked at question 4. **Every
+call carries the four answers** — the skill's as arguments, each fetch's as
+its `answers:` map — the forge, the editor, the provider slug, the update bot
+— so the materializer's conditional evaluation step can decide a pack's
 conditional files. That map is the `answers:` block the config records, with
 the **forge refreshed from `origin`** on every run: the recorded forge is the
 record and the fallback for a repo whose remote cannot be read at all, and a
 recorded forge that no longer matches the live host is **rewritten in place**
 — that one value, nothing else — and said so in the run's own report. A pack
-with no `when:` lands whole, as it always has, and a
-file a condition skips is the plan's **Skipped** row, never a deferral:
-nothing is waiting on a later run, the repo simply is not the kind the file
-was for.
+with no `when:` lands whole, as it always has, and a file a condition skips is
+the plan's **Skipped** row, never a deferral: nothing is waiting on a later
+run, the repo simply is not the kind the file was for.
 
 Their landing is consent-gated by the materializer, and their presence in a
 lockfile is what tells a later run — or `/vwf:setup` — that a repo is shaped
