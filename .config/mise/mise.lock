@@ -137,6 +137,11 @@ url_api = "https://api.github.com/repos/google/osv-scanner/releases/assets/56241
 [tools.osv-scanner."platforms.macos-arm64".provenance.slsa]
 url = "https://github.com/google/osv-scanner/releases/download/v2.6.0/multiple.intoto.jsonl"
 
+[[tools."pipx:graphifyy"]]
+version = "0.9.68"
+backend = "pipx:graphifyy"
+specifiers = ["latest"]
+
 [[tools.pnpm]]
 version = "12.6.0"
 backend = "aqua:pnpm/pnpm"

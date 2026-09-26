@@ -39,7 +39,12 @@ force=()
 if [[ "${usage_force:-false}" == "true" ]]; then
   force=(--force)
 else
-  changed="$(git diff --name-only HEAD~1 HEAD 2>/dev/null || git diff --name-only HEAD 2>/dev/null || true)"
+  # A first commit has no parent, so every file it tracks counts as changed.
+  if git rev-parse -q --verify HEAD~1 >/dev/null; then
+    changed="$(git diff --name-only HEAD~1 HEAD)"
+  else
+    changed="$(git ls-tree -r --name-only HEAD 2>/dev/null || true)"
+  fi
   # A commit touching only graphify-out/ is the previous rebuild landing; rebuilding would loop.
   if [ -z "$(printf '%s\n' "${changed}" | grep -v '^graphify-out/' || true)" ]; then
     exit 0
@@ -52,8 +57,31 @@ export PYTHONHASHSEED=0
 LOG="${HOME}/.cache/graphify-rebuild.log"
 mkdir -p "$(dirname "${LOG}")"
 
+# One rebuild at a time: mkdir is atomic, and the lock holds the PID of whoever owns it.
+LOCK="${GIT_DIR_ABS}/graphify-refresh.lock"
+if ! mkdir "${LOCK}" 2>/dev/null; then
+  holder="$(cat "${LOCK}/pid" 2>/dev/null || true)"
+  if [ -n "${holder}" ] && kill -0 "${holder}" 2>/dev/null; then
+    print_yellow "graphify: a refresh is already running — skipped (lock: ${LOCK})"
+    exit 0
+  fi
+  # The holder is gone (a killed rebuild), so the lock is stale: take it over.
+  rm -rf "${LOCK}"
+  if ! mkdir "${LOCK}" 2>/dev/null; then
+    print_yellow "graphify: another run took the lock first — skipped (lock: ${LOCK})"
+    exit 0
+  fi
+fi
+# This task holds the lock until the rebuild's own PID replaces it below.
+echo "$$" >"${LOCK}/pid"
+
 print_yellow "graphify: refreshing the graph in the background (log: ${LOG})"
-# Detached so the commit returns at once; a full rebuild can take minutes.
-nohup graphify update . ${force[@]+"${force[@]}"} >>"${LOG}" 2>&1 </dev/null &
+# Detached so the commit returns at once; a full rebuild can take minutes, and the lock goes when it ends.
+(
+  trap '' HUP
+  trap 'rm -rf "${LOCK}"' EXIT
+  graphify update . ${force[@]+"${force[@]}"}
+) >>"${LOG}" 2>&1 </dev/null &
+echo "$!" >"${LOCK}/pid" 2>/dev/null || true
 disown
 exit 0
