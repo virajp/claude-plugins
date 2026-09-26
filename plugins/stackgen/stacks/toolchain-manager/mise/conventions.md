@@ -33,6 +33,39 @@ tooling only a human needs, ci holds the pipeline's overrides.
 so a gate pinned there is a gate the pipeline cannot run. The dev file's job is
 what a laptop needs and a runner does not.
 
+**The house linter is the base's one tool.** `npm:@askviraj/linter` is pinned
+in `mise.toml` at an exact version, and the `code:lint` of the pnpm, eslint,
+flutter, swift and swiftui packs calls it as `linter`. One pin is one version
+those packs agree on, where a per-run fetch is whatever the registry serves that
+minute; it is in the base because the pipeline runs `code:lint`. The binary is
+a Node script and needs a `node` on PATH: a Node repo's own pin, or — where the
+packs pin no `node`; swift, swiftui and flutter pin none — the machine's. The
+tasks call it as `mise which linter --tool npm:@askviraj/linter`, never by
+bare name: a Node repo puts `node_modules/.bin` ahead of mise's tool bins,
+where a dependency's `linter` would shadow the pin.
+
+**The installer is the machine's, and the pin's guarantees are aube's.** mise's
+npm backend defaults to its embedded aube; a machine may set
+`npm.package_manager` or `npm.shell_out` to use npm, pnpm or bun instead. No
+shipped file sets the installer — a project-level setting reaches the machine's
+global tools too. Only when the machine's backend is the embedded aube does the
+pin install with no separate package manager, does `allow_low_downloads = true`
+matter (aube refuses a package under its weekly-download threshold on a first,
+unlocked install; the exemption is this package's alone and its dependencies
+stay gated), and do dependency lifecycle scripts run only when listed in
+`allow_builds`, which the pin leaves empty. Under another installer none of
+that holds.
+
+**Commit the lock and its sidecar before the first CI push.** Under aube,
+`.config/mise.lock`'s linter entry points at a generated sidecar,
+`.config/mise/locks/npm-askviraj-linter/<version>~<hash>/`, whose
+`package.json` and `aube-lock.yaml` fix the dependency graph; an install with
+the entry and no sidecar fails, locked or not. `locked = true` in
+`mise.ci.toml` refuses a tool no committed lock records. So a repo that takes
+the pin runs `mise install` and commits the lock and the sidecar together, or
+its pipeline fails at install. The sidecar is generated: never format or lint
+it.
+
 **Latest, but never brand new; and CI resolves nothing.** Fuzzy pins defer any
 release younger than `minimum_release_age`, and `lockfile = true` records what
 they resolved to. The pipeline sets `locked = true` and installs from that
@@ -41,10 +74,10 @@ release nobody has run never reaches a build.
 
 **One lockfile per config file that declares tools, and every one is tracked.**
 `mise install` writes a lock beside each config whose `[tools]` is non-empty,
-named after that file's stem: with the split as shipped — an empty base, nine
-dev tools — the only file produced is `.config/mise.dev.lock`, and a runtime
-pinned in `mise.toml` would add `.config/mise.lock` beside it. The single
-exception is `mise.local.lock`, the counterpart of the uncommitted
+named after that file's stem: with the split as shipped — the house linter in
+the base, nine dev tools — the files produced are `.config/mise.lock` and
+`.config/mise.dev.lock`, and a runtime pinned in `mise.toml` joins the first.
+The single exception is `mise.local.lock`, the counterpart of the uncommitted
 `mise.local.toml`, which the hygiene component already ignores.
 
 **`REPO_NAME` is the repo's folder name, slugified, and it is a literal.** The
@@ -117,8 +150,21 @@ manager's install, a `core.hooksPath` someone set, a lockfile or a plugin pin
 the repo tracks — is stopped at, named, and left for the one by-hand command the
 task prints. Every destructive step sits behind a flag passed on purpose:
 `setup:precommit --force`, `setup:precommit --update`, `setup:mise --upgrade`.
-`setup:all` passes none of them, so a bootstrap on any clone rewrites nothing
-outside the files the packs own.
+`setup:all` passes `--upgrade` on when the user passes it and the other two
+never, so a plain bootstrap on any clone rewrites nothing outside the files the
+packs own.
+
+**Tools install from the lockfile; a lockfile moves only on request.**
+`setup:mise` runs `mise install --locked` on every run and never
+`mise upgrade`. It writes a lockfile in two cases, both in dev only: no
+`.config/mise*.lock` exists yet, when it runs `mise lock` once, or the user
+passed `--upgrade` (`setup:all --upgrade` reaches it), when it runs
+`mise lock --bump --upgrade` for the base config and once per
+`mise.<env>.toml`, `test` as `dev,test`, so every environment's lockfile moves
+together. Outside dev — `MISE_ENV` without `dev`, or unset — a missing lockfile
+and `--upgrade` each exit 1 before any step. mise's own install of a missing
+tool before a task body runs still records what it resolved in dev, where
+`locked` is off; the rule above is the task's.
 
 **The commit identity is per repo, required, and equal to the forge's.**
 `code:git-config`, which the hooks run, requires the local git-config to carry

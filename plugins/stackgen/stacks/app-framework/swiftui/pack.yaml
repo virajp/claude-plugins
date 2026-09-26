@@ -2,7 +2,7 @@ name: SwiftUI
 summary: The native Apple app stack — SwiftUI on Swift, the project a
   committed Xcode project, Xcode owning the build — one codebase across iPhone,
   iPad, Mac, CarPlay, Watch, TV and Vision.
-version: 0.1.0
+version: 0.2.0
 type: app-framework
 category: native-ui
 kind: app-framework
@@ -17,11 +17,64 @@ languages:
         pack as `sourcekit-lsp` and provisioned via the generated local plugin
       mise_tool: >-
         n/a — Swift comes with Xcode, which mise does not install; the repo
-        pins the Xcode it builds with as XCODE_VERSION in its mise [env]
+        pins the Xcode it builds with as XCODE_VERSION in this pack's
+        .config/mise/conf.d/swiftui.toml
       manifest: >-
         n/a — the dependency list lives in <Name>.xcodeproj/project.pbxproj,
         a path whose name is the app's, which this fact cannot fix
-      binaries: [ xcodebuild, swift ]
+      # xcodebuild is probed, not looked up: /usr/bin/xcodebuild is a stub
+      # every Mac carries, and with only the Command Line Tools selected it
+      # exists on PATH and fails the moment it is run.
+      binaries:
+        - name: xcodebuild
+          probe: "xcodebuild -version"
+        - swift
+# The four pins conf.d/swiftui.toml carries, each a marked position /vwf:setup
+# fills from this machine when it lands the pack. Each detect prints the one
+# value or exits non-zero. The simulator three read `xcrun simctl`'s JSON with
+# jq, which macOS ships at /usr/bin/jq, and agree on one simulator: the first
+# available iPhone on the newest iOS runtime that has one.
+machine_env:
+  - name: XCODE_VERSION
+    detect: >-
+      xcodebuild -version
+      | awk 'NR == 1 && $1 == "Xcode" { print $2; found = 1 } END { exit !found }'
+    question: >-
+      Which Xcode version does this repo build with? Every task that builds
+      refuses any other.
+  - name: SIMULATOR_PLATFORM
+    detect: >-
+      xcrun simctl list devices available -j
+      | jq -er '[.devices | to_entries[] | select(.key | test("\\.iOS-[0-9]"))
+      | (.key | capture("iOS-(?<v>[0-9-]+)$").v | split("-") | map(tonumber)) as $v
+      | .value[] | select(.deviceTypeIdentifier | test("\\.iPhone-")) | {v: $v, name}]
+      | (map(.v) | max) as $newest | map(select(.v == $newest))[0] // empty
+      | "iOS Simulator"'
+    question: >-
+      Which destination platform are the goldens recorded on? `iOS Simulator`
+      for an iPhone or iPad pin, `macOS` for a Mac-only app.
+  - name: SIMULATOR_DEVICE
+    detect: >-
+      xcrun simctl list devices available -j
+      | jq -er '[.devices | to_entries[] | select(.key | test("\\.iOS-[0-9]"))
+      | (.key | capture("iOS-(?<v>[0-9-]+)$").v | split("-") | map(tonumber)) as $v
+      | .value[] | select(.deviceTypeIdentifier | test("\\.iPhone-")) | {v: $v, name}]
+      | (map(.v) | max) as $newest | map(select(.v == $newest))[0] // empty
+      | .name'
+    question: >-
+      Which simulator, by name, are the goldens recorded on? `xcrun simctl
+      list devices available` lists the choices; empty for a macOS pin.
+  - name: SIMULATOR_OS
+    detect: >-
+      xcrun simctl list devices available -j
+      | jq -er '[.devices | to_entries[] | select(.key | test("\\.iOS-[0-9]"))
+      | (.key | capture("iOS-(?<v>[0-9-]+)$").v | split("-") | map(tonumber)) as $v
+      | .value[] | select(.deviceTypeIdentifier | test("\\.iPhone-")) | {v: $v, name}]
+      | (map(.v) | max) as $newest | map(select(.v == $newest))[0] // empty
+      | .v | map(tostring) | join(".")'
+    question: >-
+      Which OS version of that simulator? The runtime's version, `27.0` say;
+      empty for a macOS pin.
 lsp_servers:
   sourcekit-lsp:
     command: mise

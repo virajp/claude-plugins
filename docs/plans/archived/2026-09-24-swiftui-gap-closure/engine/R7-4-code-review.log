@@ -1,0 +1,68 @@
+/code-review high — R7 round 4 — range b14ada40..9f776e7a
+
+```json
+[
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 204,
+    "summary": "The 'data, never syntax' rule only escapes TOML, but mise renders every [env] value as a Tera template, so an answer containing `{{ ... }}` or `{% ... %}` still runs code every time mise loads the file.",
+    "failure_scenario": "A simulator the user renamed to include `{{ exec(command=\"curl …\") }}` is offered as the detected SIMULATOR_DEVICE, or someone types such a value. Setup escapes the quotes and writes a valid basic string, then commits it. Checked on mise 2026.9.12: a conf.d value `\"{{ exec(command=\\\"echo pwned\\\") }}\"` makes `mise env` print `XCODE_VERSION pwned`. That runs on every clone, in every shell activation and in CI. The rule also needs to refuse or neutralise `{{`, `{%` and `{#`."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 193,
+    "summary": "Detect is spelled as `mise x -- sh -c '<detect>'`, but all four SwiftUI detect commands contain single quotes (the awk and jq programs), so pasting one in literally breaks the shell quoting.",
+    "failure_scenario": "For XCODE_VERSION, pasting `xcodebuild -version | awk 'NR == 1 …'` into `sh -c '…'` closes the outer quote at awk's first `'`. sh then gets a truncated command and exits non-zero or prints nothing. Every detect ends as 'no value', so no default is ever offered. Flagged in earlier rounds and still unfixed."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode",
+    "line": 77,
+    "summary": "Setup and this check disagree on what a valid value is: setup writes any value without control characters as an escaped basic string, but this check refuses a value containing both `'` and `\"` (or both `'` and `\\`), because mise prints those back as multi-line strings.",
+    "failure_scenario": "Setup accepts a device name like `Viraj's \"test\" iPhone` and writes `\"Viraj's \\\"test\\\" iPhone\"`. `mise config get` prints it as `\"\"\"Viraj's \"test\" iPhone\"\"\"`, so pinned contains `\"`, plain stays false, and every SwiftUI task and ux-gate refuses with 'not a plain string'. The value setup wrote is exactly the one refused. The two rules must agree, e.g. setup refuses such values up front."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode",
+    "line": 88,
+    "summary": "A fragment value that uses mise templating is compared as its raw template text against the rendered env value, so it is reported as 'another source overrides it' when nothing does.",
+    "failure_scenario": "The fragment has `SIMULATOR_OS = \"{{ env.CI_SIM_OS }}\"`. `mise config get` prints the raw `{{ env.CI_SIM_OS }}`, while `${!name}` holds the rendered `27.0`. The task tells the user to delete a `.config/mise.toml` line that does not exist, so the diagnosis sends them to the wrong place."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode",
+    "line": 66,
+    "summary": "Any failure of `mise config get --file … env` is reported as 'has no readable [env] table', and all tasks now depend on a mise subcommand and output format that no pack pins a `min_version` for.",
+    "failure_scenario": "A developer or CI image has an older mise without `config get --file`, or with a different table print format. `setup:deps:install`, `setup:deps:upgrade`, `setup:deps:outdated` and `test:golden` all stop with 'Fix the file' although the file is fine. If the format differs instead, the grep finds no `NAME = ` line and every pin is refused as 'not a plain string'. No pack declares a minimum mise version."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/test/golden",
+    "line": 69,
+    "summary": "test:golden still reads the fragment twice (a `-f` test plus a `mise config get` process each time): once inside require_xcode for XCODE_VERSION and again for the three SIMULATOR_* pins. This undercuts the 'reads the fragment once' fix.",
+    "failure_scenario": "Every golden run starts two mise processes and parses the same file twice for four keys. Either require_xcode should take the extra names, or golden should call `require_pin_source test:golden XCODE_VERSION SIMULATOR_PLATFORM SIMULATOR_DEVICE SIMULATOR_OS` once before the Xcode comparison."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/pack.yaml",
+    "line": 56,
+    "summary": "The SIMULATOR_DEVICE and SIMULATOR_OS detects ignore the SIMULATOR_PLATFORM answer, and setup counts a position as unfilled while it holds the shipped empty value, so a macOS pin is never settled.",
+    "failure_scenario": "The person answers `macOS`. The next two questions still preselect `iPhone 17` / `27.0`, so taking the default writes an iPhone into a macOS pin. If they manage to enter empty, the device and OS positions still hold the shipped `\"\"`. Every later `/vwf:setup` then counts them as unfilled and preselects the iPhone again."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 663,
+    "summary": "machine_env names are checked only when the pack ships a conf.d fragment. A pack that declares machine_env with no fragment passes (a test asserts this), which is exactly the 'setup would ask and fill nothing' case the rule's own doc names.",
+    "failure_scenario": "A generated pack declares `machine_env: [{ name: FOO, … }]` and ships no file with a FOO marked position. The checker stays green. Setup asks the question, finds no marked position and silently writes nothing, and the task that reads FOO fails later with an unrelated message."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 696,
+    "summary": "tomlEnvKeys sees only `KEY =` lines under a literal `[env]` header, so valid TOML spellings of env keys are reported as 'a key of no [env] table'.",
+    "failure_scenario": "A fragment written as root-level dotted keys `env.XCODE_VERSION = \"\"`, as an inline table `env = { XCODE_VERSION = \"\" }`, or under a quoted header `[\"env\"]` loads correctly in mise. The checker still reports `machine_env[0] (XCODE_VERSION) is a key of no [env] table`, which fails p:plugins:check on a correct pack."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode",
+    "line": 55,
+    "summary": "Altitude: the stale `.config/mise.toml` [env] pins were planted by the 0.1.0 pack's own refusal text, but the fix is a runtime guard in every task that reverse-parses mise's pretty-printed TOML, not a one-time migration at the source.",
+    "failure_scenario": "Each round of this guard has added parser edge cases: comments, escapes, `[[env]]`, `{value=}`, templates, mixed quotes. The stale line is still never removed; each task just refuses. The source-level fix is for `/vwf:setup` or `reshape` to find XCODE_VERSION/SIMULATOR_* in `.config/mise.toml` when landing swiftui 0.2.0, offer to move them into the fragment, and delete them. That follows the 'fix the source, not a guard' ruling in user memory."
+  }
+]
+```
+
+This round found 10 issues, and I ran nothing past them to confirm them. I reproduced the template execution in the first finding on mise 2026.9.12, and I checked the quote-printing behind the third finding the same way. Some of these repeat earlier rounds. The detect quoting, the macOS re-ask, the machine_env check with no fragment, and the mixed-quote refusal were all flagged or recorded as gaps before. The template-execution finding and its misleading-message variant are new this round. The run log hands the stale docs (the "eight assertions" count in `CLAUDE.md` and `.claude/docs/repo-shape.md`, and the `site/` `binaries: [xcodebuild, swift]` text) to U8 in wave 3, so I left them out.

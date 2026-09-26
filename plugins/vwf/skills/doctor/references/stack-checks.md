@@ -4,10 +4,11 @@ Read this before running §3. It covers the three per-project stack checks:
 languages (LSP + toolchain + binaries), frameworks and dependencies against each
 manifest, and the repo/axis tooling. **Blocking** findings live in §3 (a
 language no installed plugin claims, a materialized `binaries` entry missing
-from `PATH` — each blocking once the project's `template` is pinned, a
-degradation while it reads `unresolved`) and §5 (a `custom` template pin, a
-missing `mise`, an `iac` project inside another repo the user has not declined
-to extract).
+from `PATH` or whose declared probe exits non-zero — each blocking once the
+project's `template` is pinned, a degradation while it reads `unresolved`) and
+§5 (a `custom` template pin, a missing `mise`, an `iac` project inside another
+repo the user has not declined to extract). The package manager's lockfile is
+looked for where the pack's `lockfile:` fact says, when it declares one (§5).
 
 ## An unresolved axis is a degradation, and it makes two others conditional
 
@@ -103,12 +104,32 @@ whole section reports `not checked — no stack resolved` for it:
   A `—` in the column means the toolchain is not mise-managed; skip silently.
 - **Binaries** — only where the language is known through materialized
   `language_facts` that carry a `binaries` list (absent means none; a language
-  plugin's row has no such column). For each name, `command -v <name>`. Missing
-  → finding naming the binary, with the remedy that installs it (for
-  `xcodebuild`: install Xcode, then `sudo xcode-select -s` at it). **Blocking
-  once this project's `template` is pinned** — mise will not supply it, so the
-  skip above would otherwise hide it and the build fails on first run. **A
-  degradation while that `template` reads `unresolved`.**
+  plugin's row has no such column). An entry takes one of two forms. A **bare
+  name** is looked up with `command -v <name>`; missing → finding naming the
+  binary. A **map**, `{ name: <binary>, probe: "<command>" }`, has its `probe`
+  run instead — from the repo root, inside the repo's mise environment, the
+  command held in a variable and passed to the shell as **one argument**
+  (`mise x -- sh -c "$cmd"`), never spliced into a quoted string, so the
+  quotes and `$` references a probe carries reach the shell intact; stdout
+  and stderr discarded, stopped after 30 seconds — and exit 0 is required;
+  anything else, a timeout included, is a finding naming the binary, the
+  probe and its exit status (or `timed out`). **The probe runs only while its
+  entry matches what the lockfile last recorded:** it is run only when the
+  committed template entry it was read from
+  (`.claude/<adapter>/templates/<slug>.md`) still hashes to the value its
+  adapter lockfile records. On a mismatch it is not run — the entry changed
+  after it was recorded, and doctor stays report-only — and the binary is
+  reported **probe not run**, the drift as the reason, at the severity a
+  failed probe would carry. A probe is what tells a
+  binary that is present but unusable from one that works — for example,
+  `xcodebuild -version` exits non-zero on a machine that has only a stub on
+  `PATH`, where `command -v` would pass. A map with no `probe` is a bare name.
+  Either finding carries the remedy that installs the binary (for
+  `xcodebuild`: install Xcode, then `sudo xcode-select -s` at it).
+  **Blocking once this project's `template` is pinned** — mise will not supply
+  it, so the skip above would otherwise hide it and the build fails on first
+  run. **A degradation while that `template` reads `unresolved`** — the same
+  severity for a failed probe as for a missing name.
 
 Report per language, not per project — one missing Dart LSP is one finding even
 when three projects declare `dart`.
@@ -273,6 +294,23 @@ Then check `repo.stack`: the `package_manager` resolves (lockfile present, tool
 on `PATH` or in mise config) and each entry in `tools` has its expected marker —
 a config file, a mise tool, or a manifest dependency. Absent `repo.stack` block
 → `10` drift; report and nudge `/vwf:setup`.
+
+**Where the lockfile is looked for comes from the pack.** A `lockfile:` list —
+paths or globs relative to the repo root — rides whichever template payload
+composes the package manager, on **any** axis: `repo.stack.template`, and a
+project's `template` as much, since a package manager can ship inside a
+project bundle only. So read it from **every pinned, materialized payload
+that carries one**, each in the repo that pin materialized in, not from
+`repo.stack` alone. The lockfile is present when **any** entry matches at
+least one file; the finding, when none does, names the slug and every entry
+it tried, at the severity of the `package_manager` check above. A glob
+reaches into a project bundle as readily as the root: a package manager whose
+lockfile an IDE keeps inside its project directory declares that path beside
+the root one (for example
+`*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`).
+Where **no** pinned payload carries a `lockfile:` list, `repo.stack` keeps
+today's reading — the package manager's conventional lockfile at the repo
+root, judged from the token — and that is the only case read that way.
 
 **`rtk` is recommended, never required.** vwf ships a `PreToolUse` Bash hook
 that pipes each command through `rtk hook claude` to cut token cost, and the

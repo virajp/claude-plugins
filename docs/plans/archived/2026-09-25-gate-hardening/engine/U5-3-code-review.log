@@ -1,0 +1,14 @@
+/code-review high — U5 round 3 — branch 2026-09-25-gate-hardening (develop...HEAD)
+
+Machine-state side effect: the engine ran `mise install` in /tmp/gh-rev; the project-level npm.package_manager = "aube" rewrote the user's global ~/.config/mise/mise.lock (macos-setup/dotfiles/mise/mise.lock) with aube sidecar lines on npm:@mermaid-js/mermaid-cli and npm:codeburn, and created ~/.config/mise/locks/. With the global npm.package_manager = "pnpm", every `mise x` then fails: "locked with an embedded-aube dependency graph, but npm.package_manager is set to pnpm".
+
+1. toolchain-manager/mise/config/.config/mise.toml:32 — project-level npm.package_manager = "aube" applies to every tool mise resolves in the repo, including the machine's global tools; mise install in a shaped repo rewrites the global lock with aube sidecar entries. Reproduced (above).
+2. toolchain-manager/mise/config/.config/mise.ci.toml:16 — prose says commit .config/mise.lock alone before first CI push (also mise.toml:183, conventions.md:57); aube's entry points at a sidecar .config/mise/locks/npm-askviraj-linter/1.1.6~<hash>/ (aube-lock.yaml, package.json) that must be committed too. Reproduced: without it, mise install fails "dependency sidecar … No such file or directory; run mise lock", locked or not.
+3. mise.ci.toml:1 — mise.ci.toml is also the deployed runtime's layer; a base pin makes every production image install a Node dev tool, needing node, the lock and the sidecar.
+4. toolchain-gate/pre-commit/config/.config/linter.yaml:1 — owner changes eslint → pre-commit with new content; no materializer/sync rule for a path changing owning component.
+5. pnpm/.../code/format:62 — leading-dash fix reaches dprint only; shfmt, shellcheck in code:lint, sort-package-json, ruff get raw names.
+6. ruff/.../code/format:60 — the 7-line dprint_files loop copied into six tasks; a helper in _scripts/helpers would replace them.
+7. site/src/content/docs/plugins/stackgen.md:714 — manual says eslint ships linter.yaml; :839 says mise.dev.lock is the only lock.
+8. toolchain-gate/pre-commit/config/.config/linter.yaml:49 — ignores do not cover the generated sidecar tree .config/mise/locks/; linter, dprint and sort-package-json reach its package.json and can rewrite it, breaking its digest in mise.lock.
+9. pnpm/.../code/format:108 — pnpm dlx sort-package-json is still an unpinned per-run fetch.
+10. pre-commit-config.yaml:111 — require_serial still runs the whole-tree linter once per partition; pass_filenames: false would lint once.

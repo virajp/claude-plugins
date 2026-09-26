@@ -18,6 +18,14 @@ artifact and no `.mcp.json` key can carry one. The need still travels as
 tells doctor *how* a server is provided and provides nothing itself. What
 actually provides one is the local plugin.
 
+The facts the template payload carries for its callers, all passed through
+from `pack.yaml` as declared (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`):
+`language_facts` per language — `binaries` entries included, in either form,
+a bare name or a `{ name, probe }` map; `package_manager` and, beside it,
+`lockfile`, the paths or globs doctor's resolve check reads; and
+`machine_env`, the values `/vwf:setup` detects and asks for when it lands
+the pack.
+
 **`.mcp.json` was excluded and is not any more**, decided at Wave D. The
 reasoning that changed: an MCP server is genuinely a project file — this
 toolkit's own installer already treats `.mcp.json` as one of the user's
@@ -133,7 +141,9 @@ started as:
 - **(d) Environment fragments a provider contributes** —
   `.config/mise/conf.d/<pack>.toml`, which the manager auto-loads, so a
   provider adds its own variables without any component editing the
-  manager's own `mise.toml`.
+  manager's own `mise.toml`. A fragment holding a pack's `machine_env:`
+  marked positions lands with them **unfilled**; `/vwf:setup` fills them
+  and re-records the file's hash.
 - **(e) Hook fragments** — `.config/pre-commit.d/<pack>.yaml`, each a
   standalone `repos:` list. The materializer **copies these verbatim and
   stops**; `/vwf:init` is what merges them into

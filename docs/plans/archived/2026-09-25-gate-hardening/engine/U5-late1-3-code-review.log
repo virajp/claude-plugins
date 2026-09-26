@@ -1,0 +1,8 @@
+/code-review high — U5-late1 round 3 — range a6b7abe4^..bf9dd2e6 (comments and docs only; not verified)
+
+1. mise/.../code/lint:19 — the no-node reason applies equally to swift/swiftui/flutter, which call the pin unguarded; a command -v node guard in base and packs would remove the special case.
+2. mise.toml:166 — swift/swiftui/flutter "rely on the machine's own node" but no pack.yaml lists node in binaries; /vwf:doctor never reports it missing.
+3. mise/skills/mise/references/task-library.md:254 — "every linter worth running belongs to a language" then names the house linter (markdown, yaml, toml, json); contradicts the section's own rule at 248; same at code/lint:17-18.
+4. mise.toml:185 — uv and docs-only repos never call the linter yet the base pins it and says it "lives in the base because the pipeline runs code:lint".
+5. mise/conventions.md:41 — the rewrite puts a semicolon inside the em-dash aside ("or — where the packs pin no `node`; swift, swiftui and flutter pin none — the machine's"), breaking the clause.
+6. site/src/content/docs/plugins/stackgen.md:838 — manual still says empty base [tools], only mise.dev.lock (U6 pending).

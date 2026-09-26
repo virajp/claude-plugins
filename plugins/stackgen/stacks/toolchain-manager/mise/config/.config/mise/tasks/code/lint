@@ -15,10 +15,12 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/placeholder"
 # Half slot, half default — and the split is the point.
 #
 # The LANGUAGE linter is a slot, unlike `code:format`'s formatter. Every linter
-# worth running is a language's own, and the one this ecosystem uses for prose
-# would drag a package manager into a repo that holds only docs. So the name is
-# the contract and the language pack brings the linter, and until one does the
-# placeholder notice below announces it.
+# worth running is a language's own. The house linter is pinned in the base
+# `mise.toml`, but it is a Node script: a repo that holds only docs pins no
+# `node`, so calling it here would fail on any machine without one. So the name
+# is the contract and a language pack wires the linter in — its `code:lint`
+# calls the pin where the stack guarantees a runtime or expects one — and until
+# one does the placeholder notice below announces it.
 #
 # The two DEFAULTS above it are not language linters. shellcheck and actionlint
 # read the tree as a directory, the way dprint does — shell is in every repo
@@ -78,4 +80,4 @@ if command -v actionlint >/dev/null 2>&1; then
   fi
 fi
 
-placeholder_notice "code:lint" "no linter is pinned for this repo"
+placeholder_notice "code:lint" "no language pack's linter runs in this repo"

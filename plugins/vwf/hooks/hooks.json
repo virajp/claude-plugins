@@ -1,5 +1,16 @@
 {
   "hooks": {
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/mempalace-precompact.sh\"",
+            "timeout": 90,
+            "type": "command"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "hooks": [
@@ -15,19 +26,8 @@
       {
         "hooks": [
           {
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/mempalace-checkpoint.sh",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/mempalace-checkpoint.sh\"",
             "timeout": 30,
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "hooks": [
-          {
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/mempalace-precompact.sh",
-            "timeout": 90,
             "type": "command"
           }
         ]

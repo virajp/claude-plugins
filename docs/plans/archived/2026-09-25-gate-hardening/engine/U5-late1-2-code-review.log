@@ -1,0 +1,11 @@
+/code-review high — U5-late1 round 2 — range a6b7abe4^..ff3a0901 (3 commits, 6 files; comments and prose only)
+
+1. mise/.../code/lint:18 — the no-node reason for the default skipping the linter also applies to swift/swiftui/flutter, which call it with no node pin; "or expects one" assumes its conclusion.
+2. mise/skills/mise/references/task-library.md:254 — the mise default says a language pack wires the linter in; the markdown pack says linting is the repo axis's concern; no pack lints markdown in a docs-only repo.
+3. mise.toml:158 — base pin installs in repos that never call it; under a non-aube installer the install needs npm/node those repos don't pin.
+4. code/lint:17 — altitude: a command -v node guard would let the default run the pin wherever node exists.
+5. docs/plans/.../index.md:312 — ff3a0901 landed after the wave-2 gate and the R2 pass; run log had no row for it at review time.
+6. mise/conventions.md:39 — says the packs' code:lint "calls it as `linter`", then (43-44) "never by bare name"; mise.toml:158 and skills/mise/SKILL.md:95 repeat "calls as `linter`".
+7. conventions.md:42 — caller list hand-typed in three places; slot reason stated twice.
+8. conventions.md:42 — "where the packs pin none, as swift, swiftui and flutter do not" is a double negative, reads as the opposite.
+9. site/src/content/docs/plugins/stackgen.md:278 — manual says mise.toml names no linter (U6 pending).

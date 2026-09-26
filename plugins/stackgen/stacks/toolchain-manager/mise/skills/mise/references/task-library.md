@@ -144,8 +144,8 @@ until someone reads two tasks side by side.
 
 | Task                                                  | Does                                                                        |
 | ----------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `setup:all [--all] [--<slug>…]`                       | the bootstrap orchestrator — the order below; `--<slug>` per member         |
-| `setup:mise [--upgrade]`                              | reshim, doctor, install, the linter if present; tool upgrade and formatter plugin update only under `--upgrade` |
+| `setup:all [--all] [--upgrade] [--<slug>…]`           | the bootstrap orchestrator — the order below; `--<slug>` per member; `--upgrade` passed on to `setup:mise` and every member |
+| `setup:mise [--upgrade]`                              | reshim, doctor, `mise install --locked`, the linter if present; `mise lock` first only in dev with no lockfile (outside dev a missing lockfile exits 1); every environment's lockfile bumped and the formatter plugins updated only under `--upgrade`, dev only |
 | `setup:secrets`                                       | **slot** — the pinned secret manager's setup                                |
 | `setup:external:{start,stop,pull}`                    | **slots** — local services; each a no-op outside a dev shell                |
 | `setup:deps:all`                                      | `cleanup → install → upgrade → outdated → audit`                            |
@@ -207,10 +207,12 @@ system git-config is named by scope and refused even under `--force`; without
 the flag a hand-written hook script is kept as `.legacy` and chained, and a repo
 pre-commit already owns installs again without complaint), `--update`
 (`setup:precommit` runs `pre-commit autoupdate`, which moves the `rev:` lines),
-`--upgrade` (`setup:mise` runs `mise upgrade --local` and
-`dprint config update`, which move the lockfile and the plugin pins) — and
-`setup:all` passes none of them, so a bootstrap on any clone rewrites nothing
-outside the files the packs own.
+`--upgrade` (`setup:mise` runs `mise lock --bump --upgrade` for the base config
+and once per environment file, then `dprint config update`, which move the
+lockfiles and the plugin pins; refused outside dev). `setup:all` passes
+`--force` and `--update` never, and `--upgrade` only when the user passed it to
+`setup:all`, so a plain bootstrap on any clone rewrites nothing outside the
+files the packs own.
 
 **Nothing in this set edits a remote's settings.** Setting the forge's default
 branch is a one-time act by whoever shapes the repo, not a task a machine
@@ -251,9 +253,10 @@ belongs to a language does not.** That is the whole rule, and it is why
 `code:lint` ships shellcheck and actionlint yet is still a slot. Each of those
 says something true about a repo holding nothing but markdown, shell and
 workflows. The **language** linter is the part nobody can guess: every one worth
-running belongs to a language, and the one this ecosystem uses for prose would
-drag a package manager into a docs-only repo. So `code:lint` is a slot whose
-placeholder notice is the unfilled half, not the whole task.
+running belongs to a language. The house linter is pinned in the base
+`mise.toml`, but it is a Node script, and a docs-only repo pins no `node`, so
+calling it by default would fail on any machine without one. So `code:lint` is
+a slot whose placeholder notice is the unfilled half, not the whole task.
 
 ## `setup/*` — bootstrap & upgrade
 
@@ -300,8 +303,8 @@ machine afterwards. It declares `#MISE depends=["init"]`, and it names no tool
 at all, only the tasks it calls in order:
 
 ```text
-setup:all  (--all recurses into every member)
-  ├─ setup:mise            # reshim · doctor · install             (common)
+setup:all  (--all recurses into every member; --upgrade is passed on)
+  ├─ setup:mise            # reshim · doctor · install --locked    (common)
   ├─ setup:secrets         # the pinned secret manager             (SLOT)
   ├─ setup:external:start  # local services                        (SLOT)
   ├─ setup:deps:all        # the package manager's five verbs      (SLOTS)
@@ -315,9 +318,21 @@ setup:all  (--all recurses into every member)
 the re-sync command as much as the bootstrap one, so a step that only works on a
 clean machine is a step that breaks the second run.
 
-**And keep it non-destructive: `setup:all` passes no flag.** Moving the tool
-lockfile and the formatter's plugin pins is `setup:mise --upgrade`, run by hand;
-moving the hook `rev:` lines is `setup:precommit --update`; taking over a
+**And keep it non-destructive: `setup:all` passes no flag the user did not
+pass.** Tools install from the committed lockfile, `mise install --locked`, on
+every run. A lockfile is written in two cases only: none exists under
+`.config/` yet and the run is in dev (`MISE_ENV` includes `dev`), when
+`setup:mise` runs `mise lock` once — outside dev a missing lockfile exits 1
+before any step, naming it, so a pipeline installs what a developer committed
+or nothing; or the user runs `setup:all --upgrade` in dev, which `setup:all`
+passes on to `setup:mise` and to every member, and which bumps every
+environment's lockfile with `mise lock --bump --upgrade` — the base config,
+then each `mise.<env>.toml`, `test` selected as `dev,test` — and updates the
+formatter's plugin pins. Outside dev `--upgrade` exits 1 before any step.
+Nothing runs `mise upgrade`. That is what the task does; mise itself installs a
+missing tool before any `mise run` task body starts, and in dev, where
+`locked` is off, that install records what it resolved too. Moving the hook
+`rev:` lines is `setup:precommit --update`; taking over a
 `core.hooksPath` or a husky / lefthook install another tool left is
 `setup:precommit --force`. Without them `setup:precommit` stops on an effective
 `core.hooksPath`, a `.husky/` directory or a lefthook config in any of its forms

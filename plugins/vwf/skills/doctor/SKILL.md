@@ -173,7 +173,7 @@ optional, and no reference restates a rule that lives above.
 
 | Sections                                                   | Reference                                                 | Covers                                                                                            |
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, required binaries on `PATH`, an unknown language, framework/dependency drift per manifest, the seven stack axes, a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, the recommended `rtk`, the recommended forge CLI, and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups and the commit scopes, the aggregator's member flags and aliases, the two branches, the repo-name environment key against the repo's folder, every pack-owned file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — the `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` (a legacy `MERGE_MODEL` read as both) and `MEMBERS` positions beside it (the two runtime positions beside those are read by no row), and the forge state — the default branch, both branches' protection, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
+| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, required binaries on `PATH` or their declared probes, an unknown language, framework/dependency drift per manifest, the seven stack axes, a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, each lockfile where a pinned payload's `lockfile:` fact says (project templates included), the recommended `rtk`, the recommended forge CLI, and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups and the commit scopes, the aggregator's member flags and aliases, the two branches, the repo-name environment key against the repo's folder, every pack-owned file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — the `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` (a legacy `MERGE_MODEL` read as both) and `MEMBERS` positions beside it (the two runtime positions beside those are read by no row), and the forge state — the default branch, both branches' protection, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
 | **6–7** — harness & health, memory config                  | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `mempalace.yaml` placement, wing/room contract and secret excludes, and the markdown mirror. **Blocking findings live here** |
 | **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, a graph per locally-present checkout, the refresh hook, staleness, the `.graphifyignore`. **Blocking findings live here** |
 
@@ -192,76 +192,73 @@ is what gates the release itself.
 
 ### 9. Report & persist
 
-One table, findings first, grouped by kind — **blocking** (something
-*mandatory* is absent or misplaced, or the stack is one no installed plugin
-defines: the graphify CLI, a graph missing from a locally-present checkout, an
-`iac` project inside another repo whose extraction the user has **not**
-declined on the record, `mise`, an **unknown** language and a `binaries` name
-missing from `PATH` — the last three **conditionally**, once a stack axis is
-pinned (§5, §3) — a project whose
-pinned template its adapter never **materialized** in that project's target
-repo (§3) — the pin is an answer and the payload absent, a `custom` template
-pin, a project whose template does not cover every platform it declares, a
-broken membership link (§1), an unwaived **critical** dependency advisory (the
-audit check), a misplaced / duplicated / missing `mempalace.yaml` or one
-carrying no secret excludes; callers must halt), **drift** (config and repo
-disagree — **including the whole repo-shape check against the baseline
-`/vwf:init` lays down**, run **per repo — the base and each locally-present
-member** (§5): a pack version behind, a registry id with no task group or
-commit scope, a member with no aggregator flag or alias or a list still named
-from project ids, a missing `develop` or `main`, a repo-name key that is
+One table, findings first, grouped by kind — **blocking** (something *mandatory*
+is absent or misplaced, or the stack is one no installed plugin defines: the
+graphify CLI, a graph missing from a locally-present checkout, an `iac` project
+inside another repo whose extraction the user has **not** declined on the
+record, `mise`, an **unknown** language and a `binaries` name missing from
+`PATH` or failing its declared probe — the last three **conditionally**, once a
+stack axis is pinned (§5, §3) — a project whose pinned template its adapter
+never **materialized** in that project's target repo (§3) — the pin is an answer
+and the payload absent, a `custom` template pin, a project whose template does
+not cover every platform it declares, a broken membership link (§1), an unwaived
+**critical** dependency advisory (the audit check), a misplaced / duplicated /
+missing `mempalace.yaml` or one carrying no secret excludes; callers must halt),
+**drift** (config and repo disagree — **including the whole repo-shape check
+against the baseline `/vwf:init` lays down**, run **per repo — the base and each
+locally-present member** (§5): a pack version behind, a registry id with no task
+group or commit scope, a member with no aggregator flag or alias or a list still
+named from project ids, a missing `develop` or `main`, a repo-name key that is
 unfilled or not the folder's slug, a pack-owned file the repo edited away from
-the hash the lockfile recorded and still diverging once every marked position
-is spliced out, a recorded `answers.repos.<repo>.forge` the live `origin`
-host contradicts or a `skipped:` row whose `when: forge` it contradicts, a
-config stamped `config_format` 21 that carries no `answers:` block at all,
-an absent or invalid `MERGE_MODEL_DEVELOP` or
-`MERGE_MODEL_MAIN` (or a legacy `MERGE_MODEL` standing in for both), an absent
-or empty `MEMBERS` under siblings linkage, and — read from the forge, only
-where its CLI answers — a default branch that is neither `develop` nor `main`,
-`develop` or `main` with no protection on the forge at all, or no backlog
-project for the base. Each row is printed under the repo it was found in, and
-an **absent** member is a blind spot rather than a row. A repo behind its
-baseline still works, so none of those is ever blocking),
+the hash the lockfile recorded and still diverging once every marked position is
+spliced out, a recorded `answers.repos.<repo>.forge` the live `origin` host
+contradicts or a `skipped:` row whose `when: forge` it contradicts, a config
+stamped `config_format` 21 that carries no `answers:` block at all, an absent or
+invalid `MERGE_MODEL_DEVELOP` or `MERGE_MODEL_MAIN` (or a legacy `MERGE_MODEL`
+standing in for both), an absent or empty `MEMBERS` under siblings linkage, and
+— read from the forge, only where its CLI answers — a default branch that is
+neither `develop` nor `main`, `develop` or `main` with no protection on the
+forge at all, or no backlog project for the base. Each row is printed under the
+repo it was found in, and an **absent** member is a blind spot rather than a
+row. A repo behind its baseline still works, so none of those is ever blocking),
 **missing** (something declared has no install — including a **`B`**-kind
-capability a project declares that none of its `backing_template` pins
-provides, which is never blocking; §5),
-**unavailable** (nothing shipped here to install), **unknown** (no installed
-plugin declares it — blocking once the axis is pinned, listed separately so
-the remedy reads as *install or write the plugin*, never *install this one*),
-**pinned, not materialized** (§3's neighbour to that one and never folded
-into it: the token *is* declared, by a template the adapter would have landed
-here and did not, so the remedy is the one line `/vwf:setup` — its
-materialize pass, never `/vwf:architecture` — and the row is one per project
+capability a project declares that none of its `backing_template` pins provides,
+which is never blocking; §5), **unavailable** (nothing shipped here to install),
+**unknown** (no installed plugin declares it — blocking once the axis is pinned,
+listed separately so the remedy reads as *install or write the plugin*, never
+*install this one*), **pinned, not materialized** (§3's neighbour to that one
+and never folded into it: the token *is* declared, by a template the adapter
+would have landed here and did not, so the remedy is the one line `/vwf:setup` —
+its materialize pass, never `/vwf:architecture` — and the row is one per project
 rather than one per token, reached only after a declined landing or on a repo
 setup has not re-run on, and blocking while the pin stands), **degraded**
-(something optional is absent and a fallback is carrying the
-work, or the run simply costs more — a missing `rtk`, whose guarded hook
-no-ops (§5), a forge CLI that is absent, unauthenticated or without the
-`project` scope, which leaves `/vwf:backlog` unreadable and predicate (g) of
-the repo-shape check unread (§5) — **or** a decision the user has not yet made or has declined on
-the record: an axis reading `unresolved`, whose dependent checks report `not
-checked — no stack resolved` (§§3–5), a `binaries` name missing from `PATH`
-while its project's `template` reads `unresolved` (§3), a declined graph
-build, and an `iac`
-extraction declined under `enforcement:`, each reported every run and never
-escalating back to blocking). Mark anything the §1 recall already carried as
-**known**, so a repeat run reads as a diff rather than a re-accusation. State
-the count of checks that passed rather than listing them.
+(something optional is absent and a fallback is carrying the work, or the run
+simply costs more — a missing `rtk`, whose guarded hook no-ops (§5), a forge CLI
+that is absent, unauthenticated or without the `project` scope, which leaves
+`/vwf:backlog` unreadable and predicate (g) of the repo-shape check unread (§5)
+— **or** a decision the user has not yet made or has declined on the record: an
+axis reading `unresolved`, whose dependent checks report
+`not checked — no stack resolved` (§§3–5), a `binaries` name missing from `PATH`
+or failing its probe while its project's `template` reads `unresolved` (§3), a
+declined graph build, and an `iac` extraction declined under `enforcement:`,
+each reported every run and never escalating back to blocking). Mark anything
+the §1 recall already carried as **known**, so a repeat run reads as a diff
+rather than a re-accusation. State the count of checks that passed rather than
+listing them.
 
 Close with the remedies, each as a runnable line, and offer to apply only the
 ones that are pure config edits (a stale `stack` entry, a harness task rename, a
 missing room in a `mempalace.yaml`). Anything that installs, or that changes
 code, is reported and left to the user — as is anything needing a **choice**: a
-`custom` pin and an unknown language both look like one-line config edits and are
-not, since resolving either means picking off a menu or installing a plugin.
+`custom` pin and an unknown language both look like one-line config edits and
+are not, since resolving either means picking off a menu or installing a plugin.
 Nudge plain `/vwf:setup` — the config-side door, never `reshape` — and stop
-there; a template doctor guessed would silently change what `plan` and
-`execute` read.
+there; a template doctor guessed would silently change what `plan` and `execute`
+read.
 
-**One remedy, printed once.** Every row of the repo-shape check (§5) shares
-the same remedy — **across every repo**, since a reshape now walks the members
-and one re-run covers a member's drift as well as the base's — so print
+**One remedy, printed once.** Every row of the repo-shape check (§5) shares the
+same remedy — **across every repo**, since a reshape now walks the members and
+one re-run covers a member's drift as well as the base's — so print
 `/vwf:setup reshape` a single time with the rows that led to it underneath — a
 list repeating one command per row reads as several problems when it is one
 re-run, and hides how much of the baseline has moved. That argument is what
@@ -275,18 +272,17 @@ finding per the memory asset's AAAK style, plus what was fixed if the user
 accepted a remedy. That is what lets the next run say **known**. Skip silently
 if mempalace is unavailable.
 
-**Callers.** `/vwf:setup`'s shared spine runs this over the whole
-repo, right after it writes the config, and records what
-it finds. `/vwf:plan` runs it scoped to its dependency chain's projects, once
-the chain is approved and before its survey. `/vwf:execute` runs it scoped to
-the plan's projects. **All three halt on any `blocking` finding** — the mandated
-tooling is what the pipeline is built on, and the stack menu is what its
-conventions and harness come from, so proceeding without either produces a run
-that fails later and less clearly, or one that fails to fail at all. The LSP
-findings are `/vwf:plan`'s question: at its stack gate it asks, per flagged
-language, whether to install now or proceed without, and records the answer as
-an `LSP <language>` row in the plan folder's Consent block. `/vwf:execute`
-halts on `blocking` alone and reads that row; it never asks. `/vwf:recall`
-calls the `baseline` invocation alone, at session start, and prints its result
-as one shape-drift line pointing at `/vwf:setup reshape` — it never runs doctor
-whole, and it never reads the forge.
+**Callers.** `/vwf:setup`'s shared spine runs this over the whole repo, right
+after it writes the config, and records what it finds. `/vwf:plan` runs it
+scoped to its dependency chain's projects, once the chain is approved and before
+its survey. `/vwf:execute` runs it scoped to the plan's projects. **All three
+halt on any `blocking` finding** — the mandated tooling is what the pipeline is
+built on, and the stack menu is what its conventions and harness come from, so
+proceeding without either produces a run that fails later and less clearly, or
+one that fails to fail at all. The LSP findings are `/vwf:plan`'s question: at
+its stack gate it asks, per flagged language, whether to install now or proceed
+without, and records the answer as an `LSP <language>` row in the plan folder's
+Consent block. `/vwf:execute` halts on `blocking` alone and reads that row; it
+never asks. `/vwf:recall` calls the `baseline` invocation alone, at session
+start, and prints its result as one shape-drift line pointing at
+`/vwf:setup reshape` — it never runs doctor whole, and it never reads the forge.

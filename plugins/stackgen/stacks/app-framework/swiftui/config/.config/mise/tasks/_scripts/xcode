@@ -8,8 +8,9 @@
 # refused.
 
 # Fails unless a full Xcode is selected, the repo pins one as XCODE_VERSION in
-# its mise [env], and the selected one is that version. An unset pin is a
-# refusal too: a build that checks nothing is not pinned.
+# .config/mise/conf.d/swiftui.toml, and the selected one is that version. An
+# unset or empty pin is a refusal too: a build that checks nothing is not
+# pinned.
 #
 # `command -v xcodebuild` is no test: /usr/bin/xcodebuild is a stub every Mac
 # carries, and with only the Command Line Tools selected it exists and exits
@@ -24,9 +25,10 @@ require_xcode() {
     exit 1
   fi
   selected=$(printf '%s\n' "${version_output}" | awk 'NR==1{print $2}')
+  require_pin_source "${task}" XCODE_VERSION
   if [ -z "${XCODE_VERSION:-}" ]; then
-    print_error "${task}: no Xcode is pinned — XCODE_VERSION is unset."
-    print_yellow "Add XCODE_VERSION = \"${selected}\" (or the version the repo builds with) to the [env] of the repo's mise config, then re-run."
+    print_error "${task}: no Xcode is pinned — XCODE_VERSION is unset or empty."
+    print_yellow "Set XCODE_VERSION = \"${selected}\" (or the version the repo builds with) in the [env] of .config/mise/conf.d/swiftui.toml, then re-run."
     exit 1
   fi
   if [ "${selected}" != "${XCODE_VERSION}" ]; then
@@ -34,6 +36,32 @@ require_xcode() {
     print_yellow "Select Xcode ${XCODE_VERSION} with xcode-select -s, or point DEVELOPER_DIR at it, then re-run."
     exit 1
   fi
+}
+
+# Fails when .config/mise.toml's [env] sets a pin this task reads. The pins
+# live in .config/mise/conf.d/swiftui.toml, which /vwf:setup fills, but mise
+# lets `.config/mise.toml` win over a conf.d fragment, so a line left there —
+# swiftui 0.1.0's refusals said to put the pins in the mise config's [env] —
+# would silently override the fragment. /vwf:setup moves such a line into the
+# fragment when it asks for the pins; this is the check for a line it has not
+# moved yet.
+#
+# Presence only: whether the key is there, never what it holds. A value set in
+# the environment itself — a CI job exporting another simulator, say — or in a
+# gitignored local config is a deliberate override and is left alone.
+require_pin_source() {
+  local task="$1" config table name
+  config="${MISE_PROJECT_ROOT}/.config/mise.toml"
+  shift
+  [ -f "${config}" ] || return 0
+  table=$(mise config get --file "${config}" env 2>/dev/null) || return 0
+  for name in "$@"; do
+    if printf '%s\n' "${table}" | grep -q "^${name} = "; then
+      print_error "${task}: .config/mise.toml's [env] sets ${name}, which overrides the pin in .config/mise/conf.d/swiftui.toml."
+      print_yellow "Run /vwf:setup, which moves it into the fragment and removes the old line — or move the value by hand and delete the ${name} line from .config/mise.toml — then re-run."
+      exit 1
+    fi
+  done
 }
 
 # Prints the one `*.xcodeproj` at the repo root. None, or more than one, is a

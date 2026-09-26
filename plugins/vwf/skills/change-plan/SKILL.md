@@ -55,9 +55,11 @@ subagent reads. Nothing lives in conversation.
   remote, never one of its own. When the verb reports the backlog unreadable —
   `gh` absent, unauthenticated or without the `project` scope, or no project
   yet — record that with its reason in the facts and continue with nothing.
-  The request is often one of its items; note every id it covers, so the
-  plan's frontmatter can carry them. Reading the backlog is this skill's
-  business; editing it never is — `/vwf:backlog` is its sole writer
+  The request is often one of its items; note every id it covers, and for each
+  whether this plan finishes the item or lands one piece of it — interview item
+  2a settles it — so the plan's frontmatter can carry them on the right list.
+  Reading the backlog is this skill's business; editing it never is —
+  `/vwf:backlog` is its sole writer
 - the base repo's `docs/plans/index.md` — the plan index, the one table where
   every active plan of either kind, cycle and change, its status and its
   priority live;
@@ -119,7 +121,11 @@ until every required plan reads `COMPLETE`. One plan never swallows another.
 An answer mid-interview that raises something outside this plan's scope is
 **parked, durably**: acknowledge it, write it to the plan's *Parked* list with
 enough to pick it up later, and do not widen the plan. Parked items are the
-first thing the next plan's recall reads.
+first thing the next plan's recall reads. A Parked entry that belongs to a
+backlog item begins with its id — `- Bnn: <piece>` — and a plan that lands one
+piece of an item writes what remains that way, at least one line per
+`backlog_pieces:` id, naming the chained folder where one already covers the
+piece.
 
 ### 3. Interview, one question at a time
 
@@ -222,9 +228,12 @@ both planners write: `index.md` plus one `NN-<unit>.md` per unit. Every section
 the template does not mark *cycle plans only* is required; the frontmatter and
 the **Status**, **Consent**, **Units**, **Wave gate**, **After landing** and
 **Run log** blocks have a fixed shape because `/vwf:execute` parses and
-rewrites them. The frontmatter's `type:` is `vwf-change-plan`, and its
-`backlog:` list names the `Bnn` ids recalled in §1 — the backlog project's
-items this plan covers — or is empty.
+rewrites them. The frontmatter's `type:` is `vwf-change-plan`, and it carries
+two lists of the `Bnn` ids recalled in §1, each possibly empty: `backlog:`
+names the items this plan **finishes** — landing sets them `Done` — and
+`backlog_pieces:` the items it lands **one piece of** — landing sets them
+`Partially done`. No id sits on both. The last plan of a chain moves the id to
+`backlog:`; an absent `backlog_pieces:` reads as empty.
 
 Rules the plan must obey, learned from the plans that came before:
 
@@ -276,7 +285,9 @@ Rules the plan must obey, learned from the plans that came before:
   it changes and the alternative rejected. It is the review surface.
 - **Out of scope and Parked are explicit.** What the user declined, with the
   reason, and what was raised and deferred, so `/vwf:execute` never
-  "helpfully" picks either up.
+  "helpfully" picks either up. What remains of a `backlog_pieces:` item is a
+  `- Bnn: <piece>` Parked line, at least one per id; a `backlog:` id has none,
+  and the executor's preflight refuses a folder that breaks either rule.
 
 ### 7. Self-review
 
@@ -298,6 +309,9 @@ Re-read the folder with fresh eyes before handing it off, and fix inline:
 - every `requires:` entry resolves to a row or an archived folder, and none is
   `DRAFT` — invoke `plan-management resolve <folder>` and treat an
   *unresolvable* entry as a finding
+- every `backlog_pieces:` id has a `- Bnn:` Parked line, no id sits on both
+  `backlog:` and `backlog_pieces:`, and no `backlog:` id has a `- Bnn:` Parked
+  line
 - the derived priority equals what `plan-management priority <folder>` returns
 - the launch line names this folder
 
@@ -314,9 +328,10 @@ In this order.
    (`${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md` is
    the shape). That skill edits the Status block and the index; this one never
    does.
-2. **Mark the backlog items planned.** When the frontmatter's `backlog:` list
-   names ids, invoke `/vwf:backlog planned <ids> <folder>` — that skill edits
-   the project, not a file; this one never does either.
+2. **Mark the backlog items planned.** When the frontmatter's `backlog:` or
+   `backlog_pieces:` list names ids, invoke
+   `/vwf:backlog planned <ids> <folder>` with the ids of both lists — that
+   skill edits the project, not a file; this one never does either.
 3. **Commit and push the folder** through `vwf:git-workflow`, invoked with
    these declared preferences, so it asks nothing:
    - **work in place on the current branch, no worktree** — its Step 1 "if

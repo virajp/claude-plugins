@@ -1,0 +1,8 @@
+/security-review — U5 round 2 — range 7606e092..cff25a41 (plugins/)
+
+No findings.
+
+- allow_low_downloads (toolchain-manager/mise/config/.config/mise.toml): no hijack path. Scoped name (@askviraj/) — only the scope owner can publish; exact pin 1.1.6 recorded in a tracked .config/mise.lock (lockfile = true); the exemption is this package only — its dependencies still pass the download threshold, the malicious-package check and minimum_release_age = "10h". Remaining risk is the owner's npm account, pre-existing. Stricter than pnpm dlx, which fetched whatever the registry served.
+- Bare linter in code/lint (pnpm, eslint, flutter, swift, swiftui): resolves through PATH; a repo putting node_modules/.bin on PATH could let a dependency supply its own linter, but that dependency already runs code there. Confidence 2, not reported.
+- dprint paths in code/format (six packs): ./ prefix and -- close option injection; glob widening formats in-repo files only.
+- require_serial: true and the .config/linter.yaml ignores: no security effect.

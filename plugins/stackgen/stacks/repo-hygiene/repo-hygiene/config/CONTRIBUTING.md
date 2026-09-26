@@ -19,8 +19,8 @@ under `.config/mise/tasks/`, and `mise tasks` lists them.
 Three lines, and they do not vary with which branch the forge calls default:
 
 - Work happens on a **feature branch or a worktree**, never on a long-lived
-  branch directly. The one exception is the shaping commit the repo starts
-  with, which lands on `develop`.
+  branch directly. The one exception is the shaping commit the repo starts with,
+  which lands on `develop`.
 - A feature branch lands on **`develop`**.
 - `develop` lands on **`main`**, and `main` takes nothing else. A commit hook
   refuses a direct commit to it.
@@ -28,8 +28,8 @@ Three lines, and they do not vary with which branch the forge calls default:
 `mise run code:merge:develop` and `mise run code:merge:main` are the two moves.
 They run the gates over the whole tree before they touch anything, so a merge
 that would break the branch fails before it starts rather than after. What they
-then do is set **per branch** in `.config/mise.toml`: `MERGE_MODEL_DEVELOP`
-for the first move, `MERGE_MODEL_MAIN` for the second, each `direct` or `pr`.
+then do is set **per branch** in `.config/mise.toml`: `MERGE_MODEL_DEVELOP` for
+the first move, `MERGE_MODEL_MAIN` for the second, each `direct` or `pr`.
 `direct` merges locally and pushes — your branch is on the destination the
 moment the task returns; `pr` pushes the branch and opens a pull request
 instead, merging nothing — your branch lands when a maintainer merges that
@@ -42,8 +42,8 @@ re-runs them. On any other forge a maintainer sets them **by hand, once**:
 
 - The default branch: `gh repo edit --default-branch <branch>`, or
   `glab repo update --defaultBranch <branch>` on GitLab.
-- Protection on both `develop` and `main`: no force-push and no deletion; and
-  a pull request required on each branch whose variable is `pr` —
+- Protection on both `develop` and `main`: no force-push and no deletion; and a
+  pull request required on each branch whose variable is `pr` —
   `MERGE_MODEL_DEVELOP` for `develop`, `MERGE_MODEL_MAIN` for `main`.
 
 ## Commits

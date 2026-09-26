@@ -1,0 +1,68 @@
+/code-review high — R7 round 5 — range b14ada40..45cf8674
+
+I found 9 issues in `b14ada40..HEAD`, 7 of them correctness or security, and confirmed several by running mise 2026.9.12 directly (`mise config get`, `mise env`). The checker's test suite passes (149 of 149). I left out the stale `binaries: [xcodebuild, swift]` and `XCODE_VERSION in mise [env]` wording in `stacks/readme.md` and the site docs, because U8 (wave 3) owns those files.
+
+```json
+[
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 204,
+    "summary": "Setup's list of refused characters leaves out `$`, but the mise pack ships `env_shell_expand = true` (toolchain-manager/mise/config/.config/mise.toml:30), so `$VAR` in a value is mise syntax. The task's pin check (xcode:91) doesn't look for it either.",
+    "failure_scenario": "An answer like `iPhone $X` (or a detected value holding `$`) is accepted and written as `\"iPhone $X\"`. Confirmed by running mise: `B = \"a$HOME\"` loads as `a/Users/...`. Every SwiftUI task then fails with the wrong diagnosis, \"another source overrides it\", pointing the user at `.config/mise.toml`, which isn't the cause. This breaks the 'value is data, never syntax' promise."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 206,
+    "summary": "Setup refuses a value only when it holds both `'` and `\"`, but the task refuses more than that. A value with a `'` and a `\\` is accepted by setup, and mise prints it back as a `'''…'''` string, which `require_pin_source` rejects as not a plain string.",
+    "failure_scenario": "The answer `it's\\x` passes setup and is written as `\"it's\\\\x\"`. `mise config get` prints `A = '''it's\\x'''` (confirmed), so after stripping the outer quotes the value still contains `'`, and every task (build, golden, ux-gate) refuses a value that setup wrote itself."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 193,
+    "summary": "The detect command is to be run as `mise x -- sh -c '<detect>'`, i.e. wrapped in single quotes, but all four swiftui `machine_env` detects contain single quotes (awk/jq programs) and jq variables (`$v`, `$newest`).",
+    "failure_scenario": "Followed literally, the wrapping quote ends at the first `'` inside the detect: the jq program is split into separate shell words and the outer shell expands `$v` and `$newest` to empty. Every detect fails or prints nothing, so setup offers 'no default' for all four pins. Nothing reports this as a failure, so machine detection never works for SwiftUI."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 186,
+    "summary": "A position still holding the shipped value counts as 'unfilled', and the shipped value is empty. On a `macOS` pin, SIMULATOR_DEVICE and SIMULATOR_OS are correctly empty, so they read as unfilled forever, and each setup run offers the detected iPhone values preselected.",
+    "failure_scenario": "Mac-only app: on every `/vwf:setup` re-run, SIMULATOR_DEVICE offers `iPhone 17` and SIMULATOR_OS offers `27.0` as the preselected default (and SIMULATOR_PLATFORM's detect always offers `iOS Simulator`). Accepting the defaults commits iPhone pins into a macOS repo. Separately, all four questions are asked again on every setup run, even when every pin is filled."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 182,
+    "summary": "For a slug that is already materialized, setup reads `machine_env.detect` from the target repo's committed `.claude/stackgen/templates/<slug>.md` and runs it with no consent step. Doctor does the same with `probe` (stack-checks.md:111).",
+    "failure_scenario": "Any commit that edits `detect` or `probe` in the committed template frontmatter runs an arbitrary shell command on the next developer's `/vwf:setup` or `/vwf:doctor`. Doctor is described as report-only, and only setup's question comes after the command has already run. `mise x` gives no protection: if the repo has no mise config, the command runs directly."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode",
+    "line": 91,
+    "summary": "The template-delimiter refusal can only report after the fact. mise renders every `[env]` template (the fragment included) when it loads the environment for `mise run`, before the task's first line runs, and the check covers only the named pins.",
+    "failure_scenario": "A fragment holding `XCODE_VERSION = \"{{ exec(command='…') }}\"`, or any other key or `_.source` directive, has already run by the time `require_pin_source` prints \"which mise would run\". A templated key the task doesn't name is never checked at all. The real guard is at write time (setup) and in the hash-drift check; this special case in the task gives false assurance."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 663,
+    "summary": "The check that each `machine_env` name exists in the fragment is skipped entirely when the pack ships no conf.d fragment (`fragments.length > 0`). Duplicate `machine_env` names are not detected either.",
+    "failure_scenario": "A pack that declares `machine_env: [{name: FOO, …}]` but lands no fragment passes `p:plugins:check`. Setup then asks the question and writes the answer nowhere, which is the silent failure the function's doc comment says it catches, and pack-format.md says the pack 'must' land the position. A repeated name is asked twice."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/test/golden",
+    "line": 69,
+    "summary": "`test:golden` reads the fragment through `mise config get` twice: `require_xcode` calls `require_pin_source XCODE_VERSION`, then the task calls `require_pin_source` again for the three simulator pins.",
+    "failure_scenario": "Every golden run (and every ux-gate run) starts a nested `mise` process twice to parse the same file. One `require_pin_source` call with all four names, or keeping the parsed table from the first call, does the same job with half the process starts."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode",
+    "line": 77,
+    "summary": "The plain-pin parser depends on how mise chooses to print a string (basic when no escape is needed, literal otherwise, `'''` for mixed content). That choice belongs to mise's TOML serializer, not to any documented format.",
+    "failure_scenario": "If a mise upgrade prints strings differently (for example, always as basic strings with escapes), a valid pin holding `\"` or `\\` is refused by every task with 'not a plain string', even though nothing in the repo changed."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 621,
+    "summary": "The checker accepts `lockfile:` on a pack of any type, while pack-format.md and stack-checks.md say it belongs to package-manager components only and sits beside `package_manager`.",
+    "failure_scenario": "A misplaced `lockfile:` on an app-framework or language pack passes the checker. Depending on how the payload is composed, it either never reaches doctor's resolve check or conflicts with the package-manager pack's list, with no finding either way."
+  }
+]
+```

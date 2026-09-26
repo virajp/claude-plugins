@@ -67,13 +67,16 @@ The first thing it does is **read before it asks**. It looks through
 `docs/memory/decisions/`, the last archived plan that touched the same tree, the
 base repo's [backlog project](../../plugins/vwf.md#vwfbacklog) through
 `/vwf:backlog list` if the product keeps one — the request is often an item
-already on it, and the ids it covers go into the plan's `backlog:` frontmatter;
-when `gh` cannot reach the project the recall says so and reads nothing — and
-the memory palace's `planning`, `decisions` and `gaps` rooms. This matters more
-than it sounds: Relay's release-notes request turns out to be sitting in the
-*Parked* list of the plan that set up its CI six weeks earlier, together with
-the reason it was deferred. That is a fact the interview now does not have to
-re-derive, and a decision it will not accidentally reverse in silence.
+already on it. For each id it covers the interview asks whether this plan
+finishes the item or lands one piece of it: a finishing id goes into the plan's
+`backlog:` frontmatter, a piece id into `backlog_pieces:`, with what remains
+written as a `- Bnn: <piece>` line under *Parked*; when `gh` cannot reach the
+project the recall says so and reads nothing — and the memory palace's
+`planning`, `decisions` and `gaps` rooms. This matters more than it sounds:
+Relay's release-notes request turns out to be sitting in the *Parked* list of
+the plan that set up its CI six weeks earlier, together with the reason it was
+deferred. That is a fact the interview now does not have to re-derive, and a
+decision it will not accidentally reverse in silence.
 
 Then it surveys — concurrent `Explore` subagents that return `file:line`
 conclusions rather than file contents, so the session stays small enough to hold
@@ -152,14 +155,14 @@ table of `docs/plans/index.md` — the queue every plan of either kind sits in,
 this one with `Kind` `change` — reading `APPROVED`, with a **priority** it works
 out rather than asks: `10` for a plan that requires nothing still active, `10`
 more than the highest `Priority` value among the plans it requires otherwise, so
-a chain runs in order. Any backlog item the plan covers is marked `planned` with
-this folder as its path — an edit to the project on the forge, nothing in the
-tree — and the folder and the index are **committed and pushed on the branch you
-are on** — in place, no worktree, nothing merged. That is not housekeeping: the
-next step runs in a worktree cut from the integration branch, and it can only
-see a folder that is already committed there. A folder left untracked ends up
-swept into some later commit of the run instead. Only then does it print the
-launch line.
+a chain runs in order. Any backlog item the plan covers, finished or a piece, is
+marked `planned` with this folder added to its `Planned in:` list — an edit to
+the project on the forge, nothing in the tree — and the folder and the index are
+**committed and pushed on the branch you are on** — in place, no worktree,
+nothing merged. That is not housekeeping: the next step runs in a worktree cut
+from the integration branch, and it can only see a folder that is already
+committed there. A folder left untracked ends up swept into some later commit of
+the run instead. Only then does it print the launch line.
 
 It does not start executing, and that is deliberate.
 
@@ -232,16 +235,18 @@ took — including every unit whose owned paths the run widened, with the findin
 that widened them (read these) — the review findings that survived the cap, the
 gate results, and the worktree path.
 
-If everything is green it marks every backlog item the plan covered `done`,
-archives the folder to `docs/plans/archived/` (a landing with a gap still open
-leaves the folder live instead, to be archived when you ask), and lands per the
-consent you recorded. Once the merge is in, one more commit on the integration
-branch sets the plan's row to `COMPLETE`, pointing at the archived folder, and
-drops every `COMPLETE` row that no waiting plan still requires — the queue only
-ever holds what is waiting, running, or still needed. Then it walks the
-after-landing steps on the mode you recorded: a `run` step runs without a
-prompt, and before an `ask` step it stops **once** to say what the step would do
-and wait for your yes — that yes covers that step and nothing else.
+If everything is green it marks every backlog item the plan finishes `done` and
+every item it landed a piece of `Partially done` — the item stays open, with a
+line recording which plan landed on it — archives the folder to
+`docs/plans/archived/` (a landing with a gap still open leaves the folder live
+instead, to be archived when you ask), and lands per the consent you recorded.
+Once the merge is in, one more commit on the integration branch sets the plan's
+row to `COMPLETE`, pointing at the archived folder, and drops every `COMPLETE`
+row that no waiting plan still requires — the queue only ever holds what is
+waiting, running, or still needed. Then it walks the after-landing steps on the
+mode you recorded: a `run` step runs without a prompt, and before an `ask` step
+it stops **once** to say what the step would do and wait for your yes — that yes
+covers that step and nothing else.
 
 "Not yet" is offered as an equal option, not a fallback — where a step stages
 something, only a **restarted** session will pick it up. Coming back to the
@@ -278,9 +283,13 @@ is: ask for it to be archived, and the session invokes
 which moves the whole folder into `docs/plans/archived/` and marks its Status as
 archived-and-not-run, naming what it was before — gives its row in
 `docs/plans/index.md` the same `COMPLETE`-and-sweep edit a landing would — and
-marks every backlog item the folder still has open `done`, so nothing is left
-waiting on a plan that will not run. Nothing is deleted, and the next plan's
-recall still reads it.
+marks every backlog item the folder still has open `done` — or `Partially done`
+for an item the folder lists as a piece — so nothing is left waiting on a plan
+that will not run. A folder that lists an id as finished while its *Parked* list
+keeps a `- Bnn:` piece of it is refused, since closing that item would close
+work the folder itself says is left; `archive <folder> --force` archives it
+anyway and records the item as a piece, never `done`. Nothing is deleted, and
+the next plan's recall still reads it.
 
 ## What this will not do for you
 

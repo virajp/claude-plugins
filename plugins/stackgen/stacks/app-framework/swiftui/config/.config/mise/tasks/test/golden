@@ -29,17 +29,18 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/xcode"
 #
 # A golden is pixels from one simulator: another device or OS version renders
 # differently, and every comparison against it fails. So the repo pins the
-# simulator once, in its mise `[env]` — SIMULATOR_PLATFORM (`iOS Simulator`,
-# say), SIMULATOR_DEVICE and SIMULATOR_OS — and this task builds the
-# `-destination` from them, so recording, comparing, the `ux-gate` skill and CI
-# render on the same one. `--platform`, `--device` and `--os` override the pin
-# for one run, and `--platform` comes with `--device` and `--os`, never
-# alone: a platform on the pin's device and OS names a simulator that does not
-# exist. A run with no pin is refused rather than left to whichever simulator
-# xcodebuild would pick. A Mac-only app pins `macOS`, the one platform with no
-# simulator, which needs neither a device nor an OS. The goldens are the
-# pinned platform's; running another platform against them compares renders
-# with goldens recorded elsewhere.
+# simulator once, in `.config/mise/conf.d/swiftui.toml` — SIMULATOR_PLATFORM
+# (`iOS Simulator`, say), SIMULATOR_DEVICE and SIMULATOR_OS — and this task
+# builds the `-destination` from them, so recording, comparing, the `ux-gate`
+# skill and CI render on the same one. `--platform`, `--device` and `--os`
+# override the pin for one run, and `--platform` comes with `--device` and
+# `--os`, never alone: a platform on the pin's device and OS names a simulator
+# that does not exist. A run with no pin and not all three overrides is refused
+# rather than left to whichever simulator xcodebuild would pick, and so is a pin
+# some other mise config overrides — the fragment is the one source. A Mac-only
+# app pins `macOS`, the one platform with no simulator, which needs neither a
+# device nor an OS. The goldens are the pinned platform's; running another
+# platform against them compares renders with goldens recorded elsewhere.
 #
 # The record mode reaches the test process through xcodebuild, which strips the
 # `TEST_RUNNER_` prefix from any variable carrying it and hands the rest to the
@@ -65,6 +66,7 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/xcode"
 # from elsewhere, then "prove" those.
 
 require_xcode "test:golden"
+require_pin_source "test:golden" SIMULATOR_PLATFORM SIMULATOR_DEVICE SIMULATOR_OS
 project=$(find_xcodeproj "test:golden")
 scheme="${usage_scheme:-$(basename "${project}" .xcodeproj)}"
 
@@ -80,15 +82,15 @@ device="${usage_device:-${SIMULATOR_DEVICE:-}}"
 os="${usage_os:-${SIMULATOR_OS:-}}"
 
 if [ -z "${platform}" ]; then
-  print_error "test:golden: no simulator is pinned — SIMULATOR_PLATFORM is unset."
-  print_yellow "Set SIMULATOR_PLATFORM, SIMULATOR_DEVICE and SIMULATOR_OS in the repo's mise [env] (or pass --platform, --device and --os), then re-run."
+  print_error "test:golden: no simulator is pinned — SIMULATOR_PLATFORM is unset or empty."
+  print_yellow "Set SIMULATOR_PLATFORM, SIMULATOR_DEVICE and SIMULATOR_OS in .config/mise/conf.d/swiftui.toml (or pass --platform, --device and --os), then re-run."
   exit 1
 fi
 if [ "${platform}" == "macOS" ]; then
   destination="platform=macOS"
 elif [ -z "${device}" ] || [ -z "${os}" ]; then
   print_error "test:golden: the ${platform} pin is incomplete — SIMULATOR_DEVICE and SIMULATOR_OS are both required."
-  print_yellow "Set them in the repo's mise [env] (or pass --device and --os); xcrun simctl list devices available lists the choices."
+  print_yellow "Set them in .config/mise/conf.d/swiftui.toml (or pass --device and --os); xcrun simctl list devices available lists the choices."
   exit 1
 else
   destination="platform=${platform},name=${device},OS=${os}"
@@ -98,8 +100,14 @@ if [[ "${usage_record:-false}" == "true" ]] &&
   { [ "${platform}" != "${SIMULATOR_PLATFORM:-}" ] ||
     { [ "${platform}" != "macOS" ] &&
       { [ "${device}" != "${SIMULATOR_DEVICE:-}" ] || [ "${os}" != "${SIMULATOR_OS:-}" ]; }; }; }; then
-  print_error "test:golden: --record records on the pinned simulator only, and ${destination} is not it."
-  print_yellow "Drop --platform, --device and --os to record, or move the pin in the repo's mise [env] first."
+  overrides="${usage_platform:+ --platform \"${usage_platform}\"}${usage_device:+ --device \"${usage_device}\"}${usage_os:+ --os \"${usage_os}\"}"
+  if [ -n "${SIMULATOR_PLATFORM:-}" ]; then
+    print_error "test:golden: --record records only on a pinned simulator, and the overrides${overrides} move the destination off the pin, to ${destination}."
+    print_yellow "Drop --platform, --device and --os to record on the pin, or move the pin in .config/mise/conf.d/swiftui.toml first."
+  else
+    print_error "test:golden: --record records only on a pinned simulator, and the overrides${overrides} name no pin — none is set."
+    print_yellow "Pin the simulator to record on in .config/mise/conf.d/swiftui.toml first."
+  fi
   exit 1
 fi
 

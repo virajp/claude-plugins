@@ -46,15 +46,16 @@ minimum_release_age = "10h"
 
 # Record every resolved version in a lockfile, which IS committed. That is what
 # makes "latest" reproducible: humans move the lockfile forward deliberately
-# (`mise upgrade`), and the pipeline installs from it (see mise.ci.toml).
+# (`mise run setup:all --upgrade`, in dev), and the pipeline installs from it
+# (see mise.ci.toml).
 #
 # **One lockfile per config file that declares tools, named after that file's
-# stem.** `mise install` writes `mise.dev.lock` beside `mise.dev.toml`, and would
-# write `mise.lock` beside this file the moment `[tools]` below stops being
-# empty. With the split as shipped — an empty base and the dev tools — the only
-# file produced is `.config/mise.dev.lock`. All of them are tracked; only
-# `mise.local.lock`, the counterpart of the uncommitted `mise.local.toml`, is
-# ignored.
+# stem.** `mise install` writes `mise.dev.lock` beside `mise.dev.toml`, and
+# `mise.lock` beside this file, whose `[tools]` below carries the house linter.
+# With the split as shipped — the linter in the base and the dev tools — the
+# files produced are `.config/mise.lock` and `.config/mise.dev.lock`. All of
+# them are tracked; only `mise.local.lock`, the counterpart of the uncommitted
+# `mise.local.toml`, is ignored.
 lockfile = true
 
 # Interleave task output rather than buffering per task. Applies when `raw` is
@@ -142,17 +143,57 @@ MEMBERS = ""
 #   _.path = { path = "node_modules/.bin", tools = true }
 
 [tools]
-# EMPTY by default, and that is the contract: this pack is the toolchain
-# manager, not the toolchain. The language runtime arrives with this repo's
-# language and package-manager components, which write their own tier; a
-# capability provider (a secret manager, say) ships its tool in its own
-# `.config/mise/conf.d/<provider>.toml` fragment rather than editing this file.
+# No runtime, and that is the contract: this pack is the toolchain manager, not
+# the toolchain. Its one pin below is a gate, not a runtime. The language
+# runtime arrives with this repo's language and package-manager components,
+# which write their own tier; a capability provider (a secret manager, say)
+# ships its tool in its own `.config/mise/conf.d/<provider>.toml` fragment
+# rather than editing this file.
 # mise auto-loads `conf.d/*.toml`, so a provider can be added and removed
 # without a single line of this file changing.
 #
 # For example, a Node repo's package-manager component would carry:
 #   node = { version = "latest" }
 #   pnpm = { version = "latest" }
+#
+# The one pin is the house linter, which the `code:lint` of the pnpm, eslint,
+# flutter, swift and swiftui packs calls as `linter`. It is pinned here, once,
+# at an EXACT version rather than fetched per run: an unpinned fetch is
+# whatever the registry serves that minute, and one pin is one version those
+# packs agree on. It lives in the base because the pipeline runs `code:lint`.
+#
+# The binary is a Node script: it needs a `node` on PATH. A repo whose
+# components pin one (a Node repo) runs it under that; a repo whose packs pin
+# none (swift, swiftui, flutter) relies on the machine's own.
+#
+# The installer is the MACHINE's choice, never this file's: mise's npm backend
+# defaults to its embedded aube, and a machine may set `npm.package_manager` or
+# `npm.shell_out` to use npm, pnpm or bun instead. A project file that set the
+# installer would reach the machine's global tools too, so none does. What
+# follows holds only when the machine's npm backend is the embedded aube:
+#
+#   - it installs the package without a separate package manager;
+#   - `allow_low_downloads` is required, not a loosening — aube refuses a
+#     package under its weekly-download threshold on a first, unlocked install,
+#     and this one is below it; the exemption covers this package alone, its
+#     dependencies stay gated, and the malicious-package check still runs;
+#   - dependency lifecycle scripts run only when listed in `allow_builds`, and
+#     none is.
+# Under another installer those three do not hold, and the option is ignored.
+#
+# The lock is TWO things, committed together. `.config/mise.lock` records the
+# pin, and under aube points at a sidecar directory,
+# `.config/mise/locks/npm-askviraj-linter/<version>~<hash>/`, holding the
+# `package.json` and `aube-lock.yaml` that fix the dependency graph. An install
+# with the entry and no sidecar fails, locked or not — and `locked = true` in
+# mise.ci.toml refuses a tool no committed lock records. So a repo that takes
+# this pin runs `mise install` and commits the lock AND its sidecar before its
+# first CI push. The sidecar is generated: never format or lint it.
+#
+# The tasks call it through `mise which`, never by bare name: a Node repo puts
+# `node_modules/.bin` ahead of mise's tool bins, where another `linter` would
+# shadow this one.
+"npm:@askviraj/linter" = { version = "1.1.6", allow_low_downloads = true }
 
 [tasks.init]
 # Mandatory, and it lives in the BASE rather than in dev on purpose: the

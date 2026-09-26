@@ -3,7 +3,7 @@ name: pnpm · workspace
 axis: repo
 kind: workspace
 components:
-- package-manager/pnpm@0.3.0
+- package-manager/pnpm@0.3.1
 ---
 
 # Monorepo — pnpm · workspace

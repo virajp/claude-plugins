@@ -88,8 +88,20 @@ variant is loaded.
   release younger than ten hours, and `lockfile = true` records what a fuzzy pin
   resolved to — **one lockfile per config file that declares tools, named after
   that file's stem, and all of them tracked**. With the split as shipped that is
-  `.config/mise.dev.lock` alone; a runtime pinned in `mise.toml` adds
-  `.config/mise.lock` beside it. Only `mise.local.lock` is ignored.
+  `.config/mise.lock` and `.config/mise.dev.lock`; a runtime pinned in
+  `mise.toml` joins the first. Only `mise.local.lock` is ignored.
+  Its one shipped tool is the **house linter**, `npm:@askviraj/linter` at an
+  exact version with `allow_low_downloads = true`, which the `code:lint` of
+  the pnpm, eslint, flutter, swift and swiftui packs calls as `linter` — one
+  pin those packs agree on, in the base because the pipeline runs `code:lint`.
+  The binary is a Node script and needs a `node` on PATH — the repo's own pin
+  where it has one, else the machine's. The installer is the **machine's**
+  choice and no shipped file sets it: mise defaults to its embedded aube, and
+  only under aube does the exemption matter (a first install below its
+  download threshold is refused without it), do dependencies stay gated, and
+  do lifecycle scripts wait for `allow_builds`. Under aube the lock's entry
+  also points at a generated sidecar under `.config/mise/locks/`, committed
+  with the lock — an install without it fails — and never formatted or linted.
   It also carries three settings that are policy rather than taste:
   `all_compile = false` (take the published binary for every tool, never build
   one), `task.timings = true` (an aggregate gate whose steps have no elapsed
@@ -240,8 +252,14 @@ different command.
   by-hand command. Every destructive step is behind a flag passed on purpose —
   `setup:precommit --force` (take over a foreign `core.hooksPath` or hook
   manager), `setup:precommit --update` (`pre-commit autoupdate`),
-  `setup:mise --upgrade` (`mise upgrade --local` and the formatter's plugin
-  update) — and `setup:all` passes none of them.
+  `setup:mise --upgrade` (dev only: `mise lock --bump --upgrade` for every
+  environment's lockfile and the formatter's plugin update) — and `setup:all`
+  passes on `--upgrade` alone, only when the user passed it.
+- **Tools install from the lockfile.** `setup:mise` runs
+  `mise install --locked` on every run and never `mise upgrade`. It writes a
+  lockfile only in dev — `mise lock` once when no `.config/mise*.lock` exists,
+  or the bump under `--upgrade`; outside dev a missing lockfile, or
+  `--upgrade`, exits 1 before any step.
 - **`code:git-config` requires a per-repo forge identity.** The local
   git-config's `user.name`, `user.email` and `user.signingkey` must **equal**
   `<FORGE>_USER_NAME`, `<FORGE>_EMAIL` and `<FORGE>_SIGNING_KEY`, with ssh

@@ -1,0 +1,73 @@
+/code-review high — R7 round 3 — range b14ada40..2091563e
+
+I found 10 issues in b14ada40..HEAD. The fix in e6af858e works: `mise config get --file` reads trailing comments, indented keys and escaped strings correctly, and it exits 1 on a missing key. I checked that against mise 2026.9.12. What it leaves:
+
+- **Two problems in the fix itself.** It moves the 0.1.0 migration onto every run instead of fixing setup's default. It also wrongly refuses two valid ways of writing mise env settings: `[[env]]` blocks and `{ value = … }` tables.
+- **One documentation gap.** Docs unit U8's file list leaves out `choosing-your-stack.md:58`. That page still tells users to pin Xcode in the mise config's `[env]`, which the tasks now refuse.
+- **Five findings from round 2 are still open and are not in the plan's Gaps list:** the `sh -c` quoting, the stackgen-sync overwrite, the `lockfile:` axis, the macOS re-ask, and G4's checker gap. The run log (index.md:329) sent them to the wave-2 rulings review, and nothing has come back.
+- **Two cleanups:** four mise processes per pin check, and no automated test for `require_pin_source`.
+
+```json
+[
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 197,
+    "summary": "The fix handles the 0.1.0 migration too late. Setup still preselects this machine's detected value for an empty fragment and ignores the value mise actually resolves, which a stale `.config/mise.toml` [env] line still sets. Every task and ux-gate then refuses on every run, and the user has to recover the team's pin by hand. The real fix belongs in setup: offer the value `mise env` resolves (the team's committed pin) as the default, and remove the stale line under the same consent.",
+    "failure_scenario": "A repo on 0.1.0 has XCODE_VERSION=\"26.0\" in `.config/mise.toml`. Setup lands 0.2.0 and preselects the detected 27.0; the user accepts. Every task refuses from then on. The new message says to 'move the value the team intends', but setup has already written 27.0 over the empty position and never showed 26.0. A user who deletes the old line silently moves the pin to 27.0. The per-run check also refuses a deliberate CI or mise.local.toml override (G3); that cost only exists because the one-time migration was never done in setup."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 193,
+    "summary": "(Still open from round 2.) Setup is told to run each detect as `mise x -- sh -c '<detect>'`, but the swiftui detects contain single quotes (the awk and jq programs). Substituted literally, the outer quote closes early and every detect fails.",
+    "failure_scenario": "The XCODE_VERSION detect is spliced into `sh -c '…'`. The quote closes at `awk '`, the outer shell expands $1/$2, and the command exits non-zero. The three SIMULATOR_* detects break the same way at `jq -er '`. Setup offers no default for any of the four pins. This is not in the Gaps section."
+  },
+  {
+    "file": "plugins/stackgen/skills/stackgen-sync/SKILL.md",
+    "line": 171,
+    "summary": "(Still open from round 2.) Setup re-records the hash of the filled conf.d/swiftui.toml (materialize.md:211). Sync classifies a file by that hash alone, so the next pack change to the fragment makes the filled file 'pack moved', which is selected by default. Applying it copies the empty payload over the committed pins.",
+    "failure_scenario": "swiftui 0.2.1 edits a comment in swiftui.toml. /stackgen:stackgen-sync marks the fragment 'pack moved' and selects it by default. Applying writes XCODE_VERSION = \"\" and empty SIMULATOR_* values. Every build and golden task then refuses until /vwf:setup runs again, and the committed pins are gone from the tree."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 187,
+    "summary": "(Still open from round 2.) A position counts as 'filled' only when it differs from the shipped \"\". A macOS pin's empty SIMULATOR_DEVICE and SIMULATOR_OS are correct, but they read as unfilled on every run, and each gets the detected iPhone value preselected.",
+    "failure_scenario": "A Mac-only app pins SIMULATOR_PLATFORM=macOS with device and OS empty. Each /vwf:setup, including the one /vwf:architecture triggers, preselects 'iPhone 18 Pro' and '27.0'. Accepting the defaults writes an iPhone into a macOS pin, and the same questions come back on the next run."
+  },
+  {
+    "file": "plugins/stackgen/stacks/package-manager/swiftpm/pack.yaml",
+    "line": 10,
+    "summary": "(Still open from round 2.) The new `lockfile:` fact is declared only on swiftpm. That pack ships only in project-axis bundles, but doctor reads `lockfile` under the repo-axis `repo.stack` check, so a SwiftUI app's lockfile path never reaches the check it was added for.",
+    "failure_scenario": "A SwiftUI app's Package.resolved sits at App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/. No repo-axis payload carries `lockfile:`, so doctor falls back to a root Package.resolved and reports a correct repo's lockfile as missing. G7's second half stays open, and this is not in Gaps."
+  },
+  {
+    "file": "site/src/content/docs/how-to/operate/choosing-your-stack.md",
+    "line": 58,
+    "summary": "This page still says Xcode is 'pinned as `XCODE_VERSION` in the repo's mise `[env]`', which is the setup the tasks now refuse. U8's file list (08-docs.md) names the stackgen.md lines but not this one. The repo-root CLAUDE.md says: 'Docs ship with the change. Any change to plugin behavior must reconcile readme.md, this file, and the manual under site/src/content/docs/ in the same commit'.",
+    "failure_scenario": "A user follows the how-to and adds XCODE_VERSION to `.config/mise.toml`'s [env]. setup:deps:install and test:golden then refuse with 'another source overrides it', and the manual never mentions conf.d/swiftui.toml. Whether it gets fixed depends on docs-sync happening to find this line."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode",
+    "line": 61,
+    "summary": "`mise config get --file … env.NAME` only handles a plain string under a single [env] table. Two other forms mise itself accepts produce false refusals: `[[env]]` array-of-tables blocks (checked: mise config get says 'Key not found') and table-valued entries such as `NAME = { value = \"27.0\", … }`.",
+    "failure_scenario": "Someone rewrites the fragment as `[[env]]` blocks, or adds `redact`/`tools` options to a pin as `{ value = … }`. mise env still resolves the value, but require_pin_source says 'has no readable XCODE_VERSION under [env]', or compares against the table and reports a mismatch. Every build task and the ux-gate refuse on a valid config."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 663,
+    "summary": "(G4, still a defect.) The check that each machine_env name is a fragment key runs only when `fragments.length > 0`. A pack that declares machine_env but ships no conf.d fragment passes, and a unit test says that is fine.",
+    "failure_scenario": "A new pack declares `machine_env: [{ name: FOO, … }]` and ships no config/.config/mise/conf.d/*.toml. p:plugins:check is green. /vwf:setup asks the question and has no marked position to write the answer to, which is exactly the silent failure packFactFaults' own docstring says it prevents."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/test/golden",
+    "line": 69,
+    "summary": "require_pin_source starts a separate `mise config get` process for each pin, and each one loads the full mise config. require_xcode checks XCODE_VERSION on its own, so test:golden runs four mise processes, and setup:deps:all adds one more per verb.",
+    "failure_scenario": "Every golden run and deps task pays for 4 or more extra mise startups (tens of ms each, more on a cold cache) before xcodebuild runs. A cheaper form is one `mise config get --file <fragment> env` call, which prints the whole table (checked), split once. Another is one require_pin_source call with all four names, with require_xcode no longer checking XCODE_VERSION separately."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode",
+    "line": 51,
+    "summary": "The fix changes how the fragment is parsed and adds two new refusals (missing fragment, missing key), but no repo test covers require_pin_source. The run log's 'parser cases tested' was a one-off manual check, while the repo already table-tests shipped shell (p:plugins:npm-normalize-test).",
+    "failure_scenario": "A later edit or a mise upgrade that changes `config get` output (quoting, trailing newline, error exit code) could make the check skip silently or refuse falsely, and no gate would catch it. Round 1's regex version shipped with exactly this kind of silent skip."
+  }
+]
+```

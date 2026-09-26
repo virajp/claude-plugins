@@ -1,0 +1,4 @@
+/security-review — U5-late1 round 3 — range a6b7abe4^..bf9dd2e6
+
+No findings.
+Notes: comments and prose only (mise.toml comment, code/lint header, conventions.md, task-library.md, plan rows). No executable line changed.

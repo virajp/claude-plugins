@@ -42,9 +42,11 @@ to read.
   materialization record. Read the **slugs** its `entries:` carry and nothing
   else: which paths landed, with what hash, is the adapter's bookkeeping, and
   setup has no business reading it. An absent lockfile means nothing in that
-  repo is materialized. The one exception is the fallback for a config with
-  no `answers:` block, which reads the pinned provider slug off it and
-  nothing more.
+  repo is materialized. Three exceptions: the fallback for a config with no
+  `answers:` block, which reads the pinned provider slug off it and nothing
+  more; the machine-env step below, which reads the hash recorded for a
+  pack's template entry before it runs that entry's `detect`; and the same
+  step's re-record of the hash of each file it fills.
 
 The axes live in the **base's** `.config/vwf.yaml` only. A member repo has no
 config of its own — it carries a back-link
@@ -165,6 +167,95 @@ the adapter's and this pass does not change it. Setup does not batch two slugs
 into one gate, and does not present a plan of its own in front of the
 adapter's.
 
+## Ask the machine env
+
+Some values a stack needs are facts about the **machine** that builds it, not
+decisions anyone makes — a tool's installed version, a device the tests run
+on. A pack declares them in its `machine_env:` fact, which the template
+payload carries as a list of `{ name, detect, question }`: `name` an
+environment variable, `detect` a shell command whose stdout is the default,
+`question` the prompt. The pack lands a file with a marked position named for
+each `name` — typically a toolchain `conf.d` fragment's environment table —
+and lands it **unfilled**; filling it is this step's.
+
+**When it runs.** For every entry this pass **landed**, once the adapter
+returns, read `machine_env` off the payload it returned. For every entry the
+landing list skipped as already materialized, fetch its payload — a pure
+read — and run the step the same way. A payload with no `machine_env` is
+nothing to do.
+
+**A value set elsewhere moves in.** Before asking, look for each `name` set
+as a committed value in another file of the same tool's config — a line an
+earlier version of the pack, or a person, put there before the pack had a
+file of its own (for mise, an `[env]` key in `.config/mise.toml`, which mise
+lets win over a `conf.d` fragment). That value is the team's pin, so step 2
+preselects it — above the detected value and above the position's current
+value — and says where it was found; whatever the answer, it is written into
+the pack's file and the line in the other file is **removed**, so the value
+has one source. The question is the consent for both edits, and the
+question says so. A value set only in the environment or in a gitignored
+local config is a machine's deliberate override, not a committed pin, and is
+left alone.
+
+**Per entry, in the order the pack declares them** — one question each, per
+`${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`'s one decision per round:
+
+1. Run `detect` from the target repo's root, inside its toolchain
+   environment, stopped after 30 seconds. The command is held in a variable
+   and passed to the shell as **one argument** — `mise x -- sh -c "$cmd"` —
+   never spliced into a quoted string, so the quotes and `$` references a
+   detect command carries reach the shell intact. Its stdout, trimmed, is the
+   **detected value**; a non-zero exit, a timeout or empty output is no
+   value. **The command runs only while its entry matches what the lockfile
+   last recorded:** `detect` is run only when the committed template entry
+   it was read from (`.claude/<adapter>/templates/<slug>.md`) still hashes to
+   the value its adapter lockfile records. On a mismatch it is not run — the
+   entry changed after it was recorded — and there is no detected value; the
+   drift is named beside the question.
+2. Ask `question`. A value set elsewhere, found above, is preselected first.
+   Otherwise **which value is preselected depends only on whether the pack
+   landed in this run.** On the landing run, the detected value is
+   preselected. A pack whose every `machine_env` position still holds the
+   value it shipped with counts as landing in this run too — an earlier
+   landing was interrupted before its questions were answered, so nothing has
+   been answered yet. On every later run, the position's **current value** is
+   — an empty one included, shown as empty, since an empty answer is an
+   answer (a platform the value does not apply to, say) — with the detected
+   value beside it where the two differ. With no detected value — a failed
+   `detect`, or one not run for drift — the landing run offers no default,
+   and a later run still preselects the current value: only the detected
+   default is withheld. Either way the person may type another, and the
+   question is never skipped, and never answered for the person.
+3. Write the answer into the marked position named for `name` in the file the
+   pack landed, and nothing else in that file. An answer equal to the current
+   value writes nothing. **The value is data, never syntax:** one containing a
+   newline or any other control character, a template delimiter or expansion
+   character of the tool that reads the file (for mise, which renders every
+   environment value as a template and, under the pack's shell expansion,
+   expands variables: `{{`, `{%`, `{#` or `$`), or a `'` together with a `"`
+   or a `\` is refused and the question asked again — a detected value that
+   does so is offered as no default — and every other value is written as a
+   quoted string in the file's own syntax, escaped by it (for a TOML file, a
+   basic string with `"` and `\` escaped), so no answer can end the string,
+   add a key, or run as code when the file is loaded.
+
+Then, once per pack whose file changed, **re-record that file's hash** in the
+target repo's adapter lockfile — the same re-record `/vwf:init` makes of every
+file it fills, and the one lockfile write this pass makes — so the filled
+file does not read as drift on the next `/vwf:doctor`; a file a moved line
+was removed from is re-recorded the same way where the lockfile records it.
+Commit the files and the lockfile together in the target repo, one commit
+per pack, its message naming the slug, the variables filled and any line
+moved: the answers were the consent, as the adapter's consent line was for
+the landing.
+
+The file is committed, so once answered the value is the **repo's**, not the
+machine's: a later run on any machine offers the committed value
+preselected, with that machine's detected value beside it where the two
+differ, and keeps it unless the person there picks or types another. For
+example, a mobile stack might declare its IDE version and a test device
+this way.
+
 ## A declined landing
 
 Record it in the report as **"declined — pin stays; `/vwf:setup` offers it
@@ -235,6 +326,11 @@ One block, carried back to the spine:
 - one line per recorded `forge` the live host contradicted — the repo, the
   value replaced, the value written, and `/vwf:setup reshape` as what lands
   the files the stale record skipped;
+- one line per machine-env variable asked — the repo, the slug, the name, the
+  value written or kept, `moved from <file>` where a value set elsewhere was
+  moved in, `no default` where its `detect` produced none, and
+  `detect not run — template entry drifted from its lockfile record` where
+  the drift gate withheld it;
 - one line per member skipped as absent, with its checkout line;
 - one line per axis written `unresolved`, naming the project and the axis;
 - the sentence **"architecture decides; setup pins"**, so a reader knows where

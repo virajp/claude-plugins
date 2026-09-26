@@ -1,0 +1,72 @@
+/code-review high — R7 round 6 — range b14ada40..4d843baf
+
+I found 10 findings in `b14ada40..HEAD`, focused on round 6 (`946c73ff`). They are listed most severe first.
+
+- **Checked with mise 2026.9.12:** with the pack's `env_shell_expand = true`, a fragment value `"a$HOME"` loads with `$HOME` expanded to the home directory. `"a\\$HOME"` loads as `a\/Users/…`, so a backslash does not stop the expansion. `~` is not expanded, so leaving it off the refused list is correct.
+- **Round 6 did two things right:** the `'` + `\` refusal now matches what the task treats as a plain string, and a value with `"` alone or `\` alone still passes both.
+- **Still open from round 5, and re-listed below:** the single-quote wrapping of detect commands, the task-side check for `$`, the checker skipping the name check when a pack ships no fragment, and the empty macOS pins.
+
+```json
+[
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 193,
+    "summary": "Setup still runs detect as `mise x -- sh -c '<detect>'`, but all four swiftui detects contain single quotes and the jq variables `$v` and `$newest`. Doctor's `sh -c '<probe>'` (stack-checks.md:111) uses the same wrapping, and the checker does not reject a `'` in `detect` or `probe`.",
+    "failure_scenario": "Followed literally, the outer quote closes at the first `'` in the awk or jq program. The program is split into separate shell words and the outer shell expands `$v` and `$newest` to nothing. Every detect exits non-zero or prints nothing, so setup offers no default for XCODE_VERSION and the three SIMULATOR_* pins on every machine, and reports only `no default`. The example in pack-format.md:249 breaks the same way. Unfixed from round 5."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 196,
+    "summary": "The round-6 guard compares the committed template entry with a hash in the committed `.claude/stackgen/lock.yaml`. Anyone who can edit the template can edit that hash in the same commit, so 'only the landed pack's own command runs' is not true. The same applies to doctor's probe gate (stack-checks.md:114).",
+    "failure_scenario": "A commit changes `machine_env[].detect` (or `binaries[].probe`) in `.claude/stackgen/templates/swift-swiftui.md` and also puts that file's new hash in lock.yaml. The next developer's `/vwf:setup` or `/vwf:doctor` sees no drift and runs the command. Only `detect` is gated: a drifted entry's `name` and `question` are still used. The lasting fix is to take `detect` and `probe` from the stackgen pack named by the lock entry's `source: pack/<type>/<slug>@<version>`, not from the repo."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 45,
+    "summary": "The Inputs section says setup reads only the lockfile's slugs, with exactly 'Two exceptions' (the answers fallback and re-recording hashes). The round-6 step 1 needs a third: reading the template entry's recorded hash to compare with. That read is not listed.",
+    "failure_scenario": "Someone implementing or following setup from Inputs ('which paths landed, with what hash … setup has no business reading it') either skips the hash comparison, so detect runs even from a drifted template, or has to break a rule the same file states. The file now contradicts itself on the one read the new guard depends on."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode",
+    "line": 96,
+    "summary": "Setup now refuses `$`, but the task's pin check still does not look for it. Under the pack's `env_shell_expand = true`, mise expands `$VAR` in the fragment, so the expanded value differs from the raw one and the task gives the wrong cause.",
+    "failure_scenario": "A pin written by hand or already committed, such as `SIMULATOR_DEVICE = \"iPhone $X\"` (or `\"a\\\\$HOME\"`, which mise prints as `'a\\$HOME'` and still expands), passes the plain-string and delimiter checks. It then fails with 'another source overrides it' and tells the user to delete a line from `.config/mise.toml`, which is not the cause. setup and the task that reads the value now refuse different sets of characters."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 200,
+    "summary": "On template drift, step 1 says the question 'is asked with no default'. Step 2 (line 201) says a filled position always offers its current value preselected, and the report line (line 306) only has `no default where its detect produced none`, with no case for a drifted template.",
+    "failure_scenario": "On a re-run in a repo whose template entry drifted, step 1 says to show no preselection and step 2 says to preselect the committed XCODE_VERSION. The two readings differ: one makes the person retype the committed pin or risk replacing it. The report then describes a skipped detect as 'produced none', which hides the drift the step says to name."
+  },
+  {
+    "file": "plugins/stackgen/assets/pack-format.md",
+    "line": 260,
+    "summary": "pack-format.md still says setup 'runs each `detect`' and that doctor runs `probe` (line 213) with no condition. stackgen-stack-template/SKILL.md:111 says the same. The round-6 rule, that neither runs from a template entry whose hash has drifted, is only in the vwf references.",
+    "failure_scenario": "A pack author or the stackgen skill relies on detect and probe always running. The contract document for packs now disagrees with its two callers about when a pack's commands execute, which breaks the repo-root CLAUDE.md rule: 'Any change to plugin behavior must reconcile … in the same commit — stale docs are more harmful than no docs'."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 663,
+    "summary": "The check that a `machine_env` name exists in the fragment only runs when the pack ships at least one conf.d fragment (`fragments.length > 0`). Duplicate `machine_env` names are never reported.",
+    "failure_scenario": "A pack that declares `machine_env: [{name: FOO, …}]` and ships no `.config/mise/conf.d/*.toml` passes `p:plugins:check`. Setup then asks the question and writes the answer into no marked position. The function's own doc comment names exactly this silent failure. A repeated name is asked twice. Unfixed from round 5."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/references/materialize.md",
+    "line": 187,
+    "summary": "A position counts as 'unfilled' when it still holds the value the pack ships, which is empty. On a `macOS` pin, SIMULATOR_DEVICE and SIMULATOR_OS are correctly empty, so setup treats them as unfilled on every run and preselects the detected iPhone values.",
+    "failure_scenario": "In a Mac-only app repo, each `/vwf:setup` re-run preselects `iPhone 17` and `27.0` for the two pins that must stay empty, and SIMULATOR_PLATFORM's detect always suggests `iOS Simulator`. Accepting the defaults commits iPhone pins into a macOS repo, and golden/ux-gate then render on a destination that differs from the recorded goldens."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/pack.yaml",
+    "line": 45,
+    "summary": "The simulator-choosing jq program is pasted three times (SIMULATOR_PLATFORM, SIMULATOR_DEVICE, SIMULATOR_OS). Only the last line differs, and each copy runs its own `mise x` and its own `xcrun simctl list devices available -j`.",
+    "failure_scenario": "Every setup run starts mise and simctl three times to answer one question: which simulator. The three pins only 'agree on one simulator' because the copies are identical. If one copy is edited later (a different device filter, say), the pinned device and OS come from different simulators, the -destination names a simulator that does not exist, and nothing reports it."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 621,
+    "summary": "The checker accepts `lockfile:` on a pack of any type, while pack-format.md says it belongs to package-manager components only, beside `package_manager`.",
+    "failure_scenario": "A `lockfile:` put by mistake on an app-framework or language pack passes `p:plugins:check`. Depending on how the template payload is built, it is either dropped before it reaches doctor's lockfile check or conflicts with the package-manager pack's list, and neither case produces a finding."
+  }
+]
+```

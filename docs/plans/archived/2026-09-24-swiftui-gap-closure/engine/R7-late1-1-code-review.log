@@ -1,0 +1,42 @@
+/code-review high — R7-late1 round 1 — range 4a0b4958..20c547b8
+
+```json
+[
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode",
+    "line": 92,
+    "summary": "The new `$` check runs inside a mise task, after mise has already loaded the env and applied env_shell_expand. So it can only relabel a refusal that line 97's override check already makes. It cannot stop the expansion, and if expanding fails, the task never starts.",
+    "failure_scenario": "Fragment holds `SIMULATOR_OS = \"$FOO\"`. With FOO set, mise expands it before `mise run test:golden` reaches the helper. The only gain is that the message now says `$` instead of 'another source overrides it'. With FOO unset, if shellexpand errors on an undefined variable, mise fails while loading the config and this refusal is never printed. The real barrier is setup's write-time refusal (materialize.md step 3). This task-side special case gives false assurance that the task guards expansion, as R7-5 already flagged for the Tera delimiters."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode",
+    "line": 93,
+    "summary": "The refusal always says mise 'would ... expand' a `$`, but mise only expands it when env_shell_expand is on. The check and the message don't depend on that setting.",
+    "failure_scenario": "A repo whose mise config does not come from the mise pack, or runs with MISE_ENV_SHELL_EXPAND=0 or `env_shell_expand = false` in a local override: the `$` stays literal. The task still refuses, and its message blames an expansion that never happens, which sends the developer after the wrong cause."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode",
+    "line": 92,
+    "summary": "The refused-character list is kept by hand in two places: this glob and the prose list in vwf's setup materialize.md step 3. They drifted once already, and this commit is the catch-up. Nothing ties them together, so they can drift again.",
+    "failure_scenario": "Setup adds a refused token, for example a future Tera syntax or a `~` if mise starts expanding it. The task's glob is not updated, so a pin setup refuses is accepted, or refused under a different reason, by the task. It is the same drift R7-5/R7-6 found for `$`. One shared definition would stop it, for example a pack-declared refused-character list both read, or a test that asserts the two agree."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode",
+    "line": 92,
+    "summary": "Any `$` in a pin is now refused, and there is no way to escape it. A simulator name containing `$` can never be pinned, yet the hint tells the user to 'replace it with the literal value', which is the value they already wrote.",
+    "failure_scenario": "A team creates a custom simulator with `xcrun simctl create 'QA $mall' ...` (simctl accepts arbitrary names) and pins SIMULATOR_DEVICE to it. Every task and ux-gate refuses the pin. The yellow hint loops them back to the same literal, and nothing documents an escape (such as `$$`) or explains that the device must be renamed."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/conventions.md",
+    "line": 80,
+    "summary": "conventions.md lists every refusal the pin check makes ('when another source overrides it — or when the fragment is missing or lacks the pin'), but not the template-delimiter/`$` refusal. This commit widened that refusal without updating the list.",
+    "failure_scenario": "The repo CLAUDE.md rule says 'Docs ship with the change. Any change to plugin behavior must reconcile ... in the same commit — stale docs are more harmful than no docs'. Commit 20c547b8 changes only _scripts/xcode. A reader of the pack's conventions, or of build-and-signing.md:27-35, which describes what the tasks refuse, gets no warning that a `$` in a pin is refused."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/config/.config/mise/tasks/_scripts/xcode",
+    "line": 84,
+    "summary": "A pin value containing `$` together with a `'` or `\\` gives a different refusal than a bare `$`. mise prints such a value with an escape or as a multi-line/literal form, so plain=false and line 85's 'not a plain string' fires first. The `$` refusal never shows, and the two causes are reported inconsistently.",
+    "failure_scenario": "Fragment holds `XCODE_VERSION = \"a\\\\$HOME\"`. R7-6 logged that a backslash does not stop the expansion. mise prints it with a backslash escape, so the check stops at 'is not a plain string ... Write it as XCODE_VERSION = \"<value>\"'. The user rewrites it as `\"a$HOME\"` and only then learns that `$` is refused too. It takes two round trips where one message naming both problems would do."
+  }
+]
+```

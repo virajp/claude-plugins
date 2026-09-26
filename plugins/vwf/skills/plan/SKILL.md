@@ -102,8 +102,10 @@ the base's remote whichever member this slice will land in. When the verb
 reports the backlog unreadable — `gh` absent, unauthenticated or without the
 `project` scope, or no project yet — record that with its reason in the plan's
 facts and continue with nothing. A slice that is already a backlog item carries
-its id into §7's `backlog:` frontmatter, so the item is marked planned rather
-than planned twice.
+its id into §7's frontmatter, so the item is marked planned rather than planned
+twice — on `backlog:` when this element finishes the item, on
+`backlog_pieces:` when it lands one piece of it; interview item 2a settles
+which.
 
 Derive the slice's dependency graph from the blueprint's typed links:
 
@@ -322,19 +324,20 @@ apply the **what-vs-how test**: a question about what the product should *do*
 
 Every ruling lands in the assumed-decisions table with the alternative it
 rejected and the unit it binds; anything raised that belongs to a later plan
-goes to *Parked* before the next question. The **priority** (item 12) is stated
-as a fact, never asked: no folder exists yet, so invoke
-`plan-management priority <requires…>` with the `requires:` entries item 12
-settled — folder basenames, possibly none — and state what it returns:
-`10 + max` over the `Priority` column of every unarchived `requires:` row in
-the base repo's `docs/plans/index.md`, or `10` when the plan requires none of
-them — and which row it stands on. Item 10a
-places the `review` row(s) — one after the last code unit by default, an
-earlier one only on a ruling recorded in the decisions table. Items 16–18
-produce the Consent block: the landing answer, the after-landing steps each
-carrying `run` or `ask`, and the release intent per project the units touch —
-a release step recorded `run` is authorised by item 18's answer; the LSP rows
-come from §2.
+goes to *Parked* before the next question — and what remains of an item this
+element lands one piece of goes there as a `- Bnn: <piece>` line, at least one
+per `backlog_pieces:` id, naming the chained folder where one already covers the
+piece. The **priority** (item 12) is stated as a fact, never asked: no folder
+exists yet, so invoke `plan-management priority <requires…>` with the
+`requires:` entries item 12 settled — folder basenames, possibly none — and
+state what it returns: `10 + max` over the `Priority` column of every unarchived
+`requires:` row in the base repo's `docs/plans/index.md`, or `10` when the plan
+requires none of them — and which row it stands on. Item 10a places the `review`
+row(s) — one after the last code unit by default, an earlier one only on a
+ruling recorded in the decisions table. Items 16–18 produce the Consent block:
+the landing answer, the after-landing steps each carrying `run` or `ask`, and
+the release intent per project the units touch — a release step recorded `run`
+is authorised by item 18's answer; the LSP rows come from §2.
 
 ### 6. Present the shape — the approval gate (per chain element)
 
@@ -369,35 +372,39 @@ and skip silently if mempalace is unavailable.
 Write `docs/plans/<date>-<HHMM>-<slice>/` from
 `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`, following
 [Writing the plan folder](references/plan-doc.md): `index.md` — the frontmatter
-(`type: vwf-plan`, `covers:`, `requires:`, `backlog:`), the Status block at
-`DRAFT`, the Consent block, the cycle-only sections (Slice, Acceptance criteria
-(from blueprint), Gaps surfaced during execution), the assumed decisions, the
-units table — plus one `NN-<unit>.md` per unit. Every slice unit is
-`Kind: code`, on Model `opus` unless the interview recorded another tier, with
-its Wave from dependency order, its Owns the files it touches, its Depends-on,
-its **Test first** line, its ruling quoted from `index.md`, its Verification
-(the gate lines) and its Commit line. Harness bootstrap units and the expand /
-backfill / contract units of `delta-checks.md` are units like any other,
-ordered before what depends on them. Then **one `Kind: review` row** after the
-last code unit and before the docs unit — Owns `—`, Depends on naming every
-code unit, Model `opus`, its `NN-review.md` the header lines and a Scope
-section as the template's `NN-review.md` shape says. An earlier `review` row
-is written only on a ruling item 10a recorded in the decisions table, and its
-Scope names that reason. Every `review` row sits in a wave strictly later than
-every unit it covers — a row in the same wave runs before their commit and
-reviews nothing — and it covers, directly or transitively through Depends on,
-every `code` unit in an earlier wave that no earlier `review` row already
-covers, so the commit range it reviews and the units it covers are one set. No
-code unit triggers a review by itself, and
+(`type: vwf-plan`, `covers:`, `requires:`, `backlog:`, `backlog_pieces:`), the
+Status block at `DRAFT`, the Consent block, the cycle-only sections (Slice,
+Acceptance criteria (from blueprint), Gaps surfaced during execution), the
+assumed decisions, the units table — plus one `NN-<unit>.md` per unit. Every
+slice unit is `Kind: code`, on Model `opus` unless the interview recorded
+another tier, with its Wave from dependency order, its Owns the files it
+touches, its Depends-on, its **Test first** line, its ruling quoted from
+`index.md`, its Verification (the gate lines) and its Commit line. Harness
+bootstrap units and the expand / backfill / contract units of `delta-checks.md`
+are units like any other, ordered before what depends on them. Then **one
+`Kind: review` row** after the last code unit and before the docs unit — Owns
+`—`, Depends on naming every code unit, Model `opus`, its `NN-review.md` the
+header lines and a Scope section as the template's `NN-review.md` shape says. An
+earlier `review` row is written only on a ruling item 10a recorded in the
+decisions table, and its Scope names that reason. Every `review` row sits in a
+wave strictly later than every unit it covers — a row in the same wave runs
+before their commit and reviews nothing — and it covers, directly or
+transitively through Depends on, every `code` unit in an earlier wave that no
+earlier `review` row already covers, so the commit range it reviews and the
+units it covers are one set. No code unit triggers a review by itself, and
 `/vwf:execute` refuses a plan whose code units no later `review` row covers, or
-whose rows break either placement rule.
-The two fixed final units — docs, gates-and-bump — are written as the template
-says.
+whose rows break either placement rule. The two fixed final units — docs,
+gates-and-bump — are written as the template says.
 
-**`backlog:`.** The frontmatter also carries a `backlog:` list — the `Bnn` ids
-of the backlog project's items §2's recall matched to this element. Write it
-empty when the slice came from nowhere in the backlog; an empty or absent list
-means the plan covers no backlog item, and §8 then calls nothing.
+**`backlog:` and `backlog_pieces:`.** The frontmatter also carries two lists of
+the `Bnn` ids of the backlog project's items §2's recall matched to this
+element: `backlog:` names the items this element **finishes** — landing sets
+them `Done` — and `backlog_pieces:` the items it lands **one piece of** —
+landing sets them `Partially done`, and each needs at least one
+`- Bnn: <piece>` line under *Parked*. No id sits on both; the last plan of a
+chain moves the id to `backlog:`. Write both empty when the slice came from
+nowhere in the backlog; an empty or absent list reads as empty, and when both
+are, §8 calls nothing.
 
 **Dark exposure.** A plan may declare `exposure: dark` for its slice — the
 slice ships behind a **release flag** in the runtime-settings document (per the
@@ -431,8 +438,10 @@ before the last code unit names its reason; every unit's
 Verification names a gate line (a `review` row has none, by shape); every
 `requires:` entry resolves to a row or an archived folder — invoke
 `plan-management resolve <folder>` and treat an *unresolvable* entry as a
-finding; the derived priority matches what `plan-management priority <folder>`
-returns; the launch line names this folder.
+finding; every `backlog_pieces:` id has a `- Bnn:` Parked line, no id sits on
+both `backlog:` and `backlog_pieces:`, and no `backlog:` id has a `- Bnn:`
+Parked line; the derived priority matches what
+`plan-management priority <folder>` returns; the launch line names this folder.
 
 ### 8. Hand off
 
@@ -446,9 +455,10 @@ In this order.
    (`${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md` is
    the shape). That skill edits the Status block and the index; this one never
    does.
-2. **Mark the backlog items planned.** When the frontmatter's `backlog:` list
-   names ids, invoke `/vwf:backlog planned <ids> <folder>` — that skill edits
-   the project, not a file; this one never does either.
+2. **Mark the backlog items planned.** When the frontmatter's `backlog:` or
+   `backlog_pieces:` list names ids, invoke
+   `/vwf:backlog planned <ids> <folder>` with the ids of both lists — that
+   skill edits the project, not a file; this one never does either.
 3. **Commit and push the folder** through `vwf:git-workflow`, invoked with
    these declared preferences, so it asks nothing:
    - **work in place on the current branch, no worktree** — its Step 1 "if

@@ -36,7 +36,9 @@ status a plan has — there is no `status:` key in the frontmatter.
 type: vwf-plan | vwf-change-plan
 title: <title>
 requires: [] # earlier plan folders this one stands on, e.g. docs/plans/2026-09-01-x
-backlog: [] # ids (Bnn) of the backlog project's items this plan covers, or empty
+backlog: [] # ids (Bnn) this plan finishes — landing sets them Done
+backlog_pieces: [] # ids (Bnn) this plan lands one piece of — landing sets them
+                   # Partially done; each needs a Bnn line under Parked
 covers: [] # cycle plans only — the blueprint doc(s) this plan implements; the
            # list the implementation: stamp is written to
 exposure: dark # cycle plans only, optional — the slice ships behind a flag
@@ -220,7 +222,13 @@ the unit could not proceed without; it blocks the unit and its dependents.
 ## Parked
 
 <each item raised during the interview that belongs to a later plan, with enough
-context to pick it up — or "none">
+context to pick it up — or "none". What remains of a backlog item this plan
+lands one piece of is a line of its own that begins with the id —
+`- Bnn: <piece>` — at least one per `backlog_pieces:` id, naming the chained
+folder where one already covers the piece; anything else is free prose. The
+executor's preflight refuses a folder that names an id on both `backlog:` and
+`backlog_pieces:`, an id on `backlog:` with a `- Bnn:` line here, or an id on
+`backlog_pieces:` with none. An absent `backlog_pieces:` reads as empty.>
 
 ## Run log
 

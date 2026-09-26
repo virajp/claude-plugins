@@ -5,6 +5,16 @@
 # environment.
 
 [settings]
+# Install exactly what the lockfiles record and fail rather than resolve.
+# `lockfile = true` in the base keeps them current on a laptop; this line is
+# what makes the pipeline a reader of them. A CI run that silently resolves a
+# newer version is a build nobody can reproduce afterwards.
+#
+# There is one lockfile per config file that declares tools, named after that
+# file's stem — here `mise.lock`, `mise.dev.lock` and `mise.ci.lock`, all
+# tracked, so the pipeline reads the same versions a laptop resolved.
+locked = true
+
 # mise's bundled Node release-key import (gpg --import) fails on the Ubuntu CI
 # runner's gpg with "no valid OpenPGP data found", aborting `mise install`. The
 # same mise version verifies fine on macOS, so it is a mise-on-Linux bug, not a

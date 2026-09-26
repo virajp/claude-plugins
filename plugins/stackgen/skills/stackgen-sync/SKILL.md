@@ -55,6 +55,19 @@ user's clock.
    A pack that no longer exists in this stackgen version is reported, never
    deleted.
 
+   **A pack's `machine_env` values survive the update.** A file holding
+   the marked positions a pack's `machine_env:` names — a `conf.d`
+   fragment `/vwf:setup` filled with the repo's committed pins, whose
+   hash it re-recorded — reads as *pack moved* when the pack changes it,
+   and is in the default selection. So the incoming payload is never
+   written as it stands: for every `machine_env` name the current pack
+   still declares, the value the repo's copy holds is carried into the
+   payload's position of that name before it is diffed, shown and written.
+   The plan shows the pack's change with the pins kept, a pin the pack no
+   longer declares is listed as dropped, and a new one lands empty for the
+   next `/vwf:setup` to ask. The names come from `pack.yaml`, so they are
+   enumerable — no other marked position is spliced here.
+
    **Conditional paths are evaluated first, against the same answers the
    materializer takes.** Read the product's `.config/vwf.yaml` `answers:`
    block — `editor` and `secrets` once for the product, `forge` and
@@ -190,7 +203,9 @@ user's clock.
 
    Nothing selected → done, nothing written.
 
-6. **Apply and commit.** Write only what was selected, update the changed
+6. **Apply and commit.** Write only what was selected — a file carrying
+   `machine_env` positions written with the repo's values kept, per step 2,
+   and its hash recorded from what was written — update the changed
    components' lockfile hashes and the `local_plugin` block, and commit as
    one commit via the repo's git workflow. The local plugin's own files
    are on the machine, not in the commit. The lockfile's `skipped:` list

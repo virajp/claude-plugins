@@ -4,6 +4,7 @@
 #MISE depends=["init"]
 
 #USAGE flag "--all" help="Also set up every member project"
+#USAGE flag "--upgrade" help="Dev only: bump every environment's mise lockfile and update the formatter plugins"
 
 # One flag per MEMBER REPO is added here when this repo has members — each
 # submodule, or each path the `MEMBERS` list names — each flag named by that
@@ -33,9 +34,15 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # **Keep it idempotent: re-running must converge, never error.** It is the
 # re-sync command as much as the bootstrap one, so a step that only works on a
 # clean machine is a step that breaks the second run.
+#
+# **It rewrites no committed state unless the user asks.** Tools install from
+# the lockfile; `--upgrade` is the one rewriting flag it passes on, and only
+# when the user passed it — to `setup:mise` here and to every member below.
+UPGRADE_ARGS=()
+[[ "${usage_upgrade:-false}" == "true" ]] && UPGRADE_ARGS+=("--upgrade")
 
 print_header "Setting up the toolchain ..."
-mise run setup:mise
+mise run setup:mise ${UPGRADE_ARGS[@]+"${UPGRADE_ARGS[@]}"}
 
 print_header "Setting up secrets ..."
 mise run setup:secrets
@@ -74,7 +81,7 @@ if [[ "${usage_all:-false}" == "true" ]]; then
   while read -r member; do
     [ -n "$member" ] || continue
     print_header "Setting up ${member} ..."
-    mise run --cd "${MISE_PROJECT_ROOT}/${member}" setup:all
+    mise run --cd "${MISE_PROJECT_ROOT}/${member}" setup:all ${UPGRADE_ARGS[@]+"${UPGRADE_ARGS[@]}"}
   done < <(members)
 fi
 

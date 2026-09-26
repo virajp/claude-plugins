@@ -7,7 +7,7 @@ description: The one owner of docs/plans/ bookkeeping — the plan index
   the listing. Invoked by /vwf:plan and /vwf:change-plan at hand-off, by
   /vwf:execute at claim, status changes and landing, and by a session when the
   user asks to unclaim, archive or list plans — never typed.
-argument-hint: "[add <folder> | claim <folder> | unclaim <folder> | status <folder> <state> [detail] | complete <folder> | archive [folder] | next | resolve <folder> | priority <folder | requires…> | list]"
+argument-hint: "[add <folder> | claim <folder> | unclaim <folder> | status <folder> <state> [detail] | complete <folder> | archive [folder] [--force] | next | resolve <folder> | priority <folder | requires…> | list]"
 model: sonnet
 user-invocable: false
 disable-model-invocation: false
@@ -50,15 +50,15 @@ that asked for a standalone `archive`.
 
 ## The files
 
-| File         | Path                                                                            |
-| ------------ | ------------------------------------------------------------------------------- |
-| Plan index   | `docs/plans/index.md` (base repo)                                               |
-| Plan folder  | `<target-repo>/docs/plans/<date>-<name>/index.md` — the Status block at its top |
-| Archived     | `<target-repo>/docs/plans/archived/`                                            |
-| Folder shape | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`                         |
-| Membership   | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                                    |
-| Backlog      | a project on the base repo's forge, never a path — closed via `/vwf:backlog`    |
-| The contract | `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`         |
+| File         | Path                                                                                      |
+| ------------ | ----------------------------------------------------------------------------------------- |
+| Plan index   | `docs/plans/index.md` (base repo)                                                         |
+| Plan folder  | `<target-repo>/docs/plans/<date>-<name>/index.md` — the Status block at its top           |
+| Archived     | `<target-repo>/docs/plans/archived/`                                                      |
+| Folder shape | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`                                   |
+| Membership   | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                                              |
+| Backlog      | a project on the base repo's forge, never a path — `done` or `partial` via `/vwf:backlog` |
+| The contract | `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`                   |
 
 The contract — `references/plan-index.md` beside this file — is the index's
 shape and every procedure over it: the columns, the priority derivation,
@@ -101,9 +101,9 @@ the run's worktree no longer exists, so the folder is only there.
 ### `add <folder>`
 
 The planner's hand-off. Read the folder's frontmatter — `type:`, `title:`,
-`requires:`, `backlog:`. A folder whose Status block does not read `DRAFT` is
-refused in one line: it was handed off already, or never came from a planner.
-Then:
+`requires:`, `backlog:`, `backlog_pieces:` (absent reads as empty). A folder
+whose Status block does not read `DRAFT` is refused in one line: it was handed
+off already, or never came from a planner. Then:
 
 1. set the Status block to `**APPROVED**` with `APPROVED <date> by the user`
    under it;
@@ -115,9 +115,10 @@ Then:
    `—` for a change plan, and for any plan in a `repo` or `monorepo`
    topology), `Priority`, `Status` `APPROVED`, `Requires` the basenames of
    the `requires:` entries or `—`, `Backlog` the `backlog:` ids — the `Bnn`
-   prefixes of the backlog project's items — or `—`. When the file is absent,
-   write the contract's *prose frame* — the intro and the header row — first,
-   then the row.
+   prefixes of the backlog project's items — then the `backlog_pieces:` ids,
+   each written `Bnn (piece)`, or `—` when both lists are empty. When the
+   file is absent, write the contract's *prose frame* — the intro and the
+   header row — first, then the row.
 
 The edit rides the planner's approval commit.
 
@@ -211,9 +212,10 @@ sweep. Report the edit for the caller's
 `docs: plan queue — <folder> complete` commit and push; a rejected push
 re-applies the same row until it lands, and never re-picks.
 
-### `archive [folder]`
+### `archive [folder] [--force]`
 
-Retire a plan folder. **Never delete** — archive.
+Retire a plan folder. **Never delete** — archive. `--force` overrides the one
+refusal in step 2, and nothing else.
 
 **1. Resolve which plan(s).**
 
@@ -245,7 +247,8 @@ Retire a plan folder. **Never delete** — archive.
   a folder in a repo you do not have is not something to fake.
 
 **2. Completion check.** Before moving, verify each plan is actually complete.
-**Warn and ask to proceed** — never refuse — when any of these are unfinished:
+**Warn and ask to proceed** — never refuse, save the one refusal below — when
+any of these are unfinished:
 
 - the folder's **Status block** does not read `COMPLETE` — `DRAFT`, `APPROVED`,
   `RUNNING` or `BLOCKED` means the run never landed. A warning, not a refusal:
@@ -270,6 +273,26 @@ Retire a plan folder. **Never delete** — archive.
   through those stamps, so this is the one check a dependent of it needs.
 
 Surface what's outstanding and let the user decide whether to archive anyway.
+
+**The one refusal — a backlog list that contradicts itself.** Read the
+frontmatter's `backlog:` list — the ids the plan **finishes** — and its
+`backlog_pieces:` list — the ids it lands **a piece of**; an absent
+`backlog_pieces:` reads as empty. A `- Bnn:` Parked line is a line under the
+folder's `## Parked` heading that begins `- B`, digits, a colon. **Refuse** —
+not warn — a folder that:
+
+- names an id in both `backlog:` and `backlog_pieces:`; or
+- names an id in `backlog:` while `## Parked` carries a `- Bnn:` line for it —
+  the plan says it finishes the item and, in the same file, leaves a piece of
+  it behind.
+
+The refusal names each such id and quotes its `- Bnn:` lines, and points at the
+fix: move the id to `backlog_pieces:`, or drop the Parked lines once nothing is
+left. Closing it `Done` would close an item the folder itself says is open.
+`archive <folder> --force` archives anyway, and every id the refusal named is
+then landed as a piece — `partial`, **never** `done` (step 3's *Close the
+backlog items*). `--force` overrides this refusal and nothing else: the
+warnings above are still shown and still asked.
 
 **3. Move (never delete).** Move the whole directory —
 `mv docs/plans/<date>-<name> docs/plans/archived/<date>-<name>` — unit files,
@@ -304,12 +327,22 @@ folder only and report that the row is left for `complete`, since the index
 never rides a run branch.
 
 **Close the backlog items.** Either kind may carry a `backlog:` frontmatter
-list. For every id on it whose item in the backlog project does not yet read
-`Done`, invoke `/vwf:backlog done <ids>` — a plan can reach `archived/` without
-having landed through the command that would have closed them, and a retired
-plan leaving an item `In progress` forever is the row nobody comes back to.
-Never edit the backlog here: `/vwf:backlog` is its only writer, and its edit
-touches nothing in the tree, so the archive commit carries no backlog change.
+list — the ids it finishes — and a `backlog_pieces:` list — the ids it lands a
+piece of; an absent `backlog_pieces:` reads as empty. Two calls, each with the
+folder, so the backlog moves it off the item's `Planned in:` line onto its
+`Landed:` line:
+
+- for every `backlog:` id whose item does not yet read `Done`,
+  `/vwf:backlog done <ids> <folder>`;
+- for every `backlog_pieces:` id, and for every `backlog:` id a `--force`
+  archive overrode, `/vwf:backlog partial <ids> <folder>` — the item goes to
+  `Partially done`, never `Done`.
+
+A plan can reach `archived/` without having landed through the command that
+would have made these calls, and a retired plan leaving an item `In progress`
+forever is the row nobody comes back to. Never edit the backlog here:
+`/vwf:backlog` is its only writer, and its edit touches nothing in the tree,
+so the archive commit carries no backlog change.
 
 **Guard collisions.** Before each move, check the destination does **not**
 already exist. On a collision, suffix the archived name (e.g. `-2`) or ask the

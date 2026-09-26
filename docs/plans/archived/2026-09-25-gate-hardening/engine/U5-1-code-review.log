@@ -1,0 +1,28 @@
+/code-review high — U5 round 1 — branch 2026-09-25-gate-hardening (develop...HEAD, wave 1: U1–U4)
+
+1. plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise.toml:164 — The linter pin "npm:@askviraj/linter" = "1.1.6" is refused by a default mise install because the package gets too few downloads; nothing in the shipped config allows it.
+   Failure: reproduced with mise 2026.9.12 in a clean HOME and data dir: `mise install npm:@askviraj/linter@1.1.6` fails with "aube install failed: refusing to add @askviraj/linter: only 29 weekly downloads (threshold: 1000) ... set `allow_low_downloads = true`". The pin is in the base [tools] every shaped repo gets, so mise install (bootstrap, setup:all, CI with locked=true) exits non-zero in every repo. The maintainer's machine hides this because both its global config and this repo's .config/mise.toml set npm.package_manager = "pnpm". { version = "1.1.6", allow_low_downloads = true } installs cleanly (verified).
+
+2. plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise.toml:164 — The linter is installed in every repo, but its binary runs node, and swift, swiftui, flutter, python and blank repos pin no node, so code:lint breaks there.
+   Failure: reproduced: after installing with allow_low_downloads, `mise x -- linter --version` with PATH=/usr/bin:/bin fails with ".bin/linter: line 18: exec: node: not found". flutter code:lint (line 99) and swift/swiftui code:lint (line 198) call linter unconditionally, so the lint gate and its pre-commit hook fail on any machine without a global node. ruff and the default mise code:lint never call the linter but still install it. The pin belongs with a node pin, or in the packs whose code:lint calls it.
+
+3. plugins/stackgen/stacks/package-manager/pnpm/config/.config/mise/tasks/code/format:98 — The leading-dash fix covers dprint only. shfmt (all six format tasks) and ruff format still get raw staged names, and the new comment "Every path is handed over prefixed ./" is false for the rest of the task.
+   Failure: stage -x.sh; shell_files_in_scope passes it unprefixed; `shfmt -d -i 2 -ci -x.sh` exits 2 with "flag provided but not defined: -x.sh" (reproduced, shfmt 3.14.1). Format hook fails, commit blocked. In ruff, a staged -x.py reaches `uv run ruff format --check -x.py` (ruff/code/format:106). Prefixing files once at the top of each task, or inside shell_files_in_scope, fixes every tool.
+
+4. plugins/stackgen/stacks/toolchain-gate/pre-commit/config/.config/linter.yaml:34 — Global ignores **/build/ and **/Derived/ now ship to every repo (the pre-commit pack is unconditional), so any source directory with that name, at any depth, silently stops being linted.
+   Failure: a pnpm/Astro/TS repo with scripts/build/*.ts, packages/build/ or a Derived/ source folder loses linting with no warning. Flutter's build/ is only at the project root, and Tuist's Derived/ belongs to a generator this repo rejected, yet both patterns are unanchored and apply to every stack.
+
+5. plugins/stackgen/stacks/toolchain-gate/pre-commit/skills/pre-commit/SKILL.md:171 — The docs say require_serial: true stops pre-commit splitting a long staged list into partitions. It only drops concurrency to 1: pre-commit's xargs still splits by command-line length.
+   Failure: (recollection of pre-commit's xargs source, not checked) cap is min(ARG_MAX - env, 2**17) on POSIX. A large commit (> 128 KiB argv) still calls mise run code:lint --fix several times in a row. Same claim in pre-commit/conventions.md.
+
+6. plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise.toml:145 — The [tools] comment now reads "ONE tool by default, and that is the contract: this pack is the toolchain manager, not the toolchain" directly above a toolchain pin. linter.yaml header (line 2) and the mise pack prose also say "every code:lint" / "every language pack's code:lint" runs the linter.
+   Failure: ruff code:lint and the mise pack's default code:lint do not call linter, so "every" is false; the contract sentence contradicts itself.
+
+7. plugins/stackgen/stacks/package-manager/pnpm/config/.config/mise/tasks/code/format:62 — The same 7-line dprint_files prefix loop is copied into six task files, while swift's add_swift_target already has the same /* | ./* case, and every task sources the shared _scripts/helpers.
+   Failure: six copies to keep in step by hand; drift already started (finding 3). One helper in _scripts/helpers, or prefixing files once, would replace all six.
+
+8. site/src/content/docs/plugins/stackgen.md:714 — baae5b84 and e1df8c5a left the manual saying the eslint JS/TS linter gate ships .config/linter.yaml; the pre-commit pack.yaml summary still lists two shipped files.
+   Failure: CLAUDE.md "Docs ship with the change" rule; plan defers to U6/U7.
+
+9. plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise.toml:164 — A reshaped repo gets a new tool in base [tools] but no .config/mise.lock entry, while the shipped mise.ci.toml sets locked = true.
+   Failure: a reshaped repo that pushes before running mise install locally and committing the new lock runs CI with locked=true against a tool the lockfile does not record; install can refuse or diverge. Nothing in the pack tells the reshape to create and commit the lock.

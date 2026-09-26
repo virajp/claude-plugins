@@ -4,12 +4,13 @@ description: The product's prioritised backlog — a project on the repo's forge
   a GitHub Project named for the base repo under its account, holding the work
   that is agreed but cannot be picked up now, ordered so the next thing to
   start is obvious. Not a file in the tree. It adds items, lists them, names
-  the next one, reprioritises, marks items planned and done, and closes the
-  ones dropped without a plan. /vwf:plan and /vwf:change-plan call it as a plan
-  folder is approved, /vwf:execute as one lands, and plan-management as one is
-  retired. Not the place for production feedback — that is worked now, and
+  the next one, reprioritises, marks items planned and done, records a landed
+  piece of an item a plan only partly finishes, and closes the ones dropped
+  without a plan. /vwf:plan and /vwf:change-plan call it as a plan folder is
+  approved, /vwf:execute as one lands, and plan-management as one is retired.
+  Not the place for production feedback — that is worked now, and
   /vwf:feedback routes it into the docs and commands that fix it.
-argument-hint: "[add <item> | list | next | move <id> <P0|P1|P2> | planned <ids> <folder> | done <ids> | close <id>]"
+argument-hint: "[add <item> | list | next | move <id> <P0|P1|P2> | planned <ids> <folder> | partial <ids> <folder> | done <ids> [folder] | close <id>]"
 model: sonnet
 
 disable-model-invocation: false
@@ -68,37 +69,48 @@ There is no fallback store.
 `Bnn — <item>`; the body carries the detail the plan interview starts from.
 The project's own fields carry the state:
 
-| Field      | Values                                                                            |
-| ---------- | --------------------------------------------------------------------------------- |
-| `Id`       | `Bnn`, the title's prefix, from `B01`, **never reused** — a closed id stays spent |
-| `Priority` | the template's `P0` (pick first), `P1`, `P2`                                      |
-| `Status`   | `Backlog` → `In progress` → `Done`, or `Closed` for one dropped without a plan    |
-| `Group`    | free text, or empty — a label shared by items that want one plan between them     |
+| Field      | Values                                                                                            |
+| ---------- | ------------------------------------------------------------------------------------------------- |
+| `Id`       | `Bnn`, the title's prefix, from `B01`, **never reused** — a closed id stays spent                 |
+| `Priority` | the template's `P0` (pick first), `P1`, `P2`                                                      |
+| `Status`   | `Backlog` → `In progress` → `Partially done` → `Done`, or `Closed` for one dropped without a plan |
+| `Group`    | free text, or empty — a label shared by items that want one plan between them                     |
 
 The older vocabulary an archived plan folder may still use translates once:
 `open` is `Backlog`, `planned` is `In progress`, `done` is `Done`, `closed` is
 `Closed`; the old `P1`/`P2`/`P3` reads as `P0`/`P1`/`P2`. The verbs below keep
 their names.
 
-Two statuses carry a line the body must end with. An `In progress` item ends
-with `Planned in: <folder>` — the plan folder that covers it. A `Closed` item
-ends with the reason it was dropped.
+The body ends with the lines that record where the item stands. An item with
+a pending plan ends with `Planned in: <folder>[, <folder>…]` — a
+comma-separated list of the plan folders that cover it and have not landed.
+An item a plan has landed on carries one `Landed: <plan title> in <folder>`
+line per landed folder, above `Planned in:` when both exist — a
+`Partially done` item has at least one, and a `Done` item keeps every one. A
+`Closed` item ends with the reason it was dropped.
+
+`Partially done` is the status of an item a plan landed **a piece of**: the
+plan named the id on its `backlog_pieces:` frontmatter list rather than on
+`backlog:`, which names only the ids a plan **finishes**. Such an item stays
+open until the plan that finishes it lands.
 
 **The bootstrap** reshapes what the Team planning template ships, once, on the
 first verb that needs it, and is idempotent. The template's `Status` field
-carries `Backlog`, `Ready`, `In progress`, `In review` and `Done`; the
-bootstrap trims it to the skill's four — `Backlog`, `In progress` and `Done`
-kept with their colour and description, `Closed` added — and creates a `Group`
-text field. The trim is a replace, and an item sitting in a removed option
-would lose its Status: so when any item is `Ready` or `In review` the bootstrap
-stops, names each such item, and asks the user to move it to `Backlog` or
-`In progress` on the board before the verb is re-run — it never moves an item
-itself. The replace also reissues the ids of the options it keeps, and an
-item's value is bound to the old id: so the bootstrap snapshots every item's
-Status to a temp file before the mutation and writes each one back afterwards,
-by option name against the ids re-read after it — an item is never left
-without the Status it had. The reference specifies the procedure and both
-mutations.
+carries `Backlog`, `Ready`, `In progress`, `In review` and `Done`; the bootstrap
+reshapes it to the skill's five, in order — `Backlog` and `In progress` kept
+with their colour and description, `Partially done` added, `Done` kept, `Closed`
+added — and creates a `Group` text field. A field the earlier four-option
+bootstrap shaped (`Backlog`, `In progress`, `Done`, `Closed`) is reshaped the
+same way on the next verb, gaining `Partially done`. The reshape is a replace,
+and an item sitting in a removed option would lose its Status: so when any item
+is `Ready` or `In review` the bootstrap stops, names each such item, and asks
+the user to move it to `Backlog` or `In progress` on the board before the verb
+is re-run — it never moves an item itself. The replace also reissues the ids of
+the options it keeps, and an item's value is bound to the old id: so the
+bootstrap snapshots every item's Status to a temp file before the mutation and
+writes each one back afterwards, by option name against the ids re-read after it
+— an item is never left without the Status it had. The reference specifies the
+procedure and both mutations.
 
 **A missing project** is created by the user, not by the skill: GitHub's API
 cannot instantiate a built-in template, and Team planning is one. `add`, and
@@ -117,30 +129,36 @@ commands the reference gives.
 
 ### `add <item>`
 
-Create a draft issue titled with the next unused id — one past the highest
-`Bnn` over every item's title, done and closed included, and every plan
-folder's `backlog:` frontmatter list, live and archived — and set its Status
-to `Backlog`. Ask for the priority with a three-option question (`P0`, `P1`,
-`P2`) unless the request already names one. Set `Group` only when the user
-names a group; an item that stands alone leaves the field empty. Write the body
-with enough detail that the plan interview starts from it rather than from the
-one-line title. On a repo with no project, ask consent to create it, hand over
-the browser per the reference's missing-project procedure, and add once the
-project is found.
+Create a draft issue titled with the next unused id — one past the highest `Bnn`
+over every item's title, done and closed included, and every plan folder's
+`backlog:` and `backlog_pieces:` frontmatter lists, live and archived — and set
+its Status to `Backlog`. Ask for the priority with a three-option question
+(`P0`, `P1`, `P2`) unless the request already names one. Set `Group` only when
+the user names a group; an item that stands alone leaves the field empty. Write
+the body with enough detail that the plan interview starts from it rather than
+from the one-line title. On a repo with no project, ask consent to create it,
+hand over the browser per the reference's missing-project procedure, and add
+once the project is found.
 
 ### `list`
 
 Print a five-column table — Id, Item, Group, Priority, Status — from the
 project's items, ordered by priority (`P0` first) then id. Fold `Done` and
 `Closed` items into a trailing count rather than listing them, unless the user
-asks for everything. An item whose title carries no `Bnn` is listed under
-"unnumbered" with a warning; the skill never renumbers it. End with the
+asks for everything. A `Partially done` item is listed, never folded, and its
+Status cell carries the count of its `Landed:` lines —
+`Partially done (2 landed)`. An item whose title carries no `Bnn` is listed
+under "unnumbered" with a warning; the skill never renumbers it. End with the
 project's URL.
 
 ### `next`
 
-Name the top `Backlog` item by priority then id — its id, title and body — and
-the command that picks it up:
+Name the top item by priority then id — its id, title and body — and the
+command that picks it up. The candidates are every `Backlog` item and every
+`Partially done` item whose body has no `Planned in:` line, ranked together; a
+`Partially done` item with a plan still pending is already being worked. When
+the item named is `Partially done`, print its `Landed:` lines too, so the next
+plan starts from what remains rather than from the whole item. The command:
 
 - `/vwf:change-plan <item>` for work the blueprint does not describe;
 - `/vwf:plan <slice>` when the item names a blueprint slice.
@@ -155,15 +173,35 @@ Set one item's Priority to `P0`, `P1` or `P2`. The id does not change.
 
 ### `planned <ids> <folder>`
 
-Set each named item's Status to `In progress` and end each body with
-`Planned in: <folder>`. `<ids>` is one id or several. An item already
-`In progress` under a different path is a question for the user, not a silent
-overwrite.
+Set each named item's Status to `In progress` and add `<folder>` to its
+`Planned in:` line — writing the line when the body has none. `<ids>` is one
+id or several. An item already `In progress` or `Partially done` takes the
+folder appended to its list, since several plans may cover pieces of one item;
+a folder already on the list is not added twice. An item that is `Done` or
+`Closed` is a question for the user, not a silent reopen.
 
-### `done <ids>`
+### `partial <ids> <folder>`
 
-Set each named item's Status to `Done`. An item that was never `In progress`
-still moves — work sometimes lands without a plan folder — but say so.
+Record that the plan in `<folder>` landed a piece of each named item without
+finishing it. Set Status to `Partially done`, remove `<folder>` from
+`Planned in:` — dropping the line when the list empties — and add
+`Landed: <plan title> in <folder>`, the title read from the `title:` key of
+the folder's `index.md` frontmatter. Callers pass the ids from the plan's
+`backlog_pieces:` list. A folder still on `Planned in:` after the edit is
+another pending piece, and the status stays `Partially done` until a later
+`planned` sets it `In progress`. An item that was never `In progress` still
+moves, but say so.
+
+### `done <ids> [folder]`
+
+Set each named item's Status to `Done`, and move `<folder>` off its
+`Planned in:` line onto a `Landed: <plan title> in <folder>` line, as
+`partial` does — so a finished item's body shows every folder that landed on
+it. Callers pass the ids from the plan's `backlog:` list, which names only the
+ids the plan finishes. An item that was never `In progress`, or whose
+`Planned in:` does not name `<folder>`, still moves — work sometimes lands
+without a plan folder, and a user may then omit `<folder>`, writing no
+`Landed:` line — but say so.
 
 ### `close <id>`
 
@@ -180,19 +218,21 @@ order.
 The backlog moves as plans are written and as they land, and the commands that
 do that work call this skill rather than touching the project:
 
-| Caller                    | When                                     | Verb                      |
-| ------------------------- | ---------------------------------------- | ------------------------- |
-| `/vwf:plan`               | at hand-off, once the folder is approved | `planned <ids> <folder>`  |
-| `/vwf:change-plan`        | at hand-off, once the folder is approved | `planned <ids> <folder>`  |
-| `/vwf:execute`            | at landing, after the final gate         | `done <ids>`              |
-| `plan-management archive` | archiving a plan whose ids are open      | `done <ids>`              |
-| `/vwf:init`               | the forge pass, base repo only, last     | missing-project procedure |
+| Caller                    | When                                     | Verb                                            |
+| ------------------------- | ---------------------------------------- | ----------------------------------------------- |
+| `/vwf:plan`               | at hand-off, once the folder is approved | `planned <ids> <folder>`                        |
+| `/vwf:change-plan`        | at hand-off, once the folder is approved | `planned <ids> <folder>`                        |
+| `/vwf:execute`            | at landing, after the final gate         | `done <ids> <folder>`, `partial <ids> <folder>` |
+| `plan-management archive` | archiving a plan whose ids are open      | `done <ids> <folder>`, `partial <ids> <folder>` |
+| `/vwf:init`               | the forge pass, base repo only, last     | missing-project procedure                       |
 
-Callers pass the ids from the plan's **`backlog:` frontmatter** — the list on
-the folder's `index.md`, cycle plan and change plan alike. Empty or absent
-means the plan covers no backlog item and nothing is called. `/vwf:init` is
-the exception: it passes no ids and calls no verb — it reaches the
-missing-project procedure so the product's project exists once the repo is
+Callers pass the ids from the plan's two frontmatter lists on the folder's
+`index.md`, cycle plan and change plan alike. **`backlog:`** names the ids the
+plan finishes — `done` at landing; **`backlog_pieces:`** names the ids it lands
+a piece of — `partial` at landing. `planned` at hand-off takes both lists. Empty
+or absent means the plan covers no backlog item and nothing is called.
+`/vwf:init` is the exception: it passes no ids and calls no verb — it reaches
+the missing-project procedure so the product's project exists once the repo is
 shaped, reports a project already present and skips it, and prints the GitLab
 "not yet supported" line and continues when the forge is GitLab.
 
@@ -203,7 +243,7 @@ shaped, reports a project already present and skips it, and prints the GitLab
 - **Edit any file.** It edits the project and nothing on disk — not the plan it
   is told about, not a doc, not a config.
 - **Invent an id, or reuse one.** Ids come from the item titles and the plan
-  folders' `backlog:` lists, one past the highest.
+  folders' `backlog:` and `backlog_pieces:` lists, one past the highest.
 - **Keep a file copy.** The project is the one store. A session that cannot
   reach it has no backlog to read, and says so — this replaces the earlier
   rule that a file was kept so an offline session could read it.

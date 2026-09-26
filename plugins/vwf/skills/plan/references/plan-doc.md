@@ -17,12 +17,17 @@ this element implements — one path, or the cycle element's set; the list the
 `implementation:` stamp is written to), **`requires:`** (the folder paths of
 this element's direct prerequisites in the chain, matched on the basename —
 empty for the first), **`backlog:`** (the `Bnn` prefixes of the backlog
-project's items this element covers, matched by §2's recall — empty when the
-slice came from nowhere in the backlog), and `exposure: dark` when the slice
-ships behind a flag. There is no `status:` key: the **Status** block is the one
-status, `DRAFT` until §8's `plan-management add` sets `APPROVED`; from then on
-that skill rewrites it on the executor's behalf, and `requires:` is never
-re-pointed by anyone.
+project's items this element **finishes**, matched by §2's recall — landing
+sets them `Done`; empty when the slice came from nowhere in the backlog),
+**`backlog_pieces:`** (the `Bnn` prefixes of the items this element lands **one
+piece of** — landing sets them `Partially done`; each needs at least one
+`- Bnn: <piece>` line under *Parked*, naming the chained folder where one
+already covers the piece; no id sits on both lists, the last plan of a chain
+moves the id to `backlog:`, and an absent list reads as empty), and
+`exposure: dark` when the slice ships behind a flag. There is no `status:` key:
+the **Status** block is the one status, `DRAFT` until §8's `plan-management add`
+sets `APPROVED`; from then on that skill rewrites it on the executor's behalf,
+and `requires:` is never re-pointed by anyone.
 
 **Slice.** Links the covered doc(s) and states the chain position ("Plan 2 of 3
 — requires `<folder>`; required by `<folder>`"; or "no dependency chain").
