@@ -699,8 +699,8 @@ function packFactFaults(document: unknown): string[] {
 /** A `to …` scope: every environment, or one of the three suffixes. */
 const TOOL_CONFIG_SCOPE = String
   .raw`to (?:all environments|(?:dev|ci|test)(?: environment)?)`;
-/** A value, quoted as a TOML basic string or bare. */
-const TOOL_CONFIG_VALUE = String.raw`("(?:[^"\\]|\\.)*"|\S+)`;
+/** A value, quoted as a TOML basic string or bare — a bare one never opens a quote. */
+const TOOL_CONFIG_VALUE = String.raw`("(?:[^"\\]|\\.)*"|[^"\s]\S*)`;
 /** The three verbs a pack may ask for; the materializer appends `for <pack>`. */
 const TOOL_CONFIG_VERBS = {
   tool: new RegExp(
@@ -716,7 +716,9 @@ const TOOL_CONFIG_VERBS = {
   ),
 };
 /** A Tera delimiter: mise renders it, so only a pack's own env value may carry one. */
-const TERA_DELIMITER = /\{\{|\{%/;
+const TERA_DELIMITER = /\{\{|\{%|\{#/;
+/** An alias name: a TOML bare key, so `-` is allowed after the first character. */
+const ALIAS_NAME = /^[A-Za-z_][A-Za-z0-9_-]*$/;
 
 /**
  * One `tool-config:` entry against the verb grammar: the env key it sets, or
@@ -738,10 +740,10 @@ function toolConfigCall(call: string): { fault?: string; key?: string; } {
     };
   }
   const name = match[1] ?? "";
-  if (!ENV_VAR_NAME.test(name)) {
+  const pattern = env !== null ? ENV_VAR_NAME : ALIAS_NAME;
+  if (!pattern.test(name)) {
     return {
-      fault:
-        `names \`${name}\`, which is not a \`[A-Za-z_][A-Za-z0-9_]*\` name`,
+      fault: `names \`${name}\`, which is not a \`${pattern.source}\` name`,
     };
   }
   if (alias !== null && TERA_DELIMITER.test(words)) {

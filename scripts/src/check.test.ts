@@ -847,13 +847,35 @@ describe("the pack config tier", () => {
       "tool-config:\n"
         + "  - mise add env 1BAD=x to dev\n"
         + "  - mise add env \"{{x}}\"=1 to dev\n"
-        + "  - mise add alias a-b=c\n",
+        + "  - mise add alias -ab=c\n"
+        + "  - mise add env A-B=c to dev\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining("names `1BAD`, which is not a"),
       expect.stringContaining("names `\"{{x}}\"`, which is not a"),
-      expect.stringContaining("names `a-b`, which is not a"),
+      expect.stringContaining("names `-ab`, which is not a"),
+      expect.stringContaining("names `A-B`, which is not a"),
     ]);
+  });
+
+  it("accepts a hyphenated alias name, as a TOML bare key", () => {
+    // The mise base writes `setup-<slug>` aliases itself.
+    const root = tree(facts("tool-config:\n  - mise add alias setup-web=x\n"));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a value that opens a quote and never closes it", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - mise add env X=\"abc to dev\n"
+        + "  - mise add alias y=\"pnpm dlx to dev\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("`tool-config[0]`"),
+      expect.stringContaining("`tool-config[1]`"),
+    ]);
+    expect(messages(check(root)).every(m => m.includes("matches none of")))
+      .toBe(true);
   });
 
   it("flags a template delimiter outside an add env value", () => {
@@ -861,17 +883,20 @@ describe("the pack config tier", () => {
       "tool-config:\n"
         + "  - mise add alias x=\"{{ env.HOME }}\"\n"
         + "  - mise add alias y=\"{% if a %}b{% endif %}\" to dev\n"
-        + "  - mise add tool \"{{x}}\" 1 to dev\n",
+        + "  - mise add tool \"{{x}}\" 1 to dev\n"
+        + "  - 'mise add alias z=\"{# note #}ls\"'\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining("`tool-config[0]` (mise add alias x="),
       expect.stringContaining("`tool-config[1]` (mise add alias y="),
       expect.stringContaining("`tool-config[2]` (mise add tool"),
+      expect.stringContaining("`tool-config[3]` (mise add alias z="),
     ]);
-    const [alias, block, tool] = messages(check(root));
+    const [alias, block, tool, comment] = messages(check(root));
     expect(alias).toContain("template delimiter outside an `add env` value");
     expect(block).toContain("template delimiter outside an `add env` value");
     expect(tool).toContain("matches none of");
+    expect(comment).toContain("template delimiter outside an `add env` value");
   });
 
   it("counts a machine_env name as set only by an add env call", () => {
