@@ -16,11 +16,10 @@
 ## Ruling
 
 > - Decision 6: A pack lists its calls in `pack.yaml` under `tool-config:`, one
->   instruction per line
->   (`mise add tool swiftlint 0.65.1 to all
->   environments`); the materializer
->   runs them, tagging `for <pack>`. The five `conf.d/<pack>.toml` fragments
->   become such calls and are deleted; `mise.d/` never exists.
+>   instruction per line (for example, adding swiftlint 0.65.1 to all
+>   environments); the materializer runs them, tagging `for <pack>`. The five
+>   `conf.d/<pack>.toml` fragments become such calls and are deleted; `mise.d/`
+>   never exists.
 > - Decision 10: swiftui's `_scripts/xcode` and `tasks/test/golden`, doppler's
 >   `tasks/setup/secrets`, read values from the environment mise exports, not a
 >   file.
