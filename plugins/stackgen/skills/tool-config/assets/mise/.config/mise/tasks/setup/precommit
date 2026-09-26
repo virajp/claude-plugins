@@ -111,11 +111,32 @@ if [ "$UPDATE" = "true" ]; then
   pre-commit autoupdate --config "${CONFIG}"
 fi
 
-# graphify's raw hook pins a Python path; remove it first so it is not chained as post-commit.legacy.
-POST_COMMIT="$(git rev-parse --git-path hooks)/post-commit"
-if [ -f "$POST_COMMIT" ] && grep -q "# graphify-hook-start" "$POST_COMMIT" && command -v graphify >/dev/null 2>&1; then
+# Strip graphify's marked block from a hook, deleting the file when nothing but a shebang and blank lines is left.
+strip_graphify_block() {
+  local file="$1" name="$2"
+  if [ ! -f "$file" ] || ! grep -q "^# ${name}-start$" "$file"; then
+    return 0
+  fi
+  awk -v s="# ${name}-start" -v e="# ${name}-end" '$0 == s { skip = 1; next } skip && $0 == e { skip = 0; next } !skip' "$file" >"${file}.tmp"
+  if grep -qv -e '^#!' -e '^[[:space:]]*$' "${file}.tmp"; then
+    # Written through the original file so its exec bit survives.
+    cat "${file}.tmp" >"$file"
+    rm -f "${file}.tmp"
+  else
+    rm -f "$file" "${file}.tmp"
+  fi
+}
+
+# graphify's raw hooks pin a Python path; remove them first so post-commit is not chained as post-commit.legacy.
+HOOKS_DIR="$(git rev-parse --git-path hooks)"
+if grep -qs "^# graphify-hook-start$" "${HOOKS_DIR}/post-commit" || grep -qs "^# graphify-checkout-hook-start$" "${HOOKS_DIR}/post-checkout"; then
   print_subheader "Removing graphify's raw git hooks ..."
-  graphify hook uninstall
+  if command -v graphify >/dev/null 2>&1; then
+    graphify hook uninstall
+  else
+    strip_graphify_block "${HOOKS_DIR}/post-commit" graphify-hook
+    strip_graphify_block "${HOOKS_DIR}/post-checkout" graphify-checkout-hook
+  fi
 fi
 
 # The hook TYPES are not passed here. `default_install_hook_types` in the config
