@@ -375,8 +375,9 @@ answered and what it found.
   keeps resolves beside the language rows — a provider whose files keep
   something machine-local gets its ignore section only in a repo that runs
   it, and a **none** answer carries nothing;
-- the **two runtime positions** the toolchain pack marks in its base config
-  — `RUNTIME_BLOCK` and `PATH_ENTRIES` — which §5 fills from the same read,
+- the **two runtime positions** the toolchain pack marks — `RUNTIME_BLOCK` in
+  the settings-only `.config/mise.toml` and `PATH_ENTRIES` in the section
+  file `.config/mise/conf.d/env.toml` — which §5 fills from the same read,
   one runtime's lines per language and the path entry empty where no language
   needs one;
 - the **sub-project proposals** question 2 shows, where no registry names

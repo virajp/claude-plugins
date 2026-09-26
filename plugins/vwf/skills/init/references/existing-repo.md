@@ -196,6 +196,44 @@ inside `.github/`, the **repo's file wins**: the pack's is **not** landed, the
 row reads `kept, pack file not landed`, and nothing moves. Two policies for
 one tool is how one of them is silently ignored.
 
+#### The mise layout migration
+
+The mise pack now ships settings-only top-level files — `.config/mise.toml`
+and `.config/mise.<env>.toml` — beside one section file per table under
+`.config/mise/conf.d/` (`<section>.toml` for every environment,
+`<section>.<env>.toml` for one), a `.config/miserc.toml` turning those suffixes
+on, and one lock, `.config/mise/mise.lock`. A repo is on the **old layout**
+when any of these holds:
+
+- `.config/mise.toml` or a `.config/mise.<env>.toml` carries a table other
+  than `[settings]` (top-level keys are fine);
+- a `.config/mise*.lock` exists;
+- `.config/miserc.toml` is absent or lacks `env_conf_d = true`.
+
+That is the same test `/vwf:doctor` applies. It is one **plan row** per repo,
+`mise layout migration`, applied on the one consent and listing:
+
+- each table → its target file: `[env]` → `conf.d/env.toml`, `[tools]` →
+  `conf.d/tools.toml`, `[shell_alias]` → `conf.d/shell_alias.dev.toml`, any
+  other `[<section>]` → `conf.d/<section>.toml`; a table from
+  `mise.<env>.toml` goes to `<section>.<env>.toml`. Each is a **merge** into
+  the pack's section file on pass 3's terms — a key both sides declare shown
+  as `hand value · pack value`, the repo's kept — so every hand-added line and
+  every marked position's value survives the move;
+- the top-level files cut down to `[settings]` and their top-level keys;
+- `.config/miserc.toml` created from the pack, or given `env_conf_d = true`
+  where it exists without it;
+- each old `.config/mise*.lock` removed with plain `rm`, and the one combined
+  lock written in its place: `mise lock` with `MISE_ENV` set to the
+  comma-joined union of every environment suffix in `.config/mise.<env>.toml`
+  and `.config/mise/conf.d/*.<env>.toml` (`.local` excluded), then
+  `mise install --locked`. Never a single-environment `mise lock`: it drops
+  the other environments' tools.
+
+The lock step runs after [new repo](new-repo.md) §9's trust step, and defers
+with that step's unlock where it did. A repo already on the new layout gets no
+row.
+
 #### The hook manager
 
 Read, in the repo this pass runs in, the local `core.hooksPath`
@@ -265,18 +303,19 @@ invisible for being a table rather than a file.
 **A moved root manager config is merged into the pack's split, never kept
 whole.** Where pass 1's tool-config step moved the toolchain manager's root
 file, it is not one more file for pass 6 to offer: the pack ships that
-configuration as a **split** — one file per concern — and a whole root file
-beside the split is two sources for one setting. So its `[env]` table goes
-into the pack's environment-block file and its `[tools]` table into the
-pack's tool-pin file, each a **merge** row naming every key it carries, with
-a key both sides declare shown as `hand value · pack value` and the repo's
-kept; its tasks go through this pass as inline tasks; any other table it
-carries goes, on the same terms, into whichever file of the split the pack's
-conventions name for that concern. The moved file, emptied, is **removed** —
-listed as the move it was with no destination. Only a table no split file
-owns keeps it alive, cut down to that table and listed as repo-owned and
-kept with the table named, so the split stays the one source for everything
-the packs declare.
+configuration as a **split** — `[settings]` in `.config/mise.toml`, every
+other table its own section file under `.config/mise/conf.d/` — and a whole
+root file beside the split is two sources for one setting. So its `[env]`
+table goes into `conf.d/env.toml` and its `[tools]` table into
+`conf.d/tools.toml`, each a **merge** row naming every key it carries, with a
+key both sides declare shown as `hand value · pack value` and the repo's
+kept; its `[settings]` merge into `.config/mise.toml` the same way; its tasks
+go through this pass as inline tasks; any other table goes, on the same
+terms, into its own section file, `conf.d/<section>.toml` —
+`[shell_alias]` into `shell_alias.dev.toml`. The moved file, emptied, is
+**removed** — listed as the move it was with no destination. Every table has
+a section file, so nothing keeps it alive and the split stays the one source
+for everything the packs declare.
 
 The table lives in the pack, not here, and that is the point: the renaming is
 a fact about the task library, so vwf's prose never has to carry a name it
@@ -498,15 +537,16 @@ row at all** — the two landing-model positions, `MERGE_MODEL_DEVELOP` and
 `MERGE_MODEL_MAIN`, and any position a pack marks later that no pass reads.
 Each is a value the repo set, so there is nothing for this pass to offer and no
 survey row to show; the git pass still writes both wherever this run lands or
-replaces the environment-block file, per §11(a), exactly as before. That is
-what lets one `[env]` block carry `REPO_NAME` and `MEMBERS` beside the pair and
-still reconstruct equal — a folder rename on a repo landing `main` by `pr` is
-§9's replace row and nothing else. A kept file that still carries the retired
-single `MERGE_MODEL` is spliced on the same terms too: its one value is read as
-both positions' value, and every reader takes it that way until this run's
-fill — a keep never covers a marked position's value, as pass 6 says — writes
-that one value into both positions, retires the single key, and reports the
-line. `/vwf:doctor` (f) is what reports the legacy key in the meantime.
+replaces the environment-block file, `conf.d/env.toml`, per §11(a), exactly
+as before. That is what lets that one file carry `REPO_NAME` and `MEMBERS`
+beside the pair and still reconstruct equal — a folder rename on a repo
+landing `main` by `pr` is §9's replace row and nothing else. A kept file that
+still carries the retired single `MERGE_MODEL` is spliced on the same terms
+too: its one value is read as both positions' value, and every reader takes
+it that way until this run's fill — a keep never covers a marked position's
+value, as pass 6 says — writes that one value into both positions, retires
+the single key, and reports the line. `/vwf:doctor` (f) is what reports the
+legacy key in the meantime.
 
 **A record whose `source:` is `generated` has no pack payload**, so there is
 nothing to splice into: the second test is **skipped**, and test 1's mismatch
@@ -757,8 +797,9 @@ comparison cannot tell it apart from a position nobody has ever touched.
 
 The other marked positions are checked in the same pass, and two of them are
 **not** that id list's: the bootstrap aggregator's member flags and the shell
-aliases compare against the resolved **members** — one flag and one alias per
-member, per [new repo](new-repo.md) §7. A position still carrying only the
+aliases (`conf.d/shell_alias.dev.toml`) compare against the resolved
+**members** — one flag and one alias per member, per [new repo](new-repo.md)
+§7. A position still carrying only the
 pack's commented template, on a repo that **has** members, is a create; one
 already carrying exactly those lines needs nothing; one carrying lines named for
 anything else — the project ids an earlier run wrote there, most often — is a
@@ -766,8 +807,8 @@ anything else — the project ids an earlier run wrote there, most often — is 
 neither list: it is compared against this repo's folder slug, by the rule pass
 9 states above.
 
-The environment block's other two positions are checked here too, and they are
-not the same kind of wait:
+The environment block's other two positions, in `conf.d/env.toml`, are checked
+here too, and they are not the same kind of wait:
 
 - **`MEMBERS`** is a create on a repo whose registry declares
   **sibling** members and whose position still carries the pack's shipped
@@ -992,6 +1033,7 @@ them before the one consent rather than after.
 Moves        <n>
 Root tool configs (move / keep both / delete)  <n>
 Hook manager (keep / switch)     <n>
+Mise layout migration            <n>
 Creates      <n>
 Replaces     <n>
 Offered (replace / keep)         <n>
@@ -1065,6 +1107,9 @@ repo of the set that resolved to mode `blank` or `source` takes the
   6's offer is what decides between them. A root tool config the user picked
   **delete** for is removed with plain `rm` here, and a moved manager config
   is split per pass 3 and then removed the same way.
+- **The mise layout migration** runs right after the creates, so the pack's
+  section files it merges into are on disk; its lock step waits for
+  [new repo](new-repo.md) §9's trust step, per pass 1.
 - **Creates** are the materializer's, by fixed slug, exactly as the new-repo
   pipeline fetches them — every file the plan lists, less the pack twin a
   root tool config row said is **not landed**. `init` never authors

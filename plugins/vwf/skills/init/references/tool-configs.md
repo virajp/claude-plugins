@@ -20,13 +20,11 @@ the fourth the merge shape — one of three:
   the pack also lands a root stand-in of the same basename, this is pass 1's
   move-and-shim case, and the stand-in takes the root spot the real file left.
 - **`move-and-split`** — the repo's one file is merged into the pack's split
-  rather than kept whole: its `[env]` and `[tools]` tables go into the
-  matching files of the split as merge rows, its inline `[tasks.*]` are read
-  as tasks by pass 3 and follow its rules, and the emptied file is removed.
-  Only a table no split file owns keeps the moved file alive, cut down to
-  that table and listed as **repo-owned and kept** — it has no pack twin, so
-  pass 6 never reaches a split row. The rule is pass 3's, in the
-  existing-repo pipeline; this shape names it and adds nothing.
+  rather than kept whole: its `[settings]` go into `.config/mise.toml` and
+  every other table into its `conf.d` section file as merge rows, its inline
+  `[tasks.*]` are read as tasks by pass 3 and follow its rules, and the
+  emptied file is removed. The rule is pass 3's, in the existing-repo
+  pipeline; this shape names it and adds nothing.
 - **`yield`** — the repo's file wins and the pack's twin is **not landed**;
   the plan says so in that row, and nothing is moved. This is the shape for a
   tool whose discovery is root-first and whose pack file is itself a root
@@ -36,7 +34,7 @@ the fourth the merge shape — one of three:
 | Tool       | Root spellings                                          | Pack path                                                     | Merge shape      |
 | ---------- | ------------------------------------------------------- | ------------------------------------------------------------- | ---------------- |
 | pre-commit | `.pre-commit-config.yaml`                               | `.config/pre-commit-config.yaml`                              | `move-and-offer` |
-| mise       | `.mise.toml`, root `mise.toml`                          | `.config/mise.toml` and the `.config/mise.<env>.toml` split   | `move-and-split` |
+| mise       | `.mise.toml`, root `mise.toml`                          | `.config/mise*.toml` and the `.config/mise/conf.d/` split     | `move-and-split` |
 | gitleaks   | `.gitleaks.toml`                                        | `.config/gitleaks.toml`                                       | `move-and-offer` |
 | grype      | `.grype.yaml`                                           | `.config/grype.yaml`                                          | `move-and-offer` |
 | dprint     | `.dprint.json`, root `dprint.json`                      | `.config/dprint.json`; root `dprint.json` is the pack's shim  | `move-and-offer` |
@@ -46,8 +44,10 @@ the fourth the merge shape — one of three:
 Three rows need a word:
 
 - **mise.** A root `mise.toml` is not a rename of `.config/mise.toml` — the
-  pack's split is four files, and the tool reads every one of them. The split
-  is what the pack's own skill documents; this row says only that the repo's
+  pack's split is `.config/miserc.toml`, settings-only `.config/mise.toml` and
+  `.config/mise.<env>.toml`, and one section file per table under
+  `.config/mise/conf.d/`, and the tool reads every one of them. The split is
+  what the pack's own skill documents; this row says only that the repo's
   file is taken apart into it rather than moved beside it.
 - **dprint.** Root `dprint.json` is on the allowlist because the pack itself
   lands one there — the two-line stand-in that points at `.config/`. A real
