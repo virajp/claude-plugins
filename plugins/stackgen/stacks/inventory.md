@@ -7,7 +7,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 `../assets/kinds.md`. The narrative — which wave landed what, and why — is
 [`readme.md`](readme.md); the shape of a pack is `../assets/pack-format.md`.
 
-**74 packs, 67 bundles, 12 kinds.**
+**70 packs, 66 bundles, 12 kinds.**
 
 ## Kinds
 
@@ -16,7 +16,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `language-bundle` | 16 | 15 |
 | `database` | 1 | 1 |
 | `cloud-provider` | 31 | 26 |
-| `repo-gate` | 4 | 1 |
+| `repo-gate` | 0 | 0 |
 | `repo-hygiene` | 1 | 1 |
 | `workspace` | 0 | 3 |
 | `capability-provider` | 8 | 8 |
@@ -95,11 +95,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `stylesheet/stylex` | StyleX | `stylesheet` | stylesheet | compile-time |  | 0.1.0 | Styles authored as typed objects in the component's own language and compiled to atomic CSS at build — the token mapping type-checked, the cascade replaced by explicit merge order, and nothing evaluated at runtime. |
 | `stylesheet/tailwindcss` | Tailwind CSS | `stylesheet` | stylesheet | utility |  | 0.1.0 | Utility classes generated from a token block — the design system's semantic roles declared once in CSS, and every style written at the call site as a class rather than in a stylesheet of its own. |
 | `toolchain-gate/analysis-options` | analysis_options | `app-framework` | project |  |  | 0.2.0 | The Dart analyzer and lint configuration for a Flutter app. |
-| `toolchain-gate/dprint` | dprint | `repo-gate` | repo |  |  | 1.1.3 | The repo's single formatter — one config, plugins pinned, generated trees excluded. Ships .config/dprint.json and .config/taplo.toml. |
 | `toolchain-gate/eslint` | ESLint | `language-bundle` | repo |  |  | 0.3.3 | The correctness gate for TypeScript and JavaScript — flat config, zero formatting rules, overrides scoped by glob. |
-| `toolchain-gate/gitleaks` | gitleaks | `repo-gate` | repo |  |  | 1.1.2 | The repo's secret scanner — working tree every commit, history once, allowlist by fingerprint. Ships .config/gitleaks.toml. |
-| `toolchain-gate/grype` | grype | `repo-gate` | repo |  |  | 1.0.1 | The repo's dependency vulnerability scanner — source per commit, artifact before release, ignores time-boxed. Ships .config/grype.yaml. |
-| `toolchain-gate/pre-commit` | pre-commit | `repo-gate` | repo |  |  | 1.1.8 | The local gate, and the wiring that makes local and CI run the identical command. Ships .config/pre-commit-config.yaml, .config/git-conventional-commits.yaml and .config/linter.yaml. |
 | `toolchain-gate/ruff` | Ruff | `language-bundle` | repo |  |  | 0.3.2 | The lint and format gate for Python — one tool for both halves, run through the project's uv environment rather than a global install. |
 | `toolchain-gate/swift-format` | swift-format | `language-bundle` | repo |  |  | 0.1.1 | The Swift formatter — swift-format, built into the toolchain as `swift format`, configured once under .config/. |
 | `toolchain-gate/swiftlint` | SwiftLint | `language-bundle` | repo |  |  | 0.2.0 | The correctness gate for Swift — SwiftLint through mise, strict, with every layout rule left to swift-format. |
@@ -160,7 +156,6 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `pnpm-turbo` | pnpm · Turborepo | `workspace` | repo | `package-manager/pnpm@0.4.0`, `build-orchestrator/turbo@generated` |  |
 | `pnpm-workspace` | pnpm · workspace | `workspace` | repo | `package-manager/pnpm@0.4.0` |  |
 | `postgres` | PostgreSQL | `database` | backing | `datastore/postgres@0.1.0` |  |
-| `repo-gates` | Repo gates | `repo-gate` | repo | `toolchain-gate/dprint@1.1.3`, `toolchain-gate/gitleaks@1.1.2`, `toolchain-gate/grype@1.0.1`, `toolchain-gate/pre-commit@1.1.8` | yes |
 | `repo-hygiene` | repo-hygiene | `repo-hygiene` | repo | `repo-hygiene/repo-hygiene@1.2.4` | yes |
 | `stitch` | Google Stitch | `design-tool` | design | `design-tool/stitch@0.1.0` |  |
 | `stylex` | StyleX | `stylesheet` | stylesheet | `stylesheet/stylex@0.1.0` |  |
