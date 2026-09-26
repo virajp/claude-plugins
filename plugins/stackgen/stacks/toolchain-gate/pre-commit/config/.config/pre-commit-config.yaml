@@ -49,6 +49,7 @@ exclude: |-
   (?x)
   (^|/)\.build/|
   (^|/)\.claude/|
+  (^|/)\.config/mise/locks/|
   (^|/)\.git/|
   (^|/)\.turbo/|
   (^|/)\.venv/|

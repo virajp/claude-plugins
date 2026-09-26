@@ -5,6 +5,7 @@
   "excludes": [
     "**/.build/",
     "**/.claude/",
+    "**/.config/mise/locks/",
     "**/.git/",
     "**/.turbo/",
     "**/.venv/",
