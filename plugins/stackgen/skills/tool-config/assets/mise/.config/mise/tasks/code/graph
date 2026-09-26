@@ -9,7 +9,8 @@ set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-# Run by pre-commit's graphify-refresh hook at post-commit; graphify's own raw git hook pins a Python path, so setup:precommit removes it.
+# Run by pre-commit's graphify-refresh hook at post-commit; graphify's own raw
+# git hook pins a Python path, so setup:precommit removes it.
 
 if [ "${GRAPHIFY_SKIP_HOOK:-0}" = "1" ]; then
   exit 0
@@ -57,11 +58,17 @@ export PYTHONHASHSEED=0
 LOG="${HOME}/.cache/graphify-rebuild.log"
 mkdir -p "$(dirname "${LOG}")"
 
-# One rebuild at a time: mkdir is atomic, and the lock holds the PID of whoever owns it.
+# One rebuild at a time: mkdir is atomic, and the lock holds its owner's PID.
 LOCK="${GIT_DIR_ABS}/graphify-refresh.lock"
 TAKEOVER="${LOCK}.takeover"
 
-# Held means a live PID, or no PID yet on a lock under ten minutes old (a run between its mkdir and its write).
+# A skip, or a lost race, is never a failure of the commit.
+skip() {
+  print_yellow "graphify: $1 — skipped (lock: ${LOCK})"
+  exit 0
+}
+
+# Held: a live PID, or no PID yet on a lock under ten minutes old.
 lock_is_held() {
   local holder
   holder="$(cat "${LOCK}/pid" 2>/dev/null || true)"
@@ -74,40 +81,47 @@ lock_is_held() {
 
 if ! mkdir "${LOCK}" 2>/dev/null; then
   if lock_is_held; then
-    print_yellow "graphify: a refresh is already running — skipped (lock: ${LOCK})"
-    exit 0
+    skip "a refresh is already running"
   fi
-  # A takeover left by a killed run is itself stale after ten minutes.
+  # A takeover dir left by a killed run is stale after ten minutes; only the
+  # run whose mv succeeds clears it, and only if what it moved is still old.
   if [ -n "$(find "${TAKEOVER}" -maxdepth 0 -mmin +10 2>/dev/null)" ]; then
-    rmdir "${TAKEOVER}" 2>/dev/null || true
+    dead="${TAKEOVER}.dead.$$"
+    if mv "${TAKEOVER}" "${dead}" 2>/dev/null; then
+      if [ -z "$(find "${dead}" -maxdepth 0 -mmin +10 2>/dev/null)" ]; then
+        # It moved a live takeover: put an equivalent one back and step aside.
+        mkdir "${TAKEOVER}" 2>/dev/null || true
+        rm -rf "${dead}" || true
+        skip "another run is taking over the lock"
+      fi
+      rm -rf "${dead}" || true
+    fi
   fi
-  # Only the run that makes the takeover dir may replace a stale lock, so two runs never both take it.
+  # Only the run that makes the takeover dir may replace a stale lock.
   if ! mkdir "${TAKEOVER}" 2>/dev/null; then
-    print_yellow "graphify: another run is taking over the lock — skipped (lock: ${LOCK})"
-    exit 0
+    skip "another run is taking over the lock"
   fi
-  # Re-checked under the takeover: another run may have replaced the lock since the first read.
+  # Re-checked under the takeover: the lock may have changed since.
   if ! mkdir "${LOCK}" 2>/dev/null; then
     if lock_is_held; then
-      rmdir "${TAKEOVER}"
-      print_yellow "graphify: a refresh is already running — skipped (lock: ${LOCK})"
-      exit 0
+      rmdir "${TAKEOVER}" 2>/dev/null || true
+      skip "a refresh is already running"
     fi
-    rm -rf "${LOCK}"
-    # A plain run may win the freed lock first; it is then that run's rebuild.
+    rm -rf "${LOCK}" || true
+    # A plain run may win the freed lock first; the rebuild is then its.
     if ! mkdir "${LOCK}" 2>/dev/null; then
-      rmdir "${TAKEOVER}"
-      print_yellow "graphify: another run took the lock first — skipped (lock: ${LOCK})"
-      exit 0
+      rmdir "${TAKEOVER}" 2>/dev/null || true
+      skip "another run took the lock first"
     fi
   fi
-  rmdir "${TAKEOVER}"
+  rmdir "${TAKEOVER}" 2>/dev/null || true
 fi
 # This task holds the lock until the rebuild writes its own PID over it.
-echo "$$" >"${LOCK}/pid"
+echo "$$" >"${LOCK}/pid" 2>/dev/null || true
 
 print_yellow "graphify: refreshing the graph in the background (log: ${LOG})"
-# Detached so the commit returns at once; the rebuild removes the lock on exit only while the lock is still its own.
+# Detached so the commit returns at once; on exit the rebuild removes the
+# lock only while the lock is still its own.
 # shellcheck disable=SC2016
 nohup bash -c 'lock="$1"
 shift
