@@ -20,3 +20,7 @@ conditional:
   - path: .config/vscode.d/astro.jsonc
     when:
       editor: vscode
+# The lines this pack asks /stackgen:tool-config for.
+tool-config:
+  - dprint add plugin malva
+  - dprint add plugin markup_fmt

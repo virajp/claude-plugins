@@ -14,3 +14,7 @@ kind: language-bundle
 axis: project
 # Topic 2 of the language-bundle bar — one artifact per detected framework.
 harness: n/a
+# The lines this pack asks /stackgen:tool-config for.
+tool-config:
+  - dprint add plugin malva
+  - dprint add plugin markup_fmt

@@ -10,6 +10,9 @@ axis: stylesheet
 # The bundle slug IS the projects.<name>.stylesheet token, so the pin and the
 # config key are one value rather than two that can disagree.
 # A stylesheet approach satisfies no harness capability: nothing here is booted,
-# stood up or probed. The lint gate it can feed is a task the repo's gate
-# bundle runs and owns.
+# stood up or probed. The lint gate it can feed is a task stackgen:tool-config
+# lands and owns.
 harness: n/a
+# The lines this pack asks /stackgen:tool-config for.
+tool-config:
+  - dprint add plugin malva

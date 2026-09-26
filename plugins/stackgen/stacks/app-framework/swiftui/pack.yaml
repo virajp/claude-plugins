@@ -95,3 +95,7 @@ tool-config:
   - mise add env SIMULATOR_PLATFORM="" to all environments
   - mise add env SIMULATOR_DEVICE="" to all environments
   - mise add env SIMULATOR_OS="" to all environments
+  # Keeps the build trees out of the formatters, the scanner and the linter.
+  - all add exclude generated Derived DerivedData
+  - all add exclude *.xcassets
+  - pre-commit add linter-ignore Derived DerivedData

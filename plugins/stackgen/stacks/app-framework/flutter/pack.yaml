@@ -64,3 +64,6 @@ harness:
     mechanism: >-
       Flutter golden tests plus flutter_test's meetsGuideline accessibility
       assertions — the SDK's own visual and a11y gate
+# The lines this pack asks /stackgen:tool-config for.
+tool-config:
+  - pre-commit add linter-ignore .dart_tool

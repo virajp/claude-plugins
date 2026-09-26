@@ -13,3 +13,6 @@ harness:
     mechanism: >-
       The project's own readiness endpoint, which the host's liveness and
       readiness probes point at; this component fixes no task name
+# The lines this pack asks /stackgen:tool-config for.
+tool-config:
+  - dprint add plugin dockerfile

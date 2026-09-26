@@ -19,3 +19,6 @@ harness:
     mechanism: >-
       None — the container runs directly against the backing bundle's local
       services. You are testing your process, not the platform
+# The lines this pack asks /stackgen:tool-config for.
+tool-config:
+  - dprint add plugin dockerfile
