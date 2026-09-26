@@ -130,10 +130,10 @@ secret scanner's path allowlist too. So the formatters' three lists state one
 set and the scanner's is a subset of it by construction, never by care. A
 path holding a `*` or a `?` is a file glob (`*.lock`, `*-lock.json`); any
 other is a directory (`node_modules`, `.config/mise/locks`); both match at
-any depth; `generated` is for a
-tree a tool writes and no one reviews, never a lockfile or authored source.
-An exclude asked of one tool alone — `dprint add exclude …` — is refused,
-naming this verb. Its removal is `remove <requester>` on each tool it wrote.
+any depth. `generated` is for a tree a tool writes and no one reviews, never
+a lockfile or authored source. An exclude asked of one tool alone —
+`dprint add exclude …` — is refused, naming this verb. Its removal is
+`remove <requester>` on each tool it wrote.
 The spelling each list takes is in
 [dprint's](references/dprint.md#3-the-exclusion-set),
 [pre-commit's](references/pre-commit.md#3-the-global-exclude) and

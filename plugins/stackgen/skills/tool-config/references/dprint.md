@@ -192,8 +192,8 @@ plugin takes any extension both claim; writes the plugin's config key among
 the top-level keys in alphabetical order, as the asset keeps them; and —
 where the editor fragment has landed — writes the plugin's language scopes
 into the requester's block there, after the `dprint` base block, each bound
-to `dprint.dprint`. A base plugin asked for is already satisfied and
-noted.
+to `dprint.dprint`. A base plugin asked for is already satisfied, and the
+row says so.
 
 **No exclude verb.** An exclude is added only through
 [`all add exclude`](../SKILL.md#the-one-cross-tool-verb), because one list

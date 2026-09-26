@@ -337,13 +337,16 @@ The base's last local hook refreshes the knowledge graph after every commit:
 `post-commit` cannot fail a commit — it runs after the commit exists — and
 `code:graph` exits 0 when the graph tool is missing, is a no-op in a linked
 worktree, mid-rebase or on a commit that touched only `graphify-out/`, and
-runs detached, so the commit returns at once. It replaces graphify's own
-`graphify hook install`, whose raw git hooks pin a Python path and break on the
-next upgrade: `setup:precommit` runs `graphify hook uninstall` before it
-installs when `.git/hooks/post-commit` carries graphify's marker, so an
-earlier-shaped repo loses that hook rather than keeping it chained as
-`post-commit.legacy`. The graph tool's pin and the task are
-[mise's](mise.md#the-graph-tool).
+runs detached, so the commit returns at once — one rebuild at a time, under
+[the single-flight lock](mise.md#the-graph-tool). It replaces graphify's own
+`graphify hook install`, whose raw git hooks pin a Python path and break on
+the next upgrade. Before it installs, `setup:precommit` looks for graphify's
+markers in both hooks graphify writes, `post-commit` and `post-checkout`;
+where either carries one it runs `graphify hook uninstall`, or — with
+graphify not on `PATH` — strips each marked block itself, deleting a hook
+left with nothing but its shebang. So an earlier-shaped repo loses those
+hooks rather than keeping one chained as `post-commit.legacy`. The graph
+tool's pin and the task are [mise's](mise.md#the-graph-tool).
 
 ## 7. The migration
 

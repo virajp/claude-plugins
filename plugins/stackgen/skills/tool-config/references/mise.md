@@ -214,8 +214,14 @@ manager at run time. A value committed here is in the history.
 through uv, so a repo with no Python still installs the graph tool.
 The PyPI name really is `graphifyy`, double y; never correct it. `code:graph`
 refreshes the graph — code only, detached, a no-op in a linked worktree,
-mid-rebase or on a commit that touched only `graphify-out/` — and exits 0
-when the tool is missing, so a commit never fails on it. `setup:ai` wires the
+mid-rebase or on a commit that touched only `graphify-out/`; a first commit,
+with no parent, builds it — and exits 0 when the tool is missing, so a commit
+never fails on it. **One rebuild at a time**: the task takes a lock directory
+in the git dir holding the rebuild's pid, and skips while a live pid holds
+it. A stale lock — a dead pid, or no pid and older than ten minutes — is
+taken over through a second directory used as a mutex, so two runs never
+both take it; the rebuild releases the lock on exit only while it is still
+its own. `setup:ai` wires the
 tool for the agent with `graphify install --platform claude` and installs no
 git hook of its own: graphify's raw hooks pin a Python path and break on the
 next upgrade. The hook runner's `graphify-refresh` hook runs `code:graph` after
@@ -968,9 +974,9 @@ external counter is needed.
 
 #### `code:graph` — the graph refresh
 
-See [the graph tool](#the-graph-tool). The `post-commit` hook runs it after
-every commit, never `code:all`, and `--force` rebuilds even when the last
-commit touched only `graphify-out/`.
+See [the graph tool](#the-graph-tool), and its single-flight lock. The
+`post-commit` hook runs it after every commit, never `code:all`, and
+`--force` rebuilds even when the last commit touched only `graphify-out/`.
 
 ### `p:<id>:*` — one project's own commands
 
