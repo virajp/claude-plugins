@@ -1,0 +1,309 @@
+---
+type: vwf-change-plan
+title: tool-config gates — dprint, pre-commit, gitleaks and grype move into
+  stackgen:tool-config
+requires:
+  - docs/plans/2026-09-26-tool-config-mise
+backlog: []
+backlog_pieces: [ B66, B72 ]
+---
+
+# Plan — tool-config gates — dprint, pre-commit, gitleaks and grype move into stackgen:tool-config (2026-09-26)
+
+## Status
+
+**APPROVED**
+
+APPROVED 2026-09-26 by the user
+
+## Consent
+
+| Action                                                                                 | Granted                                                             |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Merge to the integration branch and push on green                                      | yes                                                                 |
+| After landing: `mise run p:plugins:local`                                              | run                                                                 |
+| After landing: `graphify hook uninstall && pre-commit install --hook-type post-commit` | run                                                                 |
+| Release stackgen publicly                                                              | none here — rides T1's `2.0.0`, untagged; the chain ships after T3  |
+| Release vwf publicly                                                                   | none here — rides T1's `20.0.0`, untagged; the chain ships after T3 |
+| Release site publicly                                                                  | none — not this time                                                |
+| Release installer publicly                                                             | none — untouched                                                    |
+
+**The mode recorded here is the consent.** A `run` step runs on a green landing
+without a prompt; an `ask` step stops the run once before it, reports what it
+would do, and waits. The mode is the interview's answer (item 17), and a release
+step recorded `run` is authorised by the interview's release question (item 18)
+— a release recorded `ask`, or with no step at all, is intent, not
+authorisation. Where a step stages something this session already loaded, it is
+picked up only by a **restarted** session.
+
+## Goal
+
+After this lands, `stackgen:tool-config` owns dprint, pre-commit, gitleaks and
+grype the way T1 made it own mise: their content lives in the skill, every other
+pack asks for a dprint plugin, a pre-commit hook, an exclude or an ignore
+through a `tool-config:` call, the `repo-gates` bundle is gone, init lands the
+gates through `/stackgen:tool-config all`, and a shaped repo — this one included
+— refreshes its graphify graph from a pre-commit `post-commit` hook instead of
+graphify's raw git hooks.
+
+T2 of three: T1 (`docs/plans/2026-09-26-tool-config-mise`) made the skill and
+moved mise; T3 (`docs/plans/2026-09-26-tool-config-hygiene`) moves repo-hygiene,
+drops `merge=graphify` and finishes init's cutover. This plan lands a piece of
+B66 and a piece of B72; T3 finishes both.
+
+**Reversals, all confirmed at the interview:**
+
+1. The `pre-commit.d/` fragment contract
+   (`plugins/vwf/skills/init/references/fragments-and-sections.md`, the merge
+   markers in the pre-commit pack's config) — retired; a pack calls
+   `/stackgen:tool-config pre-commit add hook … for <pack>` instead.
+2. The unconditional `repo-gates` bundle — deleted; the four tools are the
+   skill's.
+3. The per-tool skills the four packs copied into target repos — folded into
+   `references/<tool>.md`, copied nowhere.
+4. The base exclusion set and `linter.yaml` ignores carrying every stack's
+   entries — the base keeps the universal ones; each pack adds its own.
+
+## Facts the survey established
+
+- **T1 lands first**: `plugins/stackgen/skills/tool-config/` with `SKILL.md`
+  (the contract: `<tool> <instruction> [for <requester>]`, `all [answers]`,
+  blocks tagged `# >>> <requester>` / `# <<< <requester>`, drift asked, no hash,
+  `remove <requester>`, lock `source: tool-config/<tool>@<version>`),
+  `references/mise.md`, `assets/mise/.config/**` (the task library, including
+  `code/graph` and `setup/precommit`). Packs carry a `tool-config:` list in
+  `pack.yaml`. The checker already walks `skills/tool-config/assets/*` as a
+  payload root; this repo's `.config/dprint.json` and pre-commit exclusions
+  already cover it. Versions after T1: stackgen `2.0.0`, vwf `20.0.0`, untagged.
+- **The four packs** (`plugins/stackgen/stacks/toolchain-gate/<tool>/`), each
+  with `pack.yaml`, `conventions.md`, `skills/<tool>/SKILL.md` (copied into
+  target repos) and `config/`; none has `binaries`, `lockfile`, `machine_env` or
+  a `conf.d` fragment (mise pins the binaries at `latest` in the dev tools
+  file):
+  - dprint `1.1.2`: `.config/dprint.json`, `.config/taplo.toml`,
+    `.config/vscode.d/dprint-editor.jsonc` (conditional, editor vscode), root
+    `dprint.json` shim. Plugins (`dprint.json:65-74`): markdown, dockerfile,
+    markup_fmt, pretty_yaml, malva, typescript, json, exec (routes `.toml` to
+    taplo, :22-31). Exclude set (:5-21, the same in `taplo.toml:14-30`):
+    `.build`, `.claude`, `.git`, `.turbo`, `.venv`, `Derived`, `*.xcassets`,
+    `build`, `dist`, `graphify-out`, `node_modules`, `target`, `*-lock.json`,
+    `*-lock.yaml`, `*.lock`.
+  - pre-commit `1.1.6`: `.config/pre-commit-config.yaml`,
+    `.config/git-conventional-commits.yaml` (`commitScopes: []` at :40, filled
+    by init), `.config/linter.yaml` (ignores :43-52: `build`, `.dart_tool`,
+    `.build`, `.swiftpm`, `DerivedData`, `Derived`, `.venv`,
+    `.config/mise/locks`), `vscode.d/pre-commit.jsonc` (conditional). Config:
+    `default_install_hook_types` [pre-commit, commit-msg] :20-22, global
+    `exclude` :48-64, local hooks git-config :69, format :94, lint :103, sec
+    :113, pre-commit-hooks :124-194, conventional-commits :203, meta :224-229,
+    the `pre-commit.d` merge markers :235-240.
+  - gitleaks `1.1.2`: `.config/gitleaks.toml`, `[extend] useDefault=true`,
+    `[allowlist] paths` :45- (`.turbo`, `.venv`, `build`, `dist`,
+    `graphify-out`, `node_modules`, `target`).
+  - grype `1.0.1`: `.config/grype.yaml`, `fail-on-severity: medium` :15,
+    `ignore: []` :40.
+- **The bundle**: `plugins/stackgen/stacks/bundles/repo-gates.md`,
+  `unconditional: true`, pins :7-10; prose in `bun.md:32`, `pnpm-turbo.md:33`,
+  `pnpm-workspace.md:39`, `mise.md:55`, `repo-hygiene.md:38`.
+- **The one landed fragment**:
+  `stacks/package-manager/uv/config/.config/pre-commit.d/uv.yaml` (uv `0.1.0`,
+  pinned by no bundle). No other pack ships a dprint plugin or a `linter.yaml`
+  ignore; `linter.yaml` is read by the `code/lint` overlays of pnpm, eslint,
+  flutter, swiftui and swift.
+- **Tasks** read fixed paths that do not move: `code/format:30`
+  (`.config/dprint.json`), `code/sec:34-35` (gitleaks, grype),
+  `code/precommit:25`, `setup/precommit:13,124-126` (`pre-commit install`).
+- **Checker** (`scripts/src/check.ts`): rule 11 `checkPackConfigTier` :427,
+  `PACK_HOOK_FRAGMENTS` :273 parsed :510-518, `PACK_PRE_COMMIT_CONFIG` :281
+  parsed :503-508, `preCommitFaults` :812, root `dprint.json` shim allowlist
+  :346-348; rule 15 `checkExclusionSets` :1899-1980 over `EXCLUSION_LISTS`
+  :1705-1740, which hard-codes the four pack paths — a missing file is skipped
+  (:1931), so a move silently ends the check. Tests: `check.test.ts:283`,
+  :521-544, rule 15 :1417-1570. `inventory.ts` reads `unconditional` at :69,
+  :178, :247. The shellcheck task comment :45 names the pre-commit pack path.
+- **vwf init**: fixed slugs `SKILL.md:746`, `new-repo.md:82-88` (mise → gates →
+  hygiene); adoption table `tool-configs.md:36-45` (rows :38, :40-42, dprint
+  note :52-56); commit scopes `SKILL.md:487-489,730`, `new-repo.md:405`,
+  `existing-repo.md:874-906`; hook manager `existing-repo.md:199-221`; the
+  `pre-commit.d` merge `fragments-and-sections.md:120-176`.
+- **Other readers**: setup `SKILL.md:110`, `references/onboard-pipeline.md:58`;
+  doctor `references/stack-checks.md:287`,
+  `references/harness-and-memory.md:56`, `references/code-intelligence.md:32`;
+  `plugins/vwf/assets/memory.md:249`, `plugins/vwf/assets/graphify.md:99`;
+  stackgen-stack-menu `SKILL.md:29,36,39,112`; stackgen-stack-template
+  `SKILL.md:165`, `references/materializer.md:116`; stackgen-sync
+  `SKILL.md:39,134`; stackgen assets `pack-format.md:34,64,123,353-376,478`,
+  `output-tree.md:147,256,325-326`, `kinds.md:267,301,533`, `taxonomy.md:250`.
+- **Docs naming the retired names**: `site/src/content/docs/plugins/stackgen.md`
+  (:336, :498, :614, :677, :695, :703, :766), `CLAUDE.md:173`,
+  `.claude/docs/repo-shape.md:171`, `.claude/skills/stackgen-plugin/SKILL.md`
+  (:81, :190, :254, :296, :302, :373), `.claude/skills/vwf-plugin/SKILL.md:121`,
+  `.claude/skills/vwf-plugin/references/{dependencies.md:33,skills-and-agents.md:27}`,
+  `.claude/skills/plugin-authoring/references/checks.md:105`.
+- **graphify in this repo**: raw `post-commit` and `post-checkout` hooks from
+  `graphify hook install` in `.git/hooks`; no `code/graph` task; this repo's
+  `.config/pre-commit-config.yaml` has `default_install_hook_types` at :20 and
+  `exclude: ^graphify-out/` at :39. The PyPI name is `graphifyy`.
+- **Commit convention**: `ops`, `docs`, `merge`, `feat`, `fix`, `refactor`; no
+  scopes.
+
+## Assumed decisions — confirm or override at review
+
+| #  | Decision        | Ruling                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Rejected                                                  | Unit     |
+| -- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | -------- |
+| 1  | Content home    | The four packs move into the skill: each `config/**` → `assets/<tool>/**` (the landed shape), `conventions.md`, `skills/<tool>/**` and `pack.yaml`'s facts → `references/<tool>.md`. The packs and `bundles/repo-gates.md` are deleted; no tool skill is copied into target repos. The `vscode.d` fragments land only when `editor=vscode`. The root `dprint.json` shim stays a dprint asset.                                                                                                              | keeping the packs as data                                 | U1 U2 U4 |
+| 2  | dprint plugins  | The base carries markdown, pretty_yaml, json and exec (taplo). The rest come from calls: typescript ← `language/typescript`; malva ← `stylesheet/{plain-css,stylex,tailwindcss}`, `framework/astro`, `framework/html`; markup_fmt ← `framework/astro`, `framework/html`; dockerfile ← `deploy-target/container-image`, `cloud-service/containers`, `cloud-service/cloud-run`. A plugin several packs request is written once; the lock lists every requester and `remove` drops it only when none is left. | fewer callers (astro and html only, container-image only) | U2 U3 U8 |
+| 3  | Excludes        | The base set is `.claude .git graphify-out build dist *.lock`. pnpm adds `node_modules .turbo *-lock.json *-lock.yaml`; uv adds `.venv`; swiftpm adds `.build .swiftpm`; swiftui adds `Derived DerivedData *.xcassets`; `target` is dropped. The verb `/stackgen:tool-config all add exclude [generated] <paths>` writes dprint's excludes, taplo's excludes and the pre-commit global exclude; `generated` also writes the gitleaks allowlist — so rule 15 holds by construction.                         | all fifteen entries in the base; keeping `target`         | U2 U3 U8 |
+| 4  | linter.yaml     | Stays with pre-commit. Its base ignores are `build graphify-out .config/mise/locks`; flutter adds `.dart_tool`, swiftpm `.build .swiftpm`, swiftui `Derived DerivedData`, uv `.venv`, through `pre-commit add linter-ignore <paths> for <pack>`.                                                                                                                                                                                                                                                           | —                                                         | U2 U3 U8 |
+| 5  | pre-commit      | `default_install_hook_types` gains `post-commit`; a local `graphify-refresh` hook at stage `post-commit` runs `mise x -- mise run code:graph`, `always_run`, `pass_filenames: false`. The `pre-commit.d` markers retire; uv's fragment becomes `pre-commit add hook … for uv` and is deleted. Commit scopes arrive as an argument (`pre-commit set scopes <a,b,…>`), never hand-filled.                                                                                                                    | landed `pre-commit.d/`                                    | U2 U3 U8 |
+| 6  | gitleaks, grype | gitleaks' allowlist is written only through `all add exclude generated`; grype gets `grype add ignore <id> [reason]` and `grype remove ignore <id>`.                                                                                                                                                                                                                                                                                                                                                       | per-tool exclude verbs                                    | U2 U8    |
+| 7  | init            | init lands the gates through the `/stackgen:tool-config all` call T1 introduced (`all` now lands the five tools) and fetches only the hygiene bundle through the adapter; the commit scopes it derives pass as an argument. Its adoption table (`tool-configs.md`) stays in init, each row naming the skill as the owner of the landed file. The `pre-commit.d` merge section retires.                                                                                                                     | —                                                         | U6       |
+| 8  | Checker         | Rule 11 drops the `pre-commit.d` fragment parse and the whole pre-commit config parse; a file under a pack's `config/.config/pre-commit.d/` is a finding. Rule 15's `EXCLUSION_LISTS` repoint to `skills/tool-config/assets/{dprint,pre-commit,gitleaks}/`, and a missing list file is now a finding, not a skip. A pack `tool-config:` line adding an exclude through `dprint`, `pre-commit` or `gitleaks` alone, instead of `all add exclude`, is a finding. `inventory.ts` drops `repo-gates`.          | —                                                         | U5       |
+| 9  | This repo       | This repo takes the graphify hook now: `post-commit` in `default_install_hook_types`, the `graphify-refresh` hook, a `code/graph` task copied from T1's `assets/mise/.config/mise/tasks/code/graph`, and `"pipx:graphifyy" = "latest"` in `.config/mise/conf.d/tools.dev.toml`. The hook swap on this machine is an after-landing step.                                                                                                                                                                    | leaving it for a reshape                                  | U12      |
+| 10 | Review row      | One `Kind: review` row (U9): the checker, this repo's task and hook, and the task library's `setup/precommit`.                                                                                                                                                                                                                                                                                                                                                                                             | the wave review alone                                     | U9       |
+| 11 | Pack bumps      | Every pack U3 edits bumps one minor from its `pack.yaml` version at run time (skipping a 13 or 17 component), with every bundle pin and `inventory.md`, in one commit. No plugin version changes — T1's `2.0.0` and `20.0.0` carry the chain.                                                                                                                                                                                                                                                              | bumping the plugins again                                 | U11      |
+| 12 | Comments        | Any comment or sentence a unit adds is one line (B65).                                                                                                                                                                                                                                                                                                                                                                                                                                                     | —                                                         | all      |
+
+## New dependencies
+
+none.
+
+## Units
+
+| Id  | Wave | Unit file                                      | Kind   | Owns                                                                                                                                                                                                                                                                                                                                  | Depends on             | Status  | Commit |
+| --- | ---- | ---------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ------- | ------ |
+| U12 | 1    | [12-this-repo.md](12-this-repo.md)             | edit   | `.config/pre-commit-config.yaml`, `.config/mise/tasks/code/graph` (new), `.config/mise/conf.d/tools.dev.toml`                                                                                                                                                                                                                         | —                      | pending |        |
+| U5  | 1    | [05-checker.md](05-checker.md)                 | edit   | `scripts/src/check.ts`, `scripts/src/check.test.ts`, `scripts/src/inventory.ts`, `.config/mise/tasks/p/plugins/shellcheck`                                                                                                                                                                                                            | —                      | pending |        |
+| U1  | 1    | [01-move.md](01-move.md)                       | edit   | `plugins/stackgen/stacks/toolchain-gate/{dprint,pre-commit,gitleaks,grype}/**`, `plugins/stackgen/stacks/bundles/repo-gates.md`, `plugins/stackgen/skills/tool-config/assets/{dprint,pre-commit,gitleaks,grype}/**` (new), `plugins/stackgen/skills/tool-config/references/{dprint,pre-commit,gitleaks,grype}/**` (new, raw material) | —                      | pending |        |
+| U3  | 1    | [03-packs.md](03-packs.md)                     | edit   | the `pack.yaml` (not its `version:` line) and `config/` of `language/typescript`, `stylesheet/{plain-css,stylex,tailwindcss}`, `framework/{astro,html}`, `deploy-target/container-image`, `cloud-service/{containers,cloud-run}`, `package-manager/{pnpm,uv,swiftpm}`, `app-framework/{swiftui,flutter}`                              | —                      | pending |        |
+| U4  | 1    | [04-stackgen-skills.md](04-stackgen-skills.md) | edit   | `plugins/stackgen/skills/{stackgen-stack-template,stackgen-stack-menu,stackgen-sync}/**`, `plugins/stackgen/assets/{pack-format,output-tree,kinds,taxonomy}.md`, `plugins/stackgen/stacks/readme.md`, the prose (not the pins) of `plugins/stackgen/stacks/bundles/{bun,pnpm-turbo,pnpm-workspace,repo-hygiene}.md`                   | —                      | pending |        |
+| U6  | 1    | [06-init.md](06-init.md)                       | edit   | `plugins/vwf/skills/init/**`                                                                                                                                                                                                                                                                                                          | —                      | pending |        |
+| U7  | 1    | [07-setup-doctor.md](07-setup-doctor.md)       | edit   | `plugins/vwf/skills/setup/**`, `plugins/vwf/skills/doctor/**`, `plugins/vwf/assets/{memory,graphify}.md`                                                                                                                                                                                                                              | —                      | pending |        |
+| U2  | 2    | [02-skill.md](02-skill.md)                     | edit   | `plugins/stackgen/skills/tool-config/SKILL.md`, `plugins/stackgen/skills/tool-config/references/**`                                                                                                                                                                                                                                   | U1                     | pending |        |
+| U8  | 2    | [08-assets.md](08-assets.md)                   | edit   | `plugins/stackgen/skills/tool-config/assets/{dprint,pre-commit,gitleaks,grype}/**`, `plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit`, the prose of `plugins/stackgen/stacks/bundles/mise.md`                                                                                                      | U1                     | pending |        |
+| U9  | 3    | [09-review.md](09-review.md)                   | review | —                                                                                                                                                                                                                                                                                                                                     | U5, U8, U12            | pending |        |
+| U10 | 4    | [10-docs.md](10-docs.md)                       | edit   | `.claude/**`, `CLAUDE.md`, `readme.md`, `site/src/content/docs/**`, `docs/memory/decisions/2026-09-26-tool-config-gates.md` (new)                                                                                                                                                                                                     | U2, U3, U4, U6, U7, U9 | pending |        |
+| U11 | 5    | [11-gates-and-bump.md](11-gates-and-bump.md)   | edit   | `plugins/stackgen/stacks/inventory.md`, `.claude-plugin/marketplace.json`, the `version:` line of every pack U3 edited, every `plugins/stackgen/stacks/bundles/*.md` pin naming them                                                                                                                                                  | U10                    | pending |        |
+
+Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
+`skipped`.
+
+## Shared-file rule
+
+| File                                                                  | Why it collides                                          | Owner                                                                           |
+| --------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `plugins/stackgen/skills/tool-config/assets/{four tools}/**`          | U1 moves it in, U8 edits it                              | U1 (wave 1), then U8 (wave 2)                                                   |
+| `plugins/stackgen/skills/tool-config/references/**`                   | U1 moves raw material in, U2 writes the references       | U1 (wave 1), then U2 (wave 2)                                                   |
+| `plugins/stackgen/skills/tool-config/SKILL.md`                        | T1's contract; only the tool list and grammar grow       | U2 only                                                                         |
+| bundle files: prose vs pins                                           | U4 and U8 edit prose, U11 edits pins                     | U4/U8 (waves 1–2), then U11 (wave 5)                                            |
+| the edited packs' `version:` lines, their bundle pins, `inventory.md` | a version, its pins and the inventory land in one commit | U11 (wave 5); the orchestrator regenerates `inventory.md` into U1's commit only |
+| `marketplace.json`                                                    | generated                                                | U11 only                                                                        |
+| every human-facing doc outside `plugins/`                             | n units, one doc                                         | U10 only                                                                        |
+
+## Waves
+
+- **Wave 1 — U12, U5, U1, U3, U4, U6, U7.** Disjoint paths; every unit writes
+  against the new paths. **Commit order: U12 first** (it owns
+  `.config/pre-commit-config.yaml`; an unstaged own config aborts every commit),
+  **U1 second** (with `plugins/stackgen/stacks/inventory.md` regenerated by the
+  orchestrator in the same commit — the move changes it), **U3 third**, **U5
+  fourth** (its new rules scan U1's paths and U3's packs, so it commits after
+  both), then the rest.
+- **Wave 2 — U2, U8**, inside the moved tree (disjoint: `SKILL.md` and
+  `references/**` vs `assets/**`).
+- **Wave 3 — U9**, review. **Wave 4 — U10**, docs. **Wave 5 — U11**, gates and
+  bumps.
+
+## Wave gate
+
+- `mise run p:plugins:marketplace -- --check`
+- `mise run p:plugins:inventory -- --check`
+- `mise run p:plugins:check`
+- `mise run p:plugins:shellcheck`
+- `pnpm vitest run`
+- `mise run code:precommit`
+- `mise run p:site:check`
+
+every line with `MISE_ENV=dev` exported, plus the wave review, plus every report
+read for `UNRESOLVED:`.
+
+## After landing
+
+| Step                                                                    | Mode | Notes                                                                                  |
+| ----------------------------------------------------------------------- | ---- | -------------------------------------------------------------------------------------- |
+| `mise run p:plugins:local`                                              | run  | stages the landed plugins on this machine; picked up by a **restarted** session        |
+| `graphify hook uninstall && pre-commit install --hook-type post-commit` | run  | this checkout's hook swap (decision 9), run from the main checkout with `MISE_ENV=dev` |
+
+## Gates the orchestrator keeps
+
+**The skill in a scratch repo**, after wave 2, isolated (`HOME` and every
+`MISE_*` dir under one `mktemp -d`): follow
+`plugins/stackgen/skills/tool-config/SKILL.md` and its references by hand for
+`/stackgen:tool-config all repo=scratch`, then run pnpm's, typescript's and uv's
+`tool-config:` calls. Pass condition: dprint's excludes, taplo's excludes and
+the pre-commit global exclude state one set, and the gitleaks allowlist is a
+subset of it; `dprint.json` carries the four base plugins plus a
+`# >>> typescript` block; the pre-commit config has `post-commit` in its install
+types, the `graphify-refresh` hook and a `# >>> uv` block;
+`pre-commit validate-config .config/pre-commit-config.yaml` passes; `remove uv`
+deletes only uv's blocks; a line added outside every block survives. Record in
+the Run log; a failure goes back to U2 or U8.
+
+## Unit contract
+
+Every unit prompt carries, in order: its ruling quoted from this file, its owned
+paths plus "touch nothing outside this list", the facts section, the shared-file
+rule, and the return block below. A unit never bumps a version, never runs a
+generator, never edits a doc, never adds a dependency this file does not list,
+never commits. A unit deletes with plain `rm`, never `git rm` — it stages
+nothing. A unit never runs `git checkout`, `git restore` or a formatter's
+`--fix` outside its Owns.
+
+A unit returns exactly this block and nothing else — no file contents, no diff,
+under 1500 characters:
+
+    CHANGED: <path> — <one line>            (one per file)
+    DECIDED: <what> — <why>                 (choices made inside scope, or none)
+    DOCS FALSIFIED: <path> — <passage>      (reported, never edited; or none)
+    GAP: <what the plan left unspecified and the assumption taken>   (or none)
+    UNRESOLVED: <the ruling needed>         (or none)
+
+A `GAP:` is a hole in the plan the unit could proceed past on a stated
+assumption; it is recorded and the run continues. An `UNRESOLVED:` is a ruling
+the unit could not proceed without; it blocks the unit and its dependents.
+
+## Out of scope
+
+- **repo-hygiene, `.editorconfig` dropped, `merge=graphify` dropped, init's
+  final cutover** — T3 (`docs/plans/2026-09-26-tool-config-hygiene`).
+- **B67** (`docs/plans/2026-09-26-init-commits-the-lock`) — runs after T3.
+- **B68** (a landed path changing its owning pack), **B70** (the linter pin into
+  the packs), the `min_versions` gate, **B65** — later plans.
+- **eslint, ruff, swiftlint, swift-format, analysis-options, tsconfig** — gate
+  packs of a language, not universal tools; they stay packs.
+
+## Parked
+
+- B66: repo-hygiene moves into `stackgen:tool-config` and init's unconditional
+  bundles retire — planned as `docs/plans/2026-09-26-tool-config-hygiene` (T3),
+  which finishes it.
+- B72: the `merge=graphify` line leaves the hygiene pack's `.gitattributes` — T3
+  (`docs/plans/2026-09-26-tool-config-hygiene`), which finishes it.
+
+## Run log
+
+| Wave | Unit | Model | Round | Outcome | Detail | Commit |
+| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+
+## Launch
+
+This folder is already committed and pushed on the branch it was planned on, so
+the fresh session's worktree — cut from the integration branch — can see it.
+
+Run in a fresh session, whichever kind the plan is:
+
+/vwf:execute docs/plans/2026-09-26-tool-config-gates
+
+or let the queue pick it, by priority:
+
+/vwf:execute next
