@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-#MISE description="Set up mise: reshim, doctor, install tools from the lockfile; --upgrade (dev only) bumps the lockfiles first"
+#MISE description="Set up mise: reshim, doctor, install tools from the lockfile; --upgrade (dev only) bumps the lockfile first"
 #MISE hide=true
 
-#USAGE flag "--upgrade" help="Dev only: bump every environment's lockfile with mise lock --bump and update the formatter plugins with dprint config update"
+#USAGE flag "--upgrade" help="Dev only: bump the lockfile for every environment with mise lock --bump and update the formatter plugins with dprint config update"
 
 set -euo pipefail
 # shellcheck source=/dev/null
@@ -24,53 +24,58 @@ if [ "$UPGRADE" = "true" ] && [ "$IS_DEV" = "false" ]; then
 fi
 
 CONFIG_DIR="${MISE_PROJECT_ROOT}/.config"
+LOCKFILE="${CONFIG_DIR}/mise/mise.lock"
 
 # A lockfile is written in exactly two cases: none exists yet on a developer's
 # machine, or the user asked for `--upgrade`. Outside dev a missing lockfile is
 # an error, never a prompt to re-resolve "latest": the pipeline installs what a
 # developer committed, or nothing. Refused before anything runs.
 NO_LOCKFILE=false
-if [ -z "$(find "$CONFIG_DIR" -maxdepth 1 -name 'mise*.lock' -print -quit)" ]; then
+if [ ! -f "$LOCKFILE" ]; then
   NO_LOCKFILE=true
   if [ "$IS_DEV" = "false" ]; then
-    print_error "No lockfile under .config/ (expected .config/mise*.lock): MISE_ENV is '${MISE_ENV:-}', which does not include dev. Run setup in dev to create it, and commit it."
+    print_error "No lockfile at .config/mise/mise.lock: MISE_ENV is '${MISE_ENV:-}', which does not include dev. Run setup in dev to create it, and commit it."
     exit 1
   fi
 fi
+
+# The one lock holds every environment's tools, so it is written with every
+# environment active at once; a single-environment `mise lock` drops the rest.
+lock_envs() {
+  {
+    find "$CONFIG_DIR" -maxdepth 1 -name 'mise.*.toml' ! -name '*.local.toml'
+    find "$CONFIG_DIR/mise/conf.d" -maxdepth 1 -name '*.*.toml' ! -name '*.local.toml' 2>/dev/null || true
+  } | while read -r file; do
+    name="${file##*/}"
+    name="${name%.toml}"
+    echo "${name##*.}"
+  done | sort -u | paste -sd, -
+}
+LOCK_ENVS="$(lock_envs)"
 
 have_task() { mise tasks 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
 
 print_subheader "Reshimming mise ..."
 mise reshim
 
-print_subheader "Running mise doctor ..."
-mise doctor --quiet --silent >/dev/null
-
 if [ "$NO_LOCKFILE" = "true" ]; then
-  print_subheader "No lockfile under .config/ — running mise lock once ..."
-  mise lock
+  print_subheader "No lockfile at .config/mise/mise.lock — locking MISE_ENV=${LOCK_ENVS} once ..."
+  MISE_ENV="$LOCK_ENVS" mise lock
 fi
 
-# Every environment's lockfile moves together, so no environment is left
-# installing versions the others have moved past: the base config first, then
-# once per environment file. `test` layers on dev, so it is selected as
-# `dev,test`. `--upgrade` on `mise lock` is the lockfile FORMAT upgrade —
-# harmless when the format is already current.
+# `--upgrade` on `mise lock` is the lockfile FORMAT upgrade — harmless when the
+# format is already current.
 if [ "$UPGRADE" = "true" ]; then
-  print_subheader "Bumping the lockfiles ..."
-  print_yellow "  base"
-  MISE_ENV='' mise lock --bump --upgrade
-  while read -r env_file; do
-    env="${env_file##*/mise.}"
-    env="${env%.toml}"
-    [ "$env" = "test" ] && env="dev,test"
-    print_yellow "  MISE_ENV=${env}"
-    MISE_ENV="$env" mise lock --bump --upgrade
-  done < <(find "$CONFIG_DIR" -maxdepth 1 -name 'mise.*.toml' ! -name '*.local.*' | sort)
+  print_subheader "Bumping the lockfile for MISE_ENV=${LOCK_ENVS} ..."
+  MISE_ENV="$LOCK_ENVS" mise lock --bump --upgrade
 fi
 
 print_subheader "Installing mise tools from the lockfile ..."
 mise install --locked
+
+# After the install: with `task.run_auto_install = false` nothing is installed before this task.
+print_subheader "Running mise doctor ..."
+mise doctor --quiet --silent >/dev/null
 
 # Everything below rewrites a pinned version the shape lock records — the
 # plugin URLs in `dprint.json` — so it is an upgrade the user asks for with
@@ -105,7 +110,7 @@ if [ "$UPGRADE" = "true" ]; then
     fi
   fi
 else
-  print_yellow "Tools installed from the lockfile — pass --upgrade (dev only) to bump the lockfiles and update the formatter plugins."
+  print_yellow "Tools installed from the lockfile — pass --upgrade (dev only) to bump the lockfile and update the formatter plugins."
 fi
 
 if have_task setup:lint; then

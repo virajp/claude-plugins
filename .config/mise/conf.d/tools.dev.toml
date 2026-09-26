@@ -1,0 +1,20 @@
+[tools]
+# Development tools
+doppler    = { version = "latest" }
+pre-commit = { version = "latest" }
+
+# Formatter
+dprint = { postinstall = "dprint completions fish | source", version = "latest" }
+taplo  = { version = "latest" }
+
+# Security tools
+gitleaks = { version = "latest" }
+grype    = { version = "latest" }
+
+# Workflow linter; shellcheck and shfmt are in tools.toml, which CI shares.
+actionlint = { version = "latest" }
+
+# AI Tools
+jq     = { version = "latest" }
+python = { version = "latest" }
+uv     = { version = "latest" }
