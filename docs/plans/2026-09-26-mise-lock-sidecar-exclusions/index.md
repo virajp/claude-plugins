@@ -12,9 +12,10 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-09-26 by the user
+RUNNING since 2026-09-26 in
+/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.claude/worktrees/2026-09-26-mise-lock-sidecar-exclusions
 
 ## Consent
 
@@ -182,8 +183,13 @@ none
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome | Detail                                                                                                                                                                                                                                                             | Commit |
+| ---- | --------- | ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| 0    | preflight | —     | 1     | green   | wave gate green on the untouched tree with MISE_ENV=dev (conf-d-layout landed); doctor skipped beyond tooling presence — mise and graphify present; plan of edit units alone, no LSP or conventions step                                                           | —      |
+| 1    | U1        | opus  | 1     | green   | three pack lists gain the sidecar entry, placed with the directory entries after .claude; taplo written `**/.config/mise/locks/**`, the file's directory form. GAP: unit said beside the lock globs and in the list's order convention — took the order convention |        |
+| 1    | U2        | opus  | 1     | green   | this repo's dprint, taplo and pre-commit lists gain the entry; taplo `/**` form, array expanded by taplo. GAP: verification named code:precommit, dispatch withheld it while U1 ran — orchestrator ran it at the wave gate                                         |        |
+| 1    | R1        | opus  | 1     | green   | wave review clean: rulings honoured, Owns respected, no drift, regex checked by re.search; no doc falsified, two passages incomplete for U3                                                                                                                        | —      |
+| 1    | gate      | —     | 1     | green   | all seven wave gate lines                                                                                                                                                                                                                                          | —      |
 
 ## Launch
 
