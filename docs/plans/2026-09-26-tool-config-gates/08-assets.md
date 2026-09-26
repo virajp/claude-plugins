@@ -48,7 +48,15 @@
 5. **`setup/precommit`** — installs every type in `default_install_hook_types`
    (plain `pre-commit install` reads it; confirm and fix if it passes an
    explicit `--hook-type` list).
-6. **`bundles/mise.md:55`** — stop naming `repo-gates`.
+6. **`setup/precommit`, graphify's raw hook (gap 11)** — before the
+   `pre-commit install` lines (:124-126), when the file at
+   `git rev-parse --git-path hooks/post-commit` carries graphify's
+   `# graphify-hook-start` marker and `graphify` is on `PATH`, run
+   `graphify hook uninstall` first, so an earlier-shaped repo loses the
+   Python-path-pinned hook instead of pre-commit chaining it as
+   `post-commit.legacy`. This lives in `setup:precommit`, not `setup:ai`:
+   `setup:all` runs `setup:ai` after `setup:precommit` (:63, :66), too late.
+7. **`bundles/mise.md:55`** — stop naming `repo-gates`.
 
 ## Verification
 
@@ -57,6 +65,9 @@
   under `DECIDED:`)
 - `MISE_ENV=dev mise run p:plugins:check` green (rule 15 over the new paths)
 - `MISE_ENV=dev mise run p:plugins:shellcheck` green
+- in a scratch repo holding a copy of graphify's raw `post-commit` hook,
+  `setup:precommit` leaves `.git/hooks/post-commit` as pre-commit's hook and no
+  `post-commit.legacy` behind (edit 6)
 
 ## Guardrails
 

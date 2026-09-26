@@ -144,6 +144,10 @@ B66 and a piece of B72; T3 finishes both.
   `graphify hook install` in `.git/hooks`; no `code/graph` task; this repo's
   `.config/pre-commit-config.yaml` has `default_install_hook_types` at :20 and
   `exclude: ^graphify-out/` at :39. The PyPI name is `graphifyy`.
+- **graphify's raw hook in a shaped repo** (gap 11 of
+  `docs/plans/2026-09-26-tool-config-mise`): `setup:precommit` runs
+  `graphify hook uninstall` before `pre-commit install` when
+  `.git/hooks/post-commit` carries `# graphify-hook-start` (U8 edit 6).
 - **Commit convention**: `ops`, `docs`, `merge`, `feat`, `fix`, `refactor`; no
   scopes.
 
