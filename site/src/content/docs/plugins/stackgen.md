@@ -710,19 +710,21 @@ language. Each tool lands **its own config file** under `.config/`, and dprint
 and pre-commit a `vscode.d/` editor fragment where the editor answer is VS Code.
 The gate config carries three tool-neutral hooks — `format`, `lint`, `sec` —
 that call `code:format`, `code:lint` and `code:sec`, and each tool is configured
-once, inside the task. It also installs at `post-commit`, where a
-`graphify-refresh` hook runs `code:graph` to rebuild the knowledge graph in
-place of graphify's own raw git hooks. Both scanners document the same
-**baseline step for an existing repo**: run the scan, fix what can be fixed —
-rotate a real secret, upgrade a dependency — and record what remains, a gitleaks
-finding by fingerprint in the allowlist, a grype vulnerability id under
-`ignore:` in `.config/grype.yaml` (`grype add ignore <id> [reason]`), each with
-a one-line reason and when to re-check, then re-run until green. The thresholds
-stay where they are: a time-boxed ignore is the temporary silence, a lowered
-threshold the permanent one. The formatter also lands the root `dprint.json`
-shim described above, and the hook gate lands `.config/linter.yaml`, the house
-linter's one config, read by every `code:lint` that runs it — whichever pack's
-task that is.
+once, inside the task. Ahead of them a `no-dash-names` hook refuses a commit
+that stages any path with a file or folder name starting with `-`, and asks you
+to rename it — every tool those tasks call would read such a name as an option.
+It also installs at `post-commit`, where a `graphify-refresh` hook runs
+`code:graph` to rebuild the knowledge graph in place of graphify's own raw git
+hooks. Both scanners document the same **baseline step for an existing repo**:
+run the scan, fix what can be fixed — rotate a real secret, upgrade a dependency
+— and record what remains, a gitleaks finding by fingerprint in the allowlist, a
+grype vulnerability id under `ignore:` in `.config/grype.yaml`
+(`grype add ignore <id> [reason]`), each with a one-line reason and when to
+re-check, then re-run until green. The thresholds stay where they are: a
+time-boxed ignore is the temporary silence, a lowered threshold the permanent
+one. The formatter also lands the root `dprint.json` shim described above, and
+the hook gate lands `.config/linter.yaml`, the house linter's one config, read
+by every `code:lint` that runs it — whichever pack's task that is.
 
 **A pack asks; it never copies a gate file.** Each of those files carries the
 base the skill lands for every repo, and each stack's additions arrive as lines
@@ -977,7 +979,11 @@ A repo with no CI/CD, no deploy target and no separate test environment needs
 only the base. The others cost little and are shipped anyway, so the answer to
 "where does this go" never requires creating a file first. `mise.local.toml` is
 the exception: it is gitignored by the `git` tool's base and documented in
-`mise.toml`'s banner, never written for you.
+`mise.toml`'s banner, never written for you. The base ignores it, its
+`mise.<env>.local.toml` variants and the local lock mise writes beside them by
+file name, so they match at any depth; only `.config/mise/config*.local.toml`
+and `.config/mise/conf.d/*.local.toml`, whose names do not start with `mise`,
+are spelled out as paths.
 
 **Three of the base `[settings]` are worth naming**, because each answers a
 failure people hit rather than a preference: `all_compile = false` never builds
