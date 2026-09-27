@@ -100,7 +100,12 @@ if command -v shfmt >/dev/null 2>&1; then
   fi
 fi
 
-if [ ${#sort_targets[@]} -gt 0 ]; then
+# The sorter is pinned in mise's dev environment, so it is resolved by its mise
+# path rather than the bare name, which a dependency in `node_modules/.bin`
+# could shadow. Silent when it is not installed — a CI or test environment —
+# as shfmt is above.
+sort_bin="$(mise which sort-package-json --tool npm:sort-package-json 2>/dev/null || true)"
+if [ -n "${sort_bin}" ] && [ ${#sort_targets[@]} -gt 0 ]; then
   print_subheader "Sorting package.json files ..."
-  pnpm dlx sort-package-json ${sort_args[@]+"${sort_args[@]}"} "${sort_targets[@]}"
+  "${sort_bin}" ${sort_args[@]+"${sort_args[@]}"} "${sort_targets[@]}"
 fi

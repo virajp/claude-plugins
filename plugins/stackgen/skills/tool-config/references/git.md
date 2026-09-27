@@ -30,9 +30,13 @@ laid out as they land under the repo root.
 **The ignore base** is one block holding seven banner sections — macOS,
 editors, AI tooling, mise, secrets and env, scratch, reports — each banner and
 its why-comments kept inside the block. The mise patterns are load-bearing:
-they cover every path mise loads a local override from, and dropping one is
-how a machine-local pin ends up in a review. graphify's lines are not here:
-the `graphify` tool asks for them as its own block
+they cover every path mise loads a local override from, and the local lock it
+writes beside one, and dropping one is how a machine-local pin ends up in a
+review. They are bare file names — `mise.local.toml`, `mise.*.local.toml`,
+`.mise.local.toml` and the matching `.lock` names — which match at any depth;
+only `.config/mise/config*.local.toml` and `.config/mise/conf.d/*.local.toml`
+are spelled out, since their file names do not start with `mise`. graphify's
+lines are not here: the `graphify` tool asks for them as its own block
 ([its reference](graphify.md)), so they land after this one.
 
 **The attribute base** is the lines every repo takes whatever its stack:

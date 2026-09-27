@@ -16,6 +16,7 @@ conditional:
 # The lines this pack asks /stackgen:tool-config for.
 tool-config:
   - mise add alias npx="pnpm dlx" to dev environment
+  - mise add tool npm:sort-package-json 4.0.0 to dev environment
   - all add exclude generated node_modules .turbo
   - all add exclude *-lock.json *-lock.yaml
   - git add ignore template=Node
