@@ -68,3 +68,4 @@ harness:
 tool-config:
   - pre-commit add linter-ignore .dart_tool
   - git add ignore template=Flutter
+  - git add ignore !pubspec.lock
