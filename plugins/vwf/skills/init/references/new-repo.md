@@ -719,12 +719,19 @@ is missing, run `MISE_ENV=dev mise run setup:mise --lock-only` in this repo.
 It writes the lock, and its `.config/mise/locks/` sidecar where a tool needs
 one. Before locking it installs uv and Python, and nothing else. The plan
 shown before the one consent names that install. Then, whichever step wrote
-the lock, each of `.config/mise/mise.lock` and `.config/mise/locks/` that
-exists and git does not track joins this repo's written list. So the `ops:`
-commit carries the lock, and the repo's first CI run, which installs with the
-lock enforced, finds it there. A failure stops this repo's git pass with the
-command's output, before any commit. Where §9 deferred, this step is skipped
-under the same unlock, and the pass goes on.
+the lock, `.config/mise/mise.lock` where git does not track it, and every
+path `git ls-files --others --exclude-standard .config/mise/locks` lists, join
+this repo's written list. So the `ops:` commit carries the lock, and the
+repo's first CI run, which installs with the lock enforced, finds it there.
+
+A failed run stops this repo's git pass with the command's output, before any
+commit. Its line at (c) and in the report reads *lock failed — not
+committed*, and the other repos go on. The step is skipped, and the pass goes
+on, in two cases. One: §9 deferred, and the unlock is §9's. Two: the repo's
+`setup:mise` has no `--lock-only` flag — probe first, with
+`mise tasks info setup:mise` — and the unlock is `/vwf:setup reshape` with
+the task replaced. Either way the repo's line reads *lock deferred*, and says
+its first CI run needs the lock committed.
 
 Then, into this repo's own index: every path in **this repo's** written /
 moved / renamed lists, and nothing else. Not `git add -A`: a repo that already
