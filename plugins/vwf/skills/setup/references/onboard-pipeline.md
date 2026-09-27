@@ -53,12 +53,12 @@ the repo cannot support. Their absence is the **structure-pending** state, which
 ## The shape check defers rather than halting
 
 The repo shape — the toolchain manager's config and task library, the repo
-gates, the hygiene files — is `/vwf:init`'s, not setup's. Step 0 only
-**checks** for it, reading the stack adapter's lockfile for the
-`tool-config/…` records `/stackgen:tool-config all` writes — the gates
-among them — and the one unconditional slug `repo-hygiene`, and offers init
-when any is missing — and makes the same offer when all are recorded
-but the repo has fallen **behind its baseline**, on doctor's seven predicates.
+gates, the hygiene files — is `/vwf:init`'s and `/stackgen:tool-config`'s,
+not setup's. Step 0 only **checks** for it, reading the stack adapter's
+lockfile for the `tool-config/…` records `/stackgen:tool-config all` writes —
+the gates, `git` and `graphify` among them — and offers init when any is
+missing — and makes the same offer when all are recorded but the repo has
+fallen **behind its baseline**, on doctor's seven predicates.
 On a multi-repo product both questions are asked of the base **and of every
 locally-present member**, and the one offer covers whichever of them came back
 unshaped or behind.

@@ -288,12 +288,15 @@ level up, at the same severity: report it and nudge `/vwf:setup reshape`, the
 one repo-shape remedy, naming `/stackgen:tool-config all` as what it runs.
 Setup materializes no tooling itself — `/vwf:init` does, calling
 `/stackgen:tool-config all` for every universal tool the skill owns, the
-gates included, then laying down the one unconditional bundle that remains,
-`repo-hygiene`, by its fixed slug through the stack adapter's
-`-stack-template` skill. That is the coarsest form of one question — is this
-repo still shaped the way `/vwf:init` shapes one — and the section at the end
-of this file is the fuller version of the same check: this one fires when the
-shape is absent, that one when it is behind.
+gates, `git`, `graphify` and `renovate` included, and fetches no bundle.
+The baseline predicates read the `tool-config/{git,graphify}` records, and
+`tool-config/renovate` where the repo's update bot is renovate.
+A leftover `repo-hygiene/repo-hygiene` lockfile record is one drift row,
+remedy `/vwf:setup reshape`, which replaces it with those records. That is
+the coarsest form of one question — is this repo still shaped the way
+`/vwf:init` shapes one — and the section at the end of this file is the
+fuller version of the same check: this one fires when the shape is absent,
+that one when it is behind.
 
 Then check `repo.stack`: the `package_manager` resolves (lockfile present, tool
 on `PATH` or in mise config) and each entry in `tools` has its expected marker —
@@ -497,8 +500,8 @@ here, since no reshape could clear it while the answer stands. A path that
 flipped, or never conditional — is checked by hash like any landed file,
 whatever its condition reads today. Three rows are read from the config rather
 than the lockfile. A repo whose config's `answers.secrets` names a provider
-that has a row in the hygiene pack's provider table must carry that provider's
-ignore section in `.gitignore`; absent, it is one drift row naming the
+whose pack asks for ignore lines must carry that pack's block in `.gitignore`,
+written through the git tool; absent, it is one drift row naming the
 provider, remedy `/vwf:setup reshape`. A repo whose recorded
 `answers.repos.<repo>.forge` differs from the host its live `origin` remote
 names is one drift row naming both, same remedy — and so is a `skipped:` row
