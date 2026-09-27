@@ -4,7 +4,7 @@
 #MISE hide=true
 
 #USAGE flag "--upgrade" help="Dev only: bump the lockfile for every environment with mise lock --bump and update the formatter plugins with dprint config update"
-#USAGE flag "--lock-only" help="Write the lockfile only when it is missing, installing only the uv and Python it locks with, then exit without reshimming, installing the rest or running doctor"
+#USAGE flag "--lock-only" help="Write a missing lockfile, or add missing tools to a present one without bumping any locked version, installing only the uv and Python it locks with, then exit without reshimming, installing the rest or running doctor"
 
 set -euo pipefail
 # shellcheck source=/dev/null
@@ -66,55 +66,71 @@ have_task() { mise tasks 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
 SIDECARS="${CONFIG_DIR}/mise/locks"
 list_sidecars() { { find "$SIDECARS" -mindepth 2 -maxdepth 2 2>/dev/null || true; } | sort; }
 
-# EXIT trap while the lock is written: any failure removes the lock and only the sidecars this run created.
+# EXIT trap while the lock is written: any failure restores or removes the lock and removes only the sidecars this run created.
 undo_failed_lock() {
   local dir
-  rm -f "$LOCKFILE"
+  if [ -n "$LOCK_BACKUP" ]; then
+    cp "$LOCK_BACKUP" "$LOCKFILE"
+    rm -f "$LOCK_BACKUP"
+  else
+    rm -f "$LOCKFILE"
+  fi
   comm -13 <(printf '%s\n' "$SIDECARS_BEFORE") <(list_sidecars) | while read -r dir; do
     [ -n "$dir" ] || continue
     rm -rf "$dir"
     rmdir "${dir%/*}" 2>/dev/null || true
   done
   [ -e "$SIDECARS" ] && [ "$HAD_SIDECARS" = "false" ] && { rmdir "$SIDECARS" 2>/dev/null || true; }
-  print_error "Locking failed — the lockfile and the sidecars this run wrote were removed, so the next run locks again."
+  print_error "Locking failed — the lockfile was put back as it was and the sidecars this run wrote were removed, so the next run locks again."
 }
 
-write_missing_lock() {
+# One `mise lock` over every environment, never --bump: a missing lock is written, a present one only gains missing tools.
+write_lock() {
   if [ "$NO_LOCKFILE" = "true" ]; then
     print_subheader "No lockfile at .config/mise/mise.lock — locking MISE_ENV=${LOCK_ENVS} once ..."
-    local tool uv_python=""
-    HAD_SIDECARS=false
-    [ -e "$SIDECARS" ] && HAD_SIDECARS=true
-    SIDECARS_BEFORE="$(list_sidecars)"
-    trap undo_failed_lock EXIT
-    # Python dependency locks need the pinned uv and Python, not PATH's; unlocked, as ci's `locked = true` is in the union and there is no lock yet.
-    for tool in uv python; do
-      # --local: declared by this repo's config, never the user's global one.
-      if [ -n "$(MISE_LOCKED=false MISE_ENV="$LOCK_ENVS" mise ls --current --local "$tool" 2>/dev/null)" ]; then
-        MISE_LOCKED=false MISE_ENV="$LOCK_ENVS" mise install "$tool"
-        # Named outright: on a first lock uv does not find the just-installed Python on its search path.
-        [ "$tool" = "python" ] && uv_python="$(MISE_LOCKED=false MISE_ENV="$LOCK_ENVS" mise which python)"
-      fi
-    done
-    # A subshell scopes UV_PYTHON to the lock, and leaves it unset when no Python is pinned.
-    (
-      [ -n "$uv_python" ] && export UV_PYTHON="$uv_python"
-      MISE_ENV="$LOCK_ENVS" mise lock
-    )
-    trap - EXIT
+  else
+    print_subheader "Adding missing tools to .config/mise/mise.lock for MISE_ENV=${LOCK_ENVS}, keeping every locked version ..."
   fi
+  local tool uv_python=""
+  LOCK_BACKUP=""
+  if [ "$NO_LOCKFILE" = "false" ]; then
+    LOCK_BACKUP="$(mktemp)"
+    cp "$LOCKFILE" "$LOCK_BACKUP"
+  fi
+  HAD_SIDECARS=false
+  [ -e "$SIDECARS" ] && HAD_SIDECARS=true
+  SIDECARS_BEFORE="$(list_sidecars)"
+  trap undo_failed_lock EXIT
+  # Python dependency locks need the pinned uv and Python, not PATH's; unlocked, as ci's `locked = true` is in the union and the lock may lack them.
+  for tool in uv python; do
+    # --local: declared by this repo's config, never the user's global one.
+    if [ -n "$(MISE_LOCKED=false MISE_ENV="$LOCK_ENVS" mise ls --current --local "$tool" 2>/dev/null)" ]; then
+      MISE_LOCKED=false MISE_ENV="$LOCK_ENVS" mise install "$tool"
+      # Named outright: on a first lock uv does not find the just-installed Python on its search path.
+      [ "$tool" = "python" ] && uv_python="$(MISE_LOCKED=false MISE_ENV="$LOCK_ENVS" mise which python)"
+    fi
+  done
+  # A subshell scopes UV_PYTHON to the lock, and leaves it unset when no Python is pinned.
+  (
+    [ -n "$uv_python" ] && export UV_PYTHON="$uv_python"
+    MISE_ENV="$LOCK_ENVS" mise lock
+  )
+  trap - EXIT
+  [ -z "$LOCK_BACKUP" ] || rm -f "$LOCK_BACKUP"
 }
 
-# --lock-only: the missing-lock branch alone, so a caller can commit the lock without installing a tool.
+# --lock-only: the lock step alone, filling a present lock too, so a caller can commit it without installing the toolchain.
 if [ "$LOCK_ONLY" = "true" ]; then
-  write_missing_lock
+  write_lock
   exit 0
 fi
 
 print_subheader "Reshimming mise ..."
 mise reshim
 
-write_missing_lock
+if [ "$NO_LOCKFILE" = "true" ]; then
+  write_lock
+fi
 
 # `--upgrade` on `mise lock` is the lockfile FORMAT upgrade — harmless when the
 # format is already current.

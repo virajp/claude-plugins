@@ -141,6 +141,7 @@ url = "https://github.com/google/osv-scanner/releases/download/v2.6.0/multiple.i
 version = "0.9.69"
 backend = "pipx:graphifyy"
 specifiers = ["latest"]
+uv = { path = "locks/pipx-graphifyy/0.9.69~4cab81f3", digest = "sha256:23d8e285c2a3a1ebc90506d14b77e93783d0c669c5f7133ce484c442727e4e88" }
 
 [tools."pipx:graphifyy".options]
 uvx = "true"
