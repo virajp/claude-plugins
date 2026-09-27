@@ -53,6 +53,37 @@ entry that binds it to a custom domain, and **`main`**. Everything else
 ships with a real value, because everything else is this component's
 judgment rather than the repo's identity.
 
+## The values `wrangler.jsonc` ships
+
+- **`$schema`** is relative to the file, so a repo that installs wrangler
+  inside a sub-project points it at that project's `node_modules`.
+- **`name`** is account-unique and lowercase — letters, digits and dashes —
+  and derived from the project rather than the domain, so a repo that moves
+  domains keeps its Worker. The shipped `PLACEHOLDER` is deliberately
+  invalid, so an unfilled slot fails at the first deploy instead of
+  publishing a Worker nobody meant to create.
+- **`compatibility_date`** is a date, not a version: pinning it stops a
+  future runtime change from altering an already-shipped deployment. Move
+  it deliberately and read the changelog for the span skipped.
+- **`compatibility_flags`** ships `nodejs_compat` alone. Some adapters ask
+  for more — Astro's deployment guide also lists
+  `global_fetch_strictly_public`, which sends a `fetch()` to the site's own
+  hostname out through the edge and back. Add a flag when the adapter's
+  documentation asks for it, never speculatively: each one changes runtime
+  behaviour.
+- **`assets.directory`** is relative to the file; a repo whose site is a
+  sub-project points at that project's output (`./site/dist`).
+- **`assets.binding`** is how the script reaches its own files,
+  `env.ASSETS.fetch(request)`, in-process. The adapter serves prerendered
+  pages and hashed assets through it, which is why a script deployment
+  names a binding and an assets-only one does not.
+- **`routes`** ships commented out. Filling it means uncommenting it with
+  the hostname the site answers on; the zone must already be on the same
+  account, and `custom_domain` is what makes wrangler create and manage the
+  DNS record. A repo with no custom domain deletes the block, and the
+  Worker answers at `<name>.<account-subdomain>.workers.dev` — a complete
+  deployment for a preview surface or an internal tool.
+
 ## The script is the framework adapter's output, not this pack's
 
 **`main` names an entry the project's framework adapter defines, and the
@@ -86,6 +117,11 @@ a network problem.
 convenience only. It stores an OAuth grant on one laptop; CI has no
 browser and no laptop, and a pipeline that depends on someone's grant is
 one that breaks when they leave.
+
+**`--dry-run` needs no credentials.** It neither authenticates nor
+uploads, so the deploy task skips the credential check for it — requiring
+them would stop a contributor without account access from ever validating
+the config, which is the one thing the flag exists for.
 
 ## The pipeline
 

@@ -65,11 +65,29 @@ the repo.
 
 The configuration this pack lands declares **one provider, the OS keychain**,
 with `if_missing = "warn"` so a contributor whose keychain is not yet
-populated can still run the repo's tasks. Nothing is encrypted into the tree,
-so the encrypt-into-git allowance and its four conditions do not apply to a
-repo that leaves the default alone — and the shipped ciphertext guard sits
-inert until an `age` or KMS provider is added. Adding one is the moment the
-four conditions start applying, all at once.
+populated can still run the repo's tasks; a deployed or release path that
+must not run half-configured overrides it per command, with
+`fnox exec --if-missing error -- <task>`. Every secret is declared in
+`[secrets]` even before its keychain entry exists — the name is the
+contract, and `docs/blueprint/environment.md` catalogs the same names. The
+material stays in the OS keychain, so there is no ciphertext in the
+repository and no decryption identity to lose. Nothing is encrypted into
+the tree, so the encrypt-into-git allowance and its four conditions do not
+apply to a repo that leaves the default alone — and the shipped ciphertext
+guard sits inert until an `age` or KMS provider is added. Adding one is
+the moment the four conditions start applying, all at once.
+
+**The guard checks all four, not only its own.** Encrypt-into-git fails
+open — a value written before it is encrypted is a real leak at the one
+path the scanner was told to ignore — so the guard proves every entry
+carries a provider (condition 3). Conditions 1, 2 and 4 are repo-wide
+config edits, and a repo that lands fnox without them has an allowlisted
+path nothing checks, so the guard asserts those too. A scanner hit on a
+decryption identity is always real and is never allowlisted, and the
+mining exclusion has to be explicit: the seeded `*secret*` and
+`*credentials*` patterns do not match `fnox.toml`. The hook is a
+repo-local pre-commit entry, written in POSIX sh for BSD tools; its exact
+entry is the `fnox` skill's contract-satisfaction reference.
 
 ## Naming — one set per repo
 
