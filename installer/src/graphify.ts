@@ -7,7 +7,7 @@
  * graphify wiring has a plugin that refuses to run — the worst shape of failure,
  * because nothing connects it back to the install.
  *
- * Both commands are idempotent, so re-running self-heals a setup the user has
+ * `graphify install` is idempotent, so re-running self-heals a setup the user has
  * since broken.
  *
  * **It used to run only for targets that had just taken a vwf install**, and
@@ -56,31 +56,5 @@ export function setupGraphify(
         installed.stderr.trim() || installed.stdout.trim()
       }`,
   );
-
-  // `graphify hook install` attaches a post-commit hook, so it only means
-  // anything inside a work tree. Outside one it is a skip, not a failure — the
-  // CLI is frequently run from a home directory.
-  if (!inGitRepo(context)) {
-    context.log(
-      "graphify: not inside a git repository — skipping the post-commit hook",
-    );
-    return;
-  }
-  const hook = ["hook", "install"];
-  const hooked = context.exec("graphify", hook);
-  context.log(
-    hooked.status === 0
-      ? "graphify: post-commit hook installed"
-      : `graphify ${hook.join(" ")} failed: ${
-        hooked.stderr.trim() || hooked.stdout.trim()
-      }`,
-  );
-}
-
-function inGitRepo(context: Context): boolean {
-  return context
-    .exec("git", ["rev-parse", "--is-inside-work-tree"], {
-      cwd: context.cwd,
-    })
-    .status === 0;
+  // The graph refresh is the repo's pre-commit `post-commit` hook.
 }

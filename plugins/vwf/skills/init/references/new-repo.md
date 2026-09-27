@@ -93,7 +93,7 @@ there. The arguments:
 | `merge_model_develop`, `merge_model_main`  | `direct` or `pr`, the §11(a) preselection         | §11(a); re-passed if the answer moves |
 | `runtimes`                                 | the language keys the stack read produced         | SKILL.md's stack read, per §5         |
 | `plugin_sources`, `plugins`                | question 5's confirmed rows; empty on **none**    | question 5                            |
-| `scopes`                                   | the commit gate's scopes; empty where none        | §7, per existing repo §11             |
+| `scopes`                                   | the commit gate's scopes; empty where none        | §7, per existing repo pass 10         |
 | `forge`, `editor`, `secrets`, `update_bot` | the four answers, spelled as the table below      | the table below                       |
 
 **How a value is spelled.** A list is comma-separated with no spaces —
@@ -116,11 +116,13 @@ meets a row that changed since the preview, so `init` answers every row the
 preview returned, and a refused call is shown again in the report, never
 retried with guessed answers.
 
-**Then the one unconditional bundle that remains**, hygiene, by its fixed
-slug, through the stack adapter
-(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`), invoking
-`/<plugin>:<plugin>-stack-template <slug>` once; the gates are the skill's,
-landed by the call above.
+**Then `init`'s own hygiene assets**, from
+`${CLAUDE_PLUGIN_ROOT}/skills/init/assets/hygiene/`, laid down as
+[hygiene assets](readme-and-license.md) states — no adapter fetch and no
+lock record. The ignore file, the attributes file, the graph's ignore file
+and the dependency-update policy are not among them: the call above lands
+them. The stack adapter (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`) is
+reached once more, in §3, for the secrets provider alone.
 
 The skill's rows and each landing carry their own consent line. **A decline is
 a deferral, not a halt**: record what was skipped and name its unlock — run
@@ -131,15 +133,16 @@ case rather than a fault.
 
 ### The answers each fetch carries
 
-**Every adapter invocation above — and §3's — passes the materializer four
+**The adapter invocation — §3's, the only one — passes the materializer four
 answers**, as the skill's call passes them as arguments — here an `answers:`
 map in the invocation payload, beside `repo:`, keyed
 `forge`, `editor`, `secrets` and `update_bot`, one per axis its
 **conditional evaluation step** reads, and that step is what decides whether
 a file a pack marks `when:` lands in this repo. `init` evaluates nothing
 itself; it passes values, spelled exactly as the axis takes them, and takes
-back what the dry-run lists as landed and as skipped. The four, for the repo
-this pass is running in:
+back what the dry-run lists as landed and as skipped. The hygiene assets read
+the same `forge` and `editor` values, evaluated by `init` itself. The four,
+for the repo this pass is running in:
 
 | Axis         | Value passed                                     | From                             | Source after the first run          |
 | ------------ | ------------------------------------------------ | -------------------------------- | ----------------------------------- |
@@ -191,10 +194,11 @@ file the reads behind it:
   same evidence the [tool-config table](tool-configs.md)'s two rows carry:
   a file under any spelling the `renovate` row lists preselects `renovate`;
   a `.github/dependabot.yml` preselects `dependabot`; a repo carrying
-  neither preselects `renovate`, the service whose policy the hygiene pack
-  ships. A repo carrying both is preselected to `renovate` and the row says
-  it found both, since the survey's own **keep both** rule already reports
-  the second policy and a preselection cannot pick for the user. In `blank`
+  neither preselects `renovate`, the service whose policy
+  `/stackgen:tool-config` lands. A repo carrying both is preselected to
+  `renovate` and the row says it found both, since the survey's own **keep
+  both** rule already reports the second policy and a preselection cannot
+  pick for the user. In `blank`
   mode there is no survey and the seed is `renovate`.
 
 **The skipped rows.** Each repo's section of the plan gains one heading,
@@ -205,7 +209,9 @@ path is not a conflict, not a keep and not a deferral: nothing is offered,
 nothing is recorded under `enforcement`, and nothing waits on a later run
 unless the axis value itself changes — a remote added, a different answer
 given — in which case the next reshape lands it as an ordinary write. The
-report counts skipped paths nowhere; the plan is where they are read.
+report counts skipped paths nowhere; the plan is where they are read. A
+hygiene asset `init` skips on its own condition is listed the same way, `init`
+in the pack's place.
 
 **Every conflict the dry-run lists is a row, in every mode.** The
 materializer's dry-run names each target path that already exists and that no
@@ -218,10 +224,11 @@ under `enforcement.kept_files` as §6 records one — in the base's config, the
 member's path as prefix. The rows are shown **before** the one consent, one
 per conflict, so a `blank` repo that happens to hold one such file — and a
 `source` repo, which usually does — never has it silently skipped and never
-has it silently overwritten. Three root files are not offered at all: a
-readme, a licence and a security file the repo already carries are kept on
-the already-there rule in [readme and licence](readme-and-license.md), and
-reported as kept.
+has it silently overwritten. The hygiene assets are not offered at all: a
+readme, a licence, a security file or any other hygiene asset the repo
+already carries is kept on the already-there rule in
+[hygiene assets](readme-and-license.md), and reported as kept — the editor
+baseline fragment excepted, which that reference says is `init`'s to rewrite.
 
 **The record has a home in every mode, because `init` makes one.** Where no
 `.config/vwf.yaml` exists in the base — the ordinary case on a first run, since
@@ -246,10 +253,10 @@ Runs in **every mode** — a `shaped` repo reaches it from
 [existing repo](existing-repo.md)'s post-landing paragraph, after that
 pipeline's landing and before the git pass, on exactly the terms below.
 
-Materialize the bundle whose slug the user picked at question 4, by that slug,
-through the same adapter. **Last**, after the baselines — a provider's
-files are the most specific answer anything gives to the slot they overlay,
-and the composition order puts them there.
+Materialize the secrets provider the user picked at question 4, as the menu
+spelled it, through the same adapter. **Last**, after the baselines — a
+provider's files are the most specific answer anything gives to the slot they
+overlay, and the composition order puts them there.
 
 A user who answered **none — decide later** gets nothing here. Record it as a
 deferral whose unlock is a later `/vwf:setup reshape` run, and say plainly that
@@ -262,9 +269,9 @@ the `shaped` pipeline reaches it from
 [existing repo](existing-repo.md)'s post-landing paragraph — over every file
 this run landed or replaced, in whichever mode it landed.
 
-Three, and no others: `<REPO_URL>`, `<YEAR>` and `<HOLDER>`. The hygiene
-pack's conventions are authoritative for what each means; fill every
-occurrence across every landed file, from:
+Three, and no others: `<REPO_URL>`, `<YEAR>` and `<HOLDER>`. The placeholder
+vocabulary in [hygiene assets](readme-and-license.md) is authoritative for
+what each means; fill every occurrence across every landed file, from:
 
 | Placeholder  | Source                                                        |
 | ------------ | ------------------------------------------------------------- |
@@ -277,7 +284,7 @@ A placeholder whose source is missing — no origin remote, no configured name
 a landed file after this step is a bug, not a template.
 
 **Two occurrences of `<REPO_URL>` are the security contact's, not the repo
-URL's.** In the hygiene pack's `SECURITY.md` that token is the whole reporting
+URL's.** In the hygiene assets' `SECURITY.md` that token is the whole reporting
 channel, and it takes question 6b's answer as typed — a URL or an email —
 spliced by the contact procedure in [readme and licence](readme-and-license.md)
 rather than filled here. The issue-template chooser's *Report a vulnerability*
@@ -286,10 +293,15 @@ is a URL, and the whole entry is **removed** where the contact is an email or
 the row was declined, since that link must be a web address. Every other
 occurrence is the origin URL, per the table.
 
-## 5 — The ignore sections, and the runtimes
+## 5 — The template fallback, and the runtimes
 
-Append one section per language to the hygiene pack's sectioned ignore file,
-per [fragments and sections](fragments-and-sections.md).
+The ignore file is `/stackgen:tool-config`'s git tool, landed by §2's call; a
+pack that pins a language asks that tool for its own template through its
+`tool-config:` list. What stays `init`'s is the **fallback**: for each
+language the stack read produced whose template no pack landed in this repo
+asks for, `init` asks the git tool for it — the call, the `gitignore:<Name>`
+block it writes, the commit pin and the fetch failure are that tool's
+reference's, and `init` restates none of them.
 
 **The languages are what SKILL.md's stack read produced** — the pins where a
 config exists, else the lockfile's language, package-manager and app-framework
@@ -297,24 +309,23 @@ components, else, in `source` mode, the manifests its table names at the root
 and in every sub-project directory — and nothing else. The read is one answer
 per repo, taken before the plan; this step does not re-read. Whatever the
 source, that answer is spelled in the read's six language keys — a pin token
-or a lockfile component slug was mapped onto one key by the hygiene pack's
-own table before it counted, so no raw slug reaches this step. Each language
-it produced resolves to a template through that same table, the
-algorithm's step 1, and a `source` repo carrying a `package.json` therefore
-gets the node section on its **first** run, not after some later pin. A
-`blank` repo's read produced nothing, the step appends nothing, and that is
-correct: the baseline sections cover what every repo needs, and a section for
-a language nobody has is a guess.
+or a lockfile component slug was mapped onto one key by the git tool's
+template table before it counted, so no raw slug reaches this step. Each
+language resolves to a template through that same table, and a `source` repo
+carrying a `package.json` therefore gets the node template on its **first**
+run, not after some later pin. A `blank` repo's read produced nothing, and
+the step asks for nothing.
 
-**One component in the read is not a language**: the secrets provider slug
-question 4 picked, passed through the read as it is — a `blank` repo's read
-carries it too, since it is an answer and not a reading of the tree — so the
-provider row the hygiene pack's table keeps beside the language rows resolves
-on the same terms. Its section is the pattern the table's cell names, under a
-banner named for the slug, and it is what keeps the pack's base ignore file
-free of any provider's machine-local file: the line lands only in a repo
-whose provider has one. A **none — decide later** answer carries no
-component and appends no provider section.
+**Covered means landed here.** A language counts as covered only where a pack
+in this repo's lockfile, or one landing on this run, asks for its template;
+one a pack would cover but that no pack here pins takes the fallback, and a
+pack that lands later shares the entry under the git tool's shared-entry rule.
+A detected language the table names no template for is **proposed** in the
+plan, never guessed — the git tool's rule. Each call is a **Tool-config row**
+in the survey preview and one `Templates asked` line in the report.
+
+A provider's machine-local file is not this step's either: the provider's own
+pack asks the git tool for its line when §3 lands it.
 
 ### The runtimes
 
@@ -333,7 +344,7 @@ Retired — `init` merges no hook; a pack asks
 ## 7 — The project ids, the repo name, and the positions they fill
 
 The fills this section enumerates run in **every mode**, but on a `shaped`
-repo [existing repo](existing-repo.md)'s **pass 9** already owns them — it
+repo [existing repo](existing-repo.md)'s **pass 8** already owns them — it
 resolves the same ids and argument values, shows the rows, and applies the
 fill by this section's rules — so the existing pipeline does not run this
 section a second time after its landing; it reaches §3, §4, §8, §9 and §10
@@ -434,7 +445,7 @@ the repo being shaped. A registry, where the repo has one, is where the
 proposal those ids came from was read; it is not a condition on the scope
 fill, which takes whatever question 2 confirmed either way — the `scopes`
 argument is stated once, for both pipelines, in [existing
-repo](existing-repo.md) §11. `REPO_NAME` takes the repo's **folder name**,
+repo](existing-repo.md) pass 10. `REPO_NAME` takes the repo's **folder name**,
 slugified, as question 1 confirmed it — one value per repo, on no list at all.
 The bootstrap aggregator's **member flags** and the **shell aliases** that
 shorten them take the **member repos** — one flag and one alias each, in the
@@ -464,7 +475,7 @@ scopes. `init` owes each one its value, never a splice:
 
 - **`repo`** — this repo's folder name, slugified, as question 1 confirmed it.
   A `shaped` repo skips that question; its folder slug is read and compared by
-  [existing repo](existing-repo.md) §9. The skill writes it **literally**: a
+  [existing repo](existing-repo.md) pass 8. The skill writes it **literally**: a
   linked worktree's config root is named for the branch, so a derived value
   would change identity with every worktree. No project id reaches it — a repo
   whose folder is `acme-shop` and whose one project is a service carries
@@ -483,7 +494,7 @@ scopes. `init` owes each one its value, never a splice:
   since question 5 drops both rows. A **none** passes `plugin_sources=` and
   `plugins=`.
 - **`scopes`** — this repo's confirmed ids, per
-  [existing repo](existing-repo.md) §11; the forge links are the skill's.
+  [existing repo](existing-repo.md) pass 10; the forge links are the skill's.
 
 The repo-name key exists for the per-repo launch aliases the user keeps in
 their **own global configuration**, reading the value the repo publishes.
@@ -524,12 +535,12 @@ the `shaped` pipeline reaches it from
 3, 6a and 6b are asked whatever the mode, and a repo shaped years ago is as
 entitled to its answers as a blank one.
 
-Per [readme and licence](readme-and-license.md) — the stub, the licence
-question 6a answered, and the security contact 6b answered, each on that
+Per [hygiene assets](readme-and-license.md) — the stub, the licence
+question 6a answered from the assets' licence texts, and the security
+contact 6b answered, spliced into the assets' security template, each on that
 reference's already-there rule, so a file the repo carries is kept and
-reported rather than written over. All three are placed here, after the packs
-have landed, so a pack shipping any of them would have been caught by the
-materializer's own root allowlist rather than silently overwritten.
+reported rather than written over. The rest of the hygiene assets landed in
+§2; these three wait for their answers and are placed here.
 
 ## 9 — Bootstrap
 
@@ -1016,7 +1027,7 @@ words a person applies on the forge's settings pages: set the default branch
 to `<branch>`; on `develop` and on `main`, refuse force-pushes and deletion,
 and require a pull request on whichever of the two has its landing model set
 to `pr`; and, for the base, create the backlog project per the backlog skill.
-The hygiene pack's `CONTRIBUTING.md`, at the repo's root, carries the same
+The hygiene assets' `CONTRIBUTING.md`, at the repo's root, carries the same
 by-hand form of the default-branch line, so the list points there rather than
 restating it.
 

@@ -32,9 +32,10 @@ three remain **degradations**. Check:
 - **The refresh hook.** The graph is refreshed by the repo's pre-commit
   `graphify-refresh` hook at stage `post-commit`, which runs `code:graph`.
   A raw graphify git hook in `.git/hooks/` (never run `graphify hook install`
-  — it pins a Python path and breaks on upgrade) is **drift**, never a pass:
-  remedy `/vwf:setup reshape`. The staleness check below catches a graph
-  nobody refreshed.
+  — it pins a Python path and breaks on upgrade) is **drift**, never a pass,
+  and so is a leftover `merge=graphify` attribute or `merge.graphify.*` key in
+  the local git config: remedy `mise run setup:precommit`. The staleness
+  check below catches a graph nobody refreshed.
 - **Staleness.** Compare `graph.json`'s mtime to the last commit date of the
   checkout that holds it. Behind → report how far, with `graphify update` as the
   remedy for the user to run.

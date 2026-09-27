@@ -1,0 +1,72 @@
+/code-review high, loop U9-late1 round 2, branch-scoped (late range 65e8256d..c240859e)
+
+I found 10 problems on `2026-09-26-tool-config-hygiene`. The most serious: the upstream Flutter ignore template, which the Flutter pack now asks for, contains `*.lock`. Every Flutter repo shaped this way would silently stop tracking the mise lockfile and `pubspec.lock`.
+
+- **Checked:** `p:plugins:check`, `inventory --check` and `marketplace --check` all pass. I fetched the upstream templates from github/gitignore `main` to confirm findings 1–3. Findings 1–3 and 6–8 are new since the earlier review rounds.
+- **Still unfixed from earlier rounds:** findings 4, 5, 9 and 10 were raised before and are still open. The first three were not in the run log's contested list; the review logs I read don't show what was decided on them.
+- **Left out:** the stale `site/`, `installer/CLAUDE.md`, `.claude/**` and "eleven passes" docs, because unit U10 still owns them.
+
+```json
+[
+  {
+    "file": "plugins/stackgen/stacks/app-framework/flutter/pack.yaml",
+    "line": 70,
+    "summary": "The Flutter pack's new `git add ignore template=Flutter` pulls in upstream Flutter.gitignore, whose third line is `*.lock`. That ignores `.config/mise/mise.lock`, which mise's tool-config reference treats as committed, and `pubspec.lock`.",
+    "failure_scenario": "A Flutter repo shaped by init: the Flutter block lands after the git base and matches `*.lock`. `mise lock` writes `.config/mise/mise.lock` but it never shows in `git status`, and `git add pubspec.lock` refuses with 'paths are ignored'. The toolchain and dependency pins silently stop being versioned, and every clone resolves different versions."
+  },
+  {
+    "file": "plugins/stackgen/stacks/package-manager/pub/pack.yaml",
+    "line": 12,
+    "summary": "The pub pack asks for `template=Dart`, and upstream Dart.gitignore ignores `pubspec.lock` (and `*.js` and `doc/api/`). The pack's own skill says to commit the lockfile (`git add pubspec.yaml pubspec.lock`).",
+    "failure_scenario": "In any repo pinning pub, the documented step `git add pubspec.yaml pubspec.lock` from pub/skills/pub/SKILL.md:49 fails because the path is ignored. The lockfile is never committed, so dependency resolution is not reproducible, and an agent following the pack's own skill hits an error."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/references/git.md",
+    "line": 111,
+    "summary": "The secret guard only looks at a template's negations. It never catches a later positive template pattern that undoes one of the base's negations, even though written order is claimed to keep `!.env.example` working.",
+    "failure_scenario": "Upstream Dart.gitignore carries `.env*`. It is not a text duplicate of `.env` or `.env.*`, so it is written in pub's block after the git base's `!.env.example`. Last match wins, so `.env.example`, the names-only template the base says is tracked, becomes ignored and silently drops out of new commits."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/new-repo.md",
+    "line": 319,
+    "summary": "init's fallback writes a `gitignore:<Name>` block for an uncovered language. Once a pack is pinned that asks for the same template, the fallback no longer runs, but nothing removes the orphaned block. It stays the template's holder, and the pack is only a sharer.",
+    "failure_scenario": "A `source` repo with package.json gets a `gitignore:Node` block on its first run. Later pnpm is pinned and asks for `template=Node`, which is recorded as a share behind `gitignore:Node`. On later runs no requester re-asks for `gitignore:Node`. Dropping pnpm (`git remove pnpm`) still leaves the Node template in the repo under a requester nothing owns or cleans up, and a later `mise upgrade` keeps re-fetching it."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 752,
+    "summary": "The `git add ignore` grammar accepts any `!` negation from a pack, and git.md always writes negations. The re-include-a-secret guard covers only fetched template lines, so a pack's own list can un-ignore secrets with no check and no prompt.",
+    "failure_scenario": "A pack lists `git add ignore !*.pem !.env.local`. `p:plugins:check` passes, the materializer writes both after the base's `*.pem` and `.env.*`, and private keys and env files become committable in every repo the pack lands in."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 484,
+    "summary": "init's asset trees are walked with `rootFiles = null`, which turns the root-allowlist check off for them entirely. output-tree.md and readme-and-license.md:198 promise init's assets are held to the same ceiling.",
+    "failure_scenario": "Someone adds `renovate.json`, `.gitignore` or `.editorconfig` under `plugins/vwf/skills/init/assets/hygiene/`. The checker passes, and init lands a root file that tool-config owns or that no allowlist tier names. The only reason for the bypass is the `licenses/` directory, which could be allowlisted as one extra directory entry."
+  },
+  {
+    "file": "plugins/stackgen/assets/pack-format.md",
+    "line": 41,
+    "summary": "The pack-format doctrine still gives `config/.gitignore` landing at `<repo>/.gitignore` as its example of the config/ mirror, but `.gitignore` was removed from the pack tier of the root allowlist in this change.",
+    "failure_scenario": "The stackgen generator, or a pack author, follows the canonical example and ships `config/.gitignore`. `p:plugins:check` flags it as an unallowlisted root entry, and the materializer halts the whole landing set as a pack authoring error, when the doctrine should say to use `tool-config: git add ignore …`."
+  },
+  {
+    "file": "plugins/stackgen/assets/output-tree.md",
+    "line": 408,
+    "summary": "output-tree.md:408 and materializer.md:140 still list 'the `.gitignore` section appends' among the writes init re-hashes. init no longer appends sections; the git tool writes blocks. bundles/fnox.md:54 likewise still says the override file is 'gitignored by the hygiene pack'.",
+    "failure_scenario": "A reader of the drift and hash doctrine (sync, doctor, a new pack author) expects init to append `.gitignore` sections and re-record their hash. They look for records that no longer exist, or treat a changed `.gitignore` as init-sanctioned rather than as the tool-config lock's. fnox's bundle body sends readers to a pack that no longer exists; the line now comes from fnox's own `tool-config:` ask."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/references/memory-tree.md",
+    "line": 12,
+    "summary": "Setup still treats `.gitignore` as a file of `# ==== <Name> ====` banner sections and appends its own `# ==== vwf memory ====` banner. The file is now the git tool's block-structured file, and pack lines go through `git add ignore … for <requester>`.",
+    "failure_scenario": "On a shaped repo, setup appends a free-standing banner after the tool-config blocks. The git tool then treats those lines as the user's. Its migration rule leaves unmatched banners outside every block, and its no-doubling rule compares against them. So vwf's memory ignores bypass the lock and removal, and setup documents a file layout that no longer exists."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit",
+    "line": 73,
+    "summary": "`grep -v 'merge=graphify'` deletes every line containing that text, not just graphify's attribute. It rewrites the tracked `.gitattributes` from a machine-setup task, before the foreign-hook refusal that may then exit 1. The same code is in this repo's `.config/mise/tasks/setup/precommit`.",
+    "failure_scenario": "A repo with `graphify-out/graph.json merge=graphify -diff linguist-generated`, or a comment mentioning merge=graphify, loses the whole line including its other attributes. Running `setup:precommit` on a husky repo leaves the tree dirty and then exits 1 with 'refusing to replace it'."
+  }
+]
+```

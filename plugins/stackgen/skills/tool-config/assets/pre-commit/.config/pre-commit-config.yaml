@@ -191,7 +191,7 @@ repos:
         name: Remove trailing whitespace
         description: Invisible in review and the cause of diffs nobody
           authored when the next editor strips it.
-        # Two trailing spaces are a Markdown hard break; `.editorconfig` agrees.
+        # Two trailing spaces are a Markdown hard break.
         exclude: \.md$
       - id: mixed-line-ending
         name: Normalise line endings to LF

@@ -1,14 +1,15 @@
 ---
 name: tool-config
 description: Configure a repo's universal tools — mise, dprint, pre-commit,
-  gitleaks and grype — from one instruction per call, writing each requester's
-  lines between its own block markers and a line outside them only on a
-  person's approval. Use it to land every tool the skill owns in a repo (all,
-  with the repo's answers as key=value arguments), to add a tool pin, an
-  environment value, an alias, a formatter plugin, a hook, a linter ignore, a
-  vulnerability ignore or an exclude for every gate at once, for a pack or by
-  hand, to set a machine value, to remove a dropped pack's blocks, or to
-  upgrade and lock the toolchain. Invoked by /vwf:init, by the
+  gitleaks, grype, git, graphify and renovate — from one instruction per call,
+  writing each requester's lines between its own block markers and a line
+  outside them only on a person's approval. Use it to land every tool the
+  skill owns in a repo (all, with the repo's answers as key=value arguments),
+  to add a tool pin, an environment value, an alias, a formatter plugin, a
+  hook, a linter ignore, a vulnerability ignore, an ignore line, a pinned
+  ignore template, an attribute or an exclude for every gate at once, for a
+  pack or by hand, to set a machine value, to remove a dropped pack's blocks,
+  or to upgrade and lock the toolchain. Invoked by /vwf:init, by the
   stackgen materializer for a pack's tool-config list, and by /vwf:setup for
   machine values.
 argument-hint: "[preview] <tool> <instruction> [for <requester>] [answers=…] | [preview] all [key=value …] [answers=…] | [preview] all add exclude [generated] <path> … [for <requester>]"
@@ -33,6 +34,9 @@ apart, shown, and taken out again.
 | `pre-commit` | [references/pre-commit.md](references/pre-commit.md) | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/pre-commit/` |
 | `gitleaks`   | [references/gitleaks.md](references/gitleaks.md)     | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/gitleaks/`   |
 | `grype`      | [references/grype.md](references/grype.md)           | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/grype/`      |
+| `git`        | [references/git.md](references/git.md)               | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/git/`        |
+| `graphify`   | [references/graphify.md](references/graphify.md)     | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/graphify/`   |
+| `renovate`   | [references/renovate.md](references/renovate.md)     | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/renovate/`   |
 
 A row is a tool: its reference holds the doctrine, the verbs and what `all`
 lands for it; its assets hold the static files and templates, laid out exactly
@@ -79,14 +83,18 @@ adds.
 pack's slug — the materializer appends `for <pack>` to each line of a pack's
 `tool-config:` list — and the tool's own name is reserved for the base the
 skill lands itself (`for mise`, `for dprint` and the rest are never typed). A
-requester is a slug: lowercase letters, digits and `-`. A call with no `for`
+requester is a slug: lowercase letters, digits and `-` — save
+`gitignore:<Name>`, the one requester `/vwf:init`'s ignore-template fallback
+names ([git's](references/git.md#4-templates)). A call with no `for`
 writes the user's own line, outside every block. Only a person types one,
 and it writes on that person's approval; a pack's call and the materializer
 always carry a `for`.
 
 **`all [key=value …]`** lands every tool in the table above, in table order,
 each as its reference's `all` section says, filling that tool's marked
-positions from the arguments. The keys are fixed:
+positions from the arguments — so `git`, `graphify` and `renovate` land after
+the five gate tools, and `renovate` only on `update_bot=renovate`. The keys
+are fixed:
 
 | Key                                        | Value                                                           |
 | ------------------------------------------ | --------------------------------------------------------------- |
@@ -176,7 +184,9 @@ are written sorted**, in the order the shipped formatter leaves them — taplo
 sorts a TOML array, so its entries take that order, never the call's — and
 where no formatter sorts (a JSON list, a regex), directories first, then
 globs, each alphabetical, as the assets are. So a landed file passes its own
-format check.
+format check. **`.gitignore` is the one exception**: its entries keep written
+order, so a negation follows the pattern it re-includes
+([git's rule](references/git.md#3-the-ignore-files-rules)).
 
 **The base follows the same per-position rule.** Where the whole file below
 the frame is one position — a mise section file — the base is one block
@@ -245,6 +255,7 @@ order, and returns each with the answer names it takes. Every row takes one:
 | a tool, env, alias or hook clash    | `keep-existing`, `overwrite`        |
 | `set env` finding a key outside     | `move-in`, `keep-both`              |
 | … in the block's own file           | `move-in`, `keep-existing`          |
+| a commit type outside the ten       | `rename-<type>`, `keep-existing`    |
 | a create, write, fold, move, delete | `ok`                                |
 
 A `merge` row carries the combined block in the preview, so its answer needs
@@ -260,10 +271,14 @@ call without it is its own consent round.
 ## Drift
 
 **A block that differs from what its requester would write now is drift**,
-tested by content and never by a hash. Outside quoted strings the words are
-compared, so spacing and line breaks are never drift; a quoted string is
-compared exactly, character for character. Each drifted block is one row,
-the two versions side by side, with three answers:
+tested by content. Outside quoted strings the words are compared, so spacing
+and line breaks are never drift; a quoted string is compared exactly,
+character for character. **One exception**: a fetched template's block is
+compared by the lock's `written:` hash of its lines as last written, trailing
+whitespace trimmed, since the template at its pinned commit is what its
+requester would write now ([git's templates](references/git.md#4-templates)).
+Each drifted block is one row, the two versions side by side, with three
+answers:
 
 - **take theirs** — the block is rewritten as the requester would write it;
 - **keep mine** — the block stays as it stands for this run; nothing records
@@ -317,6 +332,12 @@ entries:
       astro: ["plugins[malva]", "plugins[markup_fmt]", malva, markup]
     shares: # an entry one block holds that other requesters also asked for
       "plugins[malva]": [astro, html]
+  - path: .gitignore
+    source: tool-config/git@<stackgen version>
+    hash: <content hash after the write>
+    blocks: [git, graphify, pnpm]
+    templates: # the upstream commit each fetched template is pinned to
+      pnpm: { Node: <sha>, written: <block hash> }
 ```
 
 `<stackgen version>` is this plugin's own, from
@@ -325,7 +346,10 @@ callers that test a repo's shape — `/vwf:doctor` and `/vwf:init` — and is
 re-recorded on every write; the skill's own drift test never reads it. A JSON
 file's entry carries `keys:` beside `blocks:`, one list per requester. An
 entry with a shared line carries `shares:`, the entry against every requester
-that asked for it, the holder first. A path
+that asked for it, the holder first. An entry holding a fetched template
+carries `templates:`, the commit each was fetched at, which only mise's
+`upgrade` moves, and the hash of the block as last written
+([git's templates](references/git.md#4-templates)). A path
 the skill deletes loses its entry. The entry is written in the same step as
 the file, so the two never disagree.
 

@@ -23,9 +23,10 @@ of three:
   conflict row in its preview, never a pass 6 offer. Where the owner also
   lands a root stand-in of the same basename, this is pass 1's move-and-shim
   case, and the stand-in takes the root spot the real file left.
-- **`yield`** — the repo's file wins and the pack's twin is **not landed**;
-  the plan says so in that row, and nothing is moved. This is the shape for a
-  tool whose discovery is root-first and whose pack file is itself a root
+- **`yield`** — the repo's file wins and the owner's twin is **not landed**;
+  the plan says so in that row — the skill's row, where the owner is
+  `stackgen:tool-config` — and nothing is moved. This is the shape for a
+  tool whose discovery is root-first and whose owner's file is itself a root
   file: moving the repo's copy under `.config/` would put it where the tool
   never looks.
 - **`handed`** — the file is `/stackgen:tool-config all`'s to fold, by its
@@ -34,36 +35,46 @@ of three:
   printed in the repo's section under **Tool-config rows**, per pass 1's
   toolchain migration, and the one consent covers them.
 
-| Tool       | Root spellings                                          | Landed path                                                   | Owner                  | Merge shape      |
-| ---------- | ------------------------------------------------------- | ------------------------------------------------------------- | ---------------------- | ---------------- |
-| pre-commit | `.pre-commit-config.yaml`                               | `.config/pre-commit-config.yaml`                              | `stackgen:tool-config` | `move-and-offer` |
-| gitleaks   | `.gitleaks.toml`                                        | `.config/gitleaks.toml`                                       | `stackgen:tool-config` | `move-and-offer` |
-| grype      | `.grype.yaml`                                           | `.config/grype.yaml`                                          | `stackgen:tool-config` | `move-and-offer` |
-| dprint     | `.dprint.json`, root `dprint.json`                      | `.config/dprint.json`; root `dprint.json` is the skill's shim | `stackgen:tool-config` | `move-and-offer` |
-| renovate   | `.github/renovate.json`, `.renovaterc`, `renovate.json` | root `renovate.json`                                          | the hygiene pack       | `yield`          |
-| dependabot | `.github/dependabot.yml`                                | none — nothing ships a Dependabot file                        | none                   | `keep both`      |
-| mise       | `.mise.toml`, root `mise.toml`                          | `.config/mise/` — split by the skill, not moved               | `stackgen:tool-config` | `handed`         |
+| Tool       | Root spellings                                                  | Landed path                                                   | Owner                  | Merge shape      |
+| ---------- | --------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------- | ---------------- |
+| pre-commit | `.pre-commit-config.yaml`                                       | `.config/pre-commit-config.yaml`                              | `stackgen:tool-config` | `move-and-offer` |
+| gitleaks   | `.gitleaks.toml`                                                | `.config/gitleaks.toml`                                       | `stackgen:tool-config` | `move-and-offer` |
+| grype      | `.grype.yaml`                                                   | `.config/grype.yaml`                                          | `stackgen:tool-config` | `move-and-offer` |
+| dprint     | `.dprint.json`, root `dprint.json`                              | `.config/dprint.json`; root `dprint.json` is the skill's shim | `stackgen:tool-config` | `move-and-offer` |
+| renovate   | `renovate.json` and every spelling the renovate reference lists | root `renovate.json`                                          | `stackgen:tool-config` | `yield`          |
+| dependabot | `.github/dependabot.yml`                                        | none — nothing ships a Dependabot file                        | none                   | `keep both`      |
+| mise       | `.mise.toml`, root `mise.toml`                                  | `.config/mise/` — split by the skill, not moved               | `stackgen:tool-config` | `handed`         |
+| git        | `.gitignore`, `.gitattributes`                                  | the same root files — adopted in place by the skill           | `stackgen:tool-config` | `handed`         |
+| graphify   | `.graphifyignore`                                               | the same root file — adopted in place by the skill            | `stackgen:tool-config` | `handed`         |
 
-Two rows need a word:
+Some rows need a word:
 
 - **dprint.** Root `dprint.json` is on the allowlist because the skill itself
   lands one there — the two-line stand-in that points at `.config/`. A real
   config of that name at the root is the move-and-shim case, not a
   keep-both: it moves, the stand-in replaces it, and the settings are read
   through the stand-in. `.dprint.json` has no stand-in and simply moves.
-- **renovate and dependabot.** Renovate's discovery is root-first —
-  `renovate.json`, then `.github/`, then `.renovaterc`, never `.config/` — so
-  the hygiene pack lands its policy at the root, and a repo that already has
-  one under any spelling keeps it and the pack's is not landed. A
+- **renovate and dependabot.** Renovate never reads `.config/`, so the
+  skill's renovate tool lands its policy at the root. Every spelling Renovate
+  discovers — `.gitlab/` and a `renovate` key in the root `package.json`
+  among them — is listed once, in `/stackgen:tool-config`'s renovate
+  reference, *Why the root*; the survey reads that list rather than one
+  restated here. A repo that already has a policy under any of them keeps it
+  and the skill's is not landed — the skill's own row, under **Tool-config
+  rows**. A
   `.github/dependabot.yml` is the same job done by a different service, and
   its row is **keep both** — pass 1's outcome, not a third shape: the repo's
   file stays and is reported as a second dependency policy. Whether the
-  pack's `renovate.json` lands beside it is not this row's to decide: the
+  skill's `renovate.json` lands beside it is not this row's to decide: the
   same evidence seeds question 8's update-bot row — a renovate spelling
   preselects `renovate`, a `dependabot.yml` preselects `dependabot`, both
-  preselects `renovate` and the row says it found both — and the pack's
-  file is `conditional:` on `update_bot: renovate`, so it lands only where
+  preselects `renovate` and the row says it found both — and the renovate
+  tool lands its file only on `update_bot=renovate`, so it lands only where
   that answer stands and is a **Skipped** row otherwise.
+- **git and graphify.** Their files sit at the root, where git and the graph
+  read them, so there is nothing to move: the skill adopts each in place,
+  converting a landed sectioned ignore file into blocks, and its preview
+  shows the rows.
 
 A tool whose root file `/stackgen:tool-config` folds by its own migration has
 a `handed` row listing every root spelling that migration folds, so the survey

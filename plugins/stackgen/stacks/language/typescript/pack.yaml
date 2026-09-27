@@ -1,7 +1,7 @@
 name: TypeScript
 summary: The Node/TypeScript language baseline — standards, error semantics,
   the async model, testing, build and run, config and observability wiring.
-version: 0.2.0
+version: 0.3.0
 type: language
 kind: language-bundle
 axis: project
@@ -47,3 +47,4 @@ harness: n/a
 # The lines this pack asks /stackgen:tool-config for.
 tool-config:
   - dprint add plugin typescript
+  - git add ignore template=Node

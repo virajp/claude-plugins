@@ -66,7 +66,6 @@ export interface Bundle {
   readonly kind: string;
   readonly axis: string;
   readonly components: readonly string[];
-  readonly unconditional: boolean;
 }
 
 export interface Inventory {
@@ -175,7 +174,6 @@ function readBundles(bundlesDir: string): Bundle[] {
       kind: required(doc, "kind", rel),
       axis: required(doc, "axis", rel),
       components: components.map(String),
-      unconditional: doc["unconditional"] === true,
     });
   }
   return bundles;
@@ -234,8 +232,8 @@ export function renderInventory(inventory: Inventory): string {
     "",
     "## Bundles",
     "",
-    "| Bundle | Name | Kind | Axis | Components | Unconditional |",
-    "| ------ | ---- | ---- | ---- | ---------- | ------------- |",
+    "| Bundle | Name | Kind | Axis | Components |",
+    "| ------ | ---- | ---- | ---- | ---------- |",
   );
   for (const b of bundles) {
     lines.push(row([
@@ -244,7 +242,6 @@ export function renderInventory(inventory: Inventory): string {
       `\`${b.kind}\``,
       b.axis,
       b.components.map(c => `\`${c}\``).join(", "),
-      b.unconditional ? "yes" : "",
     ]));
   }
 

@@ -34,7 +34,7 @@ user's clock.
 
    **Entries are not all under `.claude/`.** A component may have landed
    repo config files from its `config/` tree — a gate's own config file,
-   the hygiene files at the repo root, a task overlay, a
+   a root config file, a task overlay, a
    `.config/vscode.d/` editor fragment, a deploy target's root config —
    and those are ordinary lockfile entries carrying a `path`, a
    `component`, a `hash` and a `mode`. Inventory them with the rest; they
@@ -117,8 +117,8 @@ user's clock.
    reports a non-executable task file as an *unknown task* rather than as a
    permission error, and `mise run init` is the restore. And where two
    components write into one tree, re-derive in composition order —
-   `toolchain-gate`, then `repo-hygiene`, then `package-manager` / `language`,
-   then `app-framework`, then `capability-provider`, then `cloud-provider`, then
+   `toolchain-gate`, then `package-manager` / `language`, then
+   `app-framework`, then `capability-provider`, then `cloud-provider`, then
    `cloud-service`, later wins — and diff each file against the component the
    lockfile says supplied it. A file whose supplying component **changed** is a
    real delta, reported as such: it means precedence moved, not that the pack

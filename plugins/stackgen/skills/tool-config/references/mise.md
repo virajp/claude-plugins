@@ -183,7 +183,8 @@ carry, comma-joined — `dev,ci,test` as landed. A single-environment
 `mise lock` drops the other environments' tools, so none is ever run. It is
 written in two cases only, both in dev: when none exists, and under
 `--upgrade`, as `mise lock --bump --upgrade` over the same union. The one
-untracked lock is the local one, which the hygiene pack ignores.
+untracked lock is the local one, which [git's](git.md#1-what-all-lands) base
+ignores.
 
 ### Environment values
 
@@ -378,7 +379,7 @@ installs them unconditionally.
 | `set env <KEY>=<value>`                          | wherever the requester's block sets `KEY` |
 | `add alias <name>=<command>`                     | `conf.d/shell_alias.dev.toml`             |
 | `remove <requester>`                             | every file holding its blocks             |
-| `upgrade`                                        | the lock, through the task library        |
+| `upgrade`                                        | the lock, and every ignore template's pin |
 | `lock`                                           | the lock, when none exists                |
 
 Each writes into the requester's block, `for <requester>`, or outside every
@@ -463,8 +464,11 @@ again.
 
 **`upgrade`** runs `MISE_ENV=dev mise run setup:all --upgrade`: the one lock
 bumped across every environment, the formatter's plugins updated, the same
-passed to every member. It is the only verb that moves a pinned version
-forward, and it is refused outside dev.
+passed to every member. Inside the same consent it re-fetches every ignore
+template a `.gitignore` block holds at github/gitignore's current `main`, one
+row per changed block, and moves each recorded SHA
+([git's templates](git.md#4-templates)). It is the only verb that moves a
+pinned version forward, and it is refused outside dev.
 
 **`lock`** writes the one lock when none exists — `mise lock` under `MISE_ENV`
 set to the union of the environment suffixes the config files carry — and

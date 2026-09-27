@@ -9,6 +9,7 @@
     "plugins/**/*.md",
     "plugins/*/stacks/*/*/config/",
     "plugins/stackgen/skills/tool-config/assets/",
+    "plugins/vwf/skills/init/assets/",
     "**/.astro/",
     "site/dist/**",
     "**/.turbo/",

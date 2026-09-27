@@ -1,6 +1,7 @@
 # The repo's ignore set. Sections are banners; keep them, and keep the
 # why-comments — a pattern nobody can explain is a pattern nobody dares delete.
 
+# >>> git
 # ==== macOS ====
 .DS_Store
 .AppleDouble
@@ -13,7 +14,7 @@
 # .idea/ is per-machine index and workspace state, regenerated on open.
 # .vscode/ is deliberately NOT here: what a repo puts there — extensions.json,
 # launch.json, tasks.json — is hand-written and shared, so whether to commit it
-# is the repo's call, not this pack's.
+# is the repo's call, not this block's.
 .idea/
 *.swp
 *.swo
@@ -27,14 +28,6 @@
 .claude/todos.json
 .worktrees/
 .opencode/
-
-# ==== graphify ====
-# The code-intelligence graph is rebuilt from the tree on demand, so the graph
-# itself is machine-local. GRAPH_REPORT.md is the one artifact worth diffing —
-# it is prose about what the graph found, and a review can read it — so the
-# negation follows the pattern that would otherwise swallow it.
-graphify-out/*
-!graphify-out/GRAPH_REPORT.md
 
 # ==== mise ====
 # The uncommitted local override, at every path mise loads one from.
@@ -67,6 +60,4 @@ docs/scratchpad/
 gitleaks-report.*
 grype-report.*
 sbom.*
-
-# Stack sections are appended below this line by /vwf:init, one
-# `# ==== <Name> ====` banner each, from github/gitignore.
+# <<< git

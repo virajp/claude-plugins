@@ -1,0 +1,77 @@
+/code-review high, loop U9-late1 round 1, branch-scoped (late range 65e8256d..6c642835)
+
+Findings from the high-effort review of `2026-09-26-tool-config-hygiene` against `develop` (89 files). Findings 1–5 are correctness issues; 6–10 are conventions and cleanup.
+
+Some context for triage:
+- **Stale docs (finding 8):** the plan's docs unit U10 (wave 4) hasn't run yet, so these are known work still to do, not regressions.
+- **Findings 2 and 6:** earlier wave reviews already raised these. After two rounds they were left marked "Contested (two-round cap)" in the run log, not fixed.
+- **Verified OK:**
+  - The retired `.editorconfig` SHA-256 in `existing-repo.md` matches the last shipped payload.
+  - This repo's `setup/precommit` and `setup/ai` are byte-identical to the shipped assets.
+  - The init pass renumbering (11 → 10) is consistent everywhere.
+  - Nothing outside the plan's own tree still reads the removed `unconditional` bundle field.
+
+```json
+[
+  {
+    "file": "plugins/stackgen/skills/tool-config/references/git.md",
+    "line": 91,
+    "summary": "The no-doubling rule strips a leading `/` (and ignores `**/`, and strips a trailing `/`) before comparing patterns, so it treats patterns with different meanings as the same pattern and silently drops the incoming one.",
+    "failure_scenario": "A repo's own `.gitignore` has `/dist` (root only). pnpm's `git add ignore template=Node` brings `dist` (any depth). Normalised, both read as `dist`, so the template line is not written. In a monorepo, `packages/api/dist/` is then no longer ignored and build output gets committed. The same happens with `build/` (directories only) versus `build`."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/SKILL.md",
+    "line": 274,
+    "summary": "The Drift section says drift is 'tested by content and never by a hash', and that spacing is never drift. The next sentence makes template blocks the exception and compares them by the lock's `written:` hash, so whitespace changes do count as drift for them.",
+    "failure_scenario": "An upstream template line has trailing whitespace. The shipped pre-commit config's trailing-whitespace hook (it excludes only `\\.md$`) strips it at the first commit. The block's hash no longer matches `written:`, so every run reports drift. Answering 'take theirs' refetches at the pinned SHA and writes the whitespace back, so the loop never ends. The two rules also contradict each other in one paragraph."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit",
+    "line": 40,
+    "summary": "The graphify strip now runs before the core.hooksPath refusal. `git rev-parse --git-path hooks` resolves to core.hooksPath, so the task edits or deletes hook files in a global or system hooks directory outside the repo before it refuses.",
+    "failure_scenario": "A user has `git config --global core.hooksPath ~/.githooks`, and graphify once installed into it. `mise run setup:precommit` runs `graphify hook uninstall`, or rewrites and `rm -f`s `~/.githooks/post-commit`, which changes hooks for every repo on the machine. It then exits 1 saying 'That value is outside this repo, and --force never edits it'. The same applies to a tracked local `.githooks/` directory that husky or lefthook owns."
+  },
+  {
+    "file": "plugins/stackgen/assets/output-tree.md",
+    "line": 165,
+    "summary": "`.editorconfig` was removed from every tier of the root allowlist, but editors only look for it at the root. Init's pass 1 reports every unallowlisted root entry, so a legitimate user `.editorconfig` becomes a permanent stray.",
+    "failure_scenario": "A repo keeps its own `.editorconfig`: its hash differs from the retired payload, or the user answered 'keep' on the migration's delete/keep row. Every later `/vwf:setup reshape` then lists it as a root entry 'reported, not moved', a finding the user can never clear because the file cannot live under `.config/`."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 483,
+    "summary": "Init asset trees are walked with `rootFiles = null`, which turns the root-allowlist check off entirely for them. Renaming `_licenses/` to `licenses/` is what forced the bypass.",
+    "failure_scenario": "Someone adds `.gitignore`, `.editorconfig` or `renovate.json` at `plugins/vwf/skills/init/assets/hygiene/`. `p:plugins:check` passes, even though output-tree.md limits init's tier to CONTRIBUTING.md, SECURITY.md, LICENSE and `.github/ISSUE_TEMPLATE/`, and init then lands a file that tool-config owns. A small INIT_ROOT_FILES set, or keeping the `_licenses` staging prefix, would keep the guard."
+  },
+  {
+    "file": "plugins/stackgen/stacks/package-manager/swiftpm/conventions.md",
+    "line": 35,
+    "summary": "The reworded line is 123 columns in a hand-folded ~77-column paragraph.",
+    "failure_scenario": "This breaks the repo CLAUDE.md rule: \"`plugins/**/*.md` is **not** formatted — match the surrounding fold width by hand.\" The line ships unfolded into every Swift repo's landed conventions; the R2 wave review left it contested and it is still unfixed."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/ai",
+    "line": 180,
+    "summary": "The new comment says 'The graph refresh is code:graph, run by hand'. The pre-commit graphify-refresh post-commit hook runs code:graph automatically (see the `code/graph` task header and `installer/src/graphify.ts`).",
+    "failure_scenario": "This shipped asset, and this repo's byte-copy, tells a maintainer the refresh is manual. They may then add a manual refresh step, or a second hook, on top of the post-commit one."
+  },
+  {
+    "file": "installer/CLAUDE.md",
+    "line": 28,
+    "summary": "Docs still say the installer runs `graphify hook install` and describe the repo-hygiene unconditional bundle, after this branch removed both.",
+    "failure_scenario": "This breaks the repo CLAUDE.md rule: '**Docs ship with the change.** Any change to plugin behavior must reconcile `readme.md`, this file, and the manual under `site/src/content/docs/` in the same commit.' Still stale: installer/CLAUDE.md:28, site installer/targets.md:72, installer/internals.md:147, plugins/vwf.md:35, and .claude/skills/stackgen-plugin/SKILL.md:100. U10 hasn't run yet, so the behaviour commits landed without their docs."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 349,
+    "summary": "TOOL_CONFIG_ROOT_FILES is one shared set applied to every tool-config asset tree, so any tool's tree (mise, dprint, gitleaks, and so on) may ship `.gitignore`, `.gitattributes`, `.graphifyignore` or `renovate.json` at its root without a finding.",
+    "failure_scenario": "A stray `renovate.json` added under `assets/mise/` passes the checker and lands outside the renovate tool's `update_bot` condition and yield rule. A per-tool map (git → ignore and attributes files, graphify → .graphifyignore, renovate → renovate.json) would keep the guard as tight as before."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit",
+    "line": 88,
+    "summary": "HOOK_FILE runs `git rev-parse --git-path hooks` again, although HOOKS_DIR already holds that value from line 40.",
+    "failure_scenario": "The duplicated work means two sources for the same path. A later edit to one, such as adding `--path-format=absolute`, would leave the takeover check and the strip reading different directories. `HOOK_FILE=\"${HOOKS_DIR}/pre-commit\"` does the same job."
+  }
+]
+```

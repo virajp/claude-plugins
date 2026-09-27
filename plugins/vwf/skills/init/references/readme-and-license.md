@@ -1,11 +1,67 @@
-# The Readme Stub, the Licence, and the Rest of Hygiene
+# The Hygiene Assets — the Readme Stub, the Licence, the Security Contact
 
-The files a repository carries whatever it is written in. All of them are the
-hygiene pack's; `init` places them, fills the three placeholders, and stops.
+The files a repository carries whatever it is written in and that no tool
+reads. They are `init`'s own, under
+`${CLAUDE_PLUGIN_ROOT}/skills/init/assets/hygiene/`, laid out as they land;
+`init` places them, fills the three placeholders, and stops. The ignore file,
+the attributes file, the graph's ignore file and the dependency-update policy
+are not among them — they are `/stackgen:tool-config`'s tools, landed by its
+`all` call.
 
 Everything here is **per repo**: one run shapes the base and every member, and
 each repo takes its own row's answer and writes its own files at its own root.
 A row's answer never reaches a repo other than the one it names.
+
+## What the assets carry
+
+| Asset                                           | Lands at      | When                                  |
+| ----------------------------------------------- | ------------- | ------------------------------------- |
+| `CONTRIBUTING.md`                               | the repo root | always                                |
+| `.github/ISSUE_TEMPLATE/*`                      | the same path | the repo's `forge` answer is `github` |
+| `.config/vscode.d/hygiene.jsonc`                | the same path | question 7 answered **yes**           |
+| `licenses/MIT.txt` or `licenses/Apache-2.0.txt` | `LICENSE`     | question 6a, below                    |
+| `SECURITY.md`                                   | the repo root | question 6b, below                    |
+
+**`init` evaluates the two conditions itself**, from the same `forge` and
+`editor` values it passes the materializer, and a skipped asset is a
+**Skipped** row, `init` in the pack's place. They land in §2 of the new-repo
+pipeline, after `/stackgen:tool-config all`; the licence and the security
+file wait for their answers and land in §8. No lock record is written for any
+of them.
+
+**The already-there rule covers every asset.** One the repo already carries
+is **kept, never replaced, and reported as kept** — no offer, no
+`kept_files` entry, since nothing was decided — and one it lacks is a create.
+So a second run finds every asset present and plans nothing for it.
+
+**The editor baseline is the one exception.** `hygiene.jsonc` is a fragment
+the editor merge composes, never a file a person edits, so `init` rewrites it
+to the asset's bytes whenever it differs, as a replace row; a key a person
+wants belongs in the editor file's hand section, where the merge keeps it.
+
+`CONTRIBUTING.md` is developer-facing and repo-neutral: setup in one command,
+the branch model, where the commit types and scopes live, the gate tasks, and
+the pointer to `SECURITY.md`. The issue forms carry a bug form, a feature form
+and `config.yml`, which turns blank issues off and points at the docs and the
+private advisory channel; nothing else of `init`'s goes under `.github/`.
+
+## The placeholder vocabulary
+
+Three, and no others: nothing else in the assets uses a placeholder, so a `<`
+in a landed asset is one of these or a bug.
+
+| Placeholder  | Filled with                                         |
+| ------------ | --------------------------------------------------- |
+| `<REPO_URL>` | the repository's web URL, no trailing slash         |
+| `<YEAR>`     | the year the licence is first applied               |
+| `<HOLDER>`   | the copyright holder — a person or the legal entity |
+
+One position reads differently: in `SECURITY.md` the same `<REPO_URL>` token
+stands alone on its own line and is filled with the **security contact** —
+an advisory URL or an email — never with the repo URL plus a suffix, and the
+issue forms' *Report a vulnerability* link is the same slot, per the security
+contact below. The *Documentation* link above it keeps the repo URL. The
+sources each placeholder is filled from are [new repo](new-repo.md) §4's.
 
 ## The readme
 
@@ -45,11 +101,13 @@ and **no `LICENSE`** — a licence grants the public rights a private repo is
 not offering — and nothing below applies to it. A repo that answered
 **`public`** has a row at 6a, and takes its own row's answer, one of three:
 
-- **MIT** or **Apache-2.0** — copy that one text from the hygiene pack's
-  licence catalogue to `LICENSE` at **that repo's** root, filling `<YEAR>` and
-  `<HOLDER>`.
+- **MIT** or **Apache-2.0** — copy that one text from the assets'
+  `licenses/` directory to `LICENSE` at **that repo's** root, filling `<YEAR>`
+  and `<HOLDER>`. Both are permissive; they differ in whether the grant is
+  explicit about patents and about what a contributor is contributing.
 - **none** on a row — write no file in that repo. That is a legible answer,
-  and it is not the same as a licence a tool picked on the author's behalf.
+  and it is not the same as a licence a tool picked on the author's behalf —
+  "all rights reserved".
 
 **A repo that already carries a licence file is listed as kept, never
 replaced**, whichever visibility it answered — the licence a repository
@@ -62,9 +120,8 @@ on the allowlist, but the other three are the repo's own and are neither
 moved nor doubled. A private repo carrying one keeps it too: `init` removes
 no file on a visibility answer.
 
-The catalogue directory is **pack-private** and never lands in a repo: the
-materializer skips it, and `init` reads one file out of it. A repo ends up
-with `LICENSE`, never with the catalogue.
+The `licenses/` directory never lands in a repo: `init` reads one file out
+of it. A repo ends up with `LICENSE`, never with the directory.
 
 Both placeholders are resolved **per repo**, from that repo's own answers.
 `<YEAR>` is the current year — the year the licence is first applied, not a
@@ -78,7 +135,7 @@ rather than writing an empty holder.
 **A repo that already carries a security file is listed as already there —
 kept, never replaced**, in every mode. The channel a repository already names
 is a decision somebody made, and the row's answer is what a repo with no such
-file gets rather than a rewrite of one that is there. The pack's template is
+file gets rather than a rewrite of one that is there. The asset's template is
 written only where the file is absent, and **question 6b is asked only for a
 repo where it will be written**: a repo keeping its own file has no row at
 that question, and the plan's section for it reports the file as kept.
@@ -95,11 +152,11 @@ answer, and the row takes one of two shapes:
   An advisories page is a public channel, and a private repo has no reporter
   outside it to offer one to.
 
-Either answer is **spliced into the hygiene pack's security template** at its
+Either answer is **spliced into the assets' security template** at its
 one contact slot — the same slot the advisories URL filled before, and the
 only fill that file takes — and the template reads naturally with an email as
-with a URL; the pack's text is written for both. The slot takes the row's
-answer as typed, never the origin URL §4 fills elsewhere. The pack's
+with a URL; the asset's text is written for both. The slot takes the row's
+answer as typed, never the origin URL §4 fills elsewhere. The assets'
 issue-template chooser carries a *Report a vulnerability* link that follows the
 same answer: where the contact is a URL, that entry's `url:` takes it; where the
 contact is an email, or the row was declined, the **whole entry is removed** —
@@ -110,48 +167,35 @@ point at, and reads none out of a file it did not write.
 
 **Declining a row writes no file in that repo, whichever shape it had.** A
 repository with no private channel to point at is better off with none than
-with one naming a channel nobody watches, and that is the pack's own rule
-rather than a preference here.
+with one naming a channel nobody watches, and that is the rule rather than
+a preference.
 
-## Copied as-is
+## What moved to the tool-config skill
 
-The remaining hygiene files land exactly as the pack ships them, with no
-placeholder — and only the last is gated on a question, the update-bot row
-below:
+Four files once shipped beside these are `/stackgen:tool-config`'s now, and
+this reference no longer says anything about them:
 
-| File                         | Is                                                         |
-| ---------------------------- | ---------------------------------------------------------- |
-| the editor-shape defaults    | indentation and line endings a formatter has no plugin for |
-| the attributes file          | line-ending normalisation, generated trees, binaries       |
-| the dependency-update policy | the update cadence and the minimum release age             |
+| File                         | Is                                                   | Its owner                               |
+| ---------------------------- | ---------------------------------------------------- | --------------------------------------- |
+| the ignore file              | what git does not track                              | the skill's git tool                    |
+| the attributes file          | line-ending normalisation, generated trees, binaries | the skill's git tool                    |
+| the graph's ignore file      | what the code-intelligence graph does not ingest     | the skill's graphify tool               |
+| the dependency-update policy | the update cadence and the minimum release age       | the skill's renovate tool, with a yield |
 
-The ignore file is the exception among them — it is never copied over one the
-repo has: the **section merge** in
-[fragments and sections](fragments-and-sections.md) gives every file, the
-pack's fresh copy and a repo's own alike, the sections it lacks.
-
-**The dependency-update policy lands at the repo root**, not under
-`.config/` — the pack's conventions say why: Renovate's discovery is
-root-first (`renovate.json`, then `.github/`, then `.renovaterc`) and never
-reaches the configuration directory, so the root is the one place the hosted
-service reads it. It is the one hygiene file with a **yield** rule: a repo
-that already carries a policy under any of those spellings keeps its own,
-and the pack's is **not landed** — the plan's row for it says so, and no
-file is moved. The spellings, and the rule, are the
-[tool-config table](tool-configs.md)'s. It is also **conditional**: the
-pack names it under `when: update_bot: renovate`, so it lands only in a
-repo whose question-8 row answered `renovate`, and a repo on `dependabot`
-or `none` gets a **Skipped** row for it rather than a file — the yield
-covers a repo that has a policy, the condition a repo that does not want
-this one. A repo that wants the service enabled still has to install it
-on the forge; say so at write time, since a policy nobody wired is inert
-without an error.
+The policy's yield over a repo's own spelling and its `update_bot` condition
+are the renovate tool's; the spellings are the [tool-config
+table](tool-configs.md)'s, which seeds question 8. A repo that wants the
+service enabled still has to install it on the forge; say so at write time,
+since a policy nobody wired is inert without an error. The editor-shape
+defaults file that once shipped here is retired: nothing lands it, and a
+reshape offers deleting an untouched copy, per
+[existing repo](existing-repo.md)'s retired hygiene bundle.
 
 ## What `init` does not write here
 
 - **`CLAUDE.md`** — `/vwf:setup`'s, out of scope outright.
 - **A full readme** — `/vwf:readme`'s.
-- **Anything at the repo root that is not on the hygiene doctrine's
+- **Anything at the repo root that is not on the stack adapter's root
   allowlist.** The materializer enforces that as a ceiling and refuses a pack
-  that violates it; `init` holds itself to the same line, because a ceiling
-  one caller can step over is not a ceiling.
+  that violates it; `init` holds its own assets to the same line, because a
+  ceiling one caller can step over is not a ceiling.

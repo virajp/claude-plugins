@@ -288,12 +288,18 @@ level up, at the same severity: report it and nudge `/vwf:setup reshape`, the
 one repo-shape remedy, naming `/stackgen:tool-config all` as what it runs.
 Setup materializes no tooling itself — `/vwf:init` does, calling
 `/stackgen:tool-config all` for every universal tool the skill owns, the
-gates included, then laying down the one unconditional bundle that remains,
-`repo-hygiene`, by its fixed slug through the stack adapter's
-`-stack-template` skill. That is the coarsest form of one question — is this
-repo still shaped the way `/vwf:init` shapes one — and the section at the end
-of this file is the fuller version of the same check: this one fires when the
-shape is absent, that one when it is behind.
+gates, `git`, `graphify` and `renovate` included, and fetches no bundle.
+The baseline predicates read the `tool-config/{git,graphify}` records, and
+`tool-config/renovate` where the repo's update bot is renovate — unless the
+repo carries its own Renovate policy under any name the adapter's
+`tool-config` renovate reference lists, which the tool yields to and records
+nothing for, so that file stands in for the record.
+A leftover `repo-hygiene/repo-hygiene` lockfile record is one drift row,
+remedy `/vwf:setup reshape`, which replaces it with those records. That is
+the coarsest form of one question — is this repo still shaped the way
+`/vwf:init` shapes one — and the section at the end of this file is the
+fuller version of the same check: this one fires when the shape is absent,
+that one when it is behind.
 
 Then check `repo.stack`: the `package_manager` resolves (lockfile present, tool
 on `PATH` or in mise config) and each entry in `tools` has its expected marker —
@@ -400,7 +406,7 @@ root. An entry sourced `tool-config/<tool>@<version>` was written by the
 adapter's `tool-config` skill, and its version is **not compared** here: the
 adapter plugin's version moves on every release whether the tool's blocks
 changed or not, so a comparison would report drift nobody can see. Those
-records are checked by content, under (e), block by block, and nothing about
+records are checked under (e), block by block, and nothing about
 them is (a)'s. For a **pack** record — and only a pack record — a recorded
 version **older** than the shipped one is one drift row naming the component
 and both versions. A **newer** recorded
@@ -497,8 +503,8 @@ here, since no reshape could clear it while the answer stands. A path that
 flipped, or never conditional — is checked by hash like any landed file,
 whatever its condition reads today. Three rows are read from the config rather
 than the lockfile. A repo whose config's `answers.secrets` names a provider
-that has a row in the hygiene pack's provider table must carry that provider's
-ignore section in `.gitignore`; absent, it is one drift row naming the
+whose pack asks for ignore lines must carry that pack's block in `.gitignore`,
+written through the git tool; absent, it is one drift row naming the
 provider, remedy `/vwf:setup reshape`. A repo whose recorded
 `answers.repos.<repo>.forge` differs from the host its live `origin` remote
 names is one drift row naming both, same remedy — and so is a `skipped:` row
@@ -544,14 +550,17 @@ payload is the adapter's `tool-config` skill's,
 `skills/tool-config/assets/<tool>/` inside the installed adapter plugin's
 tree, located as (a) locates a pack, and read as the installed plugin ships it
 — the record's version is not consulted, since (a) no longer compares it.
-Such a record is checked **block by block and never by hash**: each block the
-tool owns is compared on its own against what the skill would write now, by
-the skill's own drift comparison (its `SKILL.md`, "Drift") — words outside
-quoted strings, quoted strings exactly — so a reformat that only moves
-whitespace is not drift. A diverging block is its own row, which is the only
-check such a record gets. Only the tool's own blocks count: another
-requester's block and a line outside every block are the skill's to show,
-never (e)'s.
+Such a record is checked **block by block**, by hash only where noted below:
+each block the tool owns is compared on its own against what the skill would
+write now, by the skill's own drift comparison (its `SKILL.md`, "Drift") —
+words outside quoted strings, quoted strings exactly — so a reformat that only
+moves whitespace is not drift. A block holding a fetched `.gitignore` template
+is the skill's one exception: it is compared against the `written:` hash its
+lock record carries (the skill's `references/git.md`, "Templates"), never
+re-derived, since upstream may have moved and only a local edit is drift. A
+diverging block is its own row, which is the only check such a record gets.
+Only the tool's own blocks count: another requester's block and a line outside
+every block are the skill's to show, never (e)'s.
 
 **A record whose `source:` is `generated` has no pack payload** to reconstruct
 from, so there is nothing to splice: the second test is skipped, and test 1's

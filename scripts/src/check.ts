@@ -276,6 +276,8 @@ const PACK_HOOK_FRAGMENTS = join(".config", "pre-commit.d");
 const PACK_EDITOR_FRAGMENTS = join(".config", "vscode.d");
 /** Where `stackgen:tool-config` keeps one landed tree per tool. */
 const TOOL_CONFIG_ASSETS = "skills/tool-config/assets";
+/** Where `/vwf:init` keeps its own landed trees — the hygiene assets. */
+const INIT_ASSETS = "skills/init/assets";
 /** The skill file that marks a plugin as the owner of those trees. */
 const TOOL_CONFIG_SKILL = "skills/tool-config/SKILL.md";
 /** Where a pack keeps the hook scripts that land in `.claude/hooks/`. */
@@ -318,37 +320,41 @@ const PACK_HOOK_SHEBANGS = new Set([
  * The tier mirrors the target repo's root, and the repo doctrine puts every
  * tool's configuration under `.config/`. What is left at the root is the short
  * list of files a tool or a host *cannot* be told to look elsewhere for, plus
- * the two humans read first. Anything else arriving here is a pack quietly
- * widening the root of every repo it materializes into.
+ * the readme. Anything else arriving here is a pack quietly widening the root
+ * of every repo it materializes into.
  *
  * This is the **landable** tier of the doctrine's root allowlist
- * (`stackgen/assets/output-tree.md`). That list has a second tier — the root
- * files *vwf* writes, `CLAUDE.md` and `mempalace.yaml` — which is deliberately
- * absent here: they may sit at a shaped root, and no pack may land them.
+ * (`stackgen/assets/output-tree.md`). The files `stackgen:tool-config`, init
+ * and vwf write there — the ignore files, `CONTRIBUTING.md`, `CLAUDE.md` and
+ * the rest — are deliberately absent: they may sit at a shaped root, and no
+ * pack may land them.
  */
 const PACK_CONFIG_ROOT_FILES = new Set([
-  ".editorconfig",
-  ".gitattributes",
-  ".gitignore",
-  // graphify reads its ignore file from the root only, as git does.
-  ".graphifyignore",
   // npm and pnpm read `.npmrc` from the root of the project they install in.
   ".npmrc",
-  "CONTRIBUTING.md",
-  "LICENSE",
-  "SECURITY.md",
   // dprint's config discovery is root-only and `--config` is the CLI's only
   // override, so tool-config's dprint tree ships a root shim extending it.
   "dprint.json",
   "eslint.config.mjs",
   "fnox.toml",
   "readme.md",
-  // Renovate discovers its config at the repo root, in `.github/` or in
-  // `.gitlab/` — never under `.config/`, where one would be silently inert.
-  "renovate.json",
   // wrangler discovers its config only at the repo root, so a `static-hosting`
   // pack shipping a deploy target has nowhere else to put it.
   "wrangler.jsonc",
+]);
+
+/**
+ * The files a `stackgen:tool-config` asset tree may land at the root beyond a
+ * pack's, per tool: the git, graphify and renovate files a pack asks for lines
+ * in and never ships.
+ */
+const TOOL_CONFIG_ROOT_FILES: ReadonlyMap<string, readonly string[]> = new Map([
+  ["git", [".gitattributes", ".gitignore"]],
+  // graphify reads its ignore file from the root only, as git does.
+  ["graphify", [".graphifyignore"]],
+  // Renovate discovers its config at the repo root, in `.github/` or in
+  // `.gitlab/` — never under `.config/`, where one would be silently inert.
+  ["renovate", ["renovate.json"]],
 ]);
 
 /**
@@ -411,7 +417,7 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  *
  * A pack's `config/` tier holding a mise `conf.d` fragment or a `pre-commit.d`
  * file is a finding too, and each `stackgen:tool-config` asset tree is walked
- * as a landed tree.
+ * as a landed tree, as is each `/vwf:init` asset tree bar the root allowlist.
  *
  * The walk is its own rather than `plugin.files`: most of these paths run
  * through `.config/`, and the reader's glob does not descend into a dot
@@ -422,7 +428,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
   const at = (message: string) => findings.push({ scope: plugin.dir, message });
   const path = (absolute: string) => relative(plugin.root, absolute);
 
-  const landedTree = (tree: string) => {
+  const landedTree = (tree: string, rootFiles: ReadonlySet<string> | null) => {
     for (const absolute of filesUnder(join(tree, PACK_MISE_TASKS))) {
       if ((statSync(absolute).mode & 0o111) === 0) {
         at(`mise task file is not executable: ${path(absolute)}`);
@@ -436,11 +442,11 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       }
     }
 
-    if (existsSync(tree)) {
+    if (existsSync(tree) && rootFiles !== null) {
       for (const entry of readdirSync(tree, { withFileTypes: true })) {
         const allowed = entry.isDirectory()
           ? PACK_CONFIG_ROOT_DIRS.has(entry.name) || entry.name.startsWith("_")
-          : PACK_CONFIG_ROOT_FILES.has(entry.name);
+          : rootFiles.has(entry.name);
         if (!allowed) {
           at(
             `pack config/ tier holds an unallowlisted root entry — everything `
@@ -448,13 +454,13 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
           );
         }
       }
+    }
 
-      for (const absolute of filesUnder(join(tree, PACK_CONFIG_FORGE_FENCE))) {
-        at(
-          `pack config/ tier ships a CI workflow — a pack states which task CI `
-            + `runs and never writes the workflow: ${path(absolute)}`,
-        );
-      }
+    for (const absolute of filesUnder(join(tree, PACK_CONFIG_FORGE_FENCE))) {
+      at(
+        `pack config/ tier ships a CI workflow — a pack states which task CI `
+          + `runs and never writes the workflow: ${path(absolute)}`,
+      );
     }
 
     for (const absolute of filesUnder(join(tree, PACK_EDITOR_FRAGMENTS))) {
@@ -468,7 +474,15 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
   };
 
   for (const tree of toolConfigTrees(plugin)) {
-    landedTree(join(plugin.root, tree));
+    const own = TOOL_CONFIG_ROOT_FILES.get(basename(tree)) ?? [];
+    landedTree(
+      join(plugin.root, tree),
+      new Set([...PACK_CONFIG_ROOT_FILES, ...own]),
+    );
+  }
+  // init picks one licence from its tree, so its root holds more than lands.
+  for (const tree of assetTrees(plugin, INIT_ASSETS)) {
+    landedTree(join(plugin.root, tree), null);
   }
 
   const packs = globSync("stacks/*/*", { cwd: plugin.root });
@@ -491,7 +505,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     }
 
     const config = join(plugin.root, pack, "config");
-    landedTree(config);
+    landedTree(config, PACK_CONFIG_ROOT_FILES);
 
     for (const absolute of filesUnder(join(config, PACK_CONF_D))) {
       at(
@@ -733,6 +747,15 @@ const TOOL_CONFIG_GATE_VERBS: readonly { pattern: RegExp; tail: boolean; }[] = [
   },
   { pattern: TOOL_CONFIG_HOOK, tail: true },
   { pattern: /^grype add ignore [A-Za-z0-9-]+(?: .+)?$/, tail: true },
+  { pattern: /^git add ignore template=[A-Za-z0-9+._-]+$/, tail: false },
+  {
+    pattern: /^git add ignore(?: (?!(?:for|template=.*)(?: |$))[^\s"']+)+$/,
+    tail: false,
+  },
+  {
+    pattern: /^git add attribute(?: (?!for(?: |$))[^\s"']+){2,}$/,
+    tail: false,
+  },
 ];
 /** A requester suffix: the materializer appends it, a pack never writes it. */
 const TOOL_CONFIG_FOR = / for \S+$/;
@@ -794,8 +817,10 @@ function toolConfigCall(
         + "`dprint add plugin <name>`, "
         + "`all add exclude [generated] <paths>`, "
         + "`pre-commit add linter-ignore <paths>`, "
-        + "`pre-commit add hook <repo> <id> <stage> [key=value …]` or "
-        + "`grype add ignore <id> [reason]`",
+        + "`pre-commit add hook <repo> <id> <stage> [key=value …]`, "
+        + "`grype add ignore <id> [reason]`, "
+        + "`git add ignore <patterns>`, `git add ignore template=<Name>` or "
+        + "`git add attribute <pattern> <attrs>`",
     };
   }
   const name = match[1] ?? "";
@@ -852,7 +877,12 @@ function hookFault(words: string): string | undefined {
 
 /** Every `stackgen:tool-config` asset tree, plugin-relative. */
 function toolConfigTrees(plugin: Plugin): string[] {
-  return globSync(`${TOOL_CONFIG_ASSETS}/*`, { cwd: plugin.root })
+  return assetTrees(plugin, TOOL_CONFIG_ASSETS);
+}
+
+/** Every landed tree directly under `assets`, plugin-relative. */
+function assetTrees(plugin: Plugin, assets: string): string[] {
+  return globSync(`${assets}/*`, { cwd: plugin.root })
     .filter(tree => statSync(join(plugin.root, tree)).isDirectory());
 }
 
@@ -1380,7 +1410,10 @@ function checkLandedCitations(plugin: Plugin): Finding[] {
 
 /** Is this plugin-relative path one of the files a pack lands? */
 function isLandedPath(path: string): boolean {
-  if (path.startsWith(`${TOOL_CONFIG_ASSETS}/`)) {
+  if (
+    path.startsWith(`${TOOL_CONFIG_ASSETS}/`)
+    || path.startsWith(`${INIT_ASSETS}/`)
+  ) {
     return true;
   }
   const parts = path.split("/");
@@ -1405,7 +1438,12 @@ function isLandedPath(path: string): boolean {
  * {@link checkPackConfigTier} walks its own way.
  */
 function* landedFiles(plugin: Plugin): Generator<LandedFile> {
-  for (const tree of toolConfigTrees(plugin)) {
+  for (
+    const tree of [
+      ...toolConfigTrees(plugin),
+      ...assetTrees(plugin, INIT_ASSETS),
+    ]
+  ) {
     for (const found of filesUnder(join(plugin.root, tree))) {
       yield { path: relative(plugin.root, found), absolute: found };
     }
@@ -1485,8 +1523,11 @@ function blankFences(body: string): string {
  */
 function landingRootOf(path: string): string | null {
   const parts = path.split("/");
-  // A tool-config asset tree lands whole as the repo root.
-  if (path.startsWith(`${TOOL_CONFIG_ASSETS}/`)) {
+  // A tool-config or init asset tree lands whole as the repo root.
+  if (
+    path.startsWith(`${TOOL_CONFIG_ASSETS}/`)
+    || path.startsWith(`${INIT_ASSETS}/`)
+  ) {
     return parts.slice(0, 4).join("/");
   }
   return parts[3] === "skills" && parts.length > 5

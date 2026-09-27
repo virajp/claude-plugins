@@ -25,7 +25,8 @@ wires graphify, and removes what the toolkit put on a machine.
   own plugin set without a package runner and without this CLI's hardcoded
   marketplace source. This is the one-shot a person runs; that is what a
   checkout re-runs.
-- **graphify's wiring** — `graphify install` + `hook install`.
+- **graphify's wiring** — `graphify install` alone, no raw git hook: the graph
+  refresh is a shaped repo's pre-commit `post-commit` hook.
 - **`--uninstall`** — interactive; see below.
 
 **The statusline is a separate package** — `claude-status`

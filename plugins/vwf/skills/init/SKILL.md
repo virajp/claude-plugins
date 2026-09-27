@@ -4,10 +4,11 @@ description: Bootstrap a new repo, or reshape an existing one and every member
   repo it has, to the standard layout — every tool config under .config/, the
   toolchain manager's file split and its task library, the repo gates, the
   hygiene files and a secrets provider — landed through stackgen's tool-config
-  skill and the stack adapter's unconditional bundles. Surveys the whole
-  product, shows one plan with a section per repo, applies on one consent.
-  Stack-agnostic; it orchestrates the
-  packs and writes no tool config of its own. Invoked by /vwf:setup — its Step 0
+  skill, init's own hygiene assets and the secrets provider the answers pick,
+  materialized through the stack adapter; it fetches no bundle. Surveys
+  the whole product, shows one plan with a section per repo, applies on one
+  consent. Stack-agnostic; it writes no tool config of its own. Invoked by
+  /vwf:setup — its Step 0
   offer, or /vwf:setup reshape — and never typed by a user.
 model: sonnet
 
@@ -39,16 +40,22 @@ asked or read; all three are things only a shaping run can know about.
 Run `init` first on a repo that has neither.
 
 Nothing here knows what the repo is written in, and that is the design. Every
-file `init` lays down comes from a pack the **stack adapter** materializes
-(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`); `init` decides *when* the
-packs land, *what* the user is asked, and how an existing tree is reconciled
-against what they ship. If this skill ever names a tool, that naming is the
-bug — say "the toolchain pack", "the gates pack", "the hygiene pack", "the
-secrets provider pack", "the task-name contract", "the legacy-name table".
+file `init` lays down comes from one of three places: `/stackgen:tool-config
+all`, `init`'s own **hygiene assets** under
+`${CLAUDE_PLUGIN_ROOT}/skills/init/assets/hygiene/`, and the secrets provider
+pack the **stack adapter** materializes
+(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`) — the only adapter fetch
+left, for the provider the user picked. `init` decides *when* they land,
+*what* the user is asked, and how an existing tree is reconciled against them.
+If this skill ever names a tool, that naming is the bug — say "the toolchain
+pack", "the gates pack", "the hygiene assets", "the secrets provider pack",
+"the task-name contract", "the legacy-name table".
 
 **Every tool `/stackgen:tool-config all` owns lands through that skill, not
 the adapter.** "The toolchain pack" and "the gates pack" below mean what that
-call lands and what the skill's own references document. `init` passes it the
+call lands and what the skill's own references document — and the ignore
+file, the attributes file, the graph's ignore file and the dependency-update
+policy are that skill's tools too. `init` passes it the
 answers as `key=value` arguments — [new repo](references/new-repo.md) §2 lists
 them — and the skill fills its own marked positions from them. Its files are
 its own. It shows their drift rows itself and records them in the adapter's
@@ -57,16 +64,17 @@ them.
 
 ## Hard rules
 
-- **Writes only what a pack declares, plus the fills those packs leave for
-  it — in each of the repos Step 0 resolved.** Those repos are the whole of
-  its reach: `init` never writes outside the repos it **resolved** as the base
-  and its members, and a member that sits beside the base rather than inside
-  it is still one of them. Within each repo the rule is the same one, applied
-  to that repo's own tree. There are two kinds of fill and the distinction is
-  the whole rule.
-  **Placeholders** — `<REPO_URL>`, `<YEAR>` and `<HOLDER>` — are values a pack
-  templated into a file it ships; the hygiene pack's conventions are
-  authoritative for them. **Marked positions** are the commented slots a pack
+- **Writes only what a pack declares or its own hygiene assets carry, plus
+  the fills they leave for it — in each of the repos Step 0 resolved.**
+  Those repos are the whole of its reach: `init` never writes outside the
+  repos it **resolved** as the base and its members, and a member that sits
+  beside the base rather than inside it is still one of them. Within each
+  repo the rule is the same one, applied to that repo's own tree. There are
+  two kinds of fill and the distinction is the whole rule.
+  **Placeholders** — `<REPO_URL>`, `<YEAR>` and `<HOLDER>` — are values the
+  hygiene assets template into the files they carry;
+  [readme and licence](references/readme-and-license.md) is authoritative for
+  them. **Marked positions** are the commented slots a pack
   ships *because no pack can know a repo's project ids, its name, its remote,
   its languages or which other packs landed beside it*: the bootstrap
   aggregator's member flags, the shell aliases, the per-project task groups,
@@ -224,14 +232,14 @@ that holds decides:
 
 | The repo carries                                                                                                      | Mode       |
 | --------------------------------------------------------------------------------------------------------------------- | ---------- |
-| the stack adapter's **lockfile** — bundle slugs or `source: tool-config/…` records                                    | **shaped** |
+| the stack adapter's **lockfile** — `source: tool-config/…` records, or a retired bundle's record awaiting migration   | **shaped** |
 | no lockfile, but a **language manifest**, a **source directory**, a **root tool config**, or a `.config/` without one | **source** |
 | none of those                                                                                                         | **blank**  |
 
 What each mode runs:
 
 - **`shaped`** runs the [existing repo](references/existing-repo.md) pipeline
-  whole — the eleven survey passes, the plan, the apply. Some earlier landing
+  whole — the ten survey passes, the plan, the apply. Some earlier landing
   exists and the survey is the honest path.
 - **`source`** runs the [new repo](references/new-repo.md) landing **plus** the
   read-before-land passes of the existing pipeline that have something to
@@ -313,14 +321,15 @@ line which branch was taken:
 2. **Otherwise discover, never construct.** The adapter contract fixes both
    skill names, so an installed plugin either ships `<plugin>-stack-menu` and
    `<plugin>-stack-template` or it does not — list the installed plugins and
-   take the ones that ship both. This is a **check**, not an assembled guess,
-   which is the same reason the three slugs below are fixed.
+   take the ones that ship both. This is a **check**, not an assembled guess:
+   a name assembled from configuration is one that can silently resolve to
+   nothing.
 3. **Exactly one** is the answer. **More than one** is a real choice between
    materializers and is asked, in one round, before anything is fetched.
-4. **None** is a halt, with the install command. Every file `init` lays down
-   comes from a pack; with no adapter installed there is nothing to
-   materialize, and continuing would print an empty plan that reads exactly
-   like an already-shaped repo.
+4. **None** is a halt, with the install command. Question 4's menu and the
+   secrets provider come from the adapter; with none installed the run cannot
+   ask its questions, and continuing would print a plan that reads like an
+   already-shaped repo.
 
 `init` never writes the roster key itself — that is `/vwf:setup`'s, and a key
 written here would record a decision nobody was asked for.
@@ -361,33 +370,30 @@ earlier ones did not name:
 
 **One vocabulary, whatever the source.** The read's answer is a set drawn
 from the six keys in that table's `Language` column — `node`, `python`,
-`dart`, `go`, `rust`, `swift` — and nothing else, so the hygiene table and
+`dart`, `go`, `rust`, `swift` — and nothing else, so the template table and
 the `runtimes` argument key on one spelling. Sources 1 and 2 do not speak it
 natively: a config `languages` token and a lockfile component slug (a
 `language/…`, `package-manager/…` or `app-framework/…` entry) are each
-**mapped onto one key first**, by the table the hygiene pack keeps under
-*Which template a detected language takes* in its conventions — the adapter
-owns that mapping, and `init` restates none of it — so a pin and a manifest
+**mapped onto one key first**, by the template table `/stackgen:tool-config`'s
+git tool keeps in its reference — that skill owns the mapping, and `init`
+restates none of it — so a pin and a manifest
 that name the same language collapse to one hit, and "first hit per language"
 counts keys, never raw tokens. A token or slug that table maps to no key is
 proposed in the plan on the same terms as an unlisted manifest, never guessed
 and never carried through as its own language.
 
 A `blank` repo reads nothing — there is no pin, no lockfile and no manifest —
-and lands no language section. Say in one line, per repo, which source
-answered and what it found.
+and asks for no template. Say in one line, per repo, which source answered and
+what it found.
 
 **What the read drives**, and it is the only thing that drives them:
 
-- the **ignore sections** [new repo](references/new-repo.md) §5 appends —
-  one per language the read produced, resolved through the hygiene pack's own
-  table, so a `source` repo with a manifest gets its language's section on the
-  **first** run rather than after some later pin. The read carries **one more
-  component** here, and it is not a language: the **secrets provider slug**
-  question 4 picked, passed as it is, so the provider row that same table
-  keeps resolves beside the language rows — a provider whose files keep
-  something machine-local gets its ignore section only in a repo that runs
-  it, and a **none** answer carries nothing;
+- the **template fallback** [new repo](references/new-repo.md) §5 asks the
+  git tool for — one ignore template per detected language that no pack
+  landed in the repo already asks for, so a `source` repo with a manifest gets
+  its language's template on the **first** run rather than after some later
+  pin. A provider's machine-local file is no longer the read's business: the
+  provider's pack asks for its own ignore line;
 - the **runtimes** argument `init` passes to `/stackgen:tool-config all`,
   per [new repo](references/new-repo.md) §5 — the language keys the read
   produced, from which the skill fills its two runtime positions;
@@ -528,9 +534,9 @@ one value per axis, `forge`, `editor`, `secrets` and `update_bot`.
    filter narrows and the **question** decides: offer the filtered set in the
    menu's own order, plus **none — decide later**, and ask which of them
    **holds this product's secrets** — naming the capability in the question is
-   what a wrong entry cannot satisfy. The options are the adapter's bundle
-   list, never a name written here: `init` presents what the menu carries and
-   never proposes a default of its own.
+   what a wrong entry cannot satisfy. The options are the adapter's menu
+   entries, never a name written here: `init` presents what the menu carries
+   and never proposes a default of its own.
 
    An entry that turns out to fill no secrets slot is not something `init`
    can detect, and it does not pretend to: the slot the packs left stays
@@ -592,7 +598,7 @@ one value per axis, `forge`, `editor`, `secrets` and `update_bot`.
    MIT, Apache-2.0, or none — one row per such repo, because a licence is a
    file a repo carries and members are licensed separately often enough that
    assuming otherwise writes the wrong text into somebody's repo. The hygiene
-   pack ships the two texts; **none** is a legible answer and writes no file,
+   assets carry the two texts; **none** is a legible answer and writes no file,
    in that repo or in any other. A `private` repo gets no row and no
    `LICENSE`: a licence grants the public rights a private repo is not
    offering, and a file granting them is a claim nobody made. A repo that
@@ -624,7 +630,8 @@ one value per axis, `forge`, `editor`, `secrets` and `update_bot`.
    What this question settles is the `editor` axis the materializer's
    conditional evaluation step reads: a **yes** passes the axis value the
    convention names for that editor, and every pack file conditioned on it —
-   every editor fragment — lands; a **no** passes `none` on that axis —
+   every editor fragment — lands, the hygiene assets' baseline fragment
+   among them; a **no** passes `none` on that axis —
    `init`'s no-match value, which no `when:` names on this axis — so those
    files are **skipped**, listed in the plan under their own heading, and
    the editor merge in
@@ -637,28 +644,28 @@ one value per axis, `forge`, `editor`, `secrets` and `update_bot`.
    not.
 8. **The update bot.** **One row per repo** in the one round: which hosted
    dependency-update service watches this repo — the one whose policy file
-   the hygiene pack ships, the other one, or **none**. The options are the
-   axis values the materializer's conditional evaluation step accepts on
+   `/stackgen:tool-config` lands, the other one, or **none**. The options are
+   the axis values the materializer's conditional evaluation step accepts on
    `update_bot`, plus **none**; [new repo](references/new-repo.md) §2 spells
    them. Each row is **seeded from the survey**: a repo already carrying a
    policy file under any spelling the [tool-config
    table](references/tool-configs.md)'s row for that service lists is
    preselected to that service — the survey's pass-1 evidence is the answer,
    and the row says which file decided it — and a repo carrying
-   neither is preselected to the service whose policy the hygiene pack ships,
+   neither is preselected to the service whose policy that skill lands,
    since that is what an unanswered run has always landed. It is per repo
    because the policy is a file each repo carries and a member watched by a
    different service than its base is ordinary.
 
    What this question settles is the `update_bot` axis: the row's answer is
-   passed as that repo's value, so the hygiene pack's policy file lands only
-   where the answer names the service it configures, and is **skipped** —
-   listed in the plan under the same heading — where the answer is the other
-   service or **none**. On this axis alone, **none** is not `init`'s
-   no-match value but one of the three answers a pack may name in a `when:`,
-   so a file a pack conditions on it lands exactly when no bot was picked. A
-   repo whose own policy file the yield rule keeps is
-   unchanged by the answer: the pack's file was never going to land there.
+   passed as that repo's `update_bot=` argument and as its value in every
+   fetch's `answers:` map, so the skill's policy file lands only where the
+   answer names the service it configures, and is **skipped** where the
+   answer is the other service or **none**. On this axis alone, **none** is
+   not `init`'s no-match value but one of the three answers a pack may name
+   in a `when:`, so a file a pack conditions on it lands exactly when no bot
+   was picked. A repo whose own policy file the yield rule keeps is unchanged
+   by the answer: the skill's file was never going to land there.
 
 Ask all nine **before** presenting the plan, so the plan is complete and one
 yes covers all of it. The plan's summary then says, per repo, the four values
@@ -699,8 +706,8 @@ its neighbours still call the old names.
 | -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | [new repo](references/new-repo.md)                             | modes **blank** and **source** — and the git pass                             |
 | [existing repo](references/existing-repo.md)                   | mode **shaped**; and the passes **source** borrows, cited there by number     |
-| [fragments and sections](references/fragments-and-sections.md) | every mode — the two merge algorithms                                         |
-| [readme and licence](references/readme-and-license.md)         | every mode — the stub and the files                                           |
+| [fragments and sections](references/fragments-and-sections.md) | every mode — the editor merge                                                 |
+| [hygiene assets](references/readme-and-license.md)             | every mode — the stub, the licence, the security contact, the other assets    |
 
 **The existing-repo pipeline adopts rather than flattens**, and three rules
 carry that — rules the `source` mode borrows for what its tree already holds,
@@ -738,13 +745,14 @@ reaches them: the **secrets provider** (§3), the **placeholders** (§4), the
 the **aggregator offer** (§10) — the existing pipeline runs them from its
 post-landing paragraph, the new-repo pipeline in its numbered order, and no
 mode skips one or asks its question twice. Beside them the **fills** the packs
-marked — the `_default` slot per project id — then the **two merges** (ignore
-sections, the first of them from the stack read, and editor fragments), then
+marked — the `_default` slot per project id — then the **editor merge**, then
 the **git pass**, whose
 questions were asked once for the run and whose commit is that repo's own.
-Between the merges and the git pass, `init` **re-records the lockfile hash** of
-every file it filled, appended to or merged, so nothing it wrote reads as drift
-on the next run. The editor merge reads the existing file
+The ignore file is not merged here: it is `/stackgen:tool-config`'s git tool,
+which converts a landed sectioned file into blocks on adoption.
+Between the merge and the git pass, `init` **re-records the lockfile hash** of
+every file it filled or merged, so nothing it wrote reads as drift on the next
+run. The editor merge reads the existing file
 whole, and a key the hand section already carries that the packs also compose
 is a **collision**: asked in one round inside the plan — keep mine, take the
 pack's, or union where the value is an object — recorded under
@@ -757,16 +765,16 @@ Both pipelines land the same baselines, in one order. **First
 gate's scopes among them — it lands every tool that skill owns, the gates
 included, so `init` names none of them. The survey runs it as `preview all`
 and shows its rows in the plan; the real call carries `answers=` for every
-row, per new-repo §2, so the skill asks no second time. **Then the one
-unconditional bundle that remains**, fetched through the adapter by the
-**fixed slug** `repo-hygiene` — fixed, never constructed: a name assembled
-from configuration is one that can silently resolve to nothing, which is the
-rule the `ux-gate` and design-adapter seams already follow. The secrets
-provider is fetched by whichever slug the user picked at question 4. **Every
-call carries the four answers** — the skill's as arguments, each fetch's as
-its `answers:` map — the forge, the editor, the provider slug, the update bot
-— so the materializer's conditional evaluation step can decide a pack's
-conditional files. That map is the `answers:` block the config records, with
+row, per new-repo §2, so the skill asks no second time. **Then `init`'s own
+hygiene assets**, per [hygiene assets](references/readme-and-license.md) —
+no adapter fetch and no lock record. **Then the secrets provider**
+question 4 picked, materialized through the stack adapter — the only thing
+`init` reaches the adapter for. **Every call carries the four answers** —
+the skill's as arguments, the fetch's as its `answers:` map — the forge, the
+editor, the provider slug, the update bot — so the materializer's conditional
+evaluation step can decide a pack's conditional files, and `init` reads the
+same values for its own assets. That map is the `answers:` block the config
+records, with
 the **forge refreshed from `origin`** on every run: the recorded forge is the
 record and the fallback for a repo whose remote cannot be read at all, and a
 recorded forge that no longer matches the live host is **rewritten in place**
@@ -775,9 +783,10 @@ with no `when:` lands whole, as it always has, and a file a condition skips is
 the plan's **Skipped** row, never a deferral: nothing is waiting on a later
 run, the repo simply is not the kind the file was for.
 
-Their landing is consent-gated by the materializer, and their presence in a
-lockfile is what tells a later run — or `/vwf:setup` — that a repo is shaped
-at all. **The lockfile is per repo**, like everything else a pack lands: each
+Their landing is covered by the one consent, and the skill's `tool-config/…`
+records in the adapter's lockfile are what tell a later run — or
+`/vwf:setup` — that a repo is shaped at all. **The lockfile is per repo**,
+like everything else a pack lands: each
 member carries its own, so a member is shaped or not on its own evidence and
 the base's lockfile never speaks for it.
 
@@ -812,7 +821,7 @@ Projects          <n>    <directory> — <id>
 Tasks renamed     <n>    <old> → <new>
 Tasks kept        <n>    <path>              (repo-owned; + the contract note)
 Calls rewritten   <n>    <file:line> <old> → <new>
-Sections appended <n>    <name>
+Templates asked   <n>    <Name>
 Fragments merged  <n>    <name>
 Deferred          <n>    <what> — unlock: <what would let it happen>
 ```
@@ -855,7 +864,7 @@ failed or a call was refused, `by hand` where the forge has no CLI and the
 list was printed. The `Backlog project` line is the base's alone and reads the
 project's URL, `present` where one already existed, or `pending` with its
 reason. Which branch a forge calls default is no longer an act somebody
-performs there by hand: the pass sets it, and the hygiene pack's contribution
+performs there by hand: the pass sets it, and the hygiene assets' contribution
 guide keeps the by-hand form for a forge the pass cannot reach.
 
 Then the two next-step lines, in this order and always both:
@@ -905,7 +914,7 @@ schedule of events rather than on a symptom, and the way to ask for one is
   their aliases are one per member, so the set changing is work for the base
   as well as for the member.
 - **On a fresh clone that reports drift.** Anything the previous run
-  **deferred** — an offline ignore section, a missing toolchain binary, a
+  **deferred** — an offline ignore template, a missing toolchain binary, a
   declined materialization — is still deferred in the clone, and its unlock is
   a re-run.
 - **After the forge drifts.** What the forge pass set is the forge's record,

@@ -288,18 +288,13 @@ describe("the pack config tier", () => {
       alpha: {
         files: {
           [task]: "#!/usr/bin/env bash\n",
-          [`${pack}/.gitignore`]: "node_modules/\n",
           [`${pack}/wrangler.jsonc`]: "{}\n",
           [`${pack}/_licenses/MIT.txt`]: "MIT\n",
           [`${pack}/.config/dprint.json`]: "{}\n",
-          // The five root entries a tool discovers only from the repo root, or
-          // that a human reads there: the dprint shim, the package-manager
-          // file, the contributing guide, graphify's ignore file, and the forge
-          // directory.
+          // The three root entries a tool discovers only from the repo root:
+          // the dprint shim, the package-manager file, and the forge directory.
           [`${pack}/dprint.json`]: "{ \"extends\": \".config/dprint.json\" }\n",
           [`${pack}/.npmrc`]: "fund=false\n",
-          [`${pack}/CONTRIBUTING.md`]: "# Contributing\n",
-          [`${pack}/.graphifyignore`]: "dist/\n",
           [`${pack}/.github/ISSUE_TEMPLATE/bug.md`]: "---\nname: Bug\n---\n",
         },
         executable: [task],
@@ -396,18 +391,21 @@ describe("the pack config tier", () => {
     ]);
   });
 
-  it("accepts a Renovate config at the config/ tier root", () => {
-    // Renovate discovers its config at the repo root, in `.github/` or in
-    // `.gitlab/`; one under `.config/` is read by nothing and reports no error.
-    const root = tree({
-      alpha: {
-        files: {
-          [`${pack}/renovate.json`]:
-            "{ \"extends\": [\"config:best-practices\"] }\n",
-        },
-      },
-    });
-    expect(messages(check(root))).toEqual([]);
+  it.each([
+    ".gitignore",
+    ".gitattributes",
+    ".graphifyignore",
+    ".editorconfig",
+    "renovate.json",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "LICENSE",
+  ])("flags %s at the config/ tier root — tool-config's or init's", file => {
+    // A pack asks tool-config for its lines in these files, or init writes them.
+    const root = tree({ alpha: { files: { [`${pack}/${file}`]: "x\n" } } });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("unallowlisted root entry"),
+    ]);
   });
 
   it("flags a root file vwf owns — CLAUDE.md", () => {
@@ -541,7 +539,7 @@ describe("the pack config tier", () => {
         "stacks/toolchain-manager/mise/pack.yaml":
           `name: mise\nconditional:\n${entries}`,
         [`${pack}/.config/vscode.d/mise.jsonc`]: "{ \"settings\": {} }\n",
-        [`${pack}/renovate.json`]: "{}\n",
+        [`${pack}/wrangler.jsonc`]: "{}\n",
         ...files,
       },
     },
@@ -550,8 +548,8 @@ describe("the pack config tier", () => {
   it("accepts a conditional list naming known axes and landed paths", () => {
     const root = tree(conditional(
       "  - path: .config/vscode.d/*.jsonc\n    when: { editor: vscode }\n"
-        + "  - path: renovate.json\n    when: { update_bot: renovate }\n"
-        + "  - path: renovate.json\n    when: { secrets: fnox }\n",
+        + "  - path: wrangler.jsonc\n    when: { update_bot: renovate }\n"
+        + "  - path: wrangler.jsonc\n    when: { secrets: fnox }\n",
     ));
     expect(messages(check(root))).toEqual([]);
   });
@@ -571,7 +569,7 @@ describe("the pack config tier", () => {
 
   it("flags a secrets condition on none, which names no provider", () => {
     const root = tree(conditional(
-      "  - path: renovate.json\n    when: { secrets: none }\n",
+      "  - path: wrangler.jsonc\n    when: { secrets: none }\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining(
@@ -582,11 +580,11 @@ describe("the pack config tier", () => {
 
   it("flags a conditional entry on an axis outside the vocabulary", () => {
     const root = tree(conditional(
-      "  - path: renovate.json\n    when: { ci: github }\n",
+      "  - path: wrangler.jsonc\n    when: { ci: github }\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining(
-        "`conditional[0]` (renovate.json) `when` names axis `ci`, not one of "
+        "`conditional[0]` (wrangler.jsonc) `when` names axis `ci`, not one of "
           + "forge, editor, secrets, update_bot",
       ),
     ]);
@@ -594,7 +592,7 @@ describe("the pack config tier", () => {
 
   it("flags a conditional entry whose value the axis never takes", () => {
     const root = tree(conditional(
-      "  - path: renovate.json\n    when: { forge: bitbucket }\n",
+      "  - path: wrangler.jsonc\n    when: { forge: bitbucket }\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining(
@@ -619,21 +617,21 @@ describe("the pack config tier", () => {
     // The glob is matched inside the pack's own tier; a `..` segment or an
     // absolute path reaches files the pack does not land.
     const root = tree(conditional(
-      "  - path: ../../../renovate.json\n    when: { forge: github }\n"
-        + "  - path: /etc/renovate.json\n    when: { forge: github }\n",
+      "  - path: ../../../wrangler.jsonc\n    when: { forge: github }\n"
+        + "  - path: /etc/wrangler.jsonc\n    when: { forge: github }\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining(
-        "(../../../renovate.json) climbs out of what the pack lands",
+        "(../../../wrangler.jsonc) climbs out of what the pack lands",
       ),
-      expect.stringContaining("(/etc/renovate.json) climbs out of"),
+      expect.stringContaining("(/etc/wrangler.jsonc) climbs out of"),
     ]);
   });
 
   it("flags a conditional entry naming two axes at once", () => {
     // Two answers is two entries on the same path, never one map.
     const root = tree(conditional(
-      "  - path: renovate.json\n    when: { forge: github, editor: vscode }\n",
+      "  - path: wrangler.jsonc\n    when: { forge: github, editor: vscode }\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining("`when` names 2 axes — exactly one of"),
@@ -832,6 +830,57 @@ describe("the pack config tier", () => {
         + "  - grype add ignore GHSA-abcd-1234 not reachable from our code\n",
     ));
     expect(messages(check(root))).toEqual([]);
+  });
+
+  it("accepts the git verbs a pack may ask for", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - git add ignore .venv\n"
+        + "  - git add ignore fnox.local.toml .doppler/ !keep/*.md\n"
+        + "  - git add ignore template=Node\n"
+        + "  - git add ignore template=C++\n"
+        + "  - git add attribute pnpm-lock.yaml linguist-generated\n"
+        + "  - git add attribute *.png binary -diff\n",
+    ));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a git verb outside the skill's grammar", () => {
+    // Empty ignore, bad template, bare attribute, quoted token, unknown verb.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - git add ignore\n"
+        + "  - git add ignore template=\n"
+        + "  - git add ignore template=Bad/Name\n"
+        + "  - git add ignore template=Node .venv\n"
+        + "  - git add attribute pnpm-lock.yaml\n"
+        + "  - git add ignore '!keep/*.md'\n"
+        + "  - git add attribute \"*.png\" binary\n"
+        + "  - git add hook x\n",
+    ));
+    expect(messages(check(root))).toEqual(
+      [0, 1, 2, 3, 4, 5, 6, 7].map(index =>
+        expect.stringContaining(`\`tool-config[${index}]\``)
+      ),
+    );
+    expect(messages(check(root)).every(m => m.includes("matches none of")))
+      .toBe(true);
+  });
+
+  it("flags a requester suffix on a git verb", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - git add ignore .venv for uv\n"
+        + "  - git add ignore template=Node for pnpm\n"
+        + "  - git add attribute pnpm-lock.yaml linguist-generated for pnpm\n",
+    ));
+    expect(messages(check(root))).toEqual(
+      [0, 1, 2].map(index =>
+        expect.stringContaining(`\`tool-config[${index}]\``)
+      ),
+    );
+    expect(messages(check(root)).every(m => m.includes("`for <requester>`")))
+      .toBe(true);
   });
 
   it("flags a hook the skill refuses though the grammar admits it", () => {
@@ -1047,6 +1096,63 @@ describe("the pack config tier", () => {
   // stackgen:tool-config's asset trees land whole as a repo root, so they are
   // held to the same bar as a pack's config/ tier.
   const assets = "skills/tool-config/assets/mise";
+
+  it("accepts the git, graphify and renovate files at an asset tree root", () => {
+    // tool-config writes these at the root, where only a pack is refused them.
+    const root = tree({
+      stackgen: {
+        files: {
+          "skills/tool-config/assets/git/.gitignore": ".DS_Store\n",
+          "skills/tool-config/assets/git/.gitattributes": "* text=auto\n",
+          "skills/tool-config/assets/graphify/.graphifyignore": "dist/\n",
+          "skills/tool-config/assets/renovate/renovate.json": "{}\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags another tool's root file at an asset tree root", () => {
+    // Each root file belongs to one tool's tree, not to every tool's.
+    const root = tree({
+      stackgen: {
+        files: { "skills/tool-config/assets/mise/renovate.json": "{}\n" },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("unallowlisted root entry"),
+    ]);
+  });
+
+  it("walks an init asset tree as a landed tree", () => {
+    // init's hygiene assets land in a repo with no plugin installed.
+    const hygiene = "skills/init/assets/hygiene";
+    const clean = tree({
+      vwf: {
+        files: {
+          [`${hygiene}/CONTRIBUTING.md`]: "# Contributing\n",
+          [`${hygiene}/licenses/MIT.txt`]: "MIT\n",
+          [`${hygiene}/.config/vscode.d/hygiene.jsonc`]:
+            "{ \"settings\": {} }\n",
+        },
+      },
+    });
+    expect(messages(check(clean))).toEqual([]);
+    const root = tree({
+      vwf: {
+        files: {
+          [`${hygiene}/SECURITY.md`]: "See ${CLAUDE_PLUGIN_ROOT}/x.md\n",
+          [`${hygiene}/.github/workflows/ci.yml`]: "on: push\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("expands to nothing"),
+        expect.stringContaining("ships a CI workflow"),
+      ]),
+    );
+  });
 
   it("walks a tool-config asset tree as a landed tree", () => {
     const task = `${assets}/.config/mise/tasks/code/graph`;

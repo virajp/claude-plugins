@@ -60,8 +60,9 @@ Read the one the step needs, not all of them.
 - **Never move source.** setup writes and moves documentation only. Layout
   drift is a written recommendation — see Recommendations, never moves.
 - **Don't write repo tooling.** The repo shape — the toolchain manager's config
-  and task library, the repo gates, the hygiene files — is `/vwf:init`'s. Setup
-  checks for it and offers init; it never materializes a bundle itself. Setup
+  and task library, the repo gates, the hygiene files — is `/vwf:init`'s and
+  `/stackgen:tool-config`'s. Setup checks for it and offers init; it never
+  writes any of it itself. Setup
   is also the **only** way init is reached — Step 0's offer, or `reshape` —
   since init is hidden from the `/` menu. On a multi-repo product the shape is
   **per repo**, and one init run reaches them all, so setup checks every repo
@@ -108,14 +109,13 @@ everything below reads as it always did.
 
 First, is the shape **there**: in **each** repo of that set, the stack adapter's
 lockfile records what `/stackgen:tool-config all` writes — entries sourced
-`tool-config/<tool>@<version>`, the gates among them — and the one remaining
-unconditional repo slug, `repo-hygiene`
-(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). Named exactly, never
-constructed: a slug assembled from configuration is one that can silently
-resolve to nothing. Second, is it **current**: the seven predicates under
-**"The repo shape against its baseline"** in `/vwf:doctor`'s stack-checks
-reference, evaluated **per repo** on that repo's own artifacts — the pack
-versions the adapter lockfile records against what the adapter ships now, the
+`tool-config/<tool>@<version>`, the gates and `git` and `graphify` among them
+(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). No pack slug is checked: a
+repo is shaped when its `tool-config/*` records are present. Second, is it
+**current**: the seven predicates under **"The repo shape against its
+baseline"** in `/vwf:doctor`'s stack-checks reference, evaluated **per repo**
+on that repo's own artifacts — the pack versions the adapter lockfile records
+against what the adapter ships now, the
 registry's project ids behind the surfaces generated from them, the
 `develop`/`main` pair, the toolchain manager's repo-name key against the repo's
 folder, the bytes of the pack-owned files the packs landed against the lock,
@@ -175,7 +175,8 @@ decisions nothing else does, and overwriting it discards them silently.
 
 **`onboard` forks once more — on evidence, not on a second mode.** A **blank**
 repo has no package or language manifest, no source directories, and no
-`docs/blueprint/` tree. A README, LICENSE, `.gitignore`, `.gitattributes`, and
+`docs/blueprint/` tree. A README, LICENSE, `.gitignore` and `.gitattributes`
+(`/stackgen:tool-config`'s git tool), and
 tooling-only configs (mise, formatter, linter, pre-commit — at the root or under
 `.config/`) are **not** code: a repo holding only those is blank. Anything else
 takes the code sub-path. Both are in the onboard pipeline. This fork chooses

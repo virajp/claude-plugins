@@ -45,10 +45,9 @@ stacks/<type>/<slug>/
   it.
 - **`config/_<name>/` is pack-private and is not copied.** A leading
   underscore **at the top of the tier** marks a payload a *reader* uses rather
-  than a file the repo gets — `config/_licenses/MIT.txt` is the case that
-  needs it: the hygiene pack carries both licence texts, and `/vwf:init`
-  copies the one the user picked to `LICENSE` with the year and holder filled.
-  Copying the directory wholesale would land two licences and answer a
+  than a file the repo gets — alternative texts a reader copies one of, the
+  one the user picked, with its placeholders filled.
+  Copying the directory wholesale would land every alternative and answer a
   question nobody asked. Nested deeper, the same character means the
   opposite: `.config/mise/tasks/p/_project/` is a **marked position**, copied
   and renamed to the project's id as it lands — the id being the slug
@@ -134,7 +133,7 @@ them, into `.vscode/settings.json` and `.vscode/extensions.json`:
   otherwise for that key; a re-run rewrites only what is between the
   markers.
 
-**Ownership of the base.** The `repo-hygiene` pack's fragment carries the
+**Ownership of the base.** `/vwf:init`'s own `hygiene.jsonc` carries the
 editor **baseline** — the nesting map, the exclude lists, the editor-wide
 keys a repo has regardless of stack. Every other pack carries only keys
 for the files or the tools **it** ships. A gate pack naming itself the
@@ -155,7 +154,7 @@ version: <semver — what sync diffs against, per component>
 type: <component type> # assets/taxonomy.md
 category: <token> # required where the type has categories
 capability: <token> # the vwf capability realized — where one applies
-kind: language-bundle | database | cloud-provider | repo-hygiene | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool | stylesheet # the bundle kind it composes into (assets/kinds.md)
+kind: language-bundle | database | cloud-provider | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool | stylesheet # the bundle kind it composes into (assets/kinds.md)
 axis: project | backing | deploy | repo | design | cicd | stylesheet # omitted by cloud-provider components, which compose into both a backing- and a deploy-axis bundle; each bundle naming one declares its own
 platforms: [ <platform> ] # language components only — the bundle root
 languages: # language and app-framework components only
@@ -307,23 +306,18 @@ so `renovate.json`, not `config/renovate.json`) and a `when:` map of
 
 ```yaml
 conditional:
-  - path: .github/ISSUE_TEMPLATE/*
-    when: { forge: github }
-  - path: renovate.json
-    when: { update_bot: renovate }
-  - path: .config/vscode.d/repo-hygiene.jsonc
+  - path: .config/vscode.d/eslint.jsonc
     when: { editor: vscode }
 ```
 
-Those three are the hygiene pack's: the issue forms are GitHub's format
-and land nowhere else; the Renovate policy only where Renovate is the bot;
-the editor fragment only where the editor is in use — and the third
-applies to **every** pack that ships a `vscode.d/` fragment, each stating
-it in its own `pack.yaml` on its own fragment's name. The `secrets` axis
-works the same way — a file that only makes sense beside one provider,
-`when: { secrets: fnox }` — but no shipped pack carries such a file today:
-the provider's ignore line is an ignore-section row keyed on the provider
-slug, not a conditional file.
+That one is the eslint pack's: the editor fragment lands only where the
+editor is in use — and the same entry applies to **every** pack that ships
+a `vscode.d/` fragment, each stating it in its own `pack.yaml` on its own
+fragment's name. The `forge`, `secrets` and `update_bot` axes work the same
+way — a file that only makes sense on one forge, beside one provider or
+under one bot — but no shipped pack carries such a file today: a
+provider's ignore line is a `git add ignore` call in its `tool-config:`
+list, not a conditional file.
 
 Rules:
 
@@ -365,7 +359,6 @@ axis: project | backing | deploy | repo | design | cicd | stylesheet
 kind: <bundle kind> # assets/kinds.md
 platforms: [ <platform> ] # project axis only
 artifact: <token> # deploy axis only
-unconditional: true # omitted by every bundle a user picks — see below
 default: true # optional — what vwf preselects; one per axis per platform
 components:
   - <type>/<slug>@<version> # a shipped pack, at its current version
@@ -376,20 +369,12 @@ components:
 a bundle answers "what is a TypeScript service" — and those are different
 questions, which is why a menu of components alone leaves nothing pickable.
 
-**Except where `unconditional: true`.** That key marks the repo baseline —
-a slot with exactly one pack, where a one-entry menu would be theatre and
-where a repo that has picked no stack still needs the thing. It has two
-readers: `stackgen-stack-menu` **excludes** such a bundle from the payload
-it returns, and `/vwf:init` fetches it by **fixed slug**, never a slug
-constructed from configuration. One bundle carries it today,
-`repo-hygiene`; the toolchain manager and the gates are
-`stackgen:tool-config`'s, not bundles. Nothing about it is recorded in
-`.config/vwf.yaml` — nothing was chosen — only in `lock.yaml`, which is also
-what tells a caller whether the repo is shaped at all: the slug and the
-`tool-config/*` entries present, or not shaped. `unconditional:` is the
-**bundle's** word — whether the composition is picked or fixed — and
-`conditional:` the **file's**, inside a pack: an unconditional bundle may
-still carry a pack whose issue forms land only on GitHub.
+**Every bundle is a menu entry.** The repo baseline is no bundle: the
+toolchain manager, the gates and the hygiene configs are
+`stackgen:tool-config`'s tools, and the prose files are `/vwf:init`'s own
+assets. Nothing about it is recorded in `.config/vwf.yaml` — nothing was
+chosen — only in `lock.yaml`, which is also what tells a caller whether the
+repo is shaped at all: the `tool-config/*` entries present, or not shaped.
 
 **`default: true` marks the menu entry vwf preselects on that axis.** It is
 optional and boolean, and it changes nothing about what the bundle is — only
@@ -405,8 +390,7 @@ platform would be a preselection decided by file order, which is silent
 nondeterminism, and the checker refuses the tree, naming both files and the
 platform they share. An axis whose flagged bundles all declare platforms
 may therefore carry one flagged bundle per platform, and a round filtered to
-one platform sees exactly one. It is **never set on an `unconditional`
-bundle**: that bundle is not in the menu, so there is nothing to preselect.
+one platform sees exactly one.
 
 **A `@generated` ref is a first-class outcome, not a gap.** A bundle may mix
 copied and generated components freely: the covered ones land verbatim, the

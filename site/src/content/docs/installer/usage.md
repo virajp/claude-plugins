@@ -76,8 +76,8 @@ same scope. That is why `--all` is just `vwf`.
 An already-installed plugin is reported as satisfied, never auto-updated — see
 [Upgrading](#upgrading). **No receipt is written at all** — not for a plugin
 install and not for anything else this CLI does. Claude's own settings are the
-record for plugins, graphify keeps its own for the hook, and `--uninstall` reads
-both live.
+record for plugins, graphify keeps its own for its wiring, and `--uninstall`
+reads both live.
 
 Restart your agent afterwards so the skills, hooks and MCP servers load.
 
@@ -157,7 +157,8 @@ can see from where it runs:
 - **At user level** — the `virajp-plugins` marketplace registration and
   user-scoped plugin installs.
 - **At repo level**, when run inside a repo — project-scoped plugin installs,
-  and graphify's hook, graph and `.graphifyignore`.
+  and graphify's graph and `.graphifyignore`, plus any raw graphify hook an
+  earlier install left — `graphify hook uninstall` still runs to clean it.
 - **Plus anything an older install left behind**, read from the receipts those
   versions wrote — the copied Claude marketplace payload, the copied OpenCode
   plugin tree, the Cursor registration, the statusline. Every one of those is

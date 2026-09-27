@@ -97,19 +97,22 @@ bundle, so a later re-sync can act on one component alone. Packs are **assets,
 not live skills** — installing stackgen floods no session with every stack's
 doctrine.
 
-`repo-hygiene` is the one **unconditional** bundle: left out of the menu payload
-and fetched by `/vwf:init` at its fixed slug, because a repo that has picked no
-stack still needs its hygiene files; the gates it once shared the tier with are
-`stackgen:tool-config`'s since 2026-09-26. `init` fetches it **per repo** — the
-base and every member repo it resolved, each landing its own lockfile — so a
-member is shaped on its own evidence. `/vwf:setup` no longer fetches it: it
-checks each repo's adapter lockfile for it and for the `tool-config/…` records
-`/stackgen:tool-config all` writes, and offers `/vwf:init` when one is missing
-anywhere, or when any repo has drifted from doctor's baseline. What setup *does*
-fetch is every **pinned** axis — its materialize pass invokes `-stack-template`
-once per `(repo, slug)`, with the `repo:` line naming the member — which is the
-one landing path `/vwf:architecture` no longer takes. Since `config_format` 21
-that pass carries an **`answers:` map** beside the `repo:` line, and so does
+No bundle is fetched for a repo's baseline any more. The hygiene kind, its pack,
+its bundle and the `unconditional:` bundle key retired on 2026-09-27: the
+hygiene **config files** — `.gitignore`, `.gitattributes`, `.graphifyignore`,
+`renovate.json` — are `stackgen:tool-config`'s `git`, `graphify` and `renovate`
+tools, and the **prose files** — `CONTRIBUTING.md`, `SECURITY.md`, the licence
+texts, the issue forms, the VS Code baseline — are `/vwf:init`'s own assets.
+`init` runs `/stackgen:tool-config all` **per repo** — the base and every member
+repo it resolved, each landing its own lockfile — so a member is shaped on its
+own evidence; the only adapter fetch it makes is the secrets provider the user
+picked. `/vwf:setup` checks each repo's adapter lockfile for the `tool-config/…`
+records that call writes, and offers `/vwf:init` when one is missing anywhere,
+or when any repo has drifted from doctor's baseline. What setup *does* fetch is
+every **pinned** axis — its materialize pass invokes `-stack-template` once per
+`(repo, slug)`, with the `repo:` line naming the member — which is the one
+landing path `/vwf:architecture` no longer takes. Since `config_format` 21 that
+pass carries an **`answers:` map** beside the `repo:` line, and so does
 `stackgen-sync`: all three callers read the four axes from the base's
 `.config/vwf.yaml` `answers:` block — `editor` and `secrets` once for the
 product, `forge` and `update_bot` per repo — and re-read `forge` live from that
@@ -127,15 +130,15 @@ A bundle's frontmatter may also carry **`default: true`**, since 2026-09-15:
 computes none, and vwf's architecture menu preselects the one flagged entry
 among those it offers on a round, after filtering by the project's platforms —
 highlighted, never assumed, naming no tool. At most one bundle per axis **per
-platform**, never an unconditional one: two flagged bundles on one axis conflict
-when either declares no `platforms:` list (it is offered on every round of the
-axis) or their lists intersect, and `p:plugins:check` rule 14 refuses the pair,
-naming the platform they share. Two are flagged today. On the project axis it is
-`astro-ssg`, `platforms: [site]` — what a `site` project's round highlights, and
-nothing on any other platform's round; the other four entries on that round, the
-three remaining Astro bundles and `html` (the `framework/html` pack, a
-hand-authored page tree under the `document` category, since 2026-09-15), carry
-no flag. Neither app-framework bundle carries one either — `dart-flutter`
+platform**: two flagged bundles on one axis conflict when either declares no
+`platforms:` list (it is offered on every round of the axis) or their lists
+intersect, and `p:plugins:check` rule 14 refuses the pair, naming the platform
+they share. Two are flagged today. On the project axis it is `astro-ssg`,
+`platforms: [site]` — what a `site` project's round highlights, and nothing on
+any other platform's round; the other four entries on that round, the three
+remaining Astro bundles and `html` (the `framework/html` pack, a hand-authored
+page tree under the `document` category, since 2026-09-15), carry no flag.
+Neither app-framework bundle carries one either — `dart-flutter`
 (`cross-platform-ui`) and `swift-swiftui` (the `app-framework/swiftui` pack, the
 first under `native-ui`, since 2026-09-23) — so an app platform's round
 preselects nothing. On the design axis it is `design-tool`'s `claude-code` — the
@@ -168,44 +171,46 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   generated `lspServers` entry **must** carry an `extensionToLanguage` map;
 - a pack's own **`config/` tree**, mirroring the repo root, for the repo config
   a component genuinely owns — **mode preserved**, so a task file lands 755.
-  Five kinds of entry since 2026-09-26: **(a)** is retired — the toolchain
+  Four kinds of entry since 2026-09-27: **(a)** is retired — the toolchain
   manager's own config and task library are `stackgen:tool-config`'s, landed
   from its `assets/mise/`, never a pack's `config/` tree; **(b)** a language
   gate's own config (`.config/swiftlint.yml`, `.config/swift-format.json`, …) —
   dprint, pre-commit, gitleaks and grype are the skill's since 2026-09-26,
-  landed from its `assets/<tool>/`; **(c)** the hygiene files (`.gitignore`,
-  `.editorconfig`, `.gitattributes`, `SECURITY.md` — its one contact slot taking
-  a URL or an email — `renovate.json` at the root, the licence texts — copied by
-  `/vwf:init` for a repo that answered `public`, never for a private one — and,
-  since 2026-09-21, three of them **conditional**: a pack's `pack.yaml` may
-  carry a `conditional:` list, each entry a `config/` path or glob and a `when:`
-  of one axis to one value from the fixed vocabulary `forge` (`github`,
-  `gitlab`), `editor` (`vscode`), `secrets` (a provider slug), `update_bot`
-  (`renovate`, `dependabot`, `none`); the hygiene pack conditions
-  `.github/ISSUE_TEMPLATE/*` on `forge: github`, `renovate.json` on
-  `update_bot: renovate` and its editor fragment on `editor: vscode`. The
-  materializer evaluates each against the `answers:` map the caller passes
-  beside `repo:` — since `config_format` 21 all three callers pass a full map
-  read from the base config's `answers:` block, the forge re-read live from
-  `origin`; an axis left out reads **true** and lands, the fallback for a caller
-  none of this describes — and writes a never-landed false path to the
-  lockfile's `skipped:` list as `{ path, pack, when }`, never a create and never
-  a conflict, so `/vwf:doctor` never reports it missing and a file at that path
-  is the repo's own; a path with an `entries:` record whose answer since flipped
-  keeps its record and is never removed. A pack's `skipped:` rows **live and die
-  with its `entries:`**: removing or un-pinning the pack drops its rows too, so
-  the list never claims a path is intentionally absent for a condition nothing
-  evaluates any more. `stackgen-sync` evaluates the same conditions before it
-  classifies a pack's landing set, and gains three states beside its three — a
-  false path with no record is **skipped (condition)** and is its `skipped:`
-  row; a never-landed path whose condition now holds is **landable — condition
-  now true** and is offered as a create under the consent tier a new pack file
-  already takes; a landed path whose condition turned false is **kept**,
-  reported once and never removed. The provider's ignore line is **not** a
-  conditional file: `fnox.local.toml` left the base `.gitignore` and is a
-  provider row in the hygiene pack's ignore table (fnox, and doppler's
-  `.doppler/`), appended under a banner named for the slug only where init's
-  stack read carries that provider); **(d)** is retired too — a mise
+  landed from its `assets/<tool>/`; **(c)** is retired too — since 2026-09-27
+  the hygiene config files (`.gitignore`, `.gitattributes`, `.graphifyignore`,
+  `renovate.json`) are `stackgen:tool-config`'s `git`, `graphify` and `renovate`
+  tools, the prose files (`CONTRIBUTING.md`, `SECURITY.md`, the licence texts,
+  the issue forms, the VS Code baseline) are `/vwf:init`'s own assets, and
+  `.editorconfig` lands nowhere. What survives it is the **conditional** list,
+  since 2026-09-21: a pack's `pack.yaml` may carry a `conditional:` list, each
+  entry a `config/` path or glob and a `when:` of one axis to one value from the
+  fixed vocabulary `forge` (`github`, `gitlab`), `editor` (`vscode`), `secrets`
+  (a provider slug), `update_bot` (`renovate`, `dependabot`, `none`) — every
+  pack editor fragment is conditioned on `editor: vscode`. The materializer
+  evaluates each against the `answers:` map the caller passes beside `repo:` —
+  since `config_format` 21 all three callers pass a full map read from the base
+  config's `answers:` block, the forge re-read live from `origin`; an axis left
+  out reads **true** and lands, the fallback for a caller none of this describes
+  — and writes a never-landed false path to the lockfile's `skipped:` list as
+  `{ path, pack, when }`, never a create and never a conflict, so `/vwf:doctor`
+  never reports it missing and a file at that path is the repo's own; a path
+  with an `entries:` record whose answer since flipped keeps its record and is
+  never removed. A pack's `skipped:` rows **live and die with its `entries:`**:
+  removing or un-pinning the pack drops its rows too, so the list never claims a
+  path is intentionally absent for a condition nothing evaluates any more.
+  `stackgen-sync` evaluates the same conditions before it classifies a pack's
+  landing set, and gains three states beside its three — a false path with no
+  record is **skipped (condition)** and is its `skipped:` row; a never-landed
+  path whose condition now holds is **landable — condition now true** and is
+  offered as a create under the consent tier a new pack file already takes; a
+  landed path whose condition turned false is **kept**, reported once and never
+  removed. A pack's ignore and attribute lines are not files at all: it asks
+  `git add ignore <pattern…>`, `git add ignore template=<Name>` or
+  `git add attribute <pattern> <attr…>` in its `tool-config:` list — node's,
+  Python's, Dart's, Flutter's and Swift's GitHub templates fetched and pinned by
+  commit SHA with a `written:` hash in the lock, fnox's `fnox.local.toml` and
+  doppler's `.doppler/` asked by those providers, pnpm's and SwiftPM's lockfile
+  markers asked as attributes; **(d)** is retired too — a mise
   `conf.d/<pack>.toml` fragment is refused by rule 11; a provider's tool pin and
   environment values (doppler, fnox), a shell alias (pnpm's `npx`) or a gate
   tool's pin (swiftlint's) is a line of the pack's `tool-config:` list, which
@@ -214,10 +219,11 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   `.config/pre-commit.d/` file is refused by rule 11; a pack's dprint plugin,
   exclude, linter ignore, pre-commit hook or grype ignore is a `tool-config:`
   line (`dprint add plugin`, `all add exclude [generated]`,
-  `pre-commit add linter-ignore`, `pre-commit add hook`, `grype add ignore`),
-  and uv's `uv lock --check` hook is one; **(f)** a deploy target's own config
-  and its deploy task, since 2026-09-05 — `cloud-service/workers-static-assets`,
-  its `workers-ssr` sibling and `cloud-service/containers` each ship
+  `pre-commit add linter-ignore`, `pre-commit add hook`, `grype add ignore`, and
+  since 2026-09-27 `git add ignore`, `git add attribute`), and uv's
+  `uv lock --check` hook is one; **(f)** a deploy target's own config and its
+  deploy task, since 2026-09-05 — `cloud-service/workers-static-assets`, its
+  `workers-ssr` sibling and `cloud-service/containers` each ship
   `wrangler.jsonc` at the root (the SSR and Containers ones both carrying
   `main`, the Containers one adding a `containers` array, the Durable Object
   binding that addresses it and the migration that declares the class) plus a
@@ -242,27 +248,28 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   block — keep mine, take the pack's or union, asked once and recorded by vwf,
   an identical extension id kept unasked — so a hand key wins without the file
   ever holding a duplicate, never because the format tolerates one. Every one of
-  the **twelve** fragments in the tree — repo-hygiene, dprint-editor,
-  pre-commit, eslint, ruff, tsconfig, analysis-options, mise, since 2026-09-21
-  astro and pnpm, and since 2026-09-23 swift-format and swiftlint — is
-  conditioned on `editor: vscode`, in its pack's `pack.yaml` or, for mise's,
-  dprint-editor's and pre-commit's, by `stackgen:tool-config`'s `editor`
-  argument, so an editor **no** at init lands none and the composing skill
-  composes nothing. The split is by ownership: the hygiene baseline carries
-  **editor-wide keys alone** (indentation and suggestion defaults, the generic
-  excludes, todo-tree, the non-stack nesting rows, the generic extensions), and
-  every stack-naming key sits in the fragment of the pack that pins that stack —
-  `node_modules`, the tsbuildinfo files, the template-string converter and
-  `*.js` nesting in tsconfig's; `.dart_tool` in analysis-options'; `.astro` in
-  astro's; `.turbo`, the pnpm lockfile and the `package.json` children in pnpm's
-  (turbo is a generated component the pnpm-turbo bundle carries, so its exclude
-  lives beside the manager); `.build`, `.swiftpm` and the `Package.swift`
-  nesting in swift-format's; `yaml.*` and `redhat.vscode-yaml` in pre-commit's;
-  the fish extension dropped. `editor.defaultFormatter` is set **per language**
-  in the dprint fragment, one `[<language>]` scope per plugin `dprint.json`
-  carries and `[toml]` to even-better-toml, never editor-wide — an editor-wide
-  binding overrode Dart's formatter by composition order alone. The dprint
-  gate's fragment is the one filename exception, `dprint-editor.jsonc`: dprint
+  the **twelve** fragments in the tree — `/vwf:init`'s own `hygiene`,
+  dprint-editor, pre-commit, eslint, ruff, tsconfig, analysis-options, mise,
+  since 2026-09-21 astro and pnpm, and since 2026-09-23 swift-format and
+  swiftlint — is conditioned on `editor: vscode`, in its pack's `pack.yaml`, for
+  mise's, dprint-editor's and pre-commit's by `stackgen:tool-config`'s `editor`
+  argument, and for `hygiene` by init's own editor answer, so an editor **no**
+  at init lands none and the composing skill composes nothing. The split is by
+  ownership: the hygiene baseline carries **editor-wide keys alone**
+  (indentation and suggestion defaults, the generic excludes, todo-tree, the
+  non-stack nesting rows, the generic extensions), and every stack-naming key
+  sits in the fragment of the pack that pins that stack — `node_modules`, the
+  tsbuildinfo files, the template-string converter and `*.js` nesting in
+  tsconfig's; `.dart_tool` in analysis-options'; `.astro` in astro's; `.turbo`,
+  the pnpm lockfile and the `package.json` children in pnpm's (turbo is a
+  generated component the pnpm-turbo bundle carries, so its exclude lives beside
+  the manager); `.build`, `.swiftpm` and the `Package.swift` nesting in
+  swift-format's; `yaml.*` and `redhat.vscode-yaml` in pre-commit's; the fish
+  extension dropped. `editor.defaultFormatter` is set **per language** in the
+  dprint fragment, one `[<language>]` scope per plugin `dprint.json` carries and
+  `[toml]` to even-better-toml, never editor-wide — an editor-wide binding
+  overrode Dart's formatter by composition order alone. The dprint gate's
+  fragment is the one filename exception, `dprint-editor.jsonc`: dprint
   discovers any `dprint.jsonc` below the root as a sub-directory config, and one
   with no `plugins` array makes a bare `dprint check` exit 13. Note the second
   underscore rule: `config/_<name>/` at the top of the tier is pack-private and
@@ -278,20 +285,18 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   enforced by `p:plugins:check` rule 11, and beside it sits a second tier of
   root files **vwf** writes — `CLAUDE.md` and `mempalace.yaml` — which may sit
   at a shaped root and which no pack may land. `readme.md` is on the landable
-  tier only because a shaped repo has one — **no pack may ship it** — and
-  `renovate.json` joined that tier on 2026-09-10, at the root because Renovate's
-  config discovery never reaches `.config/` — and since 2026-09-21 it
-  **yields**: a repo already carrying a policy under `.github/renovate.json`,
-  `.renovaterc` or `renovate.json` keeps its own and the pack's is not landed
-  (`/vwf:init`'s tool-config table owns the spellings; the hygiene pack's
-  conventions state the rule) — and since 2026-09-21 it is also **conditional**
-  on `update_bot: renovate`, so a repo whose init row picked `dependabot` or
-  `none` gets no `renovate.json` at all, the path listed under `skipped:` rather
-  than landed beside a Dependabot policy. The lockfile's per-file `hash:` is the
-  landing hash **re-recorded by `/vwf:init`** after its fills, appends, merges
-  and its replace-or-keep offer, so a differing hash is drift only when no such
-  writer ran — `assets/output-tree.md` and the materializer reference both say
-  so.
+  tier only because a shaped repo has one — **no pack may ship it**. The git,
+  graphify and Renovate root files left the pack tier on 2026-09-27: each
+  `stackgen:tool-config` asset tree admits its own tool's root files beside it
+  (`TOOL_CONFIG_ROOT_FILES`, per tool), and a pack asks for their lines instead.
+  `renovate.json` sits at the root because Renovate's config discovery never
+  reaches `.config/`; it lands only on `update_bot=renovate`, and it **yields**
+  to a repo's own policy under any spelling Renovate discovers — tool-config's
+  `renovate` reference lists them — writing nothing beside it. The lockfile's
+  per-file `hash:` is the landing hash **re-recorded by `/vwf:init`** after its
+  fills, appends, merges and its replace-or-keep offer, so a differing hash is
+  drift only when no such writer ran — `assets/output-tree.md` and the
+  materializer reference both say so.
 
 **Three consent tiers**: the `.claude/` files ride the ordinary dry-run gate;
 `settings.json`, `.mcp.json` and a pack's `config/` tree are never written
