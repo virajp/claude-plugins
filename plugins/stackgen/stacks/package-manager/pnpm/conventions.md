@@ -46,13 +46,16 @@ at the repo's own `.config/mise/tasks/` behind the materializer's config consent
 line.
 
 **It owns `code/format` and `code/lint` whole, not a fragment of each.**
-`code:format` runs **dprint first**, then `pnpm dlx sort-package-json`: one task
-file co-authored by the repo formatter and the package manager. The seam is
-ownership-plus-contract — this component writes the file, and the contract it
-honours is that the repo formatter goes first. It is written whole rather than
-assembled from contributed fragments because stackgen's dispatch is
-copy-verbatim or generate, with nothing in between; a fragment layer would be a
-templating mechanism this plugin deliberately does not have.
+`code:format` runs **dprint first**, then sort-package-json: one task file
+co-authored by the repo formatter and the package manager. The sorter is a
+mise pin in the dev environment only — the pack's `tool-config:` asks for it —
+resolved by its mise path, and the step is skipped where it is not installed,
+as shfmt's is. The seam is ownership-plus-contract — this component writes the
+file, and the contract it honours is that the repo formatter goes first. It is
+written whole rather than assembled from contributed fragments because
+stackgen's dispatch is copy-verbatim or generate, with nothing in between; a
+fragment layer would be a templating mechanism this plugin deliberately does
+not have.
 
 **Both tasks take an optional file list, and the empty case is the whole
 tree.** That is the whole pre-commit story for this pack: it ships **no
