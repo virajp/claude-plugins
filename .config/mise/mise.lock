@@ -138,9 +138,12 @@ url_api = "https://api.github.com/repos/google/osv-scanner/releases/assets/56241
 url = "https://github.com/google/osv-scanner/releases/download/v2.6.0/multiple.intoto.jsonl"
 
 [[tools."pipx:graphifyy"]]
-version = "0.9.68"
+version = "0.9.69"
 backend = "pipx:graphifyy"
 specifiers = ["latest"]
+
+[tools."pipx:graphifyy".options]
+uvx = "true"
 
 [[tools.pnpm]]
 version = "12.6.0"
