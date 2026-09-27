@@ -2,7 +2,7 @@ name: Swift
 summary: The Swift package baseline — standards and public-API design, the
   error model, strict concurrency, Swift Testing, build and run, config and
   observability wiring.
-version: 0.1.3
+version: 0.2.0
 type: language
 kind: language-bundle
 axis: project
@@ -26,3 +26,6 @@ lsp_servers:
       ".swift": swift
     startupTimeout: 1000
 harness: n/a
+# The lines this pack asks /stackgen:tool-config for.
+tool-config:
+  - git add ignore template=Swift

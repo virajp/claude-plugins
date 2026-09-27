@@ -318,37 +318,43 @@ const PACK_HOOK_SHEBANGS = new Set([
  * The tier mirrors the target repo's root, and the repo doctrine puts every
  * tool's configuration under `.config/`. What is left at the root is the short
  * list of files a tool or a host *cannot* be told to look elsewhere for, plus
- * the two humans read first. Anything else arriving here is a pack quietly
- * widening the root of every repo it materializes into.
+ * the readme. Anything else arriving here is a pack quietly widening the root
+ * of every repo it materializes into.
  *
  * This is the **landable** tier of the doctrine's root allowlist
- * (`stackgen/assets/output-tree.md`). That list has a second tier — the root
- * files *vwf* writes, `CLAUDE.md` and `mempalace.yaml` — which is deliberately
- * absent here: they may sit at a shaped root, and no pack may land them.
+ * (`stackgen/assets/output-tree.md`). The files `stackgen:tool-config`, init
+ * and vwf write there — the ignore files, `CONTRIBUTING.md`, `CLAUDE.md` and
+ * the rest — are deliberately absent: they may sit at a shaped root, and no
+ * pack may land them.
  */
 const PACK_CONFIG_ROOT_FILES = new Set([
-  ".editorconfig",
-  ".gitattributes",
-  ".gitignore",
-  // graphify reads its ignore file from the root only, as git does.
-  ".graphifyignore",
   // npm and pnpm read `.npmrc` from the root of the project they install in.
   ".npmrc",
-  "CONTRIBUTING.md",
-  "LICENSE",
-  "SECURITY.md",
   // dprint's config discovery is root-only and `--config` is the CLI's only
   // override, so tool-config's dprint tree ships a root shim extending it.
   "dprint.json",
   "eslint.config.mjs",
   "fnox.toml",
   "readme.md",
-  // Renovate discovers its config at the repo root, in `.github/` or in
-  // `.gitlab/` — never under `.config/`, where one would be silently inert.
-  "renovate.json",
   // wrangler discovers its config only at the repo root, so a `static-hosting`
   // pack shipping a deploy target has nowhere else to put it.
   "wrangler.jsonc",
+]);
+
+/**
+ * The files a `stackgen:tool-config` asset tree may land at the root, beyond a
+ * pack's: the git, graphify and renovate files a pack asks for lines in and
+ * never ships.
+ */
+const TOOL_CONFIG_ROOT_FILES = new Set([
+  ...PACK_CONFIG_ROOT_FILES,
+  ".gitattributes",
+  ".gitignore",
+  // graphify reads its ignore file from the root only, as git does.
+  ".graphifyignore",
+  // Renovate discovers its config at the repo root, in `.github/` or in
+  // `.gitlab/` — never under `.config/`, where one would be silently inert.
+  "renovate.json",
 ]);
 
 /**
@@ -422,7 +428,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
   const at = (message: string) => findings.push({ scope: plugin.dir, message });
   const path = (absolute: string) => relative(plugin.root, absolute);
 
-  const landedTree = (tree: string) => {
+  const landedTree = (tree: string, rootFiles: ReadonlySet<string>) => {
     for (const absolute of filesUnder(join(tree, PACK_MISE_TASKS))) {
       if ((statSync(absolute).mode & 0o111) === 0) {
         at(`mise task file is not executable: ${path(absolute)}`);
@@ -440,7 +446,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       for (const entry of readdirSync(tree, { withFileTypes: true })) {
         const allowed = entry.isDirectory()
           ? PACK_CONFIG_ROOT_DIRS.has(entry.name) || entry.name.startsWith("_")
-          : PACK_CONFIG_ROOT_FILES.has(entry.name);
+          : rootFiles.has(entry.name);
         if (!allowed) {
           at(
             `pack config/ tier holds an unallowlisted root entry — everything `
@@ -468,7 +474,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
   };
 
   for (const tree of toolConfigTrees(plugin)) {
-    landedTree(join(plugin.root, tree));
+    landedTree(join(plugin.root, tree), TOOL_CONFIG_ROOT_FILES);
   }
 
   const packs = globSync("stacks/*/*", { cwd: plugin.root });
@@ -491,7 +497,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     }
 
     const config = join(plugin.root, pack, "config");
-    landedTree(config);
+    landedTree(config, PACK_CONFIG_ROOT_FILES);
 
     for (const absolute of filesUnder(join(config, PACK_CONF_D))) {
       at(

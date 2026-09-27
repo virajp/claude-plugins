@@ -1,7 +1,7 @@
 name: pnpm
 summary: Dependency installation, locking and workspace layout for the Node
   ecosystem — the manifest contract and the monorepo shape.
-version: 0.5.0
+version: 0.6.0
 type: package-manager
 package_manager: pnpm
 kind: language-bundle
@@ -18,3 +18,5 @@ tool-config:
   - mise add alias npx="pnpm dlx" to dev environment
   - all add exclude generated node_modules .turbo
   - all add exclude *-lock.json *-lock.yaml
+  - git add ignore template=Node
+  - git add attribute pnpm-lock.yaml linguist-generated

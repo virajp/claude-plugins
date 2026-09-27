@@ -30,9 +30,9 @@ releases, and says why in a comment.
 `Package.resolved` fails the build rather than being rewritten on the runner.
 Moving a pin is `swift package update`, run on purpose and committed.
 
-**`.build/` is the one build tree**: regenerable, and ignored by the Swift
-section the hygiene pack appends from upstream `Swift.gitignore`. Nothing is
-checked in from it. `.swiftpm/` holds SwiftPM's per-user state and is left to
+**`.build/` is the one build tree**: regenerable, and ignored by upstream
+`Swift.gitignore`, which this pack asks tool-config's git tool for
+(`git add ignore template=Swift`). Nothing is checked in from it. `.swiftpm/` holds SwiftPM's per-user state and is left to
 the repo: upstream leaves it commented out, because `.swiftpm/configuration/`
 can hold shared Xcode settings, so a repo that wants it ignored adds the line
 itself.
