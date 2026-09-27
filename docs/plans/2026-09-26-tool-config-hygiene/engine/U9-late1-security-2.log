@@ -1,0 +1,3 @@
+/security-review, loop U9-late1 round 2, range 65e8256d..c240859e (scoped)
+
+SECURITY ENGINE: no findings. With a core.hooksPath set, the hook strip now only warns and edits nothing there, removing the earlier writes outside the repo. The merge-driver strip is unchanged in this range. check.ts only tightens the per-tool root-file allowlist. Template SHA pinning and the written: hash make fetches more reproducible; no new attack surface.
