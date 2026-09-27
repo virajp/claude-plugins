@@ -5,7 +5,7 @@ kind: app-framework
 components:
 - app-framework/swiftui@0.5.0
 - package-manager/swiftpm@0.3.0
-- toolchain-gate/swift-format@0.1.1
+- toolchain-gate/swift-format@0.1.2
 - toolchain-gate/swiftlint@0.2.0
 platforms:
 - mobile

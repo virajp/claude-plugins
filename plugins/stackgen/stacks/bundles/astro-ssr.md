@@ -5,7 +5,7 @@ kind: language-bundle
 components:
 - language/typescript@0.3.0
 - package-manager/pnpm@0.6.0
-- toolchain-gate/tsconfig@0.2.0
+- toolchain-gate/tsconfig@0.2.1
 - toolchain-gate/eslint@0.3.3
 - framework/astro@0.5.0
 - framework/react@generated
