@@ -212,7 +212,7 @@ manager at run time. A value committed here is in the history.
 
 ### The graph tool
 
-`"pipx:graphifyy" = { version = "latest", uvx = true }` is in the base's
+`"pipx:graphifyy" = { uvx = true, version = "latest" }` is in the base's
 `conf.d/tools.dev.toml` — dev only, since a pipeline never builds the graph.
 `uv = { version = "latest" }` sits beside it: mise's pipx backend installs
 through uv, so a repo with no Python still installs the graph tool.
