@@ -39,14 +39,14 @@ const present = () => true;
 const absent = () => false;
 
 describe("setupGraphify", () => {
-  it("installs for claude, then the hook", () => {
+  it("installs for claude and never installs graphify's raw hooks", () => {
     // No target list any more: `--platform opencode` went with the OpenCode
     // support, and plugin installs are Claude's own business, so there is
     // nothing left for this to be conditional on.
     setupGraphify(context, present);
 
-    expect(ran).toContainEqual(["graphify", "install", "--platform", "claude"]);
-    expect(ran).toContainEqual(["graphify", "hook", "install"]);
+    expect(ran).toEqual([["graphify", "install", "--platform", "claude"]]);
+    expect(ran).not.toContainEqual(["graphify", "hook", "install"]);
   });
 
   it("soft-skips when graphify is not on PATH, and says so", () => {
@@ -59,20 +59,7 @@ describe("setupGraphify", () => {
     expect(logged.join("\n")).toMatch(/blocking/);
   });
 
-  it("skips only the hook outside a git work tree", () => {
-    respond = command =>
-      command === "git"
-        ? { status: 128, stdout: "", stderr: "not a git repository" }
-        : { status: 0, stdout: "", stderr: "" };
-
-    setupGraphify(context, present);
-
-    expect(ran).toContainEqual(["graphify", "install", "--platform", "claude"]);
-    expect(ran).not.toContainEqual(["graphify", "hook", "install"]);
-    expect(logged.join("\n")).toMatch(/post-commit hook/);
-  });
-
-  it("reports a failed install without throwing, and still tries the hook", () => {
+  it("reports a failed install without throwing", () => {
     respond = (command, args) =>
       command === "graphify" && args[0] === "install"
         ? { status: 1, stdout: "", stderr: "boom" }
@@ -80,6 +67,6 @@ describe("setupGraphify", () => {
 
     expect(() => setupGraphify(context, present)).not.toThrow();
     expect(logged.join("\n")).toContain("boom");
-    expect(ran).toContainEqual(["graphify", "hook", "install"]);
+    expect(ran).not.toContainEqual(["graphify", "hook", "install"]);
   });
 });
