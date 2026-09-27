@@ -4,12 +4,19 @@
 #MISE hide=true
 
 #USAGE flag "--upgrade" help="Dev only: bump the lockfile for every environment with mise lock --bump and update the formatter plugins with dprint config update"
+#USAGE flag "--lock-only" help="Write the lockfile only when it is missing, then exit without reshimming, installing or running doctor"
 
 set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 UPGRADE="${usage_upgrade:-false}"
+LOCK_ONLY="${usage_lock_only:-false}"
+
+if [ "$LOCK_ONLY" = "true" ] && [ "$UPGRADE" = "true" ]; then
+  print_error "--lock-only and --upgrade cannot be combined: --lock-only never moves an existing lockfile."
+  exit 1
+fi
 
 IS_DEV=false
 [[ ",${MISE_ENV:-}," == *",dev,"* ]] && IS_DEV=true
@@ -56,13 +63,38 @@ LOCK_ENVS="$(lock_envs)"
 
 have_task() { mise tasks 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
 
+write_missing_lock() {
+  if [ "$NO_LOCKFILE" = "true" ]; then
+    print_subheader "No lockfile at .config/mise/mise.lock — locking MISE_ENV=${LOCK_ENVS} once ..."
+    # Python dependency locks need the pinned uv and Python, not PATH's; unlocked, as ci's `locked = true` is in the union and there is no lock yet.
+    for tool in uv python; do
+      if [ -n "$(MISE_LOCKED=false MISE_ENV="$LOCK_ENVS" mise ls --current "$tool" 2>/dev/null)" ]; then
+        MISE_LOCKED=false MISE_ENV="$LOCK_ENVS" mise install "$tool"
+        # Named outright: on a first lock uv does not find the just-installed Python on its search path.
+        if [ "$tool" = "python" ]; then
+          UV_PYTHON="$(MISE_LOCKED=false MISE_ENV="$LOCK_ENVS" mise which python)"
+          export UV_PYTHON
+        fi
+      fi
+    done
+    if ! MISE_ENV="$LOCK_ENVS" mise lock; then
+      rm -f "$LOCKFILE"
+      print_error "mise lock failed — the partial lockfile was removed, so the next run locks again."
+      exit 1
+    fi
+  fi
+}
+
+# --lock-only: the missing-lock branch alone, so a caller can commit the lock without installing a tool.
+if [ "$LOCK_ONLY" = "true" ]; then
+  write_missing_lock
+  exit 0
+fi
+
 print_subheader "Reshimming mise ..."
 mise reshim
 
-if [ "$NO_LOCKFILE" = "true" ]; then
-  print_subheader "No lockfile at .config/mise/mise.lock — locking MISE_ENV=${LOCK_ENVS} once ..."
-  MISE_ENV="$LOCK_ENVS" mise lock
-fi
+write_missing_lock
 
 # `--upgrade` on `mise lock` is the lockfile FORMAT upgrade — harmless when the
 # format is already current.
@@ -84,8 +116,8 @@ mise doctor --quiet --silent >/dev/null
 if [ "$UPGRADE" = "true" ]; then
   # The two tools that keep their own plugin or rule set outside mise's
   # lockfile, so `mise lock --bump` does not reach them. Both are probed rather
-  # than assumed: the formatter's config is written by a gate pack, and the
-  # linter arrives as an optional `setup:lint` a linter pack fills.
+  # than assumed: the formatter's config is landed by stackgen:tool-config, and
+  # the linter arrives as an optional `setup:lint` a linter pack fills.
   # Whether this run has a terminal a command can prompt ON — which is not the
   # same question as `[ -t 0 ]`. A tool that asks for confirmation opens
   # `/dev/tty` directly rather than reading stdin, so it works with stdin piped
