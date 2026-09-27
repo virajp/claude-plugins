@@ -91,11 +91,14 @@ needs it**.
   steps have no elapsed time is a slowdown nobody can attribute),
   `task.disable_spec_from_run_scripts = true` (a task's flags come from its
   `#USAGE` header, never from executing it to find out),
-  `task.run_auto_install = false` (`setup:mise` owns installs), and
+  `task.run_auto_install = false` (`setup:mise` owns installs),
+  `python.compile = false` and `python.uv_venv_auto` for the dev tools' python,
+  `pipx.uvx = true` (every `pipx:` tool installs through uv), and
   `lockfile_platforms = ["linux-x64", "macos-arm64"]`. `min_version` is the
   mise release `env_conf_d` was tested on.
 - **`conf.d/tools.dev.toml`** — what a human needs locally that a pipeline
-  does not: formatters, linters, scanners, pre-commit, the graph tool.
+  does not: formatters, linters, scanners, pre-commit, the graph tool and
+  the uv and Python it locks with.
 - **`conf.d/shell_alias.dev.toml`** — the repo's **shell aliases**, and
   nowhere else. Aliases need `mise activate`, which is a human's shell; CI
   never loads this file, so nothing in the pipeline may depend on one. Three
@@ -209,10 +212,12 @@ manager at run time. A value committed here is in the history.
 
 ### The graph tool
 
-`"pipx:graphifyy" = { version = "latest" }` is in the base's
+`"pipx:graphifyy" = { uvx = true, version = "latest" }` is in the base's
 `conf.d/tools.dev.toml` — dev only, since a pipeline never builds the graph.
 `uv = { version = "latest" }` sits beside it: mise's pipx backend installs
 through uv, so a repo with no Python still installs the graph tool.
+`python = { version = "latest" }` too: uv needs a Python >= 3.10 to lock
+graphifyy's dependencies.
 The PyPI name really is `graphifyy`, double y; never correct it. `code:graph`
 refreshes the graph — code only, detached, a no-op in a linked worktree,
 mid-rebase or on a commit that touched only `graphify-out/`; a first commit,
@@ -355,7 +360,7 @@ claim about the stack that is not true:
 | Runtime  | `RUNTIME_BLOCK` lines                                                   | `PATH_ENTRIES` line                                       |
 | -------- | ----------------------------------------------------------------------- | --------------------------------------------------------- |
 | `node`   | `node.compile = false`                                                  | `_.path = { path = "node_modules/.bin", tools = true }`   |
-| `python` | `pipx.uvx = true`, `python.compile = false`, `python.uv_venv_auto = "create\|source"` | —                                  |
+| `python` | — (`pipx.uvx`, `python.compile` and `python.uv_venv_auto` are in the base's `[settings]`) | —                          |
 | `dart`, `go`, `rust`, `swift` | —                                                  | —                                                         |
 
 No runtime line sets the npm installer: that is the machine's choice
@@ -647,7 +652,7 @@ added to one and not the other is how the vocabularies drift.
 | Task                                                  | Does                                                                          |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------- |
 | `setup:all [--all] [--upgrade] [--<slug>…]`           | the bootstrap orchestrator — the order below; exits 1 when `MISE_ENV` is unset; `--<slug>` per member; `--upgrade` passed on to `setup:mise` and every member |
-| `setup:mise [--upgrade]`                              | reshim, `mise install --locked`, doctor, the linter if present; one `mise lock` over every environment first only in dev with no lock (outside dev a missing lock exits 1); the lock bumped and the formatter plugins updated only under `--upgrade`, dev only |
+| `setup:mise [--upgrade] [--lock-only]`                | reshim, `mise install --locked`, doctor, the linter if present; one `mise lock` over every environment first only in dev with no lock (outside dev a missing lock exits 1); the lock bumped and the formatter plugins updated only under `--upgrade`, dev only; `--lock-only` writes that missing lock, or fills a present one with missing tools (no `--bump`, every locked version kept), and exits before reshim, install and doctor (refused with `--upgrade`); a lock write installs the pinned uv and Python first, and on failure restores a present lock byte-for-byte or removes a new one, with the sidecars it created |
 | `setup:secrets`                                       | **slot** — the pinned secret manager's setup                                  |
 | `setup:external:{start,stop,pull}`                    | **slots** — local services; each a no-op outside a dev shell                  |
 | `setup:deps:all`                                      | `cleanup → install → upgrade → outdated → audit`                              |

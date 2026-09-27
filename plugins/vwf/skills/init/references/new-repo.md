@@ -714,6 +714,30 @@ happened to be standing on. A fresh repository is on `develop` already, from
 §1, and takes the table's first row after the commit instead. This is the
 order [existing repo](existing-repo.md)'s git pass keeps too.
 
+**Then the lock, before anything is staged.** In every repo, run
+`MISE_ENV=dev mise run setup:mise --lock-only`. It writes
+`.config/mise/mise.lock` where it is missing, and fills a present one with
+missing tools without bumping a locked version, plus its `.config/mise/locks/`
+sidecar where a tool needs one. Before locking it installs uv and Python, and
+nothing else. The plan shown before the one consent names that install. Then,
+whichever step wrote it, every lock path that changed — each one
+`git status --porcelain --untracked-files=all .config/mise/mise.lock .config/mise/locks`
+lists, untracked or modified — joins this repo's written list. A stale
+untracked sidecar there is swept in with them. So the `ops:` commit carries the
+lock, and the repo's first CI run, which installs with the lock enforced, finds
+it there.
+
+A failed run stops this repo's git pass with the command's output, before any
+commit. Its line at (c) and in the report reads *lock failed — not
+committed*, and the other repos go on. The step is skipped, and the pass goes
+on, in two cases. One: §9 deferred, and the unlock is §9's. Two: the repo's
+`setup:mise` has no `--lock-only` flag — probe first, with
+`mise tasks info setup:mise` — and the unlock is `/vwf:setup reshape` with
+the task replaced. Either way the repo's line reads *lock deferred*, and says
+its first CI run needs the lock committed. Where
+`git check-ignore -q .config/mise/mise.lock` matches, no lock path is staged
+and the line reads *lock ignored*, on the same terms.
+
 Then, into this repo's own index: every path in **this repo's** written /
 moved / renamed lists, and nothing else. Not `git add -A`: a repo that already
 had untracked work of its own does not get it swept into a commit whose
@@ -1042,7 +1066,9 @@ member refused for standing detached takes its *Deferred* line instead, naming
 the branch to check out. Then one `Gitlinks staged <n>` line for the base,
 counting the member pointers (b) added to its index, which reads `none` in a
 product with no members, and one `Backlog project` line, the base's alone.
-That is the git section SKILL.md's report specifies.
+A `Lock` line per repo reads staged, *lock deferred*, *lock ignored* or *lock
+failed — not committed*, per (b). That is the git section SKILL.md's report
+specifies.
 
 ## 12 — The report
 

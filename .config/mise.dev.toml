@@ -1,6 +1,1 @@
 # Development-only settings — loaded when MISE_ENV=dev; the tools are in mise/conf.d/.
-
-[settings]
-# Only relevant to the python/uv dev tools in mise/conf.d/tools.dev.toml.
-python.compile      = false
-python.uv_venv_auto = "create|source"

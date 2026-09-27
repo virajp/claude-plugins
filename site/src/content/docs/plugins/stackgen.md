@@ -986,7 +986,8 @@ starting a long compile nobody asked for; `task.timings = true` prints elapsed
 time after each task; and `task.disable_spec_from_run_scripts = true` makes a
 task's flags come from its `#USAGE` header alone, rather than being inferred
 from the script it runs. `task.run_auto_install = false` leaves every install to
-`setup:mise`.
+`setup:mise`. `pipx.uvx = true` installs every `pipx:` tool through uv, and
+`python.compile = false` with `python.uv_venv_auto` serve the dev Python.
 
 **One lock holds every environment's tools, and it is tracked.**
 `lockfile = true` in the base records what each fuzzy pin resolved to, in
@@ -995,11 +996,13 @@ it with one `mise lock` under `MISE_ENV` set to every environment the config
 files carry; a single-environment `mise lock` would drop the rest. A tool is
 pinned in one file only: one two environments need goes in `tools.toml`. Under
 mise's default npm installer, aube, the linter's entry in the lock points at a
-generated sidecar under `.config/mise/locks/` that fixes its dependency graph;
-the two are committed together, before the first CI push, or the pipeline fails
-at install. `locked = true` in `mise.ci.toml` is what makes the pipeline a
-reader of what a laptop resolved rather than a resolver of its own. Only the
-local lock is ignored.
+generated sidecar under `.config/mise/locks/` that fixes its dependency graph. A
+`pipx:` tool installed through uv gets a uv sidecar there too, such as
+graphifyy's. The lock and its sidecars are committed together, before the first
+CI push, or the pipeline fails at install. `/vwf:init`'s `ops:` commit carries
+both. `locked = true` in `mise.ci.toml` is what makes the pipeline a reader of
+what a laptop resolved rather than a resolver of its own. Only the local lock is
+ignored.
 
 A pack contributes to the section files through its `tool-config:` calls — a
 secrets provider its tool and `[env]`, the package manager its `npx` alias —
@@ -1013,8 +1016,9 @@ runs `code:lint`. It is a Node script, so it needs a `node` on `PATH`: the
 repo's own pin, or the machine's. Other formatters, linters, security scanners
 and dev tooling belong in `conf.d/tools.dev.toml`, so a CI build does not pull
 them. graphify is one of them: `"pipx:graphifyy"`, dev only, since a pipeline
-never builds the graph, with `uv` beside it because mise's pipx backend installs
-through uv — so a repo with no Python still gets the graph tool. `[tasks.init]`,
+never builds the graph. `python` and `uv` sit beside it, both at `latest`: every
+`pipx:` tool installs through uv (`pipx.uvx = true` in the base `[settings]`),
+and uv needs a Python >= 3.10 to lock graphify's dependencies. `[tasks.init]`,
 in `conf.d/tasks.toml`, loads in every environment: file-based tasks must be
 executable under `MISE_ENV=ci` too. The runtime's settings are a **marked
 position** shipped empty: `RUNTIME_BLOCK` under `mise.toml`'s `[settings]` and
@@ -1140,12 +1144,16 @@ inside `code/*` and `setup/*` change with the tech stack.
   names what it found and prints the by-hand command, and every destructive step
   sits behind a flag. Tools install from the committed lockfile — `setup:mise`
   runs `mise install --locked` every time and never `mise upgrade` — and the
-  lock is written only in dev: once by one `mise lock` over every environment
+  lock is created only in dev: once by one `mise lock` over every environment
   when no `.config/mise/mise.lock` exists yet, or by `setup:all --upgrade`, the
   one flag `setup:all` passes on and only when you pass it, which reaches
   `setup:mise --upgrade`: one `mise lock --bump --upgrade` over every
-  environment, then `dprint config update`. Outside dev a missing lock and
-  `--upgrade` each stop the task before it runs anything.
+  environment, then `dprint config update`. `setup:mise --lock-only` writes a
+  missing lock or fills a present one without `--bump`, installing only uv and
+  Python, then exits; `/vwf:init` runs it before its commit. It keeps locked
+  versions unless a tool's options changed. Outside dev a missing lock and
+  `--upgrade` each stop the task before it runs anything. `--lock-only` with a
+  lock present has no dev check, so it fills the lock in any environment.
   `setup:precommit --update` is what runs `pre-commit autoupdate`, moving the
   hook `rev:` lines; and `setup:precommit --force` is what takes the hooks over
   from a **local** `core.hooksPath`, a `.husky/` directory or a lefthook config,

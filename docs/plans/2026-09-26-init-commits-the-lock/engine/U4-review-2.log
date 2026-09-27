@@ -1,0 +1,67 @@
+range c766f44f..adef82bf
+Review of `2026-09-26-init-commits-the-lock` (branch diff against `develop`, 7 non-plan files). I found 10 candidates, ranked most severe first. Per the recipe, I only removed duplicates and did not verify them. Two things I did check: the repo's copy and the pack's copy of `setup/mise` are byte-identical, and `mise ls --current --local` does resolve pins that live in the `conf.d` files.
+
+```json
+[
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/conf.d/tools.dev.toml",
+    "line": 24,
+    "summary": "The new base-block pin `python = { version = \"latest\" }` in tools.dev.toml overrides any Python the project pins in tools.toml whenever MISE_ENV includes dev. Nothing enforces the header's 'a runtime pack must remove it', and it contradicts tool-config's own 'one pin per tool across the tools files' conflict rule (mise.md ~L419).",
+    "failure_scenario": "Brownfield Python repo pins python 3.11 in conf.d/tools.toml → reshape lands the base block → either a new conflict row on every Python repo, or (keep both) dev shells run Python latest (3.14) while CI runs 3.11, so tests and deps diverge. A future python runtime pack's `mise add tool python` is refused as a conflict with the base block rather than 'removing it'. It also breaks the invariant setup:mise's lock_envs comment relies on ('order is moot only because a tool is pinned in one file'). The header's 'only uv's lock-time interpreter' is false too: python/python3 is on PATH in every dev shell."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/mise",
+    "line": 76,
+    "summary": "The partial-lock cleanup only covers `mise lock` failing. A failure in the pre-lock `mise install uv` / `mise install python` / `mise which python` exits through `set -e` and skips the rm of LOCKFILE and sidecars.",
+    "failure_scenario": "`lockfile = true` in the base config means `mise install` can write or refresh `.config/mise/mise.lock`. If uv installs (recorded in the lock) and then the python install fails on the network, the script dies with a uv-only mise.lock. The next run sees NO_LOCKFILE=false and never locks again; `mise install --locked` and CI then fail on every unrecorded tool, which is exactly what the new cleanup was meant to prevent."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/new-repo.md",
+    "line": 721,
+    "summary": "The staging rule 'each of mise.lock and locks/ that exists and git does not track' skips a `locks/` directory that is partly tracked. New sidecar subdirectories written by --lock-only are then left out of the ops commit, although the new mise.lock points at them.",
+    "failure_scenario": "Reshape of a repo whose old lock was deleted by tool-config's migration (mise.md ~L501) but whose `.config/mise/locks/` is still tracked → --lock-only writes mise.lock plus a new `locks/npm-askviraj-linter/<ver>~<hash>/` → locks/ counts as tracked and is not staged → the commit has a lock pointing at a sidecar that is not in the repo. Per mise.ci.toml, 'without it the install fails, locked or not', so the first CI run goes red."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/new-repo.md",
+    "line": 718,
+    "summary": "Init runs `mise run setup:mise --lock-only` unconditionally where the lock is missing, and assumes the repo's setup:mise task has the new flag.",
+    "failure_scenario": "Existing repo that answered keep-mine for its task library, or whose setup:mise came from an older pack. With a USAGE spec, mise rejects the unknown `--lock-only` → 'a failure stops this repo's git pass' → the repo gets no ops commit at all. Without a USAGE spec, the argument is ignored and the full setup runs (reshim, installing every tool, doctor, setup:lint), breaking the promise that only uv and Python are installed."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/new-repo.md",
+    "line": 726,
+    "summary": "When §9 deferred, the lock step is skipped and 'the pass goes on' to commit and push with no lock, and nothing warns that the first CI run will fail.",
+    "failure_scenario": "mise not installed → §9 defers → the user answers 'commit and push' → the ops commit is pushed without `.config/mise/mise.lock` → CI runs under `locked = true` and fails (mise.ci.toml: 'commit the lock before the first CI push, or the linter pin fails the pipeline'). The goal of this plan, a first CI run that finds the lock, is silently missed on this path, and the push is not gated or reported as a lock deferral."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/mise",
+    "line": 87,
+    "summary": "The failure cleanup removes the sidecar tree only when it did not exist before. When `locks/` already existed, whatever the failed `mise lock` wrote into it is left behind.",
+    "failure_scenario": "A repo with an existing `.config/mise/locks/` but no mise.lock → `mise lock` fails partway after writing `locks/pipx-graphifyy/<ver>~<hash>/` → the error says 'what it wrote was removed', but the new sidecar remains, is untracked, and init's staging rule or a later `git add` sweeps orphaned sidecars into a commit."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/new-repo.md",
+    "line": 725,
+    "summary": "A lock failure 'stops this repo's git pass … before any commit', but that repo may be the first to reach (c), which is where the single product-wide commit question is asked. The text does not say who asks it, or whether later repos proceed.",
+    "failure_scenario": "Multi-repo product: the first member's --lock-only fails (network or uv) → its pass stops before (c) → the one commit consent is never asked, or it is asked by the next member without the failed repo's count line, so the user agrees to a product-wide commit while a member is silently left uncommitted."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/new-repo.md",
+    "line": 717,
+    "summary": "Docs-ship-with-change violation. The init behaviour change (beef9cad) and the setup:mise flag (e341821c) were committed without updating the user manual. R1 had already flagged site/src/content/docs/plugins/vwf.md:1447 and how-to/greenfield/single-repo.md:111 as falsified, and they were deferred to U5.",
+    "failure_scenario": "Repo CLAUDE.md: '**Docs ship with the change.** Any change to plugin behavior must reconcile `readme.md`, this file, and the manual under `site/src/content/docs/` in the same commit — stale docs are more harmful than no docs'. Each behaviour commit on this branch leaves the manual describing a git pass with no lock step."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/conf.d/tools.dev.toml",
+    "line": 24,
+    "summary": "Pinning CPython `latest` in the base dev block makes every shaped repo, including non-Python ones, download a full interpreter on every dev machine. Every `--upgrade` also moves it, although it is needed only as graphifyy's lock-time interpreter.",
+    "failure_scenario": "A Node or Swift repo: `setup:mise` (and now --lock-only) installs a ~100 MB CPython per machine, and each `setup:all --upgrade` bumps the lock to a new CPython minor with no Python code in the repo. The version is also recorded for both lockfile platforms. A bounded pin (for example a fixed 3.x minor) or keeping the interpreter scoped to the pipx install would avoid the churn."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/mise",
+    "line": 75,
+    "summary": "The probe `mise ls --current --local \"$tool\" 2>/dev/null` hides every error, so a config-load failure under the environment union looks like 'uv not declared'. The install is skipped and the lock fails later with a misleading uv or Python error.",
+    "failure_scenario": "Under MISE_ENV=ci,dev,test, a malformed or untrusted conf.d file makes `mise ls` exit non-zero with its message sent to /dev/null → neither uv nor python is installed → `mise lock` fails with 'Python dependency locks require uv >= 0.12.10' or 'No interpreter found', pointing the user at the wrong cause. It runs three separate mise invocations per tool (ls/install/which) where one would do."
+  }
+]
+```

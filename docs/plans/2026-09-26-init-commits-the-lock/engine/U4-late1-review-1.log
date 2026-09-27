@@ -1,0 +1,69 @@
+range 8346877c..2cd02823 (U4-late1; engine branch-scoped)
+The review of `2026-09-26-init-commits-the-lock` against `develop` found 10 issues. The scope was 18 commits plus uncommitted plan-log changes, with the generated uv sidecar lock and the run logs skimmed only. The most serious is the second Python pin. It can make the committed lock drop a Python project's own Python version, and CI then fails at install.
+
+Findings 2, 3, 5, 6 and 7 overlap gaps the plan's own round-2 review already logged in `index.md` (G1–G5 plus the R2 docs note). The site-doc half of finding 7 is also assigned to the still-pending docs unit U5. They are kept here because they are still open in this diff.
+
+```json
+[
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/conf.d/tools.dev.toml",
+    "line": 24,
+    "summary": "Adding `python = latest` to the dev tools pins Python in two files for any repo whose runtime already pins it in tools.toml. That breaks the rule the lock depends on: each tool is pinned in one file only (setup/mise:51, site stackgen.md 'A tool is pinned in one file only').",
+    "failure_scenario": "A Python repo pins python 3.12 in tools.toml and gets reshaped. setup:mise locks with MISE_ENV=ci,dev,..., where the last file wins, so dev's `latest` overrides 3.12 and the lock records only e.g. 3.14. Under MISE_ENV=ci with `locked = true`, python 3.12 is missing from the lock and `mise install --locked` fails on the first CI run. Locally, dev also silently runs a different Python than the project pins."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/mise",
+    "line": 123,
+    "summary": "`--lock-only` has no dev guard when a lock already exists. Outside dev it still rewrites the committed lock and installs uv and Python, which contradicts the task's own rule (line 36) that a lock is written only in dev, or under `--upgrade`, which is dev-only.",
+    "failure_scenario": "`MISE_ENV=ci mise run setup:mise --lock-only`, or a deploy image running it, with a lock present: the missing-lock check at line 43 is skipped, write_lock runs `mise lock` over every environment, and the pipeline changes the lockfile it was supposed to install from. Only `--upgrade` is refused outside dev."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/mise",
+    "line": 7,
+    "summary": "The help text, references/mise.md:655 and init SKILL.md:129 all promise '--lock-only never bumps / keeps every locked version'. But `mise lock` re-resolves any entry whose tool options changed, as this very diff shows (graphifyy 0.9.68 → 0.9.69 in .config/mise/mise.lock once `uvx = true` landed).",
+    "failure_scenario": "A reshape lands the new `uvx = true` option on graphifyy in an existing repo. init's lock step, described as 'never bumping it', re-resolves graphifyy to latest and stages that upgrade into the `ops:` commit, unannounced, while the docs tell the user no locked version moved."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/new-repo.md",
+    "line": 725,
+    "summary": "Staging every lock path that `git status --porcelain --untracked-files=all .config/mise/mise.lock .config/mise/locks` lists sweeps in untracked or stale sidecars and the user's own uncommitted lock edits. The paragraph right after says the opposite: never `git add -A`, and never sweep a repo's own untracked work into the ops commit.",
+    "failure_scenario": "A brownfield repo has a hand-edited, uncommitted mise.lock, or leftover untracked sidecar dirs from an earlier failed lock. init stages all of them into its fixed-message `ops:` commit, which then carries changes init never made."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/mise",
+    "line": 78,
+    "summary": "undo_failed_lock removes only sidecar dirs created during the run. It cannot restore existing sidecars that a failed `mise lock` changed or pruned, yet it prints 'the lockfile was put back as it was'.",
+    "failure_scenario": "A fill run prunes or rewrites an existing `locks/<tool>/<ver>~<hash>` dir and then fails on a later tool. The lock is restored byte-for-byte but points at a sidecar that is gone or altered, so the next `mise install --locked` fails, or the tree carries an uncommitted sidecar change the message says cannot exist."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/new-repo.md",
+    "line": 731,
+    "summary": "A failed lock step now stops that repo's whole git pass before any commit. A lock failure (network, PyPI, a uv resolution error) therefore leaves every shaping file init wrote uncommitted, not just the lock.",
+    "failure_scenario": "graphifyy's uv lock cannot resolve on a machine with no reachable PyPI. init has already written dozens of config files into the repo, but the `ops:` commit and branch landing are skipped, and the repo is left half-shaped in a dirty tree with only 'lock failed — not committed' in the report."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/references/mise.md",
+    "line": 216,
+    "summary": "Docs were not reconciled. mise.md still says uv alone means 'a repo with no Python still installs the graph tool', and the very next added sentence contradicts it. site/src/content/docs/plugins/stackgen.md:1015 repeats the stale claim, and stackgen.md:1143 still says 'the lock is written only in dev … when no lock exists', with no mention of --lock-only, the new base [settings] lines, or init's Lock report line.",
+    "failure_scenario": "Breaks repo-root CLAUDE.md: 'Any change to plugin behavior must reconcile `readme.md`, this file, and the manual under `site/src/content/docs/` in the same commit — stale docs are more harmful than no docs'. The published manual describes setup:mise and the graph tool's needs wrongly."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise.toml",
+    "line": 37,
+    "summary": "`python.uv_venv_auto = \"create|source\"` and `python.compile = false` moved from dev-only (this repo) and Python-only repos (RUNTIME_BLOCK) into the base [settings]. They now apply in every environment, including ci and prod, and in every shaped repo.",
+    "failure_scenario": "A repo with a root uv.lock/pyproject activates mise in CI or a deploy container (MISE_ENV=ci or prod). mise now auto-creates and sources `.venv` there, which no ci/prod setup asked for. Before, this setting existed only where a python runtime was detected, or in dev."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/conf.d/tools.dev.toml",
+    "line": 18,
+    "summary": "The per-tool `uvx = true` repeats the new global `pipx.uvx = true` (mise.toml:35), so the same policy is set in two places. The per-tool option is also what changed graphifyy's lock options and forced the re-resolution in finding 3.",
+    "failure_scenario": "Two sources of truth for one setting: removing either one leaves the other still in force, and the per-tool option alone rewrites the lock's `[tools.\"pipx:graphifyy\".options]` in every repo and re-resolves its version. Keep only the global setting."
+  },
+  {
+    "file": "plugins/vwf/skills/init/SKILL.md",
+    "line": 842,
+    "summary": "The new `Lock` report line has only four states (staged, lock deferred, lock ignored, lock failed) and no unchanged/none state. new-repo.md also runs the lock, installing uv and Python, before checking `git check-ignore`, so an ignored lock still pays for the install.",
+    "failure_scenario": "A repo whose present lock is already complete gets 'staged' although nothing was staged, against the report rule 'Every line reads none where nothing happened'. A repo that gitignores mise.lock still downloads and installs uv and Python, then discards the result as 'lock ignored'."
+  }
+]
+```

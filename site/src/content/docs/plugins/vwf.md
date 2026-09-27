@@ -1444,17 +1444,26 @@ by design.
 **It ends with a git pass, and that pass is consent-gated.** Everything above it
 lands on disk; a repo shaped and left dirty is a repo whose next command — a
 commit, a worktree, a merge — meets a working tree it did not expect. So `init`
-checks out `develop`, stages **exactly what this run wrote** (never
+checks out `develop` and runs `setup:mise --lock-only`, which writes a missing
+mise lock or fills a present one without bumping it. It installs only the uv and
+Python the lock needs. It then stages **exactly what this run wrote** (never
 `git add -A`, so untracked work of your own is not swept into a commit about the
-repo's shape) and asks **one question with three answers**, showing the file
-count and the branch first: *commit*, *commit and push*, or *leave it*. Push is
-a second decision inside one question, never an assumed consequence of
+repo's shape), plus every changed lock path. That lock staging includes your own
+uncommitted lock edits and any stale untracked sidecar under
+`.config/mise/locks/`. Then it asks **one question with three answers**, showing
+the file count and the branch first: *commit*, *commit and push*, or *leave it*.
+Push is a second decision inside one question, never an assumed consequence of
 committing. The message is fixed and uses the `ops:` type the commit gate this
 run just installed will read it against, and **the commit lands on `develop` in
 every mode** — never on `main`, and never on whatever branch the repo happened
 to be standing on. History is never rewritten, nothing is force-pushed, and no
 verification-skipping flag is ever passed; a push the remote rejects is a
 deferral for that repo and branch, never a force.
+
+The report carries a `Lock` line per repo: *staged*, *lock deferred*, *lock
+ignored* or *lock failed — not committed*. A failed lock leaves that repo
+uncommitted; the others go on. A deferred lock is one where mise was not yet
+installed or the repo's `setup:mise` lacks `--lock-only`.
 
 **Before the pass, `init` reads where each repo stands.** A repo on a branch
 takes the branch work below; a member standing on **no branch** — a detached

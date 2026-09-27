@@ -1,0 +1,67 @@
+range c766f44f..8346877c
+Review of `2026-09-26-init-commits-the-lock` against `develop`: 10 findings, ranked most severe first. Findings 1 and 2 are backed by evidence (merge-order reasoning, and this branch's own run log). Findings 3 to 10 were not verified, which is what this review mode calls for. U5 (docs) and U6 (version bump) are still pending, so part of finding 9 may be picked up by U5.
+
+```json
+[
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/conf.d/tools.dev.toml",
+    "line": 24,
+    "summary": "The new dev-only `python = { version = \"latest\" }` pin overrides any runtime python pin in conf.d/tools.toml under MISE_ENV=dev. The comment accepts this, but it is not harmless.",
+    "failure_scenario": "A repo pins python \"3.12\" in tools.toml. tools.dev.toml is env-scoped, so it wins under dev, and the union `mise lock` (ci,dev) records only python 3.14.x. CI (MISE_ENV=ci, locked = true) then asks for 3.12, which the lock does not have, so `mise install --locked` fails on the first CI run. That is the failure this plan exists to prevent. Developers also run and test on a different interpreter than CI. It also breaks the base's own rule: 'A tool is pinned in ONE file'."
+  },
+  {
+    "file": ".config/mise/tasks/setup/mise",
+    "line": 116,
+    "summary": "`--lock-only` claims to fill a present lock 'keeping every locked version', but plain `mise lock` re-resolves any entry whose tool options changed. The `uvx = true` option this same change adds causes exactly that.",
+    "failure_scenario": "Reshaping an existing repo lands `\"pipx:graphifyy\" = { uvx = true, ... }`. Init then runs `setup:mise --lock-only`, and the locked graphifyy moves to latest. This branch shows it: 0.9.68 became 0.9.69 in f26882bf, as the run log records. The ops commit then carries an unrequested version bump, while init's docs and the task help say nothing is bumped."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/new-repo.md",
+    "line": 717,
+    "summary": "Lock paths are staged from `git status --porcelain` rather than from what this run changed, so the user's own uncommitted lock edits and stale untracked sidecars go into the `ops:` commit.",
+    "failure_scenario": "A repo had a hand-edited `.config/mise/mise.lock`, or a leftover `locks/<tool>/<old>~hash` directory, before init ran. Both show in git status and both get committed under the fixed ops message. That breaks the rule a few lines below: 'Not git add -A: a repo that already had untracked work of its own does not get it swept into a commit'. An orphaned sidecar also ends up committed permanently."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/new-repo.md",
+    "line": 730,
+    "summary": "A failed lock now aborts the repo's whole git pass before any commit, and the step runs on every repo, including ones whose lock is already present. A network or uv resolution error leaves the repo shaped but uncommitted.",
+    "failure_scenario": "A PyPI or GitHub outage, or a Python-download failure during the uv/python install, makes `mise lock` exit non-zero. Every shaped file stays unstaged and uncommitted, on develop. That is the dirty-tree outcome the git pass exists to prevent, and the repo was fully committable before this change."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/references/mise.md",
+    "line": 363,
+    "summary": "The `pipx.uvx`, `python.compile` and `python.uv_venv_auto` lines moved from RUNTIME_BLOCK into the base `[settings]`, but repos already shaped with a python runtime still carry them in RUNTIME_BLOCK.",
+    "failure_scenario": "A python repo shaped by an earlier release is reshaped. The file is kept or merged, so the old RUNTIME_BLOCK lines stay while the new base lines land in the same `[settings]` table. The duplicate TOML keys make mise refuse to parse `.config/mise.toml`, and every mise command in that repo fails."
+  },
+  {
+    "file": ".config/mise/tasks/setup/mise",
+    "line": 123,
+    "summary": "`--lock-only` has no dev guard when a lock is present. Outside dev it rewrites the committed lock, which breaks the invariant that a lock is written only in dev.",
+    "failure_scenario": "`MISE_ENV=ci mise run setup:mise --lock-only` with a lock present: the missing-lock check (lines 41-47) does not fire, and `--upgrade`'s dev check does not apply. The task installs uv/python and runs the union `mise lock` in the pipeline, so CI resolves and mutates the lock instead of only reading it."
+  },
+  {
+    "file": ".config/mise/tasks/setup/mise",
+    "line": 78,
+    "summary": "`undo_failed_lock` removes only sidecar directories that are new since the run started. A pre-existing sidecar directory that `mise lock` rewrote in place is not restored, yet the message says everything was put back.",
+    "failure_scenario": "A fill run regenerates files inside an existing `locks/<tool>/<ver>~<hash>/` and then fails. The lock file is restored, but the sidecar keeps the half-written contents. The next CI run reads a sidecar whose digest no longer matches the lock's `digest = sha256:…` and fails, while the error message claims a clean rollback."
+  },
+  {
+    "file": "docs/plans/2026-09-26-init-commits-the-lock/index.md",
+    "line": 27,
+    "summary": "The Consent table records stackgen as 'none — untouched', but this plan changes stackgen's tool-config assets, including the `setup:mise` task the vwf init step depends on.",
+    "failure_scenario": "vwf 20.0.1 ships its init lock step. The stackgen asset that adds `--lock-only` is in no release plan. Users on the released stackgen get the old `setup:mise`, the probe fails, and every repo reads 'lock deferred', so the plan's goal (the first CI run finds the lock) is not met for anyone until stackgen is released separately."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/references/mise.md",
+    "line": 218,
+    "summary": "Stale docs: the sentence still says 'so a repo with no Python still installs the graph tool', and the next sentence added in this diff says Python is required. The task's `#MISE description` (setup/mise:3) and site/src/content/docs/plugins/stackgen.md:1015-1017 and :1141-1146 are also unchanged.",
+    "failure_scenario": "Readers get contradictory guidance on whether Python is needed, and neither the site nor `mise tasks` mentions `--lock-only`. Repo-root CLAUDE.md says: 'Docs ship with the change. Any change to plugin behavior must reconcile readme.md, this file, and the manual under site/src/content/docs/ in the same commit.' Planned unit U5 is still pending."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/conf.d/tools.dev.toml",
+    "line": 18,
+    "summary": "uv is forced twice: the global `pipx.uvx = true` setting in the base mise.toml, and a per-tool `uvx = true` on graphifyy. The global setting makes the per-tool option redundant.",
+    "failure_scenario": "Two sources of truth for one behaviour. The per-tool option is also what changed graphifyy's lock-entry options and triggered the re-resolution in finding 2. Every future pipx tool has to repeat the option, or it silently depends on the global setting. Keep one form."
+  }
+]
+```

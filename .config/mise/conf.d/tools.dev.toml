@@ -16,6 +16,6 @@ actionlint = { version = "latest" }
 
 # AI Tools
 jq               = { version = "latest" }
-"pipx:graphifyy" = { version = "latest" }
+"pipx:graphifyy" = { uvx = true, version = "latest" }
 python           = { version = "latest" }
 uv               = { version = "latest" }
