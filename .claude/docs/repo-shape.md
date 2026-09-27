@@ -161,11 +161,13 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   marketplace; hook scripts existing and executable; **a pack's `config/`
   payload tier being materializable as-is** (seven assertions in one rule, the
   landed-tree ones also run over each `skills/tool-config/assets/<tool>/` tree
-  `stackgen:tool-config` lands: exec bit *and* a known shebang on every file
-  under `config/.config/mise/tasks/**`, because mise reports a 644 task as an
+  `stackgen:tool-config` lands, its root admitting that tool's own root files,
+  and over `/vwf:init`'s `skills/init/assets/<name>/` trees with no root
+  allowlist: exec bit *and* a known shebang on every file under
+  `config/.config/mise/tasks/**`, because mise reports a 644 task as an
   *unknown* one rather than a permission error and execs the file directly; the
   same two on every `hooks/*.sh`, which the host execs from a bare path in
-  `settings.json`; the tier's root against the **landable** tier of the hygiene
+  `settings.json`; the tier's root against the **landable** tier of the root
   allowlist, whose two allowed **directories** are `.config/` and `.github/` and
   whose sibling tier — the root files vwf writes, `CLAUDE.md` and
   `mempalace.yaml` — no pack may land; a **CI workflow refused inside
@@ -189,25 +191,26 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   `mise add env` or `mise add alias` with a legal name and scope, a template
   delimiter only in an `add env` value, or as one of the gate verbs
   (`dprint add plugin`, `all add exclude [generated]`,
-  `pre-commit add linter-ignore`, `pre-commit add hook`, `grype add ignore`), an
-  exclude asked of one tool alone refused; and no mise `conf.d` fragment and no
-  `pre-commit.d` file in the tier, since a pack asks the skill instead);
-  **strict-YAML frontmatter** (every skill and agent a plugin ships, and every
-  `stacks/*/*/skills/*/SKILL.md` and `stacks/*/*/agents/*.md` a pack ships — the
-  larger half, and the half that actually lands in a user's repo; a pack's
-  `rules/*.md` is out, frontmatter being optional there); relative links under
-  `assets/examples/**`; **root-relative reference resolution** (every such
-  reference resolves inside the plugin that wrote it — in the files a pack
-  **lands** the rule stands aside, because rule 13 owns those on stricter terms
-  and one bad reference should be one finding); **agent cross-reference
-  resolution** in both directions (every role-shaped `` `token` `` in a plugin's
-  own prose names a real agent, and every declared agent is referenced at least
-  once — the two directions cover each other on a rename); the vwf
-  design-adapter contract (all **three** import skills present and
-  model-invocable); the vwf **stack-adapter** contract (both
-  `<plugin>-stack-menu` and `<plugin>-stack-template` present, each carrying an
-  explicit `disable-model-invocation: false` **and** a `user-invocable: false` —
-  an adapter is vwf's to call, not a user's to type — on every plugin keyworded
+  `pre-commit add linter-ignore`, `pre-commit add hook`, `grype add ignore`,
+  `git add ignore`, `git add attribute`), an exclude asked of one tool alone
+  refused; and no mise `conf.d` fragment and no `pre-commit.d` file in the tier,
+  since a pack asks the skill instead); **strict-YAML frontmatter** (every skill
+  and agent a plugin ships, and every `stacks/*/*/skills/*/SKILL.md` and
+  `stacks/*/*/agents/*.md` a pack ships — the larger half, and the half that
+  actually lands in a user's repo; a pack's `rules/*.md` is out, frontmatter
+  being optional there); relative links under `assets/examples/**`;
+  **root-relative reference resolution** (every such reference resolves inside
+  the plugin that wrote it — in the files a pack **lands** the rule stands
+  aside, because rule 13 owns those on stricter terms and one bad reference
+  should be one finding); **agent cross-reference resolution** in both
+  directions (every role-shaped `` `token` `` in a plugin's own prose names a
+  real agent, and every declared agent is referenced at least once — the two
+  directions cover each other on a rename); the vwf design-adapter contract (all
+  **three** import skills present and model-invocable); the vwf
+  **stack-adapter** contract (both `<plugin>-stack-menu` and
+  `<plugin>-stack-template` present, each carrying an explicit
+  `disable-model-invocation: false` **and** a `user-invocable: false` — an
+  adapter is vwf's to call, not a user's to type — on every plugin keyworded
   `vwf-stack-adapter`, **and** the keyword declared by every plugin shipping
   either skill — the same two-directions-cover-each-other idiom, since
   `stackgen` is now the only adapter left and dropping that one keyword would

@@ -9,13 +9,13 @@ Two writers, and it is worth being clear about which puts what where.
 | Written by              | What                                            |
 | ----------------------- | ----------------------------------------------- |
 | `claude plugin install` | the plugins: skills, agents, hooks, MCP servers |
-| `graphify`              | its own index and the git hooks that refresh it |
+| `graphify`              | its Claude integration — no git hook            |
 
 **`pnpx @virajp.dev/claude-plugins` is not a third writer.** It sequences the
 other two and writes nothing itself: the plugin flags (`--all`, `--user`,
 `--project`) drive `claude plugin` and never edit Claude's settings directly —
 Claude keeps bookkeeping beside what it writes, and hand-editing would strand
-the two apart — and graphify's wiring is `graphify`'s own two commands.
+the two apart — and graphify's wiring is `graphify`'s own `install` command.
 
 This is why the CLI leaves **no receipt**. There is nothing of its own on disk
 to record; what is there belongs to a tool that already tracks it.
@@ -68,10 +68,12 @@ copy on `main`, `marketplace update` is the whole of it.
 
 ## graphify
 
-Wired after every install, when `graphify` is on `PATH`: `graphify install` plus
-`graphify hook install`, for the `claude` platform. If graphify is missing the
-run says so and carries on — vwf will report it as blocking at first use, which
-is the honest place for it.
+Wired after every install, when `graphify` is on `PATH`: `graphify install`, for
+the `claude` platform. graphify's raw git hooks are no longer installed — a
+shaped repo refreshes the graph from its pre-commit `post-commit` hook, and
+`mise run setup:precommit` strips any raw hook an earlier install left. If
+graphify is missing the run says so and carries on — vwf will report it as
+blocking at first use, which is the honest place for it.
 
 ## Receipts
 

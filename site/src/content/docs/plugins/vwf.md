@@ -31,9 +31,9 @@ agent afterwards, then run **`/vwf:doctor`** — nothing is verified at install
 time, and doctor is what reports a missing required binary.
 
 Any `pnpx @virajp.dev/claude-plugins` install also wires up **graphify**, which
-vwf enforces at its own entry gate. Installing outside a git repo works too:
-`graphify install` still runs, and its repo-scoped post-commit hook is skipped
-automatically (with a note).
+vwf enforces at its own entry gate. The wiring is `graphify install` alone, so
+installing outside a git repo works too; no raw git hook is installed — a shaped
+repo refreshes the graph from its own pre-commit `post-commit` hook.
 
 A repo shaped by [`/vwf:init`](#vwfinit) does not need that one-shot at all: its
 task library carries `setup:ai`, which registers the marketplace, installs the
@@ -918,41 +918,43 @@ gates and its own lockfile, and it is shaped or not on its own evidence. What is
 *not* per repo is the run: there is one survey, one plan with a section per
 repo, and one yes.
 
-**It names no tool, and that is the design.** Every file it lays down comes from
-the stack adapter. The toolchain manager's config and the repo gates come from
+**It names no tool, and that is the design.** It fetches no bundle for its
+baseline. The toolchain manager's config, the repo gates and the hygiene config
+files — the ignore and attribute files, the graph's ignore file, the Renovate
+policy — come from
 [`/stackgen:tool-config all`](./stackgen.md#stackgentool-config), which `init`
 calls with its answers as arguments, the commit scopes among them — previewed
 first, the skill's rows shown in init's plan, then run with those rows' answers
-on the same consent; the repo hygiene comes from one bundle fetched by fixed
-slug, *unconditional*, so a repo that has picked no stack still gets it. `init`
-decides *when* the packs land, *what* you are asked, and how an existing tree is
-reconciled against what they ship. With no stack-adapter plugin installed it
+on the same consent; the prose hygiene files are `init`'s own assets; and the
+secrets provider you pick is the one thing fetched through the stack adapter.
+`init` decides *when* they land, *what* you are asked, and how an existing tree
+is reconciled against what they ship. With no stack-adapter plugin installed it
 **halts** with the install command rather than printing an empty plan that reads
 exactly like an already-shaped repo.
 
-What a shaped repo has when it is done: a sectioned `.gitignore`, a lowercase
+What a shaped repo has when it is done: a `.gitignore` in blocks, a lowercase
 `readme.md`, every tool config under `.config/`, the toolchain manager's
 settings files, its `conf.d` section files and its one tracked lock, a
 file-based task library grouped `setup:*`, `code:*` and `p:<project>:*` over a
 shared helper library, pre-commit with the full hook set and conventional
 commits wired for release notes, a post-commit hook that refreshes the
 code-intelligence graph, the security and dependency gates configured,
-`.editorconfig`, `.gitattributes`, a Renovate config, `CONTRIBUTING.md`, issue
-templates under `.github/`, an ignore file for the code-intelligence graph, and
-composed editor settings and extension recommendations. Some of its contents
-follow the answers rather than the shape: a secrets provider where you named one
-— answer *none — decide later* and the packs' slot simply stays unfilled and
-announces itself — a `SECURITY.md` unless you declined the security contact, and
-a `LICENSE` on a repo you called `public` unless you answered *none* — a
-`private` repo gets no licence row and no `LICENSE`. And some are **conditional
-files** the packs declare against an answer init already holds: the issue
-templates land only where the repo's `origin` is GitHub, the Renovate config
-only where the update-bot answer is `renovate`, every editor fragment — and so
-the composed editor files — only where the editor answer is *yes*, and the
-secrets provider's ignore line (`fnox.local.toml`, doppler's `.doppler/`) only
-in a repo that runs that provider. A path a condition skipped is listed in the
-plan under a **Skipped** heading and recorded in the lockfile, so `/vwf:doctor`
-never reports it missing and a file you put at that path is yours.
+`.gitattributes`, a Renovate config, `CONTRIBUTING.md`, issue templates under
+`.github/`, an ignore file for the code-intelligence graph, and composed editor
+settings and extension recommendations. Some of its contents follow the answers
+rather than the shape: a secrets provider where you named one — answer *none —
+decide later* and the packs' slot simply stays unfilled and announces itself — a
+`SECURITY.md` unless you declined the security contact, and a `LICENSE` on a
+repo you called `public` unless you answered *none* — a `private` repo gets no
+licence row and no `LICENSE`. And some are **conditional files**, landed against
+an answer init already holds: the issue templates land only where the repo's
+`origin` is GitHub, the Renovate config only where the update-bot answer is
+`renovate`, every editor fragment — and so the composed editor files — only
+where the editor answer is *yes*, and the secrets provider's ignore line
+(`fnox.local.toml`, doppler's `.doppler/`), asked by that provider's pack, only
+in a repo that runs it. A path a condition skipped is listed in the plan under a
+**Skipped** heading and recorded in the lockfile, so `/vwf:doctor` never reports
+it missing and a file you put at that path is yours.
 
 **The editor files are composed, not shipped.** No pack writes one whole,
 because two packs with an opinion about the same file is a lost update; each
@@ -1043,7 +1045,7 @@ handed down: init re-derives it. Three modes, the first row that holds decides:
 | no lockfile, but a **language manifest**, a **source directory**, a **root tool config**, or a `.config/` without one | `source` |
 | none of those                                                                                                         | `blank`  |
 
-`shaped` runs the existing-repo pipeline whole — the eleven survey passes, the
+`shaped` runs the existing-repo pipeline whole — the ten survey passes, the
 plan, the apply. `source` runs the new-repo landing **plus** the
 read-before-land passes of that pipeline that have something to read: the root
 survey and the replace-or-keep offer over what is already there, and the rename
@@ -1071,16 +1073,17 @@ fixed table and nothing looser — `package.json` → node, `pyproject.toml` or
 directory the table admits, and only at the top of the directory being read,
 since an Xcode app keeps its dependency list inside it. Every source resolves to
 those six keys: a pin token or a lockfile component slug is mapped onto one by
-the hygiene pack's own template table, so a pin and a manifest naming the same
-language collapse to one hit, and a token, slug or manifest nothing maps is
-proposed in the plan rather than guessed. A `blank` repo reads nothing. The read
-drives three things and is the only thing that drives them: the `.gitignore`
-language sections — one per language found, so a `source` repo gets its section
-on the **first** run rather than after some later pin — the `runtimes` argument
-that fills the toolchain config's two runtime positions, `RUNTIME_BLOCK` and
-`PATH_ENTRIES` (one runtime's settings lines per language, the path entry left
-empty where nothing needs one), and the sub-project proposals question 2 shows
-where no registry names them.
+the template table in `/stackgen:tool-config`'s git reference, so a pin and a
+manifest naming the same language collapse to one hit, and a token, slug or
+manifest nothing maps is proposed in the plan rather than guessed. A `blank`
+repo reads nothing. The read drives three things and is the only thing that
+drives them: the ignore-template fallback — one GitHub template, as a
+`gitignore:<Name>` block, per language found that no landed pack asks for, so a
+`source` repo gets it on the **first** run rather than after some later pin —
+the `runtimes` argument that fills the toolchain config's two runtime positions,
+`RUNTIME_BLOCK` and `PATH_ENTRIES` (one runtime's settings lines per language,
+the path entry left empty where nothing needs one), and the sub-project
+proposals question 2 shows where no registry names them.
 
 **Nine questions, each one round**, asked *before* the plan so one yes covers
 all of it. **A round is one round for the whole product**, however many repos
@@ -1172,11 +1175,11 @@ materializer rather than a file:
     origin's advisories page where it has an origin and to nothing where it does
     not; a `private` repo's row is a **free contact** — an email address or an
     internal URL — with no default. Either fills the one contact slot of the
-    hygiene pack's security template, which reads naturally with both; the issue
-    chooser's *Report a vulnerability* link takes a URL contact and is removed
-    for an email or a decline. Declining a row writes no security file in that
-    repo, since one naming a channel nobody watches is worse than none, and says
-    nothing about the other rows.
+    hygiene assets' security template, which reads naturally with both; the
+    issue chooser's *Report a vulnerability* link takes a URL contact and is
+    removed for an email or a decline. Declining a row writes no security file
+    in that repo, since one naming a channel nobody watches is worse than none,
+    and says nothing about the other rows.
 - **The editor** — answered **once** for the product: is VS Code, the editor the
   packs' fragments are written for, the editor used here? Defaulted *yes* where
   any resolved repo carries a `.vscode/` directory or the `code` binary is on
@@ -1188,16 +1191,15 @@ materializer rather than a file:
   `.vscode/` file is left exactly as it was. Nothing about the answer is written
   into the tree; a later run asks again, defaulted the same way.
 - **The update bot** — **one row per repo**: `renovate`, `dependabot` or `none`,
-  seeded from the survey — a policy already under `.github/renovate.json`,
-  `.renovaterc` or `renovate.json` preselects `renovate`, a
-  `.github/dependabot.yml` preselects `dependabot`, a repo carrying neither
-  preselects `renovate` (the service whose policy the hygiene pack ships), and a
-  repo carrying both is preselected `renovate` with the row saying it found
-  both. The hygiene pack's `renovate.json` lands only where the row reads
-  `renovate`; on `dependabot` or `none` it is skipped, so a Dependabot repo no
-  longer gets a second policy beside its own. Per repo because the policy is a
-  file each repo carries, and a member watched by a different service than its
-  base is ordinary.
+  seeded from the survey — a policy already under any spelling Renovate
+  discovers preselects `renovate`, a `.github/dependabot.yml` preselects
+  `dependabot`, a repo carrying neither preselects `renovate` (the service whose
+  policy `/stackgen:tool-config`'s renovate tool lands), and a repo carrying
+  both is preselected `renovate` with the row saying it found both. That tool's
+  `renovate.json` lands only where the row reads `renovate`; on `dependabot` or
+  `none` it is skipped, so a Dependabot repo no longer gets a second policy
+  beside its own. Per repo because the policy is a file each repo carries, and a
+  member watched by a different service than its base is ordinary.
 
 Those two answers, with two the run already holds — the forge, read once per
 repo from its `origin` host (`github` or `gitlab`), and the provider slug
@@ -1227,56 +1229,55 @@ the reshape it names is what lands the forge files that were skipped.
 **On a `shaped` repo it surveys, plans, and applies on one consent** — and on a
 product it does that for every repo at once, running the survey each repo's own
 mode selected, so a single run may execute both pipelines (a `source` repo
-borrows the passes below that have something to read). The survey walks eleven
+borrows the passes below that have something to read). The survey walks ten
 checks — root files against the allowlist, the readme's casing, task names
 against the pack's *legacy-name table*, task shebangs, the helper library's name
 and whether its contents still match the pack's, the files a pack owns that the
-repo lacks or has changed, ignore sections, commit types, per-project task
-groups, the tasks the repo owns that no pack ships, and the positions the packs
-ship marked for it to fill — the gate configs, and the plugin task's two
-agent-plugin lists, which are compared row for row against question 5's
-confirmed answer, with both sides shown in the plan when they differ, since that
-is the one position a user may have hand-edited. Pass 1 has one case worth
-knowing: where `stackgen:tool-config` or a pack lands both a config under
-`.config/` and a two-line stand-in of the same name at the root — the stand-in
-existing because that tool's config discovery is root-only — your **real**
-config moves into `.config/` and the stand-in takes its place, with the plan
-saying the settings survive the move. Not every key does, and the plan says
-which: the owner's own reference names the key that is **not** inherited through
-the stand-in, where an extended file declaring it is a fatal diagnostic rather
-than a warning, so the move drops it. Dropping it **widens** what the gate
-covers, since the owner's own pinned plugin list is then what defines the file
-set. So the move row carries **sub-lines** — one for the dropped key, and one
-per **exclusion** the drop makes necessary, each naming the files that exclusion
-keeps out of the gate. Never a restored key, which puts the diagnostic back, and
-never after the fact: they are changes to the settings the row claims survive
-the move, so you read them before the one consent. The two are told apart by
-content, never by name. What comes back is **one plan for the run**, carrying a
-**section per repo** — the base's first, then each member's in the resolved
-order, each headed with the repo and the mode it resolved to — and inside every
-section the same thirteen counted sections: moves, root tool configs (move /
-keep both / delete), the hook manager (keep / switch), creates, replaces,
-offered (replace / keep), renames, rewrites applied, appends and merges — all
-applied on a single yes — and three applied by nothing,
-`Rewrites (flagged, not applied)`, `Repo-owned, kept` and `Projects`, plus one
-uncounted heading, **Skipped**, present even when empty: every path a pack's
-condition left out, one line per path naming the pack and the axis whose value
-decided it — not a conflict, not a keep, not a deferral, and nothing waits on a
-later run unless the answer itself changes — and, marked *landed earlier,
-condition now false — kept*, any path an earlier run landed whose answer has
-since flipped, which stays where it is. Each repo's section closes with its own
-total and the document with a product total; a total counts only what would be
-applied — an offered row kept, a root tool config kept both ways and a hook
-manager kept are outside it — so a repo whose only rows are files it owns and
-files it chose to keep still reads as shaped. Two plans would be two chances to
-stop halfway — one repo renamed into the contract while its neighbours still
-call the old names — which is exactly what the one-consent rule exists to
-prevent. The apply order is **members first, the base last**, so the base
-commits with its record of the members already current. A task file whose
-shebang names a shell other than bash goes there, listed with the shell-specific
-syntax it uses, and is **never** rewritten: auto-translating a shell script is
-how a working task becomes a subtly broken one, so it lands in the report's
-`Deferred` section for you to rewrite deliberately.
+repo lacks or has changed, the editor fragments, per-project task groups, the
+tasks the repo owns that no pack ships, and the positions the packs ship marked
+for it to fill — the gate configs, and the plugin task's two agent-plugin lists,
+which are compared row for row against question 5's confirmed answer, with both
+sides shown in the plan when they differ, since that is the one position a user
+may have hand-edited. Pass 1 has one case worth knowing: where
+`stackgen:tool-config` or a pack lands both a config under `.config/` and a
+two-line stand-in of the same name at the root — the stand-in existing because
+that tool's config discovery is root-only — your **real** config moves into
+`.config/` and the stand-in takes its place, with the plan saying the settings
+survive the move. Not every key does, and the plan says which: the owner's own
+reference names the key that is **not** inherited through the stand-in, where an
+extended file declaring it is a fatal diagnostic rather than a warning, so the
+move drops it. Dropping it **widens** what the gate covers, since the owner's
+own pinned plugin list is then what defines the file set. So the move row
+carries **sub-lines** — one for the dropped key, and one per **exclusion** the
+drop makes necessary, each naming the files that exclusion keeps out of the
+gate. Never a restored key, which puts the diagnostic back, and never after the
+fact: they are changes to the settings the row claims survive the move, so you
+read them before the one consent. The two are told apart by content, never by
+name. What comes back is **one plan for the run**, carrying a **section per
+repo** — the base's first, then each member's in the resolved order, each headed
+with the repo and the mode it resolved to — and inside every section the same
+thirteen counted sections: moves, root tool configs (move / keep both / delete),
+the hook manager (keep / switch), creates, replaces, offered (replace / keep),
+renames, rewrites applied, appends and merges — all applied on a single yes —
+and three applied by nothing, `Rewrites (flagged, not applied)`,
+`Repo-owned, kept` and `Projects`, plus one uncounted heading, **Skipped**,
+present even when empty: every path a pack's condition left out, one line per
+path naming the pack and the axis whose value decided it — not a conflict, not a
+keep, not a deferral, and nothing waits on a later run unless the answer itself
+changes — and, marked *landed earlier, condition now false — kept*, any path an
+earlier run landed whose answer has since flipped, which stays where it is. Each
+repo's section closes with its own total and the document with a product total;
+a total counts only what would be applied — an offered row kept, a root tool
+config kept both ways and a hook manager kept are outside it — so a repo whose
+only rows are files it owns and files it chose to keep still reads as shaped.
+Two plans would be two chances to stop halfway — one repo renamed into the
+contract while its neighbours still call the old names — which is exactly what
+the one-consent rule exists to prevent. The apply order is **members first, the
+base last**, so the base commits with its record of the members already current.
+A task file whose shebang names a shell other than bash goes there, listed with
+the shell-specific syntax it uses, and is **never** rewritten: auto-translating
+a shell script is how a working task becomes a subtly broken one, so it lands in
+the report's `Deferred` section for you to rewrite deliberately.
 
 **Root tool configs are read before a pack lands over them.** The root survey's
 rename map is the **full path** each pack's `config/` tree declares — never a
@@ -1285,9 +1286,9 @@ task is not moved into the library — plus every root spelling of a **tool-conf
 table** `init` carries, one row per tool a pack ships: the tool, the spellings a
 repo may already have at the root or inside `.github/`
 (`.pre-commit-config.yaml`; `.gitleaks.toml`; `.grype.yaml`; `.dprint.json` or a
-real root `dprint.json`; `.github/renovate.json`, `.renovaterc` or
-`renovate.json`; `.github/dependabot.yml`), the `.config/` path the pack lands,
-and the merge shape. Every hit is one plan row, `root tool config`, with three
+real root `dprint.json`; `renovate.json` and every other spelling Renovate
+discovers; `.github/dependabot.yml`), the `.config/` path the pack lands, and
+the merge shape. Every hit is one plan row, `root tool config`, with three
 outcomes: **move** — the default — moves your file to the pack's `.config/` path
 with `git mv`, before anything is created, and then offers it through the
 replace-or-keep row below against the pack's, so what you wrote is read and
@@ -1298,13 +1299,15 @@ manager's root file — `.mise.toml` or a root `mise.toml` — is the table's
 files, each move one of the skill's rows in the plan; **keep both** leaves your
 file where it is beside the pack's and reports it under `Deferred` as **unread
 by the gate**, since the gate passes the `.config/` path explicitly; **delete**
-is reachable only by flipping the row yourself and is never proposed. The
-dependency-update policy is the one **yield**: the pack lands `renovate.json` at
+is reachable only by flipping the row yourself and is never proposed.
+`.gitignore`, `.gitattributes` and `.graphifyignore` are `handed` rows too,
+adopted in place by the skill's git and graphify tools. The dependency-update
+policy is the one **yield**: the skill's renovate tool lands `renovate.json` at
 the root because that tool's discovery never reaches `.config/`, so a policy you
-already carry under any of its spellings wins, the pack's is **not landed** and
+already carry under any of its spellings wins, the skill's is **not landed** and
 the row says so — `.github/dependabot.yml` is a different service's file and
 reads `keep both`, and it seeds question 8's row to `dependabot`, which skips
-the pack's `renovate.json` rather than landing it beside yours. An entry your
+the skill's `renovate.json` rather than landing it beside yours. An entry your
 `.gitignore` ignores is build output, skipped without a row; `.git/` is exempt
 by name; and a directory holding its own manifest or source is a **project**,
 listed once under `Projects` with the id question 2 confirmed and never under
@@ -1350,12 +1353,11 @@ pack's path — is one such row, shown before the consent and recorded on a keep
 exactly as below; a `blank` repo rarely has one, and when it does it is never a
 silent skip. A readme, a licence file under any spelling — `LICENSE`,
 `LICENSE.md`, `LICENCE` or `COPYING` — or a `SECURITY.md` already in the repo is
-outside the offer altogether: kept, never replaced, and reported. So is
-`.gitignore`, which is never replaced and never kept whole: the pack's sections
-are **merged** into yours, section by section — each banner section your file
-lacks appended, patterns compared normalised (a leading or trailing `/`
-stripped, a `**/` prefix ignored, blank and comment lines skipped) so a pattern
-you carry under another spelling is never doubled. The `shaped` comparison is
+outside the offer altogether: kept, never replaced, and reported. So are
+`.gitignore`, `.gitattributes` and `.graphifyignore`, which are
+`/stackgen:tool-config`'s git and graphify tools: they adopt a landed sectioned
+`.gitignore` as blocks, keep every line you wrote outside them, and never write
+a pattern you already carry under another spelling. The `shaped` comparison is
 **two tests**: the file's hash against the one the lockfile recorded — and a
 file the lockfile has no record for is compared against the pack's bytes **after
 the fills**, never raw, so a file that is exactly what a landing would have
@@ -1400,8 +1402,9 @@ library that no landed pack ships is yours — a task file, or an inline
 rename, shebang and repo-owned passes all read as tasks so none is invisible for
 being a table rather than a file; `init` lists each under `Repo-owned, kept`, an
 inline one with its file and table, and touches none of them — it never turns a
-table into a file. A commit type your gate config carries that the legacy table
-maps neither way is **asked**, never guessed: once per type, with the closed set
+table into a file. A commit type your gate config carries that the rename table
+maps neither way is **asked**, never guessed — a conflict row of
+`/stackgen:tool-config`'s pre-commit tool, once per type, with the closed set
 plus *keep as is*. What counts is the path a file **resolves to** once the
 passes above are accounted for, never the path it sits at today: a file that
 resolves into the shipped set — by a legacy-table rename, or because `init`
@@ -1433,10 +1436,10 @@ and the security file on their already-there rule, the two bootstrap steps
 blank-repo landing's alone, while the questions that feed them were asked in
 every mode — a shaped repo answered and had nothing run on the answers. Last
 before the git pass, `init` **re-records the lockfile hash** of every file it
-filled, appended to or merged — the marked positions, the placeholders, the
-ignore sections, the hook fragments, the editor block — so nothing it wrote
-reads as drift the next morning. A file a pack task rewrites later under its own
-update flag reads as drift until the next reshape offers it, by design.
+filled or merged — the marked positions, the placeholders, the editor block — so
+nothing it wrote reads as drift the next morning. A file a pack task rewrites
+later under its own update flag reads as drift until the next reshape offers it,
+by design.
 
 **It ends with a git pass, and that pass is consent-gated.** Everything above it
 lands on disk; a repo shaped and left dirty is a repo whose next command — a
@@ -1539,7 +1542,7 @@ the origin host — and a miss is **never a stop**: the reason goes on that repo
 `Forge` line, the by-hand list is printed for it, and the run continues. So does
 a call the forge refuses, a ruleset write without admin on the repo among them.
 Any forge other than GitHub or GitLab takes the by-hand list outright. The
-hygiene pack's `CONTRIBUTING.md` keeps the same by-hand form — the default
+hygiene assets' `CONTRIBUTING.md` keeps the same by-hand form — the default
 branch and the two protections — for a forge the pass cannot reach.
 
 **The backlog project is base only, last, and the backlog skill's.** `init`
@@ -1665,10 +1668,10 @@ recorded `answers.repos.<repo>.forge` the live `origin` host contradicts, or a
 `skipped:` row whose `when: forge` it contradicts — the files that axis skipped
 are waiting for the reshape to land them, and a repo with no remote at all is
 neither row — a config stamped `config_format` 21 carrying no `answers:` block
-at all, and a provider named by `answers.secrets` whose `.gitignore` section is
-missing. Every one of these is `drift` and none is blocking — a repo behind its
-baseline is out of date, not broken — and all of them share one remedy,
-`/vwf:setup reshape`, printed once.
+at all, and a provider named by `answers.secrets` whose pack's `.gitignore`
+block is missing. Every one of these is `drift` and none is blocking — a repo
+behind its baseline is out of date, not broken — and all of them share one
+remedy, `/vwf:setup reshape`, printed once.
 
 Nobody has to remember that schedule. Four commands bring you to the door
 themselves, each **offering** `reshape` the Step 0 way — one line naming the
@@ -1723,33 +1726,32 @@ base and runs from there, so what gets reshaped is the product.
 product it asks its two things of **every repo** — the base and every member
 present on this machine, the same set `/vwf:doctor` evaluates. Is the shape
 *there* — that repo's stack-adapter lockfile records the `tool-config/…` entries
-`/stackgen:tool-config all` writes and the one unconditional slug,
-`repo-hygiene` — and is it *current*, against the seven repo-shape predicates
-`/vwf:doctor` owns, evaluated on that repo's own artifacts (the pack versions
-the lockfile recorded, the registry ids behind the surfaces generated from them,
-the `develop`/`main` pair, the repo-name environment key, the content of the
-pack-owned files that landed — against the lock, marked positions spliced out —
-the marked positions beside that key, and the forge state — default branch, both
-branches protected, the base's backlog project — read from the forge when its
-CLI is on `PATH` and logged in). Any of those missing in any repo, or any
-predicate failing in any repo, and setup says which repos are absent or behind
-and what each showed, and offers [`/vwf:init`](#vwfinit) **once for the whole
-product** — a base that is current while one member is behind is still an offer,
-because the shape is per repo and the product is shaped only when all of them
-are. `init` is what lays the shape down and what brings it forward, and it
-surveys and shapes every repo in one run of its own. That seam is why `init`
-stays model-invocable — and it is hidden from the `/` menu, so this offer and
-`reshape` above are the only two ways it is reached. An **absent** member is a
-blind spot, never a finding. Declining is a recorded deferral, not a halt: the
-repo shape and the vwf format are two different things, and a repo can be
-onboarded into one without the other. The check is not Step 0's alone: it
-**repeats once after the materialize pass**, against the lockfile that pass has
-just written, so a pack version the run itself moved is offered in the same run
-rather than the next — see [the second shape check](#the-second-shape-check)
-below. Setup itself never lands the baseline — `/stackgen:tool-config all` and
-the unconditional bundle are `init`'s. The **pinned** stacks are a different
-matter, and they are setup's: see [the materialize pass](#the-materialize-pass)
-below.
+`/stackgen:tool-config all` writes, no pack slug checked — and is it *current*,
+against the seven repo-shape predicates `/vwf:doctor` owns, evaluated on that
+repo's own artifacts (the pack versions the lockfile recorded, the registry ids
+behind the surfaces generated from them, the `develop`/`main` pair, the
+repo-name environment key, the content of the pack-owned files that landed —
+against the lock, marked positions spliced out — the marked positions beside
+that key, and the forge state — default branch, both branches protected, the
+base's backlog project — read from the forge when its CLI is on `PATH` and
+logged in). Any of those missing in any repo, or any predicate failing in any
+repo, and setup says which repos are absent or behind and what each showed, and
+offers [`/vwf:init`](#vwfinit) **once for the whole product** — a base that is
+current while one member is behind is still an offer, because the shape is per
+repo and the product is shaped only when all of them are. `init` is what lays
+the shape down and what brings it forward, and it surveys and shapes every repo
+in one run of its own. That seam is why `init` stays model-invocable — and it is
+hidden from the `/` menu, so this offer and `reshape` above are the only two
+ways it is reached. An **absent** member is a blind spot, never a finding.
+Declining is a recorded deferral, not a halt: the repo shape and the vwf format
+are two different things, and a repo can be onboarded into one without the
+other. The check is not Step 0's alone: it **repeats once after the materialize
+pass**, against the lockfile that pass has just written, so a pack version the
+run itself moved is offered in the same run rather than the next — see
+[the second shape check](#the-second-shape-check) below. Setup itself never
+lands the baseline — `/stackgen:tool-config all` and the hygiene assets are
+`init`'s. The **pinned** stacks are a different matter, and they are setup's:
+see [the materialize pass](#the-materialize-pass) below.
 
 **Step 0 resolves one of three entry paths**, once, from what is on disk, and
 nothing after it re-derives the mode:
@@ -3476,7 +3478,10 @@ back to direct reads. `/vwf:setup` is the one command that builds a graph
 (consent-gated, at the end of onboarding). The refresh is the repo's pre-commit
 `graphify-refresh` hook at `post-commit`, which runs `code:graph` and which
 `/stackgen:tool-config all` lands — never graphify's own hook, which pins a
-Python path; a recorded decline is a settled choice, not an unmet mandate.
+Python path. A raw graphify hook, a `merge=graphify` attribute or a
+`merge.graphify.*` git config key an earlier install left is doctor **drift**,
+remedy `mise run setup:precommit`, which strips all three. A recorded decline is
+a settled choice, not an unmet mandate.
 
 **What the graph indexes is narrowed by `.graphifyignore`.** graphify already
 honours `.gitignore`, so nothing git excludes — `docs/scratchpad/`, build

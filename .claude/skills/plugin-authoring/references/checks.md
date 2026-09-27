@@ -107,7 +107,10 @@ much smaller than the one it replaced: whole families of assertion became
     *target* repo is silence rather than an error. The landed-tree assertions
     run over each `stackgen:tool-config` asset tree
     (`skills/tool-config/assets/<tool>/`) exactly as over a pack's `config/`,
-    since the skill lands it whole at the repo root:
+    since the skill lands it whole at the repo root — each tree's root also
+    admitting that tool's own root files, per `TOOL_CONFIG_ROOT_FILES` — and
+    over each of `/vwf:init`'s asset trees (`skills/init/assets/<name>/`) with
+    no root allowlist, since init picks one licence out of several there:
     - a **task file lands executable**. `config/.config/mise/tasks/**` is a
       *file-based* task library — mise runs each file directly — so one landing
       644 fails as an **unknown task** rather than as a permission error, which
@@ -131,9 +134,11 @@ much smaller than the one it replaced: whole families of assertion became
       materializes into, and each entry joins on the same argument — a tool with
       root-only discovery leaves a pack a choice between the root file and a
       flag on every invocation any caller might type, and the flag is the worse
-      of the two. The forge directory is on the list for that same reason and
-      the workflow is carved back out of it: a pack states which task CI runs,
-      and the workflow is the repo's release model's;
+      of the two. The ignore, attribute, graph-ignore and Renovate files are not
+      on the pack list: a pack asks `stackgen:tool-config` for their lines. The
+      forge directory is on the list for that same reason and the workflow is
+      carved back out of it: a pack states which task CI runs, and the workflow
+      is the repo's release model's;
     - an **editor fragment parses as JSONC** and carries only `settings`,
       `nesting` and `extensions`. `/vwf:init` composes the fragments into editor
       files no pack owns, and a fourth key is dropped without a word;
@@ -177,14 +182,16 @@ much smaller than the one it replaced: whole families of assertion became
       `add env` value, since mise renders it — or one of the gate verbs,
       `dprint add plugin <name>`, `all add exclude [generated] <paths>`,
       `pre-commit add linter-ignore <paths>`,
-      `pre-commit add hook <repo> <id> <stage> [key=value …]` or
-      `grype add ignore <id> [reason]`. An exclude asked of one tool alone is a
-      finding: only `all add exclude` keeps rule 15's lists one set. The
-      materializer runs each line through `/stackgen:tool-config`, so a line
-      that does not parse is one the skill refuses at landing, in someone else's
-      repo. And a pack's `config/` tier holding any mise `conf.d/` fragment or
-      any `pre-commit.d/` file is a finding: a pack asks for those lines through
-      `tool-config:` and never lands the file.
+      `pre-commit add hook <repo> <id> <stage> [key=value …]`,
+      `grype add ignore <id> [reason]`, `git add ignore <pattern…>`,
+      `git add ignore template=<Name>` or `git add attribute <pattern> <attr…>`.
+      An exclude asked of one tool alone is a finding: only `all add exclude`
+      keeps rule 15's lists one set. The materializer runs each line through
+      `/stackgen:tool-config`, so a line that does not parse is one the skill
+      refuses at landing, in someone else's repo. And a pack's `config/` tier
+      holding any mise `conf.d/` fragment or any `pre-commit.d/` file is a
+      finding: a pack asks for those lines through `tool-config:` and never
+      lands the file.
 
     The walk is its own rather than the plugin file reader's, because every one
     of these paths runs through a dot segment the reader's glob does not descend

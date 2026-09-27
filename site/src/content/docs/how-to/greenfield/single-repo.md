@@ -118,8 +118,8 @@ and a pull request required on whichever of the two you set to `pr`), and the
 backlog project it hands you the browser to create — and applies it through the
 forge CLI, leaving any protection already there untouched. Without the CLI, or
 on a forge it has none for, it prints the same list for you to apply by hand —
-the form the hygiene pack's `CONTRIBUTING.md` keeps — and carries on. Its report
-prints, and setup carries on with its own work.
+the form the hygiene assets' `CONTRIBUTING.md` keeps — and carries on. Its
+report prints, and setup carries on with its own work.
 
 **Then setup does its half.** A repo with no manifest, no source directories and
 no `docs/blueprint/` is *blank*, and setup treats it as such: it asks nothing
