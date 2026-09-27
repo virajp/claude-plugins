@@ -63,13 +63,31 @@ LOCK_ENVS="$(lock_envs)"
 
 have_task() { mise tasks 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
 
+SIDECARS="${CONFIG_DIR}/mise/locks"
+list_sidecars() { { find "$SIDECARS" -mindepth 2 -maxdepth 2 2>/dev/null || true; } | sort; }
+
+# EXIT trap while the lock is written: any failure removes the lock and only the sidecars this run created.
+undo_failed_lock() {
+  local dir
+  rm -f "$LOCKFILE"
+  comm -13 <(printf '%s\n' "$SIDECARS_BEFORE") <(list_sidecars) | while read -r dir; do
+    [ -n "$dir" ] || continue
+    rm -rf "$dir"
+    rmdir "${dir%/*}" 2>/dev/null || true
+  done
+  [ -e "$SIDECARS" ] && [ "$HAD_SIDECARS" = "false" ] && { rmdir "$SIDECARS" 2>/dev/null || true; }
+  print_error "Locking failed — the lockfile and the sidecars this run wrote were removed, so the next run locks again."
+}
+
 write_missing_lock() {
   if [ "$NO_LOCKFILE" = "true" ]; then
     print_subheader "No lockfile at .config/mise/mise.lock — locking MISE_ENV=${LOCK_ENVS} once ..."
-    # Python dependency locks need the pinned uv and Python, not PATH's; unlocked, as ci's `locked = true` is in the union and there is no lock yet.
     local tool uv_python=""
-    local sidecars="${CONFIG_DIR}/mise/locks" had_sidecars=false
-    [ -e "$sidecars" ] && had_sidecars=true
+    HAD_SIDECARS=false
+    [ -e "$SIDECARS" ] && HAD_SIDECARS=true
+    SIDECARS_BEFORE="$(list_sidecars)"
+    trap undo_failed_lock EXIT
+    # Python dependency locks need the pinned uv and Python, not PATH's; unlocked, as ci's `locked = true` is in the union and there is no lock yet.
     for tool in uv python; do
       # --local: declared by this repo's config, never the user's global one.
       if [ -n "$(MISE_LOCKED=false MISE_ENV="$LOCK_ENVS" mise ls --current --local "$tool" 2>/dev/null)" ]; then
@@ -79,15 +97,11 @@ write_missing_lock() {
       fi
     done
     # A subshell scopes UV_PYTHON to the lock, and leaves it unset when no Python is pinned.
-    if ! (
+    (
       [ -n "$uv_python" ] && export UV_PYTHON="$uv_python"
       MISE_ENV="$LOCK_ENVS" mise lock
-    ); then
-      rm -f "$LOCKFILE"
-      [ "$had_sidecars" = "false" ] && rm -rf "$sidecars"
-      print_error "mise lock failed — what it wrote was removed, so the next run locks again."
-      exit 1
-    fi
+    )
+    trap - EXIT
   fi
 }
 

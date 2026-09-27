@@ -5,6 +5,8 @@ activate_aggressive  = true
 all_compile          = false
 env_shell_expand     = true
 gpg_verify           = true
+python.compile       = false           # only the python/uv dev tools in mise/conf.d/tools.dev.toml use it
+python.uv_venv_auto  = "create|source"
 raw                  = true
 status.missing_tools = "always"
 
