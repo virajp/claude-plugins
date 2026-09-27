@@ -714,15 +714,17 @@ happened to be standing on. A fresh repository is on `develop` already, from
 §1, and takes the table's first row after the commit instead. This is the
 order [existing repo](existing-repo.md)'s git pass keeps too.
 
-**Then the lock, before anything is staged.** Run
-`MISE_ENV=dev mise run setup:mise --lock-only` in this repo. It writes
-`.config/mise/mise.lock`, and its `.config/mise/locks/` sidecar where a tool
-needs one, only when the lock is missing, and installs nothing. Both lock
-paths join this repo's written list, so the `ops:` commit carries them. The
-repo's first CI run installs with the lock enforced, and finds it there. A
-failure stops this repo's git pass with the command's output, before any
-commit. Where §9 deferred, this step is skipped under the same unlock, and the
-pass goes on.
+**Then the lock, before anything is staged.** Where `.config/mise/mise.lock`
+is missing, run `MISE_ENV=dev mise run setup:mise --lock-only` in this repo.
+It writes the lock, and its `.config/mise/locks/` sidecar where a tool needs
+one. Before locking it installs uv and Python, and nothing else. The plan
+shown before the one consent names that install. Then, whichever step wrote
+the lock, each of `.config/mise/mise.lock` and `.config/mise/locks/` that
+exists and git does not track joins this repo's written list. So the `ops:`
+commit carries the lock, and the repo's first CI run, which installs with the
+lock enforced, finds it there. A failure stops this repo's git pass with the
+command's output, before any commit. Where §9 deferred, this step is skipped
+under the same unlock, and the pass goes on.
 
 Then, into this repo's own index: every path in **this repo's** written /
 moved / renamed lists, and nothing else. Not `git add -A`: a repo that already
