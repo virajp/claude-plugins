@@ -9,17 +9,13 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 cd "$MISE_PROJECT_ROOT"
 
-# Local publish path (CI publishes via OIDC in .github/workflows/release.yml).
-# Publishing goes through the npm CLI; pnpm drives the gates below and everything
-# else. Prefer releasing via CI (`mise run p:i:release` + push the tag) so every
-# version keeps the strongest npm trust level.
+# Local fallback — prefer p:i:release, so CI publishes with OIDC provenance.
 print_header "Verifying npm authentication ..."
 if ! npm whoami >/dev/null 2>&1; then
   print_error "Not logged in to npm. Run \`npm login\` first, then retry."
   exit 1
 fi
 
-# Gate publishing on the smoke tests and package verification (both via pnpm).
 mise run p:i:test
 mise run p:i:build
 

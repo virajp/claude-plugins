@@ -7,10 +7,7 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 cd "$MISE_PROJECT_ROOT"
 
-# Test the BUILT artifact, not the source. bin/ is what npm ships, and the
-# bundle is where a packaging mistake would show up — a missing external, a
-# broken package-root resolution — none of which `node installer/src/index.ts` can
-# expose, because in the repo everything resolves through the workspace.
+# Tests the built bin/, not the source — see installer/CLAUDE.md.
 print_header "Bundling installer/ into bin/ ..."
 pnpm exec tsup >/dev/null
 
@@ -26,9 +23,6 @@ if "${CLI[@]}" >/dev/null 2>&1; then
   exit 1
 fi
 
-# `strict` parsing is what makes a retired flag answer by name instead of being
-# a silent no-op — a user with one in a script is told, rather than watching a
-# run do less than they asked for.
 print_header "Asserting every retired flag is rejected ..."
 for flag in --platform --upgrade --force; do
   if "${CLI[@]}" "$flag" claude >/dev/null 2>&1; then
@@ -37,18 +31,7 @@ for flag in --platform --upgrade --force; do
   fi
 done
 
-# ---------------------------------------------------------------------------
-# End-to-end, against the BUILT bundle and a throwaway HOME.
-#
-# Everything above this line exits before anything is read or written. What
-# follows exercises the two read paths that resolve real directories: the
-# plugin install plan, and the legacy-receipt enumeration `--uninstall` reads.
-#
-# `claude` is stubbed because the plugin install path is exercised as
-# `--dry-run` only — driving a real install through a stub would test this tool
-# against our own fiction of Claude's CLI. The command *sequence* is covered by
-# the vitest suite with an injected fake exec.
-# ---------------------------------------------------------------------------
+# End-to-end against the built bundle and a throwaway HOME; `claude` is a stub.
 print_header "Setting up a throwaway HOME ..."
 
 E2E_HOME="$(mktemp -d)"
@@ -59,9 +42,7 @@ mkdir -p "$E2E_HOME/bin"
 printf '#!/bin/sh\nexit 0\n' >"$E2E_HOME/bin/claude"
 chmod +x "$E2E_HOME/bin/claude"
 
-# HOME drives `context.home`; the two XDG vars keep the receipt and the user
-# config inside the throwaway too. Without all three a "hermetic" run still
-# writes into the developer's own config.
+# All three of HOME and the XDG vars, or a run writes into the real config.
 e2e() {
   env \
     PATH="$NODE_DIR:$E2E_HOME/bin" \
@@ -71,8 +52,6 @@ e2e() {
     "${CLI[@]}" "$@"
 }
 
-# The plugin install path, dry only: the bundle must parse the flags and
-# describe the claude commands it would run, without writing anything.
 print_header "Asserting --user vwf --dry-run describes the claude commands ..."
 before_plugins="$(find "$E2E_HOME" -type f | sort)"
 plugin_dry="$(e2e --user vwf --dry-run)"
@@ -91,16 +70,6 @@ if [[ "$before_plugins" != "$after_plugins" ]]; then
   exit 1
 fi
 
-# --- A legacy receipt on disk -----------------------------------------------
-#
-# `legacyItems` enumerates every readable `*.json` in the receipt directory,
-# and reverts it — restoring what the recorded install displaced rather than
-# deleting. A receipt from one of the retired render targets is the surviving
-# case: no version installs one any more, so it can only be seeded, and a
-# machine still carrying one is exactly the machine an uninstall must clean.
-#
-# It is also what gives `--dry-run` something real to not-write: an enumerated
-# row naming a file and a config key it would otherwise touch.
 print_header "Seeding a legacy receipt ..."
 
 RECEIPT_DIR="$E2E_HOME/.config/ai-plugins/receipts"
@@ -129,20 +98,8 @@ cat >"$RECEIPT" <<JSON
 }
 JSON
 
-# What this proves, and what it deliberately leaves to vitest.
-#
-# The dry run is the whole reachable half here: `--uninstall` is interactive by
-# design and refuses without a TTY, and allocating one portably is a BSD-vs-GNU
-# `script` trap this repo already pays elsewhere. So the CLI-level assertion is
-# that the built bundle, resolving HOME and both XDG vars for real, FINDS the
-# receipt at the path it was written to and plans a revert for it.
-#
-# The restore itself — the config carrying the prior value again, byte for byte
-# — is asserted in `uninstall.test.ts`, against a real temp filesystem through
-# the same `revertLegacyReceipt` path this run would take.
+# The restore itself is asserted in uninstall.test.ts; --uninstall needs a TTY.
 print_header "Asserting --uninstall --dry-run finds the legacy receipt ..."
-# Both streams: the enumerated list goes to stderr (it is a question, even in
-# dry-run form) and the diff to stdout, and this asserts against each.
 dry_out="$(e2e --uninstall --dry-run 2>&1)"
 if ! grep -qF "$RECEIPT" <<<"$dry_out"; then
   print_error "--uninstall --dry-run did not name ${RECEIPT}"
@@ -156,8 +113,6 @@ if ! grep -qF "revert" <<<"$dry_out"; then
   exit 1
 fi
 
-# `--dry-run` writes nothing: the receipt and both of the things reverting it
-# would touch are still exactly as seeded.
 if [[ ! -f "$RECEIPT" || ! -f "$ARTIFACT" ]]; then
   print_error "--uninstall --dry-run removed something; it must write nothing"
   exit 1
@@ -168,8 +123,6 @@ if ! grep -qF '"virajp": "ours"' "$CONFIG"; then
 fi
 
 print_header "Asserting --uninstall refuses without a terminal ..."
-# The rule the dry run exists beside: an unattended run must not guess which
-# pieces the user wanted kept.
 if e2e --uninstall </dev/null >/dev/null 2>&1; then
   print_error "Expected non-zero exit for --uninstall with no TTY to ask on"
   exit 1

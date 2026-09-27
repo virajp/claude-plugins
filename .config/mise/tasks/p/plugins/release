@@ -4,24 +4,7 @@
 
 #USAGE flag "--dry-run" help="report what would be tagged and pushed; change nothing"
 
-# Materializes the tags `.claude-plugin/marketplace.json` already names.
-#
-# Each entry's `source.ref` is DERIVED from that plugin's manifest version
-# (`<name>-v<version>`), so bumping a version is what declares a release — this
-# task only creates the tag that ref points at. A plugin whose version did not
-# move already has its tag and is skipped, which is what makes releases
-# per-plugin: shipping vwf leaves the other entry byte-identical, so
-# `claude plugin update` sees a change for vwf alone.
-#
-# Ordering matters and is the reason this is a task rather than a paragraph in a
-# doc. The manifest on the release branch may name a tag that does not exist
-# yet — that is the normal state on `develop`, where unreleased work lives — and
-# a user whose Claude resolves such a ref gets a fetch failure. So the tag is
-# created and pushed only from the release branch, after the merge, once the
-# committed manifest is proven fresh.
-#
-# This does NOT touch package.json or the installer's tags. That release is
-# `mise run p:i:release`, whose tags are namespaced `installer-v*`.
+# Tags the refs .claude-plugin/marketplace.json already names; only from main, after the merge.
 
 set -euo pipefail
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
@@ -32,25 +15,20 @@ cd "$MISE_PROJECT_ROOT"
 DRY_RUN="${usage_dry_run:-false}"
 RELEASE_BRANCH="main"
 
-# 1. A tag names a commit, so the tree must be clean — otherwise the tag points
-#    at content that is not what was tested.
+# 1. A clean tree, so the tag names what was tested.
 if [[ -n "$(git status --porcelain)" ]]; then
   print_error "Working tree is not clean. Commit or stash your changes first."
   exit 1
 fi
 
-# 2. Only from the release branch. Users read the marketplace manifest from the
-#    default branch, so a tag cut anywhere else would publish content that
-#    branch never carried — the branch model's whole point.
+# 2. Only from main — users read the manifest from it.
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 if [[ "${BRANCH}" != "${RELEASE_BRANCH}" ]]; then
   print_error "On '${BRANCH}', not '${RELEASE_BRANCH}'. Merge to ${RELEASE_BRANCH} first — a plugin tag off it publishes content users' marketplace never lists."
   exit 1
 fi
 
-# 3. The committed manifest must be what the plugin manifests generate. Without
-#    this the refs tagged below are the STALE ones, so a version bump would ship
-#    under the previous release's tag.
+# 3. A stale manifest would tag the previous release's refs.
 mise run p:plugins:marketplace --check
 
 # 4. Every ref the manifest names, in entry order.
@@ -59,18 +37,14 @@ mapfile -t REFS < <(node -p "
     .plugins.map(p => p.source.ref).join('\n')
 ")
 
-# 5. Fetch tags so 'already exists' means the remote's answer, not this
-#    checkout's. A tag present locally but never pushed is still unreleased.
+# 5. "Exists" means on the remote, not in this checkout.
 git fetch --tags --quiet origin
 
 TO_TAG=()
 FORBIDDEN=()
 for ref in "${REFS[@]}"; do
   if ! git rev-parse -q --verify "refs/tags/${ref}" >/dev/null; then
-    # 13 and 17 are never issued as a version component. Only the refs this run
-    # would NEWLY cut are checked — a `<name>-v<version>` already out there
-    # predates the rule, and unpublishing it is not on offer. The version is
-    # everything after the last `-v`, the shape the ref is derived in.
+    # Only newly cut refs are checked; tags from before the 13/17 rule stand.
     if version_forbidden "${ref##*-v}"; then
       FORBIDDEN+=("${ref}")
     fi
@@ -78,18 +52,14 @@ for ref in "${REFS[@]}"; do
     continue
   fi
 
-  # The tag exists. It must point HERE — a tag that resolves elsewhere means the
-  # version was reused for different content, and users who already resolved it
-  # would keep the old bundle forever. Re-pointing it is not this task's call.
+  # An existing tag must point at HEAD; re-pointing it is not this task's call.
   tagged="$(git rev-list -n 1 "refs/tags/${ref}")"
   if [[ "${tagged}" != "$(git rev-parse HEAD)" ]]; then
     print_warn "${ref} already exists at ${tagged:0:8}, not HEAD — bump that plugin's version instead of reusing the tag."
   fi
 done
 
-# The whole run is refused, not just the offending entry: the tags are pushed
-# together so a partial release is not a state anyone has to reason about, and
-# that argument cuts the same way here.
+# Refuse the whole run — tags are pushed together, never partially.
 if [[ "${#FORBIDDEN[@]}" -gt 0 ]]; then
   print_error "Refusing to release ${FORBIDDEN[*]}: 13 and 17 are never issued as a version component. Bump that plugin's manifest past it, regenerate the marketplace manifest, and land it on ${RELEASE_BRANCH} first."
   exit 1
@@ -108,8 +78,7 @@ if [[ "${DRY_RUN}" == "true" ]]; then
   exit 0
 fi
 
-# 6. Annotated tags, then one push. Pushed together so a partial release is not
-#    a state anyone has to reason about.
+# 6. Annotated tags, then one push.
 for ref in "${TO_TAG[@]}"; do
   git tag -a "${ref}" -m "${ref}"
 done

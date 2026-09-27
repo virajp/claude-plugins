@@ -1,37 +1,10 @@
-# mempalace mining config for this repo.
-#
-# Per plugins/vwf/assets/memory.md: one product, one wing, one config file at
-# the repo root. `mempalace mine` looks for mempalace.yaml in the directory it is
-# pointed at and nowhere else — no parent search, no `.config/` convention, no
-# --config flag. A copy anywhere else is silently inert: the mine still runs,
-# reports auto-detected defaults, and files everything into `general`.
-#
-# Routing walks a file's path parts outermost-first and returns on the first room
-# whose name or keywords match, so every top-level directory is claimed below on
-# purpose. `docs` itself stays unclaimed so that docs/memory/<room>/ reaches its
-# own room; the user manual now lives under site/src/content/docs/, whose
-# `installer`, `plugins` and `how-to` parts still reach those same rooms.
-#
-# But leaving `docs` unclaimed is only half a rule, and the other half had to be
-# learned from a mine: an unclaimed part means routing walks *past* it, so any
-# docs/ subtree whose own name — or, worse, whose filename — brushes a room's
-# keyword is captured by it. Two did: `docs/plans/**` landed in `planning` on the
-# `plans` keyword, and the `how-to/operate/sessions-and-handoff.md` guide landed in
-# the then-existing `handoff` room on its *filename*, where a guide about the
-# mechanism outranked the state it described. Nothing errored; the room just
-# stopped meaning one thing.
-#
-# So every docs/ subtree is now claimed as deliberately as every top-level
-# directory, and the keyword that did the first capture is gone: `planning` keeps
-# only its own name. A room should be reachable by its own name — which is how
-# docs/memory/<room>/ still finds it — and by little else.
+# Routing returns the first room matching a path part, outermost first — claim every
+# top-level directory and docs/ subtree deliberately, and keep keywords narrow.
 
 wing: ai-plugins
 
 exclude_patterns:
-  # Secrets — the backstop behind .gitignore, which mining already honours by
-  # default. This layer catches the one case .gitignore cannot: a credential
-  # that was committed anyway, and is therefore not ignored.
+  # Secrets — the backstop behind .gitignore for a credential committed anyway.
   - .env*
   - "*.pem"
   - "*.key"
@@ -39,25 +12,13 @@ exclude_patterns:
   - "*credentials*"
   - "*secret*"
 
-  # The generated marketplace manifest. `plugins/` itself is authored and is
-  # mined — there is one tree now, so nothing is a near-duplicate of anything.
   - /.claude-plugin/
 
-  # Dependency and build output. node_modules/, dist/ and bin/ are already
-  # gitignored (and node_modules/ and dist/ are in mempalace's own SKIP_DIRS);
-  # listed for the case where the tree is mined without git.
   - node_modules/
   - dist/
   - /bin/
 
 rooms:
-  # ---------------------------------------------------------------------------
-  # The docs/memory/ rooms. This repo ships vwf but no longer runs it on itself,
-  # so only the four committed rooms are seeded — `runs`, `doctor` and `handoff`
-  # were dropped with the directories that fed them. Seeding matters because an
-  # implicit room, created by the first agent write, carries no keywords: a later
-  # mine routes nothing to it and it only holds what was filed by hand.
-  # ---------------------------------------------------------------------------
   - name: decisions
     description: Design and architecture decisions with their rationale, from
       docs/memory/decisions/
@@ -68,17 +29,13 @@ rooms:
     keywords: [ problems, findings ]
   - name: planning
     description: Plan rationale and deferred options, from docs/memory/planning/
-    # `plans` removed: it captured all of docs/plans/, which is plan folders
-    # rather than the rationale vwf files here. They go to `repo-plans`.
+    # Not `plans` — that would capture docs/plans/, which is `repo-plans`.
     keywords: [ planning ]
   - name: gaps
     description: Blueprint and plan holes surfaced during execution, plus scope
       parked during elicitation
     keywords: [ gaps ]
 
-  # ---------------------------------------------------------------------------
-  # Path-derived rooms — what this repo actually holds.
-  # ---------------------------------------------------------------------------
   - name: plugins
     description: Authored plugin sources under plugins/ and their user docs
       under site/src/content/docs/plugins/
@@ -104,15 +61,10 @@ rooms:
     description: The task-shaped operator guides under
       site/src/content/docs/how-to/ - the greenfield and brownfield
       walkthroughs, and the operating loops
-    # Claims the `how-to` part so routing returns there. Without it these walk
-    # past `docs` and past `how-to` and are then routed by whatever their own
-    # filename brushes — which put ten of them in `plugins` and one in `handoff`.
     keywords: [ how-to, guides ]
   - name: repo-plans
     description: Plan folders under docs/plans/, cycle and change plans alike,
       including the archived ones
-    # Named `repo-plans` rather than `plans` so it cannot be misread as the
-    # protocol room `planning`, which holds vwf's own plan rationale.
     keywords: [ plans ]
   - name: general
     description: Files that don't fit other rooms
