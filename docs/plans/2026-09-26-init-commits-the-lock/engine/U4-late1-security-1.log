@@ -1,0 +1,3 @@
+range 8346877c..2cd02823 (U4-late1)
+No high-confidence vulnerabilities found.
+Checked: one-line doc reorder of the graphifyy pipx example keys in references/mise.md; no new source, pin or behaviour.

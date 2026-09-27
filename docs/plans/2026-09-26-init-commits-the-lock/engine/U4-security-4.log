@@ -1,0 +1,5 @@
+range c766f44f..8346877c
+No high-confidence vulnerabilities found.
+- write_lock/undo_failed_lock: backup via bare mktemp (random, 0600); rm -rf only comm -13 new entries at depth 2 under ${CONFIG_DIR}/mise/locks, empty lines skipped; no untrusted input.
+- graphifyy uv sidecar pins graphifyy==0.9.69; all 36 uv.lock sources are pypi.org/simple.
+- init prose stages lock paths only, skips on git check-ignore.
