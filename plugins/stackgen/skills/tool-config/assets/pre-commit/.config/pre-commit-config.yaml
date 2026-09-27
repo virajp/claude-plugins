@@ -63,6 +63,16 @@ exclude: |-
 repos:
   - repo: local
     hooks:
+      - id: no-dash-names
+        name: No path component starting with a dash
+        description: Every tool the gate hooks below call reads an argument
+          beginning with `-` as an option, so such a name breaks — or silently
+          changes — the formatters and linters it is handed to.
+        entry: Rename these files — a path component starting with a dash is
+          read as an option by the formatters and linters
+        language: fail
+        files: '(^|/)-'
+
       - id: git-config
         name: Required local git-config (forge identity, ssh signing)
         description: Requires a per-repo identity equal to the forge variables

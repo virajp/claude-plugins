@@ -11,9 +11,9 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-09-27 by the user
+RUNNING since 2026-09-28 in .worktrees/2026-09-27-dash-names-and-mise-ignores
 
 ## Consent
 
@@ -173,9 +173,9 @@ the user; U3 writes the decision memo that supersedes that line.
 
 | Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                                                                                                                              | Depends on | Status  | Commit |
 | -- | ---- | -------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-tool-config.md](01-tool-config.md)       | edit | `plugins/stackgen/skills/tool-config/assets/pre-commit/.config/pre-commit-config.yaml`, `plugins/stackgen/skills/tool-config/assets/git/.gitignore`, `plugins/stackgen/skills/tool-config/references/{git,mise,pre-commit}.md`                                                    | —          | pending |        |
-| U2 | 1    | [02-pnpm-pack.md](02-pnpm-pack.md)           | edit | `plugins/stackgen/stacks/package-manager/pnpm/pack.yaml` (the `tool-config:` list only), `plugins/stackgen/stacks/package-manager/pnpm/config/.config/mise/tasks/code/format`, `plugins/stackgen/stacks/package-manager/pnpm/conventions.md`                                      | —          | pending |        |
-| U3 | 2    | [03-docs.md](03-docs.md)                     | edit | `site/src/content/docs/**`, `.claude/**`, `CLAUDE.md`, `readme.md`, `docs/memory/decisions/2026-09-27-mise-local-files-ignored-by-name.md` (new)                                                                                                                                  | U1, U2     | pending |        |
+| U1 | 1    | [01-tool-config.md](01-tool-config.md)       | edit | `plugins/stackgen/skills/tool-config/assets/pre-commit/.config/pre-commit-config.yaml`, `plugins/stackgen/skills/tool-config/assets/git/.gitignore`, `plugins/stackgen/skills/tool-config/references/{git,mise,pre-commit}.md`                                                    | —          | green   |        |
+| U2 | 1    | [02-pnpm-pack.md](02-pnpm-pack.md)           | edit | `plugins/stackgen/stacks/package-manager/pnpm/pack.yaml` (the `tool-config:` list only), `plugins/stackgen/stacks/package-manager/pnpm/config/.config/mise/tasks/code/format`, `plugins/stackgen/stacks/package-manager/pnpm/conventions.md`                                      | —          | green   |        |
+| U3 | 2    | [03-docs.md](03-docs.md)                     | edit | `site/src/content/docs/**`, `.claude/**`, `CLAUDE.md`, `readme.md`, `docs/memory/decisions/2026-09-27-mise-local-files-ignored-by-name.md` (new), widened: `plugins/stackgen/stacks/toolchain-gate/eslint/skills/eslint/SKILL.md` (the sort-package-json passages)                | U1, U2     | pending |        |
 | U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md) | edit | `plugins/stackgen/stacks/package-manager/pnpm/pack.yaml` (the `version:` line only), the `plugins/stackgen/stacks/*/bundles/*.md` pins of the pnpm pack, `plugins/stackgen/stacks/inventory.md`, `plugins/stackgen/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | U3         | pending |        |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
@@ -289,10 +289,25 @@ the unit could not proceed without; it blocks the unit and its dependents.
   `config.local.toml` was not verified; the bare `mise.*.local.lock` and the
   spelled-out paths cover every lock name observed so far.
 
+## Gaps surfaced during execution
+
+- **U3 Owns widened (R1, rule 5).**
+  `plugins/stackgen/stacks/toolchain-gate/eslint/skills/eslint/SKILL.md:30, 60-61, 117-118`
+  says `code:format` always runs sort-package-json; after U2 the step is skipped
+  where the dev-only pin is not installed. No unit owned the passage; the Goal
+  authorises the fix. Non-blocking.
+
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit               | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                            | Commit |
+| ---- | ------------------ | ----- | ----- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight          | —     | 1     | pass        | doctor: no blocking (repo not onboarded — no .config/vwf.yaml, checks skipped); wave gate 5/5 green; format check skipped (no covers:); no code unit — conventions, LSP skipped; stackgen-v2.0.0 untagged → no stackgen bump                                                                                      | —      |
+| 1    | U2 pnpm pack       | opus  | 1     | pass        | edit; DECIDED: sort-package-json 4.0.0 (npm latest, #8); task runs it by its `mise which` path, skipped when absent; GAP: none                                                                                                                                                                                    |        |
+| 1    | U1 tool-config     | opus  | 1     | pass        | edit; no-dash-names hook first in `repo: local`; mise ignore set per #4; DECIDED: hook message says rename, not `./`; DOCS FALSIFIED: stackgen.md :315 :926 :949 + hook lists → U3; GAP: none                                                                                                                     |        |
+| 1    | orchestrator gates | —     | 1     | pass        | scratch repo, HOME isolated: dash block fails `-x.sh`, `sub/-y.md` (by --files and staged) with the rename message, passes `x.sh`, `a-b/c-d.md`; ignore matrix 9/9 matched, 0/4 negatives                                                                                                                         | —      |
+| 1    | R1                 | opus  | 1     | findings(3) | git.md:39 fold stops early [U1] → loop; stackgen.md:711 hook list lacks no-dash-names → U3; eslint SKILL.md:30,60-61,117-118 says code:format always sorts [U2, rule 5, nobody-owned] → U3, Owns widened (GAP); CONTRACT clean; RULINGS clean; note: dev-only pin resolves only under MISE_ENV=dev, same as shfmt | —      |
+| 1    | U1 tool-config     | opus  | 2     | pass        | edit; git.md paragraph re-folded to its end, wording unchanged                                                                                                                                                                                                                                                    |        |
+| 1    | R1                 | opus  | 2     | pass        | git.md:39 resolved; nothing new; CONTRACT clean; RULINGS clean. Wave gate 5/5 green                                                                                                                                                                                                                               | —      |
 
 ## Launch
 

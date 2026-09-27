@@ -30,14 +30,18 @@
 .opencode/
 
 # ==== mise ====
-# The uncommitted local override, at every path mise loads one from.
+# The uncommitted local override and the local lock mise writes beside it.
+# Bare names match at any depth, so they cover the root and `.config/` alike;
+# the last two stay spelled out because their file names do not start with
+# `mise`, and a bare `config.local.toml` would be far too generic.
 mise.local.toml
+mise.*.local.toml
 .mise.local.toml
-.config/mise.local.toml
-.config/mise.*.local.toml
-.config/mise/config.*.local.toml
+mise.local.lock
+mise.*.local.lock
+.mise.local.lock
+.config/mise/config*.local.toml
 .config/mise/conf.d/*.local.toml
-.config/mise/mise.local.lock
 
 # ==== Secrets and env ====
 # A value never enters the tree. .env.example is the names-only template and

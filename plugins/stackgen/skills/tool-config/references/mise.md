@@ -121,7 +121,9 @@ needs it**.
   values go in `conf.d/env.test.toml`.
 - **`mise.local.toml`** — nothing lands one; it is gitignored and written by
   hand, for what is true of one machine and no other. The same holds for
-  `mise.<env>.local.toml` and `conf.d/*.local.toml`. Its existence is
+  `mise.<env>.local.toml` and `conf.d/*.local.toml`, and for the
+  `mise.local.lock` mise writes beside a local override — the `.gitignore`
+  ignores the `mise` names by file name, at any depth. Its existence is
   documented in `mise.toml`'s banner rather than by a file, because a shipped
   one would be committed by the first person who ran `git add -A`.
 

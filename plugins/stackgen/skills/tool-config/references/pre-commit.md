@@ -52,8 +52,8 @@ writes into, so it carries no block at all.
   for [the graph refresh](#6-the-graph-refresh-hook).
 - `default_stages: [pre-commit]`, so each hook says only what differs.
 - the global `exclude` — [section 3](#3-the-global-exclude).
-- a `local` repo: `git-config`, then the three gate hooks `format`, `lint`,
-  `sec`, then `graphify-refresh`.
+- a `local` repo: `no-dash-names`, then `git-config`, then the three gate
+  hooks `format`, `lint`, `sec`, then `graphify-refresh`.
 - `pre-commit/pre-commit-hooks` at a pinned rev: large files (1 MB), case
   conflicts, Windows-illegal names, shebang and exec-bit agreement in both
   directions, merge-conflict markers, broken and destroyed symlinks, JSON
@@ -293,6 +293,13 @@ own, and a regex here would AND with that and silently stop checking a tree
 the next overlay adds. **Order matters when hooks interact**: a hook that
 regenerates committed output runs before the hook asserting it is current, and
 stages its result.
+
+**The `no-dash-names` hook refuses a path component starting with `-`.** It
+is `language: fail` with `files: '(^|/)-'`, so it runs nothing and fails on any
+match, printing its message: every tool the gate hooks call reads an argument
+beginning with `-` as an option, so such a name breaks or silently changes the
+formatters and linters. It comes first, so its refusal is the first line a
+committer reads. Rename the file; the tasks do not guard against one.
 
 **The `git-config` hook requires a per-repo identity.** It runs
 `code:git-config --fix`: the local `user.name`, `user.email` and
