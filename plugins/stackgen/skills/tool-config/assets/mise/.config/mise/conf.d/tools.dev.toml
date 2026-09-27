@@ -2,11 +2,12 @@
 
 [tools]
 # Development tools only — never the language runtime, which the package-manager
-# component pins in tools.toml. These are what the shipped task library actually
-# shells out to: code:format runs dprint, code:sec runs the scanners,
-# setup:precommit runs pre-commit, and the shell gate reads every task file in
-# this library. Because they live here, the aggregate gate needs the dev
-# toolchain loaded — `MISE_ENV=dev mise run code:all`.
+# component pins in tools.toml; python below is only uv's lock-time interpreter,
+# and a pack pinning python in tools.toml drops it. These are what the shipped
+# task library actually shells out to: code:format runs dprint, code:sec runs
+# the scanners, setup:precommit runs pre-commit, and the shell gate reads every
+# task file in this library. Because they live here, the aggregate gate needs
+# the dev toolchain loaded — `MISE_ENV=dev mise run code:all`.
 actionlint = { version = "latest" }
 dprint     = { version = "latest" }
 gitleaks   = { version = "latest" }
@@ -18,7 +19,8 @@ pre-commit       = { version = "latest" }
 shellcheck       = { version = "latest" }
 shfmt            = { version = "latest" }
 taplo            = { version = "latest" }
-# mise's pipx backend installs through uv, so graphifyy needs no Python.
-uv = { version = "latest" }
+# mise's pipx backend installs through uv, and uv needs a Python >= 3.10 to lock graphifyy's dependencies.
+python = { version = "latest" }
+uv     = { version = "latest" }
 
 # No secret-manager tool here; the provider's pack asks for it through its tool-config: calls.
