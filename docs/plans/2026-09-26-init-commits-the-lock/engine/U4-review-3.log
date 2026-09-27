@@ -1,0 +1,65 @@
+range c766f44f..f26882bf
+```json
+[
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/conf.d/tools.dev.toml",
+    "line": 24,
+    "summary": "This change adds a new dev pin (`python`) and changes graphifyy's options (`uvx = true`). setup:mise, and init's `--lock-only`, only lock when mise.lock is missing entirely, so a repo that already has a committed lock is never relocked.",
+    "failure_scenario": "A repo shaped by an earlier release already has a committed mise.lock. `/vwf:setup reshape` lands the new tools.dev.toml. `--lock-only` sees a lock and exits 0 without writing anything, so the ops commit carries a lock with no python entry and a graphifyy entry without the uvx option. The next `MISE_ENV=dev mise run setup:all` then runs `mise install --locked` and fails on python, which the lock does not record. The user has to know to run `--upgrade`."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/mise",
+    "line": 41,
+    "summary": "A lock counts as missing only when mise.lock itself is absent. A present mise.lock whose aube sidecar under `.config/mise/locks/` is missing is treated as complete, so B67's second failure mode is never repaired. The U4 round-1 finding on this is still open.",
+    "failure_scenario": "A repo committed mise.lock but not `locks/npm-askviraj-linter/<v>~<hash>/`. `--lock-only` returns 0, init stages nothing new, and the first CI run still fails with 'dependency sidecar … No such file or directory; run mise lock', which is exactly what the plan's Goal says will not happen."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise.toml",
+    "line": 36,
+    "summary": "The shipped payload does not match what the target repo's own taplo config produces (`align_entries`/`align_comments`/`reorder_inline_tables`). `python.compile      = false    #` is one column short in both the `=` and the comment columns. tools.dev.toml:18 writes `{ version = \"latest\", uvx = true }`, but taplo orders it `{ uvx = true, version = \"latest\" }`, which is the form U3 had to use in this repo's own copy.",
+    "failure_scenario": "The asset tree is excluded from this repo's formatter (.config/dprint.json:11), so no gate here catches it. In a freshly shaped repo, the first `code:format --fix` hook run rewrites mise.toml and tools.dev.toml, files nobody touched. This is the payload trap the repo CLAUDE.md warns about."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/conf.d/tools.dev.toml",
+    "line": 5,
+    "summary": "Every shaped repo now gets `python = latest` in the dev tools. The comment says a runtime pack 'must remove it', but no mechanism does that. The pin also breaks tool-config's one-pin-per-tool rule (mise.md ~419-423) and shadows python on PATH for every developer.",
+    "failure_scenario": "A Python repo pins python 3.12 in tools.toml. Under MISE_ENV=dev, tools.dev.toml overrides it, so developers run 3.14 while CI runs 3.12, and uv_venv_auto builds the .venv on the wrong interpreter. A future pack's `add tool python … to all environments` becomes a conflict row against the base line. In a Node repo, activate_aggressive shims put mise's latest python ahead of the system python3 for node-gyp and every other tool, not 'only uv's lock-time interpreter'."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise.toml",
+    "line": 37,
+    "summary": "`python.uv_venv_auto = \"create|source\"` is a setting for project virtualenvs, not something the dev tools' Python needs. It now lands in every repo's base `[settings]`, in every environment, which contradicts mise.md's own rule that 'a setting for an absent runtime is a claim about the stack that is not true'.",
+    "failure_scenario": "A Node or Flutter repo with a stray uv.lock (a scripts helper, say), or any repo in CI, now gets a `.venv` created and sourced on every mise activation. Before this change that only happened for repos whose `runtimes` included python."
+  },
+  {
+    "file": "site/src/content/docs/plugins/stackgen.md",
+    "line": 1016,
+    "summary": "Convention violation. `/Users/virajpatel/Projects/github.com/virajp/claude-plugins/CLAUDE.md`: \"Any change to plugin behavior must reconcile `readme.md`, this file, and the manual under `site/src/content/docs/` in the same commit\". The stackgen behaviour commits (e341821c, 5c657fda, 051e4559) add `--lock-only`, the dev python pin, `pipx.uvx` and the undo-on-failure trap, but leave the stackgen manual untouched.",
+    "failure_scenario": "stackgen.md:1016 still says only uv sits beside graphifyy. stackgen.md:1141-1149 describes setup:mise's lock step with no `--lock-only`, no uv/Python pre-install and no cleanup of a failed lock. U5's ruling and edits target only init's lock step (vwf.md, CLAUDE.md), so these stay stale unless docs-sync happens to catch them."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/new-repo.md",
+    "line": 720,
+    "summary": "The rule 'The plan shown before the one consent names that install' sits in §11(b), which runs long after the plan was composed. SKILL.md's plan and report specs, and §11's 'What the report carries' (line ~1053), were not updated with the uv+Python install row or with the *lock deferred* / *lock failed — not committed* lines.",
+    "failure_scenario": "An agent follows SKILL.md's plan and report specs, which never mention the install or the lock outcome. The user consents to a plan that does not list the unlocked uv and Python install, and the git section of the report has no field for a repo whose lock failed or was deferred, so that repo looks like a normal committed repo."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/new-repo.md",
+    "line": 722,
+    "summary": "The step stages `.config/mise/mise.lock` 'where git does not track it' without checking whether it is ignored. It also stages every untracked path under `.config/mise/locks`, including stale sidecars from earlier runs that the new lock no longer references.",
+    "failure_scenario": "A brownfield repo's .gitignore has `*.lock` or `mise.lock`. `git add .config/mise/mise.lock` exits 1 with 'The following paths are ignored', which aborts this repo's staging. Separately, leftover untracked `locks/<tool>/<old>~<hash>/` directories are swept into the fixed `ops:` commit as orphans."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/conf.d/tools.dev.toml",
+    "line": 18,
+    "summary": "The per-tool `uvx = true` repeats the base `[settings] pipx.uvx = true` that this same change adds. That leaves two sources of truth, and the per-tool copy also adds an `options` table to the lock entry. U2 flagged this as a GAP and left it.",
+    "failure_scenario": "Every future `pipx:` pin has to remember the per-tool flag, or it silently falls back to the global setting and gets a different lock-entry shape. Turning uv off later means editing both places, in both this repo and the pack."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/mise",
+    "line": 91,
+    "summary": "write_missing_lock makes five sequential mise invocations (`mise ls` twice, `mise install` twice, `mise which` once), and each one re-resolves the whole union config under MISE_LOCKED=false.",
+    "failure_scenario": "Every missing-lock run pays repeated config loads and two separate install passes. One `mise ls --current --local` over both tools, followed by a single `mise install uv python` of whichever are declared, does the same job with fewer process starts."
+  }
+]
+```
