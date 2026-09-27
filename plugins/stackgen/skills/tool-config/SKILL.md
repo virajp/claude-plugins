@@ -273,8 +273,9 @@ call without it is its own consent round.
 **A block that differs from what its requester would write now is drift**,
 tested by content and never by a hash. Outside quoted strings the words are
 compared, so spacing and line breaks are never drift; a quoted string is
-compared exactly, character for character. A fetched template's block is the
-one exception: it is tested against the hash of what was last written
+compared exactly, character for character. For a fetched template's block,
+what its requester would write now is the template at its pinned commit, as
+last written, so that one comparison reads the lock's `written:` hash
 ([git's templates](references/git.md#4-templates)). Each drifted block is one
 row, the two versions side by side, with three answers:
 

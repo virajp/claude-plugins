@@ -129,12 +129,14 @@ reproducible: the first fetch resolves github/gitignore's `main` with
 `git ls-remote https://github.com/github/gitignore main`, fetches
 `https://raw.githubusercontent.com/github/gitignore/<sha>/<Name>.gitignore`,
 and records the SHA against the block in the lock, with a hash of the block
-exactly as it was written. Drift is the block differing from that hash, so
-only a real local edit is drift, never another block's or a user line's
-change; it is shown as the skill says. The template is re-fetched at the same
-SHA and re-filtered only when the skill itself rewrites the block — a
-`take-theirs` answer, a shared entry moving in — and the hash is re-recorded
-then. Only the skill's one upgrade verb,
+exactly as it was written. **Every re-run that writes or rewrites a template
+block fetches it at the pinned SHA, never at `main`** — a `take-theirs`
+answer, a shared entry moving in, a block deleted by hand and landed again —
+so a re-run reproduces the block, and a block that differs from it is a real
+local edit: drift, shown as the skill says. The `written:` hash is how that
+difference is tested — the block against what was last written, so another
+block's or a user line's change is never drift — and it is re-recorded on
+each write. Only the skill's one upgrade verb,
 [mise's `upgrade`](mise.md#4-the-verbs), moves it: inside that call's consent
 it resolves `main` once, re-fetches every template a block holds at that
 commit, shows each changed block as a row beside its old content, and on the
