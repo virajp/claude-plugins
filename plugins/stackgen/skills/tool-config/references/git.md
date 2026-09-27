@@ -74,7 +74,9 @@ writes `<pattern> <attr> …` as one line in the requester's block —
 `git add attribute pnpm-lock.yaml linguist-generated for pnpm`. A pattern
 another line already gives the same attributes writes nothing and is noted; a
 pattern given a different value for the same attribute is a **conflict row**,
-`keep-existing` or `overwrite`. Entries are written sorted, as every block is.
+`keep-existing` or `overwrite`. A requester's entries are written sorted, as
+every block's are; the `git` base keeps its asset's grouped order, each group
+under its why-comment.
 
 ## 3. The ignore file's rules
 
@@ -95,11 +97,14 @@ pattern another requester's block holds is [shared](../SKILL.md#blocks) and
 recorded as `ignore[<pattern>]` under `shares:`, so its removal moves it into
 the next sharer's block at the place that sharer's call put it. A negation is
 always written: it lands after the pattern it re-includes, whichever block
-holds that.
+holds that. The rule holds within one call too: a pattern a template repeats
+is written at its first place only.
 
 **A requester's block holds only its call's lines.** A template block carries
 the template's comments and blank lines inside it, trimmed at either end; a
-pattern block carries the patterns alone.
+pattern block carries the patterns alone. After filtering, a comment run left
+with no pattern below it before the next blank line is dropped, and a run of
+blank lines is collapsed to one.
 
 **Ignoring is not allowlisting.** A secret that is ignored is a secret that was
 never scanned, so an ignore line is never the answer to a scanner finding, and
@@ -116,7 +121,8 @@ reproducible: the first fetch resolves github/gitignore's `main` with
 `git ls-remote https://github.com/github/gitignore main`, fetches
 `https://raw.githubusercontent.com/github/gitignore/<sha>/<Name>.gitignore`,
 and records the SHA against the block in the lock. Every later run fetches
-that same SHA, so a block that differs from it is a real local edit — drift,
+that same SHA and filters it as above, so a block that differs from that
+filtered text — what the call would write now — is a real local edit — drift,
 shown as the skill says. Only the skill's one upgrade verb,
 [mise's `upgrade`](mise.md#4-the-verbs), moves it: inside that call's consent
 it resolves `main` once, re-fetches every template a block holds at that
@@ -197,11 +203,16 @@ network reachable. Never a partial block, never a remembered template.
 `all` on a repo the retired hygiene pack shaped brings both files onto this
 layout, each step a row:
 
-- **Banner sections become blocks.** Each `# ==== <Name> ====` section whose
-  patterns match, normalised, a section of the retired base becomes part of
-  the `git` block — its `graphify` section the `graphify` block — and one
-  matching a template a requester asks for becomes that requester's block at
-  the SHA now pinned. A section that matches neither stays where it is,
+- **Banner sections become blocks.** The retired base's sections are the
+  `git` asset's seven banner sections, word for word, plus a `graphify`
+  section holding the `graphify` block's two patterns. A landed section
+  matches when its banner names one of them and its patterns, normalised, are
+  the same set — comments are not compared, so an edited comment still
+  matches. A matching base section becomes part of the `git` block — its
+  `graphify` section the `graphify` block — and one whose banner names a
+  template a requester asks for, holding only that template's patterns at the
+  SHA now pinned, becomes that requester's block. Any other section — a
+  pattern added or removed, a banner nothing names — stays where it is,
   outside every block, as the user's, and the blocks written after it do not
   double its patterns. The comment that said stack sections are appended
   below it is deleted. No pattern is lost.
@@ -210,5 +221,7 @@ layout, each step a row:
   and `.config/mise/mise.lock` markers, graphify's merge-driver line and its
   comment — are deleted, each a row, and pnpm's own call writes its marker
   back into pnpm's block. A line the payload never carried is the user's.
+  `setup:precommit`'s strip deletes only the merge-driver line itself; its
+  comment is this step's.
 - **The lockfile entries** sourced from that pack for these two paths are
   re-recorded as `tool-config/git@<version>`.

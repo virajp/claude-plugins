@@ -368,8 +368,9 @@ graphify not on `PATH` — strips each marked block itself, deleting a hook
 left with nothing but its shebang. So an earlier-shaped repo loses those
 hooks rather than keeping one chained as `post-commit.legacy`. It also takes
 out the merge driver an earlier install registered: graphify's line in
-`.gitattributes` is deleted, the file itself never, and the `merge.graphify`
-section is removed from the local git config. The graph
+`.gitattributes` is deleted — its comment is left for
+[git's migration](git.md#5-the-migration) — the file itself never, and the
+`merge.graphify` section is removed from the local git config. The graph
 tool's pin and the task are [mise's](mise.md#the-graph-tool).
 
 ## 7. The migration
