@@ -733,6 +733,15 @@ const TOOL_CONFIG_GATE_VERBS: readonly { pattern: RegExp; tail: boolean; }[] = [
   },
   { pattern: TOOL_CONFIG_HOOK, tail: true },
   { pattern: /^grype add ignore [A-Za-z0-9-]+(?: .+)?$/, tail: true },
+  { pattern: /^git add ignore template=[A-Za-z0-9+._-]+$/, tail: false },
+  {
+    pattern: /^git add ignore(?: (?!(?:for|template=.*)(?: |$))[^\s"']+)+$/,
+    tail: false,
+  },
+  {
+    pattern: /^git add attribute(?: (?!for(?: |$))[^\s"']+){2,}$/,
+    tail: false,
+  },
 ];
 /** A requester suffix: the materializer appends it, a pack never writes it. */
 const TOOL_CONFIG_FOR = / for \S+$/;
@@ -794,8 +803,10 @@ function toolConfigCall(
         + "`dprint add plugin <name>`, "
         + "`all add exclude [generated] <paths>`, "
         + "`pre-commit add linter-ignore <paths>`, "
-        + "`pre-commit add hook <repo> <id> <stage> [key=value …]` or "
-        + "`grype add ignore <id> [reason]`",
+        + "`pre-commit add hook <repo> <id> <stage> [key=value …]`, "
+        + "`grype add ignore <id> [reason]`, "
+        + "`git add ignore <patterns>`, `git add ignore template=<Name>` or "
+        + "`git add attribute <pattern> <attrs>`",
     };
   }
   const name = match[1] ?? "";

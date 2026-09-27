@@ -834,6 +834,57 @@ describe("the pack config tier", () => {
     expect(messages(check(root))).toEqual([]);
   });
 
+  it("accepts the git verbs a pack may ask for", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - git add ignore .venv\n"
+        + "  - git add ignore fnox.local.toml .doppler/ !keep/*.md\n"
+        + "  - git add ignore template=Node\n"
+        + "  - git add ignore template=C++\n"
+        + "  - git add attribute pnpm-lock.yaml linguist-generated\n"
+        + "  - git add attribute *.png binary -diff\n",
+    ));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a git verb outside the skill's grammar", () => {
+    // Empty ignore, bad template, bare attribute, quoted token, unknown verb.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - git add ignore\n"
+        + "  - git add ignore template=\n"
+        + "  - git add ignore template=Bad/Name\n"
+        + "  - git add ignore template=Node .venv\n"
+        + "  - git add attribute pnpm-lock.yaml\n"
+        + "  - git add ignore '!keep/*.md'\n"
+        + "  - git add attribute \"*.png\" binary\n"
+        + "  - git add hook x\n",
+    ));
+    expect(messages(check(root))).toEqual(
+      [0, 1, 2, 3, 4, 5, 6, 7].map(index =>
+        expect.stringContaining(`\`tool-config[${index}]\``)
+      ),
+    );
+    expect(messages(check(root)).every(m => m.includes("matches none of")))
+      .toBe(true);
+  });
+
+  it("flags a requester suffix on a git verb", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - git add ignore .venv for uv\n"
+        + "  - git add ignore template=Node for pnpm\n"
+        + "  - git add attribute pnpm-lock.yaml linguist-generated for pnpm\n",
+    ));
+    expect(messages(check(root))).toEqual(
+      [0, 1, 2].map(index =>
+        expect.stringContaining(`\`tool-config[${index}]\``)
+      ),
+    );
+    expect(messages(check(root)).every(m => m.includes("`for <requester>`")))
+      .toBe(true);
+  });
+
   it("flags a hook the skill refuses though the grammar admits it", () => {
     // A local hook runs outside mise's environment; a URL repo floats unpinned.
     const root = tree(facts(
