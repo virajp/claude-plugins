@@ -36,7 +36,7 @@ strip_graphify_block() {
   fi
 }
 
-# graphify's raw hooks pin a Python path; strip them before any refusal below, so post-commit is not chained as post-commit.legacy.
+# graphify's raw hooks pin a Python path; strip them before any refusal below, unless core.hooksPath is set, where they are only named.
 HOOKS_PATH=$(git config --get core.hooksPath 2>/dev/null || true)
 HOOKS_DIR="$(git rev-parse --git-path hooks)"
 graphify_marked() {
