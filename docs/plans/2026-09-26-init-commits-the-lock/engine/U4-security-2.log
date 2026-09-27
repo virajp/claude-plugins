@@ -1,0 +1,5 @@
+range c766f44f..adef82bf
+No high-confidence vulnerabilities found.
+- rm -rf "$sidecars": fixed path ${MISE_PROJECT_ROOT}/.config/mise/locks, trusted env, only when absent before the run; rm -f "$LOCKFILE" likewise; UV_PYTHON from mise which python on a repo-local pin, subshell-scoped.
+- no untrusted input reaches a command; --lock-only boolean; tool loops over literals; mise ls --current --local gates the install to repo pins.
+- python latest pin follows uv latest, pinned by mise.lock; init prose is docs.
