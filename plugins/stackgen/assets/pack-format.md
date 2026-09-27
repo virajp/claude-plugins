@@ -454,6 +454,19 @@ which is the grain `stackgen-sync` acts at.
   `<type>/<slug>` ref is an identifier and is fine. `p:plugins:check`
   rule 13 enforces it. This file is an asset rather than a landed tier, so
   its own citations may keep the token.
+- **A landed config or task file carries only the comments something
+  reads.** Under `config/` and `hooks/`, keep every comment a tool or skill
+  reads: `#MISE` and `#USAGE` lines, shebangs, `# shellcheck` directives,
+  the `# >>>`/`# <<<` block markers (and their `// >>>`/`// <<<` JSONC
+  form), `MARKED POSITION` lines and what a filler needs beside them to
+  find the value, grype ignore-reason comments, commented-out templates a
+  skill fills in, and any comment a reference names as load-bearing. Beyond
+  those, a comment is at most a one-line warning where a reader would
+  otherwise break something non-obvious. Every longer explanation belongs
+  in the pack's `conventions.md` — dropped if it already says it, moved
+  there if not — and boilerplate repeated across files goes, though a
+  directive it sat above stays. Trimming a payload's comments is still a
+  payload change: bump the pack.
 - **Structure follows the kind; the slice follows the type.** A pack
   declares the bundle `kind` it composes into and ships the structural
   slice its `type` owns within that kind — the reviewer bar generated
