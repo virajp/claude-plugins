@@ -91,7 +91,9 @@ needs it**.
   steps have no elapsed time is a slowdown nobody can attribute),
   `task.disable_spec_from_run_scripts = true` (a task's flags come from its
   `#USAGE` header, never from executing it to find out),
-  `task.run_auto_install = false` (`setup:mise` owns installs), and
+  `task.run_auto_install = false` (`setup:mise` owns installs),
+  `python.compile = false` and `python.uv_venv_auto` for the dev tools' python,
+  and
   `lockfile_platforms = ["linux-x64", "macos-arm64"]`. `min_version` is the
   mise release `env_conf_d` was tested on.
 - **`conf.d/tools.dev.toml`** — what a human needs locally that a pipeline
@@ -210,7 +212,7 @@ manager at run time. A value committed here is in the history.
 
 ### The graph tool
 
-`"pipx:graphifyy" = { version = "latest" }` is in the base's
+`"pipx:graphifyy" = { version = "latest", uvx = true }` is in the base's
 `conf.d/tools.dev.toml` — dev only, since a pipeline never builds the graph.
 `uv = { version = "latest" }` sits beside it: mise's pipx backend installs
 through uv, so a repo with no Python still installs the graph tool.
@@ -358,7 +360,7 @@ claim about the stack that is not true:
 | Runtime  | `RUNTIME_BLOCK` lines                                                   | `PATH_ENTRIES` line                                       |
 | -------- | ----------------------------------------------------------------------- | --------------------------------------------------------- |
 | `node`   | `node.compile = false`                                                  | `_.path = { path = "node_modules/.bin", tools = true }`   |
-| `python` | `pipx.uvx = true`, `python.compile = false`, `python.uv_venv_auto = "create\|source"` | —                                  |
+| `python` | `pipx.uvx = true` (`python.compile` and `python.uv_venv_auto` are in the base's `[settings]`) | —                          |
 | `dart`, `go`, `rust`, `swift` | —                                                  | —                                                         |
 
 No runtime line sets the npm installer: that is the machine's choice

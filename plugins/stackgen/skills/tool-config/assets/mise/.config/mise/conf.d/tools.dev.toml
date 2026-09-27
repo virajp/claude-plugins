@@ -15,7 +15,7 @@ gitleaks   = { version = "latest" }
 grype      = { version = "latest" }
 jq         = { version = "latest" }
 # The PyPI name really is graphifyy, double y.
-"pipx:graphifyy" = { version = "latest" }
+"pipx:graphifyy" = { version = "latest", uvx = true }
 pre-commit       = { version = "latest" }
 shellcheck       = { version = "latest" }
 shfmt            = { version = "latest" }

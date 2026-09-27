@@ -32,14 +32,17 @@ activate_aggressive  = true     # let mise shims win on PATH
 all_compile          = false    # never build a tool from source
 env_shell_expand     = true     # expand $VARS in [env]
 gpg_verify           = true     # verify tool signatures (see the CI exception)
+python.compile       = false    # the dev tools' python: a prebuilt binary
+python.uv_venv_auto  = "create|source"
 raw                  = true     # streams output
 status.missing_tools = "always"
 
-# `all_compile = false` is the repo-wide form of the per-runtime `node.compile` /
-# `python.compile` lines RUNTIME_BLOCK below takes: the published binary for
-# EVERY tool, never a build. A tool that compiles turns a thirty-second install
-# into a twenty-minute one on the first machine that lacks a matching prebuild,
-# and the compiler toolchain it then needs is a dependency nothing here declares.
+# `all_compile = false` is the repo-wide form of the per-runtime `node.compile`
+# line RUNTIME_BLOCK below takes (`python.compile` is set above, for the dev
+# tools' python): the published binary for EVERY tool, never a build. A tool
+# that compiles turns a thirty-second install into a twenty-minute one on the
+# first machine that lacks a matching prebuild, and the compiler toolchain it
+# then needs is a dependency nothing here declares.
 
 # Freshness with a quarantine. Fuzzy pins ("latest", "26") resolve to the newest
 # release that is at least this old, so a version yanked hours after publication
