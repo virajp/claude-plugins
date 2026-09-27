@@ -198,13 +198,14 @@ creates whichever of `develop` and `main` the repo lacks — from the
 remote-tracking branch first, else from the table; a mainline of another name
 (`master`, `trunk`, read from `origin/HEAD`, else the branch the repo is on)
 gets `main` from it and `develop` from `main`, the old branch left in place and
-reported to retire by hand — checks out `develop`, stages what the run wrote,
-asks one question with three answers (commit / commit and push / leave it),
-commits with a fixed `ops:` message **on `develop` in every mode**, never on
-`main` — the members first, then the base with the moved **gitlinks** staged —
-and pushes; a rejected push is a deferral, never a force. **After the push comes
-the forge pass**, on one further consent for the whole product: it sets each
-pushed repo's default branch on the forge (`develop` preselected), protects
+reported to retire by hand — checks out `develop`, writes or fills the mise lock
+with `setup:mise --lock-only` (never bumping it), stages it with what the run
+wrote, asks one question with three answers (commit / commit and push / leave
+it), commits with a fixed `ops:` message **on `develop` in every mode**, never
+on `main` — the members first, then the base with the moved **gitlinks** staged
+— and pushes; a rejected push is a deferral, never a force. **After the push
+comes the forge pass**, on one further consent for the whole product: it sets
+each pushed repo's default branch on the forge (`develop` preselected), protects
 `develop` and `main` there — no force-push, no deletion, and a pull request
 required on each branch whose own value is `pr`, `MERGE_MODEL_DEVELOP` for
 `develop` and `MERGE_MODEL_MAIN` for `main`; a branch already protected in any
