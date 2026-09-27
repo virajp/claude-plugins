@@ -11,9 +11,9 @@ backlog_pieces: []
 
 ## Status
 
-**RUNNING**
+**COMPLETE**
 
-RUNNING since 2026-09-28 in .worktrees/2026-09-27-dash-names-and-mise-ignores
+COMPLETE 2026-09-28 — 82b9028d, e3c85d06, da84f90f
 
 ## Consent
 
@@ -171,12 +171,12 @@ the user; U3 writes the decision memo that supersedes that line.
 
 ## Units
 
-| Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                                                                                                                              | Depends on | Status  | Commit   |
-| -- | ---- | -------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
-| U1 | 1    | [01-tool-config.md](01-tool-config.md)       | edit | `plugins/stackgen/skills/tool-config/assets/pre-commit/.config/pre-commit-config.yaml`, `plugins/stackgen/skills/tool-config/assets/git/.gitignore`, `plugins/stackgen/skills/tool-config/references/{git,mise,pre-commit}.md`                                                    | —          | green   | 82b9028d |
-| U2 | 1    | [02-pnpm-pack.md](02-pnpm-pack.md)           | edit | `plugins/stackgen/stacks/package-manager/pnpm/pack.yaml` (the `tool-config:` list only), `plugins/stackgen/stacks/package-manager/pnpm/config/.config/mise/tasks/code/format`, `plugins/stackgen/stacks/package-manager/pnpm/conventions.md`                                      | —          | green   | e3c85d06 |
-| U3 | 2    | [03-docs.md](03-docs.md)                     | edit | `site/src/content/docs/**`, `.claude/**`, `CLAUDE.md`, `readme.md`, `docs/memory/decisions/2026-09-27-mise-local-files-ignored-by-name.md` (new), widened: `plugins/stackgen/stacks/toolchain-gate/eslint/skills/eslint/SKILL.md` (the sort-package-json passages)                | U1, U2     | green   |          |
-| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md) | edit | `plugins/stackgen/stacks/package-manager/pnpm/pack.yaml` (the `version:` line only), the `plugins/stackgen/stacks/*/bundles/*.md` pins of the pnpm pack, `plugins/stackgen/stacks/inventory.md`, `plugins/stackgen/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | U3         | pending |          |
+| Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                                                                                                                              | Depends on | Status | Commit   |
+| -- | ---- | -------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ | -------- |
+| U1 | 1    | [01-tool-config.md](01-tool-config.md)       | edit | `plugins/stackgen/skills/tool-config/assets/pre-commit/.config/pre-commit-config.yaml`, `plugins/stackgen/skills/tool-config/assets/git/.gitignore`, `plugins/stackgen/skills/tool-config/references/{git,mise,pre-commit}.md`                                                    | —          | green  | 82b9028d |
+| U2 | 1    | [02-pnpm-pack.md](02-pnpm-pack.md)           | edit | `plugins/stackgen/stacks/package-manager/pnpm/pack.yaml` (the `tool-config:` list only), `plugins/stackgen/stacks/package-manager/pnpm/config/.config/mise/tasks/code/format`, `plugins/stackgen/stacks/package-manager/pnpm/conventions.md`                                      | —          | green  | e3c85d06 |
+| U3 | 2    | [03-docs.md](03-docs.md)                     | edit | `site/src/content/docs/**`, `.claude/**`, `CLAUDE.md`, `readme.md`, `docs/memory/decisions/2026-09-27-mise-local-files-ignored-by-name.md` (new), widened: `plugins/stackgen/stacks/toolchain-gate/eslint/skills/eslint/SKILL.md` (the sort-package-json passages)                | U1, U2     | green  | da84f90f |
+| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md) | edit | `plugins/stackgen/stacks/package-manager/pnpm/pack.yaml` (the `version:` line only), the `plugins/stackgen/stacks/*/bundles/*.md` pins of the pnpm pack, `plugins/stackgen/stacks/inventory.md`, `plugins/stackgen/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | U3         | green  |          |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -295,11 +295,17 @@ the unit could not proceed without; it blocks the unit and its dependents.
   `plugins/stackgen/stacks/toolchain-gate/eslint/skills/eslint/SKILL.md:30, 60-61, 117-118`
   says `code:format` always runs sort-package-json; after U2 the step is skipped
   where the dev-only pin is not installed. No unit owned the passage; the Goal
-  authorises the fix. Non-blocking.
+  authorises the fix. Non-blocking. **Resolved in-run** — U3 edited the three
+  passages (da84f90f).
 - **U3 (GAP).** The plan cites
   `docs/memory/decisions/2026-09-26-mise-conf-d-layout.md:15` as the
   hardcoded-path line; it names only `mise.local.toml` and never lists the
   ignore paths. The new memo cites :15 as asked and also :74's open gap.
+  **Resolved in-run** (da84f90f).
+- **U4 (GAP).** The unit file's bundle-pin path
+  `plugins/stackgen/stacks/*/bundles` matches nothing; the pins live in
+  `plugins/stackgen/stacks/bundles/*.md`. U4 checked those instead — all 30 read
+  0.6.0. **Resolved in-run.**
 
 ## Run log
 
@@ -315,10 +321,13 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | —    | acceptance         | —     | 1     | skipped     | why: no covers: — no acceptance criteria                                                                                                                                                                                                                                                                          | —        |
 | —    | ux                 | —     | 1     | skipped     | why: no covers: — no Screens contract                                                                                                                                                                                                                                                                             | —        |
 | —    | reconcile          | —     | 1     | skipped     | why: no covers: — no stamps; no code unit — nothing to persist                                                                                                                                                                                                                                                    | —        |
-| 2    | U3 docs            | opus  | 1     | pass        | edit; stackgen.md:713 hook list + :982-986 bare-name sentence; eslint SKILL.md (widened) dev-only pin wording; decision memo written; DECIDED: :315 :955 :978 not falsified; docs-sync by manual grep; GAP: conf-d-layout.md:15 names no ignore paths — memo cites :15 and the :74 open gap                       |          |
+| 2    | U3 docs            | opus  | 1     | pass        | edit; stackgen.md:713 hook list + :982-986 bare-name sentence; eslint SKILL.md (widened) dev-only pin wording; decision memo written; DECIDED: :315 :955 :978 not falsified; docs-sync by manual grep; GAP: conf-d-layout.md:15 names no ignore paths — memo cites :15 and the :74 open gap                       | da84f90f |
 | 2    | R2                 | opus  | 1     | findings(1) | eslint SKILL.md:61 line 87 cols, past the 80 fold [U3] → loop; CONTRACT clean; RULINGS clean; no eslint bump needed (pack.yaml 0.3.3 already ahead of 0.3.1 at stackgen-v1.33.0)                                                                                                                                  | —        |
-| 2    | U3 docs            | opus  | 2     | pass        | edit; eslint SKILL.md:61 `(dev)` note removed — line back to its pre-branch 81 cols; :62 carries the note                                                                                                                                                                                                         |          |
+| 2    | U3 docs            | opus  | 2     | pass        | edit; eslint SKILL.md:61 `(dev)` note removed — line back to its pre-branch 81 cols; :62 carries the note                                                                                                                                                                                                         | da84f90f |
 | 2    | R2                 | opus  | 2     | pass        | :61 resolved; nothing new; CONTRACT clean; RULINGS clean. Wave gate 5/5 green                                                                                                                                                                                                                                     | —        |
+| 3    | U4 gates and bump  | opus  | 1     | pass        | edit; no change — stackgen-v2.0.0 untagged so plugin.json stays 2.0.0; pnpm pack 0.6.0 already ahead of 0.3.1 at stackgen-v1.33.0, 30 pins agree; generators byte-identical; GAP: unit file's bundle path matches nothing, checked stacks/bundles/*.md                                                            | —        |
+| 3    | R3                 | —     | 1     | pass        | not dispatched — the wave diff is empty; wave gate 5/5 green                                                                                                                                                                                                                                                      | —        |
+| —    | reconcile          | —     | 1     | pass        | final gate: wave gate 5/5 green over the finished tree; orchestrator gates (dash block, ignore matrix) passed after wave 1, tool-config assets unchanged since                                                                                                                                                    | —        |
 
 ## Launch
 
