@@ -126,8 +126,8 @@ them.
   `direct` or `pr`, written to that repo's two marked positions
   `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`, checks out `develop`,
   creating whichever of `develop` and `main` the branch model needs and the
-  repo lacks, writes the mise lock with `setup:mise --lock-only` where it is
-  missing, stages it with what this run wrote and asks **one question with
+  repo lacks, fills the mise lock with `setup:mise --lock-only`, never bumping
+  it, stages it with what this run wrote and asks **one question with
   three answers** — commit, commit and push, leave it — commits with a fixed
   `ops:` message when told to — **the ops commit lands on `develop` in every
   mode**, never on `main` or whatever branch the repo stood on — and pushes
@@ -687,7 +687,8 @@ for the product, `repos:` keyed by the member path exactly as
 `forge` and `update_bot`. Every key is always present and `none` is the
 spelling of no answer, exactly as the map passed to the materializer spells
 it. The record is written on a repo whose config already exists as much as
-into the stub, and the plan carries it as one row.
+into the stub, and the plan carries it as one row. Each repo gets one row
+more: the git pass installs uv and Python to write or fill its mise lock.
 
 ## The pipelines
 
@@ -838,6 +839,7 @@ branch appears under *Deferred* instead, with the checkout as its unlock.
 Every line reads `none` where nothing happened:
 
 ```text
+Lock                     <repo> staged | lock deferred | lock ignored | lock failed — not committed
 Landing model            <repo> develop <value>; main <value>   (one per repo)
 Branches created  <n>    <repo> <name>; <old> left     (one per repo)
 Commit                   <repo> <hash> <subject>; <hash> <subject>

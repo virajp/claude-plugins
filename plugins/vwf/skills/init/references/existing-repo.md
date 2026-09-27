@@ -1151,9 +1151,9 @@ configuration is what the gate config invokes. Splitting them leaves a commit
 whose hooks read a file the next commit is still going to change.
 
 **The lock step is §11(b)'s, before this repo's shaping commit is staged.** It
-writes a lock only where `.config/mise/mise.lock` is absent, and never
-rewrites a present one. A lock git does not track yet, whichever step wrote
-it, is staged either way.
+writes `.config/mise/mise.lock` where it is absent, and fills a present one
+with missing tools without bumping a locked version. A lock that changed,
+whichever step changed it, is staged either way.
 
 Then the rest, exactly as the new-repo pipeline's **git pass** describes it
 ([new repo](new-repo.md) §11), which already reads across the resolved repos:
