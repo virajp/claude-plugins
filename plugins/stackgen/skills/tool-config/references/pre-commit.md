@@ -110,6 +110,15 @@ does not read `.gitignore`: the base holds `**/build/`, `**/graphify-out/` and
 records), and every other entry is a pack's, through
 [`add linter-ignore`](#4-the-verbs) — flutter's `.dart_tool`, swiftpm's
 `.build` and `.swiftpm`, swiftui's `Derived` and `DerivedData`, uv's `.venv`.
+Patterns resolve from the repo root, so every entry is `**/`-prefixed: a
+generated tree sits at its project's root, which in a monorepo is any depth.
+The cost falls on the generic names, `build/` and `Derived/` — a source
+directory so named goes unlinted at any depth, and a repo that has one negates
+it (`- "!src/build/"`). An override names one of the linter's presets:
+`javascript`, `typescript`, `astro`, `json`, `jsonc`, `markdown`,
+`markdown-typescript`, `yaml`, `toml`, `html` and `css`; a change that belongs
+to a location rather than a language is a `configs` entry scoped to a `files`
+glob.
 An entry that skips source, or an override that turns a rule off to get green,
 makes a real finding disappear — the one use the file is not for. Fix the
 code; where a rule is genuinely wrong for one location, scope the change to

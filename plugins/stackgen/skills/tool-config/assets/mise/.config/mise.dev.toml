@@ -1,12 +1,4 @@
 # The developer laptop — loaded when MISE_ENV=dev.
-#
-# Everything a human needs locally that a pipeline does not. Developers export
-# MISE_ENV=dev in their shell so this layer loads automatically; a task that
-# guards a local-only side effect does it with [ "$MISE_ENV" != "dev" ] rather
-# than assuming a variant is loaded.
-#
-# Nothing here is loaded under MISE_ENV=ci. A tool the pipeline runs belongs in
-# mise/conf.d/tools.toml; dev tools, aliases and values are the `*.dev.toml` files there.
 
 [settings]
 env_shell_expand     = true

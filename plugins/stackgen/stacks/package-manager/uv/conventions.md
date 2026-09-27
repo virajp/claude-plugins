@@ -24,6 +24,20 @@ verbs are probed by name**: a verb a pack does not ship means the manager has
 no such verb, not that the choice is still pending. `setup:deps:all` calls what
 it finds.
 
+**The verbs, and why each reads as it does.** `install --frozen` maps to uv's
+`--locked`, never to uv's `--frozen`: a plain sync re-locks whenever the
+manifest has drifted, the silent rewrite a fresh worktree and CI must see fail,
+and uv's `--frozen` skips resolution and reads a stale lockfile without
+complaint — `--locked` is the one that errors on drift. `audit` is advisory and
+never a gate: the auditor is not a declared dependency but pulled in for the
+run with `uv run --with`, layered over the project's own environment, so its
+ruleset moves under an unchanged lockfile; the blocking supply-chain check is
+`code:sec`, which runs pinned tools. `outdated` is advisory too — something
+newer available is the normal state. `upgrade` syncs after `uv lock --upgrade`,
+which rewrites the lockfile without touching the virtualenv. `cleanup` removes
+`.venv` and prunes the cache and never deletes `uv.lock`. The verbs print no
+header of their own; `setup:deps:all` frames each.
+
 **This pack is authored but not yet reachable, and that is expected.** It
 declares `kind: language-bundle`, but there is no `language/python` component
 and no python bundle for it to compose into, so no materialization can land it

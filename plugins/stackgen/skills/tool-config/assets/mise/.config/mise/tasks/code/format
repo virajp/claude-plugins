@@ -11,34 +11,18 @@ set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-# The default fill, not a placeholder: every repo has markdown in it from the
-# first commit, so formatting is the one quality gate that works before any
-# stack exists. A stack overlay overwrites this file with one that also formats
-# its own sources — and keeps formatting the markdown, which does not stop
-# mattering once code arrives.
-#
-# **This is also the repo's formatting HOOK, which is why the file list is part
-# of the contract.** The pre-commit gate calls `code:format --fix <files>`
-# rather than a formatter binary, so every tool this repo formats with is
-# configured once, here. An overlay that replaces this file KEEPS the file
-# argument and KEEPS the shfmt default below: a commit gets whatever this task
-# does, and a tool that drops out of it stops running at all.
+# The `format` hook calls this task: an overlay keeps the file argument and the shfmt default.
 
 files=()
 eval "files+=(${usage_files:-})"
 
 CONFIG="${MISE_PROJECT_ROOT}/.config/dprint.json"
 
-# The formatter does not discover a config under `.config/`, so every call has
-# to name it. That is the price of keeping the repo root clean, and it is paid
-# in exactly two places: here and the pre-commit hook.
+# dprint finds no config under `.config/`, so every call names it.
 [[ "${usage_debug:-false}" == "true" ]] && LOG_LEVEL="debug" || LOG_LEVEL="warn"
 [[ "${usage_fix:-false}" == "true" ]] && ACTION="fmt" || ACTION="check"
 
-# Every path handed to dprint is prefixed `./` (or absolute) and passed after
-# `--`, so a name opening with `-` is never read as one of its options. dprint
-# reads each path as a glob and has no literal form, so a name holding `*`, `[`
-# or `{` may match other files too — never escape one by hand.
+# `./`-prefixed and after `--`, so a leading `-` is never an option; dprint reads each path as a glob.
 dprint_files=()
 for f in ${files[@]+"${files[@]}"}; do
   case "${f}" in
@@ -58,16 +42,7 @@ else
   print_yellow "The formatter component owns that file; materialize it first."
 fi
 
-# shfmt, shipped as a DEFAULT for the same reason dprint is one: it reads the
-# tree rather than a resolved dependency graph, so it says something true in a
-# repo with no stack pinned. Shell is also the one language every repo already
-# has — this task library is written in it — which no language pack would ever
-# claim.
-#
-# Silent when the binary is absent, and silent when nothing in scope is shell:
-# a repo that has not run `setup:all` yet still gets its markdown formatted.
-# The flags match the ones the shell gate checks with, so formatting here and
-# checking there cannot disagree.
+# The flags match the shell gate's, so formatting and checking cannot disagree.
 if command -v shfmt >/dev/null 2>&1; then
   shell_scope=()
   while IFS= read -r shell_file; do
@@ -80,8 +55,6 @@ if command -v shfmt >/dev/null 2>&1; then
     if [ "${ACTION}" = "fmt" ]; then
       shfmt -w -i 2 -ci "${shell_scope[@]}"
     else
-      # `-d` reports a diff and fails rather than rewriting, so a read-only run
-      # stays read-only.
       shfmt -d -i 2 -ci "${shell_scope[@]}"
     fi
   fi

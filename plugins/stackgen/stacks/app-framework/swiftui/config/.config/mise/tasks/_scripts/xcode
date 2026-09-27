@@ -3,20 +3,9 @@
 #MISE description="The Xcode check and the project lookup the SwiftUI tasks share"
 #MISE hide=true
 
-# Sourced after `helpers`, whose print functions these use. Each function takes
-# the calling task's name as its first argument, so a message says which task
-# refused.
+# Sourced after `helpers`; each function takes the calling task's name first.
 
-# Fails unless a full Xcode is selected, the repo pins one as XCODE_VERSION in
-# the environment mise exports, and the selected one is that version. An
-# unset or empty pin is a refusal too: a build that checks nothing is not
-# pinned.
-#
-# `command -v xcodebuild` is no test: /usr/bin/xcodebuild is a stub every Mac
-# carries, and with only the Command Line Tools selected it exists and exits
-# non-zero. `xcodebuild -version` is the check that fails there, and its first
-# line — `Xcode 27.0` — is the selected version. mise cannot install Xcode, so a
-# mismatch is fixed by selecting the right one, never by this task.
+# `command -v xcodebuild` is no test: every Mac carries a /usr/bin/xcodebuild stub.
 require_xcode() {
   local task="$1" version_output selected
   if ! version_output=$(xcodebuild -version 2>/dev/null); then
@@ -37,10 +26,7 @@ require_xcode() {
   fi
 }
 
-# Prints the one `*.xcodeproj` at the repo root. None, or more than one, is a
-# refusal: the tasks do not guess which project is the app. Called as
-# `project=$(find_xcodeproj <task>)`, so every message goes to stderr — stdout
-# is the answer.
+# Called as `$(find_xcodeproj <task>)`: stdout is the answer, so messages go to stderr.
 find_xcodeproj() {
   local task="$1"
   local projects=()

@@ -6,15 +6,7 @@ set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-# git only, so it belongs to every repo whatever the stack. It exists because
-# the worktree discipline makes it easy to accumulate branches you have stopped
-# thinking about — this is the one command that shows all of them at once,
-# including the ones inside members, which `git worktree list` will not.
-
-# Ahead/behind against the repo's own default branch, read from origin/HEAD.
-# The fallback is the literal `main` on purpose: branch names are fixed by the
-# branch model, and a repo with no origin/HEAD is measured against its release
-# branch rather than guessed at.
+# Ahead/behind against origin/HEAD, falling back to the literal `main`.
 default_branch() {
   local ref
   ref="$(git -C "$1" symbolic-ref -q refs/remotes/origin/HEAD 2>/dev/null || true)"
@@ -55,8 +47,7 @@ report() {
 
 report "${MISE_PROJECT_ROOT}" "$(basename "${MISE_PROJECT_ROOT}")"
 
-# `members` comes from `_scripts/helpers`, so this task sees whichever linkage
-# the repo uses — submodules, or the `MEMBERS` list — without knowing which.
+# `members` answers for either linkage.
 
 while read -r member; do
   [ -n "$member" ] || continue

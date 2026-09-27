@@ -1,7 +1,4 @@
-# settings.json hook entries this pack's scripts need. Landing these is the
-# materializer's separate settings-consent line — declining leaves
-# npm-normalize.sh in .claude/hooks/ and inert, which is safe: the hook only
-# rewrites a command that was going to run the wrong package manager anyway.
+# Landing these is its own settings consent; declined, npm-normalize.sh stays inert.
 hooks:
   PreToolUse:
     - matcher: Bash

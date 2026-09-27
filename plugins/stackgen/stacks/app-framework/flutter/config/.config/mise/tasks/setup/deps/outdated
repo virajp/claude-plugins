@@ -4,13 +4,7 @@
 #MISE hide=true
 
 set -euo pipefail
-# helpers ships with stackgen:tool-config, not this pack, so there is no
-# path here for -x to follow.
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
-
-# `--no-transitive` on purpose: a transitive package moving is the direct
-# dependency's problem to pick up, and listing them turns a short report into
-# one nobody reads.
 
 flutter pub outdated --no-transitive

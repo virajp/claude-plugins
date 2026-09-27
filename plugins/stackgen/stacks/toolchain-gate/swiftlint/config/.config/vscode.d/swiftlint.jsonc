@@ -1,20 +1,11 @@
-// Editor fragment — the Swift lint gate's contribution to the repo's editor
-// settings. `/vwf:init` merges every `.config/vscode.d/*.jsonc` into the two
-// editor files inside one marked block; a key written by hand after that block
-// wins.
-//
-// Scope: `swiftlint.*` and nothing else. The formatter keys are the
-// swift-format fragment's — the split between the two gates holds in the
-// editor too.
+// Editor fragment: `/vwf:init` merges it into the editor settings; a key after its block wins.
 {
   "extensions": [
     "vknabel.vscode-swiftlint",
   ],
 
   "settings": {
-    // The configuration lives under `.config/`, where SwiftLint's own discovery
-    // never looks. Without this the editor lints with SwiftLint's defaults and
-    // the gate with this repo's rules.
+    // SwiftLint's own discovery never looks under `.config/`.
     "swiftlint.configSearchPaths": [
       ".config/swiftlint.yml",
     ],

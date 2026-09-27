@@ -4,21 +4,10 @@
 #MISE hide=true
 
 set -euo pipefail
-# helpers ships with stackgen:tool-config, not this pack, so there is no
-# path here for -x to follow.
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-# Was inline in the old `python/setup/all` as a bare `rm -rf .venv`. It is a
-# task now because `setup:deps:all --clean` calls this verb by name, the same
-# way it does for every other overlay.
-#
-# `uv.lock` is deliberately not deleted: cleanup removes what an install
-# produced, and moving the lockfile forward is `setup:deps:upgrade`'s job.
-#
-# No header: the aggregator `setup:deps:all` already frames each verb with its
-# own subheader, so one here would invert the hierarchy. The subheaders below
-# frame the steps inside this task.
+# `uv.lock` stays: moving it forward is `setup:deps:upgrade`'s job.
 
 print_subheader "Removing the virtualenv ..."
 rm -rf .venv || true

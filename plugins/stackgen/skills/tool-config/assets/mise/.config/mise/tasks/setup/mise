@@ -21,10 +21,7 @@ fi
 IS_DEV=false
 [[ ",${MISE_ENV:-}," == *",dev,"* ]] && IS_DEV=true
 
-# An upgrade moves the committed lockfiles, which is a developer's decision made
-# on a developer's machine — never the pipeline's, and never a deployed
-# runtime's. Refused before anything runs, so a wrong environment changes
-# nothing.
+# Refused outside dev before anything runs: an upgrade is a developer's decision.
 if [ "$UPGRADE" = "true" ] && [ "$IS_DEV" = "false" ]; then
   print_error "--upgrade runs only in dev: MISE_ENV is '${MISE_ENV:-}', which does not include dev."
   exit 1
@@ -33,10 +30,7 @@ fi
 CONFIG_DIR="${MISE_PROJECT_ROOT}/.config"
 LOCKFILE="${CONFIG_DIR}/mise/mise.lock"
 
-# A lockfile is written in exactly two cases: none exists yet on a developer's
-# machine, or the user asked for `--upgrade`. Outside dev a missing lockfile is
-# an error, never a prompt to re-resolve "latest": the pipeline installs what a
-# developer committed, or nothing. Refused before anything runs.
+# Outside dev a missing lock is an error, never a re-resolve; refused before anything runs.
 NO_LOCKFILE=false
 if [ ! -f "$LOCKFILE" ]; then
   NO_LOCKFILE=true
@@ -46,8 +40,7 @@ if [ ! -f "$LOCKFILE" ]; then
   fi
 fi
 
-# The one lock holds every environment's tools, so it is written with every
-# environment active at once; a single-environment `mise lock` drops the rest.
+# Every environment active at once: a single-environment `mise lock` drops the rest.
 # The list is alphabetical though mise merges last-wins: order is moot only because a tool is pinned in one file.
 lock_envs() {
   {
@@ -132,8 +125,7 @@ if [ "$NO_LOCKFILE" = "true" ]; then
   write_lock
 fi
 
-# `--upgrade` on `mise lock` is the lockfile FORMAT upgrade — harmless when the
-# format is already current.
+# `--upgrade` on `mise lock` is the lockfile FORMAT upgrade, harmless when current.
 if [ "$UPGRADE" = "true" ]; then
   print_subheader "Bumping the lockfile for MISE_ENV=${LOCK_ENVS} ..."
   MISE_ENV="$LOCK_ENVS" mise lock --bump --upgrade
@@ -146,28 +138,14 @@ mise install --locked
 print_subheader "Running mise doctor ..."
 mise doctor --quiet --silent >/dev/null
 
-# Everything below rewrites a pinned version the shape lock records — the
-# plugin URLs in `dprint.json` — so it is an upgrade the user asks for with
-# `--upgrade`, never a side effect of setting a machine up.
+# Below rewrites pinned plugin URLs in `dprint.json`, so only under `--upgrade`.
 if [ "$UPGRADE" = "true" ]; then
-  # The two tools that keep their own plugin or rule set outside mise's
-  # lockfile, so `mise lock --bump` does not reach them. Both are probed rather
-  # than assumed: the formatter's config is landed by stackgen:tool-config, and
-  # the linter arrives as an optional `setup:lint` a linter pack fills.
-  # Whether this run has a terminal a command can prompt ON — which is not the
-  # same question as `[ -t 0 ]`. A tool that asks for confirmation opens
-  # `/dev/tty` directly rather than reading stdin, so it works with stdin piped
-  # and output captured, and fails only when the process has no controlling
-  # terminal at all: a CI runner, a daemon, an agent's shell.
+  # Formatter and linter keep their plugins outside mise's lock; both are probed.
+  # A prompting tool opens `/dev/tty`, so ask whether one exists — not `[ -t 0 ]`.
   can_prompt() { (exec 3<>/dev/tty) >/dev/null 2>&1; }
 
   if [ -f "${MISE_PROJECT_ROOT}/.config/dprint.json" ] && command -v dprint >/dev/null 2>&1; then
-    # `dprint config update` prompts before moving a PROCESS plugin, because
-    # accepting one means accepting a new checksum for a binary it will execute.
-    # It reads that answer from the terminal, so piping `N` does not reach it and
-    # the whole task dies with "Device not configured (os error 6)" wherever
-    # there is none. Skipped rather than forced with `-y`: the prompt is a
-    # supply-chain decision, and a runner is not who should be answering it.
+    # `dprint config update` prompts on the terminal before moving a process plugin; never forced with `-y`.
     if can_prompt; then
       print_subheader "Updating formatter plugins ..."
       dprint config update --config "${MISE_PROJECT_ROOT}/.config/dprint.json"

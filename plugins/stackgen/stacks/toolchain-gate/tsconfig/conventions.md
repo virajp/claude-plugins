@@ -27,6 +27,15 @@ extension that serves them, and the nesting that folds `tsconfig.*.json` under
 `tsconfig.json` and a `.js` file's source map and declarations under it. No
 extension for TypeScript itself: the editor has it built in.
 
+Auto-import is off because a suggestion that silently adds an import is how a
+dependency edge appears in a file nobody chose to add it to; `package.json`
+auto-imports stay on. A file move never rewrites imports on its own, so the
+refactor is a deliberate diff. Whole-project diagnostics are on, so an error in
+an unopened file surfaces — the question `tsc --noEmit` asks in the gate. A
+path hidden from the explorer is still searched unless `search.exclude` names
+it too, which is why every exclude sits in all three maps; the maps are unions
+across fragments, adding to the hygiene baseline's rather than replacing it.
+
 The fragment lands only where init's editor answer is vscode — `pack.yaml`'s
 `conditional:` names it.
 

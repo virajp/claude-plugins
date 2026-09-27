@@ -1,29 +1,8 @@
-# CI builds AND the deployed runtime — loaded when MISE_ENV=ci.
-#
-# One variant, two roles: the pipeline and production read the same layer, so
-# the production overrides live here rather than in a fourth file nothing
-# selects. CI-only tools and values go in `mise/conf.d/tools.ci.toml` / `env.ci.toml`.
+# CI builds and the deployed runtime — loaded when MISE_ENV=ci.
 
 [settings]
-# Install exactly what the lockfile records and fail rather than resolve.
-# `lockfile = true` in the base keeps it current on a laptop; this line is
-# what makes the pipeline a reader of it. A CI run that silently resolves a
-# newer version is a build nobody can reproduce afterwards.
-#
-# The one lock, `.config/mise/mise.lock`, holds every environment's tools, so
-# the pipeline reads the versions a laptop resolved. A tool it does not record
-# is refused here: run `MISE_ENV=dev mise run setup:all` and commit the lock
-# before the first CI push, or the linter pin fails the pipeline. Under mise's default npm
-# installer (aube) the linter's entry also points at a generated sidecar,
-# `.config/mise/locks/npm-askviraj-linter/<version>~<hash>/`, which is
-# committed with the lock — without it the install fails, locked or not. The
-# sidecar is generated: never format or lint it.
+# Install only what the committed lock records; commit the lock and its sidecar before the first CI push.
 locked = true
 
-# Per-runtime CI workarounds go here and nowhere else.
-#
-# Node: CI runs on Linux, where mise's bundled Node release-key gpg import can
-# fail ("no valid OpenPGP data found"). Disable ONLY the Node signature check —
-# the tarball is still SHA256-verified, and the general gpg_verify = true in
-# mise.toml stays intact. Uncomment for a Node project:
+# Node only — mise's Node release-key import fails on Linux runners. Uncomment for a Node project:
 #   node.gpg_verify = false

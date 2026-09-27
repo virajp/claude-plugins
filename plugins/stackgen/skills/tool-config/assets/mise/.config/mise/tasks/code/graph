@@ -9,8 +9,7 @@ set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-# Run by pre-commit's graphify-refresh hook at post-commit; graphify's own raw
-# git hook pins a Python path, so setup:precommit removes it.
+# Run by pre-commit's graphify-refresh post-commit hook; graphify's own git hook is removed.
 
 if [ "${GRAPHIFY_SKIP_HOOK:-0}" = "1" ]; then
   exit 0
@@ -120,8 +119,7 @@ fi
 echo "$$" >"${LOCK}/pid" 2>/dev/null || true
 
 print_yellow "graphify: refreshing the graph in the background (log: ${LOG})"
-# Detached so the commit returns at once; on exit the rebuild removes the
-# lock only while the lock is still its own.
+# Detached so the commit returns at once; the rebuild removes the lock only while it is its own.
 # shellcheck disable=SC2016
 nohup bash -c 'lock="$1"
 shift

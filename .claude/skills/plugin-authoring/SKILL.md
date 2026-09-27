@@ -121,6 +121,32 @@ installed and the path resolves to nothing without a word. Rule 4 covers its
 **frontmatter**, parsing every pack skill and pack agent under `stacks/*/*/` on
 the same strict terms as a plugin's own.
 
+## Comments in shipped config and task files
+
+Anything under a `stackgen:tool-config` `assets/` tree, or a pack's `config/` or
+`hooks/`, lands in a repo as its own file, so its comments are read by every
+person who opens it. Keep only the comments something reads:
+
+- `#MISE` and `#USAGE` lines, and shebangs
+- `# shellcheck` directives
+- the tool-config block markers, `# >>> <requester>` / `# <<< <requester>` and
+  the JSONC `// >>>` / `// <<<` form
+- `MARKED POSITION` lines, plus whatever a filler needs beside one to find its
+  value
+- grype ignore-reason comments, one unit with their entry
+- commented-out templates a skill fills in and uncomments
+- any comment the owning reference names as load-bearing — grep that reference
+  before removing a comment from a tool-config asset
+
+Beyond those, a comment is at most **one line**, and only as a warning where a
+reader would otherwise break something non-obvious. Every longer explanation
+goes: dropped when the owning reference already says it, moved into it when it
+does not — tool-config's `references/<tool>.md` for an asset, the pack's
+`conventions.md` for a payload. Boilerplate repeated across files goes; a
+directive it sat above stays. A comment-only payload change still bumps its
+pack. `stackgen`'s `assets/pack-format.md` states the same rule for pack
+authors.
+
 ## References
 
 | Reference                               | Covers                                                                      |

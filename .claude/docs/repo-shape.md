@@ -259,17 +259,29 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   eight rules that retired.
 - **`p:plugins:shellcheck`** — the shell gate over everything a pack ships as
   shell, in **two groups with different arguments**. The task libraries and
-  their `_scripts/*` run with `-x` and a source path, `-s bash`, and SC2034 /
-  SC2154 disabled — right for files that source a colour library and read mise's
-  `usage_*` variables. `hooks/*.sh` run with **no flags at all**: a hook lands
-  in `.claude/hooks/` without `_scripts/helpers` beside it, so `-x` would hide a
-  real bug, and one of them declares `#!/usr/bin/env sh` on purpose, so
-  `-s bash` would wave through the bashisms it forbids. `shfmt -d -i 2 -ci` runs
-  over both, and over the task library under
+  their `_scripts/*` run with `-x`, `-s bash`, SC2034 / SC2154 disabled, and
+  `-P <pack>/config` for every pack (and `-P` for every tool-config asset tree).
+  The `-P` is there because a task sources its helpers through
+  `${MISE_PROJECT_ROOT}`, which shellcheck cannot expand — it strips the
+  variable and looks for `./.config/mise/tasks/_scripts/helpers`, so without the
+  materialized repo root as a source path every file gets SC1091. The two
+  excludes are structurally false for this tier alone: `_scripts/helpers` is a
+  sourced library, so every colour it exports "appears unused", and a task's
+  arguments arrive as `usage_*` variables mise injects and `eval`-assigned
+  arrays. `hooks/*.sh` run with **no flags at all**: a hook lands in
+  `.claude/hooks/` without `_scripts/helpers` beside it, so a `source` line in
+  one is a bug `-x` would hide; one of them declares `#!/usr/bin/env sh` on
+  purpose, so `-s bash` would wave through the bashisms it forbids; and a
+  standalone hook has neither a colour library nor mise's `usage_*` variables,
+  so an unused or unassigned variable in one is a real finding, not one to
+  exclude. `shfmt -d -i 2 -ci` runs over both, and over the task library under
   `plugins/stackgen/skills/tool-config/assets/`, grouped with the task
-  libraries. Its flags must agree with what the pre-commit asset's gate ships —
-  a mismatch here rewrites a payload file into something the target repo
-  rejects, which is how it first went wrong.
+  libraries. Those two flags and nothing else, because they are what the shipped
+  `code:format` task — the `format` hook's gate in a materialized repo — passes:
+  `-bn` was tried and rejects the task library's trailing-pipe continuations,
+  and `-kp` then keeps the column padding that results. A mismatch here fails
+  this gate on files the target repo considers clean, or rewrites a payload file
+  into something the target repo rejects, which is how it first went wrong.
 - **`p:plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed (the BSD-sed portability guarantee), for **both**
   package managers: each table runs in a temp dir seeded with the lockfile that

@@ -4,23 +4,10 @@
 #MISE hide=true
 
 set -euo pipefail
-# helpers ships with stackgen:tool-config, not this pack, so there is no
-# path here for -x to follow.
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-# The lockfile is deliberately NOT deleted here. `cleanup` removes what an
-# install produced; the lockfile is an input a human reviews, and moving it
-# forward is `setup:deps:upgrade`'s job. Deleting it would make `--clean` a
-# silent upgrade.
-#
-# `.pnpm` is pruned rather than deleted: it is the store's content-addressed
-# link farm, so removing it costs a full re-download of packages that have not
-# changed.
-#
-# No header: the aggregator `setup:deps:all` already frames each verb with its
-# own subheader, so one here would invert the hierarchy. The subheaders below
-# frame the steps inside this task.
+# The lockfile stays: deleting it would make `--clean` a silent upgrade.
 
 print_subheader "Deleting build output ..."
 find . -type d -name "dist" -exec rm -rf {} + || true
@@ -28,6 +15,7 @@ find . -type d -name ".turbo" -exec rm -rf {} + || true
 find . -type f -name "*.tsbuildinfo" -exec rm -f {} + || true
 
 print_subheader "Deleting node_modules ..."
+# `.pnpm`, the store's link farm, is pruned below, not deleted: deleting it re-downloads all.
 find . -type d -name ".pnpm" -prune -o -type d -name "node_modules" -exec rm -rf {} + || true
 
 print_subheader "Pruning the pnpm store ..."

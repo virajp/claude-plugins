@@ -1,18 +1,6 @@
 #!/usr/bin/env sh
-# fnox-ciphertext-guard — the encrypt-into-git gate.
-#
-# Condition 3 of the secrets contract's encrypt-into-git allowance
-# (assets/contracts/secrets.md): encrypt-into-git fails OPEN, so a value
-# written before it is encrypted is a real leak at the one path the scanner
-# was just told to ignore. This proves the committed file holds no plaintext.
-#
-# It also asserts conditions 1, 2 and 4 are actually in place, because those
-# are repo-wide config edits and a repo that lands fnox without them has an
-# allowlisted path that nothing is checking.
-#
-# Wired as a repo-local pre-commit hook; see the fnox skill's
-# contract-satisfaction reference for the exact entry. Portable to BSD tools:
-# POSIX sh, no `\s`, no `\b`, no GNU-only flags.
+# fnox-ciphertext-guard — the encrypt-into-git gate: the secrets contract's
+# four conditions. POSIX sh and BSD tools only: no `\s`, no `\b`, no GNU flags.
 
 set -eu
 
@@ -32,29 +20,18 @@ flag() {
   say "fnox-ciphertext-guard: $*"
 }
 
-# Does the config at $1 name the fnox file? Matched as a fixed string in both
-# spellings —
-# plain, and regex-escaped, since a gitleaks `paths` entry writes the dot as
-# `\.` and a plain grep for `fnox.toml` does not find `fnox\.toml`.
+# Both spellings: a gitleaks `paths` entry writes the dot as `\.`.
 names_fnox_file() {
   grep -Fq "$FNOX_FILE" "$1" ||
     grep -Fq "$(printf '%s' "$FNOX_FILE" | sed 's/\./\\./g')" "$1"
 }
 
-# No fnox config, nothing to guard. A repo that has not pinned fnox — or one
-# using only remote references in a file named something else — passes.
+# No fnox config, nothing to guard.
 if [ ! -f "$FNOX_FILE" ]; then
   exit 0
 fi
 
 # --- Condition 3: every secret entry is ciphertext or a reference -----------
-#
-# The mechanical rule: every entry inside `[secrets]` or
-# `[profiles.<name>.secrets]` carries `provider = "..."`. That bans a bare
-# `default = "..."` outright. fnox permits one as a plaintext local value;
-# this repo does not, because the guard cannot tell a throwaway from a real
-# credential and a gate that has to guess is not a gate.
-#
 # TOML inline tables are single-line, so a line is a whole entry.
 plaintext=$(
   awk '
@@ -96,9 +73,6 @@ elif ! names_fnox_file "$GITLEAKS_CONFIG"; then
 fi
 
 # --- Condition 2: no allowlist entry covers a decryption identity ----------
-#
-# What makes the ciphertext safe to commit is that the key is not beside it,
-# so a scanner hit on an identity is ALWAYS real and must never be silenced.
 if [ -f "$GITLEAKS_CONFIG" ] &&
   grep -Eq 'age\\?\.txt|AGE-SECRET-KEY|\\?\.fnox/|key_file' "$GITLEAKS_CONFIG"; then
   flag "$GITLEAKS_CONFIG appears to allowlist a decryption identity."
@@ -112,10 +86,7 @@ if [ -f "$GITIGNORE" ] && ! grep -q 'age\.txt' "$GITIGNORE"; then
 fi
 
 # --- Condition 4: the committed file is excluded from mining ---------------
-#
-# The denylist vwf seeds carries *secret* and *credentials*, and NEITHER
-# matches fnox.toml — the existing backstop does not catch this file by
-# accident, so the entry has to be explicit.
+# The seeded *secret* / *credentials* denylist does not match fnox.toml.
 if [ -f "$MEMPALACE_CONFIG" ] && ! names_fnox_file "$MEMPALACE_CONFIG"; then
   flag "$MEMPALACE_CONFIG does not exclude $FNOX_FILE from mining. The seeded"
   say "  *secret* / *credentials* patterns do not match it. Add it to"

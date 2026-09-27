@@ -39,6 +39,32 @@ command and neither guessable by the pack: the Worker `name`, and the
 with a real value, because everything else is this component's judgment
 rather than the repo's identity.
 
+## The values `wrangler.jsonc` ships
+
+- **`$schema`** is relative to the file, so a repo that installs wrangler
+  inside a sub-project points it at that project's `node_modules`.
+- **`name`** is account-unique and lowercase — letters, digits and dashes —
+  and derived from the project rather than the domain, so a repo that moves
+  domains keeps its Worker. The shipped `PLACEHOLDER` is deliberately
+  invalid, so an unfilled slot fails at the first deploy instead of
+  publishing a Worker nobody meant to create.
+- **`compatibility_date`** is a date, not a version: pinning it stops a
+  future runtime change from altering an already-shipped deployment. Move
+  it deliberately and read the changelog for the span skipped.
+- **`assets.directory`** is relative to the file; a repo whose site is a
+  sub-project points at that project's output (`./site/dist`).
+- **`not_found_handling: "404-page"`** serves `404.html` with a 404 status,
+  the right answer for a multi-page site. A client-routed single-page app
+  wants `"single-page-application"`, which serves `index.html` with a 200
+  so the router can take the path; picked for a multi-page site, it makes
+  every typo a 200 and drops the site from search results.
+- **`routes`** ships commented out. Filling it means uncommenting it with
+  the hostname the site answers on; the zone must already be on the same
+  account, and `custom_domain` is what makes wrangler create and manage the
+  DNS record. A repo with no custom domain deletes the block, and the
+  Worker answers at `<name>.<account-subdomain>.workers.dev` — a complete
+  deployment for a preview surface or an internal tool.
+
 ## Credentials
 
 `wrangler` reads **`CLOUDFLARE_API_TOKEN`** and
@@ -56,6 +82,11 @@ a network problem.
 convenience only. It stores an OAuth grant on one laptop; CI has no
 browser and no laptop, and a pipeline that depends on someone's grant is
 one that breaks when they leave.
+
+**`--dry-run` needs no credentials.** It neither authenticates nor
+uploads, so the deploy task skips the credential check for it — requiring
+them would stop a contributor without account access from ever validating
+the config, which is the one thing the flag exists for.
 
 ## The pipeline
 

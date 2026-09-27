@@ -1,12 +1,4 @@
-// Editor fragment — the Dart analyzer gate's contribution to the repo's editor
-// settings. `/vwf:init` merges every `.config/vscode.d/*.jsonc` into the two
-// editor files inside one marked block; a key written by hand after that block
-// wins.
-//
-// Scope: the Dart toolchain's own extensions, formatter binding and the
-// analyzer cache exclude. Nothing about the Flutter app's layout or run
-// configuration is here — those differ per project everywhere they were
-// looked for.
+// Editor fragment: `/vwf:init` merges it into the editor settings; a key after its block wins.
 {
   "extensions": [
     "dart-code.dart-code",
@@ -14,17 +6,11 @@
   ],
 
   "settings": {
-    // Dart is the one language dprint does not format: the Dart formatter is
-    // part of the SDK and the analyzer assumes its output. The dprint gate
-    // binds its formatter per language and never editor-wide, so this scope
-    // is the only place Dart's is set.
+    // Dart is the one language dprint does not format.
     "[dart]": {
       "editor.defaultFormatter": "Dart-Code.dart-code",
     },
 
-    // The analyzer's cache, regenerable and hidden from the explorer, the
-    // watcher and search alike. The three maps are unions across fragments,
-    // so this row adds to the hygiene baseline's rather than replacing it.
     "files.exclude": {
       "**/.dart_tool": true,
     },
@@ -36,8 +22,6 @@
     },
   },
 
-  // The manifest is the file people open; the lockfile and the analyzer config
-  // travel with it and nest under it.
   "nesting": {
     "pubspec.yaml": [
       "pubspec.lock",

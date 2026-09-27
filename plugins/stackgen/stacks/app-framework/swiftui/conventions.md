@@ -126,4 +126,55 @@ the new render under `.build/snapshot-artifacts/`, and the diff as an
 attachment in `.build/golden.xcresult` — the three the `ux-gate` skill hands
 to the reviewer.
 
+**Why the tasks are built the way they are.** The task files carry one-line
+warnings only; the reasoning is here.
+
+- `code:format` and `code:lint` are what the `format` and `lint` pre-commit
+  hooks call, which is why each takes an optional file list: the hook passes
+  the staged files, a person passes nothing and gets the whole tree. shellcheck,
+  actionlint and shfmt are the toolchain manager's defaults, and an overlay
+  keeps them — a commit gets whatever these tasks do, so a tool dropped here
+  stops running. shfmt's flags match the shell gate's, and `-d` keeps a
+  read-only run read-only.
+- The house linter's rules read across files, so it and SwiftLint take the
+  whole tree even when a list is given. Neither reads `.gitignore`, so the tree
+  is git's list — tracked plus untracked-but-not-ignored, NUL-separated,
+  quoting off — each path prefixed `./` so a name opening with `-` is never an
+  option. Most go to the linter as a one-file glob, the last character in
+  brackets, so an ignored file or unlinted type is skipped silently; a name
+  holding a glob metacharacter goes in plain, only when its type is linted.
+- The tree is a repository when a `.git` entry sits here or above, or `GIT_DIR`
+  is set. git's list goes to a file, not a process substitution, so a failed
+  listing stops the task; mid-merge a conflicted path listed once per stage is
+  skipped when it equals the one before.
+- The Swift exclusion list is the tasks', not `.config/swiftlint.yml`'s, which
+  excludes `.build/` and `.swiftpm/` at the repo root only. The house linter
+  runs by its mise path, since `node_modules/.bin` ahead on `PATH` would shadow
+  the pin. dprint reads each path as a glob with no literal form — never escape
+  one by hand.
+- `--fix` reaches the house linter only: layout is swift-format's, not
+  SwiftLint's. `swift format format --in-place` exits 0 on what it cannot fix,
+  so the strict lint runs after it under `--fix` too. SwiftLint's "No lintable
+  files" is an empty gate, reported and passed.
+- `_scripts/xcode` checks `xcodebuild -version`, never a `PATH` lookup: every
+  Mac carries a `/usr/bin/xcodebuild` stub that exists and fails with only the
+  Command Line Tools selected. `find_xcodeproj` is called
+  as a command substitution, so its messages go to stderr.
+- The `setup:deps:*` tasks print no header: `setup:deps:all` frames each verb.
+  `audit` is a deliberate no-op — without it the manager's placeholder would
+  report that no package manager is pinned. `cleanup` keeps `Package.resolved`,
+  the committed lockfile. `install` sends the checkouts to
+  `.build/SourcePackages` rather than per-user DerivedData, so every task finds
+  them at one path. xcodebuild has no dry run and no update verb —
+  `-resolvePackageDependencies` honours an existing `Package.resolved` — so
+  `outdated` and `upgrade` set the lockfile aside and resolve afresh; a pin on a
+  branch or revision has no version and is not listed.
+- `test:golden` passes the record mode through xcodebuild, which strips the
+  `TEST_RUNNER_` prefix and hands the rest to the tests. The library fails
+  every assertion it records, so the recording run's exit status is ignored and
+  the comparison after it is the verdict. `-collect-test-diagnostics never`
+  skips a sysdiagnose-sized bundle that costs minutes on every failure, and
+  every recording run fails by design. `.build/snapshot-artifacts/` is emptied
+  first, so what is there is this run's.
+
 Full judgment: the `swiftui` skill's references.

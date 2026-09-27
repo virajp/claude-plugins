@@ -10,13 +10,7 @@ set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-# The one-command gate, and the same command the pipeline runs. It needs the dev
-# toolchain loaded, because the formatter and the scanners are pinned in
-# mise/conf.d/tools.dev.toml — `MISE_ENV=dev mise run code:all`.
-
-# `${ARR[@]+"${ARR[@]}"}` rather than a bare `"${ARR[@]}"`: under `set -u` an
-# empty array is an unbound reference on older bash, and the runner's bash is
-# whatever the machine has.
+# `${ARR[@]+"${ARR[@]}"}`: under `set -u` an empty array is unbound on older bash.
 FLAGS=()
 [[ "${usage_debug:-false}" == "true" ]] && FLAGS+=("--debug")
 [[ "${usage_fix:-false}" == "true" ]] && FLAGS+=("--fix")

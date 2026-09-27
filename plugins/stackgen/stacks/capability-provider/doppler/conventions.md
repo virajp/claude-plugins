@@ -57,7 +57,10 @@ them.
 **The task overlays a slot, and stays skippable.** `setup:secrets` is a task
 name the toolchain manager defines and this pack fills. It exits 0 when the
 CLI is absent or not logged in, because a contributor without a seat still has
-to be able to run `setup:all` end to end.
+to be able to run `setup:all` end to end. It scopes with `--no-read-env`, so
+the mapping comes from the two variables rather than whatever the shell
+happens to hold, and with `--scope` at the repo root rather than the shell's
+directory.
 
 ## Naming — one project per repo
 
