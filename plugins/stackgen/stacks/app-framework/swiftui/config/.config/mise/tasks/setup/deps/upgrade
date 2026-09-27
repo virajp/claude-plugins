@@ -4,23 +4,12 @@
 #MISE hide=true
 
 set -euo pipefail
-# helpers ships with stackgen:tool-config, not this pack, so there is no
-# path here for -x to follow.
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/xcode"
 
-# xcodebuild has no update verb: `-resolvePackageDependencies` honours
-# `Package.resolved` whenever it exists. So the lockfile is removed and the
-# project resolved again, which picks the newest version each package's
-# declared range allows and writes a fresh `Package.resolved`, fetching as it
-# goes. The lockfile diff is the review surface. The old lockfile is kept
-# aside and put back when the resolve fails, so a failed upgrade leaves the
-# repo as it found it.
-#
-# One step, so no header: whatever called it — `setup:deps:all`, or a person —
-# frames it.
+# No update verb: `-resolvePackageDependencies` honours an existing `Package.resolved`.
 
 require_xcode "setup:deps:upgrade"
 project=$(find_xcodeproj "setup:deps:upgrade")

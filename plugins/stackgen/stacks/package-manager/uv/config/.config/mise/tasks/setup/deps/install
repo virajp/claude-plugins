@@ -6,20 +6,10 @@
 #USAGE flag "--frozen" help="fail rather than write the lockfile"
 
 set -euo pipefail
-# helpers ships with stackgen:tool-config, not this pack, so there is no
-# path here for -x to follow.
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-# Fills the `setup:deps:install` slot. `--frozen` is the contract's name for
-# "the lockfile is the input, not the output": uv re-locks during a plain sync
-# whenever the manifest has drifted, which is exactly the silent rewrite a fresh
-# worktree and CI both need to see fail instead.
-#
-# The flag maps to uv's `--locked`, NOT to its `--frozen`. uv's `--frozen` skips
-# resolution entirely and reads a stale lockfile without complaint — it declines
-# to write, but it also declines to notice, which is the opposite of what the
-# contract's flag promises. `--locked` is the one that errors on drift.
+# `--frozen` maps to uv's `--locked`, NOT its `--frozen`, which reads a stale lockfile silently.
 
 install_args=(--all-extras)
 if [[ "${usage_frozen:-false}" == "true" ]]; then

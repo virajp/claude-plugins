@@ -1,12 +1,5 @@
-// Editor fragment — the Python gate's contribution to the repo's editor
-// settings. `/vwf:init` merges every `.config/vscode.d/*.jsonc` into the two
-// editor files inside one marked block; a key written by hand after that block
-// wins.
-//
-// The extension recommendation only. No `settings`: this pack runs ruff
-// through `uv run` so the gate uses the version the lockfile pinned, and the
-// editor keys that would pick an interpreter or a ruff binary are a repo's own
-// call — a wrong one here formats with a different ruff than the gate.
+// Editor fragment: `/vwf:init` merges it into the editor settings; a key after its block wins.
+// No `settings`: an interpreter or ruff binary key could format with another ruff than the gate.
 {
   "extensions": [
     "charliermarsh.ruff",

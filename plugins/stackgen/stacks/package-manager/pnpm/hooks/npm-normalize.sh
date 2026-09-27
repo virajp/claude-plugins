@@ -1,22 +1,7 @@
 #!/usr/bin/env bash
-# PreToolUse hook: rewrite npm/npx commands to the repo's package manager.
-#
-# vwf allows exactly two JS/TS package managers — pnpm and bun — so this
-# resolves which one this directory uses and rewrites accordingly:
-#
-#   pnpm:  npx <pkg> → pnpm dlx <pkg>   npm ci → pnpm install --frozen-lockfile
-#   bun:   npx <pkg> → bunx <pkg>       npm ci → bun install --frozen-lockfile
-#
-# Resolution order (first hit wins):
-#   1. a lockfile, walking up from cwd — bun.lock/bun.lockb → bun,
-#      pnpm-lock.yaml → pnpm. The lockfile is ground truth: bun reuses npm's
-#      `workspaces` field, so nothing else distinguishes them reliably.
-#   2. `package_manager: bun` in .config/vwf.yaml — covers a project scaffolded
-#      but not yet installed, where no lockfile exists.
-#   3. pnpm, the default. vwf is user-scoped so this hook fires in every repo,
-#      including ones that never heard of vwf; pnpm preserves prior behavior.
-#
-# BSD sed compatible: no \s, no \b (see CLAUDE.md).
+# PreToolUse hook: rewrite npm/npx commands to the repo's package manager, pnpm or bun.
+# Nearest lockfile first, then `package_manager: bun` in .config/vwf.yaml, else pnpm.
+# BSD sed compatible: no \s, no \b.
 
 set -euo pipefail
 
@@ -58,8 +43,6 @@ else
 fi
 
 # --- npx → <dlx> ------------------------------------------------------------
-# One generic pattern: any flags after npx (-y/--yes/--) survive verbatim in
-# command-argument position, e.g. `npx -y cowsay` → `bunx -y cowsay`.
 rewritten=$(echo "$command" | sed -E \
   "s/(^|[;&|][[:space:]]*|\\\$\\([[:space:]]*)npx[[:space:]]+/\\1${dlx} /g")
 

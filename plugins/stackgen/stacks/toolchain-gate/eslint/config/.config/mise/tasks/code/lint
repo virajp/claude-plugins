@@ -8,26 +8,8 @@
 #USAGE arg "[files]" var=#true help="files to lint (default: the whole repo)"
 
 set -euo pipefail
-# helpers ships with stackgen:tool-config, not this pack, so there is no
-# path here for -x to follow.
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
-
-# Fills the `code:lint` slot for a repo whose package manager ships no lint
-# overlay of its own. This pack sits on the toolchain-gate axis, which composes
-# BEFORE `package-manager`/`language` — so where the `pnpm` pack is also pinned,
-# its `code/lint` lands after this one and wins, and this file is dead. That is
-# harmless rather than wrong: the two run the same linter. The file earns its
-# place on the stacks where no package-manager overlay exists to shadow it.
-#
-# The linter is zero-config: it bundles its own flat config and every plugin, so
-# nothing needs installing into the repo for this to run.
-#
-# This task is also the repo's linting HOOK: the pre-commit gate calls
-# `code:lint --fix <files>` rather than a linter binary, so every tool a commit
-# lints with is configured once, here. That is why it takes an optional file
-# list — the hook passes the staged files, a person passes nothing and gets the
-# whole tree.
 
 files=()
 eval "files+=(${usage_files:-})"
@@ -42,13 +24,7 @@ fi
 
 print_header "Linting files ..."
 
-# The toolchain manager's two shipped defaults, and an overlay keeps them: a
-# commit gets whatever this task does, so a tool that drops out of it stops
-# running at all. Each costs nothing when its binary is absent or nothing in
-# scope is its file type.
-#
-# `-x` follows the sourced `_scripts/` libraries, so they are analysed the way
-# their callers actually see them.
+# Keep shellcheck and actionlint in any overlay: a tool dropped here stops running.
 if command -v shellcheck >/dev/null 2>&1; then
   shell_scope=()
   while IFS= read -r shell_file; do
@@ -63,8 +39,6 @@ if command -v shellcheck >/dev/null 2>&1; then
   fi
 fi
 
-# actionlint wants the workflows, so the scope is filtered to them and it is
-# skipped when none is in scope.
 if command -v actionlint >/dev/null 2>&1; then
   workflow_scope=()
   if [ "${#files[@]}" -gt 0 ]; then
@@ -91,14 +65,8 @@ if command -v actionlint >/dev/null 2>&1; then
   fi
 fi
 
-# The house linter's rules read across files — an unused export, a duplicate
-# key against its neighbours — so a staged subset would change its verdict
-# rather than narrow it. It takes the whole tree even when a file list is
-# given.
+# Whole tree even with a file list: the linter's rules read across files.
 print_subheader "Linting with the house linter ..."
-# The pinned binary by its mise path, never the bare name: a Node repo puts
-# `node_modules/.bin` ahead of mise's tool bins on PATH, so a dependency's
-# `linter` — or the package as a devDependency at another version — would
-# shadow the pin in `conf.d/tools.toml` without a word.
+# By mise path: `node_modules/.bin` on PATH would shadow the pin in `conf.d/tools.toml`.
 linter_bin="$(mise which linter --tool npm:@askviraj/linter)"
 "${linter_bin}" ${args[@]+"${args[@]}"}
