@@ -1150,6 +1150,10 @@ They travel together because they are one change: the commit-message gate's
 configuration is what the gate config invokes. Splitting them leaves a commit
 whose hooks read a file the next commit is still going to change.
 
+**The lock step runs only where `.config/mise/mise.lock` is absent.** Then it
+is §11(b)'s, before this repo's shaping commit is staged. A present lock is
+never rewritten.
+
 Then the rest, exactly as the new-repo pipeline's **git pass** describes it
 ([new repo](new-repo.md) §11), which already reads across the resolved repos:
 the landing-model question — one row per repo per branch, `develop` and

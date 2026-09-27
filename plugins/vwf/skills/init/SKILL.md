@@ -126,11 +126,12 @@ them.
   `direct` or `pr`, written to that repo's two marked positions
   `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`, checks out `develop`,
   creating whichever of `develop` and `main` the branch model needs and the
-  repo lacks, stages what this run wrote and asks **one question with three
-  answers** — commit, commit and push, leave it — commits with a fixed `ops:`
-  message when told to — **the ops commit lands on `develop` in every mode**,
-  never on `main` or whatever branch the repo stood on — and pushes **only**
-  on the commit-and-push answer. A repo whose mainline — read from
+  repo lacks, writes the mise lock with `setup:mise --lock-only` where it is
+  missing, stages it with what this run wrote and asks **one question with
+  three answers** — commit, commit and push, leave it — commits with a fixed
+  `ops:` message when told to — **the ops commit lands on `develop` in every
+  mode**, never on `main` or whatever branch the repo stood on — and pushes
+  **only** on the commit-and-push answer. A repo whose mainline — read from
   `origin/HEAD`, else the branch it is on — is named something else gets
   `main` created from it and `develop` from `main`, the old branch left in
   place and reported for the user to retire. Both questions are asked
