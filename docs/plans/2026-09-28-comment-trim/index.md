@@ -11,9 +11,9 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-09-28 by the user
+RUNNING since 2026-09-28 02:14 in .claude/worktrees/2026-09-28-comment-trim
 
 ## Consent
 
@@ -195,11 +195,11 @@ none
 
 | Id | Wave | Unit file                                      | Kind | Owns                                                                                                                                                                                                                                                          | Depends on         | Status  | Commit |
 | -- | ---- | ---------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ------- | ------ |
-| U1 | 1    | [01-tool-config.md](01-tool-config.md)         | edit | `plugins/stackgen/skills/tool-config/assets/**`, `plugins/stackgen/skills/tool-config/references/**`                                                                                                                                                          | —                  | pending |        |
-| U2 | 1    | [02-packs-services.md](02-packs-services.md)   | edit | under `plugins/stackgen/stacks/{cloud-service,framework,capability-provider}/*/`: `config/**`, `hooks/**`, `conventions.md`                                                                                                                                   | —                  | pending |        |
-| U3 | 1    | [03-packs-languages.md](03-packs-languages.md) | edit | under `plugins/stackgen/stacks/{language,app-framework,package-manager,toolchain-gate}/*/`: `config/**`, `hooks/**`, `conventions.md`                                                                                                                         | —                  | pending |        |
-| U4 | 1    | [04-this-repo.md](04-this-repo.md)             | edit | this repo's repo-only files: every `.config/**` file with no shipped counterpart at the same path, `.github/workflows/**`, `mempalace.yaml`, `pnpm-workspace.yaml`                                                                                            | —                  | pending |        |
-| U5 | 1    | [05-doctrine.md](05-doctrine.md)               | edit | `.claude/skills/plugin-authoring/**`, `plugins/stackgen/assets/pack-format.md`                                                                                                                                                                                | —                  | pending |        |
+| U1 | 1    | [01-tool-config.md](01-tool-config.md)         | edit | `plugins/stackgen/skills/tool-config/assets/**`, `plugins/stackgen/skills/tool-config/references/**`                                                                                                                                                          | —                  | green   |        |
+| U2 | 1    | [02-packs-services.md](02-packs-services.md)   | edit | under `plugins/stackgen/stacks/{cloud-service,framework,capability-provider}/*/`: `config/**`, `hooks/**`, `conventions.md`                                                                                                                                   | —                  | green   |        |
+| U3 | 1    | [03-packs-languages.md](03-packs-languages.md) | edit | under `plugins/stackgen/stacks/{language,app-framework,package-manager,toolchain-gate}/*/`: `config/**`, `hooks/**`, `conventions.md`                                                                                                                         | —                  | green   |        |
+| U4 | 1    | [04-this-repo.md](04-this-repo.md)             | edit | this repo's repo-only files: every `.config/**` file with no shipped counterpart at the same path, `.github/workflows/**`, `mempalace.yaml`, `pnpm-workspace.yaml`                                                                                            | —                  | green   |        |
+| U5 | 1    | [05-doctrine.md](05-doctrine.md)               | edit | `.claude/skills/plugin-authoring/**`, `plugins/stackgen/assets/pack-format.md`                                                                                                                                                                                | —                  | green   |        |
 | U6 | 2    | [06-docs.md](06-docs.md)                       | edit | `site/src/content/docs/**`, `.claude/**` except `.claude/skills/plugin-authoring/**`, `CLAUDE.md`, `readme.md`                                                                                                                                                | U1, U2, U3, U4, U5 | pending |        |
 | U7 | 3    | [07-gates-and-bump.md](07-gates-and-bump.md)   | edit | the `version:` line of every pack `pack.yaml` U2 or U3 changed, those packs' bundle pins under `plugins/stackgen/stacks/bundles/**`, `plugins/stackgen/stacks/inventory.md`, `plugins/stackgen/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | U6                 | pending |        |
 
@@ -312,10 +312,29 @@ the unit could not proceed without; it blocks the unit and its dependents.
   the shipped frame, offer a drift row — would carry it; not planned.
 - This repo's landed copies get trimmed at the next `/vwf:setup reshape`.
 
+## Gaps surfaced during execution
+
+- U2: `plugins/stackgen/stacks/cloud-service/containers/config/wrangler.jsonc`
+  already failed the shipped dprint check before this run (missing trailing
+  commas). The unit left it, since formatting changes code lines and decision 6
+  allows comment changes only. Closed for this plan (outside its Goal); it is a
+  candidate backlog item.
+
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit              | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                                                       | Commit |
+| ---- | ----------------- | ----- | ----- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| 0    | preflight         | —     | 1     | pass        | all six wave-gate lines green at 19f6ee84; doctor: repo not onboarded (no `.config/vwf.yaml`), no blocking finding; format check skipped — no `covers:`; stack conventions skipped — no `code` unit; stackgen-v2.0.0 not tagged, so `plugin.json` stays 2.0.0                                                                                                | —      |
+| 1    | U5 doctrine       | opus  | 1     | pass        | edit; rule section added to plugin-authoring `SKILL.md` and a bullet in `pack-format.md` Rules; DECIDED section in SKILL.md not a reference, both state a comment-only change still bumps the pack                                                                                                                                                           |        |
+| 1    | U4 this repo      | opus  | 1     | pass        | edit; 23 of 32 owned files trimmed (comment lines 834→157); shellcheck keeps its flags-in-step line; DOCS FALSIFIED `.claude/docs/repo-shape.md` p:plugins:shellcheck entry lacks the `-P <pack>/config` and `-i 2 -ci` reasons now dropped from the task                                                                                                    |        |
+| 1    | U2 service packs  | opus  | 1     | pass        | edit; 7 packs trimmed (containers, workers-ssr, workers-static-assets, astro, html, doppler, fnox), explanations moved to each `conventions.md`; astro/html icons byte-identical; GAP containers `wrangler.jsonc` already failed the shipped dprint check (missing trailing commas) before this run — left, since formatting changes code lines              |        |
+| 1    | U3 language packs | opus  | 1     | pass        | edit; swift, swiftui, flutter, pnpm, uv and six toolchain-gate packs trimmed, explanations moved to `conventions.md`; swift/swiftui `code/format` still byte-identical; reported a pre-existing error (not caused by this diff): the Composition order paragraph in pnpm/flutter/ruff `conventions.md` contradicts `materializer.md` — out of scope          |        |
+| 1    | U1 tool-config    | opus  | 1     | pass        | edit; 54 asset files trimmed (comment lines 1481→436), linter preset names and `**/` cost moved into `references/pre-commit.md`; kept directives, markers, MARKED POSITION lines, fill-in templates; member-flag examples in `setup/all` collapsed to one template line                                                                                      |        |
+| 1    | R1 wave review    | opus  | 1     | findings(4) | CONTRACT clean, RULINGS clean; U4 `pnpm-workspace.yaml:8` dropped the esbuild allow-build and the override-pin reasons, which no doc holds; U4 shellcheck:90 SC2034/SC2154 reason missing from repo-shape.md (goes to U6 with U4's DOCS FALSIFIED); U2 fnox/containers `conventions.md` new lines past the fold; U1 `linter.yaml:6-7` two-line comment → one |        |
+| 1    | U1 tool-config    | opus  | 2     | pass        | edit; `linter.yaml` ignores comment cut to one line                                                                                                                                                                                                                                                                                                          |        |
+| 1    | U2 service packs  | opus  | 2     | pass        | edit; fnox and containers `conventions.md` re-folded, no added line over 76 chars                                                                                                                                                                                                                                                                            |        |
+| 1    | U4 this repo      | opus  | 2     | pass        | edit; `pnpm-workspace.yaml` got back one-line warnings for the esbuild allow-build and the 0.28.1 override pin                                                                                                                                                                                                                                               |        |
+| 1    | R1 wave review    | opus  | 2     | pass        | all three fixes confirmed; CONTRACT clean, RULINGS clean                                                                                                                                                                                                                                                                                                     |        |
 
 ## Launch
 
