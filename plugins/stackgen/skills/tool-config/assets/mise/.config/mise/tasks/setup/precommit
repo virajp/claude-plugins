@@ -139,6 +139,19 @@ if grep -qs "^# graphify-hook-start$" "${HOOKS_DIR}/post-commit" || grep -qs "^#
   fi
 fi
 
+# graphify's merge driver goes too: its attribute line and its local git-config section, never the attributes file.
+ATTRIBUTES="${MISE_PROJECT_ROOT}/.gitattributes"
+if grep -qs 'merge=graphify' "$ATTRIBUTES"; then
+  print_subheader "Removing graphify's merge attribute ..."
+  grep -v 'merge=graphify' "$ATTRIBUTES" >"${ATTRIBUTES}.tmp" || true
+  cat "${ATTRIBUTES}.tmp" >"$ATTRIBUTES"
+  rm -f "${ATTRIBUTES}.tmp"
+fi
+if git config --local --get-regexp '^merge\.graphify\.' >/dev/null 2>&1; then
+  print_subheader "Removing graphify's merge driver from the local git config ..."
+  git config --local --remove-section merge.graphify
+fi
+
 # The hook TYPES are not passed here. `default_install_hook_types` in the config
 # is what declares them, so the commit-msg hook arrives with the config rather
 # than with whoever last edited this line.

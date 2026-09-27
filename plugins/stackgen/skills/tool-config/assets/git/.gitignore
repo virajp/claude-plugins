@@ -1,0 +1,63 @@
+# The repo's ignore set. Sections are banners; keep them, and keep the
+# why-comments — a pattern nobody can explain is a pattern nobody dares delete.
+
+# >>> git
+# ==== macOS ====
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# ==== Editors ====
+# .idea/ is per-machine index and workspace state, regenerated on open.
+# .vscode/ is deliberately NOT here: what a repo puts there — extensions.json,
+# launch.json, tasks.json — is hand-written and shared, so whether to commit it
+# is the repo's call, not this block's.
+.idea/
+*.swp
+*.swo
+
+# ==== AI tooling ====
+# One developer's agent state. The shared half — settings.json, skills/,
+# agents/ — stays tracked, because it is repo configuration.
+.claude/settings.local.json
+.claude/worktrees/
+.claude/cache/
+.claude/todos.json
+.worktrees/
+.opencode/
+
+# ==== mise ====
+# The uncommitted local override, at every path mise loads one from.
+mise.local.toml
+.mise.local.toml
+.config/mise.local.toml
+.config/mise.*.local.toml
+.config/mise/config.*.local.toml
+.config/mise/conf.d/*.local.toml
+.config/mise/mise.local.lock
+
+# ==== Secrets and env ====
+# A value never enters the tree. .env.example is the names-only template and
+# IS tracked, so its negation has to stay after the .env.* pattern that would
+# otherwise swallow it.
+.env
+.env.*
+!.env.example
+# Private keys and identities: the one hit that is always real.
+*.pem
+*.key
+*.p12
+
+# ==== Scratch ====
+# Local-only working notes, never reviewed and never shipped.
+docs/scratchpad/
+
+# ==== Reports ====
+# Gate output is regenerable, and a scanner report quotes what it found.
+gitleaks-report.*
+grype-report.*
+sbom.*
+# <<< git

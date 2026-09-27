@@ -80,6 +80,27 @@ types — `feat`, `fix`, `perf`, `refactor`, `revert`, `test`, `ops`, `docs`,
 `changelog:`) decides a **minor** bump: everything else is a patch, and a `!`
 or a `BREAKING CHANGE` footer is a major whatever the type.
 
+**A repo's own commit types are a conflict row each.** Where `all` finds a
+convention file already carrying a type outside the ten, the type is a
+**rename**, mapped:
+
+| Was                                                 | Is now       |
+| --------------------------------------------------- | ------------ |
+| `chore`, `build`, `ci`, `deps`, `config`, `release` | → `ops`      |
+| `style`                                             | → `refactor` |
+| `spec`, `blueprint`                                 | → `docs`     |
+| `add`                                               | → `feat`     |
+
+Each type is one row answered `rename-<type>`, one of the ten, or
+`keep-existing`; a mapped type's row proposes the table's destination. **A
+type in neither column is asked, never guessed** — `hotfix`, a team's own
+word — since a destination picked silently is a rename the user reads about
+after their next commit is refused; its row proposes none. `keep-existing`
+leaves the type in the file outside the closed set; nothing
+records the answer, so a later run that still finds it asks again. This maps
+the **configuration**, never the history: commits already written keep their
+words.
+
 **The linter config**, `linter.yaml`, is the house linter's one file, read by
 every `code:lint` that runs `@askviraj/linter` — whichever pack's task that
 is — so it ships with the gate rather than with any one of them. It ships empty
@@ -345,7 +366,10 @@ markers in both hooks graphify writes, `post-commit` and `post-checkout`;
 where either carries one it runs `graphify hook uninstall`, or — with
 graphify not on `PATH` — strips each marked block itself, deleting a hook
 left with nothing but its shebang. So an earlier-shaped repo loses those
-hooks rather than keeping one chained as `post-commit.legacy`. The graph
+hooks rather than keeping one chained as `post-commit.legacy`. It also takes
+out the merge driver an earlier install registered: graphify's line in
+`.gitattributes` is deleted, the file itself never, and the `merge.graphify`
+section is removed from the local git config. The graph
 tool's pin and the task are [mise's](mise.md#the-graph-tool).
 
 ## 7. The migration
