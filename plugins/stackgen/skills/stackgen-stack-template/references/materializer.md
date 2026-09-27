@@ -84,22 +84,23 @@ to a repo, and every write it makes is consent-gated and committed once.
        keeps `_scripts/` out of `mise tasks` — so forgetting the rename
        costs the task and never publishes one under a name nobody meant.
        The lockfile records the **landed** path, not the authored one.
-     - **A root path must be on the allowlist.** Only `.gitignore`,
-       `.graphifyignore`, `.editorconfig`, `.gitattributes`, `.npmrc`,
-       `LICENSE`, `SECURITY.md`, `CONTRIBUTING.md`, `readme.md`,
-       `fnox.toml`, `eslint.config.mjs`, `dprint.json`, `wrangler.jsonc`,
-       `renovate.json` and the directory `.github/` — never
+     - **A root path must be on the allowlist.** Only `.npmrc`,
+       `readme.md`, `fnox.toml`, `eslint.config.mjs`, `dprint.json`,
+       `wrangler.jsonc` and the directory `.github/` — never
        `.github/workflows/` — may land at the repo root
        (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). That doctrine's
-       list is what may **sit** at a shaped root, and it has a second tier
-       nothing here ever lands: `CLAUDE.md` and `mempalace.yaml` are
-       vwf's, so a pack shipping either is refused like any other
-       unallowlisted path. A language's manifests and lockfiles are not on
-       the list at all. Any other root path in a `config/` tree is a
-       **pack authoring error**: halt the landing set, name the pack and
-       the path, and write nothing. This is the materializer's own
-       assertion because a pack author is the only one who can fix it and
-       the plan is the last place anyone would read it. `readme.md` is on
+       list is what may **sit** at a shaped root, and its other tiers
+       nothing here ever lands: `.gitignore`, `.gitattributes`,
+       `.graphifyignore` and `renovate.json` are `stackgen:tool-config`'s,
+       `CONTRIBUTING.md`, `SECURITY.md` and `LICENSE` are `/vwf:init`'s,
+       and `CLAUDE.md` and `mempalace.yaml` are vwf's, so a pack shipping
+       any of them is refused like any other unallowlisted path. A
+       language's manifests and lockfiles are not on the list at all. Any
+       other root path in a `config/` tree is a **pack authoring error**:
+       halt the landing set, name the pack and the path, and write nothing.
+       This is the materializer's own assertion because a pack author is
+       the only one who can fix it and the plan is the last place anyone
+       would read it. `readme.md` is on
        the landable tier because a shaped repo has one, not because a pack
        may ship it — no pack may, and `CLAUDE.md` is separately out of
        scope below. `wrangler.jsonc` is on it because the deploy tool that
@@ -146,7 +147,7 @@ to a repo, and every write it makes is consent-gated and committed once.
    component may write into one `config/` tree — `.config/mise/tasks/` is
    the first destination that happens for. Compose by component type in
    the order `toolchain-gate`, then
-   `repo-hygiene`, then `package-manager` / `language`, then
+   `package-manager` / `language`, then
    `app-framework`, then `capability-provider`, then `cloud-provider`,
    then `cloud-service`; a **later component's file wins**, and the
    lockfile records per file which one that was. The baseline library
