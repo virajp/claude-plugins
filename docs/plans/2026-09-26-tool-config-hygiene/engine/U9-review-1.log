@@ -1,0 +1,66 @@
+/code-review high, loop U9 round 1, branch 2026-09-26-tool-config-hygiene (engine read the whole branch delta)
+
+```json
+[
+  {
+    "file": ".config/mise/tasks/setup/ai",
+    "line": 187,
+    "summary": "This repo's setup:ai still runs `graphify hook install`. setup:all runs setup:precommit (which strips graphify's raw hooks) and then runs setup:ai, which puts them straight back. U8 only byte-copied setup/precommit, the shipped asset setup/ai already dropped the call, and no unit owns this file.",
+    "failure_scenario": "`MISE_ENV=dev mise run setup:all` → setup:precommit (all:64) strips the graphify post-commit/post-checkout blocks and installs pre-commit, then setup:ai (all:67) appends graphify's Python-pinned raw hook into pre-commit's post-commit script again. Every setup run flip-flops, and doctor reports the raw hook as drift permanently. This breaks the plan goal ('no longer installs graphify's raw git hooks') and the rule in ~/.claude/CLAUDE.md: 'never `graphify hook install` (its raw git hooks pin a Python path and break on upgrade)'."
+  },
+  {
+    "file": ".config/mise/tasks/setup/precommit",
+    "line": 103,
+    "summary": "The new graphify merge-driver and raw-hook strip only runs after the foreign-hook-manager check, which exits 1 first. Doctor's remedy `mise run setup:precommit` therefore can never clear these rows on a repo that kept husky, lefthook or core.hooksPath (init's default answer is 'keep').",
+    "failure_scenario": "Repo shaped with hook manager = keep (.husky/ present) and a leftover `graphify-out/graph.json merge=graphify` plus `merge.graphify.*` config → doctor code-intelligence reports drift with remedy `mise run setup:precommit` → the task prints 'Another hook manager owns this repo's hooks' and exits 1 at line 94/103 before reaching lines 131-153. The drift row stays forever. The same applies to the shipped asset copy."
+  },
+  {
+    "file": "plugins/vwf/skills/doctor/references/code-intelligence.md",
+    "line": 37,
+    "summary": "The new remedy `mise run setup:precommit` leaves out `MISE_ENV=dev`, but pre-commit is only pinned in tools.dev.toml. Run as written, the task dies at `pre-commit install` under `set -euo pipefail`.",
+    "failure_scenario": "A fresh machine without a global pre-commit follows doctor's line → mise resolves no dev tools → the strip runs, then `pre-commit install` gives 'command not found' and the task exits non-zero, so the user sees a failed remedy. The plan's own after-landing step and setup:all both use `MISE_ENV=dev mise run setup:precommit`."
+  },
+  {
+    "file": ".config/mise/tasks/setup/precommit",
+    "line": 132,
+    "summary": "The raw-hook strip only looks at `post-commit` and `post-checkout`. A graphify hook that an earlier plain `pre-commit install` already moved to `post-commit.legacy` is never found, and pre-commit's hook keeps chaining it.",
+    "failure_scenario": "Order in an older repo: `graphify hook install`, then `pre-commit install` (no --overwrite) → graphify's script becomes .git/hooks/post-commit.legacy and pre-commit's post-commit runs it on every commit → the grep at line 132 finds no marker in post-commit, so nothing is stripped. The Python-pinned hook keeps firing (and breaking after an upgrade) on every commit. This is exactly the chained-legacy case the comment at line 130 says it prevents."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/references/git.md",
+    "line": 124,
+    "summary": "Template drift is defined as the block differing from the pinned template after no-doubling filtering against the rest of the file. That filtered text depends on other blocks and the user's own lines, so unrelated edits change what counts as 'expected' and cause false drift.",
+    "failure_scenario": "The pnpm block holds Node@sha, filtered to drop `.env` because the git base has it. The user later adds `logs/` by hand outside every block, or another requester's block that held a shared pattern is removed → re-filtering Node@sha now yields a different line set than the block holds → the skill reports drift on a block nobody edited and offers to rewrite it."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 1424,
+    "summary": "`landedFiles` and `checkPackConfigTier` walk only stackgen's tool-config trees and stacks/*/*. The hygiene payload that moved to plugins/vwf/skills/init/assets/hygiene/ (CONTRIBUTING.md, SECURITY.md, issue forms, hygiene.jsonc) still lands in every user repo but has lost the landed-file checks it had under the pack's config/ tier.",
+    "failure_scenario": "An edit adds a `${CLAUDE_PLUGIN_ROOT}/…` citation or a plugin-relative link to init/assets/hygiene/CONTRIBUTING.md, or breaks hygiene.jsonc's fragment shape → rule 13 and the config-tier checks never see it (checkRootRefs even treats it as ordinary prose) → p:plugins:check passes and every shaped repo receives a dangling reference."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/readme-and-license.md",
+    "line": 29,
+    "summary": "The hygiene assets get no lock record, and the already-there rule keeps any asset a repo already has. An updated CONTRIBUTING.md, SECURITY.md or issue form therefore never reaches an already-shaped repo. Before, a hygiene pack version bump raised doctor (a) drift and reshape offered replace-or-keep.",
+    "failure_scenario": "vwf ships a corrected bug_report.yml or CONTRIBUTING.md → `/vwf:setup reshape` on an existing repo finds the file present, plans nothing and reports it 'kept', and doctor has no version or hash to compare → the stale file stays forever with no signal. The removed pack-version propagation is not re-established anywhere."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/references/git.md",
+    "line": 91,
+    "summary": "No-doubling normalization strips a leading `/` and ignores `**/`, so a root-anchored pattern counts as the same as an any-depth one. The broader template or pack pattern is then skipped even though it covers more.",
+    "failure_scenario": "The user's .gitignore has `/node_modules` (root only) → pnpm asks for template=Node, which has `node_modules/` → normalised equal, so it is not written → packages/app/node_modules/ in a workspace is no longer ignored and gets committed."
+  },
+  {
+    "file": ".config/mise/tasks/setup/precommit",
+    "line": 146,
+    "summary": "A machine-setup task now silently rewrites the tracked `.gitattributes`: it deletes a line outside any tool-config block without the skill's approval row and leaves the comment above it orphaned. The migration is split between this task and git.md §5 instead of living in one owner.",
+    "failure_scenario": "A fresh clone of an older-shaped repo runs `MISE_ENV=dev mise run setup:all` → .gitattributes shows as modified in the working tree with nobody having asked. The next unrelated commit sweeps it in, and the orphaned 'The knowledge graph is regenerated…' comment now describes nothing until a later reshape happens to match it. This contradicts tool-config's rule 'a line outside them only on a person's approval'."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/references/renovate.md",
+    "line": 48,
+    "summary": "The yield list leaves out spellings Renovate discovers: `.renovaterc.json5`, `.github/renovate.json5`, `.gitlab/renovate.json5`, and the `renovate` key in package.json. The base `renovate.json` lands beside the repo's own policy and shadows it.",
+    "failure_scenario": "A repo configures Renovate in `.github/renovate.json5` with update_bot=renovate → `all` finds no listed spelling and writes root `renovate.json` → Renovate reads renovate.json first, so the repo's real policy is silently ignored."
+  }
+]
+```

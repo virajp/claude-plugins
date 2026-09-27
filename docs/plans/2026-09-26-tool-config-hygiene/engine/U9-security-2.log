@@ -1,0 +1,9 @@
+/security-review, loop U9 round 2, range 53cfa7e1..65e8256d (identification pass scoped to the range)
+
+SECURITY ENGINE: no findings
+
+- setup/precommit (asset and this repo's copy, byte-identical): hook, .legacy and merge-driver strips only read/write local .git/hooks and .gitattributes; no external input, no eval or interpolation; `graphify hook uninstall` resolved from PATH (trusted).
+- setup/ai and graphify.ts: only remove the `graphify hook install` step.
+- check.ts: static validation; template regex `[A-Za-z0-9+._-]`, no slash, so a name cannot escape the pinned raw URL.
+- git.md: fetch pinned by SHA from github/gitignore with a `written:` hash; an unknown template name needs a yes; the negation guard turns a secret re-include into a consent row.
+Confidence nothing missed: 8.

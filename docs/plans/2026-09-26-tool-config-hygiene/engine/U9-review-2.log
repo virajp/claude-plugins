@@ -1,0 +1,72 @@
+/code-review high, loop U9 round 2, branch 2026-09-26-tool-config-hygiene
+
+I found 10 things worth fixing on `2026-09-26-tool-config-hygiene`. The most serious is that the shipped `renovate.json` turns on Renovate's pre-commit manager, but that manager looks for `.pre-commit-config.yaml`. This toolkit puts the file at `.config/pre-commit-config.yaml`, so Renovate never updates hook revisions.
+
+- **What I ran:** `mise run p:plugins:check` passes on this branch.
+- **Not verified:** I didn't run vitest. I also couldn't confirm Renovate's default mise file patterns from the docs I looked up, so finding 2 is from memory. Finding 1 I'm fairly sure of.
+- **Not reported:** `site/`, `readme.md` and `CLAUDE.md` still describe the retired repo-hygiene bundle, `.editorconfig` and the "eleven passes" count. The plan gives those files to its U10 docs unit, so I left them out.
+
+```json
+[
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/renovate/renovate.json",
+    "line": 8,
+    "summary": "The policy turns on Renovate's pre-commit manager, but that manager's default pattern only matches a file named `.pre-commit-config.yaml` (leading dot). This toolkit puts the config at `.config/pre-commit-config.yaml`, so the manager finds nothing, and renovate.md:36 wrongly says this setting is what keeps hook revisions updated.",
+    "failure_scenario": "A repo shaped by `all` with update_bot=renovate: Renovate scans the repo and never matches `.config/pre-commit-config.yaml`. Every hook `rev:` stays frozen, which is exactly the 'one pinned set nothing updates' outcome the doc says this setting prevents. Fix: add a `managerFilePatterns` entry for `.config/pre-commit-config.yaml` under `pre-commit`."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/references/renovate.md",
+    "line": 35,
+    "summary": "The doc claims Renovate's mise manager reads every mise config file, including `.config/mise/conf.d/`. As far as I recall, its defaults cover `mise.toml`, `.config/mise.toml` and `.config/mise/config.toml`, and do not include `conf.d/*.toml`, which is where tool-config puts every tool pin. I could not confirm this from the docs, so treat it as likely rather than certain.",
+    "failure_scenario": "Pins in `.config/mise/conf.d/tools.dev.toml` (graphify, dprint and the rest) never get a Renovate PR, while the policy says they are covered. Fix: add a `managerFilePatterns` entry for `.config/mise/conf.d/*.toml` under `mise`."
+  },
+  {
+    "file": "plugins/vwf/skills/doctor/references/stack-checks.md",
+    "line": 293,
+    "summary": "Doctor's baseline check expects a `tool-config/renovate` lock record whenever the update bot is renovate. But the renovate tool yields to a policy the repo already has (for example `.github/renovate.json`), lands nothing and writes no record, so the check can never pass for such a repo.",
+    "failure_scenario": "A repo with its own `.github/renovate.json` and update_bot=renovate: doctor reports the shape as missing or behind and suggests `/vwf:setup reshape`. The reshape yields again and writes no record, so the same drift comes back on every doctor run, recall and setup Step 0."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit",
+    "line": 61,
+    "summary": "`grep -v 'merge=graphify'` deletes every line that contains that text anywhere, not just graphify's own attribute line. It also edits the tracked `.gitattributes` from a setup task, before the foreign-hook-manager refusal and without `--force`.",
+    "failure_scenario": "A repo that wrote `graphify-out/graph.json merge=graphify -diff linguist-generated` loses its `-diff linguist-generated` attributes as well. A comment line that mentions merge=graphify is also removed. The working tree is left dirty even on a run that then exits 1 because it refuses a husky setup. The same copy lives at .config/mise/tasks/setup/precommit."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 483,
+    "summary": "init's asset trees are walked with `rootFiles = null`, which switches off the root-allowlist check for them entirely. readme-and-license.md:200 says 'init holds its own assets to the same line', and output-tree.md lists exactly which files init may put at the root.",
+    "failure_scenario": "Someone adds `plugins/vwf/skills/init/assets/hygiene/.editorconfig` or `renovate.json`. `p:plugins:check` passes, init lands a root file that no allowlist tier names, and the ceiling the docs promise is not enforced. A narrower allowlist would work: CONTRIBUTING.md, SECURITY.md, the `.github`/`.config` directories, plus the `licenses/` directory as the one exception."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 750,
+    "summary": "The grammar for `git add ignore <patterns>` accepts any `!` negation, and git.md always writes a negation. The rule against re-including a secret only applies to lines fetched from a template, so a pack can un-ignore secret files with no check and no prompt.",
+    "failure_scenario": "A pack lists `git add ignore !.env.local !*.pem` (a typo or a bad copy). The checker accepts it, the materializer writes it after the base's `.env.*` and `*.pem`, and private keys or env files become committable in every repo the pack lands in."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/references/git.md",
+    "line": 166,
+    "summary": "The template table maps the `dart` language key to both `Dart` and `Flutter`. init's fallback resolves each detected language through this table, so a plain Dart repo with no Flutter pack reads as needing the Flutter template too.",
+    "failure_scenario": "A `source` repo with only `pubspec.yaml` (a Dart CLI or server) and no pack pinned: init's fallback asks for `template=Dart` and `template=Flutter`. The repo gets Flutter/iOS/Android ignore lines it has no use for, contradicting the prose that says only a repo with the Flutter pack pinned gets both."
+  },
+  {
+    "file": "plugins/stackgen/stacks/package-manager/swiftpm/conventions.md",
+    "line": 35,
+    "summary": "The rewritten paragraph adds a line of about 120 characters in a `plugins/**/*.md` file, which dprint does not format.",
+    "failure_scenario": "This breaks the rule in /Users/virajpatel/Projects/github.com/virajp/claude-plugins/CLAUDE.md: \"`plugins/**/*.md` is **not** formatted — match the surrounding fold width by hand.\" The line starting \"(`git add ignore template=Swift`). Nothing is checked in from it. `.swiftpm/` holds...\" is far past the file's roughly 78-character fold, and no gate will fix it."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/references/memory-tree.md",
+    "line": 11,
+    "summary": "Setup still describes `.gitignore` as a file of `# ==== <Name> ====` banner sections and appends a `# ==== vwf memory ====` section itself. The ignore file is now owned by tool-config's git tool, which organises it as marked blocks.",
+    "failure_scenario": "On a shaped repo, setup writes its three memory patterns as a free-standing banner outside any block, bypassing `git add ignore ... for vwf`. The git tool then treats them as the user's own lines, and the skill no longer describes accurately the file it writes to."
+  },
+  {
+    "file": ".config/mise/tasks/setup/ai",
+    "line": 180,
+    "summary": "The new comment says 'The graph refresh is code:graph, run by hand'. The installer's new comment and pre-commit.md say the refresh is the `graphify-refresh` hook at the post-commit stage. The same text is in the shipped tool-config asset.",
+    "failure_scenario": "A maintainer reading setup:ai concludes the graph is refreshed only by hand and may drop post-commit from `default_install_hook_types`, or skip installing it. The graph then goes stale silently, which doctor later reports as blocking or degraded."
+  }
+]
+```

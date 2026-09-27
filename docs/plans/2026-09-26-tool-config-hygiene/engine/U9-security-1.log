@@ -1,0 +1,8 @@
+/security-review, loop U9 round 1, range 53cfa7e1..1a24784f (the skill's own diff read origin/HEAD; the identification pass was scoped to the range)
+
+SECURITY ENGINE: no findings
+
+- git.md template fetch: the destination is only .gitignore inside the requester's block; names come from a fixed table or a user-confirmed name; check.ts accepts `template=[A-Za-z0-9+._-]+` only, so a name changes only which github/gitignore file the URL points at; fetched text is ignore patterns; SHA pinned after first fetch, moved only on upgrade with consent.
+- setup/precommit (asset and this repo's copy): .gitattributes.tmp / hook .tmp symlink planting dropped, confidence 3 — the repo already controls the task script and mise config, no trust boundary crossed; hooksPath values are printed, never evaluated.
+- graphify.ts: only removes an exec call. inventory.ts: only removes a column.
+- check.ts: local authoring validation; the new regexes only narrow what a pack line may contain.
