@@ -271,13 +271,14 @@ call without it is its own consent round.
 ## Drift
 
 **A block that differs from what its requester would write now is drift**,
-tested by content and never by a hash. Outside quoted strings the words are
-compared, so spacing and line breaks are never drift; a quoted string is
-compared exactly, character for character. For a fetched template's block,
-what its requester would write now is the template at its pinned commit, as
-last written, so that one comparison reads the lock's `written:` hash
-([git's templates](references/git.md#4-templates)). Each drifted block is one
-row, the two versions side by side, with three answers:
+tested by content. Outside quoted strings the words are compared, so spacing
+and line breaks are never drift; a quoted string is compared exactly,
+character for character. **One exception**: a fetched template's block is
+compared by the lock's `written:` hash of its lines as last written, trailing
+whitespace trimmed, since the template at its pinned commit is what its
+requester would write now ([git's templates](references/git.md#4-templates)).
+Each drifted block is one row, the two versions side by side, with three
+answers:
 
 - **take theirs** — the block is rewritten as the requester would write it;
 - **keep mine** — the block stays as it stands for this run; nothing records

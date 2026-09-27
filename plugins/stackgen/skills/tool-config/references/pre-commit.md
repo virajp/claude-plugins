@@ -369,7 +369,10 @@ or — with graphify not on `PATH` — strips each marked block itself, deleting
 a hook left with nothing but its shebang. It then strips the same blocks from
 a `post-commit.legacy` or `post-checkout.legacy` an earlier install chained,
 which graphify's uninstall never reads. So an earlier-shaped repo loses those
-hooks rather than keeping one chained. It also takes
+hooks rather than keeping one chained. Where a `core.hooksPath` is in effect
+that directory is another manager's, perhaps outside the repo, so no hook
+there is edited: the task names the marked hooks and the by-hand lines
+instead. It also takes
 out the merge driver an earlier install registered: graphify's line in
 `.gitattributes` is deleted — its comment is left for
 [git's migration](git.md#5-the-migration) — the file itself never, and the

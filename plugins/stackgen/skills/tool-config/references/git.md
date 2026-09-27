@@ -104,7 +104,9 @@ is written at its first place only.
 the template's comments and blank lines inside it, trimmed at either end; a
 pattern block carries the patterns alone. After filtering, a comment run left
 with no pattern below it before the next blank line is dropped, and a run of
-blank lines is collapsed to one.
+blank lines is collapsed to one. Every template line loses its trailing
+whitespace before it is written and hashed, as the commit gate's
+trailing-whitespace hook would strip it anyway.
 
 **No fetched line re-includes a secret.** A template's negation whose
 pattern, normalised, the `git` base's secrets section ignores — `.env`,
