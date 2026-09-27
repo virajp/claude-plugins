@@ -224,6 +224,20 @@ Plan gaps:
   uv and Python. Raised by U4-late1 on U1, an uncovered unit — dropped from the
   loop, recorded here. (U1)
 
+User rulings, 2026-09-27, after landing:
+
+- **G1, G8** — accepted: follow what mise does; an options change re-resolves
+  the entry.
+- **G2** — accepted: every environment stays in sync with `dev`.
+- **G4, G5** — accepted behaviour.
+- **G6** — vwf and stackgen are released together.
+- **G3** — open: `references/mise.md` must say graphify requires python and uv.
+- **G7** — open: when a python pin already exists, ask the user which version to
+  keep (offering `latest`) and pin python once.
+- **G9** — open: only `mise.local.lock` may be gitignored; `mise.lock` and its
+  sidecars belong in git, so a *lock ignored* state is a defect, not an outcome.
+  The missing "unchanged" report state stays open with it.
+
 ## Run log
 
 | Wave | Unit           | Model | Round      | Outcome     | Detail                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Commit                      |
