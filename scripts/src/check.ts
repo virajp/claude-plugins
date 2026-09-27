@@ -276,6 +276,8 @@ const PACK_HOOK_FRAGMENTS = join(".config", "pre-commit.d");
 const PACK_EDITOR_FRAGMENTS = join(".config", "vscode.d");
 /** Where `stackgen:tool-config` keeps one landed tree per tool. */
 const TOOL_CONFIG_ASSETS = "skills/tool-config/assets";
+/** Where `/vwf:init` keeps its own landed trees — the hygiene assets. */
+const INIT_ASSETS = "skills/init/assets";
 /** The skill file that marks a plugin as the owner of those trees. */
 const TOOL_CONFIG_SKILL = "skills/tool-config/SKILL.md";
 /** Where a pack keeps the hook scripts that land in `.claude/hooks/`. */
@@ -417,7 +419,7 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  *
  * A pack's `config/` tier holding a mise `conf.d` fragment or a `pre-commit.d`
  * file is a finding too, and each `stackgen:tool-config` asset tree is walked
- * as a landed tree.
+ * as a landed tree, as is each `/vwf:init` asset tree bar the root allowlist.
  *
  * The walk is its own rather than `plugin.files`: most of these paths run
  * through `.config/`, and the reader's glob does not descend into a dot
@@ -428,7 +430,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
   const at = (message: string) => findings.push({ scope: plugin.dir, message });
   const path = (absolute: string) => relative(plugin.root, absolute);
 
-  const landedTree = (tree: string, rootFiles: ReadonlySet<string>) => {
+  const landedTree = (tree: string, rootFiles: ReadonlySet<string> | null) => {
     for (const absolute of filesUnder(join(tree, PACK_MISE_TASKS))) {
       if ((statSync(absolute).mode & 0o111) === 0) {
         at(`mise task file is not executable: ${path(absolute)}`);
@@ -442,7 +444,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       }
     }
 
-    if (existsSync(tree)) {
+    if (existsSync(tree) && rootFiles !== null) {
       for (const entry of readdirSync(tree, { withFileTypes: true })) {
         const allowed = entry.isDirectory()
           ? PACK_CONFIG_ROOT_DIRS.has(entry.name) || entry.name.startsWith("_")
@@ -454,13 +456,13 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
           );
         }
       }
+    }
 
-      for (const absolute of filesUnder(join(tree, PACK_CONFIG_FORGE_FENCE))) {
-        at(
-          `pack config/ tier ships a CI workflow — a pack states which task CI `
-            + `runs and never writes the workflow: ${path(absolute)}`,
-        );
-      }
+    for (const absolute of filesUnder(join(tree, PACK_CONFIG_FORGE_FENCE))) {
+      at(
+        `pack config/ tier ships a CI workflow — a pack states which task CI `
+          + `runs and never writes the workflow: ${path(absolute)}`,
+      );
     }
 
     for (const absolute of filesUnder(join(tree, PACK_EDITOR_FRAGMENTS))) {
@@ -475,6 +477,10 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
 
   for (const tree of toolConfigTrees(plugin)) {
     landedTree(join(plugin.root, tree), TOOL_CONFIG_ROOT_FILES);
+  }
+  // init picks one licence from its tree, so its root holds more than lands.
+  for (const tree of assetTrees(plugin, INIT_ASSETS)) {
+    landedTree(join(plugin.root, tree), null);
   }
 
   const packs = globSync("stacks/*/*", { cwd: plugin.root });
@@ -869,7 +875,12 @@ function hookFault(words: string): string | undefined {
 
 /** Every `stackgen:tool-config` asset tree, plugin-relative. */
 function toolConfigTrees(plugin: Plugin): string[] {
-  return globSync(`${TOOL_CONFIG_ASSETS}/*`, { cwd: plugin.root })
+  return assetTrees(plugin, TOOL_CONFIG_ASSETS);
+}
+
+/** Every landed tree directly under `assets`, plugin-relative. */
+function assetTrees(plugin: Plugin, assets: string): string[] {
+  return globSync(`${assets}/*`, { cwd: plugin.root })
     .filter(tree => statSync(join(plugin.root, tree)).isDirectory());
 }
 
@@ -1397,7 +1408,10 @@ function checkLandedCitations(plugin: Plugin): Finding[] {
 
 /** Is this plugin-relative path one of the files a pack lands? */
 function isLandedPath(path: string): boolean {
-  if (path.startsWith(`${TOOL_CONFIG_ASSETS}/`)) {
+  if (
+    path.startsWith(`${TOOL_CONFIG_ASSETS}/`)
+    || path.startsWith(`${INIT_ASSETS}/`)
+  ) {
     return true;
   }
   const parts = path.split("/");
@@ -1422,7 +1436,12 @@ function isLandedPath(path: string): boolean {
  * {@link checkPackConfigTier} walks its own way.
  */
 function* landedFiles(plugin: Plugin): Generator<LandedFile> {
-  for (const tree of toolConfigTrees(plugin)) {
+  for (
+    const tree of [
+      ...toolConfigTrees(plugin),
+      ...assetTrees(plugin, INIT_ASSETS),
+    ]
+  ) {
     for (const found of filesUnder(join(plugin.root, tree))) {
       yield { path: relative(plugin.root, found), absolute: found };
     }
@@ -1502,8 +1521,11 @@ function blankFences(body: string): string {
  */
 function landingRootOf(path: string): string | null {
   const parts = path.split("/");
-  // A tool-config asset tree lands whole as the repo root.
-  if (path.startsWith(`${TOOL_CONFIG_ASSETS}/`)) {
+  // A tool-config or init asset tree lands whole as the repo root.
+  if (
+    path.startsWith(`${TOOL_CONFIG_ASSETS}/`)
+    || path.startsWith(`${INIT_ASSETS}/`)
+  ) {
     return parts.slice(0, 4).join("/");
   }
   return parts[3] === "skills" && parts.length > 5

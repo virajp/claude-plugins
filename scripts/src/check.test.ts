@@ -1112,6 +1112,36 @@ describe("the pack config tier", () => {
     expect(messages(check(root))).toEqual([]);
   });
 
+  it("walks an init asset tree as a landed tree", () => {
+    // init's hygiene assets land in a repo with no plugin installed.
+    const hygiene = "skills/init/assets/hygiene";
+    const clean = tree({
+      vwf: {
+        files: {
+          [`${hygiene}/CONTRIBUTING.md`]: "# Contributing\n",
+          [`${hygiene}/licenses/MIT.txt`]: "MIT\n",
+          [`${hygiene}/.config/vscode.d/hygiene.jsonc`]:
+            "{ \"settings\": {} }\n",
+        },
+      },
+    });
+    expect(messages(check(clean))).toEqual([]);
+    const root = tree({
+      vwf: {
+        files: {
+          [`${hygiene}/SECURITY.md`]: "See ${CLAUDE_PLUGIN_ROOT}/x.md\n",
+          [`${hygiene}/.github/workflows/ci.yml`]: "on: push\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("expands to nothing"),
+        expect.stringContaining("ships a CI workflow"),
+      ]),
+    );
+  });
+
   it("walks a tool-config asset tree as a landed tree", () => {
     const task = `${assets}/.config/mise/tasks/code/graph`;
     const clean = tree({
