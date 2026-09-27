@@ -106,6 +106,14 @@ pattern block carries the patterns alone. After filtering, a comment run left
 with no pattern below it before the next blank line is dropped, and a run of
 blank lines is collapsed to one.
 
+**No fetched line re-includes a secret.** A template's negation whose
+pattern, normalised, the `git` base's secrets section ignores — `.env`,
+`.env.*`, `*.pem`, `*.key`, `*.p12` — or matches one of them, is not
+written: it is a **conflict row** naming the line and the upstream commit,
+`keep-existing` (the line is dropped) or `overwrite` (written, on the
+person's word). `!.env.example`, the base's own, is the one negation it
+leaves alone.
+
 **Ignoring is not allowlisting.** A secret that is ignored is a secret that was
 never scanned, so an ignore line is never the answer to a scanner finding, and
 one added because "the scanner keeps complaining" is the one call to refuse.
@@ -120,10 +128,13 @@ being silently absent from a diff. **It is pinned by commit**, so a re-run is
 reproducible: the first fetch resolves github/gitignore's `main` with
 `git ls-remote https://github.com/github/gitignore main`, fetches
 `https://raw.githubusercontent.com/github/gitignore/<sha>/<Name>.gitignore`,
-and records the SHA against the block in the lock. Every later run fetches
-that same SHA and filters it as above, so a block that differs from that
-filtered text — what the call would write now — is a real local edit — drift,
-shown as the skill says. Only the skill's one upgrade verb,
+and records the SHA against the block in the lock, with a hash of the block
+exactly as it was written. Drift is the block differing from that hash, so
+only a real local edit is drift, never another block's or a user line's
+change; it is shown as the skill says. The template is re-fetched at the same
+SHA and re-filtered only when the skill itself rewrites the block — a
+`take-theirs` answer, a shared entry moving in — and the hash is re-recorded
+then. Only the skill's one upgrade verb,
 [mise's `upgrade`](mise.md#4-the-verbs), moves it: inside that call's consent
 it resolves `main` once, re-fetches every template a block holds at that
 commit, shows each changed block as a row beside its old content, and on the
@@ -135,8 +146,8 @@ rows' approval rewrites them and moves each recorded SHA.
   hash: <content hash after the write>
   blocks: [git, graphify, pnpm, gitignore:Go]
   templates: # the template each block holds, at the commit it was fetched
-    pnpm: { Node: <sha> }
-    gitignore:Go: { Go: <sha> }
+    pnpm: { Node: <sha>, written: <block hash> }
+    gitignore:Go: { Go: <sha>, written: <block hash> }
   shares:
     "template[Node]": [pnpm, typescript]
 ```

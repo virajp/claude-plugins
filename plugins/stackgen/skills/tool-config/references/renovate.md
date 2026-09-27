@@ -44,9 +44,12 @@ file the bot never opens. So this is the one policy that sits at the root
 rather than under `.config/`.
 
 **A repo's own policy wins, whatever its spelling.** Where the repo already
-carries one under any name Renovate discovers — `renovate.json5`,
-`.github/renovate.json`, `.gitlab/renovate.json`, `.renovaterc`,
-`.renovaterc.json` — the base is not landed, nothing is merged into the
+carries one under any name Renovate discovers — `renovate.jsonc`,
+`renovate.json5`, `.github/renovate.json`, `.github/renovate.jsonc`,
+`.github/renovate.json5`, `.gitlab/renovate.json`, `.gitlab/renovate.jsonc`,
+`.gitlab/renovate.json5`, `.renovaterc`, `.renovaterc.json`,
+`.renovaterc.jsonc`, `.renovaterc.json5`, or a `renovate` key in the root
+`package.json` — the base is not landed, nothing is merged into the
 repo's file, and the call's output says so. That is the yield rule: two
 policies would leave the bot reading whichever it found first.
 

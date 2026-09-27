@@ -273,8 +273,10 @@ call without it is its own consent round.
 **A block that differs from what its requester would write now is drift**,
 tested by content and never by a hash. Outside quoted strings the words are
 compared, so spacing and line breaks are never drift; a quoted string is
-compared exactly, character for character. Each drifted block is one row,
-the two versions side by side, with three answers:
+compared exactly, character for character. A fetched template's block is the
+one exception: it is tested against the hash of what was last written
+([git's templates](references/git.md#4-templates)). Each drifted block is one
+row, the two versions side by side, with three answers:
 
 - **take theirs** — the block is rewritten as the requester would write it;
 - **keep mine** — the block stays as it stands for this run; nothing records
@@ -333,7 +335,7 @@ entries:
     hash: <content hash after the write>
     blocks: [git, graphify, pnpm]
     templates: # the upstream commit each fetched template is pinned to
-      pnpm: { Node: <sha> }
+      pnpm: { Node: <sha>, written: <block hash> }
 ```
 
 `<stackgen version>` is this plugin's own, from
@@ -344,7 +346,8 @@ file's entry carries `keys:` beside `blocks:`, one list per requester. An
 entry with a shared line carries `shares:`, the entry against every requester
 that asked for it, the holder first. An entry holding a fetched template
 carries `templates:`, the commit each was fetched at, which only mise's
-`upgrade` moves ([git's templates](references/git.md#4-templates)). A path
+`upgrade` moves, and the hash of the block as last written
+([git's templates](references/git.md#4-templates)). A path
 the skill deletes loses its entry. The entry is written in the same step as
 the file, so the two never disagree.
 
