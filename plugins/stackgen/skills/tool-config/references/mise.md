@@ -93,7 +93,7 @@ needs it**.
   `#USAGE` header, never from executing it to find out),
   `task.run_auto_install = false` (`setup:mise` owns installs),
   `python.compile = false` and `python.uv_venv_auto` for the dev tools' python,
-  and
+  `pipx.uvx = true` (every `pipx:` tool installs through uv), and
   `lockfile_platforms = ["linux-x64", "macos-arm64"]`. `min_version` is the
   mise release `env_conf_d` was tested on.
 - **`conf.d/tools.dev.toml`** — what a human needs locally that a pipeline
@@ -360,7 +360,7 @@ claim about the stack that is not true:
 | Runtime  | `RUNTIME_BLOCK` lines                                                   | `PATH_ENTRIES` line                                       |
 | -------- | ----------------------------------------------------------------------- | --------------------------------------------------------- |
 | `node`   | `node.compile = false`                                                  | `_.path = { path = "node_modules/.bin", tools = true }`   |
-| `python` | `pipx.uvx = true` (`python.compile` and `python.uv_venv_auto` are in the base's `[settings]`) | —                          |
+| `python` | — (`pipx.uvx`, `python.compile` and `python.uv_venv_auto` are in the base's `[settings]`) | —                          |
 | `dart`, `go`, `rust`, `swift` | —                                                  | —                                                         |
 
 No runtime line sets the npm installer: that is the machine's choice
