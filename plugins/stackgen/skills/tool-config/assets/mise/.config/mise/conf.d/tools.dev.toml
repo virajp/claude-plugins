@@ -2,12 +2,12 @@
 
 [tools]
 # Development tools only — never the language runtime, which the package-manager
-# component pins in tools.toml; python below is only uv's lock-time interpreter,
-# and a runtime pack that pins python in tools.toml must remove it, or the two
-# disagree under dev. These are what the shipped task library actually shells
-# out to: code:format runs dprint, code:sec runs the scanners, setup:precommit
-# runs pre-commit, and the shell gate reads every task file in this library.
-# Because they live here, the aggregate gate needs the dev toolchain loaded —
+# component pins in tools.toml; python and uv below serve the uv-installed pipx
+# tools, and their overlap with a runtime pack's python pin is accepted.
+# These are what the shipped task library actually shells out to: code:format
+# runs dprint, code:sec runs the scanners, setup:precommit runs pre-commit, and
+# the shell gate reads every task file in this library. Because they live here,
+# the aggregate gate needs the dev toolchain loaded —
 # `MISE_ENV=dev mise run code:all`.
 actionlint = { version = "latest" }
 dprint     = { version = "latest" }
@@ -15,7 +15,7 @@ gitleaks   = { version = "latest" }
 grype      = { version = "latest" }
 jq         = { version = "latest" }
 # The PyPI name really is graphifyy, double y.
-"pipx:graphifyy" = { version = "latest", uvx = true }
+"pipx:graphifyy" = { uvx = true, version = "latest" }
 pre-commit       = { version = "latest" }
 shellcheck       = { version = "latest" }
 shfmt            = { version = "latest" }

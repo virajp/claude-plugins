@@ -28,14 +28,14 @@
 min_version = "2026.9.13"
 
 [settings]
-activate_aggressive  = true     # let mise shims win on PATH
-all_compile          = false    # never build a tool from source
-env_shell_expand     = true     # expand $VARS in [env]
-gpg_verify           = true     # verify tool signatures (see the CI exception)
-pipx.uvx             = true     # every pipx: tool installs through uv
-python.compile      = false    # the dev tools' python: a prebuilt binary
+activate_aggressive  = true            # let mise shims win on PATH
+all_compile          = false           # never build a tool from source
+env_shell_expand     = true            # expand $VARS in [env]
+gpg_verify           = true            # verify tool signatures (see the CI exception)
+pipx.uvx             = true            # every pipx: tool installs through uv
+python.compile       = false           # the dev tools' python: a prebuilt binary
 python.uv_venv_auto  = "create|source"
-raw                  = true     # streams output
+raw                  = true            # streams output
 status.missing_tools = "always"
 
 # `all_compile = false` is the repo-wide form of the per-runtime `node.compile`
