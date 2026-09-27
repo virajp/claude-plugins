@@ -344,19 +344,17 @@ const PACK_CONFIG_ROOT_FILES = new Set([
 ]);
 
 /**
- * The files a `stackgen:tool-config` asset tree may land at the root, beyond a
- * pack's: the git, graphify and renovate files a pack asks for lines in and
- * never ships.
+ * The files a `stackgen:tool-config` asset tree may land at the root beyond a
+ * pack's, per tool: the git, graphify and renovate files a pack asks for lines
+ * in and never ships.
  */
-const TOOL_CONFIG_ROOT_FILES = new Set([
-  ...PACK_CONFIG_ROOT_FILES,
-  ".gitattributes",
-  ".gitignore",
+const TOOL_CONFIG_ROOT_FILES: ReadonlyMap<string, readonly string[]> = new Map([
+  ["git", [".gitattributes", ".gitignore"]],
   // graphify reads its ignore file from the root only, as git does.
-  ".graphifyignore",
+  ["graphify", [".graphifyignore"]],
   // Renovate discovers its config at the repo root, in `.github/` or in
   // `.gitlab/` — never under `.config/`, where one would be silently inert.
-  "renovate.json",
+  ["renovate", ["renovate.json"]],
 ]);
 
 /**
@@ -476,7 +474,11 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
   };
 
   for (const tree of toolConfigTrees(plugin)) {
-    landedTree(join(plugin.root, tree), TOOL_CONFIG_ROOT_FILES);
+    const own = TOOL_CONFIG_ROOT_FILES.get(basename(tree)) ?? [];
+    landedTree(
+      join(plugin.root, tree),
+      new Set([...PACK_CONFIG_ROOT_FILES, ...own]),
+    );
   }
   // init picks one licence from its tree, so its root holds more than lands.
   for (const tree of assetTrees(plugin, INIT_ASSETS)) {

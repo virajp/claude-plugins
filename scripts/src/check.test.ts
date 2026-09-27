@@ -1112,6 +1112,18 @@ describe("the pack config tier", () => {
     expect(messages(check(root))).toEqual([]);
   });
 
+  it("flags another tool's root file at an asset tree root", () => {
+    // Each root file belongs to one tool's tree, not to every tool's.
+    const root = tree({
+      stackgen: {
+        files: { "skills/tool-config/assets/mise/renovate.json": "{}\n" },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("unallowlisted root entry"),
+    ]);
+  });
+
   it("walks an init asset tree as a landed tree", () => {
     // init's hygiene assets land in a repo with no plugin installed.
     const hygiene = "skills/init/assets/hygiene";
