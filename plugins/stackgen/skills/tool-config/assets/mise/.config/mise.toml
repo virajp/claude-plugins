@@ -1,28 +1,4 @@
-# The common base — loaded in EVERY environment, MISE_ENV set or not.
-#
-# Top-level files hold `[settings]` and top-level keys only; every other section
-# is its own file in `mise/conf.d/` — `<section>.toml` for every environment,
-# `<section>.<env>.toml` for one (miserc.toml turns that scoping on):
-#
-#   mise.toml        this file — always loaded, whatever MISE_ENV says
-#   mise.dev.toml    MISE_ENV=dev   — the developer laptop
-#   mise.ci.toml     MISE_ENV=ci    — the pipeline and the deployed runtime
-#   mise.test.toml   MISE_ENV=dev,test — test deltas, layered on top of dev
-#   mise.local.toml  NEVER committed — this machine's private overrides
-#
-# mise loads this file first, then deep-merges the active MISE_ENV variants on
-# top — MISE_ENV is a comma list and the last entry wins — and finally
-# `mise.local.toml` / `mise.<env>.local.toml`, which outrank everything. So a
-# variant holds DELTAS only, never a copy of the base. Never duplicate a tool or
-# a setting across the layers: a tool pinned twice is a version that can
-# disagree with itself, and the disagreement surfaces on someone else's machine.
-#
-# A tool is pinned in ONE file: `conf.d/tools.toml` when two environments need it.
-#
-# **`mise.local.toml` is gitignored and nothing ships one.** It is where a
-# machine-specific path, a personal project handle or a locally built runtime
-# goes — anything true of one laptop and no other. The same applies to
-# `mise.<env>.local.toml` and `conf.d/*.local.toml` for a private override.
+# The common base, loaded in every MISE_ENV; mise.local.toml (gitignored, never shipped) holds one machine's overrides.
 
 # The version `env_conf_d` in miserc.toml was tested on.
 min_version = "2026.9.13"
@@ -38,26 +14,8 @@ python.uv_venv_auto  = "create|source"
 raw                  = true            # streams output
 status.missing_tools = "always"
 
-# `all_compile = false` is the repo-wide form of the per-runtime `node.compile`
-# line RUNTIME_BLOCK below takes (`python.compile` is set above, for the dev
-# tools' python): the published binary for EVERY tool, never a build. A tool
-# that compiles turns a thirty-second install into a twenty-minute one on the
-# first machine that lacks a matching prebuild, and the compiler toolchain it
-# then needs is a dependency nothing here declares.
-
-# Freshness with a quarantine. Fuzzy pins ("latest", "26") resolve to the newest
-# release that is at least this old, so a version yanked hours after publication
-# is never the one a fresh clone installs. mise's own default is 24h; 10h keeps
-# a same-day fix reachable without taking the first minutes of a release.
 minimum_release_age = "10h"
 
-# Record every resolved version in a lockfile, which IS committed. That is what
-# makes "latest" reproducible: humans move the lockfile forward deliberately
-# (`mise run setup:all --upgrade`, in dev), and the pipeline installs from it
-# (see mise.ci.toml).
-#
-# ONE lock, `.config/mise/mise.lock`, holds every environment's tools; `setup:mise`
-# writes it with one `mise lock` over every environment, never a single one.
 lockfile = true
 
 # Every platform the lock carries a URL for — the CI runners are linux-x64.
@@ -66,25 +24,11 @@ lockfile_platforms = [ "linux-x64", "macos-arm64" ]
 # `mise run` installs nothing before a task body: `setup:mise` owns installs.
 task.run_auto_install = false
 
-# Interleave task output rather than buffering per task. Applies when `raw` is
-# off; with `raw = true` above, mise streams straight through and this is inert
-# — it is set so that turning `raw` off does not change the shape of the logs.
+# Inert while `raw = true`; set so turning `raw` off keeps the log shape.
 task.output = "interleave"
 
-# Print each task's elapsed time. `code:all` is an aggregate of gates and
-# `setup:all` an aggregate of installs; without timings a run that got slow is a
-# run nobody can attribute to a step. Set explicitly rather than left to mise's
-# default so that a future default flip does not silently take it away.
 task.timings = true
 
-# A task file's `#USAGE` block is read from the header this library already
-# writes, and ONLY from there. Left on, mise also infers a usage spec by
-# executing a run-script — which for this library means running a task to find
-# out what its flags are. The headers are the contract; inference is a second,
-# quieter source that can disagree with them.
 task.disable_spec_from_run_scripts = true
 
-# A MARKED POSITION — RUNTIME_BLOCK. The orchestrator that shapes this repo
-# writes one runtime settings line per language its stack read detected here,
-# directly below this comment (`node.compile = false` for Node, say); shipped
-# EMPTY, and left empty for a repo whose stack read found no language.
+# A MARKED POSITION — RUNTIME_BLOCK: one runtime settings line per detected language, below this comment.

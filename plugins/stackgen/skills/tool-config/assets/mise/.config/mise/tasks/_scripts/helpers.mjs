@@ -3,14 +3,7 @@
 // MISE description="Helper functions for Node-based mise tasks"
 // MISE hide=true
 
-// The `.mjs` mirror of `_scripts/helpers`. A task written in Node imports from
-// here instead of sourcing the bash file, and prints identically — same names,
-// same colours, same baked-in separators — so a repo whose task library is half
-// bash and half Node still reads as one surface.
-//
-// Keep the two in step. A printer added to one and not the other is how the
-// vocabularies drift, and the drift is invisible until someone reads two tasks
-// side by side.
+// The `.mjs` mirror of `_scripts/helpers` — keep the two in step.
 
 import { spawnSync } from "node:child_process";
 

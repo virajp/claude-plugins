@@ -14,9 +14,7 @@ FIXIT="${usage_fix:-false}"
 
 # Identity and signing: PER-REPO, required, equal to GITHUB_/GITLAB_/GIT_USER_NAME & kin
 ORIGIN=$(git remote get-url origin 2>/dev/null || true)
-# The authority is what sits before the path: after `://` in a URL, before the
-# first `:` in scp form; a bare path has neither. Userinfo is stripped from the
-# authority alone, so an `@` in the path cannot spoof the host.
+# Userinfo is stripped from the authority alone, so an `@` in the path cannot spoof the host.
 case "$ORIGIN" in
   *://*)
     HOST=${ORIGIN#*://}
@@ -105,10 +103,7 @@ if [ "$FIXIT" = "true" ]; then
     exit 1
   fi
   print_newline
-  # git resolves the author, the committer and `commit.gpgsign` BEFORE the
-  # pre-commit hook runs, so a key this run changes reaches only the next
-  # commit — the one in flight would still land under the old identity,
-  # unsigned. A run that changed anything therefore fails on purpose.
+  # git resolved the identity before this hook ran, so a run that changed a key fails on purpose.
   CHANGED=false
   for spec in "user.name=${!VAR_NAME}" "user.email=${!VAR_EMAIL}" "user.signingkey=${!VAR_KEY}" commit.gpgsign=true tag.gpgsign=true gpg.format=ssh; do
     key=${spec%%=*}

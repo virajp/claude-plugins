@@ -3,50 +3,13 @@
 #MISE description="The merge both code:merge:* tasks run"
 #MISE hide=true
 
-# One function, two entrypoints. `code/merge/develop` and `code/merge/main`
-# differ only in the branches they name, and keeping the sequence here is what
-# stops them drifting into two subtly different merges.
-#
-# **The policy this enforces is the repo's branch model.** Work is authored on
-# feature branches, integrated on `develop`, and reaches `main` only by merge:
-#
-#   - nothing merges *from* `main` — nothing is authored there to merge
-#   - only `develop` merges *into* `main` — a feature branch that skipped
-#     `develop` has not been through the branch the pipeline builds
-#
-# It merges `--no-ff` on purpose. A fast-forward would leave `main` and
-# `develop` as the same commit with no record that a merge happened, and the
-# merge commit is what makes "what shipped" a question git can answer.
-#
-# **The landing model chooses HOW the source reaches the destination, never
-# WHETHER.** It is set per destination branch — `MERGE_MODEL_DEVELOP` for
-# `develop`, `MERGE_MODEL_MAIN` for `main` — and the branch model above holds
-# under both values, every predicate below running under both:
-#
-#   direct  merge locally and push the destination. A solo repo, or one whose
-#           review happens before the branch lands.
-#   pr      push the branch and open a pull request against the destination.
-#           Nothing merges locally; the forge is what merges.
-#
-# Both are marked positions in `.config/mise/conf.d/env.toml`, so the choice is the repo's
-# and this file names no forge until it has to open a request. An older file
-# carrying the single `MERGE_MODEL` key is read as both values, with a warning.
-
 set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/checks"
 
-# The gate every merge passes before it touches a branch: run the hooks over the
-# WHOLE tree and fail if any of them rewrote a file.
-#
-# This is a safety net, not the working gate. `code:precommit` is what a human
-# runs before staging, so fixups land inside the commit that caused them; by the
-# time a merge runs, a hook that still has something to say means a commit went
-# in without one. Refusing here — rather than committing the fixup, or amending
-# it onto someone else's commit — leaves the repair on the branch where it
-# belongs and names the files that need it.
+# Run the hooks over the whole tree and fail if any rewrote a file: the repair belongs on the branch.
 precommit_safety_net() {
   local config="${MISE_PROJECT_ROOT}/.config/pre-commit-config.yaml"
 
@@ -66,12 +29,7 @@ precommit_safety_net() {
     hooks_passed=false
   fi
 
-  # A non-zero exit means one of two different things — a hook failed outright,
-  # or a formatting hook rewrote a file and reported the rewrite as a failure —
-  # and the status cannot tell them apart. The working tree can: the checks
-  # above already refused a dirty tree, so anything dirty NOW was written by a
-  # hook just then. That case is the common one and gets the file list, so the
-  # answer to "what do I do about this" is on screen.
+  # The checks refused a dirty tree, so anything dirty now was written by a hook.
   local dirty
   dirty="$(git status --porcelain)"
   if [ -n "${dirty}" ]; then
@@ -93,12 +51,7 @@ precommit_safety_net() {
   print_ok
 }
 
-# The `pr` half of the landing model: publish the branch and let the forge
-# merge it.
-#
-# Nothing is checked out and no branch is merged, so the main-worktree hop the
-# direct path needs does not apply here — the one thing this changes locally is
-# the source branch's upstream.
+# The `pr` half of the landing model: publish the branch and let the forge merge it.
 open_pull_request() {
   local DESTINATION_BRANCH="$1"
   local SOURCE_BRANCH="$2"
@@ -111,9 +64,7 @@ open_pull_request() {
   fi
   print_ok
 
-  # `gh` is tried first when both are installed. Two forge CLIs on one machine is
-  # far more often a GitHub repo on a laptop that still has glab than the
-  # reverse, and the request has to be opened against ONE forge.
+  # `gh` first when both forge CLIs are installed.
   if command -v gh >/dev/null 2>&1; then
     print_yellow "Opening a pull request into ${DESTINATION_BRANCH} ..."
     gh pr create --base "${DESTINATION_BRANCH}" --head "${SOURCE_BRANCH}" --fill
@@ -121,9 +72,7 @@ open_pull_request() {
     print_yellow "Opening a merge request into ${DESTINATION_BRANCH} ..."
     glab mr create --target-branch "${DESTINATION_BRANCH}" --source-branch "${SOURCE_BRANCH}" --fill
   else
-    # Not a failure. The branch is pushed, which was the part that needed a
-    # shell; opening the request is a click, and no forge CLI on PATH is the
-    # normal state of a machine whose forge has neither.
+    # Not a failure: the branch is pushed, and opening the request is a click.
     print_warn "No forge CLI on PATH — the branch is pushed, no request was opened."
     print_yellow "  branch:      ${SOURCE_BRANCH}"
     print_yellow "  destination: ${DESTINATION_BRANCH}"
@@ -136,24 +85,14 @@ open_pull_request() {
 
 # merge_to_destination_branch <destination> [<source>]
 #
-# <source> defaults to the branch you are standing on, which is the shape
-# `code:merge:develop` uses. `code:merge:main` names both, and the checks below
-# still read the CURRENT branch — merging develop into main is only allowed from
-# develop, so where you launched it from is part of the question.
+# <source> defaults to the current branch; the checks still read the CURRENT branch.
 merge_to_destination_branch() {
   local DESTINATION_BRANCH="$1"
   local CURRENT_BRANCH
   CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
   local SOURCE_BRANCH="${2:-${CURRENT_BRANCH}}"
 
-  # The model is the DESTINATION's: `MERGE_MODEL_DEVELOP` when landing on
-  # `develop`, `MERGE_MODEL_MAIN` when landing on `main`. A repo shaped before
-  # the pair existed carries the single `MERGE_MODEL`, which stands in for
-  # whichever is unset — read with a warning, so the reshape that writes the
-  # pair is not forgotten. `direct` is the behaviour every repo had before any
-  # setting existed, so nothing set at all merges locally exactly as before.
-  # Anything that is not `pr` reads as `direct` rather than erroring: a typo in
-  # a config value should not stand between a branch and its merge.
+  # The DESTINATION's model; the legacy MERGE_MODEL stands in for an unset one, and anything but `pr` is `direct`.
   local MERGE_MODE=""
   case "${DESTINATION_BRANCH}" in
     develop) MERGE_MODE="${MERGE_MODEL_DEVELOP:-}" ;;
@@ -190,11 +129,7 @@ merge_to_destination_branch() {
     exit 1
   fi
 
-  # The destination has to EXIST, and it is asked here rather than discovered at
-  # the checkout below. A repo whose branches were never laid out — one commit on
-  # `main` and no `develop` — otherwise passes every predicate above, runs the
-  # whole-tree hook pass, hops to the main worktree, and only then fails on
-  # `git checkout`, having spent minutes to say something knowable in one command.
+  # Asked up front, not discovered at the checkout after the whole-tree hook pass.
   if ! git show-ref --verify --quiet "refs/heads/${DESTINATION_BRANCH}"; then
     print_error "ERROR: branch '${DESTINATION_BRANCH}' does not exist locally."
     print_warn "- this repo's branch model needs both 'develop' and 'main': work is"
@@ -205,11 +140,7 @@ merge_to_destination_branch() {
     exit 1
   fi
 
-  # A branch checked out in a linked worktree cannot be checked out again in
-  # another, so the checkout below has to happen in the main worktree. Where we
-  # end up afterwards differs by case: from a linked worktree the main worktree
-  # goes back to whatever branch it was on, and from the main worktree we return
-  # to the branch the merge was launched from.
+  # A branch checked out in a linked worktree cannot be checked out in another, so the checkout happens in the main one.
   local IS_WORKTREE=false
   local MAIN_WORKTREE_PATH=""
   local MAIN_WORKTREE_BRANCH=""
@@ -243,15 +174,7 @@ merge_to_destination_branch() {
   fi
   print_ok
 
-  # Unpushed work is refused rather than pushed for us: the merge is about to
-  # publish this branch's commits into the destination, and a commit the remote
-  # has never seen is one the pipeline has never built. Only the SOURCE branch is
-  # asked — an unrelated local branch's unpushed work is not this merge's
-  # business.
-  #
-  # Under `pr` the question does not arise: publishing the source branch is that
-  # path's FIRST act, so refusing unpushed commits would refuse the normal case —
-  # a branch committed a minute ago and not yet pushed anywhere.
+  # Only under `direct`: `pr` publishes the source branch as its first act.
   if [ "${MERGE_MODE}" = "direct" ]; then
     print_wait "Checking if any unpushed commits exist on ${SOURCE_BRANCH} ... "
     if is_local_branch "${SOURCE_BRANCH}"; then
@@ -267,8 +190,7 @@ merge_to_destination_branch() {
 
   precommit_safety_net
 
-  # The fork. Everything above is the policy both models share; everything below
-  # is the local merge, which only `direct` performs.
+  # Everything below is the local merge, which only `direct` performs.
   if [ "${MERGE_MODE}" = "pr" ]; then
     open_pull_request "${DESTINATION_BRANCH}" "${SOURCE_BRANCH}"
     return 0
@@ -292,8 +214,7 @@ merge_to_destination_branch() {
   fi
   print_ok
 
-  # Tags come with it because `main` is where releases are cut, and a stale tag
-  # list is how a version gets reused.
+  # Tags too: a stale tag list is how a version gets reused.
   print_wait "Pulling latest changes from ${DESTINATION_BRANCH} branch ... "
   if ! git pull origin "${DESTINATION_BRANCH}" --tags >/dev/null 2>&1; then
     [ -n "${RESTORE_BRANCH}" ] && git checkout "${RESTORE_BRANCH}" -q >/dev/null 2>&1
@@ -303,9 +224,7 @@ merge_to_destination_branch() {
   fi
   print_ok
 
-  # **A conflict stops here, and the tree is left mid-merge on purpose.**
-  # Aborting would discard the one piece of information worth having — which
-  # files disagree — and resolving it is a judgement call this task cannot make.
+  # A conflict leaves the tree mid-merge on purpose: aborting would discard which files disagree.
   print_wait "Merging ${SOURCE_BRANCH} into ${DESTINATION_BRANCH} ... "
   if ! git merge --no-ff --no-edit "${SOURCE_BRANCH}" >/dev/null 2>&1; then
     print_error "ERROR"

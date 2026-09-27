@@ -10,9 +10,6 @@ set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/placeholder"
 
-# The one verb of `setup:deps:*` every package manager has, and the one every
-# overlay must fill. `--frozen` is part of the contract, not an option: a fresh
-# worktree and the pipeline both install without moving the lockfile, and a
-# manager whose install is frozen by default simply ignores the flag.
+# `--frozen` is part of the contract: an overlay honours it.
 
 placeholder_notice "setup:deps:install" "no package manager is pinned for this repo, so there are no packages to install"

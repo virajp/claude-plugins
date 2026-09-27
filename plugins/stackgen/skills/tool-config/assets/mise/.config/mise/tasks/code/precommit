@@ -9,18 +9,7 @@ set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-# **Run this BEFORE you stage.** The hooks rewrite files — a formatter reflows,
-# a linter fixes — and the whole question is where those rewrites land. Run
-# against the working tree first and they fold into the commit you were about to
-# make; run them from the git hook after staging and you get a failed commit and
-# a second "fix hooks" commit that means nothing to anyone reading the history.
-#
-# So the default file set is the working tree's changed files — staged AND
-# unstaged, plus what is untracked — and not the index. `--diff-filter=d` drops
-# deletions, which have no file left to check.
-#
-# `--all` is the safety-net form the merge tasks use, where the question is
-# whether anything got past this.
+# Run this BEFORE you stage, so the hooks' rewrites fold into the commit.
 
 CONFIG=".config/pre-commit-config.yaml"
 

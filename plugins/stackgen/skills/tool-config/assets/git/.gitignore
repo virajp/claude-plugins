@@ -1,5 +1,4 @@
-# The repo's ignore set. Sections are banners; keep them, and keep the
-# why-comments — a pattern nobody can explain is a pattern nobody dares delete.
+# The repo's ignore set, in banner sections.
 
 # >>> git
 # ==== macOS ====
@@ -11,17 +10,13 @@
 .Trashes
 
 # ==== Editors ====
-# .idea/ is per-machine index and workspace state, regenerated on open.
-# .vscode/ is deliberately NOT here: what a repo puts there — extensions.json,
-# launch.json, tasks.json — is hand-written and shared, so whether to commit it
-# is the repo's call, not this block's.
+# .vscode/ is deliberately not here: what a repo puts there is shared.
 .idea/
 *.swp
 *.swo
 
 # ==== AI tooling ====
-# One developer's agent state. The shared half — settings.json, skills/,
-# agents/ — stays tracked, because it is repo configuration.
+# One developer's agent state; the shared half of .claude/ stays tracked.
 .claude/settings.local.json
 .claude/worktrees/
 .claude/cache/
@@ -30,10 +25,7 @@
 .opencode/
 
 # ==== mise ====
-# The uncommitted local override and the local lock mise writes beside it.
-# Bare names match at any depth, so they cover the root and `.config/` alike;
-# the last two stay spelled out because their file names do not start with
-# `mise`, and a bare `config.local.toml` would be far too generic.
+# Bare names match at any depth; the last two are spelled out, their names not starting with `mise`.
 mise.local.toml
 mise.*.local.toml
 .mise.local.toml
@@ -44,9 +36,7 @@ mise.*.local.lock
 .config/mise/conf.d/*.local.toml
 
 # ==== Secrets and env ====
-# A value never enters the tree. .env.example is the names-only template and
-# IS tracked, so its negation has to stay after the .env.* pattern that would
-# otherwise swallow it.
+# .env.example is tracked: its negation stays after `.env.*`.
 .env
 .env.*
 !.env.example

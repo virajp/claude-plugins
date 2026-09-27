@@ -6,18 +6,8 @@
 #USAGE flag "--all" help="Also set up every member project"
 #USAGE flag "--upgrade" help="Dev only: bump the mise lockfile for every environment and update the formatter plugins"
 
-# One flag per MEMBER REPO is added here when this repo has members — each
-# submodule, or each path the `MEMBERS` list names — each flag named by that
-# member's own slug, never by a project id. It is the same list `[shell_alias]`
-# gets its `setup-<slug>` aliases from, and the orchestrator that shapes the
-# repo fills both from it:
-#
-#   #USAGE flag "--backend" help="Set up the backend project"
-#   #USAGE flag "--frontend" help="Set up the frontend project"
-#
-# A single-project repo has no members and therefore no flags beyond `--all`,
-# which is then a no-op. Leave it as shipped rather than deleting it: `--all` is
-# what a caller passes without knowing the repo's shape.
+# One flag per member repo, named by its slug, goes below this comment:
+#   #USAGE flag "--<slug>" help="Set up the <slug> project"
 
 set -euo pipefail
 # shellcheck source=/dev/null
@@ -29,21 +19,7 @@ if [ -z "${MISE_ENV:-}" ]; then
   exit 1
 fi
 
-# The entry point a human runs — on clone, and to re-sync a machine afterwards.
-# Aliased as `setup` in `[shell_alias]`.
-#
-# This file is the ORCHESTRATOR and names no tool. Every step is a task the
-# stack overlay fills; a step with no fill announces itself and the run
-# continues. Keep it that way — a tool named here is a tool every repo
-# scaffolded from this pack inherits whether or not it chose it.
-#
-# **Keep it idempotent: re-running must converge, never error.** It is the
-# re-sync command as much as the bootstrap one, so a step that only works on a
-# clean machine is a step that breaks the second run.
-#
-# **It rewrites no committed state unless the user asks.** Tools install from
-# the lockfile; `--upgrade` is the one rewriting flag it passes on, and only
-# when the user passed it — to `setup:mise` here and to every member below.
+# Idempotent and non-destructive: `--upgrade` is the one rewriting flag, passed on only when given.
 UPGRADE_ARGS=()
 [[ "${usage_upgrade:-false}" == "true" ]] && UPGRADE_ARGS+=("--upgrade")
 
@@ -65,23 +41,11 @@ mise run setup:precommit
 print_header "Setting up AI tooling ..."
 mise run setup:ai
 
-# Last, and after the hooks are wired: the editor is what the repo is used FROM
-# once everything that gates it is in place, and the task is silent on a machine
-# without the editor, so putting it here costs a headerless no-op at worst.
+# Last: silent on a machine without the editor.
 print_header "Setting up the editor ..."
 mise run setup:vscode
 
-# Members are set up only on request: the common case is working in one project,
-# and recursing by default turns every setup into the slowest one. Each member
-# runs its OWN task library through `mise run --cd`, so a polyglot repo gets one
-# library per project rather than one library that knows every language.
-#
-# The member list comes from `_scripts/helpers`' `members`, which answers for
-# either linkage — the repo's submodules, or the `MEMBERS` list in
-# `.config/mise/conf.d/env.toml` — so this loop covers both and
-# `code:worktrees` walks the same members this does. A repo that wants a member
-# set up on its OWN flag rather than on `--all` adds one `mise run --cd <path>`
-# per id beside the loop, guarded by that id's flag.
+# Members only on request, each running its OWN task library through `mise run --cd`.
 
 if [[ "${usage_all:-false}" == "true" ]]; then
   while read -r member; do
