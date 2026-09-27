@@ -100,9 +100,11 @@ always written: it lands after the pattern it re-includes, whichever block
 holds that. The rule holds within one call too: a pattern a template repeats
 is written at its first place only.
 
-**A requester's block holds only its call's lines.** A template block carries
-the template's comments and blank lines inside it, trimmed at either end; a
-pattern block carries the patterns alone. After filtering, a comment run left
+**A requester's block holds only its calls' lines** — its template's first,
+then its own patterns, so a pack may follow its template with a negation that
+re-includes what the template ignores, `!pubspec.lock`. A template carries its
+comments and blank lines inside the block, trimmed at either end; a pattern
+call carries the patterns alone. After filtering, a comment run left
 with no pattern below it before the next blank line is dropped, and a run of
 blank lines is collapsed to one. Every template line loses its trailing
 whitespace before it is written and hashed, as the commit gate's
@@ -115,6 +117,15 @@ written: it is a **conflict row** naming the line and the upstream commit,
 `keep-existing` (the line is dropped) or `overwrite` (written, on the
 person's word). `!.env.example`, the base's own, is the one negation it
 leaves alone.
+
+**No fetched line re-ignores what must be tracked.** A template's positive
+pattern that matches a path the `git` base negates — `.env*` over
+`.env.example` — or a file the repo commits by this skill's or its packs'
+design — `.config/mise/mise.lock`, and the lockfile the requester's pack
+commits, `*.lock` over `pubspec.lock` — is the same **conflict row**, in the
+same shape: `keep-existing` drops the line, `overwrite` writes it on the
+person's word. A line the requester's own negation, later in its block,
+already re-includes the path for is no conflict and is written.
 
 **Ignoring is not allowlisting.** A secret that is ignored is a secret that was
 never scanned, so an ignore line is never the answer to a scanner finding, and
