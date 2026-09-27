@@ -4,7 +4,7 @@
 #MISE hide=true
 
 #USAGE flag "--upgrade" help="Dev only: bump the lockfile for every environment with mise lock --bump and update the formatter plugins with dprint config update"
-#USAGE flag "--lock-only" help="Write the lockfile only when it is missing, then exit without reshimming, installing or running doctor"
+#USAGE flag "--lock-only" help="Write the lockfile only when it is missing, installing only the uv and Python it locks with, then exit without reshimming, installing the rest or running doctor"
 
 set -euo pipefail
 # shellcheck source=/dev/null
@@ -67,19 +67,25 @@ write_missing_lock() {
   if [ "$NO_LOCKFILE" = "true" ]; then
     print_subheader "No lockfile at .config/mise/mise.lock — locking MISE_ENV=${LOCK_ENVS} once ..."
     # Python dependency locks need the pinned uv and Python, not PATH's; unlocked, as ci's `locked = true` is in the union and there is no lock yet.
+    local tool uv_python=""
+    local sidecars="${CONFIG_DIR}/mise/locks" had_sidecars=false
+    [ -e "$sidecars" ] && had_sidecars=true
     for tool in uv python; do
-      if [ -n "$(MISE_LOCKED=false MISE_ENV="$LOCK_ENVS" mise ls --current "$tool" 2>/dev/null)" ]; then
+      # --local: declared by this repo's config, never the user's global one.
+      if [ -n "$(MISE_LOCKED=false MISE_ENV="$LOCK_ENVS" mise ls --current --local "$tool" 2>/dev/null)" ]; then
         MISE_LOCKED=false MISE_ENV="$LOCK_ENVS" mise install "$tool"
         # Named outright: on a first lock uv does not find the just-installed Python on its search path.
-        if [ "$tool" = "python" ]; then
-          UV_PYTHON="$(MISE_LOCKED=false MISE_ENV="$LOCK_ENVS" mise which python)"
-          export UV_PYTHON
-        fi
+        [ "$tool" = "python" ] && uv_python="$(MISE_LOCKED=false MISE_ENV="$LOCK_ENVS" mise which python)"
       fi
     done
-    if ! MISE_ENV="$LOCK_ENVS" mise lock; then
+    # A subshell scopes UV_PYTHON to the lock, and leaves it unset when no Python is pinned.
+    if ! (
+      [ -n "$uv_python" ] && export UV_PYTHON="$uv_python"
+      MISE_ENV="$LOCK_ENVS" mise lock
+    ); then
       rm -f "$LOCKFILE"
-      print_error "mise lock failed — the partial lockfile was removed, so the next run locks again."
+      [ "$had_sidecars" = "false" ] && rm -rf "$sidecars"
+      print_error "mise lock failed — what it wrote was removed, so the next run locks again."
       exit 1
     fi
   fi

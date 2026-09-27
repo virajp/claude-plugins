@@ -95,7 +95,8 @@ needs it**.
   `lockfile_platforms = ["linux-x64", "macos-arm64"]`. `min_version` is the
   mise release `env_conf_d` was tested on.
 - **`conf.d/tools.dev.toml`** — what a human needs locally that a pipeline
-  does not: formatters, linters, scanners, pre-commit, the graph tool and the uv and Python it locks with.
+  does not: formatters, linters, scanners, pre-commit, the graph tool and
+  the uv and Python it locks with.
 - **`conf.d/shell_alias.dev.toml`** — the repo's **shell aliases**, and
   nowhere else. Aliases need `mise activate`, which is a human's shell; CI
   never loads this file, so nothing in the pipeline may depend on one. Three
@@ -213,7 +214,8 @@ manager at run time. A value committed here is in the history.
 `conf.d/tools.dev.toml` — dev only, since a pipeline never builds the graph.
 `uv = { version = "latest" }` sits beside it: mise's pipx backend installs
 through uv, so a repo with no Python still installs the graph tool.
-`python = { version = "latest" }` too: uv needs a Python >= 3.10 to lock graphifyy's dependencies.
+`python = { version = "latest" }` too: uv needs a Python >= 3.10 to lock
+graphifyy's dependencies.
 The PyPI name really is `graphifyy`, double y; never correct it. `code:graph`
 refreshes the graph — code only, detached, a no-op in a linked worktree,
 mid-rebase or on a commit that touched only `graphify-out/`; a first commit,
