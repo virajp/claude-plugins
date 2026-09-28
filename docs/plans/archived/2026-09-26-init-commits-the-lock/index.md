@@ -238,6 +238,11 @@ User rulings, 2026-09-27, after landing:
   sidecars belong in git, so a *lock ignored* state is a defect, not an outcome.
   The missing "unchanged" report state stays open with it.
 
+Closed 2026-09-28, at archive: G3, G7 and G9 landed with
+`2026-09-28-one-pin-and-tracked-lock` — graphify's needs name python and uv, a
+clashing pin is a keep-which-version row pinned once, lock files are tracked
+(only `**/mise.local.lock` ignored) and the Lock line has a `none` state.
+
 ## Run log
 
 | Wave | Unit           | Model | Round      | Outcome     | Detail                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Commit                      |
