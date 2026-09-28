@@ -23,27 +23,27 @@
 >   on `all` and on a reshape, as well as on `add tool`. A clash is a conflict
 >   row whose two answers are the repo's existing version or the base's
 >   `latest`; the winner is pinned once.
-> - Decision 4: `.config/mise/mise.lock` and `.config/mise/locks/` are never
->   ignored; only `mise.local.lock` is, like `*.local.toml`. When either is
->   ignored, init appends the negation lines `!/.config/mise/mise.lock` and
->   `!/.config/mise/locks/` at the end of `.gitignore`, listed in the plan the
->   person consents to once. When a parent folder is ignored, where a negation
->   cannot reach, that rule's line gets a removal row in the same consent.
+> - Decision 4 (ruled at resume 2026-09-28, reversing the approved ruling): no
+>   lock file is ignored except `mise.local.lock`, at any depth. The shipped
+>   `.gitignore` carries one lock line, `**/mise.local.lock`, in place of
+>   `mise.local.lock`, `mise.*.local.lock` and `.mise.local.lock`. When a repo's
+>   `.gitignore` has a line ignoring any lock file (e.g. `*.lock`, `mise.lock`,
+>   `locks/`), init removes that line, one removal row per line in the one
+>   consent. No negation lines.
 > - Decision 5: The ignore fix runs before `setup:mise --lock-only`, and *lock
 >   ignored* is no longer a Lock state.
 > - Decision 6: The Lock report line reads `none` for a repo whose lock step
 >   changed nothing.
-> - Decision 8: Any sentence a unit adds is one line.
+> - Decision 8: Any sentence a unit adds is one sentence, wrapped at the fold.
 
 ## Edits
 
 1. **`new-repo.md` §11(b)** — before the lock step, the ignore fix of decisions
-   4 and 5: detect with `git check-ignore` (`-v` names the rule and its
+   4 and 5: detect with `git check-ignore -v` (it names the rule and its
    `file:line`) for `.config/mise/mise.lock` and a path under
-   `.config/mise/locks/`; append the two negation lines exactly as decision 4
-   writes them; when a parent folder is ignored, the removal row. The plan shown
-   before the one consent names the negation or the row. Remove the *lock
-   ignored* state and its `git check-ignore -q` skip.
+   `.config/mise/locks/`; each matching line is one removal row in the plan
+   shown before the one consent, and is removed on that consent. No negation
+   lines. Remove the *lock ignored* state and its `git check-ignore -q` skip.
 2. **`new-repo.md`, the report** (near :1069) — the Lock line's states: staged,
    `none` (decision 6), *lock deferred*, *lock failed — not committed*; no *lock
    ignored*.
@@ -52,7 +52,7 @@
    inside the one consent with the two answers of decision 2.
 4. **`existing-repo.md`** — the same row on a reshape (near :212-224, :724-729);
    its lock paragraph (:1153-1156) still defers to §11(b).
-5. **`SKILL.md`** — the plan spec names the negation/removal row and the
+5. **`SKILL.md`** — the plan spec names the lock-ignore removal rows and the
    base-tool rows; the report spec (near :842) lists the Lock states of edit 2.
 6. **`doctor/references/code-intelligence.md:16`** — graphify's prerequisite
    names python and uv (decision 1).
@@ -60,8 +60,8 @@
 ## Verification
 
 - `MISE_ENV=dev mise run p:plugins:check` green
-- the two negation lines appear in `new-repo.md` exactly as decision 4 writes
-  them — the orchestrator's scratch-repo gate copies them from there
+- the removal steps in `new-repo.md` are concrete enough for the orchestrator's
+  scratch-repo gate to reproduce
 
 ## Guardrails
 
