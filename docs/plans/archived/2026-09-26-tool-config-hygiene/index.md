@@ -319,6 +319,14 @@ none.
 
 ## Gaps surfaced during execution
 
+**Resolved 2026-09-28, at archive, on the user's ruling:** gap 8 fixed in the
+run; gaps 1, 3 and 7d accepted as is; 9's lock hazard fixed by
+`2026-09-28-one-pin-and-tracked-lock`; 11's uninstall fallback is B76's. The
+rest are handed off, re-checked with current line references: B78 checker rules
+(2, 7e, 7f, 13); B79 ignore rules (4, 9's template choice, 10's orphan block,
+14); B80 drift and hygiene (5, 6, 7a-c, 7g, 10's stale passages, 11's `--force`
+re-strip, 12).
+
 1. U6 — the checker keeps a verb list, not a tool list, so `graphify` and
    `renovate` get no entry; assumed "known" means has parseable verbs.
 2. U1 — the `gitignore:<Name>` requester is assumed init-only, never a pack
