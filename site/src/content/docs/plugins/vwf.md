@@ -61,7 +61,8 @@ them at install time, and the table below gives the command for each.
 | graphify        | **required** | knowledge graph the commands rely on                  | `mise use -g pipx:graphifyy@latest`                                      |
 | node + pnpm     | **required** | runs vwf's Context7 MCP server (default runner)       | `mise use -g node@latest pnpm@latest`                                    |
 | Claude Code CLI | **required** | hosts the commands                                    | `mise use -g claude-code@latest`                                         |
-| uv              | **required** | graphify's Python runtime                             | `mise use -g uv@latest`                                                  |
+| uv              | **required** | installs graphify, through mise's pipx backend        | `mise use -g uv@latest`                                                  |
+| python          | **required** | uv locks graphify's dependencies with it (>= 3.10)    | `mise use -g python@latest`                                              |
 | rtk             | recommended  | the token-saving `rtk hook claude` Bash hook          | `brew install --formulae rtk`                                            |
 | gh              | recommended  | reads and writes the backlog project (`/vwf:backlog`) | `brew install gh`, then `gh auth login` and `gh auth refresh -s project` |
 
@@ -191,17 +192,17 @@ adopting it.
 **Dependencies**
 
 - **External prerequisites, checked at run time rather than install time.**
-  `mise`, `graphify`, `uv`, `pnpm` and `rtk` must be on your `PATH`. Nothing
-  refuses the install any more; `/vwf:setup` and `/vwf:execute` halt on a
-  missing `graphify` — and on `mise` once a stack is pinned — `/vwf:doctor`
-  reports a missing `rtk` as a **degradation**, and `uv` and `pnpm` fail later
-  in their own ways. `gh`, logged in, is needed by [`/vwf:backlog`](#vwfbacklog)
-  (the `project` scope), by [`/vwf:init`](#vwfinit)'s forge pass (the `repo`
-  scope — `project` only for its backlog step; `glab` on GitLab) and by the
-  doctor predicate that reads the forge state back; its absence is a
-  **degradation** too, and init falls back to a by-hand list. Dependency
-  auto-install/enable needs Claude Code ≥ 2.1.143. See
-  [Prerequisites](#prerequisites).
+  `mise`, `graphify`, `uv`, `python`, `pnpm` and `rtk` must be on your `PATH`.
+  Nothing refuses the install any more; `/vwf:setup` and `/vwf:execute` halt on
+  a missing `graphify` — and on `mise` once a stack is pinned — `/vwf:doctor`
+  reports a missing `rtk` as a **degradation**, and `uv`, `python` and `pnpm`
+  fail later in their own ways. `gh`, logged in, is needed by
+  [`/vwf:backlog`](#vwfbacklog) (the `project` scope), by
+  [`/vwf:init`](#vwfinit)'s forge pass (the `repo` scope — `project` only for
+  its backlog step; `glab` on GitLab) and by the doctor predicate that reads the
+  forge state back; its absence is a **degradation** too, and init falls back to
+  a by-hand list. Dependency auto-install/enable needs Claude Code ≥ 2.1.143.
+  See [Prerequisites](#prerequisites).
 - **Memory is written twice, so mempalace is optional.** Every memory write goes
   to both `mempalace` (a **stdio server each session spawns**, configured in the
   `env` block of `~/.claude/settings.json`) and a markdown tree under
@@ -1460,10 +1461,14 @@ to be standing on. History is never rewritten, nothing is force-pushed, and no
 verification-skipping flag is ever passed; a push the remote rejects is a
 deferral for that repo and branch, never a force.
 
-The report carries a `Lock` line per repo: *staged*, *lock deferred*, *lock
-ignored* or *lock failed — not committed*. A failed lock leaves that repo
-uncommitted; the others go on. A deferred lock is one where mise was not yet
-installed or the repo's `setup:mise` lacks `--lock-only`.
+The report carries a `Lock` line per repo: *staged*, `none`, *lock deferred* or
+*lock failed — not committed*. A failed lock leaves that repo uncommitted; the
+others go on. A deferred lock is one where mise was not yet installed or the
+repo's `setup:mise` lacks `--lock-only`, and `none` is one where the lock step
+changed no lock path. No lock file is ignored but `mise.local.lock`: each
+`.gitignore` line ignoring another lock file is a delete row from
+`/stackgen:tool-config all`, shown in the one consent and removed before the
+lock step.
 
 **Before the pass, `init` reads where each repo stands.** A repo on a branch
 takes the branch work below; a member standing on **no branch** — a detached

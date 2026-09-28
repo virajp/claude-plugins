@@ -65,25 +65,25 @@ blocker rather than a preference. Know this before you install.
   non-negotiable TDD and a coverage gate; `plan` and `execute` map each slice to
   a project in an architecture registry you author first. It will not operate on
   an ad-hoc folder.
-- **Five binaries must be on your `PATH`** — `mise`, `graphify`, `uv`, `pnpm`
-  and `rtk`. `pnpm` is only the **default** Context7 runner; `CONTEXT7_RUNNER`
-  overrides it, so a bun or npm user needs no pnpm — see
+- **Six binaries must be on your `PATH`** — `mise`, `graphify`, `uv`, `python`,
+  `pnpm` and `rtk`. `pnpm` is only the **default** Context7 runner;
+  `CONTEXT7_RUNNER` overrides it, so a bun or npm user needs no pnpm — see
   [the vwf manual](https://claude-plugins.virajp.dev/plugins/vwf/). **Nothing
-  checks this at install time**, and `/vwf:doctor` does not cover all five: it
+  checks this at install time**, and `/vwf:doctor` does not cover all six: it
   blocks on a missing `graphify`, and on a missing `mise` once any stack axis is
   pinned (and `/vwf:setup` and `/vwf:execute` halt on either), reports a missing
   language server as an ordinary finding, reports a missing `rtk` as a
   **degradation** — its hook is guarded, so the run is correct and merely costs
-  more — and says nothing at all about the Context7 runner, while `uv` matters
-  as graphify's runtime rather than on its own. Run `/vwf:doctor` first
-  regardless, but install all five rather than relying on it to tell you. A
-  sixth, `gh`, logged in, is needed by `/vwf:backlog`, which keeps the backlog
-  in a GitHub Project and wants the `project` scope, by `init`'s **forge pass**
-  (the default branch and protection on `develop` and `main` on the `repo`
-  scope, the backlog project on `project` — on a GitLab remote, `glab`), and by
-  the doctor predicate that reads that forge state back; doctor reports its
-  absence as a **degradation** with the remedy, and init prints the by-hand list
-  and carries on.
+  more — and says nothing at all about the Context7 runner, while `uv` and
+  `python` matter as graphify's runtime rather than on their own. Run
+  `/vwf:doctor` first regardless, but install all six rather than relying on it
+  to tell you. A seventh, `gh`, logged in, is needed by `/vwf:backlog`, which
+  keeps the backlog in a GitHub Project and wants the `project` scope, by
+  `init`'s **forge pass** (the default branch and protection on `develop` and
+  `main` on the `repo` scope, the backlog project on `project` — on a GitLab
+  remote, `glab`), and by the doctor predicate that reads that forge state back;
+  doctor reports its absence as a **degradation** with the remedy, and init
+  prints the by-hand list and carries on.
 - **It is opinionated on purpose.** One workflow, one set of conventions, sized
   for a solo developer or a small team — not a configurable framework for a
   large org.

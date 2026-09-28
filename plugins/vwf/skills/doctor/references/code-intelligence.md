@@ -13,8 +13,8 @@ three remain **degradations**. Check:
 - **The `graphify` CLI on `PATH`.** Missing → **blocking**, remedy
   `mise use -g pipx:graphifyy@latest` (the double-`y` is the real package name,
   not a typo). This is *missing*, not *unavailable* — there is a command to
-  suggest. Its Python/uv toolchain is a prerequisite of that remedy, not a
-  separate finding.
+  suggest. graphify needs both python and uv, prerequisites of that remedy,
+  not separate findings.
 - **A graph at each checkout root** (`graphify-out/graph.json`). Resolve it the
   way the asset does: current checkout first, then the **main checkout** via
   `git rev-parse --git-common-dir`. Absent in **both** → **blocking**, remedy

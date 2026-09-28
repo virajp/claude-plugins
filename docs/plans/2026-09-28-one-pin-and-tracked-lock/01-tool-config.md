@@ -5,7 +5,8 @@
 - **Owns:** `plugins/stackgen/skills/tool-config/SKILL.md`,
   `plugins/stackgen/skills/tool-config/references/mise.md`,
   `plugins/stackgen/skills/tool-config/references/git.md`,
-  `plugins/stackgen/skills/tool-config/assets/mise/.config/mise/conf.d/tools.dev.toml`
+  `plugins/stackgen/skills/tool-config/assets/mise/.config/mise/conf.d/tools.dev.toml`,
+  `plugins/stackgen/skills/tool-config/assets/git/.gitignore`
 - **Model:** opus
 - **Kind:** edit
 - **Read first:** index.md's Facts; `SKILL.md` on conflict rows (:66-71, :89-91,
@@ -25,13 +26,14 @@
 > - Decision 3: A tool one environment needs is pinned in
 >   `.config/mise/conf.d/tools.<env>.toml`; a tool several environments need is
 >   pinned in `.config/mise/conf.d/tools.toml`.
-> - Decision 4: `.config/mise/mise.lock` and `.config/mise/locks/` are never
->   ignored; only `mise.local.lock` is, like `*.local.toml`. When either is
->   ignored, init appends the negation lines `!/.config/mise/mise.lock` and
->   `!/.config/mise/locks/` at the end of `.gitignore`, listed in the plan the
->   person consents to once. When a parent folder is ignored, where a negation
->   cannot reach, that rule's line gets a removal row in the same consent.
-> - Decision 8: Any comment or sentence a unit adds is one line.
+> - Decision 4 (ruled at resume 2026-09-28, reversing the approved ruling): no
+>   lock file is ignored except `mise.local.lock`, at any depth. The shipped
+>   `.gitignore` carries one lock line, `**/mise.local.lock`, in place of
+>   `mise.local.lock`, `mise.*.local.lock` and `.mise.local.lock`. When a repo's
+>   `.gitignore` has a line ignoring any lock file (e.g. `*.lock`, `mise.lock`,
+>   `locks/`), init removes that line, one removal row per line in the one
+>   consent. No negation lines.
+> - Decision 8: Any sentence a unit adds is one sentence, wrapped at the fold.
 
 ## Edits
 

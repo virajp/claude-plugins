@@ -131,6 +131,14 @@ needs it**.
 `tools.toml`: the same tool at two versions in two environment files locks
 one version, and the other environment's locked install fails.
 
+**`all` checks every pin its base block lands**, on a fresh repo and on a
+reshape alike, as `add tool` does for one. A tool the base block pins that the
+repo already pins in any tools file is not written twice: it is a conflict row
+naming the file, the repo's version and the base's `latest`. `keep-existing`
+keeps the repo's version; `overwrite` takes the base's `latest`. The winner is
+pinned once — in `conf.d/tools.<env>.toml` when one environment needs it, in
+`conf.d/tools.toml` when several do — and the other pin is removed.
+
 **A tool CI runs belongs in `tools.toml`.** The dev files' job is what a
 laptop needs and a runner does not.
 
@@ -216,10 +224,10 @@ manager at run time. A value committed here is in the history.
 
 `"pipx:graphifyy" = { uvx = true, version = "latest" }` is in the base's
 `conf.d/tools.dev.toml` — dev only, since a pipeline never builds the graph.
-`uv = { version = "latest" }` sits beside it: mise's pipx backend installs
-through uv, so a repo with no Python still installs the graph tool.
-`python = { version = "latest" }` too: uv needs a Python >= 3.10 to lock
-graphifyy's dependencies.
+The graph tool needs both `uv = { version = "latest" }` and
+`python = { version = "latest" }`, pinned beside it: mise's pipx backend
+installs through uv, and uv needs a Python >= 3.10 to lock graphifyy's
+dependencies.
 The PyPI name really is `graphifyy`, double y; never correct it. `code:graph`
 refreshes the graph — code only, detached, a no-op in a linked worktree,
 mid-rebase or on a commit that touched only `graphify-out/`; a first commit,
@@ -423,7 +431,9 @@ A version is a mise version spec — an exact version, a prefix, or `latest`.
 **One pin per tool across the tools files**: when the name is already pinned
 in any tools file — another block or a user line — the call is not written
 and is shown as a conflict row naming the file and whose pin it is; the user
-settles it, and a pin two environments need moves to `tools.toml`.
+settles it, and a pin two environments need moves to `tools.toml`. `all`
+runs the same check for its base block's pins ([what goes
+where](#what-goes-where)).
 
 **`add env`** writes `<KEY> = "<value>"`; the value may be given quoted or
 bare, as above. A requester's own value may be a template —
@@ -496,7 +506,8 @@ step is a row in the call's plan; nothing is dropped unseen.
   every other table into its `conf.d` section file, inline `[tasks.*]` into
   `conf.d/tasks.toml`. What the base block already says is dropped as a
   duplicate; everything else lands as the user's lines, outside every block.
-  The emptied file is deleted.
+  A tool it pins at another version than the base's is the one-pin conflict
+  row ([what goes where](#what-goes-where)). The emptied file is deleted.
 - **A pack's old fragment** — a `conf.d/<name>.toml` whose `<name>` is no
   section, the file a pack once copied — is split into `<name>`'s blocks in
   the section files, the values its machine keys held carried over, and the

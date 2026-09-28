@@ -29,9 +29,7 @@
 mise.local.toml
 mise.*.local.toml
 .mise.local.toml
-mise.local.lock
-mise.*.local.lock
-.mise.local.lock
+**/mise.local.lock
 .config/mise/config*.local.toml
 .config/mise/conf.d/*.local.toml
 

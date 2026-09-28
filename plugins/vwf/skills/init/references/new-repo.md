@@ -107,8 +107,11 @@ rows* section. During the survey, `init` runs
 `/stackgen:tool-config preview all <the same key=value arguments>` in each
 repo and prints the rows it returns — numbered `r1`, `r2`, … — in that
 repo's section under **Tool-config rows**. Each conflict or drift row is
-asked inside the plan, with the answer names the preview gave it. On the one
-consent, `init` runs `/stackgen:tool-config all <the same arguments>` with
+asked inside the plan, with the answer names the preview gave it. A tool the
+base mise block pins and the repo already pins is a conflict row too, its two
+answers the repo's version or the base's `latest`, and the winner is pinned
+once. On the one consent, `init` runs
+`/stackgen:tool-config all <the same arguments>` with
 `answers=<id>:<answer>,…` last — `ok` for every create, write, fold, move or
 delete row, the user's pick for every conflict or drift row. The skill
 refuses the whole call when `answers=` misses a row, names an unknown one or
@@ -714,6 +717,17 @@ happened to be standing on. A fresh repository is on `develop` already, from
 §1, and takes the table's first row after the commit instead. This is the
 order [existing repo](existing-repo.md)'s git pass keeps too.
 
+**The ignore fix is already in, before the lock.** No lock file is ignored
+except `mise.local.lock`, at any depth, which the shipped `**/mise.local.lock`
+line covers. The removal is `/stackgen:tool-config`'s, not `init`'s: §2's
+`all` preview returns one delete row, answered `ok`, per `.gitignore` line
+that ignores any other lock file, shown under this repo's **Tool-config rows**
+in the one consent, and §2's apply removes each line, so it runs before
+`setup:mise --lock-only` below. After `all`, `init` runs
+`git check-ignore -v .config/mise/mise.lock`, and a rule it still names comes
+from a source no call edits, such as `.git/info/exclude` or a global excludes
+file, and is shown on this repo's report line as the person's to fix.
+
 **Then the lock, before anything is staged.** In every repo, run
 `MISE_ENV=dev mise run setup:mise --lock-only`. It writes
 `.config/mise/mise.lock` where it is missing, and fills a present one with
@@ -734,9 +748,8 @@ on, in two cases. One: §9 deferred, and the unlock is §9's. Two: the repo's
 `setup:mise` has no `--lock-only` flag — probe first, with
 `mise tasks info setup:mise` — and the unlock is `/vwf:setup reshape` with
 the task replaced. Either way the repo's line reads *lock deferred*, and says
-its first CI run needs the lock committed. Where
-`git check-ignore -q .config/mise/mise.lock` matches, no lock path is staged
-and the line reads *lock ignored*, on the same terms.
+its first CI run needs the lock committed. Where the lock step changed no lock
+path, the line reads `none`.
 
 Then, into this repo's own index: every path in **this repo's** written /
 moved / renamed lists, and nothing else. Not `git add -A`: a repo that already
@@ -1066,8 +1079,8 @@ member refused for standing detached takes its *Deferred* line instead, naming
 the branch to check out. Then one `Gitlinks staged <n>` line for the base,
 counting the member pointers (b) added to its index, which reads `none` in a
 product with no members, and one `Backlog project` line, the base's alone.
-A `Lock` line per repo reads staged, *lock deferred*, *lock ignored* or *lock
-failed — not committed*, per (b). That is the git section SKILL.md's report
+A `Lock` line per repo reads staged, `none`, *lock deferred* or *lock failed —
+not committed*, per (b). That is the git section SKILL.md's report
 specifies.
 
 ## 12 — The report
