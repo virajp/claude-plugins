@@ -285,6 +285,14 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Gaps surfaced during execution
 
+**Resolved 2026-09-28, accepted by the user at archive:** every gap below was
+closed by later plans — G1 `.config/mise/tasks/setup/all:91` forwards
+`--upgrade`; G2 `task.run_auto_install = false` and `lockfile_platforms` set in
+this repo and the shipped tool-config asset; G3 one lock,
+`.config/mise/mise.lock`; G4 init runs `MISE_ENV=dev` explicitly; G5 CI green
+since (the `@latest` wrapper stays, redundant); C1 `.config/mise.ci.toml`
+rewritten.
+
 - **G1 (wave 1, R1 round 1, plan-level, non-blocking)** — the pack's `setup:all`
   forwards `--upgrade` to the member `setup:all` loop (U1); this repo's
   `.config/mise/tasks/setup/all` does not (U2's Edit 2: "change nothing else";
