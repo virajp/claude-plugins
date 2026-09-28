@@ -279,7 +279,9 @@ none
 - U3 GAP (non-blocking):
   `docs/memory/decisions/2026-09-27-mise-local-files-ignored-by-name.md` lists
   the three old lock patterns and rejects the `**/` form this plan now ships; it
-  sits outside every Owns — a superseding decision record is advised.
+  sits outside every Owns — a superseding decision record is advised. **Closed
+  2026-09-28, at archive:** superseded by
+  `docs/memory/decisions/2026-09-28-lock-files-tracked.md`.
 
 ## Launch
 
