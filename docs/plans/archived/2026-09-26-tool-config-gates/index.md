@@ -297,6 +297,12 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Gaps surfaced during execution
 
+**Resolved 2026-09-28, at archive, on the user's ruling:** gaps 1-7, 9, 10, 12,
+13, 15, 16, 20 and 24 are fixed, moot or record a decision already taken. Gaps
+19 and 23 are handed off as backlog item B76 (the `code:graph` lock); gaps 8,
+11, 14, 17, 21 and 25, with 18 and 22 as notes, as B77 (tool-config gate rules)
+— each re-checked with current line references.
+
 1. **`pre-commit add hook` argument shape** (U3, U5, wave 1) — the plan wrote
    `<repo> <id> [stage] …`; U3 assumed `key=value` pairs, U5's grammar accepts
    `<repo> <id> [anything]`. Handed to U2 to state in
