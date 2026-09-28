@@ -11,9 +11,9 @@ backlog_pieces: []
 
 ## Status
 
-**RUNNING**
+**COMPLETE**
 
-RUNNING since 2026-09-29T00:45 in .worktrees/2026-09-29-mempalace-http-daemon
+COMPLETE 2026-09-29 — 79b95ea2 11555887 7437b68a a00fb507
 
 ## Consent
 
@@ -128,12 +128,12 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                                      | Kind | Owns                                                                                                                            | Depends on | Status  | Commit   |
-| -- | ---- | ---------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
-| U1 | 1    | [01-vwf-skills.md](01-vwf-skills.md)           | edit | `plugins/vwf/skills/mempalace/**`, `plugins/vwf/skills/doctor/**`                                                               | —          | green   | 79b95ea2 |
-| U2 | 1    | [02-checker-comment.md](02-checker-comment.md) | edit | `scripts/src/check.ts`                                                                                                          | —          | green   | 11555887 |
-| U3 | 2    | [03-docs.md](03-docs.md)                       | edit | `site/src/content/docs/**`, `.claude/**`, `docs/memory/decisions/2026-09-29-mempalace-http-daemon.md`, `CLAUDE.md`, `readme.md` | U1, U2     | green   | 7437b68a |
-| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md)   | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`                                                     | U3         | pending |          |
+| Id | Wave | Unit file                                      | Kind | Owns                                                                                                                            | Depends on | Status | Commit   |
+| -- | ---- | ---------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ | -------- |
+| U1 | 1    | [01-vwf-skills.md](01-vwf-skills.md)           | edit | `plugins/vwf/skills/mempalace/**`, `plugins/vwf/skills/doctor/**`                                                               | —          | green  | 79b95ea2 |
+| U2 | 1    | [02-checker-comment.md](02-checker-comment.md) | edit | `scripts/src/check.ts`                                                                                                          | —          | green  | 11555887 |
+| U3 | 2    | [03-docs.md](03-docs.md)                       | edit | `site/src/content/docs/**`, `.claude/**`, `docs/memory/decisions/2026-09-29-mempalace-http-daemon.md`, `CLAUDE.md`, `readme.md` | U1, U2     | green  | 7437b68a |
+| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md)   | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`                                                     | U3         | green  | a00fb507 |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -238,8 +238,10 @@ under 1500 characters:
 | —    | acceptance         | —     | 1     | skipped     | why: no `covers:` — no blueprint slice, no acceptance criteria                                                                                                                                                                                                                                                                                                                                                                                         | —        |
 | —    | ux                 | —     | 1     | skipped     | why: no `covers:` — no Screens contract                                                                                                                                                                                                                                                                                                                                                                                                                | —        |
 | —    | reconcile          | —     | 1     | skipped     | why: no `covers:` (no stamps) and no `code` unit (nothing to persist); the decision record is U3's                                                                                                                                                                                                                                                                                                                                                     | —        |
-| 3    | U4 gates-and-bump  | opus  | 1     | pass        | edit: vwf 20.0.0 → 20.0.1; marketplace regenerated (vwf ref and version only); site/package.json 1.1.47 confirmed, tag absent; all 7 gate lines green; GAP formatter re-padded the orchestrator's run-log rows in index.md — kept                                                                                                                                                                                                                      | —        |
+| 3    | U4 gates-and-bump  | opus  | 1     | pass        | edit: vwf 20.0.0 → 20.0.1; marketplace regenerated (vwf ref and version only); site/package.json 1.1.47 confirmed, tag absent; all 7 gate lines green; GAP formatter re-padded the orchestrator's run-log rows in index.md — kept                                                                                                                                                                                                                      | a00fb507 |
 | 3    | R3                 | opus  | 1     | pass        | FINDINGS 0; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                                                                                                                                                              | —        |
+| —    | final gate         | —     | 1     | pass        | all 7 wave gate lines green over the finished tree (code:precommit green on its second run, after the formatter re-padded the run log)                                                                                                                                                                                                                                                                                                                 | —        |
+| —    | doctor probe       | —     | 2     | pass        | orchestrator gate re-run: exit 0 on :8765 (reachable), 7 on :1 (degradation)                                                                                                                                                                                                                                                                                                                                                                           | —        |
 
 ## Launch
 
