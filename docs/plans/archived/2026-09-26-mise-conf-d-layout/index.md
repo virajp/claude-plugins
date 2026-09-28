@@ -291,6 +291,14 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Gaps surfaced during execution
 
+**Resolved 2026-09-28, at archive, on the user's ruling:** six are closed by
+later work — G-local-lock, G-alias-scope, G-fragment-pins, G-lock-prose,
+G-dotted-headers, G-upgrade-remedy. The other ten — G-lock-extend,
+G-local-drift, G-migrate-upgrades, G-migrate-dup-pins, G-mise-use-remedy,
+G-readme-install, G-ci-auto-install, G-worktree-env, G-cd-miserc,
+G-vscode-settings — are handed off as backlog item B75, re-checked with current
+line references.
+
 Open unless marked closed. Source in brackets: *cap*, *guard*, or *ruling* (the
 plan left it open), *dropped* (a review finding on a unit no review row covers,
 recorded rather than lost).
