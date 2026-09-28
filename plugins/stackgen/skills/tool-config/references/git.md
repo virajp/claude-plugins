@@ -33,11 +33,12 @@ its why-comments kept inside the block. The mise patterns are load-bearing:
 they cover every path mise loads a local override from, and the local lock it
 writes beside one, and dropping one is how a machine-local pin ends up in a
 review. They are bare file names — `mise.local.toml`, `mise.*.local.toml`,
-`.mise.local.toml` and the matching `.lock` names — which match at any depth;
-only `.config/mise/config*.local.toml` and `.config/mise/conf.d/*.local.toml`
-are spelled out, since their file names do not start with `mise`. graphify's
-lines are not here: the `graphify` tool asks for them as its own block
-([its reference](graphify.md)), so they land after this one.
+`.mise.local.toml` — which match at any depth, plus `**/mise.local.lock`, the
+one lock line; only `.config/mise/config*.local.toml` and
+`.config/mise/conf.d/*.local.toml` are spelled out, since their file names do
+not start with `mise`. graphify's lines are not here: the `graphify` tool asks
+for them as its own block ([its reference](graphify.md)), so they land after
+this one.
 
 **The attribute base** is the lines every repo takes whatever its stack:
 `* text=auto eol=lf`, `*.lock linguist-generated`, and the binaries as
@@ -105,14 +106,14 @@ holds that. The rule holds within one call too: a pattern a template repeats
 is written at its first place only.
 
 **A requester's block holds only its calls' lines** — its template's first,
-then its own patterns, so a pack may follow its template with a negation that
-re-includes what the template ignores, `!pubspec.lock`. A template carries its
-comments and blank lines inside the block, trimmed at either end; a pattern
-call carries the patterns alone. After filtering, a comment run left
-with no pattern below it before the next blank line is dropped, and a run of
-blank lines is collapsed to one. Every template line loses its trailing
-whitespace before it is written and hashed, as the commit gate's
-trailing-whitespace hook would strip it anyway.
+then its own patterns. A fetched template's line that ignores a lock file is
+not written, as the lock rule below says, so no pack negates a lock file. A
+template carries its comments and blank lines inside the block, trimmed at
+either end; a pattern call carries the patterns alone. After filtering, a
+comment run left with no pattern below it before the next blank line is
+dropped, and a run of blank lines is collapsed to one. Every template line
+loses its trailing whitespace before it is written and hashed, as the commit
+gate's trailing-whitespace hook would strip it anyway.
 
 **No fetched line re-includes a secret.** A template's negation whose
 pattern, normalised, the `git` base's secrets section ignores — `.env`,
@@ -124,22 +125,28 @@ leaves alone.
 
 **No fetched line re-ignores what must be tracked.** A template's positive
 pattern that matches a path the `git` base negates — `.env*` over
-`.env.example` — or a file the repo commits by this skill's or its packs'
-design — `.config/mise/mise.lock`, `.config/mise/locks/`, and the lockfile
-the requester's pack commits, `*.lock` over `pubspec.lock` — is the same
-**conflict row**, in the same shape: `keep-existing` drops the line,
-`overwrite` writes it on the person's word. A line the requester's own
-negation, later in its block, already re-includes the path for is no conflict
-and is written.
+`.env.example` — is the same **conflict row**, in the same shape:
+`keep-existing` drops the line, `overwrite` writes it on the person's word. A
+line the requester's own negation, later in its block, already re-includes the
+path for is no conflict and is written.
 
-**The mise lock files are tracked.** `.config/mise/mise.lock` and
-`.config/mise/locks/` are never ignored; only `mise.local.lock` is, like
-`*.local.toml`. When a line already in the file ignores either, `/vwf:init`
-appends `!/.config/mise/mise.lock` and `!/.config/mise/locks/` at the end of
-`.gitignore`, as the user's lines, listed in the plan the person consents to
-once; the last match wins, so the negation re-includes them. A negation cannot
-re-include a path whose parent directory is excluded, so a line ignoring
-`.config/` or `.config/mise/` gets a removal row in that consent instead.
+**Lock files are tracked.** No lock file is ignored but `mise.local.lock`,
+which the base's one lock line, `**/mise.local.lock`, ignores at any depth.
+A line ignores a lock file when it is no negation and its last segment, a
+trailing `/` stripped and read as a glob, matches a file name ending in
+`.lock` but not in `local.lock`, or the directory name `locks`, or when it
+names `.config/` or `.config/mise/`, which hold the mise lock — so `*.lock`,
+`pubspec.lock`, `mise.lock` and `.config/mise/locks/` do, and
+`**/mise.local.lock` does not. When `all` lands, on a fresh repo or a
+reshape, it scans every line of `.gitignore` — a template's line in any
+block, and the user's lines outside every block — and raises one **delete
+row**, answered `ok`, per line that ignores a lock file. On that answer `all`
+removes the line, from its block or from the user's lines
+([the skill's rule](../SKILL.md#blocks)). `/vwf:init` shows these rows from
+`preview all` in its one consent, and `all` applies them before init's lock
+step. A template fetched later is filtered the same way: its lock-ignoring
+line is not written, and the preview shows it as the same delete row. No
+negation line is written for a lock file.
 
 **Ignoring is not allowlisting.** A secret that is ignored is a secret that was
 never scanned, so an ignore line is never the answer to a scanner finding, and

@@ -207,10 +207,11 @@ writes the frame when it creates the file and removes it with the file.
 **Lines outside every block are the user's.** A pack's call and the
 materializer never write, reorder or remove one. Such a line is written only
 by a call with no `for` that a person typed and approved, and removed or
-overwritten only on a row that person settled — a conflict row, or a
-migration row moving their own line into its new file. A file whose format
-has no comments — plain JSON — carries no markers; the lock entry records
-which keys each requester wrote instead.
+overwritten only on a row that person settled — a conflict row, a migration
+row moving their own line into its new file, or the delete row `all` raises
+for a line that ignores a lock file. A file whose format has no comments —
+plain JSON — carries no markers; the lock entry records which keys each
+requester wrote instead.
 
 **A shared entry is written once.** When a requester asks for a list entry
 another block already holds — a formatter plugin two packs need, an exclude
@@ -245,9 +246,12 @@ holds with a different value is a **conflict row** — never a silent
 overwrite — settled by the user as the tool's reference says. `all` raises
 one for each tool its base block pins that the repo already pins:
 `keep-existing` keeps the repo's version, `overwrite` takes the base's
-`latest`, and the winner is pinned once. The same list
-entry — a plugin, an exclude, an ignore — asked for twice is not a conflict:
-it is [shared](#blocks).
+`latest`, and the winner is pinned once. `all` also raises one **delete
+row**, answered `ok`, for each `.gitignore` line, in a block or the user's,
+that ignores a lock file other than `mise.local.lock`
+([git's lock rule](references/git.md#3-the-ignore-files-rules)). The same
+list entry — a plugin, an exclude, an ignore — asked for twice is not a
+conflict: it is [shared](#blocks).
 
 **How the answers come back.** `preview` numbers its rows `r1`, `r2`, … in
 order, and returns each with the answer names it takes. Every row takes one:
@@ -260,6 +264,7 @@ order, and returns each with the answer names it takes. Every row takes one:
 | … in the block's own file           | `move-in`, `keep-existing`          |
 | a commit type outside the ten       | `rename-<type>`, `keep-existing`    |
 | a create, write, fold, move, delete | `ok`                                |
+| a lock-ignoring line's delete       | `ok`                                |
 
 A `merge` row carries the combined block in the preview, so its answer needs
 no second yes. The real call then carries
