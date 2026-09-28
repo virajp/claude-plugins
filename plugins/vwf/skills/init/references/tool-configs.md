@@ -34,6 +34,8 @@ of three:
   keep, not a stray. The skill's rows — what it splits, what it deletes — are
   printed in the repo's section under **Tool-config rows**, per pass 1's
   toolchain migration, and the one consent covers them.
+  For mise, `all` may return a conflict row for a base-block tool the repo
+  already pins, its two answers the repo's version or the base's `latest`.
 
 | Tool       | Root spellings                                                  | Landed path                                                   | Owner                  | Merge shape      |
 | ---------- | --------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------- | ---------------- |

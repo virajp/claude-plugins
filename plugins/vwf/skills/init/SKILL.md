@@ -689,6 +689,12 @@ spelling of no answer, exactly as the map passed to the materializer spells
 it. The record is written on a repo whose config already exists as much as
 into the stub, and the plan carries it as one row. Each repo gets one row
 more: the git pass installs uv and Python to write or fill its mise lock.
+A repo whose `.gitignore` has a line ignoring a lock file other than
+`mise.local.lock` gets one **Tool-config rows** delete row per line, answered
+`ok`, from `/stackgen:tool-config all`'s preview, per
+[new repo](references/new-repo.md) §11(b). A tool the base mise
+block pins and the repo already pins is a **Tool-config rows** conflict row,
+answered with the repo's version or `latest`.
 
 ## The pipelines
 
@@ -839,7 +845,7 @@ branch appears under *Deferred* instead, with the checkout as its unlock.
 Every line reads `none` where nothing happened:
 
 ```text
-Lock                     <repo> staged | lock deferred | lock ignored | lock failed — not committed
+Lock                     <repo> staged | none | lock deferred | lock failed — not committed
 Landing model            <repo> develop <value>; main <value>   (one per repo)
 Branches created  <n>    <repo> <name>; <old> left     (one per repo)
 Commit                   <repo> <hash> <subject>; <hash> <subject>

@@ -221,7 +221,9 @@ block that differs, as take theirs / keep mine / merge. `init` prints those
 rows in the repo's section under **Tool-config rows**, the one consent
 covers them, and the real call carries the answers, per
 [new repo](new-repo.md) §2. A repo already on the skill's layout, with
-nothing drifted, gets no row.
+nothing drifted, gets no row. On a reshape too, a tool the base mise block
+pins and the repo already pins is a conflict row, its two answers the repo's
+version or the base's `latest`, and the winner is pinned once.
 
 #### The retired hygiene bundle
 
@@ -724,9 +726,9 @@ them to the skill's `preview all` in the survey, per [new repo](new-repo.md)
 §2. The skill compares each with what its file holds and returns the row: a
 `repo-name key: <old> → <new>` replace, member flags and aliases rewritten
 from project ids to members, a plugin list gaining or losing rows, a scope
-list that moved. `init` prints those rows in this repo's section under
-**Tool-config rows**, asks each conflict or drift row inside the plan, and
-the one consent covers them.
+list that moved, a base-block tool the repo already pins. `init` prints
+those rows in this repo's section under **Tool-config rows**, asks each
+conflict or drift row inside the plan, and the one consent covers them.
 
 The folder slug is this repo's main checkout basename, slugified by the same
 asset. Never leave a rename to `/vwf:doctor` alone: the launch aliases in the
@@ -1153,7 +1155,8 @@ whose hooks read a file the next commit is still going to change.
 **The lock step is §11(b)'s, before this repo's shaping commit is staged.** It
 writes `.config/mise/mise.lock` where it is absent, and fills a present one
 with missing tools without bumping a locked version. A lock that changed,
-whichever step changed it, is staged either way.
+whichever step changed it, is staged either way. The ignore fix before it,
+which keeps the lock tracked, is `/stackgen:tool-config all`'s, per §11(b).
 
 Then the rest, exactly as the new-repo pipeline's **git pass** describes it
 ([new repo](new-repo.md) §11), which already reads across the resolved repos:
