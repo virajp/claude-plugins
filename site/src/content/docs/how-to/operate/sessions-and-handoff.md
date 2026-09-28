@@ -82,7 +82,7 @@ recall falls back to the markdown side and **tells you the recall was
 degraded**, since a keyword sweep finds a drawer whose words you can guess, not
 one that merely means the same thing. How the stores split and what each holds:
 [Memory](../../plugins/vwf.md#memory); the server itself is
-[mempalace](../../plugins/mempalace.md#running-the-server-stdio).
+[mempalace](../../plugins/mempalace.md#running-the-server-http-daemon).
 
 ### 3. Park a second strand under its own name
 

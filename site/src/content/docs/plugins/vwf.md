@@ -87,22 +87,27 @@ the `project` scope as a **degradation** with the remedy, every run, and skips
 the forge-state predicate with a note; init prints the by-hand list and carries
 on.
 
-**The memory server is spawned per session.** `vwf` declares mempalace over
-**stdio** — Claude Code runs `mise x -- mempalace-mcp` once per session, so
-there is no daemon to run or supervise. What you install is the `mempalace` tool
-through mise and, for the Qdrant backend, Qdrant; what you configure is the
-`env` block of `~/.claude/settings.json` — `MEMPALACE_BACKEND`,
-`MEMPALACE_QDRANT_URL`, `MEMPALACE_PALACE_PATH` as `~/.local/share/mempalace`
-and `MEMPALACE_MAX_BACKUPS`. Claude passes those values literally, so write the
-path with `~` or absolute, never with `$HOME`. If you separately install the
+**The memory server is a daemon you run.** `vwf` declares mempalace over
+**HTTP** at `http://127.0.0.1:8765/mcp` and never starts it — run
+`mempalace-mcp --transport http --host 127.0.0.1 --port 8765` under any
+supervisor (pitchfork and launchd are two examples), and keep it running before
+a Claude Code session starts. What you install is the `mempalace` tool through
+mise and, for the Qdrant backend, Qdrant; what you configure is the supervisor's
+environment, not `~/.claude/settings.json` — `MEMPALACE_BACKEND` and
+`MEMPALACE_QDRANT_URL` together, `MEMPALACE_PALACE_PATH` as
+`~/.local/share/mempalace`, and `MEMPALACE_MAX_BACKUPS`. A supervisor may pass
+those values literally, so write the path with `~` or absolute, never with
+`$HOME`. `/vwf:doctor` probes the daemon and reports it unreachable as a
+**degradation** with that command as the remedy. If you separately install the
 upstream `mempalace` plugin, toggle **its** stdio server off in `/mcp` — two
 servers writing one palace lose each other's local graph state. See
-[mempalace](./mempalace.md).
+[mempalace](./mempalace.md#running-the-server-http-daemon).
 
-Nothing beyond that `env` block needs installing for memory. The two mempalace
-skills are **vendored into `vwf`** (`/vwf:mempalace`, `/vwf:mempalace-recall`)
-and its auto-save hooks are reimplemented here, so memory arrives with the
-plugin rather than depending on anything being reachable at install time.
+Nothing beyond that daemon and its supervisor's environment needs installing for
+memory. The two mempalace skills are **vendored into `vwf`** (`/vwf:mempalace`,
+`/vwf:mempalace-recall`) and its auto-save hooks are reimplemented here, so
+memory arrives with the plugin rather than depending on anything being reachable
+at install time.
 
 `vwf` also depends on one plugin — `stackgen` — resolved from the same
 `virajp-plugins` marketplace. Claude Code **auto-installs and auto-enables** it
@@ -204,12 +209,12 @@ adopting it.
   a by-hand list. Dependency auto-install/enable needs Claude Code ≥ 2.1.143.
   See [Prerequisites](#prerequisites).
 - **Memory is written twice, so mempalace is optional.** Every memory write goes
-  to both `mempalace` (a **stdio server each session spawns**, configured in the
-  `env` block of `~/.claude/settings.json`) and a markdown tree under
-  `docs/memory/`. Without the server nothing is lost, but recall degrades from
-  semantic search to grep, and says so. `decisions`, `planning`, `gaps` and
-  `problems` are committed; `handoff`, `doctor` and `runs` are gitignored, being
-  one developer's state rather than the team's.
+  to both `mempalace` (an **HTTP daemon you run** at `127.0.0.1:8765`, its
+  environment set on its supervisor) and a markdown tree under `docs/memory/`.
+  Without the server nothing is lost, but recall degrades from semantic search
+  to grep, and says so. `decisions`, `planning`, `gaps` and `problems` are
+  committed; `handoff`, `doctor` and `runs` are gitignored, being one
+  developer's state rather than the team's.
 - **Leans on review engines.** `execute` runs the `/code-review` and
   `/security-review` engines itself at each review row the plan places, over the
   branch delta since the previous one, and hands their findings to the code- and
@@ -3738,15 +3743,15 @@ rules:
 
 `vwf` declares two, and they are the only MCP servers the workflow needs.
 
-### mempalace — memory, over stdio
+### mempalace — memory, over HTTP
 
-Declared as `type: stdio`, `command: "sh"` running `mise x -- mempalace-mcp` — a
-server Claude Code spawns per session, configured through the `env` block of
-`~/.claude/settings.json`. The two skills that drive it are vendored into `vwf`
-under MIT, which is what lets memory ship on every target rather than only where
-a marketplace reaches. Setup, why stdio, the second-server trap and the
-provenance record are in [Prerequisites](#prerequisites) above and
-[mempalace](./mempalace.md) in full.
+Declared as `type: http` at `http://127.0.0.1:8765/mcp` — one daemon, shared by
+every Claude Code session, that you run under a supervisor with its environment
+set there, and that `/vwf:doctor` reports unreachable as a degradation. The two
+skills that drive it are vendored into `vwf` under MIT, which is what lets
+memory ship on every target rather than only where a marketplace reaches. Setup,
+why one daemon, the second-server trap and the provenance record are in
+[Prerequisites](#prerequisites) above and [mempalace](./mempalace.md) in full.
 
 ### Context7 — current library docs
 
