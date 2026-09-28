@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+#MISE description="Set up or upgrade everything this repo needs on your machine"
+#MISE depends=["init"]
+
+#USAGE flag "--all" help="Also set up every member project"
+#USAGE flag "--upgrade" help="Dev only: bump the mise lockfile for every environment and update the formatter plugins"
+
+# One flag per member repo, named by its slug, goes below this comment:
+#   #USAGE flag "--<slug>" help="Set up the <slug> project"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# MISE_ENV decides which conf.d files load and which lock environments exist; guessing it is wrong.
+if [ -z "${MISE_ENV:-}" ]; then
+  print_error "MISE_ENV is unset. On a developer machine run: MISE_ENV=dev mise run setup:all"
+  exit 1
+fi
+
+# Idempotent and non-destructive: `--upgrade` is the one rewriting flag, passed on only when given.
+UPGRADE_ARGS=()
+[[ "${usage_upgrade:-false}" == "true" ]] && UPGRADE_ARGS+=("--upgrade")
+
+print_header "Setting up the toolchain ..."
+mise run setup:mise ${UPGRADE_ARGS[@]+"${UPGRADE_ARGS[@]}"}
+
+print_header "Setting up secrets ..."
+mise run setup:secrets
+
+print_header "Starting external services ..."
+mise run setup:external:start
+
+print_header "Setting up dependencies ..."
+mise run setup:deps:all
+
+print_header "Setting up commit hooks ..."
+mise run setup:precommit
+
+print_header "Setting up AI tooling ..."
+mise run setup:ai
+
+# Last: silent on a machine without the editor.
+print_header "Setting up the editor ..."
+mise run setup:vscode
+
+# Members only on request, each running its OWN task library through `mise run --cd`.
+
+if [[ "${usage_all:-false}" == "true" ]]; then
+  while read -r member; do
+    [ -n "$member" ] || continue
+    print_header "Setting up ${member} ..."
+    mise run --cd "${MISE_PROJECT_ROOT}/${member}" setup:all ${UPGRADE_ARGS[@]+"${UPGRADE_ARGS[@]}"}
+  done < <(members)
+fi
+
+print_header "Setup complete!"

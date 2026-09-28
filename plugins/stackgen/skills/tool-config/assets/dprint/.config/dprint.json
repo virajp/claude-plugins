@@ -1,0 +1,62 @@
+{
+  "excludes": [
+    "**/.claude/",
+    "**/.config/mise/locks/",
+    "**/.git/",
+    "**/build/",
+    "**/dist/",
+    "**/graphify-out/",
+    "**/*.lock"
+  ],
+  "exec": {
+    "commands": [
+      {
+        "command": "taplo fmt --config .config/taplo.toml -",
+        "exts": [
+          "toml"
+        ]
+      }
+    ]
+  },
+  "json": {
+    "jsonTrailingCommaFiles": [
+      "tsconfig.json",
+      "tsconfig.*.json",
+      ".vscode/settings.json"
+    ],
+    "lineWidth": 80
+  },
+  "markdown": {
+    "emphasisKind": "asterisks",
+    "tags": {
+      "json": "json",
+      "markdown": "md",
+      "text": "text",
+      "toml": "toml",
+      "typescript": "ts",
+      "yaml": "yaml",
+      "yml": "yaml"
+    },
+    "textWrap": "always"
+  },
+  "newLineKind": "lf",
+  "plugins": [
+    "https://plugins.dprint.dev/markdown-0.22.1.wasm",
+    "https://plugins.dprint.dev/g-plane/pretty_yaml-v0.6.0.wasm",
+    "https://plugins.dprint.dev/json-0.21.3.wasm",
+    "https://plugins.dprint.dev/exec-0.6.2.json@df98f54ffd3092b8a841aedd6d098a2651f16d0a796a40535774f1a8b4b9d463"
+  ],
+  "yaml": {
+    "dashSpacing": "oneSpace",
+    "formatComments": true,
+    "ignoreCommentDirective": "dprint-yaml-ignore",
+    "indentBlockSequenceInMap": true,
+    "indentWidth": 2,
+    "lineBreak": "lf",
+    "printWidth": 80,
+    "proseWrap": "always",
+    "quotes": "forceDouble",
+    "trailingComma": true,
+    "trimTrailingWhitespaces": true
+  }
+}

@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+
+#MISE description="Helper functions for mise tasks"
+#MISE hide=true
+
+# Sourced more than once per run; the guard keeps `readonly` from failing the second time.
+if [ -n "${MISE_HELPERS_SOURCED:-}" ]; then
+  return 0
+fi
+MISE_HELPERS_SOURCED=1
+
+# Style
+readonly BOLD='\033[1m'
+readonly NORMAL='\033[0m'
+# Colors
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[0;33m'
+readonly RED='\033[0;31m'
+# Unused here; kept for a task that wants a fourth colour.
+# shellcheck disable=SC2034
+readonly BLUE='\033[0;34m'
+
+# Print a full-width separator line built from the given character.
+line_sep() {
+  local COL
+  # `|| COL=''` keeps `set -e` from killing the caller when stdin is not a terminal.
+  COL=$(stty size 2>/dev/null | awk '{print $2}') || COL=''
+  local line
+  printf -v line '%*s' "${COL:-80}" ''
+  printf '%s\n' "${line// /$1}"
+}
+
+# A major section: a full-width `=` rule, then the title.
+print_header() {
+  line_sep "="
+  echo -e "${GREEN}${BOLD}$1${NORMAL}"
+}
+
+# A step inside a section: a full-width `-` rule, then the title.
+print_subheader() {
+  line_sep "-"
+  echo -e "${GREEN}${BOLD}$1${NORMAL}"
+}
+
+print_success() { echo -e "${GREEN}${BOLD}$1${NORMAL}"; }
+print_ok() { echo -e "${GREEN}${BOLD}OK${NORMAL}"; }
+print_wait() { echo -en "${YELLOW}${BOLD}$1${NORMAL}"; }
+print_warn() { echo -e "${YELLOW}${BOLD}$1${NORMAL}"; }
+print_yellow() { echo -e "${YELLOW}$1${NORMAL}"; }
+print_newline() { echo ""; }
+
+# Errors go to stderr, so a caller piping stdout into a report still sees them.
+print_error() { echo -e "${RED}${BOLD}$1${NORMAL}" >&2; }
+
+# The repo's members, one repo-relative path per line.
+# `$displaypath` is git's own variable, single-quoted so git expands it.
+# shellcheck disable=SC2016
+members() {
+  if [ -f "${MISE_PROJECT_ROOT}/.gitmodules" ]; then
+    git -C "${MISE_PROJECT_ROOT}" submodule --quiet foreach --recursive 'echo $displaypath' 2>/dev/null || true
+  else
+    # Unquoted on purpose: word splitting turns the MEMBERS string into a list.
+    # shellcheck disable=SC2086
+    printf '%s\n' ${MEMBERS:-}
+  fi
+}
+
+# The shell files in scope, one path per line: the paths given as arguments
+# filtered down to shell, or every TRACKED shell file when no argument is given.
+shell_files_in_scope() {
+  local candidates=()
+  if [ "$#" -gt 0 ]; then
+    candidates=("$@")
+  else
+    local tracked
+    while IFS= read -r tracked; do
+      if [ -n "${tracked}" ]; then
+        candidates+=("${tracked}")
+      fi
+    done < <(git -C "${MISE_PROJECT_ROOT}" ls-files 2>/dev/null || true)
+  fi
+
+  local candidate
+  for candidate in ${candidates[@]+"${candidates[@]}"}; do
+    [ -f "${candidate}" ] || continue
+    case "${candidate}" in
+      *.sh | *.bash)
+        printf '%s\n' "${candidate}"
+        continue
+        ;;
+    esac
+    if head -n 1 "${candidate}" 2>/dev/null | grep -qE '^#!.*[/ ](ba|da|k|z)?sh( |$)'; then
+      printf '%s\n' "${candidate}"
+    fi
+  done
+}

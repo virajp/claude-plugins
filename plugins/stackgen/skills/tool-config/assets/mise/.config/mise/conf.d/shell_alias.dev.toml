@@ -1,0 +1,9 @@
+# Shell aliases — dev only: they need `mise activate`, which CI never runs.
+
+[shell_alias]
+precommit = "mise run code:precommit"
+setup     = "mise run setup:all"
+worktrees = "mise run code:worktrees"
+
+# One alias per member repo, named by its slug:
+#   setup-<slug> = "mise run setup:all --<slug>"

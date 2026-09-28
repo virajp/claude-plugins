@@ -77,18 +77,58 @@ this pipeline that touches git. Nothing in **this** step reaches a remote:
 the default branch, the protection on `develop` and `main`, and the backlog
 project, on their own consent, and nothing else the forge holds.
 
-## 2 — The three baselines
+## 2 — The baselines
 
-Materialize the three unconditional bundles by their fixed slugs, through the
-stack adapter (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`), invoking
-`/<plugin>:<plugin>-stack-template <slug>` once per slug. Fetch them in the
-**composition order the materializer documents** — the toolchain manager, then
-the gates, then hygiene — because a later component's file wins where two
-write the same path, and getting the order wrong silently lands the wrong
-version of a shared file.
+**First, `/stackgen:tool-config all`**, once per repo, with this run's answers
+as `key=value` arguments. It lands every tool the skill owns — the toolchain
+manager's files, its task library and the gates among them — and fills their
+marked positions from the arguments. `init` names no tool and splices nothing
+there. The arguments:
 
-Each landing is the materializer's own consent line. **A decline is a
-deferral, not a halt**: record what was skipped and name its unlock — run
+| Key                                        | Value                                             | From                                  |
+| ------------------------------------------ | ------------------------------------------------- | ------------------------------------- |
+| `repo`                                     | the repo's folder slug                            | question 1, or the key already held   |
+| `members`                                  | member paths, in resolved order; empty where none | Step 0's resolution                   |
+| `linkage`                                  | `siblings` or `submodule`                         | the membership asset                  |
+| `merge_model_develop`, `merge_model_main`  | `direct` or `pr`, the §11(a) preselection         | §11(a); re-passed if the answer moves |
+| `runtimes`                                 | the language keys the stack read produced         | SKILL.md's stack read, per §5         |
+| `plugin_sources`, `plugins`                | question 5's confirmed rows; empty on **none**    | question 5                            |
+| `scopes`                                   | the commit gate's scopes; empty where none        | §7, per existing repo pass 10         |
+| `forge`, `editor`, `secrets`, `update_bot` | the four answers, spelled as the table below      | the table below                       |
+
+**How a value is spelled.** A list is comma-separated with no spaces —
+`members=backend,web`. An empty value is the bare key — `members=`. An
+omitted key keeps the repo's current value, so `init` passes every key on
+every call and writes `key=` wherever the answer is empty.
+
+**Preview in the survey, answer on the consent.** The call is `init`'s plan
+row, never a consent round of its own, per the skill's *Consent and the
+rows* section. During the survey, `init` runs
+`/stackgen:tool-config preview all <the same key=value arguments>` in each
+repo and prints the rows it returns — numbered `r1`, `r2`, … — in that
+repo's section under **Tool-config rows**. Each conflict or drift row is
+asked inside the plan, with the answer names the preview gave it. A tool the
+base mise block pins and the repo already pins is a conflict row too, its two
+answers the repo's version or the base's `latest`, and the winner is pinned
+once. On the one consent, `init` runs
+`/stackgen:tool-config all <the same arguments>` with
+`answers=<id>:<answer>,…` last — `ok` for every create, write, fold, move or
+delete row, the user's pick for every conflict or drift row. The skill
+refuses the whole call when `answers=` misses a row, names an unknown one or
+meets a row that changed since the preview, so `init` answers every row the
+preview returned, and a refused call is shown again in the report, never
+retried with guessed answers.
+
+**Then `init`'s own hygiene assets**, from
+`${CLAUDE_PLUGIN_ROOT}/skills/init/assets/hygiene/`, laid down as
+[hygiene assets](readme-and-license.md) states — no adapter fetch and no
+lock record. The ignore file, the attributes file, the graph's ignore file
+and the dependency-update policy are not among them: the call above lands
+them. The stack adapter (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`) is
+reached once more, in §3, for the secrets provider alone.
+
+The skill's rows and each landing carry their own consent line. **A decline is
+a deferral, not a halt**: record what was skipped and name its unlock — run
 `/vwf:setup reshape` with the write consented — then continue with the rest
 of the pipeline. This is the same rule `/vwf:setup`'s tooling step follows,
 and it matters most here, where a repo that has picked no stack is the normal
@@ -96,14 +136,16 @@ case rather than a fault.
 
 ### The answers each fetch carries
 
-**Every invocation above — and §3's — passes the materializer four answers**
-— an `answers:` map in the invocation payload, beside `repo:`, keyed
+**The adapter invocation — §3's, the only one — passes the materializer four
+answers**, as the skill's call passes them as arguments — here an `answers:`
+map in the invocation payload, beside `repo:`, keyed
 `forge`, `editor`, `secrets` and `update_bot`, one per axis its
 **conditional evaluation step** reads, and that step is what decides whether
 a file a pack marks `when:` lands in this repo. `init` evaluates nothing
 itself; it passes values, spelled exactly as the axis takes them, and takes
-back what the dry-run lists as landed and as skipped. The four, for the repo
-this pass is running in:
+back what the dry-run lists as landed and as skipped. The hygiene assets read
+the same `forge` and `editor` values, evaluated by `init` itself. The four,
+for the repo this pass is running in:
 
 | Axis         | Value passed                                     | From                             | Source after the first run          |
 | ------------ | ------------------------------------------------ | -------------------------------- | ----------------------------------- |
@@ -155,10 +197,11 @@ file the reads behind it:
   same evidence the [tool-config table](tool-configs.md)'s two rows carry:
   a file under any spelling the `renovate` row lists preselects `renovate`;
   a `.github/dependabot.yml` preselects `dependabot`; a repo carrying
-  neither preselects `renovate`, the service whose policy the hygiene pack
-  ships. A repo carrying both is preselected to `renovate` and the row says
-  it found both, since the survey's own **keep both** rule already reports
-  the second policy and a preselection cannot pick for the user. In `blank`
+  neither preselects `renovate`, the service whose policy
+  `/stackgen:tool-config` lands. A repo carrying both is preselected to
+  `renovate` and the row says it found both, since the survey's own **keep
+  both** rule already reports the second policy and a preselection cannot
+  pick for the user. In `blank`
   mode there is no survey and the seed is `renovate`.
 
 **The skipped rows.** Each repo's section of the plan gains one heading,
@@ -169,7 +212,9 @@ path is not a conflict, not a keep and not a deferral: nothing is offered,
 nothing is recorded under `enforcement`, and nothing waits on a later run
 unless the axis value itself changes — a remote added, a different answer
 given — in which case the next reshape lands it as an ordinary write. The
-report counts skipped paths nowhere; the plan is where they are read.
+report counts skipped paths nowhere; the plan is where they are read. A
+hygiene asset `init` skips on its own condition is listed the same way, `init`
+in the pack's place.
 
 **Every conflict the dry-run lists is a row, in every mode.** The
 materializer's dry-run names each target path that already exists and that no
@@ -182,10 +227,11 @@ under `enforcement.kept_files` as §6 records one — in the base's config, the
 member's path as prefix. The rows are shown **before** the one consent, one
 per conflict, so a `blank` repo that happens to hold one such file — and a
 `source` repo, which usually does — never has it silently skipped and never
-has it silently overwritten. Three root files are not offered at all: a
-readme, a licence and a security file the repo already carries are kept on
-the already-there rule in [readme and licence](readme-and-license.md), and
-reported as kept.
+has it silently overwritten. The hygiene assets are not offered at all: a
+readme, a licence, a security file or any other hygiene asset the repo
+already carries is kept on the already-there rule in
+[hygiene assets](readme-and-license.md), and reported as kept — the editor
+baseline fragment excepted, which that reference says is `init`'s to rewrite.
 
 **The record has a home in every mode, because `init` makes one.** Where no
 `.config/vwf.yaml` exists in the base — the ordinary case on a first run, since
@@ -210,10 +256,10 @@ Runs in **every mode** — a `shaped` repo reaches it from
 [existing repo](existing-repo.md)'s post-landing paragraph, after that
 pipeline's landing and before the git pass, on exactly the terms below.
 
-Materialize the bundle whose slug the user picked at question 4, by that slug,
-through the same adapter. **Last**, after the three baselines — a provider's
-files are the most specific answer anything gives to the slot they overlay,
-and the composition order puts them there.
+Materialize the secrets provider the user picked at question 4, as the menu
+spelled it, through the same adapter. **Last**, after the baselines — a
+provider's files are the most specific answer anything gives to the slot they
+overlay, and the composition order puts them there.
 
 A user who answered **none — decide later** gets nothing here. Record it as a
 deferral whose unlock is a later `/vwf:setup reshape` run, and say plainly that
@@ -226,9 +272,9 @@ the `shaped` pipeline reaches it from
 [existing repo](existing-repo.md)'s post-landing paragraph — over every file
 this run landed or replaced, in whichever mode it landed.
 
-Three, and no others: `<REPO_URL>`, `<YEAR>` and `<HOLDER>`. The hygiene
-pack's conventions are authoritative for what each means; fill every
-occurrence across every landed file, from:
+Three, and no others: `<REPO_URL>`, `<YEAR>` and `<HOLDER>`. The placeholder
+vocabulary in [hygiene assets](readme-and-license.md) is authoritative for
+what each means; fill every occurrence across every landed file, from:
 
 | Placeholder  | Source                                                        |
 | ------------ | ------------------------------------------------------------- |
@@ -241,7 +287,7 @@ A placeholder whose source is missing — no origin remote, no configured name
 a landed file after this step is a bug, not a template.
 
 **Two occurrences of `<REPO_URL>` are the security contact's, not the repo
-URL's.** In the hygiene pack's `SECURITY.md` that token is the whole reporting
+URL's.** In the hygiene assets' `SECURITY.md` that token is the whole reporting
 channel, and it takes question 6b's answer as typed — a URL or an email —
 spliced by the contact procedure in [readme and licence](readme-and-license.md)
 rather than filled here. The issue-template chooser's *Report a vulnerability*
@@ -250,10 +296,15 @@ is a URL, and the whole entry is **removed** where the contact is an email or
 the row was declined, since that link must be a web address. Every other
 occurrence is the origin URL, per the table.
 
-## 5 — The ignore sections, and the two runtime positions
+## 5 — The template fallback, and the runtimes
 
-Append one section per language to the hygiene pack's sectioned ignore file,
-per [fragments and sections](fragments-and-sections.md).
+The ignore file is `/stackgen:tool-config`'s git tool, landed by §2's call; a
+pack that pins a language asks that tool for its own template through its
+`tool-config:` list. What stays `init`'s is the **fallback**: for each
+language the stack read produced whose template no pack landed in this repo
+asks for, `init` asks the git tool for it — the call, the `gitignore:<Name>`
+block it writes, the commit pin and the fetch failure are that tool's
+reference's, and `init` restates none of them.
 
 **The languages are what SKILL.md's stack read produced** — the pins where a
 config exists, else the lockfile's language, package-manager and app-framework
@@ -261,57 +312,47 @@ components, else, in `source` mode, the manifests its table names at the root
 and in every sub-project directory — and nothing else. The read is one answer
 per repo, taken before the plan; this step does not re-read. Whatever the
 source, that answer is spelled in the read's six language keys — a pin token
-or a lockfile component slug was mapped onto one key by the hygiene pack's
-own table before it counted, so no raw slug reaches this step. Each language
-it produced resolves to a template through that same table, the
-algorithm's step 1, and a `source` repo carrying a `package.json` therefore
-gets the node section on its **first** run, not after some later pin. A
-`blank` repo's read produced nothing, the step appends nothing, and that is
-correct: the baseline sections cover what every repo needs, and a section for
-a language nobody has is a guess.
+or a lockfile component slug was mapped onto one key by the git tool's
+template table before it counted, so no raw slug reaches this step. Each
+language resolves to a template through that same table, and a `source` repo
+carrying a `package.json` therefore gets the node template on its **first**
+run, not after some later pin. A `blank` repo's read produced nothing, and
+the step asks for nothing.
 
-**One component in the read is not a language**: the secrets provider slug
-question 4 picked, passed through the read as it is — a `blank` repo's read
-carries it too, since it is an answer and not a reading of the tree — so the
-provider row the hygiene pack's table keeps beside the language rows resolves
-on the same terms. Its section is the pattern the table's cell names, under a
-banner named for the slug, and it is what keeps the pack's base ignore file
-free of any provider's machine-local file: the line lands only in a repo
-whose provider has one. A **none — decide later** answer carries no
-component and appends no provider section.
+**Covered means landed here.** A language counts as covered only where a pack
+in this repo's lockfile, or one landing on this run, asks for its template;
+one a pack would cover but that no pack here pins takes the fallback, and a
+pack that lands later shares the entry under the git tool's shared-entry rule.
+A detected language the table names no template for is **proposed** in the
+plan, never guessed — the git tool's rule. Each call is a **Tool-config row**
+in the survey preview and one `Templates asked` line in the report.
 
-### The two runtime positions
+A provider's machine-local file is not this step's either: the provider's own
+pack asks the git tool for its line when §3 lands it.
 
-The toolchain pack's base config carries **two marked positions** the stack
-read fills, in the same file the environment block sits in: `RUNTIME_BLOCK`,
-the per-runtime settings, and `PATH_ENTRIES`, the project-local binaries the
-shell finds without a runner prefix. The pack's comment at each position
-names the lines each runtime takes; this step writes, from the same read §5
-used, **one runtime's lines per language the read produced** at the first,
-and at the second the entry a language needs — **left empty** where no
-language the read produced needs one. A `blank` repo fills both as empty,
-which is exactly what the pack ships; nothing is invented for a runtime the
-repo does not have. Both are marked positions, so a filled value is what the
-hash splice in [existing repo](existing-repo.md) §6 ignores — filling them is
-never content drift, and they are re-filled on every run the read changes,
-keep or no keep, like every other position §7 enumerates.
+### The runtimes
+
+The same read is the `runtimes` argument §2 passes to
+`/stackgen:tool-config all` — the language keys, nothing else, spelled per
+§2: `runtimes=node,python`, and `runtimes=` on a `blank` repo. The skill
+owns the two runtime positions and what each language writes there. A
+changed read is a changed argument on the next run, and the skill shows the
+row.
 
 ## 6 — The hook fragments
 
-Merge every fragment the landed packs dropped into the gate config, per
-[fragments and sections](fragments-and-sections.md). On a new repo this is the
-first merge, so every fragment present is appended; the algorithm is the same
-one a re-run uses.
+Retired — `init` merges no hook; a pack asks
+`/stackgen:tool-config pre-commit add hook … for <pack>` instead.
 
 ## 7 — The project ids, the repo name, and the positions they fill
 
 The fills this section enumerates run in **every mode**, but on a `shaped`
-repo [existing repo](existing-repo.md)'s **pass 9** already owns them — it
-surveys each marked position, shows the row, and applies the fill by this
-section's rules — so the existing pipeline does not run this section a second
-time after its landing; it reaches §3, §4, §8, §9 and §10 from its post-landing
-paragraph and takes the fills from its own pass. A `blank` or `source` repo
-runs this section as written.
+repo [existing repo](existing-repo.md)'s **pass 8** already owns them — it
+resolves the same ids and argument values, shows the rows, and applies the
+fill by this section's rules — so the existing pipeline does not run this
+section a second time after its landing; it reaches §3, §4, §8, §9 and §10
+from its post-landing paragraph and takes the fills from its own pass. A
+`blank` or `source` repo runs this section as written.
 
 Resolve the project ids **for the repo this pass is running in**, in this order
 of preference.
@@ -402,19 +443,19 @@ nothing downstream re-derives them either.
 
 **Three lists fill three surfaces, and no two of them are the same list.** The
 per-project **task groups** — and, on **every** run, the first one included,
-the commit gate's **scopes** — take the **project ids** resolved above, for the
-repo being shaped. A registry, where the repo has one, is where the proposal
-those ids came from was read; it is not a condition on the scope fill, which
-takes whatever question 2 confirmed either way — the fill itself is stated
-once, for both pipelines, in [existing repo](existing-repo.md) §11. `REPO_NAME`
-takes the repo's **folder name**, slugified, as question 1 confirmed it — one
-value per repo, on no list at all. The bootstrap aggregator's **member flags**
-and the **shell aliases** that shorten them take the **member repos** — one
-flag and one alias each, in the resolved order, each named by that member's
-own slug. Where that slug comes from is the pack's to say, not this section's:
-its **task-library reference** states both positions come from the member list
-and never from the project ids the `p:` group uses, and the shipped comments
-at those positions name the member directories as where the names come from.
+the commit gate's **scopes** — take the **project ids** resolved above, for
+the repo being shaped. A registry, where the repo has one, is where the
+proposal those ids came from was read; it is not a condition on the scope
+fill, which takes whatever question 2 confirmed either way — the `scopes`
+argument is stated once, for both pipelines, in [existing
+repo](existing-repo.md) pass 10. `REPO_NAME` takes the repo's **folder name**,
+slugified, as question 1 confirmed it — one value per repo, on no list at all.
+The bootstrap aggregator's **member flags** and the **shell aliases** that
+shorten them take the **member repos** — one flag and one alias each, in the
+resolved order, each named by that member's own slug, passed as the `members`
+argument. Where that slug comes from is the skill's to say, not this
+section's: its toolchain reference states both positions come from the member
+list and never from the project ids the `p:` group uses.
 
 They are different lists because those two positions widen the scope to a
 **repo**, not to a project: the flag makes the aggregator recurse into a member
@@ -429,175 +470,44 @@ resolved**, at the top of the run, and nothing here re-resolves them.
 
 ### The marked positions
 
-**Nine**, and with the `_default` slot below they are the ten things this
-section enumerates. Only the `_default` slot comes from the id list. Two are
-**per member repo**, three are repo-level — the repo-name key among them,
-filled from SKILL.md's **question 1** — two are the plugin task's, filled from
-SKILL.md's **question 5**, and the last two are the toolchain config's
-**runtime positions**, filled from the stack read by **§5** and enumerated
-here because this is the one section that lists every marked position, so the
-splice below reaches them.
+**Every marked position in a file the tool-config skill lands is the
+skill's**, filled from §2's arguments: the repo-name key, the landing pair,
+the member-path key, the aggregator's member flags, the shell aliases, the
+plugin task's two lists, the two runtime positions and the commit gate's
+scopes. `init` owes each one its value, never a splice:
 
-**The pack's payload is where each one is marked**, by a comment and nothing
-else: a `MARKED POSITION` block above the value, for the seven that sit in the
-toolchain manager's config and task files, and the commented template itself
-for the flag and alias lists, which stands where those lines go. There is no
-marker syntax a tool could enumerate, so the set is exactly the positions this
-section lists — read it from here, never from the payload.
+- **`repo`** — this repo's folder name, slugified, as question 1 confirmed it.
+  A `shaped` repo skips that question; its folder slug is read and compared by
+  [existing repo](existing-repo.md) pass 8. The skill writes it **literally**: a
+  linked worktree's config root is named for the branch, so a derived value
+  would change identity with every worktree. No project id reaches it — a repo
+  whose folder is `acme-shop` and whose one project is a service carries
+  `acme-shop` beside a `p/service/` group. Each repo passes its own folder.
+- **`members`** and **`linkage`** — the resolved member repos, in resolved
+  order. The skill writes one member flag and one alias each, named by that
+  member's own slug and never by a project id, and the member-path key only
+  under sibling linkage. A repo with no members passes `members=`, and the
+  templates stay as shipped.
+- **`merge_model_develop`** and **`merge_model_main`** — §11(a)'s. §2 passes
+  its preselection, and §11(a) calls the skill again where an answer differs.
+  A file still carrying the retired single key is the skill's to migrate.
+- **`runtimes`** — §5's.
+- **`plugin_sources`** and **`plugins`** — question 5's confirmed rows and
+  only those. The workflow's own plugin and its dependency never reach them,
+  since question 5 drops both rows. A **none** passes `plugin_sources=` and
+  `plugins=`.
+- **`scopes`** — this repo's confirmed ids, per
+  [existing repo](existing-repo.md) pass 10; the forge links are the skill's.
 
-One other kind of marked position exists and is **not init's**: a pack's
-`machine_env:` values, marked in that pack's own `conf.d` fragment (the SwiftUI
-pack's `XCODE_VERSION` and `SIMULATOR_*`, say). Those packs land through
-`/vwf:setup`'s materialize pass, which asks and fills them and re-records the
-fragment's hash; init neither asks them nor splices them, so they are not in
-the set above, and a value later edited by hand reads as content drift on that
-fragment.
+The repo-name key exists for the per-repo launch aliases the user keeps in
+their **own global configuration**, reading the value the repo publishes.
+Those are not this pipeline's to write: `init` never writes outside the
+repos it resolved as the base and its members.
 
-The toolchain pack ships the flag list and the alias list as **commented
-templates in place**, each with a note saying the names come from the registry
-or the member directories — that is, from the members. Those comments are the
-pack asking `init` for the one thing no pack can know, and filling them is not
-authoring pack-owned content; it is answering the question the pack left open.
+A pack's `machine_env:` values are not `init`'s either. `/vwf:setup` sets them
+through the same skill when that pack lands.
 
-Write the real lines at those two positions, **one per resolved member repo**,
-in the resolved order, copying the commented example's spelling exactly — the
-flag's own help text shape, and the alias's own left-hand and right-hand shape
-— and leave the surrounding comment in place as the record of where the list
-came from. The name each line carries is that member's own slug, as those
-comments describe it, never a project id.
-
-**A keep on the file carrying a position does not stop the fill.** Every marked
-position this section fills sits in a pack-owned file, and where the
-existing-repo pipeline offered that file and the answer was **keep**, the
-repo's own content stays and the position is written anyway: a keep covers the
-content somebody customised, never a marked position's value, which these fills
-own in either pipeline. [existing repo](existing-repo.md) §6 states that once,
-together with the second test that keeps it consistent — on a hash mismatch it
-splices the repo's current values, at every position this section enumerates
-that the file carries, into the pack's payload, and a file diverging only
-inside them is never offered. That splice is a read — it decides whether the
-file is offered and writes nothing — and it reaches all ten. The **fill** on a
-kept file governs **eight** of them unconditionally — the two runtime
-positions §5 fills among them — and not only the plugin task's two.
-`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` are the fifth and sixth, and they
-are §11(a)'s: the git pass asks them only for a repo whose environment-block
-file this run lands or replaces, so a kept file keeps the values those
-positions already hold. The one exception is a kept file that still carries
-the retired single `MERGE_MODEL` line in their place: a keep never covers a
-marked position's value, so the fill **rewrites that line in place into the
-two positions**, each carrying the one value, retires the single key, and the
-post-fill re-hash SKILL.md describes covers the file like any other fill. So
-the fill touches ten positions on such a file and eight on any other kept
-one. Being spliced like the rest is what stops §6 reading those values as
-content; no survey pass owns them, so no pass shows a row for them either.
-
-**A repo with no members leaves both positions exactly as shipped** — a
-single-project repo, and a member repo that declares no members of its own,
-which is the ordinary case: membership is a base's to declare. There is no flag
-and no alias to write, the aggregator's widen-the-scope flag is then a no-op
-that a caller passes without knowing the repo's shape, and deleting either
-comment would cost the next run — after the product grows a member — the
-template it fills.
-
-**A position already carrying lines named for something else is rewritten, not
-appended to.** An earlier run filled these two from the *project* ids, so a
-reshape finds lines naming projects where members belong. Replace the whole list
-with what the members resolve to, and show it in the plan as a **rewrite** row:
-a fill row would read as a position that had been sitting as shipped, and the
-one thing a user needs to see here is that lines they have seen before are
-going away.
-
-**The third is the repo's folder name**, `REPO_NAME`, a marked position in the
-toolchain manager's environment block. It takes **this repo's folder name,
-slugified** — the basename of its main checkout, proposed by SKILL.md's
-**question 1**, then accepted or replaced there — and it is written
-**literally**, never derived at read time from the directory the config sits
-in: a linked worktree's config root is named for the branch, so a derived value
-would change identity every time somebody cut one. That is also why the
-proposal reads the **main checkout's** basename rather than the working
-directory's.
-
-**No project id reaches this key**, and the two are routinely different: a repo
-whose folder is `acme-shop` and whose one project is a service carries
-`REPO_NAME = "acme-shop"` beside a `p/service/` group. Each repo fills its own
-key from its own folder — a member names the member, never the base.
-
-That key exists because the things that vary only by repo — the per-repo
-launch aliases the user keeps — belong in the **user's own global
-configuration**, reading the value the repo publishes. They are not this
-pipeline's to write, and `init` never writes outside the repos it resolved as
-the base and its members. What `init` owes is the value; what reads it is
-somebody else's file.
-
-That boundary is what a member run widens, and it widens by exactly one thing:
-a sibling member sits outside the base's tree, so "the repo the caller is in" is
-no longer the edge. The resolved set is. Nothing outside it is written, and a
-path that did not come out of the resolution is not made one by being nearby.
-
-**The fourth, fifth and sixth are repo-level too**, and the toolchain pack
-ships all three as marked positions in that same environment block, each with a
-comment saying what it takes. `MEMBERS` is written here, literally, by the same
-rule `REPO_NAME` follows. `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` are
-**asked and written by §11(a)**, inside the git pass, in every repo whose
-environment-block file this run lands or replaces; this section writes them
-in exactly one case — a **kept** file still carrying the retired single
-`MERGE_MODEL` line, which its fill rewrites in place into the two positions,
-as the paragraph above says.
-
-The pair is how work lands, **one value per long-lived branch**: the merge
-task for `develop` reads the first, the one for `main` reads the second, and
-the pack's comment names the two values each takes — `direct`, which merges
-locally and pushes, and `pr`, which pushes the branch and opens a pull request
-instead. The values are **asked in §11**, inside the git pass, and written there
-before that step stages — not as a numbered question, because they are a
-decision about landing and the git pass is where landing is decided. A repo
-whose positions are left as shipped runs on the pack's defaults, `direct` into
-`develop` and `pr` into `main`. An older file carrying the single legacy key
-`MERGE_MODEL` is read as both values by every reader until a run writes the
-pair — §11(a) on a landed or replaced file, the fill's in-place rewrite on a
-kept one.
-
-`MEMBERS` is the product's other repositories, as paths relative to the repo
-root, in the pack's own space-separated spelling. Fill it from the **registry's
-members list, and only where the product is multi-repo with sibling linkage**.
-Under submodule linkage the repo's own submodule declarations are what the task
-library reads, and a repo with no members has nothing to list — in both cases
-the position stays exactly as shipped. The registry does not exist on a first
-run, so this is re-run work by construction.
-
-**This is the one member-shaped position the members do not always fill**, and
-the asymmetry is deliberate rather than an oversight in the two above. The flag
-and alias lists are written for every resolved member whatever the linkage,
-because nothing else in the repo carries those names; `MEMBERS` under submodule
-linkage would be a second copy of a list the version control system already
-holds, and a second copy is only a way for the two to disagree.
-
-**The seventh and eighth are the plugin task's two lists** — the further plugin
-sources a repo installs from, and the plugins it installs from them — shipped
-as commented templates in place like the flag and alias lists, each comment
-carrying its own row shape and saying the rows come from the confirmed answer
-to the plugin question. They take **question 5's confirmed rows, and only
-those**: write them one per line at each position, in the exact shape that
-position's comment shows, and leave the comment where it is so a later run can
-re-derive the list from the same question rather than from what the file
-already says.
-
-A **none** answer — including the one an empty inventory forces — leaves both
-positions exactly as shipped, for the same reason a single-project repo leaves
-the member flags alone: the template is what the next run fills, and deleting
-it costs that run its shape.
-
-The workflow's own plugin is never written at either position, and neither is
-whatever it depends on. The task installs both unconditionally, and its
-inventory prints them anyway, like every other installed plugin — question 5
-is where those two rows are **dropped**, before the question is even offered,
-so an answer cannot carry them here.
-
-**The ninth and tenth are the two runtime positions** — `RUNTIME_BLOCK` and
-`PATH_ENTRIES` in the toolchain pack's base config — and they are **§5's** to
-fill, from the stack read, not this section's. They are listed here for the
-one reason the landing pair is: the splice above has to know every position a
-file carries, and a value at either of them is a fill, never content.
+What stays `init`'s is the `_default` slot below.
 
 ### The `_default` slot
 
@@ -628,12 +538,12 @@ the `shaped` pipeline reaches it from
 3, 6a and 6b are asked whatever the mode, and a repo shaped years ago is as
 entitled to its answers as a blank one.
 
-Per [readme and licence](readme-and-license.md) — the stub, the licence
-question 6a answered, and the security contact 6b answered, each on that
+Per [hygiene assets](readme-and-license.md) — the stub, the licence
+question 6a answered from the assets' licence texts, and the security
+contact 6b answered, spliced into the assets' security template, each on that
 reference's already-there rule, so a file the repo carries is kept and
-reported rather than written over. All three are placed here, after the packs
-have landed, so a pack shipping any of them would have been caught by the
-materializer's own root allowlist rather than silently overwritten.
+reported rather than written over. The rest of the hygiene assets landed in
+§2; these three wait for their answers and are placed here.
 
 ## 9 — Bootstrap
 
@@ -644,22 +554,20 @@ config was trusted and whose task files carried the bit already, both steps
 change nothing and say so; a task file this run created, replaced or renamed
 is exactly what the second step exists for, in every mode.
 
-Run the two bootstrap steps the toolchain pack documents, **in the pack's own
+Run the two bootstrap steps the tool-config skill documents, **in its own
 order** — the **trust** step first, then the task that makes every file in the
 task library executable.
 
-Both are documented in the pack's **task-library reference**, and reading it
+Both are documented in the skill's **toolchain reference**, and reading it
 is the step rather than a footnote to it:
 
 - **The trust step** is its own section there, titled for the fact that
   matters — that it comes before everything else — and it names the repo
   `init` has just laid the payload into as one of the two cases it exists
   for. It carries the exact form to run and why the narrower form is wrong
-  (the pack ships a config *split*, and the narrow form trusts one file of
+  (the skill lands a config *split*, and the narrow form trusts one file of
   it), a table of what an untrusted config costs under each of the manager's
-  two trust settings, and the pipeline and linked-worktree cases. The pack's
-  **conventions** state the same doctrine in one paragraph, and its skill's
-  bootstrap section restates it; the reference is where the detail is.
+  two trust settings, and the pipeline and linked-worktree cases.
 - **The executable-bit step** is in that same reference's task-file anatomy,
   which is also what explains the symptom: the manager runs a task file
   directly, so one without the bit fails as an *unknown task* rather than as
@@ -703,6 +611,8 @@ reaches the secrets provider, and on a fresh repository it is long — so it is
 an **offer**, never automatic, and a decline needs no re-asking.
 
 Whichever way it goes, name the task so a user who declined knows what to run.
+Run and name it as `MISE_ENV=dev mise run setup:all`: the aggregator refuses
+an unset `MISE_ENV`, since which tools install and lock depends on it.
 
 ## 11 — The git pass
 
@@ -761,49 +671,39 @@ Ask, in one round **and once for the whole product**, which way work lands on
 each of the two long-lived branches — **one row per repo per branch**, in the
 order the repos run, each row taking one of two values: **`direct`** — *merge
 locally and push*; or **`pr`** — *push the branch and open a pull request*.
-Only a repo whose environment-block file this run lands or replaces gets rows;
-a repo keeping that file is listed under the table with what it keeps, per the
-next paragraph.
+Every repo the run shapes gets its two rows.
 
-| Repo     | Branch    | Preselected | Position              |
+| Repo     | Branch    | Preselected | Argument              |
 | -------- | --------- | ----------- | --------------------- |
-| `<repo>` | `develop` | `direct`    | `MERGE_MODEL_DEVELOP` |
-| `<repo>` | `main`    | `pr`        | `MERGE_MODEL_MAIN`    |
+| `<repo>` | `develop` | `direct`    | `merge_model_develop` |
+| `<repo>` | `main`    | `pr`        | `merge_model_main`    |
 
-The preselections shown are the toolchain pack's, and they are what a repo
-whose file is landing for the first time gets: work into `develop` is the
-day's landing and needs no reviewer between a green branch and the integration
-line, while `main` takes nothing but `develop` and is where a review gate earns
-its keep. **A repo whose file this run replaces is preselected from what that
-file carries** — its current pair where it has one, else its legacy
-`MERGE_MODEL` for both rows, else the pack's defaults — so a reshape never
-proposes a landing the repo did not already run. A repo may answer differently
-from its siblings — each repo carries its own block, and each one's merge
-tasks read their own copy. Write each row's answer literally at that repo's
-marked position §7 described, and count each as a fill.
+The preselections shown are the tool-config skill's defaults, and they are
+what a repo landing its toolchain files for the first time gets: work into
+`develop` is the day's landing and needs no reviewer between a green branch
+and the integration line, while `main` takes nothing but `develop` and is
+where a review gate earns its keep. **A repo that already carries a landing
+model is preselected from it** — its current pair where it has one, else its
+legacy single `MERGE_MODEL` for both rows — so a reshape never proposes a
+landing the repo did not already run. §2 passed exactly these preselections.
+A repo may answer differently from its siblings — each one's merge tasks read
+their own copy.
 
-**A repo that kept that file keeps the values those positions hold**, and what
-decides that is the kind of position it is, not the keep. The landing model is a
-real, working value under its comment — filled from the moment the file landed,
-as [existing repo](existing-repo.md) §9 says of that kind — so it is written
-where this run **lands or replaces** the environment-block file and nowhere
-else, and a kept file is neither. The file's other two positions — `REPO_NAME`
-and `MEMBERS` — are a different matter: §7 fills those, keep or no keep. Say so
-on that repo's line in the report, naming the values it keeps and the file
-that was kept, so a reader sees one decision rather than a repo that silently
-landed on the pack's defaults. A kept file that still carries the single
-legacy key `MERGE_MODEL` is not asked either, but it is not left as it is: a
-keep never covers a marked position's value, so §7's fill rewrites that line
-in place into the two positions, each carrying the one value, and its line
-reads **"legacy `MERGE_MODEL` `<value>` — written to both positions"**. Until
-that run, every reader takes the one value for both branches.
+**Where a row's answer differs from what §2 passed**, call
+`/stackgen:tool-config all` again in that repo, with every argument §2
+passed and the answered pair — `merge_model_develop=pr merge_model_main=pr`,
+say — previewed first and answered as §2 says, its rows shown under this
+question and covered by its answer. The skill writes it; count each changed
+row as a fill. A
+row answered as preselected needs no second call. Migrating the retired
+single key into the pair is the skill's, on either call.
 
 It is asked here rather than as one of SKILL.md's numbered questions because it
 decides how work lands, which is what the rest of this pass is about; and it is
 asked **before** (b) so the file it writes is in what (b) stages.
 
 `init` does not act on the answers. The merge tasks read them, and what `pr`
-mode does about opening the pull request is the pack's business — naming that
+mode does about opening the pull request is the skill's business — naming that
 is exactly the naming this skill's hard rules forbid.
 
 ### (b) Check out `develop`, then stage exactly what this run wrote
@@ -816,6 +716,40 @@ commits sits on the branch work flows through: the ops commit lands on
 happened to be standing on. A fresh repository is on `develop` already, from
 §1, and takes the table's first row after the commit instead. This is the
 order [existing repo](existing-repo.md)'s git pass keeps too.
+
+**The ignore fix is already in, before the lock.** No lock file is ignored
+except `mise.local.lock`, at any depth, which the shipped `**/mise.local.lock`
+line covers. The removal is `/stackgen:tool-config`'s, not `init`'s: §2's
+`all` preview returns one delete row, answered `ok`, per `.gitignore` line
+that ignores any other lock file, shown under this repo's **Tool-config rows**
+in the one consent, and §2's apply removes each line, so it runs before
+`setup:mise --lock-only` below. After `all`, `init` runs
+`git check-ignore -v .config/mise/mise.lock`, and a rule it still names comes
+from a source no call edits, such as `.git/info/exclude` or a global excludes
+file, and is shown on this repo's report line as the person's to fix.
+
+**Then the lock, before anything is staged.** In every repo, run
+`MISE_ENV=dev mise run setup:mise --lock-only`. It writes
+`.config/mise/mise.lock` where it is missing, and fills a present one with
+missing tools without bumping a locked version, plus its `.config/mise/locks/`
+sidecar where a tool needs one. Before locking it installs uv and Python, and
+nothing else. The plan shown before the one consent names that install. Then,
+whichever step wrote it, every lock path that changed — each one
+`git status --porcelain --untracked-files=all .config/mise/mise.lock .config/mise/locks`
+lists, untracked or modified — joins this repo's written list. A stale
+untracked sidecar there is swept in with them. So the `ops:` commit carries the
+lock, and the repo's first CI run, which installs with the lock enforced, finds
+it there.
+
+A failed run stops this repo's git pass with the command's output, before any
+commit. Its line at (c) and in the report reads *lock failed — not
+committed*, and the other repos go on. The step is skipped, and the pass goes
+on, in two cases. One: §9 deferred, and the unlock is §9's. Two: the repo's
+`setup:mise` has no `--lock-only` flag — probe first, with
+`mise tasks info setup:mise` — and the unlock is `/vwf:setup reshape` with
+the task replaced. Either way the repo's line reads *lock deferred*, and says
+its first CI run needs the lock committed. Where the lock step changed no lock
+path, the line reads `none`.
 
 Then, into this repo's own index: every path in **this repo's** written /
 moved / renamed lists, and nothing else. Not `git add -A`: a repo that already
@@ -880,12 +814,13 @@ run just installed will read it against, and shaping a repo is operations, not
 a feature.
 
 **The new-repo first commit precedes hook wiring by construction, and that is
-the whole answer to the branch guard.** The gates pack ships a hook that
-refuses commits on the protected branch; it is wired only when the bootstrap
-aggregator runs, and on this path §10 offers that aggregator *after* this
-commit — §9 made the library discoverable and wired nothing. So the guard is
-not in place yet and never sees the first commit. Nothing is disabled, nothing
-is skipped, and the hook ships exactly as the pack wrote it. On an existing
+the whole answer to the branch guard.** The gates `/stackgen:tool-config`
+lands carry a hook that refuses commits on the protected branch; it is wired
+only when the bootstrap aggregator runs, and on this path §10 offers that
+aggregator *after* this commit — §9 made the library discoverable and wired
+nothing. So the guard is not in place yet and never sees the first commit.
+Nothing is disabled, nothing is skipped, and the hook ships exactly as the
+skill wrote it. On an existing
 repo the hooks may already be wired, which is why that pipeline commits the
 gate configuration first and on its own.
 
@@ -1030,13 +965,13 @@ from these reads, in this order:
   the record, and doctor's predicate (g) reads it back from there.
 - **The protection, both branches, always**: no force-push and no deletion.
   Then **per branch, from that branch's own value** — `MERGE_MODEL_DEVELOP`
-  for `develop`, `MERGE_MODEL_MAIN` for `main`, as the file carries them:
+  for `develop`, `MERGE_MODEL_MAIN` for `main`, as (a) answered them:
   where the value is **`pr`**, additionally **require a pull request**, with
   no approval count, because the landing model says that branch lands through
   a request, so a direct push to it is exactly what the forge should refuse.
   Where it is `direct` the merge tasks push the merge themselves, and a
   require-pull-request rule would refuse the model the user just chose. The
-  pack's defaults give `main` the rule and `develop` not. A repo whose pair
+  skill's defaults give `main` the rule and `develop` not. A repo whose pair
   was created beside a mainline of another name gets the rows for `develop`
   and `main` alone; the old branch is neither set default nor protected.
 - **The idempotence check, per branch.** A branch that is already protected
@@ -1129,7 +1064,7 @@ words a person applies on the forge's settings pages: set the default branch
 to `<branch>`; on `develop` and on `main`, refuse force-pushes and deletion,
 and require a pull request on whichever of the two has its landing model set
 to `pr`; and, for the base, create the backlog project per the backlog skill.
-The hygiene pack's `CONTRIBUTING.md`, at the repo's root, carries the same
+The hygiene assets' `CONTRIBUTING.md`, at the repo's root, carries the same
 by-hand form of the default-branch line, so the list points there rather than
 restating it.
 
@@ -1144,7 +1079,9 @@ member refused for standing detached takes its *Deferred* line instead, naming
 the branch to check out. Then one `Gitlinks staged <n>` line for the base,
 counting the member pointers (b) added to its index, which reads `none` in a
 product with no members, and one `Backlog project` line, the base's alone.
-That is the git section SKILL.md's report specifies.
+A `Lock` line per repo reads staged, `none`, *lock deferred* or *lock failed —
+not committed*, per (b). That is the git section SKILL.md's report
+specifies.
 
 ## 12 — The report
 

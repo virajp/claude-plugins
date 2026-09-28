@@ -20,7 +20,7 @@ The survey writes nothing. The plan is one document. The apply touches only
 what the survey listed.
 
 **All three run across the resolved repo set, not across one repo.** The survey
-runs its eleven passes **in each repo** that resolved to mode `shaped`. The plan
+runs its ten passes **in each repo** that resolved to mode `shaped`. The plan
 is still one document, printed once, with **one section per repo** — the base
 first, then each member in resolved order. The apply touches the repos in
 **members-then-base order**, so the base's gitlinks are current by the time it
@@ -30,7 +30,7 @@ the same one consent; nothing about the set changes which pipeline a repo reads.
 
 ## Survey
 
-Read-only, and exhaustive before anything is printed. Eleven passes, and they
+Read-only, and exhaustive before anything is printed. Ten passes, and they
 run **per repo**: every pass below reads, and reports on, the repo it is
 running in and no other. Where a pass needs something only the base carries,
 it says so.
@@ -40,7 +40,7 @@ found and this machine does not have has nothing on disk to read, so its section
 opens with a **clone row** — the command the membership asset names for this
 product's linkage (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`, *An absent
 member*) — followed by the words *surveyed after the clone*. At apply time that
-member's clone runs first, then the eleven passes run inside it, then its rows
+member's clone runs first, then the ten passes run inside it, then its rows
 print, and only then does its own apply proceed. **Nothing is written into an
 absent member before its survey has run**, which is the same rule every other
 repo gets — the survey is simply later in the wall clock, not skipped.
@@ -51,19 +51,20 @@ repo gets — the survey is simply later in the wall clock, not skipped.
 repo has no root entry this pass would read and skips it.** In `source` mode
 its rows open that repo's section of the plan, ahead of the new-repo landing's.
 
-The hygiene doctrine closes a repository root to a fixed set, and the
-materializer enforces it as a ceiling. The root this pass reads is **the root of
-the repo it is running in** — a member's own root, surveyed against the same
-ceiling as the base's — and what it reads there is every **entry**: files and
-directories alike, never files only. A directory at the root sits under the same
-ceiling a file does, which is why the exemptions below have to name directories
-by hand. Every other configuration file at that root is a **move** into that
-repo's configuration directory.
+The stack adapter's root-allowlist doctrine closes a repository root to a
+fixed set, and the materializer enforces it as a ceiling. The root this pass
+reads is **the root of the repo it is running in** — a member's own root,
+surveyed against the same ceiling as the base's — and what it reads there is
+every **entry**: files and directories alike, never files only. A directory
+at the root sits under the same ceiling a file does, which is why the
+exemptions below have to name directories by hand. Every other configuration
+file at that root is a **move** into that repo's configuration directory.
 
 **Derive the rename map from the packs' own `config/` trees**, never from a
 list written here. For each landed or landable pack, the **full path** its
 `config/` tree declares *is* the destination — a root entry whose path, taken
-whole, matches one of those declarations moves to where the pack puts it —
+whole, matches one of those declarations moves to where the pack puts it, and
+`init`'s hygiene assets are read the same way —
 plus every **root spelling** the [tool-config table](tool-configs.md) lists for
 the tool that declaration configures, which the *root tool configs* step below
 reads. That is what keeps this pass correct when a pack changes where its
@@ -73,10 +74,17 @@ failure mode the whole tier exists to avoid.
 **Two things the map never holds.** A **task-file basename**: the task library
 is excluded from the map whole, so a root file that happens to share a name
 with a shipped task is not that task and is never moved into the library — the
-library's files are pass 3's, pass 10's and the materializer's, by full path.
+library's files are pass 3's, pass 9's and the materializer's, by full path.
 An entry the repo's **`.gitignore` ignores**: a root entry the ignore file
 already excludes is build output or a local artefact, not configuration, and
 is skipped without a row.
+
+**A `handed` spelling is in neither.** A root file the table's `handed` row
+lists — the toolchain manager's own root config — is not a stray, and it is
+not a plan row of this pass either: it enters no rename map, gets no move,
+keep or delete row, and is reported nowhere by init. The tool-config skill's
+migration folds it, and that call's rows cover it, per the toolchain
+migration below, whose rows init's survey preview returns.
 
 A root **entry** matching **no** pack declaration, none of the table's
 spellings and **not** on the allowlist is **reported, not moved**. It belongs
@@ -126,46 +134,49 @@ a repository of its own.
 
 #### The move-and-shim case
 
-One shape needs saying because a naive move breaks it. Where a gate pack
-declares **both** a file in the configuration directory *and* a file of the
-same basename at the root — the root one being a two-line stand-in that does
-nothing but point at the other — the root file is not a config that failed to
-move. It is the pack's answer to a tool whose config discovery is root-only
-and cannot be redirected.
+One shape needs saying because a naive move breaks it. Where
+`/stackgen:tool-config` or a pack lands **both** a file in the configuration
+directory *and* a file of the same basename at the root — the root one being a
+two-line stand-in that does nothing but point at the other — the root file is
+not a config that failed to move. It is the owner's answer to a tool whose
+config discovery is root-only and cannot be redirected.
 
 So: a **real** configuration file of that basename at the root moves to where
-the pack's `config/` tree declares it, exactly as pass 1 says, and the pack's
-stand-in takes its place at the root. Record it as a **rename** row plus the
-create the stand-in already is, and say in the plan that the settings survive
-the move — they are read through the stand-in.
+its owner lands it, exactly as pass 1 says, and the owner's stand-in takes its
+place at the root. Record it as a **rename** row plus the create the stand-in
+already is, and say in the plan that the settings survive the move — they are
+read through the stand-in.
 
-**Not every key survives it, though, and the pack says which.** A gate pack
-that ships a stand-in states, in its own skill, what the file it points at may
+**Not every key survives it, though, and the owner says which.** An owner that
+ships a stand-in states, in its own reference, what the file it points at may
 not carry: at least one key is *not inherited* through the pointing mechanism,
 and an extended file declaring it is a fatal config diagnostic — so every bare
 invocation of that tool fails, not only the one that reads the moved config.
-Read that pack's skill for which key and why; it is the authority, and this
-file names neither the tool nor the key on purpose. The move **drops** the
-key, and the plan says so as its own line.
+Read that owner's reference for which key and why; it is the authority, and
+this file names neither the tool nor the key on purpose. The move **drops**
+the key, and the plan says so as its own line.
 
 Dropping it **widens** what the gate covers, which is the other half of the
-same trap: with the key gone, the pack's own pinned plugin list defines the
-file set, so files the repo had kept out of the gate by omission now enter it.
-The survey re-derives the covered set after the drop, the plan lists every
-file that newly enters, and each is narrowed away with an **exclusion** —
-never by restoring the dropped key, which puts the fatal diagnostic back.
+same trap: with the key gone, the owner's pinned plugin list defines the file
+set, so files the repo had kept out of the gate by omission now enter it. The
+survey re-derives the covered set after the drop, the plan lists every file
+that newly enters, and each is narrowed away with an **exclusion** —
+`/stackgen:tool-config all add exclude <paths>`, on the one consent — never by
+restoring the dropped key, which puts the fatal diagnostic back.
 
-Tell the two apart by content, never by name: the pack's stand-in is the file
-the pack ships, byte for byte, and the survey has that file in hand. Anything
+Tell the two apart by content, never by name: the stand-in is the file its
+owner ships, byte for byte, and the survey has that file in hand. Anything
 else of that basename is the repo's own and is the thing being moved.
 
 #### Root tool configs
 
 The move-and-shim case is one tool's; this step is the same shape for every
-tool a pack ships, and it is what reads a brownfield repo's own gate before
-the pack's lands over it. The [tool-config table](tool-configs.md) carries one
-row per such tool — the tool, its known root spellings, the `.config/` path
-the pack lands, and the merge shape. For each row, look for every spelling at
+tool a pack or `/stackgen:tool-config` ships, and it is what reads a
+brownfield repo's own gate before the shipped one lands over it. The
+[tool-config table](tool-configs.md) carries one row per such tool — the
+tool, its known root spellings, the `.config/` path its owner lands, that
+owner, and the merge shape. For each row but a `handed` one, whose
+file the toolchain migration below covers, look for every spelling at
 the root **and inside `.github/`** — the one allowlisted directory a tool's
 discovery also reads, and which the allowlist survey above reads as a single
 entry, so a policy file inside it is never seen by that survey at all. Each
@@ -176,10 +187,10 @@ the plan and applied on the one consent:
   path the table names, as a `git mv`, and is then **offered through pass 6
   under that path**, against the pack's file — so what the repo wrote is read
   and compared before anything lands over it, and a keep there keeps it.
-  That is the table's `move-and-offer` shape. Where it says `move-and-split`
-  instead — the toolchain manager's root file is the case, and pass 3 says
-  what happens to it — the row says so and the split rows follow it.
-- **keep both** — the repo's file stays where it is and the pack's lands in
+  That is the table's `move-and-offer` shape. Where the table's owner is
+  `/stackgen:tool-config`, the offer is that skill's conflict row in its
+  preview, not pass 6's.
+- **keep both** — the repo's file stays where it is and the owner's lands in
   `.config/`. The row says that the tool's own root-first discovery reads the
   root file and that the gate, which passes the `.config/` path explicitly,
   does not — and the report lists it under Deferred as **unread by the
@@ -188,21 +199,66 @@ the plan and applied on the one consent:
   default and never proposed. The row records it as a move with no
   destination.
 
-**A twin the pack itself lands at the root** is the one case with no move: a
-tool whose discovery is root-only, so the pack's own file already sits at the
-root — the dependency-update policy is the case the table names. Where the
+**A twin the owner itself lands at the root** is the one case with no move:
+a tool whose discovery is root-only, so the owner's own file already sits at
+the root — the dependency-update policy is the case the table names. Where the
 repo carries that tool's policy under another of the table's spellings, or
-inside `.github/`, the **repo's file wins**: the pack's is **not** landed, the
-row reads `kept, pack file not landed`, and nothing moves. Two policies for
-one tool is how one of them is silently ignored.
+inside `.github/`, the **repo's file wins**: the owner's is **not** landed,
+the row reads `kept, pack file not landed`, and nothing moves. Two policies for
+one tool is how one of them is silently ignored. Where the owner is
+`/stackgen:tool-config`, the yield is that skill's and so is the row, shown
+under **Tool-config rows**.
+
+#### The toolchain migration
+
+A repo whose lockfile records the toolchain manager's bundle slug — the one
+`/stackgen:tool-config all` replaced — or whose toolchain files predate the
+skill's layout, is migrated by that call, never by a pass here. The skill
+reads the old files, a root manager config — the spellings the tool-config
+table's `handed` row lists — and each pack's old fragment among them, and
+its survey preview returns the rows: what it folds, what it moves, and every
+block that differs, as take theirs / keep mine / merge. `init` prints those
+rows in the repo's section under **Tool-config rows**, the one consent
+covers them, and the real call carries the answers, per
+[new repo](new-repo.md) §2. A repo already on the skill's layout, with
+nothing drifted, gets no row. On a reshape too, a tool the base mise block
+pins and the repo already pins is a conflict row, its two answers the repo's
+version or the base's `latest`, and the winner is pinned once.
+
+#### The retired hygiene bundle
+
+**`shaped` only.** A repo whose lockfile still records the retired
+`repo-hygiene/repo-hygiene` bundle was shaped before its files split between
+`/stackgen:tool-config` and `init`'s hygiene assets. Three rows, on the one
+consent, and none where the repo carries none of it:
+
+- **The lock record.** The `repo-hygiene/repo-hygiene` record is removed, and
+  the `tool-config/git`, `tool-config/graphify` and `tool-config/renovate`
+  records the skill's `all` call writes on this run take its place — the
+  ignore, attributes, graph-ignore and policy files are adopted by that call,
+  whose preview converts a landed sectioned ignore file into blocks and shows
+  its rows. The files it recorded that the hygiene assets now carry lose
+  their record and keep their content, on the already-there rule.
+- **The editor fragment.** A landed `.config/vscode.d/repo-hygiene.jsonc` is
+  renamed to `.config/vscode.d/hygiene.jsonc` as a move row, `git mv`, before
+  the editor merge reads it.
+- **`.editorconfig`.** Nothing lands it any more. One at the root whose hash
+  matches the retired record's entry for it — or, where no entry is left, the
+  SHA-256 of the last payload shipped,
+  `15dc2bc203a891de86c2085816e1187ea8d2641d0e5eec6573795bc71d7fa46e` — is
+  offered as a **delete / keep** row, defaulting to delete. One that differs
+  is the user's: no row, and it stays.
+
+A `blank` or `source` repo has no lockfile, so none of these rows.
 
 #### The hook manager
 
 Read, in the repo this pass runs in, the local `core.hooksPath`
 (`git config --local core.hooksPath`), a `.husky/` directory, and a
 `lefthook.yml` or `.lefthook.yml` at the root. Any hit means the repo's hooks
-are wired to something other than the gate the packs ship, and it is one
-**plan row**, `switch hook manager to pre-commit`, whose **default is keep**.
+are wired to something other than the gate `/stackgen:tool-config` lands, and
+it is one **plan row**, `switch hook manager to pre-commit`, whose **default
+is keep**.
 A hook manager somebody installed is a decision on the same footing as a
 diverged file, and switching it silently is how a team's existing hooks stop
 running the morning after a reshape.
@@ -246,39 +302,27 @@ happening.
 **Precondition: a task library exists** — every `shaped` repo, and a `source`
 repo that already carries one; without a library there is nothing to rename.
 
-The toolchain pack's task-library reference carries a **Legacy names** table —
+The tool-config skill's toolchain reference carries a **Legacy names** table —
 each row a name this contract replaced and what it became. Read that table and
 match every task in the library against its left-hand column. Each hit is a
 **rename**, `old → new`, with the destination path the new name implies.
 
 **A task is a task file or an inline `[tasks.*]` table**, and this pass reads
-both. Every configuration file the toolchain manager reads — the pack's split
-under `.config/`, and any root file pass 1's tool-config step found — may
+both. Every configuration file the toolchain manager reads — the skill's split
+under `.config/`, and any root file the toolchain migration will fold — may
 declare tasks inline, and a repo that grew up without the task library
 usually did. An inline task is matched against the legacy table like a file
 is; a hit is a **rename** into the library — the file the new name implies,
 its body carried across verbatim under the shipped shebang and the helper
-`source` line, and the inline table removed — and a miss is pass 10's, kept
-inline where it sits. Passes 4 and 10 read the same set, so a task is never
+`source` line, and the inline table removed — and a miss is pass 9's, kept
+inline where it sits. Passes 4 and 9 read the same set, so a task is never
 invisible for being a table rather than a file.
 
-**A moved root manager config is merged into the pack's split, never kept
-whole.** Where pass 1's tool-config step moved the toolchain manager's root
-file, it is not one more file for pass 6 to offer: the pack ships that
-configuration as a **split** — one file per concern — and a whole root file
-beside the split is two sources for one setting. So its `[env]` table goes
-into the pack's environment-block file and its `[tools]` table into the
-pack's tool-pin file, each a **merge** row naming every key it carries, with
-a key both sides declare shown as `hand value · pack value` and the repo's
-kept; its tasks go through this pass as inline tasks; any other table it
-carries goes, on the same terms, into whichever file of the split the pack's
-conventions name for that concern. The moved file, emptied, is **removed** —
-listed as the move it was with no destination. Only a table no split file
-owns keeps it alive, cut down to that table and listed as repo-owned and
-kept with the table named, so the split stays the one source for everything
-the packs declare.
+**A root manager config is the skill's to fold**, per pass 1's toolchain
+migration, never a move here. Its inline tasks are still this pass's: read
+them as inline tasks before the skill's call removes the file.
 
-The table lives in the pack, not here, and that is the point: the renaming is
+The table lives in the skill, not here, and that is the point: the renaming is
 a fact about the task library, so vwf's prose never has to carry a name it
 would otherwise have to keep in sync.
 
@@ -334,14 +378,14 @@ file and not the sources has a task library where every task fails on its
 first line. List both.
 
 Then **compare the file's content**, under its new name, against the one the
-toolchain pack ships — byte for byte, the same way pass 1 tells the pack's
+tool-config skill lands — byte for byte, the same way pass 1 tells the pack's
 stand-in from the repo's own. Identical, and the pass ends here. Different,
 and the repo's file is a **diverged copy** of the library every pack script
 is written against: the tasks pass 6 would create call into it by name, and a
 name this copy never defined fails the moment that task first prints.
 
-So the plan carries a **replace** row for the helper file — the pack's file
-over the repo's, applied on the same one consent as everything else — with a
+So the plan carries a **replace** row for the helper file — the skill's file
+over the repo's, landed by its call on the same one consent — with a
 **sub-line for every function the repo's copy defines and the pack's does
 not**. Those are the names that leave the file, and listing them is what lets
 the user read what leaves before saying yes rather than after. Each one
@@ -350,8 +394,8 @@ body carried into the sidecar below.
 
 Each retired name then becomes **rewrite** rows: one per call site in a
 repo-owned task file, `old → new` at `file:line`, the new name read from the
-**Legacy names** table in the toolchain pack's task-library reference — the
-same table pass 3 reads for task names, and the pack's for the same reason.
+**Legacy names** table in the skill's toolchain reference — the same table
+pass 3 reads for task names, and the skill's for the same reason.
 The mapping is a fact about that library, so vwf's prose carries none of it.
 A rewrite replaces one token in place; nothing else on the line changes.
 
@@ -423,16 +467,25 @@ the input also carries each root tool config pass 1's tool-config step
 **moved**, under the `.config/` path it now occupies — the move is what puts
 the repo's file where the pack's would land, and this pass is what reads it
 before the pack's does; the [tool-config table](tool-configs.md) names the
-path, and a row whose shape is `move-and-split` goes through pass 3 instead
-and never reaches here. Either way, a path offered to this pass takes the compare,
+path. Either way, a path offered to this pass takes the compare,
 the default rule, the outcomes and the `kept_files` record exactly as written
 below — one row per path, in the plan, before the one consent.
 
-Diff **the repo this pass is running in** against what the three baseline
-bundles ship — the same three bundles for every repo of the set, since the shape
-is per repo and a member gets its own full configuration tree. Every file a
-bundle declares and that repo lacks is a **create**, listed with the bundle it
-comes from.
+Diff **the repo this pass is running in** against what `/stackgen:tool-config
+all` lands, `init`'s hygiene assets carry and the secrets provider question
+4 picked ships through the stack adapter — the same set for every repo, since
+the shape is per repo and a member gets its own full configuration tree.
+`init` fetches no bundle. Every
+hygiene asset or provider file that repo lacks is a **create**, listed with
+where it comes from.
+
+**A path the tool-config skill owns never reaches this pass.** Its lockfile
+record reads `source: tool-config/…`, and the skill's own call shows its
+creates and drift rows, per pass 1's toolchain migration.
+
+**Nor does a hygiene asset.** It carries no lock record: one the repo already
+has is kept on the already-there rule of
+[hygiene assets](readme-and-license.md), and one it lacks is a create.
 
 A path offered to this pass — a file the repo *has* and a pack also owns, once
 pass 3's renames are accounted for — is **compared**, and what it is compared
@@ -449,10 +502,9 @@ shaped repo would ever produce an empty plan.
 - **The lockfile records nothing for it** — the repo acquired that file some
   other way — compare against the **pack's** bytes instead, on exactly the same
   terms, and **after the fills**, never raw: take the pack's payload with the
-  placeholders of [new repo](new-repo.md) §4 filled from this run's sources and
-  the commit gate's scope list filled from question 2's confirmed ids, the way
-  a landing would leave it. The raw payload carries `<REPO_URL>` and an empty
-  scope list, so a file that is exactly what a landing would have written
+  placeholders of [new repo](new-repo.md) §4 filled from this run's sources,
+  the way a landing would leave it. The raw payload carries `<REPO_URL>`, so
+  a file that is exactly what a landing would have written
   reads as diverged against it and is re-offered on every run. There is no
   landing to compare to, and this is the nearest thing. Every path the
   conflict list hands here in `blank` or `source` mode is this case, since
@@ -471,9 +523,9 @@ offering the file:
 
 - Take the **pack's** shipped payload for that file, at the version the
   lockfile pins — the stack adapter's pack, reachable from the plugin.
-- Splice into it the repo file's **current** value at **every position
-  [new repo](new-repo.md) §7 enumerates that the file carries**, owned or not,
-  reading each value the way that position's own comment describes it.
+- Splice into it the repo file's **current** value at **every marked
+  position the file carries** — any a pack payload still ships — reading
+  each value the way that position's own comment describes it.
 - Hash the result, and compare it with the repo file's hash.
 
 **Equal**, and the repo file is the pack's file with nothing changed outside
@@ -484,29 +536,11 @@ exactly as before.
 
 **Every marked position is spliced, and ownership decides only who shows the
 change.** A marked position is by definition where a repo-specific value lives,
-so a value sitting in one is never content drift for this pass, whether or not
-some pass reads it. The positions a pass does own it shows: **§9** owns the
-repo-name key, the bootstrap aggregator's member flags, the shell aliases,
-`MEMBERS`, and the plugin task's two agent-plugin lists; **§11** owns the commit
-gate's scope list and its forge links. One edit is then one row, and it is the
-owning pass's row — a `repo-name key: <old> → <new>` replace row is the whole of
-what a user sees when that key is the only thing that moved, never that row plus
-an offer of the file it sits in.
-
-**A position no pass owns is spliced on exactly the same terms and produces no
-row at all** — the two landing-model positions, `MERGE_MODEL_DEVELOP` and
-`MERGE_MODEL_MAIN`, and any position a pack marks later that no pass reads.
-Each is a value the repo set, so there is nothing for this pass to offer and no
-survey row to show; the git pass still writes both wherever this run lands or
-replaces the environment-block file, per §11(a), exactly as before. That is
-what lets one `[env]` block carry `REPO_NAME` and `MEMBERS` beside the pair and
-still reconstruct equal — a folder rename on a repo landing `main` by `pr` is
-§9's replace row and nothing else. A kept file that still carries the retired
-single `MERGE_MODEL` is spliced on the same terms too: its one value is read as
-both positions' value, and every reader takes it that way until this run's
-fill — a keep never covers a marked position's value, as pass 6 says — writes
-that one value into both positions, retires the single key, and reports the
-line. `/vwf:doctor` (f) is what reports the legacy key in the meantime.
+so a value sitting in one is never content drift for this pass. One edit is
+then one row, the owning pass's, never that row plus an offer of the file it
+sits in. The positions in files the tool-config skill owns — the commit
+gate's scopes and forge links among them — are not spliced here: those files
+never reach this pass.
 
 **A record whose `source:` is `generated` has no pack payload**, so there is
 nothing to splice into: the second test is **skipped**, and test 1's mismatch
@@ -518,11 +552,11 @@ on the same single consent:
 
 - **replace** — the pack's file lands over the repo's, and every marked
   position that file carries is then filled from the confirmed answers to
-  SKILL.md's questions, exactly as [new repo](new-repo.md) §The marked
-  positions fills them on a fresh landing. That is what makes a replace safe
-  on a file whose positions the repo had already filled: they are re-filled,
-  not lost — and `init` then **records the file's post-fill hash in the
-  lockfile**, under that path's `entries:` record, once those fills have run.
+  SKILL.md's questions, exactly as a fresh landing fills them. That
+  is what makes a replace safe on a file whose positions the repo had
+  already filled: they are re-filled, not lost — and `init` then **records
+  the file's post-fill hash in the lockfile**, under that path's `entries:`
+  record, once those fills have run.
   The materializer's hash is the landing's, taken before any fill; this one
   overwrites it, and it is what the next run compares against.
 - **keep** — the file's own content is untouched and the decision is
@@ -601,34 +635,30 @@ config that already carries the block is rewritten from this run's answers on
 the same terms, and the forge is the live `origin` host rather than the
 recorded value wherever the remote can be read.
 
-**The helper library is the one file this pass never offers.** Every task
-file created here sources that library, so a kept copy missing a function the
-created scripts call is a repo that fails on its first print — a breakage
-this run causes and a later, user-run command would be too late to prevent.
-Pass 5 compares it and plans its replacement unconditionally: there is no
-keep row for it, and its retired names leave through pass 5's rewrites and
-its sidecar rather than through this pass's offer.
+**The helper library never reaches this pass either**: the skill lands it.
+Every task file the run creates sources that library, so a kept copy
+missing a function the created scripts call is a repo that fails on its
+first print — a breakage this run causes and a later, user-run command
+would be too late to prevent. Pass 5 compares it and plans the skill's
+replacement unconditionally: there is no keep row for it, and its retired
+names leave through pass 5's rewrites and its sidecar rather than through an
+offer.
 
-**Three hygiene files are never offered either, from the other end.** The
-readme, the licence file and the security file take the already-there rule of
-[readme and licence](readme-and-license.md): one the repo carries is **kept,
+**The hygiene files are never offered either, from the other end.** The
+readme, the licence file, the security file and every other file `init`'s
+hygiene assets carry take the already-there rule of
+[hygiene assets](readme-and-license.md): one the repo carries is **kept,
 never replaced, and reported as kept** — no offer, no default to flip, and no
-`kept_files` entry, since nothing was decided. **Every spelling of the licence
-file counts as carrying one** — `LICENSE`, `LICENSE.md`, `LICENCE`, `COPYING`
-— not the one name the allowlist happens to land: a repo licensed under any of
-them is licensed, and a pack file landed beside it is a second licence. A
-conflict the materializer reports on one of those paths, in any mode, becomes
-that report line and nothing else, and a licence under one of the other
-spellings, which the materializer would not report as a conflict, is found by
-this pass by name and treated the same way.
+`kept_files` entry, since nothing was decided. The editor baseline fragment
+is the one exception, and that reference says why. **Every spelling of the
+licence file counts as carrying one** — `LICENSE`, `LICENSE.md`, `LICENCE`,
+`COPYING` — not the one name the allowlist happens to land: a repo licensed
+under any of them is licensed, and a licence text landed beside it is a
+second licence. This pass finds each spelling by name, in any mode, and it
+becomes that report line and nothing else.
 
-### 7 — Fragments and sections
+### 7 — Editor fragments
 
-- **Hook fragments** — for every landed pack that ships one, whether the gate
-  configuration already carries its marked block. A missing one is a merge.
-- **Ignore sections** — for every language the stack read produced
-  (SKILL.md's *The stack read*), whether the ignore file already carries that
-  section's banner. A missing one is an append.
 - **Editor fragments** — whether each of the two editor files carries the
   block, which is a merge where it does not; and, read from the file whole,
   every key **outside** the block that the composed set also carries. Each is
@@ -639,40 +669,14 @@ this pass by name and treated the same way.
   about, before the plan is printed; a `take` or `union` sub-line names the
   hand lines it removes.
 
-All three are detailed in
-[fragments and sections](fragments-and-sections.md).
+Detailed in [fragments and sections](fragments-and-sections.md). The ignore
+file is `/stackgen:tool-config`'s git tool, never a merge here — its preview
+converts a landed sectioned file into blocks and shows the rows — and a
+pack's hook is that skill's block too. The template fallback for a detected
+language no pack here asks for is [new repo](new-repo.md) §5's, one
+**Tool-config row** per template.
 
-### 8 — Commit types
-
-The commit-message gate's configuration carries a closed set of ten types. Any
-type present in the repo's configuration and outside that set is a **rename**,
-mapped:
-
-| Was                                                 | Is now       |
-| --------------------------------------------------- | ------------ |
-| `chore`, `build`, `ci`, `deps`, `config`, `release` | → `ops`      |
-| `style`                                             | → `refactor` |
-| `spec`, `blueprint`                                 | → `docs`     |
-| `add`                                               | → `feat`     |
-
-**A type in neither column is asked, never guessed.** The table maps the
-spellings this toolkit has met; a repo may carry one it has not — `wip`,
-`hotfix`, a team's own word — and picking a destination for it silently is a
-rename the user reads about after their next commit is refused. Ask once per
-such type, before the plan is printed, with the closed set of ten as the
-choices plus **keep as is**; a mapped answer is a rename row like the table's,
-and *keep as is* leaves the type in the configuration outside the closed set,
-listed in the plan as kept with the answer beside it. `init` records no
-answer for it — the three keys it writes are pass 6's, pass 7's and the
-`answers` block — so a kept type is asked about again on the next run it is
-still there, which is one question, and the honest price of not growing a
-fourth record.
-
-This maps the **configuration**, not the history. Commits already written keep
-their words; rewriting history to match a config change is never something
-this command does.
-
-### 9 — Per-project groups
+### 8 — Per-project groups
 
 Resolve the project ids **of the repo this pass is running in** the way
 [new repo](new-repo.md) §7 does — resolution order, then slugification, the
@@ -714,24 +718,22 @@ entirely.
 Groups that already match need nothing, and a project id with no group at all
 gets its `_default` slot as a create.
 
-**The repo-name key is compared here too, and against a different thing.** It
-is not on the id list — it takes this repo's **folder name, slugified**, the
-basename of its main checkout. Read that name, slugify it by the same asset,
-and compare it with what the key holds:
+**The skill's positions are compared by the skill.** This pass computes the
+values `/stackgen:tool-config all` takes, per [new repo](new-repo.md) §2 —
+the folder slug for `repo`, the resolved members, the landing pair the repo
+already carries, question 5's confirmed rows, pass 10's scope list — and passes
+them to the skill's `preview all` in the survey, per [new repo](new-repo.md)
+§2. The skill compares each with what its file holds and returns the row: a
+`repo-name key: <old> → <new>` replace, member flags and aliases rewritten
+from project ids to members, a plugin list gaining or losing rows, a scope
+list that moved, a base-block tool the repo already pins. `init` prints
+those rows in this repo's section under **Tool-config rows**, asks each
+conflict or drift row inside the plan, and the one consent covers them.
 
-- The key still carries the pack's placeholder: a **create**, filled with the
-  folder slug.
-- The key holds the folder slug already: no row.
-- The key holds anything else — most often a project id an earlier run wrote
-  there, or the old folder name after a rename: a **replace** row reading
-  `repo-name key: <old> → <new>`, counted with the other marked-position
-  rewrites and applied on the same one consent as everything else in the plan.
-  Show both values; the whole point of the row is that a name the user has seen
-  before is going away.
-
-Never silently rewrite it, and never leave it to `/vwf:doctor` alone: the
-launch aliases in the user's own global configuration read this value, so a key
-naming a folder that no longer exists fails somewhere `init` cannot see.
+The folder slug is this repo's main checkout basename, slugified by the same
+asset. Never leave a rename to `/vwf:doctor` alone: the launch aliases in the
+user's own global configuration read that key, so a key naming a folder that
+no longer exists fails somewhere `init` cannot see.
 
 **What makes a position unfilled is a marker the fill removes.** The packs
 mark a position in two ways, and only one of them leaves a later run a test it
@@ -755,102 +757,33 @@ is how the second run of a shaped repo reports its own first run's work: a user
 who answered the git pass wrote that answer deliberately, and a value
 comparison cannot tell it apart from a position nobody has ever touched.
 
-The other marked positions are checked in the same pass, and two of them are
-**not** that id list's: the bootstrap aggregator's member flags and the shell
-aliases compare against the resolved **members** — one flag and one alias per
-member, per [new repo](new-repo.md) §7. A position still carrying only the
-pack's commented template, on a repo that **has** members, is a create; one
-already carrying exactly those lines needs nothing; one carrying lines named for
-anything else — the project ids an earlier run wrote there, most often — is a
-**rewrite**, with the lines on both sides listed. The **repo-name key** is on
-neither list: it is compared against this repo's folder slug, by the rule pass
-9 states above.
+### 9 — Repo-only tasks
 
-The environment block's other two positions are checked here too, and they are
-not the same kind of wait:
-
-- **`MEMBERS`** is a create on a repo whose registry declares
-  **sibling** members and whose position still carries the pack's shipped
-  default — that is the one shape where the task library has no other source
-  for them. It is the second kind of position above, so what decides this row
-  is the member list this run resolved and not an unfilled test: the pack
-  ships it with a working value and marks it in a comment. Under submodule
-  linkage, and on a single-project repo, it is correct as shipped and produces
-  no row.
-- **`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN` are never a create, and never
-  a row at all.** They are the second kind too — the pack ships the landing
-  model of each branch as a real value under its comment — so both are filled
-  from the moment the file landed, and a survey pass has nothing to say about
-  either however it now reads. The git pass is what asks the question, one row
-  per branch, and writes the two answers, in every repo whose environment-block
-  file this run lands or replaces (per [new repo](new-repo.md) §11(a)); a
-  survey pass does not pre-empt it, and never reports the landing model a user
-  chose — or the shipped one they kept — as a hole. A kept file carrying the
-  retired single `MERGE_MODEL` instead of the pair is not a hole here either:
-  the git pass fills both positions from that one value — a keep never
-  covers a position's value — retires the single key, and says so on the
-  repo's line; the pair is asked afresh only where the file is landed or
-  replaced.
-
-The plugin task's **two lists** are checked in the same pass, against the
-confirmed answer to SKILL.md's **question 5** — which is asked on an existing
-repo too, seeded by the same inventory the new-repo path uses, and with the
-same two rows dropped from it: the workflow's own plugin and whatever it
-depends on are the task's unconditional business and are never offered, so
-they never reach either position. A repo that already carries one of them at a
-position is a **rewrite** that removes it, and the plan says why:
-
-- A position still carrying **only** the pack's commented template, on a repo
-  whose answer was non-empty, is a **create**.
-- A position already carrying rows is **compared** with the confirmed answer,
-  row for row. Any difference — a row gained, a row lost, a row respelled — is
-  a **rewrite**, and the plan lists the rows on both sides, because this is
-  the one position whose existing content a user may have hand-edited and the
-  plan is where they get to see that before consenting.
-- Identical rows need nothing, and a **none** answer against a position that
-  still holds only the template produces no row either.
-
-**A plugin task whose content differs from the pack's** is one of §6's offered
-files. Offered **replace**, the pack's file lands and this pass fills both
-positions on it from question 5's confirmed answer, as a create. Offered
-**keep**, the repo's file stays and this pass fills both positions in it all
-the same: the keep covers the content somebody customised, never a position
-the pack marked for `init` to answer. A file whose *only* difference from the
-record is what those two positions hold was never offered at all — §6's second
-test splices them out, this pass owning and showing both — so the rows below are
-what a user sees either way, and the plan says which file each one is written
-into. A kept file **lacking** a position outright is no longer a case this
-pass needs a rule for: a root manager config is merged into the pack's split
-rather than kept whole (pass 3), so the environment block's positions are
-always the pack's file's, and a plugin task that dropped both markers is one
-Deferred line, unlock *flip the offer to replace*.
-
-### 10 — Repo-only tasks
-
-Every task in the library that **no landed pack ships** is the repo's own —
-a task file, or an inline `[tasks.*]` table in any of the manager's
-configuration files, read as pass 3 reads them. List each one as
+Every task in the library that **neither the skill nor a landed pack ships**
+is the repo's own — a task file, or an inline `[tasks.*]` table in any of the
+manager's configuration files, read as pass 3 reads them. List each one as
 **repo-owned, kept**, an inline one with the file and table it sits in, and
 touch none of them: `init` does not move a repo's task, does not rename it,
 does not turn a table into a file and does not fold it into a group of its
 own choosing. A repo that wrote a task wrote it for a reason this run cannot
 read.
 
-Derive the set the way pass 6 derives its creates — the paths the three
-baseline bundles declare, plus the secrets provider's — and take every task
-file the library carries that the set does not name — but take it only
+Derive the set the way pass 6 derives its creates — the paths the skill
+lands, plus those the secrets provider declares — and
+take every task file the library carries that the set does not name — but
+take it only
 once pass 3's renames are accounted for, in the same words pass 6 uses and
 for the same reason. A file the legacy table renames into the set is the
 set's, not the repo's, and so is one pass 3's collision rule left at its old
 path: both already carry a row of their own — a rename, or an offer — and
 listing either here as well reads as two files, one of them kept, when there
 is one. So the rule is the path the file **resolves to**, never the path it
-sits at: the set is what the bundles declare, and a file the table or that
-rule points into the set is inside it. `_scripts/local` is never among them
-either: it is pass 5's, and listing it twice reads the same way.
+sits at: the set is what the skill and the provider declare, and a file the
+table or that rule points into the set is inside it. `_scripts/local` is never
+among them either: it is pass 5's, and listing it twice reads the same way.
 
 **The `_default` slot is exempt on the same footing, and for a nearer reason:
-`init` writes it.** Pass 9 lists it as a create for a project id that has no
+`init` writes it.** Pass 8 lists it as a create for a project id that has no
 group of its own, so it is this command's output rather than a task the repo
 authored — and no bundle declares it, because no bundle can: the id is this
 repo's. Left unexempted it would come back as repo-owned and kept on **every**
@@ -871,13 +804,13 @@ here would be exactly the guess the shebang pass refuses: the contract can
 say that a name is not one of its own, and cannot say what the repo meant by
 it.
 
-### 11 — The gate-config fills
+### 10 — The commit-scope argument
 
-Two positions the commit gate's packs ship **marked, with a comment naming
-what `init` fills them from**. Only one of them is a wait: the commit-scope
-list is filled on every run, the first included, from the ids question 2
-confirmed, while the forge links wait on the repo having a remote. The
-shipped comments say which is which:
+The commit gate's configuration is `/stackgen:tool-config`'s, and `init` fills
+no position in it. What stays `init`'s is **deriving the scope list**, which
+it passes to `/stackgen:tool-config all` as `scopes=`, per
+[new repo](new-repo.md) §2; the forge links are the skill's own, read from
+the repo's origin.
 
 - **The scope list takes the ids question 2 confirmed**, on any run and the
   first one included. Where the base carries a registry those are its ids,
@@ -886,45 +819,21 @@ shipped comments say which is which:
   was shown every row and accepted it has declared the list, which is the
   thing a scope needs. A registry is where a proposal may be read from, never
   a condition on the fill.
-- **The forge links fill on *any* run where the repo has a remote** — the
-  first one included, since a cloned or already-pushed repo has one from the
-  start. Only a repo with no remote yet keeps them as shipped, and the next
-  run after the remote is added fills them. They ship **commented out**, so
-  filling them means uncommenting them too; a filled line left commented is
-  the same as no link.
-
-| The fill        | Its source                                              | Fillable                 | When it stays as shipped                            |
-| --------------- | ------------------------------------------------------- | ------------------------ | --------------------------------------------------- |
-| commit scopes   | the project ids of pass 9, as question 2 confirmed them | on any run               | question 2 confirmed no id for this repo            |
-| the forge links | this repo's own origin, via `git remote get-url origin` | on any run with a remote | no origin remote                                    |
-
-**The two fills read from different places.** The scope list takes a repo's
-**own** confirmed ids — the rows question 2 showed under that repo's heading —
-and where the base carries a registry, that registry is what those rows resolved
-from for every repo in the set: a member carries no configuration of that kind,
-its file being the back-link the membership asset defines
-(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`), so a member's scopes are the
-projects that one registry places in it. The forge links are genuinely **per
-repo**: each repo's own origin, read inside that repo, since a member has its
-own remote and filling its links from the base's would point every link in it
-at another repo's forge.
-
-Rules for both:
-
+- **Each repo passes its own** confirmed ids — the rows question 2 showed
+  under that repo's heading. Where the base carries a registry, that registry
+  is what those rows resolved from for every repo in the set: a member
+  carries no configuration of that kind, its file being the back-link the
+  membership asset defines (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`), so
+  a member's scopes are the projects that one registry places in it.
 - **The confirmed ids are the only scope source.** A scope names a project
-  somebody declared, so nothing `init` merely *inferred* reaches this position
-  — never a directory listing on its own, and never the repo's name, which is
-  not a project at all and is no longer an id source anywhere. What makes the
-  ids declarable is question 2: every row was shown with its source and
-  accepted or replaced. Where that question confirmed no id for a repo, leave
-  the position exactly as the pack ships it and say in the plan that the fill
-  is waiting on `/vwf:architecture` and `/vwf:setup`.
-- **Never delete the comment.** It is what a later run reads to find the
-  position, and it is the record of where the values came from.
-- **Each fill is its own plan row**, `+ <what>` with its source named, so the
-  user sees a config being completed rather than a file quietly changing.
-- The exact spelling of both positions — the key names, the value shape — is
-  the packs', read from the shipped file in place. Nothing here re-spells it.
+  somebody declared, so nothing `init` merely *inferred* reaches this
+  argument — never a directory listing on its own, and never the repo's
+  name, which is not a project at all and is no longer an id source
+  anywhere. Where question 2 confirmed no id for a repo, pass `scopes=` and
+  say in the plan that the scopes are waiting on `/vwf:architecture` and
+  `/vwf:setup`.
+- **A changed list is the skill's row**, shown in the repo's section under
+  **Tool-config rows**, never a row of `init`'s.
 
 ## Plan
 
@@ -974,7 +883,7 @@ way, and `delete` reachable only by that flip; the pack-twin case prints as
 **hook manager** row is the third, one at most per repo: the manager found,
 and a **keep / switch** column defaulting to keep. `Repo-owned, kept` is a
 list and nothing else: paths, an inline task with its file and table, with
-the contract note of pass 10 on the rows that earn one, and nothing in it is
+the contract note of pass 9 on the rows that earn one, and nothing in it is
 ever applied. `Projects` is a list on the same terms: each sub-project
 directory pass 1 recognised, once, with the id question 2 confirmed for it —
 printed so the reader sees why that directory is in none of the other
@@ -988,10 +897,17 @@ was printed. A `take` or `union` sub-line lists the hand lines the apply
 removes, since those are the one edit outside the block and the user reads
 them before the one consent rather than after.
 
+**Tool-config rows** are the skill's own, printed as its `preview all`
+returns them, each under its `r<n>` id — each drift row with its take
+theirs / keep mine / merge choice, each conflict row with its two answers —
+and settled on the same one consent, which becomes the real call's
+`answers=`.
+
 ```text
 Moves        <n>
 Root tool configs (move / keep both / delete)  <n>
 Hook manager (keep / switch)     <n>
+Tool-config rows                 <n>
 Creates      <n>
 Replaces     <n>
 Offered (replace / keep)         <n>
@@ -1000,7 +916,6 @@ Rewrites (applied)               <n>
 Rewrites (flagged, not applied)  <n>
 Repo-owned, kept                 <n>
 Projects                         <n>
-Appends      <n>
 Merges       <n>
 ```
 
@@ -1061,17 +976,25 @@ repo of the set that resolved to mode `blank` or `source` takes the
 - **Moves** use `git mv`, so the rename is in the index and the history
   follows the file. The readme move is a move like any other, and so is a
   root tool config's — it runs **before** the creates, so the repo's file is
-  already at its `.config/` path when the pack's would land there, and pass
-  6's offer is what decides between them. A root tool config the user picked
-  **delete** for is removed with plain `rm` here, and a moved manager config
-  is split per pass 3 and then removed the same way.
-- **Creates** are the materializer's, by fixed slug, exactly as the new-repo
-  pipeline fetches them — every file the plan lists, less the pack twin a
-  root tool config row said is **not landed**. `init` never authors
-  pack-owned content from scratch. It does fill the positions a pack
-  **marked** for it — the member flags, the shell aliases and the
-  per-project slots of [new repo](new-repo.md) §7 — and those are creates
-  like any other, listed in the plan and applied here. `_scripts/local` is
+  already at its `.config/` path when the shipped one would land there, and
+  pass 6's offer — or the skill's conflict row, where the tool-config table
+  names the skill the owner — is what decides between them. A root tool
+  config the user picked **delete** for is removed with plain `rm` here.
+- **`/stackgen:tool-config all`** runs next, with the arguments pass 8
+  computed and `answers=` carrying every row its survey preview returned —
+  `ok` for each create, write, fold, move or delete row, the user's pick
+  for each conflict or drift row — per [new repo](new-repo.md) §2, so the
+  skill asks nothing. It lands the toolchain files and the gates, and folds
+  the old ones, per pass 1's toolchain migration.
+  `_scripts/local` is written **before** it, since the call replaces the
+  helper file.
+- **Creates** are `init`'s hygiene assets, copied as
+  [hygiene assets](readme-and-license.md) states and exactly as the new-repo
+  pipeline's §2 lands them — every file the plan lists; the secrets
+  provider's files are §3's, below. `init` never authors
+  pack-owned content from scratch. It does write the per-project
+  `_default` slots of [new repo](new-repo.md) §7 — creates like any other,
+  listed in the plan and applied here. `_scripts/local` is
   the one create that is neither: no pack declares it, and every byte in it
   is carried out of the repo's own helper file by pass 5. **Write it before
   that file is replaced** — the bodies it holds exist in the tree only until
@@ -1094,8 +1017,8 @@ repo of the set that resolved to mode `blank` or `source` takes the
   load-bearing. A marked position is filled *in the file that will still be
   there afterwards* — fill first and the replace overwrites the fill, which
   is the quiet way a run reports work it did not do. So: every replace and
-  every accepted **offered** row lands, and only then does the fill pass of
-  §9 and §11 run over the tree.
+  every accepted **offered** row lands, and only then does pass 8's fill run
+  over the tree.
 - **A kept file keeps its content, and the fill pass still reaches the marked
   positions inside it.** The keep itself needs no write; only its **record**
   does, and the offered row's keep outcome is what lists
@@ -1104,7 +1027,7 @@ repo of the set that resolved to mode `blank` or `source` takes the
   in the **base's** `.config/vwf.yaml`, spelled as §6 says, merged into the
   block rather than replacing it.
   Where that file does not exist, `init` writes the **stub** §6 names, and
-  the record goes into it. Beyond that record, the fills §9 and §11 own, and
+  the record goes into it. Beyond that record, the fills pass 8 owns, and
   the re-hash below, nothing about a kept file is applied here. The
   collision round's answers are written at the same point and on the same
   terms — one `enforcement.editor_keys.<file>.<key>` entry per answer, the
@@ -1119,19 +1042,16 @@ repo of the set that resolved to mode `blank` or `source` takes the
   listed as its own rename line.
 - **Flagged rewrites are not applied.** They are in the report so the user can
   do them.
-- **Appends and merges** run after all of the above, per
-  [fragments and sections](fragments-and-sections.md), because both are
-  idempotent and both read files the earlier steps may have moved. The
-  ignore file's is the **section merge** that reference describes — the
-  repo's file kept whole, each missing banner section appended, patterns
-  compared normalised — and never a whole-file replace or a keep.
+- **The editor merge** runs after all of the above, per
+  [fragments and sections](fragments-and-sections.md), because it is
+  idempotent and reads files the earlier steps may have moved. The ignore
+  file is not merged here: `/stackgen:tool-config`'s call above wrote it.
 - **The hook-manager switch**, where its row was flipped to switch, is the
   **last shaping step**: `setup:precommit --force`, per pass 1, after every
   file above is in its final place and before anything is committed.
 - **The re-hash is the last step before the git pass**, and it writes only
-  the lockfile. Every file this run **filled, appended to or merged** — the
-  marked positions §9 and §11 wrote, the placeholders §4 filled, the ignore
-  sections, the hook fragments, the editor block — plus every file pass 6
+  the lockfile. Every file this run **filled or merged** — the slots pass 8
+  wrote, the placeholders §4 filled, the editor block — plus every file pass 6
   **replaced or kept**, is hashed as it now stands and that hash recorded
   under its `entries:` record in the materializer's lockfile, creating the
   record for a kept file that had none. The materializer's own hash is the
@@ -1141,7 +1061,9 @@ repo of the set that resolved to mode `blank` or `source` takes the
   three and named: the materializer at landing, pass 6's two outcomes after
   the fills, and this step over everything the run touched after that. A
   file a pack task rewrites later, under its own update flag, reads as drift
-  until the next reshape offers it and a keep re-records it — by design.
+  until the next reshape offers it and a keep re-records it — by design. A
+  `tool-config/…` record is the skill's to write, and this step skips it; a
+  hygiene asset has no record, and it skips that too.
 
 ### A detached member is refused before anything commits
 
@@ -1217,19 +1139,24 @@ shaping commit after it sit on the branch work flows through. A repo that was
 on `main` when the run started is on `develop` from here on, and the report
 says so; a repo that was on `develop` already stays put.
 
-Where this run wrote, merged into or moved any of: the gate's configuration
-file, the commit-message gate's configuration, or anything under the fragment
-directory — stage **those paths only** and commit them first, on their own,
-with the fixed message:
+Where this run — `/stackgen:tool-config all` included — wrote or moved either
+of the gate's configuration file and the commit-message gate's configuration,
+stage **those paths only** and commit them first, on their own, with the fixed
+message:
 
 ```text
 ops: update the pre-commit configuration
 ```
 
-They travel together because they are one change: the fragment merge is what
-the gate config's marked blocks hold, and the commit-message gate's
+They travel together because they are one change: the commit-message gate's
 configuration is what the gate config invokes. Splitting them leaves a commit
 whose hooks read a file the next commit is still going to change.
+
+**The lock step is §11(b)'s, before this repo's shaping commit is staged.** It
+writes `.config/mise/mise.lock` where it is absent, and fills a present one
+with missing tools without bumping a locked version. A lock that changed,
+whichever step changed it, is staged either way. The ignore fix before it,
+which keeps the lock tracked, is `/stackgen:tool-config all`'s, per §11(b).
 
 Then the rest, exactly as the new-repo pipeline's **git pass** describes it
 ([new repo](new-repo.md) §11), which already reads across the resolved repos:
@@ -1312,7 +1239,7 @@ because the live `origin` host contradicted the record is a line of its own
 rather than a silent edit.
 
 `Files kept` names each offered file the user kept, with the reason recorded
-beside it, and `Tasks kept` lists every repo-owned task pass 10 found — with
+beside it, and `Tasks kept` lists every repo-owned task pass 9 found — with
 the contract note on the rows in the `setup/` or `code/` group whose name the
 mandatory set does not carry. Both are sections of things this run
 deliberately did **not** touch, which is exactly why they are printed: a file
@@ -1325,9 +1252,9 @@ second run finds work, it is one of five things, and the report names which: the
 first run deferred something; a pack moved, which the adapter's re-sync
 command is for; the **id source changed** — the repo grew a registry, so ids
 that came from directories or from a type token now come from declarations,
-and pass 9's rename rows say so in those words; the **repo-name key no longer
+and pass 8's rename rows say so in those words; the **repo-name key no longer
 matches the folder** — the folder was renamed, or the key was written by a run
-from before the key took the folder name — which is pass 9's one replace row
+from before the key took the folder name — which is pass 8's one replace row
 and nothing else; or **the set changed** — a member joined the product, or one
 this machine lacked was cloned, and that member's section is the whole of the
 work.

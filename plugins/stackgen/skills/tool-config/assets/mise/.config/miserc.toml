@@ -1,0 +1,2 @@
+# Loads `mise/conf.d/<section>.<env>.toml` only under that MISE_ENV; MISE_ENV itself is set by the user's shell, never here.
+env_conf_d = true

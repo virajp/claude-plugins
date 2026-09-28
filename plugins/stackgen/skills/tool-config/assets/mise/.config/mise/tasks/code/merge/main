@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+#MISE description="Land develop on main — merge it, or open a pull request (MERGE_MODEL_MAIN)"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/merge"
+
+merge_to_destination_branch main develop

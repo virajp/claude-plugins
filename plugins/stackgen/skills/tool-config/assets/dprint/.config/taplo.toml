@@ -1,0 +1,35 @@
+# TOML formatting, reached through dprint's `exec` plugin — the only taplo config in the tree.
+
+# One spelling of the shared exclusion set; keep it equal to dprint.json's and the hook config's exclude.
+exclude = [
+  # >>> dprint
+  "**/*.lock",
+  "**/.claude/**",
+  "**/.config/mise/locks/**",
+  "**/.git/**",
+  "**/build/**",
+  "**/dist/**",
+  "**/graphify-out/**",
+  # <<< dprint
+]
+include = [ "**/*.toml" ]
+
+[formatting]
+align_comments        = true
+align_entries         = true
+allowed_blank_lines   = 1
+array_auto_collapse   = true
+array_auto_expand     = true
+array_trailing_comma  = true
+column_width          = 80
+compact_arrays        = false
+compact_entries       = false
+compact_inline_tables = false
+crlf                  = false
+indent_entries        = false
+indent_tables         = false
+inline_table_expand   = true
+reorder_arrays        = true
+reorder_inline_tables = true
+reorder_keys          = true
+trailing_newline      = true

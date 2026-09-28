@@ -3,7 +3,7 @@ name: Tailwind CSS
 axis: stylesheet
 kind: stylesheet
 components:
-- stylesheet/tailwindcss@0.1.0
+- stylesheet/tailwindcss@0.2.0
 ---
 
 # Stylesheet — Tailwind CSS

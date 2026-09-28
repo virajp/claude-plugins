@@ -1,0 +1,11 @@
+code-review engine (/code-review high), loop U9, round 3, range 09b0fd10..609115f0
+
+Closed: round-2 #9 ({#) and #10 (alias -), 7eb82f3e and 609115f0; check tests 158/158. mise renders [shell_alias] values as templates, so refusing delimiters in aliases is right.
+
+1. plugins/stackgen/skills/tool-config/references/mise.md:418 — add alias has no conflict rule (unlike add tool/add env); with - now allowed, a pack alias setup-web collides with the base's setup-<slug> alias in conf.d/shell_alias.dev.toml: duplicate key, invalid TOML, every mise command fails. check.test.ts:863 uses setup-web as the valid example.
+2. scripts/src/check.ts:703 — bare-value branch [^"\s]\S* forbids a quote only as first char; `mise add env X=abc" to dev` and `mise add alias y=ls" to dev` pass. Use [^"\s]+.
+3. scripts/src/check.test.ts:871 — the alias unclosed-quote case (y="pnpm dlx to dev) was already rejected by the old regex; use y="ls.
+4. .claude/skills/plugin-authoring/references/checks.md:167 and CLAUDE.md rule 11 — the new verb grammar is undocumented and not in U10's brief.
+5. plugins/stackgen/skills/tool-config/references/mise.md:387 — unclear whether a quoted value is taken as already escaped or raw; double escaping possible.
+6. scripts/src/check.ts:746 — name error prints pattern.source with ^ $ anchors, not the documented unanchored pattern.
+7. scripts/src/check.ts:721 — the call patterns live twice (mise.md prose, check.ts regexes) with no agreement test; drifted twice already.

@@ -25,6 +25,10 @@ ignores:
   # Static Assets parses rather than serves. None of it is the linter's, and
   # its HTML rewrite fights dprint's.
   - "site/public/**"
+  # /brag launch-video output: rendered media and the throwaway scripts and
+  # HTML composition that drew it. Scratch, not source, and its HTML rewrite
+  # fights dprint's the same way site/public/ does.
+  - "brag-output/**"
 
 overrides:
   markdown:

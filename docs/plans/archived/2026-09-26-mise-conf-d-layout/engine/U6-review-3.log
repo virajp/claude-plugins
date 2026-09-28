@@ -1,0 +1,23 @@
+# /code-review high — loop U6, round 3, branch 2026-09-26-mise-conf-d-layout (range 1d332056..689a7f4e)
+
+Engine note: verified `MISE_ENV=ci,dev,test mise lock --bump --dry-run` works with `locked = true` loaded (not a finding).
+
+1. plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise/tasks/setup/mise:62 — An existing lock can no longer take a newly pinned tool (written only when missing or under --upgrade; run_auto_install = false). Suggested: non-bumping `MISE_ENV=$LOCK_ENVS mise lock` in dev before the install. [= G-lock-extend]
+
+2. plugins/vwf/skills/doctor/references/stack-checks.md:618 — The old-layout test (and existing-repo.md:208-210) does not exclude .local files; the pack's own mise.toml:22-25 sends a locally built runtime to mise.local.toml. [= G-local-drift]
+
+3. plugins/stackgen/stacks/repo-hygiene/repo-hygiene/config/.gitignore:47 — `.config/mise.local.lock` / root `mise.local.lock` no longer ignored; keep the broad pattern and add the new one. [= G-local-lock]
+
+4. plugins/vwf/skills/init/references/existing-repo.md:216 — migration never hoists a tool pinned in several env files into tools.toml; breaks decision 5. [= G-migrate-dup-pins]
+
+5. plugins/stackgen/stacks/toolchain-manager/mise/config/.config/mise.toml:63 — `task.run_auto_install = false` removes the implicit install a pipeline without a `mise install` step relied on; the github-actions pack's references/toolchain.md still documents installing mise by a pinned script as equally fine. Scenario: curl-installed mise then `mise run code:all` — tools missing, "command not found"; only jdx/mise-action (which runs mise install) keeps working.
+
+6. plugins/stackgen/stacks/toolchain-manager/mise/config/.config/miserc.toml:2 — `env_conf_d = true` is read only from a miserc in the cwd tree; `mise -C <repo>` / `mise --cd <repo>` from elsewhere ignores it and loads every dotted conf.d file for every environment (verified mise 2026.9.13: from /tmp, `MISE_ENV=ci mise --cd <repo> ls --current` lists doppler from tools.dev.toml and warns dotted_conf_d_filename). Also setup:all's `mise run --cd <member>` loop when the base has no miserc.
+
+7. plugins/vwf/skills/doctor/references/stack-checks.md:625 — two-pins row and Toolchain lookup (line 102) skip pack fragments (pnpm.toml, doppler.toml, fnox.toml, swiftlint.toml). [= G-fragment-pins]
+
+8. plugins/vwf/skills/init/references/existing-repo.md:217 — every [shell_alias] → shell_alias.dev.toml. [= G-alias-scope]
+
+9. plugins/vwf/skills/git-workflow/references/worktree-setup.md:102 — the fallback forces MISE_ENV=dev but the preferred `mise run setup:worktree` runs with none; the pack's setup:worktree has no guard and runs a plain `mise install` (not --locked) while its comment claims it "writes nothing new". Scenario: agent shell without MISE_ENV installs base tools only, doppler/pre-commit/dprint missing, hooks fail; a plain install can extend the lock from a worktree.
+
+10. .github/workflows/plugins.yml:61 — stale references: plugins.yml says shellcheck/shfmt "live in mise.dev.toml" and wraps `mise x shellcheck@latest shfmt@latest` (redundant now tools.toml pins both); this repo's setup/vscode:42 REPO_NAME message; doppler pack setup/secrets:24 tells users to add doppler to .config/mise.dev.toml; pack mise.toml:52 says `mise run setup:all --upgrade` (exits 1 without MISE_ENV); mise pack.yaml summary still "five-file split" at 1.6.1.

@@ -1,0 +1,5 @@
+range c766f44f..f26882bf
+No high-confidence vulnerabilities found.
+- undo_failed_lock trap: rm -rf only on paths find $SIDECARS -mindepth 2 -maxdepth 2 lists that comm -13 shows new this run; quoted, no glob; rmdir only empties. Newline-in-name split needs attacker-controlled sidecar names (<8).
+- --lock-only/--upgrade exclusive; UV_PYTHON in a subshell from mise which.
+- settings pipx.uvx / python.compile / python.uv_venv_auto, python+uv latest pins covered by the lock; relock graphifyy 0.9.68→0.9.69 + uvx option — no new supply-chain vector.

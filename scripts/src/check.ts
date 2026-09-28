@@ -26,6 +26,7 @@ import {
   statSync,
 } from "node:fs";
 import {
+  basename,
   isAbsolute,
   join,
   relative,
@@ -267,23 +268,18 @@ function* hookCommands(
   }
 }
 
-/** Where a pack's `config/` tier puts the file-based mise task library. */
-const PACK_MISE_TASKS = join("config", ".config", "mise", "tasks");
-/** Where a pack's `config/` tier puts its pre-commit hook fragment. */
-const PACK_HOOK_FRAGMENTS = join("config", ".config", "pre-commit.d");
-/**
- * Where the pre-commit gate pack puts the **whole** config the fragments merge
- * into. Not a fragment and not at the `config/` root, so the fragment walk
- * above never reaches it — and until it was named here nothing parsed it at
- * all.
- */
-const PACK_PRE_COMMIT_CONFIG = join(
-  "config",
-  ".config",
-  "pre-commit-config.yaml",
-);
-/** Where a pack's `config/` tier puts its editor-settings fragment. */
-const PACK_EDITOR_FRAGMENTS = join("config", ".config", "vscode.d");
+/** Where a landed tree puts the file-based mise task library. */
+const PACK_MISE_TASKS = join(".config", "mise", "tasks");
+/** Where retired pre-commit hook fragments sat; a pack asks the skill now. */
+const PACK_HOOK_FRAGMENTS = join(".config", "pre-commit.d");
+/** Where a landed tree puts its editor-settings fragment. */
+const PACK_EDITOR_FRAGMENTS = join(".config", "vscode.d");
+/** Where `stackgen:tool-config` keeps one landed tree per tool. */
+const TOOL_CONFIG_ASSETS = "skills/tool-config/assets";
+/** Where `/vwf:init` keeps its own landed trees — the hygiene assets. */
+const INIT_ASSETS = "skills/init/assets";
+/** The skill file that marks a plugin as the owner of those trees. */
+const TOOL_CONFIG_SKILL = "skills/tool-config/SKILL.md";
 /** Where a pack keeps the hook scripts that land in `.claude/hooks/`. */
 const PACK_HOOKS = "hooks";
 /**
@@ -324,37 +320,41 @@ const PACK_HOOK_SHEBANGS = new Set([
  * The tier mirrors the target repo's root, and the repo doctrine puts every
  * tool's configuration under `.config/`. What is left at the root is the short
  * list of files a tool or a host *cannot* be told to look elsewhere for, plus
- * the two humans read first. Anything else arriving here is a pack quietly
- * widening the root of every repo it materializes into.
+ * the readme. Anything else arriving here is a pack quietly widening the root
+ * of every repo it materializes into.
  *
  * This is the **landable** tier of the doctrine's root allowlist
- * (`stackgen/assets/output-tree.md`). That list has a second tier — the root
- * files *vwf* writes, `CLAUDE.md` and `mempalace.yaml` — which is deliberately
- * absent here: they may sit at a shaped root, and no pack may land them.
+ * (`stackgen/assets/output-tree.md`). The files `stackgen:tool-config`, init
+ * and vwf write there — the ignore files, `CONTRIBUTING.md`, `CLAUDE.md` and
+ * the rest — are deliberately absent: they may sit at a shaped root, and no
+ * pack may land them.
  */
 const PACK_CONFIG_ROOT_FILES = new Set([
-  ".editorconfig",
-  ".gitattributes",
-  ".gitignore",
-  // graphify reads its ignore file from the root only, as git does.
-  ".graphifyignore",
   // npm and pnpm read `.npmrc` from the root of the project they install in.
   ".npmrc",
-  "CONTRIBUTING.md",
-  "LICENSE",
-  "SECURITY.md",
   // dprint's config discovery is root-only and `--config` is the CLI's only
-  // override, so the gate pack ships a root shim that `extends` `.config/`.
+  // override, so tool-config's dprint tree ships a root shim extending it.
   "dprint.json",
   "eslint.config.mjs",
   "fnox.toml",
   "readme.md",
-  // Renovate discovers its config at the repo root, in `.github/` or in
-  // `.gitlab/` — never under `.config/`, where one would be silently inert.
-  "renovate.json",
   // wrangler discovers its config only at the repo root, so a `static-hosting`
   // pack shipping a deploy target has nowhere else to put it.
   "wrangler.jsonc",
+]);
+
+/**
+ * The files a `stackgen:tool-config` asset tree may land at the root beyond a
+ * pack's, per tool: the git, graphify and renovate files a pack asks for lines
+ * in and never ships.
+ */
+const TOOL_CONFIG_ROOT_FILES: ReadonlyMap<string, readonly string[]> = new Map([
+  ["git", [".gitattributes", ".gitignore"]],
+  // graphify reads its ignore file from the root only, as git does.
+  ["graphify", [".graphifyignore"]],
+  // Renovate discovers its config at the repo root, in `.github/` or in
+  // `.gitlab/` — never under `.config/`, where one would be silently inert.
+  ["renovate", ["renovate.json"]],
 ]);
 
 /**
@@ -385,7 +385,7 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  * What a stackgen pack ships to run in a target repo must be materializable
  * as-is.
  *
- * Nine assertions, all of them about a file whose failure mode in the target
+ * Seven assertions, all of them about a file whose failure mode in the target
  * repo is silence rather than an error:
  *
  * - a task file lands **executable** — `.config/mise/tasks/**` is a *file-based*
@@ -403,12 +403,6 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  *   it — and inside the one forge directory the list admits, a **workflow file
  *   is refused**: a pack states which task CI runs and never writes the
  *   workflow;
- * - a **pre-commit fragment parses** and declares `repos:`, because `/vwf:init`
- *   concatenates the fragments into one pre-commit config and a malformed one
- *   breaks a file no pack owns;
- * - the gate pack's **whole pre-commit config** — which is neither a fragment
- *   nor at the `config/` root, so nothing else here reaches it — parses and
- *   declares `repos:` on the same reasoning, from the base end;
  * - an **editor fragment** parses as JSONC and carries only `settings`,
  *   `nesting` and `extensions`, because init merges the fragments into a file
  *   no pack owns and a key outside the three is dropped without a word;
@@ -418,7 +412,12 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  *   answers is never evaluated, so the file lands everywhere, silently;
  * - the pack's **`binaries`, `lockfile` and `machine_env` facts** take the
  *   shapes `/vwf:doctor` and `/vwf:setup` read, and every `machine_env` name
- *   is a key its `conf.d` fragment carries (`packFactFaults`).
+ *   is set by a `mise add env` call in its `tool-config:` list, each call one
+ *   of the verbs a pack may ask for (`packFactFaults`).
+ *
+ * A pack's `config/` tier holding a mise `conf.d` fragment or a `pre-commit.d`
+ * file is a finding too, and each `stackgen:tool-config` asset tree is walked
+ * as a landed tree, as is each `/vwf:init` asset tree bar the root allowlist.
  *
  * The walk is its own rather than `plugin.files`: most of these paths run
  * through `.config/`, and the reader's glob does not descend into a dot
@@ -429,10 +428,8 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
   const at = (message: string) => findings.push({ scope: plugin.dir, message });
   const path = (absolute: string) => relative(plugin.root, absolute);
 
-  for (const pack of globSync("stacks/*/*", { cwd: plugin.root })) {
-    for (
-      const absolute of filesUnder(join(plugin.root, pack, PACK_MISE_TASKS))
-    ) {
+  const landedTree = (tree: string, rootFiles: ReadonlySet<string> | null) => {
+    for (const absolute of filesUnder(join(tree, PACK_MISE_TASKS))) {
       if ((statSync(absolute).mode & 0o111) === 0) {
         at(`mise task file is not executable: ${path(absolute)}`);
       }
@@ -445,6 +442,52 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       }
     }
 
+    if (existsSync(tree) && rootFiles !== null) {
+      for (const entry of readdirSync(tree, { withFileTypes: true })) {
+        const allowed = entry.isDirectory()
+          ? PACK_CONFIG_ROOT_DIRS.has(entry.name) || entry.name.startsWith("_")
+          : rootFiles.has(entry.name);
+        if (!allowed) {
+          at(
+            `pack config/ tier holds an unallowlisted root entry — everything `
+              + `else belongs under .config/: ${path(join(tree, entry.name))}`,
+          );
+        }
+      }
+    }
+
+    for (const absolute of filesUnder(join(tree, PACK_CONFIG_FORGE_FENCE))) {
+      at(
+        `pack config/ tier ships a CI workflow — a pack states which task CI `
+          + `runs and never writes the workflow: ${path(absolute)}`,
+      );
+    }
+
+    for (const absolute of filesUnder(join(tree, PACK_EDITOR_FRAGMENTS))) {
+      if (!absolute.endsWith(".jsonc")) {
+        continue;
+      }
+      for (const message of editorFragmentFaults(readText(absolute))) {
+        at(`${path(absolute)}: ${message}`);
+      }
+    }
+  };
+
+  for (const tree of toolConfigTrees(plugin)) {
+    const own = TOOL_CONFIG_ROOT_FILES.get(basename(tree)) ?? [];
+    landedTree(
+      join(plugin.root, tree),
+      new Set([...PACK_CONFIG_ROOT_FILES, ...own]),
+    );
+  }
+  // init picks one licence from its tree, so its root holds more than lands.
+  for (const tree of assetTrees(plugin, INIT_ASSETS)) {
+    landedTree(join(plugin.root, tree), null);
+  }
+
+  const packs = globSync("stacks/*/*", { cwd: plugin.root });
+  const slugs = new Set(packs.map(pack => basename(pack)));
+  for (const pack of packs) {
     for (const absolute of filesUnder(join(plugin.root, pack, PACK_HOOKS))) {
       if (PACK_HOOK_METADATA.test(absolute)) {
         continue;
@@ -462,60 +505,22 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     }
 
     const config = join(plugin.root, pack, "config");
-    if (existsSync(config)) {
-      for (const entry of readdirSync(config, { withFileTypes: true })) {
-        const allowed = entry.isDirectory()
-          ? PACK_CONFIG_ROOT_DIRS.has(entry.name) || entry.name.startsWith("_")
-          : PACK_CONFIG_ROOT_FILES.has(entry.name);
-        if (!allowed) {
-          at(
-            `pack config/ tier holds an unallowlisted root entry — everything `
-              + `else belongs under .config/: ${
-                path(join(config, entry.name))
-              }`,
-          );
-        }
-      }
+    landedTree(config, PACK_CONFIG_ROOT_FILES);
 
-      for (
-        const absolute of filesUnder(join(config, PACK_CONFIG_FORGE_FENCE))
-      ) {
-        at(
-          `pack config/ tier ships a CI workflow — a pack states which task CI `
-            + `runs and never writes the workflow: ${path(absolute)}`,
-        );
-      }
+    for (const absolute of filesUnder(join(config, PACK_CONF_D))) {
+      at(
+        `pack config/ tier ships a mise conf.d fragment — a pack asks for its `
+          + `mise lines through \`tool-config:\` in pack.yaml: ${
+            path(absolute)
+          }`,
+      );
     }
 
-    for (
-      const absolute of filesUnder(
-        join(plugin.root, pack, PACK_EDITOR_FRAGMENTS),
-      )
-    ) {
-      if (!absolute.endsWith(".jsonc")) {
-        continue;
-      }
-      for (const message of editorFragmentFaults(readText(absolute))) {
-        at(`${path(absolute)}: ${message}`);
-      }
-    }
-
-    const preCommit = join(plugin.root, pack, PACK_PRE_COMMIT_CONFIG);
-    if (existsSync(preCommit)) {
-      for (const message of preCommitFaults(readText(preCommit), "config")) {
-        at(`${path(preCommit)}: ${message}`);
-      }
-    }
-
-    for (
-      const absolute of filesUnder(join(plugin.root, pack, PACK_HOOK_FRAGMENTS))
-    ) {
-      if (!/\.ya?ml$/.test(absolute)) {
-        continue;
-      }
-      for (const message of preCommitFaults(readText(absolute), "fragment")) {
-        at(`${path(absolute)}: ${message}`);
-      }
+    for (const absolute of filesUnder(join(config, PACK_HOOK_FRAGMENTS))) {
+      at(
+        `pack config/ tier ships a pre-commit.d file — a pack asks for its `
+          + `hooks through \`tool-config:\` in pack.yaml: ${path(absolute)}`,
+      );
     }
 
     const packYaml = join(plugin.root, pack, "pack.yaml");
@@ -535,7 +540,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       for (
         const message of [
           ...conditionalFaults(document, config),
-          ...packFactFaults(document, config),
+          ...packFactFaults(document, slugs),
         ]
       ) {
         at(`${path(packYaml)}: ${message}`);
@@ -559,16 +564,20 @@ const ENV_VAR_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
  * - `lockfile` is a non-empty list of paths or globs relative to the repo root,
  *   any match passing doctor's package-manager check;
  * - every `machine_env` entry names an env var, the command that `detect`s its
- *   value and the `question` setup asks — and when the pack ships a `conf.d`
- *   fragment, the var is a key of an `[env]` table in one of them, since that
- *   marked position is what setup fills.
+ *   value and the `question` setup asks — and the var is set by a `mise add
+ *   env` call in the pack's `tool-config:` list, since that is what setup fills;
+ * - every `tool-config:` entry parses as one of the verbs a pack may ask for,
+ *   and an exclude goes through `all add exclude` alone (`toolConfigCall`).
  *
  * Each is read by a caller that trusts its shape: a probe that is not a string
  * is never run, a lockfile glob that climbs out of the repo matches something
  * the repo does not own, and a `machine_env` name no fragment carries is a
  * question whose answer lands nowhere — all silently.
  */
-function packFactFaults(document: unknown, config: string): string[] {
+function packFactFaults(
+  document: unknown,
+  slugs: ReadonlySet<string>,
+): string[] {
   if (!isPlainObject(document)) {
     return [];
   }
@@ -639,16 +648,28 @@ function packFactFaults(document: unknown, config: string): string[] {
     }
   }
 
+  const calls = document["tool-config"];
+  const declared = new Set<string>();
+  if (calls !== undefined && !isStringList(calls)) {
+    faults.push("`tool-config` is not a list of instructions");
+  }
+  else if (calls !== undefined) {
+    (calls as string[]).forEach((call, index) => {
+      const { fault, key } = toolConfigCall(call, slugs);
+      if (fault !== undefined) {
+        faults.push(`\`tool-config[${index}]\` (${call}) ${fault}`);
+      }
+      else if (key !== undefined) {
+        declared.add(key);
+      }
+    });
+  }
+
   if (document.machine_env !== undefined) {
     if (!Array.isArray(document.machine_env)) {
       faults.push("`machine_env` is not a list");
       return faults;
     }
-    const fragments = [...filesUnder(join(config, PACK_CONF_D))]
-      .filter(absolute => absolute.endsWith(".toml"));
-    const declared = new Set(
-      fragments.flatMap(absolute => tomlEnvKeys(readText(absolute))),
-    );
     document.machine_env.forEach((entry: unknown, index) => {
       const label = `\`machine_env[${index}]\``;
       if (!isPlainObject(entry)) {
@@ -660,10 +681,10 @@ function packFactFaults(document: unknown, config: string): string[] {
       if (typeof name !== "string" || !ENV_VAR_NAME.test(name)) {
         faults.push(`${at} \`name\` is not an env-var name`);
       }
-      else if (fragments.length > 0 && !declared.has(name)) {
+      else if (!declared.has(name)) {
         faults.push(
-          `${at} is a key of no \`[env]\` table in the pack's conf.d `
-            + `fragments — setup would ask and fill nothing`,
+          `${at} is set by no \`mise add env\` call in the pack's `
+            + `\`tool-config:\` list — setup would ask and fill nothing`,
         );
       }
       for (const key of ["detect", "question"]) {
@@ -676,29 +697,193 @@ function packFactFaults(document: unknown, config: string): string[] {
   return faults;
 }
 
+/** A `to …` scope: every environment, or one of the three suffixes. */
+const TOOL_CONFIG_SCOPE = String
+  .raw`to (?:all environments|(?:dev|ci|test)(?: environment)?)`;
+/** A value, quoted as a TOML basic string or bare — a bare one carries no quote. */
+const TOOL_CONFIG_VALUE = String.raw`("(?:[^"\\]|\\.)*"|[^"\s]+)`;
+/** The three verbs a pack may ask for; the materializer appends `for <pack>`. */
+const TOOL_CONFIG_VERBS = {
+  tool: new RegExp(
+    String.raw`^mise add tool ([A-Za-z0-9@:/._-]+) ([A-Za-z0-9._+-]+) `
+      + `${TOOL_CONFIG_SCOPE}$`,
+  ),
+  env: new RegExp(
+    String.raw`^mise add env (\S+?)=${TOOL_CONFIG_VALUE} ${TOOL_CONFIG_SCOPE}$`,
+  ),
+  alias: new RegExp(
+    String.raw`^mise add alias (\S+?)=${TOOL_CONFIG_VALUE}`
+      + String.raw`(?: to dev(?: environment)?)?$`,
+  ),
+};
+/** The dprint plugins the skill's plugin table defines. */
+const DPRINT_PLUGINS =
+  "markdown|pretty_yaml|json|exec|typescript|malva|markup_fmt|dockerfile";
+/** The keys `pre-commit add hook` writes, each `key=value`, quoted or bare. */
+const HOOK_PAIR = String.raw`(name|description|entry|language|files|exclude|`
+  + String.raw`types|args|pass_filenames|always_run|require_serial|rev)=`
+  + String.raw`("(?:[^"\\]|\\.)*"|[^\s"]+)`;
+/** `pre-commit add hook`, its repo captured; `hookFault` reads the pairs. */
+const TOOL_CONFIG_HOOK = new RegExp(
+  String.raw`^pre-commit add hook (local|https://\S+) [A-Za-z0-9_-]+ `
+    + `(?:pre-commit|commit-msg|post-commit|manual)(?: ${HOOK_PAIR})*$`,
+);
+/** The gate verbs a pack may ask for; `tail` marks a free-text end. */
+const TOOL_CONFIG_GATE_VERBS: readonly { pattern: RegExp; tail: boolean; }[] = [
+  {
+    pattern: new RegExp(`^dprint add plugin (?:${DPRINT_PLUGINS})$`),
+    tail: false,
+  },
+  {
+    pattern: new RegExp(
+      String.raw`^all add exclude (?!generated$)(?:generated )?`
+        + String.raw`(?:(?!for(?: |$))[^\s"]+(?: |$))+$`,
+    ),
+    tail: false,
+  },
+  {
+    pattern: /^pre-commit add linter-ignore(?: (?!for(?: |$))[^\s"]+)+$/,
+    tail: false,
+  },
+  { pattern: TOOL_CONFIG_HOOK, tail: true },
+  { pattern: /^grype add ignore [A-Za-z0-9-]+(?: .+)?$/, tail: true },
+  { pattern: /^git add ignore template=[A-Za-z0-9+._-]+$/, tail: false },
+  {
+    pattern: /^git add ignore(?: (?!(?:for|template=.*)(?: |$))[^\s"']+)+$/,
+    tail: false,
+  },
+  {
+    pattern: /^git add attribute(?: (?!for(?: |$))[^\s"']+){2,}$/,
+    tail: false,
+  },
+];
+/** A requester suffix: the materializer appends it, a pack never writes it. */
+const TOOL_CONFIG_FOR = / for \S+$/;
+/** An exclude asked of one tool, which would leave rule 15's lists disagreeing. */
+const TOOL_CONFIG_LONE_EXCLUDE =
+  /^(dprint|pre-commit|gitleaks) add (?:exclude|excludes|allowlist)\b/;
+/** A Tera delimiter: mise renders it, so only a pack's own env value may carry one. */
+const TERA_DELIMITER = /\{\{|\{%|\{#/;
+/** An alias name: a TOML bare key, so `-` is allowed after the first character. */
+const ALIAS_NAME = /^[A-Za-z_][A-Za-z0-9_-]*$/;
+
 /**
- * The keys of every `[env]` table in a TOML document. Narrow on purpose, as
- * the other TOML readers here are: a bare or quoted key at the start of a line
- * under an `[env]` header, which is how a conf.d fragment spells its env.
+ * One `tool-config:` entry against the verb grammar: the env key it sets, or
+ * why it is refused. `slugs` names every pack, so a tail verb's `for <pack>`
+ * reads as a suffix rather than text.
  */
-function tomlEnvKeys(source: string): string[] {
-  const keys: string[] = [];
-  let inEnv = false;
-  for (const line of source.split("\n")) {
-    // Any header leaves `[env]`, an array-of-tables `[[…]]` included.
-    const header = /^\s*(?:\[\[[^[\]]+\]\]|\[([^[\]]+)\])\s*(?:#.*)?$/.exec(
-      line,
-    );
-    if (header !== null) {
-      inEnv = header[1]?.trim() === "env";
-      continue;
-    }
-    const key = inEnv ? /^\s*(["']?)([A-Za-z0-9_]+)\1\s*=/.exec(line) : null;
-    if (key?.[2] !== undefined) {
-      keys.push(key[2]);
-    }
+function toolConfigCall(
+  call: string,
+  slugs: ReadonlySet<string>,
+): { fault?: string; key?: string; } {
+  const words = call.trim().replace(/\s+/g, " ");
+  if (TOOL_CONFIG_VERBS.tool.test(words)) {
+    return {};
   }
-  return keys;
+  const lone = TOOL_CONFIG_LONE_EXCLUDE.exec(words);
+  if (lone !== null) {
+    return {
+      fault: `adds an exclude through \`${lone[1]}\` alone — ask `
+        + "`all add exclude [generated] <paths>`, which writes every list",
+    };
+  }
+  const verb = TOOL_CONFIG_GATE_VERBS.find(v => v.pattern.test(words));
+  const bare = words.replace(TOOL_CONFIG_FOR, "");
+  const suffix = words.slice(bare.length + " for ".length);
+  if (
+    bare !== words
+    && (verb === undefined || !verb.tail || slugs.has(suffix))
+    && TOOL_CONFIG_GATE_VERBS.some(v => v.pattern.test(bare))
+  ) {
+    return {
+      fault: "ends in a `for <requester>` suffix — the materializer appends "
+        + "it, so a pack's line never carries one",
+    };
+  }
+  if (verb !== undefined) {
+    const fault = verb.pattern === TOOL_CONFIG_HOOK
+      ? hookFault(words)
+      : undefined;
+    return fault === undefined ? {} : { fault };
+  }
+  const env = TOOL_CONFIG_VERBS.env.exec(words);
+  const alias = env === null ? TOOL_CONFIG_VERBS.alias.exec(words) : null;
+  const match = env ?? alias;
+  if (match === null) {
+    return {
+      fault: "matches none of `mise add tool <name> <version> to <scope>`, "
+        + "`mise add env <KEY>=<value> to <scope>`, "
+        + "`mise add alias <name>=<command> [to dev]`, "
+        + "`dprint add plugin <name>`, "
+        + "`all add exclude [generated] <paths>`, "
+        + "`pre-commit add linter-ignore <paths>`, "
+        + "`pre-commit add hook <repo> <id> <stage> [key=value …]`, "
+        + "`grype add ignore <id> [reason]`, "
+        + "`git add ignore <patterns>`, `git add ignore template=<Name>` or "
+        + "`git add attribute <pattern> <attrs>`",
+    };
+  }
+  const name = match[1] ?? "";
+  const pattern = env !== null ? ENV_VAR_NAME : ALIAS_NAME;
+  if (!pattern.test(name)) {
+    return {
+      fault: `names \`${name}\`, which is not a \`${
+        pattern.source.slice(1, -1)
+      }\` name`,
+    };
+  }
+  if (alias !== null && TERA_DELIMITER.test(words)) {
+    return { fault: "carries a template delimiter outside an `add env` value" };
+  }
+  return env !== null ? { key: name } : {};
+}
+
+/**
+ * What the skill refuses of a hook the grammar admits: a `local` hook needs a
+ * name, an entry run through `mise x -- ` and `language=system`, and no `rev`;
+ * a URL repo needs a `rev`.
+ */
+function hookFault(words: string): string | undefined {
+  const local = TOOL_CONFIG_HOOK.exec(words)?.[1] === "local";
+  const pairs = new Map<string, string>();
+  for (const [, key, value] of words.matchAll(new RegExp(HOOK_PAIR, "g"))) {
+    pairs.set(
+      key ?? "",
+      (value ?? "").replace(/^"([\s\S]*)"$/, "$1"),
+    );
+  }
+  if (!local) {
+    return pairs.has("rev")
+      ? undefined
+      : "is a URL repo hook with no `rev=` — the skill pins a tag";
+  }
+  if (pairs.has("rev")) {
+    return "is a `local` hook carrying `rev=`, which only a URL repo takes";
+  }
+  const missing: string[] = [];
+  if (!pairs.has("name")) {
+    missing.push("`name=`");
+  }
+  if (!(pairs.get("entry") ?? "").startsWith("mise x -- ")) {
+    missing.push("an `entry=` beginning `mise x -- `");
+  }
+  if (pairs.get("language") !== "system") {
+    missing.push("`language=system`");
+  }
+  return missing.length === 0
+    ? undefined
+    : `is a \`local\` hook lacking ${missing.join(", ")}`;
+}
+
+/** Every `stackgen:tool-config` asset tree, plugin-relative. */
+function toolConfigTrees(plugin: Plugin): string[] {
+  return assetTrees(plugin, TOOL_CONFIG_ASSETS);
+}
+
+/** Every landed tree directly under `assets`, plugin-relative. */
+function assetTrees(plugin: Plugin, assets: string): string[] {
+  return globSync(`${assets}/*`, { cwd: plugin.root })
+    .filter(tree => statSync(join(plugin.root, tree)).isDirectory());
 }
 
 /**
@@ -799,28 +984,6 @@ function conditionalFaults(document: unknown, config: string): string[] {
     }
   });
   return faults;
-}
-
-/**
- * What a pre-commit YAML a pack ships gets held to, fragment or whole config.
- *
- * The same two assertions either way — it parses, and it carries a top-level
- * `repos:` list — because the merge that produces the target repo's config is
- * a concatenation on that key: a document without it contributes nothing and
- * says nothing about having contributed nothing.
- */
-function preCommitFaults(source: string, noun: string): string[] {
-  let document: unknown;
-  try {
-    document = parseYaml(source);
-  }
-  catch (error) {
-    return [`pre-commit ${noun} is not valid YAML — ${firstLine(error)}`];
-  }
-  const repos = (document as { repos?: unknown; } | null)?.repos;
-  return Array.isArray(repos)
-    ? []
-    : [`pre-commit ${noun} declares no top-level \`repos\` list`];
 }
 
 /**
@@ -1247,6 +1410,12 @@ function checkLandedCitations(plugin: Plugin): Finding[] {
 
 /** Is this plugin-relative path one of the files a pack lands? */
 function isLandedPath(path: string): boolean {
+  if (
+    path.startsWith(`${TOOL_CONFIG_ASSETS}/`)
+    || path.startsWith(`${INIT_ASSETS}/`)
+  ) {
+    return true;
+  }
   const parts = path.split("/");
   const [stacks, type, slug, tier] = parts;
   if (stacks !== "stacks" || type === undefined || slug === undefined) {
@@ -1269,6 +1438,16 @@ function isLandedPath(path: string): boolean {
  * {@link checkPackConfigTier} walks its own way.
  */
 function* landedFiles(plugin: Plugin): Generator<LandedFile> {
+  for (
+    const tree of [
+      ...toolConfigTrees(plugin),
+      ...assetTrees(plugin, INIT_ASSETS),
+    ]
+  ) {
+    for (const found of filesUnder(join(plugin.root, tree))) {
+      yield { path: relative(plugin.root, found), absolute: found };
+    }
+  }
   for (const pack of globSync("stacks/*/*", { cwd: plugin.root })) {
     const absolute = join(plugin.root, pack);
     if (pack.startsWith("stacks/bundles/")) {
@@ -1344,6 +1523,13 @@ function blankFences(body: string): string {
  */
 function landingRootOf(path: string): string | null {
   const parts = path.split("/");
+  // A tool-config or init asset tree lands whole as the repo root.
+  if (
+    path.startsWith(`${TOOL_CONFIG_ASSETS}/`)
+    || path.startsWith(`${INIT_ASSETS}/`)
+  ) {
+    return parts.slice(0, 4).join("/");
+  }
   return parts[3] === "skills" && parts.length > 5
     ? parts.slice(0, 4).join("/")
     : null;
@@ -1690,8 +1876,8 @@ function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
 }
 
 /**
- * The four exclusion lists the gate packs ship, each in its tool's own syntax,
- * and the reader that lifts the entries out of each.
+ * The four exclusion lists tool-config's gate assets ship, each in its tool's
+ * own syntax, and the reader that lifts the entries out of each.
  *
  * dprint and taplo take globs; gitleaks and pre-commit take regexes — the
  * pre-commit one a single pattern, so its alternatives are the entries. The two
@@ -1709,7 +1895,7 @@ const EXCLUSION_LISTS: readonly {
   readonly entries: (source: string) => string[] | null;
 }[] = [
   {
-    path: "stacks/toolchain-gate/dprint/config/.config/dprint.json",
+    path: `${TOOL_CONFIG_ASSETS}/dprint/.config/dprint.json`,
     syntax: "glob",
     role: "formatter",
     entries: source => {
@@ -1718,20 +1904,19 @@ const EXCLUSION_LISTS: readonly {
     },
   },
   {
-    path: "stacks/toolchain-gate/dprint/config/.config/taplo.toml",
+    path: `${TOOL_CONFIG_ASSETS}/dprint/.config/taplo.toml`,
     syntax: "glob",
     role: "formatter",
     entries: source => tomlStringList(source, "exclude"),
   },
   {
-    path: "stacks/toolchain-gate/gitleaks/config/.config/gitleaks.toml",
+    path: `${TOOL_CONFIG_ASSETS}/gitleaks/.config/gitleaks.toml`,
     syntax: "regex",
     role: "scanner",
     entries: source => tomlStringList(source, "paths"),
   },
   {
-    path:
-      "stacks/toolchain-gate/pre-commit/config/.config/pre-commit-config.yaml",
+    path: `${TOOL_CONFIG_ASSETS}/pre-commit/.config/pre-commit-config.yaml`,
     syntax: "regex",
     role: "formatter",
     entries: source => {
@@ -1915,19 +2100,28 @@ function normalizeExclusion(entry: string, syntax: "glob" | "regex"): string {
  * A tree the scanner skips that no formatter excludes is: an allowlist entry
  * with no generated tree behind it is a scanner quietly not scanning.
  *
- * A list that is absent from the tree is left out of the comparison rather
- * than treated as empty, so a pack fixture holding one of the four files is
- * not held to the other three.
+ * The plugin carrying the tool-config skill must carry all four lists: a list
+ * missing there is a finding, since a moved file would otherwise end the check
+ * silently. In any other plugin the rule has nothing to compare.
  */
 function checkExclusionSets(plugins: readonly Plugin[]): Finding[] {
   const findings: Finding[] = [];
 
   for (const plugin of plugins) {
+    const owner = existsSync(join(plugin.root, TOOL_CONFIG_SKILL));
     const present = new Map<string, Set<string>>();
     let scanner: { path: string; set: Set<string>; } | null = null;
     for (const list of EXCLUSION_LISTS) {
       const absolute = join(plugin.root, list.path);
       if (!existsSync(absolute)) {
+        if (owner) {
+          findings.push({
+            scope: plugin.dir,
+            message:
+              `${list.path}: exclusion list is missing — the tool-config `
+              + `skill ships all four lists`,
+          });
+        }
         continue;
       }
       let entries: string[] | null;

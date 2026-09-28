@@ -96,9 +96,10 @@ recorded `n/a`, never silently absent.
    dependency hygiene, feature flags, versioning.
 8. **Package manager & workspace** — lockfile discipline, supply-chain
    posture including the ecosystem's own audit tooling (the
-   `cargo audit`/`deny` class); repo-generic scanners stay repo-gate
-   territory, never here. *(workspace half conditional — `n/a` where the
-   repo pins a `workspace` bundle, which is the kind that takes it)*
+   `cargo audit`/`deny` class); repo-generic scanners stay
+   `stackgen:tool-config`'s, never here. *(workspace half conditional —
+   `n/a` where the repo pins a `workspace` bundle, which is the kind that
+   takes it)*
 9. **Compiler/toolchain config** — toolchain pinning, profiles, lint
    tables.
 10. **Lint & format gate** — wired as tasks.
@@ -264,274 +265,36 @@ component in the bundle:
 8. **Health** — readiness/liveness wiring against vwf's `health`
    harness capability.
 
-## `repo-gate` — the gates that run over the whole repo
+## Retired 2026-09-26: `repo-gate`
 
-The output is a **Repo-Gate-Bundle**
-(`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): the `toolchain-gate`
-components that apply to a repository as a whole rather than to one
-toolchain inside it. It is one of the four kinds rooted at the `repo` axis
-— `toolchain-manager`, `repo-hygiene` and `workspace` are the others — and
-like
-`toolchain-manager` a polyglot repo materializes this one **once** rather
-than per language.
+The repo-wide gates are no kind any more. dprint, gitleaks, grype and
+pre-commit — the formatter, the two scanners and the hook runner — are
+written by `stackgen:tool-config`
+(`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`), which also holds the
+doctrine this section used to bar. Nothing generates one, and no bundle
+composes one. A pack asks the skill for a formatter plugin, a hook, an
+exclude or an ignore through `tool-config:` in its `pack.yaml`. The seam the
+kind held stands: a gate meaningful for one toolchain is topic 10 of that
+language's bundle, never the skill's.
 
-**The seam with `language-bundle` topics 9–10, which is the whole reason
-this kind exists.** A gate whose config is meaningful only for one toolchain
-— a JavaScript linter, a Rust clippy table — is topic 10 of *that
-language's* bundle and never appears here. A gate that runs over every file
-regardless of what language wrote it belongs here. Getting this backwards is
-how a polyglot repo ends up with three secret scanners, one per language
-bundle, each with its own allowlist.
+## Retired 2026-09-26: `toolchain-manager`
 
-- **Axis**: `repo`.
-- **Structure**: the **topic bar** below — but **no router skill**. Each
-  gate is one self-contained paths-scoped skill bound to its own config
-  file, which is how the curated archetype ships them; there is no
-  on-demand reference tier to route to, because a gate's doctrine is one
-  screen of judgment and its config is one file.
-- **What it writes**: the skill above **and the config file it governs** —
-  `.config/dprint.json`, `.config/gitleaks.toml`, `.config/grype.yaml`,
-  `.config/pre-commit-config.yaml` and `.config/git-conventional-commits.yaml`
-  — through the `config/` tier
-  (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). Shipping the doctrine
-  without the file it describes was the earlier line, and it left every repo
-  hand-writing the config the skill assumes. A gate ships **no hook
-  fragment**: the gate config's `format`, `lint` and `sec` hooks call the
-  `code:*` tasks, so a gate tool is configured once, in the task, and a pack
-  needing a gate overlays that task. `.config/pre-commit.d/<pack>.yaml` — copied
-  verbatim, merged by `/vwf:init` — is for a **non-gate** check, such as
-  `package-manager/uv`'s `uv lock --check`.
-- **Scope**: what each gate must catch, what it must not scan, and how a
-  finding is answered. Never the language's lint rules — those are the
-  language bundle's. Never CI system syntax — that is the reserved
-  `ci-system` kind's. Never the ignore set or the licence — those are
-  `repo-hygiene`'s, and the seam is that a gate *scans* while hygiene
-  *declares what is not there to scan*.
-- **Facts & harness**: gates satisfy no vwf harness capability, so
-  `harness:` is `n/a` throughout. What they contribute is the `repo`-axis
-  fact of **one task name per gate**, which is what topic 5 exists to pin.
-- **Invocation**: every gate skill paths-scoped to its config file and
-  **not** user-invocable — a gate the model applies while editing the file
-  it governs, never a command someone runs.
-
-### The topic bar
-
-A closed list of five topics, one artifact per topic, each individually
-researched and cited. Extracted from the curated archetype — the five repo
-gates of the `devtools` plugin, which has since dissolved into this one. A
-gate the repo has no surface for is recorded `n/a`, never silently absent.
-
-1. **Format authority** — one formatter for the repo, one root config,
-   plugins pinned by version, generated trees excluded, and the escape
-   hatch for languages the formatter has no plugin for. Formatting only:
-   correctness belongs to the linter, and saying so is part of the topic.
-2. **Secret scanning** — the working tree on every commit and the history
-   once; allowlist by fingerprint rather than by rule; and the rule that a
-   hit is a credential to **rotate**, never a line to silence.
-3. **Dependency vulnerability scanning** — the source tree per commit and
-   the built artifact before release; the severity threshold that fails a
-   run; and time-boxed ignore rules, since an ignore with no expiry is a
-   permanent silence nobody re-reads.
-4. **Hook running** — the local gate: hooks that call the repo's task
-   library so the identical command runs locally and in CI, revs pinned and
-   updated deliberately, and `files:` scoping so a hook fires only for what
-   it validates.
-5. **Gate wiring & CI parity** — every gate reachable as one task name, the
-   same task names run in CI, cheap gates ordered before expensive ones,
-   and the exclusion set stated **once** rather than drifting per gate.
-   This topic is what makes the gates a bundle rather than unrelated tools.
-   It owns only the claim that each gate *is* reachable at a name; what the
-   task library is and what the names are belongs to `toolchain-manager`
-   topic 4 below, and this sentence exists in both places so the two cannot
-   drift.
-
-The bar maps onto components one-to-one for topics 1–4 — one
-`toolchain-gate` component each. **Topic 5 belongs to the hook-runner
-component**, because that is where gates are actually wired and where local
-and CI are made to run the same command; it is the one topic that is about
-the others rather than about a tool of its own. A repo with no hook runner
-records topic 5 `n/a` and loses the parity guarantee with it, which is worth
-saying out loud rather than discovering later.
-
-## `toolchain-manager` — the repo's tool pins, environment and task library
-
-The output is a **Toolchain-Manager-Bundle**
-(`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): exactly one
-`toolchain-manager` component, standing alone. It is the second of the four
-kinds rooted at the `repo` axis, and like `repo-gate` a polyglot repo
-materializes it **once** — the manager is what makes several toolchains one
-command surface.
-
-**Three jobs, one component.** It pins the repo's tools, holds the
-environment values they read, and runs the repo's tasks. Alternatives split
-those differently — a pinner that runs nothing, a task runner that pins
-nothing, an env loader that does neither — so the bar is wide enough for a
-combiner and a splitter both, and a component with no surface for a topic
-records it `n/a`, never silently absent.
-
-**The seam with `repo-gate` topic 5, stated in both places on purpose.**
-That topic asserts each gate *is* reachable as one task name and that CI
-runs the same names. Topic 4 below owns **what the task library is and what
-the names are**. A gate says "I am reachable at the security task name"; the
-manager ships that task and the contract every task in the library follows.
-Written once, the two drift the moment only one of them knows about the
-other.
-
-- **Axis**: `repo`.
-- **Structure**: the **topic bar** below, hung per the kind-general rule —
-  a lean router skill plus on-demand `references/` for the
-  reference-shaped topics, which is the shape the curated archetype
-  already has.
-- **What it writes**: its own config layers and the whole file-based task
-  library, through the `config/` tier
-  (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`) — the layered
-  `mise.*.toml` split, `.config/mise/tasks/**` (executable), and the shared
-  helper library the tasks source. It is the **first** component in
-  composition order, because everything any other pack overlays is a file
-  this one laid down. It also owns the `.config/mise/conf.d/` directory that
-  provider packs drop their environment fragments into — owns the
-  convention, never the fragments.
-- **Scope**: which layer pins what, what the tasks are called, and how the
-  same tasks run in the pipeline. Never what a gate *checks* — that is
-  `repo-gate`'s. Never the CI system's workflow syntax — that is
-  `ci-system`'s, which installs this manager and then calls its task names.
-  Never a language's build commands, which the tasks wrap rather than
-  define. Never the ignore set — `repo-hygiene` declares that; what the
-  manager owns is **documenting** which of its own local files are meant to
-  be ignored, so the two agree on purpose rather than by luck.
-- **Facts & harness**: `harness:` is `n/a` throughout — a toolchain manager
-  satisfies no vwf harness capability; it is what the harness tasks are run
-  *by*. What it contributes is the `repo`-axis fact that the task names
-  exist at all.
-- **Invocation**: paths-scoped to the manager's config files and its task
-  tree, and **not** user-invocable — doctrine the model applies while
-  editing a config or a task file, never a command someone runs.
-
-### The topic bar
-
-A closed list of five topics, one artifact per topic, each individually
-researched and cited. Extracted from the curated archetype — the mise skill
-and its two references from the `devtools` plugin, which has since dissolved
-into this one. A topic the manager has no surface for is recorded `n/a`,
-never silently absent.
-
-1. **Tool pinning & the config split** — which config layer holds which
-   tool (the runtime the product needs, the development-only tools, the
-   CI-only ones), how the active layer is selected, and the rule that
-   nothing is duplicated across layers: a tool pinned twice is a version
-   that can disagree with itself, and the disagreement surfaces on someone
-   else's machine.
-2. **Environment values** — variable names shared across layers with the
-   *values* split per layer, so development and production override the
-   same names rather than each inventing their own. Names here, values
-   never, aligned with `environment.md`.
-3. **The task library contract** — file-based tasks over inline ones, the
-   directory-to-name mapping that makes a task's path its name, the header
-   metadata each task file declares, the shared helpers library the tasks
-   source rather than each restating, and the discipline for a slot the
-   consuming repo must fill in — marked, so an unfilled slot is visible
-   rather than silently a task that does nothing.
-4. **The mandatory task set** — the task names every repo ships regardless
-   of language, which is the vocabulary the rest of the toolkit invokes:
-   the gate-running names and the bootstrap names. A name here is a
-   contract, not a convention — renaming one breaks every caller that never
-   read this file.
-5. **Bootstrap & CI parity** — how a fresh checkout and a fresh worktree
-   reach a working toolchain, how the pipeline runs the *identical* task
-   names, how the layer is selected there, and the per-runtime workarounds
-   a CI runner needs that a laptop does not.
-
-## `repo-hygiene` — the files every repo carries regardless of stack
-
-The output is a **Repo-Hygiene-Bundle**
-(`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): exactly one `repo-hygiene`
-component, standing alone. It is the third of the four kinds rooted at the
-`repo` axis, and like `repo-gate` and `toolchain-manager` a polyglot repo
-materializes it **once** — an `.editorconfig` per language is a repo whose
-files disagree about tab width.
-
-**Why it is not a gate, which is the distinction the kind exists to hold.**
-A gate runs, finds something and fails. Hygiene runs nothing: it *declares*
-— what is ignored, how a file is indented, how a line ending is normalized,
-who to tell about a vulnerability, under what licence the thing may be used,
-and how dependency updates arrive. Folding these into `repo-gate` would have
-filed a licence text behind a secret scanner's doctrine, and the first
-person looking for either would have found neither.
-
-- **Axis**: `repo`.
-- **Structure**: the **topic bar** below — **no router skill**, the same
-  shape `repo-gate` takes and for the same reason. One paths-scoped skill,
-  bound to the files it governs; there is no reference tier, because the
-  judgment here is a screen and the rest is the files themselves.
-- **What it writes**: the root files, `renovate.json` among them — at the
-  root, as Renovate's config discovery never reaches `.config/` — through
-  the `config/` tier (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). It is
-  the kind the **root allowlist** belongs to — the doctrine of what may sit
-  at a repo root at all — which every other kind's `config/` tree is then
-  measured against. It may also carry a **pack-private** payload under
-  `config/_<name>/`, which is never copied: the licence texts are the case,
-  since a repo gets the one licence it chose, not a directory of them.
-- **Scope**: the files above and nothing that runs. Never a gate's config —
-  that is `repo-gate`'s, and the seam is that a gate scans while hygiene
-  declares what is not there to scan, so an ignore rule and a scanner
-  allowlist are two different decisions that must not be written as one.
-  Never the toolchain manager's own local file patterns — hygiene ignores
-  them, the manager documents them, and each writes only its half. Never a
-  language's ignore rules beyond the generic set: the stack-specific
-  sections are appended per repo from the community templates rather than
-  frozen into this pack, because a pack that hard-codes them ages the moment
-  a language's build directory is renamed.
-- **Facts & harness**: `harness:` is `n/a` throughout, and `capability:` is
-  unset — nothing in a blueprint chooses an ignore file, so there is no vwf
-  token to realize and none is minted here.
-- **Invocation**: the skill is paths-scoped to the files it governs and
-  **not** user-invocable — doctrine the model applies while editing one of
-  them, never a command someone runs.
-
-### The topic bar
-
-A closed list of four topics. A topic the repo has no surface for is
-recorded `n/a`, never silently absent.
-
-1. **The ignore set** — one sectioned `.gitignore`, each section labelled
-   with what it is for, so a line is removable by someone who can tell why
-   it is there. It carries the generic sections every repo needs (the OS's
-   own droppings, agent tooling, the toolchain manager's local overrides,
-   environment and secret files, worktrees and scratch space) and states the
-   rule for the rest: stack sections are **appended per repo**, one section
-   per technology, never duplicating one already present. The seam with
-   secret scanning matters and is stated here: ignoring a file is not the
-   same act as allowlisting it, and a secret that is ignored is still a
-   secret that was never scanned.
-2. **Editor and attribute defaults** — `.editorconfig` for what a person's
-   editor does before a formatter ever runs, and `.gitattributes` for what
-   git does to a file's bytes: line-ending normalization, what is binary,
-   what is generated and should not inflate a diff. Neither overlaps the
-   formatter, and saying so is part of the topic: the formatter is
-   authoritative for files it handles, and these two cover everything and
-   everyone that never reaches it.
-3. **Licensing and the security contact** — the licence the repo is offered
-   under, chosen rather than defaulted, and a `SECURITY.md` naming a private
-   channel for a vulnerability report. The rule the topic exists to enforce
-   is that a public repo with no security contact receives its next report
-   in a public issue.
-4. **Dependency updates** — the automated-update configuration: what is
-   grouped, what is held back, and the cooling-off period before a fresh
-   release is proposed. It states the policy only; the scanner that fails a
-   build on a vulnerability is `repo-gate` topic 3, and a repo needs both —
-   updates keep the surface small, scanning catches what is already there.
+The toolchain manager is no kind any more. Its files — the mise config
+split, the section files and the task library — are written by
+`stackgen:tool-config` (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`),
+which also holds the doctrine this section used to bar. Nothing generates
+one, and no bundle composes one.
 
 ## `workspace` — the repo's members and what crosses between them
 
 The output is a **Workspace-Bundle**
 (`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): the `package-manager`
 component that installs and locks the repo's members, plus a
-`build-orchestrator` component where the repo has one. It is the fourth kind
-rooted at the `repo` axis, and the only one of the four a user **picks**:
+`build-orchestrator` component where the repo has one. It is the one kind
+rooted at the `repo` axis, and a user **picks** it:
 `repo.stack.template` in `.config/vwf.yaml` is the elicited
 workspace-and-package-manager pin, and the bundles of this kind are what it
-selects from. The other three repo-axis kinds are `unconditional:` baselines
-nobody chooses.
+selects from.
 
 **A single-package repo pins nothing here**, and that is the kind's edge
 rather than a gap. Flutter's own bundle says it out loud — mobile apps are
@@ -553,15 +316,15 @@ carries topics 7–8; this kind composes the same component for the half a
 workspace adds. That is the seam working, not a mis-declared pack.
 
 - **Axis**: `repo`.
-- **Structure**: the **topic bar** below — **no router skill**, as with
-  `repo-gate`: one paths-scoped doctrine skill per config file the workspace
-  owns (the workspace manifest, the orchestrator config), plus topic 1 as a
+- **Structure**: the **topic bar** below — **no router skill**: one
+  paths-scoped doctrine skill per config file the workspace owns (the
+  workspace manifest, the orchestrator config), plus topic 1 as a
   model-invocable reference beside them. Reference-shaped because there is
   no file glob that means "choosing a workspace shape", and five short
   topics do not earn a router.
 - **Scope**: who the members are, how work crosses them, and what they
   inherit. Never a member's own internal layout — that is the language
-  bundle's. Never the task library, which is `toolchain-manager`'s: an
+  bundle's. Never the task library, which is `stackgen:tool-config`'s: an
   orchestrator runs *beneath* the manager, and this kind states which
   orchestrator exists, never what the repo's task names are. Never what a
   gate checks. Never the built artifact, which is the deploy axis's even
@@ -613,7 +376,7 @@ never silently absent.
    (an `extends` key, a symlink, a path). Only the inheritance is this
    kind's: what the config *says* belongs to the kind that owns the tool —
    the compiler config to `language-bundle` topic 9, the formatter's to
-   `repo-gate` topic 1.
+   `stackgen:tool-config`.
 
 The bar maps onto components as follows: topics 1, 2, 4 and 5 belong to the
 **`package-manager`** component. **Topic 3 belongs to the
@@ -1099,7 +862,7 @@ verifies the artifact against its declared kind: every structural element
 the kind requires is present (a `database` output without a `local_stack`
 mechanism is a gap), nothing outside the kind's scope crept in (a language
 bundle naming a database is a gap), and each skill's invocation mode matches
-the kind's ruling. For all thirteen kinds the structural checklist **is the
+the kind's ruling. For all ten kinds the structural checklist **is the
 topic bar** — every non-`n/a` topic covered by the composition, each
 artifact inside the depth sizing. For `database` the composition is the
 instance component alone, and citing rather than restating the category
@@ -1109,20 +872,7 @@ component, the service topics by each `cloud-service` component, the
 extension by category — and the cite-not-restate seam between service
 topics and provider doctrine is part of the bar; a `static-hosting`
 service whose artifact is anything but a directory of files, or that
-ships a server-side script fronting them, is a gap. For `repo-gate` the
-composition is the gate components together, and one check carries the
-kind: a **language-specific** linter or formatter appearing here is a gap,
-because it belongs to topic 10 of its language bundle. For
-`toolchain-manager` the composition is the one component alone, and two
-checks carry the kind: a task name asserted by a `repo-gate` output that the
-task library does not ship is a gap on this side of the seam, and a router
-skill that is user-invocable is a gap, because this kind's doctrine applies
-while a config is edited rather than on request. For `repo-hygiene` the
-composition is the one component alone, and two checks carry the kind: a
-**stack-specific ignore section frozen into the pack** is a gap, since those
-are appended per repo, and anything that *runs* — a scanner, a formatter, a
-hook — appearing here is a gap, because this kind declares and never
-executes. For `workspace` the
+ships a server-side script fronting them, is a gap. For `workspace` the
 composition is the `package-manager` component plus a `build-orchestrator`
 where the bundle has one, and two checks carry the kind: **topic 3 left
 unstated is a gap**, because "no orchestrator" is an answer this kind

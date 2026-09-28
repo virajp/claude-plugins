@@ -50,26 +50,11 @@ interactively.
    Name the viewport you used in every finding's `where`; a golden rendered
    at another size is not evidence for this one.
 2. **Check the pins, and read the pinned platform.** Goldens are pixels from
-   one simulator, so the repo pins it once, in
-   `.config/mise/conf.d/swiftui.toml`: `SIMULATOR_PLATFORM`,
-   `SIMULATOR_DEVICE` and `SIMULATOR_OS`, from which the golden task builds
-   the `-destination` — so the task, this gate and CI render on the same
-   simulator. The same file pins `XCODE_VERSION`. Read all four with
-   `mise env`, then apply the same stale-pin check the tasks do, from the
-   repo root:
-
-   ```sh
-   mise x -- bash -c 'MISE_PROJECT_ROOT="$PWD" &&
-     source .config/mise/tasks/_scripts/helpers &&
-     source .config/mise/tasks/_scripts/xcode &&
-     require_pin_source ux-gate XCODE_VERSION SIMULATOR_PLATFORM \
-       SIMULATOR_DEVICE SIMULATOR_OS'
-   ```
-
-   A non-zero exit — a pin still set in `.config/mise.toml`'s `[env]`,
-   which would override the fragment — is `rendered: n/a` with the message it
-   printed as the reason, and nothing below runs: the audit would otherwise
-   render on a simulator the golden task refuses. When `SIMULATOR_PLATFORM`
+   one simulator, so the repo pins it once, in the environment mise exports:
+   `SIMULATOR_PLATFORM`, `SIMULATOR_DEVICE` and `SIMULATOR_OS`, from which
+   the golden task builds the `-destination` — so the task, this gate and CI
+   render on the same simulator. `XCODE_VERSION` is pinned the same way. Read
+   all four with `mise env`, from the repo root. When `SIMULATOR_PLATFORM`
    is empty, or a simulator pin lacks its device or OS, report
    `rendered: n/a` with that reason rather than choosing a simulator
    yourself. When `XCODE_VERSION` is empty, or the first

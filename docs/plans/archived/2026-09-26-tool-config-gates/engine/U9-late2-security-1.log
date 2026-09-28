@@ -1,0 +1,3 @@
+No high-confidence vulnerabilities found.
+- 9f700d9a: comment-only change in setup/mise; no executable line changed.
+- 8acddbd6: markdown/prose only.

@@ -1,0 +1,55 @@
+---
+# The commit convention: the `commit-msg` hook enforces it, and the changelog reads it.
+
+convention:
+  # Ten types, and no more.
+  commitTypes:
+    - feat # a new capability a user can observe. Bumps the minor version.
+    - fix # a defect in a shipped capability, not in one added this branch.
+    - perf # same behaviour, measurably cheaper. Say what was measured.
+    - refactor # neither fixes nor adds — including pure formatting changes.
+    - revert # undoes an earlier commit; name it in the body.
+    - test # tests only. A test written alongside a fix belongs to the fix.
+    - ops # tooling, config, dependencies, CI, release mechanics.
+    - docs # prose: README, guides, specifications, design documents.
+    - merge # a merge commit. Written by the merge task, rarely by hand.
+    - wip # work in progress. Never survives a merge; excluded from notes.
+
+  # MARKED POSITION — commitScopes: one scope per project id, filled from the `scopes` argument.
+  # A scope that stops existing stays listed, marked `# retired`: deleting it invalidates its commits.
+  commitScopes: []
+
+  featureCommitTypes:
+    - feat
+
+  # A repo that namespaces its tags per component narrows this to that prefix.
+  releaseTagGlobPattern: "*"
+
+changelog:
+  # test, ops, docs, merge and wip are deliberately absent from the notes.
+  commitTypes:
+    - feat
+    - fix
+    - perf
+    - refactor
+    - revert
+
+  includeInvalidCommits: false
+
+  # Also catches `wip` commits written before the convention.
+  commitIgnoreRegexPattern: '^[wW][iI][pP]\b'
+
+  headlines:
+    feat: Features
+    fix: Bug Fixes
+    perf: Performance Improvements
+    refactor: Refactors
+    revert: Reverts
+    breakingChange: BREAKING CHANGES
+
+  # MARKED POSITION — the changelog links, filled and uncommented from `origin`; with no remote they stay commented.
+  #
+  # commitUrl: <forge>/<owner>/<repo>/commit/%commit%
+  # commitRangeUrl: <forge>/<owner>/<repo>/compare/%from%...%to%?diff=split
+  # issueRegexPattern: "#[0-9]+"
+  # issueUrl: <forge>/<owner>/<repo>/issues/%issue%

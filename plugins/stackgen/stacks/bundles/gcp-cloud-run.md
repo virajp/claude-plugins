@@ -4,7 +4,7 @@ axis: deploy
 kind: cloud-provider
 components:
 - cloud-provider/gcp@0.1.0
-- cloud-service/cloud-run@0.1.0
+- cloud-service/cloud-run@0.2.0
 artifact: container-image
 ---
 

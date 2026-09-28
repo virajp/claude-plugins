@@ -37,21 +37,22 @@ and it is not a secret worth mining either, so it belongs in
 
 ## The toolchain placement
 
-Doppler is dev-only tooling, so it goes in the dev-only mise file:
+The CLI arrives through the doppler pack's `tool-config:` list, which
+`stackgen:tool-config` writes inside the pack's own `# >>> doppler` block:
 
-```toml
-# .config/mise.dev.toml
-[tools]
-doppler = "latest"
+```yaml
+tool-config:
+  - mise add tool doppler latest to all environments
+  - mise add env DOPPLER_CONFIG="local" to all environments
+  - mise add env DOPPLER_PROJECT="{{ config_root | split(pat='/') | last }}" to
+    all environments
 ```
 
-**Never `.config/mise.toml`** — that file carries the runtime, which CI and
-every deployed build also load, and none of them use Doppler. **Never
-`.config/mise.ci.toml`** — CI authenticates to its own secret store.
-
-Putting it in the base file is the mistake that quietly makes the injector look
-required: it installs everywhere, so nobody notices that a task depends on it
-until a build runs somewhere it was not installed.
+The tool lands in `.config/mise/conf.d/tools.toml` and the two values in
+`.config/mise/conf.d/env.toml`, so they load in **every** environment. Change
+them through the pack, not by hand: a hand edit inside the block reads as drift
+on the next run.
+CI still authenticates to its own secret store, never to the developer's login.
 
 ## Credentials
 

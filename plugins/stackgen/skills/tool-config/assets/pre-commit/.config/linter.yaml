@@ -1,0 +1,23 @@
+---
+# The house linter's config — zero-config without it, and shipped empty of overrides.
+
+version: 1
+
+# Generated trees only — the linter does not read .gitignore.
+ignores:
+  # >>> pre-commit
+  - "**/build/"
+  - "**/graphify-out/"
+  # mise's sidecar lock tree; a --fix rewrite breaks the digest mise.lock pins
+  - "**/.config/mise/locks/"
+  # <<< pre-commit
+
+# overrides:
+#   typescript:
+#     rules:
+#       "@typescript-eslint/no-explicit-any": "error"
+#
+# configs:
+#   - name: "custom"
+#     files: ["**/*.ts"]
+#     rules: {}

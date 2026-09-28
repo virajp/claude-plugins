@@ -1,0 +1,68 @@
+/code-review high, loop U9-late2 round 1, branch-scoped (late range f89a00ba..ae7d2fee)
+
+I found 10 issues. The worst is that the Flutter pack asks for the wrong gitignore template. Vitest (355 passed), `p:plugins:check` and `p:plugins:inventory --check` all pass. Several doc findings may be closed by U10, which is still pending, but the branch as it stands is out of sync with its docs.
+
+```json
+[
+  {
+    "file": "plugins/stackgen/stacks/app-framework/flutter/pack.yaml",
+    "line": 70,
+    "summary": "`git add ignore template=Flutter` fetches github/gitignore's Flutter.gitignore, which is the ignore file for the Flutter SDK's own repo, not a template for a Flutter app. It ignores `*.lock`, a bare `version`, `/bin/cache/`, `/dev/...` and `/packages/...`.",
+    "failure_scenario": "Any Flutter app repo shaped through the dart-flutter bundle gets `*.lock`, so `ios/Podfile.lock` (and any other `.lock` besides pubspec.lock and mise.lock) is silently untracked. It also gets `version`, so any file or directory named `version` anywhere in the app is ignored. The conflict rules in git.md only protect `.config/mise/mise.lock` and the pack's own lockfile, so these lines are written without a row. git.md's template table and its claim that `Flutter.gitignore covers its iOS host` carry the same mistake."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit",
+    "line": 45,
+    "summary": "When core.hooksPath is set, the graphify check only looks inside the hooksPath directory (`git rev-parse --git-path hooks` resolves to it). Raw graphify hooks already sitting in `.git/hooks` are never inspected, and after `--force` unsets hooksPath the strip is never re-run.",
+    "failure_scenario": "A repo had `graphify hook install` run before husky set `core.hooksPath=.husky`. Running `setup:precommit --force` (or the printed by-hand steps) unsets hooksPath at line 181 and runs `pre-commit install --overwrite`. That overwrites only the declared hook types, so `.git/hooks/post-checkout` with the graphify block becomes live again, including its pinned, broken Python path."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit",
+    "line": 55,
+    "summary": "`graphify hook uninstall` runs under `set -euo pipefail` with no fallback, so any failure aborts the whole task before pre-commit is installed. The awk-based `strip_graphify_block` fallback is only used when graphify is absent from PATH.",
+    "failure_scenario": "graphify is on PATH but `hook uninstall` exits non-zero (for example, an older graphify without the subcommand, or the broken interpreter state this strip exists to clean up). setup:precommit, and so setup:all, dies at the migration step and the repo ends up with no pre-commit hooks. Something like `graphify hook uninstall || { strip_graphify_block …; }` would avoid this."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/references/git.md",
+    "line": 89,
+    "summary": "The no-doubling normalisation strips the leading `/`, the trailing `/` and a `**/` prefix before comparing patterns. That treats patterns with different git semantics as the same pattern and drops the incoming line.",
+    "failure_scenario": "The user's `.gitignore` has `/build` (root only). A template then asks for `build/` (any depth), which normalises equal and is not written, so `packages/app/build/` stays tracked. Likewise an existing `foo/bar` (anchored) suppresses a template's `**/foo/bar` (any depth), and a file-only `node_modules` suppresses a directory-only `node_modules/`."
+  },
+  {
+    "file": "plugins/vwf/skills/setup/SKILL.md",
+    "line": 113,
+    "summary": "Step 0's shape test is now just 'tool-config/* records present'. init's hygiene assets write no lock record, so nothing signals that CONTRIBUTING.md, LICENSE, SECURITY.md or the issue forms never landed. The removed repo-hygiene record used to cover that.",
+    "failure_scenario": "An init run completes `/stackgen:tool-config all` (records written) and is interrupted or declined before the hygiene-assets step. Every later `/vwf:setup` and doctor run reads the repo as shaped and never offers init again, so the repo permanently lacks CONTRIBUTING.md and SECURITY.md."
+  },
+  {
+    "file": "installer/CLAUDE.md",
+    "line": 28,
+    "summary": "The installer no longer runs `graphify hook install` and the repo-hygiene bundle is retired, but the docs were not reconciled. Stale text remains in installer/CLAUDE.md:28, site/src/content/docs/installer/targets.md:72, internals.md:147, site plugins/stackgen.md:680 and .claude/skills/stackgen-plugin/SKILL.md:100.",
+    "failure_scenario": "This breaks /CLAUDE.md's rule: \"Any change to plugin behavior must reconcile `readme.md`, this file, and the manual under `site/src/content/docs/` in the same commit\". The published manual tells users the installer installs graphify's post-commit hook and that init fetches an unconditional `repo-hygiene` bundle; neither is true on this branch. U10 is still pending."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit",
+    "line": 70,
+    "summary": "The merge=graphify strip rewrites the tracked `.gitattributes` and removes local git config on every machine that runs setup. It does this before the foreign-hook-manager refusal, and `grep -v` drops any line containing the text, comments included.",
+    "failure_scenario": "Each developer running `setup:all` on a repo still carrying the line gets an unexpected dirty `.gitattributes`, even when the task then refuses with exit 1 over husky. A comment mentioning `merge=graphify` is deleted too, leaving its orphaned explanation behind (git.md says that comment is the migration's to delete, not this task's)."
+  },
+  {
+    "file": ".config/mise/tasks/setup/ai",
+    "line": 180,
+    "summary": "The new comment says 'The graph refresh is code:graph, run by hand.' In fact code:graph runs automatically from the pre-commit `graphify-refresh` post-commit hook.",
+    "failure_scenario": "It contradicts code/graph's own description ('run by the graphify-refresh post-commit hook') and the installer comment added in the same branch. A reader concludes the graph goes stale unless refreshed manually, or adds a redundant manual step."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 483,
+    "summary": "init's asset trees are walked with `rootFiles = null`, which switches the root-allowlist check off entirely for them instead of allowlisting the few entries init actually has.",
+    "failure_scenario": "A stray or new file dropped at `skills/init/assets/hygiene/` root (say a `.editorconfig` re-added, or a file that should live under `.config/`) passes `p:plugins:check` silently. An explicit set (`CONTRIBUTING.md`, `SECURITY.md`, `licenses/`, plus the shared `.github`/`.config` dirs) would keep rule 11 in force for that tree."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 750,
+    "summary": "The `git add ignore template=<Name>` grammar accepts any identifier. It is never checked against the template table in git.md or against a known name set, even though git.md says 'a wrong name is a 404 and a 404 is a block that silently never lands'.",
+    "failure_scenario": "A pack author writes `git add ignore template=NodeJS` or `template=node`. The checker passes, and at materialize time the fetch 404s, writes nothing and only names the block in the call's output. The repo ships without its language ignore set and no gate catches it."
+  }
+]
+```

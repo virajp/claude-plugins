@@ -65,25 +65,25 @@ blocker rather than a preference. Know this before you install.
   non-negotiable TDD and a coverage gate; `plan` and `execute` map each slice to
   a project in an architecture registry you author first. It will not operate on
   an ad-hoc folder.
-- **Five binaries must be on your `PATH`** — `mise`, `graphify`, `uv`, `pnpm`
-  and `rtk`. `pnpm` is only the **default** Context7 runner; `CONTEXT7_RUNNER`
-  overrides it, so a bun or npm user needs no pnpm — see
+- **Six binaries must be on your `PATH`** — `mise`, `graphify`, `uv`, `python`,
+  `pnpm` and `rtk`. `pnpm` is only the **default** Context7 runner;
+  `CONTEXT7_RUNNER` overrides it, so a bun or npm user needs no pnpm — see
   [the vwf manual](https://claude-plugins.virajp.dev/plugins/vwf/). **Nothing
-  checks this at install time**, and `/vwf:doctor` does not cover all five: it
+  checks this at install time**, and `/vwf:doctor` does not cover all six: it
   blocks on a missing `graphify`, and on a missing `mise` once any stack axis is
   pinned (and `/vwf:setup` and `/vwf:execute` halt on either), reports a missing
   language server as an ordinary finding, reports a missing `rtk` as a
   **degradation** — its hook is guarded, so the run is correct and merely costs
-  more — and says nothing at all about the Context7 runner, while `uv` matters
-  as graphify's runtime rather than on its own. Run `/vwf:doctor` first
-  regardless, but install all five rather than relying on it to tell you. A
-  sixth, `gh`, logged in, is needed by `/vwf:backlog`, which keeps the backlog
-  in a GitHub Project and wants the `project` scope, by `init`'s **forge pass**
-  (the default branch and protection on `develop` and `main` on the `repo`
-  scope, the backlog project on `project` — on a GitLab remote, `glab`), and by
-  the doctor predicate that reads that forge state back; doctor reports its
-  absence as a **degradation** with the remedy, and init prints the by-hand list
-  and carries on.
+  more — and says nothing at all about the Context7 runner, while `uv` and
+  `python` matter as graphify's runtime rather than on their own. Run
+  `/vwf:doctor` first regardless, but install all six rather than relying on it
+  to tell you. A seventh, `gh`, logged in, is needed by `/vwf:backlog`, which
+  keeps the backlog in a GitHub Project and wants the `project` scope, by
+  `init`'s **forge pass** (the default branch and protection on `develop` and
+  `main` on the `repo` scope, the backlog project on `project` — on a GitLab
+  remote, `glab`), and by the doctor predicate that reads that forge state back;
+  doctor reports its absence as a **degradation** with the remedy, and init
+  prints the by-hand list and carries on.
 - **It is opinionated on purpose.** One workflow, one set of conventions, sized
   for a solo developer or a small team — not a configurable framework for a
   large org.
@@ -290,17 +290,25 @@ extension map, so it never starts in a repo with no matching files. Re-syncing
 against newer packs is an explicit, diffed decision — never a silent overwrite,
 never a `settings.json` edit without separate consent, and removal is by
 subtraction, dropping only the keys your repo's lockfile recorded. A pack may
-also declare **repo config files** it owns — the mise config and the file-based
-task library everything else runs through, each gate's own config, the hygiene
-files, a provider's environment fragment, a deploy target's own root config and
-the deploy task beside it, a project task a framework pack owns — the Astro
-pack's favicon rasterizer is the first — and the two fragments `/vwf:init`
-merges: the pre-commit one, and the per-pack editor fragment — on the same
-merges-never-owns terms, behind their own consent line, and capped by a fixed
-allowlist of what may sit at a repo's root. Language manifests, CI workflow
-files and a **whole** editor file stay outside that fence: the first two declare
-what the project *is*, the third is composed from every pack's slice and belongs
-to no single one, and no pack decides any of them. The packs, bundles and kinds
+also declare **repo config files** it owns — a language gate's own config, a
+deploy target's own root config and the deploy task beside it, a project task a
+framework pack owns — the Astro pack's favicon rasterizer is the first — and the
+per-pack editor fragment `/vwf:init` merges — on the same merges-never-owns
+terms, behind their own consent line, and capped by a fixed allowlist of what
+may sit at a repo's root. The mise config, the file-based task library
+everything else runs through, the dprint, pre-commit, gitleaks and grype
+configs, and the ignore, attribute, graph-ignore and Renovate files belong to no
+pack: they are written by `/stackgen:tool-config`, a skill you can also run
+yourself
+(`/stackgen:tool-config mise add tool <name> <version> to dev environment`),
+which keeps each requester's lines between its own `# >>> <name>` markers and
+writes a line outside them only on your approval — a pack asks it for a tool
+pin, an environment value, an alias, a formatter plugin, an exclude, a linter
+ignore, a hook, an ignore line, a pinned GitHub ignore template or an attribute
+through `tool-config:` in its `pack.yaml`. Language manifests, CI workflow files
+and a **whole** editor file stay outside that fence: the first two declare what
+the project *is*, the third is composed from every pack's slice and belongs to
+no single one, and no pack decides any of them. The packs, bundles and kinds
 that ship are inventoried in
 [`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md), generated from
 the tree itself; the newest kind is `stylesheet`, the one that answers vwf's

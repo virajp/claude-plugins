@@ -65,8 +65,8 @@ want it.
 Relay's repo is empty — at most a readme, which is not evidence — so `init`
 resolves it to mode **`blank`**: no lockfile, no manifest, no source directory,
 no root tool config. It runs the new-repo landing alone, shaping the repo before
-anything else runs: the config layout, the toolchain manager's five-file split,
-the task library grouped `setup:*` / `code:*` / `p:*`, the four repo gates with
+anything else runs: the config layout, the toolchain manager's config split, the
+task library grouped `setup:*` / `code:*` / `p:*`, the four repo gates with
 their configs and hook fragments, the hygiene files, and the licence Relay
 chose. Its stack read finds nothing on a blank repo, so no `.gitignore` language
 section lands and the toolchain config's runtime positions stay empty until a
@@ -108,18 +108,19 @@ It closes with a git pass: it asks how work lands in this repo, **one row per
 branch** — `direct`, which merges locally and pushes, or `pr`, which pushes the
 branch and opens a pull request; `develop` preselected `direct` and `main`
 preselected `pr` — writes the two answers to `MERGE_MODEL_DEVELOP` and
-`MERGE_MODEL_MAIN`, then stages what it wrote and asks once whether to commit,
-commit and push, or leave it. The commit lands on `develop` — Relay is brand
-new, so `develop` is its first branch and `main` is created from that first
-commit. If you chose *commit and push*, the **forge pass** follows on one more
-consent: it shows what it will set on the forge — the default branch (`develop`
+`MERGE_MODEL_MAIN`, writes the mise lock with `setup:mise --lock-only`, then
+stages the lock with what it wrote and asks once whether to commit, commit and
+push, or leave it. The commit lands on `develop` — Relay is brand new, so
+`develop` is its first branch and `main` is created from that first commit. If
+you chose *commit and push*, the **forge pass** follows on one more consent: it
+shows what it will set on the forge — the default branch (`develop`
 preselected), protection on `develop` and `main` (no force-push, no deletion,
 and a pull request required on whichever of the two you set to `pr`), and the
 backlog project it hands you the browser to create — and applies it through the
 forge CLI, leaving any protection already there untouched. Without the CLI, or
 on a forge it has none for, it prints the same list for you to apply by hand —
-the form the hygiene pack's `CONTRIBUTING.md` keeps — and carries on. Its report
-prints, and setup carries on with its own work.
+the form the hygiene assets' `CONTRIBUTING.md` keeps — and carries on. Its
+report prints, and setup carries on with its own work.
 
 **Then setup does its half.** A repo with no manifest, no source directories and
 no `docs/blueprint/` is *blank*, and setup treats it as such: it asks nothing

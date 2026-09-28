@@ -1,0 +1,195 @@
+---
+# The local gate; every run by hand needs `--config .config/pre-commit-config.yaml`.
+
+minimum_pre_commit_version: "3.2.0"
+
+default_install_hook_types:
+  - pre-commit
+  - commit-msg
+  - post-commit
+
+# Stated once so each hook below only says what differs from it.
+default_stages: [pre-commit]
+
+# The shared exclusion set — keep it equal to dprint's and taplo's; add a tree here, never inside one hook.
+# Lines after the first open with `|`; an appended block edits none above it.
+exclude: |-
+  (?x)
+  # >>> pre-commit
+  (^|/)\.claude/
+  |(^|/)\.config/mise/locks/
+  |(^|/)\.git/
+  |(^|/)build/
+  |(^|/)dist/
+  |(^|/)graphify-out/
+  |(^|/)[^/]*\.lock$
+  # <<< pre-commit
+
+repos:
+  - repo: local
+    hooks:
+      - id: no-dash-names
+        name: No path component starting with a dash
+        description: Every tool the gate hooks below call reads an argument
+          beginning with `-` as an option, so such a name breaks — or silently
+          changes — the formatters and linters it is handed to.
+        entry: Rename these files — a path component starting with a dash is
+          read as an option by the formatters and linters
+        language: fail
+        files: '(^|/)-'
+
+      - id: git-config
+        name: Required local git-config (forge identity, ssh signing)
+        description: Requires a per-repo identity equal to the forge variables
+          — user.name, user.email and user.signingkey from GITHUB_*, GITLAB_*
+          or GIT_* — with ssh-signed commits and tags. `--fix` writes those
+          keys from the variables and unsets gpg.program and gpg.ssh.program;
+          an unset variable fails the hook and writes nothing. A commit that
+          changed any key is refused — git read the old identity before the
+          hook ran — and the re-run carries the corrected one.
+        entry: mise x -- mise run code:git-config --fix
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # Tool-neutral: each hook names a task. `format` runs first (it rewrites), `sec` last (it cannot fix).
+      - id: format
+        name: Format (mise run code:format)
+        description: The repo's formatters, run over the files being committed.
+          The task owns the tool list and its config paths; this hook only
+          passes it the staged files.
+        entry: mise x -- mise run code:format --fix
+        language: system
+        pass_filenames: true
+
+      - id: lint
+        name: Lint (mise run code:lint)
+        description: The repo's linters, run over the files being committed.
+          The task owns which linters exist for the pinned stack, and skips the
+          ones whose tool or config is absent.
+        entry: mise x -- mise run code:lint --fix
+        language: system
+        pass_filenames: true
+        require_serial: true
+
+      - id: sec
+        name: Secrets (mise run code:sec --staged)
+        description: The secret scan, over what is staged rather than over the
+          tree. `--staged` is what selects that mode inside the task, which is
+          also why no filenames are passed — the task asks git, not pre-commit,
+          for the staged content.
+        entry: mise x -- mise run code:sec --staged
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: graphify-refresh
+        name: Refresh the graphify graph (mise run code:graph)
+        description: Rebuilds the knowledge graph in the background after each
+          commit; the task skips a worktree, a rebase and a missing graphify.
+        entry: mise x -- mise run code:graph
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [post-commit]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        name: Check for added large files (>1MB)
+        description: A binary committed by accident is cheap to refuse and
+          expensive to remove — it stays in history after the delete.
+        args: ["--maxkb=1024"]
+      - id: check-case-conflict
+        name: Check for case-conflicting filenames
+        description: Two paths differing only in case collide on macOS and
+          Windows checkouts, where one silently overwrites the other.
+      - id: check-illegal-windows-names
+        name: Check for filenames Windows cannot check out
+        description: A path named CON, AUX or carrying a reserved character
+          makes the whole clone fail on Windows, not just that file.
+      - id: check-executables-have-shebangs
+        name: Check that executables have shebangs
+        description: An executable with no shebang runs under whatever shell
+          the caller happens to have, which is how a bash script meets zsh.
+      - id: check-shebang-scripts-are-executable
+        name: Check that scripts with shebangs are executable
+        description: The other half of the same gate, and the one that bites
+          here — a task file landing 644 is reported by mise as an unknown
+          task rather than as a permission error.
+      - id: check-merge-conflict
+        name: Check for merge conflict markers
+        description: Conflict markers committed into a source file parse as
+          syntax errors somewhere far from the merge that caused them.
+      - id: check-symlinks
+        name: Check for broken symlinks
+        description: A symlink to a path that no longer exists is a silent
+          nothing at read time rather than an error.
+      - id: destroyed-symlinks
+        name: Check for destroyed symlinks
+        description: A symlink committed as a regular file containing its own
+          target path — what happens when a tool without symlink support
+          rewrites the tree.
+      - id: check-json
+        name: Check JSON syntax
+        description: Every config gate below reads a config file; an unparseable
+          one fails inside the tool with a message about the tool.
+        # The composed editor files under .vscode/ are JSONC by design.
+        exclude: ^\.vscode/
+      - id: check-toml
+        name: Check TOML syntax
+        description: Same reason as JSON, for the toolchain manager's config.
+      - id: check-yaml
+        name: Check YAML syntax
+        description: Same reason again, and it covers this file — a broken
+          hook config disables the gate rather than failing it.
+      - id: detect-private-key
+        name: Check for committed private keys
+        description: The secret scanner further down catches these too; this
+          one is free and runs first, so the common case fails immediately.
+      - id: end-of-file-fixer
+        name: Ensure files end with a newline
+        description: A missing final newline makes the next append show as a
+          two-line diff and breaks line-oriented tools mid-pipeline.
+      - id: trailing-whitespace
+        name: Remove trailing whitespace
+        description: Invisible in review and the cause of diffs nobody
+          authored when the next editor strips it.
+        # Two trailing spaces are a Markdown hard break.
+        exclude: \.md$
+      - id: mixed-line-ending
+        name: Normalise line endings to LF
+        description: A CRLF file entering the tree rewrites whole-file diffs
+          for everyone else. `--fix=lf` settles it rather than reporting it.
+        args: ["--fix=lf"]
+      - id: no-commit-to-branch
+        name: Refuse a direct commit to main
+        description: main is what consumers read, and it takes merges only.
+          Merges are unaffected — git runs `pre-merge-commit` for those.
+        args: ["--branch", "main"]
+
+  - repo: https://github.com/qoomon/git-conventional-commits
+    rev: v2.9.0
+    hooks:
+      - id: conventional-commits
+        name: Conventional Commits
+        description: The commit-msg gate. The release notes are generated from
+          these messages, so a type outside the convention is a change that
+          silently never appears in a changelog.
+        args: ["--config", ".config/git-conventional-commits.yaml"]
+        stages: [commit-msg]
+
+  # The config audit, `manual` only: both hooks fail on a correct config in a young repo.
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+        name: Audit — every hook matches at least one file
+        description: Catches a `files:` regex that stopped matching after a
+          rename, which is a gate that reports success while checking nothing.
+        stages: [manual]
+      - id: check-useless-excludes
+        name: Audit — every exclude matches at least one file
+        description: Catches an exclusion whose reason expired, which is the
+          failure mode nobody re-reads because it keeps working.
+        stages: [manual]

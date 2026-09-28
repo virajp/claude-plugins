@@ -1,0 +1,3 @@
+/security-review, loop U9-late1 round 3, range 65e8256d..f89a00ba (scoped to c240859e..f89a00ba's new commits)
+
+SECURITY ENGINE: no findings. git.md gains prose treating a fetched template line that re-ignores a tracked path as a conflict row, which narrows what is ignored. pub and flutter pack.yaml each add a static `git add ignore !pubspec.lock`. Nothing exploitable.

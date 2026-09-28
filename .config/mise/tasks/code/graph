@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+
+#MISE description="Refresh the graphify knowledge graph, run by the graphify-refresh post-commit hook (code only, no LLM)"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--force" help="Rebuild even when the last commit only touched graphify-out/"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Run by pre-commit's graphify-refresh hook at post-commit; graphify's own raw
+# git hook pins a Python path, so setup:precommit removes it.
+
+if [ "${GRAPHIFY_SKIP_HOOK:-0}" = "1" ]; then
+  exit 0
+fi
+
+if ! command -v graphify >/dev/null 2>&1; then
+  print_warn "graphify is not on PATH — graph not refreshed (MISE_ENV=dev mise run setup:all)"
+  exit 0
+fi
+
+# Only the main checkout holds a graph; a linked worktree never rebuilds one.
+GIT_DIR_ABS="$(cd "$(git rev-parse --git-dir)" && pwd -P)"
+GIT_COMMON_ABS="$(cd "$(git rev-parse --git-common-dir)" && pwd -P)"
+if [ "${GIT_DIR_ABS}" != "${GIT_COMMON_ABS}" ]; then
+  exit 0
+fi
+
+# Never mid-rebase, merge or cherry-pick: the rebuild would race the working tree.
+for marker in rebase-merge rebase-apply; do
+  [ -d "${GIT_DIR_ABS}/${marker}" ] && exit 0
+done
+for marker in MERGE_HEAD CHERRY_PICK_HEAD; do
+  [ -f "${GIT_DIR_ABS}/${marker}" ] && exit 0
+done
+
+force=()
+if [[ "${usage_force:-false}" == "true" ]]; then
+  force=(--force)
+else
+  # A first commit has no parent, so every file it tracks counts as changed.
+  if git rev-parse -q --verify HEAD~1 >/dev/null; then
+    changed="$(git diff --name-only HEAD~1 HEAD)"
+  else
+    changed="$(git ls-tree -r --name-only HEAD 2>/dev/null || true)"
+  fi
+  # A commit touching only graphify-out/ is the previous rebuild landing; rebuilding would loop.
+  if [ -z "$(printf '%s\n' "${changed}" | grep -v '^graphify-out/' || true)" ]; then
+    exit 0
+  fi
+fi
+
+# Pinned so louvain's set iteration, and so the community ids, stay stable across runs.
+export PYTHONHASHSEED=0
+
+LOG="${HOME}/.cache/graphify-rebuild.log"
+mkdir -p "$(dirname "${LOG}")"
+
+# One rebuild at a time: mkdir is atomic, and the lock holds its owner's PID.
+LOCK="${GIT_DIR_ABS}/graphify-refresh.lock"
+TAKEOVER="${LOCK}.takeover"
+
+# A skip, or a lost race, is never a failure of the commit.
+skip() {
+  print_yellow "graphify: $1 — skipped (lock: ${LOCK})"
+  exit 0
+}
+
+# Held: a live PID, or no PID yet on a lock under ten minutes old.
+lock_is_held() {
+  local holder
+  holder="$(cat "${LOCK}/pid" 2>/dev/null || true)"
+  if [ -n "${holder}" ]; then
+    kill -0 "${holder}" 2>/dev/null
+  else
+    [ -d "${LOCK}" ] && [ -z "$(find "${LOCK}" -maxdepth 0 -mmin +10 2>/dev/null)" ]
+  fi
+}
+
+if ! mkdir "${LOCK}" 2>/dev/null; then
+  if lock_is_held; then
+    skip "a refresh is already running"
+  fi
+  # A takeover dir left by a killed run is stale after ten minutes; only the
+  # run whose mv succeeds clears it, and only if what it moved is still old.
+  if [ -n "$(find "${TAKEOVER}" -maxdepth 0 -mmin +10 2>/dev/null)" ]; then
+    dead="${TAKEOVER}.dead.$$"
+    if mv "${TAKEOVER}" "${dead}" 2>/dev/null; then
+      if [ -z "$(find "${dead}" -maxdepth 0 -mmin +10 2>/dev/null)" ]; then
+        # It moved a live takeover: put an equivalent one back and step aside.
+        mkdir "${TAKEOVER}" 2>/dev/null || true
+        rm -rf "${dead}" || true
+        skip "another run is taking over the lock"
+      fi
+      rm -rf "${dead}" || true
+    fi
+  fi
+  # Only the run that makes the takeover dir may replace a stale lock.
+  if ! mkdir "${TAKEOVER}" 2>/dev/null; then
+    skip "another run is taking over the lock"
+  fi
+  # Re-checked under the takeover: the lock may have changed since.
+  if ! mkdir "${LOCK}" 2>/dev/null; then
+    if lock_is_held; then
+      rmdir "${TAKEOVER}" 2>/dev/null || true
+      skip "a refresh is already running"
+    fi
+    rm -rf "${LOCK}" || true
+    # A plain run may win the freed lock first; the rebuild is then its.
+    if ! mkdir "${LOCK}" 2>/dev/null; then
+      rmdir "${TAKEOVER}" 2>/dev/null || true
+      skip "another run took the lock first"
+    fi
+  fi
+  rmdir "${TAKEOVER}" 2>/dev/null || true
+fi
+# This task holds the lock until the rebuild writes its own PID over it.
+echo "$$" >"${LOCK}/pid" 2>/dev/null || true
+
+print_yellow "graphify: refreshing the graph in the background (log: ${LOG})"
+# Detached so the commit returns at once; on exit the rebuild removes the
+# lock only while the lock is still its own.
+# shellcheck disable=SC2016
+nohup bash -c 'lock="$1"
+shift
+release() { [ "$(cat "${lock}/pid" 2>/dev/null)" = "$$" ] && rm -rf "${lock}"; }
+trap release EXIT
+echo "$$" >"${lock}/pid"
+graphify update . "$@"' graphify-refresh "${LOCK}" ${force[@]+"${force[@]}"} >>"${LOG}" 2>&1 </dev/null &
+echo "$!" >"${LOCK}/pid" 2>/dev/null || true
+disown
+exit 0

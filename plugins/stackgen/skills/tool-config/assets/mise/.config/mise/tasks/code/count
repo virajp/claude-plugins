@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+#MISE description="Count lines of code"
+#MISE dir="{{ config_root }}"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+print_header "Counting lines of code ..."
+
+counts=""
+# `|| true`: git grep exits 1 on no match, a status `set -e` would take.
+counts=$(git -C "${MISE_PROJECT_ROOT}" grep -I -c '' -- . 2>/dev/null) || true
+
+if [ -z "${counts}" ]; then
+  print_warn "No tracked text files."
+  exit 0
+fi
+
+# Grouped by extension, top ten; split on the LAST colon so a path holding one still parses.
+print_subheader "By extension"
+printf '%s\n' "${counts}" | awk '
+  {
+    at = match($0, /:[0-9]+$/)
+    if (at == 0) next
+    n = substr($0, at + 1) + 0
+    path = substr($0, 1, at - 1)
+
+    slash = split(path, parts, "/")
+    base = parts[slash]
+    dot = split(base, pieces, ".")
+    ext = (dot > 1) ? "." pieces[dot] : "(none)"
+
+    lines[ext] += n
+    files[ext] += 1
+  }
+  END {
+    for (e in lines) printf "%12d  %6d  %s\n", lines[e], files[e], e
+  }
+' | sort -rn | head -10
+
+printf '%s\n' "${counts}" | awk '
+  {
+    at = match($0, /:[0-9]+$/)
+    if (at == 0) next
+    total += substr($0, at + 1) + 0
+    count += 1
+  }
+  END { printf "\n%12d lines in %d tracked text files\n", total, count }
+'

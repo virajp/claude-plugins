@@ -372,9 +372,15 @@ side of the contract is three rules:
   globs where that package manager's lockfile may sit, any match passing
   `/vwf:doctor`'s lockfile check; and **`machine_env:`**, a list of
   `{ name, detect, question }` — the machine values `/vwf:setup`'s
-  materialize pass asks for and writes into the marked position the pack
-  landed for each `name`, offering what `detect` prints as the default while
-  the template entry matches what the lockfile last recorded.
+  materialize pass asks for and sets through `/stackgen:tool-config`, in the
+  block the pack's own `tool-config:` calls added for each `name`, offering
+  what `detect` prints as the default while the template entry matches what
+  the lockfile last recorded. The same pass re-runs every already-landed
+  pack's `tool-config:` list on each run, so a call a newer pack changed
+  reaches the repo, and relays the skill's rows — a drift or conflict row,
+  including a machine value also set outside the pack's block, answered
+  `move-in`, or `keep-both` (`keep-existing` when that line shares the
+  pack's file) — inside its own consent.
 - **A materialized fetch is a pure read.** Once a slug is materialized, every
   `-stack-template` call returns the committed payload from the repo — so
   `plan`'s and `execute`'s conventions resolution behaves exactly as
@@ -398,6 +404,13 @@ side of the contract is three rules:
   and vwf sees the same thing either way — one payload, one consent-gated
   materialization. The no-fitting-template **halt** still applies when
   nothing on any menu fits *and* no installed adapter offers generation.
+
+**The adapter supplies bundles; the universal tools are
+`stackgen:tool-config`'s.** The repo's toolchain manager and the tools every
+repo carries are not a bundle any more: `/vwf:init` calls
+`/stackgen:tool-config all` with its answers, and a pack asks the same skill
+for what it needs. The lockfile records what the skill writes as
+`source: tool-config/<tool>@<adapter version>`, which `/vwf:doctor` reads.
 
 ## The UX gate
 

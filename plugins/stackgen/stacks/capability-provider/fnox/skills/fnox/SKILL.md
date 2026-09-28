@@ -15,7 +15,6 @@ paths:
   - "**/fnox.toml"
   - "**/fnox.local.toml"
   - "**/.fnox/**"
-  - "**/.config/mise/conf.d/fnox.toml"
   - "**/gitleaks.toml"
   - "**/mempalace.yaml"
 ---

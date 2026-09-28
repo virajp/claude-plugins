@@ -85,7 +85,7 @@ print_error() { echo -e "${RED}${BOLD}$1${NORMAL}" >&2; }
 #   submodules  `.gitmodules` exists, so git already holds the list. Keeping a
 #               second copy of it in the config would only let the two disagree.
 #   siblings    no `.gitmodules`, so the list is `MEMBERS` — the marked position
-#               in `.config/mise.toml` that the orchestrator shaping this repo
+#               in `.config/mise/conf.d/env.toml` that the orchestrator shaping this repo
 #               fills, space separated, each path relative to the repo root.
 #
 # Defined ONCE here rather than in each caller, which is the whole point: every

@@ -1,4 +1,3 @@
-graphify-out/graph.json merge=graphify
 
 # The one generated artifact left: the marketplace manifest is a pure function
 # of the per-plugin .claude-plugin/plugin.json files, so it collapses in review.

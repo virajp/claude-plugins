@@ -1,0 +1,9 @@
+No high-confidence vulnerabilities found.
+- .config/mise/tasks/code/graph:1 and assets/mise/.config/mise/tasks/code/graph — graphify-refresh post-commit hook runs `graphify update .` backgrounded; inputs are git metadata and env/flags (trusted); no untrusted input reaches a shell. (2)
+- assets/mise/.config/mise/tasks/setup/precommit:121 — `graphify hook uninstall` runs only after a fixed-marker grep; no interpolation. (1)
+- plugins/stackgen/stacks/package-manager/uv/pack.yaml:15 — hook `entry=` is a fixed first-party string (`mise x -- uv lock --check`), author-controlled, same entry as the deleted uv.yaml fragment. (2)
+- scripts/src/check.ts — new tool-config parsing is regex matching, no exec/spawn/shell; paths from constants. (1)
+- assets/gitleaks/.config/gitleaks.toml:46 — allowlist narrowed (`.turbo`, `.venv`, `node_modules`, `target` removed), nothing widened; scanner covers more. (1)
+- assets/pre-commit/.config/pre-commit-config.yaml `exclude` and taplo.toml — formatter exclusions, not a security control. (1)
+- .config/mise/conf.d/tools.dev.toml:19 — `pipx:graphifyy` "latest"; real package name; minimum_release_age + lockfile apply. (2)
+- grype.yaml — moved, content unchanged. (1)

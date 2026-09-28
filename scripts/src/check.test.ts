@@ -280,7 +280,6 @@ describe("hook scripts", () => {
 describe("the pack config tier", () => {
   const pack = "stacks/toolchain-manager/mise/config";
   const task = `${pack}/.config/mise/tasks/code/format`;
-  const fragment = `${pack}/.config/pre-commit.d/mise.yaml`;
 
   it("accepts an executable task, and ignores the rest of the pack", () => {
     // The `config/` tier mirrors the repo root, so a pack ships plenty there
@@ -289,19 +288,13 @@ describe("the pack config tier", () => {
       alpha: {
         files: {
           [task]: "#!/usr/bin/env bash\n",
-          [`${pack}/.gitignore`]: "node_modules/\n",
           [`${pack}/wrangler.jsonc`]: "{}\n",
           [`${pack}/_licenses/MIT.txt`]: "MIT\n",
           [`${pack}/.config/dprint.json`]: "{}\n",
-          [fragment]: "repos:\n  - repo: local\n",
-          // The five root entries a tool discovers only from the repo root, or
-          // that a human reads there: the dprint shim, the package-manager
-          // file, the contributing guide, graphify's ignore file, and the forge
-          // directory.
+          // The three root entries a tool discovers only from the repo root:
+          // the dprint shim, the package-manager file, and the forge directory.
           [`${pack}/dprint.json`]: "{ \"extends\": \".config/dprint.json\" }\n",
           [`${pack}/.npmrc`]: "fund=false\n",
-          [`${pack}/CONTRIBUTING.md`]: "# Contributing\n",
-          [`${pack}/.graphifyignore`]: "dist/\n",
           [`${pack}/.github/ISSUE_TEMPLATE/bug.md`]: "---\nname: Bug\n---\n",
         },
         executable: [task],
@@ -398,18 +391,21 @@ describe("the pack config tier", () => {
     ]);
   });
 
-  it("accepts a Renovate config at the config/ tier root", () => {
-    // Renovate discovers its config at the repo root, in `.github/` or in
-    // `.gitlab/`; one under `.config/` is read by nothing and reports no error.
-    const root = tree({
-      alpha: {
-        files: {
-          [`${pack}/renovate.json`]:
-            "{ \"extends\": [\"config:best-practices\"] }\n",
-        },
-      },
-    });
-    expect(messages(check(root))).toEqual([]);
+  it.each([
+    ".gitignore",
+    ".gitattributes",
+    ".graphifyignore",
+    ".editorconfig",
+    "renovate.json",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "LICENSE",
+  ])("flags %s at the config/ tier root — tool-config's or init's", file => {
+    // A pack asks tool-config for its lines in these files, or init writes them.
+    const root = tree({ alpha: { files: { [`${pack}/${file}`]: "x\n" } } });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("unallowlisted root entry"),
+    ]);
   });
 
   it("flags a root file vwf owns — CLAUDE.md", () => {
@@ -518,40 +514,15 @@ describe("the pack config tier", () => {
     ]);
   });
 
-  it("flags a pack's whole pre-commit config with no repos list", () => {
-    // The gate pack ships the base config the fragments merge into, and it sits
-    // under `.config/` rather than in `pre-commit.d/`, so nothing else sees it.
+  it("flags a pre-commit.d file in a pack's config/ tier", () => {
+    // A pack asks tool-config for its hooks; a fragment is merged by nothing.
+    const fragment = `${pack}/.config/pre-commit.d/mise.yaml`;
     const root = tree({
-      alpha: {
-        files: {
-          "stacks/toolchain-gate/pre-commit/config/.config/pre-commit-config.yaml":
-            "default_stages: [pre-commit]\n",
-        },
-      },
+      alpha: { files: { [fragment]: "repos:\n  - repo: local\n" } },
     });
     expect(messages(check(root))).toEqual([
-      expect.stringContaining("pre-commit config declares no top-level"),
-    ]);
-  });
-
-  it("flags a hook fragment that is not valid YAML", () => {
-    // The fragments are concatenated into one pre-commit config by init, so a
-    // malformed one breaks a file no pack owns and nothing here would see.
-    const root = tree({
-      alpha: { files: { [fragment]: "repos:\n  - repo: local\n   bad\n" } },
-    });
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("pre-commit fragment is not valid YAML"),
-    ]);
-  });
-
-  it("flags a hook fragment with no top-level repos list", () => {
-    // `repos:` is the only key the concatenation can merge on.
-    const root = tree({
-      alpha: { files: { [fragment]: "hooks:\n  - id: one\n" } },
-    });
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("declares no top-level `repos` list"),
+      `pack config/ tier ships a pre-commit.d file — a pack asks for its hooks `
+      + `through \`tool-config:\` in pack.yaml: ${fragment}`,
     ]);
   });
 
@@ -568,7 +539,7 @@ describe("the pack config tier", () => {
         "stacks/toolchain-manager/mise/pack.yaml":
           `name: mise\nconditional:\n${entries}`,
         [`${pack}/.config/vscode.d/mise.jsonc`]: "{ \"settings\": {} }\n",
-        [`${pack}/renovate.json`]: "{}\n",
+        [`${pack}/wrangler.jsonc`]: "{}\n",
         ...files,
       },
     },
@@ -577,8 +548,8 @@ describe("the pack config tier", () => {
   it("accepts a conditional list naming known axes and landed paths", () => {
     const root = tree(conditional(
       "  - path: .config/vscode.d/*.jsonc\n    when: { editor: vscode }\n"
-        + "  - path: renovate.json\n    when: { update_bot: renovate }\n"
-        + "  - path: renovate.json\n    when: { secrets: fnox }\n",
+        + "  - path: wrangler.jsonc\n    when: { update_bot: renovate }\n"
+        + "  - path: wrangler.jsonc\n    when: { secrets: fnox }\n",
     ));
     expect(messages(check(root))).toEqual([]);
   });
@@ -598,7 +569,7 @@ describe("the pack config tier", () => {
 
   it("flags a secrets condition on none, which names no provider", () => {
     const root = tree(conditional(
-      "  - path: renovate.json\n    when: { secrets: none }\n",
+      "  - path: wrangler.jsonc\n    when: { secrets: none }\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining(
@@ -609,11 +580,11 @@ describe("the pack config tier", () => {
 
   it("flags a conditional entry on an axis outside the vocabulary", () => {
     const root = tree(conditional(
-      "  - path: renovate.json\n    when: { ci: github }\n",
+      "  - path: wrangler.jsonc\n    when: { ci: github }\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining(
-        "`conditional[0]` (renovate.json) `when` names axis `ci`, not one of "
+        "`conditional[0]` (wrangler.jsonc) `when` names axis `ci`, not one of "
           + "forge, editor, secrets, update_bot",
       ),
     ]);
@@ -621,7 +592,7 @@ describe("the pack config tier", () => {
 
   it("flags a conditional entry whose value the axis never takes", () => {
     const root = tree(conditional(
-      "  - path: renovate.json\n    when: { forge: bitbucket }\n",
+      "  - path: wrangler.jsonc\n    when: { forge: bitbucket }\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining(
@@ -646,21 +617,21 @@ describe("the pack config tier", () => {
     // The glob is matched inside the pack's own tier; a `..` segment or an
     // absolute path reaches files the pack does not land.
     const root = tree(conditional(
-      "  - path: ../../../renovate.json\n    when: { forge: github }\n"
-        + "  - path: /etc/renovate.json\n    when: { forge: github }\n",
+      "  - path: ../../../wrangler.jsonc\n    when: { forge: github }\n"
+        + "  - path: /etc/wrangler.jsonc\n    when: { forge: github }\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining(
-        "(../../../renovate.json) climbs out of what the pack lands",
+        "(../../../wrangler.jsonc) climbs out of what the pack lands",
       ),
-      expect.stringContaining("(/etc/renovate.json) climbs out of"),
+      expect.stringContaining("(/etc/wrangler.jsonc) climbs out of"),
     ]);
   });
 
   it("flags a conditional entry naming two axes at once", () => {
     // Two answers is two entries on the same path, never one map.
     const root = tree(conditional(
-      "  - path: renovate.json\n    when: { forge: github, editor: vscode }\n",
+      "  - path: wrangler.jsonc\n    when: { forge: github, editor: vscode }\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining("`when` names 2 axes — exactly one of"),
@@ -668,8 +639,8 @@ describe("the pack config tier", () => {
   });
 
   // Doctor runs a probe and reads a lockfile glob as the pack states them, and
-  // setup asks a machine_env question and fills the conf.d key it names — a
-  // malformed fact or a key no fragment carries fails in none of them.
+  // setup asks a machine_env question and fills the key a tool-config call sets
+  // — a malformed fact or a key no call sets fails in none of them.
   const facts = (yaml: string, files: Record<string, string> = {}) => ({
     alpha: {
       files: {
@@ -730,64 +701,484 @@ describe("the pack config tier", () => {
     ]);
   });
 
-  it("accepts machine_env entries each keyed in a conf.d [env] table", () => {
+  it("accepts machine_env entries each set by a tool-config env call", () => {
     const root = tree(facts(
       "machine_env:\n"
         + "  - { name: XCODE_VERSION, detect: \"xcodebuild -version\", "
         + "question: Which Xcode? }\n"
         + "  - { name: SIMULATOR_OS, detect: \"xcrun simctl list\", "
-        + "question: Which OS? }\n",
-      {
-        [`${confD}/swiftui.toml`]: "[tools]\nx = \"1\"\n\n[env]\n"
-          + "# A MARKED POSITION\nXCODE_VERSION = \"\"\n"
-          + "\"SIMULATOR_OS\" = \"\" # trailing\n",
-      },
+        + "question: Which OS? }\n"
+        + "tool-config:\n"
+        + "  - mise add tool aqua:realm/SwiftLint 0.65.1 to all environments\n"
+        + "  - mise add env XCODE_VERSION=\"\" to all environments\n"
+        + "  - mise add env SIMULATOR_OS=\"\" to dev\n",
     ));
     expect(messages(check(root))).toEqual([]);
   });
 
-  it("reads an array-of-tables header as leaving [env]", () => {
+  it("flags a machine_env name no tool-config env call sets", () => {
+    // A tool line naming the key, or a call with no tool-config list at all,
+    // leaves setup asking a question whose answer lands nowhere.
     const root = tree(facts(
-      "machine_env:\n  - { name: AFTER, detect: \"x\", question: q }\n",
-      {
-        [`${confD}/swiftui.toml`]: "[env]\nBEFORE = \"\"\n\n[[hooks]]\n"
-          + "AFTER = \"1\"\n",
-      },
+      "machine_env:\n"
+        + "  - { name: X, detect: \"echo 1\", question: X? }\n"
+        + "  - { name: Y, detect: \"echo 1\", question: Y? }\n"
+        + "tool-config:\n  - mise add tool X latest to all environments\n"
+        + "  - mise add env Y=\"1\" to ci environment\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining(
-        "`machine_env[0]` (AFTER) is a key of no `[env]` table",
+        "`machine_env[0]` (X) is set by no `mise add env` call",
+      ),
+    ]);
+    const bare = tree(facts(
+      "machine_env:\n  - { name: X, detect: \"echo 1\", question: X? }\n",
+    ));
+    expect(messages(check(bare))).toEqual([
+      expect.stringContaining("(X) is set by no `mise add env` call"),
+    ]);
+  });
+
+  it("flags a tool-config value that is not a list of instructions", () => {
+    const root = tree(facts("tool-config: mise add env X=1\n"));
+    expect(messages(check(root))).toEqual([
+      "stacks/app-framework/swiftui/pack.yaml: "
+      + "`tool-config` is not a list of instructions",
+    ]);
+  });
+
+  it("flags a mise conf.d fragment in a pack's config/ tier", () => {
+    // A pack asks stackgen:tool-config for its mise lines; a landed fragment
+    // is a second writer of a file the skill owns.
+    const root = tree(facts("tool-config:\n  - mise add tool x 1 to dev\n", {
+      [`${confD}/swiftui.toml`]: "[env]\nX = \"1\"\n",
+    }));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(
+        `ships a mise conf.d fragment — a pack asks for its mise lines `
+          + `through \`tool-config:\` in pack.yaml: ${confD}/swiftui.toml`,
       ),
     ]);
   });
 
-  it("accepts machine_env on a pack that ships no conf.d fragment", () => {
-    const root = tree(facts(
-      "machine_env:\n  - { name: X, detect: \"echo 1\", question: X? }\n",
-    ));
-    expect(messages(check(root))).toEqual([]);
-  });
-
-  it("flags a malformed machine_env entry and a name no [env] carries", () => {
+  it("flags a malformed machine_env entry", () => {
     const root = tree(facts(
       "machine_env:\n"
         + "  - { name: 1BAD, detect: \"x\", question: q }\n"
         + "  - { name: GOOD, detect: \"\" }\n"
-        + "  - { name: MISSING, detect: \"x\", question: q }\n"
-        + "  - just a string\n",
-      {
-        [`${confD}/swiftui.toml`]: "[env]\nGOOD = \"\"\n\n[tools]\n"
-          + "MISSING = \"1\"\n",
-      },
+        + "  - just a string\n"
+        + "tool-config:\n  - mise add env GOOD=\"\" to all environments\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining("`machine_env[0]` (1BAD) `name` is not an env"),
       expect.stringContaining("`machine_env[1]` (GOOD) `detect` is not a"),
       expect.stringContaining("`machine_env[1]` (GOOD) `question` is not a"),
-      expect.stringContaining(
-        "`machine_env[2]` (MISSING) is a key of no `[env]` table",
+      expect.stringContaining("`machine_env[2]` is not a { name, detect,"),
+    ]);
+  });
+
+  it("accepts the three verbs, a shipped env template and a folded line", () => {
+    // mise renders every env value as a template, so a pack's own value may be
+    // one; YAML folds a continued plain scalar into one line of words.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - mise add tool aqua:realm/SwiftLint 0.65.1 to all environments\n"
+        + "  - mise add alias npx=\"pnpm dlx\" to dev environment\n"
+        + "  - mise add alias ll=ls\n"
+        + "  - mise add env P=\"{{ config_root | split(pat='/') | last }}\" to\n"
+        + "    all environments\n",
+    ));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a tool-config entry outside the verb grammar", () => {
+    // `set env` and `remove` are the setup's and the materializer's verbs; a
+    // pack's line has no `for`, since the materializer appends it.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - mise set env X=1\n"
+        + "  - mise remove swiftui\n"
+        + "  - mise add env X=1\n"
+        + "  - mise add env X=1 to all environments for swiftui\n"
+        + "  - mise add tool x 1 to prod environment\n"
+        + "  - mise add alias x=y to ci environment\n"
+        + "  - dprint add plugin x for swiftui\n",
+    ));
+    expect(messages(check(root))).toEqual(
+      [0, 1, 2, 3, 4, 5, 6].map(index =>
+        expect.stringContaining(`\`tool-config[${index}]\``)
       ),
-      expect.stringContaining("`machine_env[3]` is not a { name, detect,"),
+    );
+    expect(messages(check(root)).every(m => m.includes("matches none of")))
+      .toBe(true);
+  });
+
+  it("accepts the gate verbs a pack may ask for", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - dprint add plugin typescript\n"
+        + "  - all add exclude x\n"
+        + "  - all add exclude generated node_modules .turbo\n"
+        + "  - all add exclude *-lock.json *-lock.yaml\n"
+        + "  - pre-commit add linter-ignore .dart_tool\n"
+        + "  - 'pre-commit add hook local uv-lock-check pre-commit "
+        + "name=\"uv lockfile is current\" entry=\"mise x -- uv lock --check\" "
+        + "files=\"(^|.*/)pyproject\\.toml$\" language=system "
+        + "pass_filenames=false'\n"
+        + "  - pre-commit add hook https://github.com/x/y z post-commit rev=v1\n"
+        + "  - grype add ignore CVE-2024-1234\n"
+        + "  - grype add ignore GHSA-abcd-1234 not reachable from our code\n",
+    ));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("accepts the git verbs a pack may ask for", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - git add ignore .venv\n"
+        + "  - git add ignore fnox.local.toml .doppler/ !keep/*.md\n"
+        + "  - git add ignore template=Node\n"
+        + "  - git add ignore template=C++\n"
+        + "  - git add attribute pnpm-lock.yaml linguist-generated\n"
+        + "  - git add attribute *.png binary -diff\n",
+    ));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a git verb outside the skill's grammar", () => {
+    // Empty ignore, bad template, bare attribute, quoted token, unknown verb.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - git add ignore\n"
+        + "  - git add ignore template=\n"
+        + "  - git add ignore template=Bad/Name\n"
+        + "  - git add ignore template=Node .venv\n"
+        + "  - git add attribute pnpm-lock.yaml\n"
+        + "  - git add ignore '!keep/*.md'\n"
+        + "  - git add attribute \"*.png\" binary\n"
+        + "  - git add hook x\n",
+    ));
+    expect(messages(check(root))).toEqual(
+      [0, 1, 2, 3, 4, 5, 6, 7].map(index =>
+        expect.stringContaining(`\`tool-config[${index}]\``)
+      ),
+    );
+    expect(messages(check(root)).every(m => m.includes("matches none of")))
+      .toBe(true);
+  });
+
+  it("flags a requester suffix on a git verb", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - git add ignore .venv for uv\n"
+        + "  - git add ignore template=Node for pnpm\n"
+        + "  - git add attribute pnpm-lock.yaml linguist-generated for pnpm\n",
+    ));
+    expect(messages(check(root))).toEqual(
+      [0, 1, 2].map(index =>
+        expect.stringContaining(`\`tool-config[${index}]\``)
+      ),
+    );
+    expect(messages(check(root)).every(m => m.includes("`for <requester>`")))
+      .toBe(true);
+  });
+
+  it("flags a hook the skill refuses though the grammar admits it", () => {
+    // A local hook runs outside mise's environment; a URL repo floats unpinned.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - pre-commit add hook local x pre-commit entry=\"mise x -- y\" "
+        + "language=system\n"
+        + "  - pre-commit add hook local x pre-commit name=x entry=y "
+        + "language=system\n"
+        + "  - pre-commit add hook local x pre-commit name=x "
+        + "entry=\"mise x -- y\" language=node\n"
+        + "  - pre-commit add hook local x pre-commit name=x "
+        + "entry=\"mise x -- y\" language=system rev=v1\n"
+        + "  - pre-commit add hook https://github.com/x/y z pre-commit\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("`local` hook lacking `name=`"),
+      expect.stringContaining("lacking an `entry=` beginning `mise x -- `"),
+      expect.stringContaining("lacking `language=system`"),
+      expect.stringContaining("`local` hook carrying `rev=`"),
+      expect.stringContaining("URL repo hook with no `rev=`"),
+    ]);
+  });
+
+  it("flags a requester suffix, and reads a trailing for in text", () => {
+    // The materializer appends `for <pack>`; free text may say "for".
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - dprint add plugin malva for astro\n"
+        + "  - all add exclude generated .venv for uv\n"
+        + "  - pre-commit add linter-ignore .venv for uv\n"
+        + "  - pre-commit add hook https://github.com/x/y z pre-commit rev=v1 "
+        + "for uv\n",
+    ));
+    expect(messages(check(root))).toEqual(
+      [0, 1, 2, 3].map(index =>
+        expect.stringContaining(
+          `\`tool-config[${index}]\``,
+        )
+      ),
+    );
+    expect(messages(check(root)).every(m => m.includes("`for <requester>`")))
+      .toBe(true);
+    const text = tree(facts(
+      "tool-config:\n"
+        + "  - grype add ignore CVE-1 not exploitable for now\n"
+        + "  - pre-commit add hook local x pre-commit name=x "
+        + "entry=\"mise x -- y\" language=system "
+        + "description=\"Checks lockfile for drift\"\n",
+    ));
+    expect(messages(check(text))).toEqual([]);
+  });
+
+  it("flags a pack slug after for on a free-text verb", () => {
+    // A reason ending in a pack slug is a suffix the materializer would double.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - grype add ignore CVE-1 for swiftui\n"
+        + "  - grype add ignore CVE-1 not exploitable for uv\n"
+        + "  - grype add ignore CVE-1 not exploitable for now\n",
+      { "stacks/package-manager/uv/pack.yaml": "name: uv\n" },
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("`tool-config[0]` (grype add ignore CVE-1 for"),
+      expect.stringContaining("`tool-config[1]` (grype add ignore CVE-1 not"),
+    ]);
+    expect(messages(check(root)).every(m => m.includes("`for <requester>`")))
+      .toBe(true);
+  });
+
+  it("refuses an exclude or ignore path spelled for", () => {
+    // Otherwise `for pnpm` reads as two paths and the suffix goes unseen.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - all add exclude for pnpm\n"
+        + "  - all add exclude generated for pnpm\n"
+        + "  - pre-commit add linter-ignore for\n",
+    ));
+    expect(messages(check(root))).toEqual(
+      [0, 1, 2].map(index =>
+        expect.stringContaining(`\`tool-config[${index}]\``)
+      ),
+    );
+    const paths = tree(facts(
+      "tool-config:\n  - all add exclude format fork\n"
+        + "  - pre-commit add linter-ignore for.d\n",
+    ));
+    expect(messages(check(paths))).toEqual([]);
+  });
+
+  it("flags a gate verb outside the skill's grammar", () => {
+    // A stage nothing installs never runs; an unknown plugin or key is refused.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - pre-commit add hook local x\n"
+        + "  - pre-commit add hook local x --stage pre-commit\n"
+        + "  - pre-commit add hook local x pre-push\n"
+        + "  - pre-commit add hook local x pre-commit color=red\n"
+        + "  - pre-commit add hook ftp://x y pre-commit\n"
+        + "  - dprint add plugin biome\n"
+        + "  - all add exclude\n"
+        + "  - all add exclude generated\n"
+        + "  - grype add ignore\n",
+    ));
+    expect(messages(check(root))).toEqual(
+      [0, 1, 2, 3, 4, 5, 6, 7, 8].map(index =>
+        expect.stringContaining(`\`tool-config[${index}]\``)
+      ),
+    );
+    expect(messages(check(root)).every(m => m.includes("matches none of")))
+      .toBe(true);
+  });
+
+  it("flags an exclude asked of one gate tool alone", () => {
+    // Rule 15's lists agree only while every exclude writes all of them.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - dprint add exclude x\n"
+        + "  - pre-commit add exclude x\n"
+        + "  - gitleaks add allowlist x\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("adds an exclude through `dprint` alone"),
+      expect.stringContaining("adds an exclude through `pre-commit` alone"),
+      expect.stringContaining("adds an exclude through `gitleaks` alone"),
+    ]);
+  });
+
+  it("flags a tool-config key or alias name that is not a name", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - mise add env 1BAD=x to dev\n"
+        + "  - mise add env \"{{x}}\"=1 to dev\n"
+        + "  - mise add alias -ab=c\n"
+        + "  - mise add env A-B=c to dev\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(
+        "names `1BAD`, which is not a `[A-Za-z_][A-Za-z0-9_]*` name",
+      ),
+      expect.stringContaining("names `\"{{x}}\"`, which is not a"),
+      expect.stringContaining("names `-ab`, which is not a"),
+      expect.stringContaining("names `A-B`, which is not a"),
+    ]);
+  });
+
+  it("accepts a hyphenated alias name, as a TOML bare key", () => {
+    // The mise base writes `setup-<slug>` aliases itself.
+    const root = tree(facts("tool-config:\n  - mise add alias setup-web=x\n"));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a value that opens a quote and never closes it", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - mise add env X=\"abc to dev\n"
+        + "  - mise add alias y=\"ls to dev\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("`tool-config[0]`"),
+      expect.stringContaining("`tool-config[1]`"),
+    ]);
+    expect(messages(check(root)).every(m => m.includes("matches none of")))
+      .toBe(true);
+  });
+
+  it("flags a bare value that carries a quote", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - mise add env X=abc\" to dev\n"
+        + "  - mise add alias y=ls\" to dev\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("`tool-config[0]`"),
+      expect.stringContaining("`tool-config[1]`"),
+    ]);
+    expect(messages(check(root)).every(m => m.includes("matches none of")))
+      .toBe(true);
+  });
+
+  it("flags a template delimiter outside an add env value", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - mise add alias x=\"{{ env.HOME }}\"\n"
+        + "  - mise add alias y=\"{% if a %}b{% endif %}\" to dev\n"
+        + "  - mise add tool \"{{x}}\" 1 to dev\n"
+        + "  - 'mise add alias z=\"{# note #}ls\"'\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("`tool-config[0]` (mise add alias x="),
+      expect.stringContaining("`tool-config[1]` (mise add alias y="),
+      expect.stringContaining("`tool-config[2]` (mise add tool"),
+      expect.stringContaining("`tool-config[3]` (mise add alias z="),
+    ]);
+    const [alias, block, tool, comment] = messages(check(root));
+    expect(alias).toContain("template delimiter outside an `add env` value");
+    expect(block).toContain("template delimiter outside an `add env` value");
+    expect(tool).toContain("matches none of");
+    expect(comment).toContain("template delimiter outside an `add env` value");
+  });
+
+  it("counts a machine_env name as set only by an add env call", () => {
+    const root = tree(facts(
+      "machine_env:\n  - { name: X, detect: \"echo 1\", question: X? }\n"
+        + "tool-config:\n  - mise add alias X=y\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("(X) is set by no `mise add env` call"),
+    ]);
+  });
+
+  // stackgen:tool-config's asset trees land whole as a repo root, so they are
+  // held to the same bar as a pack's config/ tier.
+  const assets = "skills/tool-config/assets/mise";
+
+  it("accepts the git, graphify and renovate files at an asset tree root", () => {
+    // tool-config writes these at the root, where only a pack is refused them.
+    const root = tree({
+      stackgen: {
+        files: {
+          "skills/tool-config/assets/git/.gitignore": ".DS_Store\n",
+          "skills/tool-config/assets/git/.gitattributes": "* text=auto\n",
+          "skills/tool-config/assets/graphify/.graphifyignore": "dist/\n",
+          "skills/tool-config/assets/renovate/renovate.json": "{}\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags another tool's root file at an asset tree root", () => {
+    // Each root file belongs to one tool's tree, not to every tool's.
+    const root = tree({
+      stackgen: {
+        files: { "skills/tool-config/assets/mise/renovate.json": "{}\n" },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("unallowlisted root entry"),
+    ]);
+  });
+
+  it("walks an init asset tree as a landed tree", () => {
+    // init's hygiene assets land in a repo with no plugin installed.
+    const hygiene = "skills/init/assets/hygiene";
+    const clean = tree({
+      vwf: {
+        files: {
+          [`${hygiene}/CONTRIBUTING.md`]: "# Contributing\n",
+          [`${hygiene}/licenses/MIT.txt`]: "MIT\n",
+          [`${hygiene}/.config/vscode.d/hygiene.jsonc`]:
+            "{ \"settings\": {} }\n",
+        },
+      },
+    });
+    expect(messages(check(clean))).toEqual([]);
+    const root = tree({
+      vwf: {
+        files: {
+          [`${hygiene}/SECURITY.md`]: "See ${CLAUDE_PLUGIN_ROOT}/x.md\n",
+          [`${hygiene}/.github/workflows/ci.yml`]: "on: push\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("expands to nothing"),
+        expect.stringContaining("ships a CI workflow"),
+      ]),
+    );
+  });
+
+  it("walks a tool-config asset tree as a landed tree", () => {
+    const task = `${assets}/.config/mise/tasks/code/graph`;
+    const clean = tree({
+      stackgen: {
+        files: {
+          [task]: "#!/usr/bin/env bash\n",
+          [`${assets}/.config/mise/conf.d/tools.toml`]: "[tools]\n",
+        },
+        executable: [task],
+      },
+    });
+    expect(messages(check(clean))).toEqual([]);
+    const root = tree({
+      stackgen: {
+        files: {
+          [task]: "#!/bin/zsh\n# see ${CLAUDE_PLUGIN_ROOT}/assets/x.md\n",
+          [`${assets}/.prettierrc`]: "{}\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      `mise task file is not executable: ${task}`,
+      expect.stringContaining("does not start with one of"),
+      expect.stringContaining("unallowlisted root entry"),
+      expect.stringContaining("expands to nothing"),
     ]);
   });
 });
@@ -1421,15 +1812,16 @@ describe("the exclusion sets", () => {
   // reads only its own list. The three formatter lists must agree; the scanner's
   // allowlist is held to a subset of them, since upstream's default config
   // already skips part of the set and authored source must stay scanned.
-  const gate = "stacks/toolchain-gate";
-  const dprint = `${gate}/dprint/config/.config/dprint.json`;
-  const taplo = `${gate}/dprint/config/.config/taplo.toml`;
-  const gitleaks = `${gate}/gitleaks/config/.config/gitleaks.toml`;
-  const preCommit = `${gate}/pre-commit/config/.config/pre-commit-config.yaml`;
+  const gate = "skills/tool-config/assets";
+  const dprint = `${gate}/dprint/.config/dprint.json`;
+  const taplo = `${gate}/dprint/.config/taplo.toml`;
+  const gitleaks = `${gate}/gitleaks/.config/gitleaks.toml`;
+  const preCommit = `${gate}/pre-commit/.config/pre-commit-config.yaml`;
 
   const lists = (overrides: Partial<Record<string, string>> = {}) => ({
     stackgen: {
       files: {
+        "skills/tool-config/SKILL.md": skill("tool-config"),
         [dprint]: overrides.dprint ?? JSON.stringify({
           excludes: ["**/node_modules/", "**/dist/", "**/*.lock", "**/.env.*"],
         }),
@@ -1560,6 +1952,17 @@ describe("the exclusion sets", () => {
     }));
     expect(messages(check(root))).toEqual([
       expect.stringContaining("allowlists `.env.[a-z]*`"),
+    ]);
+  });
+
+  it("flags a list the tool-config skill no longer carries", () => {
+    // A moved file used to end the comparison silently; now it is named.
+    const files = lists().stackgen.files as Record<string, string>;
+    const { [taplo]: _dropped, ...rest } = files;
+    const root = tree({ stackgen: { files: rest } });
+    expect(messages(check(root))).toEqual([
+      `${taplo}: exclusion list is missing — the tool-config skill ships all `
+      + "four lists",
     ]);
   });
 

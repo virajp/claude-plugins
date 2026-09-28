@@ -1,0 +1,5 @@
+range c766f44f..e3deada4 (engine scoped to the row's range; branch-vs-main delta holds earlier plans' reviewed work)
+No high-confidence vulnerabilities found.
+- rm -f "$LOCKFILE": fixed path, only on the branch where the lock was missing at start; only removes what the failed mise lock wrote.
+- pre-lock mise install uv|python with MISE_LOCKED=false runs only with no lockfile; python latest matches sibling dev pins.
+- UV_PYTHON from mise which python; trusted env/config, quoted.

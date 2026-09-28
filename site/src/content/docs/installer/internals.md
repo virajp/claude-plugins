@@ -144,7 +144,7 @@ What users install is `main`, and `plugins.yml` validates `main` on every push.
 | `installer/src/uninstall.ts`       | enumerate → deselect → remove, plus the legacy-receipt reader       |
 | `installer/src/receipt.ts`         | reading and reverting the receipts older versions wrote             |
 | `installer/src/github.ts`          | the token header and the rate-limit-only hint                       |
-| `installer/src/graphify.ts`        | `graphify install` + `hook install`                                 |
+| `installer/src/graphify.ts`        | `graphify install` — no raw git hook                                |
 | `installer/src/version.ts`         | `--version` — this CLI against npm, the plugins on `main`           |
 | `installer/src/report.ts`          | the outcome table                                                   |
 | `installer/src/progress.ts`        | the live step on stderr, off when stderr is not a TTY               |

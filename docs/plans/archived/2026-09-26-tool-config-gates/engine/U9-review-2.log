@@ -1,0 +1,66 @@
+Review of `2026-09-26-tool-config-gates` against `develop`: 10 findings, most severe first. Five of them (1, 3, 4, 7, 9) were raised in U9 round 1 and are still in the code. I left out problems that the pending units U10 (docs) and U11 (pack version bumps) are already assigned to fix.
+
+```json
+[
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit",
+    "line": 116,
+    "summary": "graphify's raw post-commit hook is only removed when `graphify` is on PATH. Otherwise the plain (non-force) `pre-commit install` that follows keeps it as `post-commit.legacy` and chains it.",
+    "failure_scenario": "A repo that ran `graphify hook install` has setup:precommit run where graphify is not on PATH (non-dev MISE_ENV, or graphify since uninstalled). The marker check fails and the removal is skipped silently. The new `post-commit` hook type then makes pre-commit rename graphify's hook to post-commit.legacy and chain it. Every commit now runs the Python-pinned raw hook next to graphify-refresh: it breaks on the next Python upgrade and races the second rebuild. Still present from round 1."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/references/pre-commit.md",
+    "line": 194,
+    "summary": "The old init hook-fragment merge validated the merged pre-commit config and halted, restoring the previous file, if it failed. That step was deleted and nothing replaces it: no tool-config reference validates a gate config after writing it.",
+    "failure_scenario": "An `add hook` with a bad value, or a `remove <requester>` whose re-derived `|` punctuation leaves an empty alternative in the verbose `exclude`, writes a config that either fails to parse (the gate stops running at the next commit) or has an alternative matching every path (every hook silently skips the whole tree). The old step 5 caught this at write time and restored the file. Now it lands and gets recorded in the lock as a good hash."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/pack.yaml",
+    "line": 100,
+    "summary": "`all add exclude *.xcassets` counts as a file glob because it contains `*`, so pre-commit gets `(^|/)[^/]*\\.xcassets$`. That matches only a path ending in `.xcassets`, never the files inside the asset-catalog directory. The retired dprint pack excluded the directory (`**/*.xcassets/`).",
+    "failure_scenario": "`App/Assets.xcassets/AppIcon.appiconset/Contents.json` no longer matches the global exclude. check-json, end-of-file-fixer, trailing-whitespace and the format hook now rewrite Xcode-generated asset-catalog JSON on every SwiftUI commit. Still present from round 1."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 712,
+    "summary": "The `pre-commit add hook` pattern accepts calls the skill refuses: a `local` hook with no `name`/`entry`/`language=system`, a URL repo with no `rev=`, and `rev=` on a `local` hook.",
+    "failure_scenario": "A pack ships `pre-commit add hook local foo pre-commit` or `pre-commit add hook https://github.com/x/y z pre-commit` with no rev. p:plugins:check passes, and the materializer's tool-config call is then refused, or writes an unpinned or incomplete hook, in the target repo. The checker was meant to catch exactly this. Partly fixed after round 1; this part is still open."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 743,
+    "summary": "The `!/ for \\S+$/` guard rejects any gate-verb call whose free text happens to end in \"for <word>\", and reports it as \"matches none of …\".",
+    "failure_scenario": "`grype add ignore CVE-2024-1 not exploitable for now`, or a hook ending `description=\"Checks lockfile for drift\"` (the tail `for drift\"` matches `\\S+`), is legal grammar with no requester suffix. Rule 11 still refuses it, with a grammar-mismatch message that sends the author looking in the wrong place."
+  },
+  {
+    "file": ".config/mise/tasks/code/graph",
+    "line": 63,
+    "summary": "The single-flight lock treats an empty pid file as stale. Between `mkdir LOCK` and `echo $$ > LOCK/pid`, a second run reads no holder, runs `rm -rf LOCK` and takes the lock, so both runs rebuild. The same code is in the shipped asset's code/graph.",
+    "failure_scenario": "Two post-commit hooks fire close together in the main checkout (the landing flow's claim/log/archive commits). Run B lands in that window, deletes A's lock and starts a second `graphify update .`, so both write graphify-out/ at once. Also, A's subshell EXIT trap later runs `rm -rf LOCK` and deletes B's lock, opening the door to a third run."
+  },
+  {
+    "file": "plugins/vwf/skills/doctor/references/code-intelligence.md",
+    "line": 36,
+    "summary": "Doctor reports a raw graphify git hook as drift and names `/vwf:setup reshape` as the fix. But only the task library's `setup:precommit` removes that hook, and reshape (init → `tool-config all`) never runs it.",
+    "failure_scenario": "The user runs `/vwf:setup reshape` as told. The config lands, but `.git/hooks/post-commit` still carries graphify's block, and every later doctor run reports the same drift with the same wrong fix. Still present from round 1."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/pre-commit/.config/pre-commit-config.yaml",
+    "line": 121,
+    "summary": "The graph refresh hangs only on the `post-commit` hook. `git merge` (fast-forward or not) and `git pull` do not fire post-commit, yet every shaped repo pays `mise x -- mise run code:graph` on every commit, worktree commits included.",
+    "failure_scenario": "The vwf landing merges a plan branch into develop in the main checkout. That fires post-merge only, so the graph stays stale until some later direct commit. Meanwhile every /vwf:execute worktree commit starts two mise processes just to exit at the worktree check, and a repo without graphify in its active env prints the 'graphify is not on PATH' warning after every commit."
+  },
+  {
+    "file": "plugins/vwf/skills/init/SKILL.md",
+    "line": 317,
+    "summary": "init still says \"the three slugs below are fixed\", and its frontmatter description (line 7) still says \"the stack adapter's unconditional bundles\". Only one unconditional slug, `repo-hygiene`, remains now that `repo-gates` is deleted.",
+    "failure_scenario": "Breaks the repo CLAUDE.md rule \"Docs ship with the change … stale docs are more harmful than no docs\". An agent following init looks for three fixed slugs, one of which (`repo-gates`) no longer resolves, and the user-visible skill description is wrong. Still present from round 1, in a file U6 owns and has already marked green."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 464,
+    "summary": "`preCommitFaults` was deleted. It checked that the shipped whole pre-commit config parses and has a top-level `repos:` list. Now only rule 15's `exclude` read touches that file, so its `repos:` is never checked.",
+    "failure_scenario": "An edit to `skills/tool-config/assets/pre-commit/.config/pre-commit-config.yaml` that drops or mis-indents `repos:` (e.g. the list nested under `exclude`) still parses as YAML. Rule 15 passes and p:plugins:check is green, but every repo shaped from it runs no hooks, silently."
+  }
+]
+```

@@ -1,0 +1,69 @@
+Eight of the ten findings below were already raised by the earlier U9 review rounds and recorded as open gaps in `docs/plans/2026-09-26-tool-config-gates/index.md` (gaps 11 and 17–21). They are still in the code. Finding 6 (this repo's own `setup:precommit`) is new. Finding 10 is partly new: that index records the missing pre-commit-config parse, but not the missing `always_run` on a pack's `post-commit` hook.
+
+- **Checks run:** `mise run p:plugins:check` and the `scripts/` vitest suite both pass (197 tests).
+- **Not flagged:** the missing pack version bumps. They belong to U11, which hasn't run yet.
+
+```json
+[
+  {
+    "file": "plugins/stackgen/stacks/package-manager/pnpm/pack.yaml",
+    "line": 19,
+    "summary": "The base exclusion set dropped node_modules, .turbo, .venv and target, so only the pnpm, uv and swiftpm packs add them back. A generated package manager (the bun bundle's `package-manager/bun@generated`) or a Rust `target/` gets nothing, because generator.md never mentions `tool-config:` or `all add exclude`.",
+    "failure_scenario": "Take a bun workspace shaped after this change. The full `code:sec` scan runs `gitleaks dir .`, which ignores .gitignore, so it walks node_modules/. The default generic-api-key rule fires on hashes in vendored minified code and the gate fails. On develop the base allowlist covered node_modules for every repo."
+  },
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/pack.yaml",
+    "line": 100,
+    "summary": "`all add exclude *.xcassets` holds a `*`, so the skill treats it as a file glob. The hook config gets `(^|/)[^/]*\\.xcassets$`, anchored at `$`, which matches the catalog directory's own path and none of the files inside it. The retired base spelled it as a directory, `(^|/)[^/]*\\.xcassets/`.",
+    "failure_scenario": "A commit touches `App/Assets.xcassets/AppIcon.appiconset/Contents.json`. The global exclude doesn't match it, so check-json, end-of-file-fixer, trailing-whitespace and mixed-line-ending rewrite Xcode-owned JSON, and Xcode rewrites it back on the next edit. That is the churn dprint.md says this exclude exists to prevent. Rule 15 can't see it, because only the base assets are compared."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/pre-commit/.config/pre-commit-config.yaml",
+    "line": 129,
+    "summary": "graphify-refresh only runs at `post-commit`. git runs that hook for `git commit`, not for `git merge`, `git pull` or a checkout. The raw graphify `post-checkout` hook it replaces is now removed, and code:graph exits at once in a linked worktree.",
+    "failure_scenario": "vwf does a plan's commits in a linked worktree (code:graph returns immediately there) and lands them with `git merge --no-ff` in the main checkout, which fires `post-merge`. The landed code never triggers a rebuild, and the graph stays behind until some later direct commit in the main checkout. The same happens with commits pulled from a teammate."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit",
+    "line": 135,
+    "summary": "The graphify-hook removal has three gaps. `graphify hook uninstall` runs under `set -euo pipefail` with no `|| …`. Only `post-commit` and `post-checkout` are checked, never `post-commit.legacy`. And `HOOKS_DIR` comes from `git rev-parse --git-path hooks`, which follows core.hooksPath and is read before `--force` unsets it.",
+    "failure_scenario": "(a) If `graphify hook uninstall` errors, setup:precommit stops before `pre-commit install`, leaving the repo with no gate hooks. (b) A graphify block that an earlier `pre-commit install` chained as `post-commit.legacy` is never stripped. doctor keeps reporting it as drift, and doctor's remedy (`/vwf:setup reshape`) never clears it. (c) With husky's core.hooksPath and `--force`, the strip looks in `.husky/` while graphify's hooks sit in `.git/hooks/`."
+  },
+  {
+    "file": "installer/src/graphify.ts",
+    "line": 69,
+    "summary": "The installer still runs `graphify hook install` in any git repo. That is the raw, Python-pinned hook this branch replaces with the pre-commit `graphify-refresh` hook, and it now counts as doctor drift.",
+    "failure_scenario": "A user runs `pnpx @virajp.dev/claude-plugins --all` inside a shaped repo. The installer writes graphify's raw post-commit and post-checkout hooks. Every commit then rebuilds twice (the raw hook plus code:graph), the raw hook breaks on the next Python upgrade, and `/vwf:doctor` reports drift the installer just created."
+  },
+  {
+    "file": ".config/mise/tasks/setup/precommit",
+    "line": 13,
+    "summary": "This repo now has the `post-commit` graphify-refresh hook, and U12 re-copied `code/graph`, but not the new `setup:precommit`. This repo's copy never strips graphify's raw hooks. `--overwrite` only replaces hook types listed in `default_install_hook_types`, so the raw `post-checkout` hook stays.",
+    "failure_scenario": "The main checkout's `.git/hooks/post-checkout` currently carries `# graphify-checkout-hook-start…end` (checked). After `mise run setup:precommit`, post-commit becomes pre-commit's, but post-checkout keeps running graphify's Python-pinned rebuild on every checkout. doctor's code-intelligence check reports the raw hook as drift, and this repo's own task never removes it."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/code/graph",
+    "line": 132,
+    "summary": "After starting the detached child, the parent writes `$!` into `${LOCK}/pid` without checking the lock is still its own. If the child has already finished and released the lock, that write overwrites the PID of a newer run that took the lock. The same code is in `.config/mise/tasks/code/graph`.",
+    "failure_scenario": "`graphify update` exits almost at once and its EXIT trap removes the lock. Run B takes the lock and writes its PID, then run A's line 132 overwrites it with A's dead child PID. B's release no longer matches, so B leaves the lock behind, and a third run sees a dead PID and starts a second rebuild while B's is still running. Also, when the lock dir is already gone, the redirect error reaches stderr anyway, because `>` is processed before `2>/dev/null`."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/code/graph",
+    "line": 76,
+    "summary": "A lock whose pid file holds a PID counts as held for as long as `kill -0` succeeds, with no age cap. After a SIGKILL or a reboot mid-rebuild, a reused PID holds the lock indefinitely.",
+    "failure_scenario": "The machine reboots mid-rebuild, so the EXIT trap never runs and `.git/graphify-refresh.lock/pid` survives. A long-lived process later gets that PID. Every post-commit prints 'a refresh is already running — skipped', and the graph is never refreshed until someone deletes the lock by hand."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/code/graph",
+    "line": 31,
+    "summary": "The mid-operation guard checks rebase-merge, rebase-apply, MERGE_HEAD and CHERRY_PICK_HEAD, but not `.git/sequencer/` or REVERT_HEAD. A multi-commit cherry-pick or revert runs post-commit for each commit and starts a rebuild mid-sequence.",
+    "failure_scenario": "`git cherry-pick A..B` in the main checkout fires post-commit after each pick. CHERRY_PICK_HEAD is gone after each clean pick, so code:graph starts a detached `graphify update .` while the sequencer is still rewriting the working tree. The graph ends up built from a half-applied tree, which is the race the guard's own comment says it prevents."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 821,
+    "summary": "`hookFault` doesn't require `always_run=true` for a hook at stage `post-commit`. Separately, with `preCommitFaults` removed, nothing checks any more that the shipped `assets/pre-commit/.config/pre-commit-config.yaml` has a top-level `repos:` list: rule 15 only reads `exclude`.",
+    "failure_scenario": "A pack writes `pre-commit add hook local x post-commit name=… entry=\"mise x -- …\" language=system files=…`. The checker passes it, but a post-commit run passes no files, so the hook never fires. Likewise, an edit that mis-indents `repos:` under the verbose `exclude:` block still parses, rule 15 stays green, and every repo `all` lands in gets a hook config that runs no hooks."
+  }
+]
+```

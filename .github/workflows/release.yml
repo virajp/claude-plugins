@@ -1,26 +1,6 @@
 name: Release
 
-# Publishes @virajp.dev/claude-plugins to npm. Triggered two ways:
-#   1. a pushed `installer-v*` tag — the normal manual release path
-#   2. workflow_dispatch           — manual re-publish, and how deps-update.yml
-#                                    publishes its monthly release (`--ref <tag>`)
-#
-# The tag family is namespaced because this repo also tags plugin releases as
-# `<name>-v<version>`, one per plugin, which the marketplace manifest pins each
-# entry to. GitHub's tag globs match any character except `/`, so the former
-# `v*` filter matched `vwf-v19.9.0` and fired this workflow on every vwf
-# release — failing closed at the version check below, but failing every time.
-# Narrowing the filter is safe against the npm constraint: the Trusted Publisher
-# binds to this file's NAME, not to which tags reach it.
-# Auth is OIDC "trusted publishing" (no stored token) — npm verifies this repo +
-# workflow's GitHub identity and adds provenance automatically. npm allows only
-# ONE Trusted Publisher per package, and it validates the ENTRY-POINT workflow's
-# filename — so every publish path must enter through THIS file. `workflow_call`
-# is therefore unusable: when deps-update.yml called this workflow, npm saw
-# `deps-update.yml`, matched nothing, and failed with ENEEDAUTH. One-time setup:
-# on npmjs.com add this repo + `release.yml` as the package's Trusted Publisher.
-# To release manually: bump the version, then push a matching tag — or just run
-# `mise run p:i:release`, which does both.
+# npm's Trusted Publisher binds to this file's NAME — never rename it, never reach it by workflow_call.
 on:
   push:
     tags:
@@ -43,12 +23,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      # The triggering ref: the pushed tag, or whatever ref the dispatch named
-      # (deps-update.yml dispatches this workflow on the tag it just pushed).
-      # fetch-depth: 0 because the branch check below needs enough history to
-      # answer whether the tagged commit is reachable from main. A shallow
-      # checkout makes `merge-base --is-ancestor` fail for lack of commits
-      # rather than for the reason the gate exists.
+      # Full history, or the reachable-from-main check fails for lack of commits.
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}
@@ -57,14 +32,10 @@ jobs:
       - name: Set up mise (node + pnpm, ci env)
         uses: jdx/mise-action@v4
 
-      # Runs whenever the ref is a tag — a tag push, or a dispatch on a tag.
-      # A dispatch on a branch skips it.
       - name: Verify the tag matches package.json version
         if: github.ref_type == 'tag'
         run: |
-          # Strip the whole namespace, not a bare `v`: `${...#v}` on
-          # `installer-v6.0.0` removes nothing (the tag starts with `i`), so the
-          # comparison would silently never match.
+          # Strip the whole namespace — a bare `#v` removes nothing from `installer-v…`.
           tag="${GITHUB_REF_NAME#installer-v}"
           pkg="$(node -p "require('./package.json').version")"
           if [ "$tag" != "$pkg" ]; then
@@ -73,11 +44,7 @@ jobs:
           fi
           echo "Releasing @virajp.dev/claude-plugins@$pkg"
 
-      # conventions.md#pipeline, rule `pipeline/branch-validated`: a release tag
-      # must be reachable from the default branch. Without this, a tag pushed
-      # from any branch publishes — the tag/package.json check above proves the
-      # version is consistent, never that the commit was ever reviewed.
-      # Skipped for a dispatch on a branch, like the version check.
+      # pipeline/branch-validated: a release tag must be reachable from main.
       - name: Verify the tag is reachable from main
         if: github.ref_type == 'tag'
         run: |
@@ -91,9 +58,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Security gate: osv-scanner exits non-zero if the locked dependencies
-      # include any known-vulnerable package, blocking the publish. If a fix
-      # isn't yet available, add an osv-scanner.toml ignore or a pnpm override.
+      # No fix yet? Add an osv-scanner.toml ignore or a pnpm override.
       - name: Security-scan the dependencies (osv-scanner)
         run: osv-scanner scan source --lockfile=pnpm-lock.yaml
 
@@ -107,8 +72,7 @@ jobs:
       - name: Ensure npm supports OIDC trusted publishing
         run: npm install -g npm@latest
 
-      # Idempotent: skip (don't fail) if this version is already on npm, so tag
-      # re-points, dispatch retries, and re-runs are safe no-ops.
+      # Idempotent: an already-published version is skipped, so re-runs are safe.
       - name: Publish to npm (OIDC trusted publishing + provenance)
         run: |
           ver="$(node -p "require('./package.json').version")"

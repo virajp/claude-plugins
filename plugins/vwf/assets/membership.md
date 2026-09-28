@@ -193,7 +193,7 @@ they do.
   base alone. Under `linkage: submodule` the members *are* inside that tree, so
   today's rule holds unchanged: exactly one config, at the parent root, members
   get none. Full contract: `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`.
-- **graphify** — a graph per checkout, refreshed by that checkout's own hook.
-  /vwf:doctor gates every **locally-present** repo; an absent
-  member is a blind spot, not a finding. Full contract:
+- **graphify** — a graph per checkout, refreshed by running that checkout's
+  `code:graph` task by hand. /vwf:doctor gates every **locally-present**
+  repo; an absent member is a blind spot, not a finding. Full contract:
   `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`.

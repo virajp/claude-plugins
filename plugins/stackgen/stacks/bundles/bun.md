@@ -32,6 +32,8 @@ anything bun does not cover natively.
 - **dprint** formats (one root config, symlinked into each member); **ESLint**
   lints; **gitleaks** and **grype** gate security — all wired through
   pre-commit: format → lint → tests.
+  The gates are `stackgen:tool-config`'s; this bundle's packs add their
+  plugins and excludes.
 - **`bun test`** is the test runner. A project needing Vitest-specific APIs
   keeps Vitest and runs it under bun; record that in the project's own template
   choice rather than here.

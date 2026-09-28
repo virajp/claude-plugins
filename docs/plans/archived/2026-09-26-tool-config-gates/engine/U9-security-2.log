@@ -1,0 +1,7 @@
+No high-confidence vulnerabilities found.
+Dropped candidates:
+- assets/mise/.config/mise/tasks/code/graph:61-84 (and .config/mise/tasks/code/graph): symlink/TOCTOU on the lock — lock sits in the repo's own .git (pwd -P), owner-writable only; stale-lock race only lets a second local run proceed (DoS/theoretical, excluded). (2)
+- same file :64: kill -0 on an owner-written pid; sends no signal. (1)
+- same file :43-47: git ls-tree / git diff output feeds only a grep test. (1)
+- scripts/src/check.ts:699-716: tightened gate-verb regexes validate strings only. (1)
+- .config/mise/mise.lock:140: pipx:graphifyy 0.9.68 real package; no checksum = missing hardening, excluded. (2)

@@ -8,24 +8,10 @@
 #USAGE arg "[files]" var=#true help="files to format (default: the whole repo)"
 
 set -euo pipefail
-# helpers ships in the toolchain-manager pack, not this one, so there is no
-# path here for -x to follow.
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-# Overlays whatever the tiers below wrote — this pack is on the app-framework
-# axis, so it is last and wins. dprint keeps the repo's markdown, YAML and the
-# platform manifests; the SDK's own formatter and the import sorter take `lib/`,
-# which is the only tree they should touch (the generated platform folders are
-# the build's output, not the project's source).
-#
-# The import sorter is here rather than in `code:lint` because sorting imports
-# is a formatting act: it rewrites layout, and a lint gate that rewrites is a
-# gate that cannot be run read-only.
-#
-# This task is what the `format` pre-commit hook calls, which is why it takes an
-# optional file list: the hook passes the staged files, a person passes nothing
-# and gets the whole tree.
+# The import sorter is a formatter, not a lint: a gate that rewrites cannot run read-only.
 
 files=()
 eval "files+=(${usage_files:-})"
@@ -36,8 +22,6 @@ else
   log_level="warn"
 fi
 
-# The SDK tools take paths, so a file list narrows them to the Dart sources in
-# scope; with no list they take `lib/` whole.
 dart_targets=()
 if [ ${#files[@]} -gt 0 ]; then
   for f in "${files[@]}"; do
@@ -49,8 +33,6 @@ else
   dart_targets=(lib/)
 fi
 
-# `dart format` has no check flag pair: it formats by default, and the read-only
-# mode is two flags rather than one. The import sorter's read-only mode is one.
 format_args=()
 sorter_args=()
 if [[ "${usage_fix:-false}" == "true" ]]; then
@@ -63,10 +45,7 @@ fi
 
 print_header "Formatting files ..."
 
-# Every path handed to dprint is prefixed `./` (or absolute) and passed after
-# `--`, so a name opening with `-` is never read as one of its options. dprint
-# reads each path as a glob and has no literal form, so a name holding `*`, `[`
-# or `{` may match other files too — never escape one by hand.
+# dprint reads each path as a glob with no literal form: never escape one by hand.
 dprint_files=()
 for f in ${files[@]+"${files[@]}"}; do
   case "${f}" in
@@ -82,11 +61,7 @@ dprint "${action}" \
   --log-level "${log_level}" \
   -- ${dprint_files[@]+"${dprint_files[@]}"}
 
-# The toolchain manager's shipped default, and an overlay keeps it: a commit
-# gets whatever this task does, so a tool that drops out of it stops running at
-# all. Silent when the binary is absent, and silent when nothing in scope is
-# shell. The flags match the ones the shell gate checks with, so formatting
-# here and checking there cannot disagree.
+# Keep shfmt in any overlay, and its flags in step with the shell gate's.
 if command -v shfmt >/dev/null 2>&1; then
   shell_scope=()
   while IFS= read -r shell_file; do
@@ -100,8 +75,6 @@ if command -v shfmt >/dev/null 2>&1; then
     if [ "${action}" = "fmt" ]; then
       shfmt -w -i 2 -ci "${shell_scope[@]}"
     else
-      # `-d` reports a diff and fails rather than rewriting, so a read-only run
-      # stays read-only.
       shfmt -d -i 2 -ci "${shell_scope[@]}"
     fi
   fi

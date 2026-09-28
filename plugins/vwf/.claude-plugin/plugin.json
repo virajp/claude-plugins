@@ -42,15 +42,11 @@
       }
     },
     "mempalace": {
-      "args": [
-        "-c",
-        "mise x -- mempalace-mcp"
-      ],
-      "command": "sh",
-      "type": "stdio"
+      "type": "http",
+      "url": "http://127.0.0.1:8765/mcp"
     }
   },
   "name": "vwf",
   "repository": "https://github.com/virajp/claude-plugins",
-  "version": "19.46.0"
+  "version": "20.0.0"
 }

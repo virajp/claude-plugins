@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+#MISE description="Land a feature branch on develop — merge it, or open a pull request (MERGE_MODEL_DEVELOP)"
+
+#USAGE arg "<branch>" help="the local branch to merge into develop"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/merge"
+
+# `usage_branch` is set by mise from the `#USAGE arg` above.
+# shellcheck disable=SC2154
+merge_to_destination_branch develop "${usage_branch}"

@@ -2,7 +2,7 @@ name: Cloud Run · Artifact Registry
 summary: Serverless containers — scale to zero, no cluster to operate, one
   service per deployable project. The default compute target here, and the right
   answer until a workload genuinely does not fit it.
-version: 0.1.0
+version: 0.2.0
 type: cloud-service
 category: compute
 kind: cloud-provider
@@ -19,3 +19,6 @@ harness:
     mechanism: >-
       None — the container runs directly against the backing bundle's local
       services. You are testing your process, not the platform
+# The lines this pack asks /stackgen:tool-config for.
+tool-config:
+  - dprint add plugin dockerfile

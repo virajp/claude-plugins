@@ -1,0 +1,6 @@
+# Tools every MISE_ENV needs; a tool one environment alone needs goes in tools.<env>.toml, never in both.
+
+[tools]
+# No runtime here: a language or package-manager pack pins its own.
+# Commit the lock and its sidecar under .config/mise/locks/ before the first CI push, or CI fails.
+"npm:@askviraj/linter" = { allow_low_downloads = true, version = "1.1.6" }

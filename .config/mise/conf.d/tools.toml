@@ -1,0 +1,9 @@
+# Tools every environment needs; tools.<env>.toml adds one environment's own.
+[tools]
+node        = { version = "latest" }
+osv-scanner = { version = "latest" }
+pnpm        = { version = "latest" }
+
+# `p:plugins:shellcheck`'s two binaries — dev and CI both run it.
+shellcheck = { version = "latest" }
+shfmt      = { version = "latest" }

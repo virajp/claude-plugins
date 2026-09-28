@@ -33,16 +33,20 @@ user's clock.
    name state outside `.claude/`, and each diffs on its own terms below.
 
    **Entries are not all under `.claude/`.** A component may have landed
-   repo config files from its `config/` tree — the toolchain manager's
-   layers and task library, a gate's own config file, the hygiene files at
-   the repo root, a provider's `.config/mise/conf.d/` fragment, a
-   `.config/pre-commit.d/` hook fragment, a `.config/vscode.d/` editor
-   fragment, a deploy target's root config — and those are ordinary
-   lockfile entries carrying a `path`, a `component`, a `hash` and a
-   `mode`. Inventory them with the rest; they differ only in where they sit
-   and in the consent line they take. What may sit at the repo **root** is
-   the allowlist in `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`, which is
-   the one statement of it — never re-list it here.
+   repo config files from its `config/` tree — a gate's own config file,
+   a root config file, a task overlay, a
+   `.config/vscode.d/` editor fragment, a deploy target's root config —
+   and those are ordinary lockfile entries carrying a `path`, a
+   `component`, a `hash` and a `mode`. Inventory them with the rest; they
+   differ only in where they sit and in the consent line they take. What
+   may sit at the repo **root** is the allowlist in
+   `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`, which is the one
+   statement of it — never re-list it here.
+
+   **Entries recorded `source: tool-config/…` are not this skill's.** The
+   toolchain manager's and the gates' files — mise, dprint, pre-commit,
+   gitleaks, grype — are `stackgen:tool-config`'s; list them as such and
+   diff nothing in them.
 
 2. **Diff pack-sourced components.** For each component, re-derive its
    landing set from the current pack
@@ -55,18 +59,11 @@ user's clock.
    A pack that no longer exists in this stackgen version is reported, never
    deleted.
 
-   **A pack's `machine_env` values survive the update.** A file holding
-   the marked positions a pack's `machine_env:` names — a `conf.d`
-   fragment `/vwf:setup` filled with the repo's committed pins, whose
-   hash it re-recorded — reads as *pack moved* when the pack changes it,
-   and is in the default selection. So the incoming payload is never
-   written as it stands: for every `machine_env` name the current pack
-   still declares, the value the repo's copy holds is carried into the
-   payload's position of that name before it is diffed, shown and written.
-   The plan shows the pack's change with the pins kept, a pin the pack no
-   longer declares is listed as dropped, and a new one lands empty for the
-   next `/vwf:setup` to ask. The names come from `pack.yaml`, so they are
-   enumerable — no other marked position is spliced here.
+   **A pack whose `tool-config:` list changed is reported, not applied.**
+   Name the pack and the calls added, dropped or changed, and give the
+   remedy as "run `/vwf:setup`": its materialize pass re-runs every landed
+   pack's list on each run, so no reshape is needed. `machine_env` values
+   live in tool-config's blocks, so no pin is carried here.
 
    **Conditional paths are evaluated first, against the same answers the
    materializer takes.** Read the product's `.config/vwf.yaml` `answers:`
@@ -113,33 +110,19 @@ user's clock.
    An axis the map leaves out still reads **true** — the materializer's
    rule, unchanged.
 
-   A component's `config/` files diff on **exactly these terms** — same
-   three states, same hashes, same per-component grain — with two things
-   to carry through. **Mode is part of the file**: a
-   `.config/mise/tasks/**` entry recorded `755` and now sitting 644 is a
-   drift worth reporting, because mise reports a non-executable task file
-   as an *unknown task* rather than as a permission error, and
-   `mise run init` is the restore. And where two components write into
-   one tree, re-derive in composition order — `toolchain-manager`, then
-   `toolchain-gate`, then `repo-hygiene`, then `package-manager` /
-   `language`, then `app-framework`, then `capability-provider`, then
-   `cloud-provider`, then `cloud-service`, later
-   wins — and diff each file against the component
-   the lockfile says supplied it. A
-   file whose supplying component **changed** is a real delta, reported
-   as such: it means precedence moved, not that the pack did.
-
-   **`.config/pre-commit-config.yaml` is diffed outside its markers
-   only.** The fragments a pack ships land as
-   `.config/pre-commit.d/<pack>.yaml` files and are diffed there, like any
-   other entry; the merged config is `/vwf:init`'s output, and the regions
-   between its `# >>>` and `# <<<` markers are re-merged by init rather
-   than reconciled here. So compare the file **around** those regions and
-   report drift there; never rewrite inside them, and never treat a
-   fragment that has moved as a reason to edit the merged file — say the
-   fragment moved and leave the fold to the shape check that closes the
-   sync (step 7). Two things writing between the same markers is the one
-   way this file could lose an edit.
+   A component's `config/` files diff on **exactly these terms** — same three
+   states, same hashes, same per-component grain — with two things to carry
+   through. **Mode is part of the file**: a `.config/mise/tasks/**` entry
+   recorded `755` and now sitting 644 is a drift worth reporting, because mise
+   reports a non-executable task file as an *unknown task* rather than as a
+   permission error, and `mise run init` is the restore. And where two
+   components write into one tree, re-derive in composition order —
+   `toolchain-gate`, then `package-manager` / `language`, then
+   `app-framework`, then `capability-provider`, then `cloud-provider`, then
+   `cloud-service`, later wins — and diff each file against the component the
+   lockfile says supplied it. A file whose supplying component **changed** is a
+   real delta, reported as such: it means precedence moved, not that the pack
+   did.
 
 3. **Offer regeneration per generated component.** A `generated` component
    has no pack to diff against; offer to re-run the generator for that
@@ -203,9 +186,7 @@ user's clock.
 
    Nothing selected → done, nothing written.
 
-6. **Apply and commit.** Write only what was selected — a file carrying
-   `machine_env` positions written with the repo's values kept, per step 2,
-   and its hash recorded from what was written — update the changed
+6. **Apply and commit.** Write only what was selected, update the changed
    components' lockfile hashes and the `local_plugin` block, and commit as
    one commit via the repo's git workflow. The local plugin's own files
    are on the machine, not in the commit. The lockfile's `skipped:` list
@@ -225,10 +206,10 @@ user's clock.
    way Step 0 offers it — one line naming the drifted repos and the
    failing predicate, then the question — and invoke `/vwf:setup reshape`
    in-session on a yes; a decline ends the sync. A clean check says
-   nothing, and nothing reshapes unprompted. This is where a fragment
-   that moved in step 2 is folded into the merged config: the sync never
-   writes what init composes — the merged file, the regions between its
-   markers — the reshape does.
+   nothing, and nothing reshapes unprompted. This is where an editor
+   fragment that moved in step 2 is folded into the `.vscode` files: the
+   sync never writes what init composes — the composed file, the block
+   between its markers — the reshape does.
 
 ## Rules
 

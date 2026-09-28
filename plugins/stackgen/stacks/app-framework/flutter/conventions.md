@@ -52,10 +52,11 @@ copy-verbatim or generate, with nothing in between; a fragment layer would be a
 templating mechanism this plugin deliberately does not have.
 
 **Composition order, since more than one component writes this tree:**
-`toolchain-manager`, then `package-manager` / `language`, then `toolchain-gate`,
-then `app-framework` — a later component's file wins, recorded per file in the
-lockfile. An `app-framework` component is **last**, so these files win over the
-`toolchain-manager` baseline's, a `package-manager`'s and a `toolchain-gate`'s.
+the mise base `stackgen:tool-config` lands, then `package-manager` /
+`language`, then `toolchain-gate`, then `app-framework` — a later component's
+file wins, recorded per file in the lockfile. An `app-framework` component is
+**last**, so these files win over the mise base's, a `package-manager`'s and a
+`toolchain-gate`'s.
 
 **`setup:deps:install` is SDK configuration and `flutter pub get` in one task,
 and the reason is causal rather than tidiness.** `flutter pub get` resolves
@@ -63,6 +64,29 @@ against whichever platforms the SDK has enabled, so a fetch that ran before
 `flutter config` describes a different app than the one that builds. That is why
 the two cannot be separate slots: a standalone SDK-configuration task could
 never usefully run apart from the fetch it constrains.
+
+**The rest of the tasks' reasoning, kept here so the files carry one-line
+warnings only.** The analyzer and `dependency_validator` do not overlap: a
+dependency declared but never imported is invisible to the analyzer, an unused
+import to the dependency check. `--fatal-infos` is deliberate — an info nobody
+has to fix accumulates. With a file list the SDK formatters take the `lib/`
+Dart files in it; with none they take `lib/` whole, never the generated
+platform folders. shellcheck, actionlint and shfmt are the toolchain manager's
+defaults and an overlay keeps them, since a commit gets whatever these tasks do;
+shfmt's flags match the shell gate's. The house linter runs by its mise path,
+because a Node repo's `node_modules/.bin` ahead on `PATH` would shadow the pin.
+dprint reads each path, prefixed `./` and passed after `--`, as a glob with no
+literal form. `setup:deps:audit` is a deliberate no-op — `pub` ships no
+advisory command, and without the file the manager's placeholder would report
+that no package manager is pinned. `setup:deps:cleanup` deletes `pubspec.lock`,
+unlike every other pack's cleanup: a lockfile written by a previous SDK pins
+versions the current one may reject, and `pub get` will not re-resolve it on
+its own. `setup:deps:outdated` passes `--no-transitive`, since a transitive
+package moving is its direct dependency's to pick up. `setup:deps:upgrade`
+passes `--major-versions`, rewriting the constraints in `pubspec.yaml` too —
+without it the task would move nothing `setup:deps:install` had not already
+resolved; the rewritten constraints are the review surface. The `setup:deps:*`
+tasks print no header of their own: `setup:deps:all` frames each verb.
 
 Full judgment: the `flutter` skill's references; the native edges have their own
 skills, scoped to the boundary they serve.

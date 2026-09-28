@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+
+#MISE description="Install and reconcile the AI tooling this repo expects"
+#MISE hide=true
+
+#USAGE flag "--user" help="Install at user scope instead of this repo's project scope (rare)"
+#USAGE flag "--inventory" help="Print the marketplaces and plugins registered on this machine, one per line, and exit"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+if ! command -v claude >/dev/null 2>&1; then
+  print_warn "claude is not on PATH — skipping AI setup."
+  print_yellow "Install it from https://claude.com/code, then re-run this task."
+  exit 0
+fi
+
+# Project scope resolves against the working directory.
+cd "${MISE_PROJECT_ROOT}"
+
+MARKETPLACE="virajp-plugins"
+MARKETPLACE_SOURCE="virajp/claude-plugins"
+
+# Every registered marketplace as `<source-ref>|<name>` — the rows the marked positions take.
+registered_marketplaces() {
+  claude plugin marketplace list --json |
+    jq -r '.[] | "\(.repo // .path // .source)|\(.name)"'
+}
+
+# Every installed plugin as `<name>@<marketplace>|<scope>`.
+installed_plugins() {
+  claude plugin list --json | jq -r '.[] | "\(.id)|\(.scope)"'
+}
+
+# Registered under this NAME, whatever the source: re-adding a name from another source fails.
+marketplace_registered() { # <name>
+  local names
+  names="$(registered_marketplaces | cut -d'|' -f2)"
+  grep -Fqx "$1" <<<"${names}"
+}
+
+plugin_installed() { # <name@marketplace> <scope>
+  local rows
+  rows="$(installed_plugins)"
+  grep -Fqx "$1|$2" <<<"${rows}"
+}
+
+# Rows only, on stdout, for the orchestrator to read — no printers.
+if [[ "${usage_inventory:-false}" == "true" ]]; then
+  marketplace_rows="$(registered_marketplaces)"
+  if [ -n "${marketplace_rows}" ]; then
+    grep -v "|${MARKETPLACE}$" <<<"${marketplace_rows}" || true
+  fi
+  installed_plugins
+  exit 0
+fi
+
+# A MARKED POSITION — EXTRA_MARKETPLACES: further marketplaces as `<source>|<marketplace-name>`,
+# from `--inventory`. Leave this comment in place so a re-run can re-derive the list:
+#   EXTRA_MARKETPLACES=("acme/claude-plugins|acme-plugins")
+EXTRA_MARKETPLACES=()
+
+# A MARKED POSITION — EXTRA_PLUGINS: plugins from those marketplaces as `<name>@<marketplace>`.
+# Leave this comment in place so a re-run can re-derive the list:
+#   EXTRA_PLUGINS=("widget@acme-plugins")
+EXTRA_PLUGINS=()
+
+SCOPE="project"
+[[ "${usage_user:-false}" == "true" ]] && SCOPE="user"
+
+# Fatal on failure: every plugin step resolves through these names. The official marketplace is never named.
+print_subheader "Reconciling marketplaces ..."
+for row in "${MARKETPLACE_SOURCE}|${MARKETPLACE}" ${EXTRA_MARKETPLACES[@]+"${EXTRA_MARKETPLACES[@]}"}; do
+  source_ref="${row%%|*}"
+  name="${row##*|}"
+  if marketplace_registered "${name}"; then
+    claude plugin marketplace update "${name}" >/dev/null
+    print_yellow "- ${name}: updated"
+  else
+    claude plugin marketplace add "${source_ref}" >/dev/null
+    print_yellow "- ${name}: added from ${source_ref}"
+  fi
+done
+
+# Never list a dependency here: it arrives with its plugin.
+REQUIRED=("vwf@${MARKETPLACE}")
+for plugin in ${EXTRA_PLUGINS[@]+"${EXTRA_PLUGINS[@]}"}; do
+  # `--inventory` rows can repeat the baseline.
+  case " ${REQUIRED[*]} " in
+    *" ${plugin} "*) continue ;;
+  esac
+  REQUIRED+=("${plugin}")
+done
+
+# A copy at the other scope is not a substitute.
+print_subheader "Reconciling plugins at ${SCOPE} scope ..."
+for plugin in "${REQUIRED[@]}"; do
+  print_wait "- ${plugin} ... "
+  if plugin_installed "${plugin}" "${SCOPE}"; then
+    claude plugin update --scope "${SCOPE}" "${plugin}" >/dev/null
+  else
+    claude plugin install --scope "${SCOPE}" "${plugin}" >/dev/null
+  fi
+  print_ok
+done
+
+# This scope only: pruning another would reach plugins this task never touched.
+print_subheader "Pruning plugins nothing references ..."
+claude plugin autoremove --scope "${SCOPE}" --yes >/dev/null
+
+# The workflow plugin treats a missing graphify as blocking; the command is idempotent.
+if command -v graphify >/dev/null 2>&1; then
+  print_subheader "Wiring graphify ..."
+  graphify install --platform claude >/dev/null
+  print_yellow "- wired for claude"
+else
+  print_warn "graphify is not on PATH — skipping its wiring."
+  print_yellow "The workflow plugin reports this as blocking. Install it and re-run:"
+  print_yellow "  MISE_ENV=dev mise run setup:all"
+fi
+
+# Hinted, never installed: the statusline is the machine's choice.
+if ! command -v claude-status >/dev/null 2>&1; then
+  print_yellow "Optional: the statusline is a separate package —"
+  print_yellow "  brew install virajp/tap/claude-status"
+fi
+
+print_success "AI tooling reconciled."

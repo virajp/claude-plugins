@@ -1,0 +1,66 @@
+Ten findings from the review of `2026-09-26-tool-config-gates` against `develop`, most severe first. The docs (U10) and version-bump (U11) waves haven't landed yet. I only flag missing docs where no unit in the plan owns the file.
+
+```json
+[
+  {
+    "file": "plugins/stackgen/stacks/app-framework/swiftui/pack.yaml",
+    "line": 100,
+    "summary": "`all add exclude *.xcassets` is read as a file glob, so the hook config gets `(^|/)[^/]*\\.xcassets$`. That pattern matches only the directory path and none of the files inside it. The old base spelling, `(^|/)[^/]*\\.xcassets/`, excluded the directory's contents.",
+    "failure_scenario": "A SwiftUI repo commits `App/Assets.xcassets/AppIcon.appiconset/Contents.json`. pre-commit tests the global exclude against that file path, the `$`-anchored pattern does not match, and check-json, end-of-file-fixer, trailing-whitespace and the format hook all rewrite the file. dprint.md's own reason for this exclude says Xcode rewrites these files, so every IDE edit and every commit churn the same files again."
+  },
+  {
+    "file": "installer/src/graphify.ts",
+    "line": 69,
+    "summary": "The installer still runs `graphify hook install` inside any git repo. That installs the raw post-commit/post-checkout hook this branch replaces with pre-commit's graphify-refresh, and the one doctor now reports as drift.",
+    "failure_scenario": "A user runs `pnpx @virajp.dev/claude-plugins --all` in a shaped repo. graphify adds its raw block to `.git/hooks/post-commit`, which is now pre-commit's hook. Each commit then rebuilds the graph twice: once through `code:graph`, once through the raw hook with its pinned Python path, outside the new lock. `/vwf:doctor` reports drift until `setup:precommit` is run again. The plan marks the installer as untouched, so nothing reconciles this."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/code/graph",
+    "line": 31,
+    "summary": "The mid-operation guard checks only rebase-merge, rebase-apply, MERGE_HEAD and CHERRY_PICK_HEAD. It misses `.git/sequencer/` and REVERT_HEAD, so a multi-commit cherry-pick or revert starts a rebuild while the working tree is still changing. This contradicts the comment 'Never mid-rebase, merge or cherry-pick'.",
+    "failure_scenario": "`git cherry-pick A..B` with no conflicts: CHERRY_PICK_HEAD is never written, but `.git/sequencer/` exists. post-commit fires on the first pick, the check passes, and a detached `graphify update .` reads the tree while the next picks rewrite it. The graph ends up inconsistent. The same applies to `git revert A..B`, since REVERT_HEAD is not checked either. The repo copy at `.config/mise/tasks/code/graph` has the same gap."
+  },
+  {
+    "file": "plugins/stackgen/agents/stackgen-skill-reviewer.md",
+    "line": 70,
+    "summary": "Plugin files that no plan unit owns still describe the retired gate packs. The generator's reviewer lists `repo-gate` as a settled kind, which kinds.md no longer defines. Shipped eslint doctrine says 'the pre-commit gate pack ships' linter.yaml (eslint/skills/eslint/SKILL.md:93, eslint/conventions.md:11,30). repo-hygiene/conventions.md:11 says it is fetched 'the way `mise` and `repo-gates` are'.",
+    "failure_scenario": "The generator's reviewer checks a generated component against a coverage bar for a kind that no longer exists. The eslint skill, copied into target repos, points users to a gate pack that is not there. U3, U4 and U10 own none of these files, so they ship stale. This is the recurring 'plan needs an owner for cross-pack falsified passages' problem."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit",
+    "line": 132,
+    "summary": "The graphify-hook detection looks only at `post-commit` and `post-checkout`. It never looks at `post-commit.legacy`. Also, under `set -e`, a failing `graphify hook uninstall` aborts the task before `pre-commit install` runs.",
+    "failure_scenario": "In a repo where `pre-commit install` already ran with post-commit in the hook types (by hand, or through this repo's own `--overwrite`-less path), graphify's raw hook is now `post-commit.legacy` and pre-commit chains it. The strip step never finds it, so every commit runs the raw hook plus graphify-refresh. Separately, a stale graphify shim on PATH whose uninstall exits non-zero leaves the repo with no pre-commit hooks at all."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 470,
+    "summary": "Rule 11 no longer asserts that the shipped `.config/pre-commit-config.yaml` has a top-level `repos:` list. The removed `preCommitFaults` check covered it, and it still applied to the tool-config pre-commit asset tree. The only remaining read is rule 15's parse of `exclude`.",
+    "failure_scenario": "An edit to `assets/pre-commit/.config/pre-commit-config.yaml` misindents or renames `repos:` (for example, a requester block written at the wrong indentation) and the YAML still parses. Rule 15 passes because it reads only `exclude`, and the checker goes green. Every repo landed from that asset then runs no hooks at all, silently."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/code/graph",
+    "line": 69,
+    "summary": "`lock_is_held` treats any live PID in `lock/pid` as the lock holder. A pid file left by a killed rebuild keeps the lock held forever once the OS reuses that PID.",
+    "failure_scenario": "A rebuild dies without its EXIT trap running (reboot or SIGKILL), so `.git/graphify-refresh.lock/pid` still holds, say, 4312. After the reboot, a long-lived login process gets PID 4312. `kill -0` succeeds, and every later post-commit prints 'a refresh is already running — skipped' and exits 0. The graph stops refreshing indefinitely, and the only signal is a yellow line in commit output."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/code/graph",
+    "line": 118,
+    "summary": "After backgrounding, the parent writes `$!` into `${LOCK}/pid` unconditionally. If the child has already exited and removed the lock, and another run has taken it, the parent overwrites that run's PID with a dead one.",
+    "failure_scenario": "Run A's graphify fails immediately, so A's child releases the lock. Run B (a fast second commit) creates the lock and writes its own PID. A's parent then reaches line 118 and writes A's dead child PID. B's rebuild is still running, but the lock looks stale, so run C takes it over and a second concurrent rebuild starts. B's release() then sees a PID that isn't its own and leaves the lock behind."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 824,
+    "summary": "`hookFault` scans the whole line with a global HOOK_PAIR, so `key=` text inside the `https://` repo URL counts as a pair. Separately, TOOL_CONFIG_FOR refuses any grype reason that happens to end in 'for <pack-slug>'.",
+    "failure_scenario": "`pre-commit add hook https://example.com/x?rev=v1 id pre-commit` has no real `rev=` pair, but matchAll finds `rev=v1` in the URL and the unpinned hook passes. In the other direction, `grype add ignore GHSA-abcd not reachable for pnpm` is refused as a requester suffix, because `pnpm` is a pack slug, even though it is ordinary reason text."
+  },
+  {
+    "file": "CLAUDE.md",
+    "line": 173,
+    "summary": "Conventions: CLAUDE.md says '**Docs ship with the change.** Any change to plugin behavior must reconcile `readme.md`, this file, and the manual under `site/src/content/docs/` in the same commit'. Commits c55cfbe9, c032583e and 354546d5 change plugin and checker behavior without touching any of those files.",
+    "failure_scenario": "CLAUDE.md still says 'the gate and hygiene packs still ship their **config files**', that rule 11 parses `pre-commit.d/*.yaml` and 'the gate pack's whole `pre-commit-config.yaml`', that `tool-config:` entries must be one of three mise verbs, and that rule 15 reads 'the dprint pack's' lists. All of that is false as of these commits, and stays false on the branch until U10 lands."
+  }
+]
+```

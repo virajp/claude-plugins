@@ -1,0 +1,6 @@
+# What the code-intelligence graph does not ingest; a repo appends its own paths below this block.
+
+# >>> graphify
+# The graph's own output: ingesting it feeds the last run back in as source.
+graphify-out/
+# <<< graphify

@@ -8,16 +8,8 @@
 #USAGE arg "[files]" var=#true help="files to lint (default: the whole repo)"
 
 set -euo pipefail
-# helpers ships in the toolchain-manager pack, not this one, so there is no
-# path here for -x to follow.
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
-
-# This task is also the repo's linting HOOK: the pre-commit gate calls
-# `code:lint --fix <files>` rather than a linter binary, so every tool a commit
-# lints with is configured once, here. That is why it takes an optional file
-# list — the hook passes the staged files, a person passes nothing and gets the
-# whole tree.
 
 files=()
 eval "files+=(${usage_files:-})"
@@ -32,13 +24,7 @@ fi
 
 print_header "Linting files ..."
 
-# The toolchain manager's two shipped defaults, and an overlay keeps them: a
-# commit gets whatever this task does, so a tool that drops out of it stops
-# running at all. Each costs nothing when its binary is absent or nothing in
-# scope is its file type.
-#
-# `-x` follows the sourced `_scripts/` libraries, so they are analysed the way
-# their callers actually see them.
+# Keep shellcheck and actionlint in any overlay: a tool dropped here stops running.
 if command -v shellcheck >/dev/null 2>&1; then
   shell_scope=()
   while IFS= read -r shell_file; do
@@ -53,8 +39,6 @@ if command -v shellcheck >/dev/null 2>&1; then
   fi
 fi
 
-# actionlint wants the workflows, so the scope is filtered to them and it is
-# skipped when none is in scope.
 if command -v actionlint >/dev/null 2>&1; then
   workflow_scope=()
   if [ "${#files[@]}" -gt 0 ]; then
@@ -81,8 +65,6 @@ if command -v actionlint >/dev/null 2>&1; then
   fi
 fi
 
-# ruff checks the project, not a file list: its per-file settings resolve from
-# the project root, and a staged subset would answer differently from CI. So a
-# file list narrows the two defaults above and leaves this one whole-tree.
+# Whole project even with a file list: ruff's per-file settings resolve from the root.
 print_subheader "Linting Python sources ..."
 uv run ruff check ${lint_args[@]+"${lint_args[@]}"} .

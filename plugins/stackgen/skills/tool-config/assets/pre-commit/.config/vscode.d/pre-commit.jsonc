@@ -1,0 +1,20 @@
+// Editor fragment — the local gate's contribution; /vwf:init merges every vscode.d fragment into the editor files.
+{
+  "settings": {
+    "yaml.completion": true,
+    // The repo formatter owns YAML.
+    "yaml.format.enable": false,
+    "yaml.hover": true,
+  },
+
+  "nesting": {
+    "pre-commit-config.yaml": [
+      "git-conventional-commits.yaml",
+    ],
+  },
+
+  // Serves the `yaml.*` keys above.
+  "extensions": [
+    "redhat.vscode-yaml",
+  ],
+}

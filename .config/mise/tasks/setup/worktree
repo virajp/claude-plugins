@@ -15,8 +15,8 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # out, its secrets reachable and its dependencies installed, and nothing else.
 # No tool upgrades, no hook installation, no plugin reconciliation.
 #
-# "Nothing else" includes the lockfiles. The `mise install` below honours the
-# tracked `mise.<env>.lock` files and writes nothing new — every pinned tool is
+# "Nothing else" includes the lockfile. The `mise install` below honours the
+# tracked `.config/mise/mise.lock` and writes nothing new — every pinned tool is
 # already recorded there, so a worktree cannot be the place a version quietly
 # moves. That is the same reason `setup:deps:install` is called `--frozen`.
 

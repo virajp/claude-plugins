@@ -60,8 +60,9 @@ Read the one the step needs, not all of them.
 - **Never move source.** setup writes and moves documentation only. Layout
   drift is a written recommendation — see Recommendations, never moves.
 - **Don't write repo tooling.** The repo shape — the toolchain manager's config
-  and task library, the repo gates, the hygiene files — is `/vwf:init`'s. Setup
-  checks for it and offers init; it never materializes a bundle itself. Setup
+  and task library, the repo gates, the hygiene files — is `/vwf:init`'s and
+  `/stackgen:tool-config`'s. Setup checks for it and offers init; it never
+  writes any of it itself. Setup
   is also the **only** way init is reached — Step 0's offer, or `reshape` —
   since init is hidden from the `/` menu. On a multi-repo product the shape is
   **per repo**, and one init run reaches them all, so setup checks every repo
@@ -107,13 +108,14 @@ a blind spot, never a finding. On a single-repo product the set is one repo and
 everything below reads as it always did.
 
 First, is the shape **there**: in **each** repo of that set, the stack adapter's
-lockfile records all three unconditional repo slugs — `mise`, `repo-gates` and
-`repo-hygiene` (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). Named exactly,
-never constructed: a slug assembled from configuration is one that can silently
-resolve to nothing. Second, is it **current**: the seven predicates under
-**"The repo shape against its baseline"** in `/vwf:doctor`'s stack-checks
-reference, evaluated **per repo** on that repo's own artifacts — the pack
-versions the adapter lockfile records against what the adapter ships now, the
+lockfile records what `/stackgen:tool-config all` writes — entries sourced
+`tool-config/<tool>@<version>`, the gates and `git` and `graphify` among them
+(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). No pack slug is checked: a
+repo is shaped when its `tool-config/*` records are present. Second, is it
+**current**: the seven predicates under **"The repo shape against its
+baseline"** in `/vwf:doctor`'s stack-checks reference, evaluated **per repo**
+on that repo's own artifacts — the pack versions the adapter lockfile records
+against what the adapter ships now, the
 registry's project ids behind the surfaces generated from them, the
 `develop`/`main` pair, the toolchain manager's repo-name key against the repo's
 folder, the bytes of the pack-owned files the packs landed against the lock,
@@ -123,11 +125,11 @@ as chosen, both branches protected, and the base's backlog project present,
 read from the forge when its CLI is on `PATH` and logged in. Read the
 artifacts that section reads and evaluate them **by it**: the predicates are
 doctor's and are deliberately not restated here, so the two can never drift
-apart. Every repo recording all three slugs and holding all seven predicates —
+apart. Every repo recording all of them and holding all seven predicates —
 say so in one line, naming the repos checked, and read on.
 
 **Otherwise some repo needs init, and setup offers it — once, for the whole
-product.** Any of the three slugs missing in a repo, that repo is **unshaped**:
+product.** Any of those records missing in a repo, that repo is **unshaped**:
 say what is absent. Any predicate failing in a repo, that repo is **behind its
 baseline**: name which, in the words doctor's rows use. The offer fires when
 **any** repo in the set is unshaped or behind, and it names **which repos** and
@@ -173,7 +175,8 @@ decisions nothing else does, and overwriting it discards them silently.
 
 **`onboard` forks once more — on evidence, not on a second mode.** A **blank**
 repo has no package or language manifest, no source directories, and no
-`docs/blueprint/` tree. A README, LICENSE, `.gitignore`, `.gitattributes`, and
+`docs/blueprint/` tree. A README, LICENSE, `.gitignore` and `.gitattributes`
+(`/stackgen:tool-config`'s git tool), and
 tooling-only configs (mise, formatter, linter, pre-commit — at the root or under
 `.config/`) are **not** code: a repo holding only those is blank. Anything else
 takes the code sub-path. Both are in the onboard pipeline. This fork chooses
@@ -204,7 +207,15 @@ rather than reconstructing it here. It is also where a landed pack's
 **machine env** is asked: each value the pack's `machine_env:` fact declares
 is detected on this machine — only while the pack's template entry matches
 what its lockfile last recorded — offered as the default, and written into
-the pack's own marked position. Setup asks it, never `init`.
+the pack's own block through `/stackgen:tool-config`. Setup asks it, never
+`init`. A value also set outside the pack's block is the skill's **conflict
+row** — `move-in`, or `keep-both` (`keep-existing` when the line shares
+the pack's file) — relayed inside setup's question: setup previews the
+call, shows the rows, and passes each answer back as `answers=<id>:<answer>`;
+it removes no line itself. And every run re-runs each already-landed pack's
+`tool-config:` list through the skill, so a call a newer pack changed reaches
+the repo as a drift or conflict row; an unchanged call writes nothing and
+shows nothing.
 
 It runs **once per run, in every mode**, on a `.config/vwf.yaml` that is
 already current: in `onboard` and `migrate` between the spine's steps 2 and 3
@@ -216,7 +227,8 @@ skipping the whole handoff.
 In one paragraph, so a reader knows what the reference will say: setup groups
 the axes holding a slug the target repo's adapter lockfile does not name,
 dedupes by slug per repo, and invokes the adapter once per `(repo, slug)`,
-each landing behind the **adapter's own** consent line. Every landing carries
+each landing behind the **adapter's own** consent line; the adapter runs the
+pack's own `tool-config:` calls as part of it. Every landing carries
 the config's recorded `answers:` — the forge re-read live from that repo's
 `origin` — so a template pinned months after `/vwf:init` ran lands what that
 repo's answers allow, not everything. The pass never lands a forge-conditioned
@@ -304,12 +316,14 @@ point, since a stamp written before validation describes a tree nothing checked:
    **only** vwf command that builds graphs. After the commit, if
    `graphify-out/graph.json` is missing and the CLI is on `PATH`, offer —
    consent-gated; it is a long build — to build it against the **main
-   checkout's** root, never the worktree, and to install the refresh hook. A
-   decline is honored without re-asking. Before building, confirm the
-   `.graphifyignore` the pipeline wrote is present at the root the build runs
-   from — a commit still local to the worktree has not put it there, and a
-   graph built without it indexes everything the file exists to exclude until
-   the next rebuild.
+   checkout's** root, never the worktree. The refresh hook is the repo's
+   pre-commit `graphify-refresh` hook at `post-commit`, which runs `code:graph`
+   and which `/stackgen:tool-config all` lands; never graphify's own raw git
+   hook, which pins a Python path. A decline is honored without
+   re-asking. Before building, confirm the `.graphifyignore` the pipeline
+   wrote is present at the root the build runs from — a commit still local
+   to the worktree has not put it there, and a graph built without it indexes
+   everything the file exists to exclude until the next rebuild.
 6. **Chain forward.** Print the ordered chain and stop:
    `/vwf:product` → `/vwf:architecture` →
    `/vwf:design-system` (once a project declares a screen

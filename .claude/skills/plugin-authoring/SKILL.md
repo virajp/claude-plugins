@@ -52,8 +52,10 @@ mise run p:plugins:shellcheck         # the shell a pack ships, if you touched a
 
 `p:plugins:shellcheck` runs `shellcheck -x` and `shfmt -d -i 2 -ci` over
 **both** shell tiers a pack ships — `config/.config/mise/tasks/**` and `hooks/`
-— and pre-commit fires it on
-`^plugins/[^/]+/stacks/[^/]+/[^/]+/(config|hooks)/`.
+— plus the task library `stackgen:tool-config` lands from
+`skills/tool-config/assets/<tool>/.config/mise/tasks/**`, and pre-commit fires
+it on
+`^plugins/([^/]+/stacks/[^/]+/[^/]+/(config|hooks)|stackgen/skills/tool-config/assets)/`.
 
 `--check` on the two generators is what CI and pre-commit run. It exists because
 each output is generated **and** committed, so a source edited without a
@@ -70,14 +72,16 @@ the two files that still have the problem.
    `CLAUDE.md`, `readme.md` and `docs/` **are** formatted.
 2. **`plugins/*/stacks/*/*/config/` is excluded too, and for a different
    reason.** That tier is **payload** — copied byte-for-byte into a target repo,
-   where the *gate pack's own* dprint config formats it. That config
-   deliberately omits the `bracketSpacing`/`braceSpacing` this repo sets, so a
-   payload file formatted here comes out different from what the shipped config
-   produces, and a freshly initialised repo fails its own first `--all-files`
-   hook run on a file nobody touched. It has happened. The exclusion is on the
-   **directory**, so a new payload file type cannot silently re-acquire the
-   defect; when a payload file genuinely needs formatting, run the **shipped**
-   config over it, never this repo's.
+   where the dprint config *`stackgen:tool-config` lands* formats it. That
+   config deliberately omits the `bracketSpacing`/`braceSpacing` this repo sets,
+   so a payload file formatted here comes out different from what the shipped
+   config produces, and a freshly initialised repo fails its own first
+   `--all-files` hook run on a file nobody touched. It has happened. The
+   exclusion is on the **directory**, so a new payload file type cannot silently
+   re-acquire the defect; when a payload file genuinely needs formatting, run
+   the **shipped** config over it, never this repo's.
+   `plugins/stackgen/skills/tool-config/assets/` is excluded on the same terms:
+   it is the payload `stackgen:tool-config` lands.
 3. **A dependency stays inside this marketplace.** Add the name to
    `dependencies` in `plugin.json` with `"marketplace": "virajp-plugins"`; the
    marketplace entry is generated from it, and `p:plugins:check` asserts it
@@ -111,10 +115,37 @@ the `stackgen-plugin` skill still owns is what those scripts are *for*. The host
 rules in full are stackgen's `assets/artifact-doctrine.md` §4.
 
 The payload's other two halves have rules of their own. Rule 13 covers its
-**prose**: no citation a pack lands may be plugin-relative, because the file is
-copied into a repo where no plugin is installed and the path resolves to nothing
-without a word. Rule 4 covers its **frontmatter**, parsing every pack skill and
-pack agent under `stacks/*/*/` on the same strict terms as a plugin's own.
+**prose**: no citation a pack or `stackgen:tool-config` lands may be
+plugin-relative, because the file is copied into a repo where no plugin is
+installed and the path resolves to nothing without a word. Rule 4 covers its
+**frontmatter**, parsing every pack skill and pack agent under `stacks/*/*/` on
+the same strict terms as a plugin's own.
+
+## Comments in shipped config and task files
+
+Anything under a `stackgen:tool-config` `assets/` tree, or a pack's `config/` or
+`hooks/`, lands in a repo as its own file, so its comments are read by every
+person who opens it. Keep only the comments something reads:
+
+- `#MISE` and `#USAGE` lines, and shebangs
+- `# shellcheck` directives
+- the tool-config block markers, `# >>> <requester>` / `# <<< <requester>` and
+  the JSONC `// >>>` / `// <<<` form
+- `MARKED POSITION` lines, plus whatever a filler needs beside one to find its
+  value
+- grype ignore-reason comments, one unit with their entry
+- commented-out templates a skill fills in and uncomments
+- any comment the owning reference names as load-bearing — grep that reference
+  before removing a comment from a tool-config asset
+
+Beyond those, a comment is at most **one line**, and only as a warning where a
+reader would otherwise break something non-obvious. Every longer explanation
+goes: dropped when the owning reference already says it, moved into it when it
+does not — tool-config's `references/<tool>.md` for an asset, the pack's
+`conventions.md` for a payload. Boilerplate repeated across files goes; a
+directive it sat above stays. A comment-only payload change still bumps its
+pack. `stackgen`'s `assets/pack-format.md` states the same rule for pack
+authors.
 
 ## References
 

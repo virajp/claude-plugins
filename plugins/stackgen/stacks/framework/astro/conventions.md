@@ -133,6 +133,25 @@ Astro's own half of it:
   the project's own task group. It is run by hand when the mark changes, never
   in a gate and never in the build.
 
+Three of the task's choices are not obvious from its code:
+
+- **It looks in two places only** — `<id>/public/brand/favicon.svg` for a
+  monorepo member, `public/brand/favicon.svg` for a single-package repo.
+  Searching wider would write an icon set into whichever directory happened
+  to match, and a wrong favicon is found by a user rather than a build.
+- **The touch icon is squared per `<rect>` tag.** iOS masks the corners and
+  paints transparency black, so the tile's rounding is zeroed rather than
+  matched. On an `<ellipse>`, `rx` and `ry` *are* the shape, and zeroing
+  them renders a blank icon; a minified mark holds every shape on one line,
+  so the edit walks the tags in node rather than using a line-scoped `sed`.
+- **The ICO is built through the png-to-ico library, not its bin.** The bin
+  passes only its first argument on, and the single-path branch upscales
+  that one PNG into every layer; `pnpm dlx` does not help, since the dlx
+  directory is off node's resolution path. The library takes an array, so
+  the package is installed into the task's temp directory — never the repo
+  — and driven by a one-line script. `--density` renders the SVG large
+  enough that every size is a downscale.
+
 Depth — the tag order this settles on, the escaping, and how `trailingSlash`
 interacts with the canonical — is the `head` reference.
 
@@ -142,6 +161,10 @@ interacts with the canonical — is the `head` reference.
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `.config/mise/tasks/p/_project/icons` | the icons task above, renamed into the project's task group as it lands                                                                                             |
 | `.config/vscode.d/astro.jsonc`        | the editor fragment: `.astro/` — the types and cache `astro sync` regenerates — hidden from the explorer, the watcher and search; lands only where init's editor answer is vscode (`pack.yaml`'s `conditional:`) |
+
+The fragment scopes to the generated tree alone: `.astro` formatting is the
+dprint gate's, through its markup plugin, and the language extension is a
+per-project choice it does not make.
 
 ## What this component does not decide
 

@@ -1,0 +1,8 @@
+# CI builds and the deployed runtime — loaded when MISE_ENV=ci.
+
+[settings]
+# Install only what the committed lock records; commit the lock and its sidecar before the first CI push.
+locked = true
+
+# Node only — mise's Node release-key import fails on Linux runners. Uncomment for a Node project:
+#   node.gpg_verify = false

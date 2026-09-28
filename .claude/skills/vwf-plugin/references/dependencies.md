@@ -29,31 +29,32 @@ is vendored into this repo, and it buys something a dependency could not — see
 The memory layer and The vendored guidelines below.
 
 **stackgen is load-bearing at `init` and at `setup`, not only at
-`architecture`.** `/vwf:init` materializes three **unconditional** bundles
-through the stack adapter, by the fixed slugs `mise`, `repo-gates` and
-`repo-hygiene` — the toolchain manager and the repo gates the `devtools` plugin
-used to scaffold, plus the hygiene files that had no home at all. Fixed rather
-than constructed, because a name assembled from configuration can silently
-resolve to nothing, which is the same failure a skill vwf cannot see already
-has. With no stack adapter installed, `init` **halts** with the install command
-rather than printing an empty plan that reads like an already-shaped repo. The
-three land **per repo** — the base and every member `init` resolved, each
-recording its own lockfile — so a member is shaped on its own evidence.
+`architecture`.** `/vwf:init` first calls `/stackgen:tool-config all`, which
+lands the toolchain manager's config and the repo gates the `devtools` plugin
+used to scaffold with init's answers as its arguments — the ignore, attribute,
+graph-ignore and Renovate files among them since 2026-09-27 — then writes its
+own hygiene assets and materializes the secrets provider the user picked, the
+only thing it fetches through the stack adapter; it fetches no bundle for its
+baseline. With no stack adapter installed, `init` **halts** with the install
+command rather than printing an empty plan that reads like an already-shaped
+repo. All of it lands **per repo** — the base and every member `init` resolved,
+each recording its own lockfile — so a member is shaped on its own evidence.
 `/vwf:setup` no longer fetches any of them: it checks **each repo's** adapter
-lockfile for all three — and each repo's shape against doctor's seven baseline
-predicates — and offers `/vwf:init` once when any of them is missing or behind,
-which is why `init` is model-invocable and, being hidden from the `/` menu,
-reached no other way. Note that `mise` legitimately appears in two different
-meanings: the **bundle** slug stackgen materializes, and the **binary** `mise`,
-which is a mandate `/vwf:doctor` blocks on once a stack axis is pinned.
+lockfile for the `tool-config/…` records — and each repo's shape against
+doctor's seven baseline predicates — and offers `/vwf:init` once when any of
+them is missing or behind, which is why `init` is model-invocable and, being
+hidden from the `/` menu, reached no other way. Note that `mise` legitimately
+appears in two different meanings: the **tool** `stackgen:tool-config`
+configures, and the **binary** `mise`, which is a mandate `/vwf:doctor` blocks
+on once a stack axis is pinned.
 
 Setup is the third site, and the one that grew: since the consumer-gaps work
 `/vwf:architecture` records a pin and materializes nothing, and **`/vwf:setup`'s
 materialize pass** is what invokes `-stack-template` for every pinned axis, once
 per `(repo, slug)`, in the repo the project belongs to. So the adapter is
-reached from `init` (three fixed slugs), from `setup` (every pinned axis) and
-from `plan`/`execute` (pure conventions reads) — `architecture` reaches only
-`-stack-menu`.
+reached from `init` (`tool-config all` and the secrets provider), from `setup`
+(every pinned axis) and from `plan`/`execute` (pure conventions reads) —
+`architecture` reaches only `-stack-menu`.
 
 **Required binaries are no longer gated at install time.** A plugin used to
 declare `requires:`, and the CLI computed the union over the dependency-expanded
@@ -61,25 +62,25 @@ set and refused the install — explicitly not overridable by `--force`. That ga
 stayed retired when the CLI's plugin installs came back as a thin wrapper.
 
 **Doctor does not fully replace it, and the gap is worth stating precisely.** Of
-the five binaries vwf shells out to, `/vwf:doctor` blocks on **`graphify` always
+the six binaries vwf shells out to, `/vwf:doctor` blocks on **`graphify` always
 and `mise` conditionally** — since `config_format` 16 a missing `mise` is
 blocking only once some axis in the repo is pinned or some harness capability is
 claimed, and a degradation before that, since a repo with no stack has no
-toolchain to resolve. A missing language server is an ordinary finding; `uv` is
-named as a prerequisite of graphify's remedy rather than checked on its own; a
-missing `rtk` is a **degradation** finding in §5 — its hook is guarded, so the
-run is correct and merely costs more — as is, since 2026-09-18, a forge CLI
-(`gh`) that is absent, not logged in, or without the `project` scope, which
-leaves `/vwf:backlog` with nothing to read and every planner's recall of it
-empty, since the backlog is a GitHub Project with no file fallback — and the
-**Context7 runner is not checked at all**, a missing one surfacing as a dead MCP
-server. That runner is `pnpm
-dlx` by default and `${CONTEXT7_RUNNER}` overrides
-it, so what a check would have to verify is whatever the user pinned, not
-`pnpm`.
+toolchain to resolve. A missing language server is an ordinary finding; `uv` and
+`python` are named as prerequisites of graphify's remedy rather than checked on
+their own; a missing `rtk` is a **degradation** finding in §5 — its hook is
+guarded, so the run is correct and merely costs more — as is, since 2026-09-18,
+a forge CLI (`gh`) that is absent, not logged in, or without the `project`
+scope, which leaves `/vwf:backlog` with nothing to read and every planner's
+recall of it empty, since the backlog is a GitHub Project with no file fallback
+— and the **Context7 runner is not checked at all**, a missing one surfacing as
+a dead MCP server. That runner is `pnpm
+dlx` by default and `${CONTEXT7_RUNNER}`
+overrides it, so what a check would have to verify is whatever the user pinned,
+not `pnpm`.
 
-So the trade is slightly worse than "doctor already blocked on it": one of five
-blocks always, one once a stack is pinned, one degrades, one is named only as
+So the trade is slightly worse than "doctor already blocked on it": one of six
+blocks always, one once a stack is pinned, one degrades, two are named only as
 another's remedy, and one is silent. It was still worth taking —
 `claude plugin
 install vwf` cannot now fail for a reason the user did not ask

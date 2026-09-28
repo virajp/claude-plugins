@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+#MISE description="Report dependencies that have moved on"
+#MISE hide=true
+#PLACEHOLDER
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/placeholder"
+
+# Reports and exits 0: setup never fails on the registry's state.
+
+placeholder_notice "setup:deps:outdated" "no package manager is pinned for this repo"

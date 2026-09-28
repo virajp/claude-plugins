@@ -4,7 +4,8 @@ description: Check that the repo actually matches what .config/vwf.yaml declares
   — per-language
   LSP servers and toolchains, each project's frameworks and dependencies against
   its manifest, the harness task names, health endpoints, the mempalace wing and
-  room set, the graphify CLI/graph/hook/ignore file, and format-stamp drift.
+  room set, the graphify CLI/graph/staleness/ignore file, and format-stamp
+  drift.
   Reports; never writes without consent. Run it after setup, before execute, or
   any time the repo and the config might have drifted apart.
 argument-hint: "[project ... | baseline]"
@@ -175,7 +176,7 @@ optional, and no reference restates a rule that lives above.
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, required binaries on `PATH` or their declared probes, an unknown language, framework/dependency drift per manifest, the seven stack axes, a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, each lockfile where a pinned payload's `lockfile:` fact says (project templates included), the recommended `rtk`, the recommended forge CLI, and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups and the commit scopes, the aggregator's member flags and aliases, the two branches, the repo-name environment key against the repo's folder, every pack-owned file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — the `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` (a legacy `MERGE_MODEL` read as both) and `MEMBERS` positions beside it (the two runtime positions beside those are read by no row), and the forge state — the default branch, both branches' protection, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
 | **6–7** — harness & health, memory config                  | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `mempalace.yaml` placement, wing/room contract and secret excludes, and the markdown mirror. **Blocking findings live here** |
-| **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, a graph per locally-present checkout, the refresh hook, staleness, the `.graphifyignore`. **Blocking findings live here** |
+| **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, a graph per locally-present checkout, staleness, the pre-commit refresh hook (a raw graphify hook is drift), the `.graphifyignore`. **Blocking findings live here** |
 
 **Dependency audit (per in-scope project).** Alongside the manifest checks,
 run the ecosystem's own audit command against each project's lockfile — the
@@ -208,15 +209,18 @@ missing `mempalace.yaml` or one carrying no secret excludes; callers must halt),
 against the baseline `/vwf:init` lays down**, run **per repo — the base and each
 locally-present member** (§5): a pack version behind, a registry id with no task
 group or commit scope, a member with no aggregator flag or alias or a list still
-named from project ids, a missing `develop` or `main`, a repo-name key that is
-unfilled or not the folder's slug, a pack-owned file the repo edited away from
-the hash the lockfile recorded and still diverging once every marked position is
-spliced out, a recorded `answers.repos.<repo>.forge` the live `origin` host
-contradicts or a `skipped:` row whose `when: forge` it contradicts, a config
-stamped `config_format` 21 that carries no `answers:` block at all, an absent or
-invalid `MERGE_MODEL_DEVELOP` or `MERGE_MODEL_MAIN` (or a legacy `MERGE_MODEL`
-standing in for both), an absent or empty `MEMBERS` under siblings linkage, and
-— read from the forge, only where its CLI answers — a default branch that is
+named from project ids, a missing `develop` or `main`, a repo-name key in
+`conf.d/env.toml` that is unfilled or not the folder's slug, a pack-owned file
+the repo edited away from the hash the lockfile recorded and still diverging
+once every marked position is spliced out, a recorded
+`answers.repos.<repo>.forge` the live `origin` host contradicts or a `skipped:`
+row whose `when: forge` it contradicts, a config stamped `config_format` 21 that
+carries no `answers:` block at all, an absent or invalid `MERGE_MODEL_DEVELOP`
+or `MERGE_MODEL_MAIN` (or a legacy `MERGE_MODEL` standing in for both), an
+absent or empty `MEMBERS` under siblings linkage, the mise config on the old
+layout, a tool pinned in two `conf.d/tools*.toml` files
+or in a top-level mise file (the move into `conf.d` offered, made on consent),
+and — read from the forge, only where its CLI answers — a default branch that is
 neither `develop` nor `main`, `develop` or `main` with no protection on the
 forge at all, or no backlog project for the base. Each row is printed under the
 repo it was found in, and an **absent** member is a blind spot rather than a

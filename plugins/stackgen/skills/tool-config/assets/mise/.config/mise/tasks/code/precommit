@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+#MISE description="Run the commit hooks over your changed files"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--all" help="Run on every file in the repo (default: only what you changed)"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Run this BEFORE you stage, so the hooks' rewrites fold into the commit.
+
+CONFIG=".config/pre-commit-config.yaml"
+
+if [ ! -f "${MISE_PROJECT_ROOT}/${CONFIG}" ]; then
+  print_warn "No ${CONFIG} — nothing to run."
+  exit 0
+fi
+
+if [[ "${usage_all:-false}" == "true" ]]; then
+  pre-commit run --config "${CONFIG}" --all-files
+  exit 0
+fi
+
+changed=()
+while IFS= read -r file; do
+  [ -n "${file}" ] && changed+=("${file}")
+done < <(
+  {
+    git diff --name-only --diff-filter=d HEAD
+    git ls-files --others --exclude-standard
+  } | sort -u
+)
+
+if [ ${#changed[@]} -eq 0 ]; then
+  print_success "No changed files to check."
+  exit 0
+fi
+
+pre-commit run --config "${CONFIG}" --files "${changed[@]}"

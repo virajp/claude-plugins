@@ -1,0 +1,5 @@
+No high-confidence vulnerabilities found.
+- code/graph mv/rm -rf of ${TAKEOVER}.dead.$$ (703fe19a): inside the owner-only .git; attacker controls no path part. Dropped.
+- echo $$ >${LOCK}/pid: same .git; symlink swap needs write access already. Dropped.
+- skip() exit 0: intended behaviour. Dropped.
+- f832d767: byte-identical copy. Dropped.

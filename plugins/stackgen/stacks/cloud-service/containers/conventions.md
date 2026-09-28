@@ -75,6 +75,42 @@ container `class_name`, the binding name and the migration tag ship real
 and must be kept in step with the class the Worker script exports — the
 one edit that touches three places at once.
 
+## The values `wrangler.jsonc` ships
+
+- **`$schema`** is relative to the file, so a repo that installs wrangler
+  inside a sub-project points it at that project's `node_modules`.
+- **`name`** is account-unique and lowercase — letters, digits and dashes —
+  and derived from the project rather than the domain, so a repo that moves
+  domains keeps its Worker. The shipped `PLACEHOLDER` is deliberately
+  invalid, so an unfilled slot fails at the first deploy instead of
+  publishing a Worker nobody meant to create.
+- **`main`** ships a real value, unlike a rendering stack's: there is no
+  framework adapter to name one, and the Worker is a few lines the project
+  writes, exporting the container class and routing to it. The default is
+  the path Cloudflare's own starter uses; a JavaScript project points at
+  `./src/index.js`, a sub-project inside itself.
+- **`compatibility_date`** is a date, not a version: pinning it stops a
+  future runtime change from altering an already-shipped deployment. Move
+  it deliberately and read the changelog for the span skipped.
+- **`nodejs_compat`** is shipped although Cloudflare's own container
+  starter sets no flag, because the Worker in front rarely stays a bare
+  router — reading a body, signing, calling a datastore reach for Node
+  built-ins, and the failure arrives at the edge rather than at build time.
+  Delete it where the front door really is only a router; add no other
+  flag speculatively.
+- **`max_instances: 3`** is a ceiling, not a target. Every awake instance
+  bills for its vCPU, memory and disk, so this number bounds what a spike
+  can cost; raise it once the needed concurrency has been measured.
+- **`instance_type`** is deliberately unset, taking the platform default
+  `lite`. Sizing up is a cost decision made with a measurement behind it.
+- **`migrations`**: `new_sqlite_classes` is the SQLite-backed form a
+  container-backed class takes, and without the entry the deploy is
+  rejected for naming an unknown class. The tag is an ordering label — a
+  later change to the class appends an entry rather than editing this one.
+- **`observability`** is on: the Worker's logs are what show how a request
+  was routed and whether the instance was awake, and without them a
+  cold-start timeout is indistinguishable from a dead container.
+
 ## The Dockerfile is the project's, not this pack's
 
 `image` points at a Dockerfile path in the repo, and **nothing here writes
@@ -101,6 +137,11 @@ Cloudflare-managed registry, authenticating that push itself from the same
 token
 ([Image management](https://developers.cloudflare.com/containers/platform-details/image-management/)).
 There is no registry login to hold and none to rotate.
+
+**`--dry-run` needs no credentials.** It neither authenticates nor
+uploads, so the deploy task skips the credential and Docker checks for
+it — requiring them would stop a contributor without account access from
+ever validating the config, which is the one thing the flag exists for.
 
 ## The pipeline
 
@@ -173,6 +214,9 @@ component's conventions, in this composition's template.
 **No wrangler pin and no Docker pin.** Wrangler is a development
 dependency of the project that deploys, declared in that project's
 language manifest, and a manifest is outside the config tier's fence.
+The deploy task calls it through the package manager, so the version CI
+runs is the version the lockfile records; a `[tools] wrangler` entry in a
+mise fragment would be a second, unpinned copy that drifts silently.
 Docker is a machine prerequisite rather than a repo dependency; the deploy
 task checks for it and names it, and pins nothing.
 

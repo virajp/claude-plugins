@@ -1,0 +1,67 @@
+range c766f44f..e3deada4
+The main problem: `--lock-only` still installs uv and a full Python, but init's docs say it installs nothing. The other problem is that the new dev-only Python pin can clash with a language pack's Python version. Neither the lock fix nor the pin is complete yet. I ran all 8 angles myself over the four commits on the branch (`beef9cad`, `e341821c`, `f8afa0e3`, `e3deada4`). As the high-effort contract says, the findings were deduplicated but not verified, so some may be false positives.
+
+```json
+[
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/conf.d/tools.dev.toml",
+    "line": 23,
+    "summary": "The new dev-only `python = latest` pin copies a runtime that a language or package-manager pack pins in tools.toml. The header comment says such a pack 'drops it', but nothing does: tool-config has no such rule and the uv pack does not remove it.",
+    "failure_scenario": "A repo whose pack pins python 3.12 in conf.d/tools.toml: under MISE_ENV=dev the dev file wins, so every developer shell and the lock's dev entries use the latest Python (say 3.14) while CI uses 3.12. This breaks mise.md's own rule 'Nothing is duplicated across layers… a tool pinned twice is a version that can disagree with itself'. It also means every shaped repo, even a Node-only one, now downloads a full CPython in `mise install --locked` and puts it ahead of the system python in dev shells."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/new-repo.md",
+    "line": 720,
+    "summary": "The lock step is documented as 'installs nothing' (and the `--lock-only` USAGE help at setup/mise:7 says 'without … installing'), but after decisions 7 and 8 `write_missing_lock` runs `mise install uv` and `mise install python` before locking.",
+    "failure_scenario": "During the git pass, init quietly downloads and installs uv and a full CPython in every member and base repo, with no offer. The plan puts installing tools during init out of scope (still §10's offer), and the user was told nothing would be installed. The text was written in round 1, before rulings 7 and 8, and never updated."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/existing-repo.md",
+    "line": 1153,
+    "summary": "The lock step runs only when .config/mise/mise.lock is absent from disk, not when it is untracked. A lock that exists but was never committed is therefore never staged.",
+    "failure_scenario": "The user accepts the §10 aggregator, which runs before §11. Its `setup:mise` writes mise.lock and locks/. At §11 the lock is 'present', so the step is skipped and nothing adds the lock paths to the written list. The ops commit goes out without the lock and the first CI run (`locked = true`) fails exactly as B67 did. The same happens when an earlier `setup:mise` left an uncommitted lock."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/mise",
+    "line": 41,
+    "summary": "Whether a lock is 'missing' is decided only by mise.lock existing. A present mise.lock with no `.config/mise/locks/` dependency sidecar is treated as complete, so B67's second failure is never repaired.",
+    "failure_scenario": "A repo committed mise.lock but not the aube sidecar, which is B67's second reproduction. `--lock-only` exits 0 without doing anything, init stages nothing, and CI fails again with 'dependency sidecar … No such file or directory; run mise lock'."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/mise",
+    "line": 81,
+    "summary": "When `mise lock` fails, the cleanup removes only mise.lock and leaves any sidecar directories already written under .config/mise/locks/.",
+    "failure_scenario": "`mise lock` writes locks/npm-askviraj-linter/<v>~<hash>/ and then fails on pipx:graphifyy. The retry re-resolves 'latest' to a different version and writes a new sidecar. Init then stages `.config/mise/locks/**` as a whole, so the ops commit carries orphaned sidecar directories that no mise.lock entry refers to."
+  },
+  {
+    "file": "plugins/vwf/skills/init/references/new-repo.md",
+    "line": 721,
+    "summary": "'Both lock paths join this repo's written list' applies unconditionally, but the locks/ sidecar exists only 'where a tool needs one'. Staging a path that does not exist fails.",
+    "failure_scenario": "The repo's tools include no npm/pipx tool that needs a sidecar, so .config/mise/locks/ is never created. `git add .config/mise/locks` fails with 'pathspec did not match any files', which aborts the staging in (b) and so that repo's ops commit."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/mise",
+    "line": 71,
+    "summary": "`mise ls --current <tool>` also resolves tools from the user's global mise config. A global python pin is installed and exported as UV_PYTHON even when the repo does not declare python.",
+    "failure_scenario": "The user's ~/.config/mise/config.toml pins python 3.9, and the repo (for example an existing repo keeping an older tools.dev.toml) does not pin python. The loop installs 3.9 and sets UV_PYTHON to it. uv's lock of graphifyy then fails with 'No interpreter found for Python >=3.10', even though a suitable Python 3.12 is on PATH."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/mise",
+    "line": 76,
+    "summary": "UV_PYTHON is exported at script scope, so it stays set for the rest of a full setup:mise run, including `mise install --locked` and `mise run setup:lint`.",
+    "failure_scenario": "The python installed before the lock was 'latest' at time T. If `mise lock` resolves a newer latest, `mise install --locked` installs the locked version, but UV_PYTHON still points uv's pipx installs and any uv-based setup:lint at the older interpreter, which is not in the lock. Scoping it to the `mise lock` call (`UV_PYTHON=… mise lock`) avoids this."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/mise",
+    "line": 70,
+    "summary": "Altitude: the generic setup:mise now hardcodes `for tool in uv python` to serve one pipx tool (graphifyy), and the Python pin sits in the base tools.dev.toml instead of the graphify requester's own tool-config block.",
+    "failure_scenario": "Every repo pays for a Python runtime and a special-case pre-lock install even when graphify is dropped. The next pipx or npm backend prerequisite would need another hardcoded name. Putting the uv/python pins in graphify's own block (which a `remove graphify` would take with it) and pre-installing whatever the config declares as a backend dependency would fix this at the right level."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/references/mise.md",
+    "line": 98,
+    "summary": "Added prose lines at mise.md:98 (106 chars) and :216 (98 chars) break the file's hand-kept fold width of about 78.",
+    "failure_scenario": "Violates /Users/virajpatel/Projects/github.com/virajp/claude-plugins/CLAUDE.md: '`plugins/**/*.md` is **not** formatted — match the surrounding fold width by hand.' No formatter will reflow these lines."
+  }
+]
+```

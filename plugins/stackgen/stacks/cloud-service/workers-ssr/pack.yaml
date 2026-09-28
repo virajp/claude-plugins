@@ -2,7 +2,7 @@ name: Cloudflare Workers SSR
 summary: A Worker that runs a script in front of its own static assets —
   on-demand rendering at the edge, the prerendered files served by the
   platform, and one `wrangler deploy` for both.
-version: 0.1.2
+version: 0.1.3
 type: cloud-service
 category: compute
 # `capability` is deliberately unset, as `cloud-service/cloud-run` leaves it:

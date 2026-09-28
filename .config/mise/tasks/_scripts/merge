@@ -27,8 +27,8 @@
 #   pr      push the branch and open a pull request against the destination.
 #           Nothing merges locally; the forge is what merges.
 #
-# It is a marked position in `.config/mise.toml`, so the choice is the repo's
-# and this file names no forge until it has to open a request.
+# It is a marked position in `.config/mise/conf.d/env.toml`, so the choice is
+# the repo's and this file names no forge until it has to open a request.
 
 set -euo pipefail
 # shellcheck source=/dev/null
@@ -54,7 +54,7 @@ precommit_safety_net() {
   fi
   if ! command -v pre-commit >/dev/null 2>&1; then
     print_warn "pre-commit is not on PATH — skipping the hook safety net."
-    print_yellow "Run \`mise run setup:all\` to install the dev toolchain."
+    print_yellow "Run \`MISE_ENV=dev mise run setup:all\` to install the dev toolchain."
     return 0
   fi
 

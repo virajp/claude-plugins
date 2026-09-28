@@ -13,8 +13,8 @@ three remain **degradations**. Check:
 - **The `graphify` CLI on `PATH`.** Missing → **blocking**, remedy
   `mise use -g pipx:graphifyy@latest` (the double-`y` is the real package name,
   not a typo). This is *missing*, not *unavailable* — there is a command to
-  suggest. Its Python/uv toolchain is a prerequisite of that remedy, not a
-  separate finding.
+  suggest. graphify needs both python and uv, prerequisites of that remedy,
+  not separate findings.
 - **A graph at each checkout root** (`graphify-out/graph.json`). Resolve it the
   way the asset does: current checkout first, then the **main checkout** via
   `git rev-parse --git-common-dir`. Absent in **both** → **blocking**, remedy
@@ -29,10 +29,13 @@ three remain **degradations**. Check:
   member is **not** a finding: it is the blind spot the membership contract
   already recorded (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`), and blocking on a
   repo the user declined to clone would halt a run they consented to narrow.
-- **The post-commit refresh hook** (`graphify hook install`), in each
-  locally-present repo. Without it the graph freezes at whatever commit last
-  rebuilt it and silently decays into wrong answers — worse than no graph,
-  because nothing signals staleness.
+- **The refresh hook.** The graph is refreshed by the repo's pre-commit
+  `graphify-refresh` hook at stage `post-commit`, which runs `code:graph`.
+  A raw graphify git hook in `.git/hooks/` (never run `graphify hook install`
+  — it pins a Python path and breaks on upgrade) is **drift**, never a pass,
+  and so is a leftover `merge=graphify` attribute or `merge.graphify.*` key in
+  the local git config: remedy `mise run setup:precommit`. The staleness
+  check below catches a graph nobody refreshed.
 - **Staleness.** Compare `graph.json`'s mtime to the last commit date of the
   checkout that holds it. Behind → report how far, with `graphify update` as the
   remedy for the user to run.

@@ -1,0 +1,68 @@
+/code-review high, loop U9-late1 round 3, branch-scoped (late range 65e8256d..f89a00ba)
+
+I found 10 issues on the branch `2026-09-26-tool-config-hygiene` (diff against `develop` plus working tree). The top one means Renovate will never update this layout's pre-commit hook revisions. For context: vitest (355 passed) and `p:plugins:check` are both green on the branch, so none of these are caught by the current gates. Two of the findings (stale docs) fall inside the docs unit U10, which the plan still shows as pending.
+
+```json
+[
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/renovate/renovate.json",
+    "line": 8,
+    "summary": "Turning on Renovate's pre-commit manager does nothing for the layout tool-config lands: the manager's default file pattern is `/(^|/)\\.pre-commit-config\\.ya?ml$/`, and it does not match `.config/pre-commit-config.yaml`.",
+    "failure_scenario": "A repo shaped with update_bot=renovate keeps its hooks config at `.config/pre-commit-config.yaml` (no leading dot on the file name). Renovate's pre-commit manager never finds it, so hook `rev:` pins are never updated. That is exactly what references/renovate.md says this setting prevents ('without it the hook revisions are the one pinned set nothing updates'). Fix: add `managerFilePatterns` (or `fileMatch`) for `.config/pre-commit-config.yaml`. Renovate's docs confirm the mise manager's defaults already cover `.config/mise/conf.d/*.toml`, so only pre-commit is affected."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit",
+    "line": 41,
+    "summary": "When core.hooksPath is set, `git rev-parse --git-path hooks` returns the hooksPath directory (checked on git 2.55). graphify hooks sitting in `.git/hooks` are therefore never found or stripped, and `--force` then unsets hooksPath, which makes them live again.",
+    "failure_scenario": "graphify's hooks were installed into `.git/hooks`, then husky or lefthook set `core.hooksPath=.husky/_`. `setup:precommit --force` only checks `.husky/_`, and at line 181 it unsets hooksPath and runs `pre-commit install --overwrite`. That install only replaces pre-commit, commit-msg and post-commit, so graphify's raw `.git/hooks/post-checkout`, with its pinned Python path, becomes active on every checkout."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit",
+    "line": 55,
+    "summary": "`graphify hook uninstall` runs under `set -euo pipefail` whenever graphify is on PATH. If it fails, the whole task stops before any pre-commit hook is installed. The self-contained awk strip is only used when graphify is absent.",
+    "failure_scenario": "A Python or pipx upgrade breaks graphify's venv, the very breakage the strip exists for. The mise shim still resolves, so `command -v graphify` succeeds, `graphify hook uninstall` exits non-zero, and `setup:precommit` (and so `setup:all`) aborts with no commit gate installed. Fix: fall back to `strip_graphify_block` on failure, or always strip directly."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit",
+    "line": 73,
+    "summary": "`grep -v 'merge=graphify'` deletes every line containing that substring, not just graphify's driver line. This contradicts git.md §5 ('deletes only the merge-driver line itself').",
+    "failure_scenario": "A user's `.gitattributes` has `graphify-out/graph.json merge=graphify -diff linguist-generated`, or a wider pattern that also sets merge=graphify. The whole line is dropped along with its other attributes, and every teammate who runs setup gets an unexplained edit to a tracked file."
+  },
+  {
+    "file": "site/src/content/docs/installer/targets.md",
+    "line": 72,
+    "summary": "The installer and site docs still describe the removed behaviour: targets.md:72, internals.md:147 and installer/CLAUDE.md:28 say the installer runs `graphify hook install`, and site plugins/stackgen.md:680 (plus :439, :765, :1252) and plugins/vwf.md:940 still describe the retired repo-hygiene bundle and `.editorconfig`.",
+    "failure_scenario": "The repo-root CLAUDE.md rule 'Docs ship with the change … in the same commit — stale docs are more harmful than no docs' is broken: commits ecc2d2e1 and f7f26d04 change the behaviour, and no site doc changes. A reader of the published manual expects hooks and a hygiene pack that no longer exist. U10 is still pending."
+  },
+  {
+    "file": "installer/src/graphify.ts",
+    "line": 59,
+    "summary": "Dropping `graphify hook install` leaves any repo not shaped by `/vwf:init` with no graph refresh at all. The new comment assumes a pre-commit `graphify-refresh` hook that such a repo does not have.",
+    "failure_scenario": "A user runs `pnpx @virajp.dev/claude-plugins --all` in an existing unshaped repo. Before this change a post-commit refresh was wired; now nothing refreshes graphify-out, and the graph silently goes stale until they run `/vwf:setup reshape`. Nothing in the installer output says so."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 485,
+    "summary": "init's asset tree is passed `rootFiles = null`, which turns off the root-allowlist check for it entirely instead of giving it an allowlist of its own, as tool-config trees get through TOOL_CONFIG_ROOT_FILES.",
+    "failure_scenario": "Someone adds `renovate.json`, `.gitignore` or any stray file to `plugins/vwf/skills/init/assets/hygiene/`. The checker passes it, so init can quietly widen every repo's root, which is the defect rule 11 exists to catch. Fix: an init allowlist such as {CONTRIBUTING.md, SECURITY.md} plus the `licenses/` directory."
+  },
+  {
+    "file": "plugins/stackgen/stacks/package-manager/swiftpm/conventions.md",
+    "line": 35,
+    "summary": "The edited paragraph leaves a 123-character prose line in an unformatted plugin markdown file.",
+    "failure_scenario": "This breaks the repo-root CLAUDE.md rule: '`plugins/**/*.md` is **not** formatted — match the surrounding fold width by hand.' The surrounding lines fold at about 80 columns, and no formatter will fix this line."
+  },
+  {
+    "file": ".config/mise/tasks/setup/ai",
+    "line": 180,
+    "summary": "The new comment says 'The graph refresh is code:graph, run by hand.' That contradicts code:graph's own description ('run by the graphify-refresh post-commit hook') and the pre-commit wiring.",
+    "failure_scenario": "A maintainer reads this and assumes no automatic refresh exists. They then add a second refresh path, or conclude the post-commit hook is dead and remove it."
+  },
+  {
+    "file": ".config/mise/tasks/setup/precommit",
+    "line": 1,
+    "summary": "This repo's copy of setup:precommit now defaults to no autoupdate (only with `--update`) and is `hide=true`. The old task ran `pre-commit autoupdate` on every setup, and nothing records the change for this repo's own developers.",
+    "failure_scenario": "`MISE_ENV=dev mise run setup:all` no longer moves hook revs in this repo. Combined with the first finding (Renovate's pre-commit manager is inert for `.config/pre-commit-config.yaml`), nothing updates this repo's hook pins unless someone knows to pass `--update`."
+  }
+]
+```

@@ -109,8 +109,8 @@ the directory and the registration down only when the last key goes.
 ## The fourth target — repo config files
 
 `.claude/`, `.mcp.json` and the local plugin are the three targets above, and
-a repo's own configuration is none of them. A toolchain manager's config and
-its file-based task library are repo files a component genuinely owns, so a
+a repo's own configuration is none of them. A gate's config file and a task
+overlay are repo files a component genuinely owns, so a
 pack declares them in a **`config/` tree that mirrors the repo root**
 (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`):
 
@@ -126,29 +126,22 @@ stacks/<type>/<slug>/
 **What the tier covers**, since it is wider than the toolchain manager it
 started as:
 
-- **(a) The toolchain manager's config split and its task library** — the
-  `mise.*.toml` layers and every file under `.config/mise/tasks/`.
-- **(b) A gate's own config file** — `.config/dprint.json`,
-  `.config/taplo.toml`, `.config/pre-commit-config.yaml`,
-  `.config/git-conventional-commits.yaml`, `.config/gitleaks.toml`,
-  `.config/grype.yaml`. A gate whose doctrine ships without the file that
-  configures it is doctrine about a gate nobody has.
-- **(c) The hygiene files a repo carries whatever its stack is** —
-  `.gitignore`, `.editorconfig`, `.gitattributes`, `SECURITY.md`, `LICENSE`,
-  and `renovate.json` — at the root, since Renovate's config discovery
-  never reaches `.config/`. Everything landing at the **repo root** is on
-  the fixed allowlist below; everything else goes under `.config/`.
-- **(d) Environment fragments a provider contributes** —
-  `.config/mise/conf.d/<pack>.toml`, which the manager auto-loads, so a
-  provider adds its own variables without any component editing the
-  manager's own `mise.toml`. A fragment holding a pack's `machine_env:`
-  marked positions lands with them **unfilled**; `/vwf:setup` fills them
-  and re-records the file's hash.
-- **(e) Hook fragments** — `.config/pre-commit.d/<pack>.yaml`, each a
-  standalone `repos:` list. The materializer **copies these verbatim and
-  stops**; `/vwf:init` is what merges them into
-  `.config/pre-commit-config.yaml`, between its markers. Nothing in stackgen
-  edits that file, which is what keeps a fragment a fragment.
+- **(a) Task overlays** — a file under `.config/mise/tasks/` a pack ships
+  over the baseline library. The mise files themselves, and that baseline,
+  are written by `stackgen:tool-config`, not copied (since 2026-09-26).
+- **(b) A gate's own config file** — `.config/swiftlint.yml`,
+  `.config/swift-format.json`. A gate whose doctrine ships without the file
+  that configures it is doctrine about a gate nobody has. The repo-wide
+  gates' files — dprint, pre-commit, gitleaks, grype — are written by
+  `stackgen:tool-config`, not copied (since 2026-09-26).
+- **(c) Retired 2026-09-27.** The hygiene files are `stackgen:tool-config`'s
+  tools and `/vwf:init`'s own assets, not a pack's copies. Everything
+  landing at the **repo root** is on the fixed allowlist below; everything
+  else goes under `.config/`.
+- **(d) Retired 2026-09-26.** A provider's environment is a `tool-config:`
+  call in its `pack.yaml`, not a `conf.d/<pack>.toml` it copies.
+- **(e) Retired 2026-09-26.** A pack's pre-commit hook is a `tool-config:`
+  call in its `pack.yaml`, not a hook fragment it copies.
 - **(f) A deploy target's own config and its deploy task** — a root
   `wrangler.jsonc` and a `.config/mise/tasks/p/_project/deploy` overlay,
   which `cloud-service/workers-static-assets` was the first
@@ -165,16 +158,19 @@ started as:
   packs contributing a file each into it is how it fills up — so a pack
   adding one names a task no other pack in the same bundle already ships.
 
-**The root allowlist** is the hygiene doctrine's, and the materializer
-enforces it as a ceiling. It is the list of what may **sit** at a shaped
-repo's root — these entries and only these — and it has two tiers:
+**The root allowlist** is stackgen's, and the materializer enforces it as
+a ceiling. It is the list of what may **sit** at a shaped repo's root —
+these entries and only these — and it has four tiers:
 
-- **What a pack may land**: `.gitignore`, `.graphifyignore`,
-  `.editorconfig`, `.gitattributes`, `.npmrc`, `LICENSE`, `SECURITY.md`,
-  `CONTRIBUTING.md`, `readme.md`, `fnox.toml`, `eslint.config.mjs`,
-  `dprint.json`, `wrangler.jsonc`, `renovate.json`, and the directory
+- **What a pack may land**: `.npmrc`, `readme.md`, `fnox.toml`,
+  `eslint.config.mjs`, `dprint.json`, `wrangler.jsonc`, and the directory
   `.github/` — **excluding `.github/workflows/`**. This is the tier
   `p:plugins:check` enforces over a pack's `config/` root.
+- **What `stackgen:tool-config` writes**: `.gitignore`, `.gitattributes`,
+  `.graphifyignore` and `renovate.json` — a pack asks for lines in them
+  through `tool-config:`, and never ships one.
+- **What `/vwf:init` writes from its own assets**: `CONTRIBUTING.md`,
+  `SECURITY.md`, `LICENSE` and `.github/ISSUE_TEMPLATE/`.
 - **What sits there because vwf writes it** — **vwf's — no pack lands
   them**: `CLAUDE.md`, fenced out below as `/vwf:setup`'s, with
   `p:plugins:check` refusing a pack that ships one at the root; and
@@ -182,7 +178,7 @@ repo's root — these entries and only these — and it has two tiers:
   at and nowhere else, so anywhere but the root is silently inert (vwf's own
   `memory.md`, "Repo config — `mempalace.yaml`").
 
-The second tier is on the list because `/vwf:init`'s pass 1 reports any
+The last tier is on the list because `/vwf:init`'s pass 1 reports any
 root file the list does not name, and a rule beats a judgment: without
 these two entries, every shaped repo's own `CLAUDE.md` and `mempalace.yaml`
 read as findings that a person has to know to wave through.
@@ -252,22 +248,21 @@ The rules mirror the ones the other targets already have:
   invisible exec bit has cleared every other gate in this repo before.
 
 **Composition order, since more than one component may write one tree.**
-By component type: `toolchain-manager`, then `toolchain-gate` (the
-`repo-gate` kind's components), then `repo-hygiene`, then
+By component type: `toolchain-gate`, then
 `package-manager` / `language`, then `app-framework`, then
 `capability-provider`, then `cloud-provider`, then `cloud-service` — a
 later component's file wins, and the lockfile records per file which
 component supplied the version that landed.
 
-The two ends are what the order is for. The **manager goes first** because
-it ships the baseline every overlay overlays — the whole task library,
-including the slots a stack fills in. The **deploy target goes last**
-because it is the most specific thing a repo pins: a `cloud-service` pack's
-`wrangler.jsonc`, and the `p/<id>/deploy` overlay beside it, are the answer
-to how this repo actually ships, and nothing may overwrite that. The
+The two ends are what the order is for. The baseline every overlay overlays —
+the whole task library, including the slots a stack fills in — is
+`stackgen:tool-config`'s, written before any pack lands. The **deploy target
+goes last** because it is the most specific thing a repo pins: a `cloud-service`
+pack's `wrangler.jsonc`, and the `p/<id>/deploy` overlay beside it, are the
+answer to how this repo actually ships, and nothing may overwrite that. The
 **secrets provider still outranks everything before it**, for the reason it
-always did — a secrets overlay is the most specific answer anything gives
-to `setup/secrets`, whatever a language pack thought that task should do.
+always did — a secrets overlay is the most specific answer anything gives to
+`setup/secrets`, whatever a language pack thought that task should do.
 
 The two cloud types were absent from this order until 2026-09-05, for a
 plain reason rather than an oversight: no `cloud-provider` or
@@ -286,15 +281,15 @@ config lives in a plugin that exists for no other reason.
 toolchain manager: a gate pack named its config file as a prerequisite and
 wrote nothing. That line was **opened on 2026-09-05, deliberately and once**,
 for gate and provider config files — the (b), (c), (d), (e) and (f) rows
-above — because a gate that ships its doctrine and not its config leaves
-every repo to hand-write the file the doctrine describes, which is the
-failure the tier exists to prevent. Row (f) is that one opening reaching the
-cloud types later the same day, when the first `cloud-service` pack shipped a
-`config/` tree: a deploy target that ships its doctrine and not its config
-leaves the repo hand-writing that file too. Row (g) is the same argument
-arriving on the **project** axis: a framework whose doctrine names a task the
-repo must have, and then ships no task, has described a command rather than
-given one.
+above, (d) and (e) since retired — because a gate that ships its doctrine and
+not its config leaves every repo to hand-write the file the doctrine
+describes, which is the failure the tier exists to prevent. Row (f) is that
+one opening reaching the cloud types later the same day, when the first
+`cloud-service` pack shipped a `config/` tree: a deploy target that ships its
+doctrine and not its config leaves the repo hand-writing that file too. Row
+(g) is the same argument arriving on the **project** axis: a framework whose
+doctrine names a task the repo must have, and then ships no task, has
+described a command rather than given one.
 
 Four things stay **outside** the fence, and they are the whole of it:
 
@@ -322,11 +317,10 @@ argument this list exists to answer. Moving one of the four is a decision on
 the record, never an implementer's call.
 
 **The lockfile is what tells a caller the repo is shaped.** `/vwf:init` lays
-the tier down by fetching the three `unconditional:` bundles by fixed slug —
-`mise`, `repo-gates`, `repo-hygiene`
-(`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) — and every landing is
-recorded here. So the shape test is a lockfile read: **all three slugs
-present = shaped**, any missing = not, and nothing has to infer a repo's
+the tier down by calling `stackgen:tool-config` and fetching no bundle, and
+every landing is recorded here. So the shape test is a lockfile read:
+**the `tool-config/*` entries present = shaped**, any missing = not, and
+nothing has to infer a repo's
 state from which files happen to sit in it. That matters because `.config/`
 holds the repo's own files too, and presence in the tree has never meant
 stackgen put it there.
@@ -374,15 +368,18 @@ entries:
     source: generated # or pack/<type>/<slug>@<version>
     hash: <content hash — at landing, re-recorded by the composing skill after its fills>
   - path: .config/mise/tasks/code/format # a `config/` tier file — outside .claude/
-    slug: generated/mise
-    component: toolchain-manager/mise # which component's version won, per file
-    source: pack/toolchain-manager/mise@0.1.0
+    slug: swift-package
+    component: language/swift # which component's version won, per file
+    source: pack/language/swift@<version>
     hash: <content hash — at landing, re-recorded by the composing skill after its fills>
     mode: "755" # preserved for .config/mise/tasks/** — mise runs the file itself
+  - path: .config/mise/conf.d/tools.toml # written by the skill, not copied
+    source: tool-config/mise@<stackgen version> # sync leaves it alone
+    hash: <content hash>
 skipped: # config/ paths a pack declared `conditional:` whose condition was false at the last run
-  - path: renovate.json
-    pack: repo-hygiene/repo-hygiene # <type>/<slug> — the pack whose conditional: entry matched
-    when: { update_bot: renovate } # the condition, as the pack states it — re-evaluated by a later run
+  - path: .config/vscode.d/eslint.jsonc
+    pack: toolchain-gate/eslint # <type>/<slug> — the pack whose conditional: entry matched
+    when: { editor: vscode } # the condition, as the pack states it — re-evaluated by a later run
 settings_keys: [] # exact settings.json keys stackgen added, with consent — a hooks entry is spelled `hooks.<Event>[<matcher>]`
 mcp_servers: [] # exact .mcp.json server keys stackgen added, with consent
 local_plugin: # the generated local plugin — absent when none was written
@@ -409,7 +406,7 @@ Rules the lockfile enforces:
   of them ran.** The materializer writes it at landing. The composing skill
   (`/vwf:init`) **re-records** it after every change it makes to a landed
   file — the marked-position fills, the `.gitignore` section appends, the
-  hook-fragment merge, the editor block — and its replace-or-keep offer
+  editor block — and its replace-or-keep offer
   re-records it on either answer, so a file kept as the repo's own reads as
   current, not as drift, the next time sync or the offer runs.
 - **Anything not in the lockfile is not stackgen's** — never diffed, never

@@ -12,7 +12,7 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 # The one-command gate, and the same command the pipeline runs. It needs the dev
 # toolchain loaded, because the formatter and the scanners are pinned in
-# mise.dev.toml — `MISE_ENV=dev mise run code:all`.
+# mise/conf.d/tools.dev.toml — `MISE_ENV=dev mise run code:all`.
 
 # `${ARR[@]+"${ARR[@]}"}` rather than a bare `"${ARR[@]}"`: under `set -u` an
 # empty array is an unbound reference on older bash, and the runner's bash is

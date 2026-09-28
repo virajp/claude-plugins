@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+#MISE description="Predicates the merge tasks ask before touching a branch"
+#MISE hide=true
+
+# Each predicate answers by exit status and prints nothing; the caller owns the wording.
+
+# Tracked files with modifications, staged or not.
+has_uncommitted_changes() {
+  [ -n "$(git status --porcelain)" ]
+}
+
+# Files git is not tracking and .gitignore does not cover.
+has_untracked_files() {
+  [ -n "$(git ls-files --others --exclude-standard)" ]
+}
+
+# A branch with no upstream, so "unpushed" cannot be measured against anything.
+# Defaults to the branch you are standing on.
+is_local_branch() {
+  local branch="${1:-HEAD}"
+  ! git rev-parse --abbrev-ref "${branch}@{u}" >/dev/null 2>&1
+}
+
+# Commits on ONE branch that its upstream does not have — never the repo-wide form.
+has_unpushed_commits() {
+  local branch="${1:-HEAD}"
+  [ -n "$(git log --oneline "${branch}@{u}..${branch}" 2>/dev/null)" ]
+}
+
+# Whether this is a linked worktree rather than the main checkout.
+is_git_worktree() {
+  local git_dir git_common_dir
+  # `|| var=''` keeps `set -e` from firing outside a repo.
+  git_dir=$(git rev-parse --git-dir 2>/dev/null) || git_dir=''
+  git_common_dir=$(git rev-parse --git-common-dir 2>/dev/null) || git_common_dir=''
+  [ "${git_dir}" != "${git_common_dir}" ]
+}
+
+# The absolute path of the main worktree, which `git worktree list` prints first.
+get_main_worktree_path() {
+  git worktree list --porcelain | awk 'NR==1{sub(/^worktree /, ""); print; exit}'
+}

@@ -1,9 +1,4 @@
-# SwiftLint — the Swift correctness gate. swift-format owns layout; this file
-# owns everything else.
-#
-# SwiftLint resolves `included` and `excluded` relative to THIS file, not the
-# working directory — so from `.config/` every path climbs one level to the
-# repository root. A bare `.build` here would name `.config/.build`.
+# Paths resolve relative to THIS file, so each climbs `../` to the repository root.
 
 excluded:
   - ../.build
@@ -12,8 +7,7 @@ excluded:
   - ../**/DerivedData
   - ../**/*.generated.swift
 
-# Rules that decide layout — swift-format decides it, and two tools deciding
-# one thing is a gate that never converges.
+# Layout rules off: swift-format decides layout.
 disabled_rules:
   - trailing_comma # swift-format adds trailing commas to multi-line collections
   - opening_brace # swift-format puts a wrapped declaration's brace on its own line

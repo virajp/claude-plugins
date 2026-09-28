@@ -1,0 +1,8 @@
+---
+# grype's config; `code:sec` passes `--config .config/grype.yaml`.
+
+# Change together with `code:sec`'s `--fail-on medium`; never lower it to clear a first scan.
+fail-on-severity: medium
+
+# Each entry carries a comment above it: the id, the package and version, why it does not apply, and when it expires.
+ignore: []

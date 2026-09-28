@@ -26,20 +26,17 @@ comparison. Choosing is the user's job and presenting the choice is vwf's.
 ## How to answer
 
 1. List `${CLAUDE_PLUGIN_ROOT}/stacks/bundles/*.md`. **Each is one menu
-   entry, except those whose frontmatter says `unconditional: true`** — a
-   bundle is what a user picks, because a component answers "what is this
-   language" and a bundle answers "what is a service in it". Its slug is the
-   filename, and `name`, `axis`, `kind`, `platforms` and `artifact` come from
-   the frontmatter (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). Take the
-   `summary` from the body's opening sentence.
+   entry** — a bundle is what a user picks, because a component answers
+   "what is this language" and a bundle answers "what is a service in it".
+   Its slug is the filename, and `name`, `axis`, `kind`, `platforms` and
+   `artifact` come from the frontmatter
+   (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). Take the `summary` from
+   the body's opening sentence.
 
-   **Skip every `unconditional: true` bundle.** Those are the repo baseline —
-   one pack per slot, where a one-entry menu is theatre and where a repo that
-   has picked no stack still needs the thing. `/vwf:init` materializes them
-   by **fixed slug** — `mise`, `repo-gates` and `repo-hygiene` — never a slug
-   constructed from configuration, and never through this menu. Listing one
-   here would offer a choice that is not one, and would let a user decline a
-   baseline nothing else can supply.
+   **The repo baseline is no bundle.** The toolchain manager, the gates and
+   the hygiene configs are `stackgen:tool-config`'s, and `/vwf:init` writes
+   the prose files from its own assets — so nothing here is a choice that
+   is not one.
 
    **Never list bare components.** `stacks/<type>/<slug>/pack.yaml` files are
    the parts a bundle composes, not options — offering them would ask the user
@@ -79,37 +76,28 @@ templates:
 generate:
   pin: generated/<technology-slug>
   axes: [ project, backing, deploy, repo, design, cicd, stylesheet ]
-  kinds: [ language-bundle, database, cloud-provider, repo-gate, capability-provider, ci-system, app-framework, deploy-target, design-tool, stylesheet ] # the generatable kinds
+  kinds: [ language-bundle, database, cloud-provider, capability-provider, ci-system, app-framework, deploy-target, design-tool, stylesheet ] # the generatable kinds
   summary: Generate principles-grounded skills and conventions for any stack
     no pack covers. Explicit, reviewed, consent-gated — never a silent run.
 ```
 
-**`kinds:` omits `toolchain-manager`, `repo-hygiene` and `workspace`
-deliberately**, and the omission is a recorded decision rather than an
-oversight — an unstated gap here reads as one either way, which is why it is
-written down. None of the three is generatable **today**:
+**`kinds:` omits `workspace` deliberately**, and the omission is a recorded
+decision rather than an oversight — an unstated gap here reads as one
+either way, which is why it is written down. It is not generatable
+**today** (`toolchain-manager` and `repo-gate` are no kind since 2026-09-26,
+nor is repo hygiene since 2026-09-27; their files are
+`stackgen:tool-config`'s):
 
-- **`toolchain-manager`** — making the task runner genuinely pickable is
-  explicitly deferred. vwf still names `mise run` directly rather than
-  reaching a task through the manager the repo pinned, so there is no
-  uncovered tail to generate into: a generated manager would be a second
-  vocabulary nothing calls.
-- **`repo-hygiene`** — there is no uncovered tail. The kind's whole content
-  is the files every repo has regardless of what it is written in, which one
-  pack covers by definition; the only per-stack part is the ignore sections,
-  and those are appended from the community templates at init time rather
-  than generated. A generated second hygiene pack would be a second
-  `.gitignore` opinion for the same repo.
 - **`workspace`** — newly minted. Generating one is untested capability, not
   preserved capability, and the open entry is a promise about the former
   only. Its three curated bundles cover the pnpm and bun shapes; an uncovered
   workspace ecosystem is a bundle to author, not a run to offer.
 
-Both are `kinds.md` kinds regardless, and both may be added here once the
+It is a `kinds.md` kind regardless, and may be added here once the
 condition above stops holding.
 
-**If no pickable bundle remains** — `stacks/bundles/` is empty, or every file
-in it is `unconditional: true` — **return `templates: []`** with the same
+**If no bundle exists** — `stacks/bundles/` is empty — **return
+`templates: []`** with the same
 `note` and `generate` block — the open entry is what makes an empty list read as a
 decision rather than a fault.
 

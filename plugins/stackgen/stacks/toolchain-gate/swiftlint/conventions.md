@@ -26,7 +26,8 @@ rule as another rule identifier.
 
 ## What this pack writes
 
-Three files. `.config/mise/conf.d/swiftlint.toml` pins the tool — a fixed
+Two files, and one `tool-config:` call in `pack.yaml` that asks
+`/stackgen:tool-config` to pin the tool — a fixed
 version, never `latest`, because under `--strict` a release that adds a rule
 is a failing build nobody touched. `.config/swiftlint.yml` is the
 configuration. SwiftLint resolves its `excluded:` paths **relative to the

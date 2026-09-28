@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+#MISE description="Delete installed dependencies and package-manager caches"
+#MISE hide=true
+#PLACEHOLDER
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/placeholder"
+
+# Deletes the installed tree and the cache, never the lockfile.
+
+placeholder_notice "setup:deps:cleanup" "no package manager is pinned for this repo"

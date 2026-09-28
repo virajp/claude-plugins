@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+#MISE description="Renders the prompt for tasks no stack has filled yet"
+#MISE hide=true
+
+# Pulls in its own printers; the guard in `helpers` makes a second source a no-op.
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+readonly PLACEHOLDER_MARKER="#PLACEHOLDER"
+
+# List every task file in this repo still carrying the marker, as task names.
+# `_scripts/` is excluded: this file names the marker itself.
+placeholder_tasks() {
+  local root="${MISE_PROJECT_ROOT}/.config/mise/tasks"
+  [ -d "$root" ] || return 0
+  # `|| true`: no match is an empty list, not a `pipefail` error.
+  { grep -rl --exclude-dir=_scripts -- "${PLACEHOLDER_MARKER}" "$root" 2>/dev/null || true; } |
+    command sed -e "s#^${root}/##" -e 's#/#:#g' |
+    command sort
+}
+
+# placeholder_notice <task-name> <one-line reason>
+placeholder_notice() {
+  local task="$1" reason="$2"
+  local pending
+  pending="$(placeholder_tasks | command tr '\n' ' ')"
+
+  print_warn "${task} is not configured yet — ${reason}"
+  print_newline
+
+  if [ -n "${pending// /}" ]; then
+    print_yellow "Unconfigured in this repo: ${pending% }"
+    print_newline
+  fi
+
+  print_yellow "To configure them:"
+  print_yellow "  /vwf:architecture   pin this repo's stack axes (do this first)"
+  print_yellow "  /stackgen           materialize the packs that fill them"
+  print_newline
+
+  return 0
+}

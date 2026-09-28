@@ -1,23 +1,6 @@
 name: Plugins
 
-# Validates the plugin toolkit: the one authored tree under plugins/, the
-# marketplace manifest generated from its 2 manifests, and the repo tooling that
-# does both.
-#
-# Deliberately a SEPARATE workflow from release.yml. npm allows exactly one
-# Trusted Publisher per package and validates the entry-point workflow's
-# filename, so release.yml's trigger surface is left untouched — this file
-# publishes nothing and holds no id-token permission.
-#
-# Until this workflow existed these checks ran only in pre-commit, which means
-# they ran only for whoever had the hooks installed. The marketplace-freshness
-# gate in particular has no other home: the manifest is generated *and*
-# committed, so a plugin manifest edited without a regenerate is invisible to
-# every other check.
-#
-# Runs on `develop` as well as `main`, because develop is where the work lands
-# now — every check here has to be green before a release branch merge, not
-# after it.
+# Separate from release.yml on purpose — this publishes nothing and holds no id-token.
 on:
   push:
     branches: [ main, develop ]
@@ -46,9 +29,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Order matters: prove the committed manifest is what the plugin manifests
-      # generate BEFORE validating anything, so a stale manifest fails as
-      # staleness rather than as some confusing downstream assertion.
+      # Freshness first, so a stale manifest fails as staleness.
       - name: Marketplace manifest matches the plugin manifests
         run: mise run p:plugins:marketplace --check
 
@@ -58,23 +39,12 @@ jobs:
       - name: Static validation of plugins/
         run: mise run p:plugins:check
 
-      # The shell half. `shellcheck` and `shfmt` live in mise.dev.toml — the
-      # maintainer's environment — and this job runs with MISE_ENV=ci, so they
-      # are fetched for the length of the step rather than added to the CI tool
-      # set, which exists to stay small.
+      # The `mise x` wrapper is redundant — tools.toml pins both.
       - name: shellcheck and shfmt over every shell file a pack ships
         run: |
           mise x shellcheck@latest shfmt@latest -- mise run p:plugins:shellcheck
 
-      # Release-branch only. Every entry's `source.ref` is derived from that
-      # plugin's manifest version, so bumping a version renames the ref before
-      # the tag exists — which is the normal, correct state on `develop` and a
-      # broken marketplace on `main`: Claude resolves the ref at install time,
-      # so a ref with no tag is an install that fails for every user.
-      #
-      # Deliberately not part of `p:plugins:marketplace --check`. That check is
-      # a pure function of the 2 manifests and must stay offline and
-      # fresh-clone-safe; this one asks the remote a question.
+      # main only: on develop a bumped ref has no tag yet, by design.
       - name: Every marketplace ref names a tag that exists
         if: github.ref == 'refs/heads/main'
         run: |
@@ -95,13 +65,10 @@ jobs:
       - name: Tooling and installer tests
         run: pnpm vitest run
 
-      # The BSD-sed portability guarantee. Runs on GNU sed here, which is the
-      # point: the script has to work under both.
+      # GNU sed here is the point — the hook must work under BSD and GNU.
       - name: npm-normalize hook tests
         run: mise run p:plugins:npm-normalize-test
 
-      # Nothing in this repo emits, so `tsc` is only ever a checker — and one
-      # `--noEmit` per project, because there are no project references to walk.
       - name: Type-check every package
         run: |
           pnpm exec tsc --noEmit -p installer

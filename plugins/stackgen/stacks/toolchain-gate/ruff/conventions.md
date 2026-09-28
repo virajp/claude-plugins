@@ -23,7 +23,7 @@ a templating layer stackgen deliberately does not have.
 What the contract requires: **the repo formatter runs first inside
 `code:format`**, before `uv run ruff format`. dprint owns every file type it
 has a plugin for across the whole repo; ruff owns Python. The shipped
-`code/format` does exactly that, in that order — the same repo-gate-plus-
+`code/format` does exactly that, in that order — the same repo-formatter-plus-
 language shape the node and flutter overlays have.
 
 **Both tasks take an optional file list, and the empty case is the whole
@@ -35,9 +35,10 @@ resolve from the project root and a staged subset would answer differently from
 CI.
 
 **Composition order, when more than one component writes this tree:**
-`toolchain-manager`, then `package-manager` / `language`, then
-`toolchain-gate`, then `app-framework` — a later component's file wins, and
-the lockfile records per file which component supplied what landed.
+the mise base `stackgen:tool-config` lands, then `package-manager` /
+`language`, then `toolchain-gate`, then `app-framework` — a later component's
+file wins, and the lockfile records per file which component supplied what
+landed.
 
 ## The editor fragment
 
@@ -54,5 +55,4 @@ answer is vscode — `pack.yaml`'s `conditional:` names it.
 declares `kind: language-bundle`, but there is no `language/python` component
 and no python bundle for it to compose into, so no materialization can land it
 today. Authoring the python language bundle against the 12-topic bar, with
-per-topic research, is its own wave — this is not a bug to fix in passing. The
-four repo-gate packs have had the same status since Wave A.
+per-topic research, is its own wave — this is not a bug to fix in passing.

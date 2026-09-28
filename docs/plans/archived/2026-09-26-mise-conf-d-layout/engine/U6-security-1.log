@@ -1,0 +1,5 @@
+# /security-review — loop U6, round 1, range 1d332056..17dea467
+
+NO FINDINGS
+
+Checked: the single .config/mise/mise.lock keeps sha256 per platform for all 15 tools; locked = true in both mise.ci.toml; setup:mise still installs --locked; task.run_auto_install = false tightens; gpg_verify stays (pack ci node exception now commented out); minimum_release_age kept in the pack; latest pins covered by the lock; lock_envs reads repo-controlled file names; UPGRADE_ARGS is a quoted fixed array; miserc env_conf_d only selects repo-controlled files; hygiene ignore changes expose no secret file.

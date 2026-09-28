@@ -1,0 +1,3 @@
+/security-review, loop U9-late1 round 1, range 65e8256d..6c642835 (scoped)
+
+SECURITY ENGINE: no findings. The diff only rewords prose and tightens supply-chain behaviour: every re-run fetches the template at the SHA recorded in the lock, never `main`. The `written:` hash decides drift only, not trust. The upgrade path is unchanged and asks for consent. No secrets, traversal or injectable instruction text introduced.

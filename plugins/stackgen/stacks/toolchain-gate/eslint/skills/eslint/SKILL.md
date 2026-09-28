@@ -28,7 +28,8 @@ Two independent gates, split by concern — **both must pass before a commit**:
   and every plugin (TS, JSON/JSONC, CSS, HTML, Markdown, YAML, TOML, Astro). It
   owns **correctness**.
 - **Format** — `dprint` (config in `dprint.json`), plus `sort-package-json` for
-  `package.json` key order. It owns **whitespace and layout**.
+  `package.json` key order — a dev-only mise pin, so that step is skipped where
+  it is not installed, as in CI. It owns **whitespace and layout**.
 
 Keep them apart: dprint reformats, the linter finds real problems. There are no
 formatting rules in the linter and no correctness rules in dprint — don't make
@@ -58,7 +59,7 @@ narrows the task's shell and workflow gates.
 
 ```sh
 mise run code:format          # dprint check (verify) + sort-package-json --check
-mise run code:format --fix    # dprint fmt (apply) + sort-package-json
+mise run code:format --fix    # dprint fmt (apply) + sort-package-json (dev)
 mise run code:lint            # linter (mise-pinned), whole tree
 mise run code:lint --fix      # apply the linter's auto-fixes
 mise run code:lint src/a.ts   # narrows the shell/workflow gates only
@@ -90,7 +91,7 @@ The linter is **zero-config** — it ships an opinionated flat config, so no
 Only reach for config when a default genuinely misfires — never to make a real
 finding disappear.
 
-- **Linter:** edit `.config/linter.yaml` — the pre-commit gate pack ships it,
+- **Linter:** edit `.config/linter.yaml` — `stackgen:tool-config` lands it,
   empty of overrides and with an `ignores:` list of the generated trees the
   stack packs produce, so the file to change already exists. Scope changes
   narrowly: extra `ignores`, per-preset `overrides`
@@ -115,7 +116,8 @@ it silently covers every rule for every future edit to that file.
 - **Format check fails** → run `dprint fmt` (or `mise run code:format --fix`).
   It's mechanical; never hand-fix whitespace to satisfy it.
 - **`package.json` order fails** → `mise run code:format --fix` runs
-  `sort-package-json`.
+  `sort-package-json`, under the dev toolchain (`MISE_ENV=dev`) where it is
+  pinned.
 - **Lint fails** → `--fix` clears the mechanical ones; the rest are real. Fix
   the code, don't loosen the rule. If a rule is genuinely wrong for a file,
   scope an override in `.config/linter.yaml` to that `files` glob — never

@@ -85,7 +85,7 @@ the run's result bundle, which the task always writes to
   device or OS version renders differently, and every comparison against it
   fails. The Xcode pin fixes the toolchain but neither the device nor the
   runtime. So goldens are recorded and compared on one named simulator, pinned
-  once in `.config/mise/conf.d/swiftui.toml` as `SIMULATOR_DEVICE`,
+  once in mise's environment as `SIMULATOR_DEVICE`,
   `SIMULATOR_OS` and `SIMULATOR_PLATFORM` — filled by `/vwf:setup` from this
   machine and committed — from which `test:golden` builds its destination —
   so recording, comparing, the UX gate and CI render on the same simulator. A

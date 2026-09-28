@@ -1,0 +1,17 @@
+# Tools only the developer laptop needs (MISE_ENV=dev).
+
+[tools]
+actionlint = { version = "latest" }
+dprint     = { version = "latest" }
+gitleaks   = { version = "latest" }
+grype      = { version = "latest" }
+jq         = { version = "latest" }
+# The PyPI name really is graphifyy, double y.
+"pipx:graphifyy" = { uvx = true, version = "latest" }
+pre-commit       = { version = "latest" }
+shellcheck       = { version = "latest" }
+shfmt            = { version = "latest" }
+taplo            = { version = "latest" }
+# mise's pipx backend installs through uv, and uv needs a Python >= 3.10 to lock graphifyy's dependencies.
+python = { version = "latest" }
+uv     = { version = "latest" }

@@ -10,9 +10,9 @@ floods no session with every stack's doctrine, because nothing under
 materializer copies it into a repo's `.claude/` tree.
 
 **Every pack in the tree is authored here.** The `toolchain-gate` type ships
-ten packs under `stacks/toolchain-gate/` — `analysis-options`, `dprint`,
-`eslint`, `gitleaks`, `grype`, `pre-commit`, `ruff`, `swift-format`,
-`swiftlint` and `tsconfig` — and no curated plugin stands behind any pack:
+six packs under `stacks/toolchain-gate/` — `analysis-options`, `eslint`,
+`ruff`, `swift-format`, `swiftlint` and `tsconfig` — and no curated plugin
+stands behind any pack:
 the tree is each pack's only home. This file is the contract every pack is
 folded into, so an author targets a shape the materializer already reads.
 
@@ -30,8 +30,6 @@ stacks/<type>/<slug>/
 │   └── hooks.yaml       #   the settings.json hook entries it needs (consent-gated)
 └── config/              # optional: repo config files — tree mirrors the repo root
     ├── .config/…        #   e.g. .config/mise/tasks/code/format (consent-gated)
-    ├── .config/mise/conf.d/<pack>.toml       #   env fragment, auto-loaded
-    ├── .config/pre-commit.d/<pack>.yaml      #   hook fragment, merged by /vwf:init
     ├── .config/vscode.d/<pack>.jsonc         #   editor fragment, merged by /vwf:init
     └── _<name>/…        #   pack-private payload — NEVER copied
 ```
@@ -39,35 +37,28 @@ stacks/<type>/<slug>/
 **Three sub-conventions inside `config/`**, each a different contract:
 
 - **`config/.config/…` and the root allowlist.** Everything under `config/`
-  mirrors the repo root, so `config/.config/dprint.json` lands at
-  `<repo>/.config/dprint.json` and `config/.gitignore` at `<repo>/.gitignore`.
+  mirrors the repo root, so `config/.config/swiftlint.yml` lands at
+  `<repo>/.config/swiftlint.yml` and `config/.gitignore` at `<repo>/.gitignore`.
   A path landing at the **root** must be on the fixed allowlist
   (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`); anything else belongs
   under `.config/`, and the materializer refuses a root path that is not on
   it.
 - **`config/_<name>/` is pack-private and is not copied.** A leading
   underscore **at the top of the tier** marks a payload a *reader* uses rather
-  than a file the repo gets — `config/_licenses/MIT.txt` is the case that
-  needs it: the hygiene pack carries both licence texts, and `/vwf:init`
-  copies the one the user picked to `LICENSE` with the year and holder filled.
-  Copying the directory wholesale would land two licences and answer a
+  than a file the repo gets — alternative texts a reader copies one of, the
+  one the user picked, with its placeholders filled.
+  Copying the directory wholesale would land every alternative and answer a
   question nobody asked. Nested deeper, the same character means the
   opposite: `.config/mise/tasks/p/_project/` is a **marked position**, copied
   and renamed to the project's id as it lands — the id being the slug
   `${CLAUDE_PLUGIN_ROOT}/assets/ids.md` defines, never the raw name — and
   the materializer's copy rules are where that behaviour is specified.
-- **Fragments are named `<pack-name>.<ext>`, one per pack.**
-  `.config/mise/conf.d/<pack>.toml` is an environment fragment the toolchain
-  manager auto-loads, which is how a provider contributes variables without
-  editing `mise.toml` — and where a value is the machine's to answer, how
-  a pack's `machine_env:` gets it filled (below).
-  `.config/pre-commit.d/<pack>.yaml` is a hook fragment
-  — a standalone `repos:` list, valid YAML on its own — that the materializer
-  copies **verbatim** and `/vwf:init` merges into
-  `.config/pre-commit-config.yaml` between markers. The pack name in the
-  filename is what makes a fragment attributable at a glance and keeps two
-  packs from colliding on one path. **Editor fragments** are the third of
-  these, and have their own shape — below.
+- **Fragments are named `<pack-name>.<ext>`, one per pack.** The pack name
+  in the filename is what makes a fragment attributable at a glance and
+  keeps two packs from colliding on one path. **Editor fragments** are the
+  one kind left, and have their own shape — below. A pack ships no mise
+  `conf.d` fragment and no pre-commit hook fragment any more; it lists
+  `tool-config:` calls.
 
 `<type>` is a component type from
 `${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`. The slug is unique within the
@@ -88,7 +79,7 @@ merging never owning — the rules, the per-file lockfile record, the
 composition order when two components write one tree, the root allowlist and
 the four things the tier still may not write are
 `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. A gate pack **does** ship the
-config file it governs, and a provider pack its environment fragment; what
+config file it governs; a provider's environment is a `tool-config:` call; what
 stays out is a language manifest, a CI workflow, a **whole** editor file
 and CLAUDE.md — a pack contributes to the editor through the fragment
 below, never by shipping `.vscode/settings.json`. **Mode is preserved**:
@@ -101,12 +92,12 @@ and reports a non-executable one as an unknown task.
 A pack may ship `config/.config/vscode.d/<pack>.jsonc`: a JSONC object
 with exactly three optional top-level keys, and nothing else.
 
-**One pack is exempt from the filename**, and it is the formatter: the
-`dprint` pack's fragment is `dprint-editor.jsonc`, because dprint 0.57.1
-discovers any `dprint.jsonc` below the repo root as a sub-directory config
-— and a fragment carrying no `plugins` makes every bare `dprint check` or
-`dprint fmt` exit 13. The composition glob is `*.jsonc`, so the renamed
-file is still found; nothing else about the fragment changes.
+**One fragment is exempt from the filename**, and it is the formatter's:
+`stackgen:tool-config`'s dprint fragment is `dprint-editor.jsonc`, because
+dprint 0.57.1 discovers any `dprint.jsonc` below the repo root as a
+sub-directory config — and a fragment carrying no `plugins` makes every bare
+`dprint check` or `dprint fmt` exit 13. The composition glob is `*.jsonc`, so
+the renamed file is still found; nothing else about the fragment changes.
 
 | Key          | Is                                                           |
 | ------------ | ------------------------------------------------------------ |
@@ -119,8 +110,8 @@ it is spelled as a list per parent rather than the editor's comma-joined
 string so two packs contributing children of one parent merge without
 either parsing the other's punctuation.
 
-**The materializer copies a fragment verbatim** and stops, exactly as it
-does for `.config/pre-commit.d/<pack>.yaml`. The **orchestrator** composes
+**The materializer copies a fragment verbatim** and stops. The
+**orchestrator** composes
 them, into `.vscode/settings.json` and `.vscode/extensions.json`:
 
 - `settings` keys are applied in composition order
@@ -142,7 +133,7 @@ them, into `.vscode/settings.json` and `.vscode/extensions.json`:
   otherwise for that key; a re-run rewrites only what is between the
   markers.
 
-**Ownership of the base.** The `repo-hygiene` pack's fragment carries the
+**Ownership of the base.** `/vwf:init`'s own `hygiene.jsonc` carries the
 editor **baseline** — the nesting map, the exclude lists, the editor-wide
 keys a repo has regardless of stack. Every other pack carries only keys
 for the files or the tools **it** ships. A gate pack naming itself the
@@ -163,7 +154,7 @@ version: <semver — what sync diffs against, per component>
 type: <component type> # assets/taxonomy.md
 category: <token> # required where the type has categories
 capability: <token> # the vwf capability realized — where one applies
-kind: language-bundle | database | cloud-provider | repo-gate | toolchain-manager | repo-hygiene | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool | stylesheet # the bundle kind it composes into (assets/kinds.md)
+kind: language-bundle | database | cloud-provider | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool | stylesheet # the bundle kind it composes into (assets/kinds.md)
 axis: project | backing | deploy | repo | design | cicd | stylesheet # omitted by cloud-provider components, which compose into both a backing- and a deploy-axis bundle; each bundle naming one declares its own
 platforms: [ <platform> ] # language components only — the bundle root
 languages: # language and app-framework components only
@@ -178,6 +169,8 @@ package_manager: <token> # package-manager components only
 lockfile: [ <path or glob> ] # package-manager components only — where the lockfile lives, repo-root relative; any match passes
 machine_env: # optional — env values detected from the machine, asked by /vwf:setup; see below
   - { name: <ENV_VAR>, detect: <command>, question: <prompt> }
+tool-config: # optional — /stackgen:tool-config calls; see below
+  - <tool> <instruction>
 artifact: <token> # deploy-target components, and deploy-side cloud-service ones
 mcp_servers: {} # design-tool and other components needing an MCP server — written into the project's .mcp.json behind tier-2 consent
 user_mcp_servers: {} # user-scoped — the generated local plugin's mcpServers, tier 3
@@ -254,24 +247,45 @@ machine_env:
 ```
 
 `name` is the environment variable, `detect` a shell command whose stdout
-is the default, and `question` the prompt. The pack **must** land a file
-holding a marked position named for each `name` — typically an `[env]`
-table in its own `config/.config/mise/conf.d/<pack>.toml` fragment (the
-conf.d passage above), each variable under a `# A MARKED POSITION` comment,
-shipped with an empty value. The **materializer lands that fragment with
-its marked positions unfilled**; `/vwf:setup`'s materialize pass, the
-caller that lands the pack, runs each `detect`, offers the output
-preselected — the person may type another value — writes the answer into
-the marked position, and re-records the file's lockfile hash. A `detect`
+is the default, and `question` the prompt. Each `name` **must** be set by
+a `mise add env <KEY>="" to <scope>` line in the pack's `tool-config:`
+list — an empty value; `p:plugins:check` rule 11 refuses a name no such
+line sets. The materializer runs that call, so the key lands **unset**;
+`/vwf:setup`'s materialize pass, the caller that lands the pack, runs each
+`detect`, offers the output preselected — the person may type another
+value — and writes the answer with
+`/stackgen:tool-config mise set env <KEY>=<value> for <pack>`. A `detect`
 that fails or prints nothing offers no default and still asks. Setup runs
 a `detect` only while the committed template entry matches the hash its
 lockfile records — on drift it runs none and asks with no default — and
-refuses a value the fragment's reader would not take literally (control
-characters, the reading tool's template or expansion characters, a quote
-it cannot escape). The procedure is setup's. The values are the repo's
-committed pins, not per-machine overrides, and `/stackgen:stackgen-sync`
-keeps them: when the pack changes that file, the repo's value of every
-`machine_env` name is carried into the new payload before it is written.
+refuses a value mise would not take literally (control characters, its
+template or expansion characters, a quote it cannot escape). The procedure
+is setup's. The values are the repo's committed pins, not per-machine
+overrides, and they live in the pack's tool-config block, which is never
+drift.
+
+### `tool-config:` — what a pack asks of the universal tools
+
+A pack that needs a tool pin, an env value or an alias in the toolchain
+manager's files — or a formatter plugin, a hook, an exclude or an ignore in
+the gates' — lists the instructions under `tool-config:`, one per line,
+each starting with the tool, or with `all` for an exclude:
+
+```yaml
+tool-config:
+  - mise add tool swiftlint 0.65.1 to all environments
+  - mise add env XCODE_VERSION="" to all environments
+  - dprint add plugin typescript
+  - all add exclude generated node_modules .turbo
+  - pre-commit add linter-ignore .dart_tool
+```
+
+The materializer runs each line as `/stackgen:tool-config <line> for
+<pack>` after copying the pack, under the `config/` consent line. The skill
+writes the lines between `# >>> <pack>` and `# <<< <pack>` markers. A pack
+dropped from a composition gets `/stackgen:tool-config <tool> remove <pack>`
+for each tool it called. The grammar is the skill's
+(`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`).
 
 ### `conditional:` — files that land only when an answer holds
 
@@ -292,23 +306,18 @@ so `renovate.json`, not `config/renovate.json`) and a `when:` map of
 
 ```yaml
 conditional:
-  - path: .github/ISSUE_TEMPLATE/*
-    when: { forge: github }
-  - path: renovate.json
-    when: { update_bot: renovate }
-  - path: .config/vscode.d/repo-hygiene.jsonc
+  - path: .config/vscode.d/eslint.jsonc
     when: { editor: vscode }
 ```
 
-Those three are the hygiene pack's: the issue forms are GitHub's format
-and land nowhere else; the Renovate policy only where Renovate is the bot;
-the editor fragment only where the editor is in use — and the third
-applies to **every** pack that ships a `vscode.d/` fragment, each stating
-it in its own `pack.yaml` on its own fragment's name. The `secrets` axis
-works the same way — a file that only makes sense beside one provider,
-`when: { secrets: fnox }` — but no shipped pack carries such a file today:
-the provider's ignore line is an ignore-section row keyed on the provider
-slug, not a conditional file.
+That one is the eslint pack's: the editor fragment lands only where the
+editor is in use — and the same entry applies to **every** pack that ships
+a `vscode.d/` fragment, each stating it in its own `pack.yaml` on its own
+fragment's name. The `forge`, `secrets` and `update_bot` axes work the same
+way — a file that only makes sense on one forge, beside one provider or
+under one bot — but no shipped pack carries such a file today: a
+provider's ignore line is a `git add ignore` call in its `tool-config:`
+list, not a conditional file.
 
 Rules:
 
@@ -350,7 +359,6 @@ axis: project | backing | deploy | repo | design | cicd | stylesheet
 kind: <bundle kind> # assets/kinds.md
 platforms: [ <platform> ] # project axis only
 artifact: <token> # deploy axis only
-unconditional: true # omitted by every bundle a user picks — see below
 default: true # optional — what vwf preselects; one per axis per platform
 components:
   - <type>/<slug>@<version> # a shipped pack, at its current version
@@ -361,20 +369,12 @@ components:
 a bundle answers "what is a TypeScript service" — and those are different
 questions, which is why a menu of components alone leaves nothing pickable.
 
-**Except where `unconditional: true`.** That key marks the repo baseline —
-a slot with exactly one pack, where a one-entry menu would be theatre and
-where a repo that has picked no stack still needs the thing. It has two
-readers: `stackgen-stack-menu` **excludes** such a bundle from the payload
-it returns, and `/vwf:init` fetches it by **fixed slug**, never a slug
-constructed from configuration. Three bundles carry it today, because a
-bundle declares one `kind` and these are three: `mise` (`toolchain-manager`),
-`repo-gates` (`repo-gate`) and `repo-hygiene` (`repo-hygiene`). Nothing about
-them is recorded in `.config/vwf.yaml` — nothing was chosen — only in
-`lock.yaml`, which is also what tells a caller whether the repo is shaped at
-all: all three slugs present, or not shaped. `unconditional:` is the
-**bundle's** word — whether the composition is picked or fixed — and
-`conditional:` the **file's**, inside a pack: an unconditional bundle may
-still carry a pack whose issue forms land only on GitHub.
+**Every bundle is a menu entry.** The repo baseline is no bundle: the
+toolchain manager, the gates and the hygiene configs are
+`stackgen:tool-config`'s tools, and the prose files are `/vwf:init`'s own
+assets. Nothing about it is recorded in `.config/vwf.yaml` — nothing was
+chosen — only in `lock.yaml`, which is also what tells a caller whether the
+repo is shaped at all: the `tool-config/*` entries present, or not shaped.
 
 **`default: true` marks the menu entry vwf preselects on that axis.** It is
 optional and boolean, and it changes nothing about what the bundle is — only
@@ -390,8 +390,7 @@ platform would be a preselection decided by file order, which is silent
 nondeterminism, and the checker refuses the tree, naming both files and the
 platform they share. An axis whose flagged bundles all declare platforms
 may therefore carry one flagged bundle per platform, and a round filtered to
-one platform sees exactly one. It is **never set on an `unconditional`
-bundle**: that bundle is not in the menu, so there is nothing to preselect.
+one platform sees exactly one.
 
 **A `@generated` ref is a first-class outcome, not a gap.** A bundle may mix
 copied and generated components freely: the covered ones land verbatim, the
@@ -455,6 +454,19 @@ which is the grain `stackgen-sync` acts at.
   `<type>/<slug>` ref is an identifier and is fine. `p:plugins:check`
   rule 13 enforces it. This file is an asset rather than a landed tier, so
   its own citations may keep the token.
+- **A landed config or task file carries only the comments something
+  reads.** Under `config/` and `hooks/`, keep every comment a tool or skill
+  reads: `#MISE` and `#USAGE` lines, shebangs, `# shellcheck` directives,
+  the `# >>>`/`# <<<` block markers (and their `// >>>`/`// <<<` JSONC
+  form), `MARKED POSITION` lines and what a filler needs beside them to
+  find the value, grype ignore-reason comments, commented-out templates a
+  skill fills in, and any comment a reference names as load-bearing. Beyond
+  those, a comment is at most a one-line warning where a reader would
+  otherwise break something non-obvious. Every longer explanation belongs
+  in the pack's `conventions.md` — dropped if it already says it, moved
+  there if not — and boilerplate repeated across files goes, though a
+  directive it sat above stays. Trimming a payload's comments is still a
+  payload change: bump the pack.
 - **Structure follows the kind; the slice follows the type.** A pack
   declares the bundle `kind` it composes into and ships the structural
   slice its `type` owns within that kind — the reviewer bar generated
@@ -475,7 +487,7 @@ which is the grain `stackgen-sync` acts at.
   while its pin still reads `unresolved`. Where being on `PATH` does not
   prove the tool works, the entry carries a `probe` and doctor runs it.
 - **A generated pack may ship the `config/` tiers too.** Nothing about
-  `config/.config/…`, `conf.d` or `pre-commit.d` is reserved to curated
+  `config/.config/…` or an editor fragment is reserved to curated
   packs: a generated component that genuinely owns a config file may declare
   one, and it lands through the same consent line and the same lockfile
   record. Teaching the generator to **emit** them is a separate piece of work

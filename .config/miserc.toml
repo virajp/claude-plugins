@@ -1,0 +1,2 @@
+# Loads mise/conf.d/<name>.<env>.toml only when MISE_ENV includes <env>.
+env_conf_d = true
