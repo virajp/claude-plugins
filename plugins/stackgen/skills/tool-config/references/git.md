@@ -125,11 +125,21 @@ leaves alone.
 **No fetched line re-ignores what must be tracked.** A template's positive
 pattern that matches a path the `git` base negates — `.env*` over
 `.env.example` — or a file the repo commits by this skill's or its packs'
-design — `.config/mise/mise.lock`, and the lockfile the requester's pack
-commits, `*.lock` over `pubspec.lock` — is the same **conflict row**, in the
-same shape: `keep-existing` drops the line, `overwrite` writes it on the
-person's word. A line the requester's own negation, later in its block,
-already re-includes the path for is no conflict and is written.
+design — `.config/mise/mise.lock`, `.config/mise/locks/`, and the lockfile
+the requester's pack commits, `*.lock` over `pubspec.lock` — is the same
+**conflict row**, in the same shape: `keep-existing` drops the line,
+`overwrite` writes it on the person's word. A line the requester's own
+negation, later in its block, already re-includes the path for is no conflict
+and is written.
+
+**The mise lock files are tracked.** `.config/mise/mise.lock` and
+`.config/mise/locks/` are never ignored; only `mise.local.lock` is, like
+`*.local.toml`. When a line already in the file ignores either, `/vwf:init`
+appends `!/.config/mise/mise.lock` and `!/.config/mise/locks/` at the end of
+`.gitignore`, as the user's lines, listed in the plan the person consents to
+once; the last match wins, so the negation re-includes them. A negation cannot
+re-include a path whose parent directory is excluded, so a line ignoring
+`.config/` or `.config/mise/` gets a removal row in that consent instead.
 
 **Ignoring is not allowlisting.** A secret that is ignored is a secret that was
 never scanned, so an ignore line is never the answer to a scanner finding, and

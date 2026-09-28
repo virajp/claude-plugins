@@ -242,7 +242,10 @@ calls with the answers it gathered; the skill asks no second time. A call
 typed by a person is its own consent round. A call that would write a pin, an
 env key, an alias name or a hook id another block or a user line already
 holds with a different value is a **conflict row** — never a silent
-overwrite — settled by the user as the tool's reference says. The same list
+overwrite — settled by the user as the tool's reference says. `all` raises
+one for each tool its base block pins that the repo already pins:
+`keep-existing` keeps the repo's version, `overwrite` takes the base's
+`latest`, and the winner is pinned once. The same list
 entry — a plugin, an exclude, an ignore — asked for twice is not a conflict:
 it is [shared](#blocks).
 
