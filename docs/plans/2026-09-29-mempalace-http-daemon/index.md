@@ -128,12 +128,12 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                                      | Kind | Owns                                                                                                                            | Depends on | Status  | Commit |
-| -- | ---- | ---------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-vwf-skills.md](01-vwf-skills.md)           | edit | `plugins/vwf/skills/mempalace/**`, `plugins/vwf/skills/doctor/**`                                                               | —          | pending |        |
-| U2 | 1    | [02-checker-comment.md](02-checker-comment.md) | edit | `scripts/src/check.ts`                                                                                                          | —          | pending |        |
-| U3 | 2    | [03-docs.md](03-docs.md)                       | edit | `site/src/content/docs/**`, `.claude/**`, `docs/memory/decisions/2026-09-29-mempalace-http-daemon.md`, `CLAUDE.md`, `readme.md` | U1, U2     | pending |        |
-| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md)   | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`                                                     | U3         | pending |        |
+| Id | Wave | Unit file                                      | Kind | Owns                                                                                                                            | Depends on | Status  | Commit   |
+| -- | ---- | ---------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
+| U1 | 1    | [01-vwf-skills.md](01-vwf-skills.md)           | edit | `plugins/vwf/skills/mempalace/**`, `plugins/vwf/skills/doctor/**`                                                               | —          | green   | 79b95ea2 |
+| U2 | 1    | [02-checker-comment.md](02-checker-comment.md) | edit | `scripts/src/check.ts`                                                                                                          | —          | pending |          |
+| U3 | 2    | [03-docs.md](03-docs.md)                       | edit | `site/src/content/docs/**`, `.claude/**`, `docs/memory/decisions/2026-09-29-mempalace-http-daemon.md`, `CLAUDE.md`, `readme.md` | U1, U2     | pending |          |
+| U4 | 3    | [04-gates-and-bump.md](04-gates-and-bump.md)   | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`                                                     | U3         | pending |          |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -222,15 +222,15 @@ under 1500 characters:
 
 ## Run log
 
-| Wave | Unit               | Model | Round | Outcome     | Detail                                                                                                                                                                                                        | Commit |
-| ---- | ------------------ | ----- | ----- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 0    | preflight          | —     | 1     | pass        | all 7 wave gate lines green; doctor: repo has no `.config/vwf.yaml`, so no checks ran, none blocking; no `code` unit, so LSP and conventions skipped; no `covers:`, format check skipped                      | —      |
-| 1    | U2 checker-comment | opus  | 1     | pass        | edit: invocations() comment names the http URL; DECIDED kept the no-runner sentence; GAP none                                                                                                                 | —      |
-| 1    | U1 vwf-skills      | opus  | 1     | pass        | edit: mempalace skill describes the HTTP daemon, env on the supervisor; doctor §7 adds the curl reachability predicate; DECIDED bold-led paragraph not numbered item, remedy adds a session restart; GAP none | —      |
-| 1    | doctor probe       | —     | 1     | pass        | orchestrator gate: U1's curl line exits 0 against 127.0.0.1:8765 (reachable), 7 against 127.0.0.1:1 (degradation)                                                                                             | —      |
-| 1    | R1                 | opus  | 1     | findings(3) | 2 fold findings in mempalace/SKILL.md :56 :62 → U1; `.claude/docs/plugins.md:12` still says stdio → handed to U3 as DOCS FALSIFIED (already in its Owns); CONTRACT clean; RULINGS clean                       | —      |
-| 1    | U1 vwf-skills      | opus  | 2     | pass        | edit: re-folded the Qdrant bullet and daemon-env paragraph to ≤80 cols (line 56 was 80 chars, not 82 — em dash); GAP none                                                                                     | —      |
-| 1    | R1                 | opus  | 2     | pass        | FINDINGS 0; CONTRACT clean; RULINGS clean                                                                                                                                                                     | —      |
+| Wave | Unit               | Model | Round | Outcome     | Detail                                                                                                                                                                                                        | Commit   |
+| ---- | ------------------ | ----- | ----- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 0    | preflight          | —     | 1     | pass        | all 7 wave gate lines green; doctor: repo has no `.config/vwf.yaml`, so no checks ran, none blocking; no `code` unit, so LSP and conventions skipped; no `covers:`, format check skipped                      | —        |
+| 1    | U2 checker-comment | opus  | 1     | pass        | edit: invocations() comment names the http URL; DECIDED kept the no-runner sentence; GAP none                                                                                                                 | —        |
+| 1    | U1 vwf-skills      | opus  | 1     | pass        | edit: mempalace skill describes the HTTP daemon, env on the supervisor; doctor §7 adds the curl reachability predicate; DECIDED bold-led paragraph not numbered item, remedy adds a session restart; GAP none | 79b95ea2 |
+| 1    | doctor probe       | —     | 1     | pass        | orchestrator gate: U1's curl line exits 0 against 127.0.0.1:8765 (reachable), 7 against 127.0.0.1:1 (degradation)                                                                                             | —        |
+| 1    | R1                 | opus  | 1     | findings(3) | 2 fold findings in mempalace/SKILL.md :56 :62 → U1; `.claude/docs/plugins.md:12` still says stdio → handed to U3 as DOCS FALSIFIED (already in its Owns); CONTRACT clean; RULINGS clean                       | —        |
+| 1    | U1 vwf-skills      | opus  | 2     | pass        | edit: re-folded the Qdrant bullet and daemon-env paragraph to ≤80 cols (line 56 was 80 chars, not 82 — em dash); GAP none                                                                                     | 79b95ea2 |
+| 1    | R1                 | opus  | 2     | pass        | FINDINGS 0; CONTRACT clean; RULINGS clean                                                                                                                                                                     | —        |
 
 ## Launch
 

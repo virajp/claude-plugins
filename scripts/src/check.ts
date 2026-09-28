@@ -2356,8 +2356,8 @@ const EXPANSION_RE = /\$\{[^}]*\}/g;
  * Every stdio invocation vwf's manifest declares, as one string per server.
  *
  * `type: http` servers have no `command` and contribute nothing. vwf's
- * mempalace entry is a stdio command, `sh -c "mise x -- mempalace-mcp"`, which
- * the runner guard reads like any other — `mise` is not a `TOOL_TOKENS` entry.
+ * mempalace entry is one, `http://127.0.0.1:8765/mcp`, so it carries no runner
+ * for the guard to read.
  */
 function invocations(manifest: Manifest): string[] {
   const servers = manifest.mcpServers;
