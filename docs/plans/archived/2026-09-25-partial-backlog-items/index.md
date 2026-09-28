@@ -264,7 +264,9 @@ independent of this one.
 
 - **U1, non-blocking — `planned` on a `Done` or `Closed` item.** The plan did
   not say what `planned` does to an item already `Done` or `Closed`. U1 kept the
-  existing behaviour: the skill asks the user before changing it.
+  existing behaviour: the skill asks the user before changing it. **Resolved
+  2026-09-28:** accepted by the user — the rule stands, stated in
+  `plugins/vwf/skills/backlog/SKILL.md` under `planned`.
 
 ## Run log
 
