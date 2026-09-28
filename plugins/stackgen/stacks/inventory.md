@@ -28,7 +28,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 
 | Component | Name | Kind | Axis | Category | Capability | Version | Summary |
 | --------- | ---- | ---- | ---- | -------- | ---------- | ------- | ------- |
-| `app-framework/flutter` | Flutter | `app-framework` | project | cross-platform-ui |  | 0.6.0 | The cross-platform app SDK that owns the manifest, the build and the project layout — one codebase across mobile, tablet, desktop and in-car through the native edge. |
+| `app-framework/flutter` | Flutter | `app-framework` | project | cross-platform-ui |  | 0.7.0 | The cross-platform app SDK that owns the manifest, the build and the project layout — one codebase across mobile, tablet, desktop and in-car through the native edge. |
 | `app-framework/swiftui` | SwiftUI | `app-framework` | project | native-ui |  | 0.5.0 | The native Apple app stack — SwiftUI on Swift, the project a committed Xcode project, Xcode owning the build — one codebase across iPhone, iPad, Mac, CarPlay, Watch, TV and Vision. |
 | `capability-provider/audit-store-d1` | Audit store · Cloudflare D1 | `capability-provider` | backing | audit | audit-store | 0.1.0 | An isolated, append-only audit dataset in a D1 database of its own — written through one seam and read only by the console Worker that holds the binding. |
 | `capability-provider/audit-store-postgres` | Audit store · PostgreSQL | `capability-provider` | backing | audit | audit-store | 0.1.0 | An isolated, append-only audit schema inside the product's own PostgreSQL — insert-only to the application's role, readable by the console's reader role under policy, and removable only by the retention purge. |
@@ -85,7 +85,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `language/swift` | Swift | `language-bundle` | project |  |  | 0.2.0 | The Swift package baseline — standards and public-API design, the error model, strict concurrency, Swift Testing, build and run, config and observability wiring. |
 | `language/typescript` | TypeScript | `language-bundle` | project |  |  | 0.3.0 | The Node/TypeScript language baseline — standards, error semantics, the async model, testing, build and run, config and observability wiring. |
 | `package-manager/pnpm` | pnpm | `language-bundle` | repo |  |  | 0.6.0 | Dependency installation, locking and workspace layout for the Node ecosystem — the manifest contract and the monorepo shape. |
-| `package-manager/pub` | pub | `app-framework` | repo |  |  | 0.2.0 | Dependency declaration and locking for a Flutter app — pubspec.yaml, which also carries the SDK constraints and native package-manager config. |
+| `package-manager/pub` | pub | `app-framework` | repo |  |  | 0.3.0 | Dependency declaration and locking for a Flutter app — pubspec.yaml, which also carries the SDK constraints and native package-manager config. |
 | `package-manager/swiftpm` | SwiftPM | `language-bundle` | repo |  |  | 0.3.0 | Dependency declaration, resolution and locking for a Swift package — Package.swift as the manifest, Package.resolved as the lockfile, .build/ as the one build tree. |
 | `package-manager/uv` | uv | `language-bundle` | repo |  |  | 0.3.0 | Dependency resolution, locking, virtualenv management and process running for Python — one tool where the ecosystem historically had four. |
 | `stylesheet/plain-css` | Plain CSS | `stylesheet` | stylesheet | plain |  | 0.2.0 | The design system's roles as CSS custom properties and hand-authored rules in cascade layers — no build step of its own, no generated classes, and nothing between the contract and the browser. |
@@ -135,7 +135,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `cloudflare-workflows` | Cloudflare Workflows | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/workflows@0.1.0` |
 | `cloudflare-zero-trust` | Cloudflare Zero Trust Access | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/zero-trust-access@0.1.0` |
 | `container-generic` | OCI image · any container host | `deploy-target` | deploy | `deploy-target/container-image@0.2.0` |
-| `dart-flutter` | Dart · Flutter | `app-framework` | project | `app-framework/flutter@0.6.0`, `package-manager/pub@0.2.0`, `toolchain-gate/analysis-options@0.2.1` |
+| `dart-flutter` | Dart · Flutter | `app-framework` | project | `app-framework/flutter@0.7.0`, `package-manager/pub@0.3.0`, `toolchain-gate/analysis-options@0.2.1` |
 | `doppler` | Doppler | `capability-provider` | backing | `capability-provider/doppler@1.2.0` |
 | `fnox` | fnox | `capability-provider` | backing | `capability-provider/fnox@1.2.0` |
 | `gcp-cloud-run` | Google Cloud · Cloud Run · Artifact Registry | `cloud-provider` | deploy | `cloud-provider/gcp@0.1.0`, `cloud-service/cloud-run@0.2.0` |

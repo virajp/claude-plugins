@@ -3,8 +3,8 @@ name: Dart · Flutter
 axis: project
 kind: app-framework
 components:
-- app-framework/flutter@0.6.0
-- package-manager/pub@0.2.0
+- app-framework/flutter@0.7.0
+- package-manager/pub@0.3.0
 - toolchain-gate/analysis-options@0.2.1
 platforms:
 - mobile
