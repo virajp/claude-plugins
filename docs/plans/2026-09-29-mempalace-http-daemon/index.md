@@ -11,9 +11,9 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-09-29 by the user
+RUNNING since 2026-09-29T00:45 in .worktrees/2026-09-29-mempalace-http-daemon
 
 ## Consent
 
@@ -222,8 +222,15 @@ under 1500 characters:
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit               | Model | Round | Outcome     | Detail                                                                                                                                                                                                        | Commit |
+| ---- | ------------------ | ----- | ----- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight          | —     | 1     | pass        | all 7 wave gate lines green; doctor: repo has no `.config/vwf.yaml`, so no checks ran, none blocking; no `code` unit, so LSP and conventions skipped; no `covers:`, format check skipped                      | —      |
+| 1    | U2 checker-comment | opus  | 1     | pass        | edit: invocations() comment names the http URL; DECIDED kept the no-runner sentence; GAP none                                                                                                                 | —      |
+| 1    | U1 vwf-skills      | opus  | 1     | pass        | edit: mempalace skill describes the HTTP daemon, env on the supervisor; doctor §7 adds the curl reachability predicate; DECIDED bold-led paragraph not numbered item, remedy adds a session restart; GAP none | —      |
+| 1    | doctor probe       | —     | 1     | pass        | orchestrator gate: U1's curl line exits 0 against 127.0.0.1:8765 (reachable), 7 against 127.0.0.1:1 (degradation)                                                                                             | —      |
+| 1    | R1                 | opus  | 1     | findings(3) | 2 fold findings in mempalace/SKILL.md :56 :62 → U1; `.claude/docs/plugins.md:12` still says stdio → handed to U3 as DOCS FALSIFIED (already in its Owns); CONTRACT clean; RULINGS clean                       | —      |
+| 1    | U1 vwf-skills      | opus  | 2     | pass        | edit: re-folded the Qdrant bullet and daemon-env paragraph to ≤80 cols (line 56 was 80 chars, not 82 — em dash); GAP none                                                                                     | —      |
+| 1    | R1                 | opus  | 2     | pass        | FINDINGS 0; CONTRACT clean; RULINGS clean                                                                                                                                                                     | —      |
 
 ## Launch
 
