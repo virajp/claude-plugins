@@ -791,8 +791,11 @@ after the five:
   it with a `written:` hash of the block, every re-run fetches at that SHA, and
   only mise's `upgrade` moves it, inside its consent. A template several packs
   ask for is written once. A fetched line that would re-include a secret the
-  base ignores, or re-ignore a file the repo commits — the mise lock, a pack's
-  lockfile — is a **conflict row**, never a silent write. For a language
+  base ignores is a **conflict row**, never a silent write. No lock file is
+  ignored but `mise.local.lock`, which the base's one lock line,
+  `**/mise.local.lock`, covers at any depth: a fetched line ignoring any other
+  lock file is not written, and when `all` lands it raises one **delete row**,
+  answered `ok`, per `.gitignore` line that ignores one. For a language
   `/vwf:init`'s stack read detects and no landed pack covers — Go and Rust today
   — init asks for its template itself, as a `gitignore:<Name>` block. The
   attribute base is `* text=auto eol=lf`, `*.lock linguist-generated` and the
@@ -902,23 +905,26 @@ reorder or remove one — only a call you typed, or a conflict row you settled.
 **A clash is a conflict row, never a silent overwrite**: a tool, env key or
 alias name that another block or your own line already holds is shown before
 anything is written — for an alias, keep the existing or overwrite it — and
-nothing records the answer, so the next run that meets it asks again. A value
-`set env` finds set outside the pack's block — your line in an environment
-fragment, or an `[env]` table in an old top-level mise file — is a conflict row
-too, answered **move in** (your line removed, the value written in the pack's
-block) or **keep both** (the row names which one mise's precedence makes win) —
-or, when your line sits in the pack's own file, **move in** or **keep
-existing**, since a TOML table cannot hold a key twice. A file exists only while
-it has content. **Drift is tested by content, never by a hash** — words outside
-quoted strings, so spacing is never drift, and a quoted string exactly: a block
-differing from what its requester would write now is one row — take theirs, keep
-mine for this run, or merge — and the skill never picks for you. The one
-exception is a fetched ignore template's block, whose drift is tested against
-the `written:` hash the lock records. A filled marked position and a pack's
-`machine_env` value are never drift. `remove <requester>` deletes that
-requester's blocks and nothing else. Every path it writes is a `lock.yaml` entry
-sourced `tool-config/<tool>@<version>`, the version stackgen's own. It never
-commits; the caller does.
+nothing records the answer, so the next run that meets it asks again. `all`
+raises the same row for each tool its base mise block pins that the repo already
+pins, answered with the repo's version or the base's `latest`, and the winner is
+pinned once — in `conf.d/tools.<env>.toml` for one environment, in
+`conf.d/tools.toml` for several. A value `set env` finds set outside the pack's
+block — your line in an environment fragment, or an `[env]` table in an old
+top-level mise file — is a conflict row too, answered **move in** (your line
+removed, the value written in the pack's block) or **keep both** (the row names
+which one mise's precedence makes win) — or, when your line sits in the pack's
+own file, **move in** or **keep existing**, since a TOML table cannot hold a key
+twice. A file exists only while it has content. **Drift is tested by content,
+never by a hash** — words outside quoted strings, so spacing is never drift, and
+a quoted string exactly: a block differing from what its requester would write
+now is one row — take theirs, keep mine for this run, or merge — and the skill
+never picks for you. The one exception is a fetched ignore template's block,
+whose drift is tested against the `written:` hash the lock records. A filled
+marked position and a pack's `machine_env` value are never drift.
+`remove <requester>` deletes that requester's blocks and nothing else. Every
+path it writes is a `lock.yaml` entry sourced `tool-config/<tool>@<version>`,
+the version stackgen's own. It never commits; the caller does.
 
 **A pack asks for what it needs** through a `tool-config:` list in its
 `pack.yaml`, one instruction per line:

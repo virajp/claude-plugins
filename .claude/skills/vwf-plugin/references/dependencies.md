@@ -62,25 +62,25 @@ set and refused the install — explicitly not overridable by `--force`. That ga
 stayed retired when the CLI's plugin installs came back as a thin wrapper.
 
 **Doctor does not fully replace it, and the gap is worth stating precisely.** Of
-the five binaries vwf shells out to, `/vwf:doctor` blocks on **`graphify` always
+the six binaries vwf shells out to, `/vwf:doctor` blocks on **`graphify` always
 and `mise` conditionally** — since `config_format` 16 a missing `mise` is
 blocking only once some axis in the repo is pinned or some harness capability is
 claimed, and a degradation before that, since a repo with no stack has no
-toolchain to resolve. A missing language server is an ordinary finding; `uv` is
-named as a prerequisite of graphify's remedy rather than checked on its own; a
-missing `rtk` is a **degradation** finding in §5 — its hook is guarded, so the
-run is correct and merely costs more — as is, since 2026-09-18, a forge CLI
-(`gh`) that is absent, not logged in, or without the `project` scope, which
-leaves `/vwf:backlog` with nothing to read and every planner's recall of it
-empty, since the backlog is a GitHub Project with no file fallback — and the
-**Context7 runner is not checked at all**, a missing one surfacing as a dead MCP
-server. That runner is `pnpm
-dlx` by default and `${CONTEXT7_RUNNER}` overrides
-it, so what a check would have to verify is whatever the user pinned, not
-`pnpm`.
+toolchain to resolve. A missing language server is an ordinary finding; `uv` and
+`python` are named as prerequisites of graphify's remedy rather than checked on
+their own; a missing `rtk` is a **degradation** finding in §5 — its hook is
+guarded, so the run is correct and merely costs more — as is, since 2026-09-18,
+a forge CLI (`gh`) that is absent, not logged in, or without the `project`
+scope, which leaves `/vwf:backlog` with nothing to read and every planner's
+recall of it empty, since the backlog is a GitHub Project with no file fallback
+— and the **Context7 runner is not checked at all**, a missing one surfacing as
+a dead MCP server. That runner is `pnpm
+dlx` by default and `${CONTEXT7_RUNNER}`
+overrides it, so what a check would have to verify is whatever the user pinned,
+not `pnpm`.
 
-So the trade is slightly worse than "doctor already blocked on it": one of five
-blocks always, one once a stack is pinned, one degrades, one is named only as
+So the trade is slightly worse than "doctor already blocked on it": one of six
+blocks always, one once a stack is pinned, one degrades, two are named only as
 another's remedy, and one is silent. It was still worth taking —
 `claude plugin
 install vwf` cannot now fail for a reason the user did not ask
