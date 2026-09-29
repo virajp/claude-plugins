@@ -24,3 +24,6 @@ task.run_auto_install = false
 # NodeJS settings
 node.compile        = false
 npm.package_manager = "pnpm"
+
+[tools]
+"npm:cf" = { version = "latest" }
