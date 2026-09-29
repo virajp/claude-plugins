@@ -53,15 +53,14 @@ container.
 - **Qdrant connection settings** (`qdrant_url`, `qdrant_api_key`,
   `qdrant_namespace`, `qdrant_timeout`): `MEMPALACE_QDRANT_*` env vars →
   config.json → defaults (`http://localhost:6333`, 10 s timeout). **Env beats
-  the file** here — so a stale variable in Claude's environment can point the
-  server at the wrong qdrant even when config.json is right.
+  the file** here — so a stale variable in the server's environment can point
+  it at the wrong qdrant even when config.json is right.
 
-The MCP server is a child of each Claude session, so the environment it sees is
-Claude's — which includes the `env` block of `~/.claude/settings.json`.
-Keep the file and the env vars stating the same values, as below, so the flip
-never bites. The palace lives at `~/.local/share/mempalace`. A sample
-`~/.mempalace/config.json` (`palace_path` is one canonical absolute spelling —
-the path string is the palace's identity):
+The MCP server is a daemon, so the environment it sees is the one its supervisor
+starts it with, never a Claude session's. Keep the file and the env vars stating
+the same values, as below, so the flip never bites. The palace lives at
+`~/.local/share/mempalace`. A sample `~/.mempalace/config.json` (`palace_path`
+is one canonical absolute spelling — the path string is the palace's identity):
 
 ```json
 {
@@ -72,22 +71,18 @@ the path string is the palace's identity):
 }
 ```
 
-The environment variables go in the `env` block of `~/.claude/settings.json`:
+The environment variables are set on the supervisor that runs the server (see
+*The MCP server* below):
 
-```json
-{
-  "env": {
-    "MEMPALACE_BACKEND": "qdrant",
-    "MEMPALACE_MAX_BACKUPS": "4",
-    "MEMPALACE_PALACE_PATH": "~/.local/share/mempalace",
-    "MEMPALACE_QDRANT_URL": "http://127.0.0.1:6333"
-  }
-}
+```bash
+MEMPALACE_BACKEND=qdrant
+MEMPALACE_MAX_BACKUPS=4
+MEMPALACE_PALACE_PATH=~/.local/share/mempalace
+MEMPALACE_QDRANT_URL=http://127.0.0.1:6333
 ```
 
-Claude passes these values literally — `$HOME` and `${HOME}` stay exactly as
-typed — so write the palace path with `~` (mempalace expands it) or as an
-absolute path.
+A supervisor may pass these values literally, with no shell expansion, so write
+the palace path with `~` (mempalace expands it) or as an absolute path.
 
 Set `MEMPALACE_BACKEND` and `MEMPALACE_QDRANT_URL` **together** — the URL
 without the backend key silently selects chroma.
@@ -101,11 +96,20 @@ refiling them into a fresh palace.
 
 ### The MCP server
 
-vwf's plugin manifest spawns the server over stdio, through
-`mise x -- mempalace-mcp`, once per Claude session. There is no daemon to run,
-supervise or restart: the server reads its palace path and backend from the
-environment above and `~/.mempalace/config.json`. The cost is that each session
-runs its own server, and its own embedder with it.
+vwf's plugin manifest connects to the server over HTTP, at
+`http://127.0.0.1:8765/mcp`, and never starts it — the server is one daemon
+shared by every Claude session, which you run yourself:
+
+```bash
+mempalace-mcp --transport http --host 127.0.0.1 --port 8765
+```
+
+Run it under any supervisor — pitchfork and launchd are two examples — with the
+environment above set on that supervisor, and keep it running before a Claude
+session starts, since a session that finds nothing listening has no mempalace
+tools. The daemon reads its palace path and backend from that environment and
+`~/.mempalace/config.json`. `/vwf:doctor` reports it unreachable as a
+degradation.
 
 ## Usage
 
@@ -132,6 +136,7 @@ search-before-answer so the agent reads the palace instead of guessing.
   MemPalace MCP tools (`mempalace_search`, `mempalace_add_drawer`,
   `mempalace_diary_write`, `mempalace_check_duplicate`, `mempalace_diary_read`,
   etc.) are available to the agent once the plugin is installed, `mempalace` is
-  installed through mise, and the `env` block above is set.
+  installed through mise, and the daemon above is running with its environment
+  set.
 - For automatic background saving every N agent turns plus session-start memory recall, also install the Cursor hooks separately by running `hooks/cursor/install.sh --scope user` from a cloned MemPalace repo.
 - The recommended `agent_name` when calling `mempalace_diary_write` from a Cursor session is `cursor-ide` (matches the precedent of `claude-code` and `codex`).

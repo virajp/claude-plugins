@@ -112,7 +112,8 @@ belongs to `claude` or to `graphify`, which is why it writes **no receipt**.
 - **MCP and LSP declarations** ride in the plugin manifest. Confirm they appear
   in the installed plugin, and note that a declared server is inert until its
   transport is reachable — do not report an unconnected mempalace MCP server
-  (stdio, spawned through `mise x -- mempalace-mcp`) as a finding.
+  (the HTTP entry at `http://127.0.0.1:8765/mcp`, a daemon the user runs) as a
+  finding.
 
 ## Procedure
 

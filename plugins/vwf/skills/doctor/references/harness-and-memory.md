@@ -92,5 +92,23 @@ missing directory is fine (nothing written there yet); a **committed** handoff,
 doctor or runs file is drift to report, since it puts one developer's session
 state in everyone's diff.
 
-If the mempalace server itself is unreachable, still check the **files** (they
-are on disk) and report the outage as context, not as a finding.
+**The server is reachable.** vwf's mempalace server is an HTTP daemon the user
+runs, never one a session starts, so probe it:
+
+```bash
+curl -s -o /dev/null --max-time 2 http://127.0.0.1:8765/mcp
+```
+
+- **Any HTTP response** — curl exits 0, whatever the status code — is
+  reachable, and not a finding.
+- **A refused connection or a timeout** — curl exits non-zero — is a
+  **degradation**: every memory read and write this session makes fails. The
+  remedy is to start the daemon under a supervisor (pitchfork and launchd are
+  two examples) with
+  `mempalace-mcp --transport http --host 127.0.0.1 --port 8765`, setting
+  `MEMPALACE_BACKEND` and `MEMPALACE_QDRANT_URL` together and
+  `MEMPALACE_PALACE_PATH` on that supervisor rather than in
+  `~/.claude/settings.json`, then restart the session.
+
+An unreachable server does not stop the rest of §7: still check the **files**
+(they are on disk).
