@@ -19,4 +19,4 @@ node.compile        = false
 npm.package_manager = "pnpm"
 
 [tools]
-"npm:cf" = { version = "latest" }
+"npm:cf" = { allow_builds = true, version = "latest" }

@@ -1,29 +1,28 @@
 # The common base, loaded in every MISE_ENV; mise.local.toml (gitignored, never shipped) holds one machine's overrides.
 
 # The version `env_conf_d` in miserc.toml was tested on.
-min_version = "2026.9.13"
+min_version = "2026.9.16"
 
 [settings]
 activate_aggressive  = true            # let mise shims win on PATH
 all_compile          = false           # never build a tool from source
 env_shell_expand     = true            # expand $VARS in [env]
 gpg_verify           = true            # verify tool signatures (see the CI exception)
+lockfile             = false           # do not use a lockfile
 pipx.uvx             = true            # every pipx: tool installs through uv
 python.compile       = false           # the dev tools' python: a prebuilt binary
 python.uv_venv_auto  = "create|source"
 raw                  = true            # streams output
 status.missing_tools = "always"
 
-minimum_release_age = "10h"
+minimum_release_age = "10h" # minimum age of a release before it is considered for use
 
 # `mise run` installs nothing before a task body: `setup:mise` owns installs.
 task.run_auto_install = false
 
 # Inert while `raw = true`; set so turning `raw` off keeps the log shape.
-task.output = "interleave"
-
-task.timings = true
-
-task.disable_spec_from_run_scripts = true
+task.disable_spec_from_run_scripts = true         # prevent run scripts from generating spec files
+task.output                        = "interleave"
+task.timings                       = true         # enable task timing measurements
 
 # A MARKED POSITION — RUNTIME_BLOCK: one runtime settings line per detected language, below this comment.

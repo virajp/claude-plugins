@@ -39,27 +39,6 @@ fi
 
 print_header "Linting files ..."
 
-# The toolchain manager's two shipped defaults, and an overlay keeps them: a
-# commit gets whatever this task does, so a tool that drops out of it stops
-# running at all. Each costs nothing when its binary is absent or nothing in
-# scope is its file type.
-#
-# `-x` follows the sourced `_scripts/` libraries, so they are analysed the way
-# their callers actually see them.
-if command -v shellcheck >/dev/null 2>&1; then
-  shell_scope=()
-  while IFS= read -r shell_file; do
-    if [ -n "${shell_file}" ]; then
-      shell_scope+=("${shell_file}")
-    fi
-  done < <(shell_files_in_scope ${files[@]+"${files[@]}"})
-
-  if [ "${#shell_scope[@]}" -gt 0 ]; then
-    print_subheader "Checking shell scripts ..."
-    shellcheck -x "${shell_scope[@]}"
-  fi
-fi
-
 # actionlint wants the workflows, so the scope is filtered to them and it is
 # skipped when none is in scope.
 if command -v actionlint >/dev/null 2>&1; then

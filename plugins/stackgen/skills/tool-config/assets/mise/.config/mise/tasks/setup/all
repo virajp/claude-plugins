@@ -4,7 +4,7 @@
 #MISE depends=["init"]
 
 #USAGE flag "--all" help="Also set up every member project"
-#USAGE flag "--upgrade" help="Dev only: bump the mise lockfile for every environment and update the formatter plugins"
+#USAGE flag "--upgrade" help="Dev only: bump the mise packages for every environment and update the formatter plugins"
 
 # One flag per member repo, named by its slug, goes below this comment:
 #   #USAGE flag "--<slug>" help="Set up the <slug> project"
