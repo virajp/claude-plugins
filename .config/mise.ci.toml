@@ -1,9 +1,6 @@
 # CI-only settings — loaded when MISE_ENV=ci (set by the GitHub workflows).
 
 [settings]
-# Install exactly what .config/mise/mise.lock records, and fail rather than resolve.
-locked = true
-
 # mise's bundled Node release-key import (gpg --import) fails on the Ubuntu CI
 # runner's gpg with "no valid OpenPGP data found", aborting `mise install`. The
 # same mise version verifies fine on macOS, so it is a mise-on-Linux bug, not a
