@@ -11,13 +11,6 @@ python.uv_venv_auto  = "create|source"
 raw                  = true
 status.missing_tools = "always"
 
-# Every platform the lock files must carry a URL for. The GitHub runners install
-# with `mise install --locked`, which fails on a tool whose lock entry has no
-# URL for linux-x64 — the global mise config on the maintainer's machine locks
-# macos-arm64 alone, so this is set here, where `mise lock`, `mise install` and
-# `mise lock --bump` all read it.
-lockfile_platforms = [ "linux-x64", "macos-arm64" ]
-
 # Tools install in setup:mise from the lock, never before a task body.
 task.run_auto_install = false
 
@@ -26,4 +19,4 @@ node.compile        = false
 npm.package_manager = "pnpm"
 
 [tools]
-"npm:cf" = { version = "latest" }
+"npm:cf" = { allow_builds = true, version = "latest" }

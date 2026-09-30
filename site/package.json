@@ -1,6 +1,6 @@
 {
   "name": "site",
-  "version": "1.1.47",
+  "version": "1.1.48",
   "private": true,
   "description": "The website at claude-plugins.virajp.dev: the landing page and the docs for the plugins and the installer, built by Astro. Versioned and tagged on its own (site-v*), never published to npm.",
   "type": "module",
@@ -15,15 +15,15 @@
     "@astrojs/sitemap": "^3.7.4",
     "@fontsource/geist-mono": "^5.3.0",
     "@fontsource/schibsted-grotesk": "^5.3.0",
-    "astro": "^7.3.2",
+    "astro": "^7.3.5",
     "mermaid": "^12.0.0",
     "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "pagefind": "^1.5.2",
-    "tsx": "^4.23.13",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
-    "wrangler": "^4.132.0"
+    "wrangler": "^4.143.1"
   }
 }
