@@ -4,7 +4,7 @@ doppler    = { version = "latest" }
 pre-commit = { version = "latest" }
 
 # Formatter — taplo's lock entry has no checksum: upstream publishes none to record.
-dprint = { postinstall = "dprint completions fish | source", version = "latest" }
+dprint = { postinstall = "dprint completions fish | source", version = "0.57.4" }
 taplo  = { version = "latest" }
 
 # Security tools
