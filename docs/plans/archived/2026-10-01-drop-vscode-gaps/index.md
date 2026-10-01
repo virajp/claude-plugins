@@ -10,10 +10,9 @@ backlog_pieces: []
 
 ## Status
 
-**RUNNING**
+**COMPLETE**
 
-RUNNING since 2026-10-01 23:09 in
-/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-10-01-drop-vscode-gaps
+COMPLETE 2026-10-01 — dc37e341 604f1e95 7a9cacfc feafaf2a 617323df
 
 ## Consent
 
@@ -121,14 +120,14 @@ None.
 
 ## Units
 
-| Id | Wave | Unit file                              | Kind | Owns                                                                                                                                                                                                                               | Depends on     | Status  | Commit   |
-| -- | ---- | -------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------- | -------- |
-| W1 | 1    | [01-init-passes.md](01-init-passes.md) | edit | `plugins/vwf/skills/init/references/existing-repo.md`                                                                                                                                                                              | —              | green   | dc37e341 |
-| W2 | 1    | [02-stackgen.md](02-stackgen.md)       | edit | `plugins/stackgen/skills/stackgen-sync/**`, `plugins/stackgen/assets/ids.md`, `plugins/stackgen/skills/tool-config/references/mise.md`                                                                                             | —              | green   | 604f1e95 |
-| W3 | 1    | [03-env-comment.md](03-env-comment.md) | edit | `.config/mise/conf.d/env.toml`                                                                                                                                                                                                     | —              | green   | 7a9cacfc |
-| W4 | 1    | [04-plan-1.md](04-plan-1.md)           | edit | `docs/plans/2026-10-01-tool-config-script-mise/index.md` (the `requires:` line only), `docs/plans/2026-10-01-tool-config-script-mise/{03-mise-module,06-stackgen-prose}.md`                                                        | —              | green   | feafaf2a |
-| W5 | 2    | [05-docs.md](05-docs.md)               | edit | `readme.md`, `CLAUDE.md`, `.claude/docs/**`, `.claude/skills/{plugin-authoring,stackgen-plugin,vwf-plugin}/**`, `site/src/content/docs/**`, `plugins/stackgen/assets/output-tree.md` (lockfile-rules passage, widened at run time) | W1, W2, W3, W4 | green   | 617323df |
-| W6 | 3    | [06-gates.md](06-gates.md)             | edit | —                                                                                                                                                                                                                                  | W5             | pending |          |
+| Id | Wave | Unit file                              | Kind | Owns                                                                                                                                                                                                                               | Depends on     | Status | Commit   |
+| -- | ---- | -------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------ | -------- |
+| W1 | 1    | [01-init-passes.md](01-init-passes.md) | edit | `plugins/vwf/skills/init/references/existing-repo.md`                                                                                                                                                                              | —              | green  | dc37e341 |
+| W2 | 1    | [02-stackgen.md](02-stackgen.md)       | edit | `plugins/stackgen/skills/stackgen-sync/**`, `plugins/stackgen/assets/ids.md`, `plugins/stackgen/skills/tool-config/references/mise.md`                                                                                             | —              | green  | 604f1e95 |
+| W3 | 1    | [03-env-comment.md](03-env-comment.md) | edit | `.config/mise/conf.d/env.toml`                                                                                                                                                                                                     | —              | green  | 7a9cacfc |
+| W4 | 1    | [04-plan-1.md](04-plan-1.md)           | edit | `docs/plans/2026-10-01-tool-config-script-mise/index.md` (the `requires:` line only), `docs/plans/2026-10-01-tool-config-script-mise/{03-mise-module,06-stackgen-prose}.md`                                                        | —              | green  | feafaf2a |
+| W5 | 2    | [05-docs.md](05-docs.md)               | edit | `readme.md`, `CLAUDE.md`, `.claude/docs/**`, `.claude/skills/{plugin-authoring,stackgen-plugin,vwf-plugin}/**`, `site/src/content/docs/**`, `plugins/stackgen/assets/output-tree.md` (lockfile-rules passage, widened at run time) | W1, W2, W3, W4 | green  | 617323df |
+| W6 | 3    | [06-gates.md](06-gates.md)             | edit | —                                                                                                                                                                                                                                  | W5             | green  | —        |
 
 ## Shared-file rule
 
@@ -233,6 +232,10 @@ Keep the block under 1,500 characters.
 | 2    | W5 docs        | opus  | 1     | pass        | edit; output-tree.md lockfile rule added; site stackgen.md: editor profile and JSONC marker dropped, sync row + drift caveat gain retired-record drop; site vwf.md init survey names .vscode/ exempt, .idea/ reported (docs-sync); GAP: precommit re-padded orchestrator run-log rows; docs-sync surveyor missed stackgen.md:591/:862, edited from facts | 617323df |
 | 2    | R2 wave review | opus  | 1     | pass        | 0 findings; CONTRACT clean, RULINGS clean                                                                                                                                                                                                                                                                                                                | —        |
 | 2    | wave gate      | —     | 1     | pass        | 8/8 green; no UNRESOLVED                                                                                                                                                                                                                                                                                                                                 | —        |
+| 3    | W6 gates       | opus  | 1     | pass        | no file changed; G9 holds (tags stackgen-v2.0.0, vwf-v20.0.1, site-v1.1.49 vs 3.0.0, 20.1.0, 1.1.50); 8/8 gate lines green, tree clean                                                                                                                                                                                                                   | —        |
+| 3    | R3 wave review | —     | 1     | pass        | empty diff — W6 owns nothing and changed nothing; no reviewer dispatched                                                                                                                                                                                                                                                                                 | —        |
+| 3    | wave gate      | —     | 1     | pass        | 8/8 green                                                                                                                                                                                                                                                                                                                                                | —        |
+| —    | reconcile      | —     | 1     | pass        | final wave gate 8/8 green over finished tree; kept gates 4/4: editor profile none, in JSONC none, .vscode/ at existing-repo.md:114, setup/vscode at 03-mise-module.md:86                                                                                                                                                                                 | —        |
 
 ## Launch
 
