@@ -1277,9 +1277,10 @@ the row says so — `.github/dependabot.yml` is a different service's file and
 reads `keep both`, and it seeds question 7's row to `dependabot`, which skips
 the skill's `renovate.json` rather than landing it beside yours. An entry your
 `.gitignore` ignores is build output, skipped without a row; `.git/` is exempt
-by name; and a directory holding its own manifest or source is a **project**,
-listed once under `Projects` with the id question 2 confirmed and never under
-`Deferred`.
+by name, and so is `.vscode/`, your editor settings — another editor's
+directory, `.idea/` among them, is reported as a stray; and a directory holding
+its own manifest or source is a **project**, listed once under `Projects` with
+the id question 2 confirmed and never under `Deferred`.
 
 **The helper library is the one named exception**, and the reason it earns one
 is timing. A repo whose copy has drifted from the pack's is not carrying a
