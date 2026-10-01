@@ -6,9 +6,10 @@ to pick the next runnable plan.
 
 ## Plans
 
-| Folder                                           | Kind   | Plan                                                                                                   | Target repo | Priority | Status   | Requires                            | Backlog |
-| ------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------ | ----------- | -------- | -------- | ----------------------------------- | ------- |
-| docs/plans/2026-10-01-drop-vscode                | change | Drop the vscode configuration from both plugins                                                        | —           | 10       | COMPLETE | —                                   | B40     |
-| docs/plans/2026-10-01-tool-config-script-mise    | change | tool-config's mise row moves onto a node script and templates                                          | —           | 20       | APPROVED | 2026-10-01-drop-vscode              | —       |
-| docs/plans/2026-10-01-tool-config-script-gates   | change | tool-config's gate tools move onto the script — dprint, pre-commit, gitleaks, grype                    | —           | 30       | APPROVED | 2026-10-01-tool-config-script-mise  | —       |
-| docs/plans/2026-10-01-tool-config-script-hygiene | change | tool-config's hygiene tools move onto the script — git, graphify, renovate; the string grammar retires | —           | 40       | APPROVED | 2026-10-01-tool-config-script-gates | —       |
+| Folder                                           | Kind   | Plan                                                                                                   | Target repo | Priority | Status   | Requires                              | Backlog |
+| ------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------ | ----------- | -------- | -------- | ------------------------------------- | ------- |
+| docs/plans/2026-10-01-drop-vscode                | change | Drop the vscode configuration from both plugins                                                        | —           | 10       | COMPLETE | —                                     | B40     |
+| docs/plans/2026-10-01-tool-config-script-mise    | change | tool-config's mise row moves onto a node script and templates                                          | —           | 20       | APPROVED | 2026-10-01-drop-vscode                | —       |
+| docs/plans/2026-10-01-tool-config-script-gates   | change | tool-config's gate tools move onto the script — dprint, pre-commit, gitleaks, grype                    | —           | 30       | APPROVED | 2026-10-01-tool-config-script-mise    | —       |
+| docs/plans/2026-10-01-tool-config-script-hygiene | change | tool-config's hygiene tools move onto the script — git, graphify, renovate; the string grammar retires | —           | 40       | APPROVED | 2026-10-01-tool-config-script-gates   | —       |
+| docs/plans/2026-10-01-tool-config-script-init    | change | init's task-library passes and hygiene assets move onto the tool-config script                         | —           | 50       | APPROVED | 2026-10-01-tool-config-script-hygiene | —       |
