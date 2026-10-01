@@ -41,7 +41,7 @@ task runner — arrives as a `stackgen` pack landed in your own repo rather than
 as a plugin each collaborator has to install. They install through Claude Code's
 own plugin commands, straight from this repo — or through one small CLI,
 [`@virajp.dev/claude-plugins`](https://www.npmjs.com/package/@virajp.dev/claude-plugins),
-which sequences those same commands and wires up graphify.
+which sequences those same commands.
 
 These are **Claude Code plugins**, authored natively. Other agents are served by
 [a prompt, not a bespoke build](#other-tools) — see that section for what you do
@@ -378,10 +378,10 @@ restored from their receipts.
 ## The installer CLI
 
 [`@virajp.dev/claude-plugins`](https://www.npmjs.com/package/@virajp.dev/claude-plugins)
-is a small CLI with three jobs: install **plugins** (`--all`, `--user`,
+is a small CLI with two jobs: install **plugins** (`--all`, `--user`,
 `--project` — a thin wrapper driving Claude's own commands, shown under
-[Install](#install) above), wire up **graphify**, and **remove** what this
-toolkit put on your machine.
+[Install](#install) above), and **remove** what this toolkit put on your
+machine. graphify is not its job — the plugins' own skills set it up.
 
 It used to be published as `@askviraj/ai-plugins`. That package is sunset: it
 stays on npm, deprecated, and running it only prints a pointer to the new name
@@ -400,7 +400,7 @@ for the maintainer's map.
 Windows included. There is no standalone binary and no Homebrew tap.
 
 ```sh
-# Install the default set (vwf, plus stackgen as its dependency), and wire graphify
+# Install the default set (vwf, plus stackgen as its dependency)
 pnpx @virajp.dev/claude-plugins --all
 
 # See exactly what a run would do, without writing anything
@@ -418,15 +418,16 @@ Two things worth knowing before you run it; everything else is
 the one place the flag surface is described.
 
 - **It writes nothing of its own.** Every install goes through the tool that
-  owns it — `claude plugin install` for plugins, `graphify` for its wiring — so
-  running the CLI and running those commands yourself leave the same machine.
-  That is also why it keeps no receipt: what is on disk belongs to a tool that
-  already tracks it.
+  owns it — `claude plugin install` — so running the CLI and running those
+  commands yourself leave the same machine. That is also why it keeps no
+  receipt: what is on disk belongs to a tool that already tracks it.
 - **`--uninstall` shows you a list and removes what you do not deselect.** Each
   piece goes through whatever owns it, and anything an *older* version installed
   — the discontinued OpenCode and Oh-My-Pi surfaces — is restored from its
-  receipt rather than deleted, so what you had before comes back. `--dry-run` is
-  the scriptable way to just look.
+  receipt rather than deleted, so what you had before comes back. graphify's
+  hooks, graph, `.graphifyignore` and Claude wiring an earlier version left are
+  no longer listed — they are yours or your repo's to remove. `--dry-run` is the
+  scriptable way to just look.
 
 ## Credits & acknowledgements
 

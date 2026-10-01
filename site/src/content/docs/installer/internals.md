@@ -14,10 +14,10 @@ order: 3
 
 ## What this CLI is for
 
-Three jobs: **plugins**, **graphify's wiring**, and an interactive
-**`--uninstall`**. The plugin half is a thin wrapper — it drives
-`claude plugin marketplace add` and `claude plugin install`, reading this repo's
-`main`, and never edits Claude's settings itself.
+Two jobs: **plugins**, and an interactive **`--uninstall`** — both through the
+`claude` CLI; graphify is the skills' job. The plugin half is a thin wrapper —
+it drives `claude plugin marketplace add` and `claude plugin install`, reading
+this repo's `main`, and never edits Claude's settings itself.
 
 That is a large reduction from what this page used to describe, in two steps.
 The Claude-first release took four plugin adapters, the copied payload, a
@@ -56,13 +56,14 @@ written** — Claude's settings are the record `--uninstall` reads live.
 that split is what makes the list testable against a fixture directory rather
 than only by performing it. Removal is a separate switch, and every arm of it
 goes through whatever owns the piece: `claude` for the plugins and the
-marketplace registration, `graphify hook uninstall` plus a `delete` of the graph
-and `.graphifyignore` for graphify's side, and for a receipt an older version
-left, a **revert** through `receipt.ts`. **Nothing here edits a config file
-directly** — `settings.json` is Claude's, and the only key this CLI ever writes
-is one a receipt is restoring. That is also why `~/.config/statusline.json`, a
-repo's own `.config/statusline.json` and `~/.claude/usage/` never appear: this
-version neither writes nor reads them, so they are not its to remove.
+marketplace registration, and for a receipt an older version left, a **revert**
+through `receipt.ts`. Nothing graphify left — its hooks, graph,
+`.graphifyignore` or Claude wiring — is listed; that is the repo's or the user's
+to remove. **Nothing here edits a config file directly** — `settings.json` is
+Claude's, and the only key this CLI ever writes is one a receipt is restoring.
+That is also why `~/.config/statusline.json`, a repo's own
+`.config/statusline.json` and `~/.claude/usage/` never appear: this version
+neither writes nor reads them, so they are not its to remove.
 
 **`report.ts` / `progress.ts`.** A live step on stderr while work blocks in
 `spawnSync`, and the final table after it, so stdout stays parseable for
@@ -144,7 +145,6 @@ What users install is `main`, and `plugins.yml` validates `main` on every push.
 | `installer/src/uninstall.ts`       | enumerate → deselect → remove, plus the legacy-receipt reader       |
 | `installer/src/receipt.ts`         | reading and reverting the receipts older versions wrote             |
 | `installer/src/github.ts`          | the token header and the rate-limit-only hint                       |
-| `installer/src/graphify.ts`        | `graphify install` — no raw git hook                                |
 | `installer/src/version.ts`         | `--version` — this CLI against npm, the plugins on `main`           |
 | `installer/src/report.ts`          | the outcome table                                                   |
 | `installer/src/progress.ts`        | the live step on stderr, off when stderr is not a TTY               |

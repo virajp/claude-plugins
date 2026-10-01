@@ -1,7 +1,7 @@
 {
   "name": "@virajp.dev/claude-plugins",
   "version": "1.0.2",
-  "description": "@virajp.dev/claude-plugins — installs the virajp-plugins plugins for Claude Code and wires up graphify. The plugins install through Claude Code's own marketplace commands",
+  "description": "@virajp.dev/claude-plugins — installs and uninstalls the virajp-plugins plugins for Claude Code. The plugins install through Claude Code's own marketplace commands",
   "keywords": [
     "claude",
     "claude-code",

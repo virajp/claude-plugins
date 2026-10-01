@@ -11,9 +11,9 @@ is not whenever a user edits a value the installer later removes wholesale.
 ## This module is read-only
 
 **Nothing this version installs writes a receipt.** Plugins go in through
-`claude plugin install` and graphify through its own CLI; both tools keep their
-own records, which is what `--uninstall` reads live. `ReceiptBuilder`,
-`writeReceipt` and `mergeReceipts` went with the last writer this CLI had.
+`claude plugin install`, and Claude keeps its own records, which is what
+`--uninstall` reads live. `ReceiptBuilder`, `writeReceipt` and `mergeReceipts`
+went with the last writer this CLI had.
 
 What is left is `readReceipt` and `revert`, for the receipts **older versions**
 left on disk. Everything below the next two sections is therefore knowledge

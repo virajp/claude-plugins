@@ -30,10 +30,10 @@ Add `--scope project` to either command to keep it to one repo. Restart the
 agent afterwards, then run **`/vwf:doctor`** — nothing is verified at install
 time, and doctor is what reports a missing required binary.
 
-Any `pnpx @virajp.dev/claude-plugins` install also wires up **graphify**, which
-vwf enforces at its own entry gate. The wiring is `graphify install` alone, so
-installing outside a git repo works too; no raw git hook is installed — a shaped
-repo refreshes the graph from its own pre-commit `post-commit` hook.
+The `pnpx @virajp.dev/claude-plugins` installer installs plugins and nothing
+else. **graphify**, which vwf enforces at its own entry gate, is wired by a
+shaped repo's `setup:ai` below, and the repo refreshes the graph from its own
+pre-commit `post-commit` hook.
 
 A repo shaped by [`/vwf:init`](#vwfinit) does not need that one-shot at all: its
 task library carries `setup:ai`, which registers the marketplace, installs the
