@@ -7,8 +7,9 @@
  * through and marks the output executable, which is what lets `package.json`'s
  * `bin` entry point straight at the bundle.
  *
- * **The CLI has two jobs**: plugins, and an interactive `--uninstall`. Plugins are installed by **driving Claude Code's own commands**
- * against this repo on GitHub —
+ * **The CLI has two jobs**: plugins, and an interactive `--uninstall`. Plugins
+ * are installed by **driving Claude Code's own commands** against this repo on
+ * GitHub —
  * `claude plugin marketplace add virajp/claude-plugins` then `claude plugin
  * install` per plugin (`install.ts`) — so the four plugin adapters, the payload
  * copy, `--platform` and the `requires:` dependency gate stay gone, along with

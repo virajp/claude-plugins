@@ -211,6 +211,23 @@ describe("enumerate", () => {
     expect(ids(enumerate(options))).toEqual(["plugin:project:stackgen"]);
   });
 
+  it("marks a project plugin tracked when git tracks its settings.json", () => {
+    writeProjectSettings({
+      enabledPlugins: { "stackgen@virajp-plugins": true },
+    });
+    insideRepo();
+    const inRepo = respond;
+    respond = (command, args) =>
+      command === "git" && args[0] === "ls-files"
+        ? { status: 0, stdout: "", stderr: "" }
+        : inRepo(command, args);
+
+    const [item] = enumerate(options);
+
+    expect(item?.tracked).toBe(true);
+    expect(defaultSelected(item as Item)).toBe(false);
+  });
+
   it("names the two receipts it knows, and still lists one it does not", () => {
     // Only Claude Code is supported, so the retired targets lost their labels.
     // They did NOT lose their rows: LEGACY_RECEIPTS is a label lookup, not an

@@ -34,9 +34,10 @@
  * ## The legacy-receipt reader
  *
  * **This CLI writes no receipts.** It installs plugins by driving Claude's own
- * commands, and Claude keeps its own records — so every receipt in the receipt directory is the record of an
- * install by an *older* version: the copied Claude marketplace payload, and the
- * per-target installs of the render-target era. Those mechanisms are
+ * commands, and Claude keeps its own records — so every receipt in the receipt
+ * directory is the record of an install by an *older* version: the copied
+ * Claude marketplace payload, and the per-target installs of the render-target
+ * era. Those mechanisms are
  * discontinued, and this reader is deliberately kept: without it a machine
  * carrying them is orphaned rather than cleaned, because nothing else on earth
  * knows those paths.
@@ -136,9 +137,9 @@ export interface Item {
    * default — the user asked to uninstall, and making them re-name each piece
    * would turn a cleanup into a quiz. Tracked files are categorically different:
    * the project-scope plugin rows are read out of a committed
-   * `.claude/settings.json`, so accepting the defaults inside a
-   * repo would silently dirty someone's working tree. That is not a cleanup, it is
-   * an uncommitted change they did not ask for and may not notice.
+   * `.claude/settings.json`, so accepting the defaults inside a repo would
+   * silently dirty someone's working tree. That is not a cleanup, it is an
+   * uncommitted change they did not ask for and may not notice.
    *
    * Found by a real-install verification run, which is also the only way it
    * could have been: the enumeration is correct, the removals are correct, and
@@ -490,13 +491,12 @@ export function removeItem(item: Item, options: RunOptions): Outcome {
 }
 
 /**
- * Drive another tool's CLI, or skip when it is not there.
+ * Drive Claude's CLI, or skip when it is not there.
  *
- * **Absent is a skip, not a failure**, and the reasoning is the same one the old
- * per-target loop used: a machine without `omp` cannot be asked to unmake an
- * `omp` install, and there is nothing this tool could do instead — hand-editing
- * the config would leave that tool's own records claiming an install that is
- * gone. Reporting it as failed would make an otherwise clean uninstall exit
+ * **Absent is a skip, not a failure**: a machine without `claude` cannot be
+ * asked to unmake a `claude` install, and there is nothing this tool could do
+ * instead — hand-editing the settings would leave Claude's own records claiming
+ * an install that is gone. Reporting it as failed would make an otherwise clean uninstall exit
  * non-zero over state nobody can reach.
  */
 function runTool(

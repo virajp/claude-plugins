@@ -12,8 +12,8 @@
  *
  * **This module is read-only now.** Nothing this version installs writes a
  * receipt — plugins go in through `claude plugin install`, and Claude keeps its
- * own records, which is what `--uninstall` reads live. So the builder and the writer are gone, and what is
- * left is the reader and `revert`, for the receipts *older* versions left on
+ * own records, which is what `--uninstall` reads live. So the builder and the
+ * writer are gone, and what is left is the reader and `revert`, for the receipts *older* versions left on
  * disk: the copied Claude marketplace payload, and the multi-target adapters'
  * before it. Every `Entry` kind stays reachable in `revert` for that reason —
  * dropping one would turn an existing receipt into a file nothing can undo.
