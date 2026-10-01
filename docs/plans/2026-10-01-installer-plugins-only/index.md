@@ -10,9 +10,10 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-10-01 by the user
+RUNNING since 2026-10-02 in
+/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-10-01-installer-plugins-only
 
 ## Consent
 
@@ -63,12 +64,12 @@ None.
 
 ## Units
 
-| Id | Wave | Unit file                                    | Kind   | Owns                                                                                                                                                               | Depends on | Status  | Commit |
-| -- | ---- | -------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------- | ------ |
-| J1 | 1    | [01-installer.md](01-installer.md)           | edit   | `installer/src/**`                                                                                                                                                 | —          | pending |        |
-| J2 | 2    | [02-review.md](02-review.md)                 | review | —                                                                                                                                                                  | J1         | pending |        |
-| J3 | 3    | [03-docs.md](03-docs.md)                     | edit   | `installer/CLAUDE.md`, `CLAUDE.md`, `readme.md`, `.claude/docs/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-10-01-installer-plugins-only.md` (new) | J2         | pending |        |
-| J4 | 4    | [04-gates-and-bump.md](04-gates-and-bump.md) | edit   | `package.json` (version only)                                                                                                                                      | J3         | pending |        |
+| Id | Wave | Unit file                                    | Kind   | Owns                                                                                                                                                               | Depends on | Status  | Commit   |
+| -- | ---- | -------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------- | -------- |
+| J1 | 1    | [01-installer.md](01-installer.md)           | edit   | `installer/src/**`                                                                                                                                                 | —          | green   | 260d6842 |
+| J2 | 2    | [02-review.md](02-review.md)                 | review | —                                                                                                                                                                  | J1         | pending |          |
+| J3 | 3    | [03-docs.md](03-docs.md)                     | edit   | `installer/CLAUDE.md`, `CLAUDE.md`, `readme.md`, `.claude/docs/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-10-01-installer-plugins-only.md` (new) | J2         | pending |          |
+| J4 | 4    | [04-gates-and-bump.md](04-gates-and-bump.md) | edit   | `package.json` (version only)                                                                                                                                      | J3         | pending |          |
 
 ## Shared-file rule
 
@@ -131,8 +132,13 @@ none
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit           | Model | Round | Outcome | Detail                                                                                                                                                                                                                                                                                                                     | Commit   |
+| ---- | -------------- | ----- | ----- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 0    | preflight      | —     | 1     | pass    | wave gate 9/9 green; doctor blocking predicates clear (mise, graphify CLI, main-checkout graph); no .config/vwf.yaml — no stack, LSP n/a (no code unit)                                                                                                                                                                    | —        |
+| 0    | preflight      | —     | 1     | skipped | conventions fetch — why: no code unit; format check — why: no covers:; mempalace down — journal skipped                                                                                                                                                                                                                    | —        |
+| 1    | J1 installer   | opus  | 1     | pass    | edit; graphify.ts + test deleted, install step and uninstall items (graphify hooks, graph, .graphifyignore) removed, dead `delete` removal kind dropped, comments cleaned; DOCS FALSIFIED: installer/CLAUDE.md, CLAUDE.md, site installer/{index,internals,targets,usage}.md                                               | 260d6842 |
+| 1    | R1 wave review | opus  | 1     | pass    | 6 lines: 5 rule-5 docs passages, all in J3 Owns, handed to J3 as DOCS FALSIFIED (readme.md:44,383,403,421; site plugins/vwf.md:33,40; .claude/docs/repo-shape.md:92,96; .claude/docs/installer/packaging.md:62; receipts.md:14); 1 accepted (dead delete kind within edit 2); CONTRACT clean, RULINGS clean — no loop-back | —        |
+| 1    | wave gate      | —     | 1     | pass    | 9/9 green (code:precommit green on re-run after reformat); no UNRESOLVED                                                                                                                                                                                                                                                   | —        |
 
 ## Launch
 
