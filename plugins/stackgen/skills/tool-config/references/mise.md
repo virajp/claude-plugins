@@ -512,9 +512,9 @@ step is a row in the call's plan; nothing is dropped unseen.
   `.claude/skills/` is deleted where its content still matches its record,
   and kept and reported where it does not.
 - **The retired editor task.** `.config/mise/tasks/setup/vscode`, which
-  `setup:all` no longer calls, is deleted with its lock entry where its
-  content still matches its record and the repo's `setup/all` no longer
-  calls it; where either fails it is kept and reported, since a kept
+  the shipped `setup:all` no longer calls, is deleted with its lock entry
+  where its content still matches its record and the repo's `setup/all` no
+  longer calls it; where either fails it is kept and reported, since a kept
   `setup/all` that still runs it would fail on a missing task.
 
 ## 6. The task library

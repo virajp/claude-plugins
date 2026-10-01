@@ -84,8 +84,8 @@ The folder is the **main checkout's**, and the value is written
 literally. A linked worktree's directory is named after the branch, so a
 `REPO_NAME` derived at load time would address a different repo depending
 on where you were standing — and everything reading it, a launcher alias
-or a per-repo editor profile, would follow it there. A member repo names
-its own folder, never the base's.
+among them, would follow it there. A member repo names its own folder,
+never the base's.
 
 ## Who applies it
 
