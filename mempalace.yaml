@@ -35,6 +35,15 @@ rooms:
     description: Blueprint and plan holes surfaced during execution, plus scope
       parked during elicitation
     keywords: [ gaps ]
+  - name: runs
+    description: Execute run records
+    keywords: [ run, runs, execute ]
+  - name: doctor
+    description: Doctor reports
+    keywords: [ doctor, drift ]
+  - name: handoff
+    description: Session handoffs from docs/memory/handoff/
+    keywords: [ handoff, handoffs, session ]
 
   - name: plugins
     description: Authored plugin sources under plugins/ and their user docs
