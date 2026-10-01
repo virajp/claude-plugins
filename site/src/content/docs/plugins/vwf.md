@@ -2985,38 +2985,42 @@ already looks.
 **The items.** Each is a **draft issue** in the project — never a repository
 issue — titled `Bnn — <item>`, with the detail the plan interview starts from in
 its body. Ids are sequential and **never reused**: a closed id stays spent, and
-the next id is one past the highest over two sources — every item's title, done
-and closed included, and the `backlog:` and `backlog_pieces:` frontmatter lists
-of every plan folder under `docs/plans/` and `docs/plans/archived/` in the base
-repo — so an id a plan already carries is never issued again, even to a project
-that was created after it. `B01` only when both are empty. The project's own
-fields carry the state: **Priority** is the Team planning template's `P0` (pick
-first), `P1`, `P2`; **Status** runs `Backlog` → `In progress` → `Partially done`
-→ `Done`, or `Closed` for an item dropped without a plan. `Partially done` is an
-item a plan landed **one piece** of — the plan named it on `backlog_pieces:`
-rather than on `backlog:`, which names only the items a plan finishes — and it
-stays open until the plan that finishes it lands. The template ships `Status`
-with `Ready` and `In review` as well; the skill reshapes the field to its five
-the first time it needs it, keeping `Backlog`, `In progress` and `Done` as the
-template spells and colours them and adding `Partially done` and `Closed`. A
-field an earlier version trimmed to four options gains `Partially done` the same
-way on the next verb. The reshape removes an item's Status along with the
-option, so while any item sits in `Ready` or `In review` the skill stops, names
-each one, and asks you to move it to `Backlog` or `In progress` on the board
-first — it never moves an item itself. The replace also reissues the id of every
-option it keeps, which would clear every item's Status, so the skill records
-each item's Status to a temp file first, prints the path, writes every item back
-afterwards and prints the count restored — and stops naming the item and the
-file if any write fails. **Group** is a text field the skill adds once, naming
-the items that want one plan between them. An item with a plan pending ends its
-body with `Planned in: <folder>[, <folder>…]` — the list of plan folders that
-cover it and have not landed, since several plans may each cover a piece of one
-item; `planned` appends a folder to it. Each plan that lands on the item moves
-its folder off that list onto a `Landed: <plan title> in <folder>` line —
-`partial` for a piece, `done` for the finish — so a `Partially done` item shows
-what has landed and a `Done` one keeps every such line. A `Closed` item's body
-ends with the reason. An item retitled in the browser without its `Bnn —` prefix
-is listed as unnumbered and warned about, never renumbered.
+the next id is one past the highest over three sources — `backlog.last_id` in
+the base repo's `.config/vwf.yaml`, every item's title, done and closed
+included, and the `backlog:` and `backlog_pieces:` frontmatter lists of every
+plan folder under `docs/plans/` and `docs/plans/archived/` in the base repo — so
+an id a plan already carries, or one whose item was archived or deleted on the
+board, is never issued again. `B01` only when all three are empty. `add` writes
+the id it issued back to `backlog.last_id` and commits and pushes that one line;
+it refuses to run in a repo with no `.config/vwf.yaml`, so run `/vwf:setup`
+first. It is the one file the backlog touches. The project's own fields carry
+the state: **Priority** is the Team planning template's `P0` (pick first), `P1`,
+`P2`; **Status** runs `Backlog` → `In progress` → `Partially done` → `Done`, or
+`Closed` for an item dropped without a plan. `Partially done` is an item a plan
+landed **one piece** of — the plan named it on `backlog_pieces:` rather than on
+`backlog:`, which names only the items a plan finishes — and it stays open until
+the plan that finishes it lands. The template ships `Status` with `Ready` and
+`In review` as well; the skill reshapes the field to its five the first time it
+needs it, keeping `Backlog`, `In progress` and `Done` as the template spells and
+colours them and adding `Partially done` and `Closed`. A field an earlier
+version trimmed to four options gains `Partially done` the same way on the next
+verb. The reshape removes an item's Status along with the option, so while any
+item sits in `Ready` or `In review` the skill stops, names each one, and asks
+you to move it to `Backlog` or `In progress` on the board first — it never moves
+an item itself. The replace also reissues the id of every option it keeps, which
+would clear every item's Status, so the skill records each item's Status to a
+temp file first, prints the path, writes every item back afterwards and prints
+the count restored — and stops naming the item and the file if any write fails.
+**Group** is a text field the skill adds once, naming the items that want one
+plan between them. An item with a plan pending ends its body with
+`Planned in: <folder>[, <folder>…]` — the list of plan folders that cover it and
+have not landed, since several plans may each cover a piece of one item;
+`planned` appends a folder to it. Each plan that lands on the item moves its
+folder off that list onto a `Landed: <plan title> in <folder>` line — `partial`
+for a piece, `done` for the finish — so a `Partially done` item shows what has
+landed and a `Done` one keeps every such line. A `Closed` item's body ends with
+the reason. An item retitled in the browser without its `Bnn —` prefix is listed
+as unnumbered and warned about, never renumbered.
 
 **The first run.** A missing project is created by you, not by the skill:
 GitHub's API cannot instantiate a built-in template, and **Team planning** is
