@@ -1,7 +1,10 @@
 ---
 type: vwf-change-plan
 title: tool-config's mise row moves onto a node script and templates
-requires: [ docs/plans/2026-10-01-drop-vscode ]
+requires: [
+  docs/plans/2026-10-01-drop-vscode,
+  docs/plans/2026-10-01-drop-vscode-gaps,
+]
 backlog: []
 backlog_pieces: []
 ---

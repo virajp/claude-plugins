@@ -70,7 +70,8 @@
    `lockfile_platforms`, `locked = true`, the sidecar, "Freshness and the one
    lock", the `lock` verb, `upgrade`'s lock half, the migration's lock re-write,
    `setup:mise --lock-only`). The migration step that **deletes** the repo-local
-   mise skill is reversed (R4).
+   mise skill is reversed (R4). §5's "The retired editor task" bullet keeps its
+   behaviour, now pointing at the script's migration step U3 implements.
 3. **`TC/references/{dprint,pre-commit,git}.md`** — only the passages that
    describe `mise.lock` or `.config/mise/locks/` (`dprint.md:134`,
    `pre-commit.md:109`, `git.md:139,268`): drop the locks exclusion row and
