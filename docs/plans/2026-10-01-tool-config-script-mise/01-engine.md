@@ -22,8 +22,9 @@
 ## Ruling
 
 > D1 — Node, one ESM entry `TC/scripts/tool-config.mjs` plus modules under
-> `TC/scripts/lib/`, built-ins only, zero npm dependencies. Run as `node` when
-> on `PATH`, else `mise x node@lts -- node`.
+> `TC/scripts/lib/`, built-ins only, zero npm dependencies. Run as `node` from
+> `PATH` — never `mise x node@lts --` (amended 2026-10-01 by plan 2, which pins
+> node and switches the run to `mise x -- node`).
 
 > D4 — Block markers, preview rows with `answers=`, and the
 > `.claude/stackgen/lock.yaml` record all stay, in today's shapes.

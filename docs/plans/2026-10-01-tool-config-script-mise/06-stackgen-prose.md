@@ -49,13 +49,14 @@
 1. **`TC/SKILL.md`** — keep the strict-YAML frontmatter; update `description`
    and `argument-hint` to the flag form. The body becomes: how to run the script
    (`node "${CLAUDE_PLUGIN_ROOT}/skills/tool-config/scripts/tool-config.mjs" <flags>`,
-   else `mise x node@lts -- node …` when `node` is absent); that mise is handled
-   by the script and the other seven tools still by their references (D18), with
-   how their rows are merged into one numbered set; how to relay rows and pass
-   `--answers`; what a `needs-edit` row asks of the LLM; the `check` command for
-   drift. The Blocks, Drift, Removal and lock-record sections shrink to a short
-   human description pointing at the script as the authority — keep only what
-   the LLM still needs for the seven prose tools.
+   `node` from `PATH`, never `mise x node@lts`; plan 2 moves it to
+   `mise x -- node`); that mise is handled by the script and the other seven
+   tools still by their references (D18), with how their rows are merged into
+   one numbered set; how to relay rows and pass `--answers`; what a `needs-edit`
+   row asks of the LLM; the `check` command for drift. The Blocks, Drift,
+   Removal and lock-record sections shrink to a short human description pointing
+   at the script as the authority — keep only what the LLM still needs for the
+   seven prose tools.
 2. **`TC/references/mise.md`** — rewrite as: (a) what the script does for mise,
    in brief, for a human reader; (b) **the LLM's part**: each `needs-edit` case
    (splitting a root `.mise.toml` / `mise.toml` or a sectioned top-level
