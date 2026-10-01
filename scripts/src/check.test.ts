@@ -455,62 +455,12 @@ describe("the pack config tier", () => {
   });
 
   it("flags whole editor settings at the config/ tier root", () => {
-    // Editor settings are composed from per-pack fragments under
-    // `.config/vscode.d/`; a whole file here is a pack owning the merge target.
+    // A pack never lands editor settings — `.vscode/` is the user's own.
     const root = tree({
       alpha: { files: { [`${pack}/.vscode/settings.json`]: "{}\n" } },
     });
     expect(messages(check(root))).toEqual([
       expect.stringContaining("unallowlisted root entry"),
-    ]);
-  });
-
-  it("accepts an editor fragment with comments and a trailing comma", () => {
-    // The target file is JSONC, so the fragment is authored as JSONC too.
-    const root = tree({
-      alpha: {
-        files: {
-          [`${pack}/.config/vscode.d/mise.jsonc`]: "{\n"
-            + "  // what this pack contributes\n"
-            + "  /* and why */\n"
-            + "  \"settings\": { \"files.watcherExclude\": true },\n"
-            + "  \"nesting\": { \"mise.toml\": [\"mise.*.toml\"] },\n"
-            + "  \"extensions\": [\"hverlin.mise-vscode\"],\n"
-            + "}\n",
-        },
-      },
-    });
-    expect(messages(check(root))).toEqual([]);
-  });
-
-  it("flags an editor fragment with a key outside the three", () => {
-    // Init's merge reads exactly three keys; a fourth is dropped without a word.
-    const root = tree({
-      alpha: {
-        files: {
-          [`${pack}/.config/vscode.d/mise.jsonc`]:
-            "{ \"settings\": {}, \"tasks\": {} }\n",
-        },
-      },
-    });
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("declares `tasks`, which is not one of"),
-    ]);
-  });
-
-  it("flags an editor fragment whose nesting value is not a list", () => {
-    // The merge joins the lists per parent; a bare string would be spread into
-    // characters or dropped, depending on where it lands.
-    const root = tree({
-      alpha: {
-        files: {
-          [`${pack}/.config/vscode.d/mise.jsonc`]:
-            "{ \"nesting\": { \"mise.toml\": \"mise.*.toml\" } }\n",
-        },
-      },
-    });
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("`nesting.mise.toml` is not a list of strings"),
     ]);
   });
 
@@ -538,7 +488,7 @@ describe("the pack config tier", () => {
       files: {
         "stacks/toolchain-manager/mise/pack.yaml":
           `name: mise\nconditional:\n${entries}`,
-        [`${pack}/.config/vscode.d/mise.jsonc`]: "{ \"settings\": {} }\n",
+        [`${pack}/.config/wrangler.d/staging.jsonc`]: "{}\n",
         [`${pack}/wrangler.jsonc`]: "{}\n",
         ...files,
       },
@@ -547,7 +497,7 @@ describe("the pack config tier", () => {
 
   it("accepts a conditional list naming known axes and landed paths", () => {
     const root = tree(conditional(
-      "  - path: .config/vscode.d/*.jsonc\n    when: { editor: vscode }\n"
+      "  - path: .config/wrangler.d/*.jsonc\n    when: { forge: github }\n"
         + "  - path: wrangler.jsonc\n    when: { update_bot: renovate }\n"
         + "  - path: wrangler.jsonc\n    when: { secrets: fnox }\n",
     ));
@@ -559,10 +509,10 @@ describe("the pack config tier", () => {
     // dot segment would refuse a fragment set that is there. (A leading `**`
     // is quoted because bare it is a YAML alias.)
     const root = tree(conditional(
-      "  - path: .config/vscode.d/*.jsonc\n    when: { editor: vscode }\n"
-        + "  - path: \"**/vscode.d/*.jsonc\"\n    when: { editor: vscode }\n"
-        + "  - path: \"**/*.jsonc\"\n    when: { editor: vscode }\n"
-        + "  - path: .config/vscode.d/**\n    when: { editor: vscode }\n",
+      "  - path: .config/wrangler.d/*.jsonc\n    when: { forge: github }\n"
+        + "  - path: \"**/wrangler.d/*.jsonc\"\n    when: { forge: github }\n"
+        + "  - path: \"**/*.jsonc\"\n    when: { forge: github }\n"
+        + "  - path: .config/wrangler.d/**\n    when: { forge: github }\n",
     ));
     expect(messages(check(root))).toEqual([]);
   });
@@ -585,7 +535,7 @@ describe("the pack config tier", () => {
     expect(messages(check(root))).toEqual([
       expect.stringContaining(
         "`conditional[0]` (wrangler.jsonc) `when` names axis `ci`, not one of "
-          + "forge, editor, secrets, update_bot",
+          + "forge, secrets, update_bot",
       ),
     ]);
   });
@@ -631,7 +581,7 @@ describe("the pack config tier", () => {
   it("flags a conditional entry naming two axes at once", () => {
     // Two answers is two entries on the same path, never one map.
     const root = tree(conditional(
-      "  - path: wrangler.jsonc\n    when: { forge: github, editor: vscode }\n",
+      "  - path: wrangler.jsonc\n    when: { forge: github, secrets: fnox }\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining("`when` names 2 axes — exactly one of"),
@@ -1132,8 +1082,6 @@ describe("the pack config tier", () => {
         files: {
           [`${hygiene}/CONTRIBUTING.md`]: "# Contributing\n",
           [`${hygiene}/licenses/MIT.txt`]: "MIT\n",
-          [`${hygiene}/.config/vscode.d/hygiene.jsonc`]:
-            "{ \"settings\": {} }\n",
         },
       },
     });
