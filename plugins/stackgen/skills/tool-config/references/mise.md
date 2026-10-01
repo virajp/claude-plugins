@@ -281,8 +281,6 @@ fills a slot overwrites the file, its lock entry then names the pack, and
 source owns). A slot no pack filled keeps its placeholder: a repo that has
 picked no stack is supposed to see it.
 
-`forge`, `secrets` and `update_bot` are read by no mise file.
-
 **After the landing, two bootstrap steps**, in this order: `mise trust --all`
 ([section 7](#the-trust-step-which-comes-before-all-of-it)), then
 `mise run init`, which restores the exec bit on every task file. The caller
@@ -513,6 +511,9 @@ step is a row in the call's plan; nothing is dropped unseen.
   is still the skill's. The repo-local mise skill that pack used to copy under
   `.claude/skills/` is deleted where its content still matches its record,
   and kept and reported where it does not.
+- **The retired editor task.** `.config/mise/tasks/setup/vscode`, which
+  `setup:all` no longer calls, is deleted with its lock entry where its
+  content still matches its record, and kept and reported where it does not.
 
 ## 6. The task library
 
