@@ -394,10 +394,10 @@ which is the grain `stackgen-sync` acts at.
 - **A landed config or task file carries only the comments something
   reads.** Under `config/` and `hooks/`, keep every comment a tool or skill
   reads: `#MISE` and `#USAGE` lines, shebangs, `# shellcheck` directives,
-  the `# >>>`/`# <<<` block markers (and their `// >>>`/`// <<<` JSONC
-  form), `MARKED POSITION` lines and what a filler needs beside them to
-  find the value, grype ignore-reason comments, commented-out templates a
-  skill fills in, and any comment a reference names as load-bearing. Beyond
+  the `# >>>`/`# <<<` block markers, `MARKED POSITION` lines and what a
+  filler needs beside them to find the value, grype ignore-reason
+  comments, commented-out templates a skill fills in, and any comment a
+  reference names as load-bearing. Beyond
   those, a comment is at most a one-line warning where a reader would
   otherwise break something non-obvious. Every longer explanation belongs
   in the pack's `conventions.md` — dropped if it already says it, moved
