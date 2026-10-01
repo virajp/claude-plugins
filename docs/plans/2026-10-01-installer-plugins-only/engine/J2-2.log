@@ -1,0 +1,14 @@
+== /code-review high 2026-10-01-installer-plugins-only (HEAD 397412f2) ==
+
+1. docs/plans/2026-10-01-installer-plugins-only/index.md:69 — the uncommitted edit adds package.json and installer/package.json (description only) to J3's Owns, but the Shared-file rule still says package.json | J4 only, and 03-docs.md's Owns line was not widened; J3 may leave the npm description stale.
+2. installer/CLAUDE.md:13 — commit 260d6842 removes graphify wiring but installer/CLAUDE.md:13,28,60, root CLAUDE.md, readme.md, site usage.md:160-177, internals.md:59,147 still describe it; same-commit docs rule.
+3. installer/src/uninstall.ts:253 — repoItems still requires a git repo; project plugins in a non-git cwd are never listed by --uninstall.
+4. installer/src/uninstall.ts:252 — --uninstall can no longer undo raw graphify git hooks earlier installers wrote (ruling J2 dismissed; listed so the dismissal is deliberate).
+5. installer/src/receipt.ts:16 — refold incomplete: receipt.ts:16 106 chars, uninstall.ts:40 orphan line ("era. Those mechanisms are"), uninstall.ts:499 95 chars, report.ts:35 ~87 chars.
+6. installer/src/uninstall.ts:274 — tracks(context, projectSettingsFile(context)) runs per project plugin; hoist out of the loop.
+7. installer/src/uninstall.ts:502 — runTool keeps a generic bin parameter and per-call hasBin(bin); only caller passes "claude"; signature no longer matches the reworded doc.
+8. installer/src/uninstall.ts:201 — enumerate doc still says git answers "where its root is"; root no longer used.
+
+== /security-review ==
+
+No high-confidence vulnerabilities.

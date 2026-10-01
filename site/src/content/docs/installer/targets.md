@@ -1,21 +1,19 @@
 ---
 title: "What lands on disk"
-description: "Which of the two writers, claude plugin install and graphify, puts what where, and why the CLI itself is not a third."
+description: "What the one writer, claude plugin install, puts where, and why the CLI itself is not a second."
 order: 2
 ---
 
-Two writers, and it is worth being clear about which puts what where.
+One writer, and it is worth being clear about what it puts where.
 
 | Written by              | What                                            |
 | ----------------------- | ----------------------------------------------- |
 | `claude plugin install` | the plugins: skills, agents, hooks, MCP servers |
-| `graphify`              | its Claude integration — no git hook            |
 
-**`pnpx @virajp.dev/claude-plugins` is not a third writer.** It sequences the
-other two and writes nothing itself: the plugin flags (`--all`, `--user`,
-`--project`) drive `claude plugin` and never edit Claude's settings directly —
-Claude keeps bookkeeping beside what it writes, and hand-editing would strand
-the two apart — and graphify's wiring is `graphify`'s own `install` command.
+**`pnpx @virajp.dev/claude-plugins` is not a second writer.** It sequences
+`claude plugin` and writes nothing itself: the plugin flags (`--all`, `--user`,
+`--project`) never edit Claude's settings directly — Claude keeps bookkeeping
+beside what it writes, and hand-editing would strand the two apart.
 
 This is why the CLI leaves **no receipt**. There is nothing of its own on disk
 to record; what is there belongs to a tool that already tracks it.
@@ -68,18 +66,16 @@ copy on `main`, `marketplace update` is the whole of it.
 
 ## graphify
 
-Wired after every install, when `graphify` is on `PATH`: `graphify install`, for
-the `claude` platform. graphify's raw git hooks are no longer installed — a
-shaped repo refreshes the graph from its pre-commit `post-commit` hook, and
-`mise run setup:precommit` strips any raw hook an earlier install left. If
-graphify is missing the run says so and carries on — vwf will report it as
-blocking at first use, which is the honest place for it.
+**Not this CLI's job any more.** Versions up to 1.0.2 ran
+`graphify install --platform claude` after every install; this one does not. The
+plugins' own skills own graphify: a shaped repo's `mise run setup:ai` wires it
+for the agent, its pre-commit `post-commit` hook refreshes the graph, and
+`/vwf:doctor` reports a missing `graphify` as blocking.
 
 ## Receipts
 
-**Nothing writes one any more.** The install paths belong to `claude` and
-`graphify`, and both tools keep their own records — which is what `--uninstall`
-reads live.
+**Nothing writes one any more.** The install path belongs to `claude`, which
+keeps its own records — which is what `--uninstall` reads live.
 
 What is left is the **reader**, and it earns its place: a machine that installed
 an earlier version still has receipts on disk, and each records what was there

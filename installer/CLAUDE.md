@@ -9,8 +9,11 @@ table is the full one, and is not repeated here).
 
 ## What it is
 
-`pnpx @virajp.dev/claude-plugins …` does **three things**: installs plugins,
-wires graphify, and removes what the toolkit put on a machine.
+`pnpx @virajp.dev/claude-plugins …` does **two things**: installs plugins, and
+removes what the toolkit put on a machine — both through the `claude` CLI and
+nothing else. graphify is the skills' job, not this CLI's: `setup:ai` wires it
+for the agent and a shaped repo's pre-commit `post-commit` hook refreshes the
+graph.
 
 - **Plugin installs are a thin wrapper.** `--all` / `--user <name>` /
   `--project <name>` drive Claude's own `claude plugin marketplace add` and
@@ -25,8 +28,6 @@ wires graphify, and removes what the toolkit put on a machine.
   own plugin set without a package runner and without this CLI's hardcoded
   marketplace source. This is the one-shot a person runs; that is what a
   checkout re-runs.
-- **graphify's wiring** — `graphify install` alone, no raw git hook: the graph
-  refresh is a shaped repo's pre-commit `post-commit` hook.
 - **`--uninstall`** — interactive; see below.
 
 **The statusline is a separate package** — `claude-status`
@@ -57,10 +58,9 @@ asset left to restore.
 
 ## Nothing writes a receipt
 
-**Both install paths belong to another tool** — `claude` for plugins, `graphify`
-for its own wiring — and each keeps its own records. There is nothing of this
-CLI's own on disk to record, so `ReceiptBuilder` and `writeReceipt` are gone and
-`receipt.ts` is read-only.
+**The install path belongs to another tool** — `claude` for plugins — and it
+keeps its own records. There is nothing of this CLI's own on disk to record, so
+`ReceiptBuilder` and `writeReceipt` are gone and `receipt.ts` is read-only.
 
 **Do not reintroduce a write path without reading
 [receipts.md](../.claude/docs/installer/receipts.md) first.** The
@@ -126,7 +126,10 @@ Four rules:
 rather than a fix.** Every removal it performs is either owner-driven or
 receipt-driven; nothing scans the machine for state that *looks* like ours and
 deletes it. A path with no receipt and no owning tool is not this CLI's to
-touch.
+touch. That includes what installers 1.0.0–1.0.2 left for graphify — its raw git
+hooks, `graphify-out/`, `.graphifyignore` and the user-level
+`graphify install --platform claude` wiring: `--uninstall` no longer lists them,
+and removing them is the repo's or the user's call.
 
 ## The flag surface
 

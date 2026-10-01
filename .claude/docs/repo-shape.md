@@ -89,12 +89,12 @@ The CLI installs plugins as a **thin wrapper** — `--all` / `--user <name>` /
 `--project <name>` drive `claude plugin marketplace add` and
 `claude plugin install`, reading the manifest on this repo's `main` (which then
 pins each plugin to its own tag), and Claude's own commands work just as well
-directly. It also wires graphify, and removes whatever the toolkit put on the
-machine.
+directly. It also removes whatever the toolkit put on the machine, and does
+nothing else — graphify is the skills' job.
 
-**Nothing it does writes a receipt.** Both install paths belong to another tool
-— `claude` for plugins, `graphify` for its own wiring — and each keeps its own
-records, which is what `--uninstall` reads live.
+**Nothing it does writes a receipt.** The install path belongs to another tool —
+`claude` for plugins — and it keeps its own records, which is what `--uninstall`
+reads live.
 
 What survives is the **reader**, and it is load-bearing rather than vestigial: a
 machine that installed an earlier version still carries receipts recording what

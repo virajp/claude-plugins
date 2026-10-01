@@ -32,7 +32,7 @@ export interface ProgressReport {
   readonly outcomes: readonly Outcome[];
   /**
    * Everything the run wanted to say that is not a per-step result — a caveat
-   * about graphify's wiring, say. **Collected, not printed as it happens**:
+   * about an already-installed plugin, say. **Collected, not printed as it happens**:
    * interleaved with the results they read as noise before you know whether
    * anything worked.
    */

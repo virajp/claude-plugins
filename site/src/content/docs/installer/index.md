@@ -1,12 +1,13 @@
 ---
 title: "The installer CLI"
-description: "A small CLI with three jobs: install plugins, wire up graphify, and remove what this toolkit put on your machine."
+description: "A small CLI with two jobs: install plugins, and remove what this toolkit put on your machine."
 order: 0
 ---
 
 [`@virajp.dev/claude-plugins`](https://www.npmjs.com/package/@virajp.dev/claude-plugins)
-is a small CLI with three jobs: install **plugins**, wire up **graphify**, and
-**remove** what this toolkit put on your machine. It was published as
+is a small CLI with two jobs: install **plugins**, and **remove** what this
+toolkit put on your machine — both through the `claude` CLI. graphify is not its
+job; the plugins' own skills set it up. It was published as
 `@askviraj/ai-plugins` before; that package is sunset and only prints a pointer
 here.
 
@@ -31,7 +32,7 @@ Homebrew tap and no Scoop bucket.
 | Page                           | Covers                                                                           |
 | ------------------------------ | -------------------------------------------------------------------------------- |
 | [usage.md](./usage.md)         | The end-user reference — every flag, and what uninstall removes                  |
-| [targets.md](./targets.md)     | What lands on disk, and where — the plugins, graphify, the marketplace           |
+| [targets.md](./targets.md)     | What lands on disk, and where — the plugins, the marketplace, old receipts       |
 | [internals.md](./internals.md) | The maintainer's map — the flow through the source, the build split, the tarball |
 
 ## The statusline has moved

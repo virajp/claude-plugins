@@ -34,10 +34,10 @@
  * ## The legacy-receipt reader
  *
  * **This CLI writes no receipts.** It installs plugins by driving Claude's own
- * commands and wires graphify by driving graphify's, and both tools keep their
- * own records — so every receipt in the receipt directory is the record of an
- * install by an *older* version: the copied Claude marketplace payload, and the
- * per-target installs of the render-target era. Those mechanisms are
+ * commands, and Claude keeps its own records — so every receipt in the receipt
+ * directory is the record of an install by an *older* version: the copied
+ * Claude marketplace payload, and the per-target installs of the render-target
+ * era. Those mechanisms are
  * discontinued, and this reader is deliberately kept: without it a machine
  * carrying them is orphaned rather than cleaned, because nothing else on earth
  * knows those paths.
@@ -49,9 +49,7 @@
  * most in need of cleaning.
  */
 import {
-  existsSync,
   readdirSync,
-  readFileSync,
   rmdirSync,
   rmSync,
 } from "node:fs";
@@ -120,14 +118,6 @@ export type Removal =
   | {
     readonly kind: "receipt";
     readonly path: string;
-  }
-  /** graphify's own undo for the git hooks it installed. */
-  | { readonly kind: "graphify-hook"; readonly cwd: string; }
-  /** A path nothing else owns. */
-  | {
-    readonly kind: "delete";
-    readonly path: string;
-    readonly recursive: boolean;
   };
 
 export interface Item {
@@ -146,10 +136,10 @@ export interface Item {
    * Everything else here is one machine's state, where all-selected is the right
    * default — the user asked to uninstall, and making them re-name each piece
    * would turn a cleanup into a quiz. Tracked files are categorically different:
-   * `.graphifyignore` is committed, and the project-scope plugin rows are read
-   * out of a committed `.claude/settings.json`, so accepting the defaults inside a
-   * repo would silently dirty someone's working tree. That is not a cleanup, it is
-   * an uncommitted change they did not ask for and may not notice.
+   * the project-scope plugin rows are read out of a committed
+   * `.claude/settings.json`, so accepting the defaults inside a repo would
+   * silently dirty someone's working tree. That is not a cleanup, it is an
+   * uncommitted change they did not ask for and may not notice.
    *
    * Found by a real-install verification run, which is also the only way it
    * could have been: the enumeration is correct, the removals are correct, and
@@ -260,8 +250,7 @@ function userItems(context: Context): Item[] {
 }
 
 function repoItems(context: Context): Item[] {
-  const root = repoRoot(context);
-  if (root === undefined) {
+  if (repoRoot(context) === undefined) {
     return [];
   }
   const items: Item[] = [];
@@ -285,41 +274,6 @@ function repoItems(context: Context): Item[] {
       ...(tracks(context, projectSettingsFile(context))
         ? { tracked: true as const, note: "edits a git-tracked settings.json" }
         : {}),
-    });
-  }
-
-  if (graphifyHookInstalled(context)) {
-    items.push({
-      id: "graphify-hook",
-      level: "repo",
-      label: "graphify's git hooks",
-      removal: { kind: "graphify-hook", cwd: root },
-    });
-  }
-
-  const graph = join(root, "graphify-out");
-  if (existsSync(graph)) {
-    items.push({
-      id: "graph",
-      level: "repo",
-      label: `the graph (${graph})`,
-      note: "regenerable — `graphify update .` rebuilds it",
-      removal: { kind: "delete", path: graph, recursive: true },
-    });
-  }
-
-  const ignore = join(root, ".graphifyignore");
-  if (existsSync(ignore)) {
-    items.push({
-      id: "graphifyignore",
-      level: "repo",
-      label: `${ignore}`,
-      // Written by `/vwf:setup`, not by this CLI, so there is no receipt to
-      // restore from and removal is a plain delete. Listed anyway: it is part of
-      // the toolkit's footprint, and the selection is the consent.
-      note: "written by /vwf:setup; may hold your own edits",
-      removal: { kind: "delete", path: ignore, recursive: false },
-      ...(tracks(context, ignore) ? { tracked: true as const } : {}),
     });
   }
   return items;
@@ -514,7 +468,7 @@ export function removeItems(
 }
 
 export function removeItem(item: Item, options: RunOptions): Outcome {
-  const { context, dryRun } = options;
+  const { context } = options;
 
   switch (item.removal.kind) {
     case "claude":
@@ -531,43 +485,18 @@ export function removeItem(item: Item, options: RunOptions): Outcome {
         },
       );
 
-    case "graphify-hook":
-      return runTool(item, options, "graphify", ["hook", "uninstall"], {
-        cwd: item.removal.cwd,
-      });
-
-    case "delete": {
-      const { path, recursive } = item.removal;
-      const action = { summary: `remove ${path}`, path };
-      if (dryRun) {
-        return { name: item.id, actions: [action] };
-      }
-      try {
-        rmSync(path, { recursive, force: true });
-        return { name: item.id, actions: [action] };
-      }
-      catch (error) {
-        return {
-          name: item.id,
-          actions: [],
-          error: (error as Error).message,
-        };
-      }
-    }
-
     case "receipt":
       return revertLegacyReceipt(item, options);
   }
 }
 
 /**
- * Drive another tool's CLI, or skip when it is not there.
+ * Drive Claude's CLI, or skip when it is not there.
  *
- * **Absent is a skip, not a failure**, and the reasoning is the same one the old
- * per-target loop used: a machine without `omp` cannot be asked to unmake an
- * `omp` install, and there is nothing this tool could do instead — hand-editing
- * the config would leave that tool's own records claiming an install that is
- * gone. Reporting it as failed would make an otherwise clean uninstall exit
+ * **Absent is a skip, not a failure**: a machine without `claude` cannot be
+ * asked to unmake a `claude` install, and there is nothing this tool could do
+ * instead — hand-editing the settings would leave Claude's own records claiming
+ * an install that is gone. Reporting it as failed would make an otherwise clean uninstall exit
  * non-zero over state nobody can reach.
  */
 function runTool(
@@ -693,36 +622,4 @@ export function repoRoot(context: Context): string | undefined {
   });
   const root = result.stdout.trim();
   return result.status === 0 && root.length > 0 ? root : undefined;
-}
-
-/**
- * Has graphify installed its hooks here?
- *
- * Answered by reading the hook files rather than by running
- * `graphify hook status`, for two reasons: it works when graphify is no longer
- * on PATH — which is exactly the machine that most needs cleaning — and the
- * enumeration stays a read.
- *
- * `--git-path` rather than `<root>/.git/hooks`, because in a **worktree** the
- * hooks live in the main checkout's git directory and a hardcoded path would
- * find nothing there.
- */
-export function graphifyHookInstalled(context: Context): boolean {
-  const result = context.exec("git", ["rev-parse", "--git-path", "hooks"], {
-    cwd: context.cwd,
-  });
-  if (result.status !== 0) {
-    return false;
-  }
-  const hooks = result.stdout.trim();
-  const dir = hooks.startsWith("/") ? hooks : join(context.cwd, hooks);
-  return ["post-commit", "post-checkout"].some(name => {
-    const path = join(dir, name);
-    try {
-      return readFileSync(path, "utf8").includes("graphify");
-    }
-    catch {
-      return false;
-    }
-  });
 }

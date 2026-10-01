@@ -16,7 +16,7 @@ A multi-agent plugin toolkit (`virajp-plugins`) containing MCP servers and `vwf`
 verify + production-feedback intake).
 
 The repo also ships a small **installer CLI** (`@virajp.dev/claude-plugins`),
-which sequences Claude's own plugin commands and wires graphify — see The
+which sequences Claude's own plugin commands and nothing else — see The
 installer CLI.
 
 It also ships the **website** (`site/`) — the Astro build of the user manual,
@@ -258,12 +258,12 @@ agent tables, and the dependency reasoning are the [`vwf-plugin`][vwf] skill.
 ## The installer CLI
 
 `@virajp.dev/claude-plugins`, run as `pnpx @virajp.dev/claude-plugins …`, does
-three things: **plugin installs as a thin wrapper** that sequences Claude's own
-marketplace registration and plugin install commands, **graphify's wiring**, and
-**`--uninstall`**. It never edits Claude's settings itself and writes **no
-receipt**. `installer/` is the source; `bin/` is the tsup output, is gitignored,
-and is what npm publishes. The statusline is a separate package
-(`claude-status`), not a plugin and not installed here.
+two things: **plugin installs as a thin wrapper** that sequences Claude's own
+marketplace registration and plugin install commands, and **`--uninstall`**.
+graphify is not its job — the skills own it. It never edits Claude's settings
+itself and writes **no receipt**. `installer/` is the source; `bin/` is the tsup
+output, is gitignored, and is what npm publishes. The statusline is a separate
+package (`claude-status`), not a plugin and not installed here.
 
 **It is the one-shot, not a repo's reconcile step.** A repo shaped by
 `/vwf:init` reconciles its own plugin set with the task library's `setup:ai`,

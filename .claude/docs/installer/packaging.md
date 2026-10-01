@@ -59,11 +59,11 @@ Two lines, from two different places:
   is what a user installs from.
 
 **It reports no on-disk state**, and that is deliberate rather than an omission.
-Everything this CLI installs is installed by Claude or by graphify, each of
-which answers for its own version — what a user has is `claude plugin list`.
-Parsing Claude's bookkeeping a second time to say the same thing would only be a
-second thing to drift. `installer/src/version.ts` says so at the top; keep the
-two in agreement if a reader is ever added.
+Everything this CLI installs is installed by Claude, which answers for its own
+version — what a user has is `claude plugin list`. Parsing Claude's bookkeeping
+a second time to say the same thing would only be a second thing to drift.
+`installer/src/version.ts` says so at the top; keep the two in agreement if a
+reader is ever added.
 
 The "latest" side is fetched from raw GitHub and can be **CDN-cached for a few
 minutes** after a push; re-run before diagnosing a stale-looking report.

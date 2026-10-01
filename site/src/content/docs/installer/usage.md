@@ -1,12 +1,12 @@
 ---
 title: "The installer CLI: usage"
-description: "Install plugins by driving Claude Code's own commands, wire up graphify, and remove what this toolkit put on your machine."
+description: "Install plugins by driving Claude Code's own commands, and remove what this toolkit put on your machine."
 order: 1
 ---
 
 `@virajp.dev/claude-plugins` installs **plugins** (by driving Claude Code's own
-commands), wires up **graphify**, and **removes** what this toolkit put on your
-machine.
+commands), and **removes** what this toolkit put on your machine. It does
+nothing else — graphify is set up by the plugins' own skills.
 
 ```sh
 # Install the default plugin set (vwf; stackgen arrives as its dependency)
@@ -76,8 +76,7 @@ same scope. That is why `--all` is just `vwf`.
 An already-installed plugin is reported as satisfied, never auto-updated — see
 [Upgrading](#upgrading). **No receipt is written at all** — not for a plugin
 install and not for anything else this CLI does. Claude's own settings are the
-record for plugins, graphify keeps its own for its wiring, and `--uninstall`
-reads both live.
+record for plugins, and `--uninstall` reads them live.
 
 Restart your agent afterwards so the skills, hooks and MCP servers load.
 
@@ -156,9 +155,7 @@ can see from where it runs:
 
 - **At user level** — the `virajp-plugins` marketplace registration and
   user-scoped plugin installs.
-- **At repo level**, when run inside a repo — project-scoped plugin installs,
-  and graphify's graph and `.graphifyignore`, plus any raw graphify hook an
-  earlier install left — `graphify hook uninstall` still runs to clean it.
+- **At repo level**, when run inside a repo — project-scoped plugin installs.
 - **Plus anything an older install left behind**, read from the receipts those
   versions wrote — the copied Claude marketplace payload, the copied OpenCode
   plugin tree, the Cursor registration, the statusline. Every one of those is
@@ -169,15 +166,22 @@ can see from where it runs:
 Machine state starts **selected**; anything whose removal would edit a
 **git-tracked** file in the current checkout starts **unselected**, shown `[ ]`.
 You asked to uninstall, so re-naming each piece would turn a cleanup into a quiz
-— but dirtying your working tree is not a cleanup, so `.graphifyignore` and
-project-scope plugin rows read out of a committed `settings.json` have to be
-asked for. The numbers you enter **toggle** a row, either way.
+— but dirtying your working tree is not a cleanup, so project-scope plugin rows
+read out of a committed `settings.json` have to be asked for. The numbers you
+enter **toggle** a row, either way.
 
 Each piece is removed through whatever owns it: `claude plugin uninstall` and
-`claude plugin marketplace remove` for plugins, `graphify hook uninstall` for
-the hook, and for anything with a receipt a **restore from that receipt** rather
-than a delete — so whatever the recorded install displaced comes back, rather
-than leaving you with nothing at all and no record of what was there.
+`claude plugin marketplace remove` for plugins, and for anything with a receipt
+a **restore from that receipt** rather than a delete — so whatever the recorded
+install displaced comes back, rather than leaving you with nothing at all and no
+record of what was there.
+
+**graphify is not on the list.** Versions up to 1.0.2 wired graphify, and an
+uninstall used to offer its raw git hooks, its graph (`graphify-out/`) and
+`.graphifyignore`. This version lists none of them, nor the user-level
+`graphify install --platform claude` wiring: they belong to your repo, or to
+you, to remove — `mise run setup:precommit` in a shaped repo already strips a
+raw graphify hook.
 
 With no terminal to ask on, it **fails** rather than guessing — unless there is
 nothing to remove, in which case it says so and exits 0, because a run with

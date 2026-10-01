@@ -143,7 +143,7 @@ export function renderUsage(): string {
     `  ${flag.display.padEnd(width)}  ${wrap(flag.description, width + 4)}`
   );
   return [
-    "Install the virajp-plugins plugins, and wire graphify",
+    "Install the virajp-plugins plugins",
     "",
     "USAGE",
     "  claude-plugins [options]",
