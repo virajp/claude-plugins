@@ -249,10 +249,7 @@ The task library reaches for `.config/dprint.json`,
 `.config/pre-commit-config.yaml`, `.config/gitleaks.toml` and
 `.config/grype.yaml`. Those files are the other tools' of this skill, landed by
 the same `all`, and each task no-ops with a warning when its config is
-absent. `setup:vscode` reads one
-more, `.vscode/extensions.json`, which `/vwf:init` composes from every
-`.config/vscode.d/*.jsonc` fragment, this skill's included. Name any the repo
-still needs; never write one from here.
+absent. Name any the repo still needs; never write one from here.
 
 ## 2. What `all` lands
 
@@ -264,7 +261,6 @@ the repo root:
 | `miserc.toml`, `mise.toml`, `mise.{dev,ci,test}.toml` | the frame, then one `mise` block holding the rest |
 | `mise/conf.d/*.toml`                                | the frame, then one `mise` block holding the rest |
 | `mise/tasks/**`                                     | whole files, verbatim, mode `755`      |
-| `vscode.d/mise.jsonc`                               | one `mise` block, `//` markers — only when `editor=vscode` |
 
 **The frame is what opens a file before any block**: its leading comment
 run, up to the first blank line, and in a section file the table line —
@@ -285,10 +281,7 @@ fills a slot overwrites the file, its lock entry then names the pack, and
 source owns). A slot no pack filled keeps its placeholder: a repo that has
 picked no stack is supposed to see it.
 
-**The editor fragment is conditional.** `vscode.d/mise.jsonc` lands only
-where `editor=vscode`; on any other answer it is listed under **Skipped**, and
-a later run whose answer turned to `vscode` lands it. `forge`, `secrets` and
-`update_bot` are read by no mise file.
+`forge`, `secrets` and `update_bot` are read by no mise file.
 
 **After the landing, two bootstrap steps**, in this order: `mise trust --all`
 ([section 7](#the-trust-step-which-comes-before-all-of-it)), then
@@ -330,7 +323,6 @@ the repo carries no value of its own:
 | `linkage`                                   | `submodule` where the repo has a `.gitmodules`, else `siblings` |
 | `merge_model_develop`, `merge_model_main`   | `direct`, `pr`                                              |
 | `runtimes`                                  | empty — no runtime line at either position                  |
-| `editor`                                    | `none` — the editor fragment is skipped                     |
 
 `forge`, `secrets` and `update_bot` are read by no mise file and need none.
 
@@ -672,7 +664,6 @@ added to one and not the other is how the vocabularies drift.
 | `setup:deps:{install,cleanup,upgrade,outdated,audit}` | **slots** — the package manager's verbs; `install` honours `--frozen`         |
 | `setup:precommit [--force] [--update]`                | install the hooks, chaining a hand-written one as `.legacy`; refuses a foreign hook manager or `core.hooksPath` without `--force`; autoupdate only under `--update` |
 | `setup:ai [--user] [--inventory]`                     | install and update the repo's required plugins at project scope               |
-| `setup:vscode`                                        | reconcile the repo's editor profile with its recommended extensions           |
 | `setup:worktree`                                      | the lighter sibling a fresh worktree runs                                     |
 | `code:all [--fix] [--debug]`                          | the one-command gate: `format → lint → sec`                                   |
 | `code:format [--fix] [files...]`                      | format or check the files given, else the tree; the `format` hook calls it    |
@@ -779,7 +770,6 @@ setup:all  (--all recurses into every member; --upgrade is passed on)
   ├─ setup:deps:all        # the package manager's five verbs      (SLOTS)
   ├─ setup:precommit       # install the hooks                     (common)
   ├─ setup:ai              # install and reconcile agent plugins   (common)
-  ├─ setup:vscode          # the repo's editor profile             (common)
   └─ <each member>         # only with --all
 ```
 
@@ -880,23 +870,6 @@ asks before it passes `plugin_sources` and `plugins`.
 It closes by wiring [the graph tool](#the-graph-tool) when it is on `PATH` —
 hinting `MISE_ENV=dev mise run setup:all` when it is not — and by hinting at
 the statusline package, which is a per-machine choice and never installed.
-
-#### `setup:vscode` — the repo's editor profile
-
-`setup:all`'s last step, and silent on a machine without the editor. It reads
-the recommendation ids out of `.vscode/extensions.json` and makes a profile
-named `$REPO_NAME` match: install what is listed and missing, **uninstall
-what is installed there and no longer listed**. A per-repo profile, because
-accepting a recommendation installs globally and a global prune would take a
-neighbouring repo's tools with it.
-
-Measured on VS Code 1.136.1: `--profile <name>` combines with
-`--list-extensions`, `--install-extension` and `--uninstall-extension` only
-once the profile exists, and none of the three creates it. On a missing
-profile the CLI prints `Profile '<name>' not found.` and, for
-`--list-extensions`, still exits 0 — so that string is the only signal. The
-task detects it, prints the one-time command that opens the folder under the
-profile plus the share-settings-with-Default step, and exits 0.
 
 #### `setup:worktree` — the lighter sibling
 
@@ -1107,8 +1080,6 @@ worktrees from the main checkout.
   bundled Node release-key gpg import fails on Linux runners ("no valid
   OpenPGP data found"); only Node's signature check is disabled, the tarball
   is still SHA256-verified, and `gpg_verify = true` in `mise.toml` stays.
-- **The editor is set up by the same command as everything else** —
-  `setup:vscode`, `setup:all`'s last step.
 - **The repo's agent plugins are the repo's, and a user's are theirs** —
   `setup:ai` works at project scope only.
 

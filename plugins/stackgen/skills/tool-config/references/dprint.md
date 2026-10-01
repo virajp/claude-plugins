@@ -30,7 +30,6 @@ under the repo root.
 | `.config/dprint.json`               | plain JSON, no markers — the `dprint` base, keys in the lock  |
 | `.config/taplo.toml`                | the frame, the settings unmarked, a `dprint` block in `exclude` |
 | `dprint.json` (the root shim)       | one file, whole, the base's alone                             |
-| `.config/vscode.d/dprint-editor.jsonc` | the `dprint` base block — only when `editor=vscode`          |
 
 **`.config/dprint.json` carries no marker.** It is strict JSON: the hook
 runner's `check-json` rejects a `//` line, and dprint rejects an unknown
@@ -48,29 +47,8 @@ defaults. Its `exclude` array is the second spelling of
 Everything else below the frame is the base's, unmarked
 ([the skill's](../SKILL.md#blocks) per-position rule).
 
-**The editor fragment is conditional.** The asset carries no markers; the
-skill lands its content as the `dprint` base block, as
-[the skill](../SKILL.md#blocks) says for every editor fragment. It lands only
-where `editor=vscode`;
-on any other answer it is listed under **Skipped**, and a later run whose
-answer turned to `vscode` lands it. It binds `editor.defaultFormatter` **per
-language, never editor-wide** — `[markdown]`, `[yaml]`, `[json]`, `[jsonc]` in
-the base, and `[toml]` to even-better-toml — because an editor-wide binding
-asks dprint to format a file it has no plugin for, and overrides the formatter
-another pack binds for its own language depending on composition order alone.
-Each [plugin](#2-the-plugins) a requester adds brings its own language scopes
-in that requester's block. The even-better-toml `formatter.*` keys equal
-`.config/taplo.toml`'s: the extension reads them before the config file
-resolves, so a value that differs formats the first save differently from the
-gate.
-
-**That filename breaks the `<tool>.jsonc` fragment rule, and it is forced.**
-dprint discovers a `dprint.jsonc` anywhere below the root as a sub-directory
-config, so a fragment named `dprint.jsonc` is read as a second config with no
-plugins, and every bare invocation exits 13, "No formatting plugins found".
-
-`forge`, `secrets`, `update_bot` and `scopes` are read by no dprint file;
-`editor` is its one key, default `none`.
+`forge`, `secrets`, `update_bot` and `scopes` are read by no dprint file:
+dprint takes no key.
 
 ## 2. The plugins
 
@@ -89,16 +67,16 @@ in the file is the file's — `dprint config update`, run by
 so a version differing from this table is never drift. Drift compares the
 plugin, not its version.
 
-| Plugin        | URL written first                                                 | Config key   | Editor scopes                                                 | Held by                            |
-| ------------- | ----------------------------------------------------------------- | ------------ | ------------------------------------------------------------- | ---------------------------------- |
-| `markdown`    | `https://plugins.dprint.dev/markdown-0.22.1.wasm`                 | `markdown`   | `[markdown]`                                                  | the base                           |
-| `pretty_yaml` | `https://plugins.dprint.dev/g-plane/pretty_yaml-v0.6.0.wasm`      | `yaml`       | `[yaml]`                                                      | the base                           |
-| `json`        | `https://plugins.dprint.dev/json-0.21.3.wasm`                     | `json`       | `[json]`, `[jsonc]`                                           | the base                           |
-| `exec`        | `https://plugins.dprint.dev/exec-0.6.2.json@<checksum>`           | `exec`       | `[toml]`, bound to even-better-toml                           | the base                           |
-| `typescript`  | `https://plugins.dprint.dev/typescript-0.96.1.wasm`               | `typescript` | `[javascript]`, `[javascriptreact]`, `[typescript]`, `[typescriptreact]` | `language/typescript`   |
-| `malva`       | `https://plugins.dprint.dev/g-plane/malva-v0.16.0.wasm`           | `malva`      | `[css]`, `[scss]`, `[less]`                                   | the stylesheet packs, astro, html  |
-| `markup_fmt`  | `https://plugins.dprint.dev/g-plane/markup_fmt-v0.27.3.wasm`      | `markup`     | `[html]`, `[vue]`, `[svelte]`, `[astro]`                      | astro, html                        |
-| `dockerfile`  | `https://plugins.dprint.dev/dockerfile-0.4.0.wasm`                | `dockerfile` | `[dockerfile]`                                                | container-image, containers, cloud-run |
+| Plugin        | URL written first                                                 | Config key   | Held by                            |
+| ------------- | ----------------------------------------------------------------- | ------------ | ---------------------------------- |
+| `markdown`    | `https://plugins.dprint.dev/markdown-0.22.1.wasm`                 | `markdown`   | the base                           |
+| `pretty_yaml` | `https://plugins.dprint.dev/g-plane/pretty_yaml-v0.6.0.wasm`      | `yaml`       | the base                           |
+| `json`        | `https://plugins.dprint.dev/json-0.21.3.wasm`                     | `json`       | the base                           |
+| `exec`        | `https://plugins.dprint.dev/exec-0.6.2.json@<checksum>`           | `exec`       | the base                           |
+| `typescript`  | `https://plugins.dprint.dev/typescript-0.96.1.wasm`               | `typescript` | `language/typescript`              |
+| `malva`       | `https://plugins.dprint.dev/g-plane/malva-v0.16.0.wasm`           | `malva`      | the stylesheet packs, astro, html  |
+| `markup_fmt`  | `https://plugins.dprint.dev/g-plane/markup_fmt-v0.27.3.wasm`      | `markup`     | astro, html                        |
+| `dockerfile`  | `https://plugins.dprint.dev/dockerfile-0.4.0.wasm`                | `dockerfile` | container-image, containers, cloud-run |
 
 `exec`'s checksum is the one the asset carries; it is what lets dprint run a
 process plugin without a prompt. `exec` is the escape hatch for a language
@@ -182,18 +160,15 @@ comment.
 
 | Instruction                           | Writes to                                                             |
 | ------------------------------------- | --------------------------------------------------------------------- |
-| `add plugin <name>`                   | `.config/dprint.json` — the URL, the config key; the editor fragment's scopes |
+| `add plugin <name>`                   | `.config/dprint.json` — the URL, the config key                       |
 | `remove <requester>`                  | every dprint file holding its keys or blocks                          |
 
 **`add plugin <name>`** takes a name from [the plugin table](#2-the-plugins)
 and nothing else; an unknown name is refused, naming the table. It inserts
 the URL into `plugins` just ahead of `exec`, which stays last so a real
-plugin takes any extension both claim; writes the plugin's config key among
-the top-level keys in alphabetical order, as the asset keeps them; and —
-where the editor fragment has landed — writes the plugin's language scopes
-into the requester's block there, after the `dprint` base block, each bound
-to `dprint.dprint`. A base plugin asked for is already satisfied, and the
-row says so.
+plugin takes any extension both claim; and writes the plugin's config key
+among the top-level keys in alphabetical order, as the asset keeps them. A
+base plugin asked for is already satisfied, and the row says so.
 
 **No exclude verb.** An exclude is added only through
 [`all add exclude`](../SKILL.md#the-one-cross-tool-verb), because one list

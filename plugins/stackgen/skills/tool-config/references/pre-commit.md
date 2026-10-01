@@ -32,7 +32,6 @@ land under the repo root.
 | `.config/pre-commit-config.yaml`         | the frame, the base unmarked, a `pre-commit` block in `exclude` |
 | `.config/git-conventional-commits.yaml`  | the frame, the base unmarked, two marked positions         |
 | `.config/linter.yaml`                    | the frame, the base unmarked, a `pre-commit` block in `ignores:` |
-| `.config/vscode.d/pre-commit.jsonc`      | the `pre-commit` base block — only when `editor=vscode`    |
 
 Each file follows [the skill's](../SKILL.md#blocks) per-position rule: the
 base's entries in a list requesters write into — the global `exclude`, the
@@ -56,11 +55,11 @@ writes into, so it carries no block at all.
   hooks `format`, `lint`, `sec`, then `graphify-refresh`.
 - `pre-commit/pre-commit-hooks` at a pinned rev: large files (1 MB), case
   conflicts, Windows-illegal names, shebang and exec-bit agreement in both
-  directions, merge-conflict markers, broken and destroyed symlinks, JSON
-  (`.vscode/` excepted — JSONC by design), TOML and YAML syntax, private keys,
-  final newline, trailing whitespace (`.md` excepted — two trailing spaces are
-  a Markdown hard break), LF line endings, and `no-commit-to-branch` on
-  `main`.
+  directions, merge-conflict markers, broken and destroyed symlinks, JSON (a
+  user's own `.vscode/` files excepted — JSONC by design), TOML and YAML
+  syntax, private keys, final newline, trailing whitespace (`.md` excepted —
+  two trailing spaces are a Markdown hard break), LF line endings, and
+  `no-commit-to-branch` on `main`.
 - `qoomon/git-conventional-commits` at a pinned rev, at `commit-msg`, reading
   `.config/git-conventional-commits.yaml`.
 - the `meta` audit, at `stages: [manual]` — [section 5](#5-the-gate-doctrine).
@@ -124,16 +123,7 @@ makes a real finding disappear — the one use the file is not for. Fix the
 code; where a rule is genuinely wrong for one location, scope the change to
 that `files` glob.
 
-**The editor fragment** folds the convention file under the hook config and
-turns on the YAML language server — `yaml.completion`, `yaml.hover`, and
-`yaml.format.enable` off, because the repo formatter owns YAML — with the
-extension that serves those keys. The gate contributes no setting: an editor
-running the hooks would be a second definition of it. Its asset carries no
-markers; the skill lands its content as the `pre-commit` base block, as
-[the skill](../SKILL.md#blocks) says for every editor fragment. It lands only
-where `editor=vscode`; on any other answer it is listed under **Skipped**.
-
-**The keys it reads**: `scopes` (default empty) and `editor` (default `none`).
+**The key it reads**: `scopes` (default empty).
 `forge`, `secrets` and `update_bot` are read by no pre-commit file — the forge
 links come from `origin`, [below](#2-the-marked-positions).
 
