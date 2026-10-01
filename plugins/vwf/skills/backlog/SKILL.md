@@ -41,11 +41,7 @@ resolves the base first, the way
 `${CLAUDE_PLUGIN_ROOT}/assets/membership.md` resolves it, and reads the base's
 remote. Nothing is cached and no config key names the project: every verb
 resolves owner and title from the base repo's remote, then finds the project by
-title. The items live in the project, not the tree. The one thing on disk is
-the **last id issued**, `backlog.last_id` in the base repo's
-`.config/vwf.yaml`, which `add` reads and writes so an id stays spent after
-its item is archived or deleted on the board — the board no longer lists such
-an item, so its title cannot keep the id spent.
+title. There is no file in the tree — nothing to commit, nothing to diff.
 
 **The forge decides the backend.** The host of the base repo's `origin` is read
 first:
@@ -133,23 +129,10 @@ commands the reference gives.
 
 ### `add <item>`
 
-**`add` needs the base repo's `.config/vwf.yaml`.** With none, it stops with
-"no `.config/vwf.yaml` — run `/vwf:setup` first" and creates nothing; the
-other verbs never read the file. With a file whose working-tree copy already
-differs from `HEAD`, it stops too, naming the file — the commit below must
-carry the id line alone.
-
-Create a draft issue titled with the next unused id — one past the highest
-`Bnn` over the config's `backlog.last_id`, every item's title, done and closed
-included, and every plan folder's `backlog:` and `backlog_pieces:` frontmatter
-lists, live and archived; an absent key reads as nothing, so the first `add`
-seeds it from the other two sources — and set its Status to `Backlog`. Then
-write the new id to `backlog.last_id`, adding the `backlog:` block at the end
-of the file when it is absent, and commit and push that file alone through
-`vwf:git-workflow` — in place on the base repo's current branch, no worktree,
-staging only `.config/vwf.yaml`, message `ops: backlog — <Bnn> issued`, pushed
-to the branch's upstream — so every clone and session sees the id spent at
-once. The `add` request is the consent; ask nothing more. Ask for the priority with a three-option question
+Create a draft issue titled with the next unused id — one past the highest `Bnn`
+over every item's title, done and closed included, and every plan folder's
+`backlog:` and `backlog_pieces:` frontmatter lists, live and archived — and set
+its Status to `Backlog`. Ask for the priority with a three-option question
 (`P0`, `P1`, `P2`) unless the request already names one. Set `Group` only when
 the user names a group; an item that stands alone leaves the field empty. Write
 the body with enough detail that the plan interview starts from it rather than
@@ -255,14 +238,12 @@ shaped, reports a project already present and skips it, and prints the GitLab
 
 ## What this skill never does
 
-- **Commit anything but the last id.** `add`'s one-line `.config/vwf.yaml`
-  commit is the only one; every other verb changes the project alone, and a
-  caller's commit carries no backlog change.
-- **Edit any other file.** Beyond `backlog.last_id` it edits nothing on disk —
-  not the plan it is told about, not a doc, not another config key.
-- **Invent an id, or reuse one.** Ids come from `backlog.last_id`, the item
-  titles and the plan folders' `backlog:` and `backlog_pieces:` lists, one
-  past the highest.
+- **Commit.** There is nothing in the tree to commit — the project is the
+  store, and a caller's commit carries no backlog change.
+- **Edit any file.** It edits the project and nothing on disk — not the plan it
+  is told about, not a doc, not a config.
+- **Invent an id, or reuse one.** Ids come from the item titles and the plan
+  folders' `backlog:` and `backlog_pieces:` lists, one past the highest.
 - **Keep a file copy.** The project is the one store. A session that cannot
   reach it has no backlog to read, and says so — this replaces the earlier
   rule that a file was kept so an offline session could read it.

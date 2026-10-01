@@ -127,9 +127,6 @@ answers: # FORMAT 21; three keys since FORMAT 22, which removed `editor`. The TH
       forge: github # `github`, `gitlab`, or `none` for a repo whose `origin` named no known host. THE RECORD AND THE FALLBACK, never the source of truth: every caller re-reads `origin` at run time and passes THAT as the axis, using this value only where no remote can be read. A recorded value the live host contradicts is `/vwf:doctor` drift, remedy `/vwf:setup reshape` — so the forge files land at the reshape, never silently mid-pass
       update_bot: renovate # `renovate`, `dependabot`, or `none` — the update-bot question, asked per repo. The ONE axis where `none` is an answer a pack may name in a `when:` (no bot) rather than merely the absence of one
 
-backlog: # OPTIONAL, no format bump — an absent block reads as empty. Written by `/vwf:backlog add` alone, which commits it on its own
-  last_id: B<nn> # the last backlog id issued. The board's titles cannot keep an archived or deleted item's id spent; this can. `add` refuses to run without this file
-
 pipeline: # bounded knobs — see the hard floor below
   coverage_target: 100 # default coverage gate (per-project override above)
   review_round_cap: 4 # code→review loops before residuals become gaps

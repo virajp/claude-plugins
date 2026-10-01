@@ -246,16 +246,8 @@ The id is parsed from the title with `^B([0-9]{2,}) — `, case-sensitive, the
 dash the em dash the skill writes; an item whose title does not match is
 "unnumbered", warned about in `list`, and never renumbered.
 
-The **next id** is one past the highest number over three sources, zero-padded
+The **next id** is one past the highest number over two sources, zero-padded
 to two digits:
-
-- `backlog.last_id` in the base repo's `.config/vwf.yaml` — the last id `add`
-  issued, and the one source that remembers an item archived or deleted on the
-  board, which `item-list` no longer returns; an absent key contributes
-  nothing:
-
-      sed -n '/^backlog:/,/^[^[:space:]#]/s/^[[:space:]]*last_id:[[:space:]]*B\([0-9]\{2,\}\).*/\1/p' \
-        .config/vwf.yaml
 
 - every item title in the project, whatever its status — done and closed
   included;
@@ -272,15 +264,8 @@ to two digits:
         | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -E '^B[0-9]{2,}$' \
         | sed 's/^B//' | sort -n | tail -1
 
-A project starts at `B01` only when all three sources are empty — so an id
-spent by a retired file store, by a project since deleted, or by an item since
-archived or deleted is never reissued.
-
-Once the draft issue exists, `add` writes the id it issued to the config —
-`last_id: B<nn>` under a top-level `backlog:` block, the block appended at the
-end of the file when absent, the value replaced in place when present, every
-other line untouched — and commits and pushes that file alone, as the skill's
-`add` says.
+A project starts at `B01` only when both sources are empty — so an id spent by
+a retired file store, or by a project since deleted, is never reissued.
 
 `Bnn` on the command line matches the title prefix; an id no item carries is a
 stop naming it.
