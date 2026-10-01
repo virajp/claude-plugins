@@ -18,12 +18,11 @@ A row's answer never reaches a repo other than the one it names.
 | ----------------------------------------------- | ------------- | ------------------------------------- |
 | `CONTRIBUTING.md`                               | the repo root | always                                |
 | `.github/ISSUE_TEMPLATE/*`                      | the same path | the repo's `forge` answer is `github` |
-| `.config/vscode.d/hygiene.jsonc`                | the same path | question 7 answered **yes**           |
 | `licenses/MIT.txt` or `licenses/Apache-2.0.txt` | `LICENSE`     | question 6a, below                    |
 | `SECURITY.md`                                   | the repo root | question 6b, below                    |
 
-**`init` evaluates the two conditions itself**, from the same `forge` and
-`editor` values it passes the materializer, and a skipped asset is a
+**`init` evaluates the one condition itself**, from the same `forge` value
+it passes the materializer, and a skipped asset is a
 **Skipped** row, `init` in the pack's place. They land in §2 of the new-repo
 pipeline, after `/stackgen:tool-config all`; the licence and the security
 file wait for their answers and land in §8. No lock record is written for any
@@ -33,11 +32,6 @@ of them.
 is **kept, never replaced, and reported as kept** — no offer, no
 `kept_files` entry, since nothing was decided — and one it lacks is a create.
 So a second run finds every asset present and plans nothing for it.
-
-**The editor baseline is the one exception.** `hygiene.jsonc` is a fragment
-the editor merge composes, never a file a person edits, so `init` rewrites it
-to the asset's bytes whenever it differs, as a replace row; a key a person
-wants belongs in the editor file's hand section, where the merge keeps it.
 
 `CONTRIBUTING.md` is developer-facing and repo-neutral: setup in one command,
 the branch model, where the commit types and scopes live, the gate tasks, and
@@ -184,7 +178,7 @@ this reference no longer says anything about them:
 
 The policy's yield over a repo's own spelling and its `update_bot` condition
 are the renovate tool's; the spellings are the [tool-config
-table](tool-configs.md)'s, which seeds question 8. A repo that wants the
+table](tool-configs.md)'s, which seeds question 7. A repo that wants the
 service enabled still has to install it on the forge; say so at write time,
 since a policy nobody wired is inert without an error. The editor-shape
 defaults file that once shipped here is retired: nothing lands it, and a

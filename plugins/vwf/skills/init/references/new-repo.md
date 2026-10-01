@@ -9,7 +9,7 @@ lockfile — runs this landing **plus** the read-before-land passes below, so a
 tree that already holds something is read before a pack lands beside it.
 Nothing here reads or moves a source file in either mode.
 
-The nine questions in SKILL.md are already answered. Present the whole plan
+The eight questions in SKILL.md are already answered. Present the whole plan
 below, get **one** consent, then apply it in this order. The order is the
 contract: a step that runs early because it happens to be cheap produces a
 tree the next step has to undo.
@@ -85,16 +85,16 @@ manager's files, its task library and the gates among them — and fills their
 marked positions from the arguments. `init` names no tool and splices nothing
 there. The arguments:
 
-| Key                                        | Value                                             | From                                  |
-| ------------------------------------------ | ------------------------------------------------- | ------------------------------------- |
-| `repo`                                     | the repo's folder slug                            | question 1, or the key already held   |
-| `members`                                  | member paths, in resolved order; empty where none | Step 0's resolution                   |
-| `linkage`                                  | `siblings` or `submodule`                         | the membership asset                  |
-| `merge_model_develop`, `merge_model_main`  | `direct` or `pr`, the §11(a) preselection         | §11(a); re-passed if the answer moves |
-| `runtimes`                                 | the language keys the stack read produced         | SKILL.md's stack read, per §5         |
-| `plugin_sources`, `plugins`                | question 5's confirmed rows; empty on **none**    | question 5                            |
-| `scopes`                                   | the commit gate's scopes; empty where none        | §7, per existing repo pass 10         |
-| `forge`, `editor`, `secrets`, `update_bot` | the four answers, spelled as the table below      | the table below                       |
+| Key                                       | Value                                             | From                                  |
+| ----------------------------------------- | ------------------------------------------------- | ------------------------------------- |
+| `repo`                                    | the repo's folder slug                            | question 1, or the key already held   |
+| `members`                                 | member paths, in resolved order; empty where none | Step 0's resolution                   |
+| `linkage`                                 | `siblings` or `submodule`                         | the membership asset                  |
+| `merge_model_develop`, `merge_model_main` | `direct` or `pr`, the §11(a) preselection         | §11(a); re-passed if the answer moves |
+| `runtimes`                                | the language keys the stack read produced         | SKILL.md's stack read, per §5         |
+| `plugin_sources`, `plugins`               | question 5's confirmed rows; empty on **none**    | question 5                            |
+| `scopes`                                  | the commit gate's scopes; empty where none        | §7, per existing repo pass 10         |
+| `forge`, `secrets`, `update_bot`          | the three answers, spelled as the table below     | the table below                       |
 
 **How a value is spelled.** A list is comma-separated with no spaces —
 `members=backend,web`. An empty value is the bare key — `members=`. An
@@ -136,28 +136,27 @@ case rather than a fault.
 
 ### The answers each fetch carries
 
-**The adapter invocation — §3's, the only one — passes the materializer four
-answers**, as the skill's call passes them as arguments — here an `answers:`
-map in the invocation payload, beside `repo:`, keyed
-`forge`, `editor`, `secrets` and `update_bot`, one per axis its
+**The adapter invocation — §3's, the only one — passes the materializer
+three answers**, as the skill's call passes them as arguments — here an
+`answers:` map in the invocation payload, beside `repo:`, keyed
+`forge`, `secrets` and `update_bot`, one per axis its
 **conditional evaluation step** reads, and that step is what decides whether
 a file a pack marks `when:` lands in this repo. `init` evaluates nothing
 itself; it passes values, spelled exactly as the axis takes them, and takes
 back what the dry-run lists as landed and as skipped. The hygiene assets read
-the same `forge` and `editor` values, evaluated by `init` itself. The four,
-for the repo this pass is running in:
+the same `forge` value, evaluated by `init` itself. The three, for the repo
+this pass is running in:
 
 | Axis         | Value passed                                     | From                             | Source after the first run          |
 | ------------ | ------------------------------------------------ | -------------------------------- | ----------------------------------- |
 | `forge`      | `github` or `gitlab`, from the `origin` host     | §11(f)'s precondition, step 1    | the live host, always re-read       |
-| `editor`     | `vscode` on a **yes**; `none` on a **no**        | question 7, once for the product | `answers.editor`, re-asked seeded   |
 | `secrets`    | the provider slug, as the menu spelled it        | question 4, once for the product | `answers.secrets`, re-asked seeded  |
-| `update_bot` | `renovate` or `dependabot`; `none` on **none**   | question 8, that repo's row      | that repo's `answers.repos` entry   |
+| `update_bot` | `renovate` or `dependabot`; `none` on **none**   | question 7, that repo's row      | that repo's `answers.repos` entry   |
 
 **The block is written as part of the landing pass**, in every mode, and the
 fourth column is what a later run reads. Its shape is
-`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`'s top-level `answers:` — `editor`
-and `secrets` once for the product, `repos:` keyed by the member path exactly
+`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`'s top-level `answers:` —
+`secrets` once for the product, `repos:` keyed by the member path exactly
 as `enforcement.kept_files` keys one (`.` for the base), each entry carrying
 `forge` and `update_bot`. The **forge is never taken from the record while
 `origin` can be read**: every run re-reads the live host and passes that, and
@@ -175,34 +174,26 @@ pass; any other host, and a repo with no `origin`, passes **`none`**. A
 The materializer's own rule is that an axis the map leaves out reads as
 **true** — every path conditioned on it lands — so an omitted key is a
 silent yes, never a no; `init` therefore omits nothing and writes `none`
-wherever the answer was none or nothing could be read. On `forge`, `editor`
-and `secrets` that is `init`'s **no-match value** — the vocabulary names no
+wherever the answer was none or nothing could be read. On `forge` and
+`secrets` that is `init`'s **no-match value** — the vocabulary names no
 `none` on those axes, so a condition against it is false and the file is
 skipped: a repo with no remote yet gets no forge-specific files, and gets
 them on the reshape that follows the remote, which the plan says on the
 skipped row. On `update_bot` it is **one of the three answers** a pack may
 name — `when: update_bot: none` is legal — so a file conditioned on it lands
 exactly when the row picked no bot. A pack that marks nothing `when:` is
-untouched by all four and lands whole.
+untouched by all three and lands whole.
 
-**The two questions' mechanics**, where SKILL.md states the rule and this
-file the reads behind it:
-
-- **Question 7's default** is read once, over every resolved repo: **yes**
-  where any of them carries a `.vscode/` directory — the directory the
-  fragment convention's two output files sit in — or where the `code`
-  binary answers `command -v`; **no** otherwise. The question names which
-  of the two decided it, or that neither did.
-- **Question 8's seed** is read per repo, from pass 1's root survey — the
-  same evidence the [tool-config table](tool-configs.md)'s two rows carry:
-  a file under any spelling the `renovate` row lists preselects `renovate`;
-  a `.github/dependabot.yml` preselects `dependabot`; a repo carrying
-  neither preselects `renovate`, the service whose policy
-  `/stackgen:tool-config` lands. A repo carrying both is preselected to
-  `renovate` and the row says it found both, since the survey's own **keep
-  both** rule already reports the second policy and a preselection cannot
-  pick for the user. In `blank`
-  mode there is no survey and the seed is `renovate`.
+**Question 7's mechanics**, where SKILL.md states the rule and this file the
+read behind it: its seed is read per repo, from pass 1's root survey — the
+same evidence the [tool-config table](tool-configs.md)'s two rows carry: a
+file under any spelling the `renovate` row lists preselects `renovate`; a
+`.github/dependabot.yml` preselects `dependabot`; a repo carrying neither
+preselects `renovate`, the service whose policy `/stackgen:tool-config`
+lands. A repo carrying both is preselected to `renovate` and the row says it
+found both, since the survey's own **keep both** rule already reports the
+second policy and a preselection cannot pick for the user. In `blank` mode
+there is no survey and the seed is `renovate`.
 
 **The skipped rows.** Each repo's section of the plan gains one heading,
 **Skipped**, under which every path the dry-run reports as skipped by a
@@ -230,25 +221,23 @@ per conflict, so a `blank` repo that happens to hold one such file — and a
 has it silently overwritten. The hygiene assets are not offered at all: a
 readme, a licence, a security file or any other hygiene asset the repo
 already carries is kept on the already-there rule in
-[hygiene assets](readme-and-license.md), and reported as kept — the editor
-baseline fragment excepted, which that reference says is `init`'s to rewrite.
+[hygiene assets](readme-and-license.md), and reported as kept.
 
 **The record has a home in every mode, because `init` makes one.** Where no
 `.config/vwf.yaml` exists in the base — the ordinary case on a first run, since
 `/vwf:setup` is what writes the file in full — `init` writes a **stub** there,
 in the plan as one create row, carrying exactly three blocks and nothing else:
 `config_format`, at the value `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`'s
-schema heading names, `enforcement`, holding `kept_files` and
-`editor_keys`, and `answers`, holding the four conditional answers this run
-holds. No roster, no product name, no project — every other key is
-`/vwf:setup`'s, and its migration and fill passes complete the stub on the run
-that follows, reading the three blocks it finds as their own. So a keep, an
-editor-key answer under §6's collision rule, and the conditional answers
+schema heading names, `enforcement`, holding `kept_files`, and `answers`,
+holding the three conditional answers this run holds. No roster, no product
+name, no project — every other key is `/vwf:setup`'s, and its migration and
+fill passes complete the stub on the run that follows, reading the three
+blocks it finds as their own. So a keep and the conditional answers
 themselves are always **recorded**, in a member's turn as much as the base's;
-there is no Deferred line for any of the three records, and nothing is
-re-asked on the next reshape for want of the file. Where the file **does**
-exist, the same three keys are written into it in place — the `answers:`
-block on every run, whether or not the file already carried one.
+there is no Deferred line for either record, and nothing is re-asked on the
+next reshape for want of the file. Where the file **does** exist, the same
+two keys are written into it in place — the `answers:` block on every run,
+whether or not the file already carried one.
 
 ## 3 — The secrets provider
 
@@ -1085,7 +1074,7 @@ specifies.
 
 ## 12 — The report
 
-The thirteen-section report and the two next-step lines, exactly as SKILL.md
+The twelve-section report and the two next-step lines, exactly as SKILL.md
 specifies — including how the sections are grouped when a run shaped more
 than one repo, which is written down there and is not restated here. A
 `blank` repo's report is mostly *files written*; *files replaced*,
