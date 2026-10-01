@@ -11,9 +11,8 @@
  * leaves the tree and every touched config byte-identical.**
  *
  * **This module is read-only now.** Nothing this version installs writes a
- * receipt — plugins go in through `claude plugin install` and graphify through
- * its own CLI, and both tools keep their own records, which is what
- * `--uninstall` reads live. So the builder and the writer are gone, and what is
+ * receipt — plugins go in through `claude plugin install`, and Claude keeps its
+ * own records, which is what `--uninstall` reads live. So the builder and the writer are gone, and what is
  * left is the reader and `revert`, for the receipts *older* versions left on
  * disk: the copied Claude marketplace payload, and the multi-target adapters'
  * before it. Every `Entry` kind stays reachable in `revert` for that reason —

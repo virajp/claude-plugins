@@ -42,8 +42,8 @@ import {
  * a temp receipt directory, and a temp `PATH` holding fake tool binaries.
  *
  * `PATH` is real rather than stubbed because `hasBin` reads it directly, and the
- * absent-tool branch is one of the behaviours under test — `graphify hook
- * uninstall` on a machine without graphify has to skip, not fail.
+ * absent-tool branch is one of the behaviours under test — `claude plugin
+ * uninstall` on a machine without claude has to skip, not fail.
  */
 let tmp: string;
 let home: string;
@@ -70,9 +70,7 @@ beforeEach(() => {
   for (const dir of [home, configDir, repo, receiptDir, binDir]) {
     mkdirSync(dir, { recursive: true });
   }
-  for (const bin of ["claude", "graphify"]) {
-    writeFileSync(join(binDir, bin), "");
-  }
+  writeFileSync(join(binDir, "claude"), "");
   realPath = process.env["PATH"];
   process.env["PATH"] = binDir;
   process.env["CLAUDE_CONFIG_DIR"] = configDir;
@@ -116,13 +114,6 @@ function insideRepo(): void {
     if (args[1] === "--show-toplevel") {
       return { status: 0, stdout: `${repo}\n`, stderr: "" };
     }
-    if (args[1] === "--git-path") {
-      return {
-        status: 0,
-        stdout: `${join(repo, ".git", "hooks")}\n`,
-        stderr: "",
-      };
-    }
     return { status: 1, stdout: "", stderr: "" };
   };
 }
@@ -165,8 +156,8 @@ const ids = (items: readonly Item[]) => items.map(i => i.id);
 /**
  * What the run drove another tool to do.
  *
- * `git` is filtered out: the enumeration asks it where the repo is and where the
- * hooks live, and those reads are not what any of these assertions are about.
+ * `git` is filtered out: the enumeration asks it where the repo is and whether a
+ * file is tracked, and those reads are not what any of these assertions are about.
  */
 const tools = () => ran.filter(r => r.command !== "git");
 
@@ -210,34 +201,14 @@ describe("enumerate", () => {
   });
 
   it("finds the repo-level pieces only when run inside a repo", () => {
-    mkdirSync(join(repo, "graphify-out"), { recursive: true });
-    writeFileSync(join(repo, ".graphifyignore"), "docs/memory/\n");
     writeProjectSettings({
       enabledPlugins: { "stackgen@virajp-plugins": true },
     });
-    mkdirSync(join(repo, ".git", "hooks"), { recursive: true });
-    writeFileSync(
-      join(repo, ".git", "hooks", "post-commit"),
-      "graphify update .",
-    );
 
     expect(ids(enumerate(options))).toEqual([]);
 
     insideRepo();
-    expect(ids(enumerate(options))).toEqual([
-      "plugin:project:stackgen",
-      "graphify-hook",
-      "graph",
-      "graphifyignore",
-    ]);
-  });
-
-  it("does not claim a post-commit hook that is somebody else's", () => {
-    insideRepo();
-    mkdirSync(join(repo, ".git", "hooks"), { recursive: true });
-    writeFileSync(join(repo, ".git", "hooks", "post-commit"), "make lint\n");
-
-    expect(ids(enumerate(options))).not.toContain("graphify-hook");
+    expect(ids(enumerate(options))).toEqual(["plugin:project:stackgen"]);
   });
 
   it("names the two receipts it knows, and still lists one it does not", () => {
@@ -276,7 +247,9 @@ describe("enumerate", () => {
   it("groups user before repo before legacy, so the list reads top-down", () => {
     insideRepo();
     writeUserSettings({ enabledPlugins: { "vwf@virajp-plugins": true } });
-    writeFileSync(join(repo, ".graphifyignore"), "x\n");
+    writeProjectSettings({
+      enabledPlugins: { "stackgen@virajp-plugins": true },
+    });
     writeReceiptFile("opencode.json", receipt([]));
 
     expect(enumerate(options).map(i => i.level))
@@ -333,7 +306,9 @@ describe("renderItems", () => {
   it("numbers across the whole list and heads each group once", () => {
     insideRepo();
     writeUserSettings({ enabledPlugins: { "vwf@virajp-plugins": true } });
-    writeFileSync(join(repo, ".graphifyignore"), "x\n");
+    writeProjectSettings({
+      enabledPlugins: { "stackgen@virajp-plugins": true },
+    });
     const text = renderItems(enumerate(options));
 
     expect(text).toContain("User");
@@ -422,55 +397,20 @@ describe("removeItem", () => {
     expect(tools()).toEqual([]);
   });
 
-  it("undoes the graphify hooks with graphify's own command", () => {
-    insideRepo();
-    mkdirSync(join(repo, ".git", "hooks"), { recursive: true });
-    writeFileSync(
-      join(repo, ".git", "hooks", "post-commit"),
-      "graphify update .",
-    );
-
-    removeItem(enumerate(options)[0] as Item, options);
-
-    expect(tools().at(-1)).toEqual({
-      command: "graphify",
-      args: ["hook", "uninstall"],
-      cwd: repo,
-    });
-  });
-
-  it("deletes the graph and the ignore file", () => {
-    insideRepo();
-    const graph = join(repo, "graphify-out");
-    const ignore = join(repo, ".graphifyignore");
-    mkdirSync(join(graph, "memory"), { recursive: true });
-    writeFileSync(join(graph, "graph.json"), "{}");
-    writeFileSync(ignore, "x\n");
-
-    for (const item of enumerate(options)) {
-      removeItem(item, options);
-    }
-
-    expect(existsSync(graph)).toBe(false);
-    expect(existsSync(ignore)).toBe(false);
-  });
-
   it("writes nothing under a dry run, but describes each removal", () => {
-    insideRepo();
-    const ignore = join(repo, ".graphifyignore");
-    writeFileSync(ignore, "x\n");
     writeUserSettings({ enabledPlugins: { "vwf@virajp-plugins": true } });
+    const path = writeReceiptFile("opencode.json", receipt([]));
 
     const outcomes = removeItems(enumerate(options), {
       ...options,
       dryRun: true,
     });
 
-    expect(existsSync(ignore)).toBe(true);
+    expect(existsSync(path)).toBe(true);
     expect(tools()).toEqual([]);
     expect(outcomes.flatMap(o => o.actions.map(a => a.summary))).toEqual([
       "claude plugin uninstall vwf --scope user",
-      `remove ${ignore}`,
+      "revert an install recorded in opencode.json",
     ]);
   });
 });
@@ -562,17 +502,18 @@ describe("the legacy-receipt reader", () => {
 describe("removeItems", () => {
   it("keeps going when one item fails, and reports each separately", () => {
     // The pieces are independent — a plugin that will not uninstall says nothing
-    // about the graph — and stopping halfway would leave a partly-cleaned machine
-    // with no record of which half.
-    insideRepo();
+    // about a receipt revert — and stopping halfway would leave a partly-cleaned
+    // machine with no record of which half.
     writeUserSettings({ enabledPlugins: { "vwf@virajp-plugins": true } });
-    const graph = join(repo, "graphify-out");
-    mkdirSync(graph, { recursive: true });
-    respond = (command, args) =>
+    const bundle = join(tmp, "opencode-bundle");
+    mkdirSync(bundle, { recursive: true });
+    writeReceiptFile(
+      "opencode.json",
+      receipt([{ kind: "tree", path: bundle }]),
+    );
+    respond = command =>
       command === "claude"
         ? { status: 1, stdout: "", stderr: "boom" }
-        : args[1] === "--show-toplevel"
-        ? { status: 0, stdout: `${repo}\n`, stderr: "" }
         : { status: 1, stdout: "", stderr: "" };
 
     const outcomes = removeItems(enumerate(options), options);
@@ -580,7 +521,7 @@ describe("removeItems", () => {
     expect(outcomes).toHaveLength(2);
     expect(outcomes[0]?.error).toContain("boom");
     expect(outcomes[1]?.error).toBeUndefined();
-    expect(existsSync(graph)).toBe(false);
+    expect(existsSync(bundle)).toBe(false);
   });
 
   it("takes the receipt directory with it once the last one is consumed", () => {
@@ -615,20 +556,20 @@ describe("the tracked default", () => {
       id: "i1",
       level: "user" as const,
       label: "item 1",
-      removal: { kind: "graphify-hook" as const, cwd: "/tmp" },
+      removal: { kind: "receipt" as const, path: "/tmp/x.json" },
     },
     {
       id: "i2",
       level: "user" as const,
       label: "item 2",
-      removal: { kind: "graphify-hook" as const, cwd: "/tmp" },
+      removal: { kind: "receipt" as const, path: "/tmp/x.json" },
       tracked: true as const,
     },
     {
       id: "i3",
       level: "user" as const,
       label: "item 3",
-      removal: { kind: "graphify-hook" as const, cwd: "/tmp" },
+      removal: { kind: "receipt" as const, path: "/tmp/x.json" },
     },
   ];
 

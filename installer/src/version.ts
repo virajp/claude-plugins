@@ -16,7 +16,7 @@
  * a report, and `claude plugin list` answers it natively.
  *
  * Nothing here reports on-disk state any more. Everything this CLI installs is
- * installed by Claude or by graphify, each of which answers for its own version.
+ * installed by Claude, which answers for its own version.
  */
 import {
   existsSync,

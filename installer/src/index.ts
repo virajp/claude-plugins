@@ -7,8 +7,7 @@
  * through and marks the output executable, which is what lets `package.json`'s
  * `bin` entry point straight at the bundle.
  *
- * **The CLI has three jobs**: plugins, graphify's wiring, and an interactive
- * `--uninstall`. Plugins are installed by **driving Claude Code's own commands**
+ * **The CLI has two jobs**: plugins, and an interactive `--uninstall`. Plugins are installed by **driving Claude Code's own commands**
  * against this repo on GitHub —
  * `claude plugin marketplace add virajp/claude-plugins` then `claude plugin
  * install` per plugin (`install.ts`) — so the four plugin adapters, the payload
@@ -43,7 +42,6 @@ import {
   hasBin,
   PACKAGE_NAME,
 } from "./context.ts";
-import { setupGraphify } from "./graphify.ts";
 import type { InstallRequest } from "./install.ts";
 import {
   executeInstall,
@@ -177,13 +175,6 @@ export async function run(args: Args): Promise<void> {
   const outcomes: Outcome[] = [
     ...executeInstall(planInstall(request, options), options),
   ];
-
-  // After the install: vwf's commands halt at their own entry gate without it.
-  if (!options.dryRun) {
-    // The slowest tail of a run, and previously the longest silence in it.
-    progress.step("wiring graphify");
-    setupGraphify(context);
-  }
 
   if (options.dryRun) {
     // Data to stdout, so it can be piped or diffed. The diff goes to stdout
