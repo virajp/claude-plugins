@@ -1,0 +1,17 @@
+== /code-review high 2026-10-01-installer-plugins-only (HEAD 1a6ed67d) ==
+
+9 findings: 2 behaviour bugs, 2 stale wording/docs, 5 cleanup.
+
+1. installer/src/uninstall.ts:251 — repoItems dropped the 'graphify-hook' item and graphifyHookInstalled. Raw graphify git hooks were written by this same package (installer-v1.0.0 and installer-v1.0.1 ran `graphify hook install` in cwd until ecc2d2e1), so they are now orphaned with no removal path. Failure: a user ran `pnpx @virajp.dev/claude-plugins@1.0.1 --all` in a repo, so .git/hooks/post-commit and post-checkout call graphify with a pinned Python path; on 1.1.0 `--uninstall` lists only plugins and never offers to remove those hooks. Contradicts uninstall.ts:36-42's stated reason for keeping the legacy reader. J2's reason "repo files are the repo's" does not apply to hooks this CLI itself wrote.
+2. package.json:4 — the published npm description still says the installer "wires up graphify", and installer/package.json:5 still says "wires graphify". No unit owns either line; the orchestrator grep gate only scans installer/src.
+3. installer/src/uninstall.ts:252 — with the graphify items gone the repoRoot guard has no purpose; project-scope plugins are read from <cwd>/.claude/settings.json whether or not cwd is a git repo. Failure: `--project vwf` in a non-git directory writes ./.claude/settings.json; `--uninstall` there gets undefined from repoRoot, returns [], reports "found nothing … installed from here". The doc at uninstall.ts:199-201 ("where its root is") is stale too.
+4. installer/src/index.ts:10 — commit 260d6842 changes installer behaviour but leaves installer/CLAUDE.md:13,28,60, CLAUDE.md, readme.md and site/src/content/docs/installer/{index,internals,targets,usage}.md describing graphify wiring; the plan defers docs to J3, a separate commit.
+5. installer/src/uninstall.ts:203 — the user-level graphify wiring (`graphify install --platform claude`) written by installers 1.0.0-1.0.2 has no undo path; nothing owns it now.
+6. installer/src/uninstall.ts:502 — runTool is now called only with bin "claude"; its generic bin parameter and the omp-era rationale (495-500) are leftover generality.
+7. installer/src/uninstall.ts:37 — edited doc comments not re-folded: uninstall.ts:37, index.ts:10, receipt.ts:15 run ~110-140 columns in files hand-folded at 80; uninstall.ts:138-141 ragged.
+8. installer/src/uninstall.test.ts:203 — no enumerate-level test checks that a project-scope plugin row gets tracked: true when git tracks .claude/settings.json; insideRepo answers every ls-files call with status 1.
+9. installer/src/uninstall.test.ts:556 — the "tracked default" fixture pairs level 'user' with a 'receipt' removal, a combination enumerate never produces.
+
+== /security-review ==
+
+No high-confidence vulnerabilities.
