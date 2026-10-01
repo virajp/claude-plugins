@@ -96,7 +96,7 @@ is listed **once**, under the plan's **Projects** heading and the report's,
 and never under Deferred. It is where a project lives, not a file that failed
 to move.
 
-**Four kinds of root entry are recognised and never listed at all**, and no
+**Five kinds of root entry are recognised and never listed at all**, and no
 run reports any of them:
 
 - **`.git/`** — exempt **by name**, never by implication. It is the repository
@@ -111,6 +111,11 @@ run reports any of them:
   run writes**. Every shaped repo carries it by definition: it is the
   evidence a later run reads to know the repo is shaped at all, so a pass
   that listed it would report the shape as a breach of the shape.
+- **`.vscode/`** — exempt **by name**: it is the user's editor settings. No
+  pack lands it — the output tree's fence forbids one to — `init` writes
+  nothing there, and no pass reads it, so listing it would put a permanent
+  finding in every repo whose owner uses that editor. No other editor's
+  directory is exempt; `.idea/` is reported like any other stray.
 - **Every resolved member path**, in the base — a member's work tree is a
   directory at the base's root, and it is another repository, surveyed and
   shaped in its own section of this same plan. There is no configuration
@@ -119,9 +124,9 @@ run reports any of them:
   this pass has them in hand rather than guessing at a directory's nature.
 
 None of them is a hole in the allowlist and none is patched by editing it: the
-allowlist names what a **pack may land**, and all four sit outside that
-question — two are git's, one is this command's own output, and the fourth is
-a repository of its own.
+allowlist names what a **pack may land**, and all five sit outside that
+question — two are git's, one is this command's own output, one is the
+user's, and the fifth is a repository of its own.
 
 #### The move-and-shim case
 
@@ -643,10 +648,7 @@ under any of them is licensed, and a licence text landed beside it is a
 second licence. This pass finds each spelling by name, in any mode, and it
 becomes that report line and nothing else.
 
-### 7 — Editor fragments
-
-Retired — `init` composes no editor configuration; a repo's editor settings
-are the user's, and no pass reads them.
+### 7 — The ignore file and the template fallback
 
 The ignore file is `/stackgen:tool-config`'s git tool, never a merge here —
 its preview converts a landed sectioned file into blocks and shows the rows —
