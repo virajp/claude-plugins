@@ -159,7 +159,7 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   and free of a 13 or 17 component, those two integers never being issued on any
   version line this repo maintains; dependencies resolving within the
   marketplace; hook scripts existing and executable; **a pack's `config/`
-  payload tier being materializable as-is** (seven assertions in one rule, the
+  payload tier being materializable as-is** (six assertions in one rule, the
   landed-tree ones also run over each `skills/tool-config/assets/<tool>/` tree
   `stackgen:tool-config` lands, its root admitting that tool's own root files,
   and over `/vwf:init`'s `skills/init/assets/<name>/` trees with no root
@@ -172,13 +172,10 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   whose sibling tier — the root files vwf writes, `CLAUDE.md` and
   `mempalace.yaml` — no pack may land; a **CI workflow refused inside
   `.github/`**, since a pack names the task CI runs and never the workflow;
-  every `config/.config/vscode.d/*.jsonc` parsing as JSONC with only the three
-  keys `settings`, `nesting` and `extensions`, since init composes them into an
-  editor file no pack owns and a fourth key is dropped without a word; every
-  `conditional:` entry in the pack's `pack.yaml` naming a relative path or glob
-  with no `..` segment that matches at least one file under `config/` — resolved
-  by the checker's own walk, so `**` enters dot-directories — and a `when:` of
-  exactly one known axis, `forge`, `editor`, `secrets` or `update_bot`, with a
+  every `conditional:` entry in the pack's `pack.yaml` naming a relative path or
+  glob with no `..` segment that matches at least one file under `config/` —
+  resolved by the checker's own walk, so `**` enters dot-directories — and a
+  `when:` of exactly one known axis, `forge`, `secrets` or `update_bot`, with a
   value that axis takes, `secrets: none` refused, since an unknown axis is one
   no caller answers and its file lands everywhere silently; and the pack's three
   doctor- and setup-read facts in the shapes their readers trust — every

@@ -292,24 +292,23 @@ never a `settings.json` edit without separate consent, and removal is by
 subtraction, dropping only the keys your repo's lockfile recorded. A pack may
 also declare **repo config files** it owns — a language gate's own config, a
 deploy target's own root config and the deploy task beside it, a project task a
-framework pack owns — the Astro pack's favicon rasterizer is the first — and the
-per-pack editor fragment `/vwf:init` merges — on the same merges-never-owns
-terms, behind their own consent line, and capped by a fixed allowlist of what
-may sit at a repo's root. The mise config, the file-based task library
-everything else runs through, the dprint, pre-commit, gitleaks and grype
-configs, and the ignore, attribute, graph-ignore and Renovate files belong to no
-pack: they are written by `/stackgen:tool-config`, a skill you can also run
-yourself
+framework pack owns — the Astro pack's favicon rasterizer is the first — on the
+same merges-never-owns terms, behind their own consent line, and capped by a
+fixed allowlist of what may sit at a repo's root. The mise config, the
+file-based task library everything else runs through, the dprint, pre-commit,
+gitleaks and grype configs, and the ignore, attribute, graph-ignore and Renovate
+files belong to no pack: they are written by `/stackgen:tool-config`, a skill
+you can also run yourself
 (`/stackgen:tool-config mise add tool <name> <version> to dev environment`),
 which keeps each requester's lines between its own `# >>> <name>` markers and
 writes a line outside them only on your approval — a pack asks it for a tool
 pin, an environment value, an alias, a formatter plugin, an exclude, a linter
 ignore, a hook, an ignore line, a pinned GitHub ignore template or an attribute
 through `tool-config:` in its `pack.yaml`. Language manifests, CI workflow files
-and a **whole** editor file stay outside that fence: the first two declare what
-the project *is*, the third is composed from every pack's slice and belongs to
-no single one, and no pack decides any of them. The packs, bundles and kinds
-that ship are inventoried in
+and editor settings stay outside that fence: the first two declare what the
+project *is*, the third is yours — neither plugin ships, asks about or merges
+any editor configuration — and no pack decides any of them. The packs, bundles
+and kinds that ship are inventoried in
 [`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md), generated from
 the tree itself; the newest kind is `stylesheet`, the one that answers vwf's
 seventh axis — how a web frontend's styles are authored, with `tailwindcss`,

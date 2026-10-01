@@ -102,15 +102,15 @@ much smaller than the one it replaced: whole families of assertion became
    two-directions-cover-each-other-on-a-rename idiom rule 7 uses for agent
    cross-references.
 10. **The technology-free vwf guard.** Below.
-11. **A pack's `config/` payload tier is materializable as-is.** Seven
-    assertions, every one of them about a file whose failure mode in the
-    *target* repo is silence rather than an error. The landed-tree assertions
-    run over each `stackgen:tool-config` asset tree
-    (`skills/tool-config/assets/<tool>/`) exactly as over a pack's `config/`,
-    since the skill lands it whole at the repo root — each tree's root also
-    admitting that tool's own root files, per `TOOL_CONFIG_ROOT_FILES` — and
-    over each of `/vwf:init`'s asset trees (`skills/init/assets/<name>/`) with
-    no root allowlist, since init picks one licence out of several there:
+11. **A pack's `config/` payload tier is materializable as-is.** Six assertions,
+    every one of them about a file whose failure mode in the *target* repo is
+    silence rather than an error. The landed-tree assertions run over each
+    `stackgen:tool-config` asset tree (`skills/tool-config/assets/<tool>/`)
+    exactly as over a pack's `config/`, since the skill lands it whole at the
+    repo root — each tree's root also admitting that tool's own root files, per
+    `TOOL_CONFIG_ROOT_FILES` — and over each of `/vwf:init`'s asset trees
+    (`skills/init/assets/<name>/`) with no root allowlist, since init picks one
+    licence out of several there:
     - a **task file lands executable**. `config/.config/mise/tasks/**` is a
       *file-based* task library — mise runs each file directly — so one landing
       644 fails as an **unknown task** rather than as a permission error, which
@@ -139,27 +139,24 @@ much smaller than the one it replaced: whole families of assertion became
       forge directory is on the list for that same reason and the workflow is
       carved back out of it: a pack states which task CI runs, and the workflow
       is the repo's release model's;
-    - an **editor fragment parses as JSONC** and carries only `settings`,
-      `nesting` and `extensions`. `/vwf:init` composes the fragments into editor
-      files no pack owns, and a fourth key is dropped without a word;
     - every **`conditional:` entry** in the pack's `pack.yaml` names a **path or
       glob that matches at least one file** under its own `config/` tier, and a
       `when:` map of **exactly one known axis** — `forge` (`github`, `gitlab`),
-      `editor` (`vscode`), `secrets` (any provider slug — never `none`, the
-      no-provider answer init reads as "no match"), `update_bot` (`renovate`,
-      `dependabot`, `none`) — with a value that axis takes, and a path that is
-      relative and carries no `..` segment. The materializer evaluates the key
-      against the caller's answers, and an axis the caller did not answer reads
-      as true — the omitted key lands the file. So an axis outside the
-      vocabulary is one no caller ever answers: its condition can never skip
-      anything, and the file lands everywhere, silently. A value the axis never
-      takes is the mirror case — no answer ever satisfies it, so the file lands
-      nowhere; a path matching nothing is a condition guarding no file, which is
-      a rename that forgot the key — the glob is matched by the checker's own
-      walk, so `**` enters dot-directories like `.config/`, which `globSync`
-      would not; and an absolute path or a climb is rule 13's fault stated on a
-      glob — it reaches out of what the pack lands. The finding names the pack,
-      the entry's index and its path;
+      `secrets` (any provider slug — never `none`, the no-provider answer init
+      reads as "no match"), `update_bot` (`renovate`, `dependabot`, `none`) —
+      with a value that axis takes, and a path that is relative and carries no
+      `..` segment. The materializer evaluates the key against the caller's
+      answers, and an axis the caller did not answer reads as true — the omitted
+      key lands the file. So an axis outside the vocabulary is one no caller
+      ever answers: its condition can never skip anything, and the file lands
+      everywhere, silently. A value the axis never takes is the mirror case — no
+      answer ever satisfies it, so the file lands nowhere; a path matching
+      nothing is a condition guarding no file, which is a rename that forgot the
+      key — the glob is matched by the checker's own walk, so `**` enters
+      dot-directories like `.config/`, which `globSync` would not; and an
+      absolute path or a climb is rule 13's fault stated on a glob — it reaches
+      out of what the pack lands. The finding names the pack, the entry's index
+      and its path;
     - the pack's **three doctor- and setup-read facts** take the shapes their
       readers trust: every `languages[].facts.binaries` entry is a bare name
       (the `PATH` lookup) or a map of exactly `name` and an optional non-empty
