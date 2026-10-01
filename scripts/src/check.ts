@@ -272,8 +272,6 @@ function* hookCommands(
 const PACK_MISE_TASKS = join(".config", "mise", "tasks");
 /** Where retired pre-commit hook fragments sat; a pack asks the skill now. */
 const PACK_HOOK_FRAGMENTS = join(".config", "pre-commit.d");
-/** Where a landed tree puts its editor-settings fragment. */
-const PACK_EDITOR_FRAGMENTS = join(".config", "vscode.d");
 /** Where `stackgen:tool-config` keeps one landed tree per tool. */
 const TOOL_CONFIG_ASSETS = "skills/tool-config/assets";
 /** Where `/vwf:init` keeps its own landed trees — the hygiene assets. */
@@ -385,7 +383,7 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  * What a stackgen pack ships to run in a target repo must be materializable
  * as-is.
  *
- * Seven assertions, all of them about a file whose failure mode in the target
+ * Six assertions, all of them about a file whose failure mode in the target
  * repo is silence rather than an error:
  *
  * - a task file lands **executable** — `.config/mise/tasks/**` is a *file-based*
@@ -403,9 +401,6 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  *   it — and inside the one forge directory the list admits, a **workflow file
  *   is refused**: a pack states which task CI runs and never writes the
  *   workflow;
- * - an **editor fragment** parses as JSONC and carries only `settings`,
- *   `nesting` and `extensions`, because init merges the fragments into a file
- *   no pack owns and a key outside the three is dropped without a word;
  * - every **`conditional:` entry** in the pack's `pack.yaml` names a path or
  *   glob that matches a file under its `config/` tier, and a `when:` of
  *   exactly one known axis with a value that axis takes — an axis no caller
@@ -461,15 +456,6 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
         `pack config/ tier ships a CI workflow — a pack states which task CI `
           + `runs and never writes the workflow: ${path(absolute)}`,
       );
-    }
-
-    for (const absolute of filesUnder(join(tree, PACK_EDITOR_FRAGMENTS))) {
-      if (!absolute.endsWith(".jsonc")) {
-        continue;
-      }
-      for (const message of editorFragmentFaults(readText(absolute))) {
-        at(`${path(absolute)}: ${message}`);
-      }
     }
   };
 
@@ -887,7 +873,7 @@ function assetTrees(plugin: Plugin, assets: string): string[] {
 }
 
 /**
- * The four axes a `conditional:` entry may name, and the values each admits.
+ * The three axes a `conditional:` entry may name, and the values each admits.
  * `null` is "any slug": the secrets axis is answered by whichever
  * capability-provider pack the product picked, and the vocabulary there is
  * the stacks tree rather than a list here.
@@ -895,7 +881,6 @@ function assetTrees(plugin: Plugin, assets: string): string[] {
 const PACK_CONDITION_AXES: ReadonlyMap<string, ReadonlySet<string> | null> =
   new Map([
     ["forge", new Set(["github", "gitlab"])],
-    ["editor", new Set(["vscode"])],
     ["secrets", null],
     ["update_bot", new Set(["renovate", "dependabot", "none"])],
   ]);
@@ -986,17 +971,7 @@ function conditionalFaults(document: unknown, config: string): string[] {
   return faults;
 }
 
-/**
- * The only three keys an editor fragment may carry.
- *
- * The fragment is not an editor settings file: it is the slice of one a single
- * pack owns, and init composes the real file from every pack's slice. A fourth
- * key is a pack reaching past its slice into a file it does not own, and the
- * merge would drop it silently.
- */
-const EDITOR_FRAGMENT_KEYS = ["settings", "nesting", "extensions"];
-
-/** Strings and arrays-of-strings are the only leaf shapes a fragment may use. */
+/** A list whose every item is a string. */
 function isStringList(value: unknown): boolean {
   return Array.isArray(value) && value.every(item => typeof item === "string");
 }
@@ -1004,94 +979,6 @@ function isStringList(value: unknown): boolean {
 /** A JSON object — not an array, not `null`. */
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-/**
- * JSONC minus the C: comments and trailing commas removed so `JSON.parse` can
- * read what an editor would. String-aware, because a `//` inside a URL value is
- * not a comment.
- */
-function stripJsonc(source: string): string {
-  let out = "";
-  let index = 0;
-  while (index < source.length) {
-    const char = source[index]!;
-    if (char === "\"") {
-      const start = index++;
-      while (index < source.length) {
-        if (source[index] === "\\") {
-          index += 2;
-          continue;
-        }
-        index++;
-        if (source[index - 1] === "\"") {
-          break;
-        }
-      }
-      out += source.slice(start, index);
-      continue;
-    }
-    if (char === "/" && source[index + 1] === "/") {
-      while (index < source.length && source[index] !== "\n") {
-        index++;
-      }
-      continue;
-    }
-    if (char === "/" && source[index + 1] === "*") {
-      const end = source.indexOf("*/", index + 2);
-      index = end === -1 ? source.length : end + 2;
-      continue;
-    }
-    out += char;
-    index++;
-  }
-  return out.replace(/,(\s*[}\]])/g, "$1");
-}
-
-/** What a pack's `config/.config/vscode.d/<pack>.jsonc` is held to. */
-function editorFragmentFaults(source: string): string[] {
-  let fragment: unknown;
-  try {
-    fragment = JSON.parse(stripJsonc(source));
-  }
-  catch (error) {
-    return [`editor fragment is not valid JSONC — ${firstLine(error)}`];
-  }
-  if (!isPlainObject(fragment)) {
-    return ["editor fragment is not a JSON object"];
-  }
-
-  const faults: string[] = [];
-  for (const key of Object.keys(fragment)) {
-    if (!EDITOR_FRAGMENT_KEYS.includes(key)) {
-      faults.push(
-        `editor fragment declares \`${key}\`, which is not one of `
-          + `${EDITOR_FRAGMENT_KEYS.join(", ")}`,
-      );
-    }
-  }
-  const { settings, nesting, extensions } = fragment;
-  if (settings !== undefined && !isPlainObject(settings)) {
-    faults.push("editor fragment's `settings` is not an object");
-  }
-  if (nesting !== undefined) {
-    if (!isPlainObject(nesting)) {
-      faults.push("editor fragment's `nesting` is not an object");
-    }
-    else {
-      for (const [parent, children] of Object.entries(nesting)) {
-        if (!isStringList(children)) {
-          faults.push(
-            `editor fragment's \`nesting.${parent}\` is not a list of strings`,
-          );
-        }
-      }
-    }
-  }
-  if (extensions !== undefined && !isStringList(extensions)) {
-    faults.push("editor fragment's `extensions` is not a list of strings");
-  }
-  return faults;
 }
 
 /**

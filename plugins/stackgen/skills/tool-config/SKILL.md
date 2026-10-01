@@ -105,7 +105,7 @@ are fixed:
 | `runtimes`                                 | language keys, comma-separated — `node`, `python`, `dart`, `go`, `rust`, `swift` |
 | `plugin_sources`                           | `<source-ref>\|<name>` rows, comma-separated; empty on none     |
 | `plugins`                                  | `<name>@<marketplace>` rows, comma-separated; empty on none     |
-| `forge`, `editor`, `secrets`, `update_bot` | the four conditional answers, `none` the spelling of no answer  |
+| `forge`, `secrets`, `update_bot`           | the three conditional answers, `none` the spelling of no answer |
 | `scopes`                                   | the commit gate's scopes, project ids, comma-separated; empty on none |
 
 **A list is spelled comma-separated, no spaces** — `members=backend,frontend`
@@ -158,11 +158,7 @@ XCODE_VERSION = ""
 # <<< swiftui
 ```
 
-JSONC spells them `// >>> <requester>` and `// <<< <requester>`. An editor
-fragment's asset carries no markers: the skill wraps its content in the
-tool's `//` base block as it lands the file, and a requester's `//` block
-follows it. The base the
-skill lands for a tool is that tool's own block — `# >>> mise`,
+The base the skill lands for a tool is that tool's own block — `# >>> mise`,
 `# >>> dprint`, `# >>> pre-commit` — and in a file one tool lands and
 another's verb reaches, the landing tool's name is the base. A block may sit
 inside a list — a TOML array, a YAML sequence, a verbose-mode regex, where a

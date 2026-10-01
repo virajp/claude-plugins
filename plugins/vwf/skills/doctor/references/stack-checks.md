@@ -511,11 +511,12 @@ names is one drift row naming both, same remedy — and so is a `skipped:` row
 whose `when: forge` names a host the live one contradicts, since the files
 that axis skipped are waiting for that reshape to land them. A repo with **no**
 remote at all is neither row: there is nothing live to contradict, and the
-recorded value stands. And a config stamped `config_format` 21 that carries no
-`answers:` block at all is a drift row on its own, same remedy — that block is
-what every caller now evaluates a conditional file against. A config stamped
-**20** is not this row's business: §2's stamp comparison already reports the
-format drift, and the callers infer the four answers meanwhile.
+recorded value stands. And a config stamped `config_format` 21 or later that
+carries no `answers:` block at all is a drift row on its own, same remedy —
+that block is what every caller now evaluates a conditional file against. A
+config stamped **20** is not this row's business: §2's stamp comparison
+already reports the format drift, and the callers infer the three answers
+meanwhile.
 
 The hash comparison stays the first and cheapest test, and a match ends it: a
 file matching its record raises nothing and nothing further is read. **A

@@ -300,14 +300,11 @@ Four things stay **outside** the fence, and they are the whole of it:
 2. **CI workflow files.** A pack states which task names CI must run; the
    workflow that runs them is the repo's, and a generated pipeline nobody
    maintains is worse than none.
-3. **Whole editor files.** A pack never ships `.vscode/settings.json` or
-   `.vscode/extensions.json`: it ships a fragment under
-   `.config/vscode.d/<pack>.jsonc` and the orchestrator composes the
-   fragments into those two files, inside one marked block a person's own
-   keys sit after and beat (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`).
-   The file stays the repo's; only the block is anyone else's. Narrowed
-   2026-09-06 from "editor settings" outright — the reasoning is
-   `docs/memory/decisions/2026-09-06-editor-fragments-inside-the-fence.md`.
+3. **Editor settings.** A pack never ships `.vscode/` files or any other
+   editor configuration: the editor is the user's to configure. The
+   2026-09-06 narrowing that let a pack ship a fragment composed into a
+   marked block was reverted on 2026-10-01 — the reasoning is
+   `docs/memory/decisions/2026-10-01-editor-config-dropped.md`.
 4. **`CLAUDE.md`** — vwf's, out of scope outright, as it always was.
 
 **Charters ratchet**, which is why the four are enumerated rather than left
@@ -377,9 +374,9 @@ entries:
     source: tool-config/mise@<stackgen version> # sync leaves it alone
     hash: <content hash>
 skipped: # config/ paths a pack declared `conditional:` whose condition was false at the last run
-  - path: .config/vscode.d/eslint.jsonc
-    pack: toolchain-gate/eslint # <type>/<slug> — the pack whose conditional: entry matched
-    when: { editor: vscode } # the condition, as the pack states it — re-evaluated by a later run
+  - path: renovate.json
+    pack: <type>/<slug> # the pack whose conditional: entry matched
+    when: { update_bot: renovate } # the condition, as the pack states it — re-evaluated by a later run
 settings_keys: [] # exact settings.json keys stackgen added, with consent — a hooks entry is spelled `hooks.<Event>[<matcher>]`
 mcp_servers: [] # exact .mcp.json server keys stackgen added, with consent
 local_plugin: # the generated local plugin — absent when none was written
@@ -405,10 +402,10 @@ Rules the lockfile enforces:
 - **`hash:` has three writers, and a differing hash is drift only when none
   of them ran.** The materializer writes it at landing. The composing skill
   (`/vwf:init`) **re-records** it after every change it makes to a landed
-  file — the marked-position fills, the `.gitignore` section appends, the
-  editor block — and its replace-or-keep offer
-  re-records it on either answer, so a file kept as the repo's own reads as
-  current, not as drift, the next time sync or the offer runs.
+  file — the marked-position fills, the `.gitignore` section appends — and
+  its replace-or-keep offer re-records it on either answer, so a file kept
+  as the repo's own reads as current, not as drift, the next time sync or
+  the offer runs.
 - **Anything not in the lockfile is not stackgen's** — never diffed, never
   overwritten, never removed. A landing set that collides with an unlisted
   path is a conflict for the user, not a write.

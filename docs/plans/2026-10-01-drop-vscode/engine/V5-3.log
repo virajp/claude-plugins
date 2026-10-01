@@ -1,0 +1,13 @@
+V5 round 3 — range f68a30ef..70567fb4 (new: 70567fb4, V1 fix)
+
+== /code-review high (unverified, 7 findings, all on TC/references/mise.md) ==
+1. :516 — the "setup/all still calls it" test depends on setup/all's own drift-row answer in the same call; preview-time vs written-state is unspecified (orphan left, or a preview that never stabilises).
+2. :516 — only setup/all is checked as a caller; conf.d depends, user tasks, CI steps still break on delete.
+3. :516 — "calls it" has no mechanical definition (commented lines, #MISE depends, `mise r`).
+4. :517 — a kept setup/vscode keeps its tool-config/mise lock entry; drift take-theirs could still delete it.
+5. :517 — "kept and reported" has no row type/answer in SKILL.md's answer table.
+6. :514 — opening clause "which setup:all no longer calls" contradicts the new test; setup:all vs setup/all ambiguity.
+7. :516 — altitude: order retired task-file delete rows after the task-library rows instead of a per-row caller check.
+
+== /security-review ==
+NO FINDINGS — prose change; safer deletion condition.

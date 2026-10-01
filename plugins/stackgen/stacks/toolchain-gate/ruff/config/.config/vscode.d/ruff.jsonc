@@ -1,7 +1,0 @@
-// Editor fragment: `/vwf:init` merges it into the editor settings; a key after its block wins.
-// No `settings`: an interpreter or ruff binary key could format with another ruff than the gate.
-{
-  "extensions": [
-    "charliermarsh.ruff",
-  ],
-}

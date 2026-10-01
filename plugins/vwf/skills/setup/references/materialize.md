@@ -36,7 +36,7 @@ to read.
   each `projects.<name>.stylesheet`
   (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states").
   Since `config_format` 21 it also carries the **`answers:`** block — the
-  four conditional axes, read here and passed to every landing ("The answers
+  three conditional axes, read here and passed to every landing ("The answers
   map" below).
 - **Each repo's adapter lockfile** — `.claude/stackgen/lock.yaml`, the
   materialization record. Read the **slugs** its `entries:` carry and nothing
@@ -105,13 +105,12 @@ repo: <path>
 `<path>` is the member's `path` relative to the base repo root. Absent means
 the current repo, so a base-targeted landing carries no such line.
 
-Beside it — **always**, base-targeted or not — the four answers, in the same
-payload style:
+Beside it — **always**, base-targeted or not — the three answers, in the
+same payload style:
 
 ```text
 answers:
   forge: <forge>
-  editor: <editor>
   secrets: <provider>
   update_bot: <bot>
 ```
@@ -121,9 +120,9 @@ answers:
 Those are the conditional axes a pack's `conditional:` entries are evaluated
 against, and they are read from the **base's** `.config/vwf.yaml`
 (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, the `answers:` block):
-`editor` and `secrets` once for the product, from `answers.editor` and
-`answers.secrets`; `forge` and `update_bot` from the `answers.repos:` entry
-keyed by the **target** repo's member path, spelled exactly as
+`secrets` once for the product, from `answers.secrets`; `forge` and
+`update_bot` from the `answers.repos:` entry keyed by the **target** repo's
+member path, spelled exactly as
 `enforcement.kept_files` spells one — `.` for the base. `none` is a legal
 value on every axis and is passed as it stands: it is an answer, not an
 absence.
@@ -150,15 +149,13 @@ map, and **write nothing**:
 
 - `forge` — the target repo's `origin` host, `none` where there is no
   remote;
-- `editor` — a `.vscode/` directory in the target repo, or the editor binary
-  on `PATH`, else `none`;
 - `secrets` — the provider slug the target repo's adapter lockfile pins,
   else `none`;
 - `update_bot` — a Renovate config or a Dependabot config in the target
   repo, else `none`.
 
 Doctor's stamp check reports 20 → 21 as drift in its own right, and the
-reshape that follows is what asks the two questions and writes the block.
+reshape that follows is what asks the questions and writes the block.
 This pass never writes one.
 
 **Each landing is the adapter's own consent line; setup adds no consent of its
@@ -396,7 +393,7 @@ One block, carried back to the spine:
   **landed**, **declined**, or **already materialized**;
 - **the skips the adapter returned**, under their own heading, one line each
   — the path, the pack, and the `when:` that dropped it — listed exactly as
-  `/vwf:init`'s plan lists its **Skipped** rows, so a fragment an answer
+  `/vwf:init`'s plan lists its **Skipped** rows, so a file an answer
   dropped is visible rather than silently absent. A landing that skipped
   nothing prints no heading;
 - one line per recorded `forge` the live host contradicted — the repo, the

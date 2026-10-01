@@ -135,7 +135,7 @@ repos:
         name: Check JSON syntax
         description: Every config gate below reads a config file; an unparseable
           one fails inside the tool with a message about the tool.
-        # The composed editor files under .vscode/ are JSONC by design.
+        # .vscode/ files are JSONC by design.
         exclude: ^\.vscode/
       - id: check-toml
         name: Check TOML syntax

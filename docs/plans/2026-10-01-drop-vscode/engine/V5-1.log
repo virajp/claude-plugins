@@ -1,0 +1,16 @@
+V5 round 1 — range f68a30ef..09d9cd6e
+
+== /code-review high (unverified, 10 findings) ==
+1. plugins/vwf/skills/init/references/existing-repo.md:99 — removing the editor-directory exemption from pass 1 makes every repo's .vscode/ a stray root entry reported on every init/reshape; keep .vscode/ exempt as the user's.
+2. plugins/stackgen/skills/tool-config/SKILL.md:108 — editor key dropped while "An unknown key is refused"; stackgen 3.0.0 with vwf 20.0.1 makes init's `all ... editor=vscode` call fail; accept-and-ignore the retired key, or version the dependency.
+3. plugins/vwf/skills/setup/references/migrate-pipeline.md:39 — 21→22 migration deletes .config/vscode.d/*.jsonc but leaves their stackgen lockfile entries: records; sync/doctor then read the missing files as repo-edited.
+4. plugins/stackgen/skills/tool-config/references/mise.md:487 — no migration retires the already-landed setup:vscode task file and its lock entry in shaped repos; it stays as an orphan that still installs extensions.
+5. scripts/src/check.ts:274 — vscode.d walk deleted with no replacement; a pack shipping config/.config/vscode.d/x.jsonc now passes; add a retired-fragment-dir finding like PACK_HOOK_FRAGMENTS.
+6. plugins/stackgen/assets/pack-format.md:249 — conditional: example uses path renovate.json, which a pack may not ship (checker refuses unallowlisted root entry); output-tree.md:377 repeats it.
+7. plugins/stackgen/assets/pack-format.md:254 — no pack declares conditional: any more, yet all its machinery stays; E1 keeps it deliberately — a question, not a defect.
+8. plugins/vwf/skills/init/references/existing-repo.md:646 — pass 7 heading "Editor fragments" marked Retired but still holds live ignore-file and template-fallback rows; "ten passes" misleads.
+9. plugins/stackgen/skills/tool-config/references/mise.md:284 — standalone "forge, secrets and update_bot are read by no mise file." duplicates line 327.
+10. plugins/stackgen/assets/output-tree.md:307 — cites docs/memory/decisions/2026-10-01-editor-config-dropped.md, not yet on the branch (V6 creates it).
+
+== /security-review ==
+NO FINDINGS — the diff removes the editor-profile feature; setup/vscode deleted, check.ts loses only the editor-fragment rule, pre-commit-config.yaml changes a comment only (the ^\.vscode/ check-json exclude is unchanged).

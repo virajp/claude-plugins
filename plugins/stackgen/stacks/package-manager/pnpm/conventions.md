@@ -40,15 +40,6 @@ and nothing else tells them apart — then `package_manager: bun` in
 because the hook fires in every repo, including ones that never heard of vwf.
 Its `sed` stays BSD-compatible: no `\s`, no `\b`.
 
-**The editor fragment, `.config/vscode.d/pnpm.jsonc`,** hides the lockfile
-and the Turbo cache (`.turbo/`, in all three exclude maps — Turbo is a
-generated component with no pack of its own, carried by the pnpm-turbo bundle,
-so its exclude lives beside the manager it runs through) and nests everything
-that travels with `package.json` under it: the lockfile, the workspace file,
-`.npmrc`, the test, build and orchestrator configs, the hosting and secrets
-manifests. `node_modules/` is the tsconfig fragment's. The fragment lands only
-where init's editor answer is vscode — `pack.yaml`'s `conditional:` names it.
-
 ## The task library this pack owns
 
 This pack ships a `config/.config/mise/tasks/` tree — `code/format`,

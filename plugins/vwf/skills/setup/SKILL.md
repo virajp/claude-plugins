@@ -156,10 +156,12 @@ check](#the-second-shape-check) under the pass.
 Read `.config/vwf.yaml`, then compare its `blueprint_format` and `config_format`
 against the shipped integers (`${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`, and the
 current `config_format` named in `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`).
-The latest config step, `20 → 21`, is the smallest kind: add the top-level
-`answers:` block when the file lacks it, bump the stamp, and move nothing
-else — no content converts, since nothing wrote the four answers into the tree
-before 21, and every key is written, `none` where no answer was picked.
+The latest config step, `21 → 22`, is the smallest kind: remove
+`answers.editor` and `enforcement.editor_keys` where the file carries them,
+offer each `.config/vscode.d/*.jsonc` for delete, bump the stamp, and touch
+nothing else — no content converts, and `.vscode/` is the user's, never
+touched; [migrate pipeline](references/migrate-pipeline.md) step 1 carries
+the rows.
 
 | `.config/vwf.yaml`                                       | Mode      |
 | -------------------------------------------------------- | --------- |

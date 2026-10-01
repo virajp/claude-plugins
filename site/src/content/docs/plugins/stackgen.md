@@ -275,17 +275,16 @@ to the `setup:deps:*` tasks rather than `swift package resolve`; no pack lands
 `toolchain-gate/swift-format` lands `.config/swift-format.json`, and
 `toolchain-gate/swiftlint` lands `.config/swiftlint.yml` plus
 `.config/mise/conf.d/swiftlint.toml`, which pins `aqua:realm/SwiftLint` at
-0.65.1 so `mise.toml` does not name SwiftLint; each ships an editor fragment on
-`editor: vscode`. The `language/swift` pack supplies the tasks: `code:format`
-takes the staged files the hook passes and otherwise, like `code:lint`, takes
-its file list from git — every file it does not ignore, read NUL-separated and
-passed `./`-prefixed, so no file name is read as a flag, and a failed
-`git ls-files` stops the task with an error rather than judging an empty list;
-with neither a `.git` entry nor `GIT_DIR`, or no git installed, both walk the
-tree instead — and `code:lint` skips SwiftLint when no Swift source is in scope.
-Of the `setup:deps:*` tasks, `install`, `outdated` and `upgrade` run
-`swift package`; `cleanup` removes `.build/`, and `audit` is a stated no-op,
-since SwiftPM ships no advisory command.
+0.65.1 so `mise.toml` does not name SwiftLint. The `language/swift` pack
+supplies the tasks: `code:format` takes the staged files the hook passes and
+otherwise, like `code:lint`, takes its file list from git — every file it does
+not ignore, read NUL-separated and passed `./`-prefixed, so no file name is read
+as a flag, and a failed `git ls-files` stops the task with an error rather than
+judging an empty list; with neither a `.git` entry nor `GIT_DIR`, or no git
+installed, both walk the tree instead — and `code:lint` skips SwiftLint when no
+Swift source is in scope. Of the `setup:deps:*` tasks, `install`, `outdated` and
+`upgrade` run `swift package`; `cleanup` removes `.build/`, and `audit` is a
+stated no-op, since SwiftPM ships no advisory command.
 
 **SwiftUI** followed the same day as the second `app-framework` pack, and the
 first in the `native-ui` category. `app-framework/swiftui` is the root of the
@@ -503,23 +502,22 @@ than something that rides the landing:
   owns the root config its own tool reads, which is how
   `cloud-service/workers-static-assets`, `cloud-service/workers-ssr` and
   `cloud-service/containers` each ship a `wrangler.jsonc` and the
-  `p:<id>:deploy` task beside it; and any pack may drop an **editor fragment**
-  into `.config/vscode.d/`, three keys wide, which `/vwf:init` composes —
-  declares them in a `config/` tree mirroring the repo root, and they land
-  there. The mise, dprint, pre-commit, gitleaks and grype files, `.gitignore`,
-  `.gitattributes`, `.graphifyignore` and `renovate.json` are no pack's:
-  `stackgen:tool-config` writes them, and a pack asks it for a line through
-  `tool-config:`. A pack may also mark some of them **conditional**: an optional
-  `conditional:` list in its `pack.yaml`, each entry a `config/` path or glob
-  and a `when:` of one axis to one value — `forge` (`github`, `gitlab`),
-  `editor` (`vscode`), `secrets` (a provider slug), `update_bot` (`renovate`,
-  `dependabot`, `none`) — evaluated by the materializer against the `answers:`
-  map the caller passes beside `repo:`; a path whose answer differs is left out
-  of the landing set and written to the lockfile's `skipped:` list with its
-  condition, never a create and never a conflict, and an axis the caller did not
-  answer reads true. That last rule is a **fallback**, not the path anything
-  here takes: all three callers — `/vwf:init`, `/vwf:setup`'s materialize pass
-  and `/stackgen:stackgen-sync` — pass a full map, read from the product's
+  `p:<id>:deploy` task beside it — declares them in a `config/` tree mirroring
+  the repo root, and they land there. The mise, dprint, pre-commit, gitleaks and
+  grype files, `.gitignore`, `.gitattributes`, `.graphifyignore` and
+  `renovate.json` are no pack's: `stackgen:tool-config` writes them, and a pack
+  asks it for a line through `tool-config:`. A pack may also mark some of them
+  **conditional**: an optional `conditional:` list in its `pack.yaml`, each
+  entry a `config/` path or glob and a `when:` of one axis to one value —
+  `forge` (`github`, `gitlab`), `secrets` (a provider slug), `update_bot`
+  (`renovate`, `dependabot`, `none`) — no shipped pack declares one today —
+  evaluated by the materializer against the `answers:` map the caller passes
+  beside `repo:`; a path whose answer differs is left out of the landing set and
+  written to the lockfile's `skipped:` list with its condition, never a create
+  and never a conflict, and an axis the caller did not answer reads true. That
+  last rule is a **fallback**, not the path anything here takes: all three
+  callers — `/vwf:init`, `/vwf:setup`'s materialize pass and
+  `/stackgen:stackgen-sync` — pass a full map, read from the product's
   `.config/vwf.yaml` `answers:` block with the forge re-read live from the
   repo's `origin`. A pack's `skipped:` rows live and die with its `entries:`, so
   removing or un-pinning the pack drops them too. Everything else goes under
@@ -581,54 +579,21 @@ and so did a deploy target's own config and its `p:<id>:deploy` task, the same
 day; **four things stay out, enumerated rather than left to judgment** — a
 language manifest and its lockfile (a manifest is the project's own declaration
 of what it is), CI workflow files (a pack states which task names CI must run;
-the workflow is the repo's), a **whole editor file** (it is composed from every
-pack's slice, so it belongs to no single one), and `CLAUDE.md` (vwf's, out of
-scope outright). Charters ratchet, which is why they are a list: each file the
-tier absorbs makes the argument for the next one easier, and "gate configs went
-in, so why not the manifest" is the argument that list exists to answer.
+the workflow is the repo's), **editor settings** (yours to configure — neither
+plugin ships, asks about or merges any), and `CLAUDE.md` (vwf's, out of scope
+outright). Charters ratchet, which is why they are a list: each file the tier
+absorbs makes the argument for the next one easier, and "gate configs went in,
+so why not the manifest" is the argument that list exists to answer.
 
-The third of those was narrowed on 2026-09-06 rather than dropped, and the
-narrowing is worth reading precisely: **whole editor files stay outside,
-per-pack fragments come inside**. A pack ships `.config/vscode.d/<pack>.jsonc`
-carrying exactly three keys — `settings`, an object; `nesting`, a map of a
-parent file name to its children; and `extensions`, a list of recommended ids —
-and nothing else. What forced it is that a recommendation list only ever
-*prompts*, is per-workspace, and nothing merges a common set into it: a pack
-that ships a linter and says nothing about the editor ships a linter whose
-editor integration nobody turns on. Every fragment in the tree — twelve of them:
-`/vwf:init`'s hygiene baseline, dprint-editor, pre-commit, eslint, ruff,
-tsconfig, analysis-options, mise, astro, pnpm, swift-format and swiftlint — is
-**conditional on the editor**: its pack's `pack.yaml` names it under
-`when: { editor: vscode }` (mise's, dprint-editor's and pre-commit's, by
-`stackgen:tool-config`'s `editor` argument; the hygiene baseline by init's own
-editor answer), so a repo whose init answer was *no* lands none and composes
-nothing. The split between them is by ownership. The hygiene baseline carries
-**editor-wide keys alone** — indentation and suggestion defaults, the generic
-excludes, todo-tree, the nesting rows no stack owns, the generic extensions —
-and every key that names a stack sits in the fragment of the pack that pins it:
-`node_modules`, the tsbuildinfo files, the template-string converter and `*.js`
-nesting in tsconfig's; `.dart_tool` in analysis-options'; `.astro` in astro's;
-`.turbo`, the pnpm lockfile and the `package.json` children in pnpm's, since
-Turbo is a generated component the pnpm-turbo bundle carries and has no pack of
-its own; `.build`, `.swiftpm` and the `Package.swift` nesting in swift-format's;
-the YAML language-server keys and their extension in pre-commit's. The default
-formatter is bound **per language** in the dprint fragment — one `[<language>]`
-scope for each plugin `.config/dprint.json` carries, `[toml]` to
-even-better-toml — never editor-wide, which would ask dprint to format a file it
-has no plugin for and override Dart's formatter by composition order alone.
-
-Two files inside the fence are written **whole** by no pack, and both are
-composed by `/vwf:init` — the **two editor files**. The pre-commit config is no
-longer one of them: it is `stackgen:tool-config`'s, and a pack asks it for a
-hook. For the editor files, init deep-merges every `vscode.d/` fragment's
-`settings`, unions the `nesting` children per parent and the `extensions` list,
-and writes one marked block **first** in each file. A key you already carry
-outside the block is a **collision**: the block **omits** it, so your key wins
-without the file ever holding a duplicate, and what becomes of it — keep mine,
-take the pack's, or union — is asked once by init and recorded, an identical
-extension id simply kept; everything outside the block survives a second merge
-byte-for-byte unless you chose otherwise for that key. Nothing in stackgen edits
-either composed file, which is what keeps a fragment a fragment.
+The third of those was narrowed on 2026-09-06 to let each pack ship a slice of
+editor settings that `/vwf:init` composed into the two `.vscode` files, and the
+narrowing was **reverted on 2026-10-01**: no pack ships editor settings, init
+asks no editor question and composes nothing, and the per-repo editor profile
+task is gone. A repo's `.vscode/` is yours, and nothing in either plugin writes
+it. The lines that keep a `.vscode/` file of your own passing the gates stay —
+dprint reads those files as JSONC with trailing commas, pre-commit's
+`check-json` hook skips them, and the ignore file deliberately leaves `.vscode/`
+tracked.
 
 One root file is a **shim** rather than a config: `dprint.json`, whose entire
 content is `{ "extends": ".config/dprint.json" }`. That formatter's config
@@ -706,14 +671,13 @@ in the skill's assets and land through `all`, and no tool's skill is copied into
 a repo. Nothing there is language-specific — ESLint is JS/TS-only, so it is a
 topic of the TypeScript language bundle rather than a repo gate. Getting that
 backwards is how a polyglot repo ends up with three secret scanners, one per
-language. Each tool lands **its own config file** under `.config/`, and dprint
-and pre-commit a `vscode.d/` editor fragment where the editor answer is VS Code.
-The gate config carries three tool-neutral hooks — `format`, `lint`, `sec` —
-that call `code:format`, `code:lint` and `code:sec`, and each tool is configured
-once, inside the task. Ahead of them a `no-dash-names` hook refuses a commit
-that stages any path with a file or folder name starting with `-`, and asks you
-to rename it — every tool those tasks call would read such a name as an option.
-It also installs at `post-commit`, where a `graphify-refresh` hook runs
+language. Each tool lands **its own config file** under `.config/`. The gate
+config carries three tool-neutral hooks — `format`, `lint`, `sec` — that call
+`code:format`, `code:lint` and `code:sec`, and each tool is configured once,
+inside the task. Ahead of them a `no-dash-names` hook refuses a commit that
+stages any path with a file or folder name starting with `-`, and asks you to
+rename it — every tool those tasks call would read such a name as an option. It
+also installs at `post-commit`, where a `graphify-refresh` hook runs
 `code:graph` to rebuild the knowledge graph in place of graphify's own raw git
 hooks. Both scanners document the same **baseline step for an existing repo**:
 run the scan, fix what can be fixed — rotate a real secret, upgrade a dependency
@@ -820,14 +784,10 @@ lines, and no pattern is lost; `/vwf:setup reshape` offers deleting a landed
 
 **The prose files are `/vwf:init`'s own assets**: `SECURITY.md`,
 `CONTRIBUTING.md`, three `.github/ISSUE_TEMPLATE/` files, the chosen `LICENSE`
-on a repo init was told is public, and the **editor baseline**,
-`.config/vscode.d/hygiene.jsonc` — the settings every repo wants regardless of
-stack, editor-wide keys alone, since a key that names a stack belongs to that
-stack's pack. They carry no lock record. Init lands the issue forms only on a
-GitHub forge and the editor baseline only on a VS Code answer — a skipped one is
-listed in the plan, never reported missing — and **records** the four answers in
-the product's `.config/vwf.yaml`, so the later callers judge the same conditions
-the same way.
+on a repo init was told is public. They carry no lock record. Init lands the
+issue forms only on a GitHub forge — a skipped one is listed in the plan, never
+reported missing — and **records** the three answers in the product's
+`.config/vwf.yaml`, so the later callers judge the same conditions the same way.
 
 **A gate scans, while hygiene declares what is not there to scan.** Ignoring a
 file and allowlisting it in a scanner are two different decisions, and a secret
@@ -866,7 +826,7 @@ takes three argument shapes, each of which `preview` may open:
 - **`all`** lands every tool the skill owns, filling each marked position from
   its arguments — `repo`, `members`, `linkage`, `merge_model_develop`,
   `merge_model_main`, `runtimes`, `plugin_sources`, `plugins`, `scopes` and the
-  four conditional answers — `git`, `graphify` and `renovate` after the five,
+  three conditional answers — `git`, `graphify` and `renovate` after the five,
   and `renovate` only on `update_bot=renovate`. A list is comma-separated, no
   spaces. A key left out keeps the repo's current value. It is idempotent, and
   it is also the migration: a repo on an older layout is folded onto the current
@@ -1150,15 +1110,15 @@ inside `code/*` and `setup/*` change with the tech stack.
 - **`setup/*` — bootstrap & upgrade.** `setup:all` is the entrypoint — run it on
   clone and to re-sync, as `MISE_ENV=dev mise run setup:all`; it exits 1 when
   `MISE_ENV` is unset. It calls `setup:mise`, `setup:secrets`,
-  `setup:external:start`, `setup:deps:all`, `setup:precommit`, `setup:ai` and
-  `setup:vscode` in order, and stays idempotent. **It never upgrades or
-  overwrites anything it did not create**: a pack task that would have to stops,
-  names what it found and prints the by-hand command, and every destructive step
-  sits behind a flag. Tools install from the committed lockfile — `setup:mise`
-  runs `mise install --locked` every time and never `mise upgrade` — and the
-  lock is created only in dev: once by one `mise lock` over every environment
-  when no `.config/mise/mise.lock` exists yet, or by `setup:all --upgrade`, the
-  one flag `setup:all` passes on and only when you pass it, which reaches
+  `setup:external:start`, `setup:deps:all`, `setup:precommit` and `setup:ai` in
+  order, and stays idempotent. **It never upgrades or overwrites anything it did
+  not create**: a pack task that would have to stops, names what it found and
+  prints the by-hand command, and every destructive step sits behind a flag.
+  Tools install from the committed lockfile — `setup:mise` runs
+  `mise install --locked` every time and never `mise upgrade` — and the lock is
+  created only in dev: once by one `mise lock` over every environment when no
+  `.config/mise/mise.lock` exists yet, or by `setup:all --upgrade`, the one flag
+  `setup:all` passes on and only when you pass it, which reaches
   `setup:mise --upgrade`: one `mise lock --bump --upgrade` over every
   environment, then `dprint config update`. `setup:mise --lock-only` writes a
   missing lock or fills a present one without `--bump`, installing only uv and
@@ -1213,18 +1173,12 @@ inside `code/*` and `setup/*` change with the tech stack.
   same list, named for the member and never for a project id: a member holding
   three projects is still one flag. `code:worktrees` reads the same helper, so
   the two never disagree about what a member is. Alias it as `setup`.
-- **`setup/vscode` — the repo's editor profile**, and `setup:all`'s last step.
-  It reads the recommendation ids out of the editor file `/vwf:init` composed
-  from every pack's fragment and makes a profile named `$REPO_NAME` match:
-  install what is listed and missing, **uninstall what is installed there and no
-  longer listed**. A per-repo profile rather than a global install, because
-  accepting a recommendation installs globally and a repo worked on for a week
-  otherwise leaves its whole toolchain enabled in every window forever — and
-  because pruning globally would take a neighbouring repo's tools with it. It is
-  silent on a machine without the editor. The first run on a repo prints one
-  create-the-profile command and the share-settings step and exits 0: the
-  profile flag combines with the install, uninstall and list flags only once the
-  profile exists, and none of the three creates it.
+- **The retired editor task.** `setup/vscode`, which kept a per-repo editor
+  profile in step with the recommendations `/vwf:init` composed, is gone with
+  them. Where an earlier version landed it, the mise migration deletes it with
+  its lock entry when its content still matches its record and the repo's
+  `setup/all` no longer calls it; otherwise it is kept and reported, since a
+  kept `setup/all` that still runs it would fail on a missing task.
 - **Nothing in the set edits a remote's settings.** There was a
   `setup:default-branch` once; it is gone, and no task re-runs it. The forge's
   default branch and the protection on `develop` and `main` are set by
@@ -1509,12 +1463,12 @@ before it lands:
   becomes a diff you decide about. The lockfile's per-file `hash:` has three
   writers, and a differing hash is drift only when none of them ran: the
   materializer at landing, `/vwf:init`'s replace-or-keep offer on either answer,
-  and `/vwf:init` again after every fill or editor block it writes — so a file
-  it filled or you chose to keep reads as current, not as drift.
+  and `/vwf:init` again after every fill it writes — so a file it filled or you
+  chose to keep reads as current, not as drift.
 - **Repo config is a fenced target, not a free one.** A pack writes only the
   config files its own component owns — its gate's config included, since
-  2026-09-05, and its editor *fragment* since 2026-09-06. The language manifest
-  and its lockfile, CI workflows, a **whole** editor file and `CLAUDE.md` are
+  2026-09-05; since 2026-10-01 it ships no editor settings. The language
+  manifest and its lockfile, CI workflows, editor settings and `CLAUDE.md` are
   named as prerequisites and left to you, deliberately: each file the tier
   absorbs makes the argument for the next one easier, and those four are where
   the line holds.

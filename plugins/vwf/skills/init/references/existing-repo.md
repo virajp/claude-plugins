@@ -96,7 +96,7 @@ is listed **once**, under the plan's **Projects** heading and the report's,
 and never under Deferred. It is where a project lives, not a file that failed
 to move.
 
-**Five kinds of root entry are recognised and never listed at all**, and no
+**Four kinds of root entry are recognised and never listed at all**, and no
 run reports any of them:
 
 - **`.git/`** — exempt **by name**, never by implication. It is the repository
@@ -107,19 +107,10 @@ run reports any of them:
   repository, and **every base repo with submodule members carries one**, so
   reporting it would put a permanent finding in the plan of exactly the products
   this pipeline now walks.
-- **The editor directory the fragment convention names** — `init` composes it
-  itself, out of the editor fragments the packs ship, per
-  [fragments and sections](fragments-and-sections.md). A directory this run
-  writes is not a stray a later pass discovers. The convention names it; this
-  file does not. Exempt from this pass is not unread: the composition step
-  itself reads both editor files whole, and a key somebody added there by
-  hand that the packs also compose is surfaced **there**, as a collision row
-  in this repo's section — pass 7 says where.
 - **`.claude/`** — the materializer's lockfile home, and a directory **this
-  run writes**, exactly like the editor one. Every shaped repo carries it by
-  definition: it is the evidence a later run reads to know the repo is shaped
-  at all, so a pass that listed it would report the shape as a breach of the
-  shape.
+  run writes**. Every shaped repo carries it by definition: it is the
+  evidence a later run reads to know the repo is shaped at all, so a pass
+  that listed it would report the shape as a breach of the shape.
 - **Every resolved member path**, in the base — a member's work tree is a
   directory at the base's root, and it is another repository, surveyed and
   shaped in its own section of this same plan. There is no configuration
@@ -128,8 +119,8 @@ run reports any of them:
   this pass has them in hand rather than guessing at a directory's nature.
 
 None of them is a hole in the allowlist and none is patched by editing it: the
-allowlist names what a **pack may land**, and all five sit outside that
-question — two are git's, two are this command's own output, and the fifth is
+allowlist names what a **pack may land**, and all four sit outside that
+question — two are git's, one is this command's own output, and the fourth is
 a repository of its own.
 
 #### The move-and-shim case
@@ -239,9 +230,6 @@ consent, and none where the repo carries none of it:
   whose preview converts a landed sectioned ignore file into blocks and shows
   its rows. The files it recorded that the hygiene assets now carry lose
   their record and keep their content, on the already-there rule.
-- **The editor fragment.** A landed `.config/vscode.d/repo-hygiene.jsonc` is
-  renamed to `.config/vscode.d/hygiene.jsonc` as a move row, `git mv`, before
-  the editor merge reads it.
 - **`.editorconfig`.** Nothing lands it any more. One at the root whose hash
   matches the retired record's entry for it — or, where no entry is left, the
   SHA-256 of the last payload shipped,
@@ -612,11 +600,10 @@ product's only one — so a keep inside a member is recorded there, keyed by the
 path relative to the base root with the member's path as its prefix
 (`backend/.config/…`), while a keep in the base keeps its plain spelling.
 
-**That key is one of the three things `init` writes into `.config/vwf.yaml` —
-the others are `enforcement.editor_keys`, the editor merge's, and the
-top-level `answers` block, the four conditional answers this run asked or
-read.** The entry is written under the same single consent as everything
-else, merged into whatever the block already holds, and an absent
+**That key is one of the two things `init` writes into `.config/vwf.yaml` —
+the other is the top-level `answers` block, the three conditional answers
+this run asked or read.** The entry is written under the same single consent
+as everything else, merged into whatever the block already holds, and an absent
 `kept_files` block reads as empty. On a repo `/vwf:setup` has not reached
 there is no file yet, and `init` writes the **stub** SKILL.md describes —
 `config_format`, the `enforcement` block and the `answers` block, nothing
@@ -627,9 +614,9 @@ account.
 **The `answers` block is recorded on this pipeline exactly as it is on the
 other**, and a reshape is where a product that has never carried one gains
 it: a config stamped at the format before the block existed has no `answers:`
-to read, so this run asks its two questions seeded as
-[new repo](new-repo.md) §2 describes and writes the block whole — `editor`
-and `secrets` once for the product, `repos:` keyed by the member path exactly
+to read, so this run asks its questions seeded as
+[new repo](new-repo.md) §2 describes and writes the block whole — `secrets`
+once for the product, `repos:` keyed by the member path exactly
 as `kept_files` keys one, each entry carrying `forge` and `update_bot`. A
 config that already carries the block is rewritten from this run's answers on
 the same terms, and the forge is the live `origin` host rather than the
@@ -649,8 +636,7 @@ readme, the licence file, the security file and every other file `init`'s
 hygiene assets carry take the already-there rule of
 [hygiene assets](readme-and-license.md): one the repo carries is **kept,
 never replaced, and reported as kept** — no offer, no default to flip, and no
-`kept_files` entry, since nothing was decided. The editor baseline fragment
-is the one exception, and that reference says why. **Every spelling of the
+`kept_files` entry, since nothing was decided. **Every spelling of the
 licence file counts as carrying one** — `LICENSE`, `LICENSE.md`, `LICENCE`,
 `COPYING` — not the one name the allowlist happens to land: a repo licensed
 under any of them is licensed, and a licence text landed beside it is a
@@ -659,21 +645,13 @@ becomes that report line and nothing else.
 
 ### 7 — Editor fragments
 
-- **Editor fragments** — whether each of the two editor files carries the
-  block, which is a merge where it does not; and, read from the file whole,
-  every key **outside** the block that the composed set also carries. Each is
-  a **collision** — one sub-line under that file's merge row in `Merges`,
-  reading `file · key · hand value · pack value · choice`, its choice the
-  answer `enforcement.editor_keys` records where it records one and **keep**
-  otherwise. A sub-line with no record is what the collision round asks
-  about, before the plan is printed; a `take` or `union` sub-line names the
-  hand lines it removes.
+Retired — `init` composes no editor configuration; a repo's editor settings
+are the user's, and no pass reads them.
 
-Detailed in [fragments and sections](fragments-and-sections.md). The ignore
-file is `/stackgen:tool-config`'s git tool, never a merge here — its preview
-converts a landed sectioned file into blocks and shows the rows — and a
-pack's hook is that skill's block too. The template fallback for a detected
-language no pack here asks for is [new repo](new-repo.md) §5's, one
+The ignore file is `/stackgen:tool-config`'s git tool, never a merge here —
+its preview converts a landed sectioned file into blocks and shows the rows —
+and a pack's hook is that skill's block too. The template fallback for a
+detected language no pack here asks for is [new repo](new-repo.md) §5's, one
 **Tool-config row** per template.
 
 ### 8 — Per-project groups
@@ -845,7 +823,7 @@ it and the mode it resolved to:
 ── <repo> ── (shaped)
 ```
 
-and under that heading come the thirteen sections, in full, for that repo. An
+and under that heading come the twelve sections, in full, for that repo. An
 absent member's heading carries its clone row and the survey note the Survey
 describes in place of them, since its sections do not exist until the clone
 has run.
@@ -889,14 +867,6 @@ directory pass 1 recognised, once, with the id question 2 confirmed for it —
 printed so the reader sees why that directory is in none of the other
 sections, and applied nowhere.
 
-An editor **merge** row carries a **collision sub-line** per key the hand
-section and the composed set share — `file · key · hand value · pack value ·
-choice`, per pass 7 — and the choice is not a default to flip at consent: it
-is the recorded answer, or the one the collision round took before the plan
-was printed. A `take` or `union` sub-line lists the hand lines the apply
-removes, since those are the one edit outside the block and the user reads
-them before the one consent rather than after.
-
 **Tool-config rows** are the skill's own, printed as its `preview all`
 returns them, each under its `r<n>` id — each drift row with its take
 theirs / keep mine / merge choice, each conflict row with its two answers —
@@ -916,7 +886,6 @@ Rewrites (applied)               <n>
 Rewrites (flagged, not applied)  <n>
 Repo-owned, kept                 <n>
 Projects                         <n>
-Merges       <n>
 ```
 
 Close **each repo's section** with that repo's total, **counting only what would
@@ -1028,11 +997,7 @@ repo of the set that resolved to mode `blank` or `source` takes the
   block rather than replacing it.
   Where that file does not exist, `init` writes the **stub** §6 names, and
   the record goes into it. Beyond that record, the fills pass 8 owns, and
-  the re-hash below, nothing about a kept file is applied here. The
-  collision round's answers are written at the same point and on the same
-  terms — one `enforcement.editor_keys.<file>.<key>` entry per answer, the
-  file spelled as `kept_files` spells its paths, merged into the block, into
-  the same stub where the file is absent.
+  the re-hash below, nothing about a kept file is applied here.
 - **Renames** rewrite the path for a task file, and rewrite the **text** for
   every caller. Use the editing tools for those rewrites — a stream editor's
   in-place flag is not portable across platforms, and the difference is a
@@ -1042,16 +1007,14 @@ repo of the set that resolved to mode `blank` or `source` takes the
   listed as its own rename line.
 - **Flagged rewrites are not applied.** They are in the report so the user can
   do them.
-- **The editor merge** runs after all of the above, per
-  [fragments and sections](fragments-and-sections.md), because it is
-  idempotent and reads files the earlier steps may have moved. The ignore
-  file is not merged here: `/stackgen:tool-config`'s call above wrote it.
+- **The ignore file is not merged here**: `/stackgen:tool-config`'s call
+  above wrote it.
 - **The hook-manager switch**, where its row was flipped to switch, is the
   **last shaping step**: `setup:precommit --force`, per pass 1, after every
   file above is in its final place and before anything is committed.
 - **The re-hash is the last step before the git pass**, and it writes only
-  the lockfile. Every file this run **filled or merged** — the slots pass 8
-  wrote, the placeholders §4 filled, the editor block — plus every file pass 6
+  the lockfile. Every file this run **filled** — the slots pass 8 wrote, the
+  placeholders §4 filled — plus every file pass 6
   **replaced or kept**, is hashed as it now stands and that hash recorded
   under its `entries:` record in the materializer's lockfile, creating the
   record for a kept file that had none. The materializer's own hash is the
@@ -1215,7 +1178,7 @@ that a repo taking this pipeline already existed:
 
 ## Report
 
-**The report's shape is SKILL.md's** — the thirteen file sections repeated
+**The report's shape is SKILL.md's** — the twelve file sections repeated
 under one heading per repo with the base first, the git lines, and the two
 next-step lines — and it is stated there once. Read it there; nothing here restates it. What
 this pipeline settles is what goes in which section, filled from what was
@@ -1232,7 +1195,7 @@ under **Projects**, with its confirmed id, and nowhere else; and a kept-file
 record on a product whose base has no `.config/vwf.yaml`, since the stub
 gives it a home on the same run.
 
-**The report names the four answers recorded**, per repo, beside the values
+**The report names the three answers recorded**, per repo, beside the values
 the plan said would be passed — so a reshape on a product whose config
 carried no `answers:` block visibly gains one, and a forge the run rewrote
 because the live `origin` host contradicted the record is a line of its own

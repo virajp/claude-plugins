@@ -215,9 +215,10 @@ named from project ids, a missing `develop` or `main`, a repo-name key in
 the repo edited away from the hash the lockfile recorded and still diverging
 once every marked position is spliced out, a recorded
 `answers.repos.<repo>.forge` the live `origin` host contradicts or a `skipped:`
-row whose `when: forge` it contradicts, a config stamped `config_format` 21 that
-carries no `answers:` block at all, an absent or invalid `MERGE_MODEL_DEVELOP`
-or `MERGE_MODEL_MAIN` (or a legacy `MERGE_MODEL` standing in for both), an
+row whose `when: forge` it contradicts, a config stamped `config_format` 21 or
+later that carries no `answers:` block at all, an absent or invalid
+`MERGE_MODEL_DEVELOP` or `MERGE_MODEL_MAIN` (or a legacy `MERGE_MODEL`
+standing in for both), an
 absent or empty `MEMBERS` under siblings linkage, the mise config on the old
 layout, a tool pinned in two `conf.d/tools*.toml` files
 or in a top-level mise file (the move into `conf.d` offered, made on consent),

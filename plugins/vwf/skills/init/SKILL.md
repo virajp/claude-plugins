@@ -32,11 +32,10 @@ are a pair and neither does the other's job: everything a repository needs
 before it has a product — the config layout, the task vocabulary, the gates,
 the ignore set, a licence — is this command's, and everything about
 `docs/blueprint/`, `.config/vwf.yaml` and the memory tree stays `/vwf:setup`'s
-— with three keys excepted, `enforcement.kept_files`, which records a
-pack-owned file the user chose to keep, `enforcement.editor_keys`, which
-records what the user chose for an editor key the hand section already
-carried, and `answers`, which records the four conditional answers this run
-asked or read; all three are things only a shaping run can know about.
+— with two keys excepted, `enforcement.kept_files`, which records a
+pack-owned file the user chose to keep, and `answers`, which records the three
+conditional answers this run asked or read; both are things only a shaping
+run can know about.
 Run `init` first on a repo that has neither.
 
 Nothing here knows what the repo is written in, and that is the design. Every
@@ -80,8 +79,7 @@ them.
   aggregator's member flags, the shell aliases, the per-project task groups,
   the repo-name key, the landing-model key and the member-path key, the
   toolchain config's runtime block and path entries, the commit gate's scope
-  list, the plugin task's two agent-plugin lists, and the composed editor
-  block.
+  list, and the plugin task's two agent-plugin lists.
   Filling one is exactly `init`'s job and is not authoring pack content — what
   the rule forbids is inventing pack-owned content from scratch, at a path or
   a position no pack marked. A position in a file the tool-config skill owns
@@ -92,22 +90,20 @@ them.
   `_scripts/local` sidecar the existing-repo pipeline writes. No pack declares
   it, no pack ships it and `init` never replaces it — and nothing in it is
   authored, since every function it holds is carried verbatim out of the
-  repo's own helper file. It is a **move**, wearing a create's row. **Three
+  repo's own helper file. It is a **move**, wearing a create's row. **Two
   keys are neither either**: `enforcement.kept_files` in `.config/vwf.yaml`,
   where any run — whatever mode the repo resolved — records a pack-owned file
-  the user chose to keep so it is never re-offered, `enforcement.editor_keys`
-  beside it, where any run records the answer for an editor key the hand
-  section already carried so it is never re-asked, and the top-level
-  `answers` block, where any run records the four conditional answers it
-  holds — the editor and the secrets provider once for the product, the forge
-  and the update bot per repo — so every later caller of the materializer
-  evaluates a `when:` against the same values rather than against nothing.
-  `init` writes those three keys and nothing else in that file — and where
+  the user chose to keep so it is never re-offered, and the top-level
+  `answers` block, where any run records the three conditional answers it
+  holds — the secrets provider once for the product, the forge and the update
+  bot per repo — so every later caller of the materializer evaluates a
+  `when:` against the same values rather than against nothing.
+  `init` writes those two keys and nothing else in that file — and where
   the file does not exist yet, it writes a **stub** to hold them:
   `config_format`, the `enforcement` block and the `answers` block alone, per
   [new repo](references/new-repo.md) §2, which `/vwf:setup`'s migration and
-  fill passes complete later. A keep, a collision answer or a conditional
-  answer is therefore always recorded, never deferred for want of the file.
+  fill passes complete later. A keep or a conditional answer is therefore
+  always recorded, never deferred for want of the file.
 - **Never application code.** Not a source file, not a test, not a directory
   of either.
 - **Never a language manifest or a lockfile.** Those declare what the project
@@ -403,21 +399,21 @@ what it found.
 
 ## The questions
 
-Nine in all, each one round, MCQ where an option set exists, per
+Eight in all, each one round, MCQ where an option set exists, per
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`. **A round is one round for the
 whole product**, however many repos resolved: a question that differs per repo
 shows one row per repo inside its single round, and never becomes a second
 round. Two of them — 1 and 3 — are asked for the repos that resolved to mode
 **blank** or **source** only, because a `shaped` repo already answers them;
-the other seven are asked whatever the modes are. Question 6 has two dependent
+the other six are asked whatever the modes are. Question 6 has two dependent
 parts, 6a and 6b, which together are the **seventh round**: they are shown
-against 6's answers, so they cannot share its round. Questions 7 and 8 — the
-editor and the update bot — are the **eighth and ninth rounds**, and they are
-the two whose answers reach the materializer rather than a file: together
-with two answers the run already holds — the forge, read from each repo's
-origin host, and the provider slug question 4 picked — they are what the
-materializer's conditional evaluation step evaluates a pack's `when:` against,
-one value per axis, `forge`, `editor`, `secrets` and `update_bot`.
+against 6's answers, so they cannot share its round. Question 7 — the update
+bot — is the **eighth round**, and it is the one whose answer reaches the
+materializer rather than a file: together with two answers the run already
+holds — the forge, read from each repo's origin host, and the provider slug
+question 4 picked — it is what the materializer's conditional evaluation step
+evaluates a pack's `when:` against, one value per axis, `forge`, `secrets`
+and `update_bot`.
 
 1. **The repo name.** *`blank` and `source` repos only.* Asked in one round
    listing every repo that resolved to either, each proposed from that repo's
@@ -616,34 +612,7 @@ one value per axis, `forge`, `editor`, `secrets` and `update_bot`.
    security file in that repo either way — a file naming a channel nobody
    watches is worse than none — and declining one row says nothing about the
    others.
-7. **The editor.** Answered **once** for the product: is the editor the
-   packs' editor fragments are written for — the one the fragment convention
-   in the stack adapter's `assets/pack-format.md` names — the editor used
-   here? **Yes** or **no**. The default is **yes** where any resolved repo
-   carries that editor's own settings directory — the directory the
-   convention's two output files sit in — or where its command-line binary is
-   on `PATH`, and **no** otherwise; the question says which of the two
-   decided it. One answer for all the repos, because an editor is a fact
-   about the people working the product rather than about any one tree, and
-   a product whose members compose editor settings while its base does not is
-   a state nobody asked for.
-
-   What this question settles is the `editor` axis the materializer's
-   conditional evaluation step reads: a **yes** passes the axis value the
-   convention names for that editor, and every pack file conditioned on it —
-   every editor fragment — lands, the hygiene assets' baseline fragment
-   among them; a **no** passes `none` on that axis —
-   `init`'s no-match value, which no `when:` names on this axis — so those
-   files are **skipped**, listed in the plan under their own heading, and
-   the editor merge in
-   [fragments and sections](references/fragments-and-sections.md) then has no
-   fragment to read and composes nothing. The answer **is** written into the
-   tree — under `answers.editor` in `.config/vwf.yaml`, once for the product —
-   so a later caller of the materializer evaluates the axis against the same
-   value rather than against nothing. A reshape still asks, seeded by the
-   recorded value where there is one and by the two reads above where there is
-   not.
-8. **The update bot.** **One row per repo** in the one round: which hosted
+7. **The update bot.** **One row per repo** in the one round: which hosted
    dependency-update service watches this repo — the one whose policy file
    `/stackgen:tool-config` lands, the other one, or **none**. The options are
    the axis values the materializer's conditional evaluation step accepts on
@@ -668,21 +637,21 @@ one value per axis, `forge`, `editor`, `secrets` and `update_bot`.
    was picked. A repo whose own policy file the yield rule keeps is unchanged
    by the answer: the skill's file was never going to land there.
 
-Ask all nine **before** presenting the plan, so the plan is complete and one
-yes covers all of it. The plan's summary then says, per repo, the four values
+Ask all eight **before** presenting the plan, so the plan is complete and one
+yes covers all of it. The plan's summary then says, per repo, the three values
 the materializer receives in its `answers:` map, beside `repo:` — the forge
-from the origin host, the editor, the provider slug from question 4, the
-update bot, each carrying `none` where the answer was none or nothing could be
-read, since an axis the map leaves out lands every path conditioned on it —
+from the origin host, the provider slug from question 4, the update bot,
+each carrying `none` where the answer was none or nothing could be read,
+since an axis the map leaves out lands every path conditioned on it —
 and lists every path a condition skipped under its own **Skipped** heading,
 one line per path naming the axis that decided it, so a file that did not land
 is a file the reader can see was not landed rather than one that was missed.
 
-The same four values are **recorded**, in every mode, as part of the pass that
-writes the config — the top-level `answers:` block of the base's
+The same three values are **recorded**, in every mode, as part of the pass
+that writes the config — the top-level `answers:` block of the base's
 `.config/vwf.yaml`, whose shape is
-`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`'s: `editor` and `secrets` once
-for the product, `repos:` keyed by the member path exactly as
+`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`'s: `secrets` once for the
+product, `repos:` keyed by the member path exactly as
 `enforcement.kept_files` keys one (`.` for the base), each entry carrying
 `forge` and `update_bot`. Every key is always present and `none` is the
 spelling of no answer, exactly as the map passed to the materializer spells
@@ -710,12 +679,11 @@ Two plans would be two chances to stop halfway, which is exactly the state the
 one-consent rule exists to prevent — one repo renamed into the contract while
 its neighbours still call the old names.
 
-| Read                                                           | When                                                                          |
-| -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| [new repo](references/new-repo.md)                             | modes **blank** and **source** — and the git pass                             |
-| [existing repo](references/existing-repo.md)                   | mode **shaped**; and the passes **source** borrows, cited there by number     |
-| [fragments and sections](references/fragments-and-sections.md) | every mode — the editor merge                                                 |
-| [hygiene assets](references/readme-and-license.md)             | every mode — the stub, the licence, the security contact, the other assets    |
+| Read                                               | When                                                                       |
+| -------------------------------------------------- | -------------------------------------------------------------------------- |
+| [new repo](references/new-repo.md)                 | modes **blank** and **source** — and the git pass                          |
+| [existing repo](references/existing-repo.md)       | mode **shaped**; and the passes **source** borrows, cited there by number  |
+| [hygiene assets](references/readme-and-license.md) | every mode — the stub, the licence, the security contact, the other assets |
 
 **The existing-repo pipeline adopts rather than flattens**, and three rules
 carry that — rules the `source` mode borrows for what its tree already holds,
@@ -753,20 +721,13 @@ reaches them: the **secrets provider** (§3), the **placeholders** (§4), the
 the **aggregator offer** (§10) — the existing pipeline runs them from its
 post-landing paragraph, the new-repo pipeline in its numbered order, and no
 mode skips one or asks its question twice. Beside them the **fills** the packs
-marked — the `_default` slot per project id — then the **editor merge**, then
-the **git pass**, whose
+marked — the `_default` slot per project id — then the **git pass**, whose
 questions were asked once for the run and whose commit is that repo's own.
 The ignore file is not merged here: it is `/stackgen:tool-config`'s git tool,
 which converts a landed sectioned file into blocks on adoption.
-Between the merge and the git pass, `init` **re-records the lockfile hash** of
-every file it filled or merged, so nothing it wrote reads as drift on the next
-run. The editor merge reads the existing file
-whole, and a key the hand section already carries that the packs also compose
-is a **collision**: asked in one round inside the plan — keep mine, take the
-pack's, or union where the value is an object — recorded under
-`enforcement.editor_keys` so it is never asked twice, and never resolved by
-the file carrying the key twice. The report comes last, once, when every
-repo is done.
+Between the fills and the git pass, `init` **re-records the lockfile hash** of
+every file it filled, so nothing it wrote reads as drift on the next run. The
+report comes last, once, when every repo is done.
 
 Both pipelines land the same baselines, in one order. **First
 `/stackgen:tool-config all`**, with the answers as its arguments — the commit
@@ -777,9 +738,9 @@ row, per new-repo §2, so the skill asks no second time. **Then `init`'s own
 hygiene assets**, per [hygiene assets](references/readme-and-license.md) —
 no adapter fetch and no lock record. **Then the secrets provider**
 question 4 picked, materialized through the stack adapter — the only thing
-`init` reaches the adapter for. **Every call carries the four answers** —
+`init` reaches the adapter for. **Every call carries the three answers** —
 the skill's as arguments, the fetch's as its `answers:` map — the forge, the
-editor, the provider slug, the update bot — so the materializer's conditional
+provider slug, the update bot — so the materializer's conditional
 evaluation step can decide a pack's conditional files, and `init` reads the
 same values for its own assets. That map is the `answers:` block the config
 records, with
@@ -800,7 +761,7 @@ the base's lockfile never speaks for it.
 
 ## The report
 
-Every run ends with the same report — the thirteen file sections, then one
+Every run ends with the same report — the twelve file sections, then one
 git section for the whole run — each a count and its lines, and an empty
 section printed as `none`. A replace and a rewrite are counted only where they
 were applied. The two `kept` sections count what this run deliberately left
@@ -811,9 +772,9 @@ and the projects — and each prints the decision the row carried: a root tool
 config the way it went, a hook manager kept or switched, a project directory
 with the id question 2 confirmed, listed here **once** and nowhere else.
 
-**The thirteen file sections repeat under one heading per repo**, the base
+**The twelve file sections repeat under one heading per repo**, the base
 first and then each member by its path, and every count is that repo's own —
-a run over four repos prints fifty-two sections. Nothing is totalled across
+a run over four repos prints forty-eight sections. Nothing is totalled across
 repos: a count a reader cannot attribute to a tree is a count they cannot
 check.
 
@@ -830,7 +791,6 @@ Tasks renamed     <n>    <old> → <new>
 Tasks kept        <n>    <path>              (repo-owned; + the contract note)
 Calls rewritten   <n>    <file:line> <old> → <new>
 Templates asked   <n>    <Name>
-Fragments merged  <n>    <name>
 Deferred          <n>    <what> — unlock: <what would let it happen>
 ```
 
@@ -913,7 +873,7 @@ schedule of events rather than on a symptom, and the way to ask for one is
   so a rename leaves it naming the old folder and the launch aliases that read
   it pointing at a name nobody uses. The run offers the new value as a replace
   row and changes nothing else.
-- **After a stack pack's version moves.** New files, new fragments, new marked
+- **After a stack pack's version moves.** New files, new marked
   positions. The plan shows what the repo lacks; the adapter's own re-sync
   command is what shows a diff for a file the repo already has.
 - **After a member is added or removed** — or after a member is **cloned** on

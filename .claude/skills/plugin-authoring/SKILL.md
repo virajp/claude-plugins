@@ -129,8 +129,7 @@ person who opens it. Keep only the comments something reads:
 
 - `#MISE` and `#USAGE` lines, and shebangs
 - `# shellcheck` directives
-- the tool-config block markers, `# >>> <requester>` / `# <<< <requester>` and
-  the JSONC `// >>>` / `// <<<` form
+- the tool-config block markers, `# >>> <requester>` / `# <<< <requester>`
 - `MARKED POSITION` lines, plus whatever a filler needs beside one to find its
   value
 - grype ignore-reason comments, one unit with their entry

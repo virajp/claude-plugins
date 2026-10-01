@@ -68,7 +68,7 @@ Some rows need a word:
   its row is **keep both** — pass 1's outcome, not a third shape: the repo's
   file stays and is reported as a second dependency policy. Whether the
   skill's `renovate.json` lands beside it is not this row's to decide: the
-  same evidence seeds question 8's update-bot row — a renovate spelling
+  same evidence seeds question 7's update-bot row — a renovate spelling
   preselects `renovate`, a `dependabot.yml` preselects `dependabot`, both
   preselects `renovate` and the row says it found both — and the renovate
   tool lands its file only on `update_bot=renovate`, so it lands only where

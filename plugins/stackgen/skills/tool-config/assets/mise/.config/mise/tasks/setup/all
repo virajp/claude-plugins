@@ -41,10 +41,6 @@ mise run setup:precommit
 print_header "Setting up AI tooling ..."
 mise run setup:ai
 
-# Last: silent on a machine without the editor.
-print_header "Setting up the editor ..."
-mise run setup:vscode
-
 # Members only on request, each running its OWN task library through `mise run --cd`.
 
 if [[ "${usage_all:-false}" == "true" ]]; then

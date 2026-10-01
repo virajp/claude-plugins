@@ -15,11 +15,11 @@ registering as something unknown.
 
 ## What the stamps mean now
 
-`blueprint_format` (**25**) and `config_format` (**21**) are **drift
+`blueprint_format` (**25**) and `config_format` (**22**) are **drift
 detectors** and nothing else. `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md` compares
 a repo's stamps against the shipped integers and nudges
 `/vwf:setup`. Nothing selects a migration path by them any more,
-and there is no support window: a repo stamped `2` and a repo stamped `21`
+and there is no support window: a repo stamped `2` and a repo stamped `22`
 reconcile against the same current format, by the same algorithm, in one pass.
 
 **Neither line issues 13 or 17 any more.** From `config_format` **18** and
@@ -123,8 +123,8 @@ must go through the rule below. Every other row is mechanical.
 | a flat **list** at `projects.<name>.stack` | the structured block — `template`, `languages`, `frameworks`, `dependencies`, split per `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md` | config-key | |
 | `enforcement.structure` | retired — `topology` plus `topology_reason` | config-key | |
 | no `enforcement.kept_files` block | `kept_files: {}` — the block format 18 introduced; nothing is retired and nothing converts, an absent block reading as empty | config-key | |
-| no `enforcement.editor_keys` block | `editor_keys: {}` — the block format 20 introduced; nothing is retired and nothing converts, an absent block reading as empty. A collision already in a repo's `.vscode` files is `init`'s to ask on its next composition, not this pass's | config-key | |
-| no top-level `answers:` block | the block format 21 introduced — `editor` and `secrets` once for the product, `repos:` keyed as `enforcement.kept_files` keys a path (`.` for the base) with `forge` and `update_bot` per repo. Nothing is retired and nothing converts: no surface wrote any of the four answers into the tree before 21. The values come from this pass — the editor and update-bot rounds it already asks, the forge from each `origin`, the provider from the lockfile — and every key is written, `none` where no answer was picked. Until it is written, callers infer the same seeds and write nothing | config-key | |
+| `enforcement.editor_keys` (format 20), `answers.editor` (format 21) | retired in `config_format` 22 — both keys removed, nothing converts; every `.config/vscode.d/*.jsonc` is offered for delete, one row each, defaulting to delete; `.vscode/` is the user's and never touched | retirement | |
+| no top-level `answers:` block | the block format 21 introduced — since 22, `secrets` once for the product, `repos:` keyed as `enforcement.kept_files` keys a path (`.` for the base) with `forge` and `update_bot` per repo. Nothing is retired and nothing converts: no surface wrote any of the answers into the tree before 21. The values come from this pass — the update-bot round it already asks, the forge from each `origin`, the provider from the lockfile — and every key is written, `none` where no answer was picked. Until it is written, callers infer the same seeds and write nothing | config-key | |
 | a flow id carrying a `<device>` segment, or missing its `<platform>` leaf | `<project>/<NNN>-<flow>/<platform>` | config-key | |
 | `environments` keys `dev`, `test`, `stage`, `prod` | `development`, `staging`, `production` — `test` has no single canonical partner; propose, never auto-fix | config-key | yes |
 | mempalace rooms `plans`, `decision` | `planning`, `decisions` | config-key | |

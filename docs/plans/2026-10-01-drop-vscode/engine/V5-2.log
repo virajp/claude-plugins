@@ -1,0 +1,15 @@
+V5 round 2 — range f68a30ef..c8fb5464 (new: c8fb5464, V1 fix)
+
+== /code-review high (unverified, 9 findings) ==
+1. TC/references/mise.md:514 — deletes setup/vscode without checking callers; a kept, diverged setup/all still runs `mise run setup:vscode` under set -e and aborts with task not found.
+2. TC/references/mise.md:514 — retires setup/vscode but not the three tool-config-landed .config/vscode.d fragments (mise, dprint-editor, pre-commit) or their lock entries.
+3. TC/references/mise.md:516 — a diverged, kept file keeps its tool-config/mise lock entry and re-raises the row on every `all`, breaking idempotence.
+4. TC/references/mise.md:515 — "matches its record" depends on the lock hash, which SKILL.md:349-350 says the drift test never reads; unrecorded files never match.
+5. docs/plans/2026-10-01-tool-config-script-mise/03-mise-module.md:80 — plan 1's scripted migration list lacks the new setup/vscode retirement.
+6. TC/references/mise.md:514 — migration delete row takes only ok; vwf's 21→22 offers each delete with a default — consent rules differ.
+7. plugins/vwf/assets/vwf-config.md:666 — vwf 21→22 says nothing else moves and never routes setup/vscode to tool-config's all.
+8. plugins/stackgen/assets/ids.md:87 — stale "per-repo editor profile" reads REPO_NAME; this repo's .config/mise/conf.d/env.toml:19 too.
+9. TC/references/mise.md:514 — docs-ship-with-change: site manual not updated for the new delete row.
+
+== /security-review ==
+NO FINDINGS — the round-2 delta is one markdown file; no code, gate or secrets handling changed.

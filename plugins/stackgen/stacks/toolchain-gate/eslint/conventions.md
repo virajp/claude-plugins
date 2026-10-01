@@ -38,15 +38,7 @@ a misfiring default one obvious place to be answered — with an `ignores:` list
 of the generated trees the stack packs produce. The `eslint` skill still guides
 every edit to it.
 
-The editor fragment is `.config/vscode.d/eslint.jsonc` — `eslint.*` keys only,
-with `eslint.format.enable` off, because the layout half of the split is
-dprint's in the editor exactly as it is in the gate. `eslint.useFlatConfig` is
-set because the extension still supports the legacy cascade, and left unset
-the editor could lint one way and the gate another. Every rule auto-fixes on
-save, so mechanical fixes land as you write rather than in a batch at commit.
-A generated disable comment goes on its own line above the offending one, line
-style, so the decision is visible; its reason is still written by hand. The
-fragment lands only
-where init's editor answer is vscode — `pack.yaml`'s `conditional:` names it.
+**A disable comment goes on its own line above the offending one**, line style,
+so the decision is visible, with its reason written by hand.
 
 Full judgment: the `eslint` skill.

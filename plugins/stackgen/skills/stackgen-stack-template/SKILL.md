@@ -153,11 +153,9 @@ drift. It adds no consent tier.
   artifact kind**: copied verbatim, gated on its own tier-2 consent line,
   merging rather than owning, recorded per file in the lockfile with the
   component that supplied it, and executable where mise requires it. The
-  tier covers a toolchain gate's own config file and a pack's editor fragment
-  (`.config/vscode.d/<pack>.jsonc`); what it
-  still may not write — a language manifest, a CI workflow, a **whole**
-  editor file, CLAUDE.md — and the allowlist of what may land
-  at the repo **root** are
+  tier covers a toolchain gate's own config file; what it still may not
+  write — a language manifest, a CI workflow, editor settings, CLAUDE.md —
+  and the allowlist of what may land at the repo **root** are
   `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. The procedure is the
   materializer.
 - **The universal tools are not slugs.** No `mise` or gates bundle exists;
@@ -183,19 +181,19 @@ drift. It adds no consent tier.
   its own lockfile — never one repo's copies pasted around.
 - **A caller may pass answers the same way**: an optional `answers:` map
   beside the `repo:` line, at most one value per axis of the
-  `conditional:` vocabulary — `forge`, `editor`, `secrets`, `update_bot`
+  `conditional:` vocabulary — `forge`, `secrets`, `update_bot`
   (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). The materializer
   evaluates every pack's `conditional:` entries against it in its step 1
   and skips the paths whose answer differs, recording them in the
   lockfile's `skipped:` list. **Three callers pass the map now** —
-  `/vwf:init`, which asks the four questions and records them in the
-  base repo's `.config/vwf.yaml` under its `answers:` block (`editor`
-  and `secrets` once for the product, `forge` and `update_bot` per
-  repo); `/vwf:setup`'s materialize pass, which lands a pinned template
-  long after init ran; and `/stackgen:stackgen-sync`, which re-derives a
+  `/vwf:init`, which asks the three questions and records them in the
+  base repo's `.config/vwf.yaml` under its `answers:` block (`secrets`
+  once for the product, `forge` and `update_bot` per repo);
+  `/vwf:setup`'s materialize pass, which lands a pinned template long
+  after init ran; and `/stackgen:stackgen-sync`, which re-derives a
   pack's landing set. Each reads that block, re-reads `forge` from the
   repo's `origin` host live and passes that, and passes the full map per
-  repo; a caller that finds no block infers the four values from the
+  repo; a caller that finds no block infers the three values from the
   tree, passes those and writes nothing. An axis the map leaves out, or
   a map not passed at all, reads as **true** and lands the path — the
   **fallback** for a caller that passes none, which keeps a caller this

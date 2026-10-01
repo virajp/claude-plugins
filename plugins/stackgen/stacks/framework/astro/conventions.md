@@ -157,14 +157,9 @@ interacts with the canonical — is the `head` reference.
 
 ## What this pack writes
 
-| File                                  | Is                                                                                                                                                                  |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.config/mise/tasks/p/_project/icons` | the icons task above, renamed into the project's task group as it lands                                                                                             |
-| `.config/vscode.d/astro.jsonc`        | the editor fragment: `.astro/` — the types and cache `astro sync` regenerates — hidden from the explorer, the watcher and search; lands only where init's editor answer is vscode (`pack.yaml`'s `conditional:`) |
-
-The fragment scopes to the generated tree alone: `.astro` formatting is the
-dprint gate's, through its markup plugin, and the language extension is a
-per-project choice it does not make.
+| File                                  | Is                                                                      |
+| ------------------------------------- | ----------------------------------------------------------------------- |
+| `.config/mise/tasks/p/_project/icons` | the icons task above, renamed into the project's task group as it lands |
 
 ## What this component does not decide
 

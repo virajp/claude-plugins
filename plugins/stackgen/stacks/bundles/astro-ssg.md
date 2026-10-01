@@ -5,10 +5,10 @@ kind: language-bundle
 default: true
 components:
 - language/typescript@0.3.0
-- package-manager/pnpm@0.6.0
-- toolchain-gate/tsconfig@0.2.1
-- toolchain-gate/eslint@0.3.3
-- framework/astro@0.5.0
+- package-manager/pnpm@0.6.1
+- toolchain-gate/tsconfig@0.2.2
+- toolchain-gate/eslint@0.3.4
+- framework/astro@0.5.1
 - framework/react@generated
 platforms:
 - site
