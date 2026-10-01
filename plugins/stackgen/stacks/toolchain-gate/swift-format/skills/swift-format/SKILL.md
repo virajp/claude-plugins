@@ -80,11 +80,9 @@ upstream's defaults — so a bare `swift format` is never the gate's answer.
 
 ## No `.swift-format` in the tree
 
-The editor extension formats through sourcekit-lsp, which finds a
-`.swift-format` by walking up from the file and cannot be pointed at
-`.config/`. Adding one to make the editor agree creates a second
-configuration the gate never reads. Format on save is off for Swift instead;
-run the task.
+swift-format discovers a `.swift-format` by walking up from the file, but the
+gate names `.config/swift-format.json` on every run. Adding one creates a
+second configuration the gate never reads; run the task.
 
 ## Suppressing
 

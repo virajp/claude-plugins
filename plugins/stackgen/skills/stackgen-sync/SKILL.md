@@ -34,8 +34,7 @@ user's clock.
 
    **Entries are not all under `.claude/`.** A component may have landed
    repo config files from its `config/` tree — a gate's own config file,
-   a root config file, a task overlay, a
-   `.config/vscode.d/` editor fragment, a deploy target's root config —
+   a root config file, a task overlay, a deploy target's root config —
    and those are ordinary lockfile entries carrying a `path`, a
    `component`, a `hash` and a `mode`. Inventory them with the rest; they
    differ only in where they sit and in the consent line they take. What
@@ -67,14 +66,13 @@ user's clock.
 
    **Conditional paths are evaluated first, against the same answers the
    materializer takes.** Read the product's `.config/vwf.yaml` `answers:`
-   block — `editor` and `secrets` once for the product, `forge` and
-   `update_bot` per repo — and re-read `forge` live from this repo's
-   `origin` host, so a remote that appeared since init ran is what the
-   forge conditions are judged against. A config carrying **no** block —
-   a repo never reshaped since the key existed — gets the four inferred
+   block — `secrets` once for the product, `forge` and `update_bot` per
+   repo — and re-read `forge` live from this repo's `origin` host, so a
+   remote that appeared since init ran is what the forge conditions are
+   judged against. A config carrying **no** block —
+   a repo never reshaped since the key existed — gets the three inferred
    from the tree the way `/vwf:init` seeds them: the forge from
-   `origin`, the editor from a `.vscode/` directory or the editor
-   binary, the secrets provider from the lockfile's pinned provider, the
+   `origin`, the secrets provider from the lockfile's pinned provider, the
    update bot from a renovate or dependabot file — and with no block to
    correct, this skill **writes nothing** into that config: the block is
    `/vwf:init`'s to write, and a missing one is drift `/vwf:doctor`
@@ -206,10 +204,7 @@ user's clock.
    way Step 0 offers it — one line naming the drifted repos and the
    failing predicate, then the question — and invoke `/vwf:setup reshape`
    in-session on a yes; a decline ends the sync. A clean check says
-   nothing, and nothing reshapes unprompted. This is where an editor
-   fragment that moved in step 2 is folded into the `.vscode` files: the
-   sync never writes what init composes — the composed file, the block
-   between its markers — the reshape does.
+   nothing, and nothing reshapes unprompted.
 
 ## Rules
 

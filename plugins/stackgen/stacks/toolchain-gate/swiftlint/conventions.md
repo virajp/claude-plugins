@@ -26,7 +26,7 @@ rule as another rule identifier.
 
 ## What this pack writes
 
-Two files, and one `tool-config:` call in `pack.yaml` that asks
+One file, and one `tool-config:` call in `pack.yaml` that asks
 `/stackgen:tool-config` to pin the tool — a fixed
 version, never `latest`, because under `--strict` a release that adds a rule
 is a failing build nobody touched. `.config/swiftlint.yml` is the
@@ -34,12 +34,7 @@ configuration. SwiftLint resolves its `excluded:` paths **relative to the
 configuration file**, so every entry climbs one level to the repository root —
 a bare `.build` would name `.config/.build` and exclude nothing. It excludes
 SwiftPM's `.build/` and `.swiftpm/`, any `Derived` or `DerivedData` tree, and
-`*.generated.swift`.
-
-The editor fragment is `.config/vscode.d/swiftlint.jsonc` — `swiftlint.*` keys
-only: it recommends the SwiftLint extension and points it at
-`.config/swiftlint.yml`, which SwiftLint's own discovery never looks in. The
-fragment lands only where init's editor answer is vscode — `pack.yaml`'s
-`conditional:` names it.
+`*.generated.swift`. SwiftLint's own discovery never looks under `.config/`, so
+every invocation names the file with `--config`.
 
 Full judgment: the `swiftlint` skill.

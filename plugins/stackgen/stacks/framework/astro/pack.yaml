@@ -14,12 +14,6 @@ kind: language-bundle
 axis: project
 # Topic 2 of the language-bundle bar — one artifact per detected framework.
 harness: n/a
-# The editor fragment lands only where init's editor answer is vscode; every
-# other file in config/ lands unconditionally. Paths are relative to config/.
-conditional:
-  - path: .config/vscode.d/astro.jsonc
-    when:
-      editor: vscode
 # The lines this pack asks /stackgen:tool-config for.
 tool-config:
   - dprint add plugin malva

@@ -18,13 +18,13 @@ to a repo, and every write it makes is consent-gated and committed once.
 - **The answers** — an optional `answers:` map passed into the invocation
   beside the `repo:` line, in the same payload style: at most one value
   per axis of the `conditional:` vocabulary
-  (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) — `forge`, `editor`,
-  `secrets`, `update_bot`. The map a caller passes comes from the target
-  product's `.config/vwf.yaml` `answers:` block — `editor` and `secrets`
-  once for the product, `forge` and `update_bot` per repo — with `forge`
-  re-read live from the repo's `origin` host, so a remote that appeared
-  since is evaluated against, not the record. `/vwf:init` is the caller
-  that asks the four and writes that block; `/vwf:setup`'s materialize
+  (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) — `forge`, `secrets`,
+  `update_bot`. The map a caller passes comes from the target product's
+  `.config/vwf.yaml` `answers:` block — `secrets` once for the product,
+  `forge` and `update_bot` per repo — with `forge` re-read live from the
+  repo's `origin` host, so a remote that appeared since is evaluated
+  against, not the record. `/vwf:init` is the caller
+  that asks the three and writes that block; `/vwf:setup`'s materialize
   pass and `/stackgen:stackgen-sync` read it. A caller that passes none,
   or leaves an axis out, is read as below.
 
@@ -114,13 +114,8 @@ to a repo, and every write it makes is consent-gated and committed once.
        `.github/` and `.gitlab/` and never `.config/`. `dprint.json` is a
        **shim** whose only content is `extends` into `.config/`, exactly
        as `eslint.config.mjs` is.
-     - **A `.config/vscode.d/<pack>.jsonc` editor fragment lands as a
-       file and stops there.** It is an ordinary landing-set member with
-       an ordinary lockfile entry, composed into `.vscode/settings.json`
-       and `.vscode/extensions.json` by the orchestrator alone, per
-       `${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`. Nothing here reads
-       or rewrites either editor file. A pack ships no pre-commit hook
-       fragment; its hook is a `tool-config:` line.
+     - **A pack ships no pre-commit hook fragment**; its hook is a
+       `tool-config:` line.
    - **The tool-config calls a component declares** — each line of its
      `pack.yaml` `tool-config:` list
      (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`), previewed in step 3
@@ -138,10 +133,10 @@ to a repo, and every write it makes is consent-gated and committed once.
      The hash written here is the landing hash, not the last word:
      `/vwf:init` **re-records** the hash of every landed file it changes
      after landing — its marked-position fills, the `.gitignore` section
-     appends, the editor block, and either answer
-     of its replace-or-keep offer — so a differing hash is content drift
-     only when no such writer ran. What tool-config writes is recorded
-     by that skill, as `source: tool-config/<tool>@<version>`.
+     appends, and either answer of its replace-or-keep offer — so a
+     differing hash is content drift only when no such writer ran. What
+     tool-config writes is recorded by that skill, as
+     `source: tool-config/<tool>@<version>`.
 
    **Composition order, and why a bug in it is silent.** More than one
    component may write into one `config/` tree — `.config/mise/tasks/` is
@@ -169,9 +164,8 @@ to a repo, and every write it makes is consent-gated and committed once.
    is a `tool-config:` call since 2026-09-26); what stays outside is
    unchanged and enumerated
    (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`): a language manifest, a
-   CI workflow, editor settings — no pack ships one, there being no editor
-   setting that would point at a config under `.config/` — and
-   CLAUDE.md. Charters ratchet: each file the tier absorbs makes the
+   CI workflow, editor settings — the editor is the user's to configure —
+   and CLAUDE.md. Charters ratchet: each file the tier absorbs makes the
    argument for the next one easier, which is why the four are restated
    here, where an implementer meets them, and not only where they were
    decided. A pack declaring one of the four is an authoring error, not a
@@ -196,7 +190,7 @@ to a repo, and every write it makes is consent-gated and committed once.
    **Conditional paths are evaluated here, after the set is assembled and
    before the collision check.** A pack may declare, in its `pack.yaml`, a
    `conditional:` list — a landed path or glob and a `when:` of one axis
-   to one value, from the fixed vocabulary `forge`, `editor`, `secrets`,
+   to one value, from the fixed vocabulary `forge`, `secrets`,
    `update_bot` (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). For each
    entry, match its path or glob against the component's `config/` paths
    in the set as the pack spells them — **before** the `p/_project/`

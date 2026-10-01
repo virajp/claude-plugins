@@ -30,11 +30,10 @@ stacks/<type>/<slug>/
 │   └── hooks.yaml       #   the settings.json hook entries it needs (consent-gated)
 └── config/              # optional: repo config files — tree mirrors the repo root
     ├── .config/…        #   e.g. .config/mise/tasks/code/format (consent-gated)
-    ├── .config/vscode.d/<pack>.jsonc         #   editor fragment, merged by /vwf:init
     └── _<name>/…        #   pack-private payload — NEVER copied
 ```
 
-**Three sub-conventions inside `config/`**, each a different contract:
+**Two sub-conventions inside `config/`**, each a different contract:
 
 - **`config/.config/…` and the root allowlist.** Everything under `config/`
   mirrors the repo root, so `config/.config/swiftlint.yml` lands at
@@ -53,12 +52,9 @@ stacks/<type>/<slug>/
   and renamed to the project's id as it lands — the id being the slug
   `${CLAUDE_PLUGIN_ROOT}/assets/ids.md` defines, never the raw name — and
   the materializer's copy rules are where that behaviour is specified.
-- **Fragments are named `<pack-name>.<ext>`, one per pack.** The pack name
-  in the filename is what makes a fragment attributable at a glance and
-  keeps two packs from colliding on one path. **Editor fragments** are the
-  one kind left, and have their own shape — below. A pack ships no mise
-  `conf.d` fragment and no pre-commit hook fragment any more; it lists
-  `tool-config:` calls.
+
+A pack ships no fragment of any kind — no mise `conf.d` fragment, no
+pre-commit hook fragment, no editor fragment; it lists `tool-config:` calls.
 
 `<type>` is a component type from
 `${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`. The slug is unique within the
@@ -80,66 +76,11 @@ composition order when two components write one tree, the root allowlist and
 the four things the tier still may not write are
 `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. A gate pack **does** ship the
 config file it governs; a provider's environment is a `tool-config:` call; what
-stays out is a language manifest, a CI workflow, a **whole** editor file
-and CLAUDE.md — a pack contributes to the editor through the fragment
-below, never by shipping `.vscode/settings.json`. **Mode is preserved**:
+stays out is a language manifest, a CI workflow, editor settings and
+CLAUDE.md — the editor is the user's to configure. **Mode is preserved**:
 anything under `config/.config/mise/tasks/**` must be authored executable
 (755), which `p:plugins:check` asserts, because mise runs a task file directly
 and reports a non-executable one as an unknown task.
-
-### Editor fragments
-
-A pack may ship `config/.config/vscode.d/<pack>.jsonc`: a JSONC object
-with exactly three optional top-level keys, and nothing else.
-
-**One fragment is exempt from the filename**, and it is the formatter's:
-`stackgen:tool-config`'s dprint fragment is `dprint-editor.jsonc`, because
-dprint 0.57.1 discovers any `dprint.jsonc` below the repo root as a
-sub-directory config — and a fragment carrying no `plugins` makes every bare
-`dprint check` or `dprint fmt` exit 13. The composition glob is `*.jsonc`, so
-the renamed file is still found; nothing else about the fragment changes.
-
-| Key          | Is                                                           |
-| ------------ | ------------------------------------------------------------ |
-| `settings`   | an object of editor settings keys, verbatim                  |
-| `nesting`    | an object: parent file name → a list of child names or globs |
-| `extensions` | a list of extension ids                                      |
-
-`nesting` is the source for the editor's `explorer.fileNesting.patterns`;
-it is spelled as a list per parent rather than the editor's comma-joined
-string so two packs contributing children of one parent merge without
-either parsing the other's punctuation.
-
-**The materializer copies a fragment verbatim** and stops. The
-**orchestrator** composes
-them, into `.vscode/settings.json` and `.vscode/extensions.json`:
-
-- `settings` keys are applied in composition order
-  (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`) — a later component's
-  value for the same key wins.
-- `nesting` and `extensions` are **unions**: every pack's children under a
-  parent, every pack's extension ids, each id once.
-- Everything composed lands inside **one marked block per file**, placed
-  **first**, between `// >>> vscode.d` and `// <<< vscode.d` on their own
-  lines. A key the file already carries **outside** the block — a
-  `settings` key or a `nesting` parent — is a collision, and the composing
-  skill **omits** it from the block, so a hand key wins without the file
-  ever holding a duplicate. What becomes of such a key is the user's
-  choice at composition time — keep mine, take the pack's, or union —
-  asked once and recorded by the composing skill, so a later run applies
-  the answer without asking. An extension id the file already lists is
-  simply kept, unasked and unrecorded. The block still sits first, and
-  everything outside it still survives byte-for-byte unless the user chose
-  otherwise for that key; a re-run rewrites only what is between the
-  markers.
-
-**Ownership of the base.** `/vwf:init`'s own `hygiene.jsonc` carries the
-editor **baseline** — the nesting map, the exclude lists, the editor-wide
-keys a repo has regardless of stack. Every other pack carries only keys
-for the files or the tools **it** ships. A gate pack naming itself the
-default formatter for the files it formats is in scope; a gate pack
-setting the font size is not, and the split is what keeps two packs from
-fighting over a key neither owns.
 
 ## `pack.yaml`
 
@@ -291,7 +232,7 @@ for each tool it called. The grammar is the skill's
 
 A pack may declare that some of its `config/` files make sense only under
 an answer the caller already holds — the forge the repo pushes to, the
-editor in use, the secrets provider picked, the update bot the repo runs.
+secrets provider picked, the update bot the repo runs.
 `conditional:` is an optional list; each entry names a **path or glob**
 (spelled as the pack's `config/` tree spells it, relative to `config/` —
 so `renovate.json`, not `config/renovate.json`) and a `when:` map of
@@ -300,22 +241,18 @@ so `renovate.json`, not `config/renovate.json`) and a `when:` map of
 | Axis         | Values                             | Answered by                                |
 | ------------ | ---------------------------------- | ------------------------------------------ |
 | `forge`      | `github`, `gitlab`                 | the origin host                            |
-| `editor`     | `vscode`                           | the editor question, once per product      |
 | `secrets`    | a capability-provider slug         | the secrets-provider question              |
 | `update_bot` | `renovate`, `dependabot`, `none`   | the update-bot question, per repo          |
 
 ```yaml
 conditional:
-  - path: .config/vscode.d/eslint.jsonc
-    when: { editor: vscode }
+  - path: renovate.json
+    when: { update_bot: renovate }
 ```
 
-That one is the eslint pack's: the editor fragment lands only where the
-editor is in use — and the same entry applies to **every** pack that ships
-a `vscode.d/` fragment, each stating it in its own `pack.yaml` on its own
-fragment's name. The `forge`, `secrets` and `update_bot` axes work the same
-way — a file that only makes sense on one forge, beside one provider or
-under one bot — but no shipped pack carries such a file today: a
+That entry is illustrative: a file that only makes sense on one forge,
+beside one provider or under one bot. **The key is reserved with no axis
+in use** — no shipped pack declares a `conditional:` entry today: a
 provider's ignore line is a `git add ignore` call in its `tool-config:`
 list, not a conditional file.
 
@@ -323,8 +260,8 @@ Rules:
 
 - **A path not named under `conditional:` is unconditional.** The key
   narrows; absence is the default every existing pack already has.
-- **A glob may name a whole set** — `.config/vscode.d/*.jsonc` is one
-  entry, not one per fragment. A `path` or glob is spelled as the pack's
+- **A glob may name a whole set** — `.config/<tool>/*.yml` is one
+  entry, not one per file. A `path` or glob is spelled as the pack's
   own `config/` tree spells it — **before** the `p/_project/` rename — and
   must match at least one file there; that pre-rename tree is what rule 11
   resolves it against, and the materializer evaluates it on the same
@@ -487,10 +424,10 @@ which is the grain `stackgen-sync` acts at.
   while its pin still reads `unresolved`. Where being on `PATH` does not
   prove the tool works, the entry carries a `probe` and doctor runs it.
 - **A generated pack may ship the `config/` tiers too.** Nothing about
-  `config/.config/…` or an editor fragment is reserved to curated
-  packs: a generated component that genuinely owns a config file may declare
-  one, and it lands through the same consent line and the same lockfile
-  record. Teaching the generator to **emit** them is a separate piece of work
-  and is not done — so the honest statement today is that the format allows
-  it and the pipeline does not yet produce it, which is a gap in the
+  `config/.config/…` is reserved to curated packs: a generated component
+  that genuinely owns a config file may declare one, and it lands through
+  the same consent line and the same lockfile record. Teaching the
+  generator to **emit** them is a separate piece of work and is not done —
+  so the honest statement today is that the format allows it and the
+  pipeline does not yet produce it, which is a gap in the
   generator rather than a rule in the format.

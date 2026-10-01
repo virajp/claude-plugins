@@ -9,12 +9,6 @@ axis: repo
 # this linter is meaningful only for one toolchain, so it belongs to its
 # language's bundle — and to the Swift app bundle, which reuses it unchanged.
 harness: n/a
-# The editor fragment lands only where init's editor answer is vscode; every
-# other file in config/ lands unconditionally. Paths are relative to config/.
-conditional:
-  - path: .config/vscode.d/swiftlint.jsonc
-    when:
-      editor: vscode
 # A fixed pin: under --strict a new SwiftLint release fails the build.
 tool-config:
   - mise add tool aqua:realm/SwiftLint 0.65.1 to all environments

@@ -40,15 +40,6 @@ the mise base `stackgen:tool-config` lands, then `package-manager` /
 file wins, and the lockfile records per file which component supplied what
 landed.
 
-## The editor fragment
-
-`.config/vscode.d/ruff.jsonc` recommends the ruff extension and **contributes
-no setting**. The keys that would point the editor at an interpreter or a ruff
-binary are exactly the ones that can make the editor lint with a different ruff
-than `uv run` gives the gate, and a repo pinning its own interpreter path is a
-repo-level decision, not a pack's. The fragment lands only where init's editor
-answer is vscode — `pack.yaml`'s `conditional:` names it.
-
 ## Not yet reachable
 
 **This pack is authored but not yet reachable, and that is expected.** It

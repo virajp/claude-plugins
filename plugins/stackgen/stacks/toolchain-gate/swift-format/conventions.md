@@ -29,16 +29,8 @@ correctness gate, and two linters reporting one finding is noise.
 
 ## What this pack writes
 
-Two files. `.config/swift-format.json` is the configuration — every key spelled
+One file. `.config/swift-format.json` is the configuration — every key spelled
 out, so a toolchain upgrade that changes a default does not change the layout
 unannounced.
-
-The editor fragment is `.config/vscode.d/swift-format.jsonc`: it recommends the
-Swift extension, hides `.build/` and `.swiftpm/` from the explorer, the watcher
-and search, nests `Package.resolved` under `Package.swift`, and turns format on
-save **off** for Swift — the extension formats through sourcekit-lsp, which
-cannot be pointed at `.config/swift-format.json` and would apply upstream's
-defaults instead. The fragment lands only where init's editor answer is vscode
-— `pack.yaml`'s `conditional:` names it.
 
 Full judgment: the `swift-format` skill.

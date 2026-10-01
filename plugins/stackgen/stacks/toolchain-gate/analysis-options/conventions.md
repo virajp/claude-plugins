@@ -12,15 +12,11 @@ no longer has.
 
 ## What this pack writes
 
-One file: `.config/vscode.d/analysis-options.jsonc`, the editor fragment. It
-recommends the two Dart extensions, binds `[dart]` to the SDK's own formatter —
-Dart is the language dprint does not format, and the analyzer assumes that
-formatter's output — hides `.dart_tool/` from the explorer, the watcher and
-search, and nests `pubspec.lock` and `analysis_options.yaml` under
-`pubspec.yaml`. The `analysis_options.yaml` file itself is the app's, written
-where the app is.
+No file. This pack's conventions and skill guide the agent when it writes
+`analysis_options.yaml`, which is the app's, written where the app is.
 
-The fragment lands only where init's editor answer is vscode — `pack.yaml`'s
-`conditional:` names it.
+**Dart is formatted by the SDK's own formatter, not dprint** — Dart is the
+language dprint does not format, and the analyzer assumes that formatter's
+output.
 
 Full judgment: the `analysis-options` skill.
