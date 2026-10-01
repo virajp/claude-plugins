@@ -82,9 +82,12 @@ pinning."* And: *"Yes, a repo-local mise skill is back."*
      requester's blocks when it parses, else `needs-edit`; a root `.mise.toml`
      or `mise.toml`, or a top-level `.config/mise*.toml` still carrying sections
      → one `needs-edit` row naming the file and the target files; old
-     `mise.lock` / `mise.<env>.lock` files → delete rows; **skip every
-     `*.local.*` file** throughout; **hoist** a tool pinned in two env files
-     into `conf.d/tools.toml` as one row.
+     `mise.lock` / `mise.<env>.lock` files → delete rows; the retired
+     `.config/mise/tasks/setup/vscode` → a delete row, its lock record with it,
+     where its content still matches that record and the repo's `setup/all` no
+     longer calls it, else kept and reported; **skip every `*.local.*` file**
+     throughout; **hoist** a tool pinned in two env files into
+     `conf.d/tools.toml` as one row.
    - **`check`** contributions for mise blocks, for U1's drift report.
 3. **New `TC/assets/mise/.claude/skills/mise/SKILL.md`** — strict-YAML
    frontmatter (`name: mise`, a one-line `description` saying it runs this

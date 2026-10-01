@@ -399,6 +399,13 @@ Rules the lockfile enforces:
 - **Sync diffs against the lockfile, mechanically, per component**:
   unchanged / pack moved / repo edited are hash comparisons, not inference,
   and one component's drift never churns the rest of its bundle.
+- **Sync drops a retired record whose file is gone.** A recorded path its
+  recording component — the `component:` ref, or the
+  `source: tool-config/<tool>@…` skill — no longer ships, and that is
+  absent from the tree, leaves `entries:` with no row in the delta:
+  nothing lands and nothing is deleted. The sync report names every
+  record it dropped. A path no longer shipped that is still present is
+  not this rule's.
 - **`hash:` has three writers, and a differing hash is drift only when none
   of them ran.** The materializer writes it at landing. The composing skill
   (`/vwf:init`) **re-records** it after every change it makes to a landed

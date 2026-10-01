@@ -45,7 +45,9 @@ user's clock.
    **Entries recorded `source: tool-config/…` are not this skill's.** The
    toolchain manager's and the gates' files — mise, dprint, pre-commit,
    gitleaks, grype — are `stackgen:tool-config`'s; list them as such and
-   diff nothing in them.
+   diff nothing in them. The one exception is step 2's retired record: a
+   tool-config record whose path the skill no longer writes and whose
+   file is gone is dropped there.
 
 2. **Diff pack-sourced components.** For each component, re-derive its
    landing set from the current pack
@@ -57,6 +59,17 @@ user's clock.
    longer matches its landing hash — whether or not the pack also moved).
    A pack that no longer exists in this stackgen version is reported, never
    deleted.
+
+   **A retired record whose file is gone is dropped.** A recorded path
+   that its recording component — the `component:` ref, or the
+   `source: tool-config/<tool>@…` skill, the one case this step reads a
+   tool-config record — no longer ships, **and** that is absent from the
+   tree, leaves `entries:` at step 6 with no row in the delta: nothing
+   lands and nothing is deleted, so there is nothing to consent to. The
+   sync report names every record it dropped. The motivating case is the
+   `.config/vscode.d/*.jsonc` fragments vwf's 21→22 migration deletes. A
+   path the component no longer ships that is still **present** is not
+   this rule's.
 
    **A pack whose `tool-config:` list changed is reported, not applied.**
    Name the pack and the calls added, dropped or changed, and give the
@@ -194,7 +207,8 @@ user's clock.
    pack's `entries:`, its `skipped:` rows go with them
    (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`), so a pack the repo
    no longer runs leaves no row claiming one of its paths is
-   intentionally absent.
+   intentionally absent. The retired records step 2 found are dropped
+   here too, on every run — whatever was selected, nothing included.
 
 7. **Re-check the shape.** Once everything selected is written and
    committed — or nothing was selected — run the shape check `/vwf:setup`
@@ -209,7 +223,8 @@ user's clock.
 ## Rules
 
 - **Visible, never silent** — every write traces to a line the user saw in
-  the delta.
+  the delta, save a retired record whose file is already gone (step 2),
+  which the report names instead.
 - **The component is the grain.** A framework's major bump regenerates that
   framework component alone; the language baseline beside it is untouched
   unless its own pack moved.
