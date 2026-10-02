@@ -543,11 +543,10 @@ exact declaration is never moved — it is deliberate, so `all` and the pack's
 entries never undo an upgrade; a prefix moves within itself
 (`mise latest <tool>@<prefix>`); `latest` takes `mise latest <tool>`. It
 returns **one row per pin that moved**, naming the file, whose pin it is,
-`from` and `to`; each is
-answered `ok` — the version replaced in place on the pin's own line, in its
-block or the user's, its comments kept — or `keep`.
-Pins that did not move show no row. It is refused outside dev — run it under
-`MISE_ENV=dev`. The installs follow with `mise install`. The ignore
+`from` and `to`; each is answered `ok` — the version replaced in place on
+the pin's own line, in its block or the user's, its comments kept — or
+`keep`. Pins that did not move show no row. It is refused outside dev — run
+it under `MISE_ENV=dev`. The installs follow with `mise install`. The ignore
 templates' recorded commits are not the script's yet: in the same consent
 round, re-fetch each template a `.gitignore` block holds at
 github/gitignore's current `main` and move its SHA, one row per changed block
