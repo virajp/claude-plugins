@@ -6,7 +6,7 @@ description: Manage git workflows — worktree isolation, commits, merges, and
 argument-hint: "(no args)"
 model: sonnet
 
-allowed-tools: Bash Read
+allowed-tools: Bash Read AskUserQuestion
 disable-model-invocation: false
 ---
 
@@ -24,7 +24,12 @@ disable-model-invocation: false
   belongs. The base repo is a **separate** checkout the caller writes to
   directly; it is never reached by walking up from a member
   (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`)
-- **Initialize** every new worktree with its mise bootstrap task (Step 2d), and
+- **Worktrees are git's work, never a Claude Code tool's.** Create, enter and
+  leave a worktree with `git worktree add`, `cd` and `git worktree remove` —
+  never with `EnterWorktree`, `ExitWorktree` or an agent's worktree isolation.
+  Such a tool branches from origin's default branch rather than the current
+  one, and its session refuses `git`
+- **Initialize** every new worktree with its mise bootstrap task (Step 2c), and
   **end** every worktree with full coverage — land the branch (plus any
   submodule work and pointer updates), then remove it (Step 4)
 - **How a branch lands is the repo's choice, not this skill's.** The repo sets
@@ -52,9 +57,10 @@ This command takes **no arguments** — callers parameterize its behavior throug
 **declared preferences in the invocation text** (e.g. `/vwf:execute`: "isolate
 without asking; commit only — never merge/push"). Honor any such declared
 preference: it drives the **Step 1** consent (skip the worktree prompt when
-isolation is pre-declared) and the **Step 4** post-commit choice (take the
-declared action, skip the prompt). Absent a declared preference, ask as each
-step specifies.
+isolation is pre-declared), the **Step 2** branch name (use the declared name;
+`/vwf:execute` names it after its plan folder) and the **Step 4** post-commit
+choice (take the declared action, skip the prompt). Absent a declared
+preference, ask as each step specifies.
 
 ## Safety Rules
 
@@ -75,7 +81,7 @@ needs neither.
 
 | Reference                                     | When to read                                                                                               |
 | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| [Worktree setup](references/worktree-setup.md) | **Step 2** — only when Step 1 concluded a worktree must be created (native tool, git fallback, submodules, mise init) |
+| [Worktree setup](references/worktree-setup.md) | **Step 2** — only when Step 1 concluded a worktree must be created (git worktree add, submodules, mise init) |
 | [Landing a branch](references/landing.md)      | **Step 4** — only when the chosen post-commit action is one of the two landing options (submodule order, push, the `pr` path, teardown, stale sweep) |
 
 ---
@@ -126,10 +132,9 @@ in place and skip to Step 3.
 
 ## Step 2 — Create Isolated Workspace
 
-Read [Worktree setup](references/worktree-setup.md) and follow it: the four
-mechanisms in order (native tool, git fallback, submodule init, mise init),
-stopping at the first that applies. Every new worktree ends at **2c** and **2d**
-— submodules populated and the init task run — whichever mechanism created it.
+Read [Worktree setup](references/worktree-setup.md) and follow its three
+sub-steps in order: **2a** creates the worktree with `git worktree add`, **2b**
+populates its submodules, **2c** runs the init task.
 
 ---
 
@@ -142,7 +147,7 @@ Work from the **repository root**.
    staged for it to see your work — and running it first is what folds a
    formatter's reflow and a linter's fix into the very commit you are about to
    write, instead of into a second "fix hooks" commit that means nothing to
-   anyone reading the history. Guard it with the same `have_task` check Step 2d
+   anyone reading the history. Guard it with the same `have_task` check Step 2c
    uses; **skip silently** when the task is absent.
 
    **Run it twice.** The task fails when a hook fails, and a hook that *fixed*
