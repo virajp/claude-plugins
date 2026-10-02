@@ -49,6 +49,7 @@ const version = (JSON.parse(
 
 /** The test-only tool: a base block, a pack block, a list entry, a typed value, a mise-needing verb. */
 const DEMO = `
+import { createHash } from "node:crypto";
 export const tools = {
   demo: {
     verbs: {
@@ -64,6 +65,7 @@ export const tools = {
       put: { flags: { path: { required: true } }, requester: "required" },
       big: { flags: {} },
       mark: { flags: { path: { required: true }, key: {} }, requester: "required" },
+      snap: { flags: { path: { required: true }, then: {} } },
     },
     all() {
       return {
@@ -98,6 +100,22 @@ export const tools = {
       }
       if (call.verb === "big") {
         return { ops: [], rows: [{ kind: "needs-edit", file: "big", reason: "x".repeat(3000000), target: "-" }] };
+      }
+      if (call.verb === "snap") {
+        const text = ctx.read(call.flags.path);
+        const ifUnchanged = text === null ? null : createHash("sha256").update(text).digest("hex");
+        return {
+          ops: call.flags.then
+            ? [{ op: "user-line", path: call.flags.path, line: call.flags.then, match: call.flags.then }]
+            : [],
+          rows: [{
+            kind: "conflict", path: call.flags.path, reason: "snap",
+            effects: {
+              "keep-existing": [],
+              overwrite: [{ op: "whole", path: call.flags.path, content: "snap\\n", force: true, ifUnchanged }],
+            },
+          }],
+        };
       }
       if (call.verb === "mark") {
         const keys = call.flags.key ? { [call.flags.key]: [call.for] } : {};
@@ -286,7 +304,7 @@ describe("argument refusals", () => {
     const { status, out } = run(["demo", "frobnicate"]);
     expect(status).toBe(2);
     expect(out.error).toMatch(
-      /valid: add, entry, set-env, resolve, drop, takeover, put, big, mark, remove, all/,
+      /valid: add, entry, set-env, resolve, drop, takeover, put, big, mark, snap, remove, all/,
     );
   });
 
@@ -1133,6 +1151,28 @@ describe("the record op", () => {
     expect(preview.out.rows?.map(r => r.kind)).toEqual(["record"]);
     apply(mark(["--for", "p"]));
     expect(lock()).not.toContain("keys:");
+  });
+});
+
+describe("the guarded whole write", () => {
+  const overwrite = (r: Row) => (r.kind === "conflict" ? "overwrite" : "ok");
+
+  it("replays a whole-file answer when the file is as the module read it", () => {
+    writeFileSync(join(repo, "hooks.yaml"), "mine\n");
+    const res = apply(["demo", "snap", "--path", "hooks.yaml"], overwrite);
+    expect(res.status, JSON.stringify(res.out)).toBe(0);
+    expect(read("hooks.yaml")).toBe("snap\n");
+  });
+
+  it("refuses, writing nothing, when a later op in the same call wrote the file", () => {
+    writeFileSync(join(repo, "hooks.yaml"), "mine\n");
+    const res = apply(
+      ["demo", "snap", "--path", "hooks.yaml", "--then", "later: 1"],
+      overwrite,
+    );
+    expect(res.status).toBe(2);
+    expect(res.out.error).toContain("hooks.yaml changed since demo read it");
+    expect(read("hooks.yaml")).toBe("mine\n");
   });
 });
 

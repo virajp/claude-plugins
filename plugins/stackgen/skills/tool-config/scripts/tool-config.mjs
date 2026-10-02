@@ -23,7 +23,12 @@
 //
 //   {op: "block", path, requester, body, region?, comment?, sort?, list?, frame?, drift?}
 //   {op: "entry", path, requester, line, key?, region?, comment?, sort?, list?, frame?}
-//   {op: "whole", path, content, mode?, drift?, force?}
+//   {op: "whole", path, content, mode?, drift?, force?, ifUnchanged?}
+//
+// `ifUnchanged` guards a whole write a row replays later: the sha256 of the
+// file as the module read it (ctx.read; null for an absent file). When the
+// file reads otherwise by the time the op applies — another op in the same
+// call wrote it — the call is refused, never clobbered.
 //   {op: "user-line", path, line, match, region?, frame?}
 //   {op: "drop-lines", path, match, requester?}
 //   {op: "delete", path}
@@ -485,6 +490,14 @@ function applyOp(ws, op, tool, mode, rows, notes) {
       return;
     }
     case "whole": {
+      if (
+        op.ifUnchanged !== undefined
+        && (current === null ? null : sha256(current)) !== op.ifUnchanged
+      ) {
+        throw new RefusalError(
+          `${op.path} changed since ${tool} read it, earlier in this call — its whole-file write would discard that change; run the call that conflicts on its own`,
+        );
+      }
       if (current === op.content) {
         if (op.mode && ws.record(op.path)?.mode !== op.mode) {
           ws.write(op.path, op.content, tool, op.mode);
