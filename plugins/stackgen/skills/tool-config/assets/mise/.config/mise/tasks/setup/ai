@@ -52,10 +52,14 @@ ensure_plugin() { # <name@marketplace> <source>
     print_yellow "- $1: installed"
     return
   fi
-  if ! marketplace_registered "${1##*@}"; then
-    claude plugin marketplace add "$2" >/dev/null
+  if ! marketplace_registered "${1##*@}" && ! claude plugin marketplace add "$2" >/dev/null; then
+    print_warn "- $1: adding its marketplace from $2 failed — continuing"
+    return
   fi
-  claude plugin install --scope user "$1" >/dev/null
+  if ! claude plugin install --scope user "$1" >/dev/null; then
+    print_warn "- $1: installing it at user scope failed — continuing"
+    return
+  fi
   print_yellow "- $1: installed at user scope"
 }
 
