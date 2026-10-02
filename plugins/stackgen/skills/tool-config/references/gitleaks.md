@@ -34,7 +34,10 @@ with `check`.
 `[allowlist] paths`. It reads none of `all`'s keys. By
 [the skill's](../SKILL.md#blocks) per-position rule the base's allowlist
 entries are the `gitleaks` block inside `paths`, a requester's block follows
-it there, and the rest below the frame is the base's, unmarked.
+it there, and the rest below the frame is the base's, unmarked. **The
+person's own rules and settings survive every `all`**: each table the asset
+does not hold — every custom `[[rules]]` — is carried whole, and each key
+the person added to one of the asset's tables stays at that table's end.
 
 **`useDefault` is load-bearing, and its absence is a silent hole.** A
 `--config` file **replaces** gitleaks' built-in ruleset rather than adding to
@@ -151,8 +154,9 @@ turns a backlog into a permanent blind spot.
 `all` on a repo the retired gitleaks gate pack shaped: its allowlist entries
 become the `gitleaks` block where the base holds them, and stay user lines
 until a pack's `all add-exclude --generated` claims them — `target`, which
-no pack produces, offered for removal as a `migrate` row; its lockfile entry
-is re-recorded as
+no pack produces, offered for removal as a `migrate` row; any line of the
+old file the rewrite does not carry is named in a `needs-edit` row, to
+re-add where the layout keeps it; its lockfile entry is re-recorded as
 `tool-config/gitleaks@<version>`; and the repo-local gitleaks skill under
 `.claude/skills/gitleaks/` is deleted where it still matches its record, kept
 and reported where it does not.

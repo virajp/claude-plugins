@@ -129,7 +129,9 @@ their supply-chain settings, are the language pack's.
 
 `all` on a repo the retired grype gate pack shaped keeps every ignore entry as
 the user's own, whatever its comment says — an older entry without the four
-lines stays as it is until a person removes it and adds it again — re-records
+lines stays as it is until a person removes it and adds it again — names
+in a `needs-edit` row any line of the old file the rewrite does not carry,
+to re-add where the layout keeps it, re-records
 the lockfile entry as `tool-config/grype@<version>`,
 and deletes the repo-local grype skill under `.claude/skills/grype/` where it
 still matches its record, keeping and reporting it where it does not.

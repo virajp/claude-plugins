@@ -149,7 +149,11 @@ empty — save a **switch** (`--generated`, `--pass-filenames`,
 `false`; a flag given twice, or one the call does not take, is refused
 naming the valid ones. **A list is comma-separated, no spaces** —
 `--members backend,frontend` — and this is the one place that spelling is
-stated. A value holding a space is one shell argument, quoted for the shell;
+stated. A one-line value — a hook's `--name` or `--entry`, a grype
+`--reason` — is refused when it holds a control character, a line break or
+a Unicode line or paragraph separator, any of which a YAML reader could
+take as a new entry.
+A value holding a space is one shell argument, quoted for the shell;
 a value starting with `"` is read as a TOML basic string — what that means is
 [what a call may carry](references/mise.md#what-a-call-may-carry).
 
@@ -263,8 +267,9 @@ kind is in its spelling**: a trailing `/` marks a directory, a glob
 included — `*.xcassets/` excludes every such directory and everything
 inside it; a `*` or a `?` with no trailing `/` is a file glob (`*.lock`,
 `*-lock.json`); a bare name with neither is a directory (`node_modules`,
-`.venv`). Every kind matches at any depth. A path holding a space or a
-comma, or one that is absolute or climbs with `..`, is refused.
+`.venv`). Every kind matches at any depth. A path holding a comma or any
+character outside printable ASCII — a space included — or one that is
+absolute or climbs with `..`, is refused.
 `--generated` is for a tree a tool writes and no one reviews, never a
 lockfile or authored source. An exclude asked of one tool alone —
 `dprint add-exclude …` — is refused, naming this verb. Its removal is
@@ -435,6 +440,10 @@ of that row's answers, and no row's content changed since the preview — the
 script keeps each preview's rows in the repo's git directory, never in the
 tree. A missing id, an unknown id, a wrong answer name, or a changed row
 refuses the **whole call**: nothing is written, and the rows are shown again.
+So does an answer whose whole-file write would land on a file another part
+of the same call already changed — an `overwrite` replaying a file as it was
+read, after an earlier op wrote it: the script refuses rather than discard
+that change. Run the call that conflicts on its own, then the rest.
 **A call that carries matching answers asks nothing.**
 
 **One numbered set on `all`.** Until `git`, `graphify` and `renovate` move

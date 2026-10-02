@@ -307,9 +307,10 @@ hook is scoped with `files:` to what it validates, and takes
 
 ### `add-linter-ignore`
 
-Each path in `--paths` is a directory name — a trailing `/` is dropped —
-written as `- "**/<path>/"` in the requester's block inside `ignores:`.
-`**/` because a generated tree sits at its **project** root, at any depth in
+Each path in `--paths` is classified as
+[the exclude's are](../SKILL.md#the-one-cross-tool-verb): a directory — a
+trailing `/`, or no `*` or `?` — is written `- "**/<path>/"`, a file glob
+`- "**/<glob>"`, in the requester's block inside `ignores:`. `**/` because a generated tree sits at its **project** root, at any depth in
 a monorepo; a repo whose own source directory shares a generic name
 (`build`, `Derived`) negates it by hand, as a user line — `- "!src/build/"`.
 Only a generated tree belongs there: a call with no `--for` naming a path
@@ -457,8 +458,14 @@ layout, each step a row:
   fragment directory under `.config/` — is rewritten as a `# >>> <name>` block
   holding the same entries, and the trailing comment that described the merge
   goes. The pack's own `add-hook` entry, run next, then finds its block already
-  written. Each fragment file is deleted, and the directory with its last
-  file.
+  written. Each fragment file the hook config actually merged — its markers
+  read into a block — is deleted, and the directory with its last file; a
+  fragment no marker names is left where it is.
+- **Lines the rewrite does not carry** — a key the old pack shipped
+  differently, a line of the person's own outside every position `all`
+  carries — are named in one `needs-edit` row per file, in the hook config
+  and the convention file alike, so nothing is dropped unseen: re-add each
+  that was the person's own where the layout keeps it.
 - **`default_install_hook_types`** gains `post-commit` and `post-merge`, and
   the `graphify-refresh` hook lands at both stages — one row each. A repo
   installed before needs `setup:precommit` re-run to install the new type;

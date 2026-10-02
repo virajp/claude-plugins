@@ -260,6 +260,9 @@ layout, each step a row:
 
 - **The lockfile entries** sourced from that pack are re-recorded as
   `tool-config/dprint@<version>` where the path is still the skill's.
+- **Lines the rewrite does not carry** are named in one `needs-edit` row
+  per file, so nothing is dropped unseen: re-add each that was the person's
+  own where the layout keeps it.
 - **`.config/dprint.json`'s plugins and keys** are sorted into the base, each
   requesting pack's keys once its own `add-plugin` entry runs, and the user's
   keys — a plugin no base and no pack asks for stays, the user's.
