@@ -19,9 +19,10 @@ export const PATTERNS = {
   template: /\{\{|\{%|\{#/,
   slug: /^[a-z0-9][a-z0-9-]*$/,
   pluginName: /^[a-z][a-z0-9_-]*$/,
-  pluginRef: /^[A-Za-z0-9._-]+@[A-Za-z0-9._-]+$/,
+  // every name, owner and repo opens alphanumeric: a leading - would reach claude as an option
+  pluginRef: /^[A-Za-z0-9][A-Za-z0-9._-]*@[A-Za-z0-9][A-Za-z0-9._-]*$/,
   pluginSource:
-    /^([A-Za-z0-9._-]+\/[A-Za-z0-9._-]+|(\.{1,2}|~)?\/[A-Za-z0-9._/-]+)$/,
+    /^([A-Za-z0-9][A-Za-z0-9._-]*\/[A-Za-z0-9][A-Za-z0-9._-]*|(\.{1,2}|~)?\/[A-Za-z0-9._/-]+)$/,
   hookId: /^[A-Za-z0-9_-]+$/,
   hookRepo: /^(local|https:\/\/\S+)$/,
   advisoryId: /^[A-Za-z0-9-]+$/,

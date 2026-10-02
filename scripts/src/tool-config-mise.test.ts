@@ -1125,6 +1125,12 @@ describe("setup/ai", () => {
     const shell = run(addPlugin("a@b", "x/y\"; rm -rf ~"));
     expect(shell.status).toBe(2);
     expect(shell.out.error).toContain("--source");
+    for (
+      const [plugin, source] of [["-x@y", "o/r"], ["a@b", "-o/r"]] as const
+    ) {
+      const dash = run(addPlugin(plugin, source));
+      expect(dash.status, `${plugin} ${source}`).toBe(2);
+    }
     const bare = run(addPlugin("a@b", "x/y").slice(0, -2));
     expect(bare.status).toBe(2);
     expect(bare.out.error).toContain("--for");
@@ -1138,11 +1144,49 @@ describe("setup/ai", () => {
     expect(run(["check"]).out.rows).toEqual([]);
     apply(["all"]);
     expect(read(AI)).toBe(extended);
+    expect(read(".claude/stackgen/lock.yaml")).toMatch(
+      /path: "\.config\/mise\/tasks\/setup\/ai"\n\s+source: [^\n]+\n\s+hash: none\n/,
+    );
     apply(addPlugin("a@b", "x/y"));
     expect(read(AI)).toContain("# >>> pack\nensure_plugin \"a@b\" \"x/y\"\n");
     expect(read(AI)).toContain("echo mine\n");
+    expect(read(".claude/stackgen/lock.yaml")).toMatch(
+      /setup\/ai"\n\s+source: [^\n]+\n\s+hash: none\n/,
+    );
     expect(rowsOf(["all"])).toEqual([]);
     expect(run(["check"]).out.rows).toEqual([]);
+    apply(["mise", "remove", "--for", "pack"]);
+    expect(read(AI)).toBe(extended);
+    expect(rowsOf(["all"])).toEqual([]);
+  });
+
+  it("replaces an older landed setup/ai nobody edited, then takes a pack's block", () => {
+    apply(["all"]);
+    const old =
+      "#!/usr/bin/env bash\n\nEXTRA_MARKETPLACES=()\nEXTRA_PLUGINS=()\nclaude plugin install --scope project vwf@virajp-plugins\n";
+    write(AI, old);
+    const lock = ".claude/stackgen/lock.yaml";
+    const hash = createHash("sha256").update(old).digest("hex");
+    write(
+      lock,
+      read(lock).replace(
+        /(path: "\.config\/mise\/tasks\/setup\/ai"\n\s+source: [^\n]+\n\s+hash: )[0-9a-f]+/,
+        `$1${hash}`,
+      ),
+    );
+    expect(run(addPlugin("a@b", "x/y")).status).toBe(2);
+    expect(rowsOf(["all"]).map(r => [r.kind, r["path"]])).toEqual([[
+      "write",
+      AI,
+    ]]);
+    apply(["all"]);
+    expect(read(AI)).not.toContain("EXTRA_");
+    expect(read(AI)).toContain("# >>> mise\n");
+    apply(addPlugin("a@b", "x/y"));
+    expect(read(AI)).toContain("# >>> pack\nensure_plugin \"a@b\" \"x/y\"\n");
+    expect(read(lock)).not.toMatch(
+      /setup\/ai"\n\s+source: [^\n]+\n\s+hash: none/,
+    );
   });
 
   it("refuses the retired --plugin-sources and --plugins keys", () => {

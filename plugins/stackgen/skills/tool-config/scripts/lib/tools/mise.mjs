@@ -1162,6 +1162,17 @@ const takeOver = (ctx, path) => ({
   supersedes: ctx.source(path),
 });
 
+/** Whether setup/ai is as tool-config last landed it — its record's hash still matching. */
+const landedAi = (ctx, current) => untouched(ctx, SETUP_AI, current);
+
+/** Mark a recorded setup/ai the repo's own: the record kept, for remove; its hash dropped. */
+const disown = () => ({
+  op: "record",
+  path: SETUP_AI,
+  fields: {},
+  unhashed: true,
+});
+
 /** The note for a setup/ai the repo wrote itself: never overwritten, its steps the LLM's to render. */
 const brownfieldNote =
   `${SETUP_AI} is the repo's own — left as it stands; render any step it lacks into it per references/mise.md`;
@@ -1182,19 +1193,22 @@ function taskOps(ctx, path, v, pending, notes) {
     pending.set(path, current);
     return [{ ...op, content: current }];
   }
-  // setup/ai is the repo's once it is here, recorded or not: never drift,
-  // never overwritten, its record's hash never read.
-  if (path === SETUP_AI) {
-    notes.push(brownfieldNote);
-    return [];
-  }
   if (!record) {
+    if (path === SETUP_AI) {
+      notes.push(brownfieldNote);
+      return [];
+    }
     return [op];
   }
   const baseline = renderWhole(path, ctx.asset(path), carriedValues(ctx));
   if (untouched(ctx, path, current) || sameLines(current, baseline)) {
     pending.set(path, want);
     return [{ ...op, force: true }];
+  }
+  // A landed setup/ai the person edited is theirs: never drift, never overwritten.
+  if (path === SETUP_AI) {
+    notes.push(brownfieldNote);
+    return [disown()];
   }
   return [{ ...op, drift: true }];
 }
@@ -1621,7 +1635,13 @@ function addPlugin(ctx, { flags, for: requester }) {
       `${SETUP_AI} is not here — land the mise base first (tool-config mise)`,
     );
   }
+  const landed = landedAi(ctx, current);
   if (blockIn(current, BASE, { kind: "whole" }) === null) {
+    if (landed) {
+      throw new ctx.RefusalError(
+        `${SETUP_AI} is an older landing — run tool-config mise to land the current task first`,
+      );
+    }
     return { ops: [], notes: [brownfieldNote] };
   }
   const line = `ensure_plugin "${flags.plugin}" "${flags.source}"`;
@@ -1637,6 +1657,8 @@ function addPlugin(ctx, { flags, for: requester }) {
       requester,
       body: next,
       region: { kind: "whole" },
+      // written into the repo's own task: recorded, never hashed
+      ...(landed ? {} : { unhashed: true }),
     }],
   };
 }
@@ -1759,7 +1781,13 @@ const VERBS = {
   "add-alias": addAlias,
   "add-plugin": addPlugin,
   upgrade,
-  remove: (ctx, call) => ({ ops: [{ op: "remove", requester: call.for }] }),
+  remove: (ctx, call) => {
+    const ai = ctx.read(SETUP_AI);
+    const own = ai !== null && ctx.record(SETUP_AI) && !landedAi(ctx, ai);
+    return {
+      ops: [...(own ? [disown()] : []), { op: "remove", requester: call.for }],
+    };
+  },
 };
 
 function plan(ctx, call) {

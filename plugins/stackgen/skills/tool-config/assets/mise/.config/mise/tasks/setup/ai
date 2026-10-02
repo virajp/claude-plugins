@@ -15,11 +15,17 @@ fi
 
 # Project scope resolves against the working directory.
 cd "${MISE_PROJECT_ROOT}"
+ROOT="$(pwd -P)"
+
+# The rows that hold here: user scope, or project scope for this repo — never another repo's.
+plugins_here() {
+  claude plugin list --json |
+    jq -c --arg root "${ROOT}" '[.[] | select(.scope == "user" or (.scope == "project" and .projectPath == $root))]'
+}
 
 # Installed at user or project scope: either is enough.
 plugin_installed() { # <name@marketplace>
-  claude plugin list --json |
-    jq -e --arg id "$1" 'any(.[]; .id == $id and (.scope == "user" or .scope == "project"))' >/dev/null
+  plugins_here | jq -e --arg id "$1" 'any(.[]; .id == $id)' >/dev/null
 }
 
 marketplace_registered() { # <name>
@@ -45,18 +51,22 @@ print_subheader "Checking plugins ..."
 # >>> mise
 if plugin_installed "vwf@virajp-plugins"; then
   print_yellow "- vwf@virajp-plugins: installed"
-else
+elif command -v pnpx >/dev/null 2>&1; then
   print_yellow "- vwf@virajp-plugins: absent — installing it at user scope"
   pnpx @virajp.dev/claude-plugins@latest --all
+else
+  print_warn "- vwf@virajp-plugins: absent, and pnpx is not on PATH — run: pnpx @virajp.dev/claude-plugins@latest --all"
 fi
 # <<< mise
 
 # Whether or not anything was installed: every marketplace, then every plugin at its own scope.
 print_subheader "Updating marketplaces ..."
-claude plugin marketplace update >/dev/null
+if ! claude plugin marketplace update >/dev/null; then
+  print_warn "- a marketplace update failed — updating plugins from what is cached"
+fi
 
 print_subheader "Updating plugins ..."
-rows="$(claude plugin list --json | jq -r '.[] | "\(.id)|\(.scope)"')"
+rows="$(plugins_here | jq -r '.[] | "\(.id)|\(.scope)"')"
 while IFS='|' read -r plugin scope; do
   [ -n "${plugin}" ] || continue
   print_wait "- ${plugin} (${scope}) ... "
