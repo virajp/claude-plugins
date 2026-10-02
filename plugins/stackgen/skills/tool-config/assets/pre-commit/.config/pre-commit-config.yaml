@@ -7,6 +7,7 @@ default_install_hook_types:
   - pre-commit
   - commit-msg
   - post-commit
+  - post-merge
 
 # Stated once so each hook below only says what differs from it.
 default_stages: [pre-commit]
@@ -85,12 +86,13 @@ repos:
       - id: graphify-refresh
         name: Refresh the graphify graph (mise run code:graph)
         description: Rebuilds the knowledge graph in the background after each
-          commit; the task skips a worktree, a rebase and a missing graphify.
+          commit and each merge or pull; the task skips a worktree, a rebase and
+          a missing graphify.
         entry: mise x -- mise run code:graph
         language: system
         pass_filenames: false
         always_run: true
-        stages: [post-commit]
+        stages: [post-commit, post-merge]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
