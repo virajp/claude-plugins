@@ -11,9 +11,9 @@
 import { posix } from "node:path";
 import {
   BlockParseError,
-  findRegion,
   joinLines,
   parseBlocks,
+  regionBody,
   splitLines,
 } from "../blocks.mjs";
 import {
@@ -211,18 +211,7 @@ function scan(path, text) {
 
 /** A requester's block body in one position, or null. */
 function blockIn(text, requester, region) {
-  if (text === null) {
-    return null;
-  }
-  const { lines } = splitLines(text);
-  const reg = findRegion(lines, region);
-  if (!reg) {
-    return null;
-  }
-  const b = parseBlocks(lines).find(x =>
-    x.requester === requester && x.open >= reg.start && x.close < reg.end
-  );
-  return b ? lines.slice(b.open + 1, b.close) : null;
+  return text === null ? null : regionBody(text, requester, region);
 }
 
 // --- the layout -----------------------------------------------------------------
@@ -926,8 +915,13 @@ function skillOp(ctx, pending, landing) {
 
 // --- all ----------------------------------------------------------------------------------
 
-/** The base's pins and keys that something else in the repo already holds: conflict rows, or settled. */
-function baseClashes(ctx, path, region, body, mine, rows, resolve) {
+/**
+ * The base's pins and keys that something else in the repo already holds:
+ * conflict rows, or settled. `body` is the rendered body — positions filled,
+ * pins resolved — so a row asks for, and an overwrite writes, what the call
+ * would land.
+ */
+function baseClashes(ctx, path, region, body, mine, rows) {
   const omit = new Set();
   const sec = sectionOf(path);
   if (!sec || !["tools", "env", "shell_alias"].includes(sec.section)) {
@@ -962,16 +956,12 @@ function baseClashes(ctx, path, region, body, mine, rows, resolve) {
       : sec.section === "env"
       ? "key"
       : "alias";
-    const spec = sec.section === "tools" ? versionOf(KEY.exec(line)[2]) : null;
-    const resolved = spec !== null && !isExact(spec)
-      ? withVersion(line, resolve(key, spec))
-      : line;
     rows.push({
       kind: "conflict",
       path,
       [what]: key,
       requester: BASE,
-      requested: inBlock ? inBlock.line.trim() : resolved.trim(),
+      requested: inBlock ? inBlock.line.trim() : line.trim(),
       existing: outside.map(x => ({
         path: x.path,
         holder: x.owner ?? "user",
@@ -993,7 +983,7 @@ function baseClashes(ctx, path, region, body, mine, rows, resolve) {
               op: "entry",
               path,
               requester: BASE,
-              line: resolved,
+              line,
               region,
               frame: frameFor(ctx, path),
             }]),
@@ -1064,20 +1054,17 @@ function configOps(ctx, path, v, rows, resolve) {
     return [];
   }
   const mine = blockIn(current, BASE, asset.region);
-  const omit = baseClashes(
+  const tools = sec?.section === "tools";
+  const rendered = renderBody(
     ctx,
     path,
-    asset.region,
     asset.body,
-    mine,
-    rows,
-    resolve,
+    v,
+    tools ? basePins(ctx, path, asset.body, mine, resolve) : null,
   );
-  const body = asset.body.filter(l => !omit.has(keyOf(l)));
-  const pins = sec?.section === "tools"
-    ? basePins(ctx, path, body, mine, resolve)
-    : null;
-  const want = renderBody(ctx, path, body, v, pins);
+  const omit = baseClashes(ctx, path, asset.region, rendered, mine, rows);
+  const kept = l => !omit.has(keyOf(l));
+  const want = rendered.filter(kept);
   const op = {
     op: "block",
     path,
@@ -1095,27 +1082,80 @@ function configOps(ctx, path, v, rows, resolve) {
   if (untouched(ctx, path, current)) {
     return [op];
   }
-  const was = carriedValues(ctx);
   const baseline = renderBody(
     ctx,
     path,
-    body,
-    was,
-    sec?.section === "tools" ? basePins(ctx, path, body, mine, null) : null,
-  );
+    asset.body,
+    carriedValues(ctx),
+    tools ? basePins(ctx, path, asset.body, mine, null) : null,
+  )
+    .filter(kept);
   const keep = notLegacy(path);
   const drifted = !sameSet(mine.filter(keep), baseline.filter(keep));
   return [{ ...op, drift: drifted }];
 }
 
 /**
- * Whether a file is exactly what tool-config last wrote — its content hashes
- * to its lock record. Nobody edited it, so a newer asset replaces it as a
+ * Whether a file's blocks are exactly what tool-config last wrote: its
+ * content hashes to its lock record — as it stands, or with the person's own
+ * lines outside every block set aside, since the layout invites a line of
+ * one's own there. Nobody edited a block, so a newer asset replaces it as a
  * plain update, never as drift.
  */
 function untouched(ctx, path, current) {
   const record = ctx.record(path);
-  return current !== null && record?.hash === sha256(current);
+  if (current === null || !record?.hash) {
+    return false;
+  }
+  if (record.hash === sha256(current)) {
+    return true;
+  }
+  const bare = withoutUserLines(path, current);
+  return bare !== null && record.hash === sha256(bare);
+}
+
+/**
+ * A block file with every line outside its frame and its blocks removed, and
+ * the blank lines left behind collapsed — the file as tool-config wrote it,
+ * where the person's lines came later. Null for a file with no block.
+ */
+function withoutUserLines(path, text) {
+  const { lines } = splitLines(text);
+  let found;
+  try {
+    found = parseBlocks(lines);
+  }
+  catch {
+    return null;
+  }
+  if (found.length === 0) {
+    return null;
+  }
+  const inBlock = new Set(
+    found.flatMap(b =>
+      Array.from({ length: b.close - b.open + 1 }, (_, i) => b.open + i)
+    ),
+  );
+  let frame = 0;
+  while (
+    frame < lines.length && /^\s*#/.test(lines[frame]) && !MARKER
+      .test(lines[frame])
+  ) {
+    frame++;
+  }
+  while (frame < lines.length && lines[frame].trim() === "") {
+    frame++;
+  }
+  if (sectionOf(path) && TABLE.test(lines[frame] ?? "")) {
+    frame++;
+  }
+  const kept = lines.filter((l, i) =>
+    i < frame || inBlock.has(i) || l.trim() === ""
+  );
+  const out = kept.filter((l, i) =>
+    !(l.trim() === "" && (i === kept.length - 1 || kept[i + 1].trim() === ""))
+  );
+  return joinLines(out);
 }
 
 /** Whether another source's lock entry owns a path — a pack overlay's task file, say. */
@@ -1568,6 +1608,42 @@ function addAlias(ctx, { flags, for: requester }) {
   });
 }
 
+/**
+ * Line-level ops that replace one pin in its block in place, so the accepted
+ * rows of one block compose whatever the others were answered. A block op
+ * carries a fixed body and would undo an earlier row's change; instead the
+ * pin's line and every line below it leave the block and come back in order,
+ * the pin rewritten — behind a placeholder line, so the block is never empty
+ * and never moves. Every other line keeps its text, so a later row's lines
+ * still match.
+ */
+function replaceInBlock(ctx, x, line, region) {
+  const body = blockIn(ctx.read(x.path), x.owner, region) ?? [];
+  const at = body.findIndex(l => l === x.line);
+  const tail = body.slice(at).filter(l => l.trim() !== "");
+  const holder = `\u0001moving ${x.key}`;
+  const entry = l => ({
+    op: "entry",
+    path: x.path,
+    requester: x.owner,
+    line: l,
+    region,
+    frame: frameFor(ctx, x.path),
+  });
+  const drop = l => ({
+    op: "drop-lines",
+    path: x.path,
+    match: l.trim(),
+    requester: x.owner,
+  });
+  return [
+    entry(holder),
+    ...tail.map(drop),
+    ...tail.map(l => entry(l === x.line ? line : l)),
+    drop(holder),
+  ];
+}
+
 /** A pack's structured mise entries, from its pack.yaml; none for a pack this plugin does not ship. */
 function packEntries(ctx, requester) {
   return once(ctx, `pack:${requester}`, () => {
@@ -1626,20 +1702,8 @@ function upgrade(ctx) {
       continue;
     }
     const line = withVersion(x.line, to);
-    // Line-level ops, so the accepted rows of one block compose into one write:
-    // the new pin joins the block, then the old one leaves it.
     const ok = x.owner
-      ? [
-        {
-          op: "entry",
-          path: x.path,
-          requester: x.owner,
-          line,
-          region,
-          frame: frameFor(ctx, x.path),
-        },
-        dropOp(x),
-      ]
+      ? replaceInBlock(ctx, x, line, region)
       : [userLine(ctx, x.path, region, line, x)];
     rows.push({
       kind: "upgrade",

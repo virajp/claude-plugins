@@ -290,6 +290,34 @@ describe("greenfield all", () => {
     expect(rowsOf(["all"])).toEqual([]);
   });
 
+  it("still updates such a block as a write when the person added a line of their own outside it", () => {
+    apply(["all"]);
+    const tools = `${CONF}/tools.toml`;
+    write(
+      tools,
+      read(tools).replace("# No runtime here", "# The lock: no runtime here"),
+    );
+    const lock = ".claude/stackgen/lock.yaml";
+    const hash = createHash("sha256").update(read(tools)).digest("hex");
+    write(
+      lock,
+      read(lock).replace(
+        new RegExp(
+          `(path: "${tools}"\\n\\s+source: [^\\n]+\\n\\s+hash: )[0-9a-f]+`,
+        ),
+        `$1${hash}`,
+      ),
+    );
+    write(tools, read(tools) + "\nmine = \"1.0.0\"\n");
+    expect(rowsOf(["all"]).map(r => [r.kind, r["path"]])).toEqual([
+      ["write", tools],
+    ]);
+    apply(["all"]);
+    expect(read(tools)).toContain("# No runtime here");
+    expect(read(tools)).toMatch(/^mine = "1\.0\.0"$/m);
+    expect(rowsOf(["all"])).toEqual([]);
+  });
+
   it("raises drift for a hand-edited base block, and check reports it", () => {
     apply(["all"]);
     write(
@@ -798,6 +826,20 @@ describe("upgrade", () => {
     expect(rowsOf(["mise", "upgrade"], dev)).toEqual([]);
   });
 
+  it("replaces each pin in place, its order and comments kept", () => {
+    const dev = { MISE_ENV: "dev" };
+    const file = `${CONF}/tools.dev.toml`;
+    const before = read(file);
+    setVersions("jq=1.9.0\npython=3.14.1\npipx:graphifyy=0.5.0\n");
+    apply(["mise", "upgrade"], undefined, dev);
+    expect(read(file)).toBe(
+      before
+        .replace(/(jq\s+= \{ version = )"1\.0\.0"/, "$1\"1.9.0\"")
+        .replace(/(python = \{ version = )"1\.0\.0"/, "$1\"3.14.1\"")
+        .replace(/(uvx = true, version = )"1\.0\.0"/, "$1\"0.5.0\""),
+    );
+  });
+
   it("keep leaves the pins as they stand", () => {
     const dev = { MISE_ENV: "dev" };
     setVersions("jq=1.9.0\nnpm:@askviraj/linter=1.1.6\n");
@@ -948,6 +990,39 @@ describe("migration", () => {
     );
     expect(existsSync(path(`${CONF}/tools.ci.toml`))).toBe(false);
     expect(existsSync(path(`${CONF}/tools.test.toml`))).toBe(false);
+  });
+
+  it("asks for, and on overwrite writes, a clashing base key as the call would land it", () => {
+    write(
+      `${CONF}/env.toml`,
+      "[env]\nREPO_NAME = \"old\"\nMERGE_MODEL_DEVELOP = \"direct\"\nMEMBERS = \"x\"\n",
+    );
+    const args = [
+      "all",
+      "--repo",
+      "scratch",
+      "--merge-model-develop",
+      "pr",
+      "--members",
+      "api",
+    ];
+    const asked = Object.fromEntries(
+      rowsOf(args)
+        .filter(r => r.kind === "conflict")
+        .map(r => [r["key"], String(r["requested"]).replace(/\s+/g, " ")]),
+    );
+    expect(asked).toEqual({
+      REPO_NAME: "REPO_NAME = \"scratch\"",
+      MERGE_MODEL_DEVELOP: "MERGE_MODEL_DEVELOP = \"pr\"",
+      MEMBERS: "MEMBERS = \"api\"",
+    });
+    apply(args, r => (r.kind === "conflict" ? "overwrite" : "ok"));
+    const env = read(`${CONF}/env.toml`);
+    expect(env.match(/^REPO_NAME\s*=.*$/gm)).toEqual([
+      "REPO_NAME = \"scratch\"",
+    ]);
+    expect(env).toMatch(/^MERGE_MODEL_DEVELOP\s*= "pr"$/m);
+    expect(env.match(/^MEMBERS\s*=.*$/gm)).toEqual(["MEMBERS = \"api\""]);
   });
 
   it("raises a conflict row for a base pin the repo already holds", () => {
