@@ -1162,6 +1162,18 @@ const takeOver = (ctx, path) => ({
   supersedes: ctx.source(path),
 });
 
+/** The retired EXTRA_* rows an older setup/ai filled, one note each, so a replace drops none unseen. */
+function droppedExtras(text) {
+  return ["EXTRA_MARKETPLACES", "EXTRA_PLUGINS"].flatMap(name => {
+    const m = new RegExp(`^${name}=\\(([\\s\\S]*?)\\)\\s*$`, "m").exec(text);
+    return [...(m?.[1] ?? "").matchAll(/"([^"]+)"/g)].map(x =>
+      `${SETUP_AI}: ${name} entry ${
+        x[1]
+      } dropped — the task no longer installs extras; ask for it with add-plugin`
+    );
+  });
+}
+
 /** Whether setup/ai is as tool-config last landed it — its record's hash still matching. */
 const landedAi = (ctx, current) => untouched(ctx, SETUP_AI, current);
 
@@ -1203,6 +1215,9 @@ function taskOps(ctx, path, v, pending, notes) {
   const baseline = renderWhole(path, ctx.asset(path), carriedValues(ctx));
   if (untouched(ctx, path, current) || sameLines(current, baseline)) {
     pending.set(path, want);
+    if (path === SETUP_AI) {
+      notes.push(...droppedExtras(current));
+    }
     return [{ ...op, force: true }];
   }
   // A landed setup/ai the person edited is theirs: never drift, never overwritten.
@@ -1629,6 +1644,12 @@ function addAlias(ctx, { flags, for: requester }) {
  * holding no mise block is the repo's own: noted, never written.
  */
 function addPlugin(ctx, { flags, for: requester }) {
+  if (foreign(ctx, SETUP_AI)) {
+    return {
+      ops: [],
+      notes: [`${SETUP_AI} is ${ctx.source(SETUP_AI)}'s — left alone`],
+    };
+  }
   const current = ctx.read(SETUP_AI);
   if (current === null) {
     throw new ctx.RefusalError(
@@ -1783,7 +1804,10 @@ const VERBS = {
   upgrade,
   remove: (ctx, call) => {
     const ai = ctx.read(SETUP_AI);
-    const own = ai !== null && ctx.record(SETUP_AI) && !landedAi(ctx, ai);
+    const own = ai !== null
+      && !foreign(ctx, SETUP_AI)
+      && ctx.record(SETUP_AI)
+      && !landedAi(ctx, ai);
     return {
       ops: [...(own ? [disown()] : []), { op: "remove", requester: call.for }],
     };

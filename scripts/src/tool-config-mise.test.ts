@@ -1167,7 +1167,7 @@ describe("setup/ai", () => {
   it("replaces an older landed setup/ai nobody edited, then takes a pack's block", () => {
     apply(["all"]);
     const old =
-      "#!/usr/bin/env bash\n\nEXTRA_MARKETPLACES=()\nEXTRA_PLUGINS=()\nclaude plugin install --scope project vwf@virajp-plugins\n";
+      "#!/usr/bin/env bash\n\n#   EXTRA_PLUGINS=(\"widget@acme-plugins\")\nEXTRA_MARKETPLACES=(\n  \"acme/claude-plugins|acme-plugins\"\n)\nEXTRA_PLUGINS=(\n  \"gadget@acme-plugins\"\n)\nclaude plugin install --scope project vwf@virajp-plugins\n";
     write(AI, old);
     const lock = ".claude/stackgen/lock.yaml";
     const hash = createHash("sha256").update(old).digest("hex");
@@ -1183,13 +1183,35 @@ describe("setup/ai", () => {
       "write",
       AI,
     ]]);
-    apply(["all"]);
+    const { preview, out } = apply(["all"]);
+    for (const notes of [preview.notes, out.notes]) {
+      const dropped = (notes ?? []).filter(n => n.includes(" dropped "));
+      expect(dropped).toHaveLength(2);
+      expect(dropped.join(" ")).toContain("acme/claude-plugins|acme-plugins");
+      expect(dropped.join(" ")).toContain("gadget@acme-plugins");
+    }
     expect(read(AI)).not.toContain("EXTRA_");
     expect(read(AI)).toContain("# >>> mise\n");
     apply(addPlugin("a@b", "x/y"));
     expect(read(AI)).toContain("# >>> pack\nensure_plugin \"a@b\" \"x/y\"\n");
     expect(read(lock)).not.toMatch(
       /setup\/ai"\n\s+source: [^\n]+\n\s+hash: none/,
+    );
+  });
+
+  it("never writes or disowns a setup/ai a pack's overlay owns", () => {
+    const own = "#!/usr/bin/env bash\n# >>> mise\necho overlay\n# <<< mise\n";
+    write(AI, own);
+    write(
+      ".claude/stackgen/lock.yaml",
+      `entries:\n  - path: ${AI}\n    source: pnpm@1.0.0\n    hash: abc\n`,
+    );
+    const added = apply(addPlugin("a@b", "x/y"));
+    expect(added.out.notes?.join(" ")).toContain(`${AI} is pnpm@1.0.0's`);
+    apply(["mise", "remove", "--for", "pack"]);
+    expect(read(AI)).toBe(own);
+    expect(read(".claude/stackgen/lock.yaml")).toContain(
+      "source: pnpm@1.0.0\n    hash: abc",
     );
   });
 
