@@ -147,7 +147,8 @@ needs it**.
 version that disagrees with itself depending on `MISE_ENV`. A tool other than
 the base's pinned in two environment files is a **hoist** row on `all` — one
 pin, the newer version, in `tools.toml`, the others removed — answered `ok`
-or `keep-existing`.
+or `keep-existing`. A hoist answer is not recorded: kept, the row returns on
+every `all`.
 
 **`all` checks every pin its base block lands**, on a fresh repo and on a
 reshape alike, as `add-tool` does for one. A tool the base block pins that the
@@ -206,8 +207,9 @@ mise's own default is 24) keeps a release nobody has run out of what
 **So there is no lockfile, and CI resolves nothing.** The config names every
 version, the pipeline installs exactly those, and moving one forward is a
 diff. **`upgrade` is the only mover** ([section 4](#4-the-verbs)): one row per
-pin that has moved on, each answered. Nothing else — no task, no install, no
-hook — moves a pin.
+pin that has moved on within what declared it, each answered; a pin declared
+exact never moves. Nothing else — no task, no install, no hook — moves a
+pin.
 
 **A tool is never added with a bare `mise use`** — never: it writes the
 top-level `mise.toml` this layout keeps settings-only, and it pins outside
@@ -297,6 +299,11 @@ fills a slot overwrites the file, its lock entry then names the pack, and
 `all` never writes it back ([the skill's](../SKILL.md) rule for a path another
 source owns). A slot no pack filled keeps its placeholder: a repo that has
 picked no stack is supposed to see it.
+
+**A landed file nobody edited takes the newer asset.** Where a file's content
+still hashes to its lock record, a later `all` with a newer stackgen
+replaces it with a plain `write` row; only a file edited by hand since it was
+landed raises a drift row.
 
 **The repo-local mise skill**, `.claude/skills/mise/SKILL.md`, is how an
 agent working in the repo runs its tasks: every task through `mise run`,
@@ -467,6 +474,14 @@ moves to `tools.toml`. `all` runs the same check for its base block's pins
 ([what goes where](#what-goes-where)). It installs nothing: `mise install`, or
 `setup:mise`, does that after.
 
+**A requester's `keep-existing` is recorded** — on `add-tool`, `add-env`,
+`add-alias`, and `set-env`'s same-file clash below — as a comment in that
+requester's own block, `# keep-existing: <key>`, so the same call raises no
+row again and the pack's entries settle. `check` ignores the comment. It is
+cleared by `remove`, by an `overwrite`, or by the clash going away, after
+which the requester's own line is written. A call with no `--for` records
+nothing.
+
 **`add-env`** writes `<KEY> = "<value>"`. A requester's own value may be a
 template — `"{{ config_root | split(pat='/') | last }}"` — while a machine
 value, which `set-env` takes from a person, never is. A key already set in
@@ -496,8 +511,9 @@ for an environment overrides the one for every environment —
 `env.dev.toml` over `env.toml` — and otherwise the later in alphabetical
 order wins. A user line in the same file as the block cannot stay beside it,
 since a TOML table holds a key once: that row offers **move-in** or
-`keep-existing` (the block's value is not written). Nothing is written until
-the user picks, and nothing records the answer. A caller never removes the
+`keep-existing` (the block's value is not written, and the answer is
+recorded, as above). Nothing is written until the user picks; a `keep-both`
+is not recorded, so a later run asks again. A caller never removes the
 outside line itself: it relays this row inside its own consent.
 
 **`add-alias`** writes `<name> = "<command>"`. Dev only — `--env dev` is
@@ -508,16 +524,23 @@ already set in `conf.d/shell_alias.dev.toml` — by the mise block's own
 written a second time. The call is a conflict row naming the name, whose
 alias it is and both commands: `keep-existing` (the new alias is not written)
 or `overwrite` (the existing line is removed from its block or the user's
-lines and the new one written in the requester's block). Nothing records the
-answer, so a later run that meets the same clash asks again.
+lines and the new one written in the requester's block). A
+`keep-existing` is recorded as above, so a later run with the same call does
+not ask again.
 
 **`remove --for <requester>`** takes that requester's blocks out of every
 mise file, as [the skill's removal](../SKILL.md#removal) says.
 
 **`upgrade`** moves the pins forward, and it is the only call that does. It
-resolves every pin in every `conf.d/tools*.toml` file — the base's, each
-pack's, the user's — with `mise latest <tool>`, and returns **one row per pin
-that moved**, naming the file, whose pin it is, `from` and `to`; each is
+reads every pin in every `conf.d/tools*.toml` file — the base's, each
+pack's, the user's — and moves each only as far as whatever declared it
+allows: the base's pin as its shipped asset spells the version, a pack's as
+its structured `add-tool` entry does, the user's own line as `latest`. An
+exact declaration is never moved — it is deliberate, so `all` and the pack's
+entries never undo an upgrade; a prefix moves within itself
+(`mise latest <tool>@<prefix>`); `latest` takes `mise latest <tool>`. It
+returns **one row per pin that moved**, naming the file, whose pin it is,
+`from` and `to`; each is
 answered `ok` (written, in its own block or as the user's line) or `keep`.
 Pins that did not move show no row. It is refused outside dev — run it under
 `MISE_ENV=dev`. The installs follow with `mise install`. The ignore

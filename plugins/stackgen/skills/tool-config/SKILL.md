@@ -61,9 +61,11 @@ Run it with the `node` on `PATH` — never through `mise x node@lts --`. It
 needs no package, and it needs `mise` on `PATH` for any call that resolves a
 version; without one it refuses, naming the install. It runs against the
 repo the working directory sits in (`git rev-parse --show-toplevel`), or the
-one `--repo-root <dir>` names. A caller — `/vwf:init`, `/vwf:setup`, the
-materializer, a person — invokes this skill with the script's own arguments,
-and the skill runs them as given.
+one `--repo-root <dir>` names, and never outside it: a path that is absolute
+or climbs with `..`, a symlink at or above a path inside the repo, or a path
+resolving outside the root refuses the call (exit 2). A caller —
+`/vwf:init`, `/vwf:setup`, the materializer, a person — invokes this skill
+with the script's own arguments, and the skill runs them as given.
 
 **The output is JSON on stdout, always**, and the exit code says which shape:
 
@@ -116,8 +118,8 @@ a value starting with `"` is read as a TOML basic string — what that means is
   and takes no `--answers` and no `preview`.
 
 **`--for <requester>`** names whose lines these are. A pack's calls carry the
-pack's slug — `apply-entries` adds it from `--pack` — and a tool's own name is
-reserved for the base the skill lands itself (`--for mise`, `--for dprint`
+pack's slug — `apply-entries` adds it from `--pack` — and a tool's own name
+is reserved for the base the skill lands itself (`--for mise`, `--for dprint`
 and the rest are refused). A requester is a slug: lowercase letters, digits
 and `-` — save `gitignore:<Name>`, the one requester `/vwf:init`'s
 ignore-template fallback names ([git's](references/git.md#4-templates)). A
@@ -306,6 +308,20 @@ than `mise.local.lock` ([git's lock rule](references/git.md#3-the-ignore-files-r
 The same list entry — a plugin, an exclude, an ignore — asked for twice is
 not a conflict: it is [shared](#blocks).
 
+**A pack's `keep-existing` is remembered.** On mise, a requester's clash
+answered `keep-existing` — on `add-tool`, `add-env`, `add-alias`, or
+`set-env` meeting a user line in its own file — is written into that
+requester's own block as a comment, `# keep-existing: <key>`, so the same
+call raises no row again; `check` ignores the comment. `remove`, an
+`overwrite`, or the clash going away clears it. A call with no `--for` and a
+`hoist` row record nothing: answered `keep-existing`, a hoist row returns on
+every `all`.
+
+**A file left as it was landed is the skill's to replace.** A mise file whose
+content still hashes to its lock record is untouched: a newer shipped asset
+replaces it with a plain `write` row. Only a file edited since it was landed
+raises a drift row.
+
 **How the answers come back.** Rows are numbered `r1`, `r2`, … in order, and
 each carries the answer names it takes — relay them as given:
 
@@ -363,8 +379,9 @@ wrote the block — `all` for a base, the pack's `apply-entries` — and
 answering it:
 
 - **take-theirs** — the block is rewritten as the requester would write it;
-- **keep-mine** — the block stays as it stands for this run; nothing records
-  the answer, so the next run that finds the same difference asks again;
+- **keep-mine** — the block stays as it stands for this run; unlike a
+  pack's `keep-existing`, nothing records it, so the next run that finds the
+  same difference asks again;
 - **merge** — a `needs-edit` row: combine the two by hand.
 
 The skill never picks one for the user.
