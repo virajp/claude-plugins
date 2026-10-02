@@ -32,7 +32,8 @@ three remain **degradations**. Check:
   already recorded (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`), and blocking on a
   repo the user declined to clone would halt a run they consented to narrow.
 - **The refresh hook.** The graph is refreshed by the repo's pre-commit
-  `graphify-refresh` hook at stage `post-commit`, which runs `code:graph`.
+  `graphify-refresh` hook at stages `post-commit` and `post-merge`, which runs
+  `code:graph`; both are among the config's `default_install_hook_types`.
   A raw graphify git hook in `.git/hooks/` (never run `graphify hook install`
   — it pins a Python path and breaks on upgrade) is **drift**, never a pass,
   and so is a leftover `merge=graphify` attribute or `merge.graphify.*` key in

@@ -82,8 +82,10 @@ project, on their own consent, and nothing else the forge holds.
 **First, `/stackgen:tool-config all`**, once per repo, with this run's
 answers as `--<key> <value>` flags. It lands every tool the skill owns — the
 toolchain manager's files, its task library and the gates among them — and
-fills their marked positions from the arguments. `init` names no tool and
-splices nothing there. The arguments:
+fills their marked positions from the arguments; then it runs
+`MISE_ENV=dev mise run setup:all` itself, and formats and validates what it
+wrote. It assumes the repo is already trusted — §9's check, made before the
+plan. `init` names no tool and splices nothing there. The arguments:
 
 | Flag                                          | Value                                             | From                                  |
 | --------------------------------------------- | ------------------------------------------------- | ------------------------------------- |
@@ -331,7 +333,7 @@ row.
 ## 6 — The hook fragments
 
 Retired — `init` merges no hook; a pack asks
-`/stackgen:tool-config pre-commit add hook … for <pack>` instead.
+`/stackgen:tool-config pre-commit add-hook … --for <pack>` instead.
 
 ## 7 — The project ids, the repo name, and the positions they fill
 
@@ -339,8 +341,8 @@ The fills this section enumerates run in **every mode**, but on a `shaped`
 repo [existing repo](existing-repo.md)'s **pass 8** already owns them — it
 resolves the same ids and argument values, shows the rows, and applies the
 fill by this section's rules — so the existing pipeline does not run this
-section a second time after its landing; it reaches §3, §4, §8, §9 and §10
-from its post-landing paragraph and takes the fills from its own pass. A
+section a second time after its landing; it reaches §3, §4, §8 and §9 from
+its post-landing paragraph and takes the fills from its own pass. A
 `blank` or `source` repo runs this section as written.
 
 Resolve the project ids **for the repo this pass is running in**, in this order
@@ -542,69 +544,46 @@ reported rather than written over. The rest of the hygiene assets landed in
 Runs in **every mode**, after the mode's landing and before the git pass —
 the `shaped` pipeline reaches it from
 [existing repo](existing-repo.md)'s post-landing paragraph. On a repo whose
-config was trusted and whose task files carried the bit already, both steps
-change nothing and say so; a task file this run created, replaced or renamed
-is exactly what the second step exists for, in every mode.
+task files carried the bit already, it changes nothing and says so; a task
+file this run created, replaced or renamed is exactly what it exists for, in
+every mode.
 
-Run the two bootstrap steps the tool-config skill documents, **in its own
-order** — the **trust** step first, then the task that makes every file in the
-task library executable.
+**Trust is the user's prerequisite, never a step `init` runs.** The manager
+reads no config it has not been told to trust, and §2's call runs the task
+library's bootstrap aggregator itself, so an untrusted repo is one whose
+landing stops halfway. `init` therefore **checks it in the survey, before the
+plan**, per resolved repo: `mise trust --show` lists none of the repo's
+files as untrusted where it carries a config, and its path sits under
+`trusted_config_paths` in the global mise config where it carries none yet —
+there is nothing in it to trust until §2 lands it. A repo that fails is named
+in the plan with its one remedy: where it carries a config, `mise trust --all`
+in that repo; where it carries none, only its path (or a parent's) under
+`trusted_config_paths` in the global mise config helps, since `mise trust`
+has nothing to trust yet and the skill checks trust again after landing.
+Either way `init` waits for the user to say it is done, reads it again, and
+only then asks for the consent. It never runs either itself. Should §2's call still meet an untrusted config,
+the skill refuses with the files kept and nothing recorded; `init` reports it
+under *Deferred*, the remedy and then `/vwf:setup reshape` its unlock.
 
-Both are documented in the skill's **toolchain reference**, and reading it
-is the step rather than a footnote to it:
-
-- **The trust step** is its own section there, titled for the fact that
-  matters — that it comes before everything else — and it names the repo
-  `init` has just laid the payload into as one of the two cases it exists
-  for. It carries the exact form to run and why the narrower form is wrong
-  (the skill lands a config *split*, and the narrow form trusts one file of
-  it), a table of what an untrusted config costs under each of the manager's
-  two trust settings, and the pipeline and linked-worktree cases.
-- **The executable-bit step** is in that same reference's task-file anatomy,
-  which is also what explains the symptom: the manager runs a task file
-  directly, so one without the bit fails as an *unknown task* rather than as
-  a permission error.
-
-**Why trust goes first, stated honestly**, because the reference's own table
-is more interesting than "it would not work otherwise": under the manager's
-stricter setting an untrusted config makes the second step fail outright,
-while under the default it is silently auto-trusted and the step runs. What
-breaks either way is **discovery** — listing the library at all — which is how
-both a human and an agent find out the tasks exist, and what a later step in
-this pipeline probes before deciding what to run. Neither column is a working
-repo, so the order stands.
-
-Read both there and run what they say, rather than re-implementing the steps
-or re-spelling their commands here. A step those files do not document is a
-step `init` does not invent.
+**The bootstrap step left is the executable bit**: `mise run init`, the task
+that makes every file in the task library executable. It is documented in the
+skill's **toolchain reference**'s task-file anatomy, which is also what
+explains the symptom: the manager runs a task file directly, so one without
+the bit fails as an *unknown task* rather than as a permission error. Read it
+there and run what it says, rather than re-spelling it here.
 
 Where the manager's own binary is not installed, this step **defers** with its
 unlock — install the manager, then run `/vwf:setup reshape` — and the run
 continues to the report. Everything above it has already landed on disk.
 
-## 10 — Offer the bootstrap aggregator
+## 10 — The bootstrap aggregator
 
-Runs in **every mode**, after the mode's landing and before the git pass —
-the `shaped` pipeline reaches it from
-[existing repo](existing-repo.md)'s post-landing paragraph — and it is an
-offer there too: a reshape that moved a pin or landed a provider has tools to
-install and hooks to wire exactly as a first run does.
-
-**Only if §9 actually ran.** The aggregator is a task, and a task library that
-was never made discoverable has no task to run — so where §9 deferred, this
-step offers nothing. Repeat the deferral in one sentence, naming the same
-unlock §9 named, and move on. Offering a step that cannot succeed reads as a
-choice the user has, and the failure it produces looks like a broken
-aggregator rather than a missing manager.
-
-Where §9 ran, offer once, to run the task library's bootstrap aggregator now.
-It is the step that installs the pinned tools, wires the gate hooks and
-reaches the secrets provider, and on a fresh repository it is long — so it is
-an **offer**, never automatic, and a decline needs no re-asking.
-
-Whichever way it goes, name the task so a user who declined knows what to run.
-Run and name it as `MISE_ENV=dev mise run setup:all`: the aggregator refuses
-an unset `MISE_ENV`, since which tools install depends on it.
+Retired — `init` no longer offers it. §2's call runs
+`MISE_ENV=dev mise run setup:all` itself, after landing the files and before
+it formats and validates them, so every mode installs the pinned tools and
+wires the gate hooks on the one consent. A call whose aggregator fails is
+refused with the files kept and nothing recorded; `init` reports the refusal
+under *Deferred*, its unlock `/vwf:setup reshape`.
 
 ## 11 — The git pass
 
@@ -780,14 +759,13 @@ ops: shape the repo with the toolchain, gates and hygiene baselines
 run just installed will read it against, and shaping a repo is operations, not
 a feature.
 
-**The new-repo first commit precedes hook wiring by construction, and that is
-the whole answer to the branch guard.** The gates `/stackgen:tool-config`
-lands carry a hook that refuses commits on the protected branch; it is wired
-only when the bootstrap aggregator runs, and on this path §10 offers that
-aggregator *after* this commit — §9 made the library discoverable and wired
-nothing. So the guard is not in place yet and never sees the first commit.
-Nothing is disabled, nothing is skipped, and the hook ships exactly as the
-skill wrote it. On an existing
+**The new-repo first commit runs under the wired hooks, and the branch guard
+lets it through.** §2's call ran the bootstrap aggregator, so the gates
+`/stackgen:tool-config` lands are wired before this commit; their branch
+guard refuses a direct commit to `main` alone, and this commit is made on
+`develop`. Nothing is disabled, nothing is skipped, and the hook ships exactly
+as the skill wrote it. A gate that fails refuses the commit as it would any
+other: the report names the hook, and the tree is left staged. On an existing
 repo the hooks may already be wired, which is why that pipeline commits the
 gate configuration first and on its own.
 

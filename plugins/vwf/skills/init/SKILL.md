@@ -711,14 +711,15 @@ skipped and the mismatch stands. A record sourced `tool-config/…` is never
 offered here: the skill shows its own drift rows.
 
 Whichever pipeline runs, the same work happens in the same order at the end of
-each repo, after that mode's landing and before the git pass. **Five steps are
+each repo, after that mode's landing and before the git pass. **Four steps are
 shared by every mode**, and they are written down once, in
 [new repo](references/new-repo.md), cited by section from wherever a pipeline
 reaches them: the **secrets provider** (§3), the **placeholders** (§4), the
-**readme stub, licence and security files** (§8), the **bootstrap** (§9) and
-the **aggregator offer** (§10) — the existing pipeline runs them from its
-post-landing paragraph, the new-repo pipeline in its numbered order, and no
-mode skips one or asks its question twice. Beside them the **fills** the packs
+**readme stub, licence and security files** (§8) and the **bootstrap** (§9)
+— the existing pipeline runs them from its post-landing paragraph, the
+new-repo pipeline in its numbered order, and no mode skips one or asks its
+question twice. `init` offers no bootstrap aggregator: the skill's call below
+runs it. Beside them the **fills** the packs
 marked — the `_default` slot per project id — then the **git pass**, whose
 questions were asked once for the run and whose commit is that repo's own.
 The ignore file is not merged here: it is `/stackgen:tool-config`'s git tool,
@@ -730,9 +731,14 @@ report comes last, once, when every repo is done.
 Both pipelines land the same baselines, in one order. **First
 `/stackgen:tool-config all`**, with the answers as its arguments — the commit
 gate's scopes among them — it lands every tool that skill owns, the gates
-included, so `init` names none of them. The survey runs it as `preview all`
-and shows its rows in the plan; the real call carries `--answers` for every
-row, per new-repo §2, so the skill asks no second time. **Then `init`'s own
+included, so `init` names none of them — and then runs the task library's
+bootstrap aggregator itself, and formats and validates what it wrote. The
+survey runs it as `preview all` and shows its rows in the plan; the real call
+carries `--answers` for every row, per new-repo §2, so the skill asks no
+second time. **Trust is the user's prerequisite**: the call assumes the
+toolchain manager already trusts the repo, so the survey checks it before
+the plan and, where it is missing, names the one remedy and waits — `init`
+never grants it, per new-repo §9. **Then `init`'s own
 hygiene assets**, per [hygiene assets](references/readme-and-license.md) —
 no adapter fetch and no lock record. **Then the secrets provider**
 question 4 picked, materialized through the stack adapter — the only thing
