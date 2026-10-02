@@ -763,6 +763,58 @@ describe("the pack config tier", () => {
       .toBe(true);
   });
 
+  it("accepts structured mise entries beside string ones", () => {
+    // A structured entry is held to the script's own schema; a string entry,
+    // mise's included until it is refused, keeps the word grammar.
+    const root = tree(facts(
+      "machine_env:\n"
+        + "  - { name: XCODE_VERSION, detect: \"xcodebuild -version\", "
+        + "question: Which Xcode? }\n"
+        + "tool-config:\n"
+        + "  - {tool: mise, verb: add-tool, name: swiftlint, version: \"0.59\", "
+        + "env: dev}\n"
+        + "  - tool: mise\n    verb: add-env\n    key: XCODE_VERSION\n"
+        + "    value: \"\"\n    env: all\n"
+        + "  - {tool: mise, verb: add-alias, name: ll, command: ls}\n"
+        + "  - mise add tool x 1 to dev\n"
+        + "  - dprint add plugin typescript\n",
+    ));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a structured mise entry the schema refuses", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - {tool: mise, verb: add-tool, name: x, version: \"1\", env: dev, "
+        + "for: alpha}\n"
+        + "  - {tool: mise, verb: add-tool, name: x, env: dev}\n"
+        + "  - {tool: mise, verb: add-tool, name: x, version: \"1\", env: prod}\n",
+    ));
+    const found = messages(check(root));
+    expect(found).toEqual([
+      expect.stringContaining("`tool-config[0]`"),
+      expect.stringContaining("`tool-config[1]`"),
+      expect.stringContaining("`tool-config[2]`"),
+    ]);
+    expect(found[0]).toContain("unknown key for for mise add-tool");
+    expect(found[1]).toContain("missing version");
+    expect(found[2]).toContain(
+      "env must be one of all, dev, ci, test, not prod",
+    );
+  });
+
+  it("does not count a refused structured add-env as setting its key", () => {
+    const root = tree(facts(
+      "machine_env:\n  - { name: X, detect: \"echo 1\", question: X? }\n"
+        + "tool-config:\n"
+        + "  - {tool: mise, verb: add-env, key: X, value: \"\", env: prod}\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("env must be one of"),
+      expect.stringContaining("(X) is set by no `mise add env` call"),
+    ]);
+  });
+
   it("accepts the gate verbs a pack may ask for", () => {
     const root = tree(facts(
       "tool-config:\n"
@@ -1127,6 +1179,94 @@ describe("the pack config tier", () => {
       expect.stringContaining("does not start with one of"),
       expect.stringContaining("unallowlisted root entry"),
       expect.stringContaining("expands to nothing"),
+    ]);
+  });
+
+  it("accepts the mise tree's repo-local skill, held to the landed rules", () => {
+    const landed = `${assets}/.claude/skills/mise/SKILL.md`;
+    const clean = tree({ stackgen: { files: { [landed]: skill("mise") } } });
+    expect(messages(check(clean))).toEqual([]);
+    const root = tree({
+      stackgen: {
+        files: {
+          [landed]: "---\nname: mise\ndescription: a: b\n---\n\n"
+            + "See ${CLAUDE_PLUGIN_ROOT}/x.md\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(`${landed}: frontmatter is not valid YAML`),
+      expect.stringContaining("expands to nothing"),
+    ]);
+  });
+
+  it("flags any other file under .claude/ in an asset tree", () => {
+    // Only mise's tree lands a skill, and only that one.
+    const root = tree({
+      stackgen: {
+        files: {
+          [`${assets}/.claude/skills/other/SKILL.md`]: skill("other"),
+          "skills/tool-config/assets/dprint/.claude/skills/mise/SKILL.md":
+            skill("mise"),
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining(
+        "unallowlisted root entry — everything else belongs under .config/: "
+          + "skills/tool-config/assets/dprint/.claude",
+      ),
+      expect.stringContaining(
+        "unallowlisted file under .claude/ — only .claude/skills/mise/SKILL.md: "
+          + `${assets}/.claude/skills/other/SKILL.md`,
+      ),
+    ]);
+  });
+});
+
+describe("skill scripts", () => {
+  const scripts = "skills/tool-config/scripts";
+
+  it("accepts a shebanged executable entry and its lib modules", () => {
+    const root = tree({
+      stackgen: {
+        files: {
+          [`${scripts}/run.mjs`]: "#!/usr/bin/env node\n"
+            + "import { join } from \"node:path\";\n"
+            + "import {\n  x,\n} from \"./lib/x.mjs\";\n"
+            + "const m = await import(\"../y.mjs\");\n",
+          [`${scripts}/lib/x.mjs`]: "export const x = 1;\n",
+        },
+        executable: [`${scripts}/run.mjs`],
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags an entry missing its shebang or its exec bit", () => {
+    const root = tree({
+      stackgen: { files: { [`${scripts}/run.mjs`]: "// no shebang\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      "skill script entry does not start with #!/usr/bin/env node",
+      "skill script entry is not executable",
+    ]);
+  });
+
+  it("flags a bare import and a require in any script", () => {
+    const root = tree({
+      stackgen: {
+        files: {
+          [`${scripts}/lib/x.mjs`]: "import yaml from \"yaml\";\n"
+            + "export * from \"lodash/fp\";\n"
+            + "const fs = require(\"fs\");\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("imports \"yaml\""),
+      expect.stringContaining("imports \"lodash/fp\""),
+      expect.stringContaining("calls `require(`"),
     ]);
   });
 });

@@ -33,6 +33,10 @@ import {
   resolve,
 } from "node:path";
 import { parse as parseYaml } from "yaml";
+// A plain zero-dependency `.mjs` module with no declaration file beside it, so
+// its one export used here is typed by hand below.
+// @ts-expect-error TS7016 — no declaration file for a shipped .mjs module
+import * as entrySchema from "../../plugins/stackgen/skills/tool-config/scripts/lib/schema.mjs";
 import {
   agentName,
   bodyOf,
@@ -56,6 +60,14 @@ export interface Finding {
   readonly scope: string;
   readonly message: string;
 }
+
+/**
+ * The faults of one structured `tool-config:` entry, from the schema the
+ * tool-config script refuses entries by — one schema, two readers.
+ */
+const { validateEntry } = entrySchema as {
+  validateEntry: (entry: Record<string, unknown>) => string[];
+};
 
 /** The one marketplace every dependency in this repo resolves within. */
 const MARKETPLACE = "virajp-plugins";
@@ -84,6 +96,7 @@ export function check(repoRoot: string): Finding[] {
     findings.push(...checkManifest(plugin));
     findings.push(...checkDependencies(plugin, dirs));
     findings.push(...checkHookScripts(plugin));
+    findings.push(...checkSkillScripts(plugin));
     findings.push(...checkPackConfigTier(plugin));
     findings.push(...checkFrontmatterYaml(plugin));
     findings.push(...checkAgentReferences(plugin));
@@ -251,6 +264,56 @@ function checkHookScripts(plugin: Plugin): Finding[] {
   return findings;
 }
 
+/** The one interpreter a skill's script entry may name. */
+const SKILL_SCRIPT_SHEBANG = "#!/usr/bin/env node";
+/** A static module specifier: `from "x"`, `import "x"` or `import("x")`. */
+const MODULE_SPECIFIER_RE =
+  /\b(?:from\s*|import\s*\(?\s*)["']([^"']+)["']|\brequire\s*\(/g;
+
+/**
+ * A skill's node scripts run from the installed plugin with nothing installed
+ * beside them.
+ *
+ * An entry file — directly under `scripts/` — is what a skill tells the
+ * session to run, so it is shebanged and executable; a module under
+ * `scripts/lib/` is only ever imported, so it needs neither. And no file may
+ * reach for a package: the plugin ships no `node_modules`, so a `require(` or
+ * a bare specifier other than a `node:` built-in fails at the first run, on
+ * the user's machine rather than here.
+ */
+function checkSkillScripts(plugin: Plugin): Finding[] {
+  const findings: Finding[] = [];
+  for (
+    const path of globSync("skills/*/scripts/**/*.mjs", { cwd: plugin.root })
+  ) {
+    const absolute = join(plugin.root, path);
+    const text = readText(absolute);
+    const at = (message: string) =>
+      findings.push({ scope: `${plugin.dir}:${path}`, message });
+
+    if (path.split("/").length === 4) {
+      if (text.split("\n", 1)[0] !== SKILL_SCRIPT_SHEBANG) {
+        at(`skill script entry does not start with ${SKILL_SCRIPT_SHEBANG}`);
+      }
+      if ((statSync(absolute).mode & 0o111) === 0) {
+        at("skill script entry is not executable");
+      }
+    }
+    for (const [, specifier] of text.matchAll(MODULE_SPECIFIER_RE)) {
+      if (specifier === undefined) {
+        at("calls `require(` — a skill script is ESM with zero dependencies");
+      }
+      else if (!/^(?:\.{1,2}\/|\/|node:)/.test(specifier)) {
+        at(
+          `imports ${JSON.stringify(specifier)} — a skill script ships no `
+            + "node_modules, so only `node:` built-ins and relative modules",
+        );
+      }
+    }
+  }
+  return findings;
+}
+
 /** Every `command` in a `hooks.json`, paired with the event declaring it. */
 function* hookCommands(
   byEvent: Record<string, unknown>,
@@ -355,6 +418,21 @@ const TOOL_CONFIG_ROOT_FILES: ReadonlyMap<string, readonly string[]> = new Map([
   ["renovate", ["renovate.json"]],
 ]);
 
+/** Where a landed repo-local skill sits, relative to the tree's root. */
+const LANDED_SKILLS_DIR = ".claude";
+
+/**
+ * The repo-local skills a `stackgen:tool-config` asset tree may land, per tool:
+ * mise's `all` writes the skill that tells a session how to run the repo's
+ * tasks and edit its mise config — a pin, an env value or an alias edited by
+ * hand outside every block, then `mise install`. Nothing else under `.claude/`
+ * lands.
+ */
+const TOOL_CONFIG_LANDED_SKILLS: ReadonlyMap<string, readonly string[]> =
+  new Map([
+    ["mise", [join(LANDED_SKILLS_DIR, "skills", "mise", "SKILL.md")]],
+  ]);
+
 /**
  * The directories a pack may ship at the top of its `config/` tier.
  *
@@ -407,8 +485,9 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  *   answers is never evaluated, so the file lands everywhere, silently;
  * - the pack's **`binaries`, `lockfile` and `machine_env` facts** take the
  *   shapes `/vwf:doctor` and `/vwf:setup` read, and every `machine_env` name
- *   is set by a `mise add env` call in its `tool-config:` list, each call one
- *   of the verbs a pack may ask for (`packFactFaults`).
+ *   is set by a mise env entry in its `tool-config:` list — a structured
+ *   `add-env` entry or a `mise add env` string — each entry a valid structured
+ *   one or one of the string verbs a pack may ask for (`packFactFaults`).
  *
  * A pack's `config/` tier holding a mise `conf.d` fragment or a `pre-commit.d`
  * file is a finding too, and each `stackgen:tool-config` asset tree is walked
@@ -423,7 +502,11 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
   const at = (message: string) => findings.push({ scope: plugin.dir, message });
   const path = (absolute: string) => relative(plugin.root, absolute);
 
-  const landedTree = (tree: string, rootFiles: ReadonlySet<string> | null) => {
+  const landedTree = (
+    tree: string,
+    rootFiles: ReadonlySet<string> | null,
+    rootDirs: ReadonlySet<string> = PACK_CONFIG_ROOT_DIRS,
+  ) => {
     for (const absolute of filesUnder(join(tree, PACK_MISE_TASKS))) {
       if ((statSync(absolute).mode & 0o111) === 0) {
         at(`mise task file is not executable: ${path(absolute)}`);
@@ -440,7 +523,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     if (existsSync(tree) && rootFiles !== null) {
       for (const entry of readdirSync(tree, { withFileTypes: true })) {
         const allowed = entry.isDirectory()
-          ? PACK_CONFIG_ROOT_DIRS.has(entry.name) || entry.name.startsWith("_")
+          ? rootDirs.has(entry.name) || entry.name.startsWith("_")
           : rootFiles.has(entry.name);
         if (!allowed) {
           at(
@@ -461,10 +544,25 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
 
   for (const tree of toolConfigTrees(plugin)) {
     const own = TOOL_CONFIG_ROOT_FILES.get(basename(tree)) ?? [];
+    const skills = new Set(TOOL_CONFIG_LANDED_SKILLS.get(basename(tree)));
     landedTree(
       join(plugin.root, tree),
       new Set([...PACK_CONFIG_ROOT_FILES, ...own]),
+      skills.size > 0
+        ? new Set([...PACK_CONFIG_ROOT_DIRS, LANDED_SKILLS_DIR])
+        : PACK_CONFIG_ROOT_DIRS,
     );
+    const landed = join(plugin.root, tree);
+    for (const absolute of filesUnder(join(landed, LANDED_SKILLS_DIR))) {
+      if (skills.size > 0 && !skills.has(relative(landed, absolute))) {
+        at(
+          `tool-config asset tree lands an unallowlisted file under `
+            + `${LANDED_SKILLS_DIR}/ — only ${[...skills].join(", ")}: ${
+              path(absolute)
+            }`,
+        );
+      }
+    }
   }
   // init picks one licence from its tree, so its root holds more than lands.
   for (const tree of assetTrees(plugin, INIT_ASSETS)) {
@@ -550,10 +648,13 @@ const ENV_VAR_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
  * - `lockfile` is a non-empty list of paths or globs relative to the repo root,
  *   any match passing doctor's package-manager check;
  * - every `machine_env` entry names an env var, the command that `detect`s its
- *   value and the `question` setup asks — and the var is set by a `mise add
- *   env` call in the pack's `tool-config:` list, since that is what setup fills;
- * - every `tool-config:` entry parses as one of the verbs a pack may ask for,
- *   and an exclude goes through `all add exclude` alone (`toolConfigCall`).
+ *   value and the `question` setup asks — and the var is set by a valid mise
+ *   env entry in the pack's `tool-config:` list (a structured `add-env` entry
+ *   or a `mise add env` string), since that is what setup fills;
+ * - every `tool-config:` entry is a mapping the tool-config script's own
+ *   schema accepts (`validateEntry`), or a string that parses as one of the
+ *   verbs a pack may ask for, an exclude going through `all add exclude` alone
+ *   (`toolConfigCall`).
  *
  * Each is read by a caller that trusts its shape: a probe that is not a string
  * is never run, a lockfile glob that climbs out of the repo matches something
@@ -636,11 +737,33 @@ function packFactFaults(
 
   const calls = document["tool-config"];
   const declared = new Set<string>();
-  if (calls !== undefined && !isStringList(calls)) {
+  if (
+    calls !== undefined
+    && !(Array.isArray(calls)
+      && calls.every(c => typeof c === "string" || isPlainObject(c)))
+  ) {
     faults.push("`tool-config` is not a list of instructions");
   }
   else if (calls !== undefined) {
-    (calls as string[]).forEach((call, index) => {
+    (calls as (string | Record<string, unknown>)[]).forEach((call, index) => {
+      // A structured entry is held to the schema the script itself refuses
+      // entries by, so the checker and the script cannot disagree.
+      if (typeof call !== "string") {
+        const entryFaults = validateEntry(call);
+        for (const fault of entryFaults) {
+          faults.push(
+            `\`tool-config[${index}]\` (${JSON.stringify(call)}) ${fault}`,
+          );
+        }
+        if (
+          entryFaults.length === 0
+          && call.tool === "mise"
+          && call.verb === "add-env"
+        ) {
+          declared.add(String(call.key));
+        }
+        return;
+      }
       const { fault, key } = toolConfigCall(call, slugs);
       if (fault !== undefined) {
         faults.push(`\`tool-config[${index}]\` (${call}) ${fault}`);
@@ -1064,13 +1187,22 @@ function checkFrontmatterYaml(plugin: Plugin): Finding[] {
 const PACK_SKILL_RE = /^stacks\/[^/]+\/[^/]+\/skills\/[^/]+\/SKILL\.md$/;
 const PACK_AGENT_RE = /^stacks\/[^/]+\/[^/]+\/agents\/[^/]+\.md$/;
 
-/** Every document in a plugin whose frontmatter a host parses. */
+/**
+ * Every document in a plugin whose frontmatter a host parses. An asset tree's
+ * repo-local skills are walked, since they sit under a dot segment the reader's
+ * glob does not enter.
+ */
 function frontmatteredDocs(plugin: Plugin): string[] {
   const packs = plugin
     .files
     .map(f => f.path)
     .filter(path => PACK_SKILL_RE.test(path) || PACK_AGENT_RE.test(path));
-  return [...plugin.skills, ...plugin.agents, ...packs];
+  const landedSkills = toolConfigTrees(plugin).flatMap(tree =>
+    [...filesUnder(join(plugin.root, tree, LANDED_SKILLS_DIR, "skills"))]
+      .filter(absolute => basename(absolute) === "SKILL.md")
+      .map(absolute => relative(plugin.root, absolute))
+  );
+  return [...plugin.skills, ...plugin.agents, ...packs, ...landedSkills];
 }
 
 /** Relative links inside the worked example bundle must resolve. */
