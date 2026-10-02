@@ -653,8 +653,9 @@ const ENV_VAR_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
  *   structured mise `add-env` entry in the pack's `tool-config:` list, since
  *   that is what setup fills;
  * - every `tool-config:` entry is a mapping the tool-config script's own
- *   schema accepts (`validateEntry`), or a string that parses as one of the
- *   non-mise verbs a pack may ask for, an exclude going through
+ *   schema accepts (`validateEntry`) — mise, dprint (its `name` from the
+ *   plugin table), pre-commit, grype and `all` — or a string that parses as
+ *   one of the non-mise verbs a pack may ask for, an exclude going through
  *   `all add exclude` alone (`toolConfigCall`) — a mise entry is structured.
  *
  * Each is read by a caller that trusts its shape: a probe that is not a string
@@ -758,6 +759,17 @@ function packFactFaults(
         }
         if (
           entryFaults.length === 0
+          && call.tool === "dprint"
+          && !DPRINT_PLUGIN.test(String(call.name))
+        ) {
+          faults.push(
+            `\`tool-config[${index}]\` (${JSON.stringify(call)}) name `
+              + `${call.name} is not in the plugin table — valid: `
+              + DPRINT_PLUGINS.replaceAll("|", ", "),
+          );
+        }
+        if (
+          entryFaults.length === 0
           && call.tool === "mise"
           && call.verb === "add-env"
         ) {
@@ -809,6 +821,8 @@ const TOOL_CONFIG_MISE_STRING = /^mise(?: |$)/;
 /** The dprint plugins the skill's plugin table defines. */
 const DPRINT_PLUGINS =
   "markdown|pretty_yaml|json|exec|typescript|malva|markup_fmt|dockerfile";
+/** A structured dprint entry's `name`, held to the same plugin table. */
+const DPRINT_PLUGIN = new RegExp(`^(?:${DPRINT_PLUGINS})$`);
 /** The keys `pre-commit add hook` writes, each `key=value`, quoted or bare. */
 const HOOK_PAIR = String.raw`(name|description|entry|language|files|exclude|`
   + String.raw`types|args|pass_filenames|always_run|require_serial|rev)=`

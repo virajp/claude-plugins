@@ -800,6 +800,54 @@ describe("the pack config tier", () => {
     );
   });
 
+  it("accepts structured dprint, pre-commit, grype and all entries", () => {
+    // Each gate tool's entry is held to the script's schema; a string entry
+    // for the same tools is still read against the word grammar.
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - {tool: dprint, verb: add-plugin, name: typescript}\n"
+        + "  - tool: pre-commit\n    verb: add-hook\n    repo: local\n"
+        + "    id: uv-lock-check\n    stage: pre-commit\n"
+        + "    name: uv lockfile is current\n"
+        + "    entry: mise x -- uv lock --check\n    language: system\n"
+        + "    pass-filenames: false\n"
+        + "  - {tool: pre-commit, verb: add-linter-ignore, paths: [.dart_tool]}\n"
+        + "  - {tool: grype, verb: add-ignore, id: CVE-2024-1234, "
+        + "package: lodash@4.17.20, reason: not reachable, "
+        + "expires: \"2027-01-31\"}\n"
+        + "  - {tool: all, verb: add-exclude, generated: true, "
+        + "paths: [.build, \"*.xcassets/\"]}\n"
+        + "  - {tool: all, verb: add-exclude, paths: [\"*-lock.json\"]}\n"
+        + "  - dprint add plugin typescript\n",
+    ));
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("flags a structured gate entry the schema refuses", () => {
+    const root = tree(facts(
+      "tool-config:\n"
+        + "  - {tool: dprint, verb: add-plugin, name: x}\n"
+        + "  - {tool: pre-commit, verb: add-hook, repo: local, id: x, "
+        + "stage: post-commit, name: x, entry: y, language: system}\n"
+        + "  - {tool: grype, verb: add-ignore, id: CVE-2024-1234, "
+        + "package: lodash, reason: r, expires: \"2027-02-30\"}\n"
+        + "  - {tool: all, verb: add-exclude, paths: [../out]}\n",
+    ));
+    const found = messages(check(root));
+    expect(found).toEqual([
+      expect.stringContaining("`tool-config[0]`"),
+      expect.stringContaining("`tool-config[1]`"),
+      expect.stringContaining("`tool-config[2]`"),
+      expect.stringContaining("`tool-config[2]`"),
+      expect.stringContaining("`tool-config[3]`"),
+    ]);
+    expect(found[0]).toContain("name x is not in the plugin table");
+    expect(found[1]).toContain("--entry begins `mise x -- `");
+    expect(found[2]).toContain("is not a <name>@<version>");
+    expect(found[3]).toContain("is not a calendar day");
+    expect(found[4]).toContain("is not a relative name");
+  });
+
   it("does not count a refused structured add-env as setting its key", () => {
     const root = tree(facts(
       "machine_env:\n  - { name: X, detect: \"echo 1\", question: X? }\n"
