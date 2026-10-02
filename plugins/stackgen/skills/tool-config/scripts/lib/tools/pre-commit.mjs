@@ -17,6 +17,7 @@ import {
   parseBlocks,
   splitLines,
 } from "../blocks.mjs";
+import { sha256 } from "../record.mjs";
 import {
   classifyPath,
   GATE_VERBS,
@@ -484,6 +485,8 @@ function addHook(ctx, { flags, for: requester }) {
           path: HOOKS,
           content: withRepos(text, over),
           force: true,
+          // a snapshot of the file as planned: a later write in the call refuses it
+          ifUnchanged: sha256(text),
         }],
       },
     }],

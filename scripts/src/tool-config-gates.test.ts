@@ -1122,6 +1122,31 @@ describe("the migration from the retired gate packs", () => {
   });
 });
 
+describe("an overwrite replayed after a later write", () => {
+  it("is refused, never clobbering what a later call in the batch wrote", () => {
+    apply(["all"]);
+    const batch = pack("p", [
+      "{ tool: pre-commit, verb: add-hook, repo: local, id: format, stage: pre-commit, name: Mine, entry: mise x -- mise run mine, language: system }",
+      "{ tool: all, verb: add-exclude, paths: [node_modules] }",
+    ]);
+    const rows = rowsOf(batch);
+    expect(rows.find(r => r.kind === "conflict")?.["hook"]).toBe("format");
+    const before = read(HOOKS);
+    const { status, out } = run([
+      ...batch,
+      "--answers",
+      rows
+        .map(r =>
+          `${r.id}:${r.kind === "conflict" ? "overwrite" : r.answers[0]}`
+        )
+        .join(","),
+    ]);
+    expect(status).toBe(2);
+    expect(out.error).toContain("changed since");
+    expect(read(HOOKS)).toBe(before);
+  });
+});
+
 describe("G9 review round 1", () => {
   const { yamlQuote, yamlScalar } = lists as unknown as {
     yamlQuote: (v: string) => string;
