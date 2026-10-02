@@ -1015,7 +1015,7 @@ function addLinterIgnore(ctx, { flags, for: requester }) {
   const shares = recordMap(ctx, LINTER, "shares");
   const res = listAdd(text, IGNORES, {
     requester,
-    // a directory as `**/<d>/`, a file glob as `**/<g>` — G1's trailing-/ rule
+    // a directory as `**/<d>/`, a file glob as `**/<g>` — a trailing `/` marks a directory
     entries: paths.map(p =>
       p.kind === "directory" ? `- "**/${p.name}/"` : `- "**/${p.name}"`
     ),
