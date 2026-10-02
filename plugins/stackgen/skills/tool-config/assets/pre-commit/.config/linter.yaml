@@ -8,8 +8,6 @@ ignores:
   # >>> pre-commit
   - "**/build/"
   - "**/graphify-out/"
-  # mise's sidecar lock tree; a --fix rewrite breaks the digest mise.lock pins
-  - "**/.config/mise/locks/"
   # <<< pre-commit
 
 # overrides:

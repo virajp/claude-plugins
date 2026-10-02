@@ -79,42 +79,42 @@ project, on their own consent, and nothing else the forge holds.
 
 ## 2 — The baselines
 
-**First, `/stackgen:tool-config all`**, once per repo, with this run's answers
-as `key=value` arguments. It lands every tool the skill owns — the toolchain
-manager's files, its task library and the gates among them — and fills their
-marked positions from the arguments. `init` names no tool and splices nothing
-there. The arguments:
+**First, `/stackgen:tool-config all`**, once per repo, with this run's
+answers as `--<key> <value>` flags. It lands every tool the skill owns — the
+toolchain manager's files, its task library and the gates among them — and
+fills their marked positions from the arguments. `init` names no tool and
+splices nothing there. The arguments:
 
-| Key                                       | Value                                             | From                                  |
-| ----------------------------------------- | ------------------------------------------------- | ------------------------------------- |
-| `repo`                                    | the repo's folder slug                            | question 1, or the key already held   |
-| `members`                                 | member paths, in resolved order; empty where none | Step 0's resolution                   |
-| `linkage`                                 | `siblings` or `submodule`                         | the membership asset                  |
-| `merge_model_develop`, `merge_model_main` | `direct` or `pr`, the §11(a) preselection         | §11(a); re-passed if the answer moves |
-| `runtimes`                                | the language keys the stack read produced         | SKILL.md's stack read, per §5         |
-| `plugin_sources`, `plugins`               | question 5's confirmed rows; empty on **none**    | question 5                            |
-| `scopes`                                  | the commit gate's scopes; empty where none        | §7, per existing repo pass 10         |
-| `forge`, `secrets`, `update_bot`          | the three answers, spelled as the table below     | the table below                       |
+| Flag                                          | Value                                             | From                                  |
+| --------------------------------------------- | ------------------------------------------------- | ------------------------------------- |
+| `--repo`                                      | the repo's folder slug                            | question 1, or the key already held   |
+| `--members`                                   | member paths, in resolved order; empty where none | Step 0's resolution                   |
+| `--linkage`                                   | `siblings` or `submodule`                         | the membership asset                  |
+| `--merge-model-develop`, `--merge-model-main` | `direct` or `pr`, the §11(a) preselection         | §11(a); re-passed if the answer moves |
+| `--runtimes`                                  | the language keys the stack read produced         | SKILL.md's stack read, per §5         |
+| `--plugin-sources`, `--plugins`               | question 5's confirmed rows; empty on **none**    | question 5                            |
+| `--scopes`                                    | the commit gate's scopes; empty where none        | §7, per existing repo pass 10         |
+| `--forge`, `--secrets`, `--update-bot`        | the three answers, spelled as the table below     | the table below                       |
 
 **How a value is spelled.** A list is comma-separated with no spaces —
-`members=backend,web`. An empty value is the bare key — `members=`. An
-omitted key keeps the repo's current value, so `init` passes every key on
-every call and writes `key=` wherever the answer is empty.
+`--members backend,web`. An empty value is the bare flag — `--members`. An
+omitted flag keeps the repo's current value, so `init` passes every flag on
+every call and writes it bare wherever the answer is empty.
 
 **Preview in the survey, answer on the consent.** The call is `init`'s plan
 row, never a consent round of its own, per the skill's *Consent and the
 rows* section. During the survey, `init` runs
-`/stackgen:tool-config preview all <the same key=value arguments>` in each
+`/stackgen:tool-config preview all <the same flags>` in each
 repo and prints the rows it returns — numbered `r1`, `r2`, … — in that
 repo's section under **Tool-config rows**. Each conflict or drift row is
 asked inside the plan, with the answer names the preview gave it. A tool the
 base mise block pins and the repo already pins is a conflict row too, its two
-answers the repo's version or the base's `latest`, and the winner is pinned
-once. On the one consent, `init` runs
-`/stackgen:tool-config all <the same arguments>` with
-`answers=<id>:<answer>,…` last — `ok` for every create, write, fold, move or
-delete row, the user's pick for every conflict or drift row. The skill
-refuses the whole call when `answers=` misses a row, names an unknown one or
+answers the repo's version or the exact version the base resolves `latest`
+to, and the winner is pinned once. On the one consent, `init` runs
+`/stackgen:tool-config all <the same flags>` with
+`--answers <id>:<answer>,…` last — `ok` for every create, write, fold, move
+or delete row, the user's pick for every conflict or drift row. The skill
+refuses the whole call when `--answers` misses a row, names an unknown one or
 meets a row that changed since the preview, so `init` answers every row the
 preview returned, and a refused call is shown again in the report, never
 retried with guessed answers.
@@ -321,10 +321,10 @@ pack asks the git tool for its line when §3 lands it.
 
 ### The runtimes
 
-The same read is the `runtimes` argument §2 passes to
+The same read is the `--runtimes` flag §2 passes to
 `/stackgen:tool-config all` — the language keys, nothing else, spelled per
-§2: `runtimes=node,python`, and `runtimes=` on a `blank` repo. The skill
-owns the two runtime positions and what each language writes there. A
+§2: `--runtimes node,python`, and a bare `--runtimes` on a `blank` repo. The
+skill owns the two runtime positions and what each language writes there. A
 changed read is a changed argument on the next run, and the skill shows the
 row.
 
@@ -465,27 +465,30 @@ the member-path key, the aggregator's member flags, the shell aliases, the
 plugin task's two lists, the two runtime positions and the commit gate's
 scopes. `init` owes each one its value, never a splice:
 
-- **`repo`** — this repo's folder name, slugified, as question 1 confirmed it.
-  A `shaped` repo skips that question; its folder slug is read and compared by
-  [existing repo](existing-repo.md) pass 8. The skill writes it **literally**: a
-  linked worktree's config root is named for the branch, so a derived value
-  would change identity with every worktree. No project id reaches it — a repo
-  whose folder is `acme-shop` and whose one project is a service carries
-  `acme-shop` beside a `p/service/` group. Each repo passes its own folder.
-- **`members`** and **`linkage`** — the resolved member repos, in resolved
-  order. The skill writes one member flag and one alias each, named by that
-  member's own slug and never by a project id, and the member-path key only
-  under sibling linkage. A repo with no members passes `members=`, and the
-  templates stay as shipped.
-- **`merge_model_develop`** and **`merge_model_main`** — §11(a)'s. §2 passes
-  its preselection, and §11(a) calls the skill again where an answer differs.
-  A file still carrying the retired single key is the skill's to migrate.
-- **`runtimes`** — §5's.
-- **`plugin_sources`** and **`plugins`** — question 5's confirmed rows and
-  only those. The workflow's own plugin and its dependency never reach them,
-  since question 5 drops both rows. A **none** passes `plugin_sources=` and
-  `plugins=`.
-- **`scopes`** — this repo's confirmed ids, per
+- **`--repo`** — this repo's folder name, slugified, as question 1 confirmed
+  it. A `shaped` repo skips that question; its folder slug is read and
+  compared by [existing repo](existing-repo.md) pass 8. The skill writes it
+  **literally**: a linked worktree's config root is named for the branch, so
+  a derived value would change identity with every worktree. No project id
+  reaches it — a repo whose folder is `acme-shop` and whose one project is a
+  service carries `acme-shop` beside a `p/service/` group. Each repo passes
+  its own folder.
+- **`--members`** and **`--linkage`** — the resolved member repos, in
+  resolved order. The skill writes one member flag and one alias each — below
+  the `MEMBER_FLAGS` position in `.config/mise/tasks/setup/all` and the
+  `MEMBER_ALIASES` position in `.config/mise/conf.d/shell_alias.dev.toml` —
+  named by that member's own slug and never by a project id, and the
+  member-path key only under sibling linkage. A repo with no members passes
+  a bare `--members`, and the templates stay as shipped.
+- **`--merge-model-develop`** and **`--merge-model-main`** — §11(a)'s. §2
+  passes its preselection, and §11(a) calls the skill again where an answer
+  differs. A file still carrying the retired single key is the skill's to
+  migrate.
+- **`--runtimes`** — §5's.
+- **`--plugin-sources`** and **`--plugins`** — question 5's confirmed rows
+  and only those. The workflow's own plugin and its dependency never reach
+  them, since question 5 drops both rows. A **none** passes both bare.
+- **`--scopes`** — this repo's confirmed ids, per
   [existing repo](existing-repo.md) pass 10; the forge links are the skill's.
 
 The repo-name key exists for the per-repo launch aliases the user keeps in
@@ -601,7 +604,7 @@ an **offer**, never automatic, and a decline needs no re-asking.
 
 Whichever way it goes, name the task so a user who declined knows what to run.
 Run and name it as `MISE_ENV=dev mise run setup:all`: the aggregator refuses
-an unset `MISE_ENV`, since which tools install and lock depends on it.
+an unset `MISE_ENV`, since which tools install depends on it.
 
 ## 11 — The git pass
 
@@ -662,10 +665,10 @@ order the repos run, each row taking one of two values: **`direct`** — *merge
 locally and push*; or **`pr`** — *push the branch and open a pull request*.
 Every repo the run shapes gets its two rows.
 
-| Repo     | Branch    | Preselected | Argument              |
-| -------- | --------- | ----------- | --------------------- |
-| `<repo>` | `develop` | `direct`    | `merge_model_develop` |
-| `<repo>` | `main`    | `pr`        | `merge_model_main`    |
+| Repo     | Branch    | Preselected | Flag                    |
+| -------- | --------- | ----------- | ----------------------- |
+| `<repo>` | `develop` | `direct`    | `--merge-model-develop` |
+| `<repo>` | `main`    | `pr`        | `--merge-model-main`    |
 
 The preselections shown are the tool-config skill's defaults, and they are
 what a repo landing its toolchain files for the first time gets: work into
@@ -680,11 +683,11 @@ their own copy.
 
 **Where a row's answer differs from what §2 passed**, call
 `/stackgen:tool-config all` again in that repo, with every argument §2
-passed and the answered pair — `merge_model_develop=pr merge_model_main=pr`,
-say — previewed first and answered as §2 says, its rows shown under this
-question and covered by its answer. The skill writes it; count each changed
-row as a fill. A
-row answered as preselected needs no second call. Migrating the retired
+passed and the answered pair —
+`--merge-model-develop pr --merge-model-main pr`, say — previewed first and
+answered as §2 says, its rows shown under this question and covered by its
+answer. The skill writes it; count each changed row as a fill. A row
+answered as preselected needs no second call. Migrating the retired
 single key into the pair is the skill's, on either call.
 
 It is asked here rather than as one of SKILL.md's numbered questions because it
@@ -706,39 +709,14 @@ happened to be standing on. A fresh repository is on `develop` already, from
 §1, and takes the table's first row after the commit instead. This is the
 order [existing repo](existing-repo.md)'s git pass keeps too.
 
-**The ignore fix is already in, before the lock.** No lock file is ignored
-except `mise.local.lock`, at any depth, which the shipped `**/mise.local.lock`
-line covers. The removal is `/stackgen:tool-config`'s, not `init`'s: §2's
-`all` preview returns one delete row, answered `ok`, per `.gitignore` line
-that ignores any other lock file, shown under this repo's **Tool-config rows**
-in the one consent, and §2's apply removes each line, so it runs before
-`setup:mise --lock-only` below. After `all`, `init` runs
-`git check-ignore -v .config/mise/mise.lock`, and a rule it still names comes
-from a source no call edits, such as `.git/info/exclude` or a global excludes
-file, and is shown on this repo's report line as the person's to fix.
-
-**Then the lock, before anything is staged.** In every repo, run
-`MISE_ENV=dev mise run setup:mise --lock-only`. It writes
-`.config/mise/mise.lock` where it is missing, and fills a present one with
-missing tools without bumping a locked version, plus its `.config/mise/locks/`
-sidecar where a tool needs one. Before locking it installs uv and Python, and
-nothing else. The plan shown before the one consent names that install. Then,
-whichever step wrote it, every lock path that changed — each one
-`git status --porcelain --untracked-files=all .config/mise/mise.lock .config/mise/locks`
-lists, untracked or modified — joins this repo's written list. A stale
-untracked sidecar there is swept in with them. So the `ops:` commit carries the
-lock, and the repo's first CI run, which installs with the lock enforced, finds
-it there.
-
-A failed run stops this repo's git pass with the command's output, before any
-commit. Its line at (c) and in the report reads *lock failed — not
-committed*, and the other repos go on. The step is skipped, and the pass goes
-on, in two cases. One: §9 deferred, and the unlock is §9's. Two: the repo's
-`setup:mise` has no `--lock-only` flag — probe first, with
-`mise tasks info setup:mise` — and the unlock is `/vwf:setup reshape` with
-the task replaced. Either way the repo's line reads *lock deferred*, and says
-its first CI run needs the lock committed. Where the lock step changed no lock
-path, the line reads `none`.
+**The ignore fix is already in.** No lock file is ignored except
+`mise.local.lock`, at any depth, which the shipped `**/mise.local.lock` line
+covers. The removal is `/stackgen:tool-config`'s, not `init`'s: §2's `all`
+preview returns one delete row, answered `ok`, per `.gitignore` line that
+ignores any other lock file, shown under this repo's **Tool-config rows** in
+the one consent, and §2's apply removes each line. mise itself keeps no lock:
+its pins are exact, so there is nothing for this pass to write or stage for
+it.
 
 Then, into this repo's own index: every path in **this repo's** written /
 moved / renamed lists, and nothing else. Not `git add -A`: a repo that already
@@ -1068,9 +1046,7 @@ member refused for standing detached takes its *Deferred* line instead, naming
 the branch to check out. Then one `Gitlinks staged <n>` line for the base,
 counting the member pointers (b) added to its index, which reads `none` in a
 product with no members, and one `Backlog project` line, the base's alone.
-A `Lock` line per repo reads staged, `none`, *lock deferred* or *lock failed —
-not committed*, per (b). That is the git section SKILL.md's report
-specifies.
+That is the git section SKILL.md's report specifies.
 
 ## 12 — The report
 

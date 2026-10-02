@@ -99,7 +99,7 @@ task, falling back to the full bootstrap entrypoint `setup:all`:
 have_task() { mise tasks --hidden 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
 
 if have_task setup:worktree; then
-  mise run setup:worktree
+  MISE_ENV=dev mise run setup:worktree
 elif have_task setup:all; then
   MISE_ENV=dev mise run setup:all
 fi
@@ -112,11 +112,12 @@ machine's tools, hooks and running services with the checkout it was cut from,
 so re-doing the hook installation, the external services and the plugin
 reconciliation costs minutes and changes nothing. The frozen install is the part
 that matters most — a worktree is a place to work on a branch, not a place to
-move a lockfile. A fallback to `setup:all` — which refuses an unset `MISE_ENV`,
-hence the `dev` above — installs from `.config/mise/mise.lock` with
-`mise install --locked` and upgrades no tool. And its dependency step runs the
-package manager's upgrade verb, which is what quietly resolves the dependency
-lockfile.
+move a lockfile. Both tasks refuse an unset `MISE_ENV`, since it decides which
+tools install — hence the `dev` on each. Either installs the tools from the
+config's exact pins with `mise install`; mise keeps no lock, and an exact pin
+gives an upgrade nothing to move. The fallback to `setup:all` costs more in its
+dependency step, which runs the package manager's upgrade verb — what quietly
+resolves the dependency lockfile.
 
 The name is probed, never constructed. A repo carrying an older spelling of the
 task is not broken, but this probe will not find it and the run silently takes

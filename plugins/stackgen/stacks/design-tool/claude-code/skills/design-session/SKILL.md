@@ -213,8 +213,10 @@ only files under the canvas, and is a review surface for one person on one
 machine, never a deployment.
 
 1. **Check `node`.** The script is a single-file Node program with no
-   dependencies. If `node` is not on the path, say `mise use node` and halt —
-   the toolchain manager is already in every shaped repo.
+   dependencies. If `node` is not on the path, say so with the remedy — pin
+   `node` at an exact version in `.config/mise/conf.d/tools.toml` and run
+   `mise install`, through the repo-local mise skill where the repo has one
+   — and halt; the toolchain manager is already in every shaped repo.
 
 2. **Resolve the platforms** as §6.1 does, and halt naming
    `/design-session screens <flow>` for a platform whose

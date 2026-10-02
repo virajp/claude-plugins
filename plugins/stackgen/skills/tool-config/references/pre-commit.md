@@ -104,9 +104,9 @@ words.
 every `code:lint` that runs `@askviraj/linter` — whichever pack's task that
 is — so it ships with the gate rather than with any one of them. It ships empty
 of overrides. Its `ignores:` list is **generated trees only**, since the linter
-does not read `.gitignore`: the base holds `**/build/`, `**/graphify-out/` and
-`**/.config/mise/locks/` (a `--fix` there breaks the digest `mise.lock`
-records), and every other entry is a pack's, through
+does not read `.gitignore`: the base holds `**/build/` and `**/graphify-out/`
+(no mise lock exists, so mise has no tree here), and every other entry is a
+pack's, through
 [`add linter-ignore`](#4-the-verbs) — flutter's `.dart_tool`, swiftpm's
 `.build` and `.swiftpm`, swiftui's `Derived` and `DerivedData`, uv's `.venv`.
 Patterns resolve from the repo root, so every entry is `**/`-prefixed: a

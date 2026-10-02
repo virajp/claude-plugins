@@ -16,6 +16,7 @@ any of it is a single file and the manifest names none of it:
 | `.claude-plugin/plugin.json` | the manifest — name, version, description, servers, deps |
 | `skills/<name>/SKILL.md`     | a skill; auto-discovered                                 |
 | `skills/<name>/references/`  | on-demand prose the SKILL.md points at                   |
+| `skills/<name>/scripts/`     | a node entry plus `lib/` modules, zero deps (rule 16)    |
 | `agents/<name>.md`           | a subagent; auto-discovered                              |
 | `hooks/hooks.json`           | hooks, plus the scripts beside them                      |
 | `assets/`                    | shared doctrine and data the skills read                 |

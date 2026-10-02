@@ -54,8 +54,8 @@ pack", "the gates pack", "the hygiene assets", "the secrets provider pack",
 the adapter.** "The toolchain pack" and "the gates pack" below mean what that
 call lands and what the skill's own references document — and the ignore
 file, the attributes file, the graph's ignore file and the dependency-update
-policy are that skill's tools too. `init` passes it the
-answers as `key=value` arguments — [new repo](references/new-repo.md) §2 lists
+policy are that skill's tools too. `init` passes it the answers as
+`--<key> <value>` flags — [new repo](references/new-repo.md) §2 lists
 them — and the skill fills its own marked positions from them. Its files are
 its own. It shows their drift rows itself and records them in the adapter's
 lockfile as `source: tool-config/…`. `init` never offers, splices or re-hashes
@@ -84,7 +84,7 @@ them.
   the rule forbids is inventing pack-owned content from scratch, at a path or
   a position no pack marked. A position in a file the tool-config skill owns
   is filled by passing its value as an argument, never by a splice — the
-  scope list as `scopes=` — and the commit gate's forge links are that
+  scope list as `--scopes` — and the commit gate's forge links are that
   skill's own, read from the repo's origin, never `init`'s.
   **One file is neither, and it is the only file**: the repo-owned
   `_scripts/local` sidecar the existing-repo pipeline writes. No pack declares
@@ -122,8 +122,7 @@ them.
   `direct` or `pr`, written to that repo's two marked positions
   `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`, checks out `develop`,
   creating whichever of `develop` and `main` the branch model needs and the
-  repo lacks, fills the mise lock with `setup:mise --lock-only`, never bumping
-  it, stages it with what this run wrote and asks **one question with
+  repo lacks, stages what this run wrote and asks **one question with
   three answers** — commit, commit and push, leave it — commits with a fixed
   `ops:` message when told to — **the ops commit lands on `develop` in every
   mode**, never on `main` or whatever branch the repo stood on — and pushes
@@ -500,7 +499,7 @@ and `update_bot`.
    What this question settles is what the plan shows and what §7 writes in
    each repo — the per-project task groups and, on **every** run including
    the first, the commit gate's scopes, one per confirmed id, passed to
-   `/stackgen:tool-config all` as `scopes=`. A registry,
+   `/stackgen:tool-config all` as `--scopes`. A registry,
    where the repo has one, is only where this question's proposal was read
    from; the scopes take the ids it confirmed either way, and a repo with no
    registry fills them on its first run like any other. Nothing downstream
@@ -628,7 +627,7 @@ and `update_bot`.
    different service than its base is ordinary.
 
    What this question settles is the `update_bot` axis: the row's answer is
-   passed as that repo's `update_bot=` argument and as its value in every
+   passed as that repo's `--update-bot` flag and as its value in every
    fetch's `answers:` map, so the skill's policy file lands only where the
    answer names the service it configures, and is **skipped** where the
    answer is the other service or **none**. On this axis alone, **none** is
@@ -656,14 +655,13 @@ product, `repos:` keyed by the member path exactly as
 `forge` and `update_bot`. Every key is always present and `none` is the
 spelling of no answer, exactly as the map passed to the materializer spells
 it. The record is written on a repo whose config already exists as much as
-into the stub, and the plan carries it as one row. Each repo gets one row
-more: the git pass installs uv and Python to write or fill its mise lock.
-A repo whose `.gitignore` has a line ignoring a lock file other than
-`mise.local.lock` gets one **Tool-config rows** delete row per line, answered
-`ok`, from `/stackgen:tool-config all`'s preview, per
+into the stub, and the plan carries it as one row. A repo whose `.gitignore`
+has a line ignoring a lock file other than `mise.local.lock` gets one
+**Tool-config rows** delete row per line, answered `ok`, from
+`/stackgen:tool-config all`'s preview, per
 [new repo](references/new-repo.md) §11(b). A tool the base mise
 block pins and the repo already pins is a **Tool-config rows** conflict row,
-answered with the repo's version or `latest`.
+answered with the repo's version or the exact version `latest` resolves to.
 
 ## The pipelines
 
@@ -733,7 +731,7 @@ Both pipelines land the same baselines, in one order. **First
 `/stackgen:tool-config all`**, with the answers as its arguments — the commit
 gate's scopes among them — it lands every tool that skill owns, the gates
 included, so `init` names none of them. The survey runs it as `preview all`
-and shows its rows in the plan; the real call carries `answers=` for every
+and shows its rows in the plan; the real call carries `--answers` for every
 row, per new-repo §2, so the skill asks no second time. **Then `init`'s own
 hygiene assets**, per [hygiene assets](references/readme-and-license.md) —
 no adapter fetch and no lock record. **Then the secrets provider**
@@ -805,7 +803,6 @@ branch appears under *Deferred* instead, with the checkout as its unlock.
 Every line reads `none` where nothing happened:
 
 ```text
-Lock                     <repo> staged | none | lock deferred | lock failed — not committed
 Landing model            <repo> develop <value>; main <value>   (one per repo)
 Branches created  <n>    <repo> <name>; <old> left     (one per repo)
 Commit                   <repo> <hash> <subject>; <hash> <subject>

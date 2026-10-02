@@ -302,7 +302,7 @@ the moment it runs. The repo pins its Xcode as `XCODE_VERSION`, which the pack's
 `tool-config:` calls add empty inside its `# >>> swiftui` block of
 `.config/mise/conf.d/env.toml`, and `/vwf:setup` fills as it lands the pack —
 each value detected on the machine, offered as the default, and written as the
-repo's committed pin through `/stackgen:tool-config mise set env` — and every
+repo's committed pin through `/stackgen:tool-config mise set-env` — and every
 task that builds checks `xcodebuild -version` against it and fails fast. The
 tasks read the pins from the environment mise exports, never from a file. A
 value the repo already sets elsewhere in its mise config — a line in any
@@ -703,24 +703,22 @@ so `remove <pack>` takes them out again:
 - **Excludes.** The trees a gate skips are **one exclusion set**, spelled in
   three syntaxes: the formatter's `dprint.json` and `taplo.toml` and the hook
   config's global `exclude`. The base is `.claude`, `.git`, `graphify-out`,
-  `build`, `dist`, `*.lock` and mise's sidecar lock tree `.config/mise/locks`;
-  pnpm adds `node_modules`, `.turbo` and its lockfile globs, uv `.venv`, SwiftPM
-  `.build` and `.swiftpm`, SwiftUI `Derived`, `DerivedData` and `*.xcassets`.
-  The one verb, `all add exclude [generated] <paths>`, writes all three lists at
-  once, and the toolkit's checker holds them equal after normalising the syntax
-  away. The secret scanner's `[allowlist] paths` is held to a **subset** of it,
-  never the reverse: only `generated` writes it, for a tree a tool writes and
-  nobody reviews, never a lockfile or authored source. gitleaks extends
-  upstream's default config, which already skips `.git`, `node_modules` and the
-  named lockfiles, and `.claude/` is authored source a scanner must scan even
-  though no formatter touches it in a shaped repo, where it is machine-owned.
-  Its entries are anchored `(^|/)`, so `\.turbo/` never matches a
-  `foo.turbo.ts`.
+  `build`, `dist` and `*.lock`; pnpm adds `node_modules`, `.turbo` and its
+  lockfile globs, uv `.venv`, SwiftPM `.build` and `.swiftpm`, SwiftUI
+  `Derived`, `DerivedData` and `*.xcassets`. The one verb,
+  `all add exclude [generated] <paths>`, writes all three lists at once, and the
+  toolkit's checker holds them equal after normalising the syntax away. The
+  secret scanner's `[allowlist] paths` is held to a **subset** of it, never the
+  reverse: only `generated` writes it, for a tree a tool writes and nobody
+  reviews, never a lockfile or authored source. gitleaks extends upstream's
+  default config, which already skips `.git`, `node_modules` and the named
+  lockfiles, and `.claude/` is authored source a scanner must scan even though
+  no formatter touches it in a shaped repo, where it is machine-owned. Its
+  entries are anchored `(^|/)`, so `\.turbo/` never matches a `foo.turbo.ts`.
 - **Linter ignores.** The linter does not read `.gitignore`, so `linter.yaml`'s
-  `ignores:` carries `build/`, `graphify-out/` and `.config/mise/locks/`;
-  Flutter adds `.dart_tool/`, SwiftPM `.build/` and `.swiftpm/`, SwiftUI
-  `Derived/` and `DerivedData/`, uv `.venv/`, each through
-  `pre-commit add linter-ignore`.
+  `ignores:` carries `build/` and `graphify-out/`; Flutter adds `.dart_tool/`,
+  SwiftPM `.build/` and `.swiftpm/`, SwiftUI `Derived/` and `DerivedData/`, uv
+  `.venv/`, each through `pre-commit add linter-ignore`.
 - **Hooks.** A non-gate check a pack needs is `pre-commit add hook`, written
   into the gate config between that pack's markers — uv's `uv lock --check` is
   the one today. The old `pre-commit.d/` fragments are retired, and the
@@ -812,50 +810,82 @@ library everything else runs through. It is no pack and no bundle any more: the
 One skill owns the configuration of the tools every repo runs, whatever its
 stack — eight of them: mise, dprint, pre-commit, gitleaks, grype, git, graphify
 and renovate. Each tool's static files and templates sit in the skill's
-`assets/<tool>/`, laid out as they land; its doctrine and verbs in
-`references/<tool>.md`. No tool's skill is copied into your repo any more. It
-takes three argument shapes, each of which `preview` may open:
+`assets/<tool>/`, laid out as they land; its doctrine in `references/<tool>.md`.
+
+**mise runs on a script.** The skill ships a node script,
+`scripts/tool-config.mjs`, with no dependencies, run with the `node` on your
+`PATH`. It renders mise's templates, fills their marked positions, and shows
+every change as a numbered row before it writes, so the same call makes the same
+files on every run and a new repo's mise config needs no model judgement. The
+script is the source of truth: what it cannot decide in an existing repo — a
+root mise config to split, a `merge` answer, a file it cannot parse — comes back
+as a `needs-edit` row naming the file and the target layout, which the session
+edits by hand and then re-checks with `check`. It needs `mise` on `PATH` for any
+call that resolves a version, and refuses without it. Its output is JSON, and it
+never reaches outside the repo: an absolute path, a `..` climb or a symlink
+leading out refuses the call. The other seven tools still follow their
+references, by the word grammar below, until they move onto the script.
 
 ```text
-/stackgen:tool-config [preview] <tool> <instruction> [for <requester>] [answers=…]
-/stackgen:tool-config [preview] all [key=value …] [answers=…]
-/stackgen:tool-config [preview] <tool> key=value [key=value …] [answers=…]
+/stackgen:tool-config [preview] mise <verb> [--<flag> <value>]… [--for <requester>] [--answers <id>:<answer>,…]
+/stackgen:tool-config [preview] all [--<key> <value>]… [--answers …]
+/stackgen:tool-config [preview] apply-entries --pack <slug> --file <pack.yaml> [--answers …]
+/stackgen:tool-config check [<tool>]
+/stackgen:tool-config [preview] <tool> <instruction> [for <requester>] [answers=…]   # the seven prose tools
 ```
 
-- **`all`** lands every tool the skill owns, filling each marked position from
-  its arguments — `repo`, `members`, `linkage`, `merge_model_develop`,
-  `merge_model_main`, `runtimes`, `plugin_sources`, `plugins`, `scopes` and the
-  three conditional answers — `git`, `graphify` and `renovate` after the five,
-  and `renovate` only on `update_bot=renovate`. A list is comma-separated, no
-  spaces. A key left out keeps the repo's current value. It is idempotent, and
-  it is also the migration: a repo on an older layout is folded onto the current
-  one, each move one row. [`/vwf:init`](./vwf.md#vwfinit) calls it with its
-  answers.
-- **`<tool> <instruction>`** runs one verb: `add tool <name> <version>`,
-  `add env <KEY>=<value>` (each `to all environments` or
-  `to <dev|ci|test> environment`), `set env`, `add alias`, `upgrade`, `lock` for
-  mise; the gates' verbs below; git's `add ignore <pattern…>`,
-  `add ignore template=<Name>` and `add attribute <pattern> <attr…>`; and
-  `remove <requester>` for every tool. Anything else is refused, naming the
-  verbs.
-- **`for <requester>`** names whose lines these are. A pack's calls carry its
-  slug; the base is the tool's own name. A call with no `for` writes your own
-  line, and only a call you type does that.
+- **`all`** lands every tool the skill owns: mise through the script, then the
+  other seven, `git`, `graphify` and `renovate` after the five gates, and
+  `renovate` only on `--update-bot renovate`. Its keys are flags — `--repo`,
+  `--members`, `--linkage`, `--merge-model-develop`, `--merge-model-main`,
+  `--runtimes`, `--plugin-sources`, `--plugins`, `--scopes` and the three
+  conditional answers `--forge`, `--secrets` and `--update-bot`. A list is
+  comma-separated, no spaces. A key left out keeps the repo's current value. It
+  is idempotent — a second run over an unchanged repo writes nothing and shows
+  no row — and it is also the migration: a repo on an older layout is folded
+  onto the current one, each fold, move and delete one row.
+  [`/vwf:init`](./vwf.md#vwfinit) calls it with its answers. It also lands a
+  **repo-local mise skill**, `.claude/skills/mise/SKILL.md`, which tells any
+  session how to run the repo's tasks and where each config file lives, and
+  whose task table the script regenerates on every `all` and every pack change.
+- **`mise <verb>`** runs one of mise's verbs: `add-tool --name --version --env`,
+  `add-env --key --value --env` (`--env` is `all`, `dev`, `ci` or `test`),
+  `set-env --key --value`, `add-alias --name --command`, `upgrade` and
+  `remove --for <requester>`. Anything else is refused, naming the verbs.
+- **The prose tools' verbs** are the gates' below; git's
+  `add ignore <pattern…>`, `add ignore template=<Name>` and
+  `add attribute <pattern> <attr…>`; and `remove <requester>` for every tool.
+- **`apply-entries`** runs a pack's whole `tool-config:` list, each mise entry
+  as its verb for that pack and each string entry handed back for the prose
+  half.
+- **`check`** is the drift test. It writes nothing; `/vwf:doctor` calls it.
+- **`--for <requester>`** (`for <requester>` on a prose tool) names whose lines
+  these are. A pack's calls carry its slug; the base is the tool's own. A call
+  with no requester writes your own line, and only a call you type does that.
 - **`preview`** builds the rows the same call would show — every create, write,
-  fold, move and delete, every drift and conflict row — numbers them `r1`, `r2`,
-  … and returns them, writing nothing and asking nothing. A caller that gathers
-  one consent for a whole plan previews each call, shows the rows inside its own
-  question, then makes the real call with the answers.
-- **`answers=<id>:<answer>,…`**, always the last argument and never on a
-  preview, hands those answers back — `take-theirs`, `keep-mine`, `merge`,
-  `keep-existing`, `overwrite`, `move-in` or `keep-both`, whichever the row
-  offers, and `ok` for a plain create, write, fold, move or delete row. Every
-  previewed row needs an answer: a call missing any row, naming an unknown one,
-  or meeting a row changed since the preview is refused whole, nothing written,
-  and the rows shown again. A call carrying a matching `answers=` asks nothing.
-  A call without it is its own consent round.
+  fold, move and delete, every drift, conflict and `needs-edit` row — numbers
+  them `r1`, `r2`, … and returns them, writing nothing and asking nothing. A
+  caller that gathers one consent for a whole plan previews each call, shows the
+  rows inside its own question, then makes the real call with the answers.
+- **`--answers <id>:<answer>,…`** (`answers=…`, always last, on a prose tool),
+  never on a preview, hands those answers back — `take-theirs`, `keep-mine`,
+  `merge`, `keep-existing`, `overwrite`, `move-in` or `keep-both`, whichever the
+  row offers, and `ok` for a plain create, write, fold, move or delete row.
+  Every previewed row needs an answer: a call missing any row, naming an unknown
+  one, or meeting a row changed since the preview is refused whole, nothing
+  written. A call carrying matching answers asks nothing.
 - **A value** given bare is raw and escaped on write; one given quoted is read
   as a TOML basic string exactly as written and written verbatim.
+
+**Every pin is an exact version.** A pin asked for as `latest`, or as a prefix
+such as `"0.59"`, is resolved with `mise latest` when it is written and written
+as the exact version it returns. **There is no mise lockfile**: the config names
+every version, a pipeline installs exactly those, and moving one forward is a
+diff. `mise upgrade` is the one call that moves a pin, one row per pin that has
+moved on, and only within what declared it — a pin declared exact never moves, a
+prefix moves within itself, `latest` re-resolves. **A tool is never added with a
+bare `mise use`**: it is entered into its `conf.d/tools*.toml` file first, then
+installed with `mise install`.
 
 **Each requester's lines sit between its own markers** — `# >>> swiftui` and
 `# <<< swiftui` — inside the section file the tool reads. Lines outside every
@@ -863,44 +893,50 @@ block are yours: a pack's call and the materializer never write, reorder or
 remove one — only a call you typed, or a conflict row you settled. **A clash is
 a conflict row, never a silent overwrite**: a tool, env key or alias name that
 another block or your own line already holds is shown before anything is written
-— for an alias, keep the existing or overwrite it — and nothing records the
-answer, so the next run that meets it asks again. `all` raises the same row for
-each tool its base mise block pins that the repo already pins, answered with the
-repo's version or the base's `latest`, and the winner is pinned once — in
+— for an alias, keep the existing or overwrite it. A `keep-existing` answer is
+recorded in the requester's block as `# keep-existing: <key>`, so the next run
+does not ask again; removing the block, overwriting, or the clash going away
+clears it. `all` raises the same row for each tool its base mise block pins that
+the repo already pins, answered with the repo's version or the exact version the
+base's `latest` resolves to, and the winner is pinned once — in
 `conf.d/tools.<env>.toml` for one environment, in `conf.d/tools.toml` for
-several. A value `set env` finds set outside the pack's block — your line in an
+several. A value `set-env` finds set outside the pack's block — your line in an
 environment fragment, or an `[env]` table in an old top-level mise file — is a
 conflict row too, answered **move in** (your line removed, the value written in
 the pack's block) or **keep both** (the row names which one mise's precedence
 makes win) — or, when your line sits in the pack's own file, **move in** or
 **keep existing**, since a TOML table cannot hold a key twice. A file exists
-only while it has content. **Drift is tested by content, never by a hash** —
-words outside quoted strings, so spacing is never drift, and a quoted string
-exactly: a block differing from what its requester would write now is one row —
-take theirs, keep mine for this run, or merge — and the skill never picks for
-you. The one exception is a fetched ignore template's block, whose drift is
-tested against the `written:` hash the lock records. A filled marked position
-and a pack's `machine_env` value are never drift. `remove <requester>` deletes
-that requester's blocks and nothing else. Every path it writes is a `lock.yaml`
-entry sourced `tool-config/<tool>@<version>`, the version stackgen's own. It
-never commits; the caller does.
+only while it has content. **Drift is a block differing from what its requester
+would write now** — the script renders the block and compares it with the file —
+and is one row: take theirs, keep mine for this run, or merge; the skill never
+picks for you. A file whose content still matches the hash its lock record holds
+was not edited by hand, so it gets a plain write row rather than a drift row. A
+fetched ignore template's block is tested against the `written:` hash the lock
+records. A filled marked position and a pack's `machine_env` value are never
+drift. `remove` deletes that requester's blocks and nothing else. Every path it
+writes is a `lock.yaml` entry sourced `tool-config/<tool>@<version>`, the
+version stackgen's own. It never commits; the caller does.
 
 **A pack asks for what it needs** through a `tool-config:` list in its
-`pack.yaml`, one instruction per line:
+`pack.yaml`. A mise entry is a mapping, checked against the same schema the
+script refuses entries by; another tool's entry is still one instruction per
+line:
 
 ```yaml
 tool-config:
-  - mise add tool swiftlint 0.65.1 to all environments
-  - mise add env XCODE_VERSION="" to all environments
+  - { tool: mise, verb: add-tool, name: doppler, version: "latest", env: all }
+  - { tool: mise, verb: add-env, key: XCODE_VERSION, value: "", env: all }
 ```
 
-The materializer previews each line as `/stackgen:tool-config <line> for <pack>`
-in its dry-run, shows the returned rows under the `config/` consent line, then
-runs the calls with those answers, and runs `remove <pack>` when a pack is
-dropped. [`/vwf:setup`](./vwf.md#vwfsetup) fills a `machine_env` value with
-`set env <KEY>=<value> for <pack>`, and re-runs every landed pack's list on each
-run, so a call a newer pack changed reaches your repo without a reshape. A pack
-never ships a `conf.d` fragment: the checker refuses one.
+The materializer previews the list with `preview apply-entries` in its dry-run,
+shows the returned rows under the `config/` consent line, then runs it with
+those answers, and runs `mise remove --for <pack>` (`remove <pack>` for each
+prose tool) when a pack is dropped. [`/vwf:setup`](./vwf.md#vwfsetup) fills a
+`machine_env` value with
+`mise set-env --key <KEY> --value <value> --for <pack>`, and re-runs every
+landed pack's list on each run, so a call a newer pack changed reaches your repo
+without a reshape. A pack never ships a `conf.d` fragment: the checker refuses
+one.
 
 ### The config split
 
@@ -917,7 +953,7 @@ it.
 | `miserc.toml`                      | before the rest        | `env_conf_d = true` and nothing else                              |
 | `mise.toml`                        | always (every env)     | shared `[settings]` and `min_version`                             |
 | `mise.dev.toml`                    | `MISE_ENV=dev`         | dev-only settings                                                 |
-| `mise.ci.toml`                     | `MISE_ENV=ci`          | CI/production settings, `locked = true`, the node-gpg workaround  |
+| `mise.ci.toml`                     | `MISE_ENV=ci`          | CI/production settings, the node-gpg workaround, commented out    |
 | `mise.test.toml`                   | `MISE_ENV=dev,test`    | test deltas, layered on top of dev — never selected alone         |
 | `mise.local.toml`                  | always, last           | this machine's overrides — **never committed**, and never shipped |
 | `mise/conf.d/<section>.toml`       | always                 | one section for every environment                                 |
@@ -960,20 +996,12 @@ from the script it runs. `task.run_auto_install = false` leaves every install to
 `setup:mise`. `pipx.uvx = true` installs every `pipx:` tool through uv, and
 `python.compile = false` with `python.uv_venv_auto` serve the dev Python.
 
-**One lock holds every environment's tools, and it is tracked.**
-`lockfile = true` in the base records what each fuzzy pin resolved to, in
-`.config/mise/mise.lock`, for `linux-x64` and `macos-arm64`. `setup:mise` writes
-it with one `mise lock` under `MISE_ENV` set to every environment the config
-files carry; a single-environment `mise lock` would drop the rest. A tool is
-pinned in one file only: one two environments need goes in `tools.toml`. Under
-mise's default npm installer, aube, the linter's entry in the lock points at a
-generated sidecar under `.config/mise/locks/` that fixes its dependency graph. A
-`pipx:` tool installed through uv gets a uv sidecar there too, such as
-graphifyy's. The lock and its sidecars are committed together, before the first
-CI push, or the pipeline fails at install. `/vwf:init`'s `ops:` commit carries
-both. `locked = true` in `mise.ci.toml` is what makes the pipeline a reader of
-what a laptop resolved rather than a resolver of its own. Only the local lock is
-ignored.
+**There is no mise lockfile.** `lockfile = false` in the base: every pin is
+written as an exact version, so the config itself is what a pipeline installs,
+and `setup:mise` installs exactly those versions and moves none. A tool is
+pinned in one file only: one two environments need goes in `tools.toml`. A repo
+an older version shaped with a tracked mise lockfile and its sidecar folder gets
+one delete row for them from the next `all`.
 
 A pack contributes to the section files through its `tool-config:` calls — a
 secrets provider its tool and `[env]`, the package manager its `npx` alias —
@@ -987,18 +1015,19 @@ runs `code:lint`. It is a Node script, so it needs a `node` on `PATH`: the
 repo's own pin, or the machine's. Other formatters, linters, security scanners
 and dev tooling belong in `conf.d/tools.dev.toml`, so a CI build does not pull
 them. graphify is one of them: `"pipx:graphifyy"`, dev only, since a pipeline
-never builds the graph. `python` and `uv` sit beside it, both at `latest`: every
-`pipx:` tool installs through uv (`pipx.uvx = true` in the base `[settings]`),
-and uv needs a Python >= 3.10 to lock graphify's dependencies. `[tasks.init]`,
-in `conf.d/tasks.toml`, loads in every environment: file-based tasks must be
-executable under `MISE_ENV=ci` too. The runtime's settings are a **marked
-position** shipped empty: `RUNTIME_BLOCK` under `mise.toml`'s `[settings]` and
-`PATH_ENTRIES` at the end of `conf.d/env.toml` are filled from the `runtimes`
-argument `/vwf:init` passes from its stack read — one runtime settings line per
-detected language, the `_.path` entry where a project-local binary directory
-needs it — and left empty for a language the repo does not have, since a setting
-for an absent runtime is a claim about the stack that is not true. With
-`REPO_NAME`, `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and `MEMBERS`, all in
+never builds the graph. `python` and `uv` sit beside it, both asked as `latest`
+and written exact: every `pipx:` tool installs through uv (`pipx.uvx = true` in
+the base `[settings]`), and uv needs a Python >= 3.10 to lock graphify's
+dependencies. `[tasks.init]`, in `conf.d/tasks.toml`, loads in every
+environment: file-based tasks must be executable under `MISE_ENV=ci` too. The
+runtime's settings are a **marked position** shipped empty: `RUNTIME_BLOCK`
+under `mise.toml`'s `[settings]` and `PATH_ENTRIES` at the end of
+`conf.d/env.toml` are filled from the `runtimes` argument `/vwf:init` passes
+from its stack read — one runtime settings line per detected language, the
+`_.path` entry where a project-local binary directory needs it — and left empty
+for a language the repo does not have, since a setting for an absent runtime is
+a claim about the stack that is not true. With `REPO_NAME`,
+`MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and `MEMBERS`, all in
 `conf.d/env.toml`, they are the six marked positions.
 
 `conf.d/env.dev.toml` holds the **local values** of runtime env vars (verbose
@@ -1113,18 +1142,11 @@ inside `code/*` and `setup/*` change with the tech stack.
   order, and stays idempotent. **It never upgrades or overwrites anything it did
   not create**: a pack task that would have to stops, names what it found and
   prints the by-hand command, and every destructive step sits behind a flag.
-  Tools install from the committed lockfile — `setup:mise` runs
-  `mise install --locked` every time and never `mise upgrade` — and the lock is
-  created only in dev: once by one `mise lock` over every environment when no
-  `.config/mise/mise.lock` exists yet, or by `setup:all --upgrade`, the one flag
-  `setup:all` passes on and only when you pass it, which reaches
-  `setup:mise --upgrade`: one `mise lock --bump --upgrade` over every
-  environment, then `dprint config update`. `setup:mise --lock-only` writes a
-  missing lock or fills a present one without `--bump`, installing only uv and
-  Python, then exits; `/vwf:init` runs it before its commit. It keeps locked
-  versions unless a tool's options changed. Outside dev a missing lock and
-  `--upgrade` each stop the task before it runs anything. `--lock-only` with a
-  lock present has no dev check, so it fills the lock in any environment.
+  Tools install at the exact versions the config pins — `setup:mise` runs
+  `mise reshim`, `mise doctor` and `mise install` every time and never moves a
+  pin, and `setup:all` takes no upgrade flag. A pin moves only through
+  `/stackgen:tool-config mise upgrade`, whose rows you answer, and dprint's
+  plugins move by hand with `dprint config update` in dev.
   `setup:precommit --update` is what runs `pre-commit autoupdate`, moving the
   hook `rev:` lines; and `setup:precommit --force` is what takes the hooks over
   from a **local** `core.hooksPath`, a `.husky/` directory or a lefthook config,
@@ -1165,13 +1187,16 @@ inside `code/*` and `setup/*` change with the tech stack.
   package's `brew install` line as a hint when `claude-status` is absent —
   hinted, never installed, because that is a per-machine package and not the
   repo's to place. The official marketplace is never added: it ships with Claude
-  Code. `--all` recurses into every **member**, which `_scripts/helpers`'
-  `members()` answers for under either multi-repo linkage — the repo's
-  submodules where `.gitmodules` exists, else the paths listed in the `MEMBERS`
-  env value — and one `--<slug>` flag per **member repo** is generated from that
-  same list, named for the member and never for a project id: a member holding
-  three projects is still one flag. `code:worktrees` reads the same helper, so
-  the two never disagree about what a member is. Alias it as `setup`.
+  Code. `--all` sets up every **member**, and a member's own `--<slug>` sets up
+  that one alone — each run as `setup:all` from inside the member, in a
+  subshell, so the member's own mise config is the one read. The members are
+  what `_scripts/helpers`' `members()` answers for under either multi-repo
+  linkage — the repo's submodules where `.gitmodules` exists, else the paths
+  listed in the `MEMBERS` env value — and one `--<slug>` flag per **member
+  repo** is generated from that same list, named for the member and never for a
+  project id: a member holding three projects is still one flag.
+  `code:worktrees` reads the same helper, so the two never disagree about what a
+  member is. Alias it as `setup`.
 - **The retired editor task.** `setup/vscode`, which kept a per-repo editor
   profile in step with the recommendations `/vwf:init` composed, is gone with
   them. Where an earlier version landed it, the mise migration deletes it with
@@ -1201,9 +1226,12 @@ inside `code/*` and `setup/*` change with the tech stack.
   placeholder slots that announce themselves and exit 0, so `setup:all` runs end
   to end regardless.
 - **`setup/worktree`.** The lighter sibling of `setup:all` for a fresh worktree
-  — submodules, mise, `setup:secrets`, `setup:deps:install --frozen`. vwf's
-  git-workflow probes for it by name before falling back to `setup:all`. (It was
-  `worktree:init`; `worktree:` was a group of one, and this is a bootstrap.)
+  — submodules, `mise install` of the pinned versions, `setup:secrets`,
+  `setup:deps:install --frozen`. Like `setup:all` it refuses an unset
+  `MISE_ENV`, naming `MISE_ENV=dev mise run setup:worktree`, since that decides
+  which tools install. vwf's git-workflow probes for it by name before falling
+  back to `setup:all`. (It was `worktree:init`; `worktree:` was a group of one,
+  and this is a bootstrap.)
 - **Several tasks ship as slots.** `code/lint`, `setup/secrets`, every
   `setup/deps/*` and every `setup/external/*` carry a `#PLACEHOLDER` marker: the
   task name is the contract, the mechanism comes from whichever stack the repo
@@ -1381,7 +1409,7 @@ toolkit will find it: vwf probes `setup:worktree`, the aggregators call
 | `stackgen-stack-menu`     | adapter, skill-invoked | The packs + the one open `generate` entry, as a vwf menu payload. Answers the same in every product                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `stackgen-stack-template` | adapter, skill-invoked | The dispatch: materialized entry → pure read; a first pin — which arrives from `/vwf:setup`'s materialize pass — resolves the bundle's composition and dispatches **per component**, packs copied and uncovered components generated, landing once behind one consent gate in the repo the optional `repo:` line names. Unknown slug → error, never a guess                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `stackgen-sync`           | user-only              | The explicit re-sync, **per component**: lockfile-anchored diff against current component packs, regeneration offered per generated component, the delta presented for consent. Repo edits never overwritten by default. Entries sourced `tool-config/…` are that skill's and never diffed here; a record — of either source — whose path its component no longer ships and whose file is gone is dropped with no delta row and named in the report; a pack whose `tool-config:` list changed is reported and pointed at `/vwf:setup`, whose materialize pass re-runs it. Conditional paths are evaluated first, against the config's `answers:` block with the forge re-read live — a false path with no record is `skipped (condition)` and never offered, a never-landed path whose condition now holds is offered as a create, and a landed path whose condition turned false is kept and reported once. Removing a pack drops its `skipped:` rows with its entries. Closes by **re-checking the repo shape** — `/vwf:setup`'s Step 0 check, in-session, over the base and every member against the lockfile just updated — and on drift offers `/vwf:setup reshape` and invokes it on a yes; clean says nothing. A fragment that moved is folded into the merged config there, by the reshape, never by the sync |
-| `tool-config`             | user **and** model     | Owns the mise config: `/stackgen:tool-config all [key=value …]` lands it, `<tool> <instruction> [for <requester>]` runs one verb, `preview` returns a call's rows without writing and `answers=` hands their answers back, each requester's lines kept between its own markers and drift shown as take theirs, keep mine or merge. Called by `/vwf:init`, by the materializer for a pack's `tool-config:` list and by `/vwf:setup` for a `machine_env` value; yours to run as well                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `tool-config`             | user **and** model     | Owns the mise config and the gates: `/stackgen:tool-config all [--<key> <value> …]` lands them, mise through a shipped node script that pins exact versions, `mise <verb>` or `<tool> <instruction>` runs one verb, `check` tests drift, `preview` returns a call's rows without writing and `--answers` hands their answers back, each requester's lines kept between its own markers and drift shown as take theirs, keep mine or merge. Called by `/vwf:init`, by the materializer for a pack's `tool-config:` list and by `/vwf:setup` for a `machine_env` value; yours to run as well                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `stackgen-reputation`     | user **and** model     | A verdict on every name it is given — `/stackgen:stackgen-reputation <ecosystem>:<name> …`, the prefix one of `npm:`, `pypi:`, `pub:`, `action:` (owner/repo) or `image:` (registry/repo), an optional version or ref (`npm:left-pad@1.3.0`, `action:actions/checkout@v4`, `image:docker.io/library/nginx:1.27`) pinning what the advisory check runs against — one row per name reading `pass`, `warn` or `block`, with the signals that decided it, from public read APIs. The generator calls it over every concrete name a generated component emits; you call it on a name before typing it anywhere                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `stackgen-skill-reviewer` | subagent               | The stateless trust gate on generation: catalog fidelity, the **when-not-to-apply** checks, citations that resolve and support, honest emitted facts, **kind conformance**, **topic-bar coverage** against the composition, and every emitted name carrying a verdict-table row that does not read `block` — read off the table it is handed, never looked up                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 

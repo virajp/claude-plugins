@@ -167,23 +167,30 @@ adapter's.
 ## Answering the skill's rows
 
 Both steps below reach `/stackgen:tool-config` the same way, and this is the
-one place the form is stated. First
+one place the form is stated. A mise call, `all` and `apply-entries` take
+the skill's flag form — a verb, `--<flag> <value>` pairs, `--for <pack>`
+where a pack asks and `--answers` last; a call to any other tool keeps the
+skill's word grammar until that tool moves onto its script — an
+instruction, `for <pack>` and `answers=` last. First
 `/stackgen:tool-config preview <call>`, which writes nothing and returns the
 rows the call would show, each with an id — `r1`, `r2`, … Setup shows those
 rows inside its own question and takes an answer to **every** row, spelled
 as the skill spells it: `ok`, `take-theirs`, `keep-mine`, `merge`,
-`keep-existing`, `overwrite`, `move-in` or `keep-both`, whichever the row
-offers. A **plan row** — a create, write, fold, move or delete — takes `ok`,
-and setup passes `ok` for each plan row the person approved; the others are
-the drift and conflict rows' own answers. Then the real call, with the
-answers as its **last** argument:
-`/stackgen:tool-config <call> answers=<id>:<answer>,…`. That is what keeps
-the skill from asking a second time. A call whose `answers=` misses a row,
+`keep-existing`, `overwrite`, `move-in`, `keep-both`, `keep`, `done` or
+`skip`, whichever the row offers. A **plan row** — a create, write, fold,
+move or delete — takes `ok`, and setup passes `ok` for each plan row the
+person approved; the others are the drift and conflict rows' own answers. A
+`needs-edit` row is an edit the skill cannot make itself and makes through
+its own reference before it is answered `done`. Then the real call, with
+the answers as its **last** argument:
+`/stackgen:tool-config <call> --answers <id>:<answer>,…`, or
+`answers=<id>:<answer>,…` in the word grammar. That is what keeps the skill
+from asking a second time. A call whose answers miss a row,
 misnames one, or names one that changed since the preview is refused
 **whole** and its rows shown again — so no call is made with a row nobody
 answered, and a changed tree is asked about afresh rather than written over.
 A person who declines a plan row declines the call: it is not made, and the
-report says so. A preview that returns no row needs no `answers=` at all.
+report says so. A preview that returns no row needs no answers at all.
 
 A machine value also set outside the pack's block comes back as one of two
 conflict rows, by where the outside line sits. In **another file**, the row
@@ -209,8 +216,11 @@ names vwf and never another plugin's root. A pack with no list is nothing to
 do.
 
 **Preview, then run**, as
-[Answering the skill's rows](#answering-the-skills-rows) states, with
-`<call>` each line followed by `for <pack>`. The calls are
+[Answering the skill's rows](#answering-the-skills-rows) states. A list's
+mapping entries — mise's, today — run as one call,
+`apply-entries --pack <slug> --file <that pack.yaml>`; each string entry
+runs as its own `<call>` in the word grammar, followed by `for <pack>`,
+until the skill moves its tool onto mappings. The calls are
 idempotent: a line whose block already holds what it asks returns **no
 row**, and a pack whose every line returns none is not mentioned beyond the
 report's count. A changed call comes back as the skill's **drift** or
@@ -246,7 +256,8 @@ nothing to do.
 **A value set elsewhere is the skill's row, relayed here.** Setup does not
 look for it and removes no line itself. Before asking, it previews the call —
 [Answering the skill's rows](#answering-the-skills-rows) — with `<call>`
-`<tool> set env <name>=<value> for <pack>`, `<value>` the one step 2 would
+`<tool> set-env --key <name> --value <value> --for <pack>`, `<value>` the
+one step 2 would
 otherwise preselect. Where `name` is also set
 **outside the pack's block** — a line an earlier version of the pack, or a
 person, put in any of the tool's environment fragments, or an environment
@@ -293,9 +304,10 @@ key twice. Nothing is written until the person picks.
    default is withheld. Either way the person may type another, and the
    question is never skipped, and never answered for the person.
 3. Hand the answer to the skill:
-   `/stackgen:tool-config <tool> set env <name>=<value> for <pack>`, `<tool>`
-   the one the pack's own `tool-config:` call adding `name` names, with
-   `answers=<id>:<answer>` last wherever the preview returned a row. The
+   `/stackgen:tool-config <tool> set-env --key <name> --value <value> --for <pack>`,
+   `<tool>` the one the pack's own `tool-config:` entry adding `name` names
+   (`mise` for every entry today), with `--answers <id>:<answer>` last
+   wherever the preview returned a row. The
    skill writes that value in the pack's block, and removes the outside line
    only where the answer was `move-in`. An answer equal to the current value,
    with no conflict row, writes nothing. An answer other than the value first

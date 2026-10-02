@@ -76,7 +76,8 @@ connection or a timeout as a **degradation** with the start command as its
 remedy, and checks the memory **files** either way. The one Python-toolchain
 prerequisite `vwf` genuinely leans on belongs to **graphify**, not to mempalace,
 and doctor §8 treats a missing `graphify` CLI as a **blocking** finding with
-`mise use -g pipx:graphifyy@latest` as the remedy.
+`MISE_ENV=dev mise install` as the remedy — `/stackgen:tool-config` pins
+`pipx:graphifyy` in the repo's `.config/mise/conf.d/tools.dev.toml`.
 
 ## Auto-save
 

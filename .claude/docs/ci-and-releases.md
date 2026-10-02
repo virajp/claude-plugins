@@ -8,11 +8,11 @@ per table in `.config/mise/conf.d/`, and `.config/miserc.toml` turning on
 `env_conf_d` so a `<section>.<env>.toml` loads only under that environment.
 
 - `.config/mise.toml` — **generic**, loaded everywhere: settings only
-  (`lockfile_platforms`, `task.run_auto_install = false`, the Node runtime
-  settings, and the Python ones — `pipx.uvx = true`, so every `pipx:` tool
-  installs through uv) and `min_version`. `conf.d/tools.toml` holds the common
-  `node` + `pnpm` runtime, `osv-scanner`, and `shellcheck` and `shfmt` — the two
-  binaries of `p:plugins:shellcheck` and the shipped defaults of `code:lint` and
+  (`task.run_auto_install = false`, the Node runtime settings, and the Python
+  ones — `pipx.uvx = true`, so every `pipx:` tool installs through uv) and
+  `min_version`. `conf.d/tools.toml` holds the common `node` + `pnpm` runtime,
+  `osv-scanner`, and `shellcheck` and `shfmt` — the two binaries of
+  `p:plugins:shellcheck` and the shipped defaults of `code:lint` and
   `code:format`, which both dev and CI need. `conf.d/env.toml` and
   `conf.d/tasks.toml` hold the env values and `tasks.init`.
 - `.config/mise.dev.toml` — loaded when `MISE_ENV=dev` (the maintainer's machine
@@ -20,22 +20,19 @@ per table in `.config/mise/conf.d/`, and `.config/miserc.toml` turning on
   dev toolchain (doppler, pre-commit, dprint, taplo, gitleaks, grype,
   actionlint, jq, python, uv), `conf.d/shell_alias.dev.toml` the aliases.
 - `.config/mise.ci.toml` — loaded when `MISE_ENV=ci` (the workflows set this).
-  It sets `locked = true`, so CI installs exactly what the committed
-  `.config/mise/mise.lock` records and fails rather than resolving a version
-  (the lock is created and bumped only in dev, though `setup:mise --lock-only`
-  fills a present lock in any environment). It also sets
-  `node.gpg_verify = false` to work around a mise-on-Linux bug where its bundled
-  Node release-key import fails on the CI runner's gpg with "no valid OpenPGP
-  data found" (the Node tarball is still SHA256-checksum verified). Same mise
-  version verifies fine on macOS; see jdx/mise discussion #10553.
+  It sets one thing, `node.gpg_verify = false` to work around a mise-on-Linux
+  bug where its bundled Node release-key import fails on the CI runner's gpg
+  with "no valid OpenPGP data found" (the Node tarball is still SHA256-checksum
+  verified). Same mise version verifies fine on macOS; see jdx/mise discussion
+  #10553.
 
-**One lock for every environment.** `setup:mise` writes `.config/mise/mise.lock`
-with one `mise lock` over every environment the config files carry, only when it
-is missing or under `--upgrade` in dev. `setup:mise --lock-only` also fills a
-present lock with missing tools, without `--bump`, and installs only uv and
-Python first. It keeps locked versions unless a tool's options changed. A
-single-environment `mise lock` drops the other environments' tools. `taplo` is
-the one entry with no checksum: upstream publishes none.
+**There is no mise lockfile.** It was dropped on 2026-09-30 — it slowed every
+install and caused more failures than it prevented — here and in the base
+`stackgen:tool-config` lands, which instead writes every pin as an exact
+version, so CI installs what the config names and moving a pin is a diff.
+`setup:mise` here is `mise reshim`, `mise doctor`, `mise install` and
+`mise upgrade --local`; the landed base's `setup:mise` stops at the install and
+moves no pin.
 
 The `mise x shellcheck@latest shfmt@latest` wrapper still standing around that
 task in `plugins.yml` is **redundant**: both tools now resolve from

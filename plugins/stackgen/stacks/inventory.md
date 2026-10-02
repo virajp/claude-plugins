@@ -29,16 +29,16 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | Component | Name | Kind | Axis | Category | Capability | Version | Summary |
 | --------- | ---- | ---- | ---- | -------- | ---------- | ------- | ------- |
 | `app-framework/flutter` | Flutter | `app-framework` | project | cross-platform-ui |  | 0.7.0 | The cross-platform app SDK that owns the manifest, the build and the project layout — one codebase across mobile, tablet, desktop and in-car through the native edge. |
-| `app-framework/swiftui` | SwiftUI | `app-framework` | project | native-ui |  | 0.5.0 | The native Apple app stack — SwiftUI on Swift, the project a committed Xcode project, Xcode owning the build — one codebase across iPhone, iPad, Mac, CarPlay, Watch, TV and Vision. |
+| `app-framework/swiftui` | SwiftUI | `app-framework` | project | native-ui |  | 0.5.1 | The native Apple app stack — SwiftUI on Swift, the project a committed Xcode project, Xcode owning the build — one codebase across iPhone, iPad, Mac, CarPlay, Watch, TV and Vision. |
 | `capability-provider/audit-store-d1` | Audit store · Cloudflare D1 | `capability-provider` | backing | audit | audit-store | 0.1.0 | An isolated, append-only audit dataset in a D1 database of its own — written through one seam and read only by the console Worker that holds the binding. |
 | `capability-provider/audit-store-postgres` | Audit store · PostgreSQL | `capability-provider` | backing | audit | audit-store | 0.1.0 | An isolated, append-only audit schema inside the product's own PostgreSQL — insert-only to the application's role, readable by the console's reader role under policy, and removable only by the retention purge. |
-| `capability-provider/doppler` | Doppler | `capability-provider` | backing | secrets-manager |  | 1.2.0 | A vendor holds the secrets and the CLI injects them at the process boundary — onboarding is an org invite, and no key is ever distributed. |
-| `capability-provider/fnox` | fnox | `capability-provider` | backing | secrets-manager |  | 1.2.0 | The local-first secrets manager — you hold them, encrypted into git or referenced in your own cloud, and onboarding is a public key plus a re-encrypt. |
+| `capability-provider/doppler` | Doppler | `capability-provider` | backing | secrets-manager |  | 1.2.1 | A vendor holds the secrets and the CLI injects them at the process boundary — onboarding is an org invite, and no key is ever distributed. |
+| `capability-provider/fnox` | fnox | `capability-provider` | backing | secrets-manager |  | 1.2.1 | The local-first secrets manager — you hold them, encrypted into git or referenced in your own cloud, and onboarding is a public key plus a re-encrypt. |
 | `capability-provider/notion` | Notion | `capability-provider` | backing | workspace |  | 0.1.0 | The workspace a team already writes in — its docs, specs and tickets reached by the agent through one hosted server the person authorises once. |
 | `capability-provider/oidc` | OIDC issuer | `capability-provider` | backing | identity | third-party-auth | 0.1.0 | Identity as an open protocol rather than a product — any issuer speaking OpenID Connect, self-hosted or managed. |
 | `capability-provider/otel-lgtm` | OpenTelemetry · Grafana OTel-LGTM | `capability-provider` | backing | telemetry | distributed-tracing | 0.1.0 | The telemetry sink that needs no cloud — the product exports OTLP and an LGTM stack terminates it, run wherever the product runs. |
 | `capability-provider/temporal` | Temporal | `capability-provider` | backing | workflow | durable-workflows | 0.1.0 | Durable execution that needs no cloud — a workflow is ordinary code whose progress is persisted, so a crash, a deploy or a week-long wait resumes where it stopped. |
-| `ci-system/github-actions` | GitHub Actions | `ci-system` | cicd |  | n/a | 0.2.0 | The delivery pipeline on GitHub Actions — workflow layout, toolchain installation through mise, the gate sequence, and vwf's tag-triggered release contract. |
+| `ci-system/github-actions` | GitHub Actions | `ci-system` | cicd |  | n/a | 0.2.1 | The delivery pipeline on GitHub Actions — workflow layout, toolchain installation through mise, the gate sequence, and vwf's tag-triggered release contract. |
 | `cloud-provider/cloudflare` | Cloudflare | `cloud-provider` |  |  |  | 0.1.0 | The provider-wide judgment behind Cloudflare's private plane — the account and role model, seat-shaped billing, and why an origin reachable without the proxy makes the whole arrangement decorative. |
 | `cloud-provider/gcp` | Google Cloud | `cloud-provider` |  |  |  | 0.1.0 | The provider-wide judgment every Google Cloud service inherits — how the meter runs, how a workload gets an identity without a key, which services have emulators, and what a private plane looks like here. |
 | `cloud-service/ai-gateway` | Cloudflare AI Gateway | `cloud-provider` | backing | ai-gateway |  | 0.1.0 | One URL in front of every model call the product makes — to Workers AI or to any third-party provider — adding caching, rate limiting, logging, retries and fallbacks, and holding the upstream provider keys so the Worker never does. |
@@ -72,7 +72,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `cloud-service/zero-trust-access` | Cloudflare Zero Trust Access | `cloud-provider` | deploy | access |  | 0.1.0 | An identity-aware proxy in front of a project that must not be publicly reachable — an operator plane invisible to the internet rather than merely authenticated, whichever cloud actually hosts it. |
 | `datastore/postgres` | PostgreSQL | `database` | backing | sql | relational-datastore | 0.1.0 | The relational datastore that needs no cloud — open engine, managed equivalent everywhere, no lock-in beyond SQL itself. |
 | `deploy-target/container-image` | OCI image · any container host | `deploy-target` | deploy |  |  | 0.2.0 | Build one standard OCI image, push it to any registry, run it on any host that runs containers — portability bought by declining the managed features one cloud would otherwise supply. |
-| `design-tool/claude-code` | Claude Code | `design-tool` | design |  |  | 0.3.0 | The terminal you already work in — the design system, the logo and a flow's screens are authored in session into a canvas directory the repo commits, and reviewed in a browser served from the repo on loopback. |
+| `design-tool/claude-code` | Claude Code | `design-tool` | design |  |  | 0.3.1 | The terminal you already work in — the design system, the logo and a flow's screens are authored in session into a canvas directory the repo commits, and reviewed in a browser served from the repo on loopback. |
 | `design-tool/claude-design` | Claude Design | `design-tool` | design |  |  | 0.2.0 | The canvas Anthropic hosts at claude.ai/design — designed pages live on a canvas project, reached over its own MCP server. |
 | `design-tool/lovable` | Lovable | `design-tool` | design |  |  | 0.1.0 | Prompt-to-app at lovable.dev — a real project surface, but what it returns is generated app code rather than a canvas, which makes the screens import lossier. |
 | `design-tool/stitch` | Google Stitch | `design-tool` | design |  |  | 0.1.0 | Prompt-to-UI at stitch.withgoogle.com — fast for screens, and honest that it stores no design system at all. |
@@ -110,7 +110,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `audit-store-postgres` | Audit store · PostgreSQL | `capability-provider` | backing | `capability-provider/audit-store-postgres@0.1.0` |
 | `bun` | bun · workspaces | `workspace` | repo | `package-manager/bun@generated` |
 | `claude-code-plugin` | Claude Code plugin | `language-bundle` | project | `language/markdown@0.1.0`, `language/bash@0.1.0` |
-| `claude-code` | Claude Code | `design-tool` | design | `design-tool/claude-code@0.3.0` |
+| `claude-code` | Claude Code | `design-tool` | design | `design-tool/claude-code@0.3.1` |
 | `claude-design` | Claude Design | `design-tool` | design | `design-tool/claude-design@0.2.0` |
 | `cloudflare-ai-gateway` | Cloudflare AI Gateway | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/ai-gateway@0.1.0` |
 | `cloudflare-ai-search` | Cloudflare AI Search | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/ai-search@0.1.0` |
@@ -136,13 +136,13 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `cloudflare-zero-trust` | Cloudflare Zero Trust Access | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/zero-trust-access@0.1.0` |
 | `container-generic` | OCI image · any container host | `deploy-target` | deploy | `deploy-target/container-image@0.2.0` |
 | `dart-flutter` | Dart · Flutter | `app-framework` | project | `app-framework/flutter@0.7.0`, `package-manager/pub@0.3.0`, `toolchain-gate/analysis-options@0.2.2` |
-| `doppler` | Doppler | `capability-provider` | backing | `capability-provider/doppler@1.2.0` |
-| `fnox` | fnox | `capability-provider` | backing | `capability-provider/fnox@1.2.0` |
+| `doppler` | Doppler | `capability-provider` | backing | `capability-provider/doppler@1.2.1` |
+| `fnox` | fnox | `capability-provider` | backing | `capability-provider/fnox@1.2.1` |
 | `gcp-cloud-run` | Google Cloud · Cloud Run · Artifact Registry | `cloud-provider` | deploy | `cloud-provider/gcp@0.1.0`, `cloud-service/cloud-run@0.2.0` |
 | `gcp-cloud-sql` | Google Cloud · Cloud SQL | `cloud-provider` | backing | `cloud-provider/gcp@0.1.0`, `cloud-service/cloud-sql@0.1.0`, `cloud-service/firebase-auth@0.1.0`, `cloud-service/firebase-storage@0.1.0` |
 | `gcp-firebase` | Google Cloud · Firebase | `cloud-provider` | backing | `cloud-provider/gcp@0.1.0`, `cloud-service/firestore@0.1.0`, `cloud-service/firebase-auth@0.1.0`, `cloud-service/firebase-storage@0.1.0`, `cloud-service/firebase-messaging@0.1.0` |
 | `gcp-gke` | Google Cloud · GKE Autopilot · Artifact Registry | `cloud-provider` | deploy | `cloud-provider/gcp@0.1.0`, `cloud-service/gke@0.1.0` |
-| `github-actions` | GitHub Actions | `ci-system` | cicd | `ci-system/github-actions@0.2.0` |
+| `github-actions` | GitHub Actions | `ci-system` | cicd | `ci-system/github-actions@0.2.1` |
 | `html` | HTML | `language-bundle` | project | `language/typescript@0.3.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/html@0.2.0` |
 | `lovable` | Lovable | `design-tool` | design | `design-tool/lovable@0.1.0` |
 | `notion` | Notion | `capability-provider` | backing | `capability-provider/notion@0.1.0` |
@@ -156,7 +156,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `stitch` | Google Stitch | `design-tool` | design | `design-tool/stitch@0.1.0` |
 | `stylex` | StyleX | `stylesheet` | stylesheet | `stylesheet/stylex@0.2.0` |
 | `swift-package` | Swift · package | `language-bundle` | project | `language/swift@0.2.0`, `package-manager/swiftpm@0.3.0`, `toolchain-gate/swift-format@0.1.3`, `toolchain-gate/swiftlint@0.2.1` |
-| `swift-swiftui` | Swift · SwiftUI | `app-framework` | project | `app-framework/swiftui@0.5.0`, `package-manager/swiftpm@0.3.0`, `toolchain-gate/swift-format@0.1.3`, `toolchain-gate/swiftlint@0.2.1` |
+| `swift-swiftui` | Swift · SwiftUI | `app-framework` | project | `app-framework/swiftui@0.5.1`, `package-manager/swiftpm@0.3.0`, `toolchain-gate/swift-format@0.1.3`, `toolchain-gate/swiftlint@0.2.1` |
 | `tailwindcss` | Tailwind CSS | `stylesheet` | stylesheet | `stylesheet/tailwindcss@0.2.0` |
 | `temporal` | Temporal | `capability-provider` | backing | `capability-provider/temporal@0.1.0` |
 | `typescript-cloudflare-agents` | TypeScript · Cloudflare Agents · Effect | `language-bundle` | project | `language/typescript@0.3.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/effect@0.1.0`, `framework/cloudflare-agents@0.1.0` |

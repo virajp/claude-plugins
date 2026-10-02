@@ -788,7 +788,7 @@ it.
 
 The commit gate's configuration is `/stackgen:tool-config`'s, and `init` fills
 no position in it. What stays `init`'s is **deriving the scope list**, which
-it passes to `/stackgen:tool-config all` as `scopes=`, per
+it passes to `/stackgen:tool-config all` as `--scopes`, per
 [new repo](new-repo.md) §2; the forge links are the skill's own, read from
 the repo's origin.
 
@@ -809,9 +809,9 @@ the repo's origin.
   somebody declared, so nothing `init` merely *inferred* reaches this
   argument — never a directory listing on its own, and never the repo's
   name, which is not a project at all and is no longer an id source
-  anywhere. Where question 2 confirmed no id for a repo, pass `scopes=` and
-  say in the plan that the scopes are waiting on `/vwf:architecture` and
-  `/vwf:setup`.
+  anywhere. Where question 2 confirmed no id for a repo, pass a bare
+  `--scopes` and say in the plan that the scopes are waiting on
+  `/vwf:architecture` and `/vwf:setup`.
 - **A changed list is the skill's row**, shown in the repo's section under
   **Tool-config rows**, never a row of `init`'s.
 
@@ -873,7 +873,7 @@ sections, and applied nowhere.
 returns them, each under its `r<n>` id — each drift row with its take
 theirs / keep mine / merge choice, each conflict row with its two answers —
 and settled on the same one consent, which becomes the real call's
-`answers=`.
+`--answers`.
 
 ```text
 Moves        <n>
@@ -952,7 +952,7 @@ repo of the set that resolved to mode `blank` or `source` takes the
   names the skill the owner — is what decides between them. A root tool
   config the user picked **delete** for is removed with plain `rm` here.
 - **`/stackgen:tool-config all`** runs next, with the arguments pass 8
-  computed and `answers=` carrying every row its survey preview returned —
+  computed and `--answers` carrying every row its survey preview returned —
   `ok` for each create, write, fold, move or delete row, the user's pick
   for each conflict or drift row — per [new repo](new-repo.md) §2, so the
   skill asks nothing. It lands the toolchain files and the gates, and folds
@@ -1116,12 +1116,6 @@ ops: update the pre-commit configuration
 They travel together because they are one change: the commit-message gate's
 configuration is what the gate config invokes. Splitting them leaves a commit
 whose hooks read a file the next commit is still going to change.
-
-**The lock step is §11(b)'s, before this repo's shaping commit is staged.** It
-writes `.config/mise/mise.lock` where it is absent, and fills a present one
-with missing tools without bumping a locked version. A lock that changed,
-whichever step changed it, is staged either way. The ignore fix before it,
-which keeps the lock tracked, is `/stackgen:tool-config all`'s, per §11(b).
 
 Then the rest, exactly as the new-repo pipeline's **git pass** describes it
 ([new repo](new-repo.md) §11), which already reads across the resolved repos:

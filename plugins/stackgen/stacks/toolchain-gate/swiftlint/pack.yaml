@@ -11,4 +11,10 @@ axis: repo
 harness: n/a
 # A fixed pin: under --strict a new SwiftLint release fails the build.
 tool-config:
-  - mise add tool aqua:realm/SwiftLint 0.65.1 to all environments
+  - {
+      tool: mise,
+      verb: add-tool,
+      name: aqua:realm/SwiftLint,
+      version: "0.65.1",
+      env: all,
+    }

@@ -1,7 +1,6 @@
 {
   "excludes": [
     "**/.claude/",
-    "**/.config/mise/locks/",
     "**/.git/",
     "**/build/",
     "**/dist/",

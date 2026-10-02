@@ -189,13 +189,14 @@ machine_env:
 
 `name` is the environment variable, `detect` a shell command whose stdout
 is the default, and `question` the prompt. Each `name` **must** be set by
-a `mise add env <KEY>="" to <scope>` line in the pack's `tool-config:`
-list — an empty value; `p:plugins:check` rule 11 refuses a name no such
-line sets. The materializer runs that call, so the key lands **unset**;
+a mise `add-env` entry in the pack's `tool-config:` list —
+`{tool: mise, verb: add-env, key: <KEY>, value: "", env: <scope>}`, an
+empty value; `p:plugins:check` rule 11 refuses a name no such entry sets.
+The materializer runs that entry, so the key lands **unset**;
 `/vwf:setup`'s materialize pass, the caller that lands the pack, runs each
 `detect`, offers the output preselected — the person may type another
-value — and writes the answer with
-`/stackgen:tool-config mise set env <KEY>=<value> for <pack>`. A `detect`
+value — and writes the answer with tool-config's script,
+`mise set-env --key <KEY> --value <value> --for <pack>`. A `detect`
 that fails or prints nothing offers no default and still asks. Setup runs
 a `detect` only while the committed template entry matches the hash its
 lockfile records — on drift it runs none and asks with no default — and
@@ -209,23 +210,37 @@ drift.
 
 A pack that needs a tool pin, an env value or an alias in the toolchain
 manager's files — or a formatter plugin, a hook, an exclude or an ignore in
-the gates' — lists the instructions under `tool-config:`, one per line,
-each starting with the tool, or with `all` for an exclude:
+the gates' — lists the instructions under `tool-config:`, one entry each.
+A **mise** entry is a structured mapping, one of three verb shapes; every
+other tool's entry is still a string line starting with the tool, or with
+`all` for an exclude, until those tools move to the same shape:
 
 ```yaml
 tool-config:
-  - mise add tool swiftlint 0.65.1 to all environments
-  - mise add env XCODE_VERSION="" to all environments
+  - {tool: mise, verb: add-tool, name: swiftlint, version: "0.65.1", env: all}
+  - {tool: mise, verb: add-env, key: XCODE_VERSION, value: "", env: all}
+  - {tool: mise, verb: add-alias, name: npx, command: "pnpm dlx"}
   - dprint add plugin typescript
   - all add exclude generated node_modules .turbo
   - pre-commit add linter-ignore .dart_tool
 ```
 
-The materializer runs each line as `/stackgen:tool-config <line> for
-<pack>` after copying the pack, under the `config/` consent line. The skill
+Every key a mise verb names is required, and every value is a string. A
+bare word such as `swiftlint` or `all` is one already; quote a version, a
+value or a command, which YAML would otherwise read as a number or a
+null. `env` is one of `all`, `dev`, `ci`, `test`; a `version` is an
+exact pin, a version prefix or `latest`, each written as an exact version
+— the script resolves a prefix or `latest` with `mise latest` when it
+writes. A Tera template value stays verbatim inside its quotes. The
+schema is the one tool-config's script exports, and `p:plugins:check`
+validates both shapes.
+
+The materializer runs each entry through `/stackgen:tool-config` for
+`<pack>` after copying the pack, under the `config/` consent line. The skill
 writes the lines between `# >>> <pack>` and `# <<< <pack>` markers. A pack
-dropped from a composition gets `/stackgen:tool-config <tool> remove <pack>`
-for each tool it called. The grammar is the skill's
+dropped from a composition loses its blocks once for each tool it called:
+for mise, the script's `mise remove --for <pack>`; for every other tool,
+`/stackgen:tool-config <tool> remove <pack>`. The grammar is the skill's
 (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`).
 
 ### `conditional:` — files that land only when an answer holds

@@ -49,6 +49,17 @@ applies — see [pinning & caching](pinning-caching.md). Install it via its
 official action, pinned, or by a pinned installation script. Either is fine;
 what is not fine is an unpinned install of the thing that pins everything else.
 
+## Install the pinned tools before any task
+
+Once mise is on the runner, install the tools the config pins — `mise install`
+in its own step, or the mise action's own install — **before** the first
+`mise run`. The repo's config sets `task.run_auto_install = false`, so a task
+installs nothing before its body runs, and a step that skips the install fails
+on a missing tool. There is no mise lock: every pin in the config is an exact
+version, so the install needs no `--locked` and resolves nothing. A tool is
+never added from the workflow with a bare `mise use`: a pin is written into
+the repo's config and reviewed there.
+
 ## The exception that is not one
 
 A runner image ships tools preinstalled. Using them is tempting and wrong for

@@ -35,7 +35,8 @@ of three:
   printed in the repo's section under **Tool-config rows**, per pass 1's
   toolchain migration, and the one consent covers them.
   For mise, `all` may return a conflict row for a base-block tool the repo
-  already pins, its two answers the repo's version or the base's `latest`.
+  already pins, its two answers the repo's version or the exact version the
+  base's `latest` resolves to.
 
 | Tool       | Root spellings                                                  | Landed path                                                   | Owner                  | Merge shape      |
 | ---------- | --------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------- | ---------------- |

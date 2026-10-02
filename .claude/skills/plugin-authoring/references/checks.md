@@ -31,7 +31,7 @@ invisible to every other check, and the committed file keeps advertising the old
 version. It is the surviving fragment of the retired `plugins:render-clean`,
 narrowed to the one file that still has the problem.
 
-## The fifteen rules
+## The seventeen rules
 
 Each is something no format and no type can state. The checker is deliberately
 much smaller than the one it replaced: whole families of assertion became
@@ -59,7 +59,10 @@ much smaller than the one it replaced: whole families of assertion became
    ships **and** every `stacks/*/*/skills/*/SKILL.md` and
    `stacks/*/*/agents/*.md` a pack does — the pack half is the larger one, and
    it is what actually lands in a user's repo, where the host reading it is not
-   this one. A pack's `rules/*.md` is left out: frontmatter is optional there.
+   this one. So is every repo-local skill a `stackgen:tool-config` asset tree
+   lands (`skills/tool-config/assets/<tool>/.claude/skills/*/SKILL.md`), walked
+   on its own since it sits under a dot segment the plugin reader's glob does
+   not enter. A pack's `rules/*.md` is left out: frontmatter is optional there.
 5. **Example-bundle links.** Relative links under
    `plugins/vwf/assets/examples/**` resolve. That bundle is the worked "what
    good looks like" for a blueprint, so a broken link there teaches the wrong
@@ -108,9 +111,11 @@ much smaller than the one it replaced: whole families of assertion became
     `stackgen:tool-config` asset tree (`skills/tool-config/assets/<tool>/`)
     exactly as over a pack's `config/`, since the skill lands it whole at the
     repo root — each tree's root also admitting that tool's own root files, per
-    `TOOL_CONFIG_ROOT_FILES` — and over each of `/vwf:init`'s asset trees
-    (`skills/init/assets/<name>/`) with no root allowlist, since init picks one
-    licence out of several there:
+    `TOOL_CONFIG_ROOT_FILES`, and a `.claude/` directory holding exactly the
+    repo-local skills `TOOL_CONFIG_LANDED_SKILLS` names for that tool (mise's
+    `.claude/skills/mise/SKILL.md`, and nothing else under `.claude/`) — and
+    over each of `/vwf:init`'s asset trees (`skills/init/assets/<name>/`) with
+    no root allowlist, since init picks one licence out of several there:
     - a **task file lands executable**. `config/.config/mise/tasks/**` is a
       *file-based* task library — mise runs each file directly — so one landing
       644 fails as an **unknown task** rather than as a permission error, which
@@ -164,20 +169,26 @@ much smaller than the one it replaced: whole families of assertion became
       non-empty list of repo-relative paths or globs with no `..`; and every
       `machine_env` entry is a map whose `name` is an env-var name and whose
       `detect` and `question` are non-empty strings — and whose name is set by a
-      `mise add env` entry of the pack's `tool-config:` list, since that line is
-      what `/vwf:setup` fills. Each caller trusts the shape: a probe that is not
-      a string is never run, a glob that climbs out matches something the repo
-      does not own, and a name no call sets is a question whose answer lands
-      nowhere — all silently. The finding names the pack and the entry;
-    - every **`tool-config:` entry** parses as one of the verbs a pack may ask
-      for — `mise add tool <name> <version> to <scope>`,
-      `mise add env <KEY>=<value> to <scope>` or
-      `mise add alias <name>=<command> [to dev]` — the scope all environments or
-      `dev`, `ci` or `test`; an env key an env-var name, an alias name a TOML
-      bare key; a value quoted as a TOML basic string or bare and carrying no
-      quote anywhere; and a template delimiter (`{{`, `{%`, `{#`) only inside an
-      `add env` value, since mise renders it — or one of the gate verbs,
-      `dprint add plugin <name>`, `all add exclude [generated] <paths>`,
+      valid mise `add-env` entry of the pack's `tool-config:` list, since that
+      entry is what `/vwf:setup` fills. Each caller trusts the shape: a probe
+      that is not a string is never run, a glob that climbs out matches
+      something the repo does not own, and a name no call sets is a question
+      whose answer lands nowhere — all silently. The finding names the pack and
+      the entry;
+    - every **`tool-config:` entry** is one of two shapes. A **mise** entry is a
+      mapping —
+      `{tool: mise, verb: add-tool, name: swiftlint, version: "0.59", env: dev}`
+      — held to the schema the tool-config script itself refuses entries by:
+      `validateEntry`, imported from the script's `scripts/lib/schema.mjs`, so
+      the checker and the script cannot disagree. It asks for the verb, the keys
+      that verb takes and their shapes (an env key an env-var name, an alias
+      name a TOML bare key, `env` one of `all`, `dev`, `ci`, `test`), and a
+      template delimiter only in an `add-env` value. A mise entry written as a
+      string — the retired word grammar — is a finding pointing at
+      `plugins/stackgen/assets/pack-format.md`. **Every other tool's** entry
+      stays a string until its tool moves onto the script, and parses as one of
+      the gate verbs, `dprint add plugin <name>`,
+      `all add exclude [generated] <paths>`,
       `pre-commit add linter-ignore <paths>`,
       `pre-commit add hook <repo> <id> <stage> [key=value …]`,
       `grype add ignore <id> [reason]`, `git add ignore <pattern…>`,
@@ -200,8 +211,9 @@ much smaller than the one it replaced: whole families of assertion became
     happened — nothing fails, because the old word is prose, not a reference. So
     the checker holds a **closed, case-sensitive list** of the retired spellings
     and scans every `.md`, `.yml` and `.yaml` file a plugin ships, line by line.
-    It and rule 13 are the two rules that report a **line number**, because they
-    are the two that fire on a sentence rather than on a file. Below.
+    It, rule 13 and rule 17 are the three rules that report a **line number**,
+    because they are the three that fire on a sentence rather than on a file.
+    Below.
 13. **A landed pack file cites nothing by plugin path.** A pack's landed tiers —
     `skills/`, `agents/`, `rules/`, `hooks/`, `config/`, its `conventions.md`
     and a bundle's body — are copied into a target repo **verbatim**, and that
@@ -293,6 +305,24 @@ much smaller than the one it replaced: whole families of assertion became
     is a fifth entry in `EXCLUSION_LISTS`, not a wider walk — and its two TOML
     readers are deliberately narrow: `scripts/` carries no TOML parser, and a
     bracketed list of string literals is all either file holds.
+16. **A skill's node script runs with nothing installed beside it.** Every
+    `skills/*/scripts/**/*.mjs` a plugin ships is read (`checkSkillScripts`). An
+    **entry** — a file directly under `scripts/`, what a skill tells the session
+    to run — starts with `#!/usr/bin/env node` and is executable; a module under
+    `scripts/lib/` is only imported and needs neither. **No file reaches for a
+    package**: a `require(` is a finding, and so is any import specifier other
+    than a `node:` built-in or a relative path. The plugin ships no
+    `node_modules`, so a dependency fails at the first run, on the user's
+    machine, never here. `stackgen:tool-config`'s script is the first.
+17. **No bare `mise use` anywhere a plugin ships.** It writes a pin nobody
+    reviewed into the top-level config, outside every block, so a tool is
+    entered into its `conf.d/tools*.toml` file first and then installed with
+    `mise install`. The walk is the whole plugin root, dot segments included,
+    since a landed asset tree sits under one, and it reports a **line number**.
+    Every `mise use` is a finding, whatever follows it, unless the line forbids
+    it: `never` or `bare` directly before it, or `is never` / `— never` directly
+    after. So the doctrine that states the ban passes, and a mixed line that
+    also runs it does not.
 
 ### The plugin-root trap (rules 6 and 13)
 

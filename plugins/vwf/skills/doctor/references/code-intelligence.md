@@ -11,10 +11,12 @@ is **mandatory**, so the first two checks below are **blocking** and the last
 three remain **degradations**. Check:
 
 - **The `graphify` CLI on `PATH`.** Missing → **blocking**, remedy
-  `mise use -g pipx:graphifyy@latest` (the double-`y` is the real package name,
-  not a typo). This is *missing*, not *unavailable* — there is a command to
-  suggest. graphify needs both python and uv, prerequisites of that remedy,
-  not separate findings.
+  `MISE_ENV=dev mise install` — `/stackgen:tool-config` pins
+  `pipx:graphifyy` (the double-`y` is the real package name, not a typo) in
+  the repo's `.config/mise/conf.d/tools.dev.toml`; a repo missing that pin
+  gets it there first. Never a bare `mise use`. This is *missing*, not
+  *unavailable* — there is a command to suggest. graphify needs both python
+  and uv, prerequisites of that remedy, not separate findings.
 - **A graph at each checkout root** (`graphify-out/graph.json`). Resolve it the
   way the asset does: current checkout first, then the **main checkout** via
   `git rev-parse --git-common-dir`. Absent in **both** → **blocking**, remedy

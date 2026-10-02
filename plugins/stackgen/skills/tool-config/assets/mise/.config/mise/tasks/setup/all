@@ -1,30 +1,26 @@
 #!/usr/bin/env bash
 
-#MISE description="Set up or upgrade everything this repo needs on your machine"
+#MISE description="Set up everything this repo needs on your machine"
 #MISE depends=["init"]
 
 #USAGE flag "--all" help="Also set up every member project"
-#USAGE flag "--upgrade" help="Dev only: bump the mise packages for every environment and update the formatter plugins"
 
-# One flag per member repo, named by its slug, goes below this comment:
+# A MARKED POSITION — MEMBER_FLAGS: one flag per member repo, named by its slug, below this comment:
 #   #USAGE flag "--<slug>" help="Set up the <slug> project"
 
 set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-# MISE_ENV decides which conf.d files load and which lock environments exist; guessing it is wrong.
+# MISE_ENV decides which conf.d files load; guessing it is wrong.
 if [ -z "${MISE_ENV:-}" ]; then
   print_error "MISE_ENV is unset. On a developer machine run: MISE_ENV=dev mise run setup:all"
   exit 1
 fi
 
-# Idempotent and non-destructive: `--upgrade` is the one rewriting flag, passed on only when given.
-UPGRADE_ARGS=()
-[[ "${usage_upgrade:-false}" == "true" ]] && UPGRADE_ARGS+=("--upgrade")
-
+# Idempotent and non-destructive: it installs the pins and moves none.
 print_header "Setting up the toolchain ..."
-mise run setup:mise ${UPGRADE_ARGS[@]+"${UPGRADE_ARGS[@]}"}
+mise run setup:mise
 
 print_header "Setting up secrets ..."
 mise run setup:secrets
@@ -41,14 +37,16 @@ mise run setup:precommit
 print_header "Setting up AI tooling ..."
 mise run setup:ai
 
-# Members only on request, each running its OWN task library through `mise run --cd`.
-
-if [[ "${usage_all:-false}" == "true" ]]; then
-  while read -r member; do
-    [ -n "$member" ] || continue
-    print_header "Setting up ${member} ..."
-    mise run --cd "${MISE_PROJECT_ROOT}/${member}" setup:all ${UPGRADE_ARGS[@]+"${UPGRADE_ARGS[@]}"}
-  done < <(members)
-fi
+# Members only on request — `--all`, or a member's own `--<slug>` — each running its OWN task library
+# from inside it, so its own miserc.toml is read. The slug is the member folder's name, slugified as the
+# flags above were written; usage exposes `--<slug>` as `usage_<slug>` with `-` read as `_`.
+while read -r member; do
+  [ -n "$member" ] || continue
+  slug="$(basename "$member" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')"
+  flag="usage_${slug//-/_}"
+  [[ "${usage_all:-false}" == "true" || "${!flag:-false}" == "true" ]] || continue
+  print_header "Setting up ${member} ..."
+  (cd "${MISE_PROJECT_ROOT}/${member}" && mise run setup:all </dev/null)
+done < <(members)
 
 print_header "Setup complete!"

@@ -1,0 +1,15 @@
+== /code-review high 2026-10-01-tool-config-script-mise (HEAD 262884c2, range ed7281fa..2635de33) ==
+
+1. tool-config.mjs:937 — refusal/fault paths call process.exit() right after process.stdout.write(); on macOS pipe writes are async, so a large JSON body (drift rows carrying whole task files) is truncated → invalid JSON. Fix: set process.exitCode and return.
+2. lib/record.mjs:138 — (probe-confirmed) the lock reader cannot read what its writer emits and throws or hangs on legal YAML: (1) a share key holding ':' and an escaped quote ("npm:foo" = "1.2.3") is written as "\"npm:foo\" = ...": [a, b] and readLock throws 'cannot read line'; (2) a prose-tool entry with a block-style list (blocks: then - git) throws in the Workspace constructor; (3) a quoted value containing ' #' loses its closing quote to parseScalar's comment strip and parseFlow's while (text[j] !== '"') (line 72) loops forever.
+3. lib/tools/mise.mjs:1505 — upgrade moves every pin, including the base's and packs' deliberate exact pins; the next all/check/apply-entries flags drift or silently restores the old pin (npm:@askviraj/linter 1.1.6; swiftlint pack 0.65.1 — satisfies(0.66.0,"0.65.1") fails and 0.65.1 is written back). The two commands undo each other.
+4. lib/schema.mjs:58 — validateEntry skips the template-delimiter and TOML-string checks the script's validateCall applies, and check.ts dropped its old Tera refusal for aliases: {verb: add-alias, command: "{{ y }}"}, add-tool version "{{v}}", or a value starting with an unbalanced '"' pass p:plugins:check but fail at materialization on the user's machine.
+5. stacks/capability-provider/doppler/config/.config/mise/tasks/setup/secrets:18 — still tells users to run the retired `mise set env KEY=<value> for doppler`; the script refuses it ('unexpected argument: env'); no unit owns the file.
+6. lib/tools/mise.mjs:1084 — drift for task files and config blocks is judged against the new shipped asset, never the record's hash; every file this release changed shows as user drift in repos shaped by the previous stackgen (take-theirs/keep-mine/merge rows for edits never made). record.hash === sha256(current) would show it untouched.
+7. lib/tools/mise.mjs:683 — a keep-existing answer to a pack's conflict row is recorded nowhere, so the same conflict returns on every setup run, contradicting "an unchanged call writes nothing".
+8. scripts/src/check.ts:2609 — the bare `mise use` gate only catches -g or a non-dash word, and any line containing "never" is exempt: `mise use --global node@22`, `-E dev node`, `--pin node`, `-p …` pass.
+9. lib/tools/mise.mjs:293 — frameFor walks the whole asset tree per op and configOps/taskOps call values(ctx, {}) per asset; ~40 ops per all repeat the walk and scans. Build once per call.
+
+== /security-review (subagent over the script, task and checker delta) ==
+
+No high-confidence vulnerabilities.

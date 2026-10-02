@@ -16,7 +16,7 @@ require_xcode() {
   selected=$(printf '%s\n' "${version_output}" | awk 'NR==1{print $2}')
   if [ -z "${XCODE_VERSION:-}" ]; then
     print_error "${task}: no Xcode is pinned — XCODE_VERSION is unset or empty."
-    print_yellow "Run /stackgen:tool-config mise set env XCODE_VERSION=${selected} for swiftui (or the version the repo builds with), then re-run."
+    print_yellow "Run /stackgen:tool-config mise set-env --key XCODE_VERSION --value ${selected} --for swiftui (or the version the repo builds with), then re-run."
     exit 1
   fi
   if [ "${selected}" != "${XCODE_VERSION}" ]; then
