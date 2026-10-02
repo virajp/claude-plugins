@@ -339,8 +339,8 @@ picked no stack is supposed to see it.
 **A landed file nobody edited takes the newer asset.** Where a file's content
 still hashes to its lock record, a later `all` with a newer stackgen
 replaces it with a plain `write` row; only a file edited by hand since it was
-landed raises a drift row. **Save `setup/ai`**: once it is in the repo it is
-the repo's, and a newer shipped task never replaces it
+landed raises a drift row. **Save `setup/ai`**: edited by hand, it is the
+repo's own and raises no row — the note and `hash: none` instead
 ([greenfield and brownfield](#setupai--the-repos-agent-plugins)).
 
 **Every file is formatted before it is recorded.** Once a call has written
@@ -570,17 +570,21 @@ not ask again.
 **`add-plugin`** asks for an agent plugin a pack needs. It is a pack's call:
 `--for` is required. `--plugin` is `<name>@<marketplace>` and `--source` the
 marketplace's source, an `<owner>/<repo>` or a path (`./`, `../`, `~/` or
-`/`-rooted); anything else in either — a space, a quote, a `$` or any other
-shell character — is refused, since both are written into a shell line. As a
+`/`-rooted); each name, owner and repo starts with a letter or digit, so
+none reaches `claude` as an option, and anything else in either — a space, a
+quote, a `$` or any other shell character — is refused, since both are
+written into a shell line. As a
 `tool-config:` entry it is
 `{ tool: mise, verb: add-plugin, plugin: <name>@<marketplace>, source: <owner/repo> }`.
 It writes one line, `ensure_plugin "<plugin>" "<source>"`, into the
 requester's block in `tasks/setup/ai`, the block's lines kept sorted; a line
 already naming the plugin is replaced in place. The task runs it as
 [the pack plugin step](#setupai--the-repos-agent-plugins). The call is
-refused when `setup/ai` is not there — land the mise base first. It writes
-into any `setup/ai` that carries a `mise` block, landed by tool-config or
-not. One with no `mise` block is written nothing: the call returns the
+refused when `setup/ai` is not there — land the mise base first — and when
+it is an older landing tool-config left untouched that has no `mise` block:
+run `tool-config mise` to land the current task first. It writes into any
+`setup/ai` that carries a `mise` block, landed by tool-config or not. The
+repo's own with no `mise` block is written nothing: the call returns the
 [brownfield note](#setupai--the-repos-agent-plugins), and you render the
 plugin into the file by hand.
 
@@ -1023,21 +1027,26 @@ anything at project scope.
    resolves this repo's project scope.
 3. **Check for the workflow plugin** — the `mise` block, `# >>> mise` to
    `# <<< mise`. Read `claude plugin list --json`. When
-   `vwf@virajp-plugins` is installed at **user or project** scope, do nothing
-   more for it — either scope serves the repo. When it is at neither, run
+   `vwf@virajp-plugins` is installed at **user** scope, or at **project**
+   scope with a `projectPath` that is this repo's root (`pwd -P`), do nothing
+   more for it — either serves the repo; a project-scope row for another repo
+   does not count. When it is at neither, run
    `pnpx @virajp.dev/claude-plugins@latest --all`: the installer registers the
    marketplace and installs vwf, and its dependency stackgen, at **user**
    scope. `@latest` is deliberate — a bare name can replay a cached old
-   version, an exact one would need a bump every release. Whether or not it
+   version, an exact one would need a bump every release. With no `pnpx` on
+   `PATH` it warns, naming that command as the remedy. Whether or not it
    installed, the task goes on.
 4. **The pack plugins** — one block per requester, after the `mise` block
    and before step 5, each line one plugin, checked the same way.
 5. **Update every marketplace** — `claude plugin marketplace update`, no name,
    so each registered one picks up new refs, whatever source it resolves
-   from.
+   from. A failed update warns and the task goes on, updating plugins from
+   what is cached.
 6. **Upgrade every installed plugin at its own scope** — for each row of
-   `claude plugin list --json`,
-   `claude plugin update --scope <its scope> <id>`, user scope included.
+   `claude plugin list --json` that counts in step 3 — user scope, or project
+   scope for this repo's root —
+   `claude plugin update --scope <its scope> <id>`.
 7. **Prune** — `claude plugin autoremove --scope project --yes`, which drops
    a project-scope dependency nothing needs any more.
 
@@ -1061,18 +1070,22 @@ ensure_plugin "<name>@<marketplace>" "<source>"
 
 `remove --for <requester>` drops the block. `ensure_plugin`, defined in the
 task above the `mise` block, treats each the same as vwf: installed at user
-or project scope, nothing; else, when the marketplace is not registered,
+scope, or at project scope for this repo's root, nothing; else, when the
+marketplace is not registered,
 `claude plugin marketplace add <source>`, then
 `claude plugin install --scope user <plugin>`.
 
 **Greenfield and brownfield.** A repo with no `setup/ai` gets the shipped
-asset, copied whole with the pack blocks written into it. One whose lines
-already match the shipped task — trailing spaces aside — is kept as it is.
-Any other `setup/ai`, recorded or not, is the user's: tool-config never
-overwrites it, never checks it for drift, never reads its record's hash, and
-never moves a landed one forward to a newer shipped task — only
+asset, copied whole with the pack blocks written into it. One with no
+record whose lines already match the shipped task — trailing spaces aside —
+is claimed. One tool-config landed and nobody edited — its record's hash
+still matching — takes the newer shipped task like any landed file, an
+older-era task included. Any other — recorded but edited by hand, or
+unrecorded and different from the shipped task — is the repo's own:
+tool-config never overwrites it and never checks it for drift, and its lock
+entry keeps `hash: none`, so it stays the repo's on every later run. Only
 [`add-plugin`](#4-the-verbs) writes into it, and only inside a pack's block
-when it carries a `mise` block. Every run returns one note instead:
+when it carries a `mise` block. Each run returns one note instead:
 
 ```text
 .config/mise/tasks/setup/ai is the repo's own — left as it stands; render any step it lacks into it per references/mise.md
