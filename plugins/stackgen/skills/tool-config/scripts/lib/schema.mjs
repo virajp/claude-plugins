@@ -18,7 +18,7 @@ export const PATTERNS = {
   requester: /^([a-z0-9][a-z0-9-]*|gitignore:[A-Za-z0-9._+-]+)$/,
   template: /\{\{|\{%|\{#/,
   slug: /^[a-z0-9][a-z0-9-]*$/,
-  pluginName: /^[a-z][a-z0-9-]*$/,
+  pluginName: /^[a-z][a-z0-9_-]*$/,
   hookId: /^[A-Za-z0-9_-]+$/,
   hookRepo: /^(local|https:\/\/\S+)$/,
   advisoryId: /^[A-Za-z0-9-]+$/,
@@ -93,7 +93,7 @@ export const FLAG_TYPES = {
   slug: matching("slug", "a slug (lowercase letters, digits, -)"),
   pluginName: matching(
     "pluginName",
-    "a dprint plugin name (lowercase letters, digits, -)",
+    "a dprint plugin name (lowercase letters, digits, -, _)",
   ),
   hookId: matching("hookId", "a hook id (letters, digits, -, _)"),
   hookRepo: matching("hookRepo", "local or an https:// URL"),

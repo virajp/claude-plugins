@@ -28,6 +28,12 @@
 //   {op: "drop-lines", path, match, requester?}
 //   {op: "delete", path}
 //   {op: "remove", requester, tools?}   tools: the files of these tools, not the caller's
+//   {op: "record", path, fields: {keys?, shares?, templates?}}
+//
+// `record` sets those lock-record maps for a path the call leaves in place —
+// each given map replaces the field whole, an empty one drops it — and a
+// change shows as a row like any write (kind `record`, or `share` when only
+// `shares` moved). A module never mutates ctx.record() itself.
 //
 // A path another source's lock entry names is left alone, unless the op
 // carries `supersedes: <that exact source>` (ctx.source(path)); a path the
@@ -107,6 +113,9 @@ import {
 } from "./lib/schema.mjs";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
+
+/** The lock-record maps a `record` op sets and fileRows diffs. */
+const RECORD_FIELDS = ["keys", "shares", "templates"];
 
 const DPRINT_CONFIG = ".config/dprint.json";
 const HOOK_CONFIG = ".config/pre-commit-config.yaml";
@@ -546,6 +555,27 @@ function applyOp(ws, op, tool, mode, rows, notes) {
       }
       return;
     }
+    case "record": {
+      let rec = ws.record(op.path);
+      if (!rec) {
+        rec = { path: op.path, source: `tool-config/${tool}@pending` };
+        ws.lock.entries.set(op.path, rec);
+      }
+      for (const field of RECORD_FIELDS) {
+        const map = op.fields?.[field];
+        if (map === undefined) {
+          continue;
+        }
+        if (map && Object.keys(map).length) {
+          rec[field] = structuredClone(map);
+        }
+        else {
+          delete rec[field];
+        }
+      }
+      ws.touch(op.path, tool);
+      return;
+    }
     case "remove": {
       const owners = op.tools ?? [tool];
       for (const rec of [...ws.lock.entries.values()]) {
@@ -608,11 +638,14 @@ function fileRows(ws) {
   for (const path of ws.order) {
     const before = ws.disk(path);
     const after = ws.read(path);
-    const shares = r => JSON.stringify(r?.shares ?? {});
-    const sharesChanged = shares(ws.base.get(path)) !== shares(ws.record(path));
+    const field = (r, f) => JSON.stringify(r?.[f] ?? {});
+    const moved = RECORD_FIELDS.filter(f =>
+      field(ws.base.get(path), f) !== field(ws.record(path), f)
+    );
+    const sharesChanged = moved.includes("shares");
     const modeChanged = ws.modes.has(path)
       && ws.base.get(path)?.mode !== ws.modes.get(path);
-    if (before === after && !sharesChanged && !modeChanged) {
+    if (before === after && !moved.length && !modeChanged) {
       continue;
     }
     const short = t => (t === null ? null : sha256(t).slice(0, 12));
@@ -624,7 +657,11 @@ function fileRows(ws) {
       row.kind = "delete";
     }
     else {
-      row.kind = before === after && sharesChanged ? "share" : "write";
+      row.kind = before !== after || modeChanged
+        ? "write"
+        : moved.length === 1 && sharesChanged
+        ? "share"
+        : "record";
     }
     if (before !== null && after !== null && before !== after) {
       Object.assign(
@@ -651,8 +688,8 @@ function fileRows(ws) {
         // an unreadable file shows its lines only
       }
     }
-    if (sharesChanged) {
-      row.shares = ws.record(path)?.shares ?? {};
+    for (const f of moved) {
+      row[f] = ws.record(path)?.[f] ?? {};
     }
     rows.push(row);
   }

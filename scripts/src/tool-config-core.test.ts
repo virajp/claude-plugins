@@ -63,6 +63,7 @@ export const tools = {
       takeover: { flags: { path: { required: true } } },
       put: { flags: { path: { required: true } }, requester: "required" },
       big: { flags: {} },
+      mark: { flags: { path: { required: true }, key: {} }, requester: "required" },
     },
     all() {
       return {
@@ -97,6 +98,10 @@ export const tools = {
       }
       if (call.verb === "big") {
         return { ops: [], rows: [{ kind: "needs-edit", file: "big", reason: "x".repeat(3000000), target: "-" }] };
+      }
+      if (call.verb === "mark") {
+        const keys = call.flags.key ? { [call.flags.key]: [call.for] } : {};
+        return { ops: [{ op: "record", path: call.flags.path, fields: { keys } }] };
       }
       if (call.verb === "drop") return { ops: [{ op: "delete", path: call.flags.path }] };
       if (call.verb === "takeover") {
@@ -278,7 +283,7 @@ describe("argument refusals", () => {
     const { status, out } = run(["demo", "frobnicate"]);
     expect(status).toBe(2);
     expect(out.error).toMatch(
-      /valid: add, entry, set-env, resolve, drop, takeover, put, big, remove, all/,
+      /valid: add, entry, set-env, resolve, drop, takeover, put, big, mark, remove, all/,
     );
   });
 
@@ -1065,6 +1070,47 @@ describe("the mise steps a write runs", () => {
   });
 });
 
+describe("the record op", () => {
+  const mark = (args: string[]) => [
+    "demo",
+    "mark",
+    "--path",
+    "demo.toml",
+    ...args,
+  ];
+
+  it("sets a record field as a row of its own, and a second run shows none", () => {
+    apply(["demo", "add", "--line", "a = 1", "--for", "p"]);
+    const text = read("demo.toml");
+    const preview = run([
+      "preview",
+      ...mark(["--key", "excludes[x]", "--for", "p"]),
+    ]);
+    expect(preview.out.rows?.map(r => [r.kind, r["path"], r["keys"]])).toEqual([
+      ["record", "demo.toml", { "excludes[x]": ["p"] }],
+    ]);
+    expect(apply(mark(["--key", "excludes[x]", "--for", "p"])).status).toBe(0);
+    expect(read("demo.toml")).toBe(text);
+    expect(lock()).toContain("keys:");
+    expect(lock()).toContain("excludes[x]");
+    expect(
+      run(["preview", ...mark(["--key", "excludes[x]", "--for", "p"])])
+        .out
+        .rows,
+    )
+      .toEqual([]);
+  });
+
+  it("drops a field given empty, as a row", () => {
+    apply(["demo", "add", "--line", "a = 1", "--for", "p"]);
+    apply(mark(["--key", "k", "--for", "p"]));
+    const preview = run(["preview", ...mark(["--for", "p"])]);
+    expect(preview.out.rows?.map(r => r.kind)).toEqual(["record"]);
+    apply(mark(["--for", "p"]));
+    expect(lock()).not.toContain("keys:");
+  });
+});
+
 describe("the cross-tool verbs and the G1 path rule", () => {
   const { classifyPath, validateEntry } = entrySchema as {
     classifyPath: (p: string) => { kind: string; glob: boolean; name: string; };
@@ -1190,6 +1236,7 @@ describe("the cross-tool verbs and the G1 path rule", () => {
 
   it.each<Record<string, unknown>>([
     { tool: "dprint", verb: "add-plugin", name: "malva" },
+    { tool: "dprint", verb: "add-plugin", name: "markup_fmt" },
     {
       tool: "all",
       verb: "add-exclude",
