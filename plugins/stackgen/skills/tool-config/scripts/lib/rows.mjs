@@ -97,11 +97,15 @@ export function parseAnswers(text) {
   return out;
 }
 
-/** A refused call: exit 2, the message, and the rows shown again when there are some. */
+/**
+ * A refused call: exit 2, the message, and the rows shown again when there
+ * are some; `extra` (`{written, deleted}` when files stayed) joins the body.
+ */
 export class RefusalError extends Error {
-  constructor(message, rows) {
+  constructor(message, rows, extra) {
     super(message);
     this.rows = rows;
+    this.extra = extra;
   }
 }
 

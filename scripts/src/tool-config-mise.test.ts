@@ -58,7 +58,12 @@ const golden = join(
 );
 
 const FAKE_MISE = `#!/bin/sh
-# answers \`mise latest <tool>\` from $FAKE_MISE_VERSIONS (tool=version lines); 1.0.0 when unlisted, exit 1 on FAIL
+# answers \`mise latest <tool>\` from $FAKE_MISE_VERSIONS (tool=version lines); 1.0.0 when unlisted, exit 1 on FAIL;
+# the steps a write runs — trust --show, which, run setup:all, x -- dprint fmt, x -- pre-commit validate-config — pass
+case "$1 $2" in
+  "trust --show" | "run setup:all" | "x --") exit 0 ;;
+esac
+[ "$1" = which ] && { echo "/fake/bin/$2"; exit 0; }
 [ "$1" = latest ] || exit 1
 v=$(awk -F= -v t="$2" '$1 == t { print $2; exit }' "$FAKE_MISE_VERSIONS" 2>/dev/null)
 [ "$v" = FAIL ] && { echo "no such tool: $2" >&2; exit 1; }

@@ -1,20 +1,23 @@
-// The flag grammar. Four shapes, each of which `preview` may open:
+// The flag grammar. Five shapes, each of which `preview` may open:
 //
 //   [preview] <tool> <verb> [--<key> <value>]… [--for <requester>] [--answers <id>:<answer>,…]
 //   [preview] <tool> [--<all key> <value>]…   [--answers …]   one tool's base, as `all` lands it
 //   [preview] all [--<all key> <value>]…      [--answers …]
+//   [preview] all <verb> [--<key> <value>]… [--for <requester>] [--answers …]   a cross-tool verb
 //   [preview] apply-entries --pack <slug> --file <pack.yaml> [--answers …]
 //   check [<tool>]
 //
 // plus the globals --repo-root and --plugin-root, anywhere. `--key=value` and
 // `--key value` both read; a flag followed by another flag, or by nothing, is
-// empty. Lists are comma-separated, no spaces.
+// empty — save a `bool` flag, which reads `true`. Lists are comma-separated,
+// no spaces. The gate tools' and `all`'s verb flags are schema.mjs's GATE_VERBS.
 
 import {
   parseAnswers,
   RefusalError,
 } from "./rows.mjs";
 import {
+  FLAG_TYPES,
   isBasicString,
   isControl,
   PATTERNS,
@@ -96,7 +99,13 @@ export function parseArgs(argv) {
     }
   }
 
-  if (head === "all" || head === "apply-entries") {
+  if (head === "all" && positional.length) {
+    // `all <verb>`: the cross-tool verbs, the tool module registered as `all`
+    call.command = "tool";
+    call.tool = "all";
+    call.verb = positional.shift();
+  }
+  else if (head === "all" || head === "apply-entries") {
     call.command = head;
   }
   else if (head === "check") {
@@ -226,13 +235,16 @@ const TYPES = {
       return e.message;
     }
   },
+  ...FLAG_TYPES,
 };
 
 /**
  * Hold a call's flags to its verb's spec, refusing the whole call on the first
- * fault: `{flags: {<name>: {type, required, values, template}}, requester}`.
- * `template: "own"` allows `{{`, `{%`, `{#` only on a call carrying --for —
- * a pack's own shipped line; every other value refuses one.
+ * fault: `{flags: {<name>: {type, required, values, template, default}},
+ * requester, check?}`. `template: "own"` allows `{{`, `{%`, `{#` only on a
+ * call carrying --for — a pack's own shipped line; every other value refuses
+ * one. A `bool` flag given bare reads `true`; `check(flags)` returns the
+ * cross-flag faults, the first refusing the call.
  */
 export function validateCall(call, spec, tool) {
   const flags = spec.flags ?? {};
@@ -245,6 +257,9 @@ export function validateCall(call, spec, tool) {
     }
   }
   for (const [key, f] of Object.entries(flags)) {
+    if (f.type === "bool" && call.flags[key] === "") {
+      call.flags[key] = "true";
+    }
     const value = call.flags[key];
     if (value === undefined || value === "") {
       if (f.required) {
@@ -269,6 +284,10 @@ export function validateCall(call, spec, tool) {
         `--${key} holds a template ({{, {% or {#) — legal only in a pack's own line (--for); mise renders every env value on every load`,
       );
     }
+  }
+  const [fault] = spec.check?.(call.flags) ?? [];
+  if (fault) {
+    throw new RefusalError(`${tool} ${call.verb}: ${fault}`);
   }
   if (spec.requester === "required" && !call.for) {
     throw new RefusalError(`${tool} ${call.verb} needs --for <requester>`);
