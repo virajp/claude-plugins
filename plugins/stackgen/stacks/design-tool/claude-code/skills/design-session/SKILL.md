@@ -66,7 +66,7 @@ Confirm the `taste-skill` plugin is installed — its skills appear as
 exactly:
 
 > `taste-skill` is not installed. Run `mise run setup:ai`, which installs
-> `taste-skill@taste-skill` at user scope.
+> `taste-skill@taste-skill` at user scope, then restart the session.
 
 The `review` mode needs no plugin for the server; it needs it for applying
 comments, which is authoring. Check it in every mode.
