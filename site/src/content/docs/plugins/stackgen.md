@@ -394,9 +394,10 @@ per pinned screen code with a stitched `index--<platform>.html`, and
 `comments/<flow>--<platform>.yaml` — which the three fixed import skills read as
 files. The pack ships a fourth, **user-invocable** skill beside them,
 `design-session`, which runs those sessions; vwf never calls it. It declares
-`taste-skill@taste-skill` as the plugin a product pinning it must add at init's
-fifth question, so the repo's `setup:ai` installs it at project scope, and every
-skill that needs it halts with one plain sentence when it is absent.
+`taste-skill@taste-skill` as its own plugin through an `add-plugin` entry, so
+the repo's `setup:ai` installs it at user scope when it is installed at no scope
+that serves the repo, and every skill that needs it halts with one plain
+sentence when it is absent.
 
 The review loop is four lines. `/design-session screens <flow>` authors the
 pages from the brief `/vwf:screens prompt <flow>` wrote.
@@ -838,19 +839,20 @@ references, by the word grammar below, until they move onto the script.
   other seven, `git`, `graphify` and `renovate` after the five gates, and
   `renovate` only on `--update-bot renovate`. Its keys are flags — `--repo`,
   `--members`, `--linkage`, `--merge-model-develop`, `--merge-model-main`,
-  `--runtimes`, `--plugin-sources`, `--plugins`, `--scopes` and the three
-  conditional answers `--forge`, `--secrets` and `--update-bot`. A list is
-  comma-separated, no spaces. A key left out keeps the repo's current value. It
-  is idempotent — a second run over an unchanged repo writes nothing and shows
-  no row — and it is also the migration: a repo on an older layout is folded
-  onto the current one, each fold, move and delete one row.
-  [`/vwf:init`](./vwf.md#vwfinit) calls it with its answers. It also lands a
-  **repo-local mise skill**, `.claude/skills/mise/SKILL.md`, which tells any
-  session how to run the repo's tasks and where each config file lives, and
-  whose task table the script regenerates on every `all` and every pack change.
+  `--runtimes`, `--scopes` and the three conditional answers `--forge`,
+  `--secrets` and `--update-bot`. A list is comma-separated, no spaces. A key
+  left out keeps the repo's current value. It is idempotent — a second run over
+  an unchanged repo writes nothing and shows no row — and it is also the
+  migration: a repo on an older layout is folded onto the current one, each
+  fold, move and delete one row. [`/vwf:init`](./vwf.md#vwfinit) calls it with
+  its answers. It also lands a **repo-local mise skill**,
+  `.claude/skills/mise/SKILL.md`, which tells any session how to run the repo's
+  tasks and where each config file lives, and whose task table the script
+  regenerates on every `all` and every pack change.
 - **`mise <verb>`** runs one of mise's verbs: `add-tool --name --version --env`,
   `add-env --key --value --env` (`--env` is `all`, `dev`, `ci` or `test`),
-  `set-env --key --value`, `add-alias --name --command`, `upgrade` and
+  `set-env --key --value`, `add-alias --name --command`,
+  `add-plugin --plugin <name>@<marketplace> --source <source>`, `upgrade` and
   `remove --for <requester>`. Anything else is refused, naming the verbs.
 - **The prose tools' verbs** are the gates' below; git's
   `add ignore <pattern…>`, `add ignore template=<Name>` and
@@ -1158,45 +1160,38 @@ inside `code/*` and `setup/*` change with the tech stack.
   in a global or system git-config is named by scope and refused even under
   `--force`. A plain install keeps a hand-written hook script as `.legacy` and
   chains it, and a repo pre-commit already owns is never refused. `setup:ai`
-  installs and reconciles the repo's agent plugins; it is bootstrap and re-sync
-  like every other step here, which is why it is a `setup:*` task and not a
-  gate. It drives **Claude's own `claude plugin` commands and nothing else** —
-  no package runner, no wrapper CLI — and it checks before it writes: a
-  marketplace already registered under a name is *updated*, whatever source it
-  was registered from, and only one that is absent is *added*. That one rule is
-  what makes the task behave identically on a machine pointed at the published
-  marketplace and on one pointed at a local checkout of it, which a wrapper with
-  a hardcoded source cannot do. Scope is **project** by default, because the
-  plugin set is the repo's: it installs or updates each required plugin at that
-  scope, prunes with `autoremove` at that scope alone, and never installs,
-  updates or removes a user-scope plugin — `--user` is the flag for the rare
-  repo that wants the other scope, and it flips every one of those. Two **marked
-  positions** — further marketplaces, and the plugins to install from them —
-  carry whatever the repo needs beyond the workflow plugin, which the task
-  installs unconditionally with its dependencies; `/vwf:init` fills them from
-  one confirmed answer, seeded by the task's own **`--inventory`** mode, which
-  prints what this machine already has — one line per registered marketplace
-  **other than the toolkit's own**, then one line per installed plugin with its
-  marketplace and its scope — and exits, printing nothing else on stdout. It is
-  a seed for the question, not a paste buffer: a marketplace row is already in
-  the shape its position takes, while a plugin row carries a trailing scope
-  field that position does not. After the plugins it wires **graphify** for the
-  agent where the CLI is on PATH (and says what to install where it is not,
-  since vwf treats a missing graph as blocking) — never graphify's own git hook,
-  which pins a Python path and breaks on upgrade — and prints the statusline
-  package's `brew install` line as a hint when `claude-status` is absent —
-  hinted, never installed, because that is a per-machine package and not the
-  repo's to place. The official marketplace is never added: it ships with Claude
-  Code. `--all` sets up every **member**, and a member's own `--<slug>` sets up
-  that one alone — each run as `setup:all` from inside the member, in a
-  subshell, so the member's own mise config is the one read. The members are
-  what `_scripts/helpers`' `members()` answers for under either multi-repo
-  linkage — the repo's submodules where `.gitmodules` exists, else the paths
-  listed in the `MEMBERS` env value — and one `--<slug>` flag per **member
-  repo** is generated from that same list, named for the member and never for a
-  project id: a member holding three projects is still one flag.
-  `code:worktrees` reads the same helper, so the two never disagree about what a
-  member is. Alias it as `setup`.
+  keeps the machine's agent plugins current; it is bootstrap and re-sync like
+  every other step here, which is why it is a `setup:*` task and not a gate. It
+  first checks that the workflow plugin, `vwf@virajp-plugins`, is installed at
+  **user** scope, or at **project** or **local** scope whose `projectPath`
+  resolves to this repo's root — any of those serves the repo. Only when it is
+  at none of them does it run the installer,
+  `pnpx @virajp.dev/claude-plugins@latest --all`, which registers the
+  marketplace and installs vwf and its dependency at **user** scope. Whether or
+  not it installed anything, it then runs `claude plugin marketplace update` for
+  every registered marketplace, `claude plugin update --scope <its scope> <id>`
+  for every plugin installed at a scope that serves the repo, and
+  `claude plugin autoremove --scope project --yes`. It **never installs at
+  project scope**, takes no flag, and never aborts on a `claude` or `pnpx`
+  failure — each warns and the task goes on. A pack that needs a plugin of its
+  own asks for it with an `add-plugin` entry, which tool-config writes into the
+  task inside that pack's block; the task checks it the same way and installs it
+  at user scope only when absent. The task installs no plugin of your own
+  choosing, wires no graph tool for the agent and hints at no statusline
+  package. In a repo with no `setup/ai` the shipped task is copied whole; one
+  tool-config landed and nobody edited takes the newer shipped task; any other
+  is **yours** — never overwritten and never checked for drift — and the agent
+  renders whatever step it lacks into it, keeping every line you added. The
+  official marketplace is never added: it ships with Claude Code. `--all` sets
+  up every **member**, and a member's own `--<slug>` sets up that one alone —
+  each run as `setup:all` from inside the member, in a subshell, so the member's
+  own mise config is the one read. The members are what `_scripts/helpers`'
+  `members()` answers for under either multi-repo linkage — the repo's
+  submodules where `.gitmodules` exists, else the paths listed in the `MEMBERS`
+  env value — and one `--<slug>` flag per **member repo** is generated from that
+  same list, named for the member and never for a project id: a member holding
+  three projects is still one flag. `code:worktrees` reads the same helper, so
+  the two never disagree about what a member is. Alias it as `setup`.
 - **The retired editor task.** `setup/vscode`, which kept a per-repo editor
   profile in step with the recommendations `/vwf:init` composed, is gone with
   them. Where an earlier version landed it, the mise migration deletes it with

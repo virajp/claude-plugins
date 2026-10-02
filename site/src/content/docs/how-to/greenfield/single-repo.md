@@ -73,7 +73,7 @@ chose. Its stack read finds nothing on a blank repo, so no `.gitignore` language
 section lands and the toolchain config's runtime positions stay empty until a
 stack is pinned. (Had the repo already carried a `package.json` or a `src/`
 directory, the mode would be **`source`**: the same landing, with every file
-already there offered as replace-or-keep rather than overwritten.) It asks eight
+already there offered as replace-or-keep rather than overwritten.) It asks seven
 questions in one round each — the repo name, proposed from this repo's own
 folder name and the one thing that fills `REPO_NAME`, and a one-line brief (both
 proposed or skippable); the ids it will write task groups and commit scopes for,
@@ -83,25 +83,22 @@ being, on a first run, one that carries its own language manifest), Relay's one
 project is proposed from its **platform token**, which you pick from the closed
 list (`service`, `worker`, `webapp`, `site`, `cli`, `iac`, …) or type as *other
 — type any id you want*, the option that says outright you are never stuck with
-the list; which provider holds Relay's secrets, which **agent plugins this repo
-requires** (a multi-select seeded by what is already registered on your machine,
-with *none* as the ordinary answer — `init` offers those rows minus the workflow
-plugin's own and its dependency's, since `setup:ai` installs those two either
-way), and whether Relay is **public or private** — proposed from what the forge
-says where the repo already has an `origin`, `private` otherwise — with the
-seventh round shaped by that answer: the licence, asked only for a public repo,
-and a security contact, an advisories-page URL for a public repo or a free email
-or internal URL for a private one; then which **update bot** watches Relay —
-`renovate`, `dependabot` or `none`, seeded `renovate` on a repo carrying no
-policy — then shows **one plan** and applies it on one yes. That last answer,
-with the forge read from Relay's `origin` and the provider you picked, decides
-the packs' conditional files: the Renovate policy lands because the bot is
-Renovate, and the GitHub issue forms where Relay's `origin` is on GitHub — a
-repo with no remote yet skips them and lands them on the reshape after you add
-one — and a path a condition skips is listed in the plan under **Skipped**,
-never silently missing. Relay is one repo, so every one of those questions is a
-single row; on a product with member repos the same eight rounds simply carry a
-row per repo where the answer can differ.
+the list; which provider holds Relay's secrets, and whether Relay is **public or
+private** — proposed from what the forge says where the repo already has an
+`origin`, `private` otherwise — with the sixth round shaped by that answer: the
+licence, asked only for a public repo, and a security contact, an
+advisories-page URL for a public repo or a free email or internal URL for a
+private one; then which **update bot** watches Relay — `renovate`, `dependabot`
+or `none`, seeded `renovate` on a repo carrying no policy — then shows **one
+plan** and applies it on one yes. That last answer, with the forge read from
+Relay's `origin` and the provider you picked, decides the packs' conditional
+files: the Renovate policy lands because the bot is Renovate, and the GitHub
+issue forms where Relay's `origin` is on GitHub — a repo with no remote yet
+skips them and lands them on the reshape after you add one — and a path a
+condition skips is listed in the plan under **Skipped**, never silently missing.
+Relay is one repo, so every one of those questions is a single row; on a product
+with member repos the same seven rounds simply carry a row per repo where the
+answer can differ.
 
 It closes with a git pass: it asks how work lands in this repo, **one row per
 branch** — `direct`, which merges locally and pushes, or `pr`, which pushes the

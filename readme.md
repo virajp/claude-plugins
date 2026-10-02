@@ -127,11 +127,13 @@ its materialize pass, `/stackgen:stackgen-sync` after a re-sync, and
 none runs it unasked.
 
 Once a repo **is** shaped, its own task library takes the plugin side over:
-`mise run setup:ai` registers or refreshes the marketplace and installs or
-updates the plugins that repo declares at **project** scope, driving Claude's
-own commands and no package runner. The command above is the one-shot a person
-runs on a machine; that is what a checkout re-runs, and what keeps every
-collaborator on the same plugin set.
+`mise run setup:ai` checks that `vwf` is installed — at user scope, or at
+project or local scope for this repo — and only when it is not runs the command
+above to install it at **user** scope. Whether or not it installed anything, it
+then updates every registered marketplace and upgrades every plugin installed at
+a scope that serves the repo, at that scope. It never installs at project scope.
+The command above is the one-shot a person runs on a machine; that is what a
+checkout re-runs.
 
 Scope is yours to choose: `--user` / `--project` on the wrapper, or
 `--scope project` on Claude's commands, keep a plugin to one repo instead of
