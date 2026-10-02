@@ -17,15 +17,28 @@ fi
 cd "${MISE_PROJECT_ROOT}"
 ROOT="$(pwd -P)"
 
-# The rows that hold here: user scope, or project scope for this repo — never another repo's.
+# The rows that hold here, as `<id>|<scope>`: user scope, or project or local scope
+# whose projectPath resolves to this repo — never another repo's.
 plugins_here() {
-  claude plugin list --json |
-    jq -c --arg root "${ROOT}" '[.[] | select(.scope == "user" or (.scope == "project" and .projectPath == $root))]'
+  local rows id scope path
+  rows="$(claude plugin list --json |
+    jq -r '.[] | select(.scope == "user" or .scope == "project" or .scope == "local") | "\(.id)|\(.scope)|\(.projectPath // "")"')"
+  while IFS="|" read -r id scope path; do
+    [ -n "${id}" ] || continue
+    if [ "${scope}" != "user" ]; then
+      [ -n "${path}" ] || continue
+      path="$(cd "${path}" 2>/dev/null && pwd -P)" || continue
+      [ "${path}" = "${ROOT}" ] || continue
+    fi
+    echo "${id}|${scope}"
+  done <<<"${rows}"
 }
 
-# Installed at user or project scope: either is enough.
+# Installed here at any of those scopes: any is enough.
 plugin_installed() { # <name@marketplace>
-  plugins_here | jq -e --arg id "$1" 'any(.[]; .id == $id)' >/dev/null
+  local here
+  here="$(plugins_here | cut -d"|" -f1)"
+  grep -Fqx "$1" <<<"${here}"
 }
 
 marketplace_registered() { # <name>
@@ -53,7 +66,9 @@ if plugin_installed "vwf@virajp-plugins"; then
   print_yellow "- vwf@virajp-plugins: installed"
 elif command -v pnpx >/dev/null 2>&1; then
   print_yellow "- vwf@virajp-plugins: absent — installing it at user scope"
-  pnpx @virajp.dev/claude-plugins@latest --all
+  if ! pnpx @virajp.dev/claude-plugins@latest --all; then
+    print_warn "- the installer failed — continuing; re-run: pnpx @virajp.dev/claude-plugins@latest --all"
+  fi
 else
   print_warn "- vwf@virajp-plugins: absent, and pnpx is not on PATH — run: pnpx @virajp.dev/claude-plugins@latest --all"
 fi
@@ -66,15 +81,20 @@ if ! claude plugin marketplace update >/dev/null; then
 fi
 
 print_subheader "Updating plugins ..."
-rows="$(plugins_here | jq -r '.[] | "\(.id)|\(.scope)"')"
+rows="$(plugins_here)"
 while IFS='|' read -r plugin scope; do
   [ -n "${plugin}" ] || continue
   print_wait "- ${plugin} (${scope}) ... "
-  claude plugin update --scope "${scope}" "${plugin}" </dev/null >/dev/null
-  print_ok
+  if claude plugin update --scope "${scope}" "${plugin}" </dev/null >/dev/null; then
+    print_ok
+  else
+    print_warn "failed — continuing"
+  fi
 done <<<"${rows}"
 
 print_subheader "Pruning plugins nothing references ..."
-claude plugin autoremove --scope project --yes >/dev/null
+if ! claude plugin autoremove --scope project --yes >/dev/null; then
+  print_warn "- pruning failed — continuing"
+fi
 
 print_success "AI tooling reconciled."

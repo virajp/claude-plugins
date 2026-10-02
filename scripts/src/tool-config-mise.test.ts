@@ -1126,7 +1126,11 @@ describe("setup/ai", () => {
     expect(shell.status).toBe(2);
     expect(shell.out.error).toContain("--source");
     for (
-      const [plugin, source] of [["-x@y", "o/r"], ["a@b", "-o/r"]] as const
+      const [plugin, source] of [
+        ["-x@y", "o/r"],
+        ["a@b", "-o/r"],
+        ["a@b", "~/plugins"],
+      ] as const
     ) {
       const dash = run(addPlugin(plugin, source));
       expect(dash.status, `${plugin} ${source}`).toBe(2);
