@@ -15,4 +15,4 @@ axis: stylesheet
 harness: n/a
 # The lines this pack asks /stackgen:tool-config for.
 tool-config:
-  - dprint add plugin malva
+  - { tool: dprint, verb: add-plugin, name: malva }

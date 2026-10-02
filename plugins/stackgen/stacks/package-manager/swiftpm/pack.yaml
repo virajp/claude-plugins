@@ -18,7 +18,12 @@ axis: repo
 harness: n/a
 # The lines this pack asks /stackgen:tool-config for.
 tool-config:
-  - all add exclude generated .build .swiftpm
-  - pre-commit add linter-ignore .build .swiftpm
+  - {
+      tool: all,
+      verb: add-exclude,
+      paths: [ .build, .swiftpm ],
+      generated: true,
+    }
+  - { tool: pre-commit, verb: add-linter-ignore, paths: [ .build, .swiftpm ] }
   - git add ignore template=Swift
   - git add attribute Package.resolved linguist-generated

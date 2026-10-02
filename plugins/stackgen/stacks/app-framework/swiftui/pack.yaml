@@ -96,7 +96,16 @@ tool-config:
   - { tool: mise, verb: add-env, key: SIMULATOR_DEVICE, value: "", env: all }
   - { tool: mise, verb: add-env, key: SIMULATOR_OS, value: "", env: all }
   # Keeps the build trees out of the formatters, the scanner and the linter.
-  - all add exclude generated Derived DerivedData
-  - all add exclude *.xcassets
-  - pre-commit add linter-ignore Derived DerivedData
+  - {
+      tool: all,
+      verb: add-exclude,
+      paths: [ Derived, DerivedData ],
+      generated: true,
+    }
+  - { tool: all, verb: add-exclude, paths: [ "*.xcassets/" ] }
+  - {
+      tool: pre-commit,
+      verb: add-linter-ignore,
+      paths: [ Derived, DerivedData ],
+    }
   - git add ignore template=Swift

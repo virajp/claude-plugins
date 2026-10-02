@@ -46,5 +46,5 @@ lsp_servers:
 harness: n/a
 # The lines this pack asks /stackgen:tool-config for.
 tool-config:
-  - dprint add plugin typescript
+  - { tool: dprint, verb: add-plugin, name: typescript }
   - git add ignore template=Node

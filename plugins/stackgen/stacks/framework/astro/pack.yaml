@@ -16,5 +16,5 @@ axis: project
 harness: n/a
 # The lines this pack asks /stackgen:tool-config for.
 tool-config:
-  - dprint add plugin malva
-  - dprint add plugin markup_fmt
+  - { tool: dprint, verb: add-plugin, name: malva }
+  - { tool: dprint, verb: add-plugin, name: markup_fmt }
