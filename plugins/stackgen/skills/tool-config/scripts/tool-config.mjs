@@ -327,18 +327,6 @@ class Workspace {
 
 const frameText = frame => (frame?.length ? blocks.joinLines(frame) : "");
 
-function regionBodies(text, op) {
-  const { lines } = blocks.splitLines(text);
-  const reg = blocks.findRegion(lines, op.region ?? { kind: "whole" });
-  if (!reg) {
-    return null;
-  }
-  const b = blocks.parseBlocks(lines).find(x =>
-    x.requester === op.requester && x.open >= reg.start && x.close < reg.end
-  );
-  return b ? lines.slice(b.open + 1, b.close) : null;
-}
-
 /**
  * Apply one op to the workspace. In "plan" mode an op that would overwrite a
  * drifted block, or an unrecorded file, raises a row instead (pushed to
@@ -360,7 +348,7 @@ function applyOp(ws, op, tool, mode, rows, notes) {
   switch (op.op) {
     case "block": {
       if (mode === "plan" && op.drift && current !== null) {
-        const mine = regionBodies(current, op);
+        const mine = blocks.regionBody(current, op.requester, op.region);
         const theirs = op.body;
         if (mine && JSON.stringify(mine) !== JSON.stringify(theirs)) {
           rows.push({
@@ -863,6 +851,14 @@ async function run(argv) {
   };
   const tools = await loadTools();
   const ws = new Workspace(env.repoRoot);
+  // one context per tool per call, so a module's per-context memo holds
+  const contexts = new Map();
+  const ctxOf = tool => {
+    if (!contexts.has(tool)) {
+      contexts.set(tool, contextFor(tool, ws, env));
+    }
+    return contexts.get(tool);
+  };
 
   if (call.command === "check") {
     if (call.tool && !tools[call.tool] && !TOOL_ORDER.includes(call.tool)) {
@@ -874,7 +870,7 @@ async function run(argv) {
       records: [...ws.lock.entries.values()],
       read: p => ws.read(p),
       tools,
-      contextFor: tool => contextFor(tool, ws, env),
+      contextFor: ctxOf,
       toolFilter: call.tool,
     });
     return {
@@ -892,7 +888,7 @@ async function run(argv) {
   const notes = [];
   for (const c of calls) {
     const mod = tools[c.tool];
-    const ctx = contextFor(c.tool, ws, env);
+    const ctx = ctxOf(c.tool);
     let result;
     if (c.verb === "all") {
       result = await mod.all(ctx, c.keys);

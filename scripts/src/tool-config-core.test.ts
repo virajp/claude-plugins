@@ -103,6 +103,12 @@ export const tools = {
     },
     expected(ctx, { path }) {
       if (path === "demo.toml") return { blocks: { demo: ["alpha = 1", "beta = 2"] } };
+      // counts on the context: each memo-*.toml expects the next number, so
+      // check is clean only when every record shares one context
+      if (path.startsWith("memo-")) {
+        ctx.seen = (ctx.seen ?? 0) + 1;
+        return { blocks: { demo: ["seen = " + ctx.seen] } };
+      }
       if (path === "tasks/run") return { whole: "#!/usr/bin/env bash\\necho run\\n" };
       return null;
     },
@@ -697,6 +703,58 @@ describe("the lock reader", () => {
       expect(status).toBe(2);
       expect(out.error).toContain("not a repo-relative path");
     }
+  });
+});
+
+describe("gitignore:<Name> requesters", () => {
+  it("reads one unquoted in a flow list and as a mapping key, and writes it back readable", () => {
+    writeLock(
+      [
+        "entries:",
+        "  - path: demo.toml",
+        `    source: tool-config/demo@${version}`,
+        "    hash: abc",
+        "    blocks: [demo, gitignore:Go]",
+        "    templates:",
+        "      gitignore:Go: { Go: abc123, written: def456 }",
+        "",
+      ]
+        .join("\n"),
+    );
+    writeFileSync(
+      join(repo, "demo.toml"),
+      "# >>> demo\nalpha = 1\n# <<< demo\n\n# >>> gitignore:Go\n*.test\n# <<< gitignore:Go\n",
+    );
+    expect(run(["check", "demo"]).status).toBe(0);
+    apply(["demo", "add", "--line", "a = 1", "--for", "pack-a"]);
+    const once = lock();
+    expect(once).toContain("    blocks: [demo, \"gitignore:Go\", pack-a]\n");
+    expect(once).toContain(
+      "      \"gitignore:Go\": { Go: abc123, written: def456 }\n",
+    );
+    apply(["demo", "add", "--line", "a = 2", "--for", "pack-a"]);
+    expect(lock().replace(/hash: \w+/, "")).toBe(once.replace(/hash: \w+/, ""));
+  });
+});
+
+describe("check contexts", () => {
+  it("gives every record of one tool the same module context", () => {
+    const records = ["memo-a.toml", "memo-b.toml"].flatMap(path => [
+      `  - path: ${path}`,
+      `    source: tool-config/demo@${version}`,
+      "    hash: abc",
+      "    blocks: [demo]",
+    ]);
+    writeLock(["entries:", ...records, ""].join("\n"));
+    writeFileSync(
+      join(repo, "memo-a.toml"),
+      "# >>> demo\nseen = 1\n# <<< demo\n",
+    );
+    writeFileSync(
+      join(repo, "memo-b.toml"),
+      "# >>> demo\nseen = 2\n# <<< demo\n",
+    );
+    expect(run(["check", "demo"]).out.rows).toEqual([]);
   });
 });
 

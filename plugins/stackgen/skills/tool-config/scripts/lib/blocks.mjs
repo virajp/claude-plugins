@@ -331,6 +331,19 @@ function bodiesIn(lines, reg, requester) {
   return b ? lines.slice(b.open + 1, b.close) : [];
 }
 
+/** A requester's block body in one position, or null when it holds none there. */
+export function regionBody(text, requester, region = { kind: "whole" }) {
+  const { lines } = splitLines(text);
+  const reg = findRegion(lines, region);
+  if (!reg) {
+    return null;
+  }
+  const inside = parseBlocks(lines).some(x =>
+    x.requester === requester && x.open >= reg.start && x.close < reg.end
+  );
+  return inside ? bodiesIn(lines, reg, requester) : null;
+}
+
 /** The blocks of the contiguous run (blocks separated only by blank lines) holding `target`. */
 function runOf(lines, blocks, target) {
   const at = blocks.indexOf(target);

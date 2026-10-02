@@ -136,13 +136,23 @@ function parseFlow(text) {
       i = end;
       return s;
     }
-    const m = /^[^,\]}:]+/.exec(text.slice(i))
-      ?? /^[^,\]}]+/.exec(text.slice(i));
-    if (!m) {
+    // A plain scalar runs to a flow indicator, or to a colon a space or
+    // indicator follows — so `gitignore:Go` is one token, as YAML reads it.
+    let j = i;
+    while (
+      j < text.length
+      && !",]}".includes(text[j])
+      && !(text[j] === ":"
+        && (j + 1 === text.length || /[\s,\]}]/.test(text[j + 1])))
+    ) {
+      j++;
+    }
+    if (j === i) {
       throw new Error(`lock.yaml: bad value near ${text.slice(i)}`);
     }
-    i += m[0].length;
-    return m[0].trim();
+    const token = text.slice(i, j).trim();
+    i = j;
+    return token;
   };
   const v = value();
   ws();
@@ -192,7 +202,9 @@ function keyAndRest(text, line) {
     key = String(parseFlow(text.slice(0, end)));
   }
   else {
-    end = text.indexOf(":");
+    // the key ends at the first colon a space or the line end follows
+    const m = /:(\s|$)/.exec(text);
+    end = m ? m.index : -1;
     key = end > 0 ? text.slice(0, end).trim() : "";
   }
   const after = text.slice(end);

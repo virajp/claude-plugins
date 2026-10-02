@@ -42,6 +42,14 @@ export function driftRow({ path, requester, theirs, mine }) {
 export async function check({ records, read, tools, contextFor, toolFilter }) {
   const rows = [];
   const prose = new Set();
+  // one context per tool for the whole check, so a module's per-context memo holds
+  const contexts = new Map();
+  const ctxOf = tool => {
+    if (!contexts.has(tool)) {
+      contexts.set(tool, contextFor(tool));
+    }
+    return contexts.get(tool);
+  };
   for (const record of records) {
     if (!isToolConfig(record)) {
       continue;
@@ -85,7 +93,7 @@ export async function check({ records, read, tools, contextFor, toolFilter }) {
     }
     let expected;
     try {
-      expected = await mod.expected(contextFor(tool), {
+      expected = await mod.expected(ctxOf(tool), {
         path: record.path,
         record,
         text,
