@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#MISE description="Setup MISE: reshim, doctor, install & upgrade"
+#MISE description="Setup MISE: reshim, doctor & install the pinned versions"
 #MISE hide=false
 
 set -e
@@ -14,9 +14,6 @@ mise reshim
 print_header "Running mise doctor ..."
 mise doctor --quiet --silent >/dev/null
 
-# Install & upgrade mise
+# Install the pinned versions; moving a pin forward is stackgen's tool-config, never this task.
 print_header "Setting up MISE ..."
 mise install
-
-print_header "Upgrading mise tools ..."
-mise upgrade --local

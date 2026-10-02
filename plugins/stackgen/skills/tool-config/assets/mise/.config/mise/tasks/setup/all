@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 
-#MISE description="Set up or upgrade everything this repo needs on your machine"
+#MISE description="Set up everything this repo needs on your machine"
 #MISE depends=["init"]
 
 #USAGE flag "--all" help="Also set up every member project"
-#USAGE flag "--upgrade" help="Dev only: bump the mise packages for every environment and update the formatter plugins"
 
 # A MARKED POSITION — MEMBER_FLAGS: one flag per member repo, named by its slug, below this comment:
 #   #USAGE flag "--<slug>" help="Set up the <slug> project"
@@ -19,12 +18,9 @@ if [ -z "${MISE_ENV:-}" ]; then
   exit 1
 fi
 
-# Idempotent and non-destructive: `--upgrade` is the one rewriting flag, passed on only when given.
-UPGRADE_ARGS=()
-[[ "${usage_upgrade:-false}" == "true" ]] && UPGRADE_ARGS+=("--upgrade")
-
+# Idempotent and non-destructive: it installs the pins and moves none.
 print_header "Setting up the toolchain ..."
-mise run setup:mise ${UPGRADE_ARGS[@]+"${UPGRADE_ARGS[@]}"}
+mise run setup:mise
 
 print_header "Setting up secrets ..."
 mise run setup:secrets
@@ -47,7 +43,7 @@ if [[ "${usage_all:-false}" == "true" ]]; then
   while read -r member; do
     [ -n "$member" ] || continue
     print_header "Setting up ${member} ..."
-    (cd "${MISE_PROJECT_ROOT}/${member}" && mise run setup:all ${UPGRADE_ARGS[@]+"${UPGRADE_ARGS[@]}"})
+    (cd "${MISE_PROJECT_ROOT}/${member}" && mise run setup:all)
   done < <(members)
 fi
 
