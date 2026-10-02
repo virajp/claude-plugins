@@ -213,8 +213,9 @@ the pack's own block through `/stackgen:tool-config`. Setup asks it, never
 `init`. A value also set outside the pack's block is the skill's **conflict
 row** — `move-in`, or `keep-both` (`keep-existing` when the line shares
 the pack's file) — relayed inside setup's question: setup previews the
-call, shows the rows, and passes each answer back as `answers=<id>:<answer>`;
-it removes no line itself. And every run re-runs each already-landed pack's
+call, shows the rows, and passes each answer back — the script's mise
+calls as `--answers <id>:<answer>`, a prose tool's as a last
+`answers=<id>:<answer>`; it removes no line itself. And every run re-runs each already-landed pack's
 `tool-config:` list through the skill, so a call a newer pack changed reaches
 the repo as a drift or conflict row; an unchanged call writes nothing and
 shows nothing.

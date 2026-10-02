@@ -51,7 +51,7 @@ Xcode. This pack's `tool-config:` calls in `pack.yaml` ask
 the version `xcodebuild -version` prints), shipped empty and filled by
 `/vwf:setup` as it lands the pack: it reads the value from this machine, offers
 it as the default, and writes the one confirmed with
-`/stackgen:tool-config mise set env XCODE_VERSION=<value> for swiftui`. The
+`/stackgen:tool-config mise set-env --key XCODE_VERSION --value <value> --for swiftui`. The
 value is the repo's committed pin, not a per-machine override. Every task that
 builds or resolves checks the selected Xcode against it first and stops with
 the fix when they differ — or when `XCODE_VERSION` is empty, since an unpinned

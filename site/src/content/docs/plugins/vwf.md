@@ -55,16 +55,22 @@ Restart Claude Code afterward so the commands, hooks, and dependencies load.
 `vwf` shells out to a few external tools. Install them first — nothing checks
 them at install time, and the table below gives the command for each.
 
-| Tool            | Required?    | Why                                                   | Install                                                                  |
-| --------------- | ------------ | ----------------------------------------------------- | ------------------------------------------------------------------------ |
-| mise            | **required** | task runner + resolves the toolchain                  | `brew install mise`                                                      |
-| graphify        | **required** | knowledge graph the commands rely on                  | `mise use -g pipx:graphifyy@latest`                                      |
-| node + pnpm     | **required** | runs vwf's Context7 MCP server (default runner)       | `mise use -g node@latest pnpm@latest`                                    |
-| Claude Code CLI | **required** | hosts the commands                                    | `mise use -g claude-code@latest`                                         |
-| uv              | **required** | installs graphify, through mise's pipx backend        | `mise use -g uv@latest`                                                  |
-| python          | **required** | uv locks graphify's dependencies with it (>= 3.10)    | `mise use -g python@latest`                                              |
-| rtk             | recommended  | the token-saving `rtk hook claude` Bash hook          | `brew install --formulae rtk`                                            |
-| gh              | recommended  | reads and writes the backlog project (`/vwf:backlog`) | `brew install gh`, then `gh auth login` and `gh auth refresh -s project` |
+| Tool            | Required?    | Why                                                   | Install                                                                         |
+| --------------- | ------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------- |
+| mise            | **required** | task runner + resolves the toolchain                  | `brew install mise`                                                             |
+| graphify        | **required** | knowledge graph the commands rely on                  | pinned in the repo by `/stackgen:tool-config`, then `MISE_ENV=dev mise install` |
+| node + pnpm     | **required** | runs vwf's Context7 MCP server (default runner)       | `node` and `pnpm` in your global mise config, then `mise install`               |
+| Claude Code CLI | **required** | hosts the commands                                    | `claude-code` in your global mise config, then `mise install`                   |
+| uv              | **required** | installs graphify, through mise's pipx backend        | `uv` in your global mise config, then `mise install`                            |
+| python          | **required** | uv locks graphify's dependencies with it (>= 3.10)    | `python` in your global mise config, then `mise install`                        |
+| rtk             | recommended  | the token-saving `rtk hook claude` Bash hook          | `brew install --formulae rtk`                                                   |
+| gh              | recommended  | reads and writes the backlog project (`/vwf:backlog`) | `brew install gh`, then `gh auth login` and `gh auth refresh -s project`        |
+
+Your global mise config is `~/.config/mise/config.toml`: add each tool to its
+`[tools]` table at an exact version, then run `mise install`. Never a bare
+`mise use` — it writes a pin nobody reviewed. graphify is the repo's own: the
+skill pins `pipx:graphifyy` (the double `y` is the real name) in the repo's
+`.config/mise/conf.d/tools.dev.toml`.
 
 **Nothing checks these at install time.** `claude plugin install vwf` succeeds
 regardless, so the first thing to run afterwards is **`/vwf:doctor`** — it
@@ -929,12 +935,12 @@ baseline. The toolchain manager's config, the repo gates and the hygiene config
 files — the ignore and attribute files, the graph's ignore file, the Renovate
 policy — come from
 [`/stackgen:tool-config all`](./stackgen.md#stackgentool-config), which `init`
-calls with its answers as arguments, the commit scopes among them — previewed
-first, the skill's rows shown in init's plan, then run with those rows' answers
-on the same consent; the prose hygiene files are `init`'s own assets; and the
-secrets provider you pick is the one thing fetched through the stack adapter.
-`init` decides *when* they land, *what* you are asked, and how an existing tree
-is reconciled against what they ship. With no stack-adapter plugin installed it
+calls with its answers as flags, the commit scopes among them — previewed first,
+the skill's rows shown in init's plan, then run with those rows' answers on the
+same consent; the prose hygiene files are `init`'s own assets; and the secrets
+provider you pick is the one thing fetched through the stack adapter. `init`
+decides *when* they land, *what* you are asked, and how an existing tree is
+reconciled against what they ship. With no stack-adapter plugin installed it
 **halts** with the install command rather than printing an empty plan that reads
 exactly like an already-shaped repo.
 
@@ -1130,11 +1136,11 @@ it is the one whose answer reaches the materializer rather than a file:
   task installs both unconditionally and listing a fixed thing makes it look
   optional. *None* sits alongside them, and is the ordinary answer for a repo
   that needs nothing beyond the workflow. What you pick is passed to
-  `/stackgen:tool-config all` as `plugin_sources` and `plugins`, which fill that
-  task's two marked positions, so `setup:ai` installs it on every checkout. An
-  inventory that comes back empty is not an error: the question is still asked,
-  with *none* as the only thing to pick and the empty result stated in the
-  question, so the answer is recorded rather than assumed.
+  `/stackgen:tool-config all` as `--plugin-sources` and `--plugins`, which fill
+  that task's two marked positions, so `setup:ai` installs it on every checkout.
+  An inventory that comes back empty is not an error: the question is still
+  asked, with *none* as the only thing to pick and the empty result stated in
+  the question, so the answer is recorded rather than assumed.
 - **The visibility** — `public` or `private`, **one row per repo** in the one
   round: visibility is a fact about a repo rather than a product, and a private
   member beside a public base is ordinary. Each row's default is **read from the
@@ -1412,30 +1418,22 @@ flag reads as drift until the next reshape offers it, by design.
 **It ends with a git pass, and that pass is consent-gated.** Everything above it
 lands on disk; a repo shaped and left dirty is a repo whose next command — a
 commit, a worktree, a merge — meets a working tree it did not expect. So `init`
-checks out `develop` and runs `setup:mise --lock-only`, which writes a missing
-mise lock or fills a present one without bumping it. It installs only the uv and
-Python the lock needs. It then stages **exactly what this run wrote** (never
+checks out `develop` and stages **exactly what this run wrote** (never
 `git add -A`, so untracked work of your own is not swept into a commit about the
-repo's shape), plus every changed lock path. That lock staging includes your own
-uncommitted lock edits and any stale untracked sidecar under
-`.config/mise/locks/`. Then it asks **one question with three answers**, showing
-the file count and the branch first: *commit*, *commit and push*, or *leave it*.
-Push is a second decision inside one question, never an assumed consequence of
-committing. The message is fixed and uses the `ops:` type the commit gate this
-run just installed will read it against, and **the commit lands on `develop` in
-every mode** — never on `main`, and never on whatever branch the repo happened
-to be standing on. History is never rewritten, nothing is force-pushed, and no
-verification-skipping flag is ever passed; a push the remote rejects is a
-deferral for that repo and branch, never a force.
+repo's shape). mise keeps no lock — its pins are exact — so there is nothing
+else for the pass to write or stage. Then it asks **one question with three
+answers**, showing the file count and the branch first: *commit*, *commit and
+push*, or *leave it*. Push is a second decision inside one question, never an
+assumed consequence of committing. The message is fixed and uses the `ops:` type
+the commit gate this run just installed will read it against, and **the commit
+lands on `develop` in every mode** — never on `main`, and never on whatever
+branch the repo happened to be standing on. History is never rewritten, nothing
+is force-pushed, and no verification-skipping flag is ever passed; a push the
+remote rejects is a deferral for that repo and branch, never a force.
 
-The report carries a `Lock` line per repo: *staged*, `none`, *lock deferred* or
-*lock failed — not committed*. A failed lock leaves that repo uncommitted; the
-others go on. A deferred lock is one where mise was not yet installed or the
-repo's `setup:mise` lacks `--lock-only`, and `none` is one where the lock step
-changed no lock path. No lock file is ignored but `mise.local.lock`: each
-`.gitignore` line ignoring another lock file is a delete row from
-`/stackgen:tool-config all`, shown in the one consent and removed before the
-lock step.
+No lock file is ignored but `mise.local.lock`: each `.gitignore` line ignoring
+another lock file is a delete row from `/stackgen:tool-config all`, shown in the
+one consent and removed before the git pass.
 
 **Before the pass, `init` reads where each repo stands.** A repo on a branch
 takes the branch work below; a member standing on **no branch** — a detached
@@ -1478,7 +1476,7 @@ The toolchain config's defaults are `direct` for `develop` and `pr` for `main`:
 work into `develop` is the day's landing, while `main` takes nothing but
 `develop` and is where a review gate earns its keep. A repo whose file the run
 replaces is preselected from what that file carries. Each answer is passed to
-`/stackgen:tool-config all` as `merge_model_develop` and `merge_model_main`,
+`/stackgen:tool-config all` as `--merge-model-develop` and `--merge-model-main`,
 which writes it literally to that repo's `MERGE_MODEL_DEVELOP` and
 `MERGE_MODEL_MAIN` in `.config/mise/conf.d/env.toml`, so the file is in what the
 same pass stages. A file still carrying the single legacy `MERGE_MODEL` has that
@@ -1607,52 +1605,55 @@ still holds is reported and left alone, only what drifted is offered), and
 between runs, on seven subjects: the pack versions the adapter's lockfile
 recorded against what it ships now (a `tool-config/…` entry's version is not
 compared — stackgen's version moves on every release whether the blocks changed
-or not — its file re-tested block by block against the skill's own assets
-instead, by the skill's word comparison — words outside quoted strings, a quoted
-string exactly — never a hash), each registry id against its task group and
-commit scope, both branches, the repo-name key against that repo's own **folder
-name, slugified**, the **content** of every pack-owned file against the hash the
-lockfile records — the landing's, re-recorded by `init` after every fill, append
-or merge it made — a mismatch re-tested with every marked position spliced out
-before it counts as a row, on init's own two tests, so a filled position is the
-shaped state and never a finding here — and three of the five marked positions
-beside the repo-name key — `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`, each
-checked on its own, a block still carrying the legacy single `MERGE_MODEL` and
-neither new position being one drift row reading *legacy `MERGE_MODEL` — reshape
-writes the pair*, and `MEMBERS` on a product whose members are wired as plain
-siblings; the other two, `RUNTIME_BLOCK` and `PATH_ENTRIES`, are filled from
-init's stack read and are legitimately empty on a repo with no language, so no
-row reads them — and the **forge state**, predicate (g), read from the forge
-where its CLI answers for the origin host: the default branch one of `develop`
-or `main`, each of the two branches carrying some protection — a pull request
-required on a branch whose own value is `pr` noted when missing, never drift —
-and, for the base alone, the backlog project present. Where the CLI is absent,
-not logged in or refuses a read, that repo gets one `not checked` note and no
-row; an existing protection short of one of the pass's rules is a note too,
-never drift, since a reshape would leave it exactly as it is. **All seven run
-per repo** — the base and every locally-present member, resolved the way `init`
-resolves them — with every row printed under the repo it was found in and one
-remedy for the whole product, since `reshape` walks the members too. A member
-this machine does not carry is a blind spot rather than a finding, reading
-`not present, not checked`. Beside the id check sits its counterpart on the base
-alone, comparing the aggregator's member flags and `setup-<slug>` aliases
-against the resolved member set — a member with no flag is a row, and so is a
-flag named from a project id. A repo drifts by standing still and also by
-moving: a pack-owned file you edited in place is no longer the file the pack
-ships, and doctor says which of the two a row is, because re-landing fixes one
-and the other is a file somebody meant to change. A file you chose to keep is
-skipped, since that decision is already recorded. With no adapter lockfile the
-content check reports `not checked — no lockfile` rather than passing or
-crashing: a repo that landed nothing has nothing to have drifted from. Beside
-them doctor reads three rows from the config rather than the lockfile: a
-recorded `answers.repos.<repo>.forge` the live `origin` host contradicts, or a
-`skipped:` row whose `when: forge` it contradicts — the files that axis skipped
-are waiting for the reshape to land them, and a repo with no remote at all is
-neither row — a config stamped `config_format` 21 carrying no `answers:` block
-at all, and a provider named by `answers.secrets` whose pack's `.gitignore`
-block is missing. Every one of these is `drift` and none is blocking — a repo
-behind its baseline is out of date, not broken — and all of them share one
-remedy, `/vwf:setup reshape`, printed once.
+or not — its blocks re-tested instead by `/stackgen:tool-config check`, run once
+per repo, which renders what each block's requester would write now and compares
+it with the file, each diverging block one row and a file it cannot parse one
+`needs-edit` row; the tools still on the skill's prose come back listed under
+`prose`, compared by the skill's own prose drift rule), each registry id against
+its task group and commit scope, both branches, the repo-name key against that
+repo's own **folder name, slugified**, the **content** of every pack-owned file
+against the hash the lockfile records — the landing's, re-recorded by `init`
+after every fill, append or merge it made — a mismatch re-tested with every
+marked position spliced out before it counts as a row, on init's own two tests,
+so a filled position is the shaped state and never a finding here — and three of
+the five marked positions beside the repo-name key — `MERGE_MODEL_DEVELOP` and
+`MERGE_MODEL_MAIN`, each checked on its own, a block still carrying the legacy
+single `MERGE_MODEL` and neither new position being one drift row reading
+*legacy `MERGE_MODEL` — reshape writes the pair*, and `MEMBERS` on a product
+whose members are wired as plain siblings; the other two, `RUNTIME_BLOCK` and
+`PATH_ENTRIES`, are filled from init's stack read and are legitimately empty on
+a repo with no language, so no row reads them — and the **forge state**,
+predicate (g), read from the forge where its CLI answers for the origin host:
+the default branch one of `develop` or `main`, each of the two branches carrying
+some protection — a pull request required on a branch whose own value is `pr`
+noted when missing, never drift — and, for the base alone, the backlog project
+present. Where the CLI is absent, not logged in or refuses a read, that repo
+gets one `not checked` note and no row; an existing protection short of one of
+the pass's rules is a note too, never drift, since a reshape would leave it
+exactly as it is. **All seven run per repo** — the base and every
+locally-present member, resolved the way `init` resolves them — with every row
+printed under the repo it was found in and one remedy for the whole product,
+since `reshape` walks the members too. A member this machine does not carry is a
+blind spot rather than a finding, reading `not present, not checked`. Beside the
+id check sits its counterpart on the base alone, comparing the aggregator's
+member flags and `setup-<slug>` aliases against the resolved member set — a
+member with no flag is a row, and so is a flag named from a project id. A repo
+drifts by standing still and also by moving: a pack-owned file you edited in
+place is no longer the file the pack ships, and doctor says which of the two a
+row is, because re-landing fixes one and the other is a file somebody meant to
+change. A file you chose to keep is skipped, since that decision is already
+recorded. With no adapter lockfile the content check reports
+`not checked — no lockfile` rather than passing or crashing: a repo that landed
+nothing has nothing to have drifted from. Beside them doctor reads three rows
+from the config rather than the lockfile: a recorded
+`answers.repos.<repo>.forge` the live `origin` host contradicts, or a `skipped:`
+row whose `when: forge` it contradicts — the files that axis skipped are waiting
+for the reshape to land them, and a repo with no remote at all is neither row —
+a config stamped `config_format` 21 carrying no `answers:` block at all, and a
+provider named by `answers.secrets` whose pack's `.gitignore` block is missing.
+Every one of these is `drift` and none is blocking — a repo behind its baseline
+is out of date, not broken — and all of them share one remedy,
+`/vwf:setup reshape`, printed once.
 
 Nobody has to remember that schedule. Four commands bring you to the door
 themselves, each **offering** `reshape` the Step 0 way — one line naming the
@@ -1829,23 +1830,23 @@ because the landing stopped before its questions — the detected value is
 preselected; on a later run the committed value is, with this machine's beside
 it where they differ, and a failed `detect` offers no default but still asks.
 The answer is handed to
-`/stackgen:tool-config mise set env <KEY>=<value> for <pack>`, previewed first
-so the skill's rows are asked inside setup's question and handed back with
-`answers=`, and the skill writes it in the pack's block as a quoted string and
-records the lockfile itself — a value carrying a newline or other control
-character, a template delimiter or expansion character of the tool reading the
-file (for mise `{{`, `{%`, `{#` or `$`), or a `'` together with a `"` or a `\`
-is refused and asked again — and what the skill changed is committed in the
-target repo. A value the repo already sets outside the pack's block (for mise, a
-line in any `conf.d/env*.toml`, or an `[env]` table in an old top-level mise
-file) is the skill's **conflict row**: that value is preselected above the rest,
-and the row is asked as one more round of the same question — **move in** (the
-outside line is removed and the answer lands in the pack's block) or **keep
-both** (the row names which one mise's precedence makes win) — or, where the
-line sits in the pack's own file, **move in** or **keep existing**, since a TOML
-table cannot hold a key twice. Setup removes no line itself, and nothing is
-written until you pick. The value is the repo's committed pin from then on, not
-a per-machine override. `/vwf:init` never asks these.
+`/stackgen:tool-config mise set-env --key <KEY> --value <value> --for <pack>`,
+previewed first so the skill's rows are asked inside setup's question and handed
+back with `--answers`, and the skill writes it in the pack's block as a quoted
+string and records the lockfile itself — a value carrying a newline or other
+control character, a template delimiter or expansion character of the tool
+reading the file (for mise `{{`, `{%`, `{#` or `$`), or a `'` together with a
+`"` or a `\` is refused and asked again — and what the skill changed is
+committed in the target repo. A value the repo already sets outside the pack's
+block (for mise, a line in any `conf.d/env*.toml`, or an `[env]` table in an old
+top-level mise file) is the skill's **conflict row**: that value is preselected
+above the rest, and the row is asked as one more round of the same question —
+**move in** (the outside line is removed and the answer lands in the pack's
+block) or **keep both** (the row names which one mise's precedence makes win) —
+or, where the line sits in the pack's own file, **move in** or **keep
+existing**, since a TOML table cannot hold a key twice. Setup removes no line
+itself, and nothing is written until you pick. The value is the repo's committed
+pin from then on, not a per-machine override. `/vwf:init` never asks these.
 
 **Every run re-runs each landed pack's `tool-config:` list** through the skill,
 the same preview-then-run, so a call a newer stackgen release added or changed
@@ -3352,10 +3353,10 @@ commits `docs:` through `/vwf:git-workflow`.
 Internal — you rarely invoke it directly. The other commands route **all** git
 actions through it: it isolates work in a git worktree (always the outermost
 superproject, never a submodule), initializes it with the repo's
-`setup:worktree` (or `setup:all`) mise task, commits with conventional messages,
-and ends a worktree with full coverage — landing the branch (plus any submodule
-work and pointer updates), then removing it. It never pushes without your
-explicit request.
+`setup:worktree` (or `setup:all`) mise task, run under `MISE_ENV=dev`, commits
+with conventional messages, and ends a worktree with full coverage — landing the
+branch (plus any submodule work and pointer updates), then removing it. It never
+pushes without your explicit request.
 
 Two details follow the task contract [`/vwf:init`](#vwfinit) lays down. The
 pre-commit gate runs **before staging**, over the working tree's changed files,

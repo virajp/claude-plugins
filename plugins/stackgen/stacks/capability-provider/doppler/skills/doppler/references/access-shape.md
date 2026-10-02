@@ -42,11 +42,19 @@ The CLI arrives through the doppler pack's `tool-config:` list, which
 
 ```yaml
 tool-config:
-  - mise add tool doppler latest to all environments
-  - mise add env DOPPLER_CONFIG="local" to all environments
-  - mise add env DOPPLER_PROJECT="{{ config_root | split(pat='/') | last }}" to
-    all environments
+  - { tool: mise, verb: add-tool, name: doppler, version: "latest", env: all }
+  - { tool: mise, verb: add-env, key: DOPPLER_CONFIG, value: "local", env: all }
+  - {
+      tool: mise,
+      verb: add-env,
+      key: DOPPLER_PROJECT,
+      value: "{{ config_root | split(pat='/') | last }}",
+      env: all,
+    }
 ```
+
+`latest` is resolved when the line is written: the tool lands pinned to the
+exact version `mise latest doppler` returned.
 
 The tool lands in `.config/mise/conf.d/tools.toml` and the two values in
 `.config/mise/conf.d/env.toml`, so they load in **every** environment. Change

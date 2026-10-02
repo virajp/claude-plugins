@@ -66,8 +66,8 @@ repo's own skills, docs, agents and worktrees. None of them is `plugins/`.
 Setup and the refresh loop — `mise run p:plugins:local`, and the three measured
 CLI facts that shape it — are [`dev-marketplace.md`](dev-marketplace.md).
 
-> **Authoring one:** the fifteen checker rules, the invocation frontmatter, the
-> plugin-root trap and the dprint exclusion live in
+> **Authoring one:** the seventeen checker rules, the invocation frontmatter,
+> the plugin-root trap and the dprint exclusion live in
 > `.claude/skills/plugin-authoring/`, which auto-applies while you edit
 > `plugins/`.
 
@@ -154,60 +154,62 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   design and are skipped. **`--check`** is the same byte compare the marketplace
   task makes, run by pre-commit and `plugins.yml`, and `inventory.test.ts` pins
   it in vitest too.
-- **`p:plugins:check`** — validates the authored tree. Fifteen rules: manifest
+- **`p:plugins:check`** — validates the authored tree. Seventeen rules: manifest
   name↔dir **plus the two things the version itself must be** — plain semver,
   and free of a 13 or 17 component, those two integers never being issued on any
   version line this repo maintains; dependencies resolving within the
   marketplace; hook scripts existing and executable; **a pack's `config/`
   payload tier being materializable as-is** (six assertions in one rule, the
   landed-tree ones also run over each `skills/tool-config/assets/<tool>/` tree
-  `stackgen:tool-config` lands, its root admitting that tool's own root files,
-  and over `/vwf:init`'s `skills/init/assets/<name>/` trees with no root
-  allowlist: exec bit *and* a known shebang on every file under
-  `config/.config/mise/tasks/**`, because mise reports a 644 task as an
-  *unknown* one rather than a permission error and execs the file directly; the
-  same two on every `hooks/*.sh`, which the host execs from a bare path in
-  `settings.json`; the tier's root against the **landable** tier of the root
-  allowlist, whose two allowed **directories** are `.config/` and `.github/` and
-  whose sibling tier — the root files vwf writes, `CLAUDE.md` and
-  `mempalace.yaml` — no pack may land; a **CI workflow refused inside
-  `.github/`**, since a pack names the task CI runs and never the workflow;
-  every `conditional:` entry in the pack's `pack.yaml` naming a relative path or
-  glob with no `..` segment that matches at least one file under `config/` —
-  resolved by the checker's own walk, so `**` enters dot-directories — and a
-  `when:` of exactly one known axis, `forge`, `secrets` or `update_bot`, with a
-  value that axis takes, `secrets: none` refused, since an unknown axis is one
-  no caller answers and its file lands everywhere silently; and the pack's three
-  doctor- and setup-read facts in the shapes their readers trust — every
-  `binaries` entry a bare name or a map of exactly `name` and an optional
-  non-empty `probe`, `lockfile` a non-empty list of relative paths or globs with
-  no `..`, and every `machine_env` entry a `name` that is an env-var name plus a
-  non-empty `detect` and `question`, the name set by a `mise add env` entry of
-  the pack's `tool-config:` list, since a question whose answer lands nowhere
-  fails silently; every `tool-config:` entry parsing as `mise add tool`,
-  `mise add env` or `mise add alias` with a legal name and scope, a template
-  delimiter only in an `add env` value, or as one of the gate verbs
-  (`dprint add plugin`, `all add exclude [generated]`,
-  `pre-commit add linter-ignore`, `pre-commit add hook`, `grype add ignore`,
-  `git add ignore`, `git add attribute`), an exclude asked of one tool alone
-  refused; and no mise `conf.d` fragment and no `pre-commit.d` file in the tier,
-  since a pack asks the skill instead); **strict-YAML frontmatter** (every skill
-  and agent a plugin ships, and every `stacks/*/*/skills/*/SKILL.md` and
-  `stacks/*/*/agents/*.md` a pack ships — the larger half, and the half that
-  actually lands in a user's repo; a pack's `rules/*.md` is out, frontmatter
-  being optional there); relative links under `assets/examples/**`;
-  **root-relative reference resolution** (every such reference resolves inside
-  the plugin that wrote it — in the files a pack **lands** the rule stands
-  aside, because rule 13 owns those on stricter terms and one bad reference
-  should be one finding); **agent cross-reference resolution** in both
-  directions (every role-shaped `` `token` `` in a plugin's own prose names a
-  real agent, and every declared agent is referenced at least once — the two
-  directions cover each other on a rename); the vwf design-adapter contract (all
-  **three** import skills present and model-invocable); the vwf
-  **stack-adapter** contract (both `<plugin>-stack-menu` and
-  `<plugin>-stack-template` present, each carrying an explicit
-  `disable-model-invocation: false` **and** a `user-invocable: false` — an
-  adapter is vwf's to call, not a user's to type — on every plugin keyworded
+  `stackgen:tool-config` lands, its root admitting that tool's own root files
+  and the repo-local skills it lands — mise's `.claude/skills/mise/SKILL.md`,
+  nothing else under `.claude/` — and over `/vwf:init`'s
+  `skills/init/assets/<name>/` trees with no root allowlist: exec bit *and* a
+  known shebang on every file under `config/.config/mise/tasks/**`, because mise
+  reports a 644 task as an *unknown* one rather than a permission error and
+  execs the file directly; the same two on every `hooks/*.sh`, which the host
+  execs from a bare path in `settings.json`; the tier's root against the
+  **landable** tier of the root allowlist, whose two allowed **directories** are
+  `.config/` and `.github/` and whose sibling tier — the root files vwf writes,
+  `CLAUDE.md` and `mempalace.yaml` — no pack may land; a **CI workflow refused
+  inside `.github/`**, since a pack names the task CI runs and never the
+  workflow; every `conditional:` entry in the pack's `pack.yaml` naming a
+  relative path or glob with no `..` segment that matches at least one file
+  under `config/` — resolved by the checker's own walk, so `**` enters
+  dot-directories — and a `when:` of exactly one known axis, `forge`, `secrets`
+  or `update_bot`, with a value that axis takes, `secrets: none` refused, since
+  an unknown axis is one no caller answers and its file lands everywhere
+  silently; and the pack's three doctor- and setup-read facts in the shapes
+  their readers trust — every `binaries` entry a bare name or a map of exactly
+  `name` and an optional non-empty `probe`, `lockfile` a non-empty list of
+  relative paths or globs with no `..`, and every `machine_env` entry a `name`
+  that is an env-var name plus a non-empty `detect` and `question`, the name set
+  by a mise `add-env` entry of the pack's `tool-config:` list, since a question
+  whose answer lands nowhere fails silently; every mise `tool-config:` entry a
+  mapping the tool-config script's own schema accepts (`validateEntry`, imported
+  from its `scripts/lib/schema.mjs` — a string mise entry refused), and every
+  other entry a string parsing as one of the gate verbs (`dprint add plugin`,
+  `all add exclude [generated]`, `pre-commit add linter-ignore`,
+  `pre-commit add hook`, `grype add ignore`, `git add ignore`,
+  `git add attribute`), an exclude asked of one tool alone refused; and no mise
+  `conf.d` fragment and no `pre-commit.d` file in the tier, since a pack asks
+  the skill instead); **strict-YAML frontmatter** (every skill and agent a
+  plugin ships, every repo-local skill a tool-config asset tree lands, and every
+  `stacks/*/*/skills/*/SKILL.md` and `stacks/*/*/agents/*.md` a pack ships — the
+  larger half, and the half that actually lands in a user's repo; a pack's
+  `rules/*.md` is out, frontmatter being optional there); relative links under
+  `assets/examples/**`; **root-relative reference resolution** (every such
+  reference resolves inside the plugin that wrote it — in the files a pack
+  **lands** the rule stands aside, because rule 13 owns those on stricter terms
+  and one bad reference should be one finding); **agent cross-reference
+  resolution** in both directions (every role-shaped `` `token` `` in a plugin's
+  own prose names a real agent, and every declared agent is referenced at least
+  once — the two directions cover each other on a rename); the vwf
+  design-adapter contract (all **three** import skills present and
+  model-invocable); the vwf **stack-adapter** contract (both
+  `<plugin>-stack-menu` and `<plugin>-stack-template` present, each carrying an
+  explicit `disable-model-invocation: false` **and** a `user-invocable: false` —
+  an adapter is vwf's to call, not a user's to type — on every plugin keyworded
   `vwf-stack-adapter`, **and** the keyword declared by every plugin shipping
   either skill — the same two-directions-cover-each-other idiom, since
   `stackgen` is now the only adapter left and dropping that one keyword would
@@ -241,8 +243,14 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   `.claude/` is authored source a scanner must scan — a finding names the entry
   and the files that carry it and do not; in the plugin carrying the skill a
   missing list is a finding, and a file present but unparseable is its own
-  finding). The retired-vocabulary and plugin-path rules are the two that report
-  a **line number**, being the two that fire on a sentence rather than a file.
+  finding); **a skill's node script runs with nothing installed** (every
+  `skills/*/scripts/**/*.mjs`: an entry directly under `scripts/` starts
+  `#!/usr/bin/env node` and is executable, and no file calls `require(` or
+  imports anything but a `node:` built-in or a relative module); and **no bare
+  `mise use`** anywhere a plugin ships, dot directories included, unless the
+  line forbids it. The retired-vocabulary, plugin-path and bare-`mise use` rules
+  are the three that report a **line number**, being the three that fire on a
+  sentence rather than a file.
 
   Two of those are worth the extra sentence. The technology-free guard bans vwf
   naming a concrete technology **only where the mention prescribes**, which is
@@ -287,7 +295,11 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   the source and what the pack copies into a target repo. The hook lives with
   the **package manager** it rewrites for, not in `vwf`: a JS/TS rewrite has no
   business in a language-agnostic workflow plugin.
-- **`vitest run`** — the `scripts/` and `installer/` suites.
+- **`vitest run`** — the `scripts/` and `installer/` suites. The `scripts/`
+  suite is also the gate on `stackgen:tool-config`'s shipped node script:
+  `tool-config-core.test.ts` and `tool-config-mise.test.ts` spawn it in temp
+  repos against a fake `mise`, with a golden greenfield fixture under
+  `scripts/src/fixtures/tool-config/`.
 - **`tsc --noEmit`** per TypeScript project — `installer/` and `scripts/`.
   Nothing emits, so `tsc` is only ever a checker, and there are no project
   references to walk.

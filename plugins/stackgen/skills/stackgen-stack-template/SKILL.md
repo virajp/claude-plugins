@@ -111,8 +111,9 @@ materializer leaves each value **unset**; `/vwf:setup`'s materialize pass
 runs each `detect` — only while the committed entry matches the hash its
 lockfile records, asking with no default otherwise — offers the value
 preselected, refuses one its reader would not take literally, and writes
-the answer with `/stackgen:tool-config mise set env <KEY>=<value> for
-<pack>` (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). A `binaries`
+the answer with
+`/stackgen:tool-config mise set-env --key <KEY> --value <value> --for <pack>`
+(`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). A `binaries`
 probe is gated the same way in `/vwf:doctor`, which reports it not run on
 drift. It adds no consent tier.
 
