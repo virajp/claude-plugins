@@ -15,14 +15,37 @@ own. The files it lands are under
 `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/pre-commit/`, laid out as they
 land under the repo root.
 
+**pre-commit is scripted.** `tool-config.mjs` — [run as the skill
+says](../SKILL.md#running-the-script) — lands the three files, fills
+`commitScopes` from `--scopes` and the changelog links from `origin`, writes
+each hook, linter ignore and exclude a requester asks for in its block,
+raises the conflict, rename, drift and migration rows, formats what it wrote
+and then runs `mise x -- pre-commit validate-config` on the hook config: a
+config pre-commit rejects puts every file the call wrote back byte for byte
+and refuses the call. A greenfield repo needs no edit by hand. This
+reference is the why behind what it writes; your part is relaying its rows
+— a commit type's rename is the person's pick, never yours — and making the
+changes it hands back as `needs-edit` rows, a hook config it cannot read:
+
+- a global `exclude` that is not one verbose `|-` block opening `(?x)` —
+  rewrite it as [section 3](#3-the-global-exclude) shows, one alternative
+  per line;
+- an alternative holding a second group, `(^|/)(a|b)/` — split it into one
+  alternative per path;
+- a `# >>>` or `# <<<` line in a shape it does not know — make it a
+  `# >>> <requester>` pair, or delete it.
+
+Then re-run the same call's `preview` and finish with `check`. When you edit
+a pre-commit file yourself, the rules below are what you hold it to.
+
 | Section                                                  | Read before                                          |
 | -------------------------------------------------------- | ---------------------------------------------------- |
 | [1. What `all` lands](#1-what-all-lands)                 | running `all`, or reading what it landed             |
-| [2. The marked positions](#2-the-marked-positions)       | passing `scopes`, or reading the forge links         |
-| [3. The global exclude](#3-the-global-exclude)           | `all add exclude`                                    |
-| [4. The verbs](#4-the-verbs)                             | any instruction naming `pre-commit`                  |
+| [2. The marked positions](#2-the-marked-positions)       | passing `--scopes`, or reading the forge links       |
+| [3. The global exclude](#3-the-global-exclude)           | `all add-exclude`                                    |
+| [4. The verbs](#4-the-verbs)                             | any call naming `pre-commit`                         |
 | [5. The gate doctrine](#5-the-gate-doctrine)             | adding a hook by hand, or reading why one is shaped so |
-| [6. The graph refresh hook](#6-the-graph-refresh-hook)   | touching `post-commit` or `code:graph`               |
+| [6. The graph refresh hook](#6-the-graph-refresh-hook)   | touching `post-commit`, `post-merge` or `code:graph` |
 | [7. The migration](#7-the-migration)                     | running `all` on a repo the old gate pack shaped     |
 
 ## 1. What `all` lands
@@ -45,10 +68,11 @@ writes into, so it carries no block at all.
 
 - `minimum_pre_commit_version: "3.2.0"` — where `commit`/`push` became
   `pre-commit`/`pre-push`; an older pre-commit silently runs nothing.
-- `default_install_hook_types`: `pre-commit`, `commit-msg`, `post-commit` — a
-  type not installed is not a hook that fails, it is one that never runs, and
-  nothing reports it. `commit-msg` is for the convention hook, `post-commit`
-  for [the graph refresh](#6-the-graph-refresh-hook).
+- `default_install_hook_types`: `pre-commit`, `commit-msg`, `post-commit`,
+  `post-merge` — a type not installed is not a hook that fails, it is one
+  that never runs, and nothing reports it. `commit-msg` is for the convention
+  hook, `post-commit` and `post-merge` for
+  [the graph refresh](#6-the-graph-refresh-hook).
 - `default_stages: [pre-commit]`, so each hook says only what differs.
 - the global `exclude` — [section 3](#3-the-global-exclude).
 - a `local` repo: `no-dash-names`, then `git-config`, then the three gate
@@ -66,8 +90,9 @@ writes into, so it carries no block at all.
 
 Requesters' blocks go after the base in `repos:` — each a `# >>> <requester>`
 line at the list's indentation, the requester's `- repo:` entries, and the
-closing marker. A repo's own hooks are the user's lines: outside every block,
-anywhere in the list.
+closing marker. One blank line separates two entries of `repos:`, a block
+counted as one entry, and two `- repo:` entries inside one block. A repo's
+own hooks are the user's lines: outside every block, anywhere in the list.
 
 **The commit convention**, `git-conventional-commits.yaml`, is this tool's
 because the `commit-msg` hook is what enforces it — a convention nothing checks
@@ -107,7 +132,7 @@ of overrides. Its `ignores:` list is **generated trees only**, since the linter
 does not read `.gitignore`: the base holds `**/build/` and `**/graphify-out/`
 (no mise lock exists, so mise has no tree here), and every other entry is a
 pack's, through
-[`add linter-ignore`](#4-the-verbs) — flutter's `.dart_tool`, swiftpm's
+[`add-linter-ignore`](#4-the-verbs) — flutter's `.dart_tool`, swiftpm's
 `.build` and `.swiftpm`, swiftui's `Derived` and `DerivedData`, uv's `.venv`.
 Patterns resolve from the repo root, so every entry is `**/`-prefixed: a
 generated tree sits at its project's root, which in a monorepo is any depth.
@@ -123,32 +148,33 @@ makes a real finding disappear — the one use the file is not for. Fix the
 code; where a rule is genuinely wrong for one location, scope the change to
 that `files` glob.
 
-**The key it reads**: `scopes` (default empty).
-`forge`, `secrets` and `update_bot` are read by no pre-commit file — the forge
-links come from `origin`, [below](#2-the-marked-positions).
+**The key it reads**: `--scopes` (default empty).
+`--forge`, `--secrets` and `--update-bot` are read by no pre-commit file —
+the forge links come from `origin`, [below](#2-the-marked-positions).
 
 ## 2. The marked positions
 
-Two positions in `git-conventional-commits.yaml`, both inside the
-`pre-commit` block, both never drift — a changed input is one row showing the
-change.
+Two positions in `git-conventional-commits.yaml`, both never drift — a
+changed input is one row showing the change.
 
 **`commitScopes`** — one scope per project, each the same id that project's
-`p:<id>:*` task group takes, filled from the `scopes` argument (or
-`set scopes`) on **every** run, the first included. The empty list the asset
-ships is the position, never a state a caller leaves behind on purpose: a
-caller with no confirmed ids passes `scopes=` and says so. The list is
-**closed and append-only**: a scope the file lists and the argument omits is
-kept, with a trailing `# retired` comment saying it is kept for the commits
-that used it, since deleting it would invalidate every one of them.
+`p:<id>:*` task group takes, filled from `all`'s `--scopes` (or
+`set-scopes`). `--scopes` left out keeps the list the file holds; the first
+`all` with no `--scopes` lands the empty list the asset ships. A caller with
+no confirmed ids yet passes `--scopes=` — empty, stated — and says so. The
+list is **closed and append-only**: a scope the file lists and the argument
+omits is kept, with a trailing `# retired` comment saying it is kept for the
+commits that used it, since deleting it would invalidate every one of them.
 A scope the argument names again loses the comment.
 
 **The changelog links** — `commitUrl`, `commitRangeUrl`, `issueRegexPattern`,
-`issueUrl` — are filled by the skill itself, from the repo's `origin` remote,
-never from an argument and never by the caller. The remote is read with
-`git remote get-url origin` and normalised to `https://<host>/<owner>/<repo>`
-— an `scp`-style `git@<host>:<owner>/<repo>.git`, an `ssh://` URL and an
-`https://` URL alike, a trailing `.git` dropped. Then by host:
+`issueUrl` — are filled by the script itself on every `all`, from the repo's
+`origin` remote, never from an argument and never by the caller. The remote
+is read with `git remote get-url origin` and normalised to
+`https://<host>/<owner>/<repo>` — an `scp`-style
+`git@<host>:<owner>/<repo>.git`, an `ssh://` URL and an `https://` URL
+alike, any user or port in it dropped, a trailing `.git` dropped. Then by
+host:
 
 | Host                              | `commitUrl`                     | `commitRangeUrl`                                   | `issueUrl`                     |
 | --------------------------------- | ------------------------------- | -------------------------------------------------- | ------------------------------ |
@@ -181,8 +207,12 @@ exclude: |-
   # <<< pnpm
 ```
 
-A directory `<d>` is `(^|/)<d>/`, a file glob is `(^|/)` plus the glob with
-`*` as `[^/]*` and every regex metacharacter escaped, anchored with `$`. Under
+Each path is written as a regex: `*` as `[^/]*`, `?` as `[^/]`, and every
+regex metacharacter, `#` and space escaped. A directory — a path ending in
+`/`, a glob included, or one with no `*` or `?`
+([the skill's rule](../SKILL.md#the-one-cross-tool-verb)) — is `(^|/)`, the
+regex, then `/`: `(^|/)\.venv/`, `(^|/)[^/]*\.xcassets/`. A file glob is
+`(^|/)`, the regex, then `$`: `(^|/)[^/]*\.lock$`. Under
 `(?x)` a `#` line is a regex comment, so the markers are inert inside the
 pattern. **The `|` opening each alternative is punctuation the skill
 re-derives on every write** — every alternative but the pattern's first opens
@@ -197,81 +227,107 @@ exclusion is a standing rule about a tree, not a claim it exists today.
 
 ## 4. The verbs
 
-| Instruction                                   | Writes to                                       |
-| --------------------------------------------- | ----------------------------------------------- |
-| `add hook <repo> <id> <stage> [key=value …]`  | `.config/pre-commit-config.yaml` — `repos:`     |
-| `add linter-ignore <path> …`                  | `.config/linter.yaml` — `ignores:`              |
-| `set scopes <id>,<id>,…`                      | `.config/git-conventional-commits.yaml`         |
-| `remove <requester>`                          | every pre-commit file holding its blocks        |
+| Call                                                                   | Writes to                                       |
+| ---------------------------------------------------------------------- | ----------------------------------------------- |
+| `pre-commit add-hook --repo <r> --id <id> --stage <s> [--<key> <v>]…`  | `.config/pre-commit-config.yaml` — `repos:`     |
+| `pre-commit add-linter-ignore --paths <p>,<p>,…`                       | `.config/linter.yaml` — `ignores:`              |
+| `pre-commit set-scopes --scopes <id>,<id>,…`                           | `.config/git-conventional-commits.yaml`         |
+| `pre-commit remove --for <requester>`                                  | every pre-commit file holding its blocks        |
 
 **No exclude verb.** An exclude is added only through
-[`all add exclude`](../SKILL.md#the-one-cross-tool-verb);
-`pre-commit add exclude` is refused, naming it.
+[`all add-exclude`](../SKILL.md#the-one-cross-tool-verb);
+`pre-commit add-exclude` is refused, naming it.
 
-### `add hook`
-
-```text
-add hook <repo> <id> <stage> [key=value …] [for <requester>]
-```
-
-A pack's line, as the uv pack spells it:
+### `add-hook`
 
 ```text
-pre-commit add hook local uv-lock-check pre-commit name="uv lockfile is current" description="…" entry="mise x -- uv lock --check" files="(^|.*/)pyproject\.toml$" language=system pass_filenames=false
+pre-commit add-hook --repo <repo> --id <id> --stage <stage> [--<key> <value>]… [--for <requester>]
 ```
 
-- **`<repo>`** is `local`, or the `https://` URL of a hook repository.
-- **`<id>`** is the hook id — letters, digits, `-`, `_`.
-- **`<stage>`** is one of `default_install_hook_types` — `pre-commit`,
-  `commit-msg`, `post-commit` — or `manual`. Any other is refused, naming the
-  list: a hook at a stage nothing installs never runs, and nothing reports it.
-  It is written as `stages: [<stage>]`, and left out for `pre-commit`, which
-  `default_stages` already says.
-- **`key=value`** pairs are the hook's keys, written in the order given:
-  `name`, `description`, `entry`, `language`, `files`, `exclude`, `types`,
-  `args`, `pass_filenames`, `always_run`, `require_serial`, and `rev` for a
-  URL repo. An unknown key is refused, naming these. A value given quoted,
-  `"…"`, is taken exactly — every character between the quotes, a `\"` read
-  as a quote and every other backslash kept, so a `files` regex keeps its
-  `\.` — and written as a YAML scalar that reads back the same characters. A
-  value given bare holds no quote and no space. `true` and `false` are written
-  as booleans; `types` and `args` take a comma-separated list, written as a
-  flow sequence.
-- **A `local` hook** needs `name`, `entry` and `language=system`, and its
-  `entry` begins `mise x -- ` — the hook runner does not run under the
-  developer's activated environment, so without it neither `mise` nor the tool
-  it pins is on `PATH`, and the version is mise's, never one pre-commit
-  built. **A URL repo** needs `rev=`, a pinned tag.
+A pack's entry, as the uv pack spells it:
+
+```yaml
+- {
+    tool: pre-commit,
+    verb: add-hook,
+    repo: local,
+    id: uv-lock-check,
+    stage: pre-commit,
+    name: "uv lockfile is current",
+    description: "…",
+    entry: "mise x -- uv lock --check",
+    files: '(^|.*/)pyproject\.toml$',
+    language: system,
+    pass-filenames: false,
+  }
+```
+
+- **`--repo`** is `local`, or the `https://` URL of a hook repository.
+- **`--id`** is the hook id — letters, digits, `-`, `_`.
+- **`--stage`** is one of `default_install_hook_types` — `pre-commit`,
+  `commit-msg`, `post-commit`, `post-merge` — or `manual`. Any other is
+  refused, naming the list: a hook at a stage nothing installs never runs,
+  and nothing reports it. It is written as `stages: [<stage>]`, and left out
+  for `pre-commit`, which `default_stages` already says.
+- **The hook's keys**, each optional, written in this order whatever order
+  the call gives them: `--name`, `--description`, `--entry`, `--language`,
+  `--files`, `--types`, `--args`, `--pass-filenames`, `--always-run` —
+  written `pass_filenames`, `always_run` — and `--rev` on the `- repo:`
+  line's entry for a URL repo. An unknown flag is refused, naming these. A
+  value is one line, taken exactly — a `files` regex keeps its `\.` — and
+  written as a YAML scalar that reads back the same characters: plain where
+  that is safe, double-quoted otherwise. The two switches are written as
+  booleans; `--types` and `--args` take a comma-separated list, written as a
+  flow sequence of quoted strings.
+- **A `local` hook** needs `--name`, `--entry` and `--language system`, and
+  takes no `--rev`; its entry begins `mise x -- ` — the hook runner does not
+  run under the developer's activated environment, so without it neither
+  `mise` nor the tool it pins is on `PATH`, and the version is mise's, never
+  one pre-commit built. **A URL repo** needs `--rev`, a pinned tag.
+- **A `post-commit` or `post-merge` hook is always written
+  `always_run: true`** — it runs after the fact, over no staged files, so a
+  `files:` filter would skip it on most runs. Left out, it is added;
+  `--always-run false` on one is refused.
 
 It writes, in the requester's block at the end of `repos:`, one `- repo:`
 entry per repository the requester names, its hooks below in call order.
 A hook id the base, another block or a user line already defines in the file
-is a **conflict row** — `keep-existing` or `overwrite` — never a second hook
-of the same id; the same hook asked for again, key for key, writes nothing.
+is a **conflict row** — `keep-existing` leaves the other, `overwrite` takes
+it out and writes this one — never a second hook of the same id; the same
+hook asked for again, key for key, writes nothing. Every write is then
+checked with `mise x -- pre-commit validate-config`
+([what a written call runs](../SKILL.md#what-a-written-call-runs)).
 
 **What a pack's hook is for.** A gate tool is configured once, in its mise
 task, and reaches the commit through the `format`, `lint` or `sec` hook: a
-pack that needs a gate **overlays the task**, never adds a hook. `add hook` is
+pack that needs a gate **overlays the task**, never adds a hook. `add-hook` is
 for a check that is **not** a gate tool — uv's lockfile freshness — and such a
 hook is scoped with `files:` to what it validates, and takes
-`pass_filenames=false` when it acts on the repo as a whole.
+`--pass-filenames false` when it acts on the repo as a whole.
 
-### `add linter-ignore`
+### `add-linter-ignore`
 
-Each `<path>` is a directory name, written as `- "**/<path>/"` in the
-requester's block inside `ignores:`. `**/` because a generated tree sits at
-its **project** root, at any depth in a monorepo; a repo whose own source
-directory shares a generic name (`build`, `Derived`) negates it by hand, as a
-user line — `- "!src/build/"`. Only a generated tree belongs there: a call
-typed by a person naming a path git tracks is shown with that warning in its
-row before it is approved.
+Each path in `--paths` is a directory name — a trailing `/` is dropped —
+written as `- "**/<path>/"` in the requester's block inside `ignores:`.
+`**/` because a generated tree sits at its **project** root, at any depth in
+a monorepo; a repo whose own source directory shares a generic name
+(`build`, `Derived`) negates it by hand, as a user line — `- "!src/build/"`.
+Only a generated tree belongs there: a call with no `--for` naming a path
+git tracks files under raises a warning row saying so, answered `ok`
+before it is written.
 
-### `set scopes`
+### `set-scopes`
 
-`set scopes <id>,<id>,…` fills [`commitScopes`](#2-the-marked-positions) as
-`all`'s `scopes=` does, and nothing else — the way to change the list without
-re-running `all`. Each id is a slug; the list is the base's position, so a
-`for` is refused.
+`set-scopes --scopes <id>,<id>,…` fills
+[`commitScopes`](#2-the-marked-positions) as `all`'s `--scopes` does, and
+nothing else — the way to change the list without re-running `all`. Each id
+is a slug; the list is the base's position, so a `--for` is refused.
+
+### `remove`
+
+`remove --for <requester>` takes the requester's blocks out of the global
+`exclude`, `repos:` and `ignores:`; a shared exclude or ignore passes to the
+next sharer.
 
 ## 5. The gate doctrine
 
@@ -330,7 +386,7 @@ reach for is deleting the hook. Run them when a hook is added or a scope
 changes:
 
 ```sh
-pre-commit run --config .config/pre-commit-config.yaml \
+mise x -- pre-commit run --config .config/pre-commit-config.yaml \
   --hook-stage manual --all-files check-hooks-apply check-useless-excludes
 ```
 
@@ -347,21 +403,27 @@ stated in the commit message.
 
 ## 6. The graph refresh hook
 
-The base's last local hook refreshes the knowledge graph after every commit:
+The base's last local hook refreshes the knowledge graph after every commit,
+and after every merge or pull that moves the branch:
 
 ```yaml
 - id: graphify-refresh
   name: Refresh the graphify graph (mise run code:graph)
   description: Rebuilds the knowledge graph in the background after each
-    commit; the task skips a worktree, a rebase and a missing graphify.
+    commit and each merge or pull; the task skips a worktree, a rebase and
+    a missing graphify.
   entry: mise x -- mise run code:graph
   language: system
   pass_filenames: false
   always_run: true
-  stages: [post-commit]
+  stages: [post-commit, post-merge]
 ```
 
-`post-commit` cannot fail a commit — it runs after the commit exists — and
+`post-merge` is what keeps the graph current on a pull: code a teammate
+committed reaches the checkout through a merge, which no `post-commit` sees.
+Both stages run after the fact over no staged files, which is why the hook
+is `always_run`. Neither can fail a commit or a merge — each runs after it
+exists — and
 `code:graph` exits 0 when the graph tool is missing, is a no-op in a linked
 worktree, mid-rebase or on a commit that touched only `graphify-out/`, and
 runs detached, so the commit returns at once — one rebuild at a time, under
@@ -394,18 +456,21 @@ layout, each step a row:
   the hook config — the markers naming a `<name>.yaml` in the retired
   fragment directory under `.config/` — is rewritten as a `# >>> <name>` block
   holding the same entries, and the trailing comment that described the merge
-  goes. The pack's own `add hook` call, run next, then finds its block already
+  goes. The pack's own `add-hook` entry, run next, then finds its block already
   written. Each fragment file is deleted, and the directory with its last
   file.
-- **`default_install_hook_types`** gains `post-commit` and the
-  `graphify-refresh` hook lands — one row each.
+- **`default_install_hook_types`** gains `post-commit` and `post-merge`, and
+  the `graphify-refresh` hook lands at both stages — one row each. A repo
+  installed before needs `setup:precommit` re-run to install the new type;
+  `all`'s `setup:all` does it.
 - **The global exclude and the linter ignores** are sorted as dprint's are
   ([its migration](dprint.md#6-the-migration)): an entry the base does not
   hold stays a user line until a pack's call claims it; `target` is offered
-  for removal.
+  for removal as a `migrate` row. An exclude the script cannot read is a
+  `needs-edit` row, made as the list at the top of this reference says.
 - **`commitScopes`** keeps every scope it lists — a scope is never dropped —
-  and the `scopes` argument adds to it; the forge links are re-derived from
-  `origin` and shown as a row where they differ.
+  and `--scopes` adds to it; the forge links are re-derived from `origin`
+  and shown as a row where they differ.
 - **The lockfile entries** sourced from that pack are re-recorded as
   `tool-config/pre-commit@<version>` where the path is still the skill's.
 - **The repo-local pre-commit skill** the pack used to copy under

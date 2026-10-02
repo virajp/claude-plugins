@@ -13,6 +13,17 @@ The file it lands is under
 `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/gitleaks/`, laid out as it
 lands under the repo root.
 
+**gitleaks is scripted.** `tool-config.mjs` — [run as the skill
+says](../SKILL.md#running-the-script) — lands the file, writes each
+generated tree [`all add-exclude --generated`](../SKILL.md#the-one-cross-tool-verb)
+carries into the allowlist, takes a requester's block out again, and raises
+the drift and migration rows. It never writes a custom rule or a fingerprint
+entry: those are the person's, by hand, outside every block. Your part is
+relaying its rows, and the one change it hands back — an allowlist it cannot
+read, a `needs-edit` row: put `paths = [` and its closing `]` on their own
+lines, one entry per line, then re-run the same call's `preview` and finish
+with `check`.
+
 ## 1. What `all` lands
 
 | Landed                  | As                                                   |
@@ -48,7 +59,7 @@ the default ruleset's `generic-api-key` fires on any long high-entropy string �
 a cache index full of hashes fails the gate for a hash, not a credential. The
 base's `gitleaks` block holds `graphify-out`, `build` and `dist`; every other
 entry arrives through
-[`all add exclude generated`](../SKILL.md#the-one-cross-tool-verb) and
+[`all add-exclude --generated`](../SKILL.md#the-one-cross-tool-verb) and
 nothing else, so the list is a subset of the formatters' set by construction:
 
 ```toml
@@ -65,12 +76,13 @@ paths = [
 ]
 ```
 
-A directory `<d>` is `'''(^|/)<d>/'''` and a file glob is spelled as
-[the hook config's](pre-commit.md#3-the-global-exclude) regex is, each a TOML
-literal string. The list is **narrower** than the formatters' on purpose: the
+Each entry is [the hook config's](pre-commit.md#3-the-global-exclude) regex
+for the path — a directory `<d>` (a trailing `/` or no glob) as
+`'''(^|/)<d>/'''`, a file glob anchored with `$` — each a TOML literal
+string. The list is **narrower** than the formatters' on purpose: the
 scanner already skips `.git`, `node_modules` and the named lockfiles through
 upstream's defaults, and `.claude/` is authored source a scanner must scan. An
-exclude added without `generated` never reaches it. Widening it to tracked
+exclude added without `--generated` never reaches it. Widening it to tracked
 source is how a scanner quietly stops scanning.
 
 **A gitignored `.env` is not on the list.** `code:sec`'s full scan skips one
@@ -91,13 +103,15 @@ indistinguishable from a real secret somebody got tired of looking at.
 
 ## 3. The verbs
 
-| Instruction          | Writes to                                     |
-| -------------------- | --------------------------------------------- |
-| `remove <requester>` | `.config/gitleaks.toml` — its allowlist block |
+| Call                                | Writes to                                     |
+| ----------------------------------- | --------------------------------------------- |
+| `gitleaks remove --for <requester>` | `.config/gitleaks.toml` — its allowlist block |
 
 Nothing else. The allowlist is written only through
-[`all add exclude generated`](../SKILL.md#the-one-cross-tool-verb);
-`gitleaks add allowlist` or `gitleaks add exclude` is refused, naming it.
+[`all add-exclude --generated`](../SKILL.md#the-one-cross-tool-verb);
+`gitleaks add-allowlist` or `gitleaks add-exclude` is refused, naming it.
+`all remove --for <requester>` takes the same block out, along with
+everything else the requester holds in dprint and pre-commit.
 
 ## 4. Running it
 
@@ -106,7 +120,7 @@ Nothing else. The allowlist is written only through
 ```sh
 mise run code:sec            # gitleaks dir . --config .config/gitleaks.toml --redact=50, plus grype
 mise run code:sec --staged   # gitleaks git --staged over the index; what the `sec` hook runs
-gitleaks git . --log-opts="--all"   # the whole history, once, by hand
+mise x -- gitleaks git . --config .config/gitleaks.toml --log-opts="--all"   # the whole history, once, by hand
 ```
 
 `--redact` truncates the matched value: a scanner that prints the secret it
@@ -136,8 +150,9 @@ turns a backlog into a permanent blind spot.
 
 `all` on a repo the retired gitleaks gate pack shaped: its allowlist entries
 become the `gitleaks` block where the base holds them, and stay user lines
-until a pack's `all add exclude generated` claims them — `target`, which no
-pack produces, offered for removal; its lockfile entry is re-recorded as
+until a pack's `all add-exclude --generated` claims them — `target`, which
+no pack produces, offered for removal as a `migrate` row; its lockfile entry
+is re-recorded as
 `tool-config/gitleaks@<version>`; and the repo-local gitleaks skill under
 `.claude/skills/gitleaks/` is deleted where it still matches its record, kept
 and reported where it does not.

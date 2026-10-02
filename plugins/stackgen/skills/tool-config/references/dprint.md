@@ -14,12 +14,26 @@ files it lands are under
 `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/dprint/`, laid out as they land
 under the repo root.
 
+**dprint is scripted.** `tool-config.mjs` — [run as the skill
+says](../SKILL.md#running-the-script) — lands the three files, writes each
+plugin a pack asks for with its config, writes each exclude
+[`all add-exclude`](../SKILL.md#the-one-cross-tool-verb) carries, records
+every key in the lock, raises the conflict, drift and migration rows, and
+then runs this formatter over every file the call wrote. A greenfield repo
+needs no edit by hand. This reference is the why behind what it writes, for a
+person reading the result; your part is relaying its rows and making the one
+change it hands back — a `.config/dprint.json` that is not strict JSON (a
+`//` comment, a trailing comma, a JSONC file renamed), a `needs-edit` row:
+rewrite it as strict JSON, keeping every key, then re-run the same call's
+`preview` and finish with `check`. When you edit a dprint file yourself, the
+rules below are what you hold it to.
+
 | Section                                                    | Read before                                        |
 | ---------------------------------------------------------- | -------------------------------------------------- |
 | [1. What `all` lands](#1-what-all-lands)                   | running `all`, or reading what it landed           |
-| [2. The plugins](#2-the-plugins)                           | `dprint add plugin`, or widening what is formatted |
-| [3. The exclusion set](#3-the-exclusion-set)                 | `all add exclude`, or narrowing what is formatted  |
-| [4. The verbs](#4-the-verbs)                               | any instruction naming `dprint`                    |
+| [2. The plugins](#2-the-plugins)                           | `dprint add-plugin`, or widening what is formatted |
+| [3. The exclusion set](#3-the-exclusion-set)               | `all add-exclude`, or narrowing what is formatted  |
+| [4. The verbs](#4-the-verbs)                               | any call naming `dprint`                           |
 | [5. Two routes to one config](#5-two-routes-to-one-config) | touching the root shim or a call site              |
 | [6. The migration](#6-the-migration)                       | running `all` on a repo the old gate pack shaped   |
 
@@ -35,9 +49,10 @@ under the repo root.
 runner's `check-json` rejects a `//` line, and dprint rejects an unknown
 property. So, as [the skill](../SKILL.md#blocks) says for any plain-JSON file,
 the lock entry's `keys:` records what each requester wrote — a whole key
-(`typescript`) or one entry of a list (`plugins[typescript]`,
-`excludes[node_modules]`) — and the `dprint` base is every key no requester
-and no user holds.
+(`typescript`) or one entry of a list, the plugin by its name and the
+exclude as the file spells it (`plugins[typescript]`,
+`excludes[**/node_modules/]`) — and the `dprint` base is every key no
+requester and no user holds.
 
 **`.config/taplo.toml`** decides TOML layout and is reached only through the
 `exec` plugin, so the two land together or the TOML half formats with taplo's
@@ -62,10 +77,10 @@ coverage is adding a plugin; narrowing it is
 **Plugins are pinned by version in the URL.** A floating reference formats
 differently on a machine that resolved it later, and the diff lands on whoever
 commits next. The URL below is what a first write uses; after that the version
-in the file is the file's — no task moves it; a person runs
-`dprint config update` by hand, in dev, until the formatter moves onto the
-skill's script — so a version differing from this table is never drift.
-Drift compares the plugin, not its version.
+in the file is the file's — neither the script nor any task moves it; a
+person runs `mise x -- dprint config update --config .config/dprint.json` by
+hand, in dev — so a version differing from this table is never drift. Drift
+compares the plugin, not its version.
 
 | Plugin        | URL written first                                                 | Config key   | Held by                            |
 | ------------- | ----------------------------------------------------------------- | ------------ | ---------------------------------- |
@@ -116,16 +131,21 @@ set is universal — true of every repo whatever its stack:
 The base is a block in each list — the `dprint` block in both formatter files,
 the `pre-commit` block in the hook config's, the `gitleaks` block in the
 allowlist — and every other entry is a stack's, added by its pack through
-[`all add exclude`](../SKILL.md#the-one-cross-tool-verb): pnpm's
+[`all add-exclude`](../SKILL.md#the-one-cross-tool-verb): pnpm's
 `node_modules`, `.turbo`, `*-lock.json`, `*-lock.yaml`; uv's `.venv`;
 swiftpm's `.build`, `.swiftpm`; swiftui's `Derived`, `DerivedData`,
-`*.xcassets` (Xcode rewrites every `Contents.json` inside one, so a formatted
-one is rewritten back on the next edit in the IDE). A tree no pack produces is
-never in a repo's lists.
+`*.xcassets/` (Xcode rewrites every `Contents.json` inside one, so a formatted
+one is rewritten back on the next edit in the IDE — and the trailing `/` is
+what makes it the directory, excluded with everything inside, rather than a
+file glob that matches nothing). A tree no pack produces is never in a
+repo's lists.
 
-**The spellings.** A directory `<d>` is `**/<d>/` in `.config/dprint.json`'s
-`excludes` and `**/<d>/**` in `.config/taplo.toml`'s `exclude`; a file glob
-`<g>` is `**/<g>` in both. Each is written in the requester's block — in
+**The spellings.** A path is a directory when it ends in `/` — a glob
+included — or holds neither `*` nor `?`; otherwise it is a file glob
+([the skill's rule](../SKILL.md#the-one-cross-tool-verb)). A directory `<d>`
+is `**/<d>/` in `.config/dprint.json`'s `excludes` and `**/<d>/**` in
+`.config/taplo.toml`'s `exclude`; a file glob `<g>` is `**/<g>` in both. In
+`excludes` a requester's entries are its `keys:` in the lock; in
 `taplo.toml` the `# >>> <requester>` lines sit inside the array — and the
 hook config's and the allowlist's spellings are
 [pre-commit's](pre-commit.md#3-the-global-exclude) and
@@ -157,22 +177,32 @@ comment.
 
 ## 4. The verbs
 
-| Instruction                           | Writes to                                                             |
-| ------------------------------------- | --------------------------------------------------------------------- |
-| `add plugin <name>`                   | `.config/dprint.json` — the URL, the config key                       |
-| `remove <requester>`                  | every dprint file holding its keys or blocks                          |
+| Call                                      | Writes to                                                 |
+| ----------------------------------------- | --------------------------------------------------------- |
+| `dprint add-plugin --name <name>`         | `.config/dprint.json` — the URL, the config key           |
+| `dprint remove --for <requester>`         | every dprint file holding its keys or blocks              |
 
-**`add plugin <name>`** takes a name from [the plugin table](#2-the-plugins)
-and nothing else; an unknown name is refused, naming the table. It inserts
-the URL into `plugins` just ahead of `exec`, which stays last so a real
-plugin takes any extension both claim; and writes the plugin's config key
-among the top-level keys in alphabetical order, as the asset keeps them. A
-base plugin asked for is already satisfied, and the row says so.
+A pack's entry is `{tool: dprint, verb: add-plugin, name: typescript}`, run
+`--for` the pack by `apply-entries`.
+
+**`add-plugin --name <name>`** takes a name from
+[the plugin table](#2-the-plugins) and nothing else; an unknown name is
+refused, naming the table. It inserts the URL into `plugins` just ahead of
+`exec`, which stays last so a real plugin takes any extension both claim;
+and writes the plugin's config key among the top-level keys in alphabetical
+order, as the asset keeps them, unless the file already has that key. A
+base plugin asked for is already satisfied, and the call notes so. A plugin
+another requester already wrote is [shared](../SKILL.md#blocks) — a
+`share` row, nothing added to the file; one a user line holds is satisfied.
+
+**`remove --for <requester>`** takes out every key the lock records for it
+— a plugin, its config key, its excludes — and its block in `taplo.toml`'s
+`exclude`; a key another requester shares passes to the next sharer instead.
 
 **No exclude verb.** An exclude is added only through
-[`all add exclude`](../SKILL.md#the-one-cross-tool-verb), because one list
+[`all add-exclude`](../SKILL.md#the-one-cross-tool-verb), because one list
 widened alone is the drift the one set exists to prevent;
-`dprint add exclude` is refused, naming it.
+`dprint add-exclude` is refused, naming it.
 
 **Running it** is the task library's: `mise run code:format` checks,
 `--fix` rewrites, and the task passes `--config .config/dprint.json` with
@@ -180,7 +210,11 @@ widened alone is the drift the one set exists to prevent;
 person run. Never hand-fix whitespace to satisfy `check` — a hand fix that
 differs from what `fmt` produces fails again next run. The repo formatter runs
 first in `code:format`, ahead of any language formatter a pack wires into the
-same task.
+same task. **The script runs it too**, on every file a call writes, as
+`mise x -- dprint fmt --config .config/dprint.json --allow-no-files <files>`
+([what a written call runs](../SKILL.md#what-a-written-call-runs)) — so
+where a landed line folds is this formatter's decision, never the script's
+and never yours, and a repo `all` lands passes its own `check`.
 
 ## 5. Two routes to one config
 
@@ -227,11 +261,15 @@ layout, each step a row:
 - **The lockfile entries** sourced from that pack are re-recorded as
   `tool-config/dprint@<version>` where the path is still the skill's.
 - **`.config/dprint.json`'s plugins and keys** are sorted into the base, each
-  requesting pack's keys once its own `add plugin` call runs, and the user's
+  requesting pack's keys once its own `add-plugin` entry runs, and the user's
   keys — a plugin no base and no pack asks for stays, the user's.
 - **The excludes** the base does not hold are kept as the user's lines until
-  a pack's `all add exclude` claims them; `target`, which the old pack
-  shipped and no pack produces, is shown as a row offering its removal.
+  a pack's `all add-exclude` claims them; `target`, which the old pack
+  shipped and no pack produces, is shown as a `migrate` row offering its
+  removal — `ok` removes it, `keep-existing` leaves it.
+- **A file it cannot read** — a `.config/dprint.json` that is not strict
+  JSON — is a `needs-edit` row, never a guess: make it strict JSON by hand,
+  then re-run.
 - **The repo-local dprint skill** the pack used to copy under
   `.claude/skills/dprint/` is deleted where its content still matches its
   record, and kept and reported where it does not.

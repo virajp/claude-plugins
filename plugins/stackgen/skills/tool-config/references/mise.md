@@ -112,7 +112,8 @@ needs it**.
   mise release `env_conf_d` was tested on.
 - **`conf.d/tools.dev.toml`** — what a human needs locally that a pipeline
   does not: formatters, linters, scanners, pre-commit, the graph tool and
-  the uv and Python it locks with.
+  the uv and Python it locks with, and the `node` the tool-config script
+  itself runs on ([the node pin](#the-node-pin)).
 - **`conf.d/shell_alias.dev.toml`** — the repo's **shell aliases**, and
   nowhere else. Aliases need `mise activate`, which is a human's shell; CI
   never loads this file, so nothing in the pipeline may depend on one. Three
@@ -178,8 +179,9 @@ pnpm, eslint, flutter, swift and swiftui packs calls it as `linter`: one pin is
 one version those packs agree on, where a per-run fetch is whatever the
 registry serves that minute, and it is in the base because the pipeline runs
 `code:lint`. The binary is a Node script and needs a `node` on PATH — the
-repo's own pin where it has one, else, for the packs that pin none (swift,
-swiftui, flutter), the machine's. The tasks call it as
+repo's own pin: a runtime pin where the repo has one, else, under
+`MISE_ENV=dev`, [the base's dev pin](#the-node-pin), and in a pipeline with
+neither (swift, swiftui, flutter), the machine's. The tasks call it as
 `mise which linter --tool npm:@askviraj/linter`, never by bare name: a Node
 repo puts `node_modules/.bin` ahead of mise's tool bins, where a dependency's
 `linter` would shadow the pin.
@@ -194,6 +196,35 @@ package under its weekly-download threshold on a first, unlocked install; the
 exemption is this package's alone and its dependencies stay gated), and do
 dependency lifecycle scripts run only when listed in `allow_builds`, which
 the pin leaves empty.
+
+### The node pin
+
+`node = { version = "<exact>" }` is in the base's `conf.d/tools.dev.toml`
+because the tool-config script runs on it, as `mise x -- node …` under
+`MISE_ENV=dev` ([the skill's](../SKILL.md#running-the-script)): the repo's
+own node, never an ad-hoc one. Only the very first `all` on a repo with no
+mise config runs on the `node` on `PATH`; that `all` lands the pin and its
+`setup:all` installs it.
+
+**A tool is pinned once, and node is no exception.** A repo whose runtime is
+node — a stack whose language facts name `mise_tool: node` — wants its node
+in `tools.toml`, through `add-tool --name node --version <v> --env all` or by
+hand, since CI needs it and never loads a dev file; the dev pin alone
+satisfies a local toolchain check but not the pipeline. The two meet as any
+base pin and a repo pin do ([what goes where](#what-goes-where)): the
+one-tool-per-name rule is checked across every tools file, so whichever is
+written second is a conflict row, never a second line. When the repo's pin
+is there first, `all` raises the row for the base's dev pin —
+`keep-existing` keeps the repo's `tools.toml` pin and leaves the base's out,
+`overwrite` takes the base's and removes the repo's, which leaves CI with no
+node — say so when you relay the row. When the base's pin is
+there first, an `add-tool`
+for node `--env all` raises the row against it — `overwrite` drops the
+base's dev pin and writes the runtime pin in `tools.toml`; `keep-existing`,
+on a pack's call, is recorded in its block. Either way, once the base's own
+line is gone a later `all` finds node held in `tools.toml` and leaves the
+base without it — no row again. The runtime pin serves the script as well
+as the dev pin did: `tools.toml` loads under `MISE_ENV=dev` too.
 
 ### Exact pins, no lock
 
@@ -261,7 +292,8 @@ its own. `setup:ai` wires the
 tool for the agent with `graphify install --platform claude` and installs no
 git hook of its own: graphify's raw hooks pin a Python path and break on the
 next upgrade. The hook runner's `graphify-refresh` hook runs `code:graph` after
-every commit ([pre-commit's](pre-commit.md#6-the-graph-refresh-hook)).
+every commit and every merge or pull
+([pre-commit's](pre-commit.md#6-the-graph-refresh-hook)).
 
 ### Prerequisites named but not owned
 
@@ -307,6 +339,16 @@ picked no stack is supposed to see it.
 still hashes to its lock record, a later `all` with a newer stackgen
 replaces it with a plain `write` row; only a file edited by hand since it was
 landed raises a drift row.
+
+**Every file is formatted before it is recorded.** Once a call has written
+its files, the script runs the shipped formatter over them —
+`mise x -- dprint fmt --config .config/dprint.json --allow-no-files <files>`,
+mise's TOML through the `exec` plugin and `.config/taplo.toml` — and the hash
+it records is of the formatted file
+([what a written call runs](../SKILL.md#what-a-written-call-runs)). So the
+layout of a landed line — its alignment, where it folds — is the
+formatter's, never the script's, and a landed repo passes its own
+`code:format`. A repo with no `.config/dprint.json` skips the step.
 
 **The repo-local mise skill**, `.claude/skills/mise/SKILL.md`, is how an
 agent working in the repo runs its tasks: every task through `mise run`,
@@ -1086,7 +1128,8 @@ external counter is needed.
 #### `code:graph` — the graph refresh
 
 See [the graph tool](#the-graph-tool), and its single-flight lock. The
-`post-commit` hook runs it after every commit, never `code:all`, and
+`graphify-refresh` hook runs it at `post-commit` and `post-merge` — after
+every commit, merge and pull — never `code:all`, and
 `--force` rebuilds even when the last commit touched only `graphify-out/`.
 
 ### `p:<id>:*` — one project's own commands
