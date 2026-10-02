@@ -10,9 +10,9 @@ backlog_pieces: []
 
 ## Status
 
-**RUNNING**
+**COMPLETE**
 
-RUNNING since 2026-10-02 in .worktrees/2026-10-02-git-workflow-git-only
+COMPLETE 2026-10-02 — 0fd8b2b1 7058bf6f
 
 ## Consent
 
@@ -132,11 +132,11 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                                | Kind | Owns                                                                                                    | Depends on | Status  | Commit   |
-| -- | ---- | ---------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
-| U1 | 1    | [01-git-workflow.md](01-git-workflow.md) | edit | `plugins/vwf/skills/git-workflow/**`                                                                    | —          | green   | 0fd8b2b1 |
-| U2 | 2    | [02-docs.md](02-docs.md)                 | edit | `readme.md`, `CLAUDE.md`, `.claude/docs/**`, `.claude/skills/vwf-plugin/**`, `site/src/content/docs/**` | U1         | green   | 7058bf6f |
-| U3 | 3    | [03-gates.md](03-gates.md)               | edit | —                                                                                                       | U2         | pending |          |
+| Id | Wave | Unit file                                | Kind | Owns                                                                                                    | Depends on | Status | Commit   |
+| -- | ---- | ---------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------- | ---------- | ------ | -------- |
+| U1 | 1    | [01-git-workflow.md](01-git-workflow.md) | edit | `plugins/vwf/skills/git-workflow/**`                                                                    | —          | green  | 0fd8b2b1 |
+| U2 | 2    | [02-docs.md](02-docs.md)                 | edit | `readme.md`, `CLAUDE.md`, `.claude/docs/**`, `.claude/skills/vwf-plugin/**`, `site/src/content/docs/**` | U1         | green  | 7058bf6f |
+| U3 | 3    | [03-gates.md](03-gates.md)               | edit | —                                                                                                       | U2         | green  | —        |
 
 ## Shared-file rule
 
@@ -227,6 +227,9 @@ none
 | 2    | U2 docs         | opus  | 1     | pass    | edit; site vwf.md /vwf:git-workflow section: git worktree add from the current branch, git worktree remove, never a Claude Code worktree tool (D3); DECIDED: D4 branch-name rule kept out of the manual; docs-sync's own commit skipped (unit never commits); other cited passages still accurate                                                                                                                                                                                                    | —      |
 | 2    | R2 wave review  | opus  | 1     | pass    | 0 findings; CONTRACT clean, RULINGS clean                                                                                                                                                                                                                                                                                                                                                                                                                                                            | —      |
 | 2    | wave gate       | —     | 1     | pass    | 8/8 green (code:precommit green on re-run); U2 7058bf6f                                                                                                                                                                                                                                                                                                                                                                                                                                              | —      |
+| 3    | U3 gates        | opus  | 1     | pass    | no file changed; D9 holds (vwf-v20.0.1 / site-v1.1.49 vs 20.1.0 / 1.1.50); 8/8 gate green, no reformat                                                                                                                                                                                                                                                                                                                                                                                               | —      |
+| 3    | R3 wave review  | —     | 1     | pass    | empty diff — U3 owns nothing and changed nothing; no reviewer dispatched                                                                                                                                                                                                                                                                                                                                                                                                                             | —      |
+| —    | reconcile       | —     | 1     | pass    | final wave gate 8/8 (code:precommit re-padded index.md, green on re-run); kept gates 3/3: tool names only in the Core Rule (SKILL.md:29), no Step 2d/Native Worktree, BRANCH_NAME defined :39/:45 before use :54                                                                                                                                                                                                                                                                                     | —      |
 
 ## Launch
 
