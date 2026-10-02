@@ -18,8 +18,8 @@ A row's answer never reaches a repo other than the one it names.
 | ----------------------------------------------- | ------------- | ------------------------------------- |
 | `CONTRIBUTING.md`                               | the repo root | always                                |
 | `.github/ISSUE_TEMPLATE/*`                      | the same path | the repo's `forge` answer is `github` |
-| `licenses/MIT.txt` or `licenses/Apache-2.0.txt` | `LICENSE`     | question 6a, below                    |
-| `SECURITY.md`                                   | the repo root | question 6b, below                    |
+| `licenses/MIT.txt` or `licenses/Apache-2.0.txt` | `LICENSE`     | question 5a, below                    |
+| `SECURITY.md`                                   | the repo root | question 5b, below                    |
 
 **`init` evaluates the one condition itself**, from the same `forge` value
 it passes the materializer, and a skipped asset is a
@@ -89,11 +89,11 @@ left as it is, exactly as the base is.
 
 ## The licence
 
-The licence is gated on question 6's **visibility** answer, and the gate comes
-first: a repo that answered **`private`** gets no licence row at question 6a
+The licence is gated on question 5's **visibility** answer, and the gate comes
+first: a repo that answered **`private`** gets no licence row at question 5a
 and **no `LICENSE`** — a licence grants the public rights a private repo is
 not offering — and nothing below applies to it. A repo that answered
-**`public`** has a row at 6a, and takes its own row's answer, one of three:
+**`public`** has a row at 5a, and takes its own row's answer, one of three:
 
 - **MIT** or **Apache-2.0** — copy that one text from the assets'
   `licenses/` directory to `LICENSE` at **that repo's** root, filling `<YEAR>`
@@ -109,7 +109,7 @@ already declares is a decision somebody made, and a row's answer is what a
 repo with no licence gets rather than a rewrite of one that is there. **Every
 spelling counts**: `LICENSE`, `LICENSE.md`, `LICENCE` and `COPYING` are each
 "already carries a licence file", and a repo with any one of them at its root
-has no licence row at 6a and takes no `LICENSE` beside it — only `LICENSE` is
+has no licence row at 5a and takes no `LICENSE` beside it — only `LICENSE` is
 on the allowlist, but the other three are the repo's own and are neither
 moved nor doubled. A private repo carrying one keeps it too: `init` removes
 no file on a visibility answer.
@@ -130,11 +130,11 @@ rather than writing an empty holder.
 kept, never replaced**, in every mode. The channel a repository already names
 is a decision somebody made, and the row's answer is what a repo with no such
 file gets rather than a rewrite of one that is there. The asset's template is
-written only where the file is absent, and **question 6b is asked only for a
+written only where the file is absent, and **question 5b is asked only for a
 repo where it will be written**: a repo keeping its own file has no row at
 that question, and the plan's section for it reports the file as kept.
 
-Question 6b is **one row per repo**, in the round that follows the visibility
+Question 5b is **one row per repo**, in the round that follows the visibility
 answer, and the row takes one of two shapes:
 
 - A **`public`** repo's row is a URL, proposed as **that repo's** origin
@@ -178,7 +178,7 @@ this reference no longer says anything about them:
 
 The policy's yield over a repo's own spelling and its `update_bot` condition
 are the renovate tool's; the spellings are the [tool-config
-table](tool-configs.md)'s, which seeds question 7. A repo that wants the
+table](tool-configs.md)'s, which seeds question 6. A repo that wants the
 service enabled still has to install it on the forge; say so at write time,
 since a policy nobody wired is inert without an error. The editor-shape
 defaults file that once shipped here is retired: nothing lands it, and a

@@ -9,7 +9,7 @@ lockfile — runs this landing **plus** the read-before-land passes below, so a
 tree that already holds something is read before a pack lands beside it.
 Nothing here reads or moves a source file in either mode.
 
-The eight questions in SKILL.md are already answered. Present the whole plan
+The seven questions in SKILL.md are already answered. Present the whole plan
 below, get **one** consent, then apply it in this order. The order is the
 contract: a step that runs early because it happens to be cheap produces a
 tree the next step has to undo.
@@ -94,7 +94,6 @@ plan. `init` names no tool and splices nothing there. The arguments:
 | `--linkage`                                   | `siblings` or `submodule`                         | the membership asset                  |
 | `--merge-model-develop`, `--merge-model-main` | `direct` or `pr`, the §11(a) preselection         | §11(a); re-passed if the answer moves |
 | `--runtimes`                                  | the language keys the stack read produced         | SKILL.md's stack read, per §5         |
-| `--plugin-sources`, `--plugins`               | question 5's confirmed rows; empty on **none**    | question 5                            |
 | `--scopes`                                    | the commit gate's scopes; empty where none        | §7, per existing repo pass 10         |
 | `--forge`, `--secrets`, `--update-bot`        | the three answers, spelled as the table below     | the table below                       |
 
@@ -153,7 +152,7 @@ this pass is running in:
 | ------------ | ------------------------------------------------ | -------------------------------- | ----------------------------------- |
 | `forge`      | `github` or `gitlab`, from the `origin` host     | §11(f)'s precondition, step 1    | the live host, always re-read       |
 | `secrets`    | the provider slug, as the menu spelled it        | question 4, once for the product | `answers.secrets`, re-asked seeded  |
-| `update_bot` | `renovate` or `dependabot`; `none` on **none**   | question 7, that repo's row      | that repo's `answers.repos` entry   |
+| `update_bot` | `renovate` or `dependabot`; `none` on **none**   | question 6, that repo's row      | that repo's `answers.repos` entry   |
 
 **The block is written as part of the landing pass**, in every mode, and the
 fourth column is what a later run reads. Its shape is
@@ -186,7 +185,7 @@ name — `when: update_bot: none` is legal — so a file conditioned on it lands
 exactly when the row picked no bot. A pack that marks nothing `when:` is
 untouched by all three and lands whole.
 
-**Question 7's mechanics**, where SKILL.md states the rule and this file the
+**Question 6's mechanics**, where SKILL.md states the rule and this file the
 read behind it: its seed is read per repo, from pass 1's root survey — the
 same evidence the [tool-config table](tool-configs.md)'s two rows carry: a
 file under any spelling the `renovate` row lists preselects `renovate`; a
@@ -279,7 +278,7 @@ a landed file after this step is a bug, not a template.
 
 **Two occurrences of `<REPO_URL>` are the security contact's, not the repo
 URL's.** In the hygiene assets' `SECURITY.md` that token is the whole reporting
-channel, and it takes question 6b's answer as typed — a URL or an email —
+channel, and it takes question 5b's answer as typed — a URL or an email —
 spliced by the contact procedure in [readme and licence](readme-and-license.md)
 rather than filled here. The issue-template chooser's *Report a vulnerability*
 entry follows the same answer: its `url:` takes the contact where the contact
@@ -464,8 +463,8 @@ resolved**, at the top of the run, and nothing here re-resolves them.
 **Every marked position in a file the tool-config skill lands is the
 skill's**, filled from §2's arguments: the repo-name key, the landing pair,
 the member-path key, the aggregator's member flags, the shell aliases, the
-plugin task's two lists, the two runtime positions and the commit gate's
-scopes. `init` owes each one its value, never a splice:
+two runtime positions and the commit gate's scopes. `init` owes each one its
+value, never a splice:
 
 - **`--repo`** — this repo's folder name, slugified, as question 1 confirmed
   it. A `shaped` repo skips that question; its folder slug is read and
@@ -487,9 +486,6 @@ scopes. `init` owes each one its value, never a splice:
   differs. A file still carrying the retired single key is the skill's to
   migrate.
 - **`--runtimes`** — §5's.
-- **`--plugin-sources`** and **`--plugins`** — question 5's confirmed rows
-  and only those. The workflow's own plugin and its dependency never reach
-  them, since question 5 drops both rows. A **none** passes both bare.
 - **`--scopes`** — this repo's confirmed ids, per
   [existing repo](existing-repo.md) pass 10; the forge links are the skill's.
 
@@ -529,12 +525,12 @@ yet"** through the pack's own print vocabulary, and exits 0.
 Runs in **every mode**, after the mode's landing and before the git pass —
 the `shaped` pipeline reaches it from
 [existing repo](existing-repo.md)'s post-landing paragraph — since questions
-3, 6a and 6b are asked whatever the mode, and a repo shaped years ago is as
+3, 5a and 5b are asked whatever the mode, and a repo shaped years ago is as
 entitled to its answers as a blank one.
 
 Per [hygiene assets](readme-and-license.md) — the stub, the licence
-question 6a answered from the assets' licence texts, and the security
-contact 6b answered, spliced into the assets' security template, each on that
+question 5a answered from the assets' licence texts, and the security
+contact 5b answered, spliced into the assets' security template, each on that
 reference's already-there rule, so a file the repo carries is kept and
 reported rather than written over. The rest of the hygiene assets landed in
 §2; these three wait for their answers and are placed here.
@@ -878,8 +874,8 @@ line, print the by-hand list below for it, and continue with the next repo.
    the same way a failed login is — reason named, by-hand list printed, run
    continuing.
 
-**The visibility default, read at question 6.** The same precondition is what
-lets question 6 propose a default before the plan, and the read is this — run
+**The visibility default, read at question 5.** The same precondition is what
+lets question 5 propose a default before the plan, and the read is this — run
 in each repo that has an `origin`, at question time, and never again:
 
 ```text
