@@ -1053,7 +1053,7 @@ anything at project scope.
    a project-scope dependency nothing needs any more. A failed prune warns
    and the task still finishes.
 
-No `claude` call in steps 3, 5, 6 or 7 aborts the task: each failure warns
+No `claude` call in steps 3 to 7 aborts the task: each failure warns
 and the run goes on.
 
 A plugin that arrives as another's declared dependency is never checked or
