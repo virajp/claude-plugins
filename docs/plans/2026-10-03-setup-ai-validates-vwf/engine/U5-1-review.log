@@ -1,0 +1,12 @@
+## /code-review high — loop U5, round 1, branch 2026-10-03-setup-ai-validates-vwf (range 225adbdc..2a9cad20)
+
+1. setup/ai:22 — plugin_installed treats a project-scope install of a DIFFERENT repo (projectPath elsewhere) and a disabled row (enabled:false) as installed; vwf/taste-skill then never land in this repo.
+2. setup/ai:63 — the update loop runs `claude plugin update --scope <scope>` for every row the machine lists, including other repos' project-scope rows; likely non-zero exit aborts setup:ai under set -e. Filter rows to projectPath == null or == repo root.
+3. setup/ai:50 — task now needs `pnpx`, but the mise base pins no pnpm (tools.toml "No runtime here"; tools.dev.toml pins node only); a non-node repo without vwf gets `pnpx: command not found`, set -e aborts setup:all.
+4. tools/mise.mjs:1187 — setup/ai special case precedes untouched(); a recorded, unedited setup/ai landed by an earlier stackgen is never moved to the new asset, so shaped repos keep installing vwf at project scope.
+5. tools/mise.mjs:1624 — add-plugin writes nothing into a setup/ai without a `# >>> mise` block; every previously landed task lacks one, so design-tool's taste-skill request silently becomes a note.
+6. setup/ai:54 — dropping graphify wiring (D8) leaves no caller of `graphify install --platform claude`; reverses decision 2026-10-01-installer-plugins-only J1 ("a shaped repo's setup:ai wires it") without recording it.
+7. schema.mjs:23 — pluginSource accepts only owner/repo or a path; rejects URL, git-SSH and ref-pinned sources `claude plugin marketplace add` accepts (the retired --plugin-sources pattern allowed ':' and '@').
+8. CLAUDE.md:271 — docs-ship-with-the-change: CLAUDE.md, readme and the manual contradict the new task until the docs unit lands.
+9. setup/ai:56 — bare `claude plugin marketplace update` under set -e: one stale/unreachable marketplace aborts the task before any plugin is upgraded.
+10. setup/ai:31 — each ensure_plugin re-runs `claude plugin list --json` (N+2 CLI spawns); a transient list failure reads as "absent" and triggers needless installs.

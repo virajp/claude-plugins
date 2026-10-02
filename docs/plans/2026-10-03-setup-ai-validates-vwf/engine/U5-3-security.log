@@ -1,0 +1,5 @@
+## /security-review — loop U5, round 3, range 225adbdc..472f44d0
+
+No findings.
+
+plugin/source strict patterns (no quote/$/backtick/backslash/space/leading -; ~/ dropped); projectPath quoted to cd in a subshell, no eval or unquoted expansion; a leading-dash projectPath would need write access to Claude plugin state (already more control); warn-and-continue tolerates only add/install/update/autoremove failures, none an integrity guard.

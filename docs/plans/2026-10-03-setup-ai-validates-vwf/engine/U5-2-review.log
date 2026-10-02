@@ -1,0 +1,12 @@
+## /code-review high — loop U5, round 2, range 225adbdc..a736499e
+
+1. setup/ai:27 — plugin_installed ignores `enabled`; a disabled vwf or taste-skill reads as installed, so design-session's "run setup:ai" halt loops forever.
+2. setup/ai:56 — a failing `pnpx @virajp.dev/claude-plugins@latest --all` aborts the task under set -e, breaking D1/D2 "continues whether or not it installed".
+3. setup/ai:72 — each `claude plugin update` in the loop is fatal; one unreachable unrelated user-scope plugin aborts setup:all in every shaped repo.
+4. setup/ai:23 — plugins_here drops `local`-scope rows and project installs reached from a git worktree or symlinked path (projectPath != pwd -P); the CLI's own enabled/projectEnabled for the cwd is the robust signal; duplicate user install follows.
+5. tools/mise.mjs:1647 — addPlugin writes `ensure_plugin` into a repo-owned setup/ai with a mise block without checking the file defines ensure_plugin → `command not found`; a disowned old task with no mise block gets only a note while the pack's halt text promises setup:ai installs it.
+6. schema.mjs:25 — pluginSource accepts `~/…` but the value is written inside double quotes, where bash does not expand `~`.
+7. references/mise.md:1086 (and :343) — doctrine says an unrecorded differing setup/ai keeps `hash: none`; code writes no record for it (taskOps returns []).
+8. tools/mise.mjs:1784 — `remove` disowns an edited setup/ai even when the removed requester has no block there; suggests one fix in settleRecords instead of three verb special cases.
+9. setup/ai:21 — N+2 `claude plugin list` spawns; a transient list failure reads as "absent".
+10. CLAUDE.md:386, :275 — docs contradict the shipped task until the docs unit lands.
