@@ -104,6 +104,7 @@ export function check(repoRoot: string): Finding[] {
     findings.push(...checkRootRefs(plugin, pluginsRoot));
     findings.push(...checkRetiredVocabulary(plugin));
     findings.push(...checkLandedCitations(plugin));
+    findings.push(...checkBareMiseUse(plugin));
   }
 
   findings.push(...checkDesignAdapters(plugins));
@@ -485,9 +486,9 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  *   answers is never evaluated, so the file lands everywhere, silently;
  * - the pack's **`binaries`, `lockfile` and `machine_env` facts** take the
  *   shapes `/vwf:doctor` and `/vwf:setup` read, and every `machine_env` name
- *   is set by a mise env entry in its `tool-config:` list — a structured
- *   `add-env` entry or a `mise add env` string — each entry a valid structured
- *   one or one of the string verbs a pack may ask for (`packFactFaults`).
+ *   is set by a structured mise `add-env` entry in its `tool-config:` list —
+ *   each entry a valid structured one or one of the non-mise string verbs a
+ *   pack may ask for (`packFactFaults`).
  *
  * A pack's `config/` tier holding a mise `conf.d` fragment or a `pre-commit.d`
  * file is a finding too, and each `stackgen:tool-config` asset tree is walked
@@ -648,13 +649,13 @@ const ENV_VAR_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
  * - `lockfile` is a non-empty list of paths or globs relative to the repo root,
  *   any match passing doctor's package-manager check;
  * - every `machine_env` entry names an env var, the command that `detect`s its
- *   value and the `question` setup asks — and the var is set by a valid mise
- *   env entry in the pack's `tool-config:` list (a structured `add-env` entry
- *   or a `mise add env` string), since that is what setup fills;
+ *   value and the `question` setup asks — and the var is set by a valid
+ *   structured mise `add-env` entry in the pack's `tool-config:` list, since
+ *   that is what setup fills;
  * - every `tool-config:` entry is a mapping the tool-config script's own
  *   schema accepts (`validateEntry`), or a string that parses as one of the
- *   verbs a pack may ask for, an exclude going through `all add exclude` alone
- *   (`toolConfigCall`).
+ *   non-mise verbs a pack may ask for, an exclude going through
+ *   `all add exclude` alone (`toolConfigCall`) — a mise entry is structured.
  *
  * Each is read by a caller that trusts its shape: a probe that is not a string
  * is never run, a lockfile glob that climbs out of the repo matches something
@@ -764,12 +765,9 @@ function packFactFaults(
         }
         return;
       }
-      const { fault, key } = toolConfigCall(call, slugs);
+      const fault = toolConfigCall(call, slugs);
       if (fault !== undefined) {
         faults.push(`\`tool-config[${index}]\` (${call}) ${fault}`);
-      }
-      else if (key !== undefined) {
-        declared.add(key);
       }
     });
   }
@@ -792,7 +790,7 @@ function packFactFaults(
       }
       else if (!declared.has(name)) {
         faults.push(
-          `${at} is set by no \`mise add env\` call in the pack's `
+          `${at} is set by no mise \`add-env\` entry in the pack's `
             + `\`tool-config:\` list — setup would ask and fill nothing`,
         );
       }
@@ -806,25 +804,8 @@ function packFactFaults(
   return faults;
 }
 
-/** A `to …` scope: every environment, or one of the three suffixes. */
-const TOOL_CONFIG_SCOPE = String
-  .raw`to (?:all environments|(?:dev|ci|test)(?: environment)?)`;
-/** A value, quoted as a TOML basic string or bare — a bare one carries no quote. */
-const TOOL_CONFIG_VALUE = String.raw`("(?:[^"\\]|\\.)*"|[^"\s]+)`;
-/** The three verbs a pack may ask for; the materializer appends `for <pack>`. */
-const TOOL_CONFIG_VERBS = {
-  tool: new RegExp(
-    String.raw`^mise add tool ([A-Za-z0-9@:/._-]+) ([A-Za-z0-9._+-]+) `
-      + `${TOOL_CONFIG_SCOPE}$`,
-  ),
-  env: new RegExp(
-    String.raw`^mise add env (\S+?)=${TOOL_CONFIG_VALUE} ${TOOL_CONFIG_SCOPE}$`,
-  ),
-  alias: new RegExp(
-    String.raw`^mise add alias (\S+?)=${TOOL_CONFIG_VALUE}`
-      + String.raw`(?: to dev(?: environment)?)?$`,
-  ),
-};
+/** A string entry for mise: refused, since a mise entry is structured. */
+const TOOL_CONFIG_MISE_STRING = /^mise(?: |$)/;
 /** The dprint plugins the skill's plugin table defines. */
 const DPRINT_PLUGINS =
   "markdown|pretty_yaml|json|exec|typescript|malva|markup_fmt|dockerfile";
@@ -871,30 +852,25 @@ const TOOL_CONFIG_FOR = / for \S+$/;
 /** An exclude asked of one tool, which would leave rule 15's lists disagreeing. */
 const TOOL_CONFIG_LONE_EXCLUDE =
   /^(dprint|pre-commit|gitleaks) add (?:exclude|excludes|allowlist)\b/;
-/** A Tera delimiter: mise renders it, so only a pack's own env value may carry one. */
-const TERA_DELIMITER = /\{\{|\{%|\{#/;
-/** An alias name: a TOML bare key, so `-` is allowed after the first character. */
-const ALIAS_NAME = /^[A-Za-z_][A-Za-z0-9_-]*$/;
 
 /**
- * One `tool-config:` entry against the verb grammar: the env key it sets, or
- * why it is refused. `slugs` names every pack, so a tail verb's `for <pack>`
- * reads as a suffix rather than text.
+ * One string `tool-config:` entry against the verb grammar: why it is refused,
+ * or nothing. `slugs` names every pack, so a tail verb's `for <pack>` reads as
+ * a suffix rather than text.
  */
 function toolConfigCall(
   call: string,
   slugs: ReadonlySet<string>,
-): { fault?: string; key?: string; } {
+): string | undefined {
   const words = call.trim().replace(/\s+/g, " ");
-  if (TOOL_CONFIG_VERBS.tool.test(words)) {
-    return {};
+  if (TOOL_CONFIG_MISE_STRING.test(words)) {
+    return "mise entries are structured — see "
+      + "plugins/stackgen/assets/pack-format.md";
   }
   const lone = TOOL_CONFIG_LONE_EXCLUDE.exec(words);
   if (lone !== null) {
-    return {
-      fault: `adds an exclude through \`${lone[1]}\` alone — ask `
-        + "`all add exclude [generated] <paths>`, which writes every list",
-    };
+    return `adds an exclude through \`${lone[1]}\` alone — ask `
+      + "`all add exclude [generated] <paths>`, which writes every list";
   }
   const verb = TOOL_CONFIG_GATE_VERBS.find(v => v.pattern.test(words));
   const bare = words.replace(TOOL_CONFIG_FOR, "");
@@ -904,47 +880,19 @@ function toolConfigCall(
     && (verb === undefined || !verb.tail || slugs.has(suffix))
     && TOOL_CONFIG_GATE_VERBS.some(v => v.pattern.test(bare))
   ) {
-    return {
-      fault: "ends in a `for <requester>` suffix — the materializer appends "
-        + "it, so a pack's line never carries one",
-    };
+    return "ends in a `for <requester>` suffix — the materializer appends "
+      + "it, so a pack's line never carries one";
   }
   if (verb !== undefined) {
-    const fault = verb.pattern === TOOL_CONFIG_HOOK
-      ? hookFault(words)
-      : undefined;
-    return fault === undefined ? {} : { fault };
+    return verb.pattern === TOOL_CONFIG_HOOK ? hookFault(words) : undefined;
   }
-  const env = TOOL_CONFIG_VERBS.env.exec(words);
-  const alias = env === null ? TOOL_CONFIG_VERBS.alias.exec(words) : null;
-  const match = env ?? alias;
-  if (match === null) {
-    return {
-      fault: "matches none of `mise add tool <name> <version> to <scope>`, "
-        + "`mise add env <KEY>=<value> to <scope>`, "
-        + "`mise add alias <name>=<command> [to dev]`, "
-        + "`dprint add plugin <name>`, "
-        + "`all add exclude [generated] <paths>`, "
-        + "`pre-commit add linter-ignore <paths>`, "
-        + "`pre-commit add hook <repo> <id> <stage> [key=value …]`, "
-        + "`grype add ignore <id> [reason]`, "
-        + "`git add ignore <patterns>`, `git add ignore template=<Name>` or "
-        + "`git add attribute <pattern> <attrs>`",
-    };
-  }
-  const name = match[1] ?? "";
-  const pattern = env !== null ? ENV_VAR_NAME : ALIAS_NAME;
-  if (!pattern.test(name)) {
-    return {
-      fault: `names \`${name}\`, which is not a \`${
-        pattern.source.slice(1, -1)
-      }\` name`,
-    };
-  }
-  if (alias !== null && TERA_DELIMITER.test(words)) {
-    return { fault: "carries a template delimiter outside an `add env` value" };
-  }
-  return env !== null ? { key: name } : {};
+  return "matches none of `dprint add plugin <name>`, "
+    + "`all add exclude [generated] <paths>`, "
+    + "`pre-commit add linter-ignore <paths>`, "
+    + "`pre-commit add hook <repo> <id> <stage> [key=value …]`, "
+    + "`grype add ignore <id> [reason]`, "
+    + "`git add ignore <patterns>`, `git add ignore template=<Name>` or "
+    + "`git add attribute <pattern> <attrs>`";
 }
 
 /**
@@ -2651,6 +2599,38 @@ function checkRetiredVocabulary(plugin: Plugin): Finding[] {
               + `migration, dissolved, moved, →, pre-22, format 2N)`,
           });
         }
+      }
+    }
+  }
+  return findings;
+}
+
+/** `mise use` running: a non-dash word or a `-g` flag after it. */
+const BARE_MISE_USE = /\bmise use (?:-g\b|[^-\s])/;
+/** The doctrine sentences that forbid it say so on the same line. */
+const BARE_MISE_USE_EXEMPT = /\bnever\b/i;
+
+/**
+ * No bare `mise use` anywhere a plugin ships.
+ *
+ * It writes a pin the config never reviewed, outside the block that owns it, so
+ * a tool is entered into the config first and installed with `mise install`.
+ * The walk is the whole plugin root, dot segments included, since a landed
+ * asset tree sits under one.
+ */
+function checkBareMiseUse(plugin: Plugin): Finding[] {
+  const findings: Finding[] = [];
+  for (const absolute of filesUnder(plugin.root)) {
+    const lines = readText(absolute).split("\n");
+    for (const [index, line] of lines.entries()) {
+      if (BARE_MISE_USE.test(line) && !BARE_MISE_USE_EXEMPT.test(line)) {
+        findings.push({
+          scope: `${plugin.dir}:${relative(plugin.root, absolute)}:${
+            index + 1
+          }`,
+          message: "runs a bare `mise use` — enter the tool into the config, "
+            + "then run `mise install`",
+        });
       }
     }
   }
