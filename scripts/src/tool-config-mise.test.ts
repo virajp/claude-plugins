@@ -207,9 +207,21 @@ function tree(dir: string): Record<string, { content: string; mode: string; }> {
 describe("greenfield all", () => {
   it("lands the golden tree byte for byte, every task 755, every file recorded", () => {
     apply(GREENFIELD);
-    const landed = tree(repo);
-    const lock = landed[".claude/stackgen/lock.yaml"];
-    delete landed[".claude/stackgen/lock.yaml"];
+    const lock = tree(repo)[".claude/stackgen/lock.yaml"];
+    // the gate tools' files `all` also lands are tool-config-gates.test.ts's golden
+    const gates = new Set(
+      [
+        ...(lock?.content ?? "").matchAll(
+          /- path: "?([^"\n]+)"?\n\s+source: tool-config\/(dprint|pre-commit|gitleaks|grype)@/g,
+        ),
+      ]
+        .map(m => m[1]),
+    );
+    const landed = Object.fromEntries(
+      Object.entries(tree(repo)).filter(([p]) =>
+        p !== ".claude/stackgen/lock.yaml" && !gates.has(p)
+      ),
+    );
     if (process.env["TOOL_CONFIG_GOLDEN"] === "write") {
       mkdirSync(dirname(golden), { recursive: true });
       writeFileSync(golden, JSON.stringify(landed, null, 2) + "\n");
