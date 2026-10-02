@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 
-#MISE description="Setup MISE: reshim, doctor & install the pinned versions"
+#MISE description="Setup MISE: install the pinned versions, reshim & doctor"
 #MISE hide=false
 
 set -e
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Install the pinned versions first: doctor fails while a pinned tool is missing; moving a pin forward is stackgen's tool-config, never this task.
+print_header "Setting up MISE ..."
+mise install
 
 # Reshim mise to ensure all tools are available
 print_header "Reshimming mise ..."
@@ -13,7 +17,3 @@ mise reshim
 # Run mise doctor
 print_header "Running mise doctor ..."
 mise doctor --quiet --silent >/dev/null
-
-# Install the pinned versions; moving a pin forward is stackgen's tool-config, never this task.
-print_header "Setting up MISE ..."
-mise install
