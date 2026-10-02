@@ -288,11 +288,10 @@ in the git dir holding the rebuild's pid, and skips while a live pid holds
 it. A stale lock — a dead pid, or no pid and older than ten minutes — is
 taken over through a second directory used as a mutex, so two runs never
 both take it; the rebuild releases the lock on exit only while it is still
-its own. `setup:ai` wires the
-tool for the agent with `graphify install --platform claude` and installs no
-git hook of its own: graphify's raw hooks pin a Python path and break on the
-next upgrade. The hook runner's `graphify-refresh` hook runs `code:graph` after
-every commit and every merge or pull
+its own. Nothing installs graphify's own git hooks: its raw hooks pin a
+Python path and break on the next upgrade. The hook runner's
+`graphify-refresh` hook runs `code:graph` after every commit and every merge
+or pull
 ([pre-commit's](pre-commit.md#6-the-graph-refresh-hook)).
 
 ### Prerequisites named but not owned
@@ -329,7 +328,9 @@ marked positions filled from the flags; an asset with nothing below its
 header, `mise.test.toml`, is its frame alone.
 
 **The task library is copied whole**, `_scripts/` included, every file mode
-`755`. A task file is the base's alone, so it carries no markers; a pack that
+`755`. A task file is the base's alone, so it carries no markers — save
+`setup/ai`, which holds the [pack plugin](#setupai--the-repos-agent-plugins)
+blocks, and is not copied over a `setup/ai` the repo already has; a pack that
 fills a slot overwrites the file, its lock entry then names the pack, and
 `all` never writes it back ([the skill's](../SKILL.md) rule for a path another
 source owns). A slot no pack filled keeps its placeholder: a repo that has
@@ -338,7 +339,9 @@ picked no stack is supposed to see it.
 **A landed file nobody edited takes the newer asset.** Where a file's content
 still hashes to its lock record, a later `all` with a newer stackgen
 replaces it with a plain `write` row; only a file edited by hand since it was
-landed raises a drift row.
+landed raises a drift row. **Save `setup/ai`**: once it is in the repo it is
+the repo's, and a newer shipped task never replaces it
+([greenfield and brownfield](#setupai--the-repos-agent-plugins)).
 
 **Every file is formatted before it is recorded.** Once a call has written
 its files, the script runs the shipped formatter over them —
@@ -388,8 +391,6 @@ back from the file, which is how a flag left out keeps the repo's value.
 | `RUNTIME_BLOCK`       | `mise.toml`                   | `--runtimes`                               | empty               |
 | `MEMBER_ALIASES`      | `conf.d/shell_alias.dev.toml` | `--members` — one `setup-<slug>` alias each | none               |
 | `MEMBER_FLAGS`        | `tasks/setup/all`             | `--members` — one `--<slug>` flag each     | none beyond `--all` |
-| `EXTRA_MARKETPLACES`  | `tasks/setup/ai`              | `--plugin-sources`                         | `()`                |
-| `EXTRA_PLUGINS`       | `tasks/setup/ai`              | `--plugins`                                | `()`                |
 
 Each has a working default, so an unfilled repo runs: `direct` into
 `develop` is a local merge, `pr` into `main` opens the request, an empty
@@ -402,7 +403,7 @@ repo's value for both landing flags):
 | Flag                                            | Default                                                     |
 | ----------------------------------------------- | ----------------------------------------------------------- |
 | `--repo`                                        | `unfilled`                                                  |
-| `--members`, `--plugin-sources`, `--plugins`    | empty                                                       |
+| `--members`                                     | empty                                                       |
 | `--linkage`                                     | `submodule` where the repo has a `.gitmodules`, else `siblings` |
 | `--merge-model-develop`, `--merge-model-main`   | `direct`, `pr`                                              |
 | `--runtimes`                                    | empty — no runtime line at either position                  |
@@ -456,14 +457,6 @@ claim about the stack that is not true:
 No runtime line sets the npm installer: that is the machine's choice
 ([the house linter](#the-house-linter)).
 
-**The plugin lists are arrays, one quoted row per line**, keeping their
-template comment above them so a later run can re-derive them:
-`EXTRA_MARKETPLACES` takes `--plugin-sources`' `<source-ref>|<name>` rows,
-`EXTRA_PLUGINS` takes `--plugins`' `<name>@<marketplace>` rows; a row in
-neither shape is refused. The workflow's
-own plugin and what it depends on are never written there: `setup:ai`
-installs them unconditionally.
-
 ## 4. The verbs
 
 | Call                                                          | Writes to                                 |
@@ -474,6 +467,7 @@ installs them unconditionally.
 | `mise add-env --key <KEY> --value <v> --env <env>`            | `conf.d/env.<env>.toml`                   |
 | `mise set-env --key <KEY> --value <v>`                        | wherever the requester's block sets `KEY` |
 | `mise add-alias --name <n> --command <c> [--env dev]`         | `conf.d/shell_alias.dev.toml`             |
+| `mise add-plugin --plugin <n>@<m> --source <s> --for <r>`     | `tasks/setup/ai`                          |
 | `mise remove --for <requester>`                               | every file holding its blocks             |
 | `mise upgrade`                                                | every pin in every tools file             |
 
@@ -572,6 +566,23 @@ or `overwrite` (the existing line is removed from its block or the user's
 lines and the new one written in the requester's block). A
 `keep-existing` is recorded as above, so a later run with the same call does
 not ask again.
+
+**`add-plugin`** asks for an agent plugin a pack needs. It is a pack's call:
+`--for` is required. `--plugin` is `<name>@<marketplace>` and `--source` the
+marketplace's source, an `<owner>/<repo>` or a path (`./`, `../`, `~/` or
+`/`-rooted); anything else in either — a space, a quote, a `$` or any other
+shell character — is refused, since both are written into a shell line. As a
+`tool-config:` entry it is
+`{ tool: mise, verb: add-plugin, plugin: <name>@<marketplace>, source: <owner/repo> }`.
+It writes one line, `ensure_plugin "<plugin>" "<source>"`, into the
+requester's block in `tasks/setup/ai`, the block's lines kept sorted; a line
+already naming the plugin is replaced in place. The task runs it as
+[the pack plugin step](#setupai--the-repos-agent-plugins). The call is
+refused when `setup/ai` is not there — land the mise base first. It writes
+into any `setup/ai` that carries a `mise` block, landed by tool-config or
+not. One with no `mise` block is written nothing: the call returns the
+[brownfield note](#setupai--the-repos-agent-plugins), and you render the
+plugin into the file by hand.
 
 **`remove --for <requester>`** takes that requester's blocks out of every
 mise file, as [the skill's removal](../SKILL.md#removal) says.
@@ -816,7 +827,7 @@ added to one and not the other is how the vocabularies drift.
 | `setup:deps:all`                                      | `cleanup → install → upgrade → outdated → audit`                              |
 | `setup:deps:{install,cleanup,upgrade,outdated,audit}` | **slots** — the package manager's verbs; `install` honours `--frozen`         |
 | `setup:precommit [--force] [--update]`                | install the hooks, chaining a hand-written one as `.legacy`; refuses a foreign hook manager or `core.hooksPath` without `--force`; autoupdate only under `--update` |
-| `setup:ai [--user] [--inventory]`                     | install and update the repo's required plugins at project scope               |
+| `setup:ai`                                            | check for vwf, upgrade every marketplace and plugin                           |
 | `setup:worktree`                                      | the lighter sibling a fresh worktree runs                                     |
 | `code:all [--fix] [--debug]`                          | the one-command gate: `format → lint → sec`                                   |
 | `code:format [--fix] [files...]`                      | format or check the files given, else the tree; the `format` hook calls it    |
@@ -920,7 +931,7 @@ setup:all  (--all, or --<slug>, recurses into members)
   ├─ setup:external:start  # local services                        (SLOT)
   ├─ setup:deps:all        # the package manager's five verbs      (SLOTS)
   ├─ setup:precommit       # install the hooks                     (common)
-  ├─ setup:ai              # install and reconcile agent plugins   (common)
+  ├─ setup:ai              # check for vwf, upgrade every plugin   (common)
   └─ <each member>         # --all, or that member's --<slug>
 ```
 
@@ -998,33 +1009,81 @@ calls `start`, so one bootstrap leaves a developer able to run the product.
 
 #### `setup:ai` — the repo's agent plugins
 
-Installs and updates the plugins **this repo** requires, through the agent
-CLI's own plugin commands and nothing else. The required set is the
-toolkit's own workflow plugin plus the rows of `EXTRA_PLUGINS`;
-`EXTRA_MARKETPLACES` holds **marketplaces**, registered in their own pass
-before any install. A plugin that arrives as another's declared dependency is
-never listed, because the CLI resolves it.
+Makes sure the toolkit's workflow plugin is installed, then upgrades every
+marketplace and every plugin the machine has. This section is the task's
+**doctrine**: what any `setup/ai` must carry, whether it is the shipped asset
+or a file the repo wrote itself. The task takes no flag, and it never installs
+anything at project scope.
 
-**Project scope, and the exception is a flag.** Every install, update and
-prune runs `--scope project`, so the repo's own settings file declares the
-plugins and a machine's user-scope choices are left alone. `--user` flips
-every scope for the rare repo that wants them global.
+**The steps, in order:**
 
-**A marketplace may be registered from a remote repository or from a local
-directory**, and the task asks what is registered and branches: a
-marketplace already registered under the name it wants is **updated**, never
-re-added, whatever source it resolves from; only an unregistered one is
-added. Re-adding a name whose registered source differs is an error, which is
-the failure this branch avoids.
+1. **No agent CLI, no work.** With no `claude` on `PATH` the task warns and
+   exits 0, so a bootstrap on a machine without it still converges.
+2. **Run from the repo root** — `cd "${MISE_PROJECT_ROOT}"` — so the CLI
+   resolves this repo's project scope.
+3. **Check for the workflow plugin** — the `mise` block, `# >>> mise` to
+   `# <<< mise`. Read `claude plugin list --json`. When
+   `vwf@virajp-plugins` is installed at **user or project** scope, do nothing
+   more for it — either scope serves the repo. When it is at neither, run
+   `pnpx @virajp.dev/claude-plugins@latest --all`: the installer registers the
+   marketplace and installs vwf, and its dependency stackgen, at **user**
+   scope. `@latest` is deliberate — a bare name can replay a cached old
+   version, an exact one would need a bump every release. Whether or not it
+   installed, the task goes on.
+4. **The pack plugins** — one block per requester, after the `mise` block
+   and before step 5, each line one plugin, checked the same way.
+5. **Update every marketplace** — `claude plugin marketplace update`, no name,
+   so each registered one picks up new refs, whatever source it resolves
+   from.
+6. **Upgrade every installed plugin at its own scope** — for each row of
+   `claude plugin list --json`,
+   `claude plugin update --scope <its scope> <id>`, user scope included.
+7. **Prune** — `claude plugin autoremove --scope project --yes`, which drops
+   a project-scope dependency nothing needs any more.
 
-**`--inventory` is for the orchestrator.** It prints one line per registered
-marketplace other than the toolkit's own, then one per installed plugin with
-its marketplace and scope, and exits — the seed for the question `/vwf:init`
-asks before it passes `plugin_sources` and `plugins`.
+A plugin that arrives as another's declared dependency is never checked or
+installed by name: the CLI resolves it. The task installs no plugin of the
+user's own choosing — there is no extras list and no `/vwf:init` question for
+one. It neither wires [the graph tool](#the-graph-tool) for the agent nor
+hints at the statusline package.
 
-It closes by wiring [the graph tool](#the-graph-tool) when it is on `PATH` —
-hinting `MISE_ENV=dev mise run setup:all` when it is not — and by hinting at
-the statusline package, which is a per-machine choice and never installed.
+**A pack's plugins.** A pack that needs a plugin asks for it with an
+[`add-plugin`](#4-the-verbs) entry,
+`{ tool: mise, verb: add-plugin, plugin: <name>@<marketplace>, source: <owner/repo> }`.
+`setup/ai` is the one task file that carries blocks. tool-config writes each
+pack's block below the `mise` block's closing marker, after a blank line:
+
+```bash
+# >>> <requester>
+ensure_plugin "<name>@<marketplace>" "<source>"
+# <<< <requester>
+```
+
+`remove --for <requester>` drops the block. `ensure_plugin`, defined in the
+task above the `mise` block, treats each the same as vwf: installed at user
+or project scope, nothing; else, when the marketplace is not registered,
+`claude plugin marketplace add <source>`, then
+`claude plugin install --scope user <plugin>`.
+
+**Greenfield and brownfield.** A repo with no `setup/ai` gets the shipped
+asset, copied whole with the pack blocks written into it. One whose lines
+already match the shipped task — trailing spaces aside — is kept as it is.
+Any other `setup/ai`, recorded or not, is the user's: tool-config never
+overwrites it, never checks it for drift, never reads its record's hash, and
+never moves a landed one forward to a newer shipped task — only
+[`add-plugin`](#4-the-verbs) writes into it, and only inside a pack's block
+when it carries a `mise` block. Every run returns one note instead:
+
+```text
+.config/mise/tasks/setup/ai is the repo's own — left as it stands; render any step it lacks into it per references/mise.md
+```
+
+You then **render the steps into the user's file**: read it, add any of
+steps 1–7 and any pack plugin it lacks, in that order, and keep every other
+line the user wrote.
+**Nothing checks the task's content** — no test, no checker and no drift row
+— so a user may extend it for any use they see fit; a step they added is
+theirs, and you never remove it.
 
 #### `setup:worktree` — the lighter sibling
 
@@ -1241,8 +1300,9 @@ worktrees from the main checkout.
   bundled Node release-key gpg import fails on Linux runners ("no valid
   OpenPGP data found"); only Node's signature check is disabled, the tarball
   is still SHA256-verified, and `gpg_verify = true` in `mise.toml` stays.
-- **The repo's agent plugins are the repo's, and a user's are theirs** —
-  `setup:ai` works at project scope only.
+- **`setup:ai` never installs at project scope.** vwf and a pack's plugins
+  install at user scope, and only when absent at both scopes; every installed
+  plugin is upgraded at the scope it already has.
 
 **This tool gates nothing and defines no build.** What each gate *checks*
 belongs to the gate tools' references and the packs that overlay the tasks; the CI system's workflow syntax belongs to the CI

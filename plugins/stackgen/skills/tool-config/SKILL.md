@@ -162,7 +162,7 @@ a value starting with `"` is read as a TOML basic string — what that means is
 
   | Tool         | Verbs and their flags                                                                                                                                              |
   | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-  | `mise`       | [`add-tool`, `add-env`, `set-env`, `add-alias`, `upgrade`](references/mise.md#4-the-verbs)                                                                           |
+  | `mise`       | [`add-tool`, `add-env`, `set-env`, `add-alias`, `add-plugin --plugin --source`, `upgrade`](references/mise.md#4-the-verbs)                                             |
   | `dprint`     | [`add-plugin --name <n>`](references/dprint.md#4-the-verbs)                                                                                                         |
   | `pre-commit` | [`add-hook --repo --id --stage …`, `add-linter-ignore --paths <p>,…`, `set-scopes --scopes <id>,…`](references/pre-commit.md#4-the-verbs)                            |
   | `gitleaks`   | none but `remove` — [its allowlist is the cross-tool verb's](references/gitleaks.md#3-the-verbs)                                                                   |
@@ -207,8 +207,6 @@ for the flag's `-` (`update_bot`):
 | `--linkage`                                    | `siblings` or `submodule`                                       |
 | `--merge-model-develop`, `--merge-model-main`  | `direct` or `pr`                                                |
 | `--runtimes`                                   | language keys — `node`, `python`, `dart`, `go`, `rust`, `swift` |
-| `--plugin-sources`                             | `<source-ref>\|<name>` rows; empty on none                       |
-| `--plugins`                                    | `<name>@<marketplace>` rows; empty on none                      |
 | `--forge`, `--secrets`, `--update-bot`         | the three conditional answers, `none` the spelling of no answer |
 | `--scopes`                                     | the commit gate's scopes, project ids; empty on none            |
 
