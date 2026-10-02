@@ -100,7 +100,11 @@ whole section reports `not checked — no stack resolved` for it:
   drop the token, which would only hide the project.
 - **Toolchain** — the row names a mise tool. Check it appears in the repo's mise
   tool pins (`.config/mise/conf.d/tools*.toml`, `.local` variants excluded) or
-  resolves on `PATH`. Missing → finding, with the `mise use` line as the remedy.
+  resolves on `PATH`. Missing → finding; the remedy pins the tool at an exact
+  version in the right `.config/mise/conf.d/tools*.toml` — by hand or through
+  `/stackgen:tool-config mise add-tool --name <tool> --version <v> --env <env>`
+  — then runs `mise install`. Never a bare `mise use`, which writes a pin
+  outside the layout.
   A tool found only in `.config/mise.toml` or a `.config/mise.<env>.toml` is
   **the tool outside `conf.d`** row under the baseline check below, not a miss.
   A `—` in the column means the toolchain is not mise-managed; skip silently.
@@ -442,10 +446,12 @@ suspect the adapter.
 
 **The aggregator's member flags and its aliases are a different list, and it
 is not this one.** The base's bootstrap aggregator carries one member flag per
-**member repo**, and `.config/mise/conf.d/shell_alias.dev.toml` carries one
-`setup-<member>` alias beside each — both named for the members, never for a
-project id. That split is stated in the same **§7** cited above, and it is why
-a member holding three projects is still one flag. Compare the two lists on
+**member repo**, below the `MEMBER_FLAGS` marked position in
+`.config/mise/tasks/setup/all`, and `.config/mise/conf.d/shell_alias.dev.toml`
+carries one `setup-<member>` alias beside each, below its `MEMBER_ALIASES`
+marked position — both named for the members, never for a project id. That
+split is stated in the same **§7** cited above, and it is why a member
+holding three projects is still one flag. Compare the two lists on
 the **base** against the member set this check resolved: a resolved member
 with no flag, or none with an alias where the alias block exists at all, is
 one drift row; a flag or an alias named for a **project id** on a product that
@@ -536,7 +542,7 @@ state, not a repo edit, which is the whole reason for the second test.
 in one is never (e)'s finding** — owned or not. A position another predicate
 owns still gets that predicate's row and nothing more: (d)'s repo-name key,
 (f)'s `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and `MEMBERS`, (b)'s member
-flag list and alias list each
+flag list (`MEMBER_FLAGS`) and alias list (`MEMBER_ALIASES`) each
 report the value they found there. A position **no** predicate owns — the
 plugin task's two agent-plugin lists, the `_default` slot, any other a pack
 ships — is a value the repo set, and nothing reports it at all. Splicing by
@@ -547,21 +553,20 @@ owned half would leave the rest diverging and report the whole file as content
 drift.
 
 **A record sourced `tool-config/<tool>@<version>` has no pack payload**: its
-payload is the adapter's `tool-config` skill's,
-`skills/tool-config/assets/<tool>/` inside the installed adapter plugin's
-tree, located as (a) locates a pack, and read as the installed plugin ships it
-— the record's version is not consulted, since (a) no longer compares it.
-Such a record is checked **block by block**, by hash only where noted below:
-each block the tool owns is compared on its own against what the skill would
-write now, by the skill's own drift comparison (its `SKILL.md`, "Drift") —
-words outside quoted strings, quoted strings exactly — so a reformat that only
-moves whitespace is not drift. A block holding a fetched `.gitignore` template
-is the skill's one exception: it is compared against the `written:` hash its
-lock record carries (the skill's `references/git.md`, "Templates"), never
-re-derived, since upstream may have moved and only a local edit is drift. A
-diverging block is its own row, which is the only check such a record gets.
-Only the tool's own blocks count: another requester's block and a line outside
-every block are the skill's to show, never (e)'s.
+payload is the adapter's `tool-config` skill's, and doctor does not compare it
+itself. It invokes `/stackgen:tool-config check` once per repo — the skill,
+never a path inside the adapter plugin — which renders what each block's
+requester would write now, compares it with the file, and writes nothing. Its
+output is JSON: `rows`, one `drift` row per diverging block (the path, the
+requester, the block as written beside what it would write) and one
+`needs-edit` row per file it cannot parse; and `prose`, the tools whose drift
+the skill still compares by its own prose rule (its `SKILL.md`, "Drift").
+Each row is one (e) row here, reported as the skill words it; the record's
+version is not consulted, since (a) no longer compares it. A marked
+position's value, a pack's `machine_env:` key and a line outside every block
+are never among its rows, so nothing is spliced for such a record. A refused
+call — exit 2, an `error` — is one row naming that error, never a guessed
+drift.
 
 **A record whose `source:` is `generated` has no pack payload** to reconstruct
 from, so there is nothing to splice: the second test is skipped, and test 1's
@@ -607,7 +612,8 @@ lockfile is not the adapter's, which is the rule the materialization itself
 lives by.
 
 **(f) Three of the five marked positions beside `REPO_NAME`.** The toolchain
-pack ships five more marked positions — `MERGE_MODEL_DEVELOP`,
+pack ships five more marked positions in its env and settings files, beside
+(b)'s `MEMBER_FLAGS` and `MEMBER_ALIASES` — `MERGE_MODEL_DEVELOP`,
 `MERGE_MODEL_MAIN` and `MEMBERS` in the same `conf.d/env.toml`, and the two
 runtime positions `RUNTIME_BLOCK` at the end of `.config/mise.toml`'s
 `[settings]` and `PATH_ENTRIES` at the end of `conf.d/env.toml`, which `init`
@@ -652,15 +658,17 @@ already printed — (f) adds nothing to it.
 
 - **Old layout.** Any one of three is one drift row, **mise config on the old
   layout**: a `.config/mise.toml` or `.config/mise.<env>.toml` carrying a
-  table other than `[settings]` (top-level keys are fine); a
-  `.config/mise*.lock` present; or `.config/miserc.toml` absent or lacking
+  table other than `[settings]` (top-level keys are fine); a mise lock
+  present — a `.config/mise*.lock`, or a lock file or `locks/` directory
+  under `.config/mise/` — since mise keeps no lock any more and pins are
+  exact; or `.config/miserc.toml` absent or lacking
   `env_conf_d = true`. The reshape migrates it. On that row (d)
   and (f) read their positions from the `[env]` block wherever it sits, and
   the two rows below are not raised — the migration moves every table at once.
 - **One tool, two pins.** A tool pinned in more than one
   `.config/mise/conf.d/tools*.toml` is one drift row naming the tool and the
-  files. The one lock keeps a single version, so the other environment's
-  locked install fails. The fix is one pin — in `tools.toml` when two
+  files. Two exact pins drift apart, so the environments install different
+  versions. The fix is one pin — in `tools.toml` when two
   environments need it — made by hand; doctor names it and moves nothing.
 - **A tool outside `conf.d`.** A `[tools]` entry in `.config/mise.toml` or a
   `.config/mise.<env>.toml` is one drift row naming the tool and the file.
