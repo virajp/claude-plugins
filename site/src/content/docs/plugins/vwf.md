@@ -3352,11 +3352,14 @@ commits `docs:` through `/vwf:git-workflow`.
 
 Internal — you rarely invoke it directly. The other commands route **all** git
 actions through it: it isolates work in a git worktree (always the outermost
-superproject, never a submodule), initializes it with the repo's
-`setup:worktree` (or `setup:all`) mise task, run under `MISE_ENV=dev`, commits
-with conventional messages, and ends a worktree with full coverage — landing the
-branch (plus any submodule work and pointer updates), then removing it. It never
-pushes without your explicit request.
+superproject, never a submodule), cut with `git worktree add` from the current
+branch and removed with `git worktree remove` — never with a Claude Code
+worktree tool, which branches from origin's default branch and leaves a session
+that refuses `git` — initializes it with the repo's `setup:worktree` (or
+`setup:all`) mise task, run under `MISE_ENV=dev`, commits with conventional
+messages, and ends a worktree with full coverage — landing the branch (plus any
+submodule work and pointer updates), then removing it. It never pushes without
+your explicit request.
 
 Two details follow the task contract [`/vwf:init`](#vwfinit) lays down. The
 pre-commit gate runs **before staging**, over the working tree's changed files,
