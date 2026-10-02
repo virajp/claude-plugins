@@ -890,7 +890,9 @@ describe("the repo-local mise skill", () => {
     apply(["all"]);
     const skill = read(SKILL);
     const table = skill.slice(skill.indexOf("<!-- >>> tasks -->"));
-    expect(table).toContain("| `setup:all` | Set up or upgrade everything");
+    expect(table).toContain(
+      "| `setup:all` | Set up everything this repo needs",
+    );
     expect(table).not.toContain("setup:ai");
     expect(table).not.toContain("_scripts");
     expect(table).not.toContain("`init`");
