@@ -39,9 +39,8 @@ pointers current — then remove it. Order matters:
    `code:merge:main` reads `MERGE_MODEL_MAIN` — a legacy single `MERGE_MODEL`
    stands in for both.
 
-4. **Remove the worktree.**
-   - **Native tool:** use its teardown (e.g. `ExitWorktree` or equivalent).
-   - **Git fallback:** `git worktree remove <path>`.
+4. **Remove the worktree.** From the main checkout — where step 3 already ran
+   the outer merge — run `git worktree remove <path>`.
 
 5. **Sweep stale worktrees.** After this one lands, list the other worktrees
    under the worktree dir (`git worktree list`) whose branches are **fully

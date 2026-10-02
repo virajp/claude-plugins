@@ -5,20 +5,11 @@ the main checkout and isolation was consented to (or pre-declared by the
 caller). Already inside a linked worktree, or working in place after a decline,
 skip straight to Step 3.
 
-Try the mechanisms in this order — stop at the first that applies.
+Run the three sub-steps in order — create the worktree with git, populate its
+submodules, bootstrap it. Git is the only creation path: never a Claude Code
+worktree tool (see the Core Rules).
 
-## 2a. Native Worktree Tools (preferred)
-
-Do you have a tool named `EnterWorktree`, `WorktreeCreate`, a `/worktree`
-command, or a `--worktree` flag? If so, use it and **proceed to Step 2c**
-(submodules).
-
-Native tools handle directory placement, branch creation, and cleanup
-automatically — prefer them over raw git commands.
-
-## 2b. Git Worktree Fallback
-
-Only use this if no native worktree tool is available.
+## 2a. Create the Worktree with Git
 
 ### Directory selection
 
@@ -43,6 +34,17 @@ git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/d
 
 If NOT ignored: add it to `.gitignore`, commit that change, then proceed.
 
+### Branch name
+
+`$BRANCH_NAME` is the name the caller declared, when it declares one —
+`/vwf:execute` names the branch after its plan folder. Otherwise derive a short
+kebab-case slug from the task, show it to the user and confirm it before the
+worktree is cut:
+
+```bash
+BRANCH_NAME="<declared name, or the confirmed kebab-case slug>"
+```
+
 ### Create the worktree
 
 Always branch from the **current branch**, not the default branch:
@@ -58,9 +60,9 @@ cd "$path"
 **Sandbox fallback:** If `git worktree add` fails with a permission error,
 report it and proceed in the current directory instead.
 
-Then **proceed to Step 2c** (submodules).
+Then **proceed to Step 2b** (submodules).
 
-## 2c. Initialize Submodules (always, after any mechanism)
+## 2b. Initialize Submodules (always)
 
 A newly created worktree does **not** inherit the submodules from the main
 checkout — a fresh worktree leaves the submodule directories empty. If the repo
@@ -81,27 +83,26 @@ if [ -f "$WORKTREE_PATH/.gitmodules" ]; then
 fi
 ```
 
-Use `git -C "$WORKTREE_PATH"` rather than `cd` so it works regardless of where
-the native tool placed the worktree. For the **git fallback** where you already
-`cd`'d into the worktree, `git submodule update --init --recursive` from there
-is equivalent.
+`git -C "$WORKTREE_PATH"` works from any directory. Having already `cd`'d into
+the worktree in Step 2a, `git submodule update --init --recursive` from there is
+equivalent.
 
 If a submodule fails to fetch (e.g. no network or auth), report it and ask the
 user how to proceed — do not leave a partially-initialized worktree silently.
 
-## 2d. Initialize the Worktree (mise task)
+## 2c. Initialize the Worktree (mise task)
 
 A fresh worktree has no installed dependencies. After submodules are populated,
 bootstrap it so it can build and run — prefer the dedicated `setup:worktree`
 task, falling back to the full bootstrap entrypoint `setup:all`:
 
 ```bash
-have_task() { mise tasks --hidden 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
+have_task() { mise x -- mise tasks --hidden 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
 
 if have_task setup:worktree; then
-  MISE_ENV=dev mise run setup:worktree
+  MISE_ENV=dev mise x -- mise run setup:worktree
 elif have_task setup:all; then
-  MISE_ENV=dev mise run setup:all
+  MISE_ENV=dev mise x -- mise run setup:all
 fi
 ```
 
