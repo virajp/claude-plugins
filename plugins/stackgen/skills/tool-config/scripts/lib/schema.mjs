@@ -54,6 +54,65 @@ const KEY_PATTERN = {
   },
 };
 
+// The keys the script reads as values (its `type: "value"` flags), held to the
+// same rules validateCall applies to a pack's own line: a TOML basic string
+// when given quoted, never empty where the flag is required, and a template
+// only where the flag allows one (`template: "own"` — a pack line carries --for).
+const VALUE_KEYS = {
+  mise: {
+    "add-tool": { version: { required: true, template: false } },
+    "add-env": { value: { required: false, template: true } },
+    "add-alias": { command: { required: true, template: false } },
+  },
+};
+
+// A control character, tab excepted for the parse — TOML's basic-string rule.
+export const isControl = c =>
+  c.charCodeAt(0) < 0x20 || c.charCodeAt(0) === 0x7f;
+const ESCAPE = /^\\(?:[btnfre"\\]|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/;
+
+/** Whether a quoted value parses as a TOML basic string. */
+export function isBasicString(value) {
+  if (value.length < 2 || !value.endsWith("\"")) {
+    return false;
+  }
+  const body = value.slice(1, -1);
+  for (let i = 0; i < body.length; i++) {
+    const c = body[i];
+    if (c === "\\") {
+      const m = ESCAPE.exec(body.slice(i));
+      if (!m) {
+        return false;
+      }
+      i += m[0].length - 1;
+    }
+    else if (c === "\"" || (isControl(c) && c !== "\t")) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function valueFaults(entry, key, value) {
+  const rule = VALUE_KEYS[entry.tool]?.[entry.verb]?.[key];
+  if (!rule) {
+    return [];
+  }
+  if (value === "") {
+    return rule.required ? [`${key} is empty`] : [];
+  }
+  const faults = [];
+  if (value.startsWith("\"") && !isBasicString(value)) {
+    faults.push(`${key} ${value} does not parse as a TOML basic string`);
+  }
+  if (!rule.template && PATTERNS.template.test(value)) {
+    faults.push(
+      `${key} holds a template ({{, {% or {#) — legal only in add-env's value`,
+    );
+  }
+  return faults;
+}
+
 /** The faults of one structured entry; empty when it is valid. */
 export function validateEntry(entry) {
   const faults = [];
@@ -108,6 +167,7 @@ export function validateEntry(entry) {
     if (pattern && !PATTERNS[pattern].test(value)) {
       faults.push(`${key} ${JSON.stringify(value)} is not a valid ${pattern}`);
     }
+    faults.push(...valueFaults(entry, key, value));
   }
   return faults;
 }

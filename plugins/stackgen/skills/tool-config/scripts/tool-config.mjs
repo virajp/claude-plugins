@@ -37,9 +37,11 @@ import { spawnSync } from "node:child_process";
 import {
   chmodSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -50,6 +52,7 @@ import {
   join,
   relative,
   resolve,
+  sep,
 } from "node:path";
 import {
   fileURLToPath,
@@ -66,11 +69,13 @@ import {
   driftRow,
 } from "./lib/drift.mjs";
 import {
+  checkRelPath,
   isToolConfig,
   LOCK_PATH,
   readLock,
   sha256,
   sourceTool,
+  UnsafePathError,
 } from "./lib/record.mjs";
 import {
   ANSWERS,
@@ -122,8 +127,43 @@ class Workspace {
     );
   }
 
+  /**
+   * The absolute path of a repo-relative one, for any read, write, delete or
+   * list: refused when it is absolute or climbs with `..`, when it or any
+   * parent inside the repo is a symlink, or when it resolves outside the root.
+   */
+  safe(path) {
+    checkRelPath(path);
+    this.realRoot ??= realpathSync(this.root);
+    const parts = path.split("/").filter(p => p !== "" && p !== ".");
+    let at = this.realRoot;
+    for (const part of parts) {
+      at = join(at, part);
+      let st;
+      try {
+        st = lstatSync(at);
+      }
+      catch (e) {
+        if (e.code === "ENOENT" || e.code === "ENOTDIR") {
+          break;
+        }
+        throw e;
+      }
+      if (st.isSymbolicLink()) {
+        throw new UnsafePathError(
+          `${path}: ${relative(this.realRoot, at)} is a symlink — refused`,
+        );
+      }
+    }
+    const abs = join(this.realRoot, ...parts);
+    if (abs !== this.realRoot && !abs.startsWith(this.realRoot + sep)) {
+      throw new UnsafePathError(`${path} resolves outside the repo — refused`);
+    }
+    return abs;
+  }
+
   disk(path) {
-    const abs = join(this.root, path);
+    const abs = this.safe(path);
     return existsSync(abs) && statSync(abs).isFile()
       ? readFileSync(abs, "utf8")
       : null;
@@ -167,13 +207,14 @@ class Workspace {
   /** Repo-relative files under `dir`, as the call would leave them. */
   list(dir) {
     const out = new Set();
+    // the directory and its parents are held to safe(); a symlink inside it is never followed or listed
     const walk = rel => {
-      const abs = join(this.root, rel);
+      const abs = rel ? this.safe(rel) : realpathSync(this.root);
       if (!existsSync(abs)) {
         return;
       }
       for (const d of readdirSync(abs, { withFileTypes: true })) {
-        if (d.name === ".git") {
+        if (d.name === ".git" || d.isSymbolicLink()) {
           continue;
         }
         const p = rel ? `${rel}/${d.name}` : d.name;
@@ -244,9 +285,13 @@ class Workspace {
     this.settleRecords(version);
     const written = [];
     const deleted = [];
+    // every path is held to safe() before the first byte is written
+    const targets = new Map(
+      [...this.order, LOCK_PATH].map(p => [p, this.safe(p)]),
+    );
     for (const path of this.order) {
       const text = this.files.get(path);
-      const abs = join(this.root, path);
+      const abs = targets.get(path);
       if (text === undefined) {
         continue;
       }
@@ -271,8 +316,8 @@ class Workspace {
       lock !== this.lockText
       && (this.lockText !== null || this.lock.entries.size)
     ) {
-      mkdirSync(dirname(join(this.root, LOCK_PATH)), { recursive: true });
-      writeFileSync(join(this.root, LOCK_PATH), lock);
+      mkdirSync(dirname(targets.get(LOCK_PATH)), { recursive: true });
+      writeFileSync(targets.get(LOCK_PATH), lock);
     }
     return { written, deleted };
   }
@@ -928,17 +973,20 @@ try {
   process.stdout.write(JSON.stringify(out, null, 2) + "\n");
 }
 catch (e) {
-  if (e instanceof RefusalError) {
+  // exitCode, never exit(): exit() can cut a large JSON body short on a pipe
+  if (e instanceof RefusalError || e instanceof UnsafePathError) {
     const body = {
       error: e.message,
       ...(e.rows && { rows: e.rows.map(publicRow) }),
     };
     process.stdout.write(JSON.stringify(body, null, 2) + "\n");
-    process.exit(2);
+    process.exitCode = 2;
   }
-  process.stdout.write(
-    JSON.stringify({ error: String(e?.message ?? e) }, null, 2) + "\n",
-  );
-  process.stderr.write(`${e?.stack ?? e}\n`);
-  process.exit(1);
+  else {
+    process.stdout.write(
+      JSON.stringify({ error: String(e?.message ?? e) }, null, 2) + "\n",
+    );
+    process.stderr.write(`${e?.stack ?? e}\n`);
+    process.exitCode = 1;
+  }
 }

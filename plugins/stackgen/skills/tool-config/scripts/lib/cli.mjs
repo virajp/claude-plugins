@@ -14,7 +14,11 @@ import {
   parseAnswers,
   RefusalError,
 } from "./rows.mjs";
-import { PATTERNS } from "./schema.mjs";
+import {
+  isBasicString,
+  isControl,
+  PATTERNS,
+} from "./schema.mjs";
 
 /** `all`'s keys, as flags — SKILL.md's Arguments table. */
 export const ALL_KEYS = [
@@ -166,31 +170,6 @@ function refuseUnknown(flags, valid) {
 }
 
 // --- values ----------------------------------------------------------------------
-
-// A control character, tab excepted for the parse — TOML's basic-string rule.
-const isControl = c => c.charCodeAt(0) < 0x20 || c.charCodeAt(0) === 0x7f;
-const ESCAPE = /^\\(?:[btnfre"\\]|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/;
-
-function isBasicString(value) {
-  if (value.length < 2 || !value.endsWith("\"")) {
-    return false;
-  }
-  const body = value.slice(1, -1);
-  for (let i = 0; i < body.length; i++) {
-    const c = body[i];
-    if (c === "\\") {
-      const m = ESCAPE.exec(body.slice(i));
-      if (!m) {
-        return false;
-      }
-      i += m[0].length - 1;
-    }
-    else if (c === "\"" || (isControl(c) && c !== "\t")) {
-      return false;
-    }
-  }
-  return true;
-}
 
 const NAMED = {
   "\b": "\\b",

@@ -9,6 +9,63 @@ export const LOCK_PATH = ".claude/stackgen/lock.yaml";
 
 export const sha256 = text => createHash("sha256").update(text).digest("hex");
 
+/** A path that is not repo-relative, or climbs out with `..`. */
+export class UnsafePathError extends Error {}
+
+/** Refuse a path that is absolute, empty, or holds a `..` segment. */
+export function checkRelPath(path) {
+  if (
+    typeof path !== "string"
+    || path === ""
+    || path.startsWith("/")
+    || /^[A-Za-z]:/.test(path)
+    || path.includes("\\")
+    || path.split("/").some(seg => seg === "..")
+  ) {
+    throw new UnsafePathError(
+      `${JSON.stringify(path)} is not a repo-relative path — refused`,
+    );
+  }
+  return path;
+}
+
+/** The end of the quoted string opening at `i`, past its closing quote; throws when it never closes. */
+function quotedEnd(text, i) {
+  const q = text[i];
+  let j = i + 1;
+  while (j < text.length) {
+    if (q === "\"" && text[j] === "\\") {
+      j += 2;
+    }
+    else if (text[j] === q) {
+      if (q === "'" && text[j + 1] === "'") {
+        j += 2;
+      }
+      else {
+        return j + 1;
+      }
+    }
+    else {
+      j++;
+    }
+  }
+  throw new Error(`lock.yaml: unclosed quote in ${text}`);
+}
+
+/** Text with a trailing ` # comment` outside quotes removed. */
+function stripComment(text) {
+  for (let i = 0; i < text.length; i++) {
+    const opens = i === 0 || /[\s[{,:]/.test(text[i - 1]);
+    if (opens && (text[i] === "\"" || text[i] === "'")) {
+      i = quotedEnd(text, i) - 1;
+    }
+    else if (text[i] === "#" && (i === 0 || /\s/.test(text[i - 1]))) {
+      return text.slice(0, i);
+    }
+  }
+  return text;
+}
+
 // --- flow values: [a, "b"] and { k: v } -------------------------------------
 
 function parseFlow(text) {
@@ -68,34 +125,35 @@ function parseFlow(text) {
       }
     }
     if (text[i] === "\"") {
-      let j = i + 1;
-      while (text[j] !== "\"") {
-        j += text[j] === "\\" ? 2 : 1;
-      }
-      const s = JSON.parse(text.slice(i, j + 1));
-      i = j + 1;
+      const end = quotedEnd(text, i);
+      const s = JSON.parse(text.slice(i, end));
+      i = end;
       return s;
     }
     if (text[i] === "'") {
-      let j = i + 1;
-      while (!(text[j] === "'" && text[j + 1] !== "'")) {
-        j += text[j] === "'" ? 2 : 1;
-      }
-      const s = text.slice(i + 1, j).replaceAll("''", "'");
-      i = j + 1;
+      const end = quotedEnd(text, i);
+      const s = text.slice(i + 1, end - 1).replaceAll("''", "'");
+      i = end;
       return s;
     }
     const m = /^[^,\]}:]+/.exec(text.slice(i))
       ?? /^[^,\]}]+/.exec(text.slice(i));
+    if (!m) {
+      throw new Error(`lock.yaml: bad value near ${text.slice(i)}`);
+    }
     i += m[0].length;
     return m[0].trim();
   };
   const v = value();
+  ws();
+  if (i < text.length) {
+    throw new Error(`lock.yaml: trailing text after a value: ${text.slice(i)}`);
+  }
   return v;
 }
 
 function parseScalar(text) {
-  const t = text.replace(/\s+#.*$/, "").trim();
+  const t = stripComment(text).trim();
   if (
     t.startsWith("[") || t.startsWith("{") || t
       .startsWith("\"") || t
@@ -125,6 +183,26 @@ function fmt(v) {
 
 // --- the file ----------------------------------------------------------------
 
+/** A `key: rest` line split at its first colon outside a quoted key. */
+function keyAndRest(text, line) {
+  let end;
+  let key;
+  if (text[0] === "\"" || text[0] === "'") {
+    end = quotedEnd(text, 0);
+    key = String(parseFlow(text.slice(0, end)));
+  }
+  else {
+    end = text.indexOf(":");
+    key = end > 0 ? text.slice(0, end).trim() : "";
+  }
+  const after = text.slice(end);
+  const m = /^\s*:(?:\s+(.*))?$/.exec(after);
+  if (!key || !m) {
+    throw new Error(`lock.yaml: cannot read line: ${line}`);
+  }
+  return [key, m[1] ?? ""];
+}
+
 /** One tool-config entry from its raw item lines. */
 function parseItem(raw, fieldIndent) {
   const entry = {};
@@ -135,21 +213,26 @@ function parseItem(raw, fieldIndent) {
       return;
     }
     const indent = /^\s*/.exec(body)[0].length;
-    const m = /^\s*("[^"]*"|[^:\s][^:]*?)\s*:(?:\s+(.*))?$/.exec(body);
-    if (!m) {
-      throw new Error(`lock.yaml: cannot read line: ${line}`);
+    const item = /^\s*- (.*)$/.exec(body);
+    if (item && nested && indent >= fieldIndent) {
+      // a block-style list under a field: `blocks:` then `- git`
+      if (!Array.isArray(entry[nested])) {
+        entry[nested] = [];
+      }
+      entry[nested].push(parseScalar(item[1]));
+      return;
     }
-    const key = m[1].startsWith("\"") ? JSON.parse(m[1]) : m[1];
-    if (indent > fieldIndent && nested) {
-      entry[nested][key] = parseScalar(m[2] ?? "");
+    const [key, rest] = keyAndRest(body.trimStart(), line);
+    if (indent > fieldIndent && nested && !Array.isArray(entry[nested])) {
+      entry[nested][key] = parseScalar(rest);
     }
-    else if (m[2] === undefined || m[2].trim() === "") {
+    else if (stripComment(rest).trim() === "") {
       nested = key;
       entry[key] = {};
     }
     else {
       nested = null;
-      entry[key] = parseScalar(m[2]);
+      entry[key] = parseScalar(rest);
     }
   });
   return entry;
@@ -237,7 +320,12 @@ export function readLock(text) {
     for (const l of raw) {
       const m = new RegExp(`^\\s*-?\\s*${key}:\\s*(.*)$`).exec(l);
       if (m) {
-        return String(parseScalar(m[1]));
+        try {
+          return String(parseScalar(m[1]));
+        }
+        catch {
+          return m[1].trim();
+        }
       }
     }
     return null;
@@ -248,12 +336,21 @@ export function readLock(text) {
     );
     if (isOurs) {
       const e = parseItem(item.raw, itemIndent + 2);
+      checkRelPath(e.path);
       entries.set(e.path, e);
       order.push({ path: e.path });
     }
     else {
       const path = field(item.raw, "path");
-      if (path !== null) {
+      // kept as written, but only a safe path is ever acted on
+      let safe = path !== null;
+      try {
+        checkRelPath(path);
+      }
+      catch {
+        safe = false;
+      }
+      if (safe) {
         foreign.set(path, field(item.raw, "source"));
       }
       order.push({ raw: item.raw, path });

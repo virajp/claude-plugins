@@ -16,6 +16,7 @@ import {
   readFileSync,
   rmSync,
   statSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -27,6 +28,8 @@ import {
   expect,
   it,
 } from "vitest";
+// @ts-expect-error TS7016 — no declaration file for a shipped .mjs module
+import * as entrySchema from "../../plugins/stackgen/skills/tool-config/scripts/lib/schema.mjs";
 
 const pluginRoot = join(import.meta.dirname, "..", "..", "plugins", "stackgen");
 const script = join(
@@ -55,6 +58,8 @@ export const tools = {
       resolve: { flags: {}, needsMise: true },
       drop: { flags: { path: { required: true } } },
       takeover: { flags: { path: { required: true } } },
+      put: { flags: { path: { required: true } }, requester: "required" },
+      big: { flags: {} },
     },
     all() {
       return {
@@ -83,6 +88,12 @@ export const tools = {
             body: [call.flags.key + " = " + ctx.tomlString(call.flags.value)],
           }],
         };
+      }
+      if (call.verb === "put") {
+        return { ops: [{ op: "block", path: call.flags.path, requester: call.for, body: ["x = 1"] }] };
+      }
+      if (call.verb === "big") {
+        return { ops: [], rows: [{ kind: "needs-edit", file: "big", reason: "x".repeat(3000000), target: "-" }] };
       }
       if (call.verb === "drop") return { ops: [{ op: "delete", path: call.flags.path }] };
       if (call.verb === "takeover") {
@@ -140,6 +151,8 @@ function run(
     repo,
   ], {
     encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+    timeout: 20_000,
     env: {
       PATH: process.env["PATH"] ?? "",
       HOME: repo,
@@ -201,7 +214,7 @@ describe("argument refusals", () => {
     const { status, out } = run(["demo", "frobnicate"]);
     expect(status).toBe(2);
     expect(out.error).toMatch(
-      /valid: add, entry, set-env, resolve, drop, takeover, remove, all/,
+      /valid: add, entry, set-env, resolve, drop, takeover, put, big, remove, all/,
     );
   });
 
@@ -608,6 +621,198 @@ describe("another source's paths", () => {
     expect(res.out.deleted).toEqual(["frag.toml"]);
     expect(lock()).not.toContain("frag.toml");
     expect(lock()).toContain("    source: pack/language/demo@1.0.0\n");
+  });
+});
+
+const writeLock = (text: string) => {
+  mkdirSync(join(repo, ".claude", "stackgen"), { recursive: true });
+  writeFileSync(join(repo, ".claude", "stackgen", "lock.yaml"), text);
+};
+
+describe("the lock reader", () => {
+  it("round-trips what its writer emits: a quoted key with : and \\\", a ` #` in a value, a block list", () => {
+    const entry = (blocksLines: string[]) =>
+      [
+        "entries:",
+        "  - path: demo.toml",
+        `    source: tool-config/demo@${version}`,
+        "    hash: abc",
+        ...blocksLines,
+        "    shares:",
+        "      \"\\\"npm:foo\\\" = \\\"1.2.3\\\"\": [a, b]",
+        "    templates:",
+        "      pnpm: { Node: \"sha # not a comment\", written: h }",
+        "",
+      ]
+        .join("\n");
+    writeLock(entry(["    blocks:", "    - demo", "    - pack-a"]));
+    writeFileSync(
+      join(repo, "demo.toml"),
+      "# >>> demo\nalpha = 1\n# <<< demo\n\n# >>> pack-a\na = 1\n# <<< pack-a\n",
+    );
+    expect(run(["check", "demo"]).status).toBe(0);
+    apply(["demo", "add", "--line", "a = 2", "--for", "pack-a"]);
+    const once = lock();
+    expect(once).toContain("    blocks: [demo, pack-a]\n");
+    expect(once).toContain(
+      "      \"\\\"npm:foo\\\" = \\\"1.2.3\\\"\": [a, b]\n",
+    );
+    expect(once).toContain(
+      "      pnpm: { Node: \"sha # not a comment\", written: h }\n",
+    );
+    apply(["demo", "add", "--line", "a = 3", "--for", "pack-a"]);
+    expect(lock().replace(/hash: \w+/, "")).toBe(once.replace(/hash: \w+/, ""));
+  });
+
+  it("fails on an unclosed quote instead of hanging", () => {
+    writeLock(
+      [
+        "entries:",
+        "  - path: demo.toml",
+        "    source: tool-config/demo@1.0.0",
+        "    hash: abc",
+        "    blocks: [\"demo",
+        "",
+      ]
+        .join("\n"),
+    );
+    const { status, out } = run(["check"]);
+    expect(status).toBe(1);
+    expect(out.error).toContain("unclosed quote");
+  });
+
+  it("refuses a tool-config path that climbs out of the repo or is absolute", () => {
+    for (const path of ["../escape.toml", "/etc/hosts"]) {
+      writeLock(
+        [
+          "entries:",
+          `  - path: ${path}`,
+          "    source: tool-config/demo@1.0.0",
+          "    hash: abc",
+          "",
+        ]
+          .join("\n"),
+      );
+      const { status, out } = run(["demo", "remove", "--for", "pack-a"]);
+      expect(status).toBe(2);
+      expect(out.error).toContain("not a repo-relative path");
+    }
+  });
+});
+
+describe("symlinks", () => {
+  it("refuses to read, write or delete through a symlinked folder", () => {
+    const outside = join(repo, "..", "outside");
+    mkdirSync(outside);
+    writeFileSync(join(outside, "secret"), "keep me\n");
+    symlinkSync(outside, join(repo, "linked"));
+    const put = run([
+      "preview",
+      "demo",
+      "put",
+      "--path",
+      "linked/x.toml",
+      "--for",
+      "a",
+    ]);
+    expect(put.status).toBe(2);
+    expect(put.out.error).toContain("linked is a symlink");
+    expect(run(["demo", "drop", "--path", "linked/secret"]).status).toBe(2);
+    expect(
+      run(["demo", "put", "--path", "../outside/x.toml", "--for", "a"])
+        .out
+        .error,
+    )
+      .toContain(
+        "not a repo-relative path",
+      );
+    expect(readFileSync(join(outside, "secret"), "utf8")).toBe("keep me\n");
+    expect(() => statSync(join(outside, "x.toml"))).toThrow();
+  });
+});
+
+describe("validateEntry agrees with the script", () => {
+  const { validateEntry } = entrySchema as {
+    validateEntry: (entry: Record<string, unknown>) => string[];
+  };
+  const shipped = (args: string[]) =>
+    run(["preview", "mise", ...args, "--for", "p"], {
+      TOOL_CONFIG_TOOLS_MODULE: "",
+    });
+  const cases: [Record<string, unknown>, string[]][] = [
+    [{ verb: "add-alias", name: "x", command: "{{ y }}" }, [
+      "add-alias",
+      "--name",
+      "x",
+      "--command",
+      "{{ y }}",
+    ]],
+    [{ verb: "add-tool", name: "x", version: "{{ y }}", env: "all" }, [
+      "add-tool",
+      "--name",
+      "x",
+      "--version",
+      "{{ y }}",
+      "--env",
+      "all",
+    ]],
+    [{ verb: "add-env", key: "K", value: "\"unbalanced", env: "all" }, [
+      "add-env",
+      "--key",
+      "K",
+      "--value",
+      "\"unbalanced",
+      "--env",
+      "all",
+    ]],
+    [{ verb: "add-alias", name: "x", command: "" }, [
+      "add-alias",
+      "--name",
+      "x",
+      "--command",
+      "",
+    ]],
+  ];
+  it.each(cases)("refuses %j as the script does", (entry, args) => {
+    expect(validateEntry({ tool: "mise", ...entry })).not.toEqual([]);
+    const res = shipped(args);
+    expect(res.status).toBe(2);
+    expect(res.out.error).toMatch(/template|TOML basic string|needs --/);
+  });
+
+  it("takes a template in a pack's own add-env value, as the script does", () => {
+    const entry = {
+      tool: "mise",
+      verb: "add-env",
+      key: "K",
+      value: "{{ config_root }}",
+      env: "all",
+    };
+    expect(validateEntry(entry)).toEqual([]);
+    const res = shipped([
+      "add-env",
+      "--key",
+      "K",
+      "--value",
+      "{{ config_root }}",
+      "--env",
+      "all",
+    ]);
+    expect(res.out.error ?? "").not.toContain("template");
+  });
+});
+
+describe("output", () => {
+  it("delivers a multi-megabyte JSON body whole through a pipe", () => {
+    const { status, out } = run(["preview", "demo", "big"]);
+    expect(status).toBe(0);
+    expect((out.rows?.[0]?.["reason"] as string).length).toBe(3_000_000);
+  });
+
+  it("delivers a large refusal body whole, exit 2", () => {
+    const { status, out } = run(["demo", "big"]);
+    expect(status).toBe(2);
+    expect((out.rows?.[0]?.["reason"] as string).length).toBe(3_000_000);
   });
 });
 
