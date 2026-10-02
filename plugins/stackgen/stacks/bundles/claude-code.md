@@ -20,9 +20,9 @@ tool lands here — the architecture menu preselects it — and one with an
 opinion picks another.
 
 **It requires one plugin.** Authoring runs through `taste-skill`, so a product
-pinning this tool adds `taste-skill@taste-skill` to its required plugins at
-init, and the repo's `setup:ai` installs it. Every skill that needs it halts
-plainly when it is absent.
+pinning this tool gets `taste-skill@taste-skill` requested by the pack, and the
+repo's `setup:ai` installs it at user scope, when absent. Every skill that needs
+it halts plainly when it is absent.
 
 **The pack now designs and reviews screens.** `/design-session screens <flow>`
 authors a flow's pages from the brief `/vwf:screens prompt` wrote, and
