@@ -1,0 +1,16 @@
+== /code-review high 2026-10-01-tool-config-script-mise (range ed7281fa..a4e22122) ==
+
+1. lib/record.mjs:139 — (reproduced) the lock reader cannot parse a requester named gitignore:<Name> written unquoted (git.md documents blocks: [git, graphify, pnpm, gitignore:Go] and gitignore:Go: {...}); flow-scalar regex stops at ':' and keyAndRest splits at the first colon → Workspace throws 'lock.yaml: bad list near :Go]', every script call exits 1 in that repo.
+2. lib/tools/mise.mjs:965 — (reproduced) baseClashes builds conflict rows and overwrite effects from the raw asset line, not the rendered body: REPO_NAME conflict requests "unfilled"; overwrite writes it; MERGE_MODEL_* fall back to asset defaults, MEMBERS to "". Run the clash pass over renderBody's output.
+3. lib/tools/mise.mjs:1116 — untouched() compares a whole-file hash; a sanctioned user line outside every block in conf.d/tools.toml changes it, so the next asset update raises take-theirs/keep-mine/merge on an unedited block. A per-block hash would avoid it.
+4. lib/tools/mise.mjs:1631 — (reproduced) upgrade applies entry (append) then drop-lines, so upgraded pins move to the block's end and leave their comments behind; sameSet ignores order so nothing restores it.
+5. assets/mise/.config/mise/tasks/setup/all:8 — the per-member --<slug> flags at MEMBER_FLAGS are declared but never read; setup-<slug> aliases set up the base repo only, silently.
+6. assets/mise/.config/mise/tasks/setup/all:46 — the member subshell runs mise run setup:all inside while read without </dev/null; with raw = true a member task reading stdin eats the remaining member list; --all silently skips the rest.
+7. lib/tools/mise.mjs:1376 — a hoist row answered keep-existing is not remembered; every all re-raises it and refuses without --answers.
+8. assets/mise/.config/mise/tasks/setup/worktree:15 — the MISE_ENV guard runs after git submodule update --init --recursive; move it above line 12.
+9. tool-config.mjs:300 — the block-body lookup exists three times (regionBodies, blocks.mjs bodiesIn, mise.mjs blockIn), the marker regex twice, and two narrow YAML readers disagree (schema coerces numbers/booleans, record does not).
+10. lib/drift.mjs:88 — check creates a new module context per lock record, so mise.mjs's per-context memo never hits.
+
+== /security-review (subagent) ==
+
+No high-confidence vulnerabilities.

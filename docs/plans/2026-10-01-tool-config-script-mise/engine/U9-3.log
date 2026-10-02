@@ -1,0 +1,15 @@
+== /code-review high 2026-10-01-tool-config-script-mise (range ed7281fa..5e19500e) ==
+
+1. lib/tools/mise.mjs:1338 — (reproduced) fold() writes an old pack fragment's lines into conf.d section blocks with no one-key check: duplicate TOML key in one [tools] table (npm:@askviraj/linter), shfmt pinned in tools.toml and tools.dev.toml, non-exact "latest" left unresolved; real mise then refuses to parse the config.
+2. lib/tools/mise.mjs:319 — (reproduced) positionAt/readPosition find only the new 'MARKED POSITION — MEMBER_FLAGS/MEMBER_ALIASES' comments; files landed by the previous release carry '# One flag per member repo…' / '# One alias per member repo…', so they count as having no members; take-theirs deletes every member flag and alias.
+3. lib/tools/mise.mjs:1394 — hoists() moves a tool pinned by different requesters in different env files under the first holder's block only and drops the others' lines; remove --for A later removes B's pin; check reports B drifted; upgrade treats B's exact pin as latest.
+4. lib/tools/mise.mjs:1701 — (reproduced) upgrade raises a row whenever mise latest differs and never checks it is newer: 'upgrade shfmt 3.0.0 → 2.0.0', ok writes the older version.
+5. assets/mise/.config/mise/tasks/setup/all:49 — (not verified) the member subshell inherits usage_all / usage_<slug> from the parent; nested members may be set up twice or a --web leak into a member's own web member.
+6. lib/tools/mise.mjs:1358 — newer() maps parts through Number; a v prefix or prerelease suffix becomes NaN and the comparison returns the second argument (hoist picks the older pin).
+7. lib/tools/mise.mjs:1809 — expected() drops a base key from the base block when another file holds it, but configOps/baseClashes keeps it and raises a conflict; check and all disagree; doctor's drift would delete the base pin if taken.
+8. lib/tools/mise.mjs:1240 — migrate()'s top-level check reports only the first misplaced table in .config/mise.toml (find, not filter); one needs-edit round trip per section.
+9. lib/tools/mise.mjs:76 — duplicated helpers: MARKER regex copied, withoutUserLines re-derives frameEnd, record.mjs and schema.mjs each have stripComment/quoted-string scanners with different escape rules.
+
+== /security-review (subagent) ==
+
+No high-confidence vulnerabilities.
