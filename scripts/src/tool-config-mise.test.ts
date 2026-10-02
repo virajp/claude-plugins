@@ -11,6 +11,7 @@
  * after an asset change with TOOL_CONFIG_GOLDEN=write.
  */
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   appendFileSync,
   existsSync,
@@ -258,6 +259,37 @@ describe("greenfield all", () => {
     ]);
   });
 
+  it("updates a file an older release landed and nobody edited as a write, never drift", () => {
+    apply(["all"]);
+    // As an older stackgen left them: different content, recorded with its hash.
+    const task = ".config/mise/tasks/setup/mise";
+    write(task, read(task) + "mise upgrade --local\n");
+    const tools = `${CONF}/tools.toml`;
+    write(
+      tools,
+      read(tools).replace("# No runtime here", "# The lock: no runtime here"),
+    );
+    const lock = ".claude/stackgen/lock.yaml";
+    let text = read(lock);
+    for (const p of [task, tools]) {
+      const hash = createHash("sha256").update(read(p)).digest("hex");
+      text = text.replace(
+        new RegExp(
+          `(path: "${p}"\\n\\s+source: [^\\n]+\\n\\s+hash: )[0-9a-f]+`,
+        ),
+        `$1${hash}`,
+      );
+    }
+    write(lock, text);
+    expect(rowsOf(["all"]).map(r => [r.kind, r["path"]])).toEqual([
+      ["write", tools],
+      ["write", task],
+    ]);
+    apply(["all"]);
+    expect(read(task)).not.toContain("mise upgrade --local");
+    expect(rowsOf(["all"])).toEqual([]);
+  });
+
   it("raises drift for a hand-edited base block, and check reports it", () => {
     apply(["all"]);
     write(
@@ -372,8 +404,6 @@ describe("verbs", () => {
       answers: ["keep-existing", "overwrite"],
       existing: [{ path: `${CONF}/tools.dev.toml`, holder: "mise" }],
     });
-    apply(args, () => "keep-existing");
-    expect(existsSync(path(`${CONF}/tools.ci.toml`))).toBe(false);
     apply(args, () => "overwrite");
     expect(read(`${CONF}/tools.ci.toml`)).toContain(
       "# >>> pack\njq = { version = \"1.7.1\" }\n# <<< pack",
@@ -381,6 +411,65 @@ describe("verbs", () => {
     expect(read(`${CONF}/tools.dev.toml`)).not.toMatch(/^jq/m);
     expect(run(["check"]).out.rows).toEqual([]);
     expect(rowsOf(["all"])).toEqual([]);
+  });
+
+  it("remembers a keep-existing answer, so the same call again raises no row", () => {
+    const args = [
+      "mise",
+      "add-tool",
+      "--name",
+      "jq",
+      "--version",
+      "1.7.1",
+      "--env",
+      "ci",
+      "--for",
+      "pack",
+    ];
+    apply(args, () => "keep-existing");
+    expect(read(`${CONF}/tools.ci.toml`)).toContain(
+      "# >>> pack\n# keep-existing: jq\n# <<< pack",
+    );
+    expect(read(`${CONF}/tools.dev.toml`)).toMatch(/^jq/m);
+    expect(rowsOf(args)).toEqual([]);
+    expect(run(["check"]).out.rows).toEqual([]);
+    expect(rowsOf(["all"])).toEqual([]);
+    apply(["mise", "remove", "--for", "pack"]);
+    expect(rowsOf(args)).toHaveLength(1);
+  });
+
+  it("remembers keep-existing on a set-env clash in the block's own file", () => {
+    apply([
+      "mise",
+      "add-env",
+      "--key",
+      "XCODE_VERSION",
+      "--value",
+      "",
+      "--env",
+      "all",
+      "--for",
+      "swiftui",
+    ]);
+    write(
+      `${CONF}/env.toml`,
+      read(`${CONF}/env.toml`) + "XCODE_VERSION = \"15.0\"\n",
+    );
+    const args = [
+      "mise",
+      "set-env",
+      "--key",
+      "XCODE_VERSION",
+      "--value",
+      "26.1",
+      "--for",
+      "swiftui",
+    ];
+    expect(rowsOf(args).map(r => r.answers)).toEqual([
+      ["move-in", "keep-existing"],
+    ]);
+    apply(args, () => "keep-existing");
+    expect(rowsOf(args)).toEqual([]);
   });
 
   it("add-env writes a pack's line, and never moves a machine value it later holds", () => {
@@ -682,6 +771,31 @@ describe("upgrade", () => {
       "# >>> doppler\ndoppler = { version = \"3.1.0\" }\n# <<< doppler",
     );
     expect(read(`${CONF}/tools.ci.toml`)).toBe("[tools]\nmine = \"2.0.0\"\n");
+  });
+
+  it("never moves a pin its base or pack declares exact, so all and upgrade agree", () => {
+    const dev = { MISE_ENV: "dev" };
+    apply([
+      "mise",
+      "add-tool",
+      "--name",
+      "aqua:realm/SwiftLint",
+      "--version",
+      "0.65.1",
+      "--env",
+      "all",
+      "--for",
+      "swiftlint",
+    ]);
+    setVersions(
+      "npm:@askviraj/linter=9.9.9\naqua:realm/SwiftLint=0.70.0\njq=1.9.0\n",
+    );
+    expect(rowsOf(["mise", "upgrade"], dev).map(r => r["tool"])).toEqual([
+      "jq",
+    ]);
+    apply(["mise", "upgrade"], undefined, dev);
+    expect(rowsOf(["all"])).toEqual([]);
+    expect(rowsOf(["mise", "upgrade"], dev)).toEqual([]);
   });
 
   it("keep leaves the pins as they stand", () => {

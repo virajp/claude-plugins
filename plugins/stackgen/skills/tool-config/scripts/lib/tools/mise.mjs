@@ -289,10 +289,28 @@ function split(path, text) {
   };
 }
 
+// One module call reads the repo as it stood when the call began, so what it
+// derives from the assets and the carried values is built once per context.
+const memo = new WeakMap();
+function once(ctx, name, build) {
+  if (!memo.has(ctx)) {
+    memo.set(ctx, new Map());
+  }
+  const m = memo.get(ctx);
+  if (!m.has(name)) {
+    m.set(name, build());
+  }
+  return m.get(name);
+}
+
+const assetSet = ctx => once(ctx, "assets", () => new Set(ctx.listAssets()));
+
+/** The values the repo carries now — the baseline every drift test renders. */
+const carriedValues = ctx => once(ctx, "carried", () => values(ctx, {}));
+
 /** The frame a file opens with when no asset ships it. */
 function frameFor(ctx, path) {
-  const assets = new Set(ctx.listAssets());
-  if (assets.has(path)) {
+  if (assetSet(ctx).has(path)) {
     return split(path, ctx.asset(path)).frame;
   }
   const { section, env } = sectionOf(path);
@@ -634,9 +652,39 @@ const byKey = (a, b) => {
   return ka < kb ? -1 : ka > kb ? 1 : 0;
 };
 
+/**
+ * A clash a requester's call was answered keep-existing on, kept as a comment
+ * in that requester's own block: the record of the answer, so the same call
+ * unchanged raises no row again. `remove`, or the clash going away, clears it.
+ */
+const DECLINED = /^\s*# keep-existing: (\S+)\s*$/;
+
+function declinedIn(ctx, path, region, requester) {
+  return new Set(
+    (blockIn(ctx.read(path), requester, region) ?? [])
+      .map(l => DECLINED.exec(l)?.[1])
+      .filter(Boolean),
+  );
+}
+
+/** The op that records a keep-existing answer in the requester's block. */
+function decline(ctx, path, region, requester, key) {
+  const body = blockIn(ctx.read(path), requester, region) ?? [];
+  return {
+    op: "block",
+    path,
+    requester,
+    body: [...body, `# keep-existing: ${key}`].sort(byKey),
+    region,
+    frame: frameFor(ctx, path),
+  };
+}
+
 /** One requester's block with `line` set for its key — replaced in place or added, the body key-sorted. */
 function blockWith(ctx, path, region, requester, key, line) {
-  const body = blockIn(ctx.read(path), requester, region) ?? [];
+  const body = (blockIn(ctx.read(path), requester, region) ?? []).filter(l =>
+    DECLINED.exec(l)?.[1] !== key
+  );
   const at = body.findIndex(l => keyOf(l) === key);
   const next = at >= 0
     ? body.map((l, i) => (i === at ? line : l))
@@ -680,6 +728,9 @@ function keyed(ctx, { path, region, requester, key, line, scope, keep, what }) {
   if (outside.length === 0) {
     return { ops: settled ? [] : [write] };
   }
+  if (requester && declinedIn(ctx, path, region, requester).has(key)) {
+    return { ops: [] };
+  }
   return {
     ops: [],
     rows: [{
@@ -698,7 +749,9 @@ function keyed(ctx, { path, region, requester, key, line, scope, keep, what }) {
       } — one ${what} per name`,
       answers: ctx.ANSWERS.conflict,
       effects: {
-        "keep-existing": [],
+        "keep-existing": requester
+          ? [decline(ctx, path, region, requester, key)]
+          : [],
         overwrite: [...outside.map(dropOp), ...(settled ? [] : [write])],
       },
     }],
@@ -867,7 +920,7 @@ function skillOp(ctx, pending, landing) {
     op: "whole",
     path: SKILL,
     content: withTable(asset, rows),
-    drift: true,
+    ...(untouched(ctx, SKILL, current) ? { force: true } : { drift: true }),
   };
 }
 
@@ -987,6 +1040,9 @@ function configOps(ctx, path, v, rows, resolve) {
     if (current === null || sameLines(current, content)) {
       return [{ op: "whole", path, content: current ?? content }];
     }
+    if (untouched(ctx, path, current)) {
+      return [{ op: "whole", path, content, force: true }];
+    }
     const recorded = ctx.record(path) !== null;
     return [{ op: "whole", path, content, drift: recorded }];
   }
@@ -1036,7 +1092,10 @@ function configOps(ctx, path, v, rows, resolve) {
   if (sameSet(mine, want)) {
     return [];
   }
-  const was = values(ctx, {});
+  if (untouched(ctx, path, current)) {
+    return [op];
+  }
+  const was = carriedValues(ctx);
   const baseline = renderBody(
     ctx,
     path,
@@ -1047,6 +1106,16 @@ function configOps(ctx, path, v, rows, resolve) {
   const keep = notLegacy(path);
   const drifted = !sameSet(mine.filter(keep), baseline.filter(keep));
   return [{ ...op, drift: drifted }];
+}
+
+/**
+ * Whether a file is exactly what tool-config last wrote — its content hashes
+ * to its lock record. Nobody edited it, so a newer asset replaces it as a
+ * plain update, never as drift.
+ */
+function untouched(ctx, path, current) {
+  const record = ctx.record(path);
+  return current !== null && record?.hash === sha256(current);
 }
 
 /** Whether another source's lock entry owns a path — a pack overlay's task file, say. */
@@ -1081,8 +1150,8 @@ function taskOps(ctx, path, v, pending) {
   if (!record) {
     return [op];
   }
-  const baseline = renderWhole(path, ctx.asset(path), values(ctx, {}));
-  if (sameLines(current, baseline)) {
+  const baseline = renderWhole(path, ctx.asset(path), carriedValues(ctx));
+  if (untouched(ctx, path, current) || sameLines(current, baseline)) {
     pending.set(path, want);
     return [{ ...op, force: true }];
   }
@@ -1445,6 +1514,9 @@ function setEnv(ctx, { flags, for: requester }) {
   }
   const write = blockWith(ctx, held.path, region, requester, key, line);
   const sameFile = outside.find(x => x.path === held.path);
+  if (sameFile && declinedIn(ctx, held.path, region, requester).has(key)) {
+    return { ops: [] };
+  }
   const rows = outside.map(x => ({
     kind: "conflict",
     path: x.path,
@@ -1461,7 +1533,10 @@ function setEnv(ctx, { flags, for: requester }) {
       ? ["move-in", "keep-existing"]
       : ["move-in", "keep-both"],
     effects: x === sameFile
-      ? { "move-in": [dropOp(x), write], "keep-existing": [] }
+      ? {
+        "move-in": [dropOp(x), write],
+        "keep-existing": [decline(ctx, held.path, region, requester, key)],
+      }
       : { "move-in": [dropOp(x)], "keep-both": [] },
   }));
   return { ops: sameFile ? [] : [write], rows };
@@ -1493,6 +1568,43 @@ function addAlias(ctx, { flags, for: requester }) {
   });
 }
 
+/** A pack's structured mise entries, from its pack.yaml; none for a pack this plugin does not ship. */
+function packEntries(ctx, requester) {
+  return once(ctx, `pack:${requester}`, () => {
+    const text = ctx.pack(requester);
+    if (text === null) {
+      return [];
+    }
+    try {
+      return parseToolConfigList(text).filter(e =>
+        typeof e === "object" && e.tool === "mise"
+      );
+    }
+    catch {
+      return [];
+    }
+  });
+}
+
+/** The version spec that put a pin where it is: the base's asset, the pack's entry, else `latest`. */
+function declaredSpec(ctx, x) {
+  if (x.owner === BASE && assetSet(ctx).has(x.path)) {
+    const line = split(x.path, ctx.asset(x.path)).body.find(l =>
+      keyOf(l) === x.key
+    );
+    return (line && versionOf(KEY.exec(line)[2])) ?? "latest";
+  }
+  if (x.owner && x.owner !== BASE) {
+    const e = packEntries(ctx, x.owner).find(y =>
+      y.verb === "add-tool"
+      && y.name === x.key
+      && sectionFile("tools", y.env) === x.path
+    );
+    return e ? String(e.version) : "latest";
+  }
+  return "latest";
+}
+
 function upgrade(ctx) {
   if (!(ctx.env.MISE_ENV ?? "").split(",").includes("dev")) {
     throw new ctx.RefusalError(
@@ -1503,7 +1615,13 @@ function upgrade(ctx) {
   const region = table("tools");
   const rows = [];
   for (const x of allPins(ctx).filter(p => p.version !== null)) {
-    const to = resolve(x.key);
+    // A pin moves only as far as what declared it allows: an exact version is
+    // deliberate and stays, so `all` and the pack's entries never undo upgrade.
+    const spec = declaredSpec(ctx, x);
+    if (isExact(spec)) {
+      continue;
+    }
+    const to = resolve(x.key, spec);
     if (x.version === to) {
       continue;
     }
@@ -1556,19 +1674,7 @@ function plan(ctx, call) {
 
 /** What one pack's structured mise entries write into `path`, the pins as the file holds them. */
 function packLines(ctx, requester, path, mine) {
-  const text = ctx.pack(requester);
-  if (text === null) {
-    return null;
-  }
-  let entries;
-  try {
-    entries = parseToolConfigList(text).filter(e =>
-      typeof e === "object" && e.tool === "mise"
-    );
-  }
-  catch {
-    return null;
-  }
+  const entries = packEntries(ctx, requester);
   if (entries.length === 0) {
     return null;
   }
@@ -1595,7 +1701,7 @@ function packLines(ctx, requester, path, mine) {
 }
 
 function expected(ctx, { path, text }) {
-  const assets = new Set(ctx.listAssets());
+  const assets = assetSet(ctx);
   if (path === SKILL) {
     const parts = skillParts(text);
     return {
@@ -1605,7 +1711,7 @@ function expected(ctx, { path, text }) {
   }
   if (path.startsWith(`${TASKS}/`)) {
     return assets.has(path)
-      ? { whole: renderWhole(path, ctx.asset(path), values(ctx, {})) }
+      ? { whole: renderWhole(path, ctx.asset(path), carriedValues(ctx)) }
       : null;
   }
   const sec = sectionOf(path);
@@ -1647,7 +1753,7 @@ function expected(ctx, { path, text }) {
     const pins = sec?.section === "tools"
       ? basePins(ctx, path, body, mine, null)
       : null;
-    settle(BASE, renderBody(ctx, path, body, values(ctx, {}), pins), mine);
+    settle(BASE, renderBody(ctx, path, body, carriedValues(ctx), pins), mine);
   }
   if (sec) {
     const region = table(sec.section);
@@ -1662,7 +1768,19 @@ function expected(ctx, { path, text }) {
       const mine = blockIn(text, requester, region) ?? [];
       const want = packLines(ctx, requester, path, mine);
       if (want) {
-        settle(requester, want, mine);
+        // A clash answered keep-existing stands for its line: never drift.
+        const kept = new Set(
+          mine.map(l => DECLINED.exec(l)?.[1]).filter(Boolean),
+        );
+        const compared = mine.filter(l => !DECLINED.test(l));
+        const norm = l => normalize(requester, l);
+        out[requester] = sameSet(
+            compared,
+            want.filter(l => !kept.has(keyOf(l))),
+            norm,
+          )
+          ? mine
+          : want;
       }
     }
   }
