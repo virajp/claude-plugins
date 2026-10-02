@@ -10,9 +10,9 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-10-02 by the user
+RUNNING since 2026-10-02 in .worktrees/2026-10-02-git-workflow-git-only
 
 ## Consent
 
@@ -132,11 +132,11 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                                | Kind | Owns                                                                                                    | Depends on | Status  | Commit |
-| -- | ---- | ---------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-git-workflow.md](01-git-workflow.md) | edit | `plugins/vwf/skills/git-workflow/**`                                                                    | —          | pending |        |
-| U2 | 2    | [02-docs.md](02-docs.md)                 | edit | `readme.md`, `CLAUDE.md`, `.claude/docs/**`, `.claude/skills/vwf-plugin/**`, `site/src/content/docs/**` | U1         | pending |        |
-| U3 | 3    | [03-gates.md](03-gates.md)               | edit | —                                                                                                       | U2         | pending |        |
+| Id | Wave | Unit file                                | Kind | Owns                                                                                                    | Depends on | Status  | Commit   |
+| -- | ---- | ---------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
+| U1 | 1    | [01-git-workflow.md](01-git-workflow.md) | edit | `plugins/vwf/skills/git-workflow/**`                                                                    | —          | green   | 0fd8b2b1 |
+| U2 | 2    | [02-docs.md](02-docs.md)                 | edit | `readme.md`, `CLAUDE.md`, `.claude/docs/**`, `.claude/skills/vwf-plugin/**`, `site/src/content/docs/**` | U1         | pending |          |
+| U3 | 3    | [03-gates.md](03-gates.md)               | edit | —                                                                                                       | U2         | pending |          |
 
 ## Shared-file rule
 
@@ -214,8 +214,16 @@ none
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit            | Model | Round | Outcome | Detail                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Commit |
+| ---- | --------------- | ----- | ----- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight       | —     | 1     | pass    | wave gate 8/8 green; doctor blocking predicates clear (mise, graphify CLI, main-checkout graph); no .config/vwf.yaml — no stack, LSP n/a (no code unit)                                                                                                                                                                                                                                                                                                                                              | —      |
+| 0    | preflight       | —     | 1     | skipped | conventions fetch — why: no code unit; format check — why: no covers:; mempalace down — journal skipped; sequence W1 U1 → W2 U2 → W3 U3                                                                                                                                                                                                                                                                                                                                                              | —      |
+| 1    | U1 git-workflow | opus  | 1     | pass    | edit; worktree-setup.md: native-tool 2a removed, 2b→2a 2c→2b 2d→2c, Branch name section defines $BRANCH_NAME first (caller's name, else confirmed kebab slug), bootstrap via mise x -- mise; landing.md cleanup = git worktree remove from main checkout; SKILL.md: allowed-tools + AskUserQuestion, new Core Rule (D3), Step 2c citations, References row; DECIDED: worktree-setup.md opening becomes a three-step sequence pointing at the Core Rule; References row reworded (listed native tool) | —      |
+| 1    | R1 wave review  | opus  | 1     | pass    | 0 findings; CONTRACT clean, RULINGS clean; kept gates 3/3 pass (tool names only in the new Core Rule SKILL.md:29; no Step 2d/Native Worktree; BRANCH_NAME defined :39,:45 before use :54); no doc outside GW falsified                                                                                                                                                                                                                                                                               | —      |
+| 1    | wave gate       | —     | 1     | pass    | 8/8 green (code:precommit reformatted once, green on re-run); U1 0fd8b2b1                                                                                                                                                                                                                                                                                                                                                                                                                            | —      |
+| —    | acceptance      | —     | —     | skipped | why: no covers:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | —      |
+| —    | ux              | —     | —     | skipped | why: no covers:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | —      |
+| —    | reconcile       | —     | —     | skipped | why: no covers: and no code unit                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | —      |
 
 ## Launch
 
