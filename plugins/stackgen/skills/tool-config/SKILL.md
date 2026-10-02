@@ -160,13 +160,13 @@ a value starting with `"` is read as a TOML basic string — what that means is
 - **`<tool> <verb>`** runs one of a scripted tool's verbs, each in its
   reference's verbs section:
 
-  | Tool         | Verbs and their flags                                                                                                                                              |
-  | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-  | `mise`       | [`add-tool`, `add-env`, `set-env`, `add-alias`, `upgrade`](references/mise.md#4-the-verbs)                                                                           |
-  | `dprint`     | [`add-plugin --name <n>`](references/dprint.md#4-the-verbs)                                                                                                         |
-  | `pre-commit` | [`add-hook --repo --id --stage …`, `add-linter-ignore --paths <p>,…`, `set-scopes --scopes <id>,…`](references/pre-commit.md#4-the-verbs)                            |
-  | `gitleaks`   | none but `remove` — [its allowlist is the cross-tool verb's](references/gitleaks.md#3-the-verbs)                                                                   |
-  | `grype`      | [`add-ignore --id --package --reason --expires`, `remove-ignore --id`](references/grype.md#2-the-verbs)                                                             |
+  | Tool         | Verbs and their flags                                                                                                                     |
+  | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+  | `mise`       | [`add-tool`, `add-env`, `set-env`, `add-alias`, `add-plugin --plugin --source`, `upgrade`](references/mise.md#4-the-verbs)                |
+  | `dprint`     | [`add-plugin --name <n>`](references/dprint.md#4-the-verbs)                                                                               |
+  | `pre-commit` | [`add-hook --repo --id --stage …`, `add-linter-ignore --paths <p>,…`, `set-scopes --scopes <id>,…`](references/pre-commit.md#4-the-verbs) |
+  | `gitleaks`   | none but `remove` — [its allowlist is the cross-tool verb's](references/gitleaks.md#3-the-verbs)                                          |
+  | `grype`      | [`add-ignore --id --package --reason --expires`, `remove-ignore --id`](references/grype.md#2-the-verbs)                                   |
 
   Every one also takes `remove --for <requester>`. A scripted tool named
   with no verb — `mise`, `dprint` — lands that tool's base alone, exactly as
@@ -207,8 +207,6 @@ for the flag's `-` (`update_bot`):
 | `--linkage`                                    | `siblings` or `submodule`                                       |
 | `--merge-model-develop`, `--merge-model-main`  | `direct` or `pr`                                                |
 | `--runtimes`                                   | language keys — `node`, `python`, `dart`, `go`, `rust`, `swift` |
-| `--plugin-sources`                             | `<source-ref>\|<name>` rows; empty on none                       |
-| `--plugins`                                    | `<name>@<marketplace>` rows; empty on none                      |
 | `--forge`, `--secrets`, `--update-bot`         | the three conditional answers, `none` the spelling of no answer |
 | `--scopes`                                     | the commit gate's scopes, project ids; empty on none            |
 
@@ -562,7 +560,10 @@ entries:
 the file as written — after the formatter, so the bytes a later
 `dprint check` sees — for the callers that test a repo's shape —
 `/vwf:doctor` and `/vwf:init` — and is re-recorded on every write; the drift
-test never reads it. A JSON file's entry carries `keys:` in place of
+test never reads it. A landed `setup/ai` edited by hand becomes the repo's
+own and keeps its entry with `hash: none`
+([mise's](references/mise.md#setupai--the-repos-agent-plugins)).
+A JSON file's entry carries `keys:` in place of
 `blocks:`, one list per requester, an exclude spelled as dprint holds it.
 A call that moves only these maps — keys, shares, templates — and leaves
 the file as it is shows a `record` row (`share` when only `shares:` moved).

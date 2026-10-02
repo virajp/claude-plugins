@@ -705,12 +705,12 @@ gets its `_default` slot as a create.
 **The skill's positions are compared by the skill.** This pass computes the
 values `/stackgen:tool-config all` takes, per [new repo](new-repo.md) §2 —
 the folder slug for `repo`, the resolved members, the landing pair the repo
-already carries, question 5's confirmed rows, pass 10's scope list — and passes
-them to the skill's `preview all` in the survey, per [new repo](new-repo.md)
-§2. The skill compares each with what its file holds and returns the row: a
+already carries, pass 10's scope list — and passes them to the skill's
+`preview all` in the survey, per [new repo](new-repo.md) §2. The skill
+compares each with what its file holds and returns the row: a
 `repo-name key: <old> → <new>` replace, member flags and aliases rewritten
-from project ids to members, a plugin list gaining or losing rows, a scope
-list that moved, a base-block tool the repo already pins. `init` prints
+from project ids to members, a scope list that moved, a base-block tool the
+repo already pins. `init` prints
 those rows in this repo's section under **Tool-config rows**, asks each
 conflict or drift row inside the plan, and the one consent covers them.
 
@@ -1138,7 +1138,7 @@ product. Its consent line on this pipeline says one more thing, because a repo
 that already existed has usually been on its forge for a while: the pass is
 **idempotent** — a default branch already set is set again to the same value
 or to the one chosen, and a branch already protected in any form is left
-exactly as it is and reported, never rewritten to the two rules. Question 6's
+exactly as it is and reported, never rewritten to the two rules. Question 5's
 forge-read default applies here as everywhere, and it is here that it earns
 its keep: an existing repo almost always has an `origin`, so the row arrives
 proposing what the forge already says. Three differences, all from the fact

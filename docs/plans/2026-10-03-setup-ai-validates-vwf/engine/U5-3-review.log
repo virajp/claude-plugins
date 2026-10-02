@@ -1,0 +1,12 @@
+## /code-review high — loop U5, round 3, range 225adbdc..472f44d0
+
+1. tools/mise.mjs:1206 — replacing an untouched older setup/ai silently drops its filled EXTRA_MARKETPLACES/EXTRA_PLUGINS rows (readPackBlocks finds no markers); no row or note names the loss.
+2. tools/mise.mjs:1642 — add-plugin refuses every untouched older landing (no mise block); /vwf:setup's materialize re-runs the design-tool add-plugin entry, so every shaped repo using the claude-code design tool gets a refused tool-config call; check cannot flag the stale task (expected() null for setup/ai, :1839).
+3. setup/ai:31 — project/local rows count only when projectPath resolves to this checkout; a second clone or a worktree never matches, so pnpx adds a duplicate user install and project plugins are never upgraded there; `projectEnabled` is the CLI's per-directory signal.
+4. CLAUDE.md:275, :387 — docs contradict the shipped task until the docs unit lands (installer/CLAUDE.md, site how-to still say setup:ai wires graphify).
+5. setup/ai:56 — ensure_plugin's marketplace add / install hide stdout but keep stdin and pass no -y; a confirmation prompt is invisible and blocks.
+6. tools/mise.mjs:1786 — remove/addPlugin disown or write setup/ai without the foreign() check taskOps applies; a pack-overlaid setup/ai is taken over.
+7. setup/ai:39 — N+2 `claude plugin list` + N `marketplace list` spawns per run.
+8. tools/mise.mjs:1839 — altitude: setup/ai ownership enforced by five special cases plus a Workspace `unhashed` set instead of one per-record ownership flag.
+9. references/mise.md:1033 — 91-column line in an ~80-column section; SKILL.md:165 verb-table row overruns its column.
+10. design-tool/claude-code/conventions.md:74 — says "neither user nor project scope" but the task also counts local; halt text omits that a session restart is needed after a user-scope install.

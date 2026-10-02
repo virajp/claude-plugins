@@ -2,7 +2,7 @@ name: Claude Code
 summary: The terminal you already work in — the design system, the logo and
   a flow's screens are authored in session into a canvas directory the repo
   commits, and reviewed in a browser served from the repo on loopback.
-version: 0.3.1
+version: 0.4.0
 type: design-tool
 kind: design-tool
 axis: design
@@ -12,3 +12,13 @@ axis: design
 harness: n/a
 # No server key: the host is the tool, and the canvas is a directory in the
 # repo. Nothing is written into .mcp.json for this pack.
+# Asks /stackgen:tool-config for the taste-skill plugin its authoring runs
+# through; setup:ai installs it at user scope unless it is already at user
+# scope, or at local or project scope for this repo.
+tool-config:
+  - {
+      tool: mise,
+      verb: add-plugin,
+      plugin: taste-skill@taste-skill,
+      source: Leonxlnx/taste-skill,
+    }

@@ -69,15 +69,16 @@ run `mise install` — through the repo-local mise skill where the repo has
 one.
 
 **The plugin this pack requires.** Authoring runs through the `taste-skill`
-plugin's design skills, so a product pinning this tool adds
-`taste-skill@taste-skill` to the agent plugins it requires — answered at
-init's fifth question, which writes the list into the task library so the
-repo's `setup:ai` installs it at project scope. The pack vendors none of that
-doctrine and vwf depends on none of it. Every skill here that needs the plugin
-checks for it first and halts with the one sentence below when it is absent:
+plugin's design skills, so this pack requests `taste-skill@taste-skill`
+through its `tool-config:` list, which writes the request into the repo's
+`setup:ai` task; that task installs it at user scope unless it is already
+installed at user scope, or at local or project scope for this repo. The pack
+vendors none of that doctrine and vwf depends on none of it. Every skill here
+that needs the plugin checks for it first and halts with the one sentence
+below when it is absent:
 
-> `taste-skill` is not installed. Add `taste-skill@taste-skill` to this
-> product's required plugins and run `mise run setup:ai`.
+> `taste-skill` is not installed. Run `mise run setup:ai`, which installs
+> `taste-skill@taste-skill` at user scope, then restart the session.
 
 **The `design_system_id` is the canvas path** —
 `docs/design/<project>/design-system.md` — rather than a hash of its content.

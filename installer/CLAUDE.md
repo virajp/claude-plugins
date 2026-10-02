@@ -11,9 +11,9 @@ table is the full one, and is not repeated here).
 
 `pnpx @virajp.dev/claude-plugins …` does **two things**: installs plugins, and
 removes what the toolkit put on a machine — both through the `claude` CLI and
-nothing else. graphify is the skills' job, not this CLI's: `setup:ai` wires it
-for the agent and a shaped repo's pre-commit `post-commit` hook refreshes the
-graph.
+nothing else. graphify is not this CLI's job: a shaped repo's pre-commit
+`post-commit` hook refreshes the graph, and nothing in the toolkit runs
+`graphify install --platform claude` any more — that wiring is the user's.
 
 - **Plugin installs are a thin wrapper.** `--all` / `--user <name>` /
   `--project <name>` drive Claude's own `claude plugin marketplace add` and
@@ -22,11 +22,13 @@ graph.
   tag). It never edits Claude's settings itself. What stays deliberately cut is
   everything thicker than that: the copied payload, the adapters, the
   `requires:` gate, and any receipt for a plugin install — Claude's settings are
-  the record, and `--uninstall` reads them live. **Nothing in a shaped repo
-  calls this**: since 2026-09-12 the task library's `setup:ai` drives those same
-  `claude plugin` commands itself, at project scope, so a repo reconciles its
-  own plugin set without a package runner and without this CLI's hardcoded
-  marketplace source. This is the one-shot a person runs; that is what a
+  the record, and `--uninstall` reads them live. **A shaped repo calls this
+  once, only when `vwf` is missing**: since 2026-10-03 the task library's
+  `setup:ai` runs `pnpx @virajp.dev/claude-plugins@latest --all` when
+  `vwf@virajp-plugins` is installed at no scope that serves the repo, then
+  drives `claude plugin` itself to update every marketplace and upgrade every
+  plugin installed at a scope that serves the repo, at that scope. It never
+  installs at project scope. This is the one-shot a person runs; that is what a
   checkout re-runs.
 - **`--uninstall`** — interactive; see below.
 
