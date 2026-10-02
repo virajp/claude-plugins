@@ -62,10 +62,10 @@ coverage is adding a plugin; narrowing it is
 **Plugins are pinned by version in the URL.** A floating reference formats
 differently on a machine that resolved it later, and the diff lands on whoever
 commits next. The URL below is what a first write uses; after that the version
-in the file is the file's — `dprint config update`, run by
-`setup:mise --upgrade` in dev on a terminal and at no other time, moves it —
-so a version differing from this table is never drift. Drift compares the
-plugin, not its version.
+in the file is the file's — no task moves it; a person runs
+`dprint config update` by hand, in dev, until the formatter moves onto the
+skill's script — so a version differing from this table is never drift.
+Drift compares the plugin, not its version.
 
 | Plugin        | URL written first                                                 | Config key   | Held by                            |
 | ------------- | ----------------------------------------------------------------- | ------------ | ---------------------------------- |
@@ -109,7 +109,6 @@ set is universal — true of every repo whatever its stack:
 | -------------------- | --------------------------------------------------------------------- |
 | `.claude`            | the agent tooling tree — machine-owned end to end; see below          |
 | `.git`               | git's own                                                             |
-| `.config/mise/locks` | mise's sidecar lock tree — `mise.lock` records its digest             |
 | `graphify-out`       | the graph tool's output, written without a final newline              |
 | `build`, `dist`      | the generic output trees                                              |
 | `*.lock`             | every tool's lockfile                                                 |

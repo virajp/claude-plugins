@@ -44,7 +44,7 @@ this one.
 `* text=auto eol=lf`, `*.lock linguist-generated`, and the binaries as
 `-text -diff`. A lockfile whose name does not end in `.lock` is its pack's to
 mark, through [`add attribute`](#add-attribute) — pnpm's `pnpm-lock.yaml`,
-SwiftPM's `Package.resolved`. The mise lock needs no line: `*.lock` covers it.
+SwiftPM's `Package.resolved`. No mise lock exists, so mise needs no line.
 
 **The keys it reads**: none. It lands both files whatever `all` is given.
 
@@ -134,12 +134,11 @@ path for is no conflict and is written.
 which the base's one lock line, `**/mise.local.lock`, ignores at any depth.
 A line ignores a lock file when it is no negation and its last segment, a
 trailing `/` stripped and read as a glob, matches a file name ending in
-`.lock` but not in `local.lock`, or the directory name `locks`, or when it
-names `.config/` or `.config/mise/`, which hold the mise lock — so `*.lock`,
-`pubspec.lock`, `mise.lock` and `.config/mise/locks/` do, and
-`**/mise.local.lock` does not. When `all` lands, on a fresh repo or a
-reshape, it scans every line of `.gitignore` — a template's line in any
-block, and the user's lines outside every block — and raises one **delete
+`.lock` but not in `local.lock`, or the directory name `locks` — so `*.lock`
+and `pubspec.lock` do, and `**/mise.local.lock` does not. No mise lock
+exists, so no line is held to account for one. When `all` lands, on a fresh
+repo or a reshape, it scans every line of `.gitignore` — a template's line in
+any block, and the user's lines outside every block — and raises one **delete
 row**, answered `ok`, per line that ignores a lock file. On that answer `all`
 removes the line, from its block or from the user's lines
 ([the skill's rule](../SKILL.md#blocks)). `/vwf:init` shows these rows from
@@ -265,7 +264,7 @@ layout, each step a row:
   below it is deleted. No pattern is lost.
 - **`.gitattributes`** keeps the base's lines in the `git` block; the lines the
   retired payload carried that the base no longer holds — the `pnpm-lock.yaml`
-  and `.config/mise/mise.lock` markers, graphify's merge-driver line and its
+  and the old mise lock's markers, graphify's merge-driver line and its
   comment — are deleted, each a row, and pnpm's own call writes its marker
   back into pnpm's block. A line the payload never carried is the user's.
   `setup:precommit`'s strip deletes only the merge-driver line itself; its

@@ -116,13 +116,19 @@ to a repo, and every write it makes is consent-gated and committed once.
        as `eslint.config.mjs` is.
      - **A pack ships no pre-commit hook fragment**; its hook is a
        `tool-config:` line.
-   - **The tool-config calls a component declares** — each line of its
-     `pack.yaml` `tool-config:` list
-     (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`), previewed in step 3
-     and run in step 5 as `/stackgen:tool-config <line> for <pack>`. The
-     skill writes the toolchain manager's and the gates' files — mise,
-     dprint, pre-commit, gitleaks, grype — and no pack copies one. A
-     pack's plugin, hook, exclude and ignore lines run like its mise lines.
+   - **The tool-config calls a component declares** — its `pack.yaml`
+     `tool-config:` list (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`),
+     previewed in step 3 and run in step 5. A mapping entry (mise's) is
+     run by tool-config's script, the whole list in one call:
+     `node "${CLAUDE_PLUGIN_ROOT}/skills/tool-config/scripts/tool-config.mjs" apply-entries --pack <slug> --file <pack.yaml>`,
+     `<pack.yaml>` the pack's own, under
+     `${CLAUDE_PLUGIN_ROOT}/stacks/<type>/<slug>/`. A string entry —
+     every other tool's, until those move onto the script — comes back
+     under the script's `prose` and runs as
+     `/stackgen:tool-config <line> for <pack>`. The skill writes the
+     toolchain manager's and the gates' files — mise, dprint, pre-commit,
+     gitleaks, grype — and no pack copies one. A pack's plugin, hook,
+     exclude and ignore lines run like its mise entries.
      A `machine_env:` value is left unset here; `/vwf:setup` fills it.
    - The lockfile update — every path above, with its component ref,
      source and content hash, plus the **mode** for a `config/` file, and
@@ -328,12 +334,16 @@ to a repo, and every write it makes is consent-gated and committed once.
 
    **The tool-config calls ride the `config/` line.** List each call
    under it, spelled as it will run; declining the line skips them too.
-   For each line of a pack's `tool-config:` list run
-   `/stackgen:tool-config preview <line> for <pack>`, which writes
-   nothing, and show the rows it returns — conflict and drift rows
-   included — under that call, answered inside this one consent. A call
-   whose preview returns no row writes nothing and shows none. `preview`
-   is this gate's word, never a line in a pack's list.
+   For each pack run the script's
+   `preview apply-entries --pack <slug> --file <pack.yaml>`, and for each
+   string entry it returns under `prose`,
+   `/stackgen:tool-config preview <line> for <pack>`. Neither writes
+   anything. Show the rows they return — conflict, drift and `needs-edit`
+   rows included — under that pack, answered inside this one consent; the
+   script's rows keep their ids, and a string entry's rows are numbered on
+   from them, one set per pack. A call whose preview returns no row writes
+   nothing and shows none. `preview` is this gate's word, never an entry in
+   a pack's list.
 
 4. **The local plugin — its own gate, and a larger one.** A component that
    declares an `lsp_servers:` entry, or a `user_mcp_servers:` one, is
@@ -372,13 +382,17 @@ to a repo, and every write it makes is consent-gated and committed once.
    **Say plainly that this is the developer's machine, not the repo.**
    Collaborators pulling the commit get none of it.
 
-5. **Write and commit.** On approval: write the set, run each consented
-   `tool-config:` call as `/stackgen:tool-config <line> for <pack>`,
-   with `answers=` last answering every row its preview returned at step 3
-   — `ok` for each plan row the consent approved, the user's pick for each
-   other row; the form is the skill's Consent section
-   (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`) — so the skill
-   asks no second time. A call it refuses is shown again. Update the
+5. **Write and commit.** On approval: write the set, then run each
+   consented pack's tool-config calls with the answers its preview
+   returned at step 3 — `ok` for each plan row the consent approved, the
+   user's pick for each other row: the script's
+   `apply-entries --pack <slug> --file <pack.yaml> --answers <id>:<answer>,…`
+   with its own ids only, and each string entry as
+   `/stackgen:tool-config <line> for <pack>` with `answers=` last. The form
+   is the skill's Consent section
+   (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`), so the skill asks
+   no second time. A call it refuses is shown again. A `needs-edit` row the
+   script returns is made as that section says, before the commit. Update the
    lockfile, then commit as **one commit**
    via the repo's git workflow (the vwf
    git-workflow skill when present; plain `git add <paths>` + a conventional
@@ -421,8 +435,9 @@ to a repo, and every write it makes is consent-gated and committed once.
 - **The lockfile is the ownership boundary** — sync diffs against it, and
   paths outside it are invisible to every stackgen write path.
 - **A pack dropped from a composition takes its tool-config blocks with
-  it.** Run `/stackgen:tool-config <tool> remove <pack>` once for each
-  tool its `tool-config:` list called.
+  it.** Once for each tool its `tool-config:` list called: for mise, the
+  script's `mise remove --for <pack>` (previewed, then answered like any
+  call); for every other tool, `/stackgen:tool-config <tool> remove <pack>`.
 - **Four targets, and nothing else.** Inside `.claude/`, nothing lands
   outside the output vocabulary. Outside `.claude/` but inside the repo,
   there are exactly two: `.mcp.json`, and the repo config files a
