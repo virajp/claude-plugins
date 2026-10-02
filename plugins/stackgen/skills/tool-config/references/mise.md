@@ -1030,9 +1030,9 @@ anything at project scope.
    `# <<< mise`. Read `claude plugin list --json`. When
    `vwf@virajp-plugins` is installed at **user** scope, or at **local** or
    **project** scope with a `projectPath` that resolves — `cd` then
-   `pwd -P` — to this repo's root, do nothing more for it: any of these serves the repo.
-   A row for another repo, or whose `projectPath` does not resolve, is
-   skipped. When it is at none of them, run
+   `pwd -P` — to this repo's root, do nothing more for it: any of these
+   serves the repo. A row for another repo, or whose `projectPath` does not
+   resolve, is skipped. When it is at none of them, run
    `pnpx @virajp.dev/claude-plugins@latest --all`: the installer registers the
    marketplace and installs vwf, and its dependency stackgen, at **user**
    scope. `@latest` is deliberate — a bare name can replay a cached old
@@ -1086,8 +1086,10 @@ asset, copied whole with the pack blocks written into it. One with no
 record whose lines already match the shipped task — trailing spaces aside —
 is claimed. One tool-config landed and nobody edited — its record's hash
 still matching — takes the newer shipped task like any landed file, an
-older-era task included. Any other — recorded but edited by hand, or
-unrecorded and different from the shipped task — is the repo's own:
+older-era task included. Replacing an older task names each filled
+`EXTRA_MARKETPLACES` or `EXTRA_PLUGINS` entry it drops. Any other — recorded
+but edited by hand, or unrecorded and different from the shipped task — is
+the repo's own:
 tool-config never overwrites it and never checks it for drift. An unrecorded
 one gets no lock entry; a recorded one keeps its entry with `hash: none`, so
 it stays the repo's on every later run. Only

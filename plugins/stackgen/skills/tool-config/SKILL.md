@@ -160,13 +160,13 @@ a value starting with `"` is read as a TOML basic string — what that means is
 - **`<tool> <verb>`** runs one of a scripted tool's verbs, each in its
   reference's verbs section:
 
-  | Tool         | Verbs and their flags                                                                                                                                              |
-  | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-  | `mise`       | [`add-tool`, `add-env`, `set-env`, `add-alias`, `add-plugin --plugin --source`, `upgrade`](references/mise.md#4-the-verbs)                                             |
-  | `dprint`     | [`add-plugin --name <n>`](references/dprint.md#4-the-verbs)                                                                                                         |
-  | `pre-commit` | [`add-hook --repo --id --stage …`, `add-linter-ignore --paths <p>,…`, `set-scopes --scopes <id>,…`](references/pre-commit.md#4-the-verbs)                            |
-  | `gitleaks`   | none but `remove` — [its allowlist is the cross-tool verb's](references/gitleaks.md#3-the-verbs)                                                                   |
-  | `grype`      | [`add-ignore --id --package --reason --expires`, `remove-ignore --id`](references/grype.md#2-the-verbs)                                                             |
+  | Tool         | Verbs and their flags                                                                                                                     |
+  | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+  | `mise`       | [`add-tool`, `add-env`, `set-env`, `add-alias`, `add-plugin --plugin --source`, `upgrade`](references/mise.md#4-the-verbs)                |
+  | `dprint`     | [`add-plugin --name <n>`](references/dprint.md#4-the-verbs)                                                                               |
+  | `pre-commit` | [`add-hook --repo --id --stage …`, `add-linter-ignore --paths <p>,…`, `set-scopes --scopes <id>,…`](references/pre-commit.md#4-the-verbs) |
+  | `gitleaks`   | none but `remove` — [its allowlist is the cross-tool verb's](references/gitleaks.md#3-the-verbs)                                          |
+  | `grype`      | [`add-ignore --id --package --reason --expires`, `remove-ignore --id`](references/grype.md#2-the-verbs)                                   |
 
   Every one also takes `remove --for <requester>`. A scripted tool named
   with no verb — `mise`, `dprint` — lands that tool's base alone, exactly as
