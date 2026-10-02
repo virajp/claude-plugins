@@ -63,8 +63,10 @@ relative path, no script — and marks its non-default states as
 **Loopback only.** The review server binds `127.0.0.1` on an ephemeral port,
 serves only the canvas directory, carries no auth and no TLS — a surface for
 one person on one machine, never a deployment. It needs `node`, which the
-repo's toolchain manager provides (`mise use node` where the stack does not
-already carry it).
+repo's toolchain manager provides: where the stack does not already carry
+it, pin `node` at an exact version in `.config/mise/conf.d/tools.toml` and
+run `mise install` — through the repo-local mise skill where the repo has
+one.
 
 **The plugin this pack requires.** Authoring runs through the `taste-skill`
 plugin's design skills, so a product pinning this tool adds

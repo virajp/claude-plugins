@@ -9,8 +9,14 @@ axis: repo
 harness: n/a
 # The lines this pack asks /stackgen:tool-config for.
 tool-config:
-  - mise add alias npx="pnpm dlx" to dev environment
-  - mise add tool npm:sort-package-json 4.0.0 to dev environment
+  - { tool: mise, verb: add-alias, name: npx, command: "pnpm dlx" }
+  - {
+      tool: mise,
+      verb: add-tool,
+      name: npm:sort-package-json,
+      version: "4.0.0",
+      env: dev,
+    }
   - all add exclude generated node_modules .turbo
   - all add exclude *-lock.json *-lock.yaml
   - git add ignore template=Node

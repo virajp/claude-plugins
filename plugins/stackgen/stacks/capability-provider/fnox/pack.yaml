@@ -16,5 +16,5 @@ axis: backing
 harness: n/a
 # The lines this pack asks /stackgen:tool-config for.
 tool-config:
-  - mise add tool fnox latest to all environments
+  - { tool: mise, verb: add-tool, name: fnox, version: "latest", env: all }
   - git add ignore fnox.local.toml

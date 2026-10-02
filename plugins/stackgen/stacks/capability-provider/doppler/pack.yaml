@@ -16,8 +16,13 @@ harness:
       Hosted-only — there is no engine to compose. The injector wraps the repo's own task, so every task runs identically without it; the seam is a plain process environment, which is what CI already supplies
 # Asks /stackgen:tool-config for its lines; DOPPLER_PROJECT is the repo dir.
 tool-config:
-  - mise add tool doppler latest to all environments
-  - mise add env DOPPLER_CONFIG="local" to all environments
-  - mise add env DOPPLER_PROJECT="{{ config_root | split(pat='/') | last }}" to
-    all environments
+  - { tool: mise, verb: add-tool, name: doppler, version: "latest", env: all }
+  - { tool: mise, verb: add-env, key: DOPPLER_CONFIG, value: "local", env: all }
+  - {
+      tool: mise,
+      verb: add-env,
+      key: DOPPLER_PROJECT,
+      value: "{{ config_root | split(pat='/') | last }}",
+      env: all,
+    }
   - git add ignore .doppler/

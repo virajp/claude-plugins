@@ -91,10 +91,10 @@ harness:
       compared otherwise
 # Asks /stackgen:tool-config for the four machine_env pins, shipped empty.
 tool-config:
-  - mise add env XCODE_VERSION="" to all environments
-  - mise add env SIMULATOR_PLATFORM="" to all environments
-  - mise add env SIMULATOR_DEVICE="" to all environments
-  - mise add env SIMULATOR_OS="" to all environments
+  - { tool: mise, verb: add-env, key: XCODE_VERSION, value: "", env: all }
+  - { tool: mise, verb: add-env, key: SIMULATOR_PLATFORM, value: "", env: all }
+  - { tool: mise, verb: add-env, key: SIMULATOR_DEVICE, value: "", env: all }
+  - { tool: mise, verb: add-env, key: SIMULATOR_OS, value: "", env: all }
   # Keeps the build trees out of the formatters, the scanner and the linter.
   - all add exclude generated Derived DerivedData
   - all add exclude *.xcassets
