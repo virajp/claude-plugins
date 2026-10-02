@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 
-#MISE description="Install and reconcile the AI tooling this repo expects"
+#MISE description="Check for the workflow plugin, then update every marketplace and plugin"
 #MISE hide=true
-
-#USAGE flag "--user" help="Install at user scope instead of this repo's project scope (rare)"
-#USAGE flag "--inventory" help="Print the marketplaces and plugins registered on this machine, one per line, and exit"
 
 set -euo pipefail
 # shellcheck source=/dev/null
@@ -19,111 +16,55 @@ fi
 # Project scope resolves against the working directory.
 cd "${MISE_PROJECT_ROOT}"
 
-MARKETPLACE="virajp-plugins"
-MARKETPLACE_SOURCE="virajp/claude-plugins"
-
-# Every registered marketplace as `<source-ref>|<name>` — the rows the marked positions take.
-registered_marketplaces() {
-  claude plugin marketplace list --json |
-    jq -r '.[] | "\(.repo // .path // .source)|\(.name)"'
+# Installed at user or project scope: either is enough.
+plugin_installed() { # <name@marketplace>
+  claude plugin list --json |
+    jq -e --arg id "$1" 'any(.[]; .id == $id and (.scope == "user" or .scope == "project"))' >/dev/null
 }
 
-# Every installed plugin as `<name>@<marketplace>|<scope>`.
-installed_plugins() {
-  claude plugin list --json | jq -r '.[] | "\(.id)|\(.scope)"'
-}
-
-# Registered under this NAME, whatever the source: re-adding a name from another source fails.
 marketplace_registered() { # <name>
-  local names
-  names="$(registered_marketplaces | cut -d'|' -f2)"
-  grep -Fqx "$1" <<<"${names}"
+  claude plugin marketplace list --json |
+    jq -e --arg name "$1" 'any(.[]; .name == $name)' >/dev/null
 }
 
-plugin_installed() { # <name@marketplace> <scope>
-  local rows
-  rows="$(installed_plugins)"
-  grep -Fqx "$1|$2" <<<"${rows}"
+# A pack's plugin: nothing when installed at either scope, else installed at user scope.
+ensure_plugin() { # <name@marketplace> <source>
+  if plugin_installed "$1"; then
+    print_yellow "- $1: installed"
+    return
+  fi
+  if ! marketplace_registered "${1##*@}"; then
+    claude plugin marketplace add "$2" >/dev/null
+  fi
+  claude plugin install --scope user "$1" >/dev/null
+  print_yellow "- $1: installed at user scope"
 }
 
-# Rows only, on stdout, for the orchestrator to read — no printers.
-if [[ "${usage_inventory:-false}" == "true" ]]; then
-  marketplace_rows="$(registered_marketplaces)"
-  if [ -n "${marketplace_rows}" ]; then
-    grep -v "|${MARKETPLACE}$" <<<"${marketplace_rows}" || true
-  fi
-  installed_plugins
-  exit 0
-fi
-
-# A MARKED POSITION — EXTRA_MARKETPLACES: further marketplaces as `<source>|<marketplace-name>`,
-# from `--inventory`. Leave this comment in place so a re-run can re-derive the list:
-#   EXTRA_MARKETPLACES=("acme/claude-plugins|acme-plugins")
-EXTRA_MARKETPLACES=()
-
-# A MARKED POSITION — EXTRA_PLUGINS: plugins from those marketplaces as `<name>@<marketplace>`.
-# Leave this comment in place so a re-run can re-derive the list:
-#   EXTRA_PLUGINS=("widget@acme-plugins")
-EXTRA_PLUGINS=()
-
-SCOPE="project"
-[[ "${usage_user:-false}" == "true" ]] && SCOPE="user"
-
-# Fatal on failure: every plugin step resolves through these names. The official marketplace is never named.
-print_subheader "Reconciling marketplaces ..."
-for row in "${MARKETPLACE_SOURCE}|${MARKETPLACE}" ${EXTRA_MARKETPLACES[@]+"${EXTRA_MARKETPLACES[@]}"}; do
-  source_ref="${row%%|*}"
-  name="${row##*|}"
-  if marketplace_registered "${name}"; then
-    claude plugin marketplace update "${name}" >/dev/null
-    print_yellow "- ${name}: updated"
-  else
-    claude plugin marketplace add "${source_ref}" >/dev/null
-    print_yellow "- ${name}: added from ${source_ref}"
-  fi
-done
-
-# Never list a dependency here: it arrives with its plugin.
-REQUIRED=("vwf@${MARKETPLACE}")
-for plugin in ${EXTRA_PLUGINS[@]+"${EXTRA_PLUGINS[@]}"}; do
-  # `--inventory` rows can repeat the baseline.
-  case " ${REQUIRED[*]} " in
-    *" ${plugin} "*) continue ;;
-  esac
-  REQUIRED+=("${plugin}")
-done
-
-# A copy at the other scope is not a substitute.
-print_subheader "Reconciling plugins at ${SCOPE} scope ..."
-for plugin in "${REQUIRED[@]}"; do
-  print_wait "- ${plugin} ... "
-  if plugin_installed "${plugin}" "${SCOPE}"; then
-    claude plugin update --scope "${SCOPE}" "${plugin}" >/dev/null
-  else
-    claude plugin install --scope "${SCOPE}" "${plugin}" >/dev/null
-  fi
-  print_ok
-done
-
-# This scope only: pruning another would reach plugins this task never touched.
-print_subheader "Pruning plugins nothing references ..."
-claude plugin autoremove --scope "${SCOPE}" --yes >/dev/null
-
-# The workflow plugin treats a missing graphify as blocking; the command is idempotent.
-if command -v graphify >/dev/null 2>&1; then
-  print_subheader "Wiring graphify ..."
-  graphify install --platform claude >/dev/null
-  print_yellow "- wired for claude"
+# The workflow plugin first; each pack's plugins in its own block below this one.
+print_subheader "Checking plugins ..."
+# >>> mise
+if plugin_installed "vwf@virajp-plugins"; then
+  print_yellow "- vwf@virajp-plugins: installed"
 else
-  print_warn "graphify is not on PATH — skipping its wiring."
-  print_yellow "The workflow plugin reports this as blocking. Install it and re-run:"
-  print_yellow "  MISE_ENV=dev mise run setup:all"
+  print_yellow "- vwf@virajp-plugins: absent — installing it at user scope"
+  pnpx @virajp.dev/claude-plugins@latest --all
 fi
+# <<< mise
 
-# Hinted, never installed: the statusline is the machine's choice.
-if ! command -v claude-status >/dev/null 2>&1; then
-  print_yellow "Optional: the statusline is a separate package —"
-  print_yellow "  brew install virajp/tap/claude-status"
-fi
+# Whether or not anything was installed: every marketplace, then every plugin at its own scope.
+print_subheader "Updating marketplaces ..."
+claude plugin marketplace update >/dev/null
+
+print_subheader "Updating plugins ..."
+rows="$(claude plugin list --json | jq -r '.[] | "\(.id)|\(.scope)"')"
+while IFS='|' read -r plugin scope; do
+  [ -n "${plugin}" ] || continue
+  print_wait "- ${plugin} (${scope}) ... "
+  claude plugin update --scope "${scope}" "${plugin}" </dev/null >/dev/null
+  print_ok
+done <<<"${rows}"
+
+print_subheader "Pruning plugins nothing references ..."
+claude plugin autoremove --scope project --yes >/dev/null
 
 print_success "AI tooling reconciled."

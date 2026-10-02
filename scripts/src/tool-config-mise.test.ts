@@ -80,10 +80,6 @@ const GREENFIELD = [
   "api,web",
   "--runtimes",
   "node",
-  "--plugin-sources",
-  "acme/claude-plugins|acme-plugins",
-  "--plugins",
-  "widget@acme-plugins",
 ];
 
 let root: string;
@@ -1088,6 +1084,87 @@ describe("migration", () => {
     const { out } = run(["preview", "all"]);
     expect(out.rows?.some(r => r.kind === "delete")).toBe(false);
     expect(out.notes?.join(" ")).toContain("setup/vscode kept");
+  });
+});
+
+describe("setup/ai", () => {
+  const AI = ".config/mise/tasks/setup/ai";
+  const addPlugin = (plugin: string, source: string, requester = "pack") => [
+    "mise",
+    "add-plugin",
+    "--plugin",
+    plugin,
+    "--source",
+    source,
+    "--for",
+    requester,
+  ];
+
+  it("add-plugin writes the requester's block below the base's, and remove drops it", () => {
+    apply(["all"]);
+    const landed = read(AI);
+    apply(addPlugin("taste-skill@taste-skill", "Leonxlnx/taste-skill"));
+    const text = read(AI);
+    expect(text).toContain(
+      "# <<< mise\n\n# >>> pack\nensure_plugin \"taste-skill@taste-skill\" \"Leonxlnx/taste-skill\"\n# <<< pack\n",
+    );
+    expect(text.indexOf("# >>> pack")).toBeLessThan(
+      text.indexOf("claude plugin marketplace update"),
+    );
+    expect(rowsOf(["all"])).toEqual([]);
+    expect(run(["check"]).out.rows).toEqual([]);
+    apply(["mise", "remove", "--for", "pack"]);
+    expect(read(AI)).toBe(landed);
+  });
+
+  it("add-plugin refuses a plugin that is not <name>@<marketplace>, and a call with no requester", () => {
+    apply(["all"]);
+    const bad = run(addPlugin("taste-skill", "Leonxlnx/taste-skill"));
+    expect(bad.status).toBe(2);
+    expect(bad.out.error).toContain("--plugin");
+    const shell = run(addPlugin("a@b", "x/y\"; rm -rf ~"));
+    expect(shell.status).toBe(2);
+    expect(shell.out.error).toContain("--source");
+    const bare = run(addPlugin("a@b", "x/y").slice(0, -2));
+    expect(bare.status).toBe(2);
+    expect(bare.out.error).toContain("--for");
+  });
+
+  it("never raises drift for a landed setup/ai the person extended, and still adds a pack's block", () => {
+    apply(["all"]);
+    const extended = read(AI) + "echo mine\n";
+    write(AI, extended);
+    expect(rowsOf(["all"])).toEqual([]);
+    expect(run(["check"]).out.rows).toEqual([]);
+    apply(["all"]);
+    expect(read(AI)).toBe(extended);
+    apply(addPlugin("a@b", "x/y"));
+    expect(read(AI)).toContain("# >>> pack\nensure_plugin \"a@b\" \"x/y\"\n");
+    expect(read(AI)).toContain("echo mine\n");
+    expect(rowsOf(["all"])).toEqual([]);
+    expect(run(["check"]).out.rows).toEqual([]);
+  });
+
+  it("refuses the retired --plugin-sources and --plugins keys", () => {
+    for (const key of ["--plugin-sources", "--plugins"]) {
+      const { status, out } = run(["all", key, "a@b"]);
+      expect(status).toBe(2);
+      expect(out.error).toContain(`unknown flag ${key}`);
+    }
+  });
+
+  it("leaves a repo's own setup/ai byte-identical, with one note and no row or record", () => {
+    const own = "#!/usr/bin/env bash\necho mine\n";
+    write(AI, own);
+    const { preview, out } = apply(["all"]);
+    const note = `${AI} is the repo's own`;
+    expect(preview.rows?.some(r => r["path"] === AI)).toBe(false);
+    expect(out.notes?.filter(n => n.includes(note))).toHaveLength(1);
+    expect(read(AI)).toBe(own);
+    expect(read(".claude/stackgen/lock.yaml")).not.toContain("setup/ai");
+    const plugin = apply(addPlugin("a@b", "x/y"));
+    expect(plugin.out.notes?.filter(n => n.includes(note))).toHaveLength(1);
+    expect(read(AI)).toBe(own);
   });
 });
 

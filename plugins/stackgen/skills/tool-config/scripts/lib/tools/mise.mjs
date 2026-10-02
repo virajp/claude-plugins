@@ -366,27 +366,36 @@ function setValue(lines, key, value) {
   });
 }
 
-function readArray(text, name) {
+/** The packs' blocks in setup/ai, markers included, in file order — what add-plugin wrote. */
+function readPackBlocks(text) {
   if (text === null) {
     return undefined;
   }
-  const m = new RegExp(`^${name}=\\(([\\s\\S]*?)\\)\\s*$`, "m").exec(text);
-  return m ? [...m[1].matchAll(/"([^"]*)"/g)].map(x => x[1]) : undefined;
+  const { lines } = splitLines(text);
+  try {
+    return parseBlocks(lines)
+      .filter(b => b.requester !== BASE)
+      .map(b => lines.slice(b.open, b.close + 1));
+  }
+  catch {
+    return undefined;
+  }
 }
 
-function writeArray(lines, name, rows) {
-  const at = lines.findIndex(l => l.startsWith(`${name}=(`));
-  if (at < 0) {
+/** The packs' blocks set back below the base's block, each after a blank line, as setBlock adds them. */
+function writePackBlocks(lines, packBlocks) {
+  const at = lines.findIndex(l => {
+    const m = MARKER.exec(l);
+    return m?.[3] === "<<<" && m[4] === BASE;
+  });
+  if (at < 0 || packBlocks.length === 0) {
     return lines;
   }
-  let end = at;
-  while (end < lines.length && !/\)\s*$/.test(lines[end])) {
-    end++;
-  }
-  const filled = rows.length
-    ? [`${name}=(`, ...rows.map(r => `  "${r}"`), ")"]
-    : [`${name}=()`];
-  return [...lines.slice(0, at), ...filled, ...lines.slice(end + 1)];
+  return [
+    ...lines.slice(0, at + 1),
+    ...packBlocks.flatMap(b => ["", ...b]),
+    ...lines.slice(at + 1),
+  ];
 }
 
 /** Every position's value as the repo carries it — undefined where it carries none. */
@@ -411,8 +420,7 @@ function carried(ctx) {
     runtimeBlock: readPosition(ctx.read(MISE_TOML), "RUNTIME_BLOCK"),
     aliases: readPosition(ctx.read(ALIAS_TOML), "MEMBER_ALIASES"),
     flags: readPosition(ctx.read(SETUP_ALL), "MEMBER_FLAGS"),
-    marketplaces: readArray(ctx.read(SETUP_AI), "EXTRA_MARKETPLACES"),
-    plugins: readArray(ctx.read(SETUP_AI), "EXTRA_PLUGINS"),
+    packBlocks: readPackBlocks(ctx.read(SETUP_AI)),
   };
 }
 
@@ -502,17 +510,6 @@ function values(ctx, keys) {
     runtimeBlock = langs.flatMap(r => RUNTIMES[r]?.block ?? []);
   }
 
-  const rows = (k, pattern, carriedRows) => {
-    if (!has(k)) {
-      return carriedRows ?? [];
-    }
-    for (const row of list(k)) {
-      if (!pattern.test(row)) {
-        refuse(`--${k}: ${row} is not a row this key takes`);
-      }
-    }
-    return list(k);
-  };
   return {
     repo,
     mergeDevelop,
@@ -522,12 +519,7 @@ function values(ctx, keys) {
     flags,
     pathEntries,
     runtimeBlock,
-    marketplaces: rows(
-      "plugin-sources",
-      /^[A-Za-z0-9._:/@-]+\|[A-Za-z0-9._-]+$/,
-      was.marketplaces,
-    ),
-    plugins: rows("plugins", /^[A-Za-z0-9._-]+@[A-Za-z0-9._-]+$/, was.plugins),
+    packBlocks: was.packBlocks ?? [],
   };
 }
 
@@ -570,8 +562,7 @@ function renderWhole(path, text, v) {
     out = fillPosition(out, "MEMBER_FLAGS", v.flags);
   }
   if (path === SETUP_AI) {
-    out = writeArray(out, "EXTRA_MARKETPLACES", v.marketplaces);
-    out = writeArray(out, "EXTRA_PLUGINS", v.plugins);
+    out = writePackBlocks(out, v.packBlocks);
   }
   return joinLines(out);
 }
@@ -1171,7 +1162,11 @@ const takeOver = (ctx, path) => ({
   supersedes: ctx.source(path),
 });
 
-function taskOps(ctx, path, v, pending) {
+/** The note for a setup/ai the repo wrote itself: never overwritten, its steps the LLM's to render. */
+const brownfieldNote =
+  `${SETUP_AI} is the repo's own — left as it stands; render any step it lacks into it per references/mise.md`;
+
+function taskOps(ctx, path, v, pending, notes) {
   const record = ctx.record(path);
   if (foreign(ctx, path)) {
     return [];
@@ -1186,6 +1181,12 @@ function taskOps(ctx, path, v, pending) {
   if (sameLines(current, want)) {
     pending.set(path, current);
     return [{ ...op, content: current }];
+  }
+  // setup/ai is the repo's once it is here, recorded or not: never drift,
+  // never overwritten, its record's hash never read.
+  if (path === SETUP_AI) {
+    notes.push(brownfieldNote);
+    return [];
   }
   if (!record) {
     return [op];
@@ -1435,7 +1436,7 @@ function all(ctx, keys) {
     }
     try {
       if (kind === "task") {
-        ops.push(...taskOps(ctx, path, v, pending));
+        ops.push(...taskOps(ctx, path, v, pending, notes));
       }
       else if (kind === "section" || kind === "top") {
         ops.push(...configOps(ctx, path, v, rows, resolve));
@@ -1609,6 +1610,38 @@ function addAlias(ctx, { flags, for: requester }) {
 }
 
 /**
+ * A pack's plugin, as one `ensure_plugin` line in its block of setup/ai — the
+ * line replaced in place when the block already names the plugin. A setup/ai
+ * holding no mise block is the repo's own: noted, never written.
+ */
+function addPlugin(ctx, { flags, for: requester }) {
+  const current = ctx.read(SETUP_AI);
+  if (current === null) {
+    throw new ctx.RefusalError(
+      `${SETUP_AI} is not here — land the mise base first (tool-config mise)`,
+    );
+  }
+  if (blockIn(current, BASE, { kind: "whole" }) === null) {
+    return { ops: [], notes: [brownfieldNote] };
+  }
+  const line = `ensure_plugin "${flags.plugin}" "${flags.source}"`;
+  const named = l => l.startsWith(`ensure_plugin "${flags.plugin}" `);
+  const body = blockIn(current, requester, { kind: "whole" }) ?? [];
+  const next = body.some(named)
+    ? body.map(l => (named(l) ? line : l))
+    : [...body, line].sort();
+  return {
+    ops: [{
+      op: "block",
+      path: SETUP_AI,
+      requester,
+      body: next,
+      region: { kind: "whole" },
+    }],
+  };
+}
+
+/**
  * Line-level ops that replace one pin in its block in place, so the accepted
  * rows of one block compose whatever the others were answered. A block op
  * carries a fixed body and would undo an earlier row's change; instead the
@@ -1724,6 +1757,7 @@ const VERBS = {
   "add-env": addEnv,
   "set-env": setEnv,
   "add-alias": addAlias,
+  "add-plugin": addPlugin,
   upgrade,
   remove: (ctx, call) => ({ ops: [{ op: "remove", requester: call.for }] }),
 };
@@ -1774,7 +1808,7 @@ function expected(ctx, { path, text }) {
     };
   }
   if (path.startsWith(`${TASKS}/`)) {
-    return assets.has(path)
+    return assets.has(path) && path !== SETUP_AI
       ? { whole: renderWhole(path, ctx.asset(path), carriedValues(ctx)) }
       : null;
   }
@@ -1888,6 +1922,13 @@ export default {
         env: { values: ["dev"] },
       },
       requester: "optional",
+    },
+    "add-plugin": {
+      flags: {
+        plugin: { type: "pluginRef", required: true },
+        source: { type: "pluginSource", required: true },
+      },
+      requester: "required",
     },
     upgrade: { flags: {}, requester: "forbidden", needsMise: true },
     remove: { flags: {}, requester: "required" },
