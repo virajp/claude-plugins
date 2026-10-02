@@ -487,8 +487,8 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  * - the pack's **`binaries`, `lockfile` and `machine_env` facts** take the
  *   shapes `/vwf:doctor` and `/vwf:setup` read, and every `machine_env` name
  *   is set by a structured mise `add-env` entry in its `tool-config:` list —
- *   each entry a valid structured one or one of the non-mise string verbs a
- *   pack may ask for (`packFactFaults`).
+ *   each entry a valid structured one or one of the git string verbs a pack
+ *   may ask for (`packFactFaults`).
  *
  * A pack's `config/` tier holding a mise `conf.d` fragment or a `pre-commit.d`
  * file is a finding too, and each `stackgen:tool-config` asset tree is walked
@@ -571,7 +571,6 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
   }
 
   const packs = globSync("stacks/*/*", { cwd: plugin.root });
-  const slugs = new Set(packs.map(pack => basename(pack)));
   for (const pack of packs) {
     for (const absolute of filesUnder(join(plugin.root, pack, PACK_HOOKS))) {
       if (PACK_HOOK_METADATA.test(absolute)) {
@@ -625,7 +624,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       for (
         const message of [
           ...conditionalFaults(document, config),
-          ...packFactFaults(document, slugs),
+          ...packFactFaults(document),
         ]
       ) {
         at(`${path(packYaml)}: ${message}`);
@@ -655,18 +654,15 @@ const ENV_VAR_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
  * - every `tool-config:` entry is a mapping the tool-config script's own
  *   schema accepts (`validateEntry`) — mise, dprint (its `name` from the
  *   plugin table), pre-commit, grype and `all` — or a string that parses as
- *   one of the non-mise verbs a pack may ask for, an exclude going through
- *   `all add exclude` alone (`toolConfigCall`) — a mise entry is structured.
+ *   one of the git verbs a pack may ask for (`toolConfigCall`) — an entry for
+ *   any of the other five tools is structured.
  *
  * Each is read by a caller that trusts its shape: a probe that is not a string
  * is never run, a lockfile glob that climbs out of the repo matches something
  * the repo does not own, and a `machine_env` name no fragment carries is a
  * question whose answer lands nowhere — all silently.
  */
-function packFactFaults(
-  document: unknown,
-  slugs: ReadonlySet<string>,
-): string[] {
+function packFactFaults(document: unknown): string[] {
   if (!isPlainObject(document)) {
     return [];
   }
@@ -765,7 +761,8 @@ function packFactFaults(
           faults.push(
             `\`tool-config[${index}]\` (${JSON.stringify(call)}) name `
               + `${call.name} is not in the plugin table — valid: `
-              + DPRINT_PLUGINS.replaceAll("|", ", "),
+              + "markdown, pretty_yaml, json, exec, typescript, malva, "
+              + "markup_fmt, dockerfile",
           );
         }
         if (
@@ -777,7 +774,7 @@ function packFactFaults(
         }
         return;
       }
-      const fault = toolConfigCall(call, slugs);
+      const fault = toolConfigCall(call);
       if (fault !== undefined) {
         faults.push(`\`tool-config[${index}]\` (${call}) ${fault}`);
       }
@@ -816,134 +813,43 @@ function packFactFaults(
   return faults;
 }
 
-/** A string entry for mise: refused, since a mise entry is structured. */
-const TOOL_CONFIG_MISE_STRING = /^mise(?: |$)/;
-/** The dprint plugins the skill's plugin table defines. */
-const DPRINT_PLUGINS =
-  "markdown|pretty_yaml|json|exec|typescript|malva|markup_fmt|dockerfile";
-/** A structured dprint entry's `name`, held to the same plugin table. */
-const DPRINT_PLUGIN = new RegExp(`^(?:${DPRINT_PLUGINS})$`);
-/** The keys `pre-commit add hook` writes, each `key=value`, quoted or bare. */
-const HOOK_PAIR = String.raw`(name|description|entry|language|files|exclude|`
-  + String.raw`types|args|pass_filenames|always_run|require_serial|rev)=`
-  + String.raw`("(?:[^"\\]|\\.)*"|[^\s"]+)`;
-/** `pre-commit add hook`, its repo captured; `hookFault` reads the pairs. */
-const TOOL_CONFIG_HOOK = new RegExp(
-  String.raw`^pre-commit add hook (local|https://\S+) [A-Za-z0-9_-]+ `
-    + `(?:pre-commit|commit-msg|post-commit|manual)(?: ${HOOK_PAIR})*$`,
-);
-/** The gate verbs a pack may ask for; `tail` marks a free-text end. */
-const TOOL_CONFIG_GATE_VERBS: readonly { pattern: RegExp; tail: boolean; }[] = [
-  {
-    pattern: new RegExp(`^dprint add plugin (?:${DPRINT_PLUGINS})$`),
-    tail: false,
-  },
-  {
-    pattern: new RegExp(
-      String.raw`^all add exclude (?!generated$)(?:generated )?`
-        + String.raw`(?:(?!for(?: |$))[^\s"]+(?: |$))+$`,
-    ),
-    tail: false,
-  },
-  {
-    pattern: /^pre-commit add linter-ignore(?: (?!for(?: |$))[^\s"]+)+$/,
-    tail: false,
-  },
-  { pattern: TOOL_CONFIG_HOOK, tail: true },
-  { pattern: /^grype add ignore [A-Za-z0-9-]+(?: .+)?$/, tail: true },
-  { pattern: /^git add ignore template=[A-Za-z0-9+._-]+$/, tail: false },
-  {
-    pattern: /^git add ignore(?: (?!(?:for|template=.*)(?: |$))[^\s"']+)+$/,
-    tail: false,
-  },
-  {
-    pattern: /^git add attribute(?: (?!for(?: |$))[^\s"']+){2,}$/,
-    tail: false,
-  },
+/** A string entry for a tool whose entries are structured: refused. */
+const TOOL_CONFIG_STRUCTURED_STRING =
+  /^(mise|dprint|pre-commit|grype|all)(?: |$)/;
+/** A structured dprint entry's `name`, held to the skill's plugin table. */
+const DPRINT_PLUGIN =
+  /^(?:markdown|pretty_yaml|json|exec|typescript|malva|markup_fmt|dockerfile)$/;
+/** The git verbs a pack may still ask for as a string. */
+const TOOL_CONFIG_GIT_VERBS: readonly RegExp[] = [
+  /^git add ignore template=[A-Za-z0-9+._-]+$/,
+  /^git add ignore(?: (?!(?:for|template=.*)(?: |$))[^\s"']+)+$/,
+  /^git add attribute(?: (?!for(?: |$))[^\s"']+){2,}$/,
 ];
 /** A requester suffix: the materializer appends it, a pack never writes it. */
 const TOOL_CONFIG_FOR = / for \S+$/;
-/** An exclude asked of one tool, which would leave rule 15's lists disagreeing. */
-const TOOL_CONFIG_LONE_EXCLUDE =
-  /^(dprint|pre-commit|gitleaks) add (?:exclude|excludes|allowlist)\b/;
 
 /**
  * One string `tool-config:` entry against the verb grammar: why it is refused,
- * or nothing. `slugs` names every pack, so a tail verb's `for <pack>` reads as
- * a suffix rather than text.
+ * or nothing.
  */
-function toolConfigCall(
-  call: string,
-  slugs: ReadonlySet<string>,
-): string | undefined {
+function toolConfigCall(call: string): string | undefined {
   const words = call.trim().replace(/\s+/g, " ");
-  if (TOOL_CONFIG_MISE_STRING.test(words)) {
-    return "mise entries are structured — see "
+  const structured = TOOL_CONFIG_STRUCTURED_STRING.exec(words);
+  if (structured !== null) {
+    return `${structured[1]} entries are structured — see `
       + "plugins/stackgen/assets/pack-format.md";
   }
-  const lone = TOOL_CONFIG_LONE_EXCLUDE.exec(words);
-  if (lone !== null) {
-    return `adds an exclude through \`${lone[1]}\` alone — ask `
-      + "`all add exclude [generated] <paths>`, which writes every list";
+  if (TOOL_CONFIG_GIT_VERBS.some(v => v.test(words))) {
+    return undefined;
   }
-  const verb = TOOL_CONFIG_GATE_VERBS.find(v => v.pattern.test(words));
   const bare = words.replace(TOOL_CONFIG_FOR, "");
-  const suffix = words.slice(bare.length + " for ".length);
-  if (
-    bare !== words
-    && (verb === undefined || !verb.tail || slugs.has(suffix))
-    && TOOL_CONFIG_GATE_VERBS.some(v => v.pattern.test(bare))
-  ) {
+  if (bare !== words && TOOL_CONFIG_GIT_VERBS.some(v => v.test(bare))) {
     return "ends in a `for <requester>` suffix — the materializer appends "
       + "it, so a pack's line never carries one";
   }
-  if (verb !== undefined) {
-    return verb.pattern === TOOL_CONFIG_HOOK ? hookFault(words) : undefined;
-  }
-  return "matches none of `dprint add plugin <name>`, "
-    + "`all add exclude [generated] <paths>`, "
-    + "`pre-commit add linter-ignore <paths>`, "
-    + "`pre-commit add hook <repo> <id> <stage> [key=value …]`, "
-    + "`grype add ignore <id> [reason]`, "
-    + "`git add ignore <patterns>`, `git add ignore template=<Name>` or "
+  return "matches none of `git add ignore <patterns>`, "
+    + "`git add ignore template=<Name>` or "
     + "`git add attribute <pattern> <attrs>`";
-}
-
-/**
- * What the skill refuses of a hook the grammar admits: a `local` hook needs a
- * name, an entry run through `mise x -- ` and `language=system`, and no `rev`;
- * a URL repo needs a `rev`.
- */
-function hookFault(words: string): string | undefined {
-  const local = TOOL_CONFIG_HOOK.exec(words)?.[1] === "local";
-  const pairs = new Map<string, string>();
-  for (const [, key, value] of words.matchAll(new RegExp(HOOK_PAIR, "g"))) {
-    pairs.set(
-      key ?? "",
-      (value ?? "").replace(/^"([\s\S]*)"$/, "$1"),
-    );
-  }
-  if (!local) {
-    return pairs.has("rev")
-      ? undefined
-      : "is a URL repo hook with no `rev=` — the skill pins a tag";
-  }
-  if (pairs.has("rev")) {
-    return "is a `local` hook carrying `rev=`, which only a URL repo takes";
-  }
-  const missing: string[] = [];
-  if (!pairs.has("name")) {
-    missing.push("`name=`");
-  }
-  if (!(pairs.get("entry") ?? "").startsWith("mise x -- ")) {
-    missing.push("an `entry=` beginning `mise x -- `");
-  }
-  if (pairs.get("language") !== "system") {
-    missing.push("`language=system`");
-  }
-  return missing.length === 0
-    ? undefined
-    : `is a \`local\` hook lacking ${missing.join(", ")}`;
 }
 
 /** Every `stackgen:tool-config` asset tree, plugin-relative. */

@@ -734,36 +734,42 @@ describe("the pack config tier", () => {
     ]);
   });
 
-  it("refuses a string mise entry and keeps the grammar for the rest", () => {
-    // A mise entry is structured, whatever its verb; a string entry for any
-    // other tool is still read against the word grammar.
+  it("refuses a string entry for every structured tool, git strings kept", () => {
+    // mise, dprint, pre-commit, grype and `all` entries are structured,
+    // whatever their verb; a git string is still read against the grammar.
     const root = tree(facts(
       "tool-config:\n"
         + "  - mise add tool x 1 to dev\n"
-        + "  - mise add env X=1 to all environments\n"
         + "  - mise set env X=1\n"
         + "  - dprint add plugin typescript\n"
-        + "  - dprint add plugin x\n",
+        + "  - pre-commit add linter-ignore .dart_tool\n"
+        + "  - grype add ignore CVE-2024-1234\n"
+        + "  - all add exclude generated node_modules\n"
+        + "  - git add ignore .venv\n",
     ));
-    expect(messages(check(root))).toEqual([
+    const found = messages(check(root));
+    expect(found).toEqual([
       expect.stringContaining("`tool-config[0]` (mise add tool x 1 to dev)"),
-      expect.stringContaining("`tool-config[1]` (mise add env X=1"),
-      expect.stringContaining("`tool-config[2]` (mise set env X=1)"),
-      expect.stringContaining("`tool-config[4]` (dprint add plugin x)"),
+      expect.stringContaining("`tool-config[1]` (mise set env X=1)"),
+      expect.stringContaining(
+        "`tool-config[2]` (dprint add plugin typescript)",
+      ),
+      expect.stringContaining("`tool-config[3]` (pre-commit add linter-ignore"),
+      expect.stringContaining("`tool-config[4]` (grype add ignore CVE-2024"),
+      expect.stringContaining("`tool-config[5]` (all add exclude generated"),
     ]);
-    const [tool, env, set, plugin] = messages(check(root));
-    for (const refused of [tool, env, set]) {
-      expect(refused).toContain(
-        "mise entries are structured — see "
-          + "plugins/stackgen/assets/pack-format.md",
-      );
-    }
-    expect(plugin).toContain("matches none of");
+    ["mise", "mise", "dprint", "pre-commit", "grype", "all"].forEach(
+      (tool, index) =>
+        expect(found[index]).toContain(
+          `${tool} entries are structured — see `
+            + "plugins/stackgen/assets/pack-format.md",
+        ),
+    );
   });
 
   it("accepts structured mise entries beside string ones", () => {
-    // A structured entry is held to the script's own schema; a string entry
-    // for any other tool keeps the word grammar.
+    // A structured entry is held to the script's own schema; a git string
+    // entry keeps the word grammar.
     const root = tree(facts(
       "machine_env:\n"
         + "  - { name: XCODE_VERSION, detect: \"xcodebuild -version\", "
@@ -774,7 +780,7 @@ describe("the pack config tier", () => {
         + "  - tool: mise\n    verb: add-env\n    key: XCODE_VERSION\n"
         + "    value: \"\"\n    env: all\n"
         + "  - {tool: mise, verb: add-alias, name: ll, command: ls}\n"
-        + "  - dprint add plugin typescript\n",
+        + "  - git add ignore template=Node\n",
     ));
     expect(messages(check(root))).toEqual([]);
   });
@@ -801,8 +807,7 @@ describe("the pack config tier", () => {
   });
 
   it("accepts structured dprint, pre-commit, grype and all entries", () => {
-    // Each gate tool's entry is held to the script's schema; a string entry
-    // for the same tools is still read against the word grammar.
+    // Each gate tool's entry is held to the script's schema.
     const root = tree(facts(
       "tool-config:\n"
         + "  - {tool: dprint, verb: add-plugin, name: typescript}\n"
@@ -817,8 +822,7 @@ describe("the pack config tier", () => {
         + "expires: \"2027-01-31\"}\n"
         + "  - {tool: all, verb: add-exclude, generated: true, "
         + "paths: [.build, \"*.xcassets/\"]}\n"
-        + "  - {tool: all, verb: add-exclude, paths: [\"*-lock.json\"]}\n"
-        + "  - dprint add plugin typescript\n",
+        + "  - {tool: all, verb: add-exclude, paths: [\"*-lock.json\"]}\n",
     ));
     expect(messages(check(root))).toEqual([]);
   });
@@ -858,25 +862,6 @@ describe("the pack config tier", () => {
       expect.stringContaining("env must be one of"),
       expect.stringContaining("(X) is set by no mise `add-env` entry"),
     ]);
-  });
-
-  it("accepts the gate verbs a pack may ask for", () => {
-    const root = tree(facts(
-      "tool-config:\n"
-        + "  - dprint add plugin typescript\n"
-        + "  - all add exclude x\n"
-        + "  - all add exclude generated node_modules .turbo\n"
-        + "  - all add exclude *-lock.json *-lock.yaml\n"
-        + "  - pre-commit add linter-ignore .dart_tool\n"
-        + "  - 'pre-commit add hook local uv-lock-check pre-commit "
-        + "name=\"uv lockfile is current\" entry=\"mise x -- uv lock --check\" "
-        + "files=\"(^|.*/)pyproject\\.toml$\" language=system "
-        + "pass_filenames=false'\n"
-        + "  - pre-commit add hook https://github.com/x/y z post-commit rev=v1\n"
-        + "  - grype add ignore CVE-2024-1234\n"
-        + "  - grype add ignore GHSA-abcd-1234 not reachable from our code\n",
-    ));
-    expect(messages(check(root))).toEqual([]);
   });
 
   it("accepts the git verbs a pack may ask for", () => {
@@ -928,133 +913,6 @@ describe("the pack config tier", () => {
     );
     expect(messages(check(root)).every(m => m.includes("`for <requester>`")))
       .toBe(true);
-  });
-
-  it("flags a hook the skill refuses though the grammar admits it", () => {
-    // A local hook runs outside mise's environment; a URL repo floats unpinned.
-    const root = tree(facts(
-      "tool-config:\n"
-        + "  - pre-commit add hook local x pre-commit entry=\"mise x -- y\" "
-        + "language=system\n"
-        + "  - pre-commit add hook local x pre-commit name=x entry=y "
-        + "language=system\n"
-        + "  - pre-commit add hook local x pre-commit name=x "
-        + "entry=\"mise x -- y\" language=node\n"
-        + "  - pre-commit add hook local x pre-commit name=x "
-        + "entry=\"mise x -- y\" language=system rev=v1\n"
-        + "  - pre-commit add hook https://github.com/x/y z pre-commit\n",
-    ));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("`local` hook lacking `name=`"),
-      expect.stringContaining("lacking an `entry=` beginning `mise x -- `"),
-      expect.stringContaining("lacking `language=system`"),
-      expect.stringContaining("`local` hook carrying `rev=`"),
-      expect.stringContaining("URL repo hook with no `rev=`"),
-    ]);
-  });
-
-  it("flags a requester suffix, and reads a trailing for in text", () => {
-    // The materializer appends `for <pack>`; free text may say "for".
-    const root = tree(facts(
-      "tool-config:\n"
-        + "  - dprint add plugin malva for astro\n"
-        + "  - all add exclude generated .venv for uv\n"
-        + "  - pre-commit add linter-ignore .venv for uv\n"
-        + "  - pre-commit add hook https://github.com/x/y z pre-commit rev=v1 "
-        + "for uv\n",
-    ));
-    expect(messages(check(root))).toEqual(
-      [0, 1, 2, 3].map(index =>
-        expect.stringContaining(
-          `\`tool-config[${index}]\``,
-        )
-      ),
-    );
-    expect(messages(check(root)).every(m => m.includes("`for <requester>`")))
-      .toBe(true);
-    const text = tree(facts(
-      "tool-config:\n"
-        + "  - grype add ignore CVE-1 not exploitable for now\n"
-        + "  - pre-commit add hook local x pre-commit name=x "
-        + "entry=\"mise x -- y\" language=system "
-        + "description=\"Checks lockfile for drift\"\n",
-    ));
-    expect(messages(check(text))).toEqual([]);
-  });
-
-  it("flags a pack slug after for on a free-text verb", () => {
-    // A reason ending in a pack slug is a suffix the materializer would double.
-    const root = tree(facts(
-      "tool-config:\n"
-        + "  - grype add ignore CVE-1 for swiftui\n"
-        + "  - grype add ignore CVE-1 not exploitable for uv\n"
-        + "  - grype add ignore CVE-1 not exploitable for now\n",
-      { "stacks/package-manager/uv/pack.yaml": "name: uv\n" },
-    ));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("`tool-config[0]` (grype add ignore CVE-1 for"),
-      expect.stringContaining("`tool-config[1]` (grype add ignore CVE-1 not"),
-    ]);
-    expect(messages(check(root)).every(m => m.includes("`for <requester>`")))
-      .toBe(true);
-  });
-
-  it("refuses an exclude or ignore path spelled for", () => {
-    // Otherwise `for pnpm` reads as two paths and the suffix goes unseen.
-    const root = tree(facts(
-      "tool-config:\n"
-        + "  - all add exclude for pnpm\n"
-        + "  - all add exclude generated for pnpm\n"
-        + "  - pre-commit add linter-ignore for\n",
-    ));
-    expect(messages(check(root))).toEqual(
-      [0, 1, 2].map(index =>
-        expect.stringContaining(`\`tool-config[${index}]\``)
-      ),
-    );
-    const paths = tree(facts(
-      "tool-config:\n  - all add exclude format fork\n"
-        + "  - pre-commit add linter-ignore for.d\n",
-    ));
-    expect(messages(check(paths))).toEqual([]);
-  });
-
-  it("flags a gate verb outside the skill's grammar", () => {
-    // A stage nothing installs never runs; an unknown plugin or key is refused.
-    const root = tree(facts(
-      "tool-config:\n"
-        + "  - pre-commit add hook local x\n"
-        + "  - pre-commit add hook local x --stage pre-commit\n"
-        + "  - pre-commit add hook local x pre-push\n"
-        + "  - pre-commit add hook local x pre-commit color=red\n"
-        + "  - pre-commit add hook ftp://x y pre-commit\n"
-        + "  - dprint add plugin biome\n"
-        + "  - all add exclude\n"
-        + "  - all add exclude generated\n"
-        + "  - grype add ignore\n",
-    ));
-    expect(messages(check(root))).toEqual(
-      [0, 1, 2, 3, 4, 5, 6, 7, 8].map(index =>
-        expect.stringContaining(`\`tool-config[${index}]\``)
-      ),
-    );
-    expect(messages(check(root)).every(m => m.includes("matches none of")))
-      .toBe(true);
-  });
-
-  it("flags an exclude asked of one gate tool alone", () => {
-    // Rule 15's lists agree only while every exclude writes all of them.
-    const root = tree(facts(
-      "tool-config:\n"
-        + "  - dprint add exclude x\n"
-        + "  - pre-commit add exclude x\n"
-        + "  - gitleaks add allowlist x\n",
-    ));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("adds an exclude through `dprint` alone"),
-      expect.stringContaining("adds an exclude through `pre-commit` alone"),
-      expect.stringContaining("adds an exclude through `gitleaks` alone"),
-    ]);
   });
 
   it("counts a machine_env name as set only by an add-env entry", () => {
