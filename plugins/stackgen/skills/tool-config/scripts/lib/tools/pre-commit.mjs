@@ -18,6 +18,7 @@ import {
   splitLines,
 } from "../blocks.mjs";
 import {
+  classifyPath,
   GATE_VERBS,
   PATTERNS,
   POST_STAGES,
@@ -26,6 +27,7 @@ import { targetRows } from "./dprint.mjs";
 import {
   assetOf,
   carryList,
+  droppedRows,
   expectedWhole,
   foreign,
   landOps,
@@ -41,6 +43,8 @@ import {
   unreadable,
   words,
   writeOps,
+  yamlQuote,
+  yamlScalar,
 } from "./index.mjs";
 
 const BASE = "pre-commit";
@@ -77,14 +81,6 @@ function scalarValue(text) {
   return t.startsWith("\u0000")
     ? t.slice(1)
     : text.replace(/\s+#.*$/, "").trim();
-}
-
-/** A value as a YAML scalar reading back the same characters: plain where that is safe, else double-quoted. */
-function yamlScalar(v) {
-  const plain = /^[A-Za-z0-9(/.$^\\_~+=][^\n]*$/.test(v)
-    && !/: |\s#|:$|\s$/.test(v)
-    && !/^(true|false|yes|no|on|off|null|~|[-+]?[0-9][0-9._eE+-]*)$/i.test(v);
-  return plain ? v : JSON.stringify(v);
 }
 
 // --- repos: --------------------------------------------------------------------------
@@ -325,9 +321,7 @@ function renderHook(f) {
     const yaml = key.replace("-", "_");
     if (key === "types" || key === "args") {
       out.push(
-        `        ${yaml}: [${
-          v.split(",").map(x => JSON.stringify(x)).join(", ")
-        }]`,
+        `        ${yaml}: [${v.split(",").map(yamlQuote).join(", ")}]`,
       );
     }
     else if (key === "pass-filenames" || key === "always-run") {
@@ -355,6 +349,21 @@ const GATE_KEYS = [
   "always-run",
 ];
 
+/** The repo and rev a unit holds hook `id` under. */
+function placeOf(unit, id) {
+  if (unit.requester !== undefined) {
+    const e = parseEntries(unit.lines).find(x =>
+      x.hooks.some(h => h.id === id)
+    );
+    return { repo: e.repo, rev: e.rev };
+  }
+  const rev = unit.lines.find(l => /^\s*rev:/.test(l));
+  return {
+    repo: unit.repo,
+    rev: rev ? scalarValue(rev.replace(/^\s*rev:/, "")) : null,
+  };
+}
+
 /** The units with the hook written where `requester` writes — its block, or the person's own entries. */
 function putHook(units, requester, f, hook) {
   if (requester) {
@@ -368,7 +377,12 @@ function putHook(units, requester, f, hook) {
     e.rev = f.rev || e.rev;
     const at = e.hooks.findIndex(h => h.id === f.id);
     e.hooks.splice(at < 0 ? e.hooks.length : at, at < 0 ? 0 : 1, hook);
-    const next = { requester, owner: requester, lines: blockBody(entries) };
+    // an id that moved repo leaves its old entry, never two hooks of one id
+    for (const other of entries.filter(x => x !== e)) {
+      other.hooks = other.hooks.filter(h => h.id !== f.id);
+    }
+    const kept = entries.filter(x => x.hooks.length);
+    const next = { requester, owner: requester, lines: blockBody(kept) };
     if (block) {
       return units.map(u => (u === block ? { ...next, lead: block.lead } : u));
     }
@@ -427,8 +441,13 @@ function addHook(ctx, { flags, for: requester }) {
   const holders = units.filter(u => hookLines(u, f.id));
   const mine = holders.find(self);
   const others = holders.filter(u => u !== mine);
+  const where = mine && placeOf(mine, f.id);
   if (
-    mine && others.length === 0 && sameContent(
+    mine
+    && others.length === 0
+    && where.repo === f.repo
+    && (where.rev ?? "") === (f.rev ?? "")
+    && sameContent(
       HOOKS,
       hookLines(mine, f.id).join("\n"),
       hook.lines.join("\n"),
@@ -487,7 +506,7 @@ function carryRepos(ctx, text, current) {
  * person's lines (the base's are the base block's). An unrecognised marker,
  * a non-verbose regex or a multi-group alternative cannot be read.
  */
-function migrateHooks(text) {
+function migrateHooks(text, merged = new Set()) {
   const { lines, eol } = splitLines(text);
   const out = [];
   for (let i = 0; i < lines.length; i++) {
@@ -505,6 +524,7 @@ function migrateHooks(text) {
       /^(\s*)# (>>>|<<<) pre-commit\.d\/([a-z0-9][a-z0-9-]*)\.yaml\s*$/
         .exec(l);
     if (frag) {
+      merged.add(`${FRAGMENTS}/${frag[3]}.yaml`);
       out.push(`${frag[1]}# ${frag[2]} ${frag[3]}`);
       continue;
     }
@@ -545,12 +565,12 @@ function migrateHooks(text) {
   return joinLines(out, eol);
 }
 
-function renderHooks(ctx, current) {
+function renderHooks(ctx, current, merged) {
   const asset = assetOf(ctx, BASE, HOOKS);
   if (current === null) {
     return asset;
   }
-  const migrated = migrateHooks(current);
+  const migrated = migrateHooks(current, merged);
   return carryRepos(ctx, carryList(asset, migrated, EXCLUDE, BASE), migrated);
 }
 
@@ -745,10 +765,42 @@ function skeleton(text) {
     .filter((l, i) => i < pos.at || i >= pos.end)
     .filter(l => !LINK.test(l))
     .filter(l => {
-      const m = /^\s+- ([A-Za-z][\w-]*)\b/.exec(l);
+      const m = TYPE_ITEM.exec(l);
       return !m || TYPES.includes(m[1]);
     })
     .join("\n");
+}
+
+/** A list item naming one word — a type or a scope — plain or double-quoted. */
+const TYPE_ITEM = /^\s*- "?([A-Za-z][\w-]*)"?(\s|$)/;
+
+/** Whether a trimmed line is the item `- <type>`, plain, quoted, or with a comment after it. */
+const isItem = (l, type) =>
+  [`- ${type}`, `- "${type}"`].some(p => l === p || l.startsWith(`${p} `));
+
+/**
+ * The text with each own type another item's word starts with (`ci` beside a
+ * `ci-runner` scope) double-quoted — YAML reads `- "ci"` as `- ci` — so the
+ * engine's prefix match on `- "ci"` drops that item and nothing else.
+ */
+function quoteColliding(text, types) {
+  const { lines, eol } = splitLines(text);
+  for (const type of types) {
+    const collides = lines.some(l => {
+      const t = l.trim();
+      return t.startsWith(`- ${type}`) && !isItem(t, type);
+    });
+    if (!collides) {
+      continue;
+    }
+    for (let i = 0; i < lines.length; i++) {
+      const t = lines[i].trim();
+      if (isItem(t, type) && !t.startsWith(`- "${type}"`)) {
+        lines[i] = lines[i].replace(`- ${type}`, `- "${type}"`);
+      }
+    }
+  }
+  return joinLines(lines, eol);
 }
 
 /** The types `convention.commitTypes` lists outside the ten. */
@@ -764,7 +816,7 @@ function ownTypes(text) {
     if (indentOf(l) <= indentOf(lines[at])) {
       break;
     }
-    const m = /^\s*- ([A-Za-z][\w-]*)/.exec(l);
+    const m = TYPE_ITEM.exec(l);
     if (m && !TYPES.includes(m[1])) {
       out.push(m[1]);
     }
@@ -791,12 +843,15 @@ function withTypes(text, types) {
 
 /** One row per type outside the ten: renamed into one of them, the mapped one proposed first, or kept. */
 function renameRows(text, supersedes) {
+  const lines = splitLines(text).lines.map(l => l.trim());
   return ownTypes(text).map(type => {
     const to = RENAMES[type] ?? null;
+    // `text` is the file as this call writes it: a colliding type is quoted there
+    const quoted = lines.some(l => l.startsWith(`- "${type}"`));
     const drop = [{
       op: "drop-lines",
       path: CONVENTION,
-      match: `- ${type}`,
+      match: quoted ? `- "${type}"` : `- ${type}`,
       supersedes: supersedes ?? undefined,
     }];
     return {
@@ -842,23 +897,30 @@ function conventionOps(ctx, current, scopes, old, notes) {
     };
   }
   const have = scopePosition(current).items;
-  const rows = renameRows(current, old);
+  const own = ownTypes(current);
   if (!old && sameContent(CONVENTION, skeleton(current), skeleton(asset))) {
-    const next = withLinks(
-      withScopes(current, nextScopes(have, scopes)),
-      links,
+    const next = quoteColliding(
+      withLinks(withScopes(current, nextScopes(have, scopes)), links),
+      own,
     );
     return {
       ops: sameContent(CONVENTION, next, current)
         ? []
         : [{ op: "whole", path: CONVENTION, content: next, force: true }],
-      rows,
+      rows: renameRows(next, old),
     };
   }
-  const rendered = withLinks(
-    withScopes(withTypes(asset, ownTypes(current)), nextScopes(have, scopes)),
-    links ?? linksIn(current),
+  const rendered = quoteColliding(
+    withLinks(
+      withScopes(withTypes(asset, own), nextScopes(have, scopes)),
+      links ?? linksIn(current),
+    ),
+    own,
   );
+  const rows = renameRows(rendered, old);
+  if (old) {
+    rows.push(...droppedRows(ctx, CONVENTION, current, rendered));
+  }
   return { ops: landOps(ctx, CONVENTION, current, rendered, old), rows };
 }
 
@@ -882,9 +944,9 @@ function scopesArg(ctx, value) {
 
 // --- all ----------------------------------------------------------------------------
 
-function render(ctx, path, current) {
+function render(ctx, path, current, merged) {
   if (path === HOOKS) {
-    return renderHooks(ctx, current);
+    return renderHooks(ctx, current, merged);
   }
   return carryList(assetOf(ctx, BASE, LINTER), current, IGNORES, BASE);
 }
@@ -894,7 +956,7 @@ function all(ctx, keys) {
   const ops = [];
   const rows = [];
   const notes = [];
-  let hooksRead = true;
+  const merged = new Set();
   for (const path of [HOOKS, CONVENTION, LINTER]) {
     if (foreign(ctx, path, BASE)) {
       notes.push(`${path} is ${ctx.source(path)}'s — left alone`);
@@ -909,28 +971,32 @@ function all(ctx, keys) {
         rows.push(...res.rows);
         continue;
       }
-      const rendered = render(ctx, path, current);
+      const rendered = render(ctx, path, current, merged);
       ops.push(...landOps(ctx, path, current, rendered, old));
       if (old || (current !== null && ctx.record(path) === null)) {
         rows.push(...targetRows(path, rendered, old));
+      }
+      if (old) {
+        rows.push(...droppedRows(ctx, path, current, rendered));
       }
     }
     catch (e) {
       if (!(e instanceof ListError || e instanceof BlockParseError)) {
         throw e;
       }
-      hooksRead &&= path !== HOOKS;
+      if (path === HOOKS) {
+        merged.clear();
+      }
       rows.push(unreadable(ctx, path, e, `the layout of the skill's ${path}`));
     }
   }
-  if (hooksRead) {
-    for (const path of ctx.list(FRAGMENTS)) {
-      ops.push({
-        op: "delete",
-        path,
-        supersedes: ctx.source(path) ?? undefined,
-      });
-    }
+  // only a fragment the hook config merged — its markers read into a block — goes
+  for (const path of ctx.list(FRAGMENTS).filter(p => merged.has(p))) {
+    ops.push({
+      op: "delete",
+      path,
+      supersedes: ctx.source(path) ?? undefined,
+    });
   }
   ops.push(...oldSkill(ctx, BASE, notes));
   return { ops, rows, notes };
@@ -940,12 +1006,16 @@ function all(ctx, keys) {
 
 function addLinterIgnore(ctx, { flags, for: requester }) {
   const text = need(ctx, LINTER, BASE, requester);
-  const names = flags.paths.split(",").map(p => p.replace(/\/$/, ""));
+  const paths = flags.paths.split(",").map(classifyPath);
+  const names = paths.map(p => p.name);
   const notes = [];
   const shares = recordMap(ctx, LINTER, "shares");
   const res = listAdd(text, IGNORES, {
     requester,
-    entries: names.map(n => `- "**/${n}/"`),
+    // a directory as `**/<d>/`, a file glob as `**/<g>` — G1's trailing-/ rule
+    entries: paths.map(p =>
+      p.kind === "directory" ? `- "**/${p.name}/"` : `- "**/${p.name}"`
+    ),
     base: BASE,
     shares,
     notes,

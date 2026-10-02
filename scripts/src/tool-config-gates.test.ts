@@ -1112,10 +1112,211 @@ describe("the migration from the retired gate packs", () => {
     oldRepo();
     write(HOOKS, edit(read(HOOKS)));
     const rows = rowsOf(["all"]);
-    expect(rows.filter(r => r.kind === "needs-edit").map(r => r["file"]))
-      .toEqual([HOOKS]);
+    const unread = rows.filter(r =>
+      String(r["reason"]).startsWith("cannot read")
+    );
+    expect(unread.map(r => r["file"])).toEqual([HOOKS]);
     expect(rows.some(r => r["path"] === ".config/pre-commit.d/uv.yaml")).toBe(
       false,
+    );
+  });
+});
+
+describe("G9 review round 1", () => {
+  const { yamlQuote, yamlScalar } = lists as unknown as {
+    yamlQuote: (v: string) => string;
+    yamlScalar: (v: string) => string;
+  };
+  const LS = String.fromCharCode(0x2028);
+  const NEL = String.fromCharCode(0x85);
+
+  it("never writes a line-breaking character raw into a YAML value", () => {
+    for (const v of [`a${LS}b`, `a${NEL}b`, "a\u007fb", "a\nb"]) {
+      const out = yamlScalar(v);
+      expect(out, JSON.stringify(v)).toMatch(/^"[\x20-\x7e]*"$/);
+      expect(
+        JSON.parse(
+          out.replace(/\\u(2028|0085|007f)/g, m => JSON.parse(`"${m}"`)),
+        ),
+      )
+        .toBe(v);
+    }
+    expect(yamlQuote(`x${LS}`)).toBe("\"x\\u2028\"");
+    expect(yamlScalar("mise x -- uv lock --check")).toBe(
+      "mise x -- uv lock --check",
+    );
+    expect(yamlScalar("café")).toBe("\"café\"");
+  });
+
+  it("keeps a grype reason or package from ending its comment line", () => {
+    apply(["all"]);
+    const ignore = [
+      "grype",
+      "add-ignore",
+      "--id",
+      "CVE-2026-0002",
+      "--reason",
+      "fine",
+      "--expires",
+      "2027-01-01",
+    ];
+    expect(
+      run([
+        "preview",
+        ...ignore,
+        "--package",
+        "a@1",
+        "--reason",
+        `x${LS}- vulnerability: GHSA-x`,
+      ])
+        .status,
+    )
+      .toBe(2);
+    apply([...ignore, "--package", `left${NEL}pad@1.0.0`]);
+    const text = read(".config/grype.yaml");
+    expect(text).toContain("  # package: \"left\\u0085pad@1.0.0\"\n");
+    expect(text).not.toContain(NEL);
+    expect(text.match(/- vulnerability:/g)).toHaveLength(1);
+  });
+
+  it("renames a type by its whole token, never a longer word that starts with it", () => {
+    apply(["all", "--scopes", "ci-runner,docs-site"]);
+    write(
+      CONVENTION,
+      read(CONVENTION).replace(
+        "    - wip # work",
+        "    - ci\n    - doc\n    - wip # work",
+      ),
+    );
+    apply(
+      ["all"],
+      r => (r["type"] === "ci"
+        ? "rename-ops"
+        : r["type"] === "doc"
+        ? "rename-docs"
+        : r.answers[0] ?? "ok"),
+    );
+    const text = read(CONVENTION);
+    expect(text).not.toMatch(/^\s+- (ci|doc)$/m);
+    expect(text).toMatch(/^\s+- ci-runner$/m);
+    expect(text).toMatch(/^\s+- docs-site$/m);
+    expect(text).toMatch(/^\s+- docs # prose/m);
+  });
+
+  it("carries the person's gitleaks rules and allowlist keys, on every all and through the migration", () => {
+    apply(["all"]);
+    const rule =
+      "\n[[rules]]\ndescription = \"acme key\"\nid = \"acme-key\"\nregex = '''acme_[A-Za-z0-9]{20,}'''\n";
+    const p = ".config/gitleaks.toml";
+    write(
+      p,
+      read(p).replace(
+        "  # <<< gitleaks\n]\n",
+        "  # <<< gitleaks\n]\nregexes = [ '''^fixture-''' ]\n",
+      )
+        + rule,
+    );
+    expect(rowsOf(["all"])).toEqual([]);
+    expect(run(["check"]).out.rows).toEqual([]);
+    rmSync(path(LOCK));
+    write(
+      LOCK,
+      `entries:\n  - path: "${p}"\n    source: pack/toolchain-gate/gitleaks@1.1.0\n    hash: ${
+        sha(read(p))
+      }\n`,
+    );
+    const before = read(p);
+    apply(["all"]);
+    expect(read(p)).toContain("[[rules]]\ndescription = \"acme key\"");
+    expect(read(p)).toContain("regexes = [ '''^fixture-''' ]");
+    expect(read(p).length).toBeGreaterThanOrEqual(before.length - 1);
+  });
+
+  it("names the old file's lines a migration does not carry, in a needs-edit row", () => {
+    const old = JSON.parse(
+      readFileSync(join(fixtures, "old.json"), "utf8"),
+    ) as Record<string, string>;
+    for (const [p, text] of Object.entries(old)) {
+      write(p, text);
+    }
+    write(
+      LOCK,
+      `entries:\n${
+        Object
+          .entries(old)
+          .map(([p, t]) =>
+            `  - path: "${p}"\n    source: pack/toolchain-gate/pre-commit@1.1.0\n    hash: ${
+              sha(t)
+            }\n`
+          )
+          .join("")
+      }`,
+    );
+    const rows = rowsOf(["all"]).filter(r =>
+      r.kind === "needs-edit" && r["file"] === HOOKS
+    );
+    expect(rows.map(r => r["target"])).toEqual([["name: Format"]]);
+  });
+
+  it("writes a rev bump, and moves a hook between repos without leaving the old one", () => {
+    apply(["all"]);
+    const hook = (
+      repo: string,
+      rev: string,
+    ) => [
+      "pre-commit",
+      "add-hook",
+      "--repo",
+      repo,
+      "--id",
+      "x-check",
+      "--stage",
+      "pre-commit",
+      "--rev",
+      rev,
+      "--for",
+      "p",
+    ];
+    apply(hook("https://github.com/a/hooks", "v1.0.0"));
+    expect(rowsOf(hook("https://github.com/a/hooks", "v1.0.0"))).toEqual([]);
+    apply(hook("https://github.com/a/hooks", "v1.1.0"));
+    expect(read(HOOKS)).toContain("    rev: v1.1.0\n");
+    apply(hook("https://github.com/b/hooks", "v2.0.0"));
+    expect(read(HOOKS).match(/- id: x-check$/gm)).toHaveLength(1);
+    expect(read(HOOKS)).not.toContain("github.com/a/hooks");
+    expect(read(HOOKS)).toContain(
+      "  - repo: https://github.com/b/hooks\n    rev: v2.0.0\n",
+    );
+  });
+
+  it("deletes only the fragments the hook config merged", () => {
+    write(".config/pre-commit.d/stray.yaml", "repos: []\n");
+    apply(["all"]);
+    expect(existsSync(path(".config/pre-commit.d/stray.yaml"))).toBe(true);
+  });
+
+  it("removes an ignore's own keys with it, and writes a linter file glob without a trailing /", () => {
+    apply(["all"]);
+    const g = ".config/grype.yaml";
+    write(
+      g,
+      read(g).replace(
+        "ignore: []",
+        "ignore:\n  # why\n  - vulnerability: CVE-2026-0003\n    fix-state: not-fixed",
+      ),
+    );
+    apply(["grype", "remove-ignore", "--id", "CVE-2026-0003"]);
+    expect(read(g)).toBe(asset("grype", g));
+    apply([
+      "pre-commit",
+      "add-linter-ignore",
+      "--paths",
+      "*.gen.ts,Derived/",
+      "--for",
+      "p",
+    ]);
+    expect(read(".config/linter.yaml")).toContain(
+      "  - \"**/*.gen.ts\"\n  - \"**/Derived/\"\n",
     );
   });
 });

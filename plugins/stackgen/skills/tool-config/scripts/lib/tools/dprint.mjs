@@ -13,6 +13,7 @@ import { BlockParseError } from "../blocks.mjs";
 import { GATE_VERBS } from "../schema.mjs";
 import {
   carryList,
+  droppedRows,
   expectedWhole,
   foreign,
   landOps,
@@ -200,6 +201,9 @@ function all(ctx) {
     ops.push(...landOps(ctx, path, current, rendered, old));
     if (old || (current !== null && ctx.record(path) === null)) {
       rows.push(...targetRows(path, rendered, old));
+    }
+    if (old) {
+      rows.push(...droppedRows(ctx, path, current, rendered));
     }
   }
   ops.push(...oldSkill(ctx, BASE, notes));

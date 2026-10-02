@@ -187,6 +187,34 @@ export const sameContent = (path, a, b) =>
   && JSON.stringify(/\.ya?ml$/.test(path) ? yamlShape(a) : words(a))
     === JSON.stringify(/\.ya?ml$/.test(path) ? yamlShape(b) : words(b));
 
+// --- writing YAML values ----------------------------------------------------------------
+
+/**
+ * A YAML double-quoted scalar reading back exactly `v`: JSON's escapes, plus
+ * the ones JSON leaves raw — DEL, the C1 controls (U+0085 among them) and
+ * U+2028/U+2029 — so no value can break the line it is written on.
+ */
+// DEL, the C1 controls and the two Unicode line terminators, spelled as escapes
+const BREAKERS = new RegExp("[\\u007f-\\u009f\\u2028\\u2029]", "g");
+
+export const yamlQuote = v =>
+  JSON.stringify(v).replace(
+    BREAKERS,
+    c => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`,
+  );
+
+/**
+ * A value as a YAML scalar: plain only when it is printable ASCII and
+ * nothing YAML reads specially — an indicator first, `: ` or ` #` inside, a
+ * boolean, null or number lookalike — else double-quoted.
+ */
+export function yamlScalar(v) {
+  const plain = /^[A-Za-z0-9(/.$^\\_~+=][\x20-\x7e]*$/.test(v)
+    && !/: |\s#|:$|\s$/.test(v)
+    && !/^(true|false|yes|no|on|off|null|~|[-+]?[0-9][0-9._eE+-]*)$/i.test(v);
+  return plain ? v : yamlQuote(v);
+}
+
 // --- the base's landing -------------------------------------------------------------
 
 /** One tool's asset, whichever module's context reads it — `ctx.asset` is the calling tool's own. */
@@ -251,6 +279,50 @@ export function landOps(ctx, path, current, rendered, supersedes) {
     content: rendered,
     drift: ctx.record(path) !== null,
   }];
+}
+
+/**
+ * On a migration, the lines of the old file the new layout does not carry —
+ * a key the retired pack shipped differently, or a line of the person's own
+ * outside every position `all` carries — as one needs-edit row, so nothing
+ * is dropped unseen. Blank and comment lines, and `target` (its own row),
+ * are not counted.
+ */
+export function droppedRows(ctx, path, current, rendered) {
+  if (current === null) {
+    return [];
+  }
+  // a regex alternative's `|` and a trailing comment are punctuation, never content
+  const norm = l => {
+    const w = words(l.trim().replace(/^\|/, "").replace(/\|$/, ""));
+    const comment = w.findIndex(t => t.startsWith("#"));
+    return (comment < 0 ? w : w.slice(0, comment))
+      .filter(t => t !== ",")
+      .join(" ");
+  };
+  const counted = l =>
+    l.trim() !== "" && !l.trim().startsWith("#") && !/target\//.test(l);
+  const have = new Map();
+  for (const l of rendered.split("\n").filter(counted)) {
+    have.set(norm(l), (have.get(norm(l)) ?? 0) + 1);
+  }
+  const dropped = current
+    .split("\n")
+    .filter(counted)
+    .filter(l => {
+      const n = have.get(norm(l)) ?? 0;
+      have.set(norm(l), n - 1);
+      return n < 1;
+    })
+    .map(l => l.trim());
+  return dropped.length
+    ? [ctx.needsEdit({
+      file: path,
+      reason:
+        "the migration's rewrite does not carry these lines of the old file — re-add each that was the person's own, where the layout keeps it",
+      target: dropped,
+    })]
+    : [];
 }
 
 /** `check`'s half: the file as it stands where its content is the rendering, else the rendering. */

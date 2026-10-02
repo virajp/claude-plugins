@@ -13,6 +13,7 @@ import {
 import { GATE_VERBS } from "../schema.mjs";
 import {
   carryList,
+  droppedRows,
   expectedWhole,
   foreign,
   landOps,
@@ -24,6 +25,7 @@ import {
   readList,
   unreadable,
   writeList,
+  yamlQuote,
 } from "./index.mjs";
 
 const BASE = "grype";
@@ -64,11 +66,13 @@ function all(ctx) {
       rows: [unreadable(ctx, CONFIG, e, "the skill's ignore: layout")],
     };
   }
+  const old = oldPack(ctx, CONFIG, BASE);
   return {
     ops: [
-      ...landOps(ctx, CONFIG, current, rendered, oldPack(ctx, CONFIG, BASE)),
+      ...landOps(ctx, CONFIG, current, rendered, old),
       ...oldSkill(ctx, BASE, notes),
     ],
+    rows: old ? droppedRows(ctx, CONFIG, current, rendered) : [],
     notes,
   };
 }
@@ -97,6 +101,9 @@ function holderOf(units, id) {
   return undefined;
 }
 
+/** A value a comment carries: as given when printable ASCII, else escaped, so it never ends the line. */
+const comment = v => (/^[\x20-\x7e]*$/.test(v) ? v : yamlQuote(v));
+
 function addIgnore(ctx, { flags, for: requester }) {
   const text = need(ctx, CONFIG, BASE, requester);
   const l = list(text);
@@ -112,10 +119,10 @@ function addIgnore(ctx, { flags, for: requester }) {
     };
   }
   const entry = [
-    `# id: ${flags.id}`,
-    `# package: ${flags.package}`,
-    `# reason: ${flags.reason}`,
-    `# expires: ${flags.expires}`,
+    `# id: ${comment(flags.id)}`,
+    `# package: ${comment(flags.package)}`,
+    `# reason: ${comment(flags.reason)}`,
+    `# expires: ${comment(flags.expires)}`,
     `- vulnerability: ${flags.id}`,
   ]
     .map(x => `${IGNORE.indent}${x}`);
@@ -152,7 +159,17 @@ function dropEntry(lines, id) {
   ) {
     start--;
   }
-  return [...lines.slice(0, start), ...lines.slice(at + 1)];
+  // and the entry's own keys below it
+  let end = at + 1;
+  const deeper = l =>
+    typeof l === "string"
+    && l.trim() !== ""
+    && !/^\s*#/.test(l)
+    && /^\s*/.exec(l)[0].length > /^\s*/.exec(lines[at])[0].length;
+  while (end < lines.length && deeper(lines[end])) {
+    end++;
+  }
+  return [...lines.slice(0, start), ...lines.slice(end)];
 }
 
 function removeIgnore(ctx, { flags }) {
