@@ -587,7 +587,9 @@ run `tool-config mise` to land the current task first. It writes into any
 `setup/ai` that carries a `mise` block, landed by tool-config or not. The
 repo's own with no `mise` block is written nothing: the call returns the
 [brownfield note](#setupai--the-repos-agent-plugins), and you render the
-plugin into the file by hand.
+plugin into the file by hand. A `setup/ai` another source owns — a pack
+overlay — is left alone: the call writes nothing and notes whose it is, and
+`remove` skips it the same way.
 
 **`remove --for <requester>`** takes that requester's blocks out of every
 mise file, as [the skill's removal](../SKILL.md#removal) says.
@@ -1090,9 +1092,10 @@ older-era task included. Replacing an older task names each filled
 `EXTRA_MARKETPLACES` or `EXTRA_PLUGINS` entry it drops. Any other — recorded
 but edited by hand, or unrecorded and different from the shipped task — is
 the repo's own:
-tool-config never overwrites it and never checks it for drift. An unrecorded
-one gets no lock entry; a recorded one keeps its entry with `hash: none`, so
-it stays the repo's on every later run. Only
+tool-config never overwrites it and never checks it for drift. `all` writes
+no lock entry for an unrecorded one; an `add-plugin` write into it records
+one with `hash: none`, and a recorded one keeps its entry with `hash: none`,
+so it stays the repo's on every later run. Only
 [`add-plugin`](#4-the-verbs) writes into it, and only inside a pack's block
 when it carries a `mise` block. Each run returns one note instead:
 
