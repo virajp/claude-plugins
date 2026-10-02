@@ -8,14 +8,14 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
 # vwf's git-workflow probes for this task by name; it moves no version.
 
-print_header "Checking out members ..."
-git -C "${MISE_PROJECT_ROOT}" submodule update --init --recursive
-
 # MISE_ENV decides which conf.d files load, so which tools get installed; guessing it is wrong.
 if [ -z "${MISE_ENV:-}" ]; then
   print_error "MISE_ENV is unset. On a developer machine run: MISE_ENV=dev mise run setup:worktree"
   exit 1
 fi
+
+print_header "Checking out members ..."
+git -C "${MISE_PROJECT_ROOT}" submodule update --init --recursive
 
 print_header "Installing pinned tools ..."
 mise install
