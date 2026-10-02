@@ -2605,10 +2605,19 @@ function checkRetiredVocabulary(plugin: Plugin): Finding[] {
   return findings;
 }
 
-/** `mise use` running: a non-dash word or a `-g` flag after it. */
-const BARE_MISE_USE = /\bmise use (?:-g\b|[^-\s])/;
-/** The doctrine sentences that forbid it say so on the same line. */
-const BARE_MISE_USE_EXEMPT = /\bnever\b/i;
+/** Every `mise use`, whatever flag or argument follows it. */
+const BARE_MISE_USE = /\bmise use\b/g;
+/** A forbidding mention: "never a bare `mise use`", "bare \"mise use\"". */
+const BARE_MISE_USE_FORBID_BEFORE = /\b(?:never|bare)\s+[`"']?$/i;
+/** A forbidding mention: "`mise use` is never run", "`mise use` — never". */
+const BARE_MISE_USE_FORBID_AFTER = /^[`"']?\s*(?:is never|— never)\b/;
+
+/** Whether one occurrence of `mise use` in a line runs it, not forbids it. */
+function runsMiseUse(line: string, at: number): boolean {
+  const after = line.slice(at + "mise use".length);
+  return !BARE_MISE_USE_FORBID_BEFORE.test(line.slice(0, at))
+    && !BARE_MISE_USE_FORBID_AFTER.test(after);
+}
 
 /**
  * No bare `mise use` anywhere a plugin ships.
@@ -2623,7 +2632,10 @@ function checkBareMiseUse(plugin: Plugin): Finding[] {
   for (const absolute of filesUnder(plugin.root)) {
     const lines = readText(absolute).split("\n");
     for (const [index, line] of lines.entries()) {
-      if (BARE_MISE_USE.test(line) && !BARE_MISE_USE_EXEMPT.test(line)) {
+      const runs = [...line.matchAll(BARE_MISE_USE)].some(match =>
+        runsMiseUse(line, match.index)
+      );
+      if (runs) {
         findings.push({
           scope: `${plugin.dir}:${relative(plugin.root, absolute)}:${
             index + 1

@@ -1021,28 +1021,42 @@ describe("the pack config tier", () => {
   });
 
   // A tool is entered into the config, then installed with `mise install`;
-  // the doctrine sentences forbidding `mise use` say "never" on their line.
-  it("flags a bare mise use and accepts a line that forbids it", () => {
+  // only a mention that forbids `mise use` — "never"/"bare" before it, or
+  // "is never"/"— never" after it — passes, whatever else the line says.
+  it("flags every mise use invocation and accepts a mention forbidding it", () => {
+    const runs = [
+      "Run `mise use node` first.",
+      "mise use --global node@22",
+      "mise use -E dev node",
+      "mise use --pin node",
+      "mise use -p .config/mise.toml node",
+      "run mise use node, never skip",
+    ];
+    const forbids = [
+      "gets it there first. Never a bare `mise use`. This is *missing*",
+      "never added from the workflow with a bare `mise use`: a pin",
+      "`mise use` — never; the pin is written into the config.",
+      "`mise use` is never run. The prose is static.",
+      "and never with a bare `mise use` — never; the config is edited",
+      "# Pins are exact versions; never run a bare \"mise use\".",
+    ];
     const root = tree({
       alpha: {
         files: {
           "skills/a/SKILL.md": skill(
             "a",
             "",
-            "Run `mise use node` first.\n"
-              + "Never a bare `mise use`, which writes a pin.\n"
-              + "never run a bare mise use node here.\n"
-              + "`mise use --help` prints the flags.",
+            [...runs, ...forbids].join("\n"),
           ),
           "skills/a/assets/x/.config/setup.txt": "mise use -g pipx:x\n",
         },
       },
     });
     expect(check(root)).toEqual([
-      {
-        scope: "alpha:skills/a/SKILL.md:6",
+      ...runs.map((_, index) => ({
+        scope: `alpha:skills/a/SKILL.md:${index + 6}`,
         message: expect.stringContaining("runs a bare `mise use`"),
-      },
+      })),
       {
         scope: "alpha:skills/a/assets/x/.config/setup.txt:1",
         message: expect.stringContaining("runs a bare `mise use`"),
