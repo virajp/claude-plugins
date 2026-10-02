@@ -3,11 +3,13 @@ name: tool-config
 description: Configure a repo's universal tools — mise, dprint, pre-commit,
   gitleaks, grype, git, graphify and renovate — from one instruction per call,
   writing each requester's lines between its own block markers and a line
-  outside them only on a person's approval. mise is configured by a shipped
-  node script that renders the templates, shows every change as a numbered
-  row and writes on the answers; the other seven still follow their
-  references. Use it to land every tool the skill owns in a repo (all, with
-  the repo's answers as flags), to apply a pack's tool-config entries, to add
+  outside them only on a person's approval. mise, dprint, pre-commit,
+  gitleaks and grype are configured by a shipped node script that renders
+  the templates, shows every change as a numbered row, writes on the
+  answers, then formats and validates what it wrote; git, graphify and
+  renovate still follow their references. Use it to land every tool the
+  skill owns in a repo (all, with the repo's answers as flags, ending in a
+  set-up repo), to apply a pack's tool-config entries, to add
   a tool pin, an environment value, an alias, a formatter plugin, a hook, a
   linter ignore, a vulnerability ignore, an ignore line, a pinned ignore
   template, an attribute or an exclude for every gate at once, for a pack or
@@ -15,7 +17,7 @@ description: Configure a repo's universal tools — mise, dprint, pre-commit,
   check a repo for drift, or to move the toolchain's pins forward. Invoked by
   /vwf:init, by the stackgen materializer for a pack's tool-config list, and
   by /vwf:setup for machine values.
-argument-hint: "[preview] mise <verb> [--<flag> <value>]… [--for <requester>] [--answers <id>:<answer>,…] | [preview] all [--<key> <value>]… [--answers …] | [preview] apply-entries --pack <slug> --file <pack.yaml> [--answers …] | check [<tool>] | [preview] <tool> <instruction> [for <requester>] [answers=…] for the seven prose tools"
+argument-hint: "[preview] <tool> <verb> [--<flag> <value>]… [--for <requester>] [--answers <id>:<answer>,…] for mise, dprint, pre-commit, gitleaks, grype | [preview] all [--<key> <value>]… [--answers …] | [preview] all add-exclude --paths <p>,… [--generated] [--for …] [--answers …] | [preview] apply-entries --pack <slug> --file <pack.yaml> [--answers …] | check [<tool>] | [preview] <tool> <instruction> [for <requester>] [answers=…] for git, graphify, renovate"
 disable-model-invocation: false
 user-invocable: true
 ---
@@ -33,10 +35,10 @@ told apart, shown, and taken out again.
 | Tool         | Reference                                            | Assets                                                        | Run by          |
 | ------------ | ---------------------------------------------------- | ------------------------------------------------------------- | --------------- |
 | `mise`       | [references/mise.md](references/mise.md)             | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/mise/`       | the script      |
-| `dprint`     | [references/dprint.md](references/dprint.md)         | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/dprint/`     | its reference   |
-| `pre-commit` | [references/pre-commit.md](references/pre-commit.md) | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/pre-commit/` | its reference   |
-| `gitleaks`   | [references/gitleaks.md](references/gitleaks.md)     | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/gitleaks/`   | its reference   |
-| `grype`      | [references/grype.md](references/grype.md)           | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/grype/`      | its reference   |
+| `dprint`     | [references/dprint.md](references/dprint.md)         | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/dprint/`     | the script      |
+| `pre-commit` | [references/pre-commit.md](references/pre-commit.md) | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/pre-commit/` | the script      |
+| `gitleaks`   | [references/gitleaks.md](references/gitleaks.md)     | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/gitleaks/`   | the script      |
+| `grype`      | [references/grype.md](references/grype.md)           | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/grype/`      | the script      |
 | `git`        | [references/git.md](references/git.md)               | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/git/`        | its reference   |
 | `graphify`   | [references/graphify.md](references/graphify.md)     | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/graphify/`   | its reference   |
 | `renovate`   | [references/renovate.md](references/renovate.md)     | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/renovate/`   | its reference   |
@@ -47,25 +49,70 @@ and why. **A scripted tool's script is the authority**: it renders the assets,
 fills their marked positions and writes the blocks, so a greenfield repo needs
 no judgement for it, and its reference tells you what the script does and the
 edits it hands back to you. **A prose tool is still yours to apply**, exactly
-as its reference says — read it before acting on any call that names it. The
-other seven move onto the script in later releases; until then a call reaches
-both halves the way [Running the script](#running-the-script) says.
+as its reference says — read it before acting on any call that names it.
+`git`, `graphify` and `renovate` are the three prose tools left; they move
+onto the script in a later release, and until then a call reaches both
+halves the way [Running the script](#running-the-script) says.
 
 ## Running the script
 
 ```sh
-node "${CLAUDE_PLUGIN_ROOT}/skills/tool-config/scripts/tool-config.mjs" <arguments>
+MISE_ENV=dev mise x -- node "${CLAUDE_PLUGIN_ROOT}/skills/tool-config/scripts/tool-config.mjs" <arguments>
 ```
 
-Run it with the `node` on `PATH` — never through `mise x node@lts --`. It
+`node` is the repo's own pin — the base's `conf.d/tools.dev.toml` carries it
+— so run the script under `MISE_ENV=dev`, as a developer's shell exports it:
+node, the formatter and the hook runner are all dev pins, and without it
+`mise x` finds none of them. Only the very first `all` on a repo with no
+mise config has no pin to run on; there `mise x -- node` falls through to the
+`node` on `PATH`, which that one call needs. Never name a version on the
+`mise x` line, which can install one the config does not pin. The script
 needs no package, and it needs `mise` on `PATH` for any call that resolves a
-version; without one it refuses, naming the install. It runs against the
-repo the working directory sits in (`git rev-parse --show-toplevel`), or the
-one `--repo-root <dir>` names, and never outside it: a path that is absolute
-or climbs with `..`, a symlink at or above a path inside the repo, or a path
-resolving outside the root refuses the call (exit 2). A caller —
-`/vwf:init`, `/vwf:setup`, the materializer, a person — invokes this skill
-with the script's own arguments, and the skill runs them as given.
+version; without one it refuses, naming the install.
+
+**Two prerequisites are the person's, never the script's.** The repo's mise
+config is **trusted** beforehand — typically its path in
+`trusted_config_paths` in the global mise config, or `mise trust --all` in
+the repo. The script reads that trust and never grants it: any call but
+`check`, a `preview` included, on a repo mise reads as untrusted is refused
+(exit 2) naming the remedy. And **every tool runs only as
+`mise x -- <tool>`** — the version the repo's config pins — and only once
+`mise which <tool>` says it is installed; a tool the call needs and the repo
+has not installed refuses the call before the first byte is written, with
+the remedy `MISE_ENV=dev mise run setup:all`. `all` runs that itself
+([what a written call runs](#what-a-written-call-runs)).
+
+It runs against the repo the working directory sits in
+(`git rev-parse --show-toplevel`), or the one `--repo-root <dir>` names, and
+never outside it: a path that is absolute or climbs with `..`, a symlink at
+or above a path inside the repo, or a path resolving outside the root
+refuses the call (exit 2). A caller — `/vwf:init`, `/vwf:setup`, the
+materializer, a person — invokes this skill with the script's own
+arguments, and the skill runs them as given.
+
+### What a written call runs
+
+A call that writes, in this order:
+
+1. **writes** every file its answered rows reach;
+2. on **`all`** only, re-checks trust over the config it just landed, then
+   runs **`MISE_ENV=dev mise run setup:all`** — every pinned tool installed
+   and the repo set up, so `all` ends in a repo a person can work in;
+3. runs the **shipped formatter** over every file it wrote —
+   `mise x -- dprint fmt --config .config/dprint.json --allow-no-files <files>`,
+   whenever the repo has `.config/dprint.json` — mise's files included, and
+   takes the formatted text back as what it wrote;
+4. runs **`mise x -- pre-commit validate-config`** when it wrote
+   `.config/pre-commit-config.yaml`;
+5. and only then records each file's hash in the lock.
+
+So **how a landed line is folded is the shipped formatter's call**, never
+the script's or yours: what the lock records is what the formatter left. A
+formatter or validate failure puts every file the call wrote back byte for
+byte and records nothing (exit 2). An untrusted config or a `setup:all`
+failure on `all` leaves the files written and records nothing (exit 2,
+carrying `written` and `deleted`): fix what it names, then re-run the same
+`all`, whose rows cover what the first run left unrecorded.
 
 **The output is JSON on stdout, always**, and the exit code says which shape:
 
@@ -73,47 +120,70 @@ with the script's own arguments, and the skill runs them as given.
 | ---- | --------------------------------------------- | ---------------------------------------------------------------------------- |
 | 0    | `{preview: true, rows, prose?, notes?}`       | a `preview`: the rows the call would show; nothing written                   |
 | 0    | `{written, deleted, rows, prose?, notes?}`    | the call wrote; `rows` are the `needs-edit` rows its answers left for you    |
-| 2    | `{error, rows?}`                              | refused — nothing written; the message names why, and the rows when it has some |
+| 2    | `{error, rows?, written?, deleted?}`          | refused — the message names why, and the rows when it has some; nothing written, save the one case `written`/`deleted` name — `all` stopped at trust or `setup:all`, its files left written and unrecorded |
 | 1    | `{error}`, a stack on stderr                  | an internal fault — report it whole; never work around it by hand            |
 
-`prose` lists what the script left to the references — the seven tools on
-`all`, a pack's string entries on `apply-entries`. `notes` are things said,
-not asked: a pin already held, a path another source owns left alone.
+`prose` lists what the script left to the references — `git`, `graphify`
+and `renovate` on `all`, a pack's string entries on `apply-entries`.
+`notes` are things said, not asked: a pin already held, a path another
+source owns left alone, a plugin or exclude already satisfied.
 
 ## Arguments
 
-**The script's grammar** — mise, `all`, a pack's entries and `check`:
+**The script's grammar** — the five scripted tools, `all`, the cross-tool
+verb, a pack's entries and `check`:
 
 ```text
-[preview] mise <verb> [--<flag> <value>]… [--for <requester>] [--answers <id>:<answer>,…]
-[preview] mise [--<key> <value>]…                   [--answers …]
+[preview] <tool> <verb> [--<flag> <value>]… [--for <requester>] [--answers <id>:<answer>,…]
+[preview] <tool> [--<key> <value>]…                 [--answers …]
 [preview] all [--<key> <value>]…                    [--answers …]
+[preview] all <verb> [--<flag> <value>]… [--for <requester>] [--answers …]
 [preview] apply-entries --pack <slug> --file <pack.yaml> [--answers …]
 check [<tool>]
 ```
 
 plus `--repo-root` and `--plugin-root`, anywhere. `--key value` and
 `--key=value` both read; a flag followed by another flag, or by nothing, is
-empty; a flag given twice, or one the call does not take, is refused naming
-the valid ones. **A list is comma-separated, no spaces** —
+empty — save a **switch** (`--generated`, `--pass-filenames`,
+`--always-run`), which given bare reads `true` and otherwise takes `true` or
+`false`; a flag given twice, or one the call does not take, is refused
+naming the valid ones. **A list is comma-separated, no spaces** —
 `--members backend,frontend` — and this is the one place that spelling is
-stated. A value holding a space is one shell argument, quoted for the shell;
+stated. A one-line value — a hook's `--name` or `--entry`, a grype
+`--reason` — is refused when it holds a control character, a line break or
+a Unicode line or paragraph separator, any of which a YAML reader could
+take as a new entry.
+A value holding a space is one shell argument, quoted for the shell;
 a value starting with `"` is read as a TOML basic string — what that means is
 [what a call may carry](references/mise.md#what-a-call-may-carry).
 
-- **`mise <verb>`** runs one of mise's verbs —
-  [`add-tool`, `add-env`, `set-env`, `add-alias`, `upgrade`,
-  `remove`](references/mise.md#4-the-verbs). `mise` with no verb lands mise's
-  base alone, exactly as `all` would, with the same keys.
-- **`all`** lands every tool in the table above, in table order: the script
-  lands mise and returns the other seven under `prose`, which you then land as
-  each reference's `all` section says — so `git`, `graphify` and `renovate`
-  land after the five gate tools, and `renovate` only on
-  `--update-bot renovate`.
-- **`apply-entries`** runs a pack's whole `tool-config:` list: each structured
-  entry (`{tool: mise, verb: add-tool, …}`) as that verb `--for <slug>`, each
-  string entry returned under `prose` for you to run as the word grammar
-  below. A malformed entry refuses the whole call, naming it.
+- **`<tool> <verb>`** runs one of a scripted tool's verbs, each in its
+  reference's verbs section:
+
+  | Tool         | Verbs and their flags                                                                                                                                              |
+  | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+  | `mise`       | [`add-tool`, `add-env`, `set-env`, `add-alias`, `upgrade`](references/mise.md#4-the-verbs)                                                                           |
+  | `dprint`     | [`add-plugin --name <n>`](references/dprint.md#4-the-verbs)                                                                                                         |
+  | `pre-commit` | [`add-hook --repo --id --stage …`, `add-linter-ignore --paths <p>,…`, `set-scopes --scopes <id>,…`](references/pre-commit.md#4-the-verbs)                            |
+  | `gitleaks`   | none but `remove` — [its allowlist is the cross-tool verb's](references/gitleaks.md#3-the-verbs)                                                                   |
+  | `grype`      | [`add-ignore --id --package --reason --expires`, `remove-ignore --id`](references/grype.md#2-the-verbs)                                                             |
+
+  Every one also takes `remove --for <requester>`. A scripted tool named
+  with no verb — `mise`, `dprint` — lands that tool's base alone, exactly as
+  `all` would, with the same keys.
+- **`all`** lands every tool in the table above, in table order, then runs
+  what [a written call runs](#what-a-written-call-runs): the script lands the
+  five scripted tools and returns `git`, `graphify` and `renovate` under
+  `prose`, which you then land as each reference's `all` section says —
+  `renovate` only on `--update-bot renovate`.
+- **`all <verb>`** is [the one cross-tool verb](#the-one-cross-tool-verb),
+  `all add-exclude`, and its removal, `all remove --for <requester>`.
+- **`apply-entries`** runs a pack's whole `tool-config:` list: each
+  structured entry (`{tool: dprint, verb: add-plugin, name: typescript}`) as
+  that verb `--for <slug>`, a list value as the comma-separated flag; each
+  string entry — a prose tool's, until it moves onto the script — returned
+  under `prose` for you to run as the word grammar below. A malformed entry
+  refuses the whole call, naming it.
 - **`check [<tool>]`** is the drift test ([Drift](#drift)). It writes nothing
   and takes no `--answers` and no `preview`.
 
@@ -127,8 +197,8 @@ call with no `--for` writes the user's own line, outside every block. Only a
 person types one, and it writes on that person's approval; a pack's call and
 the materializer always carry a `--for`.
 
-**`all`'s keys are fixed**; the prose references spell each with `_` for the
-flag's `-` (`update_bot`):
+**`all`'s keys are fixed**; the prose tools' references spell each with `_`
+for the flag's `-` (`update_bot`):
 
 | Flag                                           | Value                                                           |
 | ---------------------------------------------- | --------------------------------------------------------------- |
@@ -153,19 +223,19 @@ repo whose files predate a tool's current layout is brought onto it by the
 same call, each fold, move and delete one row — the reference names what it
 reads.
 
-**The prose tools' word grammar**, until they move onto the script:
+**The prose tools' word grammar** — `git`, `graphify` and `renovate`, until
+they move onto the script:
 
 ```text
 [preview] <tool> <instruction> [for <requester>] [answers=<id>:<answer>,…]
 [preview] <tool> key=value [key=value …] [answers=<id>:<answer>,…]
-[preview] all add exclude [generated] <path> … [for <requester>] [answers=…]
 ```
 
 `<tool> <instruction>` runs one verb of that tool's reference; an instruction
 no verb matches is refused, naming the verbs. Every tool also takes
 `remove <requester>`. `answers=` is always the last argument and never
-carried by a `preview`. The third shape is
-[the one cross-tool verb](#the-one-cross-tool-verb).
+carried by a `preview`. A scripted tool's name in this grammar is the
+script's to refuse, naming its reference.
 
 **`preview`** builds the rows the same call would show — every create, write,
 fold, move and delete, every drift row and every conflict row — and returns
@@ -181,18 +251,32 @@ from the repo's `origin` remote, never from an argument — the rule is
 
 ### The one cross-tool verb
 
-**`all add exclude [generated] <path> …`** is the only way an exclude is
-added, by a pack or by hand. One call writes every path, in each tool's own
-syntax, into the formatter's `excludes`, the TOML formatter's `exclude` and
-the hook runner's global `exclude`; with `generated` it writes them into the
-secret scanner's path allowlist too. So the formatters' three lists state one
-set and the scanner's is a subset of it by construction, never by care. A
-path holding a `*` or a `?` is a file glob (`*.lock`, `*-lock.json`); any
-other is a directory (`node_modules`, `.venv`); both match at any depth.
-`generated` is for a tree a tool writes and no one reviews, never a lockfile
-or authored source. An exclude asked of one tool alone —
-`dprint add exclude …` — is refused, naming this verb. Its removal is
-`remove <requester>` on each tool it wrote.
+```text
+[preview] all add-exclude --paths <path>,<path>,… [--generated] [--for <requester>] [--answers …]
+```
+
+**`all add-exclude`** is the only way an exclude is added, by a pack or by
+hand — a pack's entry is
+`{tool: all, verb: add-exclude, paths: [node_modules, .turbo], generated: true}`.
+One call writes every path, in each tool's own syntax, into the formatter's
+`excludes`, the TOML formatter's `exclude` and the hook runner's global
+`exclude`; with `--generated` it writes them into the secret scanner's path
+allowlist too. So the formatters' three lists state one set and the
+scanner's is a subset of it by construction, never by care. **A path's
+kind is in its spelling**: a trailing `/` marks a directory, a glob
+included — `*.xcassets/` excludes every such directory and everything
+inside it; a `*` or a `?` with no trailing `/` is a file glob (`*.lock`,
+`*-lock.json`); a bare name with neither is a directory (`node_modules`,
+`.venv`). Every kind matches at any depth. A path holding a comma or any
+character outside printable ASCII — a space included — or one that is
+absolute or climbs with `..`, is refused.
+`--generated` is for a tree a tool writes and no one reviews, never a
+lockfile or authored source. An exclude asked of one tool alone —
+`dprint add-exclude …` — is refused, naming this verb. Its removal is
+`all remove --for <requester>`. That is `remove` on dprint, pre-commit and
+gitleaks at once, so it takes out **everything** the requester holds in
+those three tools — its excludes in all four lists, and its dprint
+plugins, hooks and linter ignores too — never grype's or mise's.
 The spelling each list takes is in
 [dprint's](references/dprint.md#3-the-exclusion-set),
 [pre-commit's](references/pre-commit.md#3-the-global-exclude) and
@@ -201,8 +285,8 @@ The spelling each list takes is in
 ## Blocks
 
 **Each requester's lines sit between its own markers**, in each file it wrote
-to. The script writes mise's this way; for the seven prose tools, this section
-is the rule you write them by.
+to. The script writes the five scripted tools' this way; for the three prose
+tools, this section is the rule you write them by.
 
 ```toml
 # >>> swiftui
@@ -225,14 +309,18 @@ written where the tool reads it — for a sectioned file, inside the section —
 and a new block goes after the last block in its position, so the base comes
 first and the packs follow in the order they asked. One blank line separates
 two adjacent blocks — except inside a list, where one block's closing marker
-is followed directly by the next one's opening marker — and a block's own
-lines carry no blank line at either end. A comment directly above a key, with
-no blank line between, belongs to that key's block. **Entries inside a block
+is followed directly by the next one's opening marker; the hook config's
+`repos:` is the one list that keeps the blank line, one between any two of
+its entries, a requester's block counted as one — and a block's own lines
+carry no blank line at either end. A comment directly above a key, with no
+blank line between, belongs to that key's block. **Entries inside a block
 are written sorted**, in the order the shipped formatter leaves them — taplo
 sorts a TOML array, so its entries take that order, never the call's — and
 where no formatter sorts (a JSON list, a regex), directories first, then
-globs, each alphabetical, as the assets are. So a landed file passes its own
-format check. **`.gitignore` is the one exception**: its entries keep written
+globs, each alphabetical, as the assets are. Then the script runs the
+shipped formatter over every file it wrote, so a landed file passes its own
+format check, and where a long line folds is the formatter's call.
+**`.gitignore` is the one exception**: its entries keep written
 order, so a negation follows the pattern it re-includes
 ([git's rule](references/git.md#3-the-ignore-files-rules)).
 
@@ -305,8 +393,10 @@ takes the base's pin, resolved to an exact version, and the winner is pinned
 once. `all` also raises one **delete row**, answered `ok`, for each
 `.gitignore` line, in a block or the user's, that ignores a lock file other
 than `mise.local.lock` ([git's lock rule](references/git.md#3-the-ignore-files-rules)).
-The same list entry — a plugin, an exclude, an ignore — asked for twice is
-not a conflict: it is [shared](#blocks).
+A file already at a path `all` lands that the lock has never recorded is a
+conflict row too: `keep-existing` leaves it, `overwrite` lands the base over
+it. The same list entry — a plugin, an exclude, an ignore — asked for twice
+is not a conflict: it is [shared](#blocks).
 
 **A pack's `keep-existing` is remembered.** On mise, a requester's clash
 answered `keep-existing` — on `add-tool`, `add-env`, `add-alias`, or
@@ -317,10 +407,10 @@ call raises no row again; `check` ignores the comment. `remove`, an
 `hoist` row record nothing: answered `keep-existing`, a hoist row returns on
 every `all`.
 
-**A file left as it was landed is the skill's to replace.** A mise file whose
-content still hashes to its lock record is untouched: a newer shipped asset
-replaces it with a plain `write` row. Only a file edited since it was landed
-raises a drift row.
+**A file left as it was landed is the skill's to replace.** A scripted
+tool's file whose content still hashes to its lock record is untouched: a
+newer shipped asset replaces it with a plain `write` row. Only a file edited
+since it was landed raises a drift row.
 
 **How the answers come back.** Rows are numbered `r1`, `r2`, … in order, and
 each carries the answer names it takes — relay them as given:
@@ -328,10 +418,14 @@ each carries the answer names it takes — relay them as given:
 | Row                                    | Answers                             |
 | -------------------------------------- | ----------------------------------- |
 | a create, write, delete, share         | `ok`                                |
+| a `record` — only the lock's maps move | `ok`                                |
 | a fold, a move                         | `ok`                                |
 | a lock-ignoring line's delete          | `ok`                                |
+| a linter ignore over a tracked tree    | `ok`                                |
 | drift                                  | `take-theirs`, `keep-mine`, `merge` |
 | a tool, env, alias or hook clash       | `keep-existing`, `overwrite`        |
+| a file at a base path never recorded   | `keep-existing`, `overwrite`        |
+| `migrate` — a retired pack's entry     | `ok`, `keep-existing`               |
 | `set-env` finding a key outside        | `move-in`, `keep-both`              |
 | … in the block's own file              | `move-in`, `keep-existing`          |
 | a commit type outside the ten          | `rename-<type>`, `keep-existing`    |
@@ -346,21 +440,30 @@ of that row's answers, and no row's content changed since the preview — the
 script keeps each preview's rows in the repo's git directory, never in the
 tree. A missing id, an unknown id, a wrong answer name, or a changed row
 refuses the **whole call**: nothing is written, and the rows are shown again.
+So does an answer whose whole-file write would land on a file another part
+of the same call already changed — an `overwrite` replaying a file as it was
+read, after an earlier op wrote it: the script refuses rather than discard
+that change. Run the call that conflicts on its own, then the rest.
 **A call that carries matching answers asks nothing.**
 
-**One numbered set on `all`.** Until the seven prose tools move onto the
-script, `all` is two halves: the script's preview returns mise's rows,
-`r1` … `rN`, and the seven tools under `prose`; build each prose tool's rows
-from its reference and number them on from `r<N+1>`. Show the one set. Then
-pass the script only its own ids, and apply the prose rows on their answers.
+**One numbered set on `all`.** Until `git`, `graphify` and `renovate` move
+onto the script, `all` is two halves: the script's preview returns the five
+scripted tools' rows, `r1` … `rN`, and the three prose tools under `prose`;
+build each prose tool's rows from its reference and number them on from
+`r<N+1>`. Show the one set. Then pass the script only its own ids, and apply
+the prose rows on their answers.
 
 **A `needs-edit` row is a change the script will not guess at** — a root mise
-config to split, a `merge` answer to combine, a file it cannot parse. It names
-the file, why, and the target layout. Either answer writes nothing for that
+config to split, a `merge` answer to combine, a file it cannot parse: a
+`.config/dprint.json` that is not strict JSON, a hook config whose global
+`exclude` is not one verbose `(?x)` block or holds a multi-group
+alternative, a marker shape it does not know. It names the file, why, and
+the target layout. Either answer writes nothing for that
 row: `done` when you make the edit in this round, `skip` when the person
 declined it and the file stays as it is. Make the edit as the tool's
 reference says — mise's is
-[what you edit by hand](references/mise.md#what-you-edit-by-hand) — then
+[what you edit by hand](references/mise.md#what-you-edit-by-hand), each gate
+tool's its migration section — then
 re-run the same call's `preview`, answer what it returns, and finish with
 `check`; the file is settled when neither shows a row for it. A `merge`
 answer comes back the same way: the written call returns a `needs-edit` row
@@ -369,14 +472,18 @@ carrying the requester's version, and you combine the two by hand.
 ## Drift
 
 **A block that differs from what its requester would write now is drift.**
-For mise, the script decides: **`check`** renders what each recorded block's
-requester would write now and compares it with the file, one `drift` row per
-differing block, the two versions side by side (`theirs` beside `mine`), and
-one `needs-edit` row for a recorded file that is missing or whose markers do
-not balance. `check` writes nothing; its `prose` lists the recorded tools it
-left to their references. A drift row is settled by re-running the call that
-wrote the block — `all` for a base, the pack's `apply-entries` — and
-answering it:
+For the scripted tools, the script decides: **`check`** renders what each
+recorded block's requester would write now and compares it with the file,
+one `drift` row per differing block — for a gate tool's base file, one per
+file — the two versions side by side (`theirs` beside `mine`), and one
+`needs-edit` row for a recorded file that is missing or whose markers do
+not balance. A gate tool's file is compared as the shipped formatter would
+leave it: a YAML file by its structure — nesting kept, quoting and
+re-wrapping ignored — any other by its words, so a layout the formatter
+chose is never drift. `check` writes nothing; its `prose` lists the recorded
+tools it left to their references. A drift row is settled by re-running the
+call that wrote the block — `all` for a base, the pack's `apply-entries` —
+and answering it:
 
 - **take-theirs** — the block is rewritten as the requester would write it;
 - **keep-mine** — the block stays as it stands for this run; unlike a
@@ -405,10 +512,13 @@ not compared at all.
 `remove` deletes every block one requester holds across a tool's files, and
 nothing else: the user's lines and the other blocks stay byte for byte. A
 file left empty is deleted, and a shared entry moves as [Blocks](#blocks)
-says. For mise it is `mise remove --for <requester>`; for a prose tool,
-`<tool> remove <requester>`. The materializer calls it once per tool a
-dropped pack's `tool-config:` list called — for an `all add exclude` line,
-once on each of `dprint`, `pre-commit` and `gitleaks`. A tool's own base is
+says. For a scripted tool it is `<tool> remove --for <requester>`; for the
+exclusion set, `all remove --for <requester>`, which is `remove` on
+dprint, pre-commit and gitleaks at once — every block and key the
+requester holds in those three, its plugins and hooks included; for a
+prose tool, `<tool> remove <requester>`. The materializer calls it once per
+tool a dropped pack's `tool-config:` list called, and once as `all` for an
+`all` entry. A tool's own base is
 not removable this way — a repo that stops using the tool deletes its files
 by hand.
 
@@ -416,9 +526,9 @@ by hand.
 
 Every path the skill writes is one entry in stackgen's lockfile,
 `.claude/stackgen/lock.yaml`, in the materializer's shape
-(`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). The script writes mise's
-entries in the same step as the files; for a prose tool you write them, in
-this shape:
+(`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). The script writes the
+scripted tools' entries as the last step of the call that wrote the files;
+for a prose tool you write them, in this shape:
 
 ```yaml
 entries:
@@ -433,10 +543,10 @@ entries:
   - path: .config/dprint.json
     source: tool-config/dprint@<stackgen version>
     hash: <content hash after the write>
-    blocks: [dprint, typescript, astro]
     keys: # plain JSON: what each requester wrote, as <key> or <key>[<entry>]
       typescript: ["plugins[typescript]", typescript]
       astro: ["plugins[malva]", "plugins[markup_fmt]", malva, markup]
+      pnpm: ["excludes[**/node_modules/]", "excludes[**/.turbo/]"]
     shares: # an entry one block holds that other requesters also asked for
       "plugins[malva]": [astro, html]
   - path: .gitignore
@@ -449,16 +559,21 @@ entries:
 
 `<stackgen version>` is this plugin's own, from
 `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`. The hash is the sha256 of
-the file as written, for the callers that test a repo's shape —
+the file as written — after the formatter, so the bytes a later
+`dprint check` sees — for the callers that test a repo's shape —
 `/vwf:doctor` and `/vwf:init` — and is re-recorded on every write; the drift
-test never reads it. A JSON file's entry carries `keys:` beside `blocks:`,
-one list per requester. An entry with a shared line carries `shares:`, the
+test never reads it. A JSON file's entry carries `keys:` in place of
+`blocks:`, one list per requester, an exclude spelled as dprint holds it.
+A call that moves only these maps — keys, shares, templates — and leaves
+the file as it is shows a `record` row (`share` when only `shares:` moved).
+An entry with a shared line carries `shares:`, the
 entry against every requester that asked for it, the holder first. An entry
 holding a fetched template carries `templates:`, the commit each was fetched
 at, moved only inside the upgrade round
 [git's templates](references/git.md#4-templates) describes, and the hash of
 the block as last written. A path the skill deletes loses its entry. The
-entry is written in the same step as the file, so the two never disagree.
+entry is written by the same call as the file, after its formatter and
+validate steps pass, so the two never disagree.
 
 ## What it never does
 
@@ -468,5 +583,7 @@ entry is written in the same step as the file, so the two never disagree.
   user's answer.
 - Writes a pin that is not an exact version, or adds a tool with a bare
   `mise use` — never; the pin is written into the config, then installed.
+- Runs a tool any way but `mise x -- <tool>`, or grants mise trust — the
+  trust is the person's, given before the call.
 - Commits. The caller commits what it landed, the way it commits everything
   else.

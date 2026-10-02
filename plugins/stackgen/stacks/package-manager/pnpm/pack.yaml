@@ -17,7 +17,16 @@ tool-config:
       version: "4.0.0",
       env: dev,
     }
-  - all add exclude generated node_modules .turbo
-  - all add exclude *-lock.json *-lock.yaml
+  - {
+      tool: all,
+      verb: add-exclude,
+      paths: [ node_modules, .turbo ],
+      generated: true,
+    }
+  - {
+      tool: all,
+      verb: add-exclude,
+      paths: [ "*-lock.json", "*-lock.yaml" ],
+    }
   - git add ignore template=Node
   - git add attribute pnpm-lock.yaml linguist-generated

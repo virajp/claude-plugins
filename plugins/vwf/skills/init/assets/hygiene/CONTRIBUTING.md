@@ -6,13 +6,20 @@ out of it and put it here instead.
 
 ## Setup
 
+Trust the repository first — once per machine, since mise reads no config it
+has not been told to trust:
+
 ```sh
+mise trust --all
 MISE_ENV=dev mise run setup:all
 ```
 
-That is the whole of it: the toolchain manager installs the pinned tools,
-installs dependencies, and wires the commit hooks. Every task lives as a file
-under `.config/mise/tasks/`, and `mise tasks` lists them.
+Listing the checkout's path, or a parent of it, under `trusted_config_paths`
+in your global mise config does the same for every checkout beneath it,
+linked worktrees included. Then `setup:all` is the whole of it: the toolchain
+manager installs the pinned tools, installs dependencies, and wires the commit
+hooks. Every task lives as a file under `.config/mise/tasks/`, and
+`mise tasks` lists them.
 
 ## Branches
 

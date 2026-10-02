@@ -167,11 +167,12 @@ adapter's.
 ## Answering the skill's rows
 
 Both steps below reach `/stackgen:tool-config` the same way, and this is the
-one place the form is stated. A mise call, `all` and `apply-entries` take
-the skill's flag form — a verb, `--<flag> <value>` pairs, `--for <pack>`
-where a pack asks and `--answers` last; a call to any other tool keeps the
-skill's word grammar until that tool moves onto its script — an
-instruction, `for <pack>` and `answers=` last. First
+one place the form is stated. A call to mise, dprint, pre-commit, gitleaks
+or grype, `all` — `all add-exclude` included — and `apply-entries` take the
+skill's flag form — a verb, `--<flag> <value>` pairs, `--for <pack>` where a
+pack asks and `--answers` last; a call to any other tool keeps the skill's
+word grammar until that tool moves onto its script — an instruction,
+`for <pack>` and `answers=` last. First
 `/stackgen:tool-config preview <call>`, which writes nothing and returns the
 rows the call would show, each with an id — `r1`, `r2`, … Setup shows those
 rows inside its own question and takes an answer to **every** row, spelled
@@ -217,7 +218,8 @@ do.
 
 **Preview, then run**, as
 [Answering the skill's rows](#answering-the-skills-rows) states. A list's
-mapping entries — mise's, today — run as one call,
+mapping entries — mise's, the four gate tools' and `all`'s — run through the
+skill's script as one call,
 `apply-entries --pack <slug> --file <that pack.yaml>`; each string entry
 runs as its own `<call>` in the word grammar, followed by `for <pack>`,
 until the skill moves its tool onto mappings. The calls are

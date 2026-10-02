@@ -1,10 +1,13 @@
 /**
  * The tool-config script's engine, run for real: argument refusals, blocks,
- * rows and answers, the lock record and `check`.
+ * rows and answers, the lock record, `check`, and the mise steps a write
+ * runs — trust, setup:all, the formatter, validate-config.
  *
- * The suite registers a test-only tool, `demo`, through
- * TOOL_CONFIG_TOOLS_MODULE, so it exercises the engine without any shipped
- * tool module. It lives here because `vitest.config.mts` collects only
+ * The suite registers a test-only tool, `demo`, and a test-only cross-tool
+ * `all` module through TOOL_CONFIG_TOOLS_MODULE, so it exercises the engine
+ * without any shipped tool module. A fake `mise` on PATH records every call
+ * and answers from FAKE_MISE_* switches; no real mise runs here. It lives
+ * here because `vitest.config.mts` collects only
  * `{installer,scripts}/src/**\/*.test.ts` — beside the script it would never run.
  */
 import { spawnSync } from "node:child_process";
@@ -46,6 +49,7 @@ const version = (JSON.parse(
 
 /** The test-only tool: a base block, a pack block, a list entry, a typed value, a mise-needing verb. */
 const DEMO = `
+import { createHash } from "node:crypto";
 export const tools = {
   demo: {
     verbs: {
@@ -60,6 +64,8 @@ export const tools = {
       takeover: { flags: { path: { required: true } } },
       put: { flags: { path: { required: true } }, requester: "required" },
       big: { flags: {} },
+      mark: { flags: { path: { required: true }, key: {} }, requester: "required" },
+      snap: { flags: { path: { required: true }, then: {} } },
     },
     all() {
       return {
@@ -95,6 +101,26 @@ export const tools = {
       if (call.verb === "big") {
         return { ops: [], rows: [{ kind: "needs-edit", file: "big", reason: "x".repeat(3000000), target: "-" }] };
       }
+      if (call.verb === "snap") {
+        const text = ctx.read(call.flags.path);
+        const ifUnchanged = text === null ? null : createHash("sha256").update(text).digest("hex");
+        return {
+          ops: call.flags.then
+            ? [{ op: "user-line", path: call.flags.path, line: call.flags.then, match: call.flags.then }]
+            : [],
+          rows: [{
+            kind: "conflict", path: call.flags.path, reason: "snap",
+            effects: {
+              "keep-existing": [],
+              overwrite: [{ op: "whole", path: call.flags.path, content: "snap\\n", force: true, ifUnchanged }],
+            },
+          }],
+        };
+      }
+      if (call.verb === "mark") {
+        const keys = call.flags.key ? { [call.flags.key]: [call.for] } : {};
+        return { ops: [{ op: "record", path: call.flags.path, fields: { keys } }] };
+      }
       if (call.verb === "drop") return { ops: [{ op: "delete", path: call.flags.path }] };
       if (call.verb === "takeover") {
         return { ops: [{ op: "delete", path: call.flags.path, supersedes: ctx.source(call.flags.path) }] };
@@ -113,11 +139,62 @@ export const tools = {
       return null;
     },
   },
+  all: {
+    verbs: {
+      "add-exclude": {
+        flags: { paths: { type: "pathList", required: true }, generated: { type: "bool", default: "false" } },
+        requester: "optional",
+      },
+    },
+    plan(ctx, call) {
+      return {
+        ops: [{
+          op: "block", path: "excludes.toml", requester: call.for ?? "user",
+          body: ["paths = " + call.flags.paths, "generated = " + call.flags.generated],
+        }],
+      };
+    },
+  },
 };
+`;
+
+/** Records each call as `MISE_ENV=<v> <argv>` in $FAKE_MISE_LOG; FAKE_MISE_* switches pick failures. */
+const FAKE_MISE = `#!/bin/sh
+echo "MISE_ENV=\${MISE_ENV:-} $*" >> "$FAKE_MISE_LOG"
+case "$1" in
+  trust)
+    # as mise prints it: a path under $HOME as ~/…
+    p=$(pwd -P); h=$(cd "$HOME" && pwd -P)
+    case "$p" in "$h" | "$h"/*) p="~\${p#"$h"}" ;; esac
+    [ -n "$FAKE_MISE_UNTRUSTED" ] && echo "$p: untrusted"
+    exit 0 ;;
+  which)
+    [ "$2" = "$FAKE_MISE_MISSING" ] && { echo "mise ERROR $2 is not a mise bin" >&2; exit 1; }
+    echo "/fake/bin/$2"
+    exit 0 ;;
+  run)
+    [ -f demo.toml ] && echo "setup:all saw demo.toml" >> "$FAKE_MISE_LOG"
+    [ -n "$FAKE_MISE_SETUP_FAIL" ] && { echo "setup:all broke" >&2; exit 1; }
+    exit 0 ;;
+  x)
+    [ "$2" = "--" ] || exit 1
+    if [ "$3" = dprint ]; then
+      shift 6
+      if [ -n "$FAKE_MISE_FMT" ]; then for f; do echo "# formatted" >> "$f"; done; fi
+      exit 0
+    fi
+    [ "$3" = pre-commit ] && [ -z "$FAKE_MISE_INVALID" ] && exit 0
+    echo "invalid config" >&2
+    exit 1 ;;
+esac
+exit 1
 `;
 
 let repo: string;
 let toolsModule: string;
+let fakeBin: string;
+let miseLog: string;
+let fakeEnv: Record<string, string>;
 
 beforeEach(() => {
   const root = mkdtempSync(join(tmpdir(), "tool-config-core-"));
@@ -126,6 +203,11 @@ beforeEach(() => {
   spawnSync("git", ["init", "-q"], { cwd: repo });
   toolsModule = join(root, "demo-tools.mjs");
   writeFileSync(toolsModule, DEMO);
+  fakeBin = join(root, "bin");
+  mkdirSync(fakeBin);
+  writeFileSync(join(fakeBin, "mise"), FAKE_MISE, { mode: 0o755 });
+  miseLog = join(root, "mise.log");
+  fakeEnv = {};
 });
 afterEach(() => {
   rmSync(join(repo, ".."), { recursive: true, force: true });
@@ -160,9 +242,11 @@ function run(
     maxBuffer: 64 * 1024 * 1024,
     timeout: 20_000,
     env: {
-      PATH: process.env["PATH"] ?? "",
+      PATH: `${fakeBin}:${process.env["PATH"] ?? ""}`,
       HOME: repo,
       TOOL_CONFIG_TOOLS_MODULE: toolsModule,
+      FAKE_MISE_LOG: miseLog,
+      ...fakeEnv,
       ...env,
     },
   });
@@ -220,7 +304,7 @@ describe("argument refusals", () => {
     const { status, out } = run(["demo", "frobnicate"]);
     expect(status).toBe(2);
     expect(out.error).toMatch(
-      /valid: add, entry, set-env, resolve, drop, takeover, put, big, remove, all/,
+      /valid: add, entry, set-env, resolve, drop, takeover, put, big, mark, snap, remove, all/,
     );
   });
 
@@ -883,5 +967,395 @@ describe("missing mise", () => {
     expect(out.error).toBe(
       "mise is not on PATH — install mise (https://mise.jdx.dev), then re-run.",
     );
+  });
+});
+
+describe("the mise steps a write runs", () => {
+  const calls = () =>
+    readFileSync(miseLog, "utf8").trimEnd().split("\n").filter(l =>
+      l.startsWith("MISE_ENV=")
+    );
+  const withFormatter = () => {
+    mkdirSync(join(repo, ".config"), { recursive: true });
+    writeFileSync(join(repo, ".config", "dprint.json"), "{}\n");
+  };
+  const sha = (text: string) => createHash("sha256").update(text).digest("hex");
+
+  it("all runs setup:all after writing and before formatting, every tool as mise x --", () => {
+    withFormatter();
+    const res = apply(["all"]);
+    expect(res.status, JSON.stringify(res.out)).toBe(0);
+    const log = calls();
+    const setup = log.indexOf("MISE_ENV=dev run setup:all");
+    const fmt = log.indexOf(
+      "MISE_ENV=dev x -- dprint fmt --config .config/dprint.json --allow-no-files demo.toml tasks/run",
+    );
+    expect(setup).toBeGreaterThanOrEqual(0);
+    expect(fmt).toBeGreaterThan(setup);
+    expect(readFileSync(miseLog, "utf8")).toContain("setup:all saw demo.toml");
+    for (const line of log.filter(l => / x /.test(l))) {
+      expect(line).toMatch(/^MISE_ENV=\S* x -- /);
+    }
+    expect(
+      log.filter(l => / trust/.test(l)).every(l => / trust --show$/.test(l)),
+    )
+      .toBe(true);
+  });
+
+  it("records the formatted file's hash, not the rendered one", () => {
+    withFormatter();
+    fakeEnv = { FAKE_MISE_FMT: "1" };
+    expect(apply(["demo", "add", "--line", "a = 1", "--for", "p"]).status)
+      .toBe(0);
+    const text = read("demo.toml");
+    expect(text).toMatch(/# formatted\n$/);
+    expect(lock()).toContain(`hash: ${sha(text)}`);
+  });
+
+  it("skips the formatter in a repo with no .config/dprint.json", () => {
+    apply(["demo", "add", "--line", "a = 1", "--for", "p"]);
+    expect(calls().some(l => / dprint /.test(l))).toBe(false);
+  });
+
+  it.each([
+    ["~/ under HOME", false],
+    ["an absolute path outside HOME", true],
+  ])(
+    "refuses an untrusted repo printed as %s, before writing, naming the remedy",
+    (_form, outside) => {
+      fakeEnv = {
+        FAKE_MISE_UNTRUSTED: "1",
+        ...(outside ? { HOME: fakeBin } : {}),
+      };
+      const { status, out } = run([
+        "demo",
+        "add",
+        "--line",
+        "a = 1",
+        "--for",
+        "p",
+      ]);
+      expect(status).toBe(2);
+      expect(out.error).toContain("not trusted");
+      expect(out.error).toContain("trusted_config_paths");
+      expect(() => statSync(join(repo, "demo.toml"))).toThrow();
+    },
+  );
+
+  it("refuses with the setup:all remedy when a step's tool is not installed, writing nothing", () => {
+    withFormatter();
+    fakeEnv = { FAKE_MISE_MISSING: "dprint" };
+    const { status, out } = apply([
+      "demo",
+      "add",
+      "--line",
+      "a = 1",
+      "--for",
+      "p",
+    ]);
+    expect(status).toBe(2);
+    expect(out.error).toContain("MISE_ENV=dev mise run setup:all");
+    expect(() => statSync(join(repo, "demo.toml"))).toThrow();
+  });
+
+  it("validates a written hook config, and a failure restores every file byte for byte", () => {
+    const hooks = ".config/pre-commit-config.yaml";
+    mkdirSync(join(repo, ".config"));
+    writeFileSync(join(repo, hooks), "repos: []\n");
+    apply(["demo", "put", "--path", hooks, "--for", "a"]);
+    expect(calls()).toContain(
+      `MISE_ENV=dev x -- pre-commit validate-config ${hooks}`,
+    );
+    const before = read(hooks);
+    const record = lock();
+    fakeEnv = { FAKE_MISE_INVALID: "1" };
+    const { status, out } = apply([
+      "demo",
+      "put",
+      "--path",
+      hooks,
+      "--for",
+      "b",
+    ]);
+    expect(status).toBe(2);
+    expect(out.error).toContain("invalid config");
+    expect(read(hooks)).toBe(before);
+    expect(lock()).toBe(record);
+  });
+
+  it("keeps the files and records nothing when setup:all fails", () => {
+    fakeEnv = { FAKE_MISE_SETUP_FAIL: "1" };
+    const { status, out } = apply(["all"]);
+    expect(status).toBe(2);
+    expect(out.error).toContain("setup:all broke");
+    expect(out.written).toEqual(["demo.toml", "tasks/run"]);
+    expect(read("demo.toml")).toContain("alpha = 1");
+    expect(() => statSync(join(repo, ".claude/stackgen/lock.yaml"))).toThrow();
+  });
+
+  it("records every file on the re-run once setup:all passes", () => {
+    fakeEnv = { FAKE_MISE_SETUP_FAIL: "1" };
+    expect(apply(["all"]).status).toBe(2);
+    fakeEnv = {};
+    const again = apply(["all"]);
+    expect(again.status, JSON.stringify(again.out)).toBe(0);
+    for (const p of ["demo.toml", "tasks/run"]) {
+      expect(lock()).toMatch(new RegExp(`path: "?${p}"?\\n`));
+    }
+    const later = apply(["demo", "add", "--line", "a = 1", "--for", "p"]);
+    expect(later.status, JSON.stringify(later.out)).toBe(0);
+  });
+
+  it("never runs setup:all on a preview or a single verb", () => {
+    run(["preview", "all"]);
+    apply(["demo", "add", "--line", "a = 1", "--for", "p"]);
+    expect(calls().some(l => / run setup:all/.test(l))).toBe(false);
+  });
+});
+
+describe("the record op", () => {
+  const mark = (args: string[]) => [
+    "demo",
+    "mark",
+    "--path",
+    "demo.toml",
+    ...args,
+  ];
+
+  it("sets a record field as a row of its own, and a second run shows none", () => {
+    apply(["demo", "add", "--line", "a = 1", "--for", "p"]);
+    const text = read("demo.toml");
+    const preview = run([
+      "preview",
+      ...mark(["--key", "excludes[x]", "--for", "p"]),
+    ]);
+    expect(preview.out.rows?.map(r => [r.kind, r["path"], r["keys"]])).toEqual([
+      ["record", "demo.toml", { "excludes[x]": ["p"] }],
+    ]);
+    expect(apply(mark(["--key", "excludes[x]", "--for", "p"])).status).toBe(0);
+    expect(read("demo.toml")).toBe(text);
+    expect(lock()).toContain("keys:");
+    expect(lock()).toContain("excludes[x]");
+    expect(
+      run(["preview", ...mark(["--key", "excludes[x]", "--for", "p"])])
+        .out
+        .rows,
+    )
+      .toEqual([]);
+  });
+
+  it("drops a field given empty, as a row", () => {
+    apply(["demo", "add", "--line", "a = 1", "--for", "p"]);
+    apply(mark(["--key", "k", "--for", "p"]));
+    const preview = run(["preview", ...mark(["--for", "p"])]);
+    expect(preview.out.rows?.map(r => r.kind)).toEqual(["record"]);
+    apply(mark(["--for", "p"]));
+    expect(lock()).not.toContain("keys:");
+  });
+});
+
+describe("the guarded whole write", () => {
+  const overwrite = (r: Row) => (r.kind === "conflict" ? "overwrite" : "ok");
+
+  it("replays a whole-file answer when the file is as the module read it", () => {
+    writeFileSync(join(repo, "hooks.yaml"), "mine\n");
+    const res = apply(["demo", "snap", "--path", "hooks.yaml"], overwrite);
+    expect(res.status, JSON.stringify(res.out)).toBe(0);
+    expect(read("hooks.yaml")).toBe("snap\n");
+  });
+
+  it("refuses, writing nothing, when a later op in the same call wrote the file", () => {
+    writeFileSync(join(repo, "hooks.yaml"), "mine\n");
+    const res = apply(
+      ["demo", "snap", "--path", "hooks.yaml", "--then", "later: 1"],
+      overwrite,
+    );
+    expect(res.status).toBe(2);
+    expect(res.out.error).toContain("hooks.yaml changed since demo read it");
+    expect(read("hooks.yaml")).toBe("mine\n");
+  });
+});
+
+describe("the cross-tool verbs and the G1 path rule", () => {
+  const { classifyPath, validateEntry } = entrySchema as {
+    classifyPath: (p: string) => { kind: string; glob: boolean; name: string; };
+    validateEntry: (entry: Record<string, unknown>) => string[];
+  };
+
+  it.each([
+    ["node_modules", "directory", false, "node_modules"],
+    [".venv", "directory", false, ".venv"],
+    ["Derived/", "directory", false, "Derived"],
+    ["*.lock", "file", true, "*.lock"],
+    ["*-lock.json", "file", true, "*-lock.json"],
+    ["?.tmp", "file", true, "?.tmp"],
+    ["*.xcassets/", "directory", true, "*.xcassets"],
+  ])("classifies %s as a %s", (path, kind, glob, name) => {
+    expect(classifyPath(path)).toEqual({ path, name, kind, glob });
+  });
+
+  it("runs all add-exclude through the module registered as all, a bare bool reading true", () => {
+    const res = apply([
+      "all",
+      "add-exclude",
+      "--paths",
+      "node_modules,*.xcassets/",
+      "--for",
+      "p",
+      "--generated",
+    ]);
+    expect(res.status, JSON.stringify(res.out)).toBe(0);
+    expect(read("excludes.toml")).toContain(
+      "paths = node_modules,*.xcassets/\ngenerated = true",
+    );
+  });
+
+  it("refuses a path that climbs, and a bool that is not one", () => {
+    expect(
+      run(["all", "add-exclude", "--paths", "../x"]).out.error,
+    )
+      .toContain("not a relative name");
+    expect(
+      run(["all", "add-exclude", "--paths", "x", "--generated", "yes"])
+        .out
+        .error,
+    )
+      .toContain("not true or false");
+  });
+
+  it("applies a pack's structured list and bool entry as the flags", () => {
+    const pack = join(repo, "..", "pack.yaml");
+    writeFileSync(
+      pack,
+      [
+        "tool-config:",
+        "  - { tool: all, verb: add-exclude, paths: [node_modules, \"*.xcassets/\"], generated: true }",
+        "",
+      ]
+        .join("\n"),
+    );
+    const res = apply(["apply-entries", "--pack", "p", "--file", pack]);
+    expect(res.status, JSON.stringify(res.out)).toBe(0);
+    expect(read("excludes.toml")).toContain(
+      "# >>> p\npaths = node_modules,*.xcassets/\ngenerated = true",
+    );
+  });
+
+  it.each<[Record<string, unknown>, string]>([
+    [{ tool: "dprint", verb: "add-plugin", name: "Bad Name" }, "plugin name"],
+    [{ tool: "all", verb: "add-exclude", paths: "node_modules" }, "list"],
+    [
+      { tool: "all", verb: "add-exclude", paths: ["x"], generated: "yes" },
+      "true or false",
+    ],
+    [{
+      tool: "pre-commit",
+      verb: "add-hook",
+      repo: "local",
+      id: "x",
+      stage: "pre-commit",
+      name: "x",
+      entry: "uv lock",
+      language: "system",
+    }, "mise x -- "],
+    [{
+      tool: "pre-commit",
+      verb: "add-hook",
+      repo: "https://example.com/h",
+      id: "x",
+      stage: "pre-commit",
+    }, "--rev"],
+    [{
+      tool: "pre-commit",
+      verb: "add-hook",
+      repo: "local",
+      id: "x",
+      stage: "post-merge",
+      name: "x",
+      entry: "mise x -- t",
+      language: "system",
+      "always-run": false,
+    }, "always-run"],
+    [
+      { tool: "pre-commit", verb: "add-linter-ignore", paths: ["/abs"] },
+      "relative",
+    ],
+    [{
+      tool: "grype",
+      verb: "add-ignore",
+      id: "CVE-1",
+      package: "a@1",
+      reason: "r",
+    }, "missing expires"],
+    [{
+      tool: "grype",
+      verb: "add-ignore",
+      id: "CVE-1",
+      package: "a",
+      reason: "r",
+      expires: "2026-01-01",
+    }, "name>@<version"],
+    [{
+      tool: "grype",
+      verb: "add-ignore",
+      id: "CVE-1",
+      package: "a@1",
+      reason: "r\u0085- vulnerability: CVE-2",
+      expires: "2027-01-01",
+    }, "control character"],
+    [{
+      tool: "pre-commit",
+      verb: "add-hook",
+      repo: "local",
+      id: "x",
+      stage: "pre-commit",
+      name: "x\u2028y",
+      entry: "mise x -- t",
+      language: "system",
+    }, "control character"],
+    [
+      { tool: "all", verb: "add-exclude", paths: ["a\u0085b"] },
+      "printable ASCII",
+    ],
+    [
+      { tool: "all", verb: "add-exclude", paths: ["caf\u00e9"] },
+      "printable ASCII",
+    ],
+  ])("validateEntry refuses %j", (entry, fault) => {
+    expect(validateEntry(entry).join("; ")).toContain(fault);
+  });
+
+  it.each<Record<string, unknown>>([
+    { tool: "dprint", verb: "add-plugin", name: "malva" },
+    { tool: "dprint", verb: "add-plugin", name: "markup_fmt" },
+    {
+      tool: "all",
+      verb: "add-exclude",
+      paths: ["*.xcassets/", "Derived"],
+      generated: false,
+    },
+    {
+      tool: "pre-commit",
+      verb: "add-hook",
+      repo: "local",
+      id: "uv-lock-check",
+      stage: "pre-commit",
+      name: "uv lockfile is current",
+      entry: "mise x -- uv lock --check",
+      language: "system",
+      files: "(^|.*/)pyproject\\.toml$",
+      "pass-filenames": false,
+    },
+    { tool: "pre-commit", verb: "add-linter-ignore", paths: [".build"] },
+    {
+      tool: "grype",
+      verb: "add-ignore",
+      id: "GHSA-abcd-1234",
+      package: "@scope/pkg@1.2.3",
+      reason: "unreachable here",
+      expires: "2027-01-31",
+    },
+  ])("validateEntry takes %j", entry => {
+    expect(validateEntry(entry)).toEqual([]);
   });
 });

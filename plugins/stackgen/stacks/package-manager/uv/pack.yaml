@@ -11,7 +11,19 @@ axis: repo
 harness: n/a
 # The lines this pack asks /stackgen:tool-config for.
 tool-config:
-  - all add exclude generated .venv
+  - { tool: all, verb: add-exclude, paths: [ .venv ], generated: true }
   - git add ignore template=Python
-  - pre-commit add linter-ignore .venv
-  - 'pre-commit add hook local uv-lock-check pre-commit name="uv lockfile is current" description="Fails when pyproject.toml moved and uv.lock did not, catching drift at the commit that caused it." entry="mise x -- uv lock --check" files="(^|.*/)pyproject\.toml$" language=system pass_filenames=false'
+  - { tool: pre-commit, verb: add-linter-ignore, paths: [ .venv ] }
+  - {
+      tool: pre-commit,
+      verb: add-hook,
+      repo: local,
+      id: uv-lock-check,
+      stage: pre-commit,
+      name: "uv lockfile is current",
+      description: "Fails when pyproject.toml moved and uv.lock did not, catching drift at the commit that caused it.",
+      entry: "mise x -- uv lock --check",
+      files: '(^|.*/)pyproject\.toml$',
+      language: system,
+      pass-filenames: false,
+    }

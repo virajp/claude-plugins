@@ -13,6 +13,8 @@ pre-commit       = { version = "latest" }
 shellcheck       = { version = "latest" }
 shfmt            = { version = "latest" }
 taplo            = { version = "latest" }
+# The tool-config script runs on it.
+node = { version = "latest" }
 # mise's pipx backend installs through uv, and uv needs a Python >= 3.10 to lock graphifyy's dependencies.
 python = { version = "latest" }
 uv     = { version = "latest" }

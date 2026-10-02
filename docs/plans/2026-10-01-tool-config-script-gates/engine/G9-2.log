@@ -1,0 +1,16 @@
+== /code-review high 2026-10-01-tool-config-script-gates (range 4322d619..ee433aad, committed only) ==
+
+1. lib/tools/index.mjs:270 — (reproduced, fake mise) landOps returns no op when a file already matches its rendering, so the engine's claim() (runs only on whole/block ops) never records gate files a failed `all` left; re-running all records only the mise files; .config/dprint.json, pre-commit-config.yaml, gitleaks.toml, grype.yaml, linter.yaml, taplo.toml stay unrecorded; every later requester call refuses 'no tool-config record — run all first' forever.
+2. lib/tools/pre-commit.mjs:325 — add-hook splits args/types on ',' and entryFlag() joins a pack's YAML list with ','; `args: ["--select=E,W"]` becomes `["--select=E", "W"]`.
+3. tool-config.mjs:1002 — on all, restore() runs after setup:all; files go back but setup:all's side effects stay (.git/hooks installed against a deleted hook config → every commit fails) while the refusal says every file is back.
+4. lib/tools/pre-commit.mjs:857 — a rename row's drop-lines prefix-matches `- <type>` across the whole convention file, so it also deletes a same-named commitScopes entry.
+5. lib/tools/index.mjs:483 — punctuate() appends ',' to the raw line end; a trailing `# comment` with no comma gets the comma inside the comment → TOML array with no separator → taplo/gitleaks parse failure.
+6. lib/tools/pre-commit.mjs:489 — the overwrite ifUnchanged snapshot: in one apply-entries call a later entry writing the hook config makes overwrite always refuse, and 'run the conflicting call alone' is impossible because apply-entries runs a pack's entries as one call.
+7. tool-config.mjs:956 — every writing non-all call now refuses unless `mise which dprint` succeeds under MISE_ENV=dev whenever .config/dprint.json exists — a new hard dependency for mise/grype calls in brownfield repos with dprint from npm/brew.
+8. lib/schema.mjs:186 — the structured add-hook flag set dropped per-hook `exclude` and `require_serial` that HOOK_PAIR accepted.
+9. lib/run.mjs:95 — trust() runs `mise trust --show` without MISE_ENV=dev, so env-specific files (*.dev.toml) are not listed; an untrusted dev config passes.
+10. lib/tools/pre-commit.mjs:1037 — addLinterIgnore's tracked-files warning always probes `**/<name>/**`, never firing for a file glob (`*.ts` ignores every TypeScript file, no warning).
+
+== /security-review (subagent) ==
+
+No high-confidence vulnerabilities.

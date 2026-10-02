@@ -118,17 +118,21 @@ to a repo, and every write it makes is consent-gated and committed once.
        `tool-config:` line.
    - **The tool-config calls a component declares** — its `pack.yaml`
      `tool-config:` list (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`),
-     previewed in step 3 and run in step 5. A mapping entry (mise's) is
-     run by tool-config's script, the whole list in one call:
-     `node "${CLAUDE_PLUGIN_ROOT}/skills/tool-config/scripts/tool-config.mjs" apply-entries --pack <slug> --file <pack.yaml>`,
+     previewed in step 3 and run in step 5. A mapping entry — mise's,
+     dprint's, pre-commit's, grype's and the cross-tool `all` exclude's —
+     is run by tool-config's script, the whole list in one call:
+     `MISE_ENV=dev mise x -- node "${CLAUDE_PLUGIN_ROOT}/skills/tool-config/scripts/tool-config.mjs" apply-entries --pack <slug> --file <pack.yaml>`,
      `<pack.yaml>` the pack's own, under
-     `${CLAUDE_PLUGIN_ROOT}/stacks/<type>/<slug>/`. A string entry —
-     every other tool's, until those move onto the script — comes back
-     under the script's `prose` and runs as
+     `${CLAUDE_PLUGIN_ROOT}/stacks/<type>/<slug>/`
+     (the skill's *Running the script*,
+     `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md` — the repo's mise
+     config trusted beforehand, the formatter and the hook runner
+     installed). A string entry — only git's, until it moves
+     onto the script — comes back under the script's `prose` and runs as
      `/stackgen:tool-config <line> for <pack>`. The skill writes the
      toolchain manager's and the gates' files — mise, dprint, pre-commit,
-     gitleaks, grype — and no pack copies one. A pack's plugin, hook,
-     exclude and ignore lines run like its mise entries.
+     gitleaks, grype — and no pack copies one; the script formats each file
+     it writes and validates the hook config before it records them.
      A `machine_env:` value is left unset here; `/vwf:setup` fills it.
    - The lockfile update — every path above, with its component ref,
      source and content hash, plus the **mode** for a `config/` file, and
@@ -336,7 +340,7 @@ to a repo, and every write it makes is consent-gated and committed once.
    under it, spelled as it will run; declining the line skips them too.
    For each pack run the script's
    `preview apply-entries --pack <slug> --file <pack.yaml>`, and for each
-   string entry it returns under `prose`,
+   string entry — git's — it returns under `prose`,
    `/stackgen:tool-config preview <line> for <pack>`. Neither writes
    anything. Show the rows they return — conflict, drift and `needs-edit`
    rows included — under that pack, answered inside this one consent; the
@@ -391,7 +395,11 @@ to a repo, and every write it makes is consent-gated and committed once.
    `/stackgen:tool-config <line> for <pack>` with `answers=` last. The form
    is the skill's Consent section
    (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`), so the skill asks
-   no second time. A call it refuses is shown again. A `needs-edit` row the
+   no second time. A call it refuses is shown again — one refused because
+   the repo's mise config is untrusted, or because the formatter or the
+   hook runner is not installed, names its remedy (trust the path; run
+   `MISE_ENV=dev mise run setup:all`), which is the person's to take before
+   the call is re-run. A `needs-edit` row the
    script returns is made as that section says, before the commit. Update the
    lockfile, then commit as **one commit**
    via the repo's git workflow (the vwf
@@ -435,9 +443,15 @@ to a repo, and every write it makes is consent-gated and committed once.
 - **The lockfile is the ownership boundary** — sync diffs against it, and
   paths outside it are invisible to every stackgen write path.
 - **A pack dropped from a composition takes its tool-config blocks with
-  it.** Once for each tool its `tool-config:` list called: for mise, the
-  script's `mise remove --for <pack>` (previewed, then answered like any
-  call); for every other tool, `/stackgen:tool-config <tool> remove <pack>`.
+  it.** Once for each tool its `tool-config:` list called: for a scripted
+  tool — mise, dprint, pre-commit, grype — the script's
+  `<tool> remove --for <pack>`, and for an `all` entry
+  `all remove --for <pack>`, which is `remove` on dprint, pre-commit and
+  gitleaks at once — every block and key the pack holds in those three,
+  its plugins and hooks as well as its excludes, so a pack with an `all`
+  entry needs no separate dprint or pre-commit removal (each previewed,
+  then answered like any call); for git,
+  `/stackgen:tool-config git remove <pack>`.
 - **Four targets, and nothing else.** Inside `.claude/`, nothing lands
   outside the output vocabulary. Outside `.claude/` but inside the repo,
   there are exactly two: `.mcp.json`, and the repo config files a

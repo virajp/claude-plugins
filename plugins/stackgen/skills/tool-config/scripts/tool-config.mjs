@@ -17,21 +17,40 @@
 //   expected(ctx, {path, record, text})
 //                           → {whole} | {blocks: {<req>: lines | lines[]}, normalize?(req, line)}
 //
-// `remove` is the engine's unless the module defines it. An op is one of:
+// `remove` is the engine's unless the module defines it. The cross-tool verbs
+// (`all add-exclude`) are the module registered as `all`, which lands no base.
+// An op is one of:
 //
 //   {op: "block", path, requester, body, region?, comment?, sort?, list?, frame?, drift?}
 //   {op: "entry", path, requester, line, key?, region?, comment?, sort?, list?, frame?}
-//   {op: "whole", path, content, mode?, drift?, force?}
+//   {op: "whole", path, content, mode?, drift?, force?, ifUnchanged?}
+//
+// `ifUnchanged` guards a whole write a row replays later: the sha256 of the
+// file as the module read it (ctx.read; null for an absent file). When the
+// file reads otherwise by the time the op applies — another op in the same
+// call wrote it — the call is refused, never clobbered.
 //   {op: "user-line", path, line, match, region?, frame?}
 //   {op: "drop-lines", path, match, requester?}
 //   {op: "delete", path}
-//   {op: "remove", requester}
+//   {op: "remove", requester, tools?}   tools: the files of these tools, not the caller's
+//   {op: "record", path, fields: {keys?, shares?, templates?}}
+//
+// `record` sets those lock-record maps for a path the call leaves in place —
+// each given map replaces the field whole, an empty one drops it — and a
+// change shows as a row like any write (kind `record`, or `share` when only
+// `shares` moved). A module never mutates ctx.record() itself.
 //
 // A path another source's lock entry names is left alone, unless the op
 // carries `supersedes: <that exact source>` (ctx.source(path)); a path the
 // call deletes or takes over loses that entry.
 //
 // A row a module raises carries `effects: {<answer>: ops | "needs-edit"}`.
+//
+// A call that writes then runs, in order: on `all`, `MISE_ENV=dev mise run
+// setup:all`; the formatter over every file it wrote, when the repo has
+// `.config/dprint.json`; `pre-commit validate-config` when it wrote the hook
+// config; and only then records the hashes. Every tool runs as `mise x --
+// <tool>` (lib/run.mjs); a module reaches it as `ctx.runTool(tool, args)`.
 
 import { spawnSync } from "node:child_process";
 import {
@@ -47,7 +66,6 @@ import {
   writeFileSync,
 } from "node:fs";
 import {
-  delimiter,
   dirname,
   join,
   relative,
@@ -87,6 +105,12 @@ import {
   RefusalError,
 } from "./lib/rows.mjs";
 import {
+  MISSING_MISE,
+  onPath,
+  Runner,
+} from "./lib/run.mjs";
+import {
+  entryFlag,
   parseMachineEnv,
   parseToolConfigList,
   readPack,
@@ -94,6 +118,12 @@ import {
 } from "./lib/schema.mjs";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
+
+/** The lock-record maps a `record` op sets and fileRows diffs. */
+const RECORD_FIELDS = ["keys", "shares", "templates"];
+
+const DPRINT_CONFIG = ".config/dprint.json";
+const HOOK_CONFIG = ".config/pre-commit-config.yaml";
 
 /** SKILL.md's table order — `all` lands the tools in it. */
 const TOOL_ORDER = [
@@ -106,9 +136,6 @@ const TOOL_ORDER = [
   "graphify",
   "renovate",
 ];
-
-const MISSING_MISE =
-  "mise is not on PATH — install mise (https://mise.jdx.dev), then re-run.";
 
 // --- the workspace: the repo as the call would leave it --------------------------
 
@@ -281,14 +308,37 @@ class Workspace {
     }
   }
 
-  commit(version) {
-    this.settleRecords(version);
+  /** The paths this call will write (not delete), before any is written. */
+  pending() {
+    return this.order.filter(p => {
+      const text = this.files.get(p);
+      return typeof text === "string"
+        && (this.disk(p) !== text || this.modes.has(p));
+    });
+  }
+
+  /**
+   * Write every touched file — no record yet. Returns what it wrote and
+   * deleted, and `restore()`, which puts each touched path back byte for byte.
+   */
+  writeFiles() {
     const written = [];
     const deleted = [];
     // every path is held to safe() before the first byte is written
     const targets = new Map(
       [...this.order, LOCK_PATH].map(p => [p, this.safe(p)]),
     );
+    this.targets = targets;
+    const before = new Map();
+    for (const path of this.order) {
+      const abs = targets.get(path);
+      before.set(
+        path,
+        existsSync(abs) && statSync(abs).isFile()
+          ? { bytes: readFileSync(abs), mode: statSync(abs).mode & 0o777 }
+          : null,
+      );
+    }
     for (const path of this.order) {
       const text = this.files.get(path);
       const abs = targets.get(path);
@@ -311,15 +361,38 @@ class Workspace {
         written.push(path);
       }
     }
+    const restore = () => {
+      for (const [path, was] of before) {
+        const abs = targets.get(path);
+        if (was === null) {
+          rmSync(abs, { force: true });
+          continue;
+        }
+        mkdirSync(dirname(abs), { recursive: true });
+        writeFileSync(abs, was.bytes);
+        chmodSync(abs, was.mode);
+      }
+    };
+    return { written, deleted, restore };
+  }
+
+  /** Take a written file's text back from the disk — the formatter's output, which the hash records. */
+  adopt(path) {
+    this.files.set(path, this.disk(path));
+  }
+
+  /** Record every touched path's hash and requesters, and write the lock. */
+  writeLock(version) {
+    this.settleRecords(version);
     const lock = this.lock.write();
     if (
       lock !== this.lockText
       && (this.lockText !== null || this.lock.entries.size)
     ) {
-      mkdirSync(dirname(targets.get(LOCK_PATH)), { recursive: true });
-      writeFileSync(targets.get(LOCK_PATH), lock);
+      const abs = this.targets?.get(LOCK_PATH) ?? this.safe(LOCK_PATH);
+      mkdirSync(dirname(abs), { recursive: true });
+      writeFileSync(abs, lock);
     }
-    return { written, deleted };
   }
 }
 
@@ -380,6 +453,9 @@ function applyOp(ws, op, tool, mode, rows, notes) {
           ws.write(op.path, next, tool);
         }
       }
+      else {
+        claim(ws, op.path, tool);
+      }
       return;
     }
     case "entry": {
@@ -414,10 +490,19 @@ function applyOp(ws, op, tool, mode, rows, notes) {
       return;
     }
     case "whole": {
+      if (
+        op.ifUnchanged !== undefined
+        && (current === null ? null : sha256(current)) !== op.ifUnchanged
+      ) {
+        throw new RefusalError(
+          `${op.path} changed since ${tool} read it, earlier in this call — its whole-file write would discard that change; run the call that conflicts on its own`,
+        );
+      }
       if (current === op.content) {
         if (op.mode && ws.record(op.path)?.mode !== op.mode) {
           ws.write(op.path, op.content, tool, op.mode);
         }
+        claim(ws, op.path, tool);
         return;
       }
       if (mode === "plan" && current !== null && !op.force) {
@@ -487,9 +572,31 @@ function applyOp(ws, op, tool, mode, rows, notes) {
       }
       return;
     }
+    case "record": {
+      let rec = ws.record(op.path);
+      if (!rec) {
+        rec = { path: op.path, source: `tool-config/${tool}@pending` };
+        ws.lock.entries.set(op.path, rec);
+      }
+      for (const field of RECORD_FIELDS) {
+        const map = op.fields?.[field];
+        if (map === undefined) {
+          continue;
+        }
+        if (map && Object.keys(map).length) {
+          rec[field] = structuredClone(map);
+        }
+        else {
+          delete rec[field];
+        }
+      }
+      ws.touch(op.path, tool);
+      return;
+    }
     case "remove": {
+      const owners = op.tools ?? [tool];
       for (const rec of [...ws.lock.entries.values()]) {
-        if (sourceTool(rec) !== tool) {
+        if (!owners.includes(sourceTool(rec))) {
           continue;
         }
         const sharer = Object.values(rec.shares ?? {}).some(h =>
@@ -523,6 +630,17 @@ function applyOp(ws, op, tool, mode, rows, notes) {
   }
 }
 
+/**
+ * A file already exactly as the op would write it, yet carrying no record —
+ * left by a call that wrote and then stopped (a failed setup:all) — is
+ * recorded by this call, so a later requester call finds its record.
+ */
+function claim(ws, path, tool) {
+  if (ws.read(path) !== null && ws.sourceOf(path) === null) {
+    ws.touch(path, tool);
+  }
+}
+
 /** One count-aware line difference: what `after` adds and drops against `before`. */
 function lineDiff(before, after) {
   const count = new Map();
@@ -548,11 +666,14 @@ function fileRows(ws) {
   for (const path of ws.order) {
     const before = ws.disk(path);
     const after = ws.read(path);
-    const shares = r => JSON.stringify(r?.shares ?? {});
-    const sharesChanged = shares(ws.base.get(path)) !== shares(ws.record(path));
+    const field = (r, f) => JSON.stringify(r?.[f] ?? {});
+    const moved = RECORD_FIELDS.filter(f =>
+      field(ws.base.get(path), f) !== field(ws.record(path), f)
+    );
+    const sharesChanged = moved.includes("shares");
     const modeChanged = ws.modes.has(path)
       && ws.base.get(path)?.mode !== ws.modes.get(path);
-    if (before === after && !sharesChanged && !modeChanged) {
+    if (before === after && !moved.length && !modeChanged) {
       continue;
     }
     const short = t => (t === null ? null : sha256(t).slice(0, 12));
@@ -564,7 +685,11 @@ function fileRows(ws) {
       row.kind = "delete";
     }
     else {
-      row.kind = before === after && sharesChanged ? "share" : "write";
+      row.kind = before !== after || modeChanged
+        ? "write"
+        : moved.length === 1 && sharesChanged
+        ? "share"
+        : "record";
     }
     if (before !== null && after !== null && before !== after) {
       Object.assign(
@@ -591,8 +716,8 @@ function fileRows(ws) {
         // an unreadable file shows its lines only
       }
     }
-    if (sharesChanged) {
-      row.shares = ws.record(path)?.shares ?? {};
+    for (const f of moved) {
+      row[f] = ws.record(path)?.[f] ?? {};
     }
     rows.push(row);
   }
@@ -621,17 +746,6 @@ async function loadTools() {
     tools[name] = mod.default ?? mod;
   }
   return tools;
-}
-
-function onPath(bin, path = process.env.PATH ?? "") {
-  return path.split(delimiter).some(dir => {
-    try {
-      return dir && statSync(join(dir, bin)).isFile();
-    }
-    catch {
-      return false;
-    }
-  });
 }
 
 function walkFiles(dir) {
@@ -678,6 +792,7 @@ function contextFor(tool, ws, env) {
     listAssets: () => walkFiles(assetsDir),
     exec: (cmd, args, opts = {}) =>
       spawnSync(cmd, args, { cwd: env.repoRoot, encoding: "utf8", ...opts }),
+    runTool: (name, args) => env.runner.tool(name, args),
     pack: slug => readPack(env.pluginRoot, slug),
     machineEnv: slug => parseMachineEnv(readPack(env.pluginRoot, slug) ?? ""),
     env: process.env,
@@ -696,7 +811,7 @@ function resolveCalls(call, tools) {
   if (call.command === "all") {
     const names = [
       ...TOOL_ORDER,
-      ...Object.keys(tools).filter(t => !TOOL_ORDER.includes(t)),
+      ...Object.keys(tools).filter(t => !TOOL_ORDER.includes(t) && t !== "all"),
     ];
     for (const tool of names) {
       if (tools[tool]?.all) {
@@ -729,7 +844,7 @@ function resolveCalls(call, tools) {
           tool,
           verb,
           flags: Object.fromEntries(
-            Object.entries(flags).map(([k, v]) => [k, String(v)]),
+            Object.entries(flags).map(([k, v]) => [k, entryFlag(v)]),
           ),
           for: call.flags.pack,
         });
@@ -820,6 +935,82 @@ function signatureOf(call, env) {
   );
 }
 
+// --- landing -----------------------------------------------------------------------------
+
+/**
+ * Write the call's files, then — on `all` — `MISE_ENV=dev mise run setup:all`,
+ * then the formatter over every file written, then `pre-commit
+ * validate-config` when the hook config was written, and only then the
+ * hashes. A tool a step needs and the repo has not installed refuses before
+ * the first byte (on `all`, after setup:all has had its chance). A setup:all
+ * failure leaves the files written and records nothing; a formatter or
+ * validate failure puts every file back byte for byte.
+ */
+function land(ws, env, all) {
+  const runner = env.runner;
+  const pending = ws.pending();
+  const formats = pending.length > 0 && ws.read(DPRINT_CONFIG) !== null;
+  const validates = pending.includes(HOOK_CONFIG);
+  if (!all) {
+    if (formats) {
+      runner.ensure("dprint");
+    }
+    if (validates) {
+      runner.ensure("pre-commit");
+    }
+  }
+  const { written, deleted, restore } = ws.writeFiles();
+  if (all) {
+    const kept = (why, output) =>
+      new RefusalError(
+        `${why} — the files this call wrote stay, and nothing is recorded; re-run all once it passes${
+          output ? `:\n${output}` : ""
+        }`,
+        undefined,
+        { written, deleted },
+      );
+    try {
+      runner.trust();
+    }
+    catch (e) {
+      throw e instanceof RefusalError ? kept(e.message) : e;
+    }
+    const setup = runner.setupAll();
+    if (!setup.ok) {
+      throw kept("MISE_ENV=dev mise run setup:all failed", setup.output);
+    }
+  }
+  try {
+    const files = written.filter(p => ws.read(p) !== null);
+    if (formats && files.length) {
+      runner.tool("dprint", [
+        "fmt",
+        "--config",
+        DPRINT_CONFIG,
+        "--allow-no-files",
+        ...files,
+      ]);
+      for (const p of files) {
+        ws.adopt(p);
+      }
+    }
+    if (validates) {
+      runner.tool("pre-commit", ["validate-config", HOOK_CONFIG]);
+    }
+  }
+  catch (e) {
+    restore();
+    if (e instanceof RefusalError) {
+      throw new RefusalError(
+        `${e.message}\nevery file this call wrote is back as it was; nothing is recorded`,
+      );
+    }
+    throw e;
+  }
+  ws.writeLock(env.version);
+  return { written, deleted };
+}
+
 // --- main ------------------------------------------------------------------------------
 
 function repoRootOf(given) {
@@ -849,6 +1040,7 @@ async function run(argv) {
       )
       .version,
   };
+  env.runner = new Runner(env.repoRoot);
   const tools = await loadTools();
   const ws = new Workspace(env.repoRoot);
   // one context per tool per call, so a module's per-context memo holds
@@ -883,6 +1075,8 @@ async function run(argv) {
   if (needsMise(calls, tools) && !onPath("mise")) {
     throw new RefusalError(MISSING_MISE);
   }
+  // trust is the person's to grant beforehand; an untrusted config stops here
+  env.runner.trust();
 
   const raised = [];
   const notes = [];
@@ -954,7 +1148,7 @@ async function run(argv) {
       }
     }
   }
-  const { written, deleted } = ws.commit(env.version);
+  const { written, deleted } = land(ws, env, call.command === "all");
   store.drop(signature);
   return {
     written,
@@ -974,6 +1168,7 @@ catch (e) {
     const body = {
       error: e.message,
       ...(e.rows && { rows: e.rows.map(publicRow) }),
+      ...e.extra,
     };
     process.stdout.write(JSON.stringify(body, null, 2) + "\n");
     process.exitCode = 2;

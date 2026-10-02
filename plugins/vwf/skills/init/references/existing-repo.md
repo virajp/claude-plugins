@@ -157,8 +157,10 @@ same trap: with the key gone, the owner's pinned plugin list defines the file
 set, so files the repo had kept out of the gate by omission now enter it. The
 survey re-derives the covered set after the drop, the plan lists every file
 that newly enters, and each is narrowed away with an **exclusion** —
-`/stackgen:tool-config all add exclude <paths>`, on the one consent — never by
-restoring the dropped key, which puts the fatal diagnostic back.
+`/stackgen:tool-config all add-exclude --paths <p>,…`, on the one consent
+— a directory written with a trailing `/` (a glob one too, `*.xcassets/`),
+a bare `*`/`?` pattern a file glob — never by restoring the dropped key,
+which puts the fatal diagnostic back.
 
 Tell the two apart by content, never by name: the stand-in is the file its
 owner ships, byte for byte, and the survey has that file in hand. Anything
@@ -257,12 +259,13 @@ diverged file, and switching it silently is how a team's existing hooks stop
 running the morning after a reshape.
 
 - **keep** — the gate-first commit below runs under the **installed** hooks,
-  and this run does **not** invoke `setup:precommit`. The plan says so, and
-  the report names the manager it found and that the shipped gate
-  configuration is landed but not wired. Where the aggregator offer of
-  [new repo](new-repo.md) §10 is then accepted, the task it reaches refuses
-  the foreign manager without `--force` and names it — so nothing switches by
-  that route either.
+  and this run does **not** invoke `setup:precommit --force`. The plan says
+  so, and the report names the manager it found and that the shipped gate
+  configuration is landed but not wired. **Open question:** §2's call runs
+  `setup:all` ([new repo](new-repo.md) §2), which runs `setup:precommit`
+  without `--force`; that task exits 1 on the foreign manager, so on keep the
+  call is always refused — its files kept, nothing recorded, reported under
+  Deferred. How keep should complete is not yet decided.
 - **switch** — the run invokes **`setup:precommit --force`**, the task
   library's flag for exactly this, which unsets the local `core.hooksPath`
   and takes the hooks over — as its **last shaping step**, after every other
@@ -271,7 +274,8 @@ running the morning after a reshape.
   by-hand line, repeated under Deferred.
 
 No hit, and the row is not printed: the hooks are the gate's already, or not
-wired yet, and the aggregator is what wires them as on any repo.
+wired yet, and the aggregator `/stackgen:tool-config all` runs is what wires
+them, as on any repo.
 
 ### 2 — The readme
 
@@ -956,7 +960,9 @@ repo of the set that resolved to mode `blank` or `source` takes the
   `ok` for each create, write, fold, move or delete row, the user's pick
   for each conflict or drift row — per [new repo](new-repo.md) §2, so the
   skill asks nothing. It lands the toolchain files and the gates, and folds
-  the old ones, per pass 1's toolchain migration.
+  the old ones, per pass 1's toolchain migration; then it runs
+  `MISE_ENV=dev mise run setup:all` and formats and validates what it wrote,
+  on the trust the survey checked.
   `_scripts/local` is written **before** it, since the call replaces the
   helper file.
 - **Creates** are `init`'s hygiene assets, copied as
@@ -976,11 +982,11 @@ repo of the set that resolved to mode `blank` or `source` takes the
   provider, by the slug question 4 confirmed), **§4** (the three
   placeholders, across every landed *and replaced* file), **§8** (the readme
   stub, the licence and the security file — on this pipeline each is nearly
-  always the *already there* case and is reported as kept), **§9** (the two
-  bootstrap steps, the trust step first) and **§10** (the aggregator offer),
-  in that order and **exactly as that file states them** — read there, not
-  restated here. They were the new-repo landing's alone, and the questions
-  that feed them were asked in every mode all along; a shaped repo that
+  always the *already there* case and is reported as kept) and **§9** (the
+  executable-bit step; trust was checked in the survey, and §2's call ran the
+  aggregator), in that order and **exactly as that file states them** —
+  read there, not restated here. They were the new-repo landing's alone,
+  and the questions that feed them were asked in every mode all along; a shaped repo that
   answered them and had nothing run on the answers was the hole. The fill
   passes below run after §4 so a placeholder and a marked position never
   race for one line.

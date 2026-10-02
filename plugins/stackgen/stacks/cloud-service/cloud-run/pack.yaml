@@ -21,4 +21,4 @@ harness:
       services. You are testing your process, not the platform
 # The lines this pack asks /stackgen:tool-config for.
 tool-config:
-  - dprint add plugin dockerfile
+  - { tool: dprint, verb: add-plugin, name: dockerfile }

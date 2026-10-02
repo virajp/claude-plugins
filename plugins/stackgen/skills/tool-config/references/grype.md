@@ -14,6 +14,16 @@ lock record — is [the skill's](../SKILL.md); what follows is grype's own. The
 file it lands is under `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/grype/`,
 laid out as it lands under the repo root.
 
+**grype is scripted.** `tool-config.mjs` — [run as the skill
+says](../SKILL.md#running-the-script) — lands the file, writes and removes
+each ignore entry, and raises the drift and migration rows. Your part is
+relaying its rows, helping the person word an ignore's `--reason` — the one
+part of an entry the script cannot judge
+([the bar](#an-entry-clears-a-bar)) — and the one change it hands back, an
+`ignore:` list it cannot read, a `needs-edit` row: make it a block sequence
+of `- vulnerability:` entries, or `ignore: []`, then re-run the same call's
+`preview` and finish with `check`.
+
 ## 1. What `all` lands
 
 | Landed               | As                                                  |
@@ -36,33 +46,55 @@ file is the home of the decision, and the two move together or not at all.
 
 ## 2. The verbs
 
-| Instruction                    | Writes to                        |
-| ------------------------------ | -------------------------------- |
-| `add ignore <id> [reason]`     | `.config/grype.yaml` — `ignore:` |
-| `remove ignore <id>`           | `.config/grype.yaml` — `ignore:` |
-| `remove <requester>`           | its block in `.config/grype.yaml` |
+| Call                                                                                     | Writes to                         |
+| ---------------------------------------------------------------------------------------- | --------------------------------- |
+| `grype add-ignore --id <id> --package <name@version> --reason <text> --expires <date>`   | `.config/grype.yaml` — `ignore:`  |
+| `grype remove-ignore --id <id>`                                                          | `.config/grype.yaml` — `ignore:`  |
+| `grype remove --for <requester>`                                                         | its block in `.config/grype.yaml` |
 
-**`add ignore <id> [reason]`** writes `- vulnerability: <id>` with the reason
-as a `#` comment directly above it, so the two are one entry. `<id>` is an
-advisory id — `CVE-…`, `GHSA-…` — letters, digits and `-`; the reason is the
-rest of the line, quoted when it holds a quote. `ignore: []` becomes a block
-sequence on the first entry and returns to `[]` when the last goes. With a
-`for` it lands in the requester's block; with none it is the user's line — the
-common case, since an ignore is a person's judgement about one finding.
-The same id already ignored anywhere in the list writes nothing and says where.
+**`add-ignore`** takes all four flags, each required — the call is refused
+without one:
 
-**`remove ignore <id>`** deletes that entry and its comment, whichever block or
-user line holds it, on the row's approval. An id the list does not hold is
-refused.
+- **`--id`** — the advisory id, `CVE-…`, `GHSA-…`: letters, digits and `-`;
+- **`--package`** — the package and version it matches, `<name>@<version>`
+  (`@scope/name@1.2.3` for a scoped npm package);
+- **`--reason`** — why it does not apply here, one line;
+- **`--expires`** — the re-check date, `YYYY-MM-DD`, a real calendar day.
 
-**An entry clears a bar, and the reason says how.** Four things, in the
-comment: the vulnerability by id; the package and version it matches; why it
-does not apply here — a reachability argument, not a severity opinion; and what
-makes it expire — a re-check date or the upstream release that fixes it. An
-ignore with no expiry is a permanent silence nobody re-reads, still covering a
-fix that shipped a year ago; the expiry is what turns the list back into a
-queue. A reason missing any of the four is shown in the row as such before it
-is approved.
+It writes the four as `#` comment lines directly above
+`- vulnerability: <id>`, so they are one entry:
+
+```yaml
+ignore:
+  # id: GHSA-xxxx-xxxx-xxxx
+  # package: example@1.2.3
+  # reason: only the CLI entry point imports it, and the CLI is not shipped
+  # expires: 2026-12-31
+  - vulnerability: GHSA-xxxx-xxxx-xxxx
+```
+
+`ignore: []` becomes a block sequence on the first entry and returns to `[]`
+when the last goes. With a `--for` it lands in the requester's block; with
+none it is the user's line — the common case, since an ignore is a person's
+judgement about one finding. The same id already ignored anywhere in the
+list writes nothing and says where.
+
+**`remove-ignore --id <id>`** deletes that entry and its comment lines,
+whichever block or user line holds it, on the row's approval. An id the list
+does not hold is refused. A requester is not named: the id is enough.
+
+### An entry clears a bar
+
+The four flags are the bar, and the script holds the shape of three: the id,
+the `<name>@<version>` and the date. **The reason is yours to help word**,
+since no pattern can judge it: why the finding does not apply here — a
+reachability argument, not a severity opinion ("not reachable: only the dev
+server imports it", never "low risk"). And the expiry is what makes it a
+queue rather than a silence — the date the person will re-check, or the day
+after the upstream release that fixes it is due. An ignore with no expiry is
+a permanent silence nobody re-reads, still covering a fix that shipped a
+year ago. Ask the person for any of the four they did not give; never
+invent one.
 
 **Scope an ignore to the finding, never to the package.** Ignoring the package
 means the next, unrelated advisory against it arrives silently. Prefer
@@ -72,7 +104,7 @@ upgrading; ignore only when there is genuinely nothing to upgrade to.
 
 ```sh
 mise run code:sec     # grype dir:. --config .config/grype.yaml --fail-on medium, plus gitleaks
-grype <image>:<tag>   # the built artifact, before release
+mise x -- grype <image>:<tag> --config .config/grype.yaml   # the built artifact, before release
 ```
 
 **There is no hook for grype.** It reaches the commit gate only through
@@ -81,8 +113,8 @@ scan and CI; remove the task and nothing runs it.
 
 **A baseline on an existing repo.** A never-scanned tree rarely clears
 `medium` on its first run. Run `mise run code:sec`; for each finding, upgrade
-the dependency where an upgrade exists, and where none does,
-`add ignore <id> <reason>`; re-run until green. The threshold stays `medium` —
+the dependency where an upgrade exists, and where none does, `add-ignore`
+with its four flags; re-run until green. The threshold stays `medium` —
 lowering it to clear the first scan is the permanent silence the ignore list
 exists to avoid.
 
@@ -96,6 +128,10 @@ their supply-chain settings, are the language pack's.
 ## 4. The migration
 
 `all` on a repo the retired grype gate pack shaped keeps every ignore entry as
-the user's own, re-records the lockfile entry as `tool-config/grype@<version>`,
+the user's own, whatever its comment says — an older entry without the four
+lines stays as it is until a person removes it and adds it again — names
+in a `needs-edit` row any line of the old file the rewrite does not carry,
+to re-add where the layout keeps it, re-records
+the lockfile entry as `tool-config/grype@<version>`,
 and deletes the repo-local grype skill under `.claude/skills/grype/` where it
 still matches its record, keeping and reporting it where it does not.
