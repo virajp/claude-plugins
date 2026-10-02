@@ -46,7 +46,8 @@ marketplace_registered() { # <name>
     jq -e --arg name "$1" 'any(.[]; .name == $name)' >/dev/null
 }
 
-# A pack's plugin: nothing when installed at either scope, else installed at user scope.
+# A pack's plugin: nothing when installed at user scope, or at local or project scope
+# whose projectPath resolves to this repo's root; else installed at user scope.
 ensure_plugin() { # <name@marketplace> <source>
   if plugin_installed "$1"; then
     print_yellow "- $1: installed"
