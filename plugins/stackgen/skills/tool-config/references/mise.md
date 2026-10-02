@@ -340,7 +340,8 @@ picked no stack is supposed to see it.
 still hashes to its lock record, a later `all` with a newer stackgen
 replaces it with a plain `write` row; only a file edited by hand since it was
 landed raises a drift row. **Save `setup/ai`**: edited by hand, it is the
-repo's own and raises no row — the note and `hash: none` instead
+repo's own and raises no row — the note, and its entry's `hash: none`,
+instead
 ([greenfield and brownfield](#setupai--the-repos-agent-plugins)).
 
 **Every file is formatted before it is recorded.** Once a call has written
@@ -569,8 +570,8 @@ not ask again.
 
 **`add-plugin`** asks for an agent plugin a pack needs. It is a pack's call:
 `--for` is required. `--plugin` is `<name>@<marketplace>` and `--source` the
-marketplace's source, an `<owner>/<repo>` or a path (`./`, `../`, `~/` or
-`/`-rooted); each name, owner and repo starts with a letter or digit, so
+marketplace's source, an `<owner>/<repo>` or a path starting with `/`, `./`
+or `../`; each name, owner and repo starts with a letter or digit, so
 none reaches `claude` as an option, and anything else in either — a space, a
 quote, a `$` or any other shell character — is refused, since both are
 written into a shell line. As a
@@ -1027,16 +1028,17 @@ anything at project scope.
    resolves this repo's project scope.
 3. **Check for the workflow plugin** — the `mise` block, `# >>> mise` to
    `# <<< mise`. Read `claude plugin list --json`. When
-   `vwf@virajp-plugins` is installed at **user** scope, or at **project**
-   scope with a `projectPath` that is this repo's root (`pwd -P`), do nothing
-   more for it — either serves the repo; a project-scope row for another repo
-   does not count. When it is at neither, run
+   `vwf@virajp-plugins` is installed at **user** scope, or at **local** or
+   **project** scope with a `projectPath` that resolves — `cd` then
+   `pwd -P` — to this repo's root, do nothing more for it: any of these serves the repo.
+   A row for another repo, or whose `projectPath` does not resolve, is
+   skipped. When it is at none of them, run
    `pnpx @virajp.dev/claude-plugins@latest --all`: the installer registers the
    marketplace and installs vwf, and its dependency stackgen, at **user**
    scope. `@latest` is deliberate — a bare name can replay a cached old
    version, an exact one would need a bump every release. With no `pnpx` on
-   `PATH` it warns, naming that command as the remedy. Whether or not it
-   installed, the task goes on.
+   `PATH` it warns, naming that command as the remedy; a failed installer
+   warns the same way. Whether or not it installed, the task goes on.
 4. **The pack plugins** — one block per requester, after the `mise` block
    and before step 5, each line one plugin, checked the same way.
 5. **Update every marketplace** — `claude plugin marketplace update`, no name,
@@ -1044,11 +1046,15 @@ anything at project scope.
    from. A failed update warns and the task goes on, updating plugins from
    what is cached.
 6. **Upgrade every installed plugin at its own scope** — for each row of
-   `claude plugin list --json` that counts in step 3 — user scope, or project
-   scope for this repo's root —
-   `claude plugin update --scope <its scope> <id>`.
+   `claude plugin list --json` that counts in step 3,
+   `claude plugin update --scope <its scope> <id>`. A failed update warns and
+   the task moves to the next row; OK prints only on success.
 7. **Prune** — `claude plugin autoremove --scope project --yes`, which drops
-   a project-scope dependency nothing needs any more.
+   a project-scope dependency nothing needs any more. A failed prune warns
+   and the task still finishes.
+
+No `claude` call in steps 3, 5, 6 or 7 aborts the task: each failure warns
+and the run goes on.
 
 A plugin that arrives as another's declared dependency is never checked or
 installed by name: the CLI resolves it. The task installs no plugin of the
@@ -1069,8 +1075,8 @@ ensure_plugin "<name>@<marketplace>" "<source>"
 ```
 
 `remove --for <requester>` drops the block. `ensure_plugin`, defined in the
-task above the `mise` block, treats each the same as vwf: installed at user
-scope, or at project scope for this repo's root, nothing; else, when the
+task above the `mise` block, treats each the same as vwf: installed at a
+scope that counts in step 3, nothing; else, when the
 marketplace is not registered,
 `claude plugin marketplace add <source>`, then
 `claude plugin install --scope user <plugin>`.
@@ -1082,8 +1088,9 @@ is claimed. One tool-config landed and nobody edited — its record's hash
 still matching — takes the newer shipped task like any landed file, an
 older-era task included. Any other — recorded but edited by hand, or
 unrecorded and different from the shipped task — is the repo's own:
-tool-config never overwrites it and never checks it for drift, and its lock
-entry keeps `hash: none`, so it stays the repo's on every later run. Only
+tool-config never overwrites it and never checks it for drift. An unrecorded
+one gets no lock entry; a recorded one keeps its entry with `hash: none`, so
+it stays the repo's on every later run. Only
 [`add-plugin`](#4-the-verbs) writes into it, and only inside a pack's block
 when it carries a `mise` block. Each run returns one note instead:
 

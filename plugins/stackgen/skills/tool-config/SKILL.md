@@ -560,8 +560,8 @@ entries:
 the file as written — after the formatter, so the bytes a later
 `dprint check` sees — for the callers that test a repo's shape —
 `/vwf:doctor` and `/vwf:init` — and is re-recorded on every write; the drift
-test never reads it. A `setup/ai` that is the repo's own keeps its entry
-with `hash: none`
+test never reads it. A landed `setup/ai` edited by hand becomes the repo's
+own and keeps its entry with `hash: none`
 ([mise's](references/mise.md#setupai--the-repos-agent-plugins)).
 A JSON file's entry carries `keys:` in place of
 `blocks:`, one list per requester, an exclude spelled as dprint holds it.
