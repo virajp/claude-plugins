@@ -27,6 +27,10 @@
 //   {op: "delete", path}
 //   {op: "remove", requester}
 //
+// A path another source's lock entry names is left alone, unless the op
+// carries `supersedes: <that exact source>` (ctx.source(path)); a path the
+// call deletes or takes over loses that entry.
+//
 // A row a module raises carries `effects: {<answer>: ops | "needs-edit"}`.
 
 import { spawnSync } from "node:child_process";
@@ -155,6 +159,11 @@ class Workspace {
     return this.lock.entries.get(path) ?? null;
   }
 
+  /** The source any lock entry names for a path — tool-config's or another's — or null. */
+  sourceOf(path) {
+    return this.record(path)?.source ?? this.lock.foreign.get(path) ?? null;
+  }
+
   /** Repo-relative files under `dir`, as the call would leave them. */
   list(dir) {
     const out = new Set();
@@ -198,8 +207,10 @@ class Workspace {
       const entries = this.lock.entries;
       if (text === null) {
         entries.delete(path);
+        this.lock.drop(path);
         continue;
       }
+      this.lock.drop(path);
       const prev = entries.get(path);
       const tool = (prev && sourceTool(prev)) ?? this.owner.get(path);
       const rec = prev ?? { path };
@@ -290,9 +301,13 @@ function regionBodies(text, op) {
  */
 function applyOp(ws, op, tool, mode, rows, notes) {
   if (op.path) {
-    const rec = ws.record(op.path);
-    if (rec && !isToolConfig(rec)) {
-      notes.push(`${op.path} is ${rec.source}'s — left alone`);
+    // Another source's path is never written — unless the op names exactly
+    // that source in `supersedes`, taking the path over (a fold's delete).
+    const source = ws.sourceOf(op.path);
+    if (
+      source !== null && !isToolConfig({ source }) && op.supersedes !== source
+    ) {
+      notes.push(`${op.path} is ${source}'s — left alone`);
       return;
     }
   }
@@ -623,6 +638,7 @@ function contextFor(tool, ws, env) {
     exists: p => ws.read(p) !== null,
     list: dir => ws.list(dir),
     record: p => ws.record(p),
+    source: p => ws.sourceOf(p),
     records: () => [...ws.lock.entries.values()],
     assetsDir,
     asset: rel => readFileSync(join(assetsDir, rel), "utf8"),

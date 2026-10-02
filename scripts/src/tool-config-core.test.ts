@@ -53,6 +53,8 @@ export const tools = {
         requester: "optional",
       },
       resolve: { flags: {}, needsMise: true },
+      drop: { flags: { path: { required: true } } },
+      takeover: { flags: { path: { required: true } } },
     },
     all() {
       return {
@@ -81,6 +83,10 @@ export const tools = {
             body: [call.flags.key + " = " + ctx.tomlString(call.flags.value)],
           }],
         };
+      }
+      if (call.verb === "drop") return { ops: [{ op: "delete", path: call.flags.path }] };
+      if (call.verb === "takeover") {
+        return { ops: [{ op: "delete", path: call.flags.path, supersedes: ctx.source(call.flags.path) }] };
       }
       return { ops: [] };
     },
@@ -195,7 +201,7 @@ describe("argument refusals", () => {
     const { status, out } = run(["demo", "frobnicate"]);
     expect(status).toBe(2);
     expect(out.error).toMatch(
-      /valid: add, entry, set-env, resolve, remove, all/,
+      /valid: add, entry, set-env, resolve, drop, takeover, remove, all/,
     );
   });
 
@@ -553,6 +559,55 @@ describe("check", () => {
       kind: "needs-edit",
       file: "demo.toml",
     });
+  });
+});
+
+describe("another source's paths", () => {
+  const packLock = [
+    "entries:",
+    "  - path: demo.toml",
+    "    component: language/demo",
+    "    source: pack/language/demo@1.0.0",
+    "    hash: abc",
+    "  - path: frag.toml",
+    "    component: language/frag",
+    "    source: pack/language/frag@1.0.0",
+    "    hash: def",
+    "",
+  ]
+    .join("\n");
+  beforeEach(() => {
+    mkdirSync(join(repo, ".claude", "stackgen"), { recursive: true });
+    writeFileSync(join(repo, ".claude", "stackgen", "lock.yaml"), packLock);
+    writeFileSync(join(repo, "demo.toml"), "pack = 1\n");
+    writeFileSync(join(repo, "frag.toml"), "frag = 1\n");
+  });
+
+  it("never writes or deletes a path another source's entry names", () => {
+    const add = run([
+      "preview",
+      "demo",
+      "add",
+      "--line",
+      "a = 1",
+      "--for",
+      "pack-a",
+    ]);
+    expect(add.out.rows).toEqual([]);
+    expect(add.out["notes"]).toEqual([
+      "demo.toml is pack/language/demo@1.0.0's — left alone",
+    ]);
+    expect(run(["preview", "demo", "drop", "--path", "frag.toml"]).out.rows)
+      .toEqual([]);
+    expect(read("demo.toml")).toBe("pack = 1\n");
+    expect(lock()).toBe(packLock);
+  });
+
+  it("lets an op naming the exact source take the path over, and drops that entry", () => {
+    const res = apply(["demo", "takeover", "--path", "frag.toml"]);
+    expect(res.out.deleted).toEqual(["frag.toml"]);
+    expect(lock()).not.toContain("frag.toml");
+    expect(lock()).toContain("    source: pack/language/demo@1.0.0\n");
   });
 });
 

@@ -230,7 +230,18 @@ export function readLock(text) {
     }
   }
   const entries = new Map();
+  const foreign = new Map(); // path → source, for every other source's entry
+  const dropped = new Set();
   const order = [];
+  const field = (raw, key) => {
+    for (const l of raw) {
+      const m = new RegExp(`^\\s*-?\\s*${key}:\\s*(.*)$`).exec(l);
+      if (m) {
+        return String(parseScalar(m[1]));
+      }
+    }
+    return null;
+  };
   for (const item of items) {
     const isOurs = item.raw.some(l =>
       /^\s*-?\s*source:\s*tool-config\//.test(l)
@@ -241,18 +252,30 @@ export function readLock(text) {
       order.push({ path: e.path });
     }
     else {
-      order.push({ raw: item.raw });
+      const path = field(item.raw, "path");
+      if (path !== null) {
+        foreign.set(path, field(item.raw, "source"));
+      }
+      order.push({ raw: item.raw, path });
     }
   }
   return {
     entries,
+    foreign,
+    /** Drop another source's entry for a path the call deleted or took over. */
+    drop(path) {
+      dropped.add(path);
+      foreign.delete(path);
+    },
     /** The file's text with `entries` written back: kept in place, new ones appended, gone ones dropped. */
     write() {
       const seen = new Set();
       const body = [];
       for (const o of order) {
         if (o.raw) {
-          body.push(...o.raw);
+          if (!dropped.has(o.path) && !entries.has(o.path)) {
+            body.push(...o.raw);
+          }
         }
         else if (entries.has(o.path)) {
           body.push(...serializeItem(entries.get(o.path), itemIndent));
