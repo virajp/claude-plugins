@@ -5,7 +5,6 @@ exclude = [
   # >>> dprint
   "**/*.lock",
   "**/.claude/**",
-  "**/.config/mise/locks/**",
   "**/.git/**",
   "**/build/**",
   "**/dist/**",

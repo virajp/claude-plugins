@@ -1,3 +1,4 @@
+# Pins are exact versions, resolved when written; never run a bare "mise use".
 # Tools only the developer laptop needs (MISE_ENV=dev).
 
 [tools]

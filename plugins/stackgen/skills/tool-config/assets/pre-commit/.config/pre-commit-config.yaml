@@ -17,7 +17,6 @@ exclude: |-
   (?x)
   # >>> pre-commit
   (^|/)\.claude/
-  |(^|/)\.config/mise/locks/
   |(^|/)\.git/
   |(^|/)build/
   |(^|/)dist/

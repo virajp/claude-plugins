@@ -5,5 +5,5 @@ precommit = "mise run code:precommit"
 setup     = "mise run setup:all"
 worktrees = "mise run code:worktrees"
 
-# One alias per member repo, named by its slug:
+# A MARKED POSITION — MEMBER_ALIASES: one alias per member repo, named by its slug, below this comment:
 #   setup-<slug> = "mise run setup:all --<slug>"
