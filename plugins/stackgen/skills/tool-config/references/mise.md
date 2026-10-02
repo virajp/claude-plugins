@@ -153,7 +153,10 @@ every `all`.
 **`all` checks every pin its base block lands**, on a fresh repo and on a
 reshape alike, as `add-tool` does for one. A tool the base block pins that the
 repo already pins in any tools file is not written twice: it is a conflict row
-naming the file, the repo's line and the base's pin, resolved exact.
+naming the file, the repo's line and the base's line as it would be written —
+the pin resolved exact. A base env key or alias the repo already sets is the
+same row, its requested line rendered too: a marked position shows the value
+the call fills it with — the real `REPO_NAME`, not `"unfilled"`.
 `keep-existing` keeps the repo's version; `overwrite` takes the base's. The
 winner is pinned once — in `conf.d/tools.<env>.toml` when one environment
 needs it, in `conf.d/tools.toml` when several do — and the other pin is
@@ -541,7 +544,8 @@ entries never undo an upgrade; a prefix moves within itself
 (`mise latest <tool>@<prefix>`); `latest` takes `mise latest <tool>`. It
 returns **one row per pin that moved**, naming the file, whose pin it is,
 `from` and `to`; each is
-answered `ok` (written, in its own block or as the user's line) or `keep`.
+answered `ok` — the version replaced in place on the pin's own line, in its
+block or the user's, its comments kept — or `keep`.
 Pins that did not move show no row. It is refused outside dev — run it under
 `MISE_ENV=dev`. The installs follow with `mise install`. The ignore
 templates' recorded commits are not the script's yet: in the same consent
@@ -764,7 +768,7 @@ added to one and not the other is how the vocabularies drift.
 
 | Task                                                  | Does                                                                          |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `setup:all [--all] [--<slug>…]`                       | the bootstrap orchestrator — the order below; exits 1 when `MISE_ENV` is unset; `--<slug>` per member |
+| `setup:all [--all] [--<slug>…]`                       | the bootstrap orchestrator — the order below; exits 1 when `MISE_ENV` is unset; then `--<slug>` sets up that one member, `--all` every member, each in its own subshell |
 | `setup:mise`                                          | `mise reshim`, `mise doctor`, then `mise install` of the pinned versions; it moves no pin |
 | `setup:secrets`                                       | **slot** — the pinned secret manager's setup                                  |
 | `setup:external:{start,stop,pull}`                    | **slots** — local services; each a no-op outside a dev shell                  |
@@ -869,14 +873,14 @@ machine afterwards. It declares `#MISE depends=["init"]` and names no tool,
 only the tasks it calls in order:
 
 ```text
-setup:all  (--all recurses into every member)
+setup:all  (--all, or --<slug>, recurses into members)
   ├─ setup:mise            # reshim · doctor · install             (common)
   ├─ setup:secrets         # the pinned secret manager             (SLOT)
   ├─ setup:external:start  # local services                        (SLOT)
   ├─ setup:deps:all        # the package manager's five verbs      (SLOTS)
   ├─ setup:precommit       # install the hooks                     (common)
   ├─ setup:ai              # install and reconcile agent plugins   (common)
-  └─ <each member>         # only with --all
+  └─ <each member>         # --all, or that member's --<slug>
 ```
 
 **Keep it idempotent: re-running `setup:all` must converge, never error.** It
@@ -900,18 +904,23 @@ file still tracked.
 #### Member flags
 
 A repo with members gets **one flag per member repo** on top of `--all`
-([section 3](#3-the-marked-positions)). Each member runs its **own** task
-library, entered in a subshell — `(cd <member> && mise run setup:all)` — so
-mise reads the member's own `miserc.toml` and `MISE_ENV` variants, and a
-polyglot repo gets one library per project rather than one that knows every
-language. **A repo with
-no members has no flags beyond `--all`**, which is then a no-op — left in
-place because a caller passes it without knowing the repo's shape.
+([section 3](#3-the-marked-positions)). `--<slug>` sets up that one member,
+and the `setup-<slug>` alias is exactly `mise run setup:all --<slug>`;
+`--all` sets up every member. The task matches each member to its flag by
+the member folder's name, slugified the same way the script wrote the
+`MEMBER_FLAGS` and `MEMBER_ALIASES` lines, so the two never disagree. Each
+member runs its **own** task library, entered in a subshell with stdin
+closed — `(cd <member> && mise run setup:all </dev/null)` — so mise reads
+the member's own `miserc.toml` and `MISE_ENV` variants, a member's prompt
+cannot eat the member list, and a polyglot repo gets one library per project
+rather than one that knows every language. **A repo with no members has no
+flags beyond `--all`**, which is then a no-op — left in place because a
+caller passes it without knowing the repo's shape.
 
 **The member *list* is one function, `members()` in `_scripts/helpers`**, and
-every task that walks members calls it — `setup:all --all` and
-`code:worktrees`. It answers from `.gitmodules` when the members are
-submodules, and otherwise from the words of `MEMBERS`.
+every task that walks members calls it — `setup:all` with `--all` or a
+`--<slug>`, and `code:worktrees`. It answers from `.gitmodules` when the
+members are submodules, and otherwise from the words of `MEMBERS`.
 
 #### `setup/deps/*` — the package manager, and only that
 
