@@ -1,5 +1,5 @@
 // Every tool the script runs, it runs through mise, in the repo root: a tool
-// only ever as `mise x -- <tool> …`, the version the repo's config pins —
+// only ever as `MISE_ENV=dev mise x -- <tool> …`, the version the repo's config pins —
 // never `mise x <tool>@… --`, which can install a version the config does not
 // name — and never before `mise which <tool>` says it is installed. The repo's
 // mise config is trusted by the person beforehand; the script reads that
@@ -10,6 +10,7 @@ import {
   realpathSync,
   statSync,
 } from "node:fs";
+import { homedir } from "node:os";
 import {
   delimiter,
   join,
@@ -22,6 +23,22 @@ export const MISSING_MISE =
 
 /** What installs every tool the repo's mise config pins. */
 export const SETUP_REMEDY = "MISE_ENV=dev mise run setup:all";
+
+/** dprint, pre-commit and node are pinned in tools.dev.toml — every tool runs in dev. */
+const TOOL_ENV = { MISE_ENV: "dev" };
+
+/** A path as mise prints it — `~/…` under the home directory — made real for comparing. */
+function realOf(printed) {
+  const abs = printed === "~" || printed.startsWith("~/")
+    ? join(homedir(), printed.slice(1))
+    : printed;
+  try {
+    return realpathSync(abs);
+  }
+  catch {
+    return abs;
+  }
+}
 
 const TRUST_REMEDY =
   "trust it — add the repo's path to trusted_config_paths in the global mise config, or run `mise trust --all` in the repo — then re-run";
@@ -80,7 +97,10 @@ export class Runner {
     const untrusted = `${res.stdout ?? ""}`
       .split("\n")
       .map(l => /^(.*): untrusted$/.exec(l.trim())?.[1])
-      .filter(p => p && (p === root || p.startsWith(root + sep)));
+      .filter(p => {
+        const real = p && realOf(p);
+        return real && (real === root || real.startsWith(root + sep));
+      });
     if (untrusted.length) {
       throw new RefusalError(
         `the repo's mise config is not trusted (${
@@ -95,7 +115,7 @@ export class Runner {
     if (this.installed.has(tool)) {
       return;
     }
-    const res = this.mise(["which", tool]);
+    const res = this.mise(["which", tool], TOOL_ENV);
     if (res.status !== 0) {
       throw new RefusalError(
         `${tool} is not installed by the repo's mise config — run ${SETUP_REMEDY}, then re-run`,
@@ -107,7 +127,7 @@ export class Runner {
   /** `mise x -- <tool> <args>` in the repo root, the one form a tool runs in; a failure refuses. */
   tool(tool, args) {
     this.ensure(tool);
-    const res = this.mise(["x", "--", tool, ...args]);
+    const res = this.mise(["x", "--", tool, ...args], TOOL_ENV);
     if (res.status !== 0) {
       throw new RefusalError(
         `mise x -- ${tool} ${args.join(" ")} failed:\n${tail(res)}`,
@@ -118,7 +138,7 @@ export class Runner {
 
   /** `MISE_ENV=dev mise run setup:all` — installs and sets up everything the repo pins. */
   setupAll() {
-    const res = this.mise(["run", "setup:all"], { MISE_ENV: "dev" });
+    const res = this.mise(["run", "setup:all"], TOOL_ENV);
     return { ok: res.status === 0, output: tail(res) };
   }
 }

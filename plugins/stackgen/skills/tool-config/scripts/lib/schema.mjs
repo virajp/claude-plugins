@@ -47,8 +47,8 @@ export function pathFault(path) {
   if (name === "") {
     return "is empty";
   }
-  if (/\s|,/.test(name)) {
-    return "holds a space or a comma";
+  if (/[^\x21-\x7e]|,/.test(name)) {
+    return "holds a space, a comma or a character outside printable ASCII";
   }
   if (
     name.startsWith("/")
@@ -69,6 +69,13 @@ function dateFault(value) {
     ? null
     : "is not a calendar day";
 }
+
+// every C0 control, DEL, every C1 control (U+0085 among them) and U+2028/9 —
+// each a line break to some YAML reader, so a value could open a new entry
+const lineBreaking = c => {
+  const n = c.codePointAt(0);
+  return n < 0x20 || (n >= 0x7f && n <= 0x9f) || n === 0x2028 || n === 0x2029;
+};
 
 const listOf = itemFault => value => {
   const items = value.split(",");
@@ -100,7 +107,9 @@ export const FLAG_TYPES = {
   advisoryId: matching("advisoryId", "an advisory id (letters, digits, -)"),
   packageRef: matching("packageRef", "a <name>@<version>"),
   date: dateFault,
-  line: v => (/[\r\n]/.test(v) ? "holds a line break" : null),
+  line: v => ([...v].some(lineBreaking)
+    ? "holds a control character or a line break"
+    : null),
   bool: v => (v === "true" || v === "false" ? null : "is not true or false"),
   list: listOf(() => null),
   pathList: listOf(pathFault),

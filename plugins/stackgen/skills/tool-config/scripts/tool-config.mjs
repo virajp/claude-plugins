@@ -448,6 +448,9 @@ function applyOp(ws, op, tool, mode, rows, notes) {
           ws.write(op.path, next, tool);
         }
       }
+      else {
+        claim(ws, op.path, tool);
+      }
       return;
     }
     case "entry": {
@@ -486,6 +489,7 @@ function applyOp(ws, op, tool, mode, rows, notes) {
         if (op.mode && ws.record(op.path)?.mode !== op.mode) {
           ws.write(op.path, op.content, tool, op.mode);
         }
+        claim(ws, op.path, tool);
         return;
       }
       if (mode === "plan" && current !== null && !op.force) {
@@ -610,6 +614,17 @@ function applyOp(ws, op, tool, mode, rows, notes) {
     }
     default:
       throw new Error(`unknown op ${op.op}`);
+  }
+}
+
+/**
+ * A file already exactly as the op would write it, yet carrying no record —
+ * left by a call that wrote and then stopped (a failed setup:all) — is
+ * recorded by this call, so a later requester call finds its record.
+ */
+function claim(ws, path, tool) {
+  if (ws.read(path) !== null && ws.sourceOf(path) === null) {
+    ws.touch(path, tool);
   }
 }
 

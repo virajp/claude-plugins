@@ -145,7 +145,10 @@ const FAKE_MISE = `#!/bin/sh
 echo "MISE_ENV=\${MISE_ENV:-} $*" >> "$FAKE_MISE_LOG"
 case "$1" in
   trust)
-    [ -n "$FAKE_MISE_UNTRUSTED" ] && echo "$(pwd -P): untrusted"
+    # as mise prints it: a path under $HOME as ~/…
+    p=$(pwd -P); h=$(cd "$HOME" && pwd -P)
+    case "$p" in "$h" | "$h"/*) p="~\${p#"$h"}" ;; esac
+    [ -n "$FAKE_MISE_UNTRUSTED" ] && echo "$p: untrusted"
     exit 0 ;;
   which)
     [ "$2" = "$FAKE_MISE_MISSING" ] && { echo "mise ERROR $2 is not a mise bin" >&2; exit 1; }
@@ -967,7 +970,7 @@ describe("the mise steps a write runs", () => {
     const log = calls();
     const setup = log.indexOf("MISE_ENV=dev run setup:all");
     const fmt = log.indexOf(
-      "MISE_ENV= x -- dprint fmt --config .config/dprint.json --allow-no-files demo.toml tasks/run",
+      "MISE_ENV=dev x -- dprint fmt --config .config/dprint.json --allow-no-files demo.toml tasks/run",
     );
     expect(setup).toBeGreaterThanOrEqual(0);
     expect(fmt).toBeGreaterThan(setup);
@@ -996,21 +999,30 @@ describe("the mise steps a write runs", () => {
     expect(calls().some(l => / dprint /.test(l))).toBe(false);
   });
 
-  it("refuses an untrusted repo before writing, naming the remedy", () => {
-    fakeEnv = { FAKE_MISE_UNTRUSTED: "1" };
-    const { status, out } = run([
-      "demo",
-      "add",
-      "--line",
-      "a = 1",
-      "--for",
-      "p",
-    ]);
-    expect(status).toBe(2);
-    expect(out.error).toContain("not trusted");
-    expect(out.error).toContain("trusted_config_paths");
-    expect(() => statSync(join(repo, "demo.toml"))).toThrow();
-  });
+  it.each([
+    ["~/ under HOME", false],
+    ["an absolute path outside HOME", true],
+  ])(
+    "refuses an untrusted repo printed as %s, before writing, naming the remedy",
+    (_form, outside) => {
+      fakeEnv = {
+        FAKE_MISE_UNTRUSTED: "1",
+        ...(outside ? { HOME: fakeBin } : {}),
+      };
+      const { status, out } = run([
+        "demo",
+        "add",
+        "--line",
+        "a = 1",
+        "--for",
+        "p",
+      ]);
+      expect(status).toBe(2);
+      expect(out.error).toContain("not trusted");
+      expect(out.error).toContain("trusted_config_paths");
+      expect(() => statSync(join(repo, "demo.toml"))).toThrow();
+    },
+  );
 
   it("refuses with the setup:all remedy when a step's tool is not installed, writing nothing", () => {
     withFormatter();
@@ -1034,7 +1046,7 @@ describe("the mise steps a write runs", () => {
     writeFileSync(join(repo, hooks), "repos: []\n");
     apply(["demo", "put", "--path", hooks, "--for", "a"]);
     expect(calls()).toContain(
-      `MISE_ENV= x -- pre-commit validate-config ${hooks}`,
+      `MISE_ENV=dev x -- pre-commit validate-config ${hooks}`,
     );
     const before = read(hooks);
     const record = lock();
@@ -1061,6 +1073,19 @@ describe("the mise steps a write runs", () => {
     expect(out.written).toEqual(["demo.toml", "tasks/run"]);
     expect(read("demo.toml")).toContain("alpha = 1");
     expect(() => statSync(join(repo, ".claude/stackgen/lock.yaml"))).toThrow();
+  });
+
+  it("records every file on the re-run once setup:all passes", () => {
+    fakeEnv = { FAKE_MISE_SETUP_FAIL: "1" };
+    expect(apply(["all"]).status).toBe(2);
+    fakeEnv = {};
+    const again = apply(["all"]);
+    expect(again.status, JSON.stringify(again.out)).toBe(0);
+    for (const p of ["demo.toml", "tasks/run"]) {
+      expect(lock()).toMatch(new RegExp(`path: "?${p}"?\\n`));
+    }
+    const later = apply(["demo", "add", "--line", "a = 1", "--for", "p"]);
+    expect(later.status, JSON.stringify(later.out)).toBe(0);
   });
 
   it("never runs setup:all on a preview or a single verb", () => {
@@ -1230,6 +1255,32 @@ describe("the cross-tool verbs and the G1 path rule", () => {
       reason: "r",
       expires: "2026-01-01",
     }, "name>@<version"],
+    [{
+      tool: "grype",
+      verb: "add-ignore",
+      id: "CVE-1",
+      package: "a@1",
+      reason: "r\u0085- vulnerability: CVE-2",
+      expires: "2027-01-01",
+    }, "control character"],
+    [{
+      tool: "pre-commit",
+      verb: "add-hook",
+      repo: "local",
+      id: "x",
+      stage: "pre-commit",
+      name: "x\u2028y",
+      entry: "mise x -- t",
+      language: "system",
+    }, "control character"],
+    [
+      { tool: "all", verb: "add-exclude", paths: ["a\u0085b"] },
+      "printable ASCII",
+    ],
+    [
+      { tool: "all", verb: "add-exclude", paths: ["caf\u00e9"] },
+      "printable ASCII",
+    ],
   ])("validateEntry refuses %j", (entry, fault) => {
     expect(validateEntry(entry).join("; ")).toContain(fault);
   });
