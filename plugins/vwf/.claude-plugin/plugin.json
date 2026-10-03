@@ -42,8 +42,13 @@
       }
     },
     "mempalace": {
-      "type": "http",
-      "url": "http://127.0.0.1:8765/mcp"
+      "args": [
+        "x",
+        "--",
+        "mempalace-mcp"
+      ],
+      "command": "${HOME}/.local/bin/mise",
+      "type": "stdio"
     }
   },
   "name": "vwf",
