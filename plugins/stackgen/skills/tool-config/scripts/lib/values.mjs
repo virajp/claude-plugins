@@ -8,6 +8,7 @@ import { execFileSync } from "node:child_process";
 import {
   existsSync,
   readFileSync,
+  realpathSync,
 } from "node:fs";
 import { join } from "node:path";
 import { parseYaml } from "./yaml.mjs";
@@ -162,13 +163,23 @@ function parseRemote(url) {
 
 /** REPO_URL and PROJECT_NAME from `origin`, or `{}` when there is none or it is not a forge URL. */
 export function deriveOrigin(repoRoot) {
-  let url;
-  try {
-    url = execFileSync("git", ["-C", repoRoot, "remote", "get-url", "origin"], {
+  const git = (...args) =>
+    execFileSync("git", ["-C", repoRoot, ...args], {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
     })
       .trim();
+  let url;
+  try {
+    // git walks up into an enclosing checkout: a directory that is not its own
+    // repo's top level has no origin of its own.
+    if (
+      realpathSync(git("rev-parse", "--show-toplevel"))
+        !== realpathSync(repoRoot)
+    ) {
+      return {};
+    }
+    url = git("remote", "get-url", "origin");
   }
   catch {
     return {};

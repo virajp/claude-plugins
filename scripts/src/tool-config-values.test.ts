@@ -425,9 +425,22 @@ describe("deriveOrigin", () => {
   });
 
   it("is empty with no origin, and outside a git repo", () => {
+    // Holds even if os.tmpdir() sits inside a checkout: root is not its top level.
     expect(values.deriveOrigin(root)).toEqual({});
     gitRepo();
     expect(values.deriveOrigin(root)).toEqual({});
+  });
+
+  it("is empty for a directory with no .git of its own inside a repo with an origin", () => {
+    gitRepo("git@github.com:virajp/claude-plugins.git");
+    const member = join(root, "member");
+    mkdirSync(member);
+    expect(values.deriveOrigin(root)).toEqual({
+      REPO_URL: "https://github.com/virajp/claude-plugins",
+      PROJECT_NAME: "virajp/claude-plugins",
+    });
+    expect(values.deriveOrigin(member)).toEqual({});
+    expect(values.loadValues(member)).toEqual({});
   });
 });
 
