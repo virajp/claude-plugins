@@ -3,7 +3,7 @@ name: Plain CSS
 axis: stylesheet
 kind: stylesheet
 components:
-- stylesheet/plain-css@0.2.0
+- stylesheet/plain-css@0.2.1
 ---
 
 # Stylesheet — Plain CSS
