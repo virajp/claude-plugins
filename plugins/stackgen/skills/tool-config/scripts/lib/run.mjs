@@ -139,6 +139,13 @@ export class Runner {
   /** `MISE_ENV=dev mise run setup:all` — installs and sets up everything the repo pins. */
   setupAll() {
     const res = this.mise(["run", "setup:all"], TOOL_ENV);
-    return { ok: res.status === 0, output: tail(res) };
+    // colour codes stripped: the output lands in a JSON report, warnings included
+    return {
+      ok: res.status === 0,
+      output: tail(res).replace(
+        new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g"),
+        "",
+      ),
+    };
   }
 }
