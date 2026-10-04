@@ -1,7 +1,7 @@
 # Routing returns the first room matching a path part, outermost first — claim every
 # top-level directory and docs/ subtree deliberately, and keep keywords narrow.
 
-wing: ai-plugins
+wing: claude-plugins
 
 exclude_patterns:
   # Secrets — the backstop behind .gitignore for a credential committed anyway.
