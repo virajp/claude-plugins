@@ -883,10 +883,9 @@ hook manager you kept.
   writes nothing and shows no row — and it is also the migration: a repo on an
   older layout is folded onto the current one, each fold, move and delete one
   row. [`/vwf:init`](./vwf.md#vwfinit) calls it with its answers. It also lands
-  a **repo-local mise skill**,
-  `.claude/skills/mise/SKILL.md`, which tells any session how to run the repo's
-  tasks and where each config file lives, and whose task table the script
-  regenerates on every `all` and every pack change.
+  a **repo-local mise skill**, `.claude/skills/mise/SKILL.md`, which tells any
+  session how to run the repo's tasks and where each config file lives, and
+  whose task table the script regenerates on every `all` and every pack change.
 - **`mise <verb>`** runs one of mise's verbs: `add-tool --name --version --env`,
   `add-env --key --value --env` (`--env` is `all`, `dev`, `ci` or `test`),
   `set-env --key --value`, `add-alias --name --command`,
@@ -1214,15 +1213,16 @@ inside `code/*` and `setup/*` change with the tech stack.
   hand-written hook script as `.legacy` and chains it, and a repo pre-commit
   already owns is never refused. `setup:ai` keeps the machine's agent plugins
   current; it is bootstrap and re-sync like every other step here, which is why
-  it is a `setup:*` task and not a gate. It first checks that the workflow plugin, `vwf@virajp-plugins`, is installed at
-  **user** scope, or at **project** or **local** scope whose `projectPath`
-  resolves to this repo's root — any of those serves the repo. Only when it is
-  at none of them does it run the installer,
-  `pnpx @virajp.dev/claude-plugins@latest --all`, which registers the
-  marketplace and installs vwf and its dependency at **user** scope. Whether or
-  not it installed anything, it then runs `claude plugin marketplace update` for
-  every registered marketplace, `claude plugin update --scope <its scope> <id>`
-  for every plugin installed at a scope that serves the repo, and
+  it is a `setup:*` task and not a gate. It first checks that the workflow
+  plugin, `vwf@virajp-plugins`, is installed at **user** scope, or at
+  **project** or **local** scope whose `projectPath` resolves to this repo's
+  root — any of those serves the repo. Only when it is at none of them does it
+  run the installer, `pnpx @virajp.dev/claude-plugins@latest --all`, which
+  registers the marketplace and installs vwf and its dependency at **user**
+  scope. Whether or not it installed anything, it then runs
+  `claude plugin marketplace update` for every registered marketplace,
+  `claude plugin update --scope <its scope> <id>` for every plugin installed at
+  a scope that serves the repo, and
   `claude plugin autoremove --scope project --yes`. It **never installs at
   project scope**, takes no flag, and never aborts on a `claude` or `pnpx`
   failure — each warns and the task goes on. A pack that needs a plugin of its
