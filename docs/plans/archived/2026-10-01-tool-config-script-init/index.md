@@ -11,9 +11,10 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**ARCHIVED**
 
-APPROVED 2026-10-01 by the user
+ARCHIVED 2026-10-05 — not run; was APPROVED (superseded by the tool-config
+template chain, docs/plans/2026-10-05-tool-config-template-engine)
 
 ## Consent
 

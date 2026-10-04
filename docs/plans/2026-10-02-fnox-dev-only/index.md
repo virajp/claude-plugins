@@ -1,7 +1,7 @@
 ---
 type: vwf-change-plan
 title: fnox is the development-only secrets provider; Doppler retires
-requires: [ docs/plans/2026-10-02-graphify-report-ignored ]
+requires: [ docs/plans/2026-10-05-reshape-migration ]
 backlog: []
 backlog_pieces: []
 ---

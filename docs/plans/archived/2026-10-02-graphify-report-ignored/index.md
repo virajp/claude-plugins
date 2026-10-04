@@ -2,7 +2,7 @@
 type: vwf-change-plan
 title: graphify's report is gitignored unless the repo opts in
 requires: [ docs/plans/2026-10-01-tool-config-script-init ]
-backlog: [ B84 ]
+backlog: []
 backlog_pieces: []
 ---
 
@@ -10,9 +10,10 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**ARCHIVED**
 
-APPROVED 2026-10-02 by the user
+ARCHIVED 2026-10-05 — not run; was APPROVED (superseded by the tool-config
+template chain, docs/plans/2026-10-05-tool-config-template-engine)
 
 ## Consent
 
