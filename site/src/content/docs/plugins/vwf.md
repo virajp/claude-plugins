@@ -33,7 +33,7 @@ time, and doctor is what reports a missing required binary.
 The `pnpx @virajp.dev/claude-plugins` installer installs plugins and nothing
 else. **graphify**, which vwf enforces at its own entry gate, is wired by a
 shaped repo's `setup:ai` below, and the repo refreshes the graph from its own
-pre-commit `post-commit` hook.
+pre-commit `post-commit` and `post-merge` hooks.
 
 A repo shaped by [`/vwf:init`](#vwfinit) does not need that one-shot at all: its
 task library carries `setup:ai`, which registers the marketplace, installs the
@@ -949,17 +949,17 @@ What a shaped repo has when it is done: a `.gitignore` in blocks, a lowercase
 settings files, its `conf.d` section files and its one tracked lock, a
 file-based task library grouped `setup:*`, `code:*` and `p:<project>:*` over a
 shared helper library, pre-commit with the full hook set and conventional
-commits wired for release notes, a post-commit hook that refreshes the
-code-intelligence graph, the security and dependency gates configured,
-`.gitattributes`, a Renovate config, `CONTRIBUTING.md`, issue templates under
-`.github/`, and an ignore file for the code-intelligence graph. It ships no
-editor settings: a repo's `.vscode/` is yours, and `init` neither asks about it
-nor writes it. Some of its contents follow the answers rather than the shape: a
-secrets provider where you named one — answer *none — decide later* and the
-packs' slot simply stays unfilled and announces itself — a `SECURITY.md` unless
-you declined the security contact, and a `LICENSE` on a repo you called `public`
-unless you answered *none* — a `private` repo gets no licence row and no
-`LICENSE`. And some are **conditional files**, landed against an answer init
+commits wired for release notes, a post-commit and post-merge hook that
+refreshes the code-intelligence graph, the security and dependency gates
+configured, `.gitattributes`, a Renovate config, `CONTRIBUTING.md`, issue
+templates under `.github/`, and an ignore file for the code-intelligence graph.
+It ships no editor settings: a repo's `.vscode/` is yours, and `init` neither
+asks about it nor writes it. Some of its contents follow the answers rather than
+the shape: a secrets provider where you named one — answer *none — decide later*
+and the packs' slot simply stays unfilled and announces itself — a `SECURITY.md`
+unless you declined the security contact, and a `LICENSE` on a repo you called
+`public` unless you answered *none* — a `private` repo gets no licence row and
+no `LICENSE`. And some are **conditional files**, landed against an answer init
 already holds: the issue templates land only where the repo's `origin` is
 GitHub, the Renovate config only where the update-bot answer is `renovate`, and
 the secrets provider's ignore line (`fnox.local.toml`, doppler's `.doppler/`),
@@ -1406,14 +1406,16 @@ lines: the H1 and the one-line brief, or the H1 alone when the brief is empty.
 **Five steps run after the landing in every mode**, before the git pass, and a
 `shaped` repo is no exception: the secrets provider question 4 picked, the three
 placeholders across every landed and replaced file, the readme stub, the licence
-and the security file on their already-there rule, the two bootstrap steps
-(trust, then the executable bit), and the aggregator offer. They were the
-blank-repo landing's alone, while the questions that feed them were asked in
-every mode — a shaped repo answered and had nothing run on the answers. Last
-before the git pass, `init` **re-records the lockfile hash** of every file it
-filled — the marked positions, the placeholders — so nothing it wrote reads as
-drift the next morning. A file a pack task rewrites later under its own update
-flag reads as drift until the next reshape offers it, by design.
+and the security file on their already-there rule, and the bootstrap step (the
+executable bit). Trust is not among them: it is your prerequisite, which the
+survey checks before the plan and `init` never grants, and there is no
+aggregator offer — `/stackgen:tool-config all` runs `setup:all` itself. They
+were the blank-repo landing's alone, while the questions that feed them were
+asked in every mode — a shaped repo answered and had nothing run on the answers.
+Last before the git pass, `init` **re-records the lockfile hash** of every file
+it filled — the marked positions, the placeholders — so nothing it wrote reads
+as drift the next morning. A file a pack task rewrites later under its own
+update flag reads as drift until the next reshape offers it, by design.
 
 **It ends with a git pass, and that pass is consent-gated.** Everything above it
 lands on disk; a repo shaped and left dirty is a repo whose next command — a
@@ -1558,12 +1560,14 @@ root survey reads the repo's local `core.hooksPath`, a `.husky/` directory and a
 somebody installed is a decision on the same footing as a diverged file, and
 switching it silently is how a team's hooks stop running the morning after a
 reshape. On keep the gate-first commit runs under the **installed** hooks, the
-shipped gate config lands but is not wired, `setup:precommit` is not invoked
-(and the aggregator, if accepted, refuses the foreign manager without
-`--force`), and the report names the manager it found. On **switch** the run
-invokes `setup:precommit --force` as its last shaping step, so that commit is
-the first one through the shipped gate. No hit, no row: the hooks are the gate's
-already or not yet wired, and the aggregator wires them as on any repo.
+shipped gate config lands but is not wired, `setup:precommit --force` is not
+invoked (the `setup:all` that `/stackgen:tool-config all` runs reaches
+`setup:precommit` without `--force`, which warns, installs nothing and exits 0),
+and the report names the manager it found. On **switch** the run invokes
+`setup:precommit --force` as its last shaping step, so that commit is the first
+one through the shipped gate. No hit, no row: the hooks are the gate's already
+or not yet wired, and the `setup:all` that `/stackgen:tool-config all` runs
+wires them as on any repo.
 
 **Every run ends with the same report** — files written, files replaced, files
 kept, files moved, root tool configs, the hook manager, projects, tasks renamed,
@@ -3449,9 +3453,9 @@ detection, `feedback`'s "which flow owns this bug", and execute's coder (reuse
 discovery) and reviewers (impact analysis, call-path threat modeling) — with raw
 file reads reserved for verification: the graph orients, the file is the
 evidence. The graph reflects at best the last commit (the repo's `code:graph`
-task refreshes it from a post-commit hook), so the uncommitted diff is always
-read directly, and execute's worktrees reach back to the main checkout's graph
-for pre-change context.
+task refreshes it from a post-commit and post-merge hook), so the uncommitted
+diff is always read directly, and execute's worktrees reach back to the main
+checkout's graph for pre-change context.
 
 **graphify is mandatory**, and the check happens at the entry gate: a missing
 CLI, or no graph reachable from either the current checkout or the main one, is
@@ -3460,12 +3464,12 @@ reaching back to the main checkout's graph is the normal path, not an absence.
 Past the gate it still degrades rather than crashes — an unreachable graph falls
 back to direct reads. `/vwf:setup` is the one command that builds a graph
 (consent-gated, at the end of onboarding). The refresh is the repo's pre-commit
-`graphify-refresh` hook at `post-commit`, which runs `code:graph` and which
-`/stackgen:tool-config all` lands — never graphify's own hook, which pins a
-Python path. A raw graphify hook, a `merge=graphify` attribute or a
-`merge.graphify.*` git config key an earlier install left is doctor **drift**,
-remedy `mise run setup:precommit`, which strips all three. A recorded decline is
-a settled choice, not an unmet mandate.
+`graphify-refresh` hook at `post-commit` and `post-merge`, which runs
+`code:graph` and which `/stackgen:tool-config all` lands — never graphify's own
+hook, which pins a Python path. A raw graphify hook, a `merge=graphify`
+attribute or a `merge.graphify.*` git config key an earlier install left is
+doctor **drift**, remedy `mise run setup:precommit`, which strips all three. A
+recorded decline is a settled choice, not an unmet mandate.
 
 **What the graph indexes is narrowed by `.graphifyignore`.** graphify already
 honours `.gitignore`, so nothing git excludes — `docs/scratchpad/`, build

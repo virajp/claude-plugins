@@ -108,9 +108,11 @@ yields to one the repo has, and `.gitignore`, `.gitattributes` and
 a landed sectioned file as blocks — a foreign hook manager is a row defaulting
 to keep (switch runs `setup:precommit --force` last), inline `[tasks.*]` tables
 count as tasks, an unmapped commit type is the skill's pre-commit conflict row,
-and every licence spelling counts. After any mode's landing the five new-repo
-steps (§3 secrets, §4 placeholders, §8 readme/licence/security, §9 bootstrap,
-§10 aggregator) run, and `init` re-records the lockfile hash of every file it
+and every licence spelling counts. After any mode's landing the four new-repo
+steps (§3 secrets, §4 placeholders, §8 readme/licence/security, §9 bootstrap —
+the executable bit alone) run — trust is the user's prerequisite, checked in the
+survey and never granted, and `/stackgen:tool-config all` runs the `setup:all`
+aggregator itself — and `init` re-records the lockfile hash of every file it
 filled or appended to — pass 6's replace and keep re-record too — as the last
 step before the git pass; a missing `.config/vwf.yaml` gets a stub
 (`config_format` + `enforcement` + `answers`) so `kept_files` and the three

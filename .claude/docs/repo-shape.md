@@ -185,16 +185,15 @@ this repo's own, and a typo in one is otherwise discovered only by pushing it.
   relative paths or globs with no `..`, and every `machine_env` entry a `name`
   that is an env-var name plus a non-empty `detect` and `question`, the name set
   by a mise `add-env` entry of the pack's `tool-config:` list, since a question
-  whose answer lands nowhere fails silently; every mise `tool-config:` entry a
-  mapping the tool-config script's own schema accepts (`validateEntry`, imported
-  from its `scripts/lib/schema.mjs` — a string mise entry refused), and every
-  other entry a string parsing as one of the gate verbs (`dprint add plugin`,
-  `all add exclude [generated]`, `pre-commit add linter-ignore`,
-  `pre-commit add hook`, `grype add ignore`, `git add ignore`,
-  `git add attribute`), an exclude asked of one tool alone refused; and no mise
-  `conf.d` fragment and no `pre-commit.d` file in the tier, since a pack asks
-  the skill instead); **strict-YAML frontmatter** (every skill and agent a
-  plugin ships, every repo-local skill a tool-config asset tree lands, and every
+  whose answer lands nowhere fails silently; every mise, dprint, pre-commit,
+  grype and `all` `tool-config:` entry a mapping the tool-config script's own
+  schema accepts (`validateEntry`, imported from its `scripts/lib/schema.mjs`, a
+  dprint `name` held to the plugin table — a string entry for any of them
+  refused), and every other entry a string parsing as one of the git verbs
+  (`git add ignore`, `git add attribute`); and no mise `conf.d` fragment and no
+  `pre-commit.d` file in the tier, since a pack asks the skill instead);
+  **strict-YAML frontmatter** (every skill and agent a plugin ships, every
+  repo-local skill a tool-config asset tree lands, and every
   `stacks/*/*/skills/*/SKILL.md` and `stacks/*/*/agents/*.md` a pack ships — the
   larger half, and the half that actually lands in a user's repo; a pack's
   `rules/*.md` is out, frontmatter being optional there); relative links under

@@ -363,11 +363,11 @@ so a pack's overlay or a new task shows up there, and the table is never
 drift; the prose around it is the base's, and a changed copy is a drift row
 like any other.
 
-**After the landing, two bootstrap steps**, in this order: `mise trust --all`
-([section 7](#the-trust-step-which-comes-before-all-of-it)), then
-`mise run init`, which restores the exec bit on every task file. The caller
-runs them; on a repo whose config was trusted and whose tasks carried the bit,
-both change nothing and say so.
+**After the landing, `all` runs `MISE_ENV=dev mise run setup:all` itself**,
+which depends on `init`, so the exec bit is back on every task file before
+anything else runs. Trust comes before all of it and is **the person's**
+([section 7](#the-trust-step-which-comes-before-all-of-it)): the script reads
+it and never grants it, and neither does its caller.
 
 ## 3. The marked positions
 
@@ -1198,17 +1198,22 @@ it.
 
 mise will not read a config file it has not been told to trust, and a fresh
 checkout has told it nothing: the trust record is per machine, kept outside
-the repo, and never committed. So the first command run in a clone — or in a
-repo `all` has just landed into — is
+the repo, and never committed. **Trust is the person's prerequisite**, in
+place before the first `all` or the first command in a clone — typically the
+repo's path in `trusted_config_paths` (below), or, in a repo that already
+has its config,
 
 ```bash
 mise trust --all
 ```
 
-from the repo root. **`--all` is the form that matters.** Bare `mise trust`
-trusts a single file, and `all` lands a config *split* — several top-level
-files plus the `conf.d` section files — so a bare run leaves the rest
-untrusted and the next command fails on a different one.
+from the repo root. The script only reads it: any call but `check` on an
+untrusted config is refused, naming this remedy, and `all` re-checks it over
+the config it has just landed before it runs `setup:all`.
+**`--all` is the form that matters.** Bare `mise trust` trusts a single
+file, and `all` lands a config *split* — several top-level files plus the
+`conf.d` section files — so a bare run leaves the rest untrusted and the
+next command fails on a different one.
 
 | Setting                      | `mise run <task>`               | `mise tasks`          |
 | ---------------------------- | ------------------------------- | --------------------- |

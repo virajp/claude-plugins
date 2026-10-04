@@ -32,38 +32,46 @@ touches beyond Context7. Since `devtools` dissolved into it, stackgen also
 carries the repo's own gate doctrine as packs. `skills/tool-config` is invocable
 both ways too: `/stackgen:tool-config` owns the mise config — its layout, task
 library and doctrine sit in its `assets/mise/` and `references/mise.md` — and
-**mise runs on a shipped node script**,
-`skills/tool-config/scripts/tool-config.mjs` plus `scripts/lib/`: zero
-dependencies, run with the `node` on `PATH`, JSON on stdout, exit 0, 2 (refused)
-or 1 (fault). The script is the source of truth: it renders the assets' marked
-positions, so a greenfield repo needs no judgement, and hands a brownfield
-repo's leftovers back as `needs-edit` rows the session edits by hand per
-`references/mise.md`. It writes every pin as an **exact version**, resolving
-`latest` or a prefix with `mise latest` — there is no mise lockfile — and
-`mise upgrade` is the one call that moves a pin, only within what declared it.
-`all` also lands a repo-local `.claude/skills/mise/SKILL.md` whose task table it
-regenerates. The other seven tools still follow their references, by the word
-grammar, until they move onto the script. Either half writes each requester's
-lines between `# >>> <requester>` / `# <<< <requester>` markers, shows drift
-with take theirs, keep mine or merge — `check` is the drift test doctor calls,
-and a file still matching its lock-record hash is a plain write, not drift — and
-records `source: tool-config/<tool>@<version>` in the lockfile. Any call may
-open with `preview`, which returns the call's rows numbered `r1`, `r2`, … and
-writes nothing; the real call then carries `--answers <id>:<answer>,…`
-(`answers=…` last, for a prose tool) — one answer for every previewed row, `ok`
-for a plain plan row, and a call missing any row refused whole — and asks
-nothing, so a caller with one consent of its own shows the skill's rows inside
-it. A line outside every block is written only by a person's own call or a
-conflict row they settled — `set-env` finding the key outside the pack's block
-is one, `move-in` or `keep-both` — `move-in` or `keep-existing` when the line
-sits in the pack's own file, since a TOML table holds a key once; a
-`keep-existing` is recorded as `# keep-existing: <key>` in the requester's
-block, so it is not asked again. `/vwf:init` previews `all` with its answers,
-shows the rows in its plan and runs `all … --answers` on the one consent, the
-materializer previews each pack's `tool-config:` list with
-`preview apply-entries` in its dry-run and runs it at the write step, and
-`/vwf:setup` fills a `machine_env` value with `mise set-env` and re-runs every
-landed pack's list on each run.
+**mise, dprint, pre-commit, gitleaks and grype run on a shipped node script**,
+`skills/tool-config/scripts/tool-config.mjs` plus `scripts/lib/` (one module per
+gate tool under `lib/tools/`): zero dependencies, run as
+`MISE_ENV=dev mise x -- node` on the repo's own dev node pin (the `node` on
+`PATH` only for the first `all` on a repo with no mise config), JSON on stdout,
+exit 0, 2 (refused) or 1 (fault). The script is the source of truth: it renders
+the assets' marked positions, so a greenfield repo needs no judgement, and hands
+a brownfield repo's leftovers back as `needs-edit` rows the session edits by
+hand per the tool's reference. It writes every pin as an **exact version**,
+resolving `latest` or a prefix with `mise latest` — there is no mise lockfile —
+and `mise upgrade` is the one call that moves a pin, only within what declared
+it. It runs a tool only as `mise x -- <tool>`, the version the repo pins, and
+only once installed; it reads mise trust and never grants it — **trust is the
+person's prerequisite**. A written call formats every file it wrote with the
+shipped dprint config and validates the hook config
+(`pre-commit validate-config`) before it records a hash, restoring the files
+byte for byte on a failure; `all` runs `MISE_ENV=dev mise run setup:all` between
+the landing and the formatter, so it ends in a set-up repo. `all` also lands a
+repo-local `.claude/skills/mise/SKILL.md` whose task table it regenerates. git,
+graphify and renovate still follow their references, by the word grammar, until
+they move onto the script. Either half writes each requester's lines between
+`# >>> <requester>` / `# <<< <requester>` markers, shows drift with take theirs,
+keep mine or merge — `check` is the drift test doctor calls, and a file still
+matching its lock-record hash is a plain write, not drift — and records
+`source: tool-config/<tool>@<version>` in the lockfile. Any call may open with
+`preview`, which returns the call's rows numbered `r1`, `r2`, … and writes
+nothing; the real call then carries `--answers <id>:<answer>,…` (`answers=…`
+last, for a prose tool) — one answer for every previewed row, `ok` for a plain
+plan row, and a call missing any row refused whole — and asks nothing, so a
+caller with one consent of its own shows the skill's rows inside it. A line
+outside every block is written only by a person's own call or a conflict row
+they settled — `set-env` finding the key outside the pack's block is one,
+`move-in` or `keep-both` — `move-in` or `keep-existing` when the line sits in
+the pack's own file, since a TOML table holds a key once; a `keep-existing` is
+recorded as `# keep-existing: <key>` in the requester's block, so it is not
+asked again. `/vwf:init` previews `all` with its answers, shows the rows in its
+plan and runs `all … --answers` on the one consent, the materializer previews
+each pack's `tool-config:` list with `preview apply-entries` in its dry-run and
+runs it at the write step, and `/vwf:setup` fills a `machine_env` value with
+`mise set-env` and re-runs every landed pack's list on each run.
 
 **Each asset is authoritative for its own subject.** This file is a map; do not
 restate a count or a rule that an asset below already owns.
@@ -234,13 +242,14 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   pack dropped from a composition gets that skill's `mise remove --for <pack>`
   (`remove <pack>` for a prose tool); **(e)** is retired too — a
   `.config/pre-commit.d/` file is refused by rule 11; a pack's dprint plugin,
-  exclude, linter ignore, pre-commit hook or grype ignore is a `tool-config:`
-  line (`dprint add plugin`, `all add exclude [generated]`,
-  `pre-commit add linter-ignore`, `pre-commit add hook`, `grype add ignore`, and
-  since 2026-09-27 `git add ignore`, `git add attribute`), and uv's
-  `uv lock --check` hook is one; **(f)** a deploy target's own config and its
-  deploy task, since 2026-09-05 — `cloud-service/workers-static-assets`, its
-  `workers-ssr` sibling and `cloud-service/containers` each ship
+  exclude, linter ignore, pre-commit hook or grype ignore is a structured
+  `tool-config:` entry (`{tool: dprint, verb: add-plugin, …}`,
+  `{tool: all, verb: add-exclude, …}`, pre-commit `add-linter-ignore` and
+  `add-hook`, grype `add-ignore`) run through `apply-entries`, and since
+  2026-09-27 a hygiene line is a `git add ignore` or `git add attribute` string,
+  and uv's `uv lock --check` hook is one; **(f)** a deploy target's own config
+  and its deploy task, since 2026-09-05 — `cloud-service/workers-static-assets`,
+  its `workers-ssr` sibling and `cloud-service/containers` each ship
   `wrangler.jsonc` at the root (the SSR and Containers ones both carrying
   `main`, the Containers one adding a `containers` array, the Durable Object
   binding that addresses it and the migration that declares the class) plus a
@@ -325,23 +334,24 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
   `machine_env` facts take the shapes doctor and setup read — a binary a bare
   name or `{ name, probe }`, a lockfile a list of relative paths or globs with
   no `..`, a `machine_env` entry a `name`, `detect` and `question`, the name set
-  by a mise `add-env` entry of the pack's `tool-config:` list, and each mise
-  entry a mapping the tool-config script's own schema accepts (`validateEntry`,
-  a string mise entry refused), each other entry a string parsing as a gate
-  verb, an exclude asked of one tool alone refused; and no mise `conf.d`
-  fragment and no `pre-commit.d` file in the tier at all. Beside it, rule 15
-  holds the skill's exclusion lists to one invariant: `assets/dprint/`'s
-  `dprint.json` and `taplo.toml` and `assets/pre-commit/`'s global `exclude` (a
-  `(?x)` block of anchored alternatives) state **one set** after normalisation,
-  and the gitleaks `[allowlist] paths` — every entry anchored `(^|/)`, `.turbo/`
-  among them since 2026-09-21 — is a **subset** of it, never the reverse: the
-  scanner extends upstream's default allowlist and must still walk `.claude/`,
-  which the formatters skip because in a shaped repo it is machine-owned. A list
-  missing from the skill's assets is a finding. A pack widens the lists through
-  one `all add exclude [generated]` call, never by hand. `p:plugins:shellcheck`
-  runs `shellcheck -x` and `shfmt -d` over the same shell, in two groups — task
-  libraries with the pack's `_scripts/` beside them, hooks with no flags, since
-  a hook lands alone and may declare `sh`.
+  by a mise `add-env` entry of the pack's `tool-config:` list, and each mise,
+  dprint, pre-commit, grype and `all` entry a mapping the tool-config script's
+  own schema accepts (`validateEntry`, a string entry for any of them refused),
+  each git entry a string parsing as a git verb; and no mise `conf.d` fragment
+  and no `pre-commit.d` file in the tier at all. Beside it, rule 15 holds the
+  skill's exclusion lists to one invariant: `assets/dprint/`'s `dprint.json` and
+  `taplo.toml` and `assets/pre-commit/`'s global `exclude` (a `(?x)` block of
+  anchored alternatives) state **one set** after normalisation, and the gitleaks
+  `[allowlist] paths` — every entry anchored `(^|/)`, `.turbo/` among them since
+  2026-09-21 — is a **subset** of it, never the reverse: the scanner extends
+  upstream's default allowlist and must still walk `.claude/`, which the
+  formatters skip because in a shaped repo it is machine-owned. A list missing
+  from the skill's assets is a finding. A pack widens the lists through one
+  `{tool: all, verb: add-exclude, paths: […]}` entry (`generated: true` for a
+  generated tree, a trailing `/` marking a directory glob), never by hand.
+  `p:plugins:shellcheck` runs `shellcheck -x` and `shfmt -d` over the same
+  shell, in two groups — task libraries with the pack's `_scripts/` beside them,
+  hooks with no flags, since a hook lands alone and may declare `sh`.
 - **The tool-config script ships with nothing beside it.** Rule 16 holds
   `skills/tool-config/scripts/` to a `#!/usr/bin/env node` executable entry and
   `node:` built-ins or relative modules only — no `require(`, no package; the

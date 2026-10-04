@@ -645,16 +645,19 @@ two members pinning the same slug hold two independent materializations.
 fetches a bundle. It calls `/stackgen:tool-config all` with its answers — the
 commit gate's scopes among them — which lands the mise config, the four gates
 and the hygiene config files, through the skill's `git`, `graphify` and
-`renovate` tools. Then it writes its own **hygiene assets** — the prose files
-below — from its own tree. Nothing is recorded in `.config/vwf.yaml` for any of
-it — nothing was chosen, so there is no choice to record — and the skill's files
-land in `lock.yaml`. The `tool-config/…` entries present in that lockfile are
-what "this repo is shaped" means: `/vwf:setup` checks for exactly that and
-offers `/vwf:init` when one is missing — or when the shape has drifted. On a
-multi-repo product it checks **every repo**, the base and every member present
-on this machine, and one repo short or behind its baseline is enough to make the
-offer; `init` then lands the baseline in every repo it resolved, each with its
-own lockfile.
+`renovate` tools, then runs `MISE_ENV=dev mise run setup:all` itself and formats
+and validates what it wrote. Trusting the repo's mise config is your
+prerequisite, never a step either runs: `init` checks it in its survey and names
+the remedy. Then it writes its own **hygiene assets** — the prose files below —
+from its own tree. Nothing is recorded in `.config/vwf.yaml` for any of it —
+nothing was chosen, so there is no choice to record — and the skill's files land
+in `lock.yaml`. The `tool-config/…` entries present in that lockfile are what
+"this repo is shaped" means: `/vwf:setup` checks for exactly that and offers
+`/vwf:init` when one is missing — or when the shape has drifted. On a multi-repo
+product it checks **every repo**, the base and every member present on this
+machine, and one repo short or behind its baseline is enough to make the offer;
+`init` then lands the baseline in every repo it resolved, each with its own
+lockfile.
 
 It lands on every repo because a repo that has picked no stack yet still needs a
 formatter, a secret scanner, a vulnerability scanner, an ignore set, and a way
@@ -676,18 +679,20 @@ config carries three tool-neutral hooks — `format`, `lint`, `sec` — that cal
 inside the task. Ahead of them a `no-dash-names` hook refuses a commit that
 stages any path with a file or folder name starting with `-`, and asks you to
 rename it — every tool those tasks call would read such a name as an option. It
-also installs at `post-commit`, where a `graphify-refresh` hook runs
-`code:graph` to rebuild the knowledge graph in place of graphify's own raw git
-hooks. Both scanners document the same **baseline step for an existing repo**:
-run the scan, fix what can be fixed — rotate a real secret, upgrade a dependency
-— and record what remains, a gitleaks finding by fingerprint in the allowlist, a
-grype vulnerability id under `ignore:` in `.config/grype.yaml`
-(`grype add ignore <id> [reason]`), each with a one-line reason and when to
-re-check, then re-run until green. The thresholds stay where they are: a
-time-boxed ignore is the temporary silence, a lowered threshold the permanent
-one. The formatter also lands the root `dprint.json` shim described above, and
-the hook gate lands `.config/linter.yaml`, the house linter's one config, read
-by every `code:lint` that runs it — whichever pack's task that is.
+also installs at `post-commit` and `post-merge`, where a `graphify-refresh` hook
+— always run — calls `code:graph` to rebuild the knowledge graph in place of
+graphify's own raw git hooks. Both scanners document the same **baseline step
+for an existing repo**: run the scan, fix what can be fixed — rotate a real
+secret, upgrade a dependency — and record what remains, a gitleaks finding by
+fingerprint in the allowlist, a grype vulnerability id under `ignore:` in
+`.config/grype.yaml`
+(`grype add-ignore --id <id> --package <name@version> --reason <text> --expires <YYYY-MM-DD>`),
+each with a one-line reason and when to re-check, then re-run until green. The
+thresholds stay where they are: a time-boxed ignore is the temporary silence, a
+lowered threshold the permanent one. The formatter also lands the root
+`dprint.json` shim described above, and the hook gate lands
+`.config/linter.yaml`, the house linter's one config, read by every `code:lint`
+that runs it — whichever pack's task that is.
 
 **A pack asks; it never copies a gate file.** Each of those files carries the
 base the skill lands for every repo, and each stack's additions arrive as lines
@@ -695,7 +700,7 @@ of that pack's `tool-config:` list, written between the pack's own block markers
 so `remove <pack>` takes them out again:
 
 - **dprint plugins.** The base carries markdown, YAML, JSON and the `exec`
-  plugin that routes `.toml` to taplo. `dprint add plugin` brings the rest:
+  plugin that routes `.toml` to taplo. `dprint add-plugin` brings the rest:
   `typescript` from the TypeScript language pack; `malva` from the stylesheet
   packs, Astro and HTML; `markup_fmt` from Astro and HTML; `dockerfile` from the
   container-image target and the Containers and Cloud Run services. A plugin
@@ -705,24 +710,30 @@ so `remove <pack>` takes them out again:
   config's global `exclude`. The base is `.claude`, `.git`, `graphify-out`,
   `build`, `dist` and `*.lock`; pnpm adds `node_modules`, `.turbo` and its
   lockfile globs, uv `.venv`, SwiftPM `.build` and `.swiftpm`, SwiftUI
-  `Derived`, `DerivedData` and `*.xcassets`. The one verb,
-  `all add exclude [generated] <paths>`, writes all three lists at once, and the
-  toolkit's checker holds them equal after normalising the syntax away. The
-  secret scanner's `[allowlist] paths` is held to a **subset** of it, never the
-  reverse: only `generated` writes it, for a tree a tool writes and nobody
-  reviews, never a lockfile or authored source. gitleaks extends upstream's
-  default config, which already skips `.git`, `node_modules` and the named
-  lockfiles, and `.claude/` is authored source a scanner must scan even though
-  no formatter touches it in a shaped repo, where it is machine-owned. Its
-  entries are anchored `(^|/)`, so `\.turbo/` never matches a `foo.turbo.ts`.
+  `Derived`, `DerivedData` and `*.xcassets/`. The one verb,
+  `all add-exclude --paths <p>,… [--generated]`, writes all three lists at once,
+  and the toolkit's checker holds them equal after normalising the syntax away.
+  A trailing `/` marks a directory, globs included — `*.xcassets/` excludes
+  every asset catalog with everything inside it; a `*` or `?` without one is a
+  file glob, and a bare name with neither is a directory. The secret scanner's
+  `[allowlist] paths` is held to a **subset** of it, never the reverse: only
+  `generated` writes it, for a tree a tool writes and nobody reviews, never a
+  lockfile or authored source. gitleaks extends upstream's default config, which
+  already skips `.git`, `node_modules` and the named lockfiles, and `.claude/`
+  is authored source a scanner must scan even though no formatter touches it in
+  a shaped repo, where it is machine-owned. Its entries are anchored `(^|/)`, so
+  `\.turbo/` never matches a `foo.turbo.ts`.
 - **Linter ignores.** The linter does not read `.gitignore`, so `linter.yaml`'s
   `ignores:` carries `build/` and `graphify-out/`; Flutter adds `.dart_tool/`,
   SwiftPM `.build/` and `.swiftpm/`, SwiftUI `Derived/` and `DerivedData/`, uv
-  `.venv/`, each through `pre-commit add linter-ignore`.
-- **Hooks.** A non-gate check a pack needs is `pre-commit add hook`, written
+  `.venv/`, each through `pre-commit add-linter-ignore`.
+- **Hooks.** A non-gate check a pack needs is `pre-commit add-hook`, written
   into the gate config between that pack's markers — uv's `uv lock --check` is
-  the one today. The old `pre-commit.d/` fragments are retired, and the
-  toolkit's checker refuses one in a pack.
+  the one today. A local hook's `entry` starts `mise x --`, and a `post-commit`
+  or `post-merge` hook is always written with `always_run: true`. Every write to
+  the gate config is checked by `pre-commit validate-config`, and a failure puts
+  the file back byte for byte. The old `pre-commit.d/` fragments are retired,
+  and the toolkit's checker refuses one in a pack.
 - **Ignore lines and attributes.** `git add ignore <pattern…>` writes patterns
   into the pack's block in `.gitignore`, and `git add ignore template=<Name>`
   fetches GitHub's `<Name>.gitignore` there — `Node` from pnpm and TypeScript,
@@ -812,52 +823,87 @@ stack — eight of them: mise, dprint, pre-commit, gitleaks, grype, git, graphif
 and renovate. Each tool's static files and templates sit in the skill's
 `assets/<tool>/`, laid out as they land; its doctrine in `references/<tool>.md`.
 
-**mise runs on a script.** The skill ships a node script,
-`scripts/tool-config.mjs`, with no dependencies, run with the `node` on your
-`PATH`. It renders mise's templates, fills their marked positions, and shows
-every change as a numbered row before it writes, so the same call makes the same
-files on every run and a new repo's mise config needs no model judgement. The
-script is the source of truth: what it cannot decide in an existing repo — a
-root mise config to split, a `merge` answer, a file it cannot parse — comes back
-as a `needs-edit` row naming the file and the target layout, which the session
-edits by hand and then re-checks with `check`. It needs `mise` on `PATH` for any
-call that resolves a version, and refuses without it. Its output is JSON, and it
-never reaches outside the repo: an absolute path, a `..` climb or a symlink
-leading out refuses the call. The other seven tools still follow their
-references, by the word grammar below, until they move onto the script.
+**mise and the four gates run on a script.** The skill ships a node script,
+`scripts/tool-config.mjs`, with no dependencies, run as
+`MISE_ENV=dev mise x -- node` on the repo's own node pin, which the base's
+`conf.d/tools.dev.toml` carries — only the very first `all` on a repo with no
+mise config falls through to the `node` on your `PATH`. It renders the templates
+of mise, dprint, pre-commit, gitleaks and grype, fills their marked positions,
+and shows every change as a numbered row before it writes, so the same call
+makes the same files on every run and a new repo's config needs no model
+judgement. The script is the source of truth: what it cannot decide in an
+existing repo — a root mise config to split, a `merge` answer, a file it cannot
+parse — comes back as a `needs-edit` row naming the file and the target layout,
+which the session edits by hand and then re-checks with `check`. It needs `mise`
+on `PATH` for any call that resolves a version, and refuses without it. Its
+output is JSON, and it never reaches outside the repo: an absolute path, a `..`
+climb or a symlink leading out refuses the call. git, graphify and renovate
+still follow their references, by the word grammar below, until they move onto
+the script.
+
+**Two things are yours, never the script's.** The repo's mise config is
+**trusted** before the call — typically its path in `trusted_config_paths` in
+your global mise config, or `mise trust --all` in a repo that already has its
+config; the script reads trust and never grants it, and any call but `check` on
+an untrusted config is refused naming that remedy. And **every tool runs only as
+`mise x -- <tool>`**, the version the repo pins, once it is installed; a tool
+the call needs and the repo has not installed refuses the call before anything
+is written, naming `MISE_ENV=dev mise run setup:all`.
+
+**A call that writes** lands its files, then — on `all` alone — runs
+`MISE_ENV=dev mise run setup:all`, then formats every file it wrote with the
+shipped dprint config, validates the hook config with
+`pre-commit validate-config` when it wrote it, and only then records each hash.
+How a landed line is folded is the shipped formatter's call. A formatter or
+validate failure puts every file back byte for byte and records nothing; an
+untrusted config or a failed `setup:all` on `all` leaves the files written and
+unrecorded, and re-running the same `all` after the fix covers them. A
+successful `all` returns the tail of `setup:all`'s output as `setup`, which the
+caller relays to you — a passing `setup:all` can still warn, as it does for a
+hook manager you kept.
 
 ```text
-/stackgen:tool-config [preview] mise <verb> [--<flag> <value>]… [--for <requester>] [--answers <id>:<answer>,…]
+/stackgen:tool-config [preview] <tool> <verb> [--<flag> <value>]… [--for <requester>] [--answers <id>:<answer>,…]   # mise, dprint, pre-commit, gitleaks, grype
 /stackgen:tool-config [preview] all [--<key> <value>]… [--answers …]
+/stackgen:tool-config [preview] all add-exclude --paths <p>,… [--generated] [--for <requester>] [--answers …]
 /stackgen:tool-config [preview] apply-entries --pack <slug> --file <pack.yaml> [--answers …]
 /stackgen:tool-config check [<tool>]
-/stackgen:tool-config [preview] <tool> <instruction> [for <requester>] [answers=…]   # the seven prose tools
+/stackgen:tool-config [preview] <tool> <instruction> [for <requester>] [answers=…]   # git, graphify, renovate
 ```
 
-- **`all`** lands every tool the skill owns: mise through the script, then the
-  other seven, `git`, `graphify` and `renovate` after the five gates, and
-  `renovate` only on `--update-bot renovate`. Its keys are flags — `--repo`,
-  `--members`, `--linkage`, `--merge-model-develop`, `--merge-model-main`,
-  `--runtimes`, `--plugin-sources`, `--plugins`, `--scopes` and the three
-  conditional answers `--forge`, `--secrets` and `--update-bot`. A list is
-  comma-separated, no spaces. A key left out keeps the repo's current value. It
-  is idempotent — a second run over an unchanged repo writes nothing and shows
-  no row — and it is also the migration: a repo on an older layout is folded
-  onto the current one, each fold, move and delete one row.
-  [`/vwf:init`](./vwf.md#vwfinit) calls it with its answers. It also lands a
-  **repo-local mise skill**, `.claude/skills/mise/SKILL.md`, which tells any
-  session how to run the repo's tasks and where each config file lives, and
-  whose task table the script regenerates on every `all` and every pack change.
+- **`all`** lands every tool the skill owns: mise and the four gates through the
+  script, then `git`, `graphify` and `renovate`, `renovate` only on
+  `--update-bot renovate`, then runs `setup:all` and formats and validates what
+  it wrote, ending in a set-up repo. Its keys are flags — `--repo`, `--members`,
+  `--linkage`, `--merge-model-develop`, `--merge-model-main`, `--runtimes`,
+  `--plugin-sources`, `--plugins`, `--scopes` and the three conditional answers
+  `--forge`, `--secrets` and `--update-bot`. A list is comma-separated, no
+  spaces. A key left out keeps the repo's current value. It is idempotent — a
+  second run over an unchanged repo writes nothing and shows no row — and it is
+  also the migration: a repo on an older layout is folded onto the current one,
+  each fold, move and delete one row. [`/vwf:init`](./vwf.md#vwfinit) calls it
+  with its answers. It also lands a **repo-local mise skill**,
+  `.claude/skills/mise/SKILL.md`, which tells any session how to run the repo's
+  tasks and where each config file lives, and whose task table the script
+  regenerates on every `all` and every pack change.
 - **`mise <verb>`** runs one of mise's verbs: `add-tool --name --version --env`,
   `add-env --key --value --env` (`--env` is `all`, `dev`, `ci` or `test`),
   `set-env --key --value`, `add-alias --name --command`, `upgrade` and
   `remove --for <requester>`. Anything else is refused, naming the verbs.
-- **The prose tools' verbs** are the gates' below; git's
-  `add ignore <pattern…>`, `add ignore template=<Name>` and
-  `add attribute <pattern> <attr…>`; and `remove <requester>` for every tool.
-- **`apply-entries`** runs a pack's whole `tool-config:` list, each mise entry
-  as its verb for that pack and each string entry handed back for the prose
-  half.
+- **The gates' verbs**: dprint `add-plugin --name <n>`; pre-commit
+  `add-hook --repo --id --stage …`, `add-linter-ignore --paths <p>,…` and
+  `set-scopes --scopes <id>,…`; grype
+  `add-ignore --id <id> --package <name@version> --reason <text> --expires <YYYY-MM-DD>`,
+  all four required, and `remove-ignore --id`; gitleaks none but `remove` — its
+  allowlist is `all add-exclude`'s. Each also takes `remove --for <requester>`.
+- **`all add-exclude`** is the one cross-tool verb: one exclusion set written to
+  every gate's list at once, and `--generated` to the scanner's too.
+- **The prose tools' verbs**: git's `add ignore <pattern…>`,
+  `add ignore template=<Name>` and `add attribute <pattern> <attr…>`; and
+  `remove <requester>` for each of the three.
+- **`apply-entries`** runs a pack's whole `tool-config:` list, each structured
+  entry as its verb for that pack and each git string entry handed back for the
+  prose half.
 - **`check`** is the drift test. It writes nothing; `/vwf:doctor` calls it.
 - **`--for <requester>`** (`for <requester>` on a prose tool) names whose lines
   these are. A pack's calls carry its slug; the base is the tool's own. A call
@@ -918,14 +964,18 @@ writes is a `lock.yaml` entry sourced `tool-config/<tool>@<version>`, the
 version stackgen's own. It never commits; the caller does.
 
 **A pack asks for what it needs** through a `tool-config:` list in its
-`pack.yaml`. A mise entry is a mapping, checked against the same schema the
-script refuses entries by; another tool's entry is still one instruction per
-line:
+`pack.yaml`. A mise, dprint, pre-commit, grype or `all` entry is a mapping,
+checked against the same schema the script refuses entries by, and the toolkit's
+checker refuses one written as a string; a git entry is still one instruction
+per line:
 
 ```yaml
 tool-config:
   - { tool: mise, verb: add-tool, name: doppler, version: "latest", env: all }
   - { tool: mise, verb: add-env, key: XCODE_VERSION, value: "", env: all }
+  - { tool: dprint, verb: add-plugin, name: typescript }
+  - { tool: all, verb: add-exclude, paths: [ "*.xcassets/" ] }
+  - git add ignore template=Python
 ```
 
 The materializer previews the list with `preview apply-entries` in its dry-run,
@@ -1143,60 +1193,62 @@ inside `code/*` and `setup/*` change with the tech stack.
   not create**: a pack task that would have to stops, names what it found and
   prints the by-hand command, and every destructive step sits behind a flag.
   Tools install at the exact versions the config pins — `setup:mise` runs
-  `mise reshim`, `mise doctor` and `mise install` every time and never moves a
-  pin, and `setup:all` takes no upgrade flag. A pin moves only through
-  `/stackgen:tool-config mise upgrade`, whose rows you answer, and dprint's
-  plugins move by hand with `dprint config update` in dev.
+  `mise install`, `mise reshim` and `mise doctor` every time, in that order, and
+  never moves a pin, and `setup:all` takes no upgrade flag. A pin moves only
+  through `/stackgen:tool-config mise upgrade`, whose rows you answer, and
+  dprint's plugins move by hand with `dprint config update` in dev.
   `setup:precommit --update` is what runs `pre-commit autoupdate`, moving the
   hook `rev:` lines; and `setup:precommit --force` is what takes the hooks over
   from a **local** `core.hooksPath`, a `.husky/` directory or a lefthook config,
-  installing with `--overwrite`. Without it `setup:precommit` refuses, prints
-  the unset and the install to run by hand plus the cleanup (delete the foreign
-  files and drop a husky `prepare` script — the task deletes nothing), and exits
-  1 — which halts `setup:all` there on a brownfield clone until that cleanup is
-  done, since the orchestrator stops at a failing step. A `core.hooksPath` set
-  in a global or system git-config is named by scope and refused even under
-  `--force`. A plain install keeps a hand-written hook script as `.legacy` and
-  chains it, and a repo pre-commit already owns is never refused. `setup:ai`
-  installs and reconciles the repo's agent plugins; it is bootstrap and re-sync
-  like every other step here, which is why it is a `setup:*` task and not a
-  gate. It drives **Claude's own `claude plugin` commands and nothing else** —
-  no package runner, no wrapper CLI — and it checks before it writes: a
-  marketplace already registered under a name is *updated*, whatever source it
-  was registered from, and only one that is absent is *added*. That one rule is
-  what makes the task behave identically on a machine pointed at the published
-  marketplace and on one pointed at a local checkout of it, which a wrapper with
-  a hardcoded source cannot do. Scope is **project** by default, because the
-  plugin set is the repo's: it installs or updates each required plugin at that
-  scope, prunes with `autoremove` at that scope alone, and never installs,
-  updates or removes a user-scope plugin — `--user` is the flag for the rare
-  repo that wants the other scope, and it flips every one of those. Two **marked
-  positions** — further marketplaces, and the plugins to install from them —
-  carry whatever the repo needs beyond the workflow plugin, which the task
-  installs unconditionally with its dependencies; `/vwf:init` fills them from
-  one confirmed answer, seeded by the task's own **`--inventory`** mode, which
-  prints what this machine already has — one line per registered marketplace
-  **other than the toolkit's own**, then one line per installed plugin with its
-  marketplace and its scope — and exits, printing nothing else on stdout. It is
-  a seed for the question, not a paste buffer: a marketplace row is already in
-  the shape its position takes, while a plugin row carries a trailing scope
-  field that position does not. After the plugins it wires **graphify** for the
-  agent where the CLI is on PATH (and says what to install where it is not,
-  since vwf treats a missing graph as blocking) — never graphify's own git hook,
-  which pins a Python path and breaks on upgrade — and prints the statusline
-  package's `brew install` line as a hint when `claude-status` is absent —
-  hinted, never installed, because that is a per-machine package and not the
-  repo's to place. The official marketplace is never added: it ships with Claude
-  Code. `--all` sets up every **member**, and a member's own `--<slug>` sets up
-  that one alone — each run as `setup:all` from inside the member, in a
-  subshell, so the member's own mise config is the one read. The members are
-  what `_scripts/helpers`' `members()` answers for under either multi-repo
-  linkage — the repo's submodules where `.gitmodules` exists, else the paths
-  listed in the `MEMBERS` env value — and one `--<slug>` flag per **member
-  repo** is generated from that same list, named for the member and never for a
-  project id: a member holding three projects is still one flag.
-  `code:worktrees` reads the same helper, so the two never disagree about what a
-  member is. Alias it as `setup`.
+  installing with `--overwrite`. Without it `setup:precommit` warns that the
+  gate config is landed but not wired, prints the unset and the install to run
+  by hand plus the cleanup (delete the foreign files and drop a husky `prepare`
+  script — the task deletes nothing), installs nothing and exits 0 — so
+  `setup:all`, and the `/stackgen:tool-config all` that runs it, completes on a
+  brownfield clone that keeps its hook manager. A `core.hooksPath` set outside
+  the repo's local git-config is named by scope with the by-hand unset; without
+  `--force` that is a warning and exit 0, and under `--force` it still exits 1,
+  since `--force` never edits a config outside the repo. A plain install keeps a
+  hand-written hook script as `.legacy` and chains it, and a repo pre-commit
+  already owns is never refused. `setup:ai` installs and reconciles the repo's
+  agent plugins; it is bootstrap and re-sync like every other step here, which
+  is why it is a `setup:*` task and not a gate. It drives **Claude's own
+  `claude plugin` commands and nothing else** — no package runner, no wrapper
+  CLI — and it checks before it writes: a marketplace already registered under a
+  name is *updated*, whatever source it was registered from, and only one that
+  is absent is *added*. That one rule is what makes the task behave identically
+  on a machine pointed at the published marketplace and on one pointed at a
+  local checkout of it, which a wrapper with a hardcoded source cannot do. Scope
+  is **project** by default, because the plugin set is the repo's: it installs
+  or updates each required plugin at that scope, prunes with `autoremove` at
+  that scope alone, and never installs, updates or removes a user-scope plugin —
+  `--user` is the flag for the rare repo that wants the other scope, and it
+  flips every one of those. Two **marked positions** — further marketplaces, and
+  the plugins to install from them — carry whatever the repo needs beyond the
+  workflow plugin, which the task installs unconditionally with its
+  dependencies; `/vwf:init` fills them from one confirmed answer, seeded by the
+  task's own **`--inventory`** mode, which prints what this machine already has
+  — one line per registered marketplace **other than the toolkit's own**, then
+  one line per installed plugin with its marketplace and its scope — and exits,
+  printing nothing else on stdout. It is a seed for the question, not a paste
+  buffer: a marketplace row is already in the shape its position takes, while a
+  plugin row carries a trailing scope field that position does not. After the
+  plugins it wires **graphify** for the agent where the CLI is on PATH (and says
+  what to install where it is not, since vwf treats a missing graph as blocking)
+  — never graphify's own git hook, which pins a Python path and breaks on
+  upgrade — and prints the statusline package's `brew install` line as a hint
+  when `claude-status` is absent — hinted, never installed, because that is a
+  per-machine package and not the repo's to place. The official marketplace is
+  never added: it ships with Claude Code. `--all` sets up every **member**, and
+  a member's own `--<slug>` sets up that one alone — each run as `setup:all`
+  from inside the member, in a subshell, so the member's own mise config is the
+  one read. The members are what `_scripts/helpers`' `members()` answers for
+  under either multi-repo linkage — the repo's submodules where `.gitmodules`
+  exists, else the paths listed in the `MEMBERS` env value — and one `--<slug>`
+  flag per **member repo** is generated from that same list, named for the
+  member and never for a project id: a member holding three projects is still
+  one flag. `code:worktrees` reads the same helper, so the two never disagree
+  about what a member is. Alias it as `setup`.
 - **The retired editor task.** `setup/vscode`, which kept a per-repo editor
   profile in step with the recommendations `/vwf:init` composed, is gone with
   them. Where an earlier version landed it, the mise migration deletes it with
@@ -1409,7 +1461,7 @@ toolkit will find it: vwf probes `setup:worktree`, the aggregators call
 | `stackgen-stack-menu`     | adapter, skill-invoked | The packs + the one open `generate` entry, as a vwf menu payload. Answers the same in every product                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `stackgen-stack-template` | adapter, skill-invoked | The dispatch: materialized entry → pure read; a first pin — which arrives from `/vwf:setup`'s materialize pass — resolves the bundle's composition and dispatches **per component**, packs copied and uncovered components generated, landing once behind one consent gate in the repo the optional `repo:` line names. Unknown slug → error, never a guess                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `stackgen-sync`           | user-only              | The explicit re-sync, **per component**: lockfile-anchored diff against current component packs, regeneration offered per generated component, the delta presented for consent. Repo edits never overwritten by default. Entries sourced `tool-config/…` are that skill's and never diffed here; a record — of either source — whose path its component no longer ships and whose file is gone is dropped with no delta row and named in the report; a pack whose `tool-config:` list changed is reported and pointed at `/vwf:setup`, whose materialize pass re-runs it. Conditional paths are evaluated first, against the config's `answers:` block with the forge re-read live — a false path with no record is `skipped (condition)` and never offered, a never-landed path whose condition now holds is offered as a create, and a landed path whose condition turned false is kept and reported once. Removing a pack drops its `skipped:` rows with its entries. Closes by **re-checking the repo shape** — `/vwf:setup`'s Step 0 check, in-session, over the base and every member against the lockfile just updated — and on drift offers `/vwf:setup reshape` and invokes it on a yes; clean says nothing. A fragment that moved is folded into the merged config there, by the reshape, never by the sync |
-| `tool-config`             | user **and** model     | Owns the mise config and the gates: `/stackgen:tool-config all [--<key> <value> …]` lands them, mise through a shipped node script that pins exact versions, `mise <verb>` or `<tool> <instruction>` runs one verb, `check` tests drift, `preview` returns a call's rows without writing and `--answers` hands their answers back, each requester's lines kept between its own markers and drift shown as take theirs, keep mine or merge. Called by `/vwf:init`, by the materializer for a pack's `tool-config:` list and by `/vwf:setup` for a `machine_env` value; yours to run as well                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `tool-config`             | user **and** model     | Owns the mise config and the gates: `/stackgen:tool-config all [--<key> <value> …]` lands them and runs `setup:all`, mise and the four gates through a shipped node script that pins exact versions, formats what it wrote and validates the hook config, `<tool> <verb>` (or `<tool> <instruction>` for git, graphify and renovate) runs one verb, `check` tests drift, `preview` returns a call's rows without writing and `--answers` hands their answers back, each requester's lines kept between its own markers and drift shown as take theirs, keep mine or merge. Called by `/vwf:init`, by the materializer for a pack's `tool-config:` list and by `/vwf:setup` for a `machine_env` value; yours to run as well                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `stackgen-reputation`     | user **and** model     | A verdict on every name it is given — `/stackgen:stackgen-reputation <ecosystem>:<name> …`, the prefix one of `npm:`, `pypi:`, `pub:`, `action:` (owner/repo) or `image:` (registry/repo), an optional version or ref (`npm:left-pad@1.3.0`, `action:actions/checkout@v4`, `image:docker.io/library/nginx:1.27`) pinning what the advisory check runs against — one row per name reading `pass`, `warn` or `block`, with the signals that decided it, from public read APIs. The generator calls it over every concrete name a generated component emits; you call it on a name before typing it anywhere                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `stackgen-skill-reviewer` | subagent               | The stateless trust gate on generation: catalog fidelity, the **when-not-to-apply** checks, citations that resolve and support, honest emitted facts, **kind conformance**, **topic-bar coverage** against the composition, and every emitted name carrying a verdict-table row that does not read `block` — read off the table it is handed, never looked up                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
