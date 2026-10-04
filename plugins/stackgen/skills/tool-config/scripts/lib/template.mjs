@@ -69,18 +69,6 @@ function tokenize(template, source) {
       tokens.push({ type: "text", text: piece, line });
     };
     for (const m of text.matchAll(TAG)) {
-      // A tag with a stray `@` against it is a tripled delimiter, `@@@A@@` or `@@A@@@`.
-      const end = m.index + m[0].length;
-      if (
-        (m.index > at && text[m.index - 1] === "@")
-        || (text[end] === "@" && !text.startsWith("@@", end))
-      ) {
-        throw new TemplateError(
-          source,
-          line,
-          `a tripled @ delimiter around ${m[0]}`,
-        );
-      }
       if (m.index > at) {
         pushText(text.slice(at, m.index));
       }
@@ -241,18 +229,34 @@ function scalar(value, ref, token, source) {
   return value;
 }
 
-function renderNodes(nodes, values, items, source) {
-  let out = "";
+/** Append one piece; refuses a join that would spell `@@`, naming the piece's line. */
+function append(out, piece, line, source) {
+  if (out.text.endsWith("@") && piece.startsWith("@")) {
+    throw new TemplateError(
+      source,
+      line,
+      "an @ meets an @ here, spelling @@ in the output",
+    );
+  }
+  out.text += piece;
+}
+
+function renderNodes(nodes, values, items, source, out) {
   for (const node of nodes) {
     switch (node.type) {
       case "text":
-        out += node.text;
+        append(out, node.text, node.line, source);
         break;
       case "var":
-        out += scalar(
-          lookup(node.ref, values, items, node, source),
-          node.ref,
-          node,
+        append(
+          out,
+          scalar(
+            lookup(node.ref, values, items, node, source),
+            node.ref,
+            node,
+            source,
+          ),
+          node.line,
           source,
         );
         break;
@@ -261,11 +265,12 @@ function renderNodes(nodes, values, items, source) {
         const value = lookup(node.ref, values, items, node, source, {
           missingOk: true,
         });
-        out += renderNodes(
+        renderNodes(
           truthy(value) ? node.body : node.elseBody,
           values,
           items,
           source,
+          out,
         );
         break;
       }
@@ -279,13 +284,12 @@ function renderNodes(nodes, values, items, source) {
           );
         }
         for (const item of list) {
-          out += renderNodes(node.body, values, [...items, item], source);
+          renderNodes(node.body, values, [...items, item], source, out);
         }
         break;
       }
     }
   }
-  return out;
 }
 
 /**
@@ -298,10 +302,13 @@ function renderNodes(nodes, values, items, source) {
  * @throws {TemplateError} on an unknown name, a stray `@@`, an unbalanced block or an unsafe value
  */
 export function render(template, values, { source }) {
-  return renderNodes(
+  const out = { text: "" };
+  renderNodes(
     parse(tokenize(template, source), source).body,
     values,
     [],
     source,
+    out,
   );
+  return out.text;
 }

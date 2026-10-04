@@ -71,16 +71,49 @@ describe("substitution", () => {
   });
 
   it.each([
-    ["before a name", "a\nx @@@A@@ y\n", 2],
-    ["after a name", "x @@A@@@ y\n", 1],
-    ["quadrupled before a name", "a\nb\n@@@@A@@\n", 3],
-    ["between adjacent tags", "@@A@@@@@A@@\n", 1],
-    ["before a block tag", "@@@#if T@@x@@/if@@\n", 1],
-  ])("refuses a tripled delimiter %s, naming the line", (_, template, want) => {
-    const { message, line } = fault(template, { A: "v", T: true });
-    expect(message).toMatch(/tripled @ delimiter/);
-    expect(line).toBe(want);
+    ["before a name", "x @@@A@@ y", "x @v y"],
+    ["after a name", "x @@A@@@ y", "x v@ y"],
+    ["between adjacent tags", "@@A@@@@@A@@", "v@v"],
+    ["before a block tag", "@@@#if T@@x@@/if@@", "@x"],
+    ["in a pkg@version", "\"npm:prettier@@@V@@\"", "\"npm:prettier@3.0\""],
+    ["in a pnpx pin", "pnpx foo@@@VER@@", "pnpx foo@1.2.3"],
+    ["in a user@host", "@@USER@@@@@HOST@@", "u@h"],
+  ])("renders a literal @ %s as text", (_, template, want) => {
+    expect(
+      run(template, {
+        A: "v",
+        T: true,
+        V: "3.0",
+        VER: "1.2.3",
+        USER: "u",
+        HOST: "h",
+      }),
+    )
+      .toBe(want);
   });
+
+  it("refuses a quadrupled delimiter, which leaves @@ in the text", () => {
+    const { message, line } = fault("a\nb\n@@@@A@@\n", { A: "v" });
+    expect(message).toBe(`${source}:3: a stray @@ is left in the template`);
+    expect(line).toBe(3);
+  });
+
+  it.each([
+    ["two values", "@@A@@@@B@@", { A: "x@", B: "@y" }, 1],
+    ["two #each items", "\n@@#each L@@@@.@@@@/each@@", { L: ["a@", "@b"] }, 2],
+    ["a literal @ and a value", "a\npkg@@@A@@\n", { A: "@scope" }, 2],
+    ["a value and a literal @", "@@A@@@x\n", { A: "x@" }, 1],
+    ["text across an #if", "\na@@@#if T@@@b@@/if@@", { T: true }, 2],
+  ])(
+    "refuses %s joining into @@, naming the line",
+    (_, template, values, want) => {
+      const { message, line } = fault(template, values);
+      expect(message).toBe(
+        `${source}:${want}: an @ meets an @ here, spelling @@ in the output`,
+      );
+      expect(line).toBe(want);
+    },
+  );
 
   it("keeps two adjacent tags apart", () => {
     expect(run("@@A@@@@A@@", { A: "v" })).toBe("vv");
