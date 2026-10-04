@@ -1,0 +1,11 @@
+/security-review engine, row R, round 5, range f000e131..c8576bdc (sub-task scoped to the range).
+The code-review engine was not re-run this round: the review stage closed at the round cap (4); only the
+cap-exempt security stage loops on.
+
+NO FINDINGS.
+- Command injection: none; git via execFileSync with an argument array, no shell.
+- Fix c8576bdc: deriveOrigin compares realpath of rev-parse --show-toplevel with realpath of repoRoot;
+  a mismatch or any error returns {}. A subdirectory or non-repo directory cannot pick up an enclosing origin.
+- Origin URL: host and path allowlisted to [A-Za-z0-9._-]; . and .. refused.
+- Prototype pollution: __proto__, constructor, prototype keys refused; lookups use Object.hasOwn.
+- Rendered content: values cannot carry line breaks, control characters or @@.

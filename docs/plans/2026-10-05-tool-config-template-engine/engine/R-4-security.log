@@ -1,0 +1,12 @@
+/security-review engine, row R, round 4, range f000e131..13d08d1e (sub-task scoped to the range).
+
+NO FINDINGS at confidence >= 8.
+- Command injection: values.mjs passes git an argument list; no shell.
+- Credentials and port (13d08d1e): user@ of an https origin is dropped, never reaches REPO_URL; port
+  captured by (\d+), ASCII digits only; a non-digit port fails the match since the host pattern refuses ":".
+- Host and path: allowlisted, . and .. refused — no quotes, $ or traversal into rendered text.
+- Prototype pollution: __proto__, constructor, prototype keys refused; lookups use Object.hasOwn; names upper-cased.
+- @@ handling (440cd71c): value holding @@ or a control char refused; @@ formed at a join refused;
+  rendered text never re-parsed.
+- Below the bar: values not escaped for TOML/bash; a " in the repo's own stackgen.yaml could break out
+  of a quoted string — the author can already commit mise.toml directly, no trust boundary crossed.

@@ -1,0 +1,25 @@
+/code-review engine (high), row R, round 1, range f000e131..a1891171. 130 tests pass.
+Findings 1-7 confirmed by probe scripts; 8-10 by reading.
+
+1. values.mjs:201 — pack/global clash only refused when that global is present in this repo, not
+   checked against the fixed D6 name set. No origin + packs.x.repo_url: evil → REPO_URL='evil', no error.
+   Same for packs.x.merge_model_develop when merge_model absent. Compare against all names TOP and the
+   origin derivation can produce.
+2. yaml.mjs:172 — only lowercase true/false become booleans; False, FALSE, no, null, ~ silently become
+   non-empty strings (truthy in #if). packs.x.enabled: False → "False". forge: ~ → "~".
+3. yaml.mjs:35 — stripComment treats a mid-scalar ' or " as a quote opener, so the trailing comment is
+   kept: repo_name: o'neil # the api repo → "o'neil # the api repo". Quotes only count when they open the scalar.
+4. values.mjs:140 — parseRemote accepts fewer forms than forgeLinks (which plan 2 deletes): user-less scp
+   github.com:owner/repo, leading-slash scp git@github.com:/owner/repo.git, and http:// all give {}.
+5. yaml.mjs:249 — key pattern allows __proto__; out[key]= on {} sets the prototype, swallowing the key;
+   duplicate and unknown-key checks miss it. '__proto__:\n  format: 1' validates via the prototype.
+   Use Object.create(null) or refuse __proto__.
+6. template.mjs:277 — stray-@@ check scans the output, so a value containing @@ is reported as a template
+   fault, and the line is an output line labelled with the template path (wrong after #each / tag-line
+   removal). Check text tokens at tokenize time for the real template line.
+7. template.mjs:19 — 'x @@@A@@ y' with A='v' renders 'x @v y' with no error; D2's mistyped-tag promise fails.
+8. yaml.mjs:276 — nested block list '- - x' not refused; becomes the string '- x'.
+9. yaml.mjs:243 — list at the same indent as its key ('members:\n- a\n- b') refused with misleading
+   'members has no value'.
+10. values.mjs:176 — unsafe-character predicate duplicated from template.mjs:28; must be kept in sync by
+   hand. A shared lib module would remove the copy.

@@ -1,0 +1,13 @@
+/security-review engine, row R, round 2, range f000e131..387bab7c (sub-task scoped to the range).
+
+NO FINDINGS at confidence >= 8.
+- Prototype pollution: both fixes hold. yaml.mjs refuses __proto__, constructor and prototype in every
+  mapping, packs.<slug> included; values.mjs and template.mjs look keys up only with Object.hasOwn.
+  A pack named after an Object method (toString) reads as empty — no concrete pollution path.
+- Origin-derived names: parseRemote limits host to [A-Za-z0-9.-], path segments to [A-Za-z0-9._-],
+  . and .. refused. execFileSync passes an argument array; no shell.
+- Template engine: substituted values never re-parsed; control chars, U+2028/U+2029 refused; any @@
+  left in the output, including one a value brings in, is an error.
+- Below the bar: stored scalars render unescaped, so " or $(…) in repo_name could break out of quoted
+  bash/TOML — but they come from the target repo's own committed file and nothing calls these modules
+  yet; the first caller must quote values for its output format.
