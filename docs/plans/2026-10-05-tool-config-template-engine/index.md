@@ -11,9 +11,9 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-10-05 by the user
+RUNNING since 2026-10-05 in .worktrees/2026-10-05-tool-config-template-engine
 
 ## Consent
 
@@ -206,10 +206,29 @@ Raised in the interview, owned by the chained plans:
   from the script's `check` to the LLM
   (`doctor/references/stack-checks.md:556-565`).
 
+## Gaps surfaced during execution
+
+- **D2 needs a carve-out** (R1, wave 1) — D2 says an unknown name is an error,
+  but D7's `@@#if REPO_URL@@` guard only works if an absent name reads false in
+  `#if`. U1 took that reading: absent → false in `#if`, still an error in a
+  substitution or `#each`. Side effect: a mistyped name in `#if` reads false
+  silently. Non-blocking; for plan 2 to confirm or tighten.
+- **`forge` and `secrets` value shape** (U2, wave 1) — D6 gives no type; U2
+  typed both as strings. Non-blocking; plan 3 may need a mapping.
+
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                                                                                                           | Commit |
+| ---- | --------- | ----- | ----- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight | —     | 1     | pass        | wave gate 6/6 green; doctor 0 blocking (repo not onboarded — no `.config/vwf.yaml`); format check skipped — no `covers:`; conventions skipped — no `code` unit; order U1,U2 → R → U3 → U4                                                                                                                                                                                                                        |        |
+| 1    | U1        | opus  | 1     | green       | 61 cases green. DECIDED: unknown name in `#if` is false (D7 guard), substitution/`#each` still error; `#if`/`#each` take `.`/`.key`; tab + C1 refused. GAP: number in `#if` taken as true                                                                                                                                                                                                                        |        |
+| 1    | U2        | opus  | 1     | green       | 68 tests green. DECIDED: no null (empty list is `[]`); only space/tab trimmed so U+2028 reaches D4; escapes limited to `\"` `\\`; `format` required; no file → origin names only; origin paths ≥2 segments, host lowercased; C1 refused. GAP: `forge`/`secrets` typed as strings — plan 3 may need a mapping                                                                                                     |        |
+| 1    | R1        | opus  | 1     | findings(5) | RULINGS: U1 departed D1 — a number is truthy in `#if` → loop to U1. Not a departure: unknown name in `#if` reads false (only reading that makes D7's guard work; D2's text needs a carve-out — gap). U2 extra exports `ValuesError`/`STACKGEN_PATH` accepted (needed for errors naming the key). `forge`/`secrets` typing — U2's gap. Docs: `.claude/skills/stackgen-plugin/SKILL.md:36-37` → U3. CONTRACT clean |        |
+| 1    | U1        | opus  | 2     | green       | R1 loop-back: number is false in `#if` per D1's closed truth set; 62 cases green                                                                                                                                                                                                                                                                                                                                 |        |
+| 1    | R1        | opus  | 2     | pass        | D1 now matched exactly; CONTRACT clean, RULINGS clean                                                                                                                                                                                                                                                                                                                                                            |        |
+| 1    | gate      | —     | 1     | red         | `code:precommit` lint: `template.mjs:28` no-control-regex [U1]; `values.mjs:176` no-control-regex, `yaml.mjs:181` no-irregular-whitespace [U2]; the other 5 lines green                                                                                                                                                                                                                                          |        |
+| 1    | U1        | opus  | 3     | green       | gate loop-back: control regex replaced by a code-point check, same refusals, no disable comment; 62 green                                                                                                                                                                                                                                                                                                        |        |
+| 1    | U2        | opus  | 2     | green       | gate loop-back: D4 regex → code-point check; BOM strip via `charCodeAt(0) === 0xfeff` (Write had turned the escape literal); 68 green                                                                                                                                                                                                                                                                            |        |
 
 ## Launch
 
