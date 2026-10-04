@@ -261,11 +261,11 @@ running the morning after a reshape.
 - **keep** — the gate-first commit below runs under the **installed** hooks,
   and this run does **not** invoke `setup:precommit --force`. The plan says
   so, and the report names the manager it found and that the shipped gate
-  configuration is landed but not wired. **Open question:** §2's call runs
-  `setup:all` ([new repo](new-repo.md) §2), which runs `setup:precommit`
-  without `--force`; that task exits 1 on the foreign manager, so on keep the
-  call is always refused — its files kept, nothing recorded, reported under
-  Deferred. How keep should complete is not yet decided.
+  configuration is landed but not wired. §2's call still completes: it runs
+  `setup:all` ([new repo](new-repo.md) §2), whose `setup:precommit` without
+  `--force` names the foreign manager and the by-hand switch lines, warns,
+  installs nothing and exits 0 — so the hooks stay the foreign manager's,
+  and the report says so.
 - **switch** — the run invokes **`setup:precommit --force`**, the task
   library's flag for exactly this, which unsets the local `core.hooksPath`
   and takes the hooks over — as its **last shaping step**, after every other
@@ -986,8 +986,9 @@ repo of the set that resolved to mode `blank` or `source` takes the
   executable-bit step; trust was checked in the survey, and §2's call ran the
   aggregator), in that order and **exactly as that file states them** —
   read there, not restated here. They were the new-repo landing's alone,
-  and the questions that feed them were asked in every mode all along; a shaped repo that
-  answered them and had nothing run on the answers was the hole. The fill
+  and the questions that feed them were asked in every mode all along; a
+  shaped repo that answered them and had nothing run on the answers was the
+  hole. The fill
   passes below run after §4 so a placeholder and a marked position never
   race for one line.
 - **Replaced files land before the positions are filled**, and the order is

@@ -815,7 +815,7 @@ added to one and not the other is how the vocabularies drift.
 | `setup:external:{start,stop,pull}`                    | **slots** — local services; each a no-op outside a dev shell                  |
 | `setup:deps:all`                                      | `cleanup → install → upgrade → outdated → audit`                              |
 | `setup:deps:{install,cleanup,upgrade,outdated,audit}` | **slots** — the package manager's verbs; `install` honours `--frozen`         |
-| `setup:precommit [--force] [--update]`                | install the hooks, chaining a hand-written one as `.legacy`; refuses a foreign hook manager or `core.hooksPath` without `--force`; autoupdate only under `--update` |
+| `setup:precommit [--force] [--update]`                | install the hooks, chaining a hand-written one as `.legacy`; skips a foreign hook manager or `core.hooksPath` with a warning without `--force`; autoupdate only under `--update` |
 | `setup:ai [--user] [--inventory]`                     | install and update the repo's required plugins at project scope               |
 | `setup:worktree`                                      | the lighter sibling a fresh worktree runs                                     |
 | `code:all [--fix] [--debug]`                          | the one-command gate: `format → lint → sec`                                   |
@@ -935,12 +935,15 @@ a pipeline installs what a developer committed and resolves nothing.
 `setup:all` exits 1 when `MISE_ENV` is unset, naming
 `MISE_ENV=dev mise run setup:all`.
 
-`setup:precommit` stops, without `--force`, on an effective `core.hooksPath`,
+`setup:precommit` skips, without `--force`, on an effective `core.hooksPath`,
 a `.husky/` directory or a lefthook config in any of its forms (`lefthook` or
-`.lefthook`, with `.yml`, `.yaml`, `.toml` or `.json`), prints what it found
-and the by-hand cleanup, deletes nothing and exits 1. A repo whose hooks
-pre-commit already owns is not refused again, even with the husky or lefthook
-file still tracked.
+`.lefthook`, with `.yml`, `.yaml`, `.toml` or `.json`): it warns, prints what
+it found and the by-hand switch lines, installs and deletes nothing and exits
+0, so `setup:all` completes. With `--force` it takes the hooks over, except
+where `core.hooksPath` is set outside the repo — global or system git-config,
+which `--force` never edits — where it prints the unset lines and exits 1. A
+repo whose hooks pre-commit already owns is not skipped again, even with the
+husky or lefthook file still tracked.
 
 #### Member flags
 

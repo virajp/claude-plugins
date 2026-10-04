@@ -430,8 +430,8 @@ worktree, mid-rebase or on a commit that touched only `graphify-out/`, and
 runs detached, so the commit returns at once — one rebuild at a time, under
 [the single-flight lock](mise.md#the-graph-tool). It replaces graphify's own
 `graphify hook install`, whose raw git hooks pin a Python path and break on
-the next upgrade. First — before its foreign-hook-manager refusal, so the
-strip runs even where it then refuses — `setup:precommit` looks for
+the next upgrade. First — before its foreign-hook-manager check, so the
+strip runs even where it then skips the install — `setup:precommit` looks for
 graphify's markers in both hooks graphify writes, `post-commit` and
 `post-checkout`; where either carries one it runs `graphify hook uninstall`,
 or — with graphify not on `PATH` — strips each marked block itself, deleting
