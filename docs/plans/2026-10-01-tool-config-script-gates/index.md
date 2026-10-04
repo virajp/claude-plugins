@@ -11,13 +11,10 @@ backlog_pieces: []
 
 ## Status
 
-**BLOCKED**
+**COMPLETE**
 
-BLOCKED at landing — develop merged in (2400991e), all units green;
-code:merge:develop refuses: its all-files hook run fails on shfmt, shellcheck
-and actionlint having no pinned version since develop's 1f178b3d mise reorg
-(conf.d subfolders not loaded); in
-.worktrees/2026-10-01-tool-config-script-gates
+COMPLETE 2026-10-04 — 1b34cdad, 218d48bd, 6ad8537c, 1a14555c, merges 2400991e,
+e54ba18a
 
 ## Consent
 
