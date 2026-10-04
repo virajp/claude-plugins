@@ -135,18 +135,19 @@ export function toNames(obj, prefix = "") {
 
 /** `{ host, path }` from an scp, ssh:// or https:// remote URL, or null. */
 function parseRemote(url) {
-  let m = /^(?:ssh|https):\/\/(?:[^@/]*@)?([^/:]+)(?::\d+)?\/(.+)$/i.exec(url);
+  let m = /^(ssh|https):\/\/(?:[^@/]*@)?([^/:]+)(?::(\d+))?\/(.+)$/i.exec(url);
   if (!m && !/^[a-z][a-z0-9+.-]*:\/\//i.test(url)) {
-    m = /^[^@/\s]+@([^:/\s]+):(.+)$/.exec(url);
+    m = /^()[^@/\s]+@([^:/\s]+):()(.+)$/.exec(url);
   }
   if (!m) {
     return null;
   }
-  const path = m[2].replace(/\/+$/, "").replace(/\.git$/, "");
+  const [, scheme, host, port, rest] = m;
+  const path = rest.replace(/\/+$/, "").replace(/\.git$/, "");
   // Both land inside quoted shell and TOML: a host or a segment holding
   // anything but these characters is not a forge URL.
   if (
-    !/^[A-Za-z0-9.-]+$/.test(m[1])
+    !/^[A-Za-z0-9.-]+$/.test(host)
     || !/^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)+$/.test(path)
   ) {
     return null;
@@ -154,7 +155,9 @@ function parseRemote(url) {
   if (path.split("/").some(seg => seg === "." || seg === "..")) {
     return null;
   }
-  return { host: m[1].toLowerCase(), path };
+  // An https port is part of the web URL; an ssh port is not.
+  const web = scheme.toLowerCase() === "https" && port ? `:${port}` : "";
+  return { host: `${host.toLowerCase()}${web}`, path };
 }
 
 /** REPO_URL and PROJECT_NAME from `origin`, or `{}` when there is none or it is not a forge URL. */

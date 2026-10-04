@@ -390,6 +390,22 @@ describe("deriveOrigin", () => {
     });
   });
 
+  it("keeps an https port in REPO_URL", () => {
+    gitRepo("https://git.example.com:8443/team/app.git");
+    expect(values.deriveOrigin(root)).toEqual({
+      REPO_URL: "https://git.example.com:8443/team/app",
+      PROJECT_NAME: "team/app",
+    });
+  });
+
+  it("drops an ssh port from REPO_URL", () => {
+    gitRepo("ssh://git@git.example.com:2222/team/app.git");
+    expect(values.deriveOrigin(root)).toEqual({
+      REPO_URL: "https://git.example.com/team/app",
+      PROJECT_NAME: "team/app",
+    });
+  });
+
   it.each([
     ["a local path", "/srv/git/repo.git"],
     ["a file url", "file:///srv/git/repo.git"],
