@@ -1,5 +1,3 @@
-# CI-only settings — loaded when MISE_ENV=ci (set by the GitHub workflows).
-
 [settings]
 # mise's bundled Node release-key import (gpg --import) fails on the Ubuntu CI
 # runner's gpg with "no valid OpenPGP data found", aborting `mise install`. The

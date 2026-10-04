@@ -1,4 +1,0 @@
-[tasks.init]
-description = "Initialize mise tasks"
-hide        = true
-run         = "find .config/mise/tasks/ -name '*' -type f -exec chmod 755 {} \\;"

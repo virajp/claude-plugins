@@ -1,0 +1,29 @@
+# AI Tools
+[tools.jq]
+version = "latest"
+
+[tools.yq]
+version = "latest"
+
+[tools."pipx:mempalace"]
+depends = [ "python", "uv" ]
+uvx     = true
+version = "latest"
+
+[tools."pipx:graphifyy"]
+depends = [ "python", "uv" ]
+uvx     = true
+version = "latest"
+
+[env]
+# Mempalace Backend (common across repos)
+MEMPALACE_BACKEND               = "qdrant"
+MEMPALACE_EMBEDDING_DEVICE      = "auto"
+MEMPALACE_EMBEDDING_MODEL       = "minilm"
+MEMPALACE_MAX_BACKUPS           = 4
+MEMPALACE_MCP_ALLOW_PEER_WRITER = 1
+MEMPALACE_MCP_IDLE_HOURS        = 0
+MEMPALACE_QDRANT_URL            = "http://127.0.0.1:6333"
+
+# Palace path for storing local data
+MEMPALACE_PALACE_PATH = "~/.local/share/mempalace/claude-plugins"

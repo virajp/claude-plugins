@@ -1,0 +1,47 @@
+[settings]
+# Python, pipx, uv settings
+# every pipx: tool installs through uv
+pipx.uvx            = true
+python.compile      = false
+python.uv_venv_auto = "create|source"
+
+[tools.python]
+version = "latest"
+
+[tools.uv]
+depends = [ "python" ]
+version = "latest"
+
+[tools."pre-commit"]
+depends = [ "python", "uv" ]
+uvx     = true
+version = "latest"
+
+# Grype is a vulnerability scanner for container images
+# and filesystems
+[tools.grype]
+version = "latest"
+
+# Gitleaks is a SAST tool for detecting hardcoded secrets like
+# passwords, API keys, and tokens in git repositories
+[tools.gitleaks]
+version = "latest"
+
+# Dprint is a code formatter for various programming languages
+[tools.dprint]
+version = "latest"
+
+# Taplo is a code formatter for TOML files
+[tools.taplo]
+depends = [ "dprint" ]
+version = "latest"
+
+[tasks.init]
+description = "Initialize mise tasks"
+hide        = true
+run         = "find .config/mise/tasks/ -name '*' -type f -exec chmod 755 {} \\;"
+
+[shell_alias]
+precommit = "mise run code:precommit"
+setup     = "mise run setup:all"
+worktrees = "mise run code:worktrees"

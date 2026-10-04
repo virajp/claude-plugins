@@ -1,0 +1,24 @@
+[settings]
+# NodeJS settings
+node.compile        = false
+npm.package_manager = "pnpm"
+
+# Tools every environment needs; tools.<env>.toml adds one environment's own.
+[tools.node]
+version = "latest"
+
+[tools.pnpm]
+depends = [ "node" ]
+version = "latest"
+
+# OSV Scanner is a tool for scanning open source vulnerabilities.
+[tools.osv-scanner]
+version = "latest"
+
+[env]
+_.path = { path = "node_modules/.bin", tools = true }
+
+# Repo level configuration for `vwf` plugin
+MEMBERS     = ""
+MERGE_MODEL = "direct"
+REPO_NAME   = "claude-plugins"
