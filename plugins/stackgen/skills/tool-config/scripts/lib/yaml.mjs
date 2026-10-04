@@ -19,27 +19,23 @@ export class YamlError extends Error {
 const BLANK = /^[ \t]+|[ \t]+$/g;
 const KEY = /^([A-Za-z_][A-Za-z0-9_-]*)[ \t]*:(?:[ \t]+(.*))?$/s;
 
-/**
- * A quote opens a string only where a scalar starts — the line start, or after
- * `: ` or `- `, and inside a flow list after `[` or `,` — never mid-scalar
- * (`o'neil`).
- */
-function opensScalar(text, i, flow) {
-  const starts = flow ? ":-[," : ":-";
-  if (
-    i > 0 && !/[ \t]/.test(text[i - 1]) && !(flow && "[,"
-      .includes(text[i - 1]))
-  ) {
-    return false;
-  }
-  const before = text.slice(0, i).replace(/[ \t]+$/, "");
-  return before === "" || starts.includes(before.at(-1));
+/** Where a line's value starts: after `- ` for a list item, after `key: ` for a mapping. */
+function valueStart(text) {
+  const m = /^-[ \t]+/.exec(text)
+    ?? /^[A-Za-z_][A-Za-z0-9_-]*[ \t]*:[ \t]+/.exec(text);
+  return m ? m[0].length : 0;
 }
 
-/** Strip a trailing ` # comment` outside quotes. */
+/**
+ * Strip a trailing ` # comment` outside quotes. A quote opens a string only as
+ * the value's first character, or a flow list element's — never mid-scalar
+ * (`o'neil`, `b - "c`).
+ */
 function stripComment(text) {
+  const first = valueStart(text);
+  const flow = text[first] === "[";
   let quote = null;
-  let flow = false;
+  let expect = false;
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
     if (quote) {
@@ -52,12 +48,15 @@ function stripComment(text) {
       else if (c === quote) {
         quote = null;
       }
+      continue;
     }
-    else if ((c === "\"" || c === "'") && opensScalar(text, i, flow)) {
+    if (expect && (c === " " || c === "\t")) {
+      continue;
+    }
+    const opens = i === first || expect;
+    expect = flow && i >= first && (c === "[" && i === first || c === ",");
+    if ((c === "\"" || c === "'") && opens) {
       quote = c;
-    }
-    else if (c === "[" && opensScalar(text, i, flow)) {
-      flow = true;
     }
     else if (c === "#" && (i === 0 || /[ \t]/.test(text[i - 1]))) {
       return text.slice(0, i);
@@ -71,6 +70,7 @@ function splitFlow(body, fail) {
   const parts = [];
   let quote = null;
   let start = 0;
+  let expect = true;
   for (let i = 0; i < body.length; i++) {
     const c = body[i];
     if (quote) {
@@ -84,16 +84,25 @@ function splitFlow(body, fail) {
         quote = null;
       }
     }
-    else if ((c === "\"" || c === "'") && opensScalar(body, i, true)) {
+    else if (expect && (c === " " || c === "\t")) {
+      continue;
+    }
+    else if ((c === "\"" || c === "'") && expect) {
       quote = c;
     }
     else if (c === "[" || c === "{") {
       fail("a nested flow collection is not supported");
     }
+    else if (c === "]") {
+      fail("an unquoted ] inside a flow list — quote the element");
+    }
     else if (c === ",") {
       parts.push(body.slice(start, i));
       start = i + 1;
+      expect = true;
+      continue;
     }
+    expect = false;
   }
   parts.push(body.slice(start));
   const items = parts.map(p => p.replace(BLANK, ""));
@@ -193,7 +202,15 @@ function scalar(text, fail, { list = true } = {}) {
   if (/:([ \t]|$)/.test(t)) {
     fail("a mapping where a scalar was expected — quote the value");
   }
+  if (/^-([ \t]|$)/.test(t)) {
+    fail(
+      "a list item where a scalar was expected — a block list starts on the next line, indented by 2 spaces",
+    );
+  }
   if (/^-?\d+$/.test(t)) {
+    if (/^-?0\d/.test(t) || t === "-0" || !Number.isSafeInteger(Number(t))) {
+      fail(`${t} is not an exact integer — quote it to keep it a string`);
+    }
     return Number(t);
   }
   if (t === "true" || t === "false") {

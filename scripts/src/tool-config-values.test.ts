@@ -105,6 +105,19 @@ describe("parseYaml", () => {
     });
   });
 
+  it("opens a quote only at the value's or a flow element's first character", () => {
+    expect(parse("a: b - \"c # d\"\nl:\n  - x 'y # z'\nf: [ 'a, b' , \"c]\"]"))
+      .toEqual({ a: "b - \"c", l: ["x 'y"], f: ["a, b", "c]"] });
+  });
+
+  it("reads 0, a negative integer, and a quoted leading zero", () => {
+    expect(parse("a: 0\nb: -12\nc: '0012'")).toEqual({
+      a: 0,
+      b: -12,
+      c: "0012",
+    });
+  });
+
   it("keeps a float or a quoted number a string", () => {
     expect(parse("a: 1.5\nb: '1'")).toEqual({ a: "1.5", b: "1" });
   });
@@ -165,6 +178,23 @@ describe("parseYaml", () => {
           ],
       ),
     ["an ambiguous word in a flow list", "a: [x, off]", 1, /off is ambiguous/],
+    [
+      "a leading-zero integer",
+      "a: 1\nb: 0012",
+      2,
+      /0012 is not an exact integer/,
+    ],
+    ["a negative zero", "a: -0", 1, /-0 is not an exact integer/],
+    ["an unsafe integer", "a: 12345678901234567890", 1, /not an exact integer/],
+    [
+      "a block list on the key's line",
+      "a: 1\nb: - x",
+      2,
+      /block list starts on the next line/,
+    ],
+    ["a bare dash value", "a: -", 1, /block list starts on the next line/],
+    ["a stray ] in a flow list", "a: [x]y, z]", 1, /unquoted \]/],
+    ["a stray [ in a flow list", "a: [x, y[z]", 1, /nested flow/],
   ])("refuses %s, naming the line", (_what, text, line, message) => {
     const e = refusal(text);
     expect(e.line).toBe(line);
@@ -446,6 +476,19 @@ describe("loadValues", () => {
       );
     },
   );
+
+  it("refuses two pack keys that differ only in case", () => {
+    writeStackgen("format: 1\npacks:\n  swiftui:\n    foo: a\n    FOO: b");
+    expect(() => values.loadValues(root, { pack: "swiftui" }))
+      .toThrow(/packs\.swiftui\.foo and packs\.swiftui\.FOO both name FOO/);
+  });
+
+  it("reads a slug that names an Object.prototype member as absent", () => {
+    writeStackgen("format: 1");
+    expect(values.loadValues(root, { pack: "toString" })).toEqual({
+      FORMAT: 1,
+    });
+  });
 
   it("is the origin names alone when the file is absent", () => {
     gitRepo("https://github.com/virajp/claude-plugins");

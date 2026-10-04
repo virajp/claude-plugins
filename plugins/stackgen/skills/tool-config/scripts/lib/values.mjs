@@ -215,13 +215,23 @@ export function loadValues(repoRoot, { pack } = {}) {
   const { packs = {}, ...stored } = readStackgen(repoRoot) ?? {};
   const values = { ...toNames(stored), ...deriveOrigin(repoRoot) };
   if (pack !== undefined) {
-    for (const [key, value] of Object.entries(packs[pack] ?? {})) {
+    const own = Object.hasOwn(packs, pack) ? packs[pack] : {};
+    const seen = new Map();
+    for (const [key, value] of Object.entries(own)) {
       const name = key.toUpperCase();
-      if (GLOBAL_NAMES.has(name) || Object.hasOwn(values, name)) {
+      if (seen.has(name)) {
+        throw new ValuesError(
+          `${STACKGEN_PATH}: packs.${pack}.${
+            seen.get(name)
+          } and packs.${pack}.${key} both name ${name} — refused`,
+        );
+      }
+      if (GLOBAL_NAMES.has(name)) {
         throw new ValuesError(
           `${STACKGEN_PATH}: packs.${pack}.${key} names ${name}, which is already a global name — refused`,
         );
       }
+      seen.set(name, key);
       values[name] = value;
     }
   }
