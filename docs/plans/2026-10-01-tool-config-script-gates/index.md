@@ -11,9 +11,12 @@ backlog_pieces: []
 
 ## Status
 
-**COMPLETE**
+**BLOCKED**
 
-COMPLETE 2026-10-04 — 1b34cdad, 218d48bd, 6ad8537c, 1a14555c, merge 2400991e
+BLOCKED at landing — develop merged in (2400991e), all units green;
+code:merge:develop refuses: its all-files hook run fails on shfmt, shellcheck
+and actionlint having no pinned version since develop's 1f178b3d mise reorg
+(conf.d subfolders not loaded); in .worktrees/2026-10-01-tool-config-script-gates
 
 ## Consent
 
@@ -369,6 +372,7 @@ Keep the block under 1,500 characters.
 | —    | wave gate (final)       | —     | 1     | pass        | 8/8 green over the finished tree 1a14555c                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | —                                                                                                                                                                                                                                                                                            |
 | —    | land                    | —     | 1     | blocked     | merge-tree vs origin/develop: 6 conflicts — .claude/skills/vwf-plugin/references/skills-and-agents.md, TC references/mise.md, stacks/inventory.md, site installer/targets.md, plugins/stackgen.md, plugins/vwf.md (develop moved 36 commits: setup-ai-validates-vwf, mise config reorg); also develop itself fails p:plugins:shellcheck (no shellcheck/shfmt pin loads after the conf.d/_base reorg)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | —                                                                                                                                                                                                                                                                                            |
 | —    | land               | —     | 2     | pass        | user chose (2026-10-04): merge develop in and land with the inherited red recorded; merged origin/develop at 2400991e — 6 conflicts resolved keeping both sides (mise.md setup:precommit + setup:ai rows; inventory.md regenerated; skills-and-agents init row, site targets.md, vwf.md, stackgen.md x2); gate over merged tree: 7/8 green, p:plugins:shellcheck RED (inherited from develop 1f178b3d: conf.d/_base, ai/, cloudflare/ subfolders do not load, so shellcheck/shfmt have no pin; same failure in the main checkout), code:precommit red on the same shellcheck/shfmt hooks only | 2400991e |
+| —    | land               | —     | 3     | blocked     | code:merge:develop (run from the branch) refuses at "Running the hooks over every file": format, lint and plugins-shellcheck hooks fail on "No version is set for shim" for shfmt, shellcheck, actionlint — develop 1f178b3d moved pins into conf.d/_base, ai/, cloudflare/ subfolders that mise does not load; not bypassed | —        |
 
 ## Gaps surfaced during execution
 
