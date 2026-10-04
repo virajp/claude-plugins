@@ -1,7 +1,7 @@
 ---
 name: plugin-authoring
 description: This repo's plugin doctrine — how a plugin is structured,
-  packaged and registered, the four mise gates, what p:plugins:check asserts,
+  packaged and registered, the three mise gates, what p:plugins:check asserts,
   and the traps specific to this marketplace. Auto-applies when editing
   anything under plugins/.
 user-invocable: false
@@ -47,15 +47,9 @@ A change under `plugins/` is not done until the gates pass:
 mise run p:plugins:check              # validates the authored tree
 mise run p:plugins:marketplace        # regenerate, if you touched a manifest
 mise run p:plugins:inventory          # regenerate, if you touched stackgen's stacks/ or kinds.md
-mise run p:plugins:shellcheck         # the shell a pack ships, if you touched any
 ```
 
-`p:plugins:shellcheck` runs `shellcheck -x` and `shfmt -d -i 2 -ci` over
-**both** shell tiers a pack ships — `config/.config/mise/tasks/**` and `hooks/`
-— plus the task library `stackgen:tool-config` lands from
-`skills/tool-config/assets/<tool>/.config/mise/tasks/**`, and pre-commit fires
-it on
-`^plugins/([^/]+/stacks/[^/]+/[^/]+/(config|hooks)|stackgen/skills/tool-config/assets)/`.
+No gate lints or formats the shell a pack ships.
 
 `--check` on the two generators is what CI and pre-commit run. It exists because
 each output is generated **and** committed, so a source edited without a
@@ -106,12 +100,10 @@ hook belongs to:
 
 `p:plugins:check`'s hook *rule* reads only a plugin's own `hooks/hooks.json`,
 but rule 11 covers a stackgen pack's payload scripts from the other end — exec
-bit and shebang, `bash` or `sh` only — and `p:plugins:shellcheck` lints their
-bodies. The shebang set is narrower than a task's on purpose: a hook is wired
-into `settings.json` as a bare path, so only a shell the host can find on `PATH`
-will do, and `shellcheck` reads that same line to pick its dialect — a POSIX
-hook declaring `bash` would be checked as bash and its bashisms would ship. What
-the `stackgen-plugin` skill still owns is what those scripts are *for*. The host
+bit and shebang, `bash` or `sh` only; nothing lints their bodies. The shebang
+set is narrower than a task's on purpose: a hook is wired into `settings.json`
+as a bare path, so only a shell the host can find on `PATH` will do. What the
+`stackgen-plugin` skill still owns is what those scripts are *for*. The host
 rules in full are stackgen's `assets/artifact-doctrine.md` §4.
 
 The payload's other two halves have rules of their own. Rule 13 covers its

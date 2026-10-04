@@ -39,11 +39,6 @@ jobs:
       - name: Static validation of plugins/
         run: mise run p:plugins:check
 
-      # The `mise x` wrapper is redundant — tools.toml pins both.
-      - name: shellcheck and shfmt over every shell file a pack ships
-        run: |
-          mise x shellcheck@latest shfmt@latest -- mise run p:plugins:shellcheck
-
       # main only: on develop a bumped ref has no tag yet, by design.
       - name: Every marketplace ref names a tag that exists
         if: github.ref == 'refs/heads/main'

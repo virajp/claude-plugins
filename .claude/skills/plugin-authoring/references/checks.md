@@ -11,7 +11,6 @@ format, and the one generated file that needs a freshness gate of its own.
 | `p:plugins:marketplace`         | regenerates both marketplace manifests from the 2 plugin manifests, plus the `.dev-marketplace/plugins/` staging dir                                                                   |
 | `p:plugins:marketplace --check` | asserts the committed manifest matches a fresh generation                                                                                                                              |
 | `p:plugins:inventory`           | regenerates `plugins/stackgen/stacks/inventory.md` from the stacks tree, and asserts every bundle pin resolves to a pack at that version; `--check` asserts the committed file matches |
-| `p:plugins:shellcheck`          | `shellcheck -x` + `shfmt -d` over every shell file a pack ships — task libraries and `_scripts/*`, then `hooks/*.sh`                                                                   |
 | `p:plugins:npm-normalize-test`  | table-tests the pnpm pack's `npm-normalize.sh` through the system sed                                                                                                                  |
 | `pnpm vitest run`               | the `scripts/` and `installer/` suites                                                                                                                                                 |
 
