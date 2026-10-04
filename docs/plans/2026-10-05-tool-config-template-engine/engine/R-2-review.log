@@ -1,0 +1,23 @@
+/code-review engine (high), row R, round 2, range f000e131..387bab7c. 165 tests pass.
+1-4 and 6 reproduced; 5, 7-10 by reading.
+
+1. template.mjs:242 — strictness covers only rendered branches: an unknown name, `@@NAME@` typo or stray @@
+   inside an untaken #if/#else branch or a zero-item #each passes. `@@#if X@@\n@@TYPO@\n@@UNKNOWN@@\n@@/if@@`
+   with X=false renders "" — breaks D2 for any guarded block.
+2. template.mjs:291 — post-render stray-@@ error reports a rendered-output line labelled source:line.
+   `@@#if X@@\nline2\n@@/if@@\nbad @@` X=false → `t:1`, bad @@ is on template line 4.
+3. template.mjs:289 — a value containing @@ (or x@ / @y adjacent tags) triggers the stray-@@ error,
+   blaming the template; neither loader nor scalar() refuses @@ in a value.
+4. yaml.mjs:196 — integer-looking plain scalars go through Number(): 0012 → 12, 12345678901234567890 →
+   12345678901234567000, -0 → 0. Raw insertion lands a corrupted value.
+5. values.mjs:140 — parseRemote needs user@ in scp form and only ssh:// / https://; forgeLinks
+   (tools/pre-commit.mjs:703) also took host:owner/repo (ssh alias) and any scheme://.
+6. yaml.mjs:36 — opensScalar treats a quote after a mid-value ` - ` as a scalar start (`a: b - "c # d"`
+   keeps the comment); `a: - x` → "- x" and `a: [x]y, z]` → ["x]y","z"] accepted instead of refused.
+7. values.mjs:218 — pack keys differing only in case (foo, FOO) reported as "already a global name";
+   packs[pack] resolves through the prototype (slug `constructor`) instead of Object.hasOwn.
+8. template.mjs:79 — altitude: refuse @@ in text tokens at tokenize time and validate every branch's
+   names before rendering; replaces the post-render scan and causes of 1-3.
+9. values.mjs:184 — D4 predicate written twice (also template.mjs:28-35).
+10. values.mjs:214 — each loadValues call re-reads the file and spawns git; plan 2's per-pack calls
+   cost N parses and N processes.

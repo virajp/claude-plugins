@@ -1,0 +1,20 @@
+/code-review engine (high), row R, round 4, range f000e131..13d08d1e. 194 tests pass; p:plugins:check green.
+1-2 reproduced in /tmp scratch repos; rest by reading. No remaining path for @@ to reach the output.
+
+1. values.mjs:167 — deriveOrigin runs git -C repoRoot without checking repoRoot is its own top level; a member
+   directory with no .git inside the base checkout takes the base's origin (REPO_URL https://github.com/acme/base).
+   Fix: compare git rev-parse --show-toplevel with repoRoot first.
+2. values.mjs:138 — parseRemote accepts fewer forms than forgeLinks (pre-commit.mjs:698-712): http://,
+   git+ssh://, user-less scp host:owner/repo, leading-slash scp all give {}.
+3. template.mjs:265 — unknown name in #if reads false; unknown names in untaken branches / empty #each never
+   checked (test.ts:142 locks it in). A #if typo silently drops its block everywhere.
+4. tool-config-values.test.ts:427 — the outside-a-git-repo test and REPO_URL undefined check at :460 assume
+   os.tmpdir() is outside any checkout — the condition that hides finding 1.
+5. values.mjs:117 — every YamlError/ValuesError names only .config/stackgen.yaml, never the repoRoot; with
+   N members the file is ambiguous.
+6. template.mjs:204 — scalar() calls any non-scalar non-list "a mapping", including an undefined own property.
+7. values.mjs:217 — each loadValues call re-reads the file and spawns git.
+8. yaml.mjs:222 — 0x10, 0o7, +1, 1.0, ? x accepted as strings while y/n/on refused; 16.0 is "16.0" here, 16 in yq.
+9. values.mjs:187 — D4 check duplicated with template.mjs:28.
+10. values.mjs:201 — shipped comment cites plan-internal ids D6/D7; also yaml.mjs:345 `if (i < lines.length)`
+   can never fire.

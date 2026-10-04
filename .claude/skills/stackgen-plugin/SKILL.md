@@ -34,19 +34,23 @@ both ways too: `/stackgen:tool-config` owns the mise config — its layout, task
 library and doctrine sit in its `assets/mise/` and `references/mise.md` — and
 **mise, dprint, pre-commit, gitleaks and grype run on a shipped node script**,
 `skills/tool-config/scripts/tool-config.mjs` plus `scripts/lib/` (one module per
-gate tool under `lib/tools/`): zero dependencies, run as
-`MISE_ENV=dev mise x -- node` on the repo's own dev node pin (the `node` on
-`PATH` only for the first `all` on a repo with no mise config), JSON on stdout,
-exit 0, 2 (refused) or 1 (fault). The script is the source of truth: it renders
-the assets' marked positions, so a greenfield repo needs no judgement, and hands
-a brownfield repo's leftovers back as `needs-edit` rows the session edits by
-hand per the tool's reference. It writes every pin as an **exact version**,
-resolving `latest` or a prefix with `mise latest` — there is no mise lockfile —
-and `mise upgrade` is the one call that moves a pin, only within what declared
-it. It runs a tool only as `mise x -- <tool>`, the version the repo pins, and
-only once installed; it reads mise trust and never grants it — **trust is the
-person's prerequisite**. A written call formats every file it wrote with the
-shipped dprint config and validates the hook config
+gate tool under `lib/tools/`, plus three tool-neutral modules the script does
+not call yet: `lib/template.mjs`, the `@@NAME@@`, `@@#if NAME@@` and
+`@@#each NAME@@` template engine; `lib/yaml.mjs`, the reader for the constrained
+`.config/stackgen.yaml` grammar; and `lib/values.mjs`, which turns that file
+plus the repo's `origin` into the names a template reads): zero dependencies,
+run as `MISE_ENV=dev mise x -- node` on the repo's own dev node pin (the `node`
+on `PATH` only for the first `all` on a repo with no mise config), JSON on
+stdout, exit 0, 2 (refused) or 1 (fault). The script is the source of truth: it
+renders the assets' marked positions, so a greenfield repo needs no judgement,
+and hands a brownfield repo's leftovers back as `needs-edit` rows the session
+edits by hand per the tool's reference. It writes every pin as an **exact
+version**, resolving `latest` or a prefix with `mise latest` — there is no mise
+lockfile — and `mise upgrade` is the one call that moves a pin, only within what
+declared it. It runs a tool only as `mise x -- <tool>`, the version the repo
+pins, and only once installed; it reads mise trust and never grants it — **trust
+is the person's prerequisite**. A written call formats every file it wrote with
+the shipped dprint config and validates the hook config
 (`pre-commit validate-config`) before it records a hash, restoring the files
 byte for byte on a failure; `all` runs `MISE_ENV=dev mise run setup:all` between
 the landing and the formatter, so it ends in a set-up repo. `all` also lands a

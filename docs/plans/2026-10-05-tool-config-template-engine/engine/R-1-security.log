@@ -1,0 +1,15 @@
+/security-review engine, row R, round 1, range f000e131..a1891171.
+The engine's built-in diff is against main (3MB, prior plans' work already reviewed by
+their own rows); its vulnerability sub-task was scoped to the row's range.
+
+NO FINDINGS.
+- Command injection: none. execFileSync("git", [...]) runs without a shell; repoRoot is one argument.
+- Template injection: none. Rendered values are never re-parsed; delimiters strict; stray @@ refused.
+- Path traversal: none. Only read is join(repoRoot, ".config/stackgen.yaml").
+- Prototype pollution: none reachable. __proto__ key affects only that parsed object; lookups use Object.hasOwn.
+- Rendered-content breakout: filtered (4/10). No context escaping; a value can hold ", $(, backtick, ;
+  and the origin path regex [^/\s]+ passes them, so a crafted value could break out of a quoted
+  TOML/bash string. Left out: no trust boundary crossed — values come from the target repo's own
+  committed file; origin is local git config, not inherited on clone; nothing calls these yet.
+Hardening note: if a later caller renders values from a less trusted source, escape per output
+format or restrict values to a safe character set.

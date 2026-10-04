@@ -1,0 +1,20 @@
+/code-review engine (high), row R, round 3, range f000e131..d98c33f5. 1-3 checked by running; rest by reading.
+Engine note: 4 (part), 5, 6, 7, 8 were raised in earlier rounds and remain; 1, 2, 3 are new.
+
+1. template.mjs:74 — the tripled-delimiter check refuses any literal @ beside a tag, so `"npm:prettier@@@V@@"`,
+   `pnpx foo@@@VER@@`, `@@USER@@@@@HOST@@` throw "a tripled @ delimiter". No escape (D2) — plan 2's pinned-tool
+   templates cannot write pkg@version or user@host beside a value.
+2. values.mjs:138 — parseRemote drops the port for https:// too: https://git.example.com:8443/team/app.git →
+   REPO_URL https://git.example.com/team/app. Right for ssh, wrong for https.
+3. template.mjs:252 — with the post-render scan gone, adjacent values make @@ in the output:
+   render('@@A@@@@B@@', {A:'x@', B:'@y'}) → 'x@@y'; same with #each over ['a@','@b']. Breaks D2's leftover-@@ guarantee.
+4. template.mjs:259 — unknown names checked only on rendered branches: `@@#if REPO_URL@@\n@@REPO_NAEM@@\n@@/if@@`
+   passes until a machine with an origin; `@@#if MERGE_MODEL@@` (never produced) silently drops its block.
+5. values.mjs:139 — parseRemote accepts fewer forms than forgeLinks: user-less scp alias, leading-slash scp,
+   http:// / git:// give {}.
+6. values.mjs:184 — D4 predicate duplicated with template.mjs:28-35.
+7. values.mjs:214 — each loadValues call re-reads the file and spawns git.
+8. yaml.mjs:34 — stripComment and splitFlow are two copies of one quote-tracking scanner; patched in step twice.
+9. values.mjs:199 — GLOBAL_NAMES built from TOP key names, not from what toNames produces; stale once a
+   top-level key becomes a mapping (plan 3 forge/secrets).
+10. yaml.mjs:256 — isItem needs `- ` (space) while valueStart accepts `-\t`; `-\tb` misreported as a mapping key.
