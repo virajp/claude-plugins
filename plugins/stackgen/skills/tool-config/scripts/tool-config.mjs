@@ -146,6 +146,7 @@ class Workspace {
     this.modes = new Map();
     this.owner = new Map(); // path → the tool whose call first wrote it
     this.order = []; // touched paths, first touch first
+    this.unhashed = new Set(); // paths an op marked unhashed: recorded with hash none
     const text = this.disk(LOCK_PATH);
     this.lockText = text;
     this.lock = readLock(text);
@@ -283,7 +284,7 @@ class Workspace {
       const tool = (prev && sourceTool(prev)) ?? this.owner.get(path);
       const rec = prev ?? { path };
       rec.source = `tool-config/${tool}@${version}`;
-      rec.hash = sha256(text);
+      rec.hash = this.unhashed.has(path) ? "none" : sha256(text);
       if (this.modes.has(path)) {
         rec.mode = this.modes.get(path);
       }
@@ -416,6 +417,9 @@ function applyOp(ws, op, tool, mode, rows, notes) {
       notes.push(`${op.path} is ${source}'s — left alone`);
       return;
     }
+  }
+  if (op.unhashed) {
+    ws.unhashed.add(op.path);
   }
   const current = op.path ? ws.read(op.path) : null;
   switch (op.op) {

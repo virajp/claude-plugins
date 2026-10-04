@@ -31,8 +31,6 @@ export const ALL_KEYS = [
   "merge-model-develop",
   "merge-model-main",
   "runtimes",
-  "plugin-sources",
-  "plugins",
   "forge",
   "secrets",
   "update-bot",

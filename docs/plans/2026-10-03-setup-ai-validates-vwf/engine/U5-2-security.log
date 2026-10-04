@@ -1,0 +1,5 @@
+## /security-review — loop U5, round 2, range 225adbdc..a736499e
+
+No findings.
+
+plugin/source anchored patterns (schema.mjs:23-25), alnum-or-path first char, no quote/$/backtick/space/newline; jq ROOT via --arg after quoted cd + pwd -P; user-edited setup/ai: hash change → disowned (hash: none), never rewritten; pack-block edits carried via readPackBlocks.

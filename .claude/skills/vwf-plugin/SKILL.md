@@ -132,64 +132,62 @@ own marked positions from them (the repo name, from that repo's own
 main-checkout folder name slugified and never from a project id; the member
 flags and their aliases, named for the **member repos**; `MERGE_MODEL_DEVELOP`,
 `MERGE_MODEL_MAIN`, `MEMBERS`, the two runtime positions from the stack read,
-the plugin task's two agent-plugin lists, and the commit gate's scopes from the
-project ids as `--scopes`, its forge links read from `origin` by the skill) —
-then writes its own **hygiene assets** from `skills/init/assets/hygiene/`
-(`CONTRIBUTING.md`, `SECURITY.md`, the licence texts, the issue forms) with no
-adapter fetch and no lock record, then materializes the secrets provider the
-user picked — the only adapter fetch left — per repo, each with its own
-lockfile; it fetches no bundle for its baseline. It fills the marked positions
-the packs leave it (the per-project groups and their aliases, from the project
-ids) and writes a two-line readme stub; it names no tool, and every file it lays
-down is a pack's, the skill's or its own assets'. It ships, asks about and
-composes **no editor configuration** — a repo's `.vscode/` is the user's,
-untouched — and `enforcement.kept_files` and the top-level `answers:` block are
-the two keys it writes in the base's `.config/vwf.yaml`. Before any of that it
-asks **eight** questions — one round each for the whole product, a per-repo
-answer showing as a row inside its single round — the first naming each `blank`
-or `source` repo's folder, which is the one thing that fills `REPO_NAME`, and
-the second confirming every project id, the slug it resolves to and the source
-the name came from — the registry, a sub-project directory (defined once in
-init: the registry's `projects[].path`, or on a first run in `source` mode a
-non-root directory with its own manifest or one a workspace file lists), or the
-project's platform token — grouped by repo: nothing writes a `p:<slug>:*` group,
-its alias or a commit scope until that list is accepted, and the scopes are
-filled on **every** run, the first included, one per confirmed id. The fifth
-asks which agent plugins this product requires, seeded by running the plugin
-task's own inventory mode and written into those two lists. The sixth asks each
-repo's **visibility**, `public` or `private`, defaulted from the forge where the
-repo has an origin the forge CLI answers for and `private` otherwise, written
-nowhere in the tree; its two dependent parts are the seventh round — 6a the
-licence, rows for `public` repos only (a private repo gets no `LICENSE`), and 6b
-the security contact, a public repo's row defaulted to its advisories page and a
-private repo's a free email or internal URL with no default. The seventh asks
-the **update bot** per repo, `renovate`, `dependabot` or `none`, seeded from the
-survey; that is the eighth round, and with the forge read from each `origin`
-host and question 4's provider slug it makes the `answers:` map every fetch
-passes the materializer beside `repo:` — every key present, `none` the no-match
-value on `forge` and `secrets` and a legal answer on `update_bot` — against
-which a pack's `conditional:` files are evaluated, the skips listed per repo
-under a **Skipped** heading in the plan. The same three are **recorded**, in
-every mode, in the base config's top-level `answers:` block — `secrets` once for
-the product, `repos:` keyed as `kept_files` keys a path (`.` for the base) with
-`forge` and `update_bot` per repo — so the later callers evaluate a `when:`
-against the same values; the forge is re-read live from `origin` on every run
-and a record the live host contradicts is rewritten in place, that one value,
-and reported. 4 and 5 are answered once for every repo, 2, 6, 6b and 7 carry a
-row per repo, 6a a row per public repo, and 1 and 3 a row per repo that resolved
-`blank` or `source`. It then closes with a **consent-gated git pass**, whose two
-questions are asked once and applied to every repo. It first reads where each
-repo stands (`git symbolic-ref -q HEAD`): a member on no branch is a **refused**
-row naming the branch to check out, its shaping deferred and its gitlink
-unmoved, and a member the run clones is checked out on the remote branch holding
-the recorded gitlink commit, at that branch's tip, so it never arrives detached.
-It asks the landing model **one row per repo per branch** — `develop` and
-`main`, each `direct` or `pr`, preselected `direct` and `pr`, or from what a
-replaced file carries — and writes each row to that repo's `MERGE_MODEL_DEVELOP`
-and `MERGE_MODEL_MAIN`; a kept file still carrying the single legacy
-`MERGE_MODEL` is not asked, but its line is rewritten in place into the pair
-carrying the one value, and until then every reader takes that value for both
-branches. It creates whichever of `develop` and `main` the repo lacks — from the
+and the commit gate's scopes from the project ids as `--scopes`, its forge links
+read from `origin` by the skill) — then writes its own **hygiene assets** from
+`skills/init/assets/hygiene/` (`CONTRIBUTING.md`, `SECURITY.md`, the licence
+texts, the issue forms) with no adapter fetch and no lock record, then
+materializes the secrets provider the user picked — the only adapter fetch left
+— per repo, each with its own lockfile; it fetches no bundle for its baseline.
+It fills the marked positions the packs leave it (the per-project groups and
+their aliases, from the project ids) and writes a two-line readme stub; it names
+no tool, and every file it lays down is a pack's, the skill's or its own
+assets'. It ships, asks about and composes **no editor configuration** — a
+repo's `.vscode/` is the user's, untouched — and `enforcement.kept_files` and
+the top-level `answers:` block are the two keys it writes in the base's
+`.config/vwf.yaml`. Before any of that it asks **seven** questions — one round
+each for the whole product, a per-repo answer showing as a row inside its single
+round — the first naming each `blank` or `source` repo's folder, which is the
+one thing that fills `REPO_NAME`, and the second confirming every project id,
+the slug it resolves to and the source the name came from — the registry, a
+sub-project directory (defined once in init: the registry's `projects[].path`,
+or on a first run in `source` mode a non-root directory with its own manifest or
+one a workspace file lists), or the project's platform token — grouped by repo:
+nothing writes a `p:<slug>:*` group, its alias or a commit scope until that list
+is accepted, and the scopes are filled on **every** run, the first included, one
+per confirmed id. The fifth asks each repo's **visibility**, `public` or
+`private`, defaulted from the forge where the repo has an origin the forge CLI
+answers for and `private` otherwise, written nowhere in the tree; its two
+dependent parts are the sixth round — 5a the licence, rows for `public` repos
+only (a private repo gets no `LICENSE`), and 5b the security contact, a public
+repo's row defaulted to its advisories page and a private repo's a free email or
+internal URL with no default. The sixth asks the **update bot** per repo,
+`renovate`, `dependabot` or `none`, seeded from the survey; that is the seventh
+round, and with the forge read from each `origin` host and question 4's provider
+slug it makes the `answers:` map every fetch passes the materializer beside
+`repo:` — every key present, `none` the no-match value on `forge` and `secrets`
+and a legal answer on `update_bot` — against which a pack's `conditional:` files
+are evaluated, the skips listed per repo under a **Skipped** heading in the
+plan. The same three are **recorded**, in every mode, in the base config's
+top-level `answers:` block — `secrets` once for the product, `repos:` keyed as
+`kept_files` keys a path (`.` for the base) with `forge` and `update_bot` per
+repo — so the later callers evaluate a `when:` against the same values; the
+forge is re-read live from `origin` on every run and a record the live host
+contradicts is rewritten in place, that one value, and reported. 4 is answered
+once for every repo, 2, 5, 5b and 6 carry a row per repo, 5a a row per public
+repo, and 1 and 3 a row per repo that resolved `blank` or `source`. It then
+closes with a **consent-gated git pass**, whose two questions are asked once and
+applied to every repo. It first reads where each repo stands
+(`git symbolic-ref -q HEAD`): a member on no branch is a **refused** row naming
+the branch to check out, its shaping deferred and its gitlink unmoved, and a
+member the run clones is checked out on the remote branch holding the recorded
+gitlink commit, at that branch's tip, so it never arrives detached. It asks the
+landing model **one row per repo per branch** — `develop` and `main`, each
+`direct` or `pr`, preselected `direct` and `pr`, or from what a replaced file
+carries — and writes each row to that repo's `MERGE_MODEL_DEVELOP` and
+`MERGE_MODEL_MAIN`; a kept file still carrying the single legacy `MERGE_MODEL`
+is not asked, but its line is rewritten in place into the pair carrying the one
+value, and until then every reader takes that value for both branches. It
+creates whichever of `develop` and `main` the repo lacks — from the
 remote-tracking branch first, else from the table; a mainline of another name
 (`master`, `trunk`, read from `origin/HEAD`, else the branch the repo is on)
 gets `main` from it and `develop` from `main`, the old branch left in place and

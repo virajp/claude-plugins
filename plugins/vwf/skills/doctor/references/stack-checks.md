@@ -542,15 +542,14 @@ state, not a repo edit, which is the whole reason for the second test.
 in one is never (e)'s finding** — owned or not. A position another predicate
 owns still gets that predicate's row and nothing more: (d)'s repo-name key,
 (f)'s `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and `MEMBERS`, (b)'s member
-flag list (`MEMBER_FLAGS`) and alias list (`MEMBER_ALIASES`) each
-report the value they found there. A position **no** predicate owns — the
-plugin task's two agent-plugin lists, the `_default` slot, any other a pack
-ships — is a value the repo set, and nothing reports it at all. Splicing by
-what the pack **marks** rather than by what a predicate **owns** is what makes
-a mixed file tractable: `.config/mise/conf.d/env.toml` carries the repo-name
-key and `MEMBERS` beside positions no predicate reads, and splicing only the
-owned half would leave the rest diverging and report the whole file as content
-drift.
+flag list (`MEMBER_FLAGS`) and alias list (`MEMBER_ALIASES`) each report the
+value they found there. A position **no** predicate owns — the `_default`
+slot, any other a pack ships — is a value the repo set, and nothing reports it
+at all. Splicing by what the pack **marks** rather than by what a predicate
+**owns** is what makes a mixed file tractable: `.config/mise/conf.d/env.toml`
+carries the repo-name key and `MEMBERS` beside positions no predicate reads,
+and splicing only the owned half would leave the rest diverging and report the
+whole file as content drift.
 
 **A record sourced `tool-config/<tool>@<version>` has no pack payload**: its
 payload is the adapter's `tool-config` skill's, and doctor does not compare it

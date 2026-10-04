@@ -31,22 +31,23 @@ agent afterwards, then run **`/vwf:doctor`** — nothing is verified at install
 time, and doctor is what reports a missing required binary.
 
 The `pnpx @virajp.dev/claude-plugins` installer installs plugins and nothing
-else. **graphify**, which vwf enforces at its own entry gate, is wired by a
-shaped repo's `setup:ai` below, and the repo refreshes the graph from its own
-pre-commit `post-commit` and `post-merge` hooks.
+else. **graphify**, which vwf enforces at its own entry gate, is yours to wire
+for the agent — nothing in the toolkit runs `graphify install --platform claude`
+— and a shaped repo refreshes the graph from its own pre-commit `post-commit`
+and `post-merge` hooks, never graphify's own git hook, which pins a Python path.
 
-A repo shaped by [`/vwf:init`](#vwfinit) does not need that one-shot at all: its
-task library carries `setup:ai`, which registers the marketplace, installs the
-plugins the repo declares at **project** scope, wires graphify for the agent —
-never graphify's own git hook, which pins a Python path; the repo's pre-commit
-`graphify-refresh` hook runs `code:graph` after each commit — and runs on every
-checkout. The full description is
+A repo shaped by [`/vwf:init`](#vwfinit) runs that one-shot for you: its task
+library carries `setup:ai`, which checks whether `vwf` is installed — at user
+scope, or at project or local scope for this repo — and only when it is not runs
+the installer above, at **user** scope. Whether or not it installed anything, it
+then updates every registered marketplace and upgrades every plugin installed at
+a scope that serves the repo, at that scope, on every checkout. It never
+installs at project scope. The full description is
 [stackgen's task library](./stackgen.md#the-task-library).
 
 Separately, `brew install virajp/tap/claude-status` installs the statusline —
 and with it the caps hook that delivers `/vwf:execute`'s resource-cap pause.
-`setup:ai` prints that line as a hint when the package is absent, and never
-installs it. See [/vwf:execute](#vwfexecute).
+Nothing in the toolkit installs it. See [/vwf:execute](#vwfexecute).
 
 Restart Claude Code afterward so the commands, hooks, and dependencies load.
 
@@ -1071,7 +1072,7 @@ the `runtimes` argument that fills the toolchain config's two runtime positions,
 the path entry left empty where nothing needs one), and the sub-project
 proposals question 2 shows where no registry names them.
 
-**Eight questions, each one round**, asked *before* the plan so one yes covers
+**Seven questions, each one round**, asked *before* the plan so one yes covers
 all of it. **A round is one round for the whole product**, however many repos
 resolved: a question whose answer differs per repo shows one row per repo inside
 its single round, and never becomes a second round. Two are asked for the repos
@@ -1079,12 +1080,12 @@ that came out `blank` or `source` only — the repo name (proposed from the
 basename of that repo's **main checkout**, and the one thing that fills
 `REPO_NAME`) and a one-line brief, which may be empty (a `source` repo that
 already carries a readme keeps it, whatever the row says), each listing one row
-per such repo. The other six are asked whatever the modes are, listed in order —
-the first of them is question 2 overall, and it is the one this section's slug
-rule waits on; question 6, the visibility, has two dependent parts, 6a and 6b,
-which together are the seventh round, since they are shown against 6's answers
-and cannot share its round; question 7, the update bot, is the eighth round, and
-it is the one whose answer reaches the materializer rather than a file:
+per such repo. The other five are asked whatever the modes are, listed in order
+— the first of them is question 2 overall, and it is the one this section's slug
+rule waits on; question 5, the visibility, has two dependent parts, 5a and 5b,
+which together are the sixth round, since they are shown against 5's answers and
+cannot share its round; question 6, the update bot, is the seventh round, and it
+is the one whose answer reaches the materializer rather than a file:
 
 - **The ids, confirmed** — one list, **grouped by repo**: the base's group
   first, then one per member in the resolved order, and inside each group a row
@@ -1125,37 +1126,21 @@ it is the one whose answer reaches the materializer rather than a file:
   providers, plus *none — decide later*. Answered **once** and written into
   every repo: a product keeps its secrets in one place, and a member on a
   different provider is a decision nobody made by answering this.
-- **The agent plugins this product requires** — a multi-select, seeded by the
-  machine itself and answered **once** for every repo, since the inventory it
-  reads is the machine's and not a repo's. `init` runs the plugin task's
-  inventory mode, which prints the plugin sources registered on this machine —
-  every one **except the toolkit's own**, which the task always reconciles — and
-  then the plugins already installed from any of them, one row each. Those rows
-  are offered as the task printed them, in its order, **minus two**: the
-  workflow plugin's own row and its dependency's, which `init` drops because the
-  task installs both unconditionally and listing a fixed thing makes it look
-  optional. *None* sits alongside them, and is the ordinary answer for a repo
-  that needs nothing beyond the workflow. What you pick is passed to
-  `/stackgen:tool-config all` as `--plugin-sources` and `--plugins`, which fill
-  that task's two marked positions, so `setup:ai` installs it on every checkout.
-  An inventory that comes back empty is not an error: the question is still
-  asked, with *none* as the only thing to pick and the empty result stated in
-  the question, so the answer is recorded rather than assumed.
 - **The visibility** — `public` or `private`, **one row per repo** in the one
   round: visibility is a fact about a repo rather than a product, and a private
   member beside a public base is ordinary. Each row's default is **read from the
   forge** where the repo has an `origin` the forge CLI can answer for, and is
   `private` where it has none or the read fails — the question says which. The
   answer is written nowhere in the tree; the forge is the record. Its two
-  dependent parts are the **seventh round**, shown against these answers:
-  - **6a — the licence** — MIT, Apache-2.0 or none, one row per repo that
+  dependent parts are the **sixth round**, shown against these answers:
+  - **5a — the licence** — MIT, Apache-2.0 or none, one row per repo that
     answered `public`: a licence is a file a repo carries, and members are
     licensed separately often enough that assuming otherwise writes the wrong
     text into somebody's repo. A `private` repo gets no row and no `LICENSE` — a
     licence grants the public rights a private repo is not offering. A repo that
     already carries a licence file — `LICENSE`, `LICENSE.md`, `LICENCE` or
     `COPYING`, every spelling counts — keeps it whatever it answered.
-  - **6b — the security contact** — **one row per repo**, its shape following
+  - **5b — the security contact** — **one row per repo**, its shape following
     the visibility: a `public` repo's row is defaulted to *that* repo's own
     origin's advisories page where it has an origin and to nothing where it does
     not; a `private` repo's row is a **free contact** — an email address or an
@@ -1209,49 +1194,46 @@ against the pack's *legacy-name table*, task shebangs, the helper library's name
 and whether its contents still match the pack's, the files a pack owns that the
 repo lacks or has changed, per-project task groups, the tasks the repo owns that
 no pack ships, and the positions the packs ship marked for it to fill — the gate
-configs, and the plugin task's two agent-plugin lists, which are compared row
-for row against question 5's confirmed answer, with both sides shown in the plan
-when they differ, since that is the one position a user may have hand-edited.
-Pass 1 has one case worth knowing: where `stackgen:tool-config` or a pack lands
-both a config under `.config/` and a two-line stand-in of the same name at the
-root — the stand-in existing because that tool's config discovery is root-only —
-your **real** config moves into `.config/` and the stand-in takes its place,
-with the plan saying the settings survive the move. Not every key does, and the
-plan says which: the owner's own reference names the key that is **not**
-inherited through the stand-in, where an extended file declaring it is a fatal
-diagnostic rather than a warning, so the move drops it. Dropping it **widens**
-what the gate covers, since the owner's own pinned plugin list is then what
-defines the file set. So the move row carries **sub-lines** — one for the
-dropped key, and one per **exclusion** the drop makes necessary, each naming the
-files that exclusion keeps out of the gate. Never a restored key, which puts the
-diagnostic back, and never after the fact: they are changes to the settings the
-row claims survive the move, so you read them before the one consent. The two
-are told apart by content, never by name. What comes back is **one plan for the
-run**, carrying a **section per repo** — the base's first, then each member's in
-the resolved order, each headed with the repo and the mode it resolved to — and
-inside every section the same thirteen counted sections: moves, root tool
-configs (move / keep both / delete), the hook manager (keep / switch), creates,
-replaces, offered (replace / keep), renames, rewrites applied, appends and
-merges — all applied on a single yes — and three applied by nothing,
-`Rewrites (flagged, not applied)`, `Repo-owned, kept` and `Projects`, plus one
-uncounted heading, **Skipped**, present even when empty: every path a pack's
-condition left out, one line per path naming the pack and the axis whose value
-decided it — not a conflict, not a keep, not a deferral, and nothing waits on a
-later run unless the answer itself changes — and, marked *landed earlier,
-condition now false — kept*, any path an earlier run landed whose answer has
-since flipped, which stays where it is. Each repo's section closes with its own
-total and the document with a product total; a total counts only what would be
-applied — an offered row kept, a root tool config kept both ways and a hook
-manager kept are outside it — so a repo whose only rows are files it owns and
-files it chose to keep still reads as shaped. Two plans would be two chances to
-stop halfway — one repo renamed into the contract while its neighbours still
-call the old names — which is exactly what the one-consent rule exists to
-prevent. The apply order is **members first, the base last**, so the base
-commits with its record of the members already current. A task file whose
-shebang names a shell other than bash goes there, listed with the shell-specific
-syntax it uses, and is **never** rewritten: auto-translating a shell script is
-how a working task becomes a subtly broken one, so it lands in the report's
-`Deferred` section for you to rewrite deliberately.
+configs among them. Pass 1 has one case worth knowing: where
+`stackgen:tool-config` or a pack lands both a config under `.config/` and a
+two-line stand-in of the same name at the root — the stand-in existing because
+that tool's config discovery is root-only — your **real** config moves into
+`.config/` and the stand-in takes its place, with the plan saying the settings
+survive the move. Not every key does, and the plan says which: the owner's own
+reference names the key that is **not** inherited through the stand-in, where an
+extended file declaring it is a fatal diagnostic rather than a warning, so the
+move drops it. Dropping it **widens** what the gate covers, since the owner's
+own pinned plugin list is then what defines the file set. So the move row
+carries **sub-lines** — one for the dropped key, and one per **exclusion** the
+drop makes necessary, each naming the files that exclusion keeps out of the
+gate. Never a restored key, which puts the diagnostic back, and never after the
+fact: they are changes to the settings the row claims survive the move, so you
+read them before the one consent. The two are told apart by content, never by
+name. What comes back is **one plan for the run**, carrying a **section per
+repo** — the base's first, then each member's in the resolved order, each headed
+with the repo and the mode it resolved to — and inside every section the same
+thirteen counted sections: moves, root tool configs (move / keep both / delete),
+the hook manager (keep / switch), creates, replaces, offered (replace / keep),
+renames, rewrites applied, appends and merges — all applied on a single yes —
+and three applied by nothing, `Rewrites (flagged, not applied)`,
+`Repo-owned, kept` and `Projects`, plus one uncounted heading, **Skipped**,
+present even when empty: every path a pack's condition left out, one line per
+path naming the pack and the axis whose value decided it — not a conflict, not a
+keep, not a deferral, and nothing waits on a later run unless the answer itself
+changes — and, marked *landed earlier, condition now false — kept*, any path an
+earlier run landed whose answer has since flipped, which stays where it is. Each
+repo's section closes with its own total and the document with a product total;
+a total counts only what would be applied — an offered row kept, a root tool
+config kept both ways and a hook manager kept are outside it — so a repo whose
+only rows are files it owns and files it chose to keep still reads as shaped.
+Two plans would be two chances to stop halfway — one repo renamed into the
+contract while its neighbours still call the old names — which is exactly what
+the one-consent rule exists to prevent. The apply order is **members first, the
+base last**, so the base commits with its record of the members already current.
+A task file whose shebang names a shell other than bash goes there, listed with
+the shell-specific syntax it uses, and is **never** rewritten: auto-translating
+a shell script is how a working task becomes a subtly broken one, so it lands in
+the report's `Deferred` section for you to rewrite deliberately.
 
 **Root tool configs are read before a pack lands over them.** The root survey's
 rename map is the **full path** each pack's `config/` tree declares — never a
@@ -1280,7 +1262,7 @@ policy is the one **yield**: the skill's renovate tool lands `renovate.json` at
 the root because that tool's discovery never reaches `.config/`, so a policy you
 already carry under any of its spellings wins, the skill's is **not landed** and
 the row says so — `.github/dependabot.yml` is a different service's file and
-reads `keep both`, and it seeds question 7's row to `dependabot`, which skips
+reads `keep both`, and it seeds question 6's row to `dependabot`, which skips
 the skill's `renovate.json` rather than landing it beside yours. An entry your
 `.gitignore` ignores is build output, skipped without a row; `.git/` is exempt
 by name, and so is `.vscode/`, your editor settings — another editor's

@@ -1,2 +1,5 @@
 # Loads mise/conf.d/<name>.<env>.toml only when MISE_ENV includes <env>.
 env_conf_d = true
+# Load configuration ONLY from this repo
+# ceiling_paths        = [ "{{ env.HOME }}" ]
+# ignored_config_paths = [ "{{ xdg_config_home }}/mise" ]

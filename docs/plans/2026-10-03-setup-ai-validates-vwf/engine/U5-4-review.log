@@ -1,0 +1,11 @@
+## /code-review high — loop U5, round 4, range 225adbdc..997a6b68
+
+1. setup/ai:24 — a failing `claude plugin list --json` or jq is swallowed: plugins_here prints nothing, vwf reads absent, pnpx runs, the update loop sees zero rows, and the task still prints "AI tooling reconciled." with exit 0 (reproduced with a stub).
+2. setup/ai:31 — a git worktree or second clone never matches projectPath; duplicate user install via pnpx; project plugins never updated there.
+3. setup/ai:51 — plugin_installed ignores `enabled`; a disabled taste-skill loops design-session's halt.
+4. tools/mise.mjs:1661 — add-plugin refuses an untouched older landing; apply-entries refuses the whole pack list; nothing orders `tool-config mise` before pack lists in /vwf:setup (materialize.md:223).
+5. tools/mise.mjs:1204 — a disowned (hash: none) setup/ai reverted to the shipped content is never re-claimed.
+6. plugins/stackgen/assets/pack-format.md:240 — the mise verb table lists add-tool/add-env/add-alias only; add-plugin undocumented; no unit owns the file.
+7. CLAUDE.md:275, :387; site stackgen.md:841, :1177; vwf.md:1139 — docs lag the change until the docs unit.
+8. setup/ai:73, :83 — the pnpx installer and `marketplace update` keep the terminal's stdin, unlike the other calls 1ee4fda4 detached.
+9. setup/ai:40 — N+2 to 2N+2 `claude` CLI starts per run.

@@ -238,6 +238,7 @@ The verb shapes:
 | `mise`       | `add-tool`          | `name`, `version`, `env`                                                                                                             |
 | `mise`       | `add-env`           | `key`, `value`, `env`                                                                                                                |
 | `mise`       | `add-alias`         | `name`, `command`                                                                                                                    |
+| `mise`       | `add-plugin`        | `plugin` (`<name>@<marketplace>`), `source` (`<owner/repo>` or a `/`, `./`, `../` path); every segment opens with a letter or digit  |
 | `dprint`     | `add-plugin`        | `name`                                                                                                                               |
 | `pre-commit` | `add-linter-ignore` | `paths`                                                                                                                              |
 | `pre-commit` | `add-hook`          | `repo`, `id`, `stage`, [`name`, `entry`, `language`, `files`, `types`, `args`, `rev`, `description`, `pass-filenames`, `always-run`] |

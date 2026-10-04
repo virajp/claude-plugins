@@ -78,8 +78,8 @@ them.
   its languages or which other packs landed beside it*: the bootstrap
   aggregator's member flags, the shell aliases, the per-project task groups,
   the repo-name key, the landing-model key and the member-path key, the
-  toolchain config's runtime block and path entries, the commit gate's scope
-  list, and the plugin task's two agent-plugin lists.
+  toolchain config's runtime block and path entries, and the commit gate's
+  scope list.
   Filling one is exactly `init`'s job and is not authoring pack content — what
   the rule forbids is inventing pack-owned content from scratch, at a path or
   a position no pack marked. A position in a file the tool-config skill owns
@@ -398,16 +398,16 @@ what it found.
 
 ## The questions
 
-Eight in all, each one round, MCQ where an option set exists, per
+Seven in all, each one round, MCQ where an option set exists, per
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`. **A round is one round for the
 whole product**, however many repos resolved: a question that differs per repo
 shows one row per repo inside its single round, and never becomes a second
 round. Two of them — 1 and 3 — are asked for the repos that resolved to mode
 **blank** or **source** only, because a `shaped` repo already answers them;
-the other six are asked whatever the modes are. Question 6 has two dependent
-parts, 6a and 6b, which together are the **seventh round**: they are shown
-against 6's answers, so they cannot share its round. Question 7 — the update
-bot — is the **eighth round**, and it is the one whose answer reaches the
+the other five are asked whatever the modes are. Question 5 has two dependent
+parts, 5a and 5b, which together are the **sixth round**: they are shown
+against 5's answers, so they cannot share its round. Question 6 — the update
+bot — is the **seventh round**, and it is the one whose answer reaches the
 materializer rather than a file: together with two answers the run already
 holds — the forge, read from each repo's origin host, and the provider slug
 question 4 picked — it is what the materializer's conditional evaluation step
@@ -538,46 +538,7 @@ and `update_bot`.
    can detect, and it does not pretend to: the slot the packs left stays
    unfilled, announces itself, and is reported exactly as a **none** answer
    is reported.
-5. **The agent plugins this product requires.** Answered **once** and written
-   into every repo, for the same reason question 4 is: the inventory it is
-   seeded from is the **machine's**, not a repo's, so asking per repo would
-   offer the same rows again and invite a difference nobody wants.
-   The task library ships one task that reconciles them, and beyond the
-   workflow's own — which that task always installs, with whatever it depends
-   on — no pack can know which others a repo needs. So ask, **seeded by the
-   machine itself**: run that
-   task's inventory mode, `setup:ai --inventory`, named by the task-name
-   contract like every other task `init` reaches for, and it prints the plugin
-   sources registered on this machine, one row each, then the plugins already
-   installed from any of them, one row each, and nothing else.
-
-   **Drop two rows before offering anything.** The task prints *every*
-   installed plugin, so the workflow's own plugin and whatever it depends on
-   appear there like any other — and they are the two the task installs
-   unconditionally. `init` removes those rows from what it offers. They are
-   not a choice, and an MCQ that lists them either invites a user to deselect
-   something that gets installed regardless, or writes a row that duplicates
-   what the task already does.
-
-   Offer what is left as a **multi-select** — the sources and the plugins in
-   the two groups the task printed them in — plus **none**, which is the
-   ordinary answer for a repo that needs nothing beyond the workflow. The rows
-   are shown verbatim, in the task's own order; `init` neither reorders them
-   nor proposes one of its own, and a row the user does not pick is simply not
-   written.
-
-   An inventory that prints nothing, or whose every row was dropped, is not an
-   error — it is an unshaped machine, or one whose plugins all arrived with
-   the workflow. Ask the question anyway, with **none** as the only thing to
-   pick, and say in the question itself which of the two it was — so the
-   answer is recorded rather than assumed, and a user who expected rows
-   learns why there are none.
-
-   What this question settles is what [new repo](references/new-repo.md) §7
-   writes into the plugin task's two marked positions — never the workflow's
-   own plugin or its dependency, which are dropped above and stay the task's
-   unconditional business.
-6. **The visibility.** `public` or `private` — **one row per repo** in the one
+5. **The visibility.** `public` or `private` — **one row per repo** in the one
    round, because visibility is a fact about a repo rather than a product, and
    a private member beside a public base is ordinary enough that one answer
    for all of them would write a licence into somebody's private repo. Each
@@ -587,10 +548,10 @@ and `update_bot`.
    fails: a repo nobody has published is private until somebody says
    otherwise. The answer is written nowhere in the tree — the forge is the
    record of what a repo is — and what it decides is the shape of the two
-   dependent parts below, asked as the seventh round once every row here is
+   dependent parts below, asked as the sixth round once every row here is
    answered.
 
-   **6a — The licence.** *Rows for the repos that answered `public` only.*
+   **5a — The licence.** *Rows for the repos that answered `public` only.*
    MIT, Apache-2.0, or none — one row per such repo, because a licence is a
    file a repo carries and members are licensed separately often enough that
    assuming otherwise writes the wrong text into somebody's repo. The hygiene
@@ -602,7 +563,7 @@ and `update_bot`.
    spelling counts as carrying one: `LICENSE`, `LICENSE.md`, `LICENCE` and
    `COPYING` alike, per [readme and licence](references/readme-and-license.md).
 
-   **6b — The security contact.** **One row per repo**, and the row's shape
+   **5b — The security contact.** **One row per repo**, and the row's shape
    follows that repo's visibility. A `public` repo's row is defaulted to
    **that repo's own** origin remote's advisories page where it has an origin,
    and to nothing where it does not. A `private` repo has no advisories page a
@@ -611,7 +572,7 @@ and `update_bot`.
    security file in that repo either way — a file naming a channel nobody
    watches is worse than none — and declining one row says nothing about the
    others.
-7. **The update bot.** **One row per repo** in the one round: which hosted
+6. **The update bot.** **One row per repo** in the one round: which hosted
    dependency-update service watches this repo — the one whose policy file
    `/stackgen:tool-config` lands, the other one, or **none**. The options are
    the axis values the materializer's conditional evaluation step accepts on
@@ -636,7 +597,7 @@ and `update_bot`.
    was picked. A repo whose own policy file the yield rule keeps is unchanged
    by the answer: the skill's file was never going to land there.
 
-Ask all eight **before** presenting the plan, so the plan is complete and one
+Ask all seven **before** presenting the plan, so the plan is complete and one
 yes covers all of it. The plan's summary then says, per repo, the three values
 the materializer receives in its `answers:` map, beside `repo:` — the forge
 from the origin host, the provider slug from question 4, the update bot,

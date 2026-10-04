@@ -176,8 +176,9 @@ review round (`review <flow>`, which serves the canvas from the repo, waits for
 `scripts/serve.mjs`, a single-file Node program with no dependencies: it binds
 `127.0.0.1` on an ephemeral port, serves only the canvas, carries no auth and no
 TLS, and appends each comment to a **committed**
-`comments/<flow>--<platform>.yaml`. It declares `taste-skill@taste-skill` as the
-plugin a product pinning it must add at init's fifth question.
+`comments/<flow>--<platform>.yaml`. It requests `taste-skill@taste-skill`
+through a mise `add-plugin` entry in its `tool-config:` list, so the repo's
+`setup:ai` installs it at user scope when no scope serving the repo has it.
 
 ## Where it lands, and the consent tiers
 

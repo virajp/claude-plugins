@@ -272,10 +272,12 @@ output, is gitignored, and is what npm publishes. The statusline is a separate
 package (`claude-status`), not a plugin and not installed here.
 
 **It is the one-shot, not a repo's reconcile step.** A repo shaped by
-`/vwf:init` reconciles its own plugin set with the task library's `setup:ai`,
-which runs `claude plugin …` and no package runner — so a machine that
-registered `virajp-plugins` from `./.dev-marketplace` is served by the same task
-as one that registered it from the forge. Nothing calls this CLI from a task.
+`/vwf:init` keeps its plugins current with the task library's `setup:ai`, which
+calls this CLI only when `vwf` is installed at no scope that serves the repo —
+`pnpx @virajp.dev/claude-plugins@latest --all`, at user scope — and otherwise
+runs `claude plugin …` alone, so a machine that registered `virajp-plugins` from
+`./.dev-marketplace` is served by the same task as one that registered it from
+the forge.
 
 Everything else — the flag surface, the legacy-receipt reader, the interactive
 uninstall, the GitHub token rule, testing — is [`installer/CLAUDE.md`][icl]; the
@@ -385,12 +387,16 @@ shadowing the stackgen packs they moved into. The reasoning is
 [`dependencies.md`](.claude/skills/vwf-plugin/references/dependencies.md).
 
 **On a repo that has been shaped, the reconcile step is the repo's own.**
-`mise run setup:ai` — the task library's, and this repo runs the same one —
-registers or refreshes `virajp-plugins` and installs or updates the plugins the
-repo requires at **project** scope, through `claude plugin …` and nothing else.
-It is idempotent, it never touches a user-scope plugin, and it works unchanged
-on a machine registered from `./.dev-marketplace`. The installer above is the
-one-shot for a person; this is what a checkout re-runs.
+`mise run setup:ai` — the task library's — checks that `vwf@virajp-plugins` is
+installed at user scope, or at project or local scope whose `projectPath` is
+this repo; only when it is not does it run the installer above, at **user**
+scope. Whether or not it installed, it then updates every registered marketplace
+and upgrades every plugin installed at a scope that serves the repo, at that
+scope, then prunes project scope. It never installs at project scope, every
+`claude` and `pnpx` call warns and continues, and a pack may add a plugin of its
+own through tool-config's `add-plugin` verb, checked the same way. This repo
+keeps its own hand-edited copy. The installer above is the one-shot for a
+person; this is what a checkout re-runs.
 
 Upgrading is `claude plugin marketplace update virajp-plugins` then
 `claude plugin update <name>`. The **manifest** is served from this repo's

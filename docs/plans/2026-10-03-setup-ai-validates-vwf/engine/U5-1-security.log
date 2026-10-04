@@ -1,0 +1,7 @@
+## /security-review — loop U5, round 1, range 225adbdc..2a9cad20
+
+No findings.
+
+Traced: pack entries validated by schema.mjs:426 (pluginRef/pluginSource, anchored ^…$, no m flag); CLI flags by cli.mjs:276; allowed chars [A-Za-z0-9._-] @ / ~ only, so the double-quoted ensure_plugin line cannot break quoting; --for requester slug-checked (cli.mjs:143). setup/ai: no eval, all expansions quoted, jq --arg, IFS split. addPlugin writes only the fixed SETUP_AI path. pnpx @latest is the repo own package, runs only when vwf absent.
+
+Sub-threshold (not reported): pluginSource admits a leading "-" which `claude plugin marketplace add` could read as an option; input is trusted.

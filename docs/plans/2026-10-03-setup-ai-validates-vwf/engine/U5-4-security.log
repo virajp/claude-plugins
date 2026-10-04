@@ -1,0 +1,5 @@
+## /security-review — loop U5, round 4, range 225adbdc..997a6b68
+
+No findings.
+
+ensure_plugin lines built at mise.mjs:1668 from values validated by flag types (mise.mjs:1980-1981) and pack KEY_PATTERN (schema.mjs); dropped EXTRA entries reach note text only; /dev/null stdin and foreign-owner skips remove capability only.
