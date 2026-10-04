@@ -86,8 +86,57 @@ describe("substitution", () => {
     expect(run("@@A@@@@A@@", { A: "v" })).toBe("vv");
   });
 
-  it("refuses a value that itself holds @@", () => {
-    expect(fault("x = @@A@@", { A: "a@@b" }).message).toMatch(/stray @@/);
+  it.each([
+    ["an untaken #if branch", "a\n@@#if F@@\nx = @@REPO_NAME@\n@@/if@@\n", 3],
+    [
+      "an untaken #else branch",
+      "@@#if T@@\nok\n@@#else@@\n@@ lone\n@@/if@@\n",
+      4,
+    ],
+    ["a zero-item #each", "@@#each L@@\n\n@@.na-me@@x\n@@/each@@\n", 3],
+    ["a lower-case name in an untaken branch", "@@#if F@@ @@bad@@ @@/if@@", 1],
+  ])(
+    "refuses a stray @@ in %s, naming the template line",
+    (_, template, want) => {
+      const { message, line } = fault(template, { T: true, F: false, L: [] });
+      expect(message).toBe(
+        `${source}:${want}: a stray @@ is left in the template`,
+      );
+      expect(line).toBe(want);
+    },
+  );
+
+  it("leaves an unknown name in an untaken branch unchecked", () => {
+    expect(run("a@@#if F@@@@NOPE@@@@/if@@b", { F: false })).toBe("ab");
+  });
+
+  it.each([
+    ["a name", "x\ny = @@A@@\n", { A: "a@@b" }, 2, "the value of A holds @@"],
+    [
+      "an #each item",
+      "@@#each L@@@@.@@@@/each@@",
+      { L: ["@@"] },
+      1,
+      "the value of . holds @@",
+    ],
+    [
+      "an #each field",
+      "@@#each L@@@@.name@@@@/each@@",
+      { L: [{ name: "a@@" }] },
+      1,
+      "the value of .name holds @@",
+    ],
+  ])(
+    "refuses a value holding @@ from %s, naming the value",
+    (_, template, values, want, text) => {
+      const { message, line } = fault(template, values);
+      expect(message).toBe(`${source}:${want}: ${text}`);
+      expect(line).toBe(want);
+    },
+  );
+
+  it("allows a single @ in a value", () => {
+    expect(run("@@A@@", { A: "user@example.com" })).toBe("user@example.com");
   });
 });
 

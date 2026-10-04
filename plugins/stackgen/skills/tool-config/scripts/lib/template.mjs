@@ -57,6 +57,17 @@ function tokenize(template, source) {
       return;
     }
     let at = 0;
+    // Text keeps no `@@`: a malformed tag is refused here, taken branch or not.
+    const pushText = piece => {
+      if (piece.includes("@@")) {
+        throw new TemplateError(
+          source,
+          line,
+          "a stray @@ is left in the template",
+        );
+      }
+      tokens.push({ type: "text", text: piece, line });
+    };
     for (const m of text.matchAll(TAG)) {
       // A tag with a stray `@` against it is a tripled delimiter, `@@@A@@` or `@@A@@@`.
       const end = m.index + m[0].length;
@@ -71,13 +82,13 @@ function tokenize(template, source) {
         );
       }
       if (m.index > at) {
-        tokens.push({ type: "text", text: text.slice(at, m.index), line });
+        pushText(text.slice(at, m.index));
       }
       tokens.push(tagToken(m, line));
       at = m.index + m[0].length;
     }
     if (at < text.length) {
-      tokens.push({ type: "text", text: text.slice(at), line });
+      pushText(text.slice(at));
     }
   });
   return tokens;
@@ -196,7 +207,7 @@ function truthy(value) {
   return value === true;
 }
 
-/** A scalar as text; refuses a list, a mapping, or an unsafe character. */
+/** A scalar as text; refuses a list, a mapping, an unsafe character, or a value holding `@@`. */
 function scalar(value, ref, token, source) {
   if (typeof value === "boolean" || typeof value === "number") {
     return String(value);
@@ -218,6 +229,13 @@ function scalar(value, ref, token, source) {
       source,
       token.line,
       `@@${ref}@@ holds a line break, a control character or a line/paragraph separator`,
+    );
+  }
+  if (value.includes("@@")) {
+    throw new TemplateError(
+      source,
+      token.line,
+      `the value of ${ref} holds @@`,
     );
   }
   return value;
@@ -280,20 +298,10 @@ function renderNodes(nodes, values, items, source) {
  * @throws {TemplateError} on an unknown name, a stray `@@`, an unbalanced block or an unsafe value
  */
 export function render(template, values, { source }) {
-  const out = renderNodes(
+  return renderNodes(
     parse(tokenize(template, source), source).body,
     values,
     [],
     source,
   );
-  const stray = out.indexOf("@@");
-  if (stray !== -1) {
-    const line = out.slice(0, stray).split("\n").length;
-    throw new TemplateError(
-      source,
-      line,
-      "a stray @@ is left in the rendered output",
-    );
-  }
-  return out;
 }
