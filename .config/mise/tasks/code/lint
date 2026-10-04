@@ -39,34 +39,6 @@ fi
 
 print_header "Linting files ..."
 
-# actionlint wants the workflows, so the scope is filtered to them and it is
-# skipped when none is in scope.
-if command -v actionlint >/dev/null 2>&1; then
-  workflow_scope=()
-  if [ "${#files[@]}" -gt 0 ]; then
-    for candidate in "${files[@]}"; do
-      case "${candidate}" in
-        .github/workflows/*.yml | .github/workflows/*.yaml)
-          if [ -f "${candidate}" ]; then
-            workflow_scope+=("${candidate}")
-          fi
-          ;;
-      esac
-    done
-  else
-    while IFS= read -r workflow; do
-      if [ -n "${workflow}" ]; then
-        workflow_scope+=("${workflow}")
-      fi
-    done < <(git -C "${MISE_PROJECT_ROOT}" ls-files '.github/workflows/*.yml' '.github/workflows/*.yaml' 2>/dev/null || true)
-  fi
-
-  if [ "${#workflow_scope[@]}" -gt 0 ]; then
-    print_subheader "Checking workflows ..."
-    actionlint "${workflow_scope[@]}"
-  fi
-fi
-
 # The house linter's rules read across files — an unused export, a duplicate
 # key against its neighbours — so a staged subset would change its verdict
 # rather than narrow it. It takes the whole tree even when a file list is

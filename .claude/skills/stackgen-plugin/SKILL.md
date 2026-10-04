@@ -339,10 +339,8 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
   scanner extends upstream's default allowlist and must still walk `.claude/`,
   which the formatters skip because in a shaped repo it is machine-owned. A list
   missing from the skill's assets is a finding. A pack widens the lists through
-  one `all add exclude [generated]` call, never by hand. `p:plugins:shellcheck`
-  runs `shellcheck -x` and `shfmt -d` over the same shell, in two groups — task
-  libraries with the pack's `_scripts/` beside them, hooks with no flags, since
-  a hook lands alone and may declare `sh`.
+  one `all add exclude [generated]` call, never by hand. No gate lints or
+  formats the shell itself.
 - **The tool-config script ships with nothing beside it.** Rule 16 holds
   `skills/tool-config/scripts/` to a `#!/usr/bin/env node` executable entry and
   `node:` built-ins or relative modules only — no `require(`, no package; the
@@ -396,10 +394,10 @@ a materialization rather than discovered from a `hooks/hooks.json`:
   business in vwf.
 
 Both are still gated here, as payload rather than as hooks: rule 11 asserts each
-script's exec bit and its shebang, and `p:plugins:shellcheck` lints the body.
-What no rule reads is the `hooks.yaml` beside them — `checkHookScripts`, the
-older rule, follows only a plugin's own `hooks/hooks.json`, so the event and
-matcher a payload hook is wired to are asserted by nothing in this repo.
+script's exec bit and its shebang; nothing lints the body. What no rule reads is
+the `hooks.yaml` beside them — `checkHookScripts`, the older rule, follows only
+a plugin's own `hooks/hooks.json`, so the event and matcher a payload hook is
+wired to are asserted by nothing in this repo.
 `mise run p:plugins:npm-normalize-test` covers the normalizer's behaviour: it
 table-tests the script through the **system sed** for both package managers,
 each table in a temp dir seeded with the lockfile that selects pnpm or bun. Hook

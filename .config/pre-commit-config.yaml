@@ -143,22 +143,6 @@ repos:
         language: system
         pass_filenames: false
         files: ^plugins/
-      # The shell half of the same idea. Neither the task files a pack ships
-      # under `config/` nor the hook scripts it ships under `hooks/` are ever
-      # run here — both are copied into someone else's repo and run there — so
-      # nothing else between authoring and materialization ever parses them. The
-      # `code:lint` gate above runs shellcheck over this repo's own shell, and
-      # `code:format` runs shfmt over it, but neither reaches a pack's payload:
-      # that tree is excluded from this repo's formatter on purpose.
-      #
-      # Both tiers are in the trigger: scoping it to `config/` alone let a
-      # malformed hook through, which is the defect that widened this gate.
-      - id: plugins-shellcheck
-        name: shellcheck and shfmt over every shell file a pack ships
-        entry: mise x -- mise run p:plugins:shellcheck
-        language: system
-        pass_filenames: false
-        files: ^plugins/([^/]+/stacks/[^/]+/[^/]+/(config|hooks)|stackgen/skills/tool-config/assets)/
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

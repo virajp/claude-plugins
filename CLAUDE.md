@@ -146,7 +146,7 @@ installer no longer writes, are in [`repo-shape.md`][repo].
 
 Run in `plugins.yml` (never in `release.yml`, which is the installer's and whose
 trigger surface must stay untouched, and never in `site.yml`, which is the
-website's); the first five also run locally via pre-commit, with marketplace,
+website's); the first four also run locally via pre-commit, with marketplace,
 inventory and check in that order — freshness before validity:
 
 - **`p:plugins:marketplace`** — generates **both** marketplace manifests from
@@ -169,10 +169,6 @@ inventory and check in that order — freshness before validity:
   node script shebanged, executable and dependency-free (rule 16), and no bare
   `mise use` anywhere a plugin ships (rule 17). Each rule in full is the
   [`plugin-authoring`][auth] skill's `references/checks.md`.
-- **`p:plugins:shellcheck`** — the shell gate over everything a pack ships as
-  shell: `shellcheck -x` plus `shfmt -d` over the pack task libraries and their
-  `_scripts/*`, and a second pass over `hooks/*.sh` with no flags, since a hook
-  lands without its helper library beside it and may declare `sh`.
 - **`p:plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed, for both package managers.
 - **`vitest run`** — the `scripts/` and `installer/` suites.
@@ -188,9 +184,9 @@ inventory and check in that order — freshness before validity:
 
 Beside them the local gate runs **three tool-neutral hooks** — `format`, `lint`
 and `sec` — each of which calls a mise task (`code:format --fix`,
-`code:lint --fix`, `code:sec --staged`) rather than a tool. dprint, shfmt,
-shellcheck, actionlint, the house linter and gitleaks are configured **once**,
-inside those tasks; no hook names a binary. This repo takes the same shape
+`code:lint --fix`, `code:sec --staged`) rather than a tool. dprint, the house
+linter and gitleaks are configured **once**, inside those tasks; no hook names a
+binary — and no gate lints or formats shell. This repo takes the same shape
 `stackgen:tool-config` lands, so its own commits prove the hook-to-task path.
 graphify's graph is refreshed the same way: a `graphify-refresh` hook at the
 `post-commit` stage runs `code:graph`, in place of graphify's raw git hooks.

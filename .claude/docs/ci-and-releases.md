@@ -10,15 +10,13 @@ per table in `.config/mise/conf.d/`, and `.config/miserc.toml` turning on
 - `.config/mise.toml` — **generic**, loaded everywhere: settings only
   (`task.run_auto_install = false`, the Node runtime settings, and the Python
   ones — `pipx.uvx = true`, so every `pipx:` tool installs through uv) and
-  `min_version`. `conf.d/tools.toml` holds the common `node` + `pnpm` runtime,
-  `osv-scanner`, and `shellcheck` and `shfmt` — the two binaries of
-  `p:plugins:shellcheck` and the shipped defaults of `code:lint` and
-  `code:format`, which both dev and CI need. `conf.d/env.toml` and
+  `min_version`. `conf.d/tools.toml` holds the common `node` + `pnpm` runtime
+  and `osv-scanner`, which both dev and CI need. `conf.d/env.toml` and
   `conf.d/tasks.toml` hold the env values and `tasks.init`.
 - `.config/mise.dev.toml` — loaded when `MISE_ENV=dev` (the maintainer's machine
   has this exported): a header, no settings. `conf.d/tools.dev.toml` holds the
-  dev toolchain (doppler, pre-commit, dprint, taplo, gitleaks, grype,
-  actionlint, jq, python, uv), `conf.d/shell_alias.dev.toml` the aliases.
+  dev toolchain (doppler, pre-commit, dprint, taplo, gitleaks, grype, jq,
+  python, uv), `conf.d/shell_alias.dev.toml` the aliases.
 - `.config/mise.ci.toml` — loaded when `MISE_ENV=ci` (the workflows set this).
   It sets one thing, `node.gpg_verify = false` to work around a mise-on-Linux
   bug where its bundled Node release-key import fails on the CI runner's gpg
@@ -33,12 +31,6 @@ version, so CI installs what the config names and moving a pin is a diff.
 `setup:mise` here is `mise reshim`, `mise doctor`, `mise install` and
 `mise upgrade --local`; the landed base's `setup:mise` stops at the install and
 moves no pin.
-
-The `mise x shellcheck@latest shfmt@latest` wrapper still standing around that
-task in `plugins.yml` is **redundant**: both tools now resolve from
-`conf.d/tools.toml` under `MISE_ENV=ci`. It never worked in the first place: the
-inner `mise run` rebuilds PATH from the config-resolved toolset and drops the
-ad-hoc install.
 
 Pin each tool in one file only: a tool two environments need goes in
 `conf.d/tools.toml`, an environment's own in `conf.d/tools.<env>.toml`.
@@ -161,11 +153,9 @@ loads the working tree for that session, no install and no cache.
 
 - **`plugins.yml`** — validates the plugin toolkit on every push to `main` or
   `develop` and every PR: `p:plugins:marketplace --check`, then
-  `p:plugins:inventory --check`, then `p:plugins:check`, then
-  `p:plugins:shellcheck` (whose two binaries `conf.d/tools.toml` declares; the
-  `mise x` wrapper still wrapping that line is redundant), then the vitest
-  suites, then `p:plugins:npm-normalize-test`, then `tsc --noEmit` per project.
-  The order matters — proving the two committed generated files are what their
+  `p:plugins:inventory --check`, then `p:plugins:check`, then the vitest suites,
+  then `p:plugins:npm-normalize-test`, then `tsc --noEmit` per project. The
+  order matters — proving the two committed generated files are what their
   sources generate *before* validating anything means a stale one fails as
   staleness rather than as some confusing downstream assertion. On `main` only
   it adds one more gate: **every `source.ref` names a tag that exists**. That
