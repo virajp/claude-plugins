@@ -70,6 +70,22 @@ describe("substitution", () => {
     expect(line).toBe(wantLine);
   });
 
+  it.each([
+    ["before a name", "a\nx @@@A@@ y\n", 2],
+    ["after a name", "x @@A@@@ y\n", 1],
+    ["quadrupled before a name", "a\nb\n@@@@A@@\n", 3],
+    ["between adjacent tags", "@@A@@@@@A@@\n", 1],
+    ["before a block tag", "@@@#if T@@x@@/if@@\n", 1],
+  ])("refuses a tripled delimiter %s, naming the line", (_, template, want) => {
+    const { message, line } = fault(template, { A: "v", T: true });
+    expect(message).toMatch(/tripled @ delimiter/);
+    expect(line).toBe(want);
+  });
+
+  it("keeps two adjacent tags apart", () => {
+    expect(run("@@A@@@@A@@", { A: "v" })).toBe("vv");
+  });
+
   it("refuses a value that itself holds @@", () => {
     expect(fault("x = @@A@@", { A: "a@@b" }).message).toMatch(/stray @@/);
   });

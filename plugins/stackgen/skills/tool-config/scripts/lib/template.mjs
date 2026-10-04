@@ -46,7 +46,7 @@ function tagToken(m, line) {
 }
 
 /** Split the template into text and tag tokens, each with its source line. */
-function tokenize(template) {
+function tokenize(template, source) {
   const tokens = [];
   const lines = template.match(/[^\n]*\n|[^\n]+$/g) ?? [];
   lines.forEach((text, i) => {
@@ -58,6 +58,18 @@ function tokenize(template) {
     }
     let at = 0;
     for (const m of text.matchAll(TAG)) {
+      // A tag with a stray `@` against it is a tripled delimiter, `@@@A@@` or `@@A@@@`.
+      const end = m.index + m[0].length;
+      if (
+        (m.index > at && text[m.index - 1] === "@")
+        || (text[end] === "@" && !text.startsWith("@@", end))
+      ) {
+        throw new TemplateError(
+          source,
+          line,
+          `a tripled @ delimiter around ${m[0]}`,
+        );
+      }
       if (m.index > at) {
         tokens.push({ type: "text", text: text.slice(at, m.index), line });
       }
@@ -269,7 +281,7 @@ function renderNodes(nodes, values, items, source) {
  */
 export function render(template, values, { source }) {
   const out = renderNodes(
-    parse(tokenize(template), source).body,
+    parse(tokenize(template, source), source).body,
     values,
     [],
     source,
