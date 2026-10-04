@@ -161,10 +161,11 @@ inventory and check in that order — freshness before validity:
   design and are skipped.
 - **`p:plugins:check`** — validates the authored tree, seventeen rules: the
   manifest (rule 1 refuses a version with a 13 or 17 component), a pack's
-  `config/` payload, its `tool-config:` entries — a mise entry a mapping the
-  tool-config script's own schema accepts — and each `stackgen:tool-config`
-  asset tree (rule 11), no plugin-relative citation in anything that lands (rule
-  13), one `default: true` bundle per axis per platform (rule 14), one formatter
+  `config/` payload, its `tool-config:` entries — a mise, dprint, pre-commit,
+  grype or `all` entry a mapping the tool-config script's own schema accepts, a
+  git entry still a string — and each `stackgen:tool-config` asset tree (rule
+  11), no plugin-relative citation in anything that lands (rule 13), one
+  `default: true` bundle per axis per platform (rule 14), one formatter
   exclusion set with gitleaks' allowlist a subset of it (rule 15), a skill's
   node script shebanged, executable and dependency-free (rule 16), and no bare
   `mise use` anywhere a plugin ships (rule 17). Each rule in full is the
@@ -188,8 +189,10 @@ and `sec` — each of which calls a mise task (`code:format --fix`,
 linter and gitleaks are configured **once**, inside those tasks; no hook names a
 binary — and no gate lints or formats shell. This repo takes the same shape
 `stackgen:tool-config` lands, so its own commits prove the hook-to-task path.
-graphify's graph is refreshed the same way: a `graphify-refresh` hook at the
-`post-commit` stage runs `code:graph`, in place of graphify's raw git hooks.
+graphify's graph is refreshed the same way: a `graphify-refresh` hook runs
+`code:graph`, in place of graphify's raw git hooks — at `post-commit` and
+`post-merge` in the shape `stackgen:tool-config` lands, at `post-commit` alone
+in this repo's own `.config/pre-commit-config.yaml` until it is edited by hand.
 
 What each rule asserts, and what the checker deliberately no longer checks, is
 in [`repo-shape.md`][repo].

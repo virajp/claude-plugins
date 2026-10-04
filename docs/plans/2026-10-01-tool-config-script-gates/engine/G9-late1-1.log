@@ -1,0 +1,15 @@
+## /code-review high (engine scoped itself to develop...HEAD = 6515dcd3, 1b34cdad)
+
+1. plugins/stackgen/skills/tool-config/scripts/lib/run.mjs:141 — setup:precommit now exits 0 on a foreign hook manager, and tool-config all keeps setup:all's piped output only on non-zero exit, so the skip warning is swallowed and the repo reads as set up with no hook wired.
+2. plugins/vwf/skills/init/references/existing-repo.md:251 — init's hook-manager survey detects fewer managers than the task (no global/system core.hooksPath, no lefthook.toml/.json/.lefthook.yaml); those repos get no keep row, no Deferred entry, and :287 says the aggregator wired the hooks; Deferred :1192 is unreachable.
+3. plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit:152 — with a foreign manager and no --force, --update exits 0 before pre-commit autoupdate; the requested update silently does not run.
+4. site/src/content/docs/plugins/stackgen.md:1153 — manual still says setup:precommit refuses and exits 1 halting setup:all; vwf.md:1562 likewise.
+5. plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit:137 — no-force global/system hooksPath path omits the 'landed but not wired' line and the local switch lines when .husky/ is also present.
+6. plugins/stackgen/skills/tool-config/assets/mise/.config/mise/tasks/setup/precommit:117 — FORCE re-checked three times inside the FOREIGN block with nested exits; simplification.
+7. docs/plans/2026-10-01-tool-config-script-gates/07-vwf-prose.md:89 — the new exit-code contract is verified only by a manual scratch check; no vitest case.
+8. plugins/vwf/skills/init/references/existing-repo.md:991 — ragged hand fold ('hole. The fill' 16-col line).
+9. plugins/stackgen/skills/tool-config/references/mise.md:938 — passage says global or system only and 'switch lines'; script treats any non-local hooksPath as outside and prints unset lines.
+
+## /security-review
+
+No findings. Subprocesses are argv-array spawnSync with no shell; writes are confined by Workspace.safe(); config escaping holds; e0bcf2ea is comment-only. Noted (not reportable): setup:precommit now fails open on a foreign hook manager.

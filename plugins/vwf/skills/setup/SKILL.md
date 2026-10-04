@@ -320,10 +320,10 @@ point, since a stamp written before validation describes a tree nothing checked:
    `graphify-out/graph.json` is missing and the CLI is on `PATH`, offer —
    consent-gated; it is a long build — to build it against the **main
    checkout's** root, never the worktree. The refresh hook is the repo's
-   pre-commit `graphify-refresh` hook at `post-commit`, which runs `code:graph`
-   and which `/stackgen:tool-config all` lands; never graphify's own raw git
-   hook, which pins a Python path. A decline is honored without
-   re-asking. Before building, confirm the `.graphifyignore` the pipeline
+   pre-commit `graphify-refresh` hook at `post-commit` and `post-merge`, which
+   runs `code:graph` and which `/stackgen:tool-config all` lands; never
+   graphify's own raw git hook, which pins a Python path. A decline is
+   honored without re-asking. Before building, confirm the `.graphifyignore` the pipeline
    wrote is present at the root the build runs from — a commit still local
    to the worktree has not put it there, and a graph built without it indexes
    everything the file exists to exclude until the next rebuild.

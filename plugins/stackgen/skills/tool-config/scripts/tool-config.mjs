@@ -964,6 +964,7 @@ function land(ws, env, all) {
     }
   }
   const { written, deleted, restore } = ws.writeFiles();
+  let setupOutput = "";
   if (all) {
     const kept = (why, output) =>
       new RefusalError(
@@ -983,6 +984,7 @@ function land(ws, env, all) {
     if (!setup.ok) {
       throw kept("MISE_ENV=dev mise run setup:all failed", setup.output);
     }
+    setupOutput = setup.output;
   }
   try {
     const files = written.filter(p => ws.read(p) !== null);
@@ -1012,7 +1014,8 @@ function land(ws, env, all) {
     throw e;
   }
   ws.writeLock(env.version);
-  return { written, deleted };
+  // a passing setup:all can still warn (a kept foreign hook manager): relay it
+  return { written, deleted, ...(setupOutput && { setup: setupOutput }) };
 }
 
 // --- main ------------------------------------------------------------------------------
@@ -1152,11 +1155,12 @@ async function run(argv) {
       }
     }
   }
-  const { written, deleted } = land(ws, env, call.command === "all");
+  const { written, deleted, setup } = land(ws, env, call.command === "all");
   store.drop(signature);
   return {
     written,
     deleted,
+    ...(setup && { setup }),
     rows: numberRows(followUps).map(publicRow),
     ...extra,
   };

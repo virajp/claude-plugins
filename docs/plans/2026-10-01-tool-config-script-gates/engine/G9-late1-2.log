@@ -1,0 +1,15 @@
+## /code-review high 218d48bd
+
+1. lib/run.mjs:145 — tail() joins stdout then stderr and keeps the last 4000 chars; setup:precommit's warning is on stdout, so later stderr (mise task lines, setup:ai, members) pushes it out of the tail.
+2. tool-config.mjs:1014 — `setup` carries all of setup:all's output (headers, separators, 'Setup complete!'), non-empty on every all; no signal whether anything warned.
+3. tool-config.mjs:1014 — altitude: the ruling needs a structured fact (foreign manager kept, gate not wired); have setup:precommit emit a detectable marker or check hook state, report as a note/flag.
+4. tool-config.mjs:1160 — reuse: new top-level `setup` key duplicates the documented `notes` channel ('things said, not asked').
+5. TC SKILL.md:122 — documented exit-0 shape lacks `setup`; nothing tells the driver to relay it.
+6. lib/run.mjs:146 — strip removes SGR only; erase-line, cursor, OSC hyperlinks, CR progress pass through.
+7. lib/run.mjs:145 — strip runs after truncation; the cut can split an escape and leave a fragment.
+8. lib/run.mjs:146 — reuse: node:util stripVTControlCharacters exists and is dependency-free.
+9. tool-config-core.test.ts:1097 — the case prints only the warning line; cannot catch truncation or noise; no assertion that `setup` is absent on a clean run.
+
+## /security-review
+
+No findings. The tail goes only to the caller's stdout JSON; never written, executed or put into config.

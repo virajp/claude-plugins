@@ -124,10 +124,10 @@ python. Rule 16 holds every `skills/*/scripts/**/*.mjs`: an entry directly under
 `require(` or imports anything but a `node:` built-in or a relative module,
 since the installed plugin ships no `node_modules`. No formatter and no shell
 gate read `.mjs`; its gate is a vitest suite under `scripts/src/` that spawns
-the script in temp repos, as `tool-config-core.test.ts` and
-`tool-config-mise.test.ts` do. Only the owning plugin may cite the script's path
-— rule 6 refuses `${CLAUDE_PLUGIN_ROOT}` across plugins — so vwf invokes
-`/stackgen:tool-config`, never the file.
+the script in temp repos, as `tool-config-core.test.ts`,
+`tool-config-mise.test.ts` and `tool-config-gates.test.ts` do. Only the owning
+plugin may cite the script's path — rule 6 refuses `${CLAUDE_PLUGIN_ROOT}`
+across plugins — so vwf invokes `/stackgen:tool-config`, never the file.
 
 Rule 17 fails any `mise use` a plugin ships, dot directories included, unless
 the line forbids it (`never` or `bare` right before it, `is never` or `— never`

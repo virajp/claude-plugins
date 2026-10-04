@@ -120,12 +120,12 @@ table — is kept and listed, a helper function the pack's library has no name f
 moves into a repo-owned `_scripts/local` sidecar rather than breaking, and a
 file a pack owns whose **content** has diverged is offered as replace or keep —
 a file differing only inside the positions `init` fills is not an offer at all.)
-In every mode the landing is followed by the same five steps — the secrets
-provider, the placeholders, the readme-licence-security step, the bootstrap and
-the aggregator offer — and by a re-hash of everything `init` filled or merged,
-so the next `/vwf:doctor` reads none of it as drift. Either way it shows **one**
-plan, with a section per repo naming the mode it got, and takes one consent for
-all of it before setup carries on. Declining is recorded as a deferral, with
+In every mode the landing is followed by the same four steps — the secrets
+provider, the placeholders, the readme-licence-security step and the bootstrap —
+and by a re-hash of everything `init` filled or merged, so the next
+`/vwf:doctor` reads none of it as drift. Either way it shows **one** plan, with
+a section per repo naming the mode it got, and takes one consent for all of it
+before setup carries on. Declining is recorded as a deferral, with
 `/vwf:setup reshape` as the unlock, and the onboard continues — the repo shape
 and the vwf format are two different things. The offer comes back on its own:
 setup re-checks the shape once more after its materialize pass and on every

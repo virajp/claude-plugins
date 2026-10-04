@@ -4,7 +4,7 @@ axis: project
 kind: language-bundle
 components:
 - language/swift@0.2.0
-- package-manager/swiftpm@0.3.0
+- package-manager/swiftpm@0.3.1
 - toolchain-gate/swift-format@0.1.3
 - toolchain-gate/swiftlint@0.2.1
 platforms:

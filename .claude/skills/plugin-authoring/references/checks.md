@@ -174,31 +174,29 @@ much smaller than the one it replaced: whole families of assertion became
       something the repo does not own, and a name no call sets is a question
       whose answer lands nowhere — all silently. The finding names the pack and
       the entry;
-    - every **`tool-config:` entry** is one of two shapes. A **mise** entry is a
-      mapping —
-      `{tool: mise, verb: add-tool, name: swiftlint, version: "0.59", env: dev}`
-      — held to the schema the tool-config script itself refuses entries by:
-      `validateEntry`, imported from the script's `scripts/lib/schema.mjs`, so
-      the checker and the script cannot disagree. It asks for the verb, the keys
-      that verb takes and their shapes (an env key an env-var name, an alias
-      name a TOML bare key, `env` one of `all`, `dev`, `ci`, `test`), and a
-      template delimiter only in an `add-env` value. A mise entry written as a
-      string — the retired word grammar — is a finding pointing at
-      `plugins/stackgen/assets/pack-format.md`. **Every other tool's** entry
-      stays a string until its tool moves onto the script, and parses as one of
-      the gate verbs, `dprint add plugin <name>`,
-      `all add exclude [generated] <paths>`,
-      `pre-commit add linter-ignore <paths>`,
-      `pre-commit add hook <repo> <id> <stage> [key=value …]`,
-      `grype add ignore <id> [reason]`, `git add ignore <pattern…>`,
-      `git add ignore template=<Name>` or `git add attribute <pattern> <attr…>`.
-      An exclude asked of one tool alone is a finding: only `all add exclude`
-      keeps rule 15's lists one set. The materializer runs each line through
-      `/stackgen:tool-config`, so a line that does not parse is one the skill
-      refuses at landing, in someone else's repo. And a pack's `config/` tier
-      holding any mise `conf.d/` fragment or any `pre-commit.d/` file is a
-      finding: a pack asks for those lines through `tool-config:` and never
-      lands the file.
+    - every **`tool-config:` entry** is one of two shapes. A **mise, dprint,
+      pre-commit, grype or `all`** entry is a mapping —
+      `{tool: mise, verb: add-tool, name: swiftlint, version: "0.59", env: dev}`,
+      `{tool: all, verb: add-exclude, paths: ["*.xcassets/"]}` — held to the
+      schema the tool-config script itself refuses entries by: `validateEntry`,
+      imported from the script's `scripts/lib/schema.mjs`, so the checker and
+      the script cannot disagree. It asks for the verb, the keys that verb takes
+      and their shapes (an env key an env-var name, an alias name a TOML bare
+      key, `env` one of `all`, `dev`, `ci`, `test`, a hook's keys, grype's four
+      ignore keys), and a template delimiter only in an `add-env` value; a
+      dprint `add-plugin` `name` is also held to the skill's plugin table. An
+      entry for one of those tools written as a string — the retired word
+      grammar — is a finding pointing at
+      `plugins/stackgen/assets/pack-format.md`. A **git** entry stays a string
+      until git moves onto the script, and parses as
+      `git add ignore <pattern…>`, `git add ignore template=<Name>` or
+      `git add attribute <pattern> <attr…>`. An exclude has no single-tool verb
+      at all: only `all add-exclude` exists, which keeps rule 15's lists one
+      set. The materializer runs each line through `/stackgen:tool-config`, so a
+      line that does not parse is one the skill refuses at landing, in someone
+      else's repo. And a pack's `config/` tier holding any mise `conf.d/`
+      fragment or any `pre-commit.d/` file is a finding: a pack asks for those
+      lines through `tool-config:` and never lands the file.
 
     The walk is its own rather than the plugin file reader's, because every one
     of these paths runs through a dot segment the reader's glob does not descend
@@ -278,7 +276,7 @@ much smaller than the one it replaced: whole families of assertion became
     and comments removed first) are the **formatters'** three and must agree;
     the gitleaks `[allowlist] paths` (regexes) is the **scanner's** and is held
     to a subset of them instead. The skill writes every entry through one verb,
-    `all add exclude`, in three syntaxes, so the drift is an entry added to some
+    `all add-exclude`, in three syntaxes, so the drift is an entry added to some
     of the lists and not the rest — and no tool reports it, since each reads
     only its own list: the formatter simply formats the tree. The scanner is
     held the other way round because the asset extends upstream's default

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#MISE description="Install pre-commit hooks; refuses to replace a foreign hook manager"
+#MISE description="Install pre-commit hooks; skips a foreign hook manager with a warning"
 #MISE hide=true
 
 #USAGE flag "--force" help="Replace a foreign hook manager (core.hooksPath, husky, lefthook) with pre-commit"
@@ -79,7 +79,7 @@ if git config --local --get-regexp '^merge\.graphify\.' >/dev/null 2>&1; then
   git config --local --remove-section merge.graphify
 fi
 
-# A foreign hook manager is never touched without `--force`; the effective core.hooksPath is what is read.
+# A foreign hook manager is skipped with a warning without `--force`; the effective core.hooksPath is what is read.
 FOREIGN=""
 LOCAL_HOOKS_PATH=$(git config --local --get core.hooksPath 2>/dev/null || true)
 GLOBAL_HOOKS_PATH=$(git config --global --get core.hooksPath 2>/dev/null || true)
@@ -114,7 +114,9 @@ if [ "$TAKEN_OVER" != "true" ]; then
 fi
 
 if [ -n "$FOREIGN" ]; then
-  if [ "$FORCE" = "true" ] && [ "$GLOBAL_ONLY" != "true" ]; then
+  if [ "$FORCE" != "true" ]; then
+    print_warn "Another hook manager owns this repo's hooks — skipping hook installation:"
+  elif [ "$GLOBAL_ONLY" != "true" ]; then
     print_warn "Replacing the existing hook setup (--force):"
   else
     print_error "Another hook manager owns this repo's hooks — refusing to replace it:"
@@ -135,16 +137,19 @@ if [ -n "$FOREIGN" ]; then
       print_yellow "  git config --show-origin --get core.hooksPath   # to find which file sets it"
     fi
     print_yellow "then re-run this task."
-    exit 1
+    if [ "$FORCE" = "true" ]; then
+      exit 1
+    fi
+    exit 0
   fi
   if [ "$FORCE" != "true" ]; then
-    print_yellow "To hand the hooks to pre-commit, run these by hand:"
+    print_yellow "The gate config is landed but not wired. To hand the hooks to pre-commit, run these by hand:"
     print_yellow "  git config --local --unset-all core.hooksPath"
     print_yellow "  pre-commit install --config ${CONFIG} --install-hooks --overwrite"
     print_yellow "or re-run this task with --force, which does the same. Then, so this stops firing:"
     print_yellow "  delete .husky/ or the lefthook file, and drop a package.json \"prepare\" script that runs husky"
     print_yellow "  (it sets core.hooksPath again on every install) — this task deletes nothing."
-    exit 1
+    exit 0
   fi
 fi
 

@@ -175,6 +175,7 @@ case "$1" in
   run)
     [ -f demo.toml ] && echo "setup:all saw demo.toml" >> "$FAKE_MISE_LOG"
     [ -n "$FAKE_MISE_SETUP_FAIL" ] && { echo "setup:all broke" >&2; exit 1; }
+    [ -n "$FAKE_MISE_SETUP_WARN" ] && printf '\\033[33mlanded but not wired\\033[0m\n'
     exit 0 ;;
   x)
     [ "$2" = "--" ] || exit 1
@@ -1091,6 +1092,14 @@ describe("the mise steps a write runs", () => {
     expect(out.written).toEqual(["demo.toml", "tasks/run"]);
     expect(read("demo.toml")).toContain("alpha = 1");
     expect(() => statSync(join(repo, ".claude/stackgen/lock.yaml"))).toThrow();
+  });
+
+  it("relays a passing setup:all's warning in the report", () => {
+    fakeEnv = { FAKE_MISE_SETUP_WARN: "1" };
+    const { status, out } = apply(["all"]);
+    expect(status, JSON.stringify(out)).toBe(0);
+    expect(out.setup).toBe("landed but not wired");
+    expect(lock()).toMatch(/path: "?demo.toml"?\n/);
   });
 
   it("records every file on the re-run once setup:all passes", () => {

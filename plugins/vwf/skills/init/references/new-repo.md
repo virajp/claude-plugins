@@ -557,9 +557,10 @@ in that repo; where it carries none, only its path (or a parent's) under
 `trusted_config_paths` in the global mise config helps, since `mise trust`
 has nothing to trust yet and the skill checks trust again after landing.
 Either way `init` waits for the user to say it is done, reads it again, and
-only then asks for the consent. It never runs either itself. Should §2's call still meet an untrusted config,
-the skill refuses with the files kept and nothing recorded; `init` reports it
-under *Deferred*, the remedy and then `/vwf:setup reshape` its unlock.
+only then asks for the consent. It never runs either itself. Should §2's
+call still meet an untrusted config, the skill refuses with the files kept
+and nothing recorded; `init` reports it under *Deferred*, the remedy and then
+`/vwf:setup reshape` its unlock.
 
 **The bootstrap step left is the executable bit**: `mise run init`, the task
 that makes every file in the task library executable. It is documented in the

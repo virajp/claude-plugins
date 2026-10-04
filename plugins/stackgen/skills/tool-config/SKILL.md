@@ -116,17 +116,21 @@ carrying `written` and `deleted`): fix what it names, then re-run the same
 
 **The output is JSON on stdout, always**, and the exit code says which shape:
 
-| Exit | Shape                                         | Means                                                                        |
-| ---- | --------------------------------------------- | ---------------------------------------------------------------------------- |
-| 0    | `{preview: true, rows, prose?, notes?}`       | a `preview`: the rows the call would show; nothing written                   |
-| 0    | `{written, deleted, rows, prose?, notes?}`    | the call wrote; `rows` are the `needs-edit` rows its answers left for you    |
-| 2    | `{error, rows?, written?, deleted?}`          | refused — the message names why, and the rows when it has some; nothing written, save the one case `written`/`deleted` name — `all` stopped at trust or `setup:all`, its files left written and unrecorded |
-| 1    | `{error}`, a stack on stderr                  | an internal fault — report it whole; never work around it by hand            |
+| Exit | Shape                                              | Means                                                                     |
+| ---- | -------------------------------------------------- | ------------------------------------------------------------------------- |
+| 0    | `{preview: true, rows, prose?, notes?}`            | a `preview`: the rows the call would show; nothing written                |
+| 0    | `{written, deleted, rows, prose?, notes?, setup?}` | the call wrote; `rows` are the `needs-edit` rows its answers left for you |
+| 2    | `{error, rows?, written?, deleted?}`               | refused — the message names why, and the rows when it has some; nothing written, save the one case `written`/`deleted` name — `all` stopped at trust or `setup:all`, its files left written and unrecorded |
+| 1    | `{error}`, a stack on stderr                       | an internal fault — report it whole; never work around it by hand         |
 
 `prose` lists what the script left to the references — `git`, `graphify`
 and `renovate` on `all`, a pack's string entries on `apply-entries`.
 `notes` are things said, not asked: a pin already held, a path another
 source owns left alone, a plugin or exclude already satisfied.
+`setup` comes back on a successful `all` alone: the tail of `setup:all`'s
+output, colour codes stripped. **Relay it to the person** — a passing
+`setup:all` can still warn, and it is how a foreign hook manager the repo
+kept ("landed but not wired") reaches them.
 
 ## Arguments
 
