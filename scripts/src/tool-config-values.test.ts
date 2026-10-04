@@ -88,6 +88,23 @@ describe("parseYaml", () => {
     expect(parse("a: 1\r\nb: x\r\n")).toEqual({ a: 1, b: "x" });
   });
 
+  it("counts a quote only where a scalar starts", () => {
+    expect(parse("repo_name: o'neil # c\nb: a\"b # c\nc: [o'neil, x] # c"))
+      .toEqual({
+        repo_name: "o'neil",
+        b: "a\"b",
+        c: ["o'neil", "x"],
+      });
+  });
+
+  it("keeps an ambiguous word a string only when quoted", () => {
+    expect(parse("a: 'yes'\nb: \"False\"\nc: '~'")).toEqual({
+      a: "yes",
+      b: "False",
+      c: "~",
+    });
+  });
+
   it("keeps a float or a quoted number a string", () => {
     expect(parse("a: 1.5\nb: '1'")).toEqual({ a: "1.5", b: "1" });
   });
@@ -116,6 +133,38 @@ describe("parseYaml", () => {
     ["an unquoted colon in a value", "a: b: c", 1, /quote the value/],
     ["a document marker", "---\na: 1", 1, /document marker/],
     ["a line that is no key", "a: 1\njust text", 2, /not a key: value/],
+    [
+      "a __proto__ key",
+      "a: 1\n__proto__: x",
+      2,
+      /the key __proto__ is refused/,
+    ],
+    [
+      "a nested __proto__ key",
+      "m:\n  __proto__:\n    polluted: true",
+      2,
+      /__proto__ is refused/,
+    ],
+    ["a constructor key", "constructor: x", 1, /constructor is refused/],
+    ["a prototype key", "prototype: x", 1, /prototype is refused/],
+    ["a nested block list", "a:\n  - - x", 2, /nested list/],
+    [
+      "a list at its key's indent",
+      "members:\n- a",
+      2,
+      /indent the list under members by 2 spaces/,
+    ],
+    ...["False", "FALSE", "True", "yes", "no", "on", "off", "null", "Null", "~"]
+      .map(
+        w =>
+          [`a plain ${w}`, `a: 1\nb: ${w}`, 2, /ambiguous/] as [
+            string,
+            string,
+            number,
+            RegExp,
+          ],
+      ),
+    ["an ambiguous word in a flow list", "a: [x, off]", 1, /off is ambiguous/],
   ])("refuses %s, naming the line", (_what, text, line, message) => {
     const e = refusal(text);
     expect(e.line).toBe(line);
@@ -209,7 +258,7 @@ describe("readStackgen", () => {
     ],
     [
       "a non-boolean node",
-      "format: 1\nnode: yes",
+      "format: 1\nnode: 'yes'",
       /node must be true or false/,
     ],
     [
@@ -315,6 +364,15 @@ describe("deriveOrigin", () => {
     ["a local path", "/srv/git/repo.git"],
     ["a file url", "file:///srv/git/repo.git"],
     ["an owner-less path", "https://github.com/repo"],
+    ["a quote in the path", "https://github.com/own\"er/repo"],
+    [
+      "a command substitution in the path",
+      "git@github.com:owner/$(touch x).git",
+    ],
+    ["a backtick in the path", "https://github.com/owner/re`id`po"],
+    ["a semicolon in the host", "ssh://git@evil;rm/owner/repo"],
+    ["a pipe in the path", "git@github.com:owner/a|b"],
+    ["a dot-dot segment", "https://github.com/owner/../repo"],
   ])("is empty for %s", (_what, url) => {
     gitRepo(url);
     expect(values.deriveOrigin(root)).toEqual({});
@@ -368,6 +426,26 @@ describe("loadValues", () => {
         /packs\.clashing\.repo_name names REPO_NAME, which is already a global name/,
       );
   });
+
+  it("refuses a pack key that clashes with a global name absent from this repo", () => {
+    writeStackgen(
+      "format: 1\npacks:\n  swiftui:\n    repo_url: x\n    merge_model_main: pr\n    forge: z",
+    );
+    expect(() => values.loadValues(root, { pack: "swiftui" }))
+      .toThrow(
+        /packs\.swiftui\.repo_url names REPO_URL, which is already a global name/,
+      );
+  });
+
+  it.each(["merge_model_main", "forge", "project_name"])(
+    "refuses an absent global %s as a pack key",
+    key => {
+      writeStackgen(`format: 1\npacks:\n  swiftui:\n    ${key}: x`);
+      expect(() => values.loadValues(root, { pack: "swiftui" })).toThrow(
+        /already a global name/,
+      );
+    },
+  );
 
   it("is the origin names alone when the file is absent", () => {
     gitRepo("https://github.com/virajp/claude-plugins");

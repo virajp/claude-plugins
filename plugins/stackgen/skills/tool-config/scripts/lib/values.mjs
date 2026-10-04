@@ -143,7 +143,15 @@ function parseRemote(url) {
     return null;
   }
   const path = m[2].replace(/\/+$/, "").replace(/\.git$/, "");
-  if (!/^[^/\s]+(\/[^/\s]+)+$/.test(path)) {
+  // Both land inside quoted shell and TOML: a host or a segment holding
+  // anything but these characters is not a forge URL.
+  if (
+    !/^[A-Za-z0-9.-]+$/.test(m[1])
+    || !/^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)+$/.test(path)
+  ) {
+    return null;
+  }
+  if (path.split("/").some(seg => seg === "." || seg === "..")) {
     return null;
   }
   return { host: m[1].toLowerCase(), path };
@@ -187,6 +195,17 @@ function checkScalar(name, value) {
   }
 }
 
+/** Every name D6 and D7 can produce, present in this repo or not. */
+const GLOBAL_NAMES = new Set([
+  ...Object.keys(TOP).filter(k => k !== "packs" && k !== "merge_model").map(k =>
+    k.toUpperCase()
+  ),
+  "MERGE_MODEL_DEVELOP",
+  "MERGE_MODEL_MAIN",
+  "REPO_URL",
+  "PROJECT_NAME",
+]);
+
 /**
  * The flat name → value map a template reads: every stored key but `packs`,
  * the names derived from `origin`, and — when `pack` names a slug — that
@@ -198,7 +217,7 @@ export function loadValues(repoRoot, { pack } = {}) {
   if (pack !== undefined) {
     for (const [key, value] of Object.entries(packs[pack] ?? {})) {
       const name = key.toUpperCase();
-      if (Object.hasOwn(values, name)) {
+      if (GLOBAL_NAMES.has(name) || Object.hasOwn(values, name)) {
         throw new ValuesError(
           `${STACKGEN_PATH}: packs.${pack}.${key} names ${name}, which is already a global name — refused`,
         );

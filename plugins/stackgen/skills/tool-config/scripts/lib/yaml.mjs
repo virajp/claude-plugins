@@ -19,21 +19,45 @@ export class YamlError extends Error {
 const BLANK = /^[ \t]+|[ \t]+$/g;
 const KEY = /^([A-Za-z_][A-Za-z0-9_-]*)[ \t]*:(?:[ \t]+(.*))?$/s;
 
+/**
+ * A quote opens a string only where a scalar starts — the line start, or after
+ * `: ` or `- `, and inside a flow list after `[` or `,` — never mid-scalar
+ * (`o'neil`).
+ */
+function opensScalar(text, i, flow) {
+  const starts = flow ? ":-[," : ":-";
+  if (
+    i > 0 && !/[ \t]/.test(text[i - 1]) && !(flow && "[,"
+      .includes(text[i - 1]))
+  ) {
+    return false;
+  }
+  const before = text.slice(0, i).replace(/[ \t]+$/, "");
+  return before === "" || starts.includes(before.at(-1));
+}
+
 /** Strip a trailing ` # comment` outside quotes. */
 function stripComment(text) {
   let quote = null;
+  let flow = false;
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
     if (quote) {
       if (c === "\\" && quote === "\"") {
         i++;
       }
+      else if (c === "'" && quote === "'" && text[i + 1] === "'") {
+        i++;
+      }
       else if (c === quote) {
         quote = null;
       }
     }
-    else if (c === "\"" || c === "'") {
+    else if ((c === "\"" || c === "'") && opensScalar(text, i, flow)) {
       quote = c;
+    }
+    else if (c === "[" && opensScalar(text, i, flow)) {
+      flow = true;
     }
     else if (c === "#" && (i === 0 || /[ \t]/.test(text[i - 1]))) {
       return text.slice(0, i);
@@ -53,11 +77,14 @@ function splitFlow(body, fail) {
       if (c === "\\" && quote === "\"") {
         i++;
       }
+      else if (c === "'" && quote === "'" && body[i + 1] === "'") {
+        i++;
+      }
       else if (c === quote) {
         quote = null;
       }
     }
-    else if (c === "\"" || c === "'") {
+    else if ((c === "\"" || c === "'") && opensScalar(body, i, true)) {
       quote = c;
     }
     else if (c === "[" || c === "{") {
@@ -172,6 +199,9 @@ function scalar(text, fail, { list = true } = {}) {
   if (t === "true" || t === "false") {
     return t === "true";
   }
+  if (/^(true|false|yes|no|y|n|on|off|null|~)$/i.test(t)) {
+    fail(`${t} is ambiguous — write true or false, or quote it as a string`);
+  }
   return t;
 }
 
@@ -231,6 +261,9 @@ export function parseYaml(text, { source = "<yaml>" } = {}) {
         fail(`not a key: value line: ${l.text}`);
       }
       const [, key, rest] = m;
+      if (key === "__proto__" || key === "constructor" || key === "prototype") {
+        fail(`the key ${key} is refused`);
+      }
       if (Object.hasOwn(out, key)) {
         fail(`duplicate key ${key}`);
       }
@@ -240,6 +273,9 @@ export function parseYaml(text, { source = "<yaml>" } = {}) {
         continue;
       }
       const next = lines[i];
+      if (next && next.indent === indent && isItem(next)) {
+        failAt(next.line)(`indent the list under ${key} by 2 spaces`);
+      }
       if (!next || next.indent <= indent) {
         fail(`${key} has no value`);
       }
@@ -269,6 +305,9 @@ export function parseYaml(text, { source = "<yaml>" } = {}) {
         fail(
           "a nested block in a list is not supported — list items are scalars",
         );
+      }
+      if (item === "-" || item.startsWith("- ")) {
+        fail("a nested list is not supported — list items are scalars");
       }
       if (KEY.test(item) || /^("[^"]*"|'[^']*')[ \t]*:([ \t]|$)/.test(item)) {
         fail("a list of mappings is not supported — list items are scalars");
