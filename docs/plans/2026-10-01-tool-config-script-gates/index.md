@@ -13,9 +13,10 @@ backlog_pieces: []
 
 **BLOCKED**
 
-BLOCKED at wave 3 — G7 UNRESOLVED: how tool-config all finishes when a foreign
-hook manager is kept or switched; G10, G11 skipped (depend on G7); G7 edits
-uncommitted in .worktrees/2026-10-01-tool-config-script-gates
+BLOCKED at wave 3 — G7 ruling recorded 2026-10-04 (foreign hook manager:
+setup:precommit warns and exits 0; switch runs --force after all), ready to
+resume; G10, G11 skipped (depend on G7); G7 draft edits in checkpoint c688019e
+in .worktrees/2026-10-01-tool-config-script-gates
 
 ## Consent
 
@@ -192,7 +193,7 @@ None.
 | G4  | 2    | [04-checker-widen.md](04-checker-widen.md)     | edit   | `scripts/src/check.ts`, `scripts/src/check.test.ts`                                                                                                                                                                                                                                                                                                                                                                                     | G1             | green      | 428f4da4 |
 | G5  | 3    | [05-pack-entries.md](05-pack-entries.md)       | edit   | the dprint, pre-commit and `all` entries in `plugins/stackgen/stacks/{cloud-service/containers,cloud-service/cloud-run,framework/html,framework/astro,stylesheet/stylex,stylesheet/plain-css,stylesheet/tailwindcss,language/typescript,deploy-target/container-image,package-manager/pnpm,package-manager/uv,package-manager/swiftpm,app-framework/swiftui,app-framework/flutter}/pack.yaml`; `plugins/stackgen/assets/pack-format.md` | G4             | green      | e5d7e9d5 |
 | G6  | 3    | [06-stackgen-prose.md](06-stackgen-prose.md)   | edit   | `plugins/stackgen/skills/tool-config/SKILL.md`, `plugins/stackgen/skills/tool-config/references/{dprint,pre-commit,gitleaks,grype,mise}.md`, `plugins/stackgen/skills/stackgen-stack-template/references/materializer.md`                                                                                                                                                                                                               | G3             | green      | 24b5ba8f |
-| G7  | 3    | [07-vwf-prose.md](07-vwf-prose.md)             | edit   | `plugins/vwf/skills/init/SKILL.md`, `plugins/vwf/skills/init/references/{new-repo,existing-repo}.md`, `plugins/vwf/skills/init/assets/hygiene/CONTRIBUTING.md`, `plugins/vwf/skills/setup/references/materialize.md`, `plugins/vwf/skills/doctor/references/code-intelligence.md`                                                                                                                                                       | G3             | unresolved |          |
+| G7  | 3    | [07-vwf-prose.md](07-vwf-prose.md)             | edit   | `plugins/vwf/skills/init/SKILL.md`, `plugins/vwf/skills/init/references/{new-repo,existing-repo}.md`, `plugins/vwf/skills/init/assets/hygiene/CONTRIBUTING.md`, `plugins/vwf/skills/setup/references/materialize.md`, `plugins/vwf/skills/doctor/references/code-intelligence.md`; four more widened at resume (see its unit file)                                                                                                      | G3             | unresolved |          |
 | G8  | 4    | [08-checker-tighten.md](08-checker-tighten.md) | edit   | `scripts/src/check.ts`, `scripts/src/check.test.ts`                                                                                                                                                                                                                                                                                                                                                                                     | G4, G5         | green      | eafc2d7a |
 | G9  | 5    | [09-review.md](09-review.md)                   | review | —                                                                                                                                                                                                                                                                                                                                                                                                                                       | G3, G8         | green      |          |
 | G10 | 6    | [10-docs.md](10-docs.md)                       | edit   | `readme.md`, `CLAUDE.md`, `.claude/docs/**`, `.claude/skills/{stackgen-plugin,vwf-plugin,plugin-authoring}/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-10-01-*.md` (new)                                                                                                                                                                                                                                               | G5, G6, G7, G9 | skipped    |          |
@@ -351,6 +352,9 @@ Keep the block under 1,500 characters.
 
 ## Gaps surfaced during execution
 
+- **Ruled 2026-10-04 — see G7's unit file:** `setup:precommit` warns and exits 0
+  on a foreign manager without `--force`; switch runs `--force` after `all`;
+  G7's Owns widened to the task, its golden and two tool-config passages.
 - **Ruling needed (G7 UNRESOLVED, blocks G10 and G11):** a foreign hook manager
   (husky, lefthook, `core.hooksPath`) makes `tool-config all` refuse either way.
   Keep it: `all` runs `setup:all`, whose `setup:precommit` exits 1 on a foreign
