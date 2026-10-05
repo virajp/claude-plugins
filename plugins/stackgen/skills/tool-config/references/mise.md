@@ -387,8 +387,13 @@ setup:all  (--all, or --<slug>, recurses into members)
   ├─ setup:deps:all        # every package manager's five verbs
   ├─ setup:precommit       # install the hooks
   ├─ setup:ai:all          # vwf, then each pack's plugins
+  ├─ setup:precommit       # again: strip what the plugin install let in
   └─ <each member>         # --all, or that member's --<slug>
 ```
+
+`setup:precommit` runs twice because the published installer `setup:ai:all`
+may run can put back graphify's raw hooks and its `merge=graphify` line in
+`.gitattributes`; the second pass strips them.
 
 **Keep it idempotent and non-destructive**: re-running converges, never
 errors, and it passes no flag the user did not pass. It exits 1 when

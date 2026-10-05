@@ -29,7 +29,8 @@ checkout, so `graphify-out/` is ignored whole.
 no merge driver and no attribute is landed for it, and graphify's own raw git
 hooks are never installed — the commit gate's refresh hook runs the graph
 build instead ([pre-commit's](pre-commit.md#5-the-graph-refresh-hook)), and
-`setup:precommit` strips whatever an earlier install left.
+`setup:precommit` strips whatever an earlier install left — and `setup:all`
+runs it again after `setup:ai:all`, whose plugin install can let them back.
 
 The graph tool's pin, `pipx:graphifyy` with the `uv` and `python` it locks
 with, and the `code:graph` task are [mise's](mise.md#3-the-task-library). The
