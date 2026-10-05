@@ -55,10 +55,10 @@ stack for it, as a `site` or `webapp` project of its own beside the app. A
 native Apple app pins `swift-swiftui` instead — `app-framework/swiftui`, serving
 `mobile`, `tablet`, `desktop` and `auto` like Flutter plus `watch`, `tv` and
 `spatial`, from a committed Xcode project a person creates in Xcode, with the
-Xcode version pinned as `XCODE_VERSION` in the pack's block of
-`.config/mise/conf.d/env.toml`, which `/vwf:setup` asks for — offering the
-version it detects on your machine — as it lands the pack. Pick it when the app
-ships on Apple platforms alone or reaches one Flutter does not; pick Flutter
+Xcode version pinned as `XCODE_VERSION` in the pack's own
+`.config/mise/conf.d/swiftui/mise.toml`, which `/vwf:setup` asks for — offering
+the version it detects on your machine — as it lands the pack. Pick it when the
+app ships on Apple platforms alone or reaches one Flutter does not; pick Flutter
 when it must also ship on Android. A Swift library on the `packages` platform
 pins `swift-package` — SwiftPM, swift-format and SwiftLint over the host's Swift
 toolchain, which must be on `PATH`; it carries no app target. Anything else
@@ -115,26 +115,26 @@ not this.
 capability has a neutral contract — what any provider must guarantee — beside
 the providers that realize it. Vendor-free: `postgres` for the datastore, `oidc`
 for identity, `otel-lgtm` for observability, `temporal` for orchestration,
-`doppler` and `fnox` for secrets. Those two are the **developer-machine and CI**
-providers; the runtime secrets a deployed Worker or Container reads in staging
-and production are a backing pin of their own, Cloudflare's being
-`cloudflare-secrets-store`, and a repo pins both. The **audit store** is the one
-capability whose providers ride the datastore you already pinned rather than
-composing an engine of their own — `audit-store-postgres` on Postgres,
-`audit-store-d1` on D1 — so it is a pin you make beside the datastore, never
-instead of it. The **workspace** is the odd one on this axis: `notion` pins the
-place your team's docs, specs and tickets already live, and what it lands is the
-wiring that lets the agent reach them — no part of the product runs against it,
-which is why the category realizes no capability at all. Managed: a cloud's own
-services — `gcp` bringing Firestore, Cloud SQL and the Firebase services, and
-`cloudflare` bringing Workers KV, R2, D1, Hyperdrive, Vectorize, Pipelines,
-Analytics Engine, Durable Objects, Workflows, Queues, Workers AI, AI Gateway, AI
-Search, Browser Rendering, Images, Realtime, Email Service and Secrets Store.
-Each managed service is its own bundle, so they are pinned side by side rather
-than chosen between. Object storage is the one to know about — **it has no
-vendor-free provider by design**, because every object store belongs to a cloud,
-so its contract states the requirement and points at whichever cloud you have
-pinned rather than offering a neutral one.
+`fnox` for secrets. That is the **developer-machine and CI** provider; the
+runtime secrets a deployed Worker or Container reads in staging and production
+are a backing pin of their own, Cloudflare's being `cloudflare-secrets-store`,
+and a repo pins both. The **audit store** is the one capability whose providers
+ride the datastore you already pinned rather than composing an engine of their
+own — `audit-store-postgres` on Postgres, `audit-store-d1` on D1 — so it is a
+pin you make beside the datastore, never instead of it. The **workspace** is the
+odd one on this axis: `notion` pins the place your team's docs, specs and
+tickets already live, and what it lands is the wiring that lets the agent reach
+them — no part of the product runs against it, which is why the category
+realizes no capability at all. Managed: a cloud's own services — `gcp` bringing
+Firestore, Cloud SQL and the Firebase services, and `cloudflare` bringing
+Workers KV, R2, D1, Hyperdrive, Vectorize, Pipelines, Analytics Engine, Durable
+Objects, Workflows, Queues, Workers AI, AI Gateway, AI Search, Browser
+Rendering, Images, Realtime, Email Service and Secrets Store. Each managed
+service is its own bundle, so they are pinned side by side rather than chosen
+between. Object storage is the one to know about — **it has no vendor-free
+provider by design**, because every object store belongs to a cloud, so its
+contract states the requirement and points at whichever cloud you have pinned
+rather than offering a neutral one.
 
 **The deploy axis has a provider-neutral default that is a real answer**, not a
 placeholder: `deploy-target/container-image` is an OCI image on any registry and

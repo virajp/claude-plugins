@@ -105,11 +105,12 @@ sitting at a path a pack would land, a **replace-or-keep** row shown before the
 one consent — a keep is recorded under `enforcement.kept_files`, in a stub
 `.config/vwf.yaml` `init` writes since setup has not made one yet, carrying the
 `answers:` block of the run's four conditional answers beside it, so it is never
-re-offered. Bookable's `.gitignore` is neither replaced nor offered:
-`/stackgen:tool-config`'s git tool **adopts** it, a banner section matching its
-base becoming its block and the rest staying Bookable's own lines, and never
-writes a pattern Bookable already carries under another spelling, so
-`node_modules/` is not doubled. A readme, a licence file under any spelling or a
+re-offered. Bookable's `.gitignore` is one row of its own:
+`/stackgen:tool-config` renders the universal ignore set between one
+`# >>> tool-config` marker pair, and a file carrying no marker pair yet is
+replaced whole only on your `ok` — answer `keep-existing` and Bookable's file
+stands for that run; once the pair is in, every line Bookable keeps outside it
+survives every later render. A readme, a licence file under any spelling or a
 `SECURITY.md` already there is kept outright. Its **stack read** finds the
 `package.json` and, on this first run with no pin yet, asks the git tool for
 GitHub's `Node` ignore template as a `gitignore:Node` block and lands the Node
