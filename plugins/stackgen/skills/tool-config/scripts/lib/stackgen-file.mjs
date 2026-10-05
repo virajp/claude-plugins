@@ -22,7 +22,7 @@ export { STACKGEN_PATH };
 
 const HEADER = [
   "# stackgen's values for this repo, read by every tool-config render.",
-  "# Written by the tool-config script alone — change a value through it, never by hand.",
+  "# Written by the tool-config script alone: change a value through it.",
 ];
 
 const ORDER = [
@@ -47,10 +47,19 @@ function scalar(value) {
   return String(value);
 }
 
-function valueText(value) {
-  return Array.isArray(value)
-    ? `[${value.map(scalar).join(", ")}]`
-    : scalar(value);
+/**
+ * `key: value` at `indent`. A non-empty list is a block list, one item a line,
+ * as the shipped formatter prints it: a flow list it wraps past 80 columns
+ * is one the reader refuses.
+ */
+function entry(indent, key, value) {
+  if (!Array.isArray(value)) {
+    return [`${indent}${key}: ${scalar(value)}`];
+  }
+  if (!value.length) {
+    return [`${indent}${key}: []`];
+  }
+  return [`${indent}${key}:`, ...value.map(v => `${indent}  - ${scalar(v)}`)];
 }
 
 /** The file's text for a parsed document. */
@@ -84,7 +93,7 @@ export function stackgenText(doc) {
         }
         lines.push(`  ${slug}:`);
         for (const [k, v] of entries) {
-          lines.push(`    ${k}: ${valueText(v)}`);
+          lines.push(...entry("    ", k, v));
         }
       }
       if (lines.at(-1) === "packs:") {
@@ -92,7 +101,7 @@ export function stackgenText(doc) {
       }
       continue;
     }
-    lines.push(`${key}: ${valueText(doc[key])}`);
+    lines.push(...entry("", key, doc[key]));
   }
   return lines.join("\n") + "\n";
 }

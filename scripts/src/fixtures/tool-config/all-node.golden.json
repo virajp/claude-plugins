@@ -19,5 +19,5 @@
   ".config/mise/tasks/setup/external/pull": "<not written>",
   ".config/mise/tasks/setup/external/start": "<not written>",
   ".config/mise/tasks/setup/external/stop": "<not written>",
-  ".config/stackgen.yaml": "# stackgen's values for this repo, read by every tool-config render.\n# Written by the tool-config script alone — change a value through it, never by hand.\n\nformat: 1\nrepo_name: \"widget\"\nmembers: [\"apps/web\", \"svc/API_x\"]\nscopes: [\"web\", \"api\"]\nnode: true\n"
+  ".config/stackgen.yaml": "# stackgen's values for this repo, read by every tool-config render.\n# Written by the tool-config script alone: change a value through it.\n\nformat: 1\nrepo_name: \"widget\"\nmembers:\n  - \"apps/web\"\n  - \"svc/API_x\"\nscopes:\n  - \"web\"\n  - \"api\"\nnode: true\n"
 }

@@ -222,7 +222,15 @@ export function pinExact(text, existing, latest) {
     if (pin.version !== "latest" || FLOATING.has(pin.tool)) {
       continue;
     }
-    out = setPin(out, pin.line, held.get(pin.tool) ?? latest(pin.tool));
+    const version = held.get(pin.tool) ?? latest(pin.tool);
+    if (!isExact(version)) {
+      throw new RefusalError(
+        `mise latest ${pin.tool} answered ${
+          JSON.stringify(version)
+        }, not an exact version — a pin CI loads is only ever written exact`,
+      );
+    }
+    out = setPin(out, pin.line, version);
   }
   return out;
 }
@@ -324,7 +332,10 @@ export function taskNames(ws) {
   }
   const configs = [
     ".config/mise.toml",
-    ...ws.list(`${CONF_D}/`).filter(p => p.endsWith(".toml")),
+    // a machine's own mise.local.toml / mise.<env>.local.toml is gitignored, never the repo's
+    ...ws.list(`${CONF_D}/`).filter(p =>
+      p.endsWith(".toml") && !/(^|\/)mise(\.[^/]+)?\.local\.toml$/.test(p)
+    ),
   ];
   for (const path of configs) {
     let task = null;

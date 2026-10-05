@@ -468,6 +468,36 @@ function rerenderAll(ctx, text) {
   renderTree(ctx, readTree(ctx.templatesDir), values, { tiers: [1, 2] });
 }
 
+/** Every path tool-config's own assets/ and templates/ ship. */
+function shippedPaths(ctx) {
+  return [...walk(ctx.assetsDir), ...walk(ctx.templatesDir)].map(f => f.path);
+}
+
+/**
+ * Why a pack template may not render at `path` (lowercased: every compare is
+ * case-blind, as a case-insensitive disk is), or null when it may.
+ */
+function refusedDestination(path, slug, shipped) {
+  const segs = path.split("/");
+  if (path === STACKGEN_PATH.toLowerCase()) {
+    return "the values file is the script's alone";
+  }
+  if (segs.includes(".git")) {
+    return "nothing renders into .git/";
+  }
+  if (shipped.has(path)) {
+    return "tool-config ships that path itself";
+  }
+  const confD = `${CONF_D}/`.toLowerCase();
+  if (path.startsWith(confD) && segs[confD.split("/").length - 1] !== slug) {
+    return `a pack renders into conf.d/${slug}/ alone`;
+  }
+  if (path.startsWith(`${TASKS_DIR}/`.toLowerCase()) && segs.at(-1) === "all") {
+    return "the …:all tasks are tool-config's";
+  }
+  return null;
+}
+
 function cmdPack(ctx, call) {
   const slug = call.flags.slug;
   const dir = resolve(call.flags.dir);
@@ -476,17 +506,11 @@ function cmdPack(ctx, call) {
   }
   const text = setDoc(ctx, withPack(readDoc(ctx.ws), slug, call.sets));
   const templates = readTree(join(dir, "templates"));
+  const shipped = new Set(shippedPaths(ctx).map(p => p.toLowerCase()));
   for (const t of templates) {
-    if (t.path === STACKGEN_PATH) {
-      throw new RefusalError(
-        `${slug}'s templates/ holds ${STACKGEN_PATH} — the values file is the script's alone`,
-      );
-    }
-    // case-blind: on a case-insensitive disk .GIT/ is .git/
-    if (t.path.split("/").some(seg => seg.toLowerCase() === ".git")) {
-      throw new RefusalError(
-        `${slug}'s templates/ holds ${t.path} — nothing renders into .git/`,
-      );
+    const why = refusedDestination(t.path.toLowerCase(), slug, shipped);
+    if (why) {
+      throw new RefusalError(`${slug}'s templates/ holds ${t.path} — ${why}`);
     }
   }
   renderTree(ctx, templates, valuesFrom(text, ctx.ws.root, slug));
@@ -497,9 +521,7 @@ function cmdPackRemove(ctx, call) {
   const slug = call.flags.slug;
   const text = setDoc(ctx, withPack(readDoc(ctx.ws), slug, null));
   // a path tool-config ships itself is never a pack's to delete
-  const shipped = new Set(
-    [...walk(ctx.assetsDir), ...walk(ctx.templatesDir)].map(f => f.path),
-  );
+  const shipped = new Set(shippedPaths(ctx));
   const owned = [
     ...ctx.ws.list(`${CONF_D}/${slug}/`),
     ...Object
@@ -619,31 +641,44 @@ function fileRows(ws) {
 }
 
 /**
- * Refuse an answer set that deletes a task while keeping a file that still
- * runs it — a kept `…:all` naming a subtask the same call removes.
+ * Refuse an answer set that splits a task from what runs it: a kept file
+ * that still runs a task this call deletes, or an `ok`'d file — a new
+ * `…:all` — that stops running a task the answers keep.
  */
 function refuseOrphans(ws, rows, answers) {
-  const gone = rows
-    .filter(r =>
-      r.kind === "delete"
-      && answers.get(r.id) === "ok"
-      && r.path.startsWith(`${TASKS_DIR}/`)
-    )
-    .map(r => r.path.slice(TASKS_DIR.length + 1).split("/").join(":"));
+  const tasks = answer =>
+    rows
+      .filter(r =>
+        r.kind === "delete"
+        && answers.get(r.id) === answer
+        && r.path.startsWith(`${TASKS_DIR}/`)
+      )
+      .map(r => r.path.slice(TASKS_DIR.length + 1).split("/").join(":"));
+  // a task name holds no pattern syntax but `.`, which only widens the match
+  const runs = (text, t) => new RegExp(`mise run ${t}(\\s|$)`, "m").test(text);
+  const gone = tasks("ok");
+  const stays = tasks("keep-existing");
   for (const row of rows) {
-    if (answers.get(row.id) !== "keep-existing") {
-      continue;
+    const before = ws.disk(row.path) ?? "";
+    const answer = answers.get(row.id);
+    if (answer === "keep-existing") {
+      const task = gone.find(t => runs(before, t));
+      if (task) {
+        throw new RefusalError(
+          `${row.id} keeps ${row.path}, which still runs ${task} — a task this call deletes; answer both rows alike`,
+          rows,
+        );
+      }
     }
-    const kept = ws.disk(row.path) ?? "";
-    // a task name holds no pattern syntax but `.`, which only widens the match
-    const task = gone.find(t =>
-      new RegExp(`mise run ${t}(\\s|$)`, "m").test(kept)
-    );
-    if (task) {
-      throw new RefusalError(
-        `${row.id} keeps ${row.path}, which still runs ${task} — a task this call deletes; answer both rows alike`,
-        rows,
-      );
+    if (answer === "ok" && row.kind === "write") {
+      const after = ws.read(row.path) ?? "";
+      const task = stays.find(t => runs(before, t) && !runs(after, t));
+      if (task) {
+        throw new RefusalError(
+          `${row.id} rewrites ${row.path} without ${task} — a task the answers keep; answer both rows alike`,
+          rows,
+        );
+      }
     }
   }
 }

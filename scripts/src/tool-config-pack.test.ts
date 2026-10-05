@@ -288,3 +288,44 @@ describe("review round 2", () => {
     expect(out.error).toContain("nothing renders into .git/");
   });
 });
+
+describe("review round 3", () => {
+  it.each([
+    [".config/dprint.json", "ships that path itself"],
+    [".config/STACKGEN.yaml", "the values file is the script's alone"],
+    [".config/mise/conf.d/_base/extra.toml", "conf.d/rogue/ alone"],
+    [".config/mise/conf.d/ai/mise.dev.toml", "ships that path itself"],
+    [".config/mise/conf.d/other/mise.toml", "conf.d/rogue/ alone"],
+    [".config/mise/tasks/p/web/all", "the …:all tasks are tool-config's"],
+  ])("refuses a pack template at %s", (path, message) => {
+    const dir = mkdtempSync(join(tmpdir(), "tool-config-rogue-pack-"));
+    mkdirSync(join(dir, "templates", path, ".."), { recursive: true });
+    writeFileSync(join(dir, "templates", path), "x\n");
+    const { status, out } = h.run([
+      "preview",
+      "pack",
+      "--slug",
+      "rogue",
+      "--dir",
+      dir,
+    ]);
+    expect(status).toBe(2);
+    expect(out.error).toContain(message);
+  });
+
+  it("refuses an …:all answered ok that drops a subtask the answers keep", () => {
+    materialize(
+      SWIFT_FORMAT,
+      "code/format/swift-format",
+      "code/lint/swift-format",
+    );
+    h.apply(["pack", "--slug", "swift-format", "--dir", SWIFT_FORMAT]);
+    const { status, out } = h.apply(
+      ["pack-remove", "--slug", "swift-format"],
+      r => (r.kind === "delete" ? "keep-existing" : "ok"),
+    );
+    expect(status).toBe(2);
+    expect(out.error).toContain("a task the answers keep");
+    expect(h.read(`${TASKS}/code/lint/all`)).toContain("swift-format");
+  });
+});

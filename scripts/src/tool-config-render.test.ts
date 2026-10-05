@@ -682,3 +682,46 @@ describe("review round 2", () => {
     expect(line).not.toContain(path);
   });
 });
+
+describe("review round 3", () => {
+  it("writes lists as block lists, so a long one never wraps into a form the reader refuses", () => {
+    const members = Array.from({ length: 8 }, (_, i) => `services/member-${i}`);
+    h.apply(["all", "--repo-name", "widget", "--members", members.join(",")]);
+    const yaml = h.read(".config/stackgen.yaml");
+    expect(yaml).toContain(
+      "members:\n" + members.map(m => `  - "${m}"\n`).join(""),
+    );
+    expect(yaml.split("\n").every(l => l.length <= 80)).toBe(true);
+    expect(values.loadValues(h.repo).MEMBERS).toEqual(members);
+    expect(h.run(["preview", "all"]).out.rows).toEqual([]);
+  });
+
+  it("writes an empty list as [] and keeps reading it", () => {
+    h.apply(["all", "--repo-name", "widget", "--scopes", ""]);
+    expect(h.read(".config/stackgen.yaml")).toContain("scopes: []\n");
+    expect(values.loadValues(h.repo).SCOPES).toEqual([]);
+  });
+
+  it("lists no task from a machine's gitignored mise.local.toml", () => {
+    h.apply(NODE_ALL);
+    h.write(
+      ".config/mise/conf.d/_base/mise.local.toml",
+      "[tasks.secret]\ndescription = \"mine\"\n",
+    );
+    h.write(
+      ".config/mise/conf.d/_base/mise.dev.local.toml",
+      "[tasks.other]\ndescription = \"mine\"\n",
+    );
+    expect(h.run(["preview", "all"]).out.rows).toEqual([]);
+  });
+
+  it("refuses a latest answer that is not an exact version", () => {
+    const dir = join(stacksDir, "toolchain-gate", "swiftlint");
+    const { status, out } = h.run(
+      ["preview", "pack", "--slug", "swiftlint", "--dir", dir],
+      { FAKE_MISE_LATEST: "nightly" },
+    );
+    expect(status).toBe(2);
+    expect(out.error).toContain("not an exact version");
+  });
+});
