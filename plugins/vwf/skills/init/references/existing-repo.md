@@ -224,9 +224,9 @@ consent, and none where the repo carries none of it:
   now, whose preview shows a file with no marker pair as one `write` row
   replacing it whole — each file's own lines, the attributes file's
   included, listed under it and re-appended on `ok`, per
-  [new repo](new-repo.md) §2. The files
-  it recorded that the hygiene assets now carry lose their record and keep
-  their content, on the already-there rule.
+  [new repo](new-repo.md) §2. The files it recorded that the hygiene assets
+  now carry lose their record and keep their content, on the already-there
+  rule.
 - **`.editorconfig`.** Nothing lands it any more. One at the root whose hash
   matches the retired record's entry for it — or, where no entry is left, the
   SHA-256 of the last payload shipped,
