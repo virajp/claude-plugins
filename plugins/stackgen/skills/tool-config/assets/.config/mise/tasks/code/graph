@@ -60,22 +60,22 @@ mkdir -p "$(dirname "${LOG}")"
 # One rebuild at a time: mkdir is atomic, and the lock holds its holder's PID. A
 # run finding the lock held leaves the re-run marker and exits; the holder
 # rebuilds once more if the marker is there when it finishes. Nobody takes a
-# live lock over: only a dead holder's lock is cleared.
+# live lock over: a lock is cleared only when its holder is dead or it is older
+# than any rebuild runs.
 LOCK="${GIT_DIR_ABS}/graphify-refresh.lock"
 RERUN="${GIT_DIR_ABS}/graphify-refresh.rerun"
-# A lock with no PID yet is a run between its mkdir and its write; past this age it was killed there.
-STALE_MINUTES=30
+# Past this age a lock is cleared whatever its PID: after a reboot that PID may be reused.
+STALE_MINUTES=120
 
-# Dead: its PID is no longer alive, or it never got one and is past STALE_MINUTES.
+# Dead: older than STALE_MINUTES, or holding a PID that is no longer alive.
 lock_is_dead() { # <lock dir>
   local holder
+  if [ -n "$(find "$1" -maxdepth 0 -mmin +"${STALE_MINUTES}" 2>/dev/null)" ]; then
+    return 0
+  fi
   holder="$(cat "$1/pid" 2>/dev/null || true)"
-  if [ -n "${holder}" ]; then
-    if kill -0 "${holder}" 2>/dev/null; then
-      return 1
-    fi
-  else
-    [ -n "$(find "$1" -maxdepth 0 -mmin +"${STALE_MINUTES}" 2>/dev/null)" ]
+  if [ -z "${holder}" ] || kill -0 "${holder}" 2>/dev/null; then
+    return 1
   fi
 }
 
@@ -117,6 +117,13 @@ trap release EXIT
 echo "$$" >"${lock}/pid"
 graphify update . "$@"
 if [ -e "${rerun}" ]; then
+  rm -f "${rerun}"
+  graphify update . "$@"
+fi
+release
+# A commit landing between that check and the release left a marker no holder reads: take the lock back once.
+if [ -e "${rerun}" ] && mkdir "${lock}" 2>/dev/null; then
+  echo "$$" >"${lock}/pid"
   rm -f "${rerun}"
   graphify update . "$@"
 fi' graphify-refresh "${LOCK}" "${RERUN}" ${force[@]+"${force[@]}"} >>"${LOG}" 2>&1 </dev/null &
