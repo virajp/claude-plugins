@@ -5,18 +5,13 @@ Read this when writing the repo's memory layout. It sits beside
 
 ## Write the memory tree
 
-Create `docs/memory/` with the seven room directories, and keep the
-developer-specific ones out of git — `docs/memory/handoff/`,
-`docs/memory/doctor/`, `docs/memory/runs/`.
-
-**Append them as a section, never as bare lines.** The ignore file is a
-sectioned one, each section a `# ==== <Name> ====` banner and its entries, so
-the three go under a `# ==== vwf memory ====` banner of their own, appended at
-the end. **Idempotent by banner:** a run that finds that banner already there
-reconciles the lines beneath it and appends nothing; a run that does not find it
-writes the banner and the three lines. Bare lines dropped anywhere in the file
-are what makes an ignore set unreadable and un-updatable, and they are what a
-second run duplicates. Per
+Create `docs/memory/` with the seven room directories. The developer-specific
+ones — `docs/memory/handoff/`, `docs/memory/doctor/`, `docs/memory/runs/` —
+stay out of git through lines already in the repo's `.gitignore` and
+`.graphifyignore`: they are among the universal lines
+`/stackgen:tool-config` renders between its markers, so setup **writes
+neither file**. A repo whose ignore files lack them is behind its shape, and
+Step 0's offer is what brings it forward. Per
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, every memory write goes to both this
 tree and mempalace, which is what makes the server optional. A pre-format-19
 `docs/handoffs/next.md` moves to `docs/memory/handoff/next.md`.
