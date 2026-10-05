@@ -1,0 +1,70 @@
+The review found 10 issues. Two are real bugs in the tool-config script, two are gaps (one in the plugin checker, one in the graph lock), and the rest are cleanup, design-depth and docs findings. They are ranked most severe first below.
+
+The top issue is confirmed: I spliced a dprint config that had one extra exclude below the block, and the comma before it was lost. The other findings come from reading the code, without running it.
+
+I reviewed `git diff e53f4a10...HEAD`, the range from the base commit to HEAD. Round 1's findings that the fix commits already addressed are not repeated, and I left out work owned by units still pending (U6–U8, plan 3).
+
+```json
+[
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/.config/dprint.json",
+    "line": 41,
+    "summary": "The last entry in the marked `excludes` block, \"../**/*.xcassets/\", has no trailing comma. Any repo-owned exclude added after `// <<< tool-config` therefore needs a comma inside the block, and every render's splice wipes that comma out, leaving an invalid dprint config.",
+    "failure_scenario": "A repo adds `\"**/vendor/\"` below the close marker and puts a comma on the xcassets line. The next `all` splices in the shipped block, giving `\"../**/*.xcassets/\"\\n// <<< tool-config\\n\"**/vendor/\"` with no comma (reproduced with render.mjs `splice`). dprint can no longer parse its config, so `formatted()` returns null, and on an `ok` answer `land()`'s `dprint fmt` fails and restores everything. `all` can never apply unless the dprint row is answered keep-existing, which drops every new shipped exclude. The other five marked files (TOML/YAML lists, the pre-commit regex, .gitignore) don't have this problem. Fix: ship the last entry with a trailing comma (dprint's config reader accepts JSONC)."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/tool-config.mjs",
+    "line": 696,
+    "summary": "If `all` stops after writing, at `runner.trust()` or at a failed `setup:all`, the files stay on disk unformatted and `pre-commit validate-config` never runs. The suggested re-run sees no rows, so `written` is empty and both steps are skipped for good.",
+    "failure_scenario": "On a greenfield repo, `all` writes `.config/mise.toml` and the conf.d files. These are new, so `trust()` refuses with 'the files this call wrote stay; re-run all'. The user trusts the repo and re-runs: every render now equals the disk, `pending` is empty, `formats && written.length` is false and `validates` is false. Templates rendered with values, such as the `setup-<slug>` aliases in `_base/mise.dev.toml` that taplo would align, are never formatted, and the first commit's format hook rewrites them and fails. Re-running with the original `--answers` fails a second way: the stored preview was never dropped, so it no longer matches the now-empty row list and the call is refused as 'the rows changed since the preview'."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 711,
+    "summary": "The checker only looks at pack task files of the form `<folder>/<leaf>` (via `PACK_SUBTASK`). It does not reject a pack `config/` or `templates/` file at a folder path tool-config now owns, such as a left-over overlay file `.config/mise/tasks/code/lint`. It also does not reject a file at a path tool-config ships whole that is not a `#PLACEHOLDER` slot.",
+    "failure_scenario": "A pack still ships the old `config/.config/mise/tasks/code/lint` overlay, or a new pack ships `config/.config/dprint.json` or `.../code/format/dprint`, and `p:plugins:check` passes. In the first case, after the materializer copies it, `Workspace.clear()` refuses every later `all`/`pack` with 'needs code/lint to be a folder'. In the second, the materializer and `all` keep overwriting each other's version, so every `all` shows a row reverting the pack's file."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/.config/mise/tasks/code/graph",
+    "line": 70,
+    "summary": "`lock_is_dead` treats any lock whose recorded PID passes `kill -0` as alive, with no age limit. Ruling E16 asks for 'a lock older than a timeout is cleared', but only PID-less locks ever time out, so a reused PID (for example after a reboot) holds the lock forever.",
+    "failure_scenario": "A machine reboots or crashes mid-rebuild, so `.git/graphify-refresh.lock/pid` holds 812. After boot, an unrelated daemon gets PID 812. Every later commit's hook sees a live holder, touches the re-run marker, prints 'a refresh is already running', and exits; the graph silently never refreshes again. Separately, a commit that lands between the holder's final `[ -e rerun ]` check and its lock release is dropped until the next commit."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/tool-config.mjs",
+    "line": 623,
+    "summary": "Design depth: `refuseOrphans` patches one symptom of answering derived rows independently. The `…:all` tasks are rendered before any answers are known, then cross-checked by grepping kept files for `mise run <task>`.",
+    "failure_scenario": "Any reference to a deleted task that isn't spelled `mise run <name>` gets through, for example a `#MISE depends=[...]` line or a quoted name. Each new derived template would need its own special case. The simpler, general fix: apply the answers first, then re-render the tier-1 and tier-2 templates from the post-answer workspace, so `…:all` and the mise skill's task table always match the files that actually remain."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 465,
+    "summary": "check.ts keeps hand-maintained copies of three script lists: `TEMPLATE_GLOBAL_NAMES` (from values.mjs `GLOBAL_NAMES`, render.mjs `SUBTASK_DIRS` keys and the derived names), `RESERVED_PACK_SLUGS` (cli.mjs `RESERVED_SLUGS`) and the `PACK_SUBTASK` folder regex (render.mjs `SUBTASK_DIRS`). The removed `schema.mjs` import used to enforce 'one schema, two readers'.",
+    "failure_scenario": "Adding a subtask folder or a derived name to render.mjs (say `code/test` → `TEST_SUBTASKS`) without updating check.ts makes `p:plugins:check` reject the new template. Adding a reserved slug to cli.mjs alone lets the checker pass a pack the script will refuse. check.ts could import these lists from the .mjs modules, as it did with schema.mjs."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/lib/stackgen-file.mjs",
+    "line": 143,
+    "summary": "`valuesFrom` creates a temp directory, writes the YAML text, re-parses it with `loadValues`, then calls `deriveOrigin` again for the real repo, all to get values the caller already holds as a parsed doc.",
+    "failure_scenario": "Every `pack` call does this twice (`cmdPack`, then `rerenderAll`): two mkdtemp+write+rm cycles and four git spawns (`deriveOrigin` runs on the scratch directory too). The validation could run in memory instead, through the `validate`/`toNames` path in values.mjs on the doc."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/tool-config.mjs",
+    "line": 388,
+    "summary": "`formatted()` starts a separate `mise x -- dprint fmt --stdin` process for every rendered file that differs from disk, and it does this in both the preview call and the answering call. `renderTree` in `cmdPack` also recomputes `subtaskNames`/`taskNames` for tiers the pack never renders.",
+    "failure_scenario": "On a brownfield `all` where about 40 files differ, preview plus answer means about 80 mise+dprint startups, each loading its wasm plugins, which adds many seconds to every call. Formatting all candidates in one dprint run over a temp tree, and skipping tier-name derivation when `tiers` excludes it, would avoid this."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 2160,
+    "summary": "Leftover dead code in the rule-15 reader: `const list = candidate;` is a no-op alias, and `.filter(e => !e.includes(\"@@\"))` at line 2196 can never match, since every `EXCLUSION_LISTS` path is under `assets/`, which is copied, never rendered.",
+    "failure_scenario": "Readers are led to think templated exclusion entries exist and need skipping. Plain `for (const list of EXCLUSION_LISTS)` without the filter would be clearer."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/references/dprint.md",
+    "line": 48,
+    "summary": "This breaks the rule 'Docs ship with the change' in /Users/virajpatel/Projects/github.com/virajp/claude-plugins/CLAUDE.md: 'Any change to plugin behavior must reconcile readme.md, this file, and the manual under site/src/content/docs/ in the same commit'. The script change (ca08c79f) landed while the shipped tool-config docs still describe the old behavior.",
+    "failure_scenario": "At HEAD, references/dprint.md:44-48 says `.config/dprint.json` is 'plain JSON, no markers' (it now carries `//` markers), and SKILL.md:5 still says each requester's lines go between their own block markers. The removed verbs, lock entries and `check` are also still described. Any session that installs this commit is guided by docs that contradict the script. U6/U7 are scheduled to fix this, but the rule requires the same commit."
+  }
+]
+```
