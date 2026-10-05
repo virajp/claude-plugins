@@ -3,4 +3,10 @@
 # >>> tool-config
 # The graph's own output: ingesting it feeds the last run back in as source.
 graphify-out/
+# vwf's committed trees that are not code intelligence: memory belongs to the
+# memory layer, archived plans are superseded, design briefs restate the flows.
+docs/memory/
+docs/plans/archived/
+docs/prompts/
+archived/
 # <<< tool-config

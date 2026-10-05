@@ -29,6 +29,52 @@ languages:
         - name: xcodebuild
           probe: "xcodebuild -version"
         - swift
+# The four values this pack's mise template carries as @@NAME@@, each filled by
+# /vwf:setup from this machine when it lands the pack. Each detect prints the
+# one value or exits non-zero. The simulator three read `xcrun simctl`'s JSON
+# with jq, which macOS ships at /usr/bin/jq, and agree on one simulator: the
+# first available iPhone on the newest iOS runtime that has one.
+values:
+  - name: XCODE_VERSION
+    detect: >-
+      xcodebuild -version
+      | awk 'NR == 1 && $1 == "Xcode" { print $2; found = 1 } END { exit !found }'
+    question: >-
+      Which Xcode version does this repo build with? Every task that builds
+      refuses any other.
+  - name: SIMULATOR_PLATFORM
+    detect: >-
+      xcrun simctl list devices available -j
+      | jq -er '[.devices | to_entries[] | select(.key | test("\\.iOS-[0-9]"))
+      | (.key | capture("iOS-(?<v>[0-9-]+)$").v | split("-") | map(tonumber)) as $v
+      | .value[] | select(.deviceTypeIdentifier | test("\\.iPhone-")) | {v: $v, name}]
+      | (map(.v) | max) as $newest | map(select(.v == $newest))[0] // empty
+      | "iOS Simulator"'
+    question: >-
+      Which destination platform are the goldens recorded on? `iOS Simulator`
+      for an iPhone or iPad pin, `macOS` for a Mac-only app.
+  - name: SIMULATOR_DEVICE
+    detect: >-
+      xcrun simctl list devices available -j
+      | jq -er '[.devices | to_entries[] | select(.key | test("\\.iOS-[0-9]"))
+      | (.key | capture("iOS-(?<v>[0-9-]+)$").v | split("-") | map(tonumber)) as $v
+      | .value[] | select(.deviceTypeIdentifier | test("\\.iPhone-")) | {v: $v, name}]
+      | (map(.v) | max) as $newest | map(select(.v == $newest))[0] // empty
+      | .name'
+    question: >-
+      Which simulator, by name, are the goldens recorded on? `xcrun simctl
+      list devices available` lists the choices; empty for a macOS pin.
+  - name: SIMULATOR_OS
+    detect: >-
+      xcrun simctl list devices available -j
+      | jq -er '[.devices | to_entries[] | select(.key | test("\\.iOS-[0-9]"))
+      | (.key | capture("iOS-(?<v>[0-9-]+)$").v | split("-") | map(tonumber)) as $v
+      | .value[] | select(.deviceTypeIdentifier | test("\\.iPhone-")) | {v: $v, name}]
+      | (map(.v) | max) as $newest | map(select(.v == $newest))[0] // empty
+      | .v | map(tostring) | join(".")'
+    question: >-
+      Which OS version of that simulator? The runtime's version, `27.0` say;
+      empty for a macOS pin.
 lsp_servers:
   sourcekit-lsp:
     command: mise

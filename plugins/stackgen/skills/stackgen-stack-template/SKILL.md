@@ -108,9 +108,11 @@ A value only the machine can answer — swiftui's `XCODE_VERSION` — is not a
 payload field. It is a `@@NAME@@` tag in the pack's `templates/`, stored
 under `packs.<slug>` in the repo's `.config/stackgen.yaml` and filled by
 tool-config's `pack --set <key>=<value>`
-(`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`); who asks for it is the
-caller's. A `binaries` probe runs in `/vwf:doctor` only while the committed
-entry matches the hash its lockfile records, and is reported not run on
+(`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). The pack declares how to
+find it in its `values:` list — a `detect` command, else a `question`; the
+caller gathers each and passes them as the invocation's `values:` map.
+A `binaries` probe runs in `/vwf:doctor` only while the committed entry
+matches the hash its lockfile records, and is reported not run on
 drift. It adds no consent tier.
 
 ## Rules
@@ -185,15 +187,15 @@ drift. It adds no consent tier.
   evaluates every pack's `conditional:` entries against it in its step 1
   and skips the paths whose answer differs, recording them in the
   lockfile's `skipped:` list. **Three callers pass the map now** —
-  `/vwf:init`, which records them in the base repo's `.config/vwf.yaml`
-  under its `answers:` block (`secrets` once for the product, `forge` per
-  repo);
+  `/vwf:init`, which passes them to tool-config's `all --forge` and
+  `all --secrets`, so they live in each repo's `.config/stackgen.yaml`;
   `/vwf:setup`'s materialize pass, which lands a pinned template long
   after init ran; and `/stackgen:stackgen-sync`, which re-derives a
-  pack's landing set. Each reads that block, re-reads `forge` from the
-  repo's `origin` host live and passes that, and passes the full map per
-  repo; a caller that finds no block infers the values from the
-  tree, passes those and writes nothing. An axis the map leaves out, or
+  pack's landing set. Each reads that repo's `stackgen.yaml` `forge` and
+  `secrets`, re-reads `forge` from the repo's `origin` host live and
+  passes that, and passes the full map per repo; a caller that finds no
+  `stackgen.yaml` infers the values from the tree, passes those and
+  writes nothing. An axis the map leaves out, or
   a map not passed at all, reads as **true** and lands the path — the
   **fallback** for a caller that passes none, which keeps a caller this
   contract does not know about landing what it always landed, and not

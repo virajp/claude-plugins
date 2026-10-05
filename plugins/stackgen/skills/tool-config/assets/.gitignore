@@ -88,8 +88,12 @@ xcuserdata/
 *.xcuserstate
 *.xcscmblueprint
 
-# ==== Scratch ====
-# Local-only working notes, never reviewed and never shipped.
+# ==== vwf — working notes and scratch ====
+# Local-only working notes, never reviewed and never shipped: one developer's
+# handoffs, doctor reports and run logs, and rendered mockups.
+docs/memory/handoff/
+docs/memory/doctor/
+docs/memory/runs/
 docs/scratchpad/
 
 # ==== Reports ====
