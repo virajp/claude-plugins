@@ -47,9 +47,11 @@ the caller decides what to print.
 
 Its output is **one line per drifted repo**, naming the repo and the letters of
 the predicates that failed — `<repo>: (a) (c) (e)` — and no line for a repo
-that is clean. A base with no lockfile is reported as **`not shaped`** on its
-own line rather than as drift, since a repo never shaped has no baseline to
-drift from; an absent member is `not present, not checked`, exactly as §5
+that is clean. A base with no `.config/stackgen.yaml` at `format: 1` is
+reported on its own line rather than as drift — **`shaped on the old
+layout`** where it carries old-layout mise files, **`not shaped`** where it
+carries none — since neither has the baseline these predicates read; an
+absent member is `not present, not checked`, exactly as §5
 reports it. Whether any of that is shown, and how, is the caller's: this is
 what **`/vwf:recall`** calls to print its shape-drift line, and the remedy for
 every row is the one `/vwf:setup reshape` the full run prints under §9.

@@ -557,11 +557,12 @@ the preview above.
 from, so there is nothing to splice: the second test is skipped, and test 1's
 mismatch is (e)'s row exactly as it was before this test existed.
 
-This is `/vwf:init`'s existing-repo pass 6 asking the same question of the
-same record on the same terms — the same two tests over the same set of
-positions — which is what keeps the two agreeing: a file that pass leaves
-alone is a file this predicate reports clean, and nothing is reported here
-that a reshape would not offer to fix.
+For a pack-copied file, (e) runs two tests: the hash, then the
+marked-position splice. `/vwf:init`'s existing-repo pass 6 runs the hash test
+alone over the same record, so a file that pass leaves alone is one this
+predicate reports clean; a file pass 6 offers whose divergence lies wholly
+inside marked positions is one (e) reports clean while pass 6 still shows
+it. Nothing is reported here that a reshape would not offer to fix.
 
 That comparison isolates exactly one thing — content drift is the **repo**
 having edited a file the pack owns. A pack that merely moved leaves the file
