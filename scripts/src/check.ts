@@ -339,6 +339,8 @@ const PACK_MISE_TASKS = join(".config", "mise", "tasks");
 const PACK_HOOK_FRAGMENTS = join(".config", "pre-commit.d");
 /** Where `stackgen:tool-config` keeps one landed tree per tool. */
 const TOOL_CONFIG_ASSETS = "skills/tool-config/assets";
+/** Where `stackgen:tool-config` keeps the files it renders, flat as assets. */
+const TOOL_CONFIG_TEMPLATES = "skills/tool-config/templates";
 /** Where `/vwf:init` keeps its own landed trees — the hygiene assets. */
 const INIT_ASSETS = "skills/init/assets";
 /**
@@ -440,6 +442,16 @@ const TOOL_CONFIG_ROOT_FILES: ReadonlyMap<string, readonly string[]> = new Map([
   ["renovate", ["renovate.json"]],
 ]);
 
+/**
+ * The directories a flat `stackgen:tool-config` tree may land at the root
+ * beyond a pack's: the repo-local skill tree and the editor settings the
+ * universal `.vscode/settings.json` sits in.
+ */
+const TOOL_CONFIG_FLAT_ROOT_DIRS = [".claude", ".vscode"];
+
+/** A template's opening `@@#if NAME@@` guard line. */
+const TEMPLATE_GUARD = /^@@#if [A-Za-z_][\w.]*@@$/;
+
 /** Where a landed repo-local skill sits, relative to the tree's root. */
 const LANDED_SKILLS_DIR = ".claude";
 
@@ -535,7 +547,11 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       if ((statSync(absolute).mode & 0o111) === 0) {
         at(`mise task file is not executable: ${path(absolute)}`);
       }
-      const shebang = readText(absolute).split("\n", 1)[0] ?? "";
+      // A template wrapped whole in `@@#if NAME@@` renders empty or starting
+      // at the shebang beneath it, so that guard line is not the first line.
+      const shebang = readText(absolute)
+        .split("\n")
+        .find(line => !TEMPLATE_GUARD.test(line)) ?? "";
       if (!PACK_TASK_SHEBANGS.has(shebang)) {
         at(
           `mise task file does not start with one of `
@@ -567,12 +583,22 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
   };
 
   for (const tree of toolConfigTrees(plugin)) {
-    const own = TOOL_CONFIG_ROOT_FILES.get(basename(tree)) ?? [];
-    const skills = new Set(TOOL_CONFIG_LANDED_SKILLS.get(basename(tree)));
+    // A flat tree mirrors the repo root whole, so it may land every tool's.
+    const flat = isFlatToolConfigTree(tree);
+    const own = flat
+      ? [...TOOL_CONFIG_ROOT_FILES.values()].flat()
+      : TOOL_CONFIG_ROOT_FILES.get(basename(tree)) ?? [];
+    const skills = new Set(
+      flat
+        ? [...TOOL_CONFIG_LANDED_SKILLS.values()].flat()
+        : TOOL_CONFIG_LANDED_SKILLS.get(basename(tree)),
+    );
     landedTree(
       join(plugin.root, tree),
       new Set([...PACK_CONFIG_ROOT_FILES, ...own]),
-      skills.size > 0
+      flat
+        ? new Set([...PACK_CONFIG_ROOT_DIRS, ...TOOL_CONFIG_FLAT_ROOT_DIRS])
+        : skills.size > 0
         ? new Set([...PACK_CONFIG_ROOT_DIRS, LANDED_SKILLS_DIR])
         : PACK_CONFIG_ROOT_DIRS,
     );
@@ -911,9 +937,22 @@ function toolConfigCall(call: string): string | undefined {
     + "`git add attribute <pattern> <attrs>`";
 }
 
-/** Every `stackgen:tool-config` asset tree, plugin-relative. */
+/**
+ * Every `stackgen:tool-config` landed tree, plugin-relative: `assets/` and
+ * `templates/` themselves once `assets/` mirrors the repo root, else one
+ * tree per tool under `assets/`.
+ */
 function toolConfigTrees(plugin: Plugin): string[] {
+  if (existsSync(join(plugin.root, TOOL_CONFIG_ASSETS, ".config"))) {
+    return [TOOL_CONFIG_ASSETS, TOOL_CONFIG_TEMPLATES]
+      .filter(tree => existsSync(join(plugin.root, tree)));
+  }
   return assetTrees(plugin, TOOL_CONFIG_ASSETS);
+}
+
+/** Is this tool-config tree one that mirrors the repo root whole? */
+function isFlatToolConfigTree(tree: string): boolean {
+  return tree === TOOL_CONFIG_ASSETS || tree === TOOL_CONFIG_TEMPLATES;
 }
 
 /** Every landed tree directly under `assets`, plugin-relative. */
@@ -1365,6 +1404,7 @@ function checkLandedCitations(plugin: Plugin): Finding[] {
 function isLandedPath(path: string): boolean {
   if (
     path.startsWith(`${TOOL_CONFIG_ASSETS}/`)
+    || path.startsWith(`${TOOL_CONFIG_TEMPLATES}/`)
     || path.startsWith(`${INIT_ASSETS}/`)
   ) {
     return true;
@@ -1476,11 +1516,17 @@ function blankFences(body: string): string {
  */
 function landingRootOf(path: string): string | null {
   const parts = path.split("/");
-  // A tool-config or init asset tree lands whole as the repo root.
-  if (
-    path.startsWith(`${TOOL_CONFIG_ASSETS}/`)
-    || path.startsWith(`${INIT_ASSETS}/`)
-  ) {
+  // A tool-config or init asset tree lands whole as the repo root. A flat
+  // tool-config tree is the root itself: its first segment is a dot entry or
+  // a root file, where a per-tool tree's is the tool's directory.
+  if (path.startsWith(`${TOOL_CONFIG_TEMPLATES}/`)) {
+    return parts.slice(0, 3).join("/");
+  }
+  if (path.startsWith(`${TOOL_CONFIG_ASSETS}/`)) {
+    const flat = parts.length === 4 || parts[3]?.startsWith(".") === true;
+    return parts.slice(0, flat ? 3 : 4).join("/");
+  }
+  if (path.startsWith(`${INIT_ASSETS}/`)) {
     return parts.slice(0, 4).join("/");
   }
   return parts[3] === "skills" && parts.length > 5
@@ -1842,34 +1888,51 @@ function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
  * {@link checkExclusionSets}.
  */
 const EXCLUSION_LISTS: readonly {
-  readonly path: string;
+  /** Where the list sits — the flat tree first, then the per-tool one. */
+  readonly paths: readonly string[];
   readonly syntax: "glob" | "regex";
   readonly role: "formatter" | "scanner";
   readonly entries: (source: string) => string[] | null;
 }[] = [
   {
-    path: `${TOOL_CONFIG_ASSETS}/dprint/.config/dprint.json`,
+    paths: [
+      `${TOOL_CONFIG_ASSETS}/.config/dprint.json`,
+      `${TOOL_CONFIG_ASSETS}/dprint/.config/dprint.json`,
+    ],
     syntax: "glob",
     role: "formatter",
     entries: source => {
-      const excludes = (JSON.parse(source) as { excludes?: unknown; }).excludes;
+      // JSONC: the tool-config markers are `//` comments inside the list.
+      const excludes = (JSON.parse(stripJsonComments(source)) as {
+        excludes?: unknown;
+      })
+        .excludes;
       return isStringList(excludes) ? excludes as string[] : null;
     },
   },
   {
-    path: `${TOOL_CONFIG_ASSETS}/dprint/.config/taplo.toml`,
+    paths: [
+      `${TOOL_CONFIG_ASSETS}/.config/taplo.toml`,
+      `${TOOL_CONFIG_ASSETS}/dprint/.config/taplo.toml`,
+    ],
     syntax: "glob",
     role: "formatter",
     entries: source => tomlStringList(source, "exclude"),
   },
   {
-    path: `${TOOL_CONFIG_ASSETS}/gitleaks/.config/gitleaks.toml`,
+    paths: [
+      `${TOOL_CONFIG_ASSETS}/.config/gitleaks.toml`,
+      `${TOOL_CONFIG_ASSETS}/gitleaks/.config/gitleaks.toml`,
+    ],
     syntax: "regex",
     role: "scanner",
     entries: source => tomlStringList(source, "paths"),
   },
   {
-    path: `${TOOL_CONFIG_ASSETS}/pre-commit/.config/pre-commit-config.yaml`,
+    paths: [
+      `${TOOL_CONFIG_ASSETS}/.config/pre-commit-config.yaml`,
+      `${TOOL_CONFIG_ASSETS}/pre-commit/.config/pre-commit-config.yaml`,
+    ],
     syntax: "regex",
     role: "formatter",
     entries: source => {
@@ -1883,6 +1946,37 @@ const EXCLUSION_LISTS: readonly {
     },
   },
 ];
+
+/**
+ * JSONC as JSON: every `//` line comment and `/* … *\/` block comment
+ * outside a string removed. A string is walked whole, so a plugin URL's `//`
+ * survives.
+ */
+function stripJsonComments(source: string): string {
+  let out = "";
+  for (let index = 0; index < source.length; index++) {
+    const char = source[index]!;
+    if (char === "\"") {
+      const end = /"(?:\\.|[^"\\])*"/y;
+      end.lastIndex = index;
+      const string = end.exec(source)?.[0] ?? source.slice(index);
+      out += string;
+      index += string.length - 1;
+    }
+    else if (source.startsWith("//", index)) {
+      const newline = source.indexOf("\n", index);
+      index = (newline === -1 ? source.length : newline) - 1;
+    }
+    else if (source.startsWith("/*", index)) {
+      const close = source.indexOf("*/", index + 2);
+      index = (close === -1 ? source.length : close + 2) - 1;
+    }
+    else {
+      out += char;
+    }
+  }
+  return out;
+}
 
 /**
  * The string literals inside a TOML array assigned to `key`, or `null` when
@@ -2026,7 +2120,9 @@ function normalizeExclusion(entry: string, syntax: "glob" | "regex"): string {
       .replace(/\[\^\/\]\*|\.\*/g, "*")
       .replace(/\\([./])/g, "$1");
   }
-  value = value.replace(/^\/+/, "");
+  // dprint's `../X` twin of `**/X` reaches past its config's directory to
+  // the repo root; the pair is one entry.
+  value = value.replace(/^(?:\.\.\/)+/, "").replace(/^\/+/, "");
   while (value.startsWith("**/")) {
     value = value.slice(3);
   }
@@ -2064,9 +2160,11 @@ function checkExclusionSets(plugins: readonly Plugin[]): Finding[] {
     const owner = existsSync(join(plugin.root, TOOL_CONFIG_SKILL));
     const present = new Map<string, Set<string>>();
     let scanner: { path: string; set: Set<string>; } | null = null;
-    for (const list of EXCLUSION_LISTS) {
+    for (const candidate of EXCLUSION_LISTS) {
+      const found = candidate.paths.find(p => existsSync(join(plugin.root, p)));
+      const list = { ...candidate, path: found ?? candidate.paths[0]! };
       const absolute = join(plugin.root, list.path);
-      if (!existsSync(absolute)) {
+      if (found === undefined) {
         if (owner) {
           findings.push({
             scope: plugin.dir,

@@ -1187,6 +1187,45 @@ describe("the pack config tier", () => {
     ]);
   });
 
+  it("walks a flat tool-config assets/ and templates/ tree as the repo root", () => {
+    // Once assets/ mirrors the repo root, it and templates/ are one landed
+    // tree each, allowed every tool's root files plus `.vscode/`.
+    const flat = "skills/tool-config/assets";
+    const templates = "skills/tool-config/templates";
+    const task = `${flat}/.config/mise/tasks/code/graph`;
+    const guarded = `${templates}/.config/mise/tasks/setup/external/pull`;
+    const clean = tree({
+      stackgen: {
+        files: {
+          [task]: "#!/usr/bin/env bash\n",
+          [guarded]: "@@#if EXTERNAL@@\n#!/usr/bin/env bash\n@@/if@@\n",
+          [`${flat}/.gitignore`]: "node_modules/\n",
+          [`${flat}/.graphifyignore`]: "dist/\n",
+          [`${flat}/dprint.json`]: "{ \"extends\": \".config/dprint.json\" }\n",
+          [`${flat}/.vscode/settings.json`]: "{}\n",
+          [`${templates}/.claude/skills/mise/SKILL.md`]: skill("mise"),
+        },
+        executable: [task, guarded],
+      },
+    });
+    expect(messages(check(clean))).toEqual([]);
+    const root = tree({
+      stackgen: {
+        files: {
+          [`${flat}/.config/x.toml`]: "[x]\n",
+          [`${templates}/.prettierrc`]: "{}\n",
+          [`${templates}/.config/y.toml`]: "# ${CLAUDE_PLUGIN_ROOT}/x.md\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("unallowlisted root entry"),
+        expect.stringContaining("expands to nothing"),
+      ]),
+    );
+  });
+
   it("flags any other file under .claude/ in an asset tree", () => {
     // Only mise's tree lands a skill, and only that one.
     const root = tree({
@@ -1888,10 +1927,10 @@ describe("the exclusion sets", () => {
   // allowlist is held to a subset of them, since upstream's default config
   // already skips part of the set and authored source must stay scanned.
   const gate = "skills/tool-config/assets";
-  const dprint = `${gate}/dprint/.config/dprint.json`;
-  const taplo = `${gate}/dprint/.config/taplo.toml`;
-  const gitleaks = `${gate}/gitleaks/.config/gitleaks.toml`;
-  const preCommit = `${gate}/pre-commit/.config/pre-commit-config.yaml`;
+  const dprint = `${gate}/.config/dprint.json`;
+  const taplo = `${gate}/.config/taplo.toml`;
+  const gitleaks = `${gate}/.config/gitleaks.toml`;
+  const preCommit = `${gate}/.config/pre-commit-config.yaml`;
 
   const lists = (overrides: Partial<Record<string, string>> = {}) => ({
     stackgen: {
@@ -2039,6 +2078,59 @@ describe("the exclusion sets", () => {
       `${taplo}: exclusion list is missing — the tool-config skill ships all `
       + "four lists",
     ]);
+  });
+
+  it("reads dprint's JSONC markers and its `../X` + `**/X` pairs as one entry", () => {
+    // The tool-config markers are `//` comments; a plugin URL's `//` is not.
+    const dprintJsonc = "{\n"
+      + "  \"plugins\": [\"https://plugins.dprint.dev/json-0.20.0.wasm\"],\n"
+      + "  \"includes\": [\"../**\"],\n"
+      + "  \"excludes\": [\n"
+      + "    // >>> tool-config\n"
+      + "    \"**/node_modules/\", \"../**/node_modules/\",\n"
+      + "    \"**/dist/\", \"../**/dist/\",\n"
+      + "    \"**/*.lock\", \"../**/*.lock\",\n"
+      + "    /* the repo's own */ \"**/.env.*\", \"../**/.env.*\"\n"
+      + "    // <<< tool-config\n"
+      + "  ]\n}\n";
+    expect(messages(check(tree(lists({ dprint: dprintJsonc }))))).toEqual([]);
+    const missing = dprintJsonc.replace(
+      "\"**/dist/\", \"../**/dist/\",\n",
+      "",
+    );
+    expect(messages(check(tree(lists({ dprint: missing }))))).toEqual([
+      `exclusion \`dist\` is in ${taplo}, ${preCommit} and not in ${dprint} — `
+      + "the formatters' exclusion lists state one set",
+    ]);
+  });
+
+  it("still reads the per-tool asset paths", () => {
+    // Additive until the checker tightens: the old layout is read where the
+    // flat one is absent.
+    const files = lists().stackgen.files as Record<string, string>;
+    const old = Object.fromEntries(
+      Object.entries(files).map(([path, body]) => [
+        path
+          .replace(
+            `${gate}/.config/dprint.json`,
+            `${gate}/dprint/.config/dprint.json`,
+          )
+          .replace(
+            `${gate}/.config/taplo.toml`,
+            `${gate}/dprint/.config/taplo.toml`,
+          )
+          .replace(
+            `${gate}/.config/gitleaks.toml`,
+            `${gate}/gitleaks/.config/gitleaks.toml`,
+          )
+          .replace(
+            `${gate}/.config/pre-commit-config.yaml`,
+            `${gate}/pre-commit/.config/pre-commit-config.yaml`,
+          ),
+        body,
+      ]),
+    );
+    expect(messages(check(tree({ stackgen: { files: old } })))).toEqual([]);
   });
 
   it("flags a dprint config that lost its excludes list", () => {
