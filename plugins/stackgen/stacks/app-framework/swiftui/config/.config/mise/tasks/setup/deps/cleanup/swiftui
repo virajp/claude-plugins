@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+#MISE description="Delete build output and the resolved package checkouts"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# `Package.resolved` stays: it is the committed lockfile.
+
+rm -rf .build

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+#MISE description="Report known vulnerabilities in the dependency tree"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Advisory, not a gate: the auditor's ruleset moves without any lockfile change.
+
+uv run --with pip-audit pip-audit || true

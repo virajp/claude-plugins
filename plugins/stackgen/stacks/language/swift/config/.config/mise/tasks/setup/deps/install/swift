@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+#MISE description="Resolve the package's dependencies"
+#MISE hide=true
+
+#USAGE flag "--frozen" help="fail rather than write the lockfile"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+if ! command -v swift >/dev/null 2>&1; then
+  print_error "setup:deps:install:swift: swift is not on PATH."
+  print_yellow "Install the Swift toolchain from swift.org, or Xcode on macOS, then re-run."
+  exit 1
+fi
+
+resolve_args=()
+if [[ "${usage_frozen:-false}" == "true" ]]; then
+  resolve_args+=(--force-resolved-versions)
+fi
+
+print_subheader "Resolving packages ..."
+swift package resolve ${resolve_args[@]+"${resolve_args[@]}"}

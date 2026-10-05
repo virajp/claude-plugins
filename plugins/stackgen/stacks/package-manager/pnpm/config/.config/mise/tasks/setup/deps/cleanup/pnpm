@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+#MISE description="Delete build output, installed packages and caches"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# The lockfile stays: deleting it would make `--clean` a silent upgrade.
+
+print_subheader "Deleting build output ..."
+find . -type d -name "dist" -exec rm -rf {} + || true
+find . -type d -name ".turbo" -exec rm -rf {} + || true
+find . -type f -name "*.tsbuildinfo" -exec rm -f {} + || true
+
+print_subheader "Deleting node_modules ..."
+# `.pnpm`, the store's link farm, is pruned below, not deleted: deleting it re-downloads all.
+find . -type d -name ".pnpm" -prune -o -type d -name "node_modules" -exec rm -rf {} + || true
+
+print_subheader "Pruning the pnpm store ..."
+pnpm store prune || true

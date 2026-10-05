@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+#MISE description="Move the lockfile forward within the manifest's ranges"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+swift package update

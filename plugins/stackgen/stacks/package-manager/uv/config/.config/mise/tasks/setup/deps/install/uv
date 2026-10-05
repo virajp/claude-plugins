@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+#MISE description="Install dependencies from the lockfile"
+#MISE hide=true
+
+#USAGE flag "--frozen" help="fail rather than write the lockfile"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# `--frozen` maps to uv's `--locked`, NOT its `--frozen`, which reads a stale lockfile silently.
+
+install_args=(--all-extras)
+if [[ "${usage_frozen:-false}" == "true" ]]; then
+  install_args+=(--locked)
+fi
+
+uv sync "${install_args[@]}"
