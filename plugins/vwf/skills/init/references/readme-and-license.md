@@ -4,9 +4,8 @@ The files a repository carries whatever it is written in and that no tool
 reads. They are `init`'s own, under
 `${CLAUDE_PLUGIN_ROOT}/skills/init/assets/hygiene/`, laid out as they land;
 `init` places them, fills the three placeholders, and stops. The ignore file,
-the attributes file, the graph's ignore file and the dependency-update policy
-are not among them — they are `/stackgen:tool-config`'s tools, landed by its
-`all` call.
+the attributes file and the graph's ignore file are not among them — they are
+`/stackgen:tool-config`'s tools, rendered by its `all` call.
 
 Everything here is **per repo**: one run shapes the base and every member, and
 each repo takes its own row's answer and writes its own files at its own root.
@@ -34,10 +33,13 @@ is **kept, never replaced, and reported as kept** — no offer, no
 So a second run finds every asset present and plans nothing for it.
 
 `CONTRIBUTING.md` is developer-facing and repo-neutral: setup in one command,
-the branch model, where the commit types and scopes live, the gate tasks, and
-the pointer to `SECURITY.md`. The issue forms carry a bug form, a feature form
-and `config.yml`, which turns blank issues off and points at the docs and the
-private advisory channel; nothing else of `init`'s goes under `.github/`.
+the branch model and where its two landing models live
+(`.config/stackgen.yaml`), where the commit types and scopes live, the gate
+tasks — `code:format:all`, `code:lint:all`, `code:check:all`, `code:sec`
+and `code:precommit` — and the pointer to `SECURITY.md`. The issue forms
+carry a bug form, a feature form and `config.yml`, which turns blank issues
+off and points at the docs and the private advisory channel; nothing else of
+`init`'s goes under `.github/`.
 
 ## The placeholder vocabulary
 
@@ -166,23 +168,19 @@ a preference.
 
 ## What moved to the tool-config skill
 
-Four files once shipped beside these are `/stackgen:tool-config`'s now, and
+Three files once shipped beside these are `/stackgen:tool-config`'s now, and
 this reference no longer says anything about them:
 
-| File                         | Is                                                   | Its owner                               |
-| ---------------------------- | ---------------------------------------------------- | --------------------------------------- |
-| the ignore file              | what git does not track                              | the skill's git tool                    |
-| the attributes file          | line-ending normalisation, generated trees, binaries | the skill's git tool                    |
-| the graph's ignore file      | what the code-intelligence graph does not ingest     | the skill's graphify tool               |
-| the dependency-update policy | the update cadence and the minimum release age       | the skill's renovate tool, with a yield |
+| File                    | Is                                                   | Its owner                 |
+| ----------------------- | ---------------------------------------------------- | ------------------------- |
+| the ignore file         | what git does not track                              | the skill's git tool      |
+| the attributes file     | line-ending normalisation, generated trees, binaries | the skill's git tool      |
+| the graph's ignore file | what the code-intelligence graph does not ingest     | the skill's graphify tool |
 
-The policy's yield over a repo's own spelling and its `update_bot` condition
-are the renovate tool's; the spellings are the [tool-config
-table](tool-configs.md)'s, which seeds question 6. A repo that wants the
-service enabled still has to install it on the forge; say so at write time,
-since a policy nobody wired is inert without an error. The editor-shape
-defaults file that once shipped here is retired: nothing lands it, and a
-reshape offers deleting an untouched copy, per
+No dependency-update policy ships at all: a repo that wants one writes its
+own, and pass 1 reports a root one as it reports any file off the allowlist.
+The editor-shape defaults file that once shipped here is retired: nothing
+lands it, and a reshape offers deleting an untouched copy, per
 [existing repo](existing-repo.md)'s retired hygiene bundle.
 
 ## What `init` does not write here

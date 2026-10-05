@@ -6,9 +6,23 @@ table: beside the allowlist and the rename map it walks the root and the
 inside of `.github/` for every spelling in the second column, and each hit is
 one **plan row** whose outcomes — move by default, keep both, delete only on
 the user's explicit pick — pass 1 states and this file does not restate; a
-`handed` row's hit is the one exception, and is no row of init's. The table is
-the list of what to look for and the shape the move takes; the offer, the
-consent and the report are the pipeline's.
+`handed` or `report` row's hit is the exception, and is no move row of
+init's. The table is the list of what to look for and the shape the move
+takes; the offer, the consent and the report are the pipeline's.
+
+## What `all` lands
+
+`/stackgen:tool-config all` lands every file the rows below name, and more;
+its own SKILL.md, *What it lands*, is the list, and this file restates none
+of it beyond the root spellings. In short: the mise files under `.config/`
+and the task library, the gate configs — dprint and its root stand-in,
+taplo, pre-commit, gitleaks, grype, the house linter — the git files and the
+commit convention, `.graphifyignore`, `.vscode/settings.json` and the
+statusline config, every one rendered from the repo's
+`.config/stackgen.yaml`. It lands no dependency-update policy.
+
+## The table
+
 
 The first column is the tool, the second its known root spellings, the third
 the path the owner lands the same tool's configuration at, the fourth that
@@ -16,39 +30,32 @@ owner — `stackgen:tool-config` or a pack — and the fifth the merge shape —
 of three:
 
 - **`move-and-offer`** — the repo's file becomes the `.config/` copy, and that
-  copy is then offered through pass 6 against the pack's, exactly as any
-  other pack-owned file whose content diverged: replace, or keep. Nothing is
-  read and dropped; the settings the repo had are what the offer shows. Where
-  the owner is `stackgen:tool-config`, the moved copy is that skill's
-  conflict row in its preview, never a pass 6 offer. Where the owner also
-  lands a root stand-in of the same basename, this is pass 1's move-and-shim
-  case, and the stand-in takes the root spot the real file left.
-- **`yield`** — the repo's file wins and the owner's twin is **not landed**;
-  the plan says so in that row — the skill's row, where the owner is
-  `stackgen:tool-config` — and nothing is moved. This is the shape for a
-  tool whose discovery is root-first and whose owner's file is itself a root
-  file: moving the repo's copy under `.config/` would put it where the tool
-  never looks.
-- **`handed`** — the file is `/stackgen:tool-config all`'s to fold, by its
-  own migration, and init writes no row of its own for it: not a move, not a
-  keep, not a stray. The skill's rows — what it splits, what it deletes — are
-  printed in the repo's section under **Tool-config rows**, per pass 1's
-  toolchain migration, and the one consent covers them.
-  For mise, `all` may return a conflict row for a base-block tool the repo
-  already pins, its two answers the repo's version or the exact version the
-  base's `latest` resolves to.
+  copy is then compared against the owner's render: replace, or keep.
+  Nothing is read and dropped; the settings the repo had are what the
+  comparison shows. Where the owner is `stackgen:tool-config`, the moved copy
+  is that skill's `write` row in its preview, `ok` or `keep-existing`,
+  never a pass 6 offer. Where the owner also lands a root stand-in of the
+  same basename, this is pass 1's move-and-shim case, and the stand-in takes
+  the root spot the real file left.
+- **`handed`** — the file sits at the root, where its tool reads it, and
+  `/stackgen:tool-config all` renders it in place: init writes no row of its
+  own for it, not a move, not a keep, not a stray. The skill's row — the
+  file's lines between its markers, or, for a file with no marker pair, one
+  `write` row replacing it whole — is printed in the repo's section under
+  **Tool-config rows**, and the one consent covers it.
+- **`report`** — nothing folds or moves the file: it stays at the root, and
+  pass 1's toolchain step reports it under Deferred with the unlock it
+  names.
 
-| Tool       | Root spellings                                                  | Landed path                                                   | Owner                  | Merge shape      |
-| ---------- | --------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------- | ---------------- |
-| pre-commit | `.pre-commit-config.yaml`                                       | `.config/pre-commit-config.yaml`                              | `stackgen:tool-config` | `move-and-offer` |
-| gitleaks   | `.gitleaks.toml`                                                | `.config/gitleaks.toml`                                       | `stackgen:tool-config` | `move-and-offer` |
-| grype      | `.grype.yaml`                                                   | `.config/grype.yaml`                                          | `stackgen:tool-config` | `move-and-offer` |
-| dprint     | `.dprint.json`, root `dprint.json`                              | `.config/dprint.json`; root `dprint.json` is the skill's shim | `stackgen:tool-config` | `move-and-offer` |
-| renovate   | `renovate.json` and every spelling the renovate reference lists | root `renovate.json`                                          | `stackgen:tool-config` | `yield`          |
-| dependabot | `.github/dependabot.yml`                                        | none — nothing ships a Dependabot file                        | none                   | `keep both`      |
-| mise       | `.mise.toml`, root `mise.toml`                                  | `.config/mise/` — split by the skill, not moved               | `stackgen:tool-config` | `handed`         |
-| git        | `.gitignore`, `.gitattributes`                                  | the same root files — adopted in place by the skill           | `stackgen:tool-config` | `handed`         |
-| graphify   | `.graphifyignore`                                               | the same root file — adopted in place by the skill            | `stackgen:tool-config` | `handed`         |
+| Tool       | Root spellings                     | Landed path                                                   | Owner                  | Merge shape      |
+| ---------- | ---------------------------------- | ------------------------------------------------------------- | ---------------------- | ---------------- |
+| pre-commit | `.pre-commit-config.yaml`          | `.config/pre-commit-config.yaml`                              | `stackgen:tool-config` | `move-and-offer` |
+| gitleaks   | `.gitleaks.toml`                   | `.config/gitleaks.toml`                                       | `stackgen:tool-config` | `move-and-offer` |
+| grype      | `.grype.yaml`                      | `.config/grype.yaml`                                          | `stackgen:tool-config` | `move-and-offer` |
+| dprint     | `.dprint.json`, root `dprint.json` | `.config/dprint.json`; root `dprint.json` is the skill's shim | `stackgen:tool-config` | `move-and-offer` |
+| mise       | `.mise.toml`, root `mise.toml`     | `.config/mise/` — landed beside it, never folded              | `stackgen:tool-config` | `report`         |
+| git        | `.gitignore`, `.gitattributes`     | the same root files — rendered in place by the skill          | `stackgen:tool-config` | `handed`         |
+| graphify   | `.graphifyignore`                  | the same root file — rendered in place by the skill           | `stackgen:tool-config` | `handed`         |
 
 Some rows need a word:
 
@@ -57,33 +64,16 @@ Some rows need a word:
   config of that name at the root is the move-and-shim case, not a
   keep-both: it moves, the stand-in replaces it, and the settings are read
   through the stand-in. `.dprint.json` has no stand-in and simply moves.
-- **renovate and dependabot.** Renovate never reads `.config/`, so the
-  skill's renovate tool lands its policy at the root. Every spelling Renovate
-  discovers — `.gitlab/` and a `renovate` key in the root `package.json`
-  among them — is listed once, in `/stackgen:tool-config`'s renovate
-  reference, *Why the root*; the survey reads that list rather than one
-  restated here. A repo that already has a policy under any of them keeps it
-  and the skill's is not landed — the skill's own row, under **Tool-config
-  rows**. A
-  `.github/dependabot.yml` is the same job done by a different service, and
-  its row is **keep both** — pass 1's outcome, not a third shape: the repo's
-  file stays and is reported as a second dependency policy. Whether the
-  skill's `renovate.json` lands beside it is not this row's to decide: the
-  same evidence seeds question 6's update-bot row — a renovate spelling
-  preselects `renovate`, a `dependabot.yml` preselects `dependabot`, both
-  preselects `renovate` and the row says it found both — and the renovate
-  tool lands its file only on `update_bot=renovate`, so it lands only where
-  that answer stands and is a **Skipped** row otherwise.
 - **git and graphify.** Their files sit at the root, where git and the graph
-  read them, so there is nothing to move: the skill adopts each in place,
-  converting a landed sectioned ignore file into blocks, and its preview
-  shows the rows.
+  read them, so there is nothing to move: the skill renders its curated set
+  between the markers, and a repo's own lines below the closing marker
+  survive every render.
+- **A dependency-update policy** — a Renovate or Dependabot file — is no
+  row's: nothing ships one, so a root spelling is reported by pass 1 like
+  any root file off the allowlist, and one under `.github/` is the repo's
+  own and left alone.
 
-A tool whose root file `/stackgen:tool-config` folds by its own migration has
-a `handed` row listing every root spelling that migration folds, so the survey
-recognises the file without acting on it — the skill's toolchain reference
-names the spellings, and this row follows it. A tool with no row here is not
-on the survey's list: a root file for it is off the allowlist and is
-reported, as pass 1 says, never moved. Adding a tool to the packs or the
-skill, or a spelling to the skill's migration, means adding its row here in
-the same change.
+A tool with no row here is not on the survey's list: a root file for it is
+off the allowlist and is reported, as pass 1 says, never moved. Adding a tool
+to the packs or the skill, or a spelling it reads, means adding its row here
+in the same change.

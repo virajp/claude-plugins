@@ -35,9 +35,12 @@ Three lines, and they do not vary with which branch the forge calls default:
 `mise run code:merge:develop` and `mise run code:merge:main` are the two moves.
 They run the gates over the whole tree before they touch anything, so a merge
 that would break the branch fails before it starts rather than after. What they
-then do is set **per branch** in `.config/mise/conf.d/env.toml`:
-`MERGE_MODEL_DEVELOP` for the first move, `MERGE_MODEL_MAIN` for the second,
-each `direct` or `pr`. `direct` merges locally and pushes — your branch is on
+then do is set **per branch** in `.config/stackgen.yaml`: `merge_model.develop`
+for the first move, `merge_model.main` for the second, each `direct` or `pr`,
+which the tasks read as `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`. That
+file is written by the toolkit, never by hand: change a value by re-running
+`/stackgen:tool-config all --merge-model-main pr`, say, which rewrites it and
+every file rendered from it. `direct` merges locally and pushes — your branch is on
 the destination the moment the task returns; `pr` pushes the branch and opens a
 pull request instead, merging nothing — your branch lands when a maintainer
 merges that request. The two can differ: a repo that lands features directly on
@@ -66,8 +69,9 @@ The same checks run on every commit and in CI, so there is nothing to remember
 beyond running them before you push:
 
 ```sh
-mise run code:format      # the formatter, over what it owns
-mise run code:lint        # the linters, per language
+mise run code:format:all  # every formatter, over what it owns
+mise run code:lint:all    # every linter, per language
+mise run code:check:all   # every check a stack adds — lockfiles, types
 mise run code:sec         # secret and vulnerability scanning
 mise run code:precommit   # every hook, over the whole tree
 ```
