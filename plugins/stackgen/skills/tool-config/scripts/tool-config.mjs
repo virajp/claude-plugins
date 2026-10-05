@@ -362,6 +362,7 @@ function place(ctx, path, source, exec, raw = source) {
     }
     return;
   }
+  ctx.rendered.add(path);
   let text = source;
   if (existing !== null && isMarked(source)) {
     const spliced = splice(existing, source);
@@ -481,7 +482,8 @@ function cmdPack(ctx, call) {
         `${slug}'s templates/ holds ${STACKGEN_PATH} — the values file is the script's alone`,
       );
     }
-    if (t.path.split("/").includes(".git")) {
+    // case-blind: on a case-insensitive disk .GIT/ is .git/
+    if (t.path.split("/").some(seg => seg.toLowerCase() === ".git")) {
       throw new RefusalError(
         `${slug}'s templates/ holds ${t.path} — nothing renders into .git/`,
       );
@@ -656,11 +658,14 @@ function refuseOrphans(ws, rows, answers) {
  * setup:all has had its chance). A setup:all failure leaves the files
  * written; a formatter or validate failure puts every file back byte for byte.
  */
-function land(ws, env, all) {
+function land(ws, env, { all, tail = [], written: onWritten }) {
   const runner = env.runner;
   const pending = ws.pending();
-  const formats = pending.length > 0 && ws.read(DPRINT_CONFIG) !== null;
-  const validates = pending.includes(HOOK_CONFIG);
+  // `all` finishes the whole rendered set, so a run stopped after its writes
+  // is completed by the next: its tail is every file it renders, not only those it writes
+  const finish = [...new Set([...pending, ...(all ? tail : [])])].sort();
+  const formats = finish.length > 0 && ws.read(DPRINT_CONFIG) !== null;
+  const validates = finish.includes(HOOK_CONFIG);
   if (!all) {
     if (formats) {
       runner.ensure("dprint");
@@ -669,7 +674,9 @@ function land(ws, env, all) {
       runner.ensure("pre-commit");
     }
   }
-  const { written, deleted, restore } = ws.writeFiles();
+  const { written, deleted, restore: restoreWritten } = ws.writeFiles();
+  // the preview is spent once a byte is written: a re-run previews afresh
+  onWritten?.();
   let setupOutput = "";
   if (all) {
     const kept = (why, output) =>
@@ -692,14 +699,29 @@ function land(ws, env, all) {
     }
     setupOutput = setup.output;
   }
+  const held = new Map(
+    finish.filter(p => !written.includes(p)).map(p => {
+      const abs = ws.safe(p);
+      return [p, existsSync(abs) ? readFileSync(abs) : null];
+    }),
+  );
+  const restore = () => {
+    restoreWritten();
+    for (const [p, bytes] of held) {
+      if (bytes !== null) {
+        writeFileSync(ws.safe(p), bytes);
+      }
+    }
+  };
+  const files = finish.filter(p => held.get(p) !== null);
   try {
-    if (formats && written.length) {
+    if (formats && files.length) {
       runner.tool("dprint", [
         "fmt",
         "--config",
         DPRINT_CONFIG,
         "--allow-no-files",
-        ...written,
+        ...files,
       ]);
     }
     if (validates) {
@@ -749,6 +771,7 @@ async function run(argv) {
     ws,
     env,
     notes: [],
+    rendered: new Set(),
     assetsDir: join(skill, "assets"),
     templatesDir: join(skill, "templates"),
   };
@@ -790,8 +813,13 @@ async function run(argv) {
       rows,
     );
   }
-  if (rows.length || call.answers?.size) {
+  if (rows.length) {
     checkAnswers(rows, call.answers ?? new Map(), store.get(signature));
+  }
+  else if (call.answers?.size) {
+    // a re-run of a call that wrote and then stopped: nothing is left to answer
+    ctx.notes.push("no rows to answer — --answers ignored");
+    extra.notes = ctx.notes;
   }
   for (const row of rows) {
     const answer = call.answers?.get(row.id);
@@ -805,8 +833,16 @@ async function run(argv) {
     }
   }
   refuseOrphans(ws, rows, call.answers ?? new Map());
-  const { written, deleted, setup } = land(ws, env, call.command === "all");
-  store.drop(signature);
+  const kept = new Set(
+    rows.filter(r => call.answers?.get(r.id) === "keep-existing").map(r =>
+      r.path
+    ),
+  );
+  const { written, deleted, setup } = land(ws, env, {
+    all: call.command === "all",
+    tail: [...ctx.rendered].filter(p => !kept.has(p)),
+    written: () => store.drop(signature),
+  });
   return { written, deleted, ...(setup && { setup }), ...extra };
 }
 

@@ -270,3 +270,21 @@ describe("review round 1", () => {
     );
   });
 });
+
+describe("review round 2", () => {
+  it("refuses a template that renders into .git/ under any case", () => {
+    const dir = mkdtempSync(join(tmpdir(), "tool-config-git-case-"));
+    mkdirSync(join(dir, "templates", ".GIT", "hooks"), { recursive: true });
+    writeFileSync(join(dir, "templates", ".GIT", "hooks", "pre-commit"), "x\n");
+    const { status, out } = h.run([
+      "preview",
+      "pack",
+      "--slug",
+      "sneaky",
+      "--dir",
+      dir,
+    ]);
+    expect(status).toBe(2);
+    expect(out.error).toContain("nothing renders into .git/");
+  });
+});

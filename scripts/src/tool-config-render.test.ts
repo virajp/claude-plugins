@@ -627,3 +627,58 @@ describe("review round 1", () => {
     expect(h.run(["preview", "all"]).out.rows).toEqual([]);
   });
 });
+
+describe("review round 2", () => {
+  const fmtLine = (log: string[]) =>
+    log.find(l =>
+      l.startsWith(
+        "MISE_ENV=dev x -- dprint fmt --config .config/dprint.json --allow-no-files",
+      )
+    ) ?? "";
+
+  it("finishes a run stopped by a trust refusal: the original answers re-run the whole tail", () => {
+    const rows = h.run(["preview", ...NODE_ALL]).out.rows ?? [];
+    const answers = rows.map(r => `${r.id}:ok`).join(",");
+    const stopped = h.run([...NODE_ALL, "--answers", answers], {
+      FAKE_MISE_UNTRUSTED: "1",
+    });
+    expect(stopped.status).toBe(2);
+    expect(stopped.out.error).toContain("not trusted");
+    expect(fmtLine(h.log())).toBe("");
+
+    const log = h.log().length;
+    const again = h.run([...NODE_ALL, "--answers", answers]);
+    expect(again.out.error).toBeUndefined();
+    expect(again.status).toBe(0);
+    expect(again.out.notes).toContain("no rows to answer — --answers ignored");
+    const tail = h.log().slice(log);
+    expect(tail).toContain("MISE_ENV=dev run setup:all");
+    expect(fmtLine(tail)).toContain(".config/mise.toml");
+    expect(tail).toContain(
+      "MISE_ENV=dev x -- pre-commit validate-config .config/pre-commit-config.yaml",
+    );
+  });
+
+  it("finishes a run stopped by a failed setup:all on a plain re-run", () => {
+    const stopped = h.apply(NODE_ALL, undefined, { FAKE_MISE_SETUP_FAIL: "1" });
+    expect(stopped.status).toBe(2);
+    const log = h.log().length;
+    const again = h.run(["all"]);
+    expect(again.status).toBe(0);
+    expect(again.out.written).toEqual([]);
+    expect(fmtLine(h.log().slice(log))).toContain(
+      ".config/mise/conf.d/_base/mise.toml",
+    );
+  });
+
+  it("never formats a file whose row was answered keep-existing", () => {
+    h.apply(NODE_ALL);
+    const path = ".config/mise/tasks/code/count";
+    h.write(path, h.read(path) + "echo mine\n");
+    const log = h.log().length;
+    h.apply(["all"], () => "keep-existing");
+    const line = fmtLine(h.log().slice(log));
+    expect(line).toContain(".config/mise.toml");
+    expect(line).not.toContain(path);
+  });
+});
