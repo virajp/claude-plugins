@@ -1,0 +1,10 @@
+/security-review — loop R, round 1, range 22354bd2..3a06efe3
+
+NO FINDINGS
+
+- scripts/src/check.ts: packValues() parses the repo's own pack.yaml with the yaml package (parseDocument/parse) into plain data; collects @@NAME@@ names into Sets/Maps and compares. Nothing executed; no path built from parsed input.
+- plugins/stackgen/stacks/app-framework/swiftui/pack.yaml values: detect commands are fixed author strings shipped in the plugin; input is the user's own xcodebuild/xcrun output, read by awk/jq, never re-executed.
+- Value landing in TOML: tool-config.mjs pack --set; lib/cli.mjs (comment 14-15, refusal 126) refuses a value with a quote, backslash, @@ or a control character — no breakout from KEY = "@@NAME@@". Pre-existing check, unchanged by this delta.
+- Everything else: markdown skill prose and .gitignore/.graphifyignore assets — out of scope.
+
+Confidence nothing qualifies: 9/10.

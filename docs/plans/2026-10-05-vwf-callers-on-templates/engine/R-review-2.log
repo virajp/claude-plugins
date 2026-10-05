@@ -1,0 +1,12 @@
+/code-review high — loop R, round 2, range 22354bd2..0aa26b45
+
+1. plugins/vwf/skills/git-workflow/references/worktree-setup.md:35 [U5] — not-ignored branch now hard-stops, but git check-ignore never matches a trailing-slash pattern (.worktrees/) against a path not on disk; every first worktree in a correctly shaped repo refused. Same stop in mockups/SKILL.md:72 and blueprint/references/screen-review.md:7 for docs/scratchpad. REPRODUCED in a scratch repo: .gitignore holding .worktrees/ and docs/scratchpad/, dirs absent → git check-ignore -q .worktrees exits 1; exits 0 once the dir exists. Before: the false negative only appended a duplicate line.
+2. plugins/vwf/skills/setup/references/materialize.md:214 [U4] — re-render each run never updates rendered: true lock records (version, added, dropped files); stackgen-sync cannot repair it later (preview pack returns no rows).
+3. plugins/vwf/skills/init/references/new-repo.md:135 [U3] — keep-own-lines fix covers .gitignore/.graphifyignore only; .gitattributes (and other unmarked files) still replaced whole on ok — e.g. git lfs track filters lost, raw binaries committed.
+4. plugins/vwf/skills/setup/references/materialize.md:42 [U4] — no stackgen.yaml → only forge passed; missing secrets axis read as true; every when: secrets path lands.
+5. plugins/vwf/skills/setup/SKILL.md:123 [U4] — Step 0 init offer re-fires forever on keep-existing files and on preview pack rows init cannot clear.
+6. plugins/vwf/skills/setup/references/migrate-pipeline.md:31 [U4] — a format-22 config with answers: keeps its stamp; mode table sends it to migrate every run; never converges until plan 4.
+7. plugins/vwf/skills/init/SKILL.md:226 [U3] — old-layout test ignores tool-config/* and repo-hygiene lock records doctor (stack-checks.md:303) counts; init can shape such a repo as source.
+8. plugins/vwf/skills/init/references/existing-repo.md:487 [U3] — pass 6 claims doctor (e)'s test but runs hash only; doctor splices marked positions; replace wipes filled values.
+9. scripts/src/check.ts:1010 [U1] — PACK_VALUE_REFUSED hand-copies values.mjs GLOBAL_NAMES (checker already imports tool-config modules for SUBTASK_DIRS; export+import removes the drift class); pack.yaml parsed twice; invalid YAML leaves values empty so every pack-own template tag gets a spurious not-declared finding.
+10. site/src/content/docs/plugins/vwf.md:1793 [unmapped — U6 owns] — site manual still describes answers: block and update_bot (vwf.md:1167, 1793-1803; stackgen.md:525, 1336).

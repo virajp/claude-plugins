@@ -1,0 +1,12 @@
+/code-review high — loop R, round 3, range 22354bd2..5ba0172b
+
+1. plugins/vwf/skills/doctor/references/stack-checks.md:497 [U5] — every preview pack row reported as (e) drift with remedy /vwf:setup reshape, but reshape runs no materialize pass and init never calls pack; remedy cannot clear it; Step 0 offers init for drift init cannot fix.
+2. plugins/vwf/skills/init/references/new-repo.md:162 [U3] — tool-config's .gitattributes asset has no marker pair; after init appends the repo's lines, every preview shows a write row, init preselects keep-existing; drift never converges and shipped .gitattributes changes never land. Root fix: marker pair in the shipped .gitattributes asset (U2's tree).
+3. plugins/vwf/skills/setup/references/materialize.md:238 [U4] — re-run each landed pack never updates rendered: true lock entries (source version, added/dropped templates).
+4. plugins/vwf/skills/setup/references/materialize.md:234 [U4] — 'a file the pack's version no longer renders is a delete row' is false; script deletes only when a template renders empty; a template removed from a newer pack is never deleted.
+5. plugins/vwf/skills/setup/references/materialize.md:246 [U4] — Remove a dropped pack calls pack-remove --slug <bundle slug> (swift-swiftui) but the script keys conf.d/<slug>/, subtasks and packs.<slug> by the pack slug (swiftui); removes nothing.
+6. plugins/vwf/assets/vwf-config.md:683 [U5] — 22 → 23 migration said performed by /vwf:setup reshape; nothing implements it this release; migrate skips it; stamp drift forever.
+7. plugins/vwf/assets/stack-adapter.md:380 [U5] — contract says --set <NAME>=<value> upper-case but setPair refuses non-lowercase keys; says the materializer not setup runs pack, contradicting setup's re-run step; lists values: as a payload field while stackgen-stack-template SKILL.md:108 says a machine value is not a payload field.
+8. plugins/stackgen/skills/stackgen-stack-template/references/materializer.md:154 [U2] — records 'every path it rendered' but the script's JSON reports only changed rows; an unchanged render gets no rendered: true record; derive paths from templates/ tree.
+9. scripts/src/check.ts:744 [U1] — pack.yaml parsed three times; missing/invalid pack.yaml yields spurious not-declared findings (same as round 2 #9).
+10. site/src/content/docs/plugins/stackgen.md:525 [unmapped — U6] — site manual stale (answers:, machine_env:, update bot; migrate-old-vwf-repo.md:77-82, onboard-existing-codebase.md:107).
