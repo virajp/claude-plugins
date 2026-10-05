@@ -185,28 +185,37 @@ much smaller than the one it replaced: whole families of assertion became
       `@@#else@@`, `@@/if@@` and `@@/each@@` closers, or an `@@.@@`/`@@.key@@`
       item read. Anything else lands in the rendered file verbatim. In
       tool-config's own templates every name is one of `TEMPLATE_GLOBAL_NAMES` —
-      the stored and derived names of `.config/stackgen.yaml` — since no pack
-      keys are in scope there; in a pack's, any other name is the pack's own
-      `packs.<slug>` key, and the script refuses a stored key that takes a
-      global name, so no collision is left to catch statically. The finding
-      names the file, the line and the tag.
+      the stored and derived names of `.config/stackgen.yaml`, its `…:all` lists
+      read off the script's own `SUBTASK_DIRS` — since no pack keys are in scope
+      there; in a pack's, any other name is the pack's own `packs.<slug>` key,
+      and the script refuses a stored key that takes a global name, so no
+      collision is left to catch statically. The finding names the file, the
+      line and the tag.
 
     A pack's `config/` tier holding any mise `conf.d/` fragment or any
     `pre-commit.d/` file is a finding too: a pack's mise files live in its
     `templates/`, and the hooks are tool-config's universal set, which call the
-    `…:all` tasks a pack's subtask joins. So is a subtask under either tier —
-    `code/{check,lint,format}/<leaf>`, `setup/deps/<verb>/<leaf>`,
-    `setup/ai/<leaf>` — whose leaf is not the pack's slug, so two packs never
-    write one file, or whose leaf is one of the universal subtasks tool-config's
-    own `assets/` and `templates/` ship (read off those trees, `all` aside),
-    since removing the pack would delete the universal file — a pack may keep
-    such a slug, as `cloud-service/workflows` does, so long as it ships no
-    subtask under it. A pack whose slug is `all`, `ai` or `_base` is refused
-    outright: those are tool-config's `…:all` leaf and its own `conf.d/`
-    folders. And a pack's `templates/.config/mise/conf.d/` holds exactly one
-    entry, a folder named for its slug — a `_base/`, an `ai/`, another pack's
-    folder or a loose file there is a finding, since tool-config renders and
-    removes that folder as the pack's.
+    `…:all` tasks a pack's subtask joins. So is a subtask under either tier — a
+    task file directly in a folder the script's `SUBTASK_DIRS` names
+    (`code/{check,lint,format}/`, `setup/deps/<verb>/`, `setup/ai/`) — whose
+    leaf is not the pack's slug, so two packs never write one file, or whose
+    leaf is one of the universal subtasks tool-config's own `assets/` and
+    `templates/` ship (read off those trees, `all` aside), since removing the
+    pack would delete the universal file — a pack may keep such a slug, as
+    `cloud-service/workflows` does, so long as it ships no subtask under it. A
+    pack whose slug is one of the script's `RESERVED_SLUGS` (`all`, `ai`,
+    `_base`) is refused outright: those are tool-config's `…:all` leaf and its
+    own `conf.d/` folders. And a pack's `templates/.config/mise/conf.d/` holds
+    exactly one entry, a folder named for its slug — a `_base/`, an `ai/`,
+    another pack's folder or a loose file there is a finding, since tool-config
+    renders and removes that folder as the pack's. Finally a pack lands beside
+    tool-config, never over it: a `config/` or `templates/` file at a path
+    tool-config's `assets/` or `templates/` ships whole (`.config/dprint.json`,
+    `code/format/dprint`), where it ships a folder (a leftover
+    `.config/mise/tasks/code/lint` overlay file), or under one of its files is a
+    finding — bar a file tool-config ships as a `#PLACEHOLDER` slot (its
+    `setup/secrets`), which is a pack's to fill. The owned set is read off those
+    trees, and the placeholder marker off the script's `PLACEHOLDER`.
 
     The walk is its own rather than the plugin file reader's, because every one
     of these paths runs through a dot segment the reader's glob does not descend
@@ -282,43 +291,42 @@ much smaller than the one it replaced: whole families of assertion became
 15. **The formatters' exclusion lists state one set, and the scanner's allowlist
     is a subset of it.** `stackgen:tool-config` ships four lists of the trees a
     gate skips, under `skills/tool-config/assets/.config/` — `dprint.json`'s
-    `excludes` (JSONC: its `// >>> tool-config` markers are comments, and a
-    `../X` entry and its `**/X` twin read as one) and `taplo.toml`'s `exclude`
-    (both dprint's, both globs) and pre-commit's global `exclude` (one regex,
-    whose top-level alternatives are the entries; a `(?x)` verbose pattern has
-    its whitespace and comments removed first) are the **formatters'** three and
-    must agree; the gitleaks `[allowlist] paths` (regexes) is the **scanner's**
-    and is held to a subset of them instead. Each is a universal superset
-    authored by hand in three syntaxes, so the drift is an entry added to some
-    of the lists and not the rest — and no tool reports it, since each reads
-    only its own list: the formatter simply formats the tree. The house linter's
-    `ignores` in `linter.yaml` is not compared: the installer generates that
-    file only when absent, so its list is not held to this set. An entry
-    carrying a `@@` tag is the repo's rendered value, not the shipped set's, and
-    is skipped. The scanner is held the other way round because the asset
-    extends upstream's default config, whose built-in allowlist already skips
-    `.git`, `node_modules` and the named lockfiles, and `.claude/` is authored
-    source a scanner must scan — so the formatters' set is wider than the
-    scanner's by design, a formatter-excluded tree the scanner still reads is no
-    finding, and a tree the scanner skips that no formatter excludes is one,
-    naming `gitleaks.toml` and the entry: an allowlist entry with no generated
-    tree behind it is a scanner quietly not scanning. Each entry is
-    **normalised** before the compare — a regex loses its anchors (`^`, `$`, and
-    the `(^|/)` or `(?:^|/)` that means "at the root or under any directory", a
-    glob's `**/`), its `\.` escapes and its `[^/]*` or `.*` (a glob's `*`);
-    every entry then loses a leading `/` or `**/` and a trailing `/`, `/*` or
-    `/**`, the spellings of "this directory, wherever it sits" that the four
-    tools take — so `**/dist/`, `**/dist/**`, `dist/*`, `^dist/` and
-    `(^|/)dist/` are one entry, `dist`. The formatters' finding names the entry,
-    the files that carry it and the files that do not. In the plugin carrying
-    the skill a missing list is a finding, since a moved file would otherwise
-    end the check silently; a file present but carrying no list at all, or one
-    that cannot be parsed, is its own finding naming the file — nothing else
-    parses `dprint.json`, `taplo.toml` or `gitleaks.toml`. Rule 15 reads those
-    four paths and no others — a fifth list is a fifth entry in
-    `EXCLUSION_LISTS`, not a wider walk — and its two TOML readers are
-    deliberately narrow: `scripts/` carries no TOML parser, and a bracketed list
-    of string literals is all either file holds.
+    `excludes` (JSONC: its `// >>> tool-config` markers are comments, a trailing
+    comma is allowed, and a `../X` entry and its `**/X` twin read as one) and
+    `taplo.toml`'s `exclude` (both dprint's, both globs) and pre-commit's global
+    `exclude` (one regex, whose top-level alternatives are the entries; a `(?x)`
+    verbose pattern has its whitespace and comments removed first) are the
+    **formatters'** three and must agree; the gitleaks `[allowlist] paths`
+    (regexes) is the **scanner's** and is held to a subset of them instead. Each
+    is a universal superset authored by hand in three syntaxes, so the drift is
+    an entry added to some of the lists and not the rest — and no tool reports
+    it, since each reads only its own list: the formatter simply formats the
+    tree. The house linter's `ignores` in `linter.yaml` is not compared: the
+    installer generates that file only when absent, so its list is not held to
+    this set. The scanner is held the other way round because the asset extends
+    upstream's default config, whose built-in allowlist already skips `.git`,
+    `node_modules` and the named lockfiles, and `.claude/` is authored source a
+    scanner must scan — so the formatters' set is wider than the scanner's by
+    design, a formatter-excluded tree the scanner still reads is no finding, and
+    a tree the scanner skips that no formatter excludes is one, naming
+    `gitleaks.toml` and the entry: an allowlist entry with no generated tree
+    behind it is a scanner quietly not scanning. Each entry is **normalised**
+    before the compare — a regex loses its anchors (`^`, `$`, and the `(^|/)` or
+    `(?:^|/)` that means "at the root or under any directory", a glob's `**/`),
+    its `\.` escapes and its `[^/]*` or `.*` (a glob's `*`); every entry then
+    loses a leading `/` or `**/` and a trailing `/`, `/*` or `/**`, the
+    spellings of "this directory, wherever it sits" that the four tools take —
+    so `**/dist/`, `**/dist/**`, `dist/*`, `^dist/` and `(^|/)dist/` are one
+    entry, `dist`. The formatters' finding names the entry, the files that carry
+    it and the files that do not. In the plugin carrying the skill a missing
+    list is a finding, since a moved file would otherwise end the check
+    silently; a file present but carrying no list at all, or one that cannot be
+    parsed, is its own finding naming the file — nothing else parses
+    `dprint.json`, `taplo.toml` or `gitleaks.toml`. Rule 15 reads those four
+    paths and no others — a fifth list is a fifth entry in `EXCLUSION_LISTS`,
+    not a wider walk — and its two TOML readers are deliberately narrow:
+    `scripts/` carries no TOML parser, and a bracketed list of string literals
+    is all either file holds.
 16. **A skill's node script runs with nothing installed beside it.** Every
     `skills/*/scripts/**/*.mjs` a plugin ships is read (`checkSkillScripts`). An
     **entry** — a file directly under `scripts/`, what a skill tells the session

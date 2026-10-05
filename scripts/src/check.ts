@@ -34,6 +34,13 @@ import {
   sep,
 } from "node:path";
 import { parse as parseYaml } from "yaml";
+// Plain zero-dependency `.mjs` modules with no declaration file beside them,
+// so the exports used here are typed by hand below — the checker reads the
+// script's own vocabulary rather than a copy of it.
+// @ts-expect-error TS7016 — no declaration file for a shipped .mjs module
+import * as toolConfigCli from "../../plugins/stackgen/skills/tool-config/scripts/lib/cli.mjs";
+// @ts-expect-error TS7016 — no declaration file for a shipped .mjs module
+import * as toolConfigRender from "../../plugins/stackgen/skills/tool-config/scripts/lib/render.mjs";
 import {
   agentName,
   bodyOf,
@@ -342,19 +349,31 @@ const INIT_ROOT_ALLOWLIST = [
   "licenses/",
   ".github/ISSUE_TEMPLATE/",
 ];
+/** What the tool-config script exports and this checker reads. */
+const { RESERVED_SLUGS } = toolConfigCli as {
+  RESERVED_SLUGS: readonly string[];
+};
+const { PLACEHOLDER, SUBTASK_DIRS } = toolConfigRender as {
+  PLACEHOLDER: RegExp;
+  SUBTASK_DIRS: Readonly<Record<string, string>>;
+};
 /**
- * A pack-owned subtask under the task library: `code/{check,lint,format}/<slug>`,
- * `setup/deps/<verb>/<slug>` or `setup/ai/<slug>`. The leaf is captured — it
- * must be the pack's own slug, so two packs never write one subtask file.
+ * A pack-owned subtask under the task library: a task file directly in one of
+ * the folders an `…:all` task calls (`code/{check,lint,format}/`,
+ * `setup/deps/<verb>/`, `setup/ai/`), read off the script. The leaf is
+ * captured — it must be the pack's own slug, so two packs never write one
+ * subtask file.
  */
-const PACK_SUBTASK =
-  /^(?:code\/(?:check|lint|format)|setup\/deps\/[^/]+|setup\/ai)\/([^/]+)$/;
+const PACK_SUBTASK = new RegExp(
+  `^(?:${Object.values(SUBTASK_DIRS).join("|")})/([^/]+)$`,
+);
 /**
- * The slugs no pack may take: `all` is every `…:all` task's leaf, and `_base`
- * and `ai` are tool-config's own `conf.d/` folders — a pack named for one
- * would write, and on removal delete, what tool-config owns.
+ * The slugs no pack may take, the script's own list: `all` is every `…:all`
+ * task's leaf, and `_base` and `ai` are tool-config's own `conf.d/` folders
+ * — a pack named for one would write, and on removal delete, what tool-config
+ * owns.
  */
-const RESERVED_PACK_SLUGS = new Set(["all", "ai", "_base"]);
+const RESERVED_PACK_SLUGS = new Set(RESERVED_SLUGS);
 /** The skill file that marks a plugin as the owner of those trees. */
 const TOOL_CONFIG_SKILL = "skills/tool-config/SKILL.md";
 /** Where a pack keeps the files tool-config renders into the repo. */
@@ -462,7 +481,7 @@ const TOOL_CONFIG_LANDED_SKILLS = new Set([
  * template reads these and its own `packs.<slug>` keys, which the script
  * refuses when one takes a global name.
  */
-const TEMPLATE_GLOBAL_NAMES = new Set([
+export const TEMPLATE_GLOBAL_NAMES: ReadonlySet<string> = new Set([
   "REPO_NAME",
   "FORGE",
   "SECRETS",
@@ -476,15 +495,7 @@ const TEMPLATE_GLOBAL_NAMES = new Set([
   "PROJECT_NAME",
   "MEMBERS_SPACED",
   "MEMBER_ENTRIES",
-  "CHECK_SUBTASKS",
-  "LINT_SUBTASKS",
-  "FORMAT_SUBTASKS",
-  "AI_SUBTASKS",
-  "DEPS_INSTALL_SUBTASKS",
-  "DEPS_UPGRADE_SUBTASKS",
-  "DEPS_OUTDATED_SUBTASKS",
-  "DEPS_AUDIT_SUBTASKS",
-  "DEPS_CLEANUP_SUBTASKS",
+  ...Object.keys(SUBTASK_DIRS),
   "TASKS",
 ]);
 
@@ -671,6 +682,21 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
         .filter((leaf): leaf is string => leaf !== undefined && leaf !== "all");
     }),
   );
+  // Every path tool-config lands, repo-relative: each file — and whether it
+  // is a `#PLACEHOLDER` slot a pack may fill — and each folder above one.
+  const owned = new Map<string, boolean>();
+  const ownedDirs = new Set<string>();
+  for (const tree of toolConfigTrees(plugin)) {
+    const root = join(plugin.root, tree);
+    for (const absolute of filesUnder(root)) {
+      const rel = relative(root, absolute).split(sep).join("/");
+      owned.set(rel, PLACEHOLDER.test(readText(absolute)));
+      const parts = rel.split("/");
+      for (let depth = 1; depth < parts.length; depth++) {
+        ownedDirs.add(parts.slice(0, depth).join("/"));
+      }
+    }
+  }
 
   const packs = globSync("stacks/*/*", { cwd: plugin.root });
   for (const pack of packs) {
@@ -708,6 +734,33 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
           + `tasks and the conf.d/_base/ and conf.d/ai/ folders: ${pack}`,
       );
     }
+    // A pack lands beside tool-config, never over it: a file at a path
+    // tool-config ships whole, or where it ships a folder, or under one of its
+    // files, is a second writer — bar a `#PLACEHOLDER` slot, which a pack
+    // fills.
+    for (const tier of [config, templates]) {
+      for (const absolute of filesUnder(tier)) {
+        const rel = relative(tier, absolute).split(sep).join("/");
+        const parts = rel.split("/");
+        const under = parts.slice(1).some((_, depth) =>
+          owned.has(parts.slice(0, depth + 1).join("/"))
+        );
+        if (ownedDirs.has(rel) || under) {
+          at(
+            `pack file sits where tool-config ships a folder or a file above `
+              + `it — a pack adds files beside tool-config's, never over its `
+              + `tree: ${path(absolute)}`,
+          );
+        }
+        else if (owned.get(rel) === false) {
+          at(
+            `pack file overwrites ${rel}, which tool-config ships whole — only `
+              + `a #PLACEHOLDER slot is a pack's to fill: ${path(absolute)}`,
+          );
+        }
+      }
+    }
+
     for (const tier of [config, templates]) {
       const tasks = join(tier, PACK_MISE_TASKS);
       for (const absolute of filesUnder(tasks)) {
@@ -1945,31 +1998,56 @@ const EXCLUSION_LISTS: readonly {
 
 /**
  * JSONC as JSON: every `//` line comment and `/* … *\/` block comment
- * outside a string removed. A string is walked whole, so a plugin URL's `//`
+ * outside a string removed, then every trailing comma before a `]` or `}` —
+ * the formatter writes one. A string is walked whole, so a plugin URL's `//`
  * survives.
  */
 function stripJsonComments(source: string): string {
+  return walkJson(
+    walkJson(source, (text, index) => {
+      if (text.startsWith("//", index)) {
+        const newline = text.indexOf("\n", index);
+        return newline === -1 ? text.length : newline;
+      }
+      if (text.startsWith("/*", index)) {
+        const close = text.indexOf("*/", index + 2);
+        return close === -1 ? text.length : close + 2;
+      }
+      return index;
+    }),
+    (text, index) =>
+      text[index] === "," && /^\s*[\]}]/.test(text.slice(index + 1))
+        ? index + 1
+        : index,
+  );
+}
+
+/**
+ * Copy JSON text, each string whole, dropping what `skip` reports: given a
+ * position outside a string, it returns where copying resumes.
+ */
+function walkJson(
+  source: string,
+  skip: (text: string, index: number) => number,
+): string {
   let out = "";
-  for (let index = 0; index < source.length; index++) {
-    const char = source[index]!;
-    if (char === "\"") {
+  let index = 0;
+  while (index < source.length) {
+    if (source[index] === "\"") {
       const end = /"(?:\\.|[^"\\])*"/y;
       end.lastIndex = index;
       const string = end.exec(source)?.[0] ?? source.slice(index);
       out += string;
-      index += string.length - 1;
+      index += string.length;
+      continue;
     }
-    else if (source.startsWith("//", index)) {
-      const newline = source.indexOf("\n", index);
-      index = (newline === -1 ? source.length : newline) - 1;
+    const resume = skip(source, index);
+    if (resume > index) {
+      index = resume;
+      continue;
     }
-    else if (source.startsWith("/*", index)) {
-      const close = source.indexOf("*/", index + 2);
-      index = (close === -1 ? source.length : close + 2) - 1;
-    }
-    else {
-      out += char;
-    }
+    out += source[index];
+    index++;
   }
   return out;
 }
@@ -2156,8 +2234,7 @@ function checkExclusionSets(plugins: readonly Plugin[]): Finding[] {
     const owner = existsSync(join(plugin.root, TOOL_CONFIG_SKILL));
     const present = new Map<string, Set<string>>();
     let scanner: { path: string; set: Set<string>; } | null = null;
-    for (const candidate of EXCLUSION_LISTS) {
-      const list = candidate;
+    for (const list of EXCLUSION_LISTS) {
       const absolute = join(plugin.root, list.path);
       if (!existsSync(absolute)) {
         if (owner) {
@@ -2190,12 +2267,7 @@ function checkExclusionSets(plugins: readonly Plugin[]): Finding[] {
         });
         continue;
       }
-      // A rendered `@@` value is the repo's, not the shipped set's.
-      const set = new Set(
-        entries
-          .filter(e => !e.includes("@@"))
-          .map(e => normalizeExclusion(e, list.syntax)),
-      );
+      const set = new Set(entries.map(e => normalizeExclusion(e, list.syntax)));
       if (list.role === "scanner") {
         scanner = { path: list.path, set };
       }

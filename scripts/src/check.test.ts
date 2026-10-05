@@ -11,10 +11,17 @@ import {
   expect,
   it,
 } from "vitest";
+// Plain zero-dependency `.mjs` modules with no declaration file beside them,
+// so the exports used here are typed by hand below.
+// @ts-expect-error TS7016 — no declaration file for a shipped .mjs module
+import * as toolConfigCli from "../../plugins/stackgen/skills/tool-config/scripts/lib/cli.mjs";
+// @ts-expect-error TS7016 — no declaration file for a shipped .mjs module
+import * as toolConfigRender from "../../plugins/stackgen/skills/tool-config/scripts/lib/render.mjs";
 import {
   check,
   prescribes,
   resolveRootRef,
+  TEMPLATE_GLOBAL_NAMES,
 } from "./check.ts";
 import type { Finding } from "./check.ts";
 
@@ -89,6 +96,14 @@ function skill(name: string, extra = "", body = "prose"): string {
 }
 
 const messages = (findings: readonly Finding[]) => findings.map(f => f.message);
+
+const { RESERVED_SLUGS } = toolConfigCli as {
+  RESERVED_SLUGS: readonly string[];
+};
+const { SUBTASK_DIRS, valueNames } = toolConfigRender as {
+  SUBTASK_DIRS: Readonly<Record<string, string>>;
+  valueNames: (values: Record<string, unknown>) => Record<string, unknown>;
+};
 
 describe("the manifest", () => {
   it("flags a name that disagrees with the directory", () => {
@@ -920,6 +935,73 @@ describe("the pack config tier", () => {
       "pack subtask takes the leaf `workflows` of a universal subtask "
       + `tool-config ships — removing the pack would delete it: ${task}`,
     ]);
+  });
+
+  it("refuses a pack file over a path tool-config ships, bar a slot", () => {
+    // The owned set is read off tool-config's trees: a whole file is
+    // tool-config's, a folder there is never a pack's file, and a
+    // `#PLACEHOLDER` slot is the one path a pack fills.
+    const tc = "skills/tool-config/assets/.config";
+    const house = `${tc}/mise/tasks/code/lint/house`;
+    const slot = `${tc}/mise/tasks/setup/secrets`;
+    const pack = "stacks/capability-provider/fnox/config/.config";
+    const overlay = `${pack}/mise/tasks/setup/secrets`;
+    const files = {
+      [house]: "#!/usr/bin/env bash\n",
+      [slot]: "#!/usr/bin/env bash\n#PLACEHOLDER\n",
+      [`${tc}/dprint.json`]: "{ \"excludes\": [] }\n",
+      [overlay]: "#!/usr/bin/env bash\nfnox\n",
+    };
+    const executable = [house, slot, overlay];
+    expect(messages(check(tree({ stackgen: { files, executable } }))))
+      .toEqual([]);
+    const lint = `${pack}/mise/tasks/code/lint`;
+    const dprint = `${pack}/dprint.json`;
+    const root = tree({
+      stackgen: {
+        files: {
+          ...files,
+          [lint]: "#!/usr/bin/env bash\n",
+          [dprint]: "{}\n",
+        },
+        executable: [...executable, lint],
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      `pack file overwrites .config/dprint.json, which tool-config ships `
+      + `whole — only a #PLACEHOLDER slot is a pack's to fill: ${dprint}`,
+      `pack file sits where tool-config ships a folder or a file above it — a `
+      + `pack adds files beside tool-config's, never over its tree: ${lint}`,
+    ]);
+  });
+
+  it("reads the template names and reserved slugs off the script", () => {
+    // The checker's name set is the script's: every name `valueNames`
+    // derives, each `…:all` list `SUBTASK_DIRS` names, and `TASKS`.
+    const names = new Set([
+      ...Object.keys(
+        valueNames({
+          REPO_NAME: "r",
+          FORGE: "github",
+          SECRETS: "fnox",
+          REPO_URL: "https://example.com/r",
+        }),
+      ),
+      ...Object.keys(SUBTASK_DIRS),
+      "TASKS",
+    ]);
+    expect([...TEMPLATE_GLOBAL_NAMES].sort()).toEqual([...names].sort());
+    const root = tree({
+      stackgen: {
+        files: Object.fromEntries(
+          RESERVED_SLUGS.map(slug => [
+            `stacks/linter/${slug}/pack.yaml`,
+            "name: x\n",
+          ]),
+        ),
+      },
+    });
+    expect(messages(check(root))).toHaveLength(RESERVED_SLUGS.length);
   });
 
   it("refuses a pack conf.d folder not named for its pack", () => {
@@ -1972,6 +2054,24 @@ describe("the exclusion sets", () => {
       `exclusion \`dist\` is in ${taplo}, ${preCommit} and not in ${dprint} — `
       + "the formatters' exclusion lists state one set",
     ]);
+  });
+
+  it("reads dprint's trailing commas, and keeps a comma inside a string", () => {
+    // dprint writes a trailing comma in a JSONC file it is told to; a `,]`
+    // inside a string is an entry, not one.
+    const dprintJsonc = "{\n"
+      + "  \"includes\": [\"../**\",],\n"
+      + "  \"excludes\": [\n"
+      + "    \"**/node_modules/\",\n    \"**/dist/\",\n    \"**/*.lock\",\n"
+      + "    \"**/.env.*\", // trailing\n"
+      + "  ],\n}\n";
+    expect(messages(check(tree(lists({ dprint: dprintJsonc }))))).toEqual([]);
+    const inString = dprintJsonc.replace("\"**/dist/\",", "\"**/dist,]/\",");
+    expect(messages(check(tree(lists({ dprint: inString }))))).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("exclusion `dist,]` is in "),
+      ]),
+    );
   });
 
   it("flags a dprint config that lost its excludes list", () => {
