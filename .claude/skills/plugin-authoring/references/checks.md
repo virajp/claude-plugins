@@ -58,8 +58,8 @@ much smaller than the one it replaced: whole families of assertion became
    ships **and** every `stacks/*/*/skills/*/SKILL.md` and
    `stacks/*/*/agents/*.md` a pack does — the pack half is the larger one, and
    it is what actually lands in a user's repo, where the host reading it is not
-   this one. So is every repo-local skill a `stackgen:tool-config` asset tree
-   lands (`skills/tool-config/assets/<tool>/.claude/skills/*/SKILL.md`), walked
+   this one. So is every repo-local skill a `stackgen:tool-config` tree lands
+   (`skills/tool-config/{assets,templates}/.claude/skills/*/SKILL.md`), walked
    on its own since it sits under a dot segment the plugin reader's glob does
    not enter. A pack's `rules/*.md` is left out: frontmatter is optional there.
 5. **Example-bundle links.** Relative links under
@@ -104,17 +104,24 @@ much smaller than the one it replaced: whole families of assertion became
    two-directions-cover-each-other-on-a-rename idiom rule 7 uses for agent
    cross-references.
 10. **The technology-free vwf guard.** Below.
-11. **A pack's `config/` payload tier is materializable as-is.** Six assertions,
-    every one of them about a file whose failure mode in the *target* repo is
-    silence rather than an error. The landed-tree assertions run over each
-    `stackgen:tool-config` asset tree (`skills/tool-config/assets/<tool>/`)
-    exactly as over a pack's `config/`, since the skill lands it whole at the
-    repo root — each tree's root also admitting that tool's own root files, per
-    `TOOL_CONFIG_ROOT_FILES`, and a `.claude/` directory holding exactly the
-    repo-local skills `TOOL_CONFIG_LANDED_SKILLS` names for that tool (mise's
-    `.claude/skills/mise/SKILL.md`, and nothing else under `.claude/`) — and
-    over each of `/vwf:init`'s asset trees (`skills/init/assets/<name>/`) with
-    no root allowlist, since init picks one licence out of several there:
+11. **A pack's `config/` payload tier is materializable as-is.** Seven
+    assertions, every one of them about a file whose failure mode in the
+    *target* repo is silence rather than an error. The landed-tree assertions
+    run over a pack's `templates/` tier exactly as over its `config/`, since
+    tool-config renders it to the same relative paths; over
+    `stackgen:tool-config`'s two trees, `skills/tool-config/assets/` (copied)
+    and `skills/tool-config/templates/` (rendered), since the skill lands each
+    whole at the repo root — each root also admitting the git and graphify
+    ignore files (`TOOL_CONFIG_ROOT_FILES`), `.vscode/`, and a `.claude/`
+    directory holding exactly the repo-local skills `TOOL_CONFIG_LANDED_SKILLS`
+    names (`.claude/skills/mise/SKILL.md`, and nothing else under `.claude/`);
+    and over each of `/vwf:init`'s asset trees (`skills/init/assets/<name>/`),
+    whose root check is skipped since init picks one licence out of several
+    there — every file in one must instead sit on init's own allowlist
+    (`CONTRIBUTING.md`, `SECURITY.md`, `licenses/`, `.github/ISSUE_TEMPLATE/`),
+    since init writes the hygiene files and every tool config is tool-config's.
+    A task file that is a template may open with one `@@#if NAME@@` guard line;
+    the shebang is read from the line after it:
     - a **task file lands executable**. `config/.config/mise/tasks/**` is a
       *file-based* task library — mise runs each file directly — so one landing
       644 fails as an **unknown task** rather than as a permission error, which
@@ -138,65 +145,59 @@ much smaller than the one it replaced: whole families of assertion became
       materializes into, and each entry joins on the same argument — a tool with
       root-only discovery leaves a pack a choice between the root file and a
       flag on every invocation any caller might type, and the flag is the worse
-      of the two. The ignore, attribute, graph-ignore and Renovate files are not
-      on the pack list: a pack asks `stackgen:tool-config` for their lines. The
-      forge directory is on the list for that same reason and the workflow is
-      carved back out of it: a pack states which task CI runs, and the workflow
-      is the repo's release model's;
+      of the two. The ignore, attribute and graph-ignore files are not on the
+      pack list: tool-config ships them as universal supersets. The forge
+      directory is on the list for that same reason and the workflow is carved
+      back out of it: a pack states which task CI runs, and the workflow is the
+      repo's release model's;
     - every **`conditional:` entry** in the pack's `pack.yaml` names a **path or
       glob that matches at least one file** under its own `config/` tier, and a
       `when:` map of **exactly one known axis** — `forge` (`github`, `gitlab`),
       `secrets` (any provider slug — never `none`, the no-provider answer init
-      reads as "no match"), `update_bot` (`renovate`, `dependabot`, `none`) —
-      with a value that axis takes, and a path that is relative and carries no
-      `..` segment. The materializer evaluates the key against the caller's
-      answers, and an axis the caller did not answer reads as true — the omitted
-      key lands the file. So an axis outside the vocabulary is one no caller
-      ever answers: its condition can never skip anything, and the file lands
-      everywhere, silently. A value the axis never takes is the mirror case — no
-      answer ever satisfies it, so the file lands nowhere; a path matching
-      nothing is a condition guarding no file, which is a rename that forgot the
-      key — the glob is matched by the checker's own walk, so `**` enters
-      dot-directories like `.config/`, which `globSync` would not; and an
-      absolute path or a climb is rule 13's fault stated on a glob — it reaches
-      out of what the pack lands. The finding names the pack, the entry's index
-      and its path;
-    - the pack's **three doctor- and setup-read facts** take the shapes their
-      readers trust: every `languages[].facts.binaries` entry is a bare name
-      (the `PATH` lookup) or a map of exactly `name` and an optional non-empty
-      `probe` (the command `/vwf:doctor` runs instead); `lockfile` is a
-      non-empty list of repo-relative paths or globs with no `..`; and every
-      `machine_env` entry is a map whose `name` is an env-var name and whose
-      `detect` and `question` are non-empty strings — and whose name is set by a
-      valid mise `add-env` entry of the pack's `tool-config:` list, since that
-      entry is what `/vwf:setup` fills. Each caller trusts the shape: a probe
-      that is not a string is never run, a glob that climbs out matches
-      something the repo does not own, and a name no call sets is a question
-      whose answer lands nowhere — all silently. The finding names the pack and
-      the entry;
-    - every **`tool-config:` entry** is one of two shapes. A **mise, dprint,
-      pre-commit, grype or `all`** entry is a mapping —
-      `{tool: mise, verb: add-tool, name: swiftlint, version: "0.59", env: dev}`,
-      `{tool: all, verb: add-exclude, paths: ["*.xcassets/"]}` — held to the
-      schema the tool-config script itself refuses entries by: `validateEntry`,
-      imported from the script's `scripts/lib/schema.mjs`, so the checker and
-      the script cannot disagree. It asks for the verb, the keys that verb takes
-      and their shapes (an env key an env-var name, an alias name a TOML bare
-      key, `env` one of `all`, `dev`, `ci`, `test`, a hook's keys, grype's four
-      ignore keys), and a template delimiter only in an `add-env` value; a
-      dprint `add-plugin` `name` is also held to the skill's plugin table. An
-      entry for one of those tools written as a string — the retired word
-      grammar — is a finding pointing at
-      `plugins/stackgen/assets/pack-format.md`. A **git** entry stays a string
-      until git moves onto the script, and parses as
-      `git add ignore <pattern…>`, `git add ignore template=<Name>` or
-      `git add attribute <pattern> <attr…>`. An exclude has no single-tool verb
-      at all: only `all add-exclude` exists, which keeps rule 15's lists one
-      set. The materializer runs each line through `/stackgen:tool-config`, so a
-      line that does not parse is one the skill refuses at landing, in someone
-      else's repo. And a pack's `config/` tier holding any mise `conf.d/`
-      fragment or any `pre-commit.d/` file is a finding: a pack asks for those
-      lines through `tool-config:` and never lands the file.
+      reads as "no match") — with a value that axis takes, and a path that is
+      relative and carries no `..` segment. The materializer evaluates the key
+      against the caller's answers, and an axis the caller did not answer reads
+      as true — the omitted key lands the file. So an axis outside the
+      vocabulary is one no caller ever answers: its condition can never skip
+      anything, and the file lands everywhere, silently. A value the axis never
+      takes is the mirror case — no answer ever satisfies it, so the file lands
+      nowhere; a path matching nothing is a condition guarding no file, which is
+      a rename that forgot the key — the glob is matched by the checker's own
+      walk, so `**` enters dot-directories like `.config/`, which `globSync`
+      would not; and an absolute path or a climb is rule 13's fault stated on a
+      glob — it reaches out of what the pack lands. The finding names the pack,
+      the entry's index and its path;
+    - the pack's **two doctor-read facts** take the shapes their readers trust:
+      every `languages[].facts.binaries` entry is a bare name (the `PATH`
+      lookup) or a map of exactly `name` and an optional non-empty `probe` (the
+      command `/vwf:doctor` runs instead); and `lockfile` is a non-empty list of
+      repo-relative paths or globs with no `..`. Each caller trusts the shape: a
+      probe that is not a string is never run, and a glob that climbs out
+      matches something the repo does not own — both silently. A `tool-config:`
+      or `machine_env:` key is **refused** outright: nothing reads either any
+      more — a pack ships the lines it needs as files in its `templates/` tier
+      or as a subtask, and a machine value is a `@@NAME@@` in its templates,
+      filled from its `packs.<slug>` keys in `.config/stackgen.yaml`. The
+      finding names the pack and the entry;
+    - every **`@@` tag in a template tree** — tool-config's `templates/` and
+      each pack's `templates/` — is one the template engine reads: a name in
+      upper snake case as `@@NAME@@`, `@@#if NAME@@` or `@@#each NAME@@`, the
+      `@@#else@@`, `@@/if@@` and `@@/each@@` closers, or an `@@.@@`/`@@.key@@`
+      item read. Anything else lands in the rendered file verbatim. In
+      tool-config's own templates every name is one of `TEMPLATE_GLOBAL_NAMES` —
+      the stored and derived names of `.config/stackgen.yaml` — since no pack
+      keys are in scope there; in a pack's, any other name is the pack's own
+      `packs.<slug>` key, and the script refuses a stored key that takes a
+      global name, so no collision is left to catch statically. The finding
+      names the file, the line and the tag.
+
+    A pack's `config/` tier holding any mise `conf.d/` fragment or any
+    `pre-commit.d/` file is a finding too: a pack's mise files live in its
+    `templates/`, and the hooks are tool-config's universal set, which call the
+    `…:all` tasks a pack's subtask joins. So is a subtask under either tier —
+    `code/{check,lint,format}/<leaf>`, `setup/deps/<verb>/<leaf>`,
+    `setup/ai/<leaf>` — whose leaf is not the pack's slug, so two packs never
+    write one file.
 
     The walk is its own rather than the plugin file reader's, because every one
     of these paths runs through a dot segment the reader's glob does not descend
@@ -212,15 +213,17 @@ much smaller than the one it replaced: whole families of assertion became
     because they are the three that fire on a sentence rather than on a file.
     Below.
 13. **A landed pack file cites nothing by plugin path.** A pack's landed tiers —
-    `skills/`, `agents/`, `rules/`, `hooks/`, `config/`, its `conventions.md`
-    and a bundle's body — are copied into a target repo **verbatim**, and that
-    repo has no plugin installed. So is every file under
-    `skills/tool-config/assets/<tool>/`, which `stackgen:tool-config` lands
-    whole at the repo root; the rule reads it as one landed tree. Inside the
-    plugin every citation in them resolves, which is exactly why rule 6 was
-    silent about all of them; after landing not one does, and nothing reports it
-    — the reader is sent to a path that is not there. Four forms, matched
-    separately because they fail and are fixed differently:
+    `skills/`, `agents/`, `rules/`, `hooks/`, `config/`, `templates/`, its
+    `conventions.md` and a bundle's body — are copied (or, for `templates/`,
+    rendered) into a target repo **verbatim**, and that repo has no plugin
+    installed. So is every file under `skills/tool-config/assets/` and
+    `skills/tool-config/templates/`, which `stackgen:tool-config` lands whole at
+    the repo root, and under each `skills/init/assets/<name>/`; the rule reads
+    each as one landed tree. Inside the plugin every citation in them resolves,
+    which is exactly why rule 6 was silent about all of them; after landing not
+    one does, and nothing reports it — the reader is sent to a path that is not
+    there. Four forms, matched separately because they fail and are fixed
+    differently:
     - the **literal `${CLAUDE_PLUGIN_ROOT}`**, anywhere and even with no path
       after it, since outside a plugin the host expands it to nothing. This form
       is checked in every landed file, not only prose: a task script or a config
@@ -269,39 +272,44 @@ much smaller than the one it replaced: whole families of assertion became
     resolve, which `p:plugins:inventory` owns.
 15. **The formatters' exclusion lists state one set, and the scanner's allowlist
     is a subset of it.** `stackgen:tool-config` ships four lists of the trees a
-    gate skips, under `skills/tool-config/assets/{dprint,pre-commit,gitleaks}/`
-    — `dprint.json`'s `excludes` and `taplo.toml`'s `exclude` (both dprint's,
-    both globs) and pre-commit's global `exclude` (one regex, whose top-level
-    alternatives are the entries; a `(?x)` verbose pattern has its whitespace
-    and comments removed first) are the **formatters'** three and must agree;
-    the gitleaks `[allowlist] paths` (regexes) is the **scanner's** and is held
-    to a subset of them instead. The skill writes every entry through one verb,
-    `all add-exclude`, in three syntaxes, so the drift is an entry added to some
+    gate skips, under `skills/tool-config/assets/.config/` — `dprint.json`'s
+    `excludes` (JSONC: its `// >>> tool-config` markers are comments, and a
+    `../X` entry and its `**/X` twin read as one) and `taplo.toml`'s `exclude`
+    (both dprint's, both globs) and pre-commit's global `exclude` (one regex,
+    whose top-level alternatives are the entries; a `(?x)` verbose pattern has
+    its whitespace and comments removed first) are the **formatters'** three and
+    must agree; the gitleaks `[allowlist] paths` (regexes) is the **scanner's**
+    and is held to a subset of them instead. Each is a universal superset
+    authored by hand in three syntaxes, so the drift is an entry added to some
     of the lists and not the rest — and no tool reports it, since each reads
-    only its own list: the formatter simply formats the tree. The scanner is
-    held the other way round because the asset extends upstream's default
-    config, whose built-in allowlist already skips `.git`, `node_modules` and
-    the named lockfiles, and `.claude/` is authored source a scanner must scan —
-    so the formatters' set is wider than the scanner's by design, a
-    formatter-excluded tree the scanner still reads is no finding, and a tree
-    the scanner skips that no formatter excludes is one, naming `gitleaks.toml`
-    and the entry: an allowlist entry with no generated tree behind it is a
-    scanner quietly not scanning. Each entry is **normalised** before the
-    compare — a regex loses its anchors (`^`, `$`, and the `(^|/)` or `(?:^|/)`
-    that means "at the root or under any directory", a glob's `**/`), its `\.`
-    escapes and its `[^/]*` or `.*` (a glob's `*`); every entry then loses a
-    leading `/` or `**/` and a trailing `/`, `/*` or `/**`, the spellings of
-    "this directory, wherever it sits" that the four tools take — so `**/dist/`,
-    `**/dist/**`, `dist/*`, `^dist/` and `(^|/)dist/` are one entry, `dist`. The
-    formatters' finding names the entry, the files that carry it and the files
-    that do not. In the plugin carrying the skill a missing list is a finding,
-    since a moved file would otherwise end the check silently; a file present
-    but carrying no list at all, or one that cannot be parsed, is its own
-    finding naming the file — nothing else parses `dprint.json`, `taplo.toml` or
-    `gitleaks.toml`. Rule 15 reads those four paths and no others — a fifth list
-    is a fifth entry in `EXCLUSION_LISTS`, not a wider walk — and its two TOML
-    readers are deliberately narrow: `scripts/` carries no TOML parser, and a
-    bracketed list of string literals is all either file holds.
+    only its own list: the formatter simply formats the tree. The house linter's
+    `ignores` in `linter.yaml` is not compared: the installer generates that
+    file only when absent, so its list is not held to this set. An entry
+    carrying a `@@` tag is the repo's rendered value, not the shipped set's, and
+    is skipped. The scanner is held the other way round because the asset
+    extends upstream's default config, whose built-in allowlist already skips
+    `.git`, `node_modules` and the named lockfiles, and `.claude/` is authored
+    source a scanner must scan — so the formatters' set is wider than the
+    scanner's by design, a formatter-excluded tree the scanner still reads is no
+    finding, and a tree the scanner skips that no formatter excludes is one,
+    naming `gitleaks.toml` and the entry: an allowlist entry with no generated
+    tree behind it is a scanner quietly not scanning. Each entry is
+    **normalised** before the compare — a regex loses its anchors (`^`, `$`, and
+    the `(^|/)` or `(?:^|/)` that means "at the root or under any directory", a
+    glob's `**/`), its `\.` escapes and its `[^/]*` or `.*` (a glob's `*`);
+    every entry then loses a leading `/` or `**/` and a trailing `/`, `/*` or
+    `/**`, the spellings of "this directory, wherever it sits" that the four
+    tools take — so `**/dist/`, `**/dist/**`, `dist/*`, `^dist/` and
+    `(^|/)dist/` are one entry, `dist`. The formatters' finding names the entry,
+    the files that carry it and the files that do not. In the plugin carrying
+    the skill a missing list is a finding, since a moved file would otherwise
+    end the check silently; a file present but carrying no list at all, or one
+    that cannot be parsed, is its own finding naming the file — nothing else
+    parses `dprint.json`, `taplo.toml` or `gitleaks.toml`. Rule 15 reads those
+    four paths and no others — a fifth list is a fifth entry in
+    `EXCLUSION_LISTS`, not a wider walk — and its two TOML readers are
+    deliberately narrow: `scripts/` carries no TOML parser, and a bracketed list
+    of string literals is all either file holds.
 16. **A skill's node script runs with nothing installed beside it.** Every
     `skills/*/scripts/**/*.mjs` a plugin ships is read (`checkSkillScripts`). An
     **entry** — a file directly under `scripts/`, what a skill tells the session
@@ -312,12 +320,13 @@ much smaller than the one it replaced: whole families of assertion became
     `node_modules`, so a dependency fails at the first run, on the user's
     machine, never here. `stackgen:tool-config`'s script is the first.
 17. **No bare `mise use` anywhere a plugin ships.** It writes a pin nobody
-    reviewed into the top-level config, outside every block, so a tool is
-    entered into its `conf.d/tools*.toml` file first and then installed with
+    reviewed into the top-level `.config/mise.toml`, which holds settings only,
+    so a tool is entered into the `conf.d/` folder that owns it —
+    `conf.d/_base/`, `conf.d/ai/` or `conf.d/<pack>/` — and then installed with
     `mise install`. The walk is the whole plugin root, dot segments included,
-    since a landed asset tree sits under one, and it reports a **line number**.
-    Every `mise use` is a finding, whatever follows it, unless the line forbids
-    it: `never` or `bare` directly before it, or `is never` / `— never` directly
+    since a landed tree sits under one, and it reports a **line number**. Every
+    `mise use` is a finding, whatever follows it, unless the line forbids it:
+    `never` or `bare` directly before it, or `is never` / `— never` directly
     after. So the doctrine that states the ban passes, and a mixed line that
     also runs it does not.
 

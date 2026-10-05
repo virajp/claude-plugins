@@ -465,14 +465,16 @@ describe("the pack config tier", () => {
   });
 
   it("flags a pre-commit.d file in a pack's config/ tier", () => {
-    // A pack asks tool-config for its hooks; a fragment is merged by nothing.
+    // The hooks are tool-config's universal set; a fragment is merged by
+    // nothing.
     const fragment = `${pack}/.config/pre-commit.d/mise.yaml`;
     const root = tree({
       alpha: { files: { [fragment]: "repos:\n  - repo: local\n" } },
     });
     expect(messages(check(root))).toEqual([
-      `pack config/ tier ships a pre-commit.d file — a pack asks for its hooks `
-      + `through \`tool-config:\` in pack.yaml: ${fragment}`,
+      `pack config/ tier ships a pre-commit.d file — the hooks are `
+      + "tool-config's universal set, and a pack adds a subtask the `…:all` "
+      + `tasks call: ${fragment}`,
     ]);
   });
 
@@ -498,7 +500,6 @@ describe("the pack config tier", () => {
   it("accepts a conditional list naming known axes and landed paths", () => {
     const root = tree(conditional(
       "  - path: .config/wrangler.d/*.jsonc\n    when: { forge: github }\n"
-        + "  - path: wrangler.jsonc\n    when: { update_bot: renovate }\n"
         + "  - path: wrangler.jsonc\n    when: { secrets: fnox }\n",
     ));
     expect(messages(check(root))).toEqual([]);
@@ -530,13 +531,15 @@ describe("the pack config tier", () => {
 
   it("flags a conditional entry on an axis outside the vocabulary", () => {
     const root = tree(conditional(
-      "  - path: wrangler.jsonc\n    when: { ci: github }\n",
+      "  - path: wrangler.jsonc\n    when: { ci: github }\n"
+        + "  - path: wrangler.jsonc\n    when: { update_bot: renovate }\n",
     ));
     expect(messages(check(root))).toEqual([
       expect.stringContaining(
         "`conditional[0]` (wrangler.jsonc) `when` names axis `ci`, not one of "
-          + "forge, secrets, update_bot",
+          + "forge, secrets",
       ),
+      expect.stringContaining("`when` names axis `update_bot`, not one of"),
     ]);
   });
 
@@ -588,9 +591,8 @@ describe("the pack config tier", () => {
     ]);
   });
 
-  // Doctor runs a probe and reads a lockfile glob as the pack states them, and
-  // setup asks a machine_env question and fills the key a tool-config call sets
-  // — a malformed fact or a key no call sets fails in none of them.
+  // Doctor runs a probe and reads a lockfile glob as the pack states them — a
+  // malformed fact fails in neither.
   const facts = (yaml: string, files: Record<string, string> = {}) => ({
     alpha: {
       files: {
@@ -651,278 +653,33 @@ describe("the pack config tier", () => {
     ]);
   });
 
-  it("accepts machine_env entries each set by a tool-config env call", () => {
+  it("refuses a retired tool-config or machine_env key", () => {
+    // Nothing reads either list any more: a pack ships templates and subtasks,
+    // and a machine value is a template name filled from `packs.<slug>`.
     const root = tree(facts(
-      "machine_env:\n"
-        + "  - { name: XCODE_VERSION, detect: \"xcodebuild -version\", "
-        + "question: Which Xcode? }\n"
-        + "  - { name: SIMULATOR_OS, detect: \"xcrun simctl list\", "
-        + "question: Which OS? }\n"
-        + "tool-config:\n"
-        + "  - {tool: mise, verb: add-tool, name: aqua:realm/SwiftLint, "
-        + "version: \"0.65.1\", env: all}\n"
-        + "  - {tool: mise, verb: add-env, key: XCODE_VERSION, value: \"\", "
-        + "env: all}\n"
-        + "  - {tool: mise, verb: add-env, key: SIMULATOR_OS, value: \"\", "
-        + "env: dev}\n",
-    ));
-    expect(messages(check(root))).toEqual([]);
-  });
-
-  it("flags a machine_env name no tool-config env call sets", () => {
-    // A tool line naming the key, or a call with no tool-config list at all,
-    // leaves setup asking a question whose answer lands nowhere.
-    const root = tree(facts(
-      "machine_env:\n"
-        + "  - { name: X, detect: \"echo 1\", question: X? }\n"
-        + "  - { name: Y, detect: \"echo 1\", question: Y? }\n"
-        + "tool-config:\n"
-        + "  - {tool: mise, verb: add-tool, name: X, version: latest, env: all}\n"
-        + "  - {tool: mise, verb: add-env, key: Y, value: \"1\", env: ci}\n",
+      "tool-config:\n  - git add ignore .venv\n"
+        + "machine_env:\n  - { name: X, detect: \"echo 1\", question: X? }\n",
     ));
     expect(messages(check(root))).toEqual([
-      expect.stringContaining(
-        "`machine_env[0]` (X) is set by no mise `add-env` entry",
-      ),
-    ]);
-    const bare = tree(facts(
-      "machine_env:\n  - { name: X, detect: \"echo 1\", question: X? }\n",
-    ));
-    expect(messages(check(bare))).toEqual([
-      expect.stringContaining("(X) is set by no mise `add-env` entry"),
-    ]);
-  });
-
-  it("flags a tool-config value that is not a list of instructions", () => {
-    const root = tree(facts("tool-config: mise add env X=1\n"));
-    expect(messages(check(root))).toEqual([
-      "stacks/app-framework/swiftui/pack.yaml: "
-      + "`tool-config` is not a list of instructions",
+      "stacks/app-framework/swiftui/pack.yaml: `tool-config:` is retired — a "
+      + "pack ships the lines it needs as files in its templates/ tier, which "
+      + "tool-config renders, or as a subtask under .config/mise/tasks/",
+      "stacks/app-framework/swiftui/pack.yaml: `machine_env:` is retired — a "
+      + "machine value is a `@@NAME@@` in the pack's templates/, filled from "
+      + "its `packs.<slug>` keys in .config/stackgen.yaml",
     ]);
   });
 
   it("flags a mise conf.d fragment in a pack's config/ tier", () => {
-    // A pack asks stackgen:tool-config for its mise lines; a landed fragment
-    // is a second writer of a file the skill owns.
-    const root = tree(facts(
-      "tool-config:\n"
-        + "  - {tool: mise, verb: add-tool, name: x, version: \"1\", env: dev}\n",
-      { [`${confD}/swiftui.toml`]: "[env]\nX = \"1\"\n" },
-    ));
+    // A pack's mise files live in its templates/ tier, which tool-config
+    // renders; a copied fragment is a second writer of the same path.
+    const root = tree(facts("", {
+      [`${confD}/swiftui.toml`]: "[env]\nX = \"1\"\n",
+    }));
     expect(messages(check(root))).toEqual([
-      expect.stringContaining(
-        `ships a mise conf.d fragment — a pack asks for its mise lines `
-          + `through \`tool-config:\` in pack.yaml: ${confD}/swiftui.toml`,
-      ),
-    ]);
-  });
-
-  it("flags a malformed machine_env entry", () => {
-    const root = tree(facts(
-      "machine_env:\n"
-        + "  - { name: 1BAD, detect: \"x\", question: q }\n"
-        + "  - { name: GOOD, detect: \"\" }\n"
-        + "  - just a string\n"
-        + "tool-config:\n"
-        + "  - {tool: mise, verb: add-env, key: GOOD, value: \"\", env: all}\n",
-    ));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("`machine_env[0]` (1BAD) `name` is not an env"),
-      expect.stringContaining("`machine_env[1]` (GOOD) `detect` is not a"),
-      expect.stringContaining("`machine_env[1]` (GOOD) `question` is not a"),
-      expect.stringContaining("`machine_env[2]` is not a { name, detect,"),
-    ]);
-  });
-
-  it("refuses a string entry for every structured tool, git strings kept", () => {
-    // mise, dprint, pre-commit, grype and `all` entries are structured,
-    // whatever their verb; a git string is still read against the grammar.
-    const root = tree(facts(
-      "tool-config:\n"
-        + "  - mise add tool x 1 to dev\n"
-        + "  - mise set env X=1\n"
-        + "  - dprint add plugin typescript\n"
-        + "  - pre-commit add linter-ignore .dart_tool\n"
-        + "  - grype add ignore CVE-2024-1234\n"
-        + "  - all add exclude generated node_modules\n"
-        + "  - git add ignore .venv\n",
-    ));
-    const found = messages(check(root));
-    expect(found).toEqual([
-      expect.stringContaining("`tool-config[0]` (mise add tool x 1 to dev)"),
-      expect.stringContaining("`tool-config[1]` (mise set env X=1)"),
-      expect.stringContaining(
-        "`tool-config[2]` (dprint add plugin typescript)",
-      ),
-      expect.stringContaining("`tool-config[3]` (pre-commit add linter-ignore"),
-      expect.stringContaining("`tool-config[4]` (grype add ignore CVE-2024"),
-      expect.stringContaining("`tool-config[5]` (all add exclude generated"),
-    ]);
-    ["mise", "mise", "dprint", "pre-commit", "grype", "all"].forEach(
-      (tool, index) =>
-        expect(found[index]).toContain(
-          `${tool} entries are structured — see `
-            + "plugins/stackgen/assets/pack-format.md",
-        ),
-    );
-  });
-
-  it("accepts structured mise entries beside string ones", () => {
-    // A structured entry is held to the script's own schema; a git string
-    // entry keeps the word grammar.
-    const root = tree(facts(
-      "machine_env:\n"
-        + "  - { name: XCODE_VERSION, detect: \"xcodebuild -version\", "
-        + "question: Which Xcode? }\n"
-        + "tool-config:\n"
-        + "  - {tool: mise, verb: add-tool, name: swiftlint, version: \"0.59\", "
-        + "env: dev}\n"
-        + "  - tool: mise\n    verb: add-env\n    key: XCODE_VERSION\n"
-        + "    value: \"\"\n    env: all\n"
-        + "  - {tool: mise, verb: add-alias, name: ll, command: ls}\n"
-        + "  - git add ignore template=Node\n",
-    ));
-    expect(messages(check(root))).toEqual([]);
-  });
-
-  it("flags a structured mise entry the schema refuses", () => {
-    const root = tree(facts(
-      "tool-config:\n"
-        + "  - {tool: mise, verb: add-tool, name: x, version: \"1\", env: dev, "
-        + "for: alpha}\n"
-        + "  - {tool: mise, verb: add-tool, name: x, env: dev}\n"
-        + "  - {tool: mise, verb: add-tool, name: x, version: \"1\", env: prod}\n",
-    ));
-    const found = messages(check(root));
-    expect(found).toEqual([
-      expect.stringContaining("`tool-config[0]`"),
-      expect.stringContaining("`tool-config[1]`"),
-      expect.stringContaining("`tool-config[2]`"),
-    ]);
-    expect(found[0]).toContain("unknown key for for mise add-tool");
-    expect(found[1]).toContain("missing version");
-    expect(found[2]).toContain(
-      "env must be one of all, dev, ci, test, not prod",
-    );
-  });
-
-  it("accepts structured dprint, pre-commit, grype and all entries", () => {
-    // Each gate tool's entry is held to the script's schema.
-    const root = tree(facts(
-      "tool-config:\n"
-        + "  - {tool: dprint, verb: add-plugin, name: typescript}\n"
-        + "  - tool: pre-commit\n    verb: add-hook\n    repo: local\n"
-        + "    id: uv-lock-check\n    stage: pre-commit\n"
-        + "    name: uv lockfile is current\n"
-        + "    entry: mise x -- uv lock --check\n    language: system\n"
-        + "    pass-filenames: false\n"
-        + "  - {tool: pre-commit, verb: add-linter-ignore, paths: [.dart_tool]}\n"
-        + "  - {tool: grype, verb: add-ignore, id: CVE-2024-1234, "
-        + "package: lodash@4.17.20, reason: not reachable, "
-        + "expires: \"2027-01-31\"}\n"
-        + "  - {tool: all, verb: add-exclude, generated: true, "
-        + "paths: [.build, \"*.xcassets/\"]}\n"
-        + "  - {tool: all, verb: add-exclude, paths: [\"*-lock.json\"]}\n",
-    ));
-    expect(messages(check(root))).toEqual([]);
-  });
-
-  it("flags a structured gate entry the schema refuses", () => {
-    const root = tree(facts(
-      "tool-config:\n"
-        + "  - {tool: dprint, verb: add-plugin, name: x}\n"
-        + "  - {tool: pre-commit, verb: add-hook, repo: local, id: x, "
-        + "stage: post-commit, name: x, entry: y, language: system}\n"
-        + "  - {tool: grype, verb: add-ignore, id: CVE-2024-1234, "
-        + "package: lodash, reason: r, expires: \"2027-02-30\"}\n"
-        + "  - {tool: all, verb: add-exclude, paths: [../out]}\n",
-    ));
-    const found = messages(check(root));
-    expect(found).toEqual([
-      expect.stringContaining("`tool-config[0]`"),
-      expect.stringContaining("`tool-config[1]`"),
-      expect.stringContaining("`tool-config[2]`"),
-      expect.stringContaining("`tool-config[2]`"),
-      expect.stringContaining("`tool-config[3]`"),
-    ]);
-    expect(found[0]).toContain("name x is not in the plugin table");
-    expect(found[1]).toContain("--entry begins `mise x -- `");
-    expect(found[2]).toContain("is not a <name>@<version>");
-    expect(found[3]).toContain("is not a calendar day");
-    expect(found[4]).toContain("is not a relative name");
-  });
-
-  it("does not count a refused structured add-env as setting its key", () => {
-    const root = tree(facts(
-      "machine_env:\n  - { name: X, detect: \"echo 1\", question: X? }\n"
-        + "tool-config:\n"
-        + "  - {tool: mise, verb: add-env, key: X, value: \"\", env: prod}\n",
-    ));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("env must be one of"),
-      expect.stringContaining("(X) is set by no mise `add-env` entry"),
-    ]);
-  });
-
-  it("accepts the git verbs a pack may ask for", () => {
-    const root = tree(facts(
-      "tool-config:\n"
-        + "  - git add ignore .venv\n"
-        + "  - git add ignore fnox.local.toml .doppler/ !keep/*.md\n"
-        + "  - git add ignore template=Node\n"
-        + "  - git add ignore template=C++\n"
-        + "  - git add attribute pnpm-lock.yaml linguist-generated\n"
-        + "  - git add attribute *.png binary -diff\n",
-    ));
-    expect(messages(check(root))).toEqual([]);
-  });
-
-  it("flags a git verb outside the skill's grammar", () => {
-    // Empty ignore, bad template, bare attribute, quoted token, unknown verb.
-    const root = tree(facts(
-      "tool-config:\n"
-        + "  - git add ignore\n"
-        + "  - git add ignore template=\n"
-        + "  - git add ignore template=Bad/Name\n"
-        + "  - git add ignore template=Node .venv\n"
-        + "  - git add attribute pnpm-lock.yaml\n"
-        + "  - git add ignore '!keep/*.md'\n"
-        + "  - git add attribute \"*.png\" binary\n"
-        + "  - git add hook x\n",
-    ));
-    expect(messages(check(root))).toEqual(
-      [0, 1, 2, 3, 4, 5, 6, 7].map(index =>
-        expect.stringContaining(`\`tool-config[${index}]\``)
-      ),
-    );
-    expect(messages(check(root)).every(m => m.includes("matches none of")))
-      .toBe(true);
-  });
-
-  it("flags a requester suffix on a git verb", () => {
-    const root = tree(facts(
-      "tool-config:\n"
-        + "  - git add ignore .venv for uv\n"
-        + "  - git add ignore template=Node for pnpm\n"
-        + "  - git add attribute pnpm-lock.yaml linguist-generated for pnpm\n",
-    ));
-    expect(messages(check(root))).toEqual(
-      [0, 1, 2].map(index =>
-        expect.stringContaining(`\`tool-config[${index}]\``)
-      ),
-    );
-    expect(messages(check(root)).every(m => m.includes("`for <requester>`")))
-      .toBe(true);
-  });
-
-  it("counts a machine_env name as set only by an add-env entry", () => {
-    const root = tree(facts(
-      "machine_env:\n  - { name: X, detect: \"echo 1\", question: X? }\n"
-        + "tool-config:\n"
-        + "  - {tool: mise, verb: add-alias, name: X, command: y}\n",
-    ));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("(X) is set by no mise `add-env` entry"),
+      `pack config/ tier ships a mise conf.d fragment — a pack's mise files `
+      + `live in its templates/ tier, which tool-config renders: `
+      + `${confD}/swiftui.toml`,
     ]);
   });
 
@@ -970,34 +727,32 @@ describe("the pack config tier", () => {
     ]);
   });
 
-  // stackgen:tool-config's asset trees land whole as a repo root, so they are
-  // held to the same bar as a pack's config/ tier.
-  const assets = "skills/tool-config/assets/mise";
+  // stackgen:tool-config's assets/ and templates/ land whole as a repo root,
+  // so they are held to the same bar as a pack's config/ tier.
+  const assets = "skills/tool-config/assets";
+  const templates = "skills/tool-config/templates";
 
-  it("accepts the git, graphify and renovate files at an asset tree root", () => {
+  it("accepts the git and graphify files at the assets/ root", () => {
     // tool-config writes these at the root, where only a pack is refused them.
     const root = tree({
       stackgen: {
         files: {
-          "skills/tool-config/assets/git/.gitignore": ".DS_Store\n",
-          "skills/tool-config/assets/git/.gitattributes": "* text=auto\n",
-          "skills/tool-config/assets/graphify/.graphifyignore": "dist/\n",
-          "skills/tool-config/assets/renovate/renovate.json": "{}\n",
+          [`${assets}/.gitignore`]: ".DS_Store\n",
+          [`${assets}/.gitattributes`]: "* text=auto\n",
+          [`${assets}/.graphifyignore`]: "dist/\n",
         },
       },
     });
     expect(messages(check(root))).toEqual([]);
   });
 
-  it("flags another tool's root file at an asset tree root", () => {
-    // Each root file belongs to one tool's tree, not to every tool's.
+  it("flags a retired renovate config at the assets/ root", () => {
     const root = tree({
-      stackgen: {
-        files: { "skills/tool-config/assets/mise/renovate.json": "{}\n" },
-      },
+      stackgen: { files: { [`${assets}/renovate.json`]: "{}\n" } },
     });
     expect(messages(check(root))).toEqual([
-      expect.stringContaining("unallowlisted root entry"),
+      `tool-config assets/ tree holds an unallowlisted root entry — `
+      + `everything else belongs under .config/: ${assets}/renovate.json`,
     ]);
   });
 
@@ -1147,7 +902,7 @@ describe("the pack config tier", () => {
       stackgen: {
         files: {
           [task]: "#!/usr/bin/env bash\n",
-          [`${assets}/.config/mise/conf.d/tools.toml`]: "[tools]\n",
+          [`${assets}/.config/mise/conf.d/_base/mise.toml`]: "[tools]\n",
         },
         executable: [task],
       },
@@ -1169,8 +924,8 @@ describe("the pack config tier", () => {
     ]);
   });
 
-  it("accepts the mise tree's repo-local skill, held to the landed rules", () => {
-    const landed = `${assets}/.claude/skills/mise/SKILL.md`;
+  it("accepts the repo-local mise skill, held to the landed rules", () => {
+    const landed = `${templates}/.claude/skills/mise/SKILL.md`;
     const clean = tree({ stackgen: { files: { [landed]: skill("mise") } } });
     expect(messages(check(clean))).toEqual([]);
     const root = tree({
@@ -1188,8 +943,8 @@ describe("the pack config tier", () => {
   });
 
   it("walks a flat tool-config assets/ and templates/ tree as the repo root", () => {
-    // Once assets/ mirrors the repo root, it and templates/ are one landed
-    // tree each, allowed every tool's root files plus `.vscode/`.
+    // assets/ and templates/ are one landed tree each, allowed the git and
+    // graphify root files plus `.claude/` and `.vscode/`.
     const flat = "skills/tool-config/assets";
     const templates = "skills/tool-config/templates";
     const task = `${flat}/.config/mise/tasks/code/graph`;
@@ -1226,26 +981,74 @@ describe("the pack config tier", () => {
     );
   });
 
-  it("flags any other file under .claude/ in an asset tree", () => {
-    // Only mise's tree lands a skill, and only that one.
+  it("flags any other file under .claude/ in a tool-config tree", () => {
+    // Only the mise skill lands under `.claude/`.
     const root = tree({
       stackgen: {
         files: {
-          [`${assets}/.claude/skills/other/SKILL.md`]: skill("other"),
-          "skills/tool-config/assets/dprint/.claude/skills/mise/SKILL.md":
-            skill("mise"),
+          [`${templates}/.claude/skills/other/SKILL.md`]: skill("other"),
         },
       },
     });
     expect(messages(check(root))).toEqual([
-      expect.stringContaining(
-        "unallowlisted root entry — everything else belongs under .config/: "
-          + "skills/tool-config/assets/dprint/.claude",
-      ),
-      expect.stringContaining(
-        "unallowlisted file under .claude/ — only .claude/skills/mise/SKILL.md: "
-          + `${assets}/.claude/skills/other/SKILL.md`,
-      ),
+      "tool-config templates/ tree lands an unallowlisted file under .claude/ "
+      + "— only .claude/skills/mise/SKILL.md: "
+      + `${templates}/.claude/skills/other/SKILL.md`,
+    ]);
+  });
+
+  it("holds tool-config's templates to the stored and derived names", () => {
+    // No pack keys are in scope there, so any other name renders as missing.
+    const file = `${templates}/.config/claude-status.json`;
+    const clean = tree({
+      stackgen: {
+        files: {
+          [file]: "{ \"projectName\": \"@@PROJECT_NAME@@\" }\n"
+            + "@@#each MEMBER_ENTRIES@@@@.slug@@ @@.@@@@/each@@\n"
+            + "@@#if NODE@@x@@#else@@y@@/if@@\n",
+        },
+      },
+    });
+    expect(messages(check(clean))).toEqual([]);
+    const root = tree({
+      stackgen: {
+        files: { [file]: "@@#if NODE@@\n@@XCODE_VERSION@@\n@@/if@@\n" },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      `${file}:2: \`@@XCODE_VERSION@@\` names XCODE_VERSION, which is not a `
+      + "template name — tool-config's templates read the stored and derived "
+      + "names alone",
+    ]);
+  });
+
+  it("reads a pack template's own names, and refuses a malformed tag", () => {
+    // A pack's own `packs.<slug>` key is upper snake case; anything the engine
+    // cannot read lands verbatim in the rendered file.
+    const file = "stacks/app-framework/swiftui/templates/.config/mise/conf.d/"
+      + "swiftui/mise.toml";
+    const clean = tree({
+      stackgen: {
+        files: {
+          [file]: "[env]\nXCODE_VERSION = \"@@XCODE_VERSION@@\"\n"
+            + "REPO = \"@@REPO_NAME@@\"\n",
+        },
+      },
+    });
+    expect(messages(check(clean))).toEqual([]);
+    const root = tree({
+      stackgen: {
+        files: {
+          [file]: "[env]\nXCODE_VERSION = \"@@xcode_version@@\"\n"
+            + "@@#unless NODE@@\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      `${file}:2: \`@@xcode_version@@\` is not a template tag — a name is `
+      + "upper snake case, read as @@NAME@@, @@#if NAME@@ or @@#each NAME@@",
+      `${file}:3: \`@@#unless NODE@@\` is not a template tag — a name is `
+      + "upper snake case, read as @@NAME@@, @@#if NAME@@ or @@#each NAME@@",
     ]);
   });
 });
@@ -2102,35 +1905,6 @@ describe("the exclusion sets", () => {
       `exclusion \`dist\` is in ${taplo}, ${preCommit} and not in ${dprint} — `
       + "the formatters' exclusion lists state one set",
     ]);
-  });
-
-  it("still reads the per-tool asset paths", () => {
-    // Additive until the checker tightens: the old layout is read where the
-    // flat one is absent.
-    const files = lists().stackgen.files as Record<string, string>;
-    const old = Object.fromEntries(
-      Object.entries(files).map(([path, body]) => [
-        path
-          .replace(
-            `${gate}/.config/dprint.json`,
-            `${gate}/dprint/.config/dprint.json`,
-          )
-          .replace(
-            `${gate}/.config/taplo.toml`,
-            `${gate}/dprint/.config/taplo.toml`,
-          )
-          .replace(
-            `${gate}/.config/gitleaks.toml`,
-            `${gate}/gitleaks/.config/gitleaks.toml`,
-          )
-          .replace(
-            `${gate}/.config/pre-commit-config.yaml`,
-            `${gate}/pre-commit/.config/pre-commit-config.yaml`,
-          ),
-        body,
-      ]),
-    );
-    expect(messages(check(tree({ stackgen: { files: old } })))).toEqual([]);
   });
 
   it("flags a dprint config that lost its excludes list", () => {
