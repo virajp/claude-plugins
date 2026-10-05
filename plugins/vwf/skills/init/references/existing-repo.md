@@ -222,8 +222,10 @@ consent, and none where the repo carries none of it:
 - **The lock record.** The `repo-hygiene/repo-hygiene` record is removed —
   the ignore, attributes and graph-ignore files are the skill's `all` call's
   now, whose preview shows a file with no marker pair as one `write` row
-  replacing it whole. The files it recorded that the hygiene assets now
-  carry lose their record and keep their content, on the already-there rule.
+  replacing it whole — an ignore file's own lines listed under it and
+  re-appended below the markers, per [new repo](new-repo.md) §2. The files
+  it recorded that the hygiene assets now carry lose their record and keep
+  their content, on the already-there rule.
 - **`.editorconfig`.** Nothing lands it any more. One at the root whose hash
   matches the retired record's entry for it — or, where no entry is left, the
   SHA-256 of the last payload shipped,
@@ -574,9 +576,11 @@ becomes that report line and nothing else.
 ### 7 — The ignore file
 
 The ignore file is `/stackgen:tool-config`'s git tool, never a merge here —
-its lines sit between its markers, a file with no marker pair is one `write`
-row replacing it whole, and a repo's own lines below the closing marker
-survive every render. No language template is asked for: the shipped set is
+its lines sit between its markers, and a repo's own lines below the closing
+marker survive every render. A file with no marker pair is one `write` row
+replacing it whole, and `init` lists the repo's own lines under that row and
+appends them below the markers on `ok`, per [new repo](new-repo.md) §2 —
+never a silent drop. No language template is asked for: the shipped set is
 a universal superset.
 
 ### 8 — Per-project groups

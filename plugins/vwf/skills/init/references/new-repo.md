@@ -132,6 +132,23 @@ row, names an unknown one or meets a row that changed since the preview, so
 `init` answers every row the preview returned, and a refused call is shown
 again in the report, never retried with guessed answers.
 
+**An ignore file adopted whole keeps the repo's own lines.** That `write`
+row on a `.gitignore` or `.graphifyignore` with no marker pair would drop
+every line the repo wrote — a `secrets/` or `.env.production` line among
+them, after which a plain `git add` stages what it used to ignore — and its
+`keep-existing` lands none of the universal set. So, before the plan,
+`init` reads the repo's file and lists its **own lines**: every pattern line
+the rendered block between the markers does not carry, comments and blank
+lines aside, in the file's order. The row shows them beneath it as
+`kept below the markers: <line>`, one per line, so the person reads exactly
+what survives. On `ok`, `init` lets the call write the file, then appends
+those lines below the closing `# <<< tool-config` marker, unchanged and in
+order — the person's approval a line outside the markers needs, given on
+the one consent that answered the row. On `keep-existing` the file is left
+as it stands and nothing is appended. A line is never dropped silently: an
+empty list is said as `no lines of its own`. A later run finds the markers
+and leaves every line below them alone, so the append is made once.
+
 **Then `init`'s own hygiene assets**, from
 `${CLAUDE_PLUGIN_ROOT}/skills/init/assets/hygiene/`, laid down as
 [hygiene assets](readme-and-license.md) states — no adapter fetch and no

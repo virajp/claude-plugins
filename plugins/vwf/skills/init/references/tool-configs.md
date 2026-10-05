@@ -41,8 +41,10 @@ of three:
   `/stackgen:tool-config all` renders it in place: init writes no row of its
   own for it, not a move, not a keep, not a stray. The skill's row — the
   file's lines between its markers, or, for a file with no marker pair, one
-  `write` row replacing it whole — is printed in the repo's section under
-  **Tool-config rows**, and the one consent covers it.
+  `write` row replacing it whole, the repo's own lines listed under it and
+  appended below the markers on `ok` per [new repo](new-repo.md) §2 — is
+  printed in the repo's section under **Tool-config rows**, and the one
+  consent covers it.
 - **`report`** — nothing folds or moves the file: it stays at the root, and
   pass 1's toolchain step reports it under Deferred with the unlock it
   names.
