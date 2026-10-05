@@ -1136,10 +1136,12 @@ your own the same way, as a subtask file of your own, never by editing an
   clone and to re-sync, as `MISE_ENV=dev mise run setup:all`; it exits 1 when
   `MISE_ENV` is unset. It calls `setup:mise`, `setup:secrets`,
   `setup:external:start` (on a repo with `external: true`), `setup:deps:all`,
-  `setup:precommit` and `setup:ai:all` in order, and stays idempotent. **It
-  never upgrades or overwrites anything it did not create**: a task that would
-  have to stops, names what it found and prints the by-hand command, and every
-  destructive step sits behind a flag. `setup:mise` runs `mise install`,
+  `setup:precommit`, `setup:ai:all` and `setup:precommit` again in order — the
+  second pass strips the raw graphify hooks and the `merge=graphify` attribute
+  an installer run inside `setup:ai:all` can let back in — and stays idempotent.
+  **It never upgrades or overwrites anything it did not create**: a task that
+  would have to stops, names what it found and prints the by-hand command, and
+  every destructive step sits behind a flag. `setup:mise` runs `mise install`,
   `mise reshim` and `mise doctor` every time and never moves a pin; a pin moves
   only through `/stackgen:tool-config upgrade`, whose rows you answer.
   `setup:precommit --update` is what runs `pre-commit autoupdate`, moving the
