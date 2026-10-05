@@ -11,9 +11,9 @@ backlog_pieces: [ B80 ]
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-10-05 by the user
+RUNNING since 2026-10-05 09:20 in .worktrees/2026-10-05-tool-config-templates
 
 ## Consent
 
@@ -365,8 +365,11 @@ under 1500 characters:
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome | Detail                                                                                                                                                                                                                                                                                                  | Commit |
+| ---- | --------- | ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight | —     | —     | green   | all 7 wave gate lines green on develop e53f4a10; mise and graphify present, graph in main checkout; format check skipped (no `covers:`); stack conventions skipped (no `code` unit); order U1 → U2,U3 → U4,U5 → R → U6 → U7 → U8                                                                        |        |
+| 1    | U1        | opus  | 1     | green   | templates tier walked under landed-tree rules + LANDED_TIERS; subtask leaf must equal pack slug; init asset root allowlist; 9 new tests (181 pass). DECIDED: any `setup/deps/<verb>` segment, leaf only policed; kept "pack config/ tier" wording for U5. DOCS FALSIFIED: checks.md rules 11, 13 (U5's) |        |
+| 1    | R1        | opus  | 1     | pass    | 1 rule-5 finding: `.claude/docs/repo-shape.md:165` says init asset trees walk "with no root allowlist" — within U7's Owns (`.claude/**`), handed to U7 as DOCS FALSIFIED, no loop. CONTRACT clean, RULINGS clean                                                                                        |        |
 
 ## Launch
 

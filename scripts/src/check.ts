@@ -31,6 +31,7 @@ import {
   join,
   relative,
   resolve,
+  sep,
 } from "node:path";
 import { parse as parseYaml } from "yaml";
 // A plain zero-dependency `.mjs` module with no declaration file beside it, so
@@ -340,8 +341,28 @@ const PACK_HOOK_FRAGMENTS = join(".config", "pre-commit.d");
 const TOOL_CONFIG_ASSETS = "skills/tool-config/assets";
 /** Where `/vwf:init` keeps its own landed trees — the hygiene assets. */
 const INIT_ASSETS = "skills/init/assets";
+/**
+ * The only paths an init asset tree may land, relative to the tree: two root
+ * files and two directories, `/`-terminated. init writes the hygiene files and
+ * nothing else; every tool config is tool-config's.
+ */
+const INIT_ROOT_ALLOWLIST = [
+  "CONTRIBUTING.md",
+  "SECURITY.md",
+  "licenses/",
+  ".github/ISSUE_TEMPLATE/",
+];
+/**
+ * A pack-owned subtask under the task library: `code/{check,lint,format}/<slug>`,
+ * `setup/deps/<verb>/<slug>` or `setup/ai/<slug>`. The leaf is captured — it
+ * must be the pack's own slug, so two packs never write one subtask file.
+ */
+const PACK_SUBTASK =
+  /^(?:code\/(?:check|lint|format)|setup\/deps\/[^/]+|setup\/ai)\/([^/]+)$/;
 /** The skill file that marks a plugin as the owner of those trees. */
 const TOOL_CONFIG_SKILL = "skills/tool-config/SKILL.md";
+/** Where a pack keeps the files tool-config renders into the repo. */
+const PACK_TEMPLATES = "templates";
 /** Where a pack keeps the hook scripts that land in `.claude/hooks/`. */
 const PACK_HOOKS = "hooks";
 /**
@@ -491,8 +512,10 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  *   may ask for (`packFactFaults`).
  *
  * A pack's `config/` tier holding a mise `conf.d` fragment or a `pre-commit.d`
- * file is a finding too, and each `stackgen:tool-config` asset tree is walked
- * as a landed tree, as is each `/vwf:init` asset tree bar the root allowlist.
+ * file is a finding too, as is a subtask under either tier whose leaf is not
+ * the pack's slug. A pack's `templates/` tier is walked as a landed tree like
+ * `config/`, and each `stackgen:tool-config` asset tree is walked as one, as
+ * is each `/vwf:init` asset tree — which lands only its hygiene allowlist.
  *
  * The walk is its own rather than `plugin.files`: most of these paths run
  * through `.config/`, and the reader's glob does not descend into a dot
@@ -567,7 +590,20 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
   }
   // init picks one licence from its tree, so its root holds more than lands.
   for (const tree of assetTrees(plugin, INIT_ASSETS)) {
-    landedTree(join(plugin.root, tree), null);
+    const landed = join(plugin.root, tree);
+    landedTree(landed, null);
+    for (const absolute of filesUnder(landed)) {
+      const rel = relative(landed, absolute).split(sep).join("/");
+      const allowed = INIT_ROOT_ALLOWLIST.some(entry =>
+        entry.endsWith("/") ? rel.startsWith(entry) : rel === entry
+      );
+      if (!allowed) {
+        at(
+          `init asset tree lands a file outside its allowlist — only `
+            + `${INIT_ROOT_ALLOWLIST.join(", ")}: ${path(absolute)}`,
+        );
+      }
+    }
   }
 
   const packs = globSync("stacks/*/*", { cwd: plugin.root });
@@ -590,6 +626,29 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
 
     const config = join(plugin.root, pack, "config");
     landedTree(config, PACK_CONFIG_ROOT_FILES);
+    // `templates/` renders to the same relative paths `config/` copies to, so
+    // it is held to the same landed-tree rules — bar the conf.d refusal below:
+    // a pack's mise files live in its templates.
+    const templates = join(plugin.root, pack, PACK_TEMPLATES);
+    landedTree(templates, PACK_CONFIG_ROOT_FILES);
+
+    const slug = basename(pack);
+    for (const tier of [config, templates]) {
+      const tasks = join(tier, PACK_MISE_TASKS);
+      for (const absolute of filesUnder(tasks)) {
+        const leaf = relative(tasks, absolute)
+          .split(sep)
+          .join("/")
+          .match(PACK_SUBTASK)
+          ?.[1];
+        if (leaf !== undefined && leaf !== slug) {
+          at(
+            `pack subtask is not named for its pack — a subtask's leaf is the `
+              + `pack slug \`${slug}\`: ${path(absolute)}`,
+          );
+        }
+      }
+    }
 
     for (const absolute of filesUnder(join(config, PACK_CONF_D))) {
       at(
@@ -1164,7 +1223,14 @@ function outside(root: string, path: string): boolean {
  * `.claude/stackgen/templates/<slug>.md`, and the materializer's only mutation
  * is the `p/_project/` -> `p/<id>/` rename. Nothing else is rewritten.
  */
-const LANDED_TIERS = ["skills", "agents", "rules", "hooks", "config"];
+const LANDED_TIERS = [
+  "skills",
+  "agents",
+  "rules",
+  "hooks",
+  "config",
+  PACK_TEMPLATES,
+];
 
 /** The literal token, matched for its own sake rather than for its path. */
 const LANDED_TOKEN_RE = /\$\{CLAUDE_PLUGIN_ROOT\}/g;

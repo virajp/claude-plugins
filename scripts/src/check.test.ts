@@ -1029,6 +1029,118 @@ describe("the pack config tier", () => {
     );
   });
 
+  it("flags an init asset file outside the hygiene allowlist", () => {
+    // init writes the hygiene files alone; every tool config is tool-config's.
+    const hygiene = "skills/init/assets/hygiene";
+    const clean = tree({
+      vwf: {
+        files: {
+          [`${hygiene}/CONTRIBUTING.md`]: "# Contributing\n",
+          [`${hygiene}/SECURITY.md`]: "# Security\n",
+          [`${hygiene}/licenses/MIT.txt`]: "MIT\n",
+          [`${hygiene}/.github/ISSUE_TEMPLATE/bug.md`]: "---\nname: Bug\n---\n",
+        },
+      },
+    });
+    expect(messages(check(clean))).toEqual([]);
+    const root = tree({
+      vwf: {
+        files: {
+          [`${hygiene}/.editorconfig`]: "root = true\n",
+          [`${hygiene}/.github/CODEOWNERS`]: "* @me\n",
+        },
+      },
+    });
+    expect(messages(check(root)).sort()).toEqual([
+      `init asset tree lands a file outside its allowlist — only `
+      + `CONTRIBUTING.md, SECURITY.md, licenses/, .github/ISSUE_TEMPLATE/: `
+      + `${hygiene}/.editorconfig`,
+      `init asset tree lands a file outside its allowlist — only `
+      + `CONTRIBUTING.md, SECURITY.md, licenses/, .github/ISSUE_TEMPLATE/: `
+      + `${hygiene}/.github/CODEOWNERS`,
+    ]
+      .sort());
+  });
+
+  it("accepts a pack templates/ tier and a pack with no tool-config list", () => {
+    // tool-config renders `templates/` to the same paths `config/` copies to;
+    // a pack's mise files live there, so a conf.d fragment is not a finding.
+    const dir = "stacks/linter/eslint";
+    const task = `${dir}/templates/.config/mise/tasks/code/lint/eslint`;
+    const root = tree({
+      stackgen: {
+        files: {
+          [`${dir}/pack.yaml`]: "slug: eslint\nversion: 0.1.0\n",
+          [task]: "#!/usr/bin/env bash\neslint @@REPO_NAME@@\n",
+          [`${dir}/templates/.config/mise/conf.d/eslint/mise.toml`]:
+            "[tools]\n",
+        },
+        executable: [task],
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
+
+  it("holds a pack templates/ tier to the landed-tree rules", () => {
+    const dir = "stacks/linter/eslint/templates";
+    const task = `${dir}/.config/mise/tasks/code/lint/eslint`;
+    const root = tree({
+      stackgen: {
+        files: {
+          [task]: "#!/usr/bin/env bash\n",
+          [`${dir}/.prettierrc`]: "{}\n",
+          [`${dir}/.config/x.toml`]: "# ${CLAUDE_PLUGIN_ROOT}/x.md\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual(
+      expect.arrayContaining([
+        `mise task file is not executable: ${task}`,
+        expect.stringContaining("unallowlisted root entry"),
+        expect.stringContaining("expands to nothing"),
+      ]),
+    );
+  });
+
+  it.each([
+    "config/.config/mise/tasks/code/check/uv",
+    "config/.config/mise/tasks/code/format/ruff",
+    "templates/.config/mise/tasks/setup/deps/install/pnpm",
+    "templates/.config/mise/tasks/setup/ai/claude-code",
+  ])("flags a subtask not named for its pack: %s", subtask => {
+    // A subtask's leaf is its pack's slug, so two packs never write one file.
+    const dir = "stacks/linter/eslint";
+    const task = `${dir}/${subtask}`;
+    const root = tree({
+      stackgen: {
+        files: { [task]: "#!/usr/bin/env bash\n" },
+        executable: [task],
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      `pack subtask is not named for its pack — a subtask's leaf is the pack `
+      + `slug \`eslint\`: ${task}`,
+    ]);
+  });
+
+  it("accepts a subtask named for its pack, and a whole-file overlay", () => {
+    const dir = "stacks/linter/eslint/config/.config/mise/tasks";
+    const tasks = [
+      `${dir}/code/lint/eslint`,
+      `${dir}/setup/deps/audit/eslint`,
+      `${dir}/code/format`,
+    ];
+    const root = tree({
+      stackgen: {
+        files: Object.fromEntries(
+          tasks.map(task => [task, "#!/usr/bin/env bash\n"]),
+        ),
+        executable: tasks,
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
+
   it("walks a tool-config asset tree as a landed tree", () => {
     const task = `${assets}/.config/mise/tasks/code/graph`;
     const clean = tree({
