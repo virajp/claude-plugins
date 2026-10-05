@@ -349,6 +349,12 @@ const INIT_ROOT_ALLOWLIST = [
  */
 const PACK_SUBTASK =
   /^(?:code\/(?:check|lint|format)|setup\/deps\/[^/]+|setup\/ai)\/([^/]+)$/;
+/**
+ * The slugs no pack may take: `all` is every `…:all` task's leaf, and `_base`
+ * and `ai` are tool-config's own `conf.d/` folders — a pack named for one
+ * would write, and on removal delete, what tool-config owns.
+ */
+const RESERVED_PACK_SLUGS = new Set(["all", "ai", "_base"]);
 /** The skill file that marks a plugin as the owner of those trees. */
 const TOOL_CONFIG_SKILL = "skills/tool-config/SKILL.md";
 /** Where a pack keeps the files tool-config renders into the repo. */
@@ -650,6 +656,22 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     }
   }
 
+  // The subtask leaves tool-config's own trees ship, read off the trees.
+  const universalLeaves = new Set(
+    toolConfigTrees(plugin).flatMap(tree => {
+      const tasks = join(plugin.root, tree, PACK_MISE_TASKS);
+      return [...filesUnder(tasks)]
+        .map(absolute =>
+          relative(tasks, absolute)
+            .split(sep)
+            .join("/")
+            .match(PACK_SUBTASK)
+            ?.[1]
+        )
+        .filter((leaf): leaf is string => leaf !== undefined && leaf !== "all");
+    }),
+  );
+
   const packs = globSync("stacks/*/*", { cwd: plugin.root });
   for (const pack of packs) {
     for (const absolute of filesUnder(join(plugin.root, pack, PACK_HOOKS))) {
@@ -680,6 +702,12 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     }
 
     const slug = basename(pack);
+    if (!pack.startsWith("stacks/bundles/") && RESERVED_PACK_SLUGS.has(slug)) {
+      at(
+        `pack slug \`${slug}\` is reserved — tool-config owns the \`…:all\` `
+          + `tasks and the conf.d/_base/ and conf.d/ai/ folders: ${pack}`,
+      );
+    }
     for (const tier of [config, templates]) {
       const tasks = join(tier, PACK_MISE_TASKS);
       for (const absolute of filesUnder(tasks)) {
@@ -692,6 +720,28 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
           at(
             `pack subtask is not named for its pack — a subtask's leaf is the `
               + `pack slug \`${slug}\`: ${path(absolute)}`,
+          );
+        }
+        else if (leaf !== undefined && universalLeaves.has(leaf)) {
+          at(
+            `pack subtask takes the leaf \`${leaf}\` of a universal subtask `
+              + `tool-config ships — removing the pack would delete it: `
+              + `${path(absolute)}`,
+          );
+        }
+      }
+    }
+
+    // A pack's mise files sit in one conf.d folder named for it, so it never
+    // writes into tool-config's `_base/` or `ai/`, or another pack's.
+    const confD = join(templates, PACK_CONF_D);
+    if (existsSync(confD)) {
+      for (const entry of readdirSync(confD, { withFileTypes: true })) {
+        if (!entry.isDirectory() || entry.name !== slug) {
+          at(
+            `pack templates/ tier writes conf.d/${entry.name} — a pack's mise `
+              + `files sit in conf.d/${slug}/ alone: `
+              + `${path(join(confD, entry.name))}`,
           );
         }
       }

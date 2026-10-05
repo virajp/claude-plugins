@@ -878,6 +878,73 @@ describe("the pack config tier", () => {
     ]);
   });
 
+  it.each(["all", "ai", "_base"])("refuses the reserved pack slug %s", slug => {
+    // tool-config owns the `…:all` tasks and the conf.d/_base/ and ai/ folders.
+    const root = tree({
+      stackgen: { files: { [`stacks/linter/${slug}/pack.yaml`]: "name: x\n" } },
+    });
+    expect(messages(check(root))).toEqual([
+      `pack slug \`${slug}\` is reserved — tool-config owns the \`…:all\` `
+      + `tasks and the conf.d/_base/ and conf.d/ai/ folders: `
+      + `stacks/linter/${slug}`,
+    ]);
+  });
+
+  it("refuses a pack subtask taking a universal subtask's leaf", () => {
+    // The set is read off tool-config's own trees: a pack named `workflows`
+    // keeps its slug, but may not ship `code/lint/workflows` beside it.
+    const universal = "skills/tool-config/assets/.config/mise/tasks/code/lint/"
+      + "workflows";
+    const clean = tree({
+      stackgen: {
+        files: {
+          [universal]: "#!/usr/bin/env bash\n",
+          "stacks/cloud-service/workflows/pack.yaml": "name: Workflows\n",
+        },
+        executable: [universal],
+      },
+    });
+    expect(messages(check(clean))).toEqual([]);
+    const task = "stacks/cloud-service/workflows/templates/.config/mise/tasks/"
+      + "code/check/workflows";
+    const root = tree({
+      stackgen: {
+        files: {
+          [universal]: "#!/usr/bin/env bash\n",
+          [task]: "#!/usr/bin/env bash\n",
+        },
+        executable: [universal, task],
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      "pack subtask takes the leaf `workflows` of a universal subtask "
+      + `tool-config ships — removing the pack would delete it: ${task}`,
+    ]);
+  });
+
+  it("refuses a pack conf.d folder not named for its pack", () => {
+    const confD = "stacks/package-manager/pnpm/templates/.config/mise/conf.d";
+    const clean = tree({
+      stackgen: { files: { [`${confD}/pnpm/mise.dev.toml`]: "[tools]\n" } },
+    });
+    expect(messages(check(clean))).toEqual([]);
+    const root = tree({
+      stackgen: {
+        files: {
+          [`${confD}/_base/mise.toml`]: "[tools]\n",
+          [`${confD}/ai/mise.dev.toml`]: "[tools]\n",
+          [`${confD}/pnpm.toml`]: "[tools]\n",
+        },
+      },
+    });
+    expect(messages(check(root)).sort()).toEqual(
+      ["_base", "ai", "pnpm.toml"].map(name =>
+        `pack templates/ tier writes conf.d/${name} — a pack's mise files sit `
+        + `in conf.d/pnpm/ alone: ${confD}/${name}`
+      ),
+    );
+  });
+
   it("accepts a subtask named for its pack, and a whole-file overlay", () => {
     const dir = "stacks/linter/eslint/config/.config/mise/tasks";
     const tasks = [

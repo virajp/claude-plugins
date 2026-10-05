@@ -197,7 +197,16 @@ much smaller than the one it replaced: whole families of assertion became
     `…:all` tasks a pack's subtask joins. So is a subtask under either tier —
     `code/{check,lint,format}/<leaf>`, `setup/deps/<verb>/<leaf>`,
     `setup/ai/<leaf>` — whose leaf is not the pack's slug, so two packs never
-    write one file.
+    write one file, or whose leaf is one of the universal subtasks tool-config's
+    own `assets/` and `templates/` ship (read off those trees, `all` aside),
+    since removing the pack would delete the universal file — a pack may keep
+    such a slug, as `cloud-service/workflows` does, so long as it ships no
+    subtask under it. A pack whose slug is `all`, `ai` or `_base` is refused
+    outright: those are tool-config's `…:all` leaf and its own `conf.d/`
+    folders. And a pack's `templates/.config/mise/conf.d/` holds exactly one
+    entry, a folder named for its slug — a `_base/`, an `ai/`, another pack's
+    folder or a loose file there is a finding, since tool-config renders and
+    removes that folder as the pack's.
 
     The walk is its own rather than the plugin file reader's, because every one
     of these paths runs through a dot segment the reader's glob does not descend
