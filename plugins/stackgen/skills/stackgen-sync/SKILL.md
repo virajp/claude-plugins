@@ -42,18 +42,21 @@ user's clock.
    `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`, which is the one
    statement of it — never re-list it here.
 
-   **What `stackgen:tool-config` renders is not this skill's.** The
-   toolchain manager's and the gates' files — mise, dprint, pre-commit,
-   gitleaks, grype — and each pack's `templates/` tree, rendered into
-   `.config/mise/conf.d/<slug>/`, carry no lockfile record: tool-config
-   compares them with a fresh render on its own calls. This skill diffs
-   nothing in them.
+   **What `stackgen:tool-config` renders is never byte-diffed here.** The
+   toolchain manager's and the gates' own files — mise, dprint, pre-commit,
+   gitleaks, grype — carry no lockfile record: tool-config compares them
+   with a fresh render on its own calls. Each pack's `templates/` tree,
+   rendered into `.config/mise/conf.d/<slug>/`, **is** recorded, as entries
+   carrying `rendered: true` and no hash; inventory them with their
+   component, and refresh them at step 2 by re-running `pack`, never by
+   comparing bytes.
 
 2. **Diff pack-sourced components.** For each component, re-derive its
    landing set from the current pack
    (`${CLAUDE_PLUGIN_ROOT}/stacks/<type>/<slug>/`, per
-   `${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) and classify each file by
-   hash against the lockfile and the tree — three states, reported per
+   `${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) and classify each copied
+   file — every entry but a `rendered: true` one, which is refreshed below
+   — by hash against the lockfile and the tree — three states, reported per
    file: **unchanged**, **pack moved** (the pack's version/content changed,
    the copy still matches its landing hash), **repo edited** (the copy no
    longer matches its landing hash — whether or not the pack also moved).
@@ -70,33 +73,40 @@ user's clock.
    path the component no longer ships that is still **present** is not
    this rule's.
 
-   **A pack whose `templates/` changed is reported, not applied.** Name
-   the pack and the template files added, dropped or changed, and give the
-   remedy as tool-config's `pack --slug <slug> --dir <pack dir>`, whose
-   rows show the render against the repo
-   (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md#packs`). A pack
-   value its templates name lives under `packs.<slug>` in
-   `.config/stackgen.yaml`, so no value is carried here.
+   **A rendered entry is refreshed by re-running `pack`, never
+   byte-diffed.** For a component with `rendered: true` entries whose pack
+   version is newer than the one recorded, run tool-config's
+   `preview pack --slug <slug> --dir <pack dir>`
+   (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md#packs`) and offer its
+   rows in the delta under that component; taking them runs `pack` with
+   the same answers and re-records every path it rendered — `source` at
+   the new version, `rendered: true`, no hash — dropping any rendered
+   entry the new templates no longer produce. A pack value its templates
+   name lives under `packs.<slug>` in `.config/stackgen.yaml`, so the
+   call needs no `--set` for a value already there; a value the new
+   version adds to its `values:` list is found the way `/vwf:setup`
+   gathers one — its `detect`, else its `question` — before the call
+   runs. A rendered
+   entry whose pack has not moved gets no row: tool-config's own preview
+   is what judges a local edit to it.
 
    **Conditional paths are evaluated first, against the same answers the
-   materializer takes.** Read the product's `.config/vwf.yaml` `answers:`
-   block — `secrets` once for the product, `forge` per
-   repo — and re-read `forge` live from this repo's `origin` host, so a
-   remote that appeared since init ran is what the forge conditions are
-   judged against. A config carrying **no** block —
-   a repo never reshaped since the key existed — gets the two inferred
-   from the tree the way `/vwf:init` seeds them: the forge from
-   `origin`, the secrets provider from the lockfile's pinned provider —
-   and with no block to
-   correct, this skill **writes nothing** into that config: the block is
-   `/vwf:init`'s to write, and a missing one is drift `/vwf:doctor`
-   reports and the reshape fixes. Where a block **is** there and the
-   live host contradicts the recorded value, rewrite that one value in
-   place — `answers.repos.<path>.forge`, that key and nothing else —
-   and name the rewrite in the sync report. It is the only config key
-   this skill writes: it writes no `answers:` block of its own and
-   touches no other key in one. Evaluate each pack's `conditional:`
-   entries (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) against that map
+   materializer takes.** Read this repo's `.config/stackgen.yaml` — its
+   `forge` and `secrets` keys, which tool-config's `all` wrote — and
+   re-read `forge` live from this repo's `origin` host, so a remote that
+   appeared since init ran is what the forge conditions are judged
+   against. A repo with **no** `stackgen.yaml` is not shaped: report it,
+   with `/vwf:setup reshape` as the remedy, infer the two from the tree
+   the way `/vwf:init` seeds them — the forge from `origin`, the secrets
+   provider from the lockfile's pinned provider — and write nothing for
+   them. Where the file **is** there and the live host contradicts its
+   `forge`, never edit the key in place: offer tool-config's
+   `all --forge <value>` in the delta, previewed and answered like any
+   call, since the script is the one writer of `stackgen.yaml`, and name
+   the correction in the sync report. This skill writes no other value
+   there and never reads `.config/vwf.yaml` for either. Evaluate each
+   pack's `conditional:` entries
+   (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) against that map
    before classifying its landing set — three more states beside the
    three above, each reported in the delta:
 
@@ -199,7 +209,8 @@ user's clock.
    Nothing selected → done, nothing written.
 
 6. **Apply and commit.** Write only what was selected, update the changed
-   components' lockfile hashes and the `local_plugin` block, and commit as
+   components' lockfile hashes (a re-rendered path: its `source` alone)
+   and the `local_plugin` block, and commit as
    one commit via the repo's git workflow. The local plugin's own files
    are on the machine, not in the commit. The lockfile's `skipped:` list
    is rewritten here too, for the packs step 2 evaluated and no others —

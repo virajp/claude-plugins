@@ -35,18 +35,21 @@ to read.
   `deploy_template`, plus `repo.stack.template` and, since `config_format` 19,
   each `projects.<name>.stylesheet`
   (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states").
-  Since `config_format` 21 it also carries the **`answers:`** block — the
-  three conditional axes, read here and passed to every landing ("The answers
-  map" below).
+- **Each repo's `.config/stackgen.yaml`** — the values file
+  `/stackgen:tool-config` renders from and alone writes. Read `forge`,
+  `secrets`, `node`, `external` and each `packs.<slug>` block; never edit it —
+  a value changes only through the call that sets it (`all` or `pack`). A
+  repo without one is a repo whose shape was deferred at Step 0: it is passed
+  the live forge and nothing else, and the `all` step below skips it, since
+  laying the shape down is `/vwf:init`'s.
 - **Each repo's adapter lockfile** — `.claude/stackgen/lock.yaml`, the
   materialization record. Read the **slugs** its `entries:` carry and nothing
   else: which paths landed, with what hash, is the adapter's bookkeeping, and
   setup has no business reading it. An absent lockfile means nothing in that
-  repo is materialized. Three exceptions: the fallback for a config with no
-  `answers:` block, which reads the pinned provider slug off it and nothing
-  more; the tool-config re-run below, which reads the component packs the
-  entries record; and the machine-env step below, which reads the hash
-  recorded for a pack's template entry before it runs that entry's `detect`.
+  repo is materialized. Two exceptions: the pack steps below read the
+  component packs the entries record (`pack/<type>/<slug>@<version>`), and
+  the `all` step reads whether any recorded path sits under
+  `.config/mise/tasks/setup/external/`.
 
 The axes live in the **base's** `.config/vwf.yaml` only. A member repo has no
 config of its own — it carries a back-link
@@ -105,243 +108,174 @@ repo: <path>
 `<path>` is the member's `path` relative to the base repo root. Absent means
 the current repo, so a base-targeted landing carries no such line.
 
-Beside it — **always**, base-targeted or not — the three answers, in the
-same payload style:
+Beside it — **always**, base-targeted or not — the conditional answers, in
+the same payload style:
 
 ```text
 answers:
   forge: <forge>
   secrets: <provider>
-  update_bot: <bot>
+```
+
+and, when a component pack of the slug declares `values:`, the values
+gathered for it ([Gather the pack values](#gather-the-pack-values)):
+
+```text
+values:
+  <pack slug>:
+    <name, lowercased>: <value>
 ```
 
 ### The answers map
 
-Those are the conditional axes a pack's `conditional:` entries are evaluated
-against, and they are read from the **base's** `.config/vwf.yaml`
-(`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, the `answers:` block):
-`secrets` once for the product, from `answers.secrets`; `forge` and
-`update_bot` from the `answers.repos:` entry keyed by the **target** repo's
-member path, spelled exactly as
-`enforcement.kept_files` spells one — `.` for the base. `none` is a legal
-value on every axis and is passed as it stands: it is an answer, not an
-absence.
-
-**The forge is re-read live.** Before each entry is invoked, read the target
-repo's `origin` host and pass **that** as the `forge` axis. The recorded
-value is the record, and the fallback for a repo whose remote answers
-nothing — so a repo whose `origin` appeared after init is evaluated against
-the forge it actually has, with nobody remembering a reshape.
-
-Where the live host **contradicts** the recorded value, rewrite that one
-value in place — `answers.repos.<path>.forge`, that key and nothing else —
-and name the rewrite in the report. It is the only config key this pass
-writes: the pass writes no `answers:` block of its own and touches no other
-key in one. Landing the forge-conditioned files the stale record had skipped
-is the **reshape's**, not this pass's: `/vwf:doctor`'s predicate (e) reports
-the staleness and names `/vwf:setup reshape`, so those files land there and
-never silently mid-pass.
-
-**A config with no `answers:` block** — a repo still at `config_format` 20 —
-is not a reason to pass nothing, which would read as unanswered and land
-every conditional path. Infer what init's own seeds would give, pass that
-map, and **write nothing**:
-
-- `forge` — the target repo's `origin` host, `none` where there is no
-  remote;
-- `secrets` — the provider slug the target repo's adapter lockfile pins,
-  else `none`;
-- `update_bot` — a Renovate config or a Dependabot config in the target
-  repo, else `none`.
-
-Doctor's stamp check reports 20 → 21 as drift in its own right, and the
-reshape that follows is what asks the questions and writes the block.
-This pass never writes one.
+Those are the axes a pack's `conditional:` entries are evaluated against,
+read from the **target** repo's `.config/stackgen.yaml`: `secrets` as that
+file records it, `forge` read **live** from the target repo's `origin` host
+— `github` or `gitlab`, else `none`, the mapping `/vwf:init` passes — so a
+repo whose `origin` appeared after init is evaluated against the forge it
+actually has. `none` is a legal value
+on both axes and is passed as it stands: it is an answer, not an absence. A
+repo with no values file passes `forge` alone. Where the live host differs
+from the recorded `forge`, the `all` step below writes it; this pass never
+edits the values file by hand.
 
 **Each landing is the adapter's own consent line; setup adds no consent of its
 own.** The adapter lands one set and takes one commit per slug — that rule is
 the adapter's and this pass does not change it. Setup does not batch two slugs
 into one gate, and does not present a plan of its own in front of the
-adapter's.
+adapter's. The adapter copies each component's `config/` payload and runs the
+component's `pack` call with the `values:` above as `--set`, so the pack's
+templates render on the landing that copies its subtasks.
 
-## Answering the skill's rows
-
-Both steps below reach `/stackgen:tool-config` the same way, and this is the
-one place the form is stated. A call to mise, dprint, pre-commit, gitleaks
-or grype, `all` — `all add-exclude` included — and `apply-entries` take the
-skill's flag form — a verb, `--<flag> <value>` pairs, `--for <pack>` where a
-pack asks and `--answers` last; a call to any other tool keeps the skill's
-word grammar until that tool moves onto its script — an instruction,
-`for <pack>` and `answers=` last. First
-`/stackgen:tool-config preview <call>`, which writes nothing and returns the
-rows the call would show, each with an id — `r1`, `r2`, … Setup shows those
-rows inside its own question and takes an answer to **every** row, spelled
-as the skill spells it: `ok`, `take-theirs`, `keep-mine`, `merge`,
-`keep-existing`, `overwrite`, `move-in`, `keep-both`, `keep`, `done` or
-`skip`, whichever the row offers. A **plan row** — a create, write, fold,
-move or delete — takes `ok`, and setup passes `ok` for each plan row the
-person approved; the others are the drift and conflict rows' own answers. A
-`needs-edit` row is an edit the skill cannot make itself and makes through
-its own reference before it is answered `done`. Then the real call, with
-the answers as its **last** argument:
-`/stackgen:tool-config <call> --answers <id>:<answer>,…`, or
-`answers=<id>:<answer>,…` in the word grammar. That is what keeps the skill
-from asking a second time. A call whose answers miss a row,
-misnames one, or names one that changed since the preview is refused
-**whole** and its rows shown again — so no call is made with a row nobody
-answered, and a changed tree is asked about afresh rather than written over.
-A person who declines a plan row declines the call: it is not made, and the
-report says so. A preview that returns no row needs no answers at all.
-
-A machine value also set outside the pack's block comes back as one of two
-conflict rows, by where the outside line sits. In **another file**, the row
-offers `move-in` or `keep-both`. In the **same file** as the pack's block,
-it offers `move-in` or `keep-existing` — a table cannot hold one key twice,
-so keeping both is not on offer — and declining that row is `keep-existing`.
-
-## Re-run each landed pack's tool-config list
-
-A pack asks for toolchain lines through the `tool-config:` list in its
-`pack.yaml`, and the adapter runs that list when it lands the pack — once. A
-later adapter release that adds, drops or changes a call would otherwise
-never reach a repo that landed the pack before it, so this step re-runs every
-landed pack's list on **every** run, in every mode.
-
-**Which packs.** For each repo, every pack its adapter lockfile records as a
-component — an entry sourced `pack/<type>/<slug>@<version>` — minus any a
-landing above just ran, since that landing ran the list itself. Read the
-pack's `tool-config:` list from `stacks/<type>/<slug>/pack.yaml` inside the
-installed adapter plugin's own tree, located from `claude plugin list` as
-`/vwf:doctor`'s pack-version check locates it — vwf's own plugin-root token
-names vwf and never another plugin's root. A pack with no list is nothing to
-do.
-
-**Preview, then run**, as
-[Answering the skill's rows](#answering-the-skills-rows) states. A list's
-mapping entries — mise's, the four gate tools' and `all`'s — run through the
-skill's script as one call,
-`apply-entries --pack <slug> --file <that pack.yaml>`; each string entry
-runs as its own `<call>` in the word grammar, followed by `for <pack>`,
-until the skill moves its tool onto mappings. The calls are
-idempotent: a line whose block already holds what it asks returns **no
-row**, and a pack whose every line returns none is not mentioned beyond the
-report's count. A changed call comes back as the skill's **drift** or
-**conflict** row, and those rows are shown together for the repo behind one
-consent of this step's; with no row, nothing is asked. Declining a row is
-answering it with the keep answer it offers — `keep-mine` or
-`keep-existing` — which leaves it as it stands and is reported. A call a
-newer pack **dropped** is not this step's — the
-adapter's sync reports it, and its block is removed only when the pack
-leaves the composition.
-
-The skill records what it wrote in the adapter lockfile itself. Commit what
-changed in the target repo, one commit per pack, its message naming the pack
-and the calls re-run.
-
-## Ask the machine env
+## Gather the pack values
 
 Some values a stack needs are facts about the **machine** that builds it, not
 decisions anyone makes — a tool's installed version, a device the tests run
-on. A pack declares them in its `machine_env:` fact, which the template
-payload carries as a list of `{ name, detect, question }`: `name` an
-environment variable, `detect` a shell command whose stdout is the default,
-`question` the prompt. The pack does not land a file for them: its
-`tool-config:` list adds each `name` empty, through `/stackgen:tool-config`,
-inside the pack's own block, and filling it is this step's.
+on. A pack declares each one its templates read as one entry of the
+`values:` list in its `pack.yaml`: `name` (the template's `@@NAME@@`),
+`detect` (a shell command that prints the value, exiting non-zero when it
+cannot tell) and `question`.
 
-**When it runs.** For every entry this pass **landed**, once the adapter
-returns, read `machine_env` off the payload it returned. For every entry the
-landing list skipped as already materialized, fetch its payload — a pure
-read — and run the step the same way. A payload with no `machine_env` is
-nothing to do.
-
-**A value set elsewhere is the skill's row, relayed here.** Setup does not
-look for it and removes no line itself. Before asking, it previews the call —
-[Answering the skill's rows](#answering-the-skills-rows) — with `<call>`
-`<tool> set-env --key <name> --value <value> --for <pack>`, `<value>` the
-one step 2 would
-otherwise preselect. Where `name` is also set
-**outside the pack's block** — a line an earlier version of the pack, or a
-person, put in any of the tool's environment fragments, or an environment
-table in one of the tool's old top-level config files — the skill returns a
-**conflict row** naming that line, its file and its value. That value is the
-team's pin, so step 2 preselects it — above the detected value and above the
-position's current value — and says where it was found. Once the value is
-answered, the conflict row is asked as one more round of the same consent,
-with the skill's two answers. `move-in` is always one — the outside line is
-removed and the value written in the pack's block, so it has one source. The
-other depends on where that line sits: in another file it is `keep-both`,
-with the row's own warning naming which of the two the tool's precedence
-makes win; in the pack's own file it is `keep-existing`, the outside line
-left and the pack's position not written, since one table cannot hold the
-key twice. Nothing is written until the person picks.
+**Which packs.** For an entry about to land, the component packs of its
+slug: read the bundle's `components:` list and each component's `pack.yaml`
+inside the installed adapter plugin's own tree, located from
+`claude plugin list` as `/vwf:doctor`'s pack-version check locates it — vwf's
+own plugin-root token names vwf and never another plugin's root. For the
+re-run below, every component pack the repo's lockfile records. A pack with
+no `values:` list is nothing to do.
 
 **Per entry, in the order the pack declares them** — one question each, per
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`'s one decision per round:
 
-1. Run `detect` from the target repo's root, inside its toolchain
+1. **A value the repo already stores** under `packs.<slug>` in its
+   `.config/stackgen.yaml` is kept and passed again, unasked: the file is
+   committed, so once answered the value is the **repo's**, not the
+   machine's, and another machine running setup does not move it. A person
+   who wants another value re-runs `pack` with that `--set` themselves.
+2. Otherwise run `detect` from the target repo's root, inside its toolchain
    environment, stopped after 30 seconds. The command is held in a variable
    and passed to the shell as **one argument** — `mise x -- sh -c "$cmd"` —
    never spliced into a quoted string, so the quotes and `$` references a
-   detect command carries reach the shell intact. Its stdout, trimmed, is the
-   **detected value**; a non-zero exit, a timeout or empty output is no
-   value. **The command runs only while its entry matches what the lockfile
-   last recorded:** `detect` is run only when the committed template entry
-   it was read from (`.claude/<adapter>/templates/<slug>.md`) still hashes to
-   the value its adapter lockfile records. On a mismatch it is not run — the
-   entry changed after it was recorded — and there is no detected value; the
-   drift is named beside the question.
-2. Ask `question`. A value set elsewhere, found above, is preselected first.
-   Otherwise **which value is preselected depends only on whether the pack
-   landed in this run.** On the landing run, the detected value is
-   preselected. A pack whose every `machine_env` position still holds the
-   value it shipped with counts as landing in this run too — an earlier
-   landing was interrupted before its questions were answered, so nothing has
-   been answered yet. On every later run, the position's **current value** is
-   — an empty one included, shown as empty, since an empty answer is an
-   answer (a platform the value does not apply to, say) — with the detected
-   value beside it where the two differ. With no detected value — a failed
-   `detect`, or one not run for drift — the landing run offers no default,
-   and a later run still preselects the current value: only the detected
-   default is withheld. Either way the person may type another, and the
-   question is never skipped, and never answered for the person.
-3. Hand the answer to the skill:
-   `/stackgen:tool-config <tool> set-env --key <name> --value <value> --for <pack>`,
-   `<tool>` the one the pack's own `tool-config:` entry adding `name` names
-   (`mise` for every entry today), with `--answers <id>:<answer>` last
-   wherever the preview returned a row. The
-   skill writes that value in the pack's block, and removes the outside line
-   only where the answer was `move-in`. An answer equal to the current value,
-   with no conflict row, writes nothing. An answer other than the value first
-   previewed is previewed again, and a row that changed is asked again under
-   its new id before this call is made. **The value is data, never syntax:** one
-   containing a newline or any other control character, a template delimiter
-   or expansion character of the tool that reads the file (for mise, which
-   renders every environment value as a template and, under the pack's shell
-   expansion, expands variables: `{{`, `{%`, `{#` or `$`), or a `'` together
-   with a `"` or a `\` is refused and the question asked again — a detected
-   value that does so is offered as no default. Every other value is handed
-   over in one of two forms, since the skill reads a bare value as one
-   holding no quote and no space. A value holding a space or a `"` is handed
-   **quoted**, already escaped in the file's own syntax (for a TOML file, a
-   basic string with `\` and `"` each escaped by a backslash), and the skill
-   writes it exactly as given. Any other value is handed **bare**, and the
-   skill writes it as a quoted string, escaped on write. Either way no answer
-   can end the string, add a key, or run as code when the file is loaded.
+   detect command carries reach the shell intact. A zero exit with output,
+   trimmed, is the value.
+3. A non-zero exit, a timeout or empty output asks `question`. An empty
+   answer is an answer — a platform the value does not apply to, say — and
+   the question is never skipped and never answered for the person.
 
-The skill records what it wrote in the adapter lockfile itself, and a
-`machine_env` value is never its drift, so this pass writes no lockfile.
-Commit what the skill changed in the target repo, one commit per pack, its
-message naming the slug, the variables filled and any line the skill moved
-in: the answers, conflict rows included, were the consent, as the adapter's
-consent line was for the landing.
+Every value is passed as `--set <name, lowercased>=<value>`. **The value is
+data, never syntax:** the script refuses one holding a quote, a backslash,
+`@@` or a control character, so setup refuses it first — a detected value
+that does is asked as though `detect` failed, and a typed one is asked
+again.
 
-The file is committed, so once answered the value is the **repo's**, not the
-machine's: a later run on any machine offers the committed value
-preselected, with that machine's detected value beside it where the two
-differ, and keeps it unless the person there picks or types another. For
-example, a mobile stack might declare its IDE version and a test device
-this way.
+## Answering the skill's rows
+
+Every call below reaches `/stackgen:tool-config` the same way, and this is
+the one place the form is stated. First the call prefixed with `preview`,
+which writes nothing and returns the rows the call would show, each with an
+id — `r1`, `r2`, … Setup shows those rows inside its own question and takes
+an answer to **every** row, spelled as the skill spells it: `ok` takes the
+render, `keep-existing` leaves the file as it stands for this run. The row
+for `.config/stackgen.yaml` takes `ok` alone — declining it declines the
+call. Then the real call, with the answers as its **last** argument:
+`--answers <id>:<answer>,…`. That is what keeps the skill from asking a
+second time. A call whose answers miss a row, misname one, or name one that
+changed since the preview is refused **whole** and its rows shown again — so
+no call is made with a row nobody answered, and a changed tree is asked
+about afresh rather than written over. A person who declines the call
+outright is reported, and nothing is written. A preview that returns no row
+needs no answers and makes no call.
+
+A call the script refuses because the repo's mise config is untrusted, or
+because a tool it runs is not installed, names its remedy — trust the path;
+run `MISE_ENV=dev mise run setup:all` — which is the person's to take before
+the call is re-run.
+
+## Re-run each landed pack
+
+A pack's templates render when it lands, once. A later adapter release that
+changes a template, and a value a person changed, would otherwise never
+reach a repo that landed the pack before it, so this step re-runs `pack` for
+every landed pack on **every** run, in every mode.
+
+**Which packs.** For each repo, every pack its adapter lockfile records as a
+component — an entry sourced `pack/<type>/<slug>@<version>` — minus any a
+landing above just ran, since that landing ran the call itself. Its directory
+is `stacks/<type>/<slug>/` inside the installed adapter plugin's tree,
+located as [Gather the pack values](#gather-the-pack-values) locates it.
+
+**Preview, then run**, as
+[Answering the skill's rows](#answering-the-skills-rows) states:
+`pack --slug <slug> --dir <pack dir>` with one `--set` per `values:` entry,
+gathered as above. The call is idempotent: a pack whose render matches the
+repo returns **no row**, and is not mentioned beyond the report's count. A
+changed template comes back as a `write` row carrying its diff, and those
+rows are shown together for the repo behind one consent of this step's;
+with no row, nothing is asked. A file the pack's version no longer renders is
+a `delete` row. Bringing a newer pack version's `config/` payload is the
+adapter's sync, not this step's.
+
+Commit what changed in the target repo, one commit per pack, its message
+naming the pack, the values filled and the files re-rendered.
+
+## Remove a dropped pack
+
+A slug a repo's lockfile records that no axis targeting that repo names any
+more — `/vwf:architecture` replaced it — has been **dropped**. For each of
+its component packs that no slug still pinned in that repo also composes,
+preview `pack-remove --slug <slug>`: it deletes the pack's
+`conf.d/<slug>/` folder and every subtask named `<slug>`, drops
+`packs.<slug>` from the values file and re-renders the `…:all` tasks, so no
+gate calls a task that is gone. Show its rows beside the files the lockfile
+records for that component — its `config/` copies — as one consent per repo.
+On a yes, run the call with its answers, then delete those recorded files
+and their lockfile entries, and commit, one commit per slug. A decline
+leaves everything as it stands and is reported; `/vwf:setup` offers it
+again on the next run.
+
+## Re-derive the repo's values
+
+After the packs, three repo-wide values may have moved, each read against
+what the repo's `.config/stackgen.yaml` stores:
+
+- **`node`** — `true` when the repo's lockfile records a component that
+  runs on Node — the Node package manager pack, the TypeScript language
+  pack, the JavaScript lint gate pack — or a slug whose bundle composes that
+  package manager; else `false`;
+- **`external`** — `true` only when a path the lockfile records sits under
+  `.config/mise/tasks/setup/external/`; else `false`;
+- **`forge`** — read live from the `origin` host: `github` or `gitlab`,
+  else `none` — no remote, or a host that is neither.
+
+Any that differs from the stored value — and only those — goes to one call,
+`all --node <v> --external <v> --forge <v>`, each flag present only when its
+value changed: a key left out keeps what the file holds. Preview it and
+answer it as above. `all` re-renders every universal file the change
+reaches — `_base/`'s node tools, the `setup/external/*` tasks — and ends by
+running `MISE_ENV=dev mise run setup:all`, whose output tail the script
+returns: **relay it**. Nothing changed, no call. A repo with no values file
+is skipped, as its inputs say. Commit what the call changed in that repo as
+one commit naming the values moved.
 
 ## A declined landing
 
@@ -410,19 +344,17 @@ One block, carried back to the spine:
   `/vwf:init`'s plan lists its **Skipped** rows, so a file an answer
   dropped is visible rather than silently absent. A landing that skipped
   nothing prints no heading;
-- one line per recorded `forge` the live host contradicted — the repo, the
-  value replaced, the value written, and `/vwf:setup reshape` as what lands
-  the files the stale record skipped;
-- one line per machine-env variable asked — the repo, the slug, the name, the
-  value written or kept, `moved from <file>` where a conflict row was
-  answered `move-in`, `kept both — <file> wins` where it was answered
-  `keep-both`, `kept existing in <file>` where it was answered
-  `keep-existing`, `no default` where its `detect` produced none, and
-  `detect not run — template entry drifted from its lockfile record` where
-  the drift gate withheld it;
-- one line per repo for the tool-config re-run — the packs re-run and how
-  many calls wrote nothing — and one line per row it showed, the pack, the
-  call, and **applied** or **declined**;
+- one line per pack value filled — the repo, the pack, the name, the value,
+  and whether it was **kept** from the values file, **detected** or
+  **asked**;
+- one line per repo for the pack re-run — the packs re-run and how many
+  wrote nothing — and one line per row it showed, the pack, the file, and
+  **applied** or **kept**;
+- one line per dropped pack — the repo, the slug, and **removed** or
+  **declined**;
+- one line per repo-wide value the `all` call moved — the repo, the key,
+  the value replaced and the value written — and the `setup:all` tail it
+  returned;
 - one line per member skipped as absent, with its checkout line;
 - one line per axis written `unresolved`, naming the project and the axis;
 - the sentence **"architecture decides; setup pins"**, so a reader knows where

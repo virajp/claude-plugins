@@ -162,15 +162,16 @@ inventory and check in that order — freshness before validity:
 - **`p:plugins:check`** — validates the authored tree, seventeen rules: the
   manifest (rule 1 refuses a version with a 13 or 17 component), a pack's
   `config/` payload and `templates/` folder — no `tool-config:` or
-  `machine_env:` key, no reserved slug (`all`, `ai`, `_base`), a subtask's leaf
-  its own slug, mise files in its own `conf.d/<slug>/` alone — and each
-  `stackgen:tool-config` `assets/` and `templates/` tree (rule 11), no
-  plugin-relative citation in anything that lands (rule 13), one `default: true`
-  bundle per axis per platform (rule 14), one formatter exclusion set with
-  gitleaks' allowlist a subset of it (rule 15), a skill's node script shebanged,
-  executable and dependency-free (rule 16), and no bare `mise use` anywhere a
-  plugin ships (rule 17). Each rule in full is the [`plugin-authoring`][auth]
-  skill's `references/checks.md`.
+  `machine_env:` key, a `values:` list matching the templates' `@@` names both
+  ways, no reserved slug (`all`, `ai`, `_base`), a subtask's leaf its own slug,
+  mise files in its own `conf.d/<slug>/` alone — and each `stackgen:tool-config`
+  `assets/` and `templates/` tree (rule 11), no plugin-relative citation in
+  anything that lands (rule 13), one `default: true` bundle per axis per
+  platform (rule 14), one formatter exclusion set with gitleaks' allowlist a
+  subset of it (rule 15), a skill's node script shebanged, executable and
+  dependency-free (rule 16), and no bare `mise use` anywhere a plugin ships
+  (rule 17). Each rule in full is the [`plugin-authoring`][auth] skill's
+  `references/checks.md`.
 - **`p:plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed, for both package managers.
 - **`vitest run`** — the `scripts/` and `installer/` suites.
@@ -260,8 +261,10 @@ to `blueprint` is done in full before planning.** The ad-hoc planner
 `change-plan` sits beside that line; both planners write one folder shape into
 one plan index, and one executor, `execute`, runs both, each unit's `Kind`
 deciding what runs over it. How `init` surveys, asks and adopts, what it records
-in `.config/vwf.yaml`, the materialize pass, the ordering gates, the skill and
-agent tables, and the dependency reasoning are the [`vwf-plugin`][vwf] skill.
+in `.config/vwf.yaml` — `enforcement.kept_files` alone; a repo's answers live in
+its own `.config/stackgen.yaml`, written by `stackgen:tool-config` — the
+materialize pass, the ordering gates, the skill and agent tables, and the
+dependency reasoning are the [`vwf-plugin`][vwf] skill.
 
 ## The installer CLI
 

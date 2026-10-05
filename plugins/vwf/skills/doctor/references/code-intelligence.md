@@ -13,10 +13,11 @@ three remain **degradations**. Check:
 - **The `graphify` CLI on `PATH`.** Missing → **blocking**, remedy
   `MISE_ENV=dev mise install` — `/stackgen:tool-config` pins
   `pipx:graphifyy` (the double-`y` is the real package name, not a typo) in
-  the repo's `.config/mise/conf.d/tools.dev.toml`; a repo missing that pin
-  gets it there first. Never a bare `mise use`. This is *missing*, not
-  *unavailable* — there is a command to suggest. graphify needs both python
-  and uv, prerequisites of that remedy, not separate findings.
+  the repo's `.config/mise/conf.d/ai/mise.dev.toml`, a file it renders; a
+  repo missing that pin gets it from `/vwf:setup reshape`.
+  Never a bare `mise use`. This is *missing*, not *unavailable* — there is
+  a command to suggest. graphify needs both python and uv, prerequisites of
+  that remedy, not separate findings.
 - **A graph at each checkout root** (`graphify-out/graph.json`). Resolve it the
   way the asset does: current checkout first, then the **main checkout** via
   `git rev-parse --git-common-dir`. Absent in **both** → **blocking**, remedy
@@ -37,14 +38,15 @@ three remain **degradations**. Check:
   A raw graphify git hook in `.git/hooks/` (never run `graphify hook install`
   — it pins a Python path and breaks on upgrade) is **drift**, never a pass,
   and so is a leftover `merge=graphify` attribute or `merge.graphify.*` key in
-  the local git config: remedy `mise run setup:precommit`. The staleness
-  check below catches a graph nobody refreshed.
+  the local git config: remedy `MISE_ENV=dev mise run setup:precommit`. The
+  staleness check below catches a graph nobody refreshed.
 - **Staleness.** Compare `graph.json`'s mtime to the last commit date of the
   checkout that holds it. Behind → report how far, with `graphify update` as the
   remedy for the user to run.
 - **A `.graphifyignore` at each locally-present checkout root**, carrying the
-  vwf-standard excludes the asset names. Missing → **degradation**, remedy:
-  write it per the asset. The graph still answers without one — just noisily,
+  vwf-standard excludes the asset names. Missing → **degradation**, remedy
+  `/vwf:setup reshape`: the file is tool-config's universal one, and vwf
+  never writes it. The graph still answers without one — just noisily,
   with memory rooms and archived plans indexed beside the code — and the fix
   reaches the graph only at its next rebuild, so say that too.
 

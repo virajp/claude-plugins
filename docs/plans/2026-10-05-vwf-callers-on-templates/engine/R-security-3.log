@@ -1,0 +1,6 @@
+/security-review — loop R, round 3, range 22354bd2..5ba0172b
+
+NO FINDINGS
+
+- 2a461fc8 (.gitattributes keeps the repo's own lines): improves security — the whole-file write on adoption no longer drops filter= lines (git-crypt, transcrypt, LFS); lines listed on the row, appended unchanged on ok, later runs preselect keep-existing; only the repo's own lines re-appended, nothing injectable.
+- 5ba0172b (probe <dir>/x instead of the bare dir): right fix for a directory pattern when the directory is absent; a wrong "ignored" needs a crafted .gitignore in the user's own repo and at most leaves scratch files committable — not exploitable.

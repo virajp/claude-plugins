@@ -30,17 +30,15 @@ In order:
    `docs/plans/archived/`. Nothing inside `docs/blueprint/` is authored here —
    an empty tree is the honest state of a product nobody has described yet, and
    a skeleton full of placeholders is not.
-2. **The memory tree.** `docs/memory/` with its seven rooms and the three
-   gitignored ones, plus the product's `mempalace.yaml`, per
-   [the memory tree](memory-tree.md).
-3. **The graph ignore file.** Write `.graphifyignore` at the repo root with the
-   vwf-standard excludes, per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`. A blank repo
-   has no repo-specific noise to detect, so the standard set is the whole file.
-4. **CLAUDE.md.** Merge the vwf section from
+2. **The memory tree.** `docs/memory/` with its seven rooms, plus the
+   product's `mempalace.yaml`, per [the memory tree](memory-tree.md). The
+   graph ignore file is not setup's: `/stackgen:tool-config all` lands
+   `.graphifyignore` with vwf's excludes among its rendered lines.
+3. **CLAUDE.md.** Merge the vwf section from
    `${CLAUDE_PLUGIN_ROOT}/assets/templates/project-claude.md` into the repo's
    `CLAUDE.md`, preserving everything already there, per
    [the CLAUDE.md section](claude-md.md).
-5. **The two questions.** `product.name` and `memory.wing`, each one MCQ,
+4. **The two questions.** `product.name` and `memory.wing`, each one MCQ,
    proposed from the repo directory name. These are the **only** questions this
    path asks.
 
@@ -54,11 +52,12 @@ the repo cannot support. Their absence is the **structure-pending** state, which
 
 The repo shape — the toolchain manager's config and task library, the repo
 gates, the hygiene files — is `/vwf:init`'s and `/stackgen:tool-config`'s,
-not setup's. Step 0 only **checks** for it, reading the stack adapter's
-lockfile for the `tool-config/…` records `/stackgen:tool-config all` writes —
-the gates, `git` and `graphify` among them — and offers init when any is
-missing — and makes the same offer when all are recorded but the repo has
-fallen **behind its baseline**, on doctor's seven predicates.
+not setup's. Step 0 only **checks** for it — `.config/stackgen.yaml` with
+`format: 1`, the values file `/stackgen:tool-config all` writes — and offers
+init when it is missing, and makes the same offer when it is there but the
+repo has fallen **behind its baseline**, on doctor's predicates. A repo
+still on the older layout is the one case that stops instead (Step 0 names
+it).
 On a multi-repo product both questions are asked of the base **and of every
 locally-present member**, and the one offer covers whichever of them came back
 unshaped or behind.
@@ -170,12 +169,14 @@ four facts and acts on that delta alone.
   `${CLAUDE_PLUGIN_ROOT}/assets/templates/`, `flows/index.md`, `entities/index.md`, the
   empty `apis/` and `apis/released/` directories, `docs/plans/` and
   `docs/plans/archived/`.
-- **The graph ignore file**, per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`: the
-  vwf-standard excludes plus every committed-but-not-code tree detection turned
-  up — vendored third-party code, committed generated output, large fixtures.
-  Repo-specific additions are proposed with their evidence and confirmed;
-  git-ignored trees are never restated. One file per locally-present repo in a
-  `multi-repo` product.
+- **Graph excludes, recommended only.** setup writes no `.graphifyignore`:
+  the file is `/stackgen:tool-config`'s, vwf's excludes among its rendered
+  lines. Every committed-but-not-code tree detection turned up — vendored
+  third-party code, committed generated output, large fixtures — goes in
+  the recommendations report with its evidence, as a line the person may add
+  **outside** the file's `tool-config` markers, where every render keeps it
+  (`${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`); git-ignored trees are never
+  restated.
 - **Harness detection** per `${CLAUDE_PLUGIN_ROOT}/assets/harness.md` — which
   verification capabilities the repo can already run, and any non-canonical task
   names. Missing capabilities are **recorded, never built**;

@@ -189,14 +189,17 @@ shellcheck and actionlint under `code/lint/`, plus each pack's own.
   or a map of exactly `name` and an optional non-empty `probe`, and `lockfile` a
   non-empty list of relative paths or globs with no `..` — and a `tool-config:`
   or `machine_env:` key refused outright, since a pack now ships files and `@@`
-  names instead; every `@@` tag in a template tree one the engine reads,
-  tool-config's own held to the global names; and no mise `conf.d` fragment and
-  no `pre-commit.d` file in `config/`, a pack's mise files in its own
-  `templates/.config/mise/conf.d/<slug>/` alone, a subtask's leaf its own slug
-  and never a universal subtask's, no reserved slug (`all`, `ai`, `_base`), and
-  no pack file at a path tool-config ships, bar a `#PLACEHOLDER` slot);
-  **strict-YAML frontmatter** (every skill and agent a plugin ships, every
-  repo-local skill a tool-config asset tree lands, and every
+  names instead; an optional `values:` list of entries carrying exactly `name`
+  (upper snake, unique, never `FORMAT` or a tool-config global name), `detect`
+  and `question`, every declared name read in the pack's `templates/`; every
+  `@@` tag in a template tree one the engine reads, tool-config's own held to
+  the global names and a pack's to those plus its `values:` names; and no mise
+  `conf.d` fragment and no `pre-commit.d` file in `config/`, a pack's mise files
+  in its own `templates/.config/mise/conf.d/<slug>/` alone, a subtask's leaf its
+  own slug and never a universal subtask's, no reserved slug (`all`, `ai`,
+  `_base`), and no pack file at a path tool-config ships, bar a `#PLACEHOLDER`
+  slot); **strict-YAML frontmatter** (every skill and agent a plugin ships,
+  every repo-local skill a tool-config asset tree lands, and every
   `stacks/*/*/skills/*/SKILL.md` and `stacks/*/*/agents/*.md` a pack ships — the
   larger half, and the half that actually lands in a user's repo; a pack's
   `rules/*.md` is out, frontmatter being optional there); relative links under

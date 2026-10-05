@@ -79,11 +79,12 @@ archived/
 The blueprint tree, the code, and **active** plans stay in — the graph exists
 to answer questions about exactly those.
 
-`/vwf:setup` writes the file: the standard set plus whatever
-repo-specific committed noise detection turns up (vendored third-party trees,
-committed generated output, large fixtures), consent-gated like every other
-write, one file per locally-present repo in a `multi-repo` product.
-`/vwf:doctor` §8 reports a missing one as a **degradation**,
+No vwf skill writes the file. The standard set is in tool-config's universal
+`.graphifyignore`, inside its `tool-config` markers, landed in every repo by
+`/vwf:init` (or `/vwf:setup reshape`); repo-specific committed noise (vendored
+third-party trees, committed generated output, large fixtures) is the repo's
+own, added by hand below the block, where every render leaves it.
+`/vwf:doctor` §8 reports a missing file as a **degradation**,
 never blocking — the graph still answers, just noisily — and the fix reaches
 the graph only at its next rebuild.
 

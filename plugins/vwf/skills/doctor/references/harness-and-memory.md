@@ -87,7 +87,9 @@ check:
 
 **The markdown mirror.** Check `docs/memory/` exists with the seven room
 directories, and that `.gitignore` covers `docs/memory/handoff/`,
-`docs/memory/doctor/` and `docs/memory/runs/` — the developer-specific rooms. A
+`docs/memory/doctor/` and `docs/memory/runs/` — the developer-specific rooms,
+whose lines tool-config's universal `.gitignore` carries (remedy
+`/vwf:setup reshape`). A
 missing directory is fine (nothing written there yet); a **committed** handoff,
 doctor or runs file is drift to report, since it puts one developer's session
 state in everyone's diff.

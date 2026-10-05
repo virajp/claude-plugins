@@ -32,21 +32,21 @@ before a stack is chosen, and the deploy axis is a **list**, because a project
 may ship through more than one delivery mechanism. Since **format 18**
 `enforcement:` also records a **kept file** — a pack-owned file a reshape
 offered to replace and the user kept — so the decision is settled once and
-neither `/vwf:init` nor `/vwf:doctor` raises it again. Since **format 21** a
-top-level `answers:` block records the **conditional axes** — since
-**format 22** three of them: the secrets provider once for the product, the
-forge and the update bot per repo — so every caller of the materializer
-evaluates a pack's `conditional:` entry against the same answers, and a
-landing decided at `/vwf:init` is honoured by a pass that runs months later.
-Format 22 also retired the editor axis and the editor-key record format 20
-added: vwf ships, asks about and composes no editor configuration. Since
+neither `/vwf:init` nor `/vwf:doctor` raises it again. **Formats 21 and 22**
+carried a top-level `answers:` block — the secrets provider, and the forge
+and the dependency bot per repo; **format 23 retired it**: the secrets
+provider and each repo's forge now live in that repo's own
+`.config/stackgen.yaml`, which only stackgen's `tool-config` script writes,
+and the dependency-bot key retired with the bot config it chose. Format 22
+also retired the editor axis and the editor-key record format 20 added: vwf
+ships, asks about and composes no editor configuration. Since
 **blueprint-format 6** this file replaces the old stamp at
 `docs/blueprint/.vwf.yml`.
 
-## Schema (config_format 22)
+## Schema (config_format 23)
 
 ```yaml
-config_format: 22 # this file's own schema version — setup migrates it
+config_format: 23 # this file's own schema version — setup migrates it
 blueprint_format: 25 # the docs/blueprint format stamp
 
 product:
@@ -120,12 +120,7 @@ enforcement: # vwf's enforcement opt-outs
   rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (assets/standard-flows.md); standard-entities/<project>/<slug> waives a mandatory standard entity (assets/standard-entities.md); baseline/<rule>[/<unit>] waives an engineering-baseline rule product-wide or scoped (assets/engineering-baseline.md; boundary-validation never product-wide); pipeline/<rule>[/<unit>] waives a delivery-pipeline rule (assets/delivery-pipeline.md)
   kept_files: {} # FORMAT 18. <path>: { reason: <one line> } — a file the landed packs OWN that this repo kept over the pack's, written by `/vwf:init` (consented, in its single plan) when a reshape offered that file as replace-or-keep and the answer was keep. The path is BASE-RELATIVE: a file the base owns is spelled exactly as its lockfile names it, and a file inside a member repo takes that member's path as prefix followed by the path the member's own lockfile names — this one block on the base records every repo's keeps, since a member carries only its back-link and no `.config/vwf.yaml` of its own. NOT a rule id and never under `rules:` — a path names no catalogued rule. Read by `init`, which never re-offers a recorded path, and by `/vwf:doctor`, whose content-drift check skips it; an absent block reads as empty, so a repo that has kept nothing records nothing
 
-answers: # FORMAT 21; three keys since FORMAT 22, which removed `editor`. The THREE CONDITIONAL AXES a pack's `conditional:` entries are evaluated against (stackgen's assets/pack-format.md) — recorded here so every caller of the materializer evaluates a conditional file against the SAME answers, and a landing decided at `/vwf:init` is honoured by a pass that runs months later rather than re-decided from an empty map (under the materializer's "an unanswered axis reads true" rule, an empty map lands every conditional path). The callers are `/vwf:init`, which asks them; `/vwf:setup`'s materialize pass, which lands a pinned template long after init ran; and `/stackgen:stackgen-sync`, which re-derives a pack's landing set. EVERY key below is always present, `none` where no answer was picked or nothing could be read
-  secrets: <slug> # PRODUCT-WIDE — the secrets-provider question. A capability-provider slug, or `none` for no answer. A pack may NOT name `none` on this axis (`p:plugins:check` rule 11 refuses `secrets: none` in a `when:`), so `none` here simply matches nothing
-  repos: # PER REPO — one entry per repo the product has. Keyed by the member path exactly as `enforcement.kept_files` spells one: `.` for the base, `<member-path>` for a member, so both blocks on the base record every repo
-    <member-path>:
-      forge: github # `github`, `gitlab`, or `none` for a repo whose `origin` named no known host. THE RECORD AND THE FALLBACK, never the source of truth: every caller re-reads `origin` at run time and passes THAT as the axis, using this value only where no remote can be read. A recorded value the live host contradicts is `/vwf:doctor` drift, remedy `/vwf:setup reshape` — so the forge files land at the reshape, never silently mid-pass
-      update_bot: renovate # `renovate`, `dependabot`, or `none` — the update-bot question, asked per repo. The ONE axis where `none` is an answer a pack may name in a `when:` (no bot) rather than merely the absence of one
+# NO `answers:` block since FORMAT 23. The secrets provider and each repo's forge live in that repo's `.config/stackgen.yaml` (`secrets`, `forge`), passed to `/stackgen:tool-config all` by `/vwf:init`; the per-repo dependency-bot key retired with nothing to replace it. A leftover block is format drift, migrated by `22 → 23` below
 
 pipeline: # bounded knobs — see the hard floor below
   coverage_target: 100 # default coverage gate (per-project override above)
@@ -233,7 +228,6 @@ at answering the question, never at installing something.
 | `repo`               | `setup` / `architecture` (elicited)                                                                                                       | `doctor`, `plan`, `execute`                                                                                     |
 | `harness`            | `setup`; `execute` reconcile                                                                                                              | `plan` preflight, acceptance/ux verifiers, `verify`, `doctor`                                                   |
 | `enforcement`        | `setup` / `architecture` (consented); `init` (`kept_files` only, consented in its single plan)                                            | `setup`, `architecture`, `blueprint`, the reviewers; `init` and `doctor` (`kept_files`)                         |
-| `answers`            | `init` alone (consented, in its single plan) — the SECOND key it owns, beside `enforcement.kept_files`, and the only one outside `enforcement:`. No other skill writes the block, with ONE exception: a caller that reads a **stale forge** — the recorded `answers.repos.<path>.forge` differing from the live `origin` host — rewrites **that one value** and says so | `init`, `setup`'s materialize pass, `stackgen-sync` (the answers every `conditional:` entry is evaluated against), `doctor` (the drift rows and the provider ignore-section row) |
 | `pipeline`           | the user (hand-edited)                                                                                                                    | `execute`, and the external caps hook that delivers its resource-cap pause                                       |
 | `environments`       | `setup` / `verify` (confirmed)                                                                                                            | `verify`                                                                                                        |
 | `production_env`     | `setup` / `verify` (confirmed)                                                                                                            | `verify` (the release environment)                                                                              |
@@ -644,15 +638,15 @@ earlier than 65/90/80), never loosen.
   enforcement opt-outs. **Nothing converts**: no surface wrote any of the
   answers into the tree before 21 — each was asked, used for one run, and
   forgotten — so there is no old spelling to map. The values come from the
-  reshape that performs this migration, which asks the update-bot round as it
-  always did and reads the forge and the provider from the repo; the pass
+  reshape that performs this migration, which asked the dependency-bot round
+  as it always did and reads the forge and the provider from the repo; the pass
   never invents an answer to fill a key. The block carried four keys at 21;
   a repo migrating today writes the three format 22 keeps.
 
   A config still reading **20** is not broken for a caller. Every caller
   handles the absent block by **inferring** what init's own seeds would give —
   the forge from `origin`, the secrets provider from the lockfile's pinned
-  provider, the update bot from a renovate or dependabot file — passing that
+  provider, the dependency bot from that bot's own config file — passing that
   map and **writing nothing**. So the gap degrades to today's seeds rather
   than to an empty map, and the block is written on the next
   `/vwf:setup reshape`, which is what `/vwf:doctor`'s existing stamp check
@@ -685,6 +679,27 @@ earlier than 65/90/80), never loosen.
   **untouched** and stays **25**: nothing under `docs/blueprint/` changes, the
   sixth config bump to ship without a paired blueprint bump, after `14`,
   `16`, `18`, `20` and `21`.
+
+- **`22 → 23` migration** (performed by `/vwf:setup reshape`): **the
+  `answers:` block is retired, and nothing else in this file moves.** Its two
+  live values move into each repo's own `.config/stackgen.yaml`, which only
+  stackgen's `tool-config` script writes: `answers.secrets` becomes every
+  repo's `secrets`, and `answers.repos.<path>.forge` that repo's `forge`,
+  each passed to `/stackgen:tool-config all` (`--secrets`, `--forge`) rather
+  than written by hand. the per-repo dependency-bot key is dropped with
+  nothing to replace it: the bot config it chose is no longer shipped. Remove
+  the block and rewrite the stamp. `members:` and `linkage:` stay here — the
+  base's `stackgen.yaml` `members` is rendered from them, and `/vwf:doctor`
+  checks the two agree.
+
+  A config still reading **22** is not broken for a reader: the block is
+  ignored wherever it would have been read, and `/vwf:doctor`'s stamp check
+  reports 22 against 23 until the reshape performs this pass.
+
+  **Neither 13 nor 17 is in play on this bump.** `blueprint_format` is
+  **untouched** and stays **25**: nothing under `docs/blueprint/` changes, the
+  seventh config bump to ship without a paired blueprint bump, after `14`,
+  `16`, `18`, `20`, `21` and `22`.
 
 - **`10 → 11` migration** (performed by `/vwf:setup`): stacks stop being
   *enforced with an escape hatch* and become a **menu**, and the flat

@@ -1,0 +1,8 @@
+/security-review — loop R, round 2, range 22354bd2..0aa26b45
+
+NO FINDINGS
+
+- b77a8fe9 scripts/src/check.ts: refuses a values: entry named FORMAT or declared twice; tightens validation of this repo's own pack.yaml; no new input path, no shell or file work.
+- 0aa26b45 init references new-repo.md, existing-repo.md, tool-configs.md: re-appends the repo's own pattern lines below the closing marker unchanged; content already the repo's; comment lines left out so a stray marker line cannot fake one; append only after ok on a preview listing every kept line; keep-existing leaves the file untouched. Closes the round-1 risk of a whole-file write dropping secrets/ or .env.production.
+
+Confidence nothing new introduced: 9/10.

@@ -123,6 +123,10 @@ harness:
 conditional: # optional — config/ paths that land only when an answer holds; see below
   - path: <a landed path or glob, repo-root relative>
     when: { <axis>: <value> } # one axis, one value
+values: # optional — the machine values the pack's templates read as @@NAME@@; see below
+  - name: <UPPER_SNAKE>
+    detect: <shell command printing the value; non-zero when unknown>
+    question: <asked when detect fails>
 ```
 
 **Servers are three sibling keys, never one key with a scope field.**
@@ -218,10 +222,43 @@ The value is stored under `packs.<slug>` in the repo's
 `.config/stackgen.yaml`, written by the script from `--set <key>=<value>`
 (the key lowercase — `--set xcode_version=26.1` fills `@@XCODE_VERSION@@`),
 and visible to that pack's templates alone. A render missing a value the
-template names is refused, naming it. Who asks for the value is the
-caller's; the pack only names it. The tag grammar is tool-config's
+template names is refused, naming it. The pack says how to find each value
+in its `values:` list (below); the caller runs it. The tag grammar is
+tool-config's
 (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md#templates`), and
 `p:plugins:check` rule 11 refuses a tag it would not read.
+
+### `values:` — how each machine value is found
+
+Every `@@NAME@@` a pack's templates read, beyond tool-config's own global
+names, is declared in `pack.yaml` as one `values:` entry:
+
+| Field      | Is                                                                                            |
+| ---------- | --------------------------------------------------------------------------------------------- |
+| `name`     | the tag's name, upper snake case — `XCODE_VERSION` for `@@XCODE_VERSION@@`                    |
+| `detect`   | a shell command that prints the value on this machine, and exits non-zero when it cannot tell |
+| `question` | what to ask the person when `detect` fails                                                    |
+
+```yaml
+values:
+  - name: XCODE_VERSION
+    detect: >-
+      xcodebuild -version
+      | awk 'NR == 1 && $1 == "Xcode" { print $2; found = 1 } END { exit !found }'
+    question: >-
+      Which Xcode version does this repo build with? Every task that builds
+      refuses any other.
+```
+
+The caller — `/vwf:setup`, as it lands the pack — fills each entry in
+order: run `detect`; a zero exit with output is the value, anything else
+asks `question`. It passes every value to `pack` as `--set
+<name lowercased>=<value>`. `p:plugins:check` rule 11 holds the list to
+the templates both ways: every `values:` name is read as `@@<name>@@`
+somewhere in the pack's `templates/`, and every pack-own `@@` name there is
+declared in `values:`. An entry carries exactly `name`, `detect` and
+`question`, each a non-empty string, and a `name` may not take one of
+tool-config's global names.
 
 ### Subtasks — what a pack adds to a gate
 

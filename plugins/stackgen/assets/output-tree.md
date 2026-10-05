@@ -24,7 +24,8 @@ from `pack.yaml` as declared (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`):
 a bare name or a `{ name, probe }` map; and `package_manager` and, beside
 it, `lockfile`, the paths or globs doctor's resolve check reads. A value
 only the machine can answer is not a fact here: it is a `@@NAME@@` tag in
-the pack's `templates/`, filled when tool-config renders them.
+the pack's `templates/`, filled when tool-config renders them, and found by
+the caller through the pack's `values:` list.
 
 **`.mcp.json` was excluded and is not any more**, decided at Wave D. The
 reasoning that changed: an MCP server is genuinely a project file — this
@@ -317,14 +318,17 @@ easier, and "gate configs went in, so why not the manifest" is exactly the
 argument this list exists to answer. Moving one of the four is a decision on
 the record, never an implementer's call.
 
-**The lockfile records what the materializer copied, and nothing
-tool-config renders.** `/vwf:init` lays the baseline down by calling
-`stackgen:tool-config` and fetching no bundle; tool-config keeps its values
-in `.config/stackgen.yaml`, writes no lockfile entry, and judges its own
-files by comparing them with a fresh render. A pack's `templates/` are the
-same: rendered by tool-config, compared against a fresh render, never
-hashed here. `.config/` holds the repo's own files too, and presence in the
-tree has never meant stackgen put it there.
+**The lockfile records what the materializer copied, and the paths a
+pack's templates rendered — never tool-config's own files.** `/vwf:init`
+lays the baseline down by calling `stackgen:tool-config` and fetching no
+bundle; tool-config keeps its values in `.config/stackgen.yaml`, writes no
+lockfile entry, and judges its own files by comparing them with a fresh
+render. A pack's `templates/` are rendered by tool-config too, but they
+belong to the pack, so after `pack` writes them the materializer records
+each rendered path with `rendered: true` and **no hash** — a rendered file
+is judged against a fresh render (`preview pack`), never against bytes
+recorded here. `.config/` holds the repo's own files too, and presence in
+the tree has never meant stackgen put it there.
 
 ## The three consent tiers
 
@@ -374,6 +378,11 @@ entries:
     source: pack/toolchain-gate/swiftlint@<version>
     hash: <content hash — at landing, re-recorded by the composing skill after its fills>
     mode: "755" # preserved for .config/mise/tasks/** — mise runs the file itself
+  - path: .config/mise/conf.d/swiftui/mise.toml # a pack `templates/` file — rendered by tool-config's `pack`
+    slug: swift-swiftui
+    component: app-framework/swiftui
+    source: pack/app-framework/swiftui@<version>
+    rendered: true # no hash: judged against a fresh render, never a recorded one
 skipped: # config/ paths a pack declared `conditional:` whose condition was false at the last run
   - path: .github/CODEOWNERS
     pack: <type>/<slug> # the pack whose conditional: entry matched
@@ -406,6 +415,11 @@ Rules the lockfile enforces:
   nothing lands and nothing is deleted. The sync report names every
   record it dropped. A path no longer shipped that is still present is
   not this rule's.
+- **A `rendered: true` entry carries no hash and is never byte-diffed.**
+  Its content is a render of the pack's `templates/` from the repo's
+  `.config/stackgen.yaml`, so it is current when `preview pack` for its
+  pack returns no row, and a newer pack version is applied by re-running
+  `pack`, never by comparing bytes.
 - **`hash:` has three writers, and a differing hash is drift only when none
   of them ran.** The materializer writes it at landing. The composing skill
   (`/vwf:init`) **re-records** it after every change it makes to a landed
@@ -440,9 +454,12 @@ Rules the lockfile enforces:
   runs — a row left behind would go on telling every reader that a path
   is intentionally absent for a condition nothing evaluates any more.
 - **Removal removes exactly the listed entries**, `settings_keys` and
-  `mcp_servers`, nothing else — the same receipt invariant this repo's
-  installer CLI lives by — and drops the removed pack's `skipped:` rows
-  with its `entries:`. Those rows are the record of a decision about that
+  `mcp_servers`, nothing else. A pack with `rendered: true` entries is
+  removed in order: tool-config's `pack-remove --slug <slug>` first, which
+  drops its `packs.<slug>` values and re-renders the `…:all` tasks, then
+  the pack's recorded files, rendered ones among them, are deleted — the
+  same receipt invariant this repo's installer CLI lives by — and drops
+  the removed pack's `skipped:` rows with its `entries:`. Those rows are the record of a decision about that
   pack's paths; nothing lands and nothing is deleted on the way out, so
   dropping them removes a claim, never a file, and a file sitting at a
   dropped row's path was always the repo's own.

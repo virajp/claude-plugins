@@ -22,25 +22,27 @@ Four sources define it, and none of them is a history:
 1. **Diff the tree against those four.** Every file that is missing, misplaced,
    misnamed, or carrying a section the current format does not have is one
    entry. Judge the tree as it stands; do not ask how it got there. The root
-   `.graphifyignore` is part of the current shape too — absent, or missing the
-   vwf-standard excludes (`${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`), is one entry
-   like any other. A config whose `enforcement:` block lacks `kept_files:` is
-   one entry as well: it gains `kept_files: {}` and the stamp is rewritten with
-   the rest, with no content to migrate, since nothing wrote that key before
-   `config_format` 18. A config with no **top-level** `answers:` block is one
-   entry on the same terms — it gains the block, from the answers this run
-   asks (the update-bot round) and reads (the forge from each `origin`, the
-   provider from the lockfile), every key present and `none` where no answer
-   was picked; a block already there is left alone, since nothing wrote it
-   before `config_format` 21 and the pass invents no answer to fill a key.
+   `.graphifyignore` is **not** an entry: it is `/stackgen:tool-config`'s,
+   vwf's excludes among its rendered lines, and an absent or stale one is
+   the repo shape Step 0 already checked. A config whose `enforcement:` block
+   lacks `kept_files:` is one entry: it gains `kept_files: {}` and the
+   stamp is rewritten with the rest, with no content to migrate, since
+   nothing wrote that key before `config_format` 18.
+   **`config_format` 22 → 23** — the top-level `answers:` block leaving
+   for each repo's `.config/stackgen.yaml` — is **not** an entry here:
+   `/vwf:setup reshape` applies it
+   ([format lineage](format-lineage.md)), in the release that moves the old
+   layout. A config still carrying the block keeps it, and its stamp, and
+   the report names `/vwf:setup reshape` as the unlock; a config without the
+   block takes the 23 stamp with the rest.
    **`config_format` 21 → 22** retires the editor axis, as entries of their
    own: a config carrying `answers.editor` or `enforcement.editor_keys` loses
    each key, with nothing to convert, since both only decided whether an
    editor fragment landed; and every `.config/vscode.d/*.jsonc` in the base or
    a member is offered for delete, **one row each, defaulting to delete** —
    the one delete this pass offers, because nothing reads those files any
-   more. `.vscode/` is the user's and is **never touched**: not its files,
-   not a block an earlier `/vwf:init` composed there, not its markers.
+   more. This pass **never touches** `.vscode/` — its `settings.json` is
+   `/stackgen:tool-config`'s, and nothing else there is vwf's.
 2. **Resolve every unrecognised spelling through
    [format lineage](format-lineage.md)** before recording it as a gap. A tree
    written against an older format is usually *correct for that format* and

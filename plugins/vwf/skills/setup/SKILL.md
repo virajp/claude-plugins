@@ -20,7 +20,7 @@ the shape the rest of the workflow reads. `setup` is the Phase-0 bootstrapper of
 `setup → product → architecture → design-system → blueprint → plan → execute`,
 and the only vwf command that onboards. It is also where a **pinned** stack is
 materialized: `/vwf:architecture` decides the slug, setup lands it — asking the
-machine values the landed pack declares — and **the materialize pass runs in
+values the landed pack declares — and **the materialize pass runs in
 every mode** — which is why `/vwf:architecture` comes back here when it is
 done.
 
@@ -107,42 +107,43 @@ product rather than the one repo it is standing in, and an **absent** member is
 a blind spot, never a finding. On a single-repo product the set is one repo and
 everything below reads as it always did.
 
-First, is the shape **there**: in **each** repo of that set, the stack adapter's
-lockfile records what `/stackgen:tool-config all` writes — entries sourced
-`tool-config/<tool>@<version>`, the gates and `git` and `graphify` among them
-(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). No pack slug is checked: a
-repo is shaped when its `tool-config/*` records are present. Second, is it
-**current**: the seven predicates under **"The repo shape against its
-baseline"** in `/vwf:doctor`'s stack-checks reference, evaluated **per repo**
-on that repo's own artifacts — the pack versions the adapter lockfile records
-against what the adapter ships now, the
-registry's project ids behind the surfaces generated from them, the
-`develop`/`main` pair, the toolchain manager's repo-name key against the repo's
-folder, the bytes of the pack-owned files the packs landed against the lock,
-marked positions spliced out, the marked positions init fills in that same
-environment block, and — predicate (g), the forge state — the default branch
-as chosen, both branches protected, and the base's backlog project present,
-read from the forge when its CLI is on `PATH` and logged in. Read the
-artifacts that section reads and evaluate them **by it**: the predicates are
-doctor's and are deliberately not restated here, so the two can never drift
-apart. Every repo recording all of them and holding all seven predicates —
-say so in one line, naming the repos checked, and read on.
+First, is the shape **there**: in **each** repo of that set,
+`.config/stackgen.yaml` exists with `format: 1` — the values file
+`/stackgen:tool-config all` writes, and nothing else writes. No pack slug is
+checked: a repo is shaped when that file is there. A repo **without** it that
+still carries the older layout — `.config/mise/conf.d/tools.toml`,
+`.config/mise/conf.d/env.toml` or a root `.config/mise.dev.toml` — is **shaped
+on the old layout**: its move onto the renderer is a reshape this release does
+not ship yet, so setup names the repo and the files that marked it, says that
+`/vwf:setup reshape` will move it in a later release, and **stops** — no init
+offer, no mode fork, nothing written. Second, is it **current**: the
+predicates under **"The repo shape against its baseline"** in `/vwf:doctor`'s
+stack-checks reference, evaluated **per repo** on that repo's own artifacts —
+among them the pack versions the adapter lockfile records against what the
+adapter ships now, every row a `preview all` and a `preview pack` per landed
+pack would show, and the forge state — the default branch as chosen, both
+branches protected, and the base's backlog project present, read from the
+forge when its CLI is on `PATH` and logged in. Read the artifacts that
+section reads and evaluate them **by it**: the predicates are doctor's and
+are deliberately not restated here, so the two can never drift apart. Every
+repo shaped and holding every predicate — say so in one line, naming the
+repos checked, and read on.
 
 **Otherwise some repo needs init, and setup offers it — once, for the whole
-product.** Any of those records missing in a repo, that repo is **unshaped**:
-say what is absent. Any predicate failing in a repo, that repo is **behind its
-baseline**: name which, in the words doctor's rows use. The offer fires when
-**any** repo in the set is unshaped or behind, and it names **which repos** and
-what each of them showed — a base that is current while one member is behind is
-still an offer, because the shape is per repo and the product is shaped only
-when all of them are. Both causes reach the same offer — init is what lays the
-shape down and what brings it forward — and on a yes invoke `/vwf:init`, which
-surveys the base and every member and shapes them in one run of its own, and
-continue once it returns. init decides each repo's mode from what its tree
-contains — `blank`, `source` or `shaped` — so a repo that already carries
-source is shaped as `source`: its existing files are offered, never
-overwritten. init is **skill-invoked**: hidden from the `/` menu
-and called from here alone, so this offer and `reshape` above are the
+product.** A repo with no `.config/stackgen.yaml` and no old-layout file is
+**unshaped**: say what is absent. Any predicate failing in a repo, that repo
+is **behind its baseline**: name which, in the words doctor's rows use. The
+offer fires when **any** repo in the set is unshaped or behind, and it names
+**which repos** and what each of them showed — a base that is current while
+one member is behind is still an offer, because the shape is per repo and
+the product is shaped only when all of them are. Both causes reach the same
+offer — init is what lays the shape down and what brings it forward — and on
+a yes invoke `/vwf:init`, which surveys the base and every member and shapes
+them in one run of its own, and continue once it returns. init decides each
+repo's mode from what its tree contains — `blank`, `source` or `shaped` — so
+a repo that already carries source is shaped as `source`: its existing files
+are offered, never overwritten. init is **skill-invoked**: hidden from the
+`/` menu and called from here alone, so this offer and `reshape` above are the
 only two ways it is reached. A **decline** is a recorded deferral on the terms
 in [the onboard pipeline](references/onboard-pipeline.md), named with its
 unlock (`/vwf:setup reshape`, run whenever), and the run continues to the mode
@@ -156,12 +157,11 @@ check](#the-second-shape-check) under the pass.
 Read `.config/vwf.yaml`, then compare its `blueprint_format` and `config_format`
 against the shipped integers (`${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`, and the
 current `config_format` named in `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`).
-The latest config step, `21 → 22`, is the smallest kind: remove
-`answers.editor` and `enforcement.editor_keys` where the file carries them,
-offer each `.config/vscode.d/*.jsonc` for delete, bump the stamp, and touch
-nothing else — no content converts, and `.vscode/` is the user's, never
-touched; [migrate pipeline](references/migrate-pipeline.md) step 1 carries
-the rows.
+The latest config step, `22 → 23`, removes the `answers:` block — forge and
+secrets now live in each repo's `.config/stackgen.yaml`, and the bot key is
+retired — and is **not** this pipeline's: `/vwf:setup reshape` applies it, in
+the release that ships the old-layout move;
+[migrate pipeline](references/migrate-pipeline.md) step 1 names it.
 
 | `.config/vwf.yaml`                                       | Mode      |
 | -------------------------------------------------------- | --------- |
@@ -205,20 +205,19 @@ the whole report.
 **Architecture decides; setup pins.** A slug on a stack axis is a decision
 `/vwf:architecture` made and wrote; landing it is setup's, and the pass that
 does it is [materialize](references/materialize.md) — read it there, in full,
-rather than reconstructing it here. It is also where a landed pack's
-**machine env** is asked: each value the pack's `machine_env:` fact declares
-is detected on this machine — only while the pack's template entry matches
-what its lockfile last recorded — offered as the default, and written into
-the pack's own block through `/stackgen:tool-config`. Setup asks it, never
-`init`. A value also set outside the pack's block is the skill's **conflict
-row** — `move-in`, or `keep-both` (`keep-existing` when the line shares
-the pack's file) — relayed inside setup's question: setup previews the
-call, shows the rows, and passes each answer back — the script's mise
-calls as `--answers <id>:<answer>`, a prose tool's as a last
-`answers=<id>:<answer>`; it removes no line itself. And every run re-runs each already-landed pack's
-`tool-config:` list through the skill, so a call a newer pack changed reaches
-the repo as a drift or conflict row; an unchanged call writes nothing and
-shows nothing.
+rather than reconstructing it here. It is also where a pack's **values** are
+asked: each entry the pack's `values:` list declares is detected on this
+machine with its `detect` command, else asked with its `question`, and handed
+to `/stackgen:tool-config pack --slug <slug> --dir <pack dir> --set …`,
+which renders the pack's templates and stores the value in the repo's
+`.config/stackgen.yaml`. Setup asks them, never `init`. Every call is
+previewed first, its rows shown inside setup's question, and run with the
+answers as `--answers <id>:<answer>`. And every run re-runs `pack` for each
+already-landed pack, so a template a newer pack changed reaches the repo as a
+`write` row; an unchanged pack writes nothing and shows nothing. A pack
+dropped from a composition goes through `pack-remove`. After the packs,
+setup re-derives the repo's `node`, `external` and `forge` values and calls
+`all` with the ones that changed.
 
 It runs **once per run, in every mode**, on a `.config/vwf.yaml` that is
 already current: in `onboard` and `migrate` between the spine's steps 2 and 3
@@ -230,16 +229,15 @@ skipping the whole handoff.
 In one paragraph, so a reader knows what the reference will say: setup groups
 the axes holding a slug the target repo's adapter lockfile does not name,
 dedupes by slug per repo, and invokes the adapter once per `(repo, slug)`,
-each landing behind the **adapter's own** consent line; the adapter runs the
-pack's own `tool-config:` calls as part of it. Every landing carries
-the config's recorded `answers:` — the forge re-read live from that repo's
-`origin` — so a template pinned months after `/vwf:init` ran lands what that
-repo's answers allow, not everything. The pass never lands a forge-conditioned
-file a **stale** record would have skipped: `/vwf:doctor` reports the
-staleness and `/vwf:setup reshape` is what lands it. A declined landing
-leaves the pin untouched and is reported. An `unresolved` axis is skipped
-silently. An **absent** axis is written `unresolved` and the run continues — a
-slug is never rewritten.
+each landing behind the **adapter's own** consent line; the adapter copies
+each pack's `config/` and runs its `pack` call, with the values setup
+gathered, as part of it. Every landing carries the forge — read live from
+that repo's `origin` — and the secrets provider that repo's
+`.config/stackgen.yaml` records, so a template pinned months after
+`/vwf:init` ran lands what that repo's answers allow, not everything. A
+declined landing leaves the pin untouched and is reported. An `unresolved`
+axis is skipped silently. An **absent** axis is written `unresolved` and the
+run continues — a slug is never rewritten.
 
 ### The second shape check
 
@@ -323,10 +321,11 @@ point, since a stamp written before validation describes a tree nothing checked:
    pre-commit `graphify-refresh` hook at `post-commit` and `post-merge`, which
    runs `code:graph` and which `/stackgen:tool-config all` lands; never
    graphify's own raw git hook, which pins a Python path. A decline is
-   honored without re-asking. Before building, confirm the `.graphifyignore` the pipeline
-   wrote is present at the root the build runs from — a commit still local
-   to the worktree has not put it there, and a graph built without it indexes
-   everything the file exists to exclude until the next rebuild.
+   honored without re-asking. Before building, confirm the `.graphifyignore`
+   `/stackgen:tool-config all` landed is present at the root the build runs
+   from — a commit still local to the worktree has not put it there, and a
+   graph built without it indexes everything the file exists to exclude
+   until the next rebuild.
 6. **Chain forward.** Print the ordered chain and stop:
    `/vwf:product` → `/vwf:architecture` →
    `/vwf:design-system` (once a project declares a screen

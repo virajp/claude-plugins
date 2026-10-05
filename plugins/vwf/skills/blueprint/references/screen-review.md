@@ -5,8 +5,10 @@ Read this when §6a fires — the pass authored or materially changed a flow's
 never needs this file.
 
 1. **Render (local, never canvas).** Ensure `docs/scratchpad/` is gitignored
-   (`git check-ignore -q docs/scratchpad`; if not, append `docs/scratchpad/` to
-   `.gitignore` — the line rides this pass's commit). Dispatch a fresh
+   (`git check-ignore -q docs/scratchpad/x` — a child path, which matches the
+   directory pattern before the directory exists; if not, stop and say so —
+   the line is tool-config's universal `.gitignore`'s, landed by
+   `/vwf:setup reshape`, and this pass never writes the file). Dispatch a fresh
    `mockup-generator` subagent **per platform file** the pass touched (that
    platform's Screens table + Components blocks + Metadata blocks (`site` and
    `webapp` only) + deviations, the design-system

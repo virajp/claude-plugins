@@ -47,9 +47,11 @@ the caller decides what to print.
 
 Its output is **one line per drifted repo**, naming the repo and the letters of
 the predicates that failed — `<repo>: (a) (c) (e)` — and no line for a repo
-that is clean. A base with no lockfile is reported as **`not shaped`** on its
-own line rather than as drift, since a repo never shaped has no baseline to
-drift from; an absent member is `not present, not checked`, exactly as §5
+that is clean. A base with no `.config/stackgen.yaml` at `format: 1` is
+reported on its own line rather than as drift — **`shaped on the old
+layout`** where it carries old-layout mise files, **`not shaped`** where it
+carries none — since neither has the baseline these predicates read; an
+absent member is `not present, not checked`, exactly as §5
 reports it. Whether any of that is shown, and how, is the caller's: this is
 what **`/vwf:recall`** calls to print its shape-drift line, and the remedy for
 every row is the one `/vwf:setup reshape` the full run prints under §9.
@@ -175,7 +177,7 @@ optional, and no reference restates a rule that lives above.
 
 | Sections                                                   | Reference                                                 | Covers                                                                                            |
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, required binaries on `PATH` or their declared probes, an unknown language, framework/dependency drift per manifest, the seven stack axes, a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, each lockfile where a pinned payload's `lockfile:` fact says (project templates included), the recommended `rtk`, the recommended forge CLI, and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups and the commit scopes, the aggregator's member flags and aliases, the two branches, the repo-name environment key against the repo's folder, every pack-owned file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — the `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` (a legacy `MERGE_MODEL` read as both) and `MEMBERS` positions beside it (the two runtime positions beside those are read by no row), and the forge state — the default branch, both branches' protection, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
+| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, required binaries on `PATH` or their declared probes, an unknown language, framework/dependency drift per manifest, the seven stack axes, a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, each lockfile where a pinned payload's `lockfile:` fact says (project templates included), the recommended `rtk`, the recommended forge CLI, and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups and the commit scopes, whether the repo is shaped (`.config/stackgen.yaml` at `format: 1`) or still on the old layout, the base's `stackgen.yaml` members against `.config/vwf.yaml`'s, the two branches, `repo_name` against the repo's folder, the `tool-config` skill's `preview all` and per-pack `preview pack` rows as drift, every pack-copied file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — the `merge_model` and `members` values beside it, and the forge state — the default branch, both branches' protection, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
 | **6–7** — harness & health, memory config                  | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `mempalace.yaml` placement, wing/room contract and secret excludes, the markdown mirror, and the mempalace daemon's reachability. **Blocking findings live here** |
 | **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, a graph per locally-present checkout, staleness, the pre-commit refresh hook (a raw graphify hook is drift), the `.graphifyignore`. **Blocking findings live here** |
 
@@ -209,18 +211,18 @@ missing `mempalace.yaml` or one carrying no secret excludes; callers must halt),
 **drift** (config and repo disagree — **including the whole repo-shape check
 against the baseline `/vwf:init` lays down**, run **per repo — the base and each
 locally-present member** (§5): a pack version behind, a registry id with no task
-group or commit scope, a member with no aggregator flag or alias or a list still
-named from project ids, a missing `develop` or `main`, a repo-name key in
-`conf.d/env.toml` that is unfilled or not the folder's slug, a pack-owned file
-the repo edited away from the hash the lockfile recorded and still diverging
-once every marked position is spliced out, a recorded
-`answers.repos.<repo>.forge` the live `origin` host contradicts or a `skipped:`
-row whose `when: forge` it contradicts, a config stamped `config_format` 21 or
-later that carries no `answers:` block at all, an absent or invalid
-`MERGE_MODEL_DEVELOP` or `MERGE_MODEL_MAIN` (or a legacy `MERGE_MODEL`
-standing in for both), an
-absent or empty `MEMBERS` under siblings linkage, the mise config on the old
-layout, a tool pinned in two `conf.d/tools*.toml` files
+group or commit scope, a repo with no `.config/stackgen.yaml` shaped on the
+old layout, a base whose `stackgen.yaml` `members` differs from
+`.config/vwf.yaml`'s `members:` or is named from project ids, a missing
+`develop` or `main`, a `repo_name` that is absent or not the folder's slug,
+every row the `tool-config` skill's `preview all` and `preview pack` return
+(each with its diff, read as a local edit or a stale file), a pack-copied
+file the repo edited away from the hash the lockfile recorded and still
+diverging once every marked position is spliced out, a `stackgen.yaml`
+`forge` the live `origin` host contradicts or a `skipped:` row whose
+`when: forge` it contradicts, an invalid `merge_model.develop` or
+`merge_model.main`, an absent or empty `members` under siblings linkage, the
+mise config on the old layout, a tool pinned in two `conf.d/` folders
 or in a top-level mise file (the move into `conf.d` offered, made on consent),
 and — read from the forge, only where its CLI answers — a default branch that is
 neither `develop` nor `main`, `develop` or `main` with no protection on the

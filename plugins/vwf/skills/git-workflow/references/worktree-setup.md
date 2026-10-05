@@ -26,13 +26,17 @@ Follow this priority:
 
 ### Safety verification
 
-Verify the directory is git-ignored before creating the worktree:
+Verify the directory is git-ignored before creating the worktree. Probe a
+child path: a `.worktrees/` pattern does not match the bare name until the
+directory exists, so the bare name reads "not ignored" on a first worktree.
 
 ```bash
-git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
+git check-ignore -q .worktrees/x 2>/dev/null || git check-ignore -q worktrees/x 2>/dev/null
 ```
 
-If NOT ignored: add it to `.gitignore`, commit that change, then proceed.
+If NOT ignored: stop and say so. `.worktrees/` is a line in tool-config's
+universal `.gitignore`, landed by `/vwf:setup reshape`; this skill never writes
+the file.
 
 ### Branch name
 

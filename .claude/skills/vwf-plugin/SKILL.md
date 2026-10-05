@@ -92,102 +92,101 @@ members as the **union** of `.gitmodules` walked recursively and the config's
 `members:` list, deduped on realpath, with a path in only one of two present
 sources reported as a disagreement and never shaped, and an absent member
 offered a **clone row inside the same plan**. Mode resolves per repo from what
-its tree contains, never a flag or setup's fork — `shaped` (the adapter lockfile
-exists), `source` (no lockfile, but a language manifest, a source directory, a
-root tool config or a `.config/`), `blank` (none of those); `source` runs the
-new-repo landing plus the survey passes with something to read, and the
-replace-or-keep offer over materializer conflicts runs in every mode. The root
-survey reads a repo's own tooling before a pack lands over it: every root
-spelling in the nine-row tool-config table
-(`skills/init/references/tool-configs.md`) is a plan row — move into `.config/`
-and offer through pass 6 (default), keep both, delete on an explicit pick; the
-toolchain manager's root file — the table's `handed` row, no row of init's — is
-folded by `/stackgen:tool-config`'s own migration, the dependency-update policy
-yields to one the repo has, and `.gitignore`, `.gitattributes` and
-`.graphifyignore` are handed to the skill's git and graphify tools, which adopt
-a landed sectioned file as blocks — a foreign hook manager is a row defaulting
-to keep (switch runs `setup:precommit --force` last), inline `[tasks.*]` tables
-count as tasks, an unmapped commit type is the skill's pre-commit conflict row,
-and every licence spelling counts. After any mode's landing the four new-repo
-steps (§3 secrets, §4 placeholders, §8 readme/licence/security, §9 bootstrap —
-the executable bit alone) run — trust is the user's prerequisite, checked in the
-survey and never granted, and `/stackgen:tool-config all` runs the `setup:all`
-aggregator itself — and `init` re-records the lockfile hash of every file it
-filled or appended to — pass 6's replace and keep re-record too — as the last
-step before the git pass; a missing `.config/vwf.yaml` gets a stub
-(`config_format` + `enforcement` + `answers`) so `kept_files` and the three
-conditional answers are never deferred. A **stack read** — pins, else lockfile
-components, else a fixed manifest table, first hit per language, six keys —
-drives the skill's `runtimes` argument and the ignore-template fallback: one
-GitHub template, as a `gitignore:<Name>` block, per detected language no landed
-pack asks for. There is **one plan with a section per repo and one consent**,
-and the apply order is members first so the base commits its gitlinks current.
-`init` first calls `/stackgen:tool-config all` with its answers as flags
-(`--repo`, `--members a,b`, …) — `preview all` for the plan, whose rows it
-shows, then `all … --answers <id>:<answer>,…` on the consent — the skill's node
-script lands the mise config with every pin exact and the repo-local mise skill,
-and the skill lands the gates, the ignore and attribute files, the graph's
-ignore file and, on `update_bot=renovate`, the Renovate policy, and fills its
-own marked positions from them (the repo name, from that repo's own
-main-checkout folder name slugified and never from a project id; the member
-flags and their aliases, named for the **member repos**; `MERGE_MODEL_DEVELOP`,
-`MERGE_MODEL_MAIN`, `MEMBERS`, the two runtime positions from the stack read,
-and the commit gate's scopes from the project ids as `--scopes`, its forge links
-read from `origin` by the skill) — then writes its own **hygiene assets** from
-`skills/init/assets/hygiene/` (`CONTRIBUTING.md`, `SECURITY.md`, the licence
-texts, the issue forms) with no adapter fetch and no lock record, then
+its tree contains, never a flag or setup's fork — `shaped`
+(`.config/stackgen.yaml` with `format: 1`), **shaped on the old layout** (no
+`stackgen.yaml`, but `.config/mise/conf.d/tools.toml`, `conf.d/env.toml` or a
+root `.config/mise.dev.toml` — init names each such repo and **stops before the
+plan**, writing nothing anywhere, until the old-layout reshape ships), `source`
+(none of those, but a language manifest, a source directory, a root tool config
+or a `.config/`), `blank` (none of those); `source` runs the new-repo landing
+plus the survey passes with something to read, and the replace-or-keep offer
+over materializer conflicts runs in every mode. The root survey reads a repo's
+own tooling before a pack lands over it: every root spelling in the tool-config
+table (`skills/init/references/tool-configs.md`) is a plan row — move into
+`.config/` and offer through the skill's `write` row (default), keep both,
+delete on an explicit pick; the toolchain manager's root file is the table's
+`report` row — `all` folds nothing, so it stays and is reported under Deferred —
+a dependency-update policy is no row's (nothing ships one), and `.gitignore`,
+`.gitattributes` and `.graphifyignore` are `handed` rows the skill renders in
+place. An ignore file with no marker pair is one `write` row replacing it whole,
+so init lists the repo's **own lines** under it and appends them below the
+closing marker on `ok`; `.gitattributes` has no markers, so its own lines are
+appended to the end on `ok` and every later preview preselects `keep-existing`,
+so a default reshape never drops them. A foreign hook manager is a row
+defaulting to keep (switch runs `setup:precommit --force` last), inline
+`[tasks.*]` tables count as tasks, an unmapped commit type is the skill's
+pre-commit conflict row, and every licence spelling counts. After any mode's
+landing the four new-repo steps (§3 secrets, §4 placeholders, §8
+readme/licence/security, §9 bootstrap — the executable bit alone) run — trust is
+the user's prerequisite, checked in the survey and never granted, and
+`/stackgen:tool-config all` runs the `setup:all` aggregator itself — and `init`
+re-records the lockfile hash of every pack file pass 6 replaced or kept as the
+last step before the git pass; a missing `.config/vwf.yaml` gets a stub
+(`config_format` + `enforcement`) so `kept_files` is never deferred. A **stack
+read** — in `source` mode only, a fixed manifest table — drives one thing, the
+sub-project proposals; the ignore set is a universal superset, so no template is
+asked for. There is **one plan with a section per repo and one consent**, and
+the apply order is members first so the base commits its gitlinks current.
+`init` first calls `/stackgen:tool-config all` with its answers as flags —
+`--repo-name`, `--members`, `--scopes`, `--merge-model-develop`,
+`--merge-model-main`, `--forge` (read from `origin`'s host), `--secrets`, and
+`--node true` / `--external false` only where `stackgen.yaml` holds no value
+yet, since `/vwf:setup` re-derives both from the packs it pins — `preview all`
+for the plan, whose rows it shows, then `all … --answers <id>:<answer>,…` on the
+consent. The skill writes them into the repo's `.config/stackgen.yaml`, the file
+only its script writes, and renders from it the mise config with every pin
+exact, the gates, the ignore and attribute files and the graph's ignore file
+(the repo name from that repo's own main-checkout folder name slugified and
+never from a project id; the member flags and their aliases, named for the
+**member repos**; the landing pair; the commit gate's scopes, its forge links
+read from `origin` by the skill) — then init writes its own **hygiene assets**
+from `skills/init/assets/hygiene/` (`CONTRIBUTING.md`, `SECURITY.md`, the
+licence texts, the issue forms) with no adapter fetch and no lock record, then
 materializes the secrets provider the user picked — the only adapter fetch left
 — per repo, each with its own lockfile; it fetches no bundle for its baseline.
-It fills the marked positions the packs leave it (the per-project groups and
-their aliases, from the project ids) and writes a two-line readme stub; it names
-no tool, and every file it lays down is a pack's, the skill's or its own
-assets'. It ships, asks about and composes **no editor configuration** — a
-repo's `.vscode/` is the user's, untouched — and `enforcement.kept_files` and
-the top-level `answers:` block are the two keys it writes in the base's
-`.config/vwf.yaml`. Before any of that it asks **seven** questions — one round
-each for the whole product, a per-repo answer showing as a row inside its single
-round — the first naming each `blank` or `source` repo's folder, which is the
-one thing that fills `REPO_NAME`, and the second confirming every project id,
-the slug it resolves to and the source the name came from — the registry, a
-sub-project directory (defined once in init: the registry's `projects[].path`,
-or on a first run in `source` mode a non-root directory with its own manifest or
-one a workspace file lists), or the project's platform token — grouped by repo:
-nothing writes a `p:<slug>:*` group, its alias or a commit scope until that list
-is accepted, and the scopes are filled on **every** run, the first included, one
-per confirmed id. The fifth asks each repo's **visibility**, `public` or
-`private`, defaulted from the forge where the repo has an origin the forge CLI
-answers for and `private` otherwise, written nowhere in the tree; its two
-dependent parts are the sixth round — 5a the licence, rows for `public` repos
-only (a private repo gets no `LICENSE`), and 5b the security contact, a public
-repo's row defaulted to its advisories page and a private repo's a free email or
-internal URL with no default. The sixth asks the **update bot** per repo,
-`renovate`, `dependabot` or `none`, seeded from the survey; that is the seventh
-round, and with the forge read from each `origin` host and question 4's provider
-slug it makes the `answers:` map every fetch passes the materializer beside
-`repo:` — every key present, `none` the no-match value on `forge` and `secrets`
-and a legal answer on `update_bot` — against which a pack's `conditional:` files
-are evaluated, the skips listed per repo under a **Skipped** heading in the
-plan. The same three are **recorded**, in every mode, in the base config's
-top-level `answers:` block — `secrets` once for the product, `repos:` keyed as
-`kept_files` keys a path (`.` for the base) with `forge` and `update_bot` per
-repo — so the later callers evaluate a `when:` against the same values; the
-forge is re-read live from `origin` on every run and a record the live host
-contradicts is rewritten in place, that one value, and reported. 4 is answered
-once for every repo, 2, 5, 5b and 6 carry a row per repo, 5a a row per public
-repo, and 1 and 3 a row per repo that resolved `blank` or `source`. It then
-closes with a **consent-gated git pass**, whose two questions are asked once and
-applied to every repo. It first reads where each repo stands
-(`git symbolic-ref -q HEAD`): a member on no branch is a **refused** row naming
-the branch to check out, its shaping deferred and its gitlink unmoved, and a
-member the run clones is checked out on the remote branch holding the recorded
-gitlink commit, at that branch's tip, so it never arrives detached. It asks the
-landing model **one row per repo per branch** — `develop` and `main`, each
-`direct` or `pr`, preselected `direct` and `pr`, or from what a replaced file
-carries — and writes each row to that repo's `MERGE_MODEL_DEVELOP` and
-`MERGE_MODEL_MAIN`; a kept file still carrying the single legacy `MERGE_MODEL`
-is not asked, but its line is rewritten in place into the pair carrying the one
-value, and until then every reader takes that value for both branches. It
-creates whichever of `develop` and `main` the repo lacks — from the
+It writes the `_default` slot per project id and a two-line readme stub; it
+names no tool, and every file it lays down is a pack's, the skill's or its own
+assets'. It asks about **no editor configuration** — the one universal
+`.vscode/settings.json` is the skill's — and `enforcement.kept_files` is the one
+key it writes in the base's `.config/vwf.yaml`. Before any of that it asks
+**five** questions in **six** rounds — one round each for the whole product, a
+per-repo answer showing as a row inside its single round — the first naming each
+`blank` or `source` repo's folder, which is the one thing that fills
+`REPO_NAME`, and the second confirming every project id, the slug it resolves to
+and the source the name came from — the registry, a sub-project directory
+(defined once in init: the registry's `projects[].path`, or on a first run in
+`source` mode a non-root directory with its own manifest or one a workspace file
+lists), or the project's platform token — grouped by repo: nothing writes a
+`p:<slug>:*` group, its alias or a commit scope until that list is accepted, and
+the scopes are filled on **every** run, the first included, one per confirmed
+id. The fifth asks each repo's **visibility**, `public` or `private`, defaulted
+from the forge where the repo has an origin the forge CLI answers for and
+`private` otherwise, written nowhere in the tree; its two dependent parts are
+the sixth round — 5a the licence, rows for `public` repos only (a private repo
+gets no `LICENSE`), and 5b the security contact, a public repo's row defaulted
+to its advisories page and a private repo's a free email or internal URL with no
+default. The forge read from each `origin` host and question 4's provider slug
+make the `answers:` map the secrets provider's fetch passes the materializer
+beside `repo:` — both keys present, `none` the no-match value — against which a
+pack's `conditional:` files are evaluated, the skips listed per repo under a
+**Skipped** heading in the plan. The same two are **recorded** in every repo's
+`.config/stackgen.yaml` by the `all` call (`forge`, `secrets`), so the later
+callers evaluate a `when:` against the same values; the forge is re-read live
+from `origin` on every run and a held value the live host contradicts is passed
+again as `--forge`. 4 is answered once for every repo, 2, 5 and 5b carry a row
+per repo, 5a a row per public repo, and 1 and 3 a row per repo that resolved
+`blank` or `source`. It then closes with a **consent-gated git pass**, whose two
+questions are asked once and applied to every repo. It first reads where each
+repo stands (`git symbolic-ref -q HEAD`): a member on no branch is a **refused**
+row naming the branch to check out, its shaping deferred and its gitlink
+unmoved, and a member the run clones is checked out on the remote branch holding
+the recorded gitlink commit, at that branch's tip, so it never arrives detached.
+It asks the landing model **one row per repo per branch** — `develop` and
+`main`, each `direct` or `pr`, preselected `direct` and `pr`, or from what a
+replaced file carries — and passes each row to that repo's `all` call as
+`--merge-model-develop` and `--merge-model-main`, stored as `merge_model` in its
+`stackgen.yaml` and rendered into `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`.
+It creates whichever of `develop` and `main` the repo lacks — from the
 remote-tracking branch first, else from the table; a mainline of another name
 (`master`, `trunk`, read from `origin/HEAD`, else the branch the repo is on)
 gets `main` from it and `develop` from `main`, the old branch left in place and
@@ -200,7 +199,7 @@ force. **After the push comes the forge pass**, on one further consent for the
 whole product: it sets each pushed repo's default branch on the forge (`develop`
 preselected), protects `develop` and `main` there — no force-push, no deletion,
 and a pull request required on each branch whose own value is `pr`,
-`MERGE_MODEL_DEVELOP` for `develop` and `MERGE_MODEL_MAIN` for `main`; a branch
+`merge_model.develop` for `develop` and `merge_model.main` for `main`; a branch
 already protected in any form is left exactly as it is — and reaches the backlog
 skill's missing-project procedure for the base, never running the
 project-creating command itself. Those three are the only forge settings it
@@ -217,9 +216,10 @@ user to the door** — `/vwf:setup` after its materialize pass,
 `/vwf:doctor` has the drift finding that prints the one remedy,
 `/vwf:setup reshape`. `setup` is the Phase-0 bootstrapper — it onboards a repo
 (a Step-0 shape check, run over **every repo in the product** — the base and
-every locally-present member — that offers `/vwf:init` once when any of the
-three slugs is missing **or** any of doctor's seven baseline predicates fails in
-any of them, **repeated once after the materialize pass** against the lockfile
+every locally-present member — that offers `/vwf:init` once when any of them has
+no `.config/stackgen.yaml` **or** any of doctor's seven baseline predicates
+fails in any of them, and **stops** naming the repo when one is shaped on the
+old layout, **repeated once after the materialize pass** against the lockfile
 that pass just wrote so a pack version moved in the run is offered in the run —
 never on `reshape`, which runs no pass — the `reshape` argument forcing that
 offer and stopping once init returns, detect-or-ask topology via MCQ,
@@ -232,31 +232,39 @@ decides, setup pins.** Its **materialize pass** runs once per run in every mode
 — `current` included, which is the mode a repo architecture just wrote pins into
 resolves to — grouping the axes holding a slug the target repo's adapter
 lockfile does not name, deduping by slug per repo, and invoking
-`-stack-template` once per `(repo, slug)` with the contract's `repo:` line and
-the config's recorded `answers:` map beside it, the forge re-read live from that
-repo's `origin` — a template pinned months after `init` ran lands what that
-repo's answers allow, and a stale recorded forge is rewritten in place and left
-for `/vwf:setup reshape` to land the files it had skipped; an **absent** axis is
-written `unresolved` and a pinned slug is never rewritten. The same pass re-runs
-every already-landed pack's `tool-config:` list on each run, previewing each
-call and relaying the skill's drift and conflict rows inside its own consent, so
-a call a newer pack changed reaches the repo without a reshape. On the spine it
-runs before the doctor gate, and a declined landing is the expected way to reach
-doctor's blocking *pinned, not materialized*. **It runs none of the
-foundations** — it ends by printing the chain and offering to start
-`/vwf:product`, because each of those commands resolves its own mode and reports
-what it did, which a gate inside setup could only guess at on their behalf. The
-one return trip is `/vwf:architecture`'s, which invokes `/vwf:setup` in-session
-after its own commit so the pins it just recorded get materialized. `product.md`
-(the Phase −1 outcome contract, type `vwf-product`, gated by the
-`product-reviewer`) and `architecture` (the registry) are both unconditionally
-required before `blueprint` — every **flow's** Purpose must `Serves:`-link a
-product goal anchor (entities trace to goals transitively via their `Used by:`
-flow links), which the `blueprint-reviewer` verifies and the minimalism check
-traces to. `design-system` is a second foundation, **required once the registry
-has a UI project** (some project declares a **screen platform**): `blueprint`
-halts on a flow with a Screens surface if `docs/blueprint/design-system.md` is
-missing. `environment.md` (the per-project env-var/secret catalog, type
+`-stack-template` once per `(repo, slug)` with the contract's `repo:` line, an
+`answers:` map of the forge and secrets provider that repo's
+`.config/stackgen.yaml` holds (the forge re-read live from `origin`), and a
+`values:` map — pack slug → lowercase name → value — of each pack's `values:`
+entries, gathered by running its `detect` command, else asking its `question`;
+the materializer copies the pack's `config/`, runs
+`tool-config pack --slug <s> --dir <d> --set <name>=<value>` for its
+`templates/`, and records each rendered path with `rendered: true` and no hash.
+A template pinned months after `init` ran lands what that repo's answers allow;
+an **absent** axis is written `unresolved` and a pinned slug is never rewritten.
+The same pass re-runs `pack` for every already-landed pack on each run,
+previewing each call and relaying the skill's rows inside its own consent, so a
+template a newer pack changed reaches the repo without a reshape; a dropped pack
+goes through `pack-remove` before its recorded files are deleted; and after the
+packs setup re-derives `node` (any pinned node-based pack) and `external` (a
+pinned pack shipping a `setup/external/*` task) and calls `all` with the ones
+that changed. On the spine it runs before the doctor gate, and a declined
+landing is the expected way to reach doctor's blocking *pinned, not
+materialized*. **It runs none of the foundations** — it ends by printing the
+chain and offering to start `/vwf:product`, because each of those commands
+resolves its own mode and reports what it did, which a gate inside setup could
+only guess at on their behalf. The one return trip is `/vwf:architecture`'s,
+which invokes `/vwf:setup` in-session after its own commit so the pins it just
+recorded get materialized. `product.md` (the Phase −1 outcome contract, type
+`vwf-product`, gated by the `product-reviewer`) and `architecture` (the
+registry) are both unconditionally required before `blueprint` — every
+**flow's** Purpose must `Serves:`-link a product goal anchor (entities trace to
+goals transitively via their `Used by:` flow links), which the
+`blueprint-reviewer` verifies and the minimalism check traces to.
+`design-system` is a second foundation, **required once the registry has a UI
+project** (some project declares a **screen platform**): `blueprint` halts on a
+flow with a Screens surface if `docs/blueprint/design-system.md` is missing.
+`environment.md` (the per-project env-var/secret catalog, type
 `vwf-environment`) is a third foundation, **required once the registry declares
 an external integration or a secrets-manager `config`** — `setup` bootstraps it
 from the repo's existing env-var/secret usage (names only, never values) and
