@@ -35,11 +35,14 @@ mise run setup:external:start
 print_header "Setting up dependencies ..."
 mise run setup:deps:all
 
+print_header "Setting up commit hooks ..."
+mise run setup:precommit
+
 print_header "Setting up AI tooling ..."
 mise run setup:ai:all
 
-# After AI tooling: an older installer `setup:ai` can run wires graphify's raw git hooks and merge driver, which this strips.
-print_header "Setting up commit hooks ..."
+# Again: an older installer `setup:ai` runs wires graphify's raw git hooks and merge driver, which this strips.
+print_header "Re-checking commit hooks ..."
 mise run setup:precommit
 
 # Members only on request — `--all`, or a member's own `--<slug>` — each running its OWN task library
