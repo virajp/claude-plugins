@@ -21,10 +21,10 @@ now spent: every curated stack plugin has retired, so for every pack here the
 pack is the only home. Three packs went straight there, deleting their source
 in the same commit because the pack plus a contract together carry everything
 that source said: Wave D's `container-image` (with `contracts/local-stack.md`),
-`doppler` (with `contracts/secrets.md`), and `github-actions` (with
-`contracts/release-trigger.md`) — the third being the first to retire not a
-skill but a **whole plugin**, `cicd` having been exactly one kind wearing a
-manifest.
+a secrets pack (with `contracts/secrets.md`) since deleted in favour of `fnox`,
+and `github-actions` (with `contracts/release-trigger.md`) — the third being
+the first to retire not a skill but a **whole plugin**, `cicd` having been
+exactly one kind wearing a manifest.
 
 **Wave C — `ci-system/`, kind `ci-system`:** `github-actions`. Exactly one CI
 system per repo, so this bundle never composes two. Its neutral contract is
@@ -53,20 +53,22 @@ repo-wide one: `eslint` and `tsconfig` are meaningful for exactly one
 toolchain. The gates that run over any repo are `stackgen:tool-config`'s.
 
 **The Swift package stack made Swift the fourth language root on 2026-09-23**,
-after TypeScript and the Markdown and Bash pair the `claude-code-plugin`
-bundle composes. `swift-package`, `platforms: [packages]`, pins four packs:
+after TypeScript and the Markdown and Bash pair the `claude-code-plugin` bundle
+composes. `swift-package`, `platforms: [packages]`, pins four packs:
 `language/swift` (the root, declaring `sourcekit-lsp` and `binaries: [swift]`,
 since the toolchain is the host's), `package-manager/swiftpm` (doctrine only,
-no `config/` tier, and a `lockfile` fact naming `Package.resolved` at the
-root or inside an `.xcodeproj`), `toolchain-gate/swift-format` and
+no `config/` tier, and a `lockfile` fact naming `Package.resolved` at the root
+or inside an `.xcodeproj`), `toolchain-gate/swift-format` and
 `toolchain-gate/swiftlint` — two more gates meaningful for one toolchain.
-swift-format ships with the toolchain; SwiftLint is pinned through mise by
-its pack's `tool-config:` call. `language/swift` owns the tasks,
-which take their file list from git, NUL-separated and `./`-prefixed —
-`code:format` the hook's staged list when one is passed — stop with an error
-when `git ls-files` fails, walk the tree with `find` when there is neither a
-`.git` entry nor `GIT_DIR`, or no git, and skip SwiftLint when no Swift
-source is in scope. No pack lands `Package.swift`: `swift package init`
+swift-format ships with the toolchain; SwiftLint is pinned through mise by its
+pack's template, rendered into `.config/mise/conf.d/swiftlint/`. Each gate pack
+owns its subtasks — `code:format:swift-format`, `code:lint:swift-format`,
+`code:lint:swiftlint` — and `language/swift` the `setup:deps:<verb>:swift`
+ones. The gate subtasks take their file list from git, NUL-separated and
+`./`-prefixed — swift-format the hook's staged list when one is passed — stop
+with an error when `git ls-files` fails, walk the tree with `find` when there
+is neither a `.git` entry nor `GIT_DIR`, or no git, and skip SwiftLint when no
+Swift source is in scope. No pack lands `Package.swift`: `swift package init`
 creates it.
 
 **Wave C — `app-framework/flutter`**, kind `app-framework`, with
@@ -88,10 +90,12 @@ build from a committed Xcode project a person creates once — no pack lands it
 and no generator writes it — so the pack declares `swift` as a bare binary and
 `xcodebuild` with the probe `xcodebuild -version`, which doctor runs because a
 Command Line Tools stub is on `PATH` too. Its tasks check `xcodebuild -version`
-against the `XCODE_VERSION` mise exports, set by its pack's `tool-config:` call,
-and refuse an unset or empty pin. That pin and the three `SIMULATOR_*` pins
-beside it land empty and are filled by `/vwf:setup`, which runs each
-`machine_env` entry's `detect` and offers the answer as the default. Its
+against the `XCODE_VERSION` mise exports, rendered from its pack's template
+into `.config/mise/conf.d/swiftui/mise.toml`, and refuse an unset or empty
+pin. That pin and the three `SIMULATOR_*` pins beside it are the pack's own
+template values, stored under `packs.swiftui` in `.config/stackgen.yaml` and
+filled by `/vwf:setup`, which reads this machine's answer and offers it as the
+default. Its
 `ux-gate` runs the swift-snapshot-testing goldens on the simulator the repo
 pins. Its doctrine landed on 2026-09-25 with one reference per Apple platform —
 iOS and iPadOS, macOS, CarPlay, watchOS, tvOS, visionOS, each keyed by the vwf
@@ -172,25 +176,19 @@ hold what someone curated. LSP configuration stays out of the repo — no
 project file can express one — and reaches the developer's machine through
 the generated local plugin instead, the third output target Wave E added.
 
-**Secrets — `capability-provider/`, category `secrets-manager`:** `doppler` and
-`fnox`, the second pair to land in a category rather than one instance, and the
-first landing where the choice between them is the whole point. Their neutral
-contract is `../assets/contracts/secrets.md`, whose clauses both are judged
-against; the axis that separates them is **where the secret lives and what
-onboarding a teammate costs**, and the contract deliberately declines to rank
-them.
+**Secrets — `capability-provider/`, category `secrets-manager`:** `fnox`, the
+one pack left in the category since its hosted-vault sibling was deleted. Its
+neutral contract is `../assets/contracts/secrets.md`, whose clauses it is
+judged against; a second secrets manager lands as a second pack in the same
+category, judged against the same clauses.
 
-Two things are worth knowing here rather than discovering later. The contract
-carries an **encrypt-into-git allowance** under four conditions, and only `fnox`
-engages it — a pack storing nothing in the repository emits no scanner allowlist
-and claims no exemption, so a committed plaintext secrets file stays a finding
-whichever pack is pinned. And `doppler`'s scope is **`development` only**, which
-its contract-satisfaction topic states as a **named gap** on clauses 1 and 2
-rather than omitting them: deployed environments take their secrets from the
-platform that runs them. That is the contract's "a clause a tool cannot satisfy
-is stated as such" rule doing what it exists for.
+One thing is worth knowing here rather than discovering later. The contract
+carries an **encrypt-into-git allowance** under four conditions, and `fnox`
+engages it — a pack storing nothing in the repository emits no scanner
+allowlist and claims no exemption, so a committed plaintext secrets file stays
+a finding whichever pack is pinned.
 
-The since-dissolved `devtools` plugin lost its `doppler` skill in the same
+The since-dissolved `devtools` plugin lost its secrets skill in the same
 landing — the second pack to retire its source skill on arrival. That plugin
 dissolved into this one entirely; nothing named `devtools` ships any more.
 

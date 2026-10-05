@@ -26,13 +26,16 @@ Swift toolchain as `swift format`; the configuration is
 Through the task library, so the gate and a developer run the same command:
 
 ```bash
-mise run code:format          # check — exits non-zero on any unformatted file
-mise run code:format --fix    # rewrite in place
+mise run code:format:swift-format        # check — non-zero on any unformatted file
+mise run code:format:swift-format --fix  # rewrite in place
+mise run code:lint:swift-format          # the strict lint
 ```
 
-Underneath, the task hands `swift format` the Swift files git lists — tracked,
-plus untracked ones not ignored — by name, never by walking a directory list.
-`--fix` formats them in place, then lints the same files; the check lints only:
+The repo's `code:format:all` and `code:lint:all` run these beside every other
+subtask. Underneath, each hands `swift format` the Swift files git lists —
+tracked, plus untracked ones not ignored — by name, never by walking a
+directory list. The format subtask under `--fix` formats them in place, and
+otherwise lints; the lint subtask always lints:
 
 ```bash
 swift format format --in-place \
@@ -46,10 +49,11 @@ swift format lint --strict \
 ```
 
 `format --in-place` exits 0 even on a finding it cannot fix, which is why the
-strict lint follows it under `--fix`. `lint --strict` turns every finding into
-an error, which is what makes it a gate. Without `--configuration` the tool
-searches upward for a `.swift-format` file, finds none, and formats with
-upstream's defaults — so a bare `swift format` is never the gate's answer.
+lint subtask runs the strict lint under `--fix` too. `lint --strict` turns
+every finding into an error, which is what makes it a gate. Without
+`--configuration` the tool searches upward for a `.swift-format` file, finds
+none, and formats with upstream's defaults — so a bare `swift format` is never
+the gate's answer.
 
 ## The house layout
 
@@ -69,7 +73,7 @@ upstream's defaults — so a bare `swift format` is never the gate's answer.
 - **Every key is spelled out**, defaults included. A toolchain upgrade that
   changes a default must not change the layout unannounced.
 - **A layout change is its own commit**: edit the file, run
-  `mise run code:format --fix` over the whole tree, commit both together with
+  `mise run code:format:all --fix` over the whole tree, commit both together with
   nothing else in it — a reviewer can then skip it as mechanical.
 - **Lint-style rules stay at upstream's defaults** (`rules:`). SwiftLint is the
   correctness gate; turning on a swift-format rule that SwiftLint also has

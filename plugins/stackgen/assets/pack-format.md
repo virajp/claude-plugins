@@ -28,16 +28,19 @@ stacks/<type>/<slug>/
 ├── hooks/               # optional: hook scripts + their settings entries
 │   ├── <name>.sh        #   the script, copied into .claude/hooks/
 │   └── hooks.yaml       #   the settings.json hook entries it needs (consent-gated)
-└── config/              # optional: repo config files — tree mirrors the repo root
-    ├── .config/…        #   e.g. .config/mise/tasks/code/format (consent-gated)
-    └── _<name>/…        #   pack-private payload — NEVER copied
+├── config/              # optional: repo config files — tree mirrors the repo root
+│   ├── .config/…        #   e.g. .config/mise/tasks/code/lint/<slug> (consent-gated)
+│   └── _<name>/…        #   pack-private payload — NEVER copied
+└── templates/           # optional: files tool-config renders — tree mirrors the repo root
+    └── .config/mise/conf.d/<slug>/…   # the pack's own mise files, and nothing else
 ```
 
 **Two sub-conventions inside `config/`**, each a different contract:
 
 - **`config/.config/…` and the root allowlist.** Everything under `config/`
   mirrors the repo root, so `config/.config/swiftlint.yml` lands at
-  `<repo>/.config/swiftlint.yml` and `config/.gitignore` at `<repo>/.gitignore`.
+  `<repo>/.config/swiftlint.yml` and `config/wrangler.jsonc` at
+  `<repo>/wrangler.jsonc`.
   A path landing at the **root** must be on the fixed allowlist
   (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`); anything else belongs
   under `.config/`, and the materializer refuses a root path that is not on
@@ -53,8 +56,11 @@ stacks/<type>/<slug>/
   `${CLAUDE_PLUGIN_ROOT}/assets/ids.md` defines, never the raw name — and
   the materializer's copy rules are where that behaviour is specified.
 
-A pack ships no fragment of any kind — no mise `conf.d` fragment, no
-pre-commit hook fragment, no editor fragment; it lists `tool-config:` calls.
+A pack ships no fragment of a universal file — no pre-commit hook, no
+ignore line, no exclude, no editor setting: `stackgen:tool-config` ships
+those as universal supersets, every stack's entries whether or not the repo
+uses that stack. What a pack adds to the toolchain is its own mise folder,
+in `templates/`, and its own subtasks, in `config/` (both below).
 
 `<type>` is a component type from
 `${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`. The slug is unique within the
@@ -75,12 +81,12 @@ merging never owning — the rules, the per-file lockfile record, the
 composition order when two components write one tree, the root allowlist and
 the four things the tier still may not write are
 `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. A gate pack **does** ship the
-config file it governs; a provider's environment is a `tool-config:` call; what
-stays out is a language manifest, a CI workflow, editor settings and
-CLAUDE.md — the editor is the user's to configure. **Mode is preserved**:
-anything under `config/.config/mise/tasks/**` must be authored executable
-(755), which `p:plugins:check` asserts, because mise runs a task file directly
-and reports a non-executable one as an unknown task.
+config file it governs; a provider's environment is a file in its
+`templates/`; what stays out is a language manifest, a CI workflow, editor
+settings and CLAUDE.md — the editor is the user's to configure. **Mode is
+preserved**: anything under `config/.config/mise/tasks/**` must be authored
+executable (755), which `p:plugins:check` asserts, because mise runs a task
+file directly and reports a non-executable one as an unknown task.
 
 ## `pack.yaml`
 
@@ -108,10 +114,6 @@ languages: # language and app-framework components only
       binaries: [ <name> | { name: <name>, probe: <command> } ] # optional — executables mise does not manage (xcodebuild, say); absent means none; see below
 package_manager: <token> # package-manager components only
 lockfile: [ <path or glob> ] # package-manager components only — where the lockfile lives, repo-root relative; any match passes
-machine_env: # optional — env values detected from the machine, asked by /vwf:setup; see below
-  - { name: <ENV_VAR>, detect: <command>, question: <prompt> }
-tool-config: # optional — /stackgen:tool-config calls; see below
-  - <tool> <instruction>
 artifact: <token> # deploy-target components, and deploy-side cloud-service ones
 mcp_servers: {} # design-tool and other components needing an MCP server — written into the project's .mcp.json behind tier-2 consent
 user_mcp_servers: {} # user-scoped — the generated local plugin's mcpServers, tier 3
@@ -174,137 +176,110 @@ The second entry is why the key is a list: an app's lockfile sits inside
 the Xcode project Xcode writes it into, a library's at the root, and one
 pack serves both.
 
-### `machine_env:` — values read from the machine, asked at setup
+### `templates/` — the pack's own mise files
 
-A pack whose tasks read an environment value only the developer's machine
-can answer — the Xcode it builds with, the simulator it tests on —
-declares it as a pack-level `machine_env:` list:
+A pack that needs a tool pin, an env value or an alias ships them as a mise
+file in `templates/.config/mise/conf.d/<slug>/` — `mise.toml` for every
+environment, `mise.<env>.toml` (`dev`, `ci`, `test`) for one — and nothing
+else lives in `templates/`. `stackgen:tool-config` renders the tree into
+the repo at the same relative paths with
+`pack --slug <slug> --dir <pack dir> [--set <key>=<value>]…`
+(`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md#packs`); the
+materializer never copies it. The checker holds the folder to the slug:
+`templates/.config/mise/conf.d/` carries exactly one entry, the folder named
+for the pack, since tool-config renders and removes that folder as the
+pack's.
 
-```yaml
-machine_env:
-  - name: XCODE_VERSION
-    detect: "xcodebuild -version | awk 'NR==1 {print $2}'"
-    question: Which Xcode version does this repo build with?
+```toml
+# templates/.config/mise/conf.d/swiftlint/mise.toml
+[tools."aqua:realm/SwiftLint"]
+version = "latest"
 ```
 
-`name` is the environment variable, `detect` a shell command whose stdout
-is the default, and `question` the prompt. Each `name` **must** be set by
-a mise `add-env` entry in the pack's `tool-config:` list —
-`{tool: mise, verb: add-env, key: <KEY>, value: "", env: <scope>}`, an
-empty value; `p:plugins:check` rule 11 refuses a name no such entry sets.
-The materializer runs that entry, so the key lands **unset**;
-`/vwf:setup`'s materialize pass, the caller that lands the pack, runs each
-`detect`, offers the output preselected — the person may type another
-value — and writes the answer with tool-config's script,
-`mise set-env --key <KEY> --value <value> --for <pack>`. A `detect`
-that fails or prints nothing offers no default and still asks. Setup runs
-a `detect` only while the committed template entry matches the hash its
-lockfile records — on drift it runs none and asks with no default — and
-refuses a value mise would not take literally (control characters, its
-template or expansion characters, a quote it cannot escape). The procedure
-is setup's. The values are the repo's committed pins, not per-machine
-overrides, and they live in the pack's tool-config block, which is never
-drift.
+**Pins follow tool-config's rule**
+(`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md#pins`): write `latest`
+and nothing else. In a file a CI environment loads — `mise.toml`,
+`mise.ci.toml`, `mise.test.toml` — the script resolves it to an exact
+version as it renders; a `mise.dev.toml` keeps `latest`. A tool is pinned in
+exactly one `conf.d/` folder: never re-pin one the universal `_base/` or
+`ai/` folder already pins.
 
-### `tool-config:` — what a pack asks of the universal tools
+**A value only the machine can answer** — the Xcode a repo builds with, the
+simulator its goldens are recorded on — is a `@@NAME@@` tag in the pack's
+template, never a hardcoded default:
 
-A pack that needs a tool pin, an env value or an alias in the toolchain
-manager's files — or a formatter plugin, a hook, an exclude or an ignore in
-the gates' — lists the instructions under `tool-config:`, one entry each.
-A **mise**, **dprint**, **pre-commit** or **`all`** entry is a structured
-mapping: `tool`, `verb`, and the keys that verb takes. A **git** entry is
-still a string line starting with `git` until git moves to the same shape:
-
-```yaml
-tool-config:
-  - {tool: mise, verb: add-tool, name: swiftlint, version: "0.65.1", env: all}
-  - {tool: mise, verb: add-env, key: XCODE_VERSION, value: "", env: all}
-  - {tool: mise, verb: add-alias, name: npx, command: "pnpm dlx"}
-  - {tool: dprint, verb: add-plugin, name: typescript}
-  - {tool: all, verb: add-exclude, paths: [node_modules, .turbo], generated: true}
-  - {tool: all, verb: add-exclude, paths: ["*.xcassets/"]}
-  - {tool: pre-commit, verb: add-linter-ignore, paths: [.dart_tool]}
-  - {tool: pre-commit, verb: add-hook, repo: local, id: uv-lock-check,
-     stage: pre-commit, name: "uv lockfile is current",
-     entry: "mise x -- uv lock --check", language: system,
-     pass-filenames: false}
-  - git add ignore template=Node
+```toml
+# templates/.config/mise/conf.d/swiftui/mise.toml
+[env]
+XCODE_VERSION = "@@XCODE_VERSION@@"
 ```
 
-The verb shapes:
+The value is stored under `packs.<slug>` in the repo's
+`.config/stackgen.yaml`, written by the script from `--set <key>=<value>`
+(the key lowercase — `--set xcode_version=26.1` fills `@@XCODE_VERSION@@`),
+and visible to that pack's templates alone. A render missing a value the
+template names is refused, naming it. Who asks for the value is the
+caller's; the pack only names it. The tag grammar is tool-config's
+(`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md#templates`), and
+`p:plugins:check` rule 11 refuses a tag it would not read.
 
-| Tool         | Verb                | Keys (optional in brackets)                                                                                                          |
-| ------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `mise`       | `add-tool`          | `name`, `version`, `env`                                                                                                             |
-| `mise`       | `add-env`           | `key`, `value`, `env`                                                                                                                |
-| `mise`       | `add-alias`         | `name`, `command`                                                                                                                    |
-| `mise`       | `add-plugin`        | `plugin` (`<name>@<marketplace>`), `source` (`<owner/repo>` or a `/`, `./`, `../` path); every segment opens with a letter or digit  |
-| `dprint`     | `add-plugin`        | `name`                                                                                                                               |
-| `pre-commit` | `add-linter-ignore` | `paths`                                                                                                                              |
-| `pre-commit` | `add-hook`          | `repo`, `id`, `stage`, [`name`, `entry`, `language`, `files`, `types`, `args`, `rev`, `description`, `pass-filenames`, `always-run`] |
-| `all`        | `add-exclude`       | `paths`, [`generated`]                                                                                                               |
+### Subtasks — what a pack adds to a gate
 
-A mise value is a string. A bare word such as `swiftlint` or `all` is one
-already; quote a version, a value or a command, which YAML would otherwise
-read as a number or a null. `env` is one of `all`, `dev`, `ci`, `test`; a
-`version` is an exact pin, a version prefix or `latest`, each written as an
-exact version — the script resolves a prefix or `latest` with
-`mise latest` when it writes. A Tera template value stays verbatim inside
-its quotes.
+The universal gates are `…:all` tasks that call one subtask each:
+`code:check:all`, `code:format:all`, `code:lint:all`, `setup:ai:all` and
+`setup:deps:<verb>:all` for `install`, `upgrade`, `outdated`, `audit` and
+`cleanup`. A pack adds to one by shipping a task file, executable, in its
+`config/` tier at
+`.config/mise/tasks/{code/{check,format,lint},setup/ai,setup/deps/<verb>}/<slug>`
+— the leaf **is** the pack's slug, so two packs never write one file:
+flutter's are `code/format/flutter` and `code/lint/flutter`, uv's lock check
+is `code/check/uv`. A subtask carries only its own tool's steps, and skips
+itself with a warning when its tool or config is absent. tool-config
+re-renders every `…:all` task on each `pack` and `pack-remove` call, so the
+new subtask joins the gate the hooks already call; a pack never ships a
+hook.
 
-`paths`, `types` and `args` are YAML lists of strings; `generated`,
-`pass-filenames` and `always-run` are YAML booleans; every other gate key
-is a string. Quote a path that opens with `*` — YAML reads a bare one as an
-alias — and a hook value holding `:`, `#` or a backslash. A local hook
-needs `name`, an `entry` opening `mise x -- ` and `language: system`; a
-URL hook needs `rev`; a `post-commit` or `post-merge` hook never sets
-`always-run: false`.
+**Three things a pack may not ship.** A slug from tool-config's reserved
+set — `all`, `ai`, `_base` — which name its own `…:all` leaf and its own
+`conf.d/` folders. A subtask whose leaf is one of tool-config's universal
+subtasks (`dprint`, `shell`, `house`, `workflows`, `base`): removing the
+pack would delete the universal file. And any file at a path
+tool-config's own trees ship — save one tool-config ships as a
+`#PLACEHOLDER` slot, which is a pack's to fill: the `capability-provider/fnox`
+pack's `setup/secrets` replaces the universal placeholder. `p:plugins:check`
+rule 11 refuses all three.
 
-**A trailing `/` marks a directory**, globs included: `*.xcassets/`
-excludes every matching directory and everything inside it. A `*` or `?`
-with no trailing `/` is a file glob; a bare name with neither is a
-directory. A path is relative — no leading `/`, no `.` or `..` part.
-
-The schema is the one tool-config's script exports, and `p:plugins:check`
-validates every structured entry against it, and the git string lines
-against the skill's grammar.
-
-The materializer runs each entry through `/stackgen:tool-config` for
-`<pack>` after copying the pack, under the `config/` consent line. The skill
-writes the lines between `# >>> <pack>` and `# <<< <pack>` markers. A pack
-dropped from a composition loses its blocks once for each tool it called:
-for mise, dprint, pre-commit and `all`, the script's
-`<tool> remove --for <pack>`; for git, `/stackgen:tool-config git remove
-<pack>`. The grammar is the skill's
-(`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`).
+**A dropped pack is removed with `pack-remove --slug <slug>`**: tool-config
+deletes `conf.d/<slug>/` and every subtask named `<slug>` — never a path its
+own trees ship — drops `packs.<slug>` from `.config/stackgen.yaml`, and
+re-renders the `…:all` tasks.
 
 ### `conditional:` — files that land only when an answer holds
 
 A pack may declare that some of its `config/` files make sense only under
-an answer the caller already holds — the forge the repo pushes to, the
-secrets provider picked, the update bot the repo runs.
+an answer the caller already holds — the forge the repo pushes to, or the
+secrets provider picked.
 `conditional:` is an optional list; each entry names a **path or glob**
 (spelled as the pack's `config/` tree spells it, relative to `config/` —
-so `renovate.json`, not `config/renovate.json`) and a `when:` map of
+so `.github/CODEOWNERS`, not `config/.github/CODEOWNERS`) and a `when:` map of
 **exactly one axis to one value**, drawn from a fixed vocabulary:
 
-| Axis         | Values                             | Answered by                                |
-| ------------ | ---------------------------------- | ------------------------------------------ |
-| `forge`      | `github`, `gitlab`                 | the origin host                            |
-| `secrets`    | a capability-provider slug         | the secrets-provider question              |
-| `update_bot` | `renovate`, `dependabot`, `none`   | the update-bot question, per repo          |
+| Axis      | Values                     | Answered by                   |
+| --------- | -------------------------- | ----------------------------- |
+| `forge`   | `github`, `gitlab`         | the origin host               |
+| `secrets` | a capability-provider slug | the secrets-provider question |
 
 ```yaml
 conditional:
-  - path: renovate.json
-    when: { update_bot: renovate }
+  - path: .github/CODEOWNERS
+    when: { forge: github }
 ```
 
-That entry is illustrative: a file that only makes sense on one forge,
-beside one provider or under one bot. **The key is reserved with no axis
-in use** — no shipped pack declares a `conditional:` entry today: a
-provider's ignore line is a `git add ignore` call in its `tool-config:`
-list, not a conditional file.
+That entry is illustrative: a file that only makes sense on one forge or
+beside one provider. **The key is reserved with no axis in use** — no
+shipped pack declares a `conditional:` entry today: a provider's ignore
+line is already in tool-config's universal `.gitignore`, not a conditional
+file.
 
 Rules:
 
@@ -360,8 +335,8 @@ questions, which is why a menu of components alone leaves nothing pickable.
 toolchain manager, the gates and the hygiene configs are
 `stackgen:tool-config`'s tools, and the prose files are `/vwf:init`'s own
 assets. Nothing about it is recorded in `.config/vwf.yaml` — nothing was
-chosen — only in `lock.yaml`, which is also what tells a caller whether the
-repo is shaped at all: the `tool-config/*` entries present, or not shaped.
+chosen. tool-config keeps the values it renders from in
+`.config/stackgen.yaml` and records nothing in `lock.yaml`.
 
 **`default: true` marks the menu entry vwf preselects on that axis.** It is
 optional and boolean, and it changes nothing about what the bundle is — only
@@ -430,7 +405,8 @@ which is the grain `stackgen-sync` acts at.
   the bundle is the recorded composition, and `stackgen-sync` diffs on
   that version.
 - **A landed file cites nothing by plugin path.** Everything under
-  `skills/`, `agents/`, `rules/`, `hooks/` and `config/`, plus a pack's
+  `skills/`, `agents/`, `rules/`, `hooks/`, `config/` and `templates/`,
+  plus a pack's
   `conventions.md` and a bundle's body, is copied verbatim into a repo
   that has **no plugin installed** — so the `${CLAUDE_PLUGIN_ROOT}` token,
   a bare `assets/…` path, a `../` climb out of the tree the file lands in,
@@ -442,18 +418,16 @@ which is the grain `stackgen-sync` acts at.
   rule 13 enforces it. This file is an asset rather than a landed tier, so
   its own citations may keep the token.
 - **A landed config or task file carries only the comments something
-  reads.** Under `config/` and `hooks/`, keep every comment a tool or skill
-  reads: `#MISE` and `#USAGE` lines, shebangs, `# shellcheck` directives,
-  the `# >>>`/`# <<<` block markers, `MARKED POSITION` lines and what a
-  filler needs beside them to find the value, grype ignore-reason
-  comments, commented-out templates a skill fills in, and any comment a
-  reference names as load-bearing. Beyond
-  those, a comment is at most a one-line warning where a reader would
-  otherwise break something non-obvious. Every longer explanation belongs
-  in the pack's `conventions.md` — dropped if it already says it, moved
-  there if not — and boilerplate repeated across files goes, though a
-  directive it sat above stays. Trimming a payload's comments is still a
-  payload change: bump the pack.
+  reads.** Under `config/`, `templates/` and `hooks/`, keep every comment a
+  tool or skill reads: `#MISE` and `#USAGE` lines, shebangs, `# shellcheck`
+  directives, `#PLACEHOLDER` markers, grype ignore-reason comments,
+  commented-out templates a skill fills in, and any comment a reference
+  names as load-bearing. Beyond those, a comment is at most a one-line
+  warning where a reader would otherwise break something non-obvious.
+  Every longer explanation belongs in the pack's `conventions.md` — dropped
+  if it already says it, moved there if not — and boilerplate repeated
+  across files goes, though a directive it sat above stays. Trimming a
+  payload's comments is still a payload change: bump the pack.
 - **Structure follows the kind; the slice follows the type.** A pack
   declares the bundle `kind` it composes into and ships the structural
   slice its `type` owns within that kind — the reviewer bar generated

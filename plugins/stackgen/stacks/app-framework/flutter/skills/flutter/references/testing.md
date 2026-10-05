@@ -91,7 +91,8 @@ End-to-end flows live under `integration_test/<area>/…_test.dart` using the
 `integration_test` SDK package. A single `integration_test/app_test.dart`
 aggregates them — import each `as alias` and call `alias.main()` after
 `IntegrationTestWidgetsFlutterBinding.ensureInitialized()`. Run the suite with
-the env injected: `doppler run -- flutter test integration_test/app_test.dart`.
+the env injected through the repo's secrets manager — with fnox,
+`fnox exec -- flutter test integration_test/app_test.dart`.
 
 ## Running & coverage
 

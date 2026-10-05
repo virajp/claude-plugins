@@ -30,17 +30,17 @@ releases, and says why in a comment.
 `Package.resolved` fails the build rather than being rewritten on the runner.
 Moving a pin is `swift package update`, run on purpose and committed.
 
-**`.build/` is the one build tree**: regenerable, and ignored by upstream
-`Swift.gitignore`, which this pack asks tool-config's git tool for
-(`git add ignore template=Swift`). Nothing is checked in from it. `.swiftpm/` holds SwiftPM's per-user state and is left to
-the repo: upstream leaves it commented out, because `.swiftpm/configuration/`
-can hold shared Xcode settings, so a repo that wants it ignored adds the line
-itself.
+**`.build/` is the one build tree**: regenerable, and ignored by the
+universal `.gitignore` tool-config lands in every repo, whose Swift section
+carries it. Nothing is checked in from it. `.swiftpm/`, SwiftPM's per-user
+state, is ignored by the same section, whole — git cannot re-include a path
+under an ignored directory, so shared Xcode settings do not live in
+`.swiftpm/configuration/`.
 
 ## What this pack writes
 
-Nothing into the repo. The dependency tasks — install, update, outdated,
-cleanup — call `swift package`, and they belong to the language pack, which
-owns the toolchain they run.
+Nothing into the repo. The dependency subtasks —
+`setup/deps/<verb>/swift` — call `swift package`, and they belong to the
+language pack, which owns the toolchain they run.
 
 Full judgment: the `swiftpm` skill.

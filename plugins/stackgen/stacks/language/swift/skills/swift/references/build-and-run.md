@@ -15,38 +15,39 @@ the same thing.
 
 ## The task wiring
 
-The repo's tasks are the interface; the tools behind them are detail.
+The repo's tasks are the interface; the tools behind them are detail. Each
+tool has its own subtask, and the repo's `code:format:all` and `code:lint:all`
+call every one by name — the Swift ones beside dprint, shfmt, shellcheck,
+actionlint and the house linter.
 
 | Task | Runs |
 | --- | --- |
-| `setup:deps:install` | `swift package resolve` — `--frozen` fails rather than move `Package.resolved` |
-| `code:format` | dprint and shfmt, then `swift format` with `.config/swift-format.json` over the Swift scope when no list is passed, or over the staged `.swift` files the hook passes, less the scope's exclusions — rewritten in place under `--fix`, then a strict lint either way |
-| `code:lint` | shellcheck and actionlint over the staged files the hook passes (every tracked file when none is passed), the house linter over every file git does not ignore, then `swiftlint lint --strict` with `.config/swiftlint.yml` over the Swift scope |
-| `setup:deps:outdated` | `swift package update --dry-run` |
-| `setup:deps:upgrade` | `swift package update` |
-| `setup:deps:cleanup` | removes `.build/` |
+| `setup:deps:install:swift` | `swift package resolve` — `--frozen` fails rather than move `Package.resolved` |
+| `code:format:swift-format` | `swift format` with `.config/swift-format.json` over the Swift scope when no list is passed, or over the staged `.swift` files the hook passes, less the scope's exclusions — rewritten in place under `--fix`, a strict lint otherwise |
+| `code:lint:swift-format` | `swift format lint --strict` over the same files, under `--fix` too |
+| `code:lint:swiftlint` | `swiftlint lint --strict` with `.config/swiftlint.yml` over the whole Swift scope |
+| `setup:deps:outdated:swift` | `swift package update --dry-run` |
+| `setup:deps:upgrade:swift` | `swift package update` |
+| `setup:deps:cleanup:swift` | removes `.build/` |
 
 The **Swift scope** is every `.swift` file git tracks or would track, less a
 fixed list the tasks hold themselves, at any depth — `.build/`, `.swiftpm/`,
-`Derived/`, `DerivedData/` and `*.generated.swift` — so both Swift gates judge
+`Derived/`, `DerivedData/` and `*.generated.swift` — so every Swift gate judges
 the same files. The shipped `.config/swiftlint.yml` excludes `.build/` and
 `.swiftpm/` at the repo root only; the any-depth exclusion is the tasks'. An
 `excluded:` entry you add to the config reaches SwiftLint, which is passed
-`--force-exclude`, but not `code:format`. Inside a git repository — a `.git`
+`--force-exclude`, but not swift-format. Inside a git repository — a `.git`
 entry here or above, or `GIT_DIR` set — the scope is git's list, and when git
 cannot give it the gates that read it stop with an error rather than judge an
-empty list: `code:format` given no file list, and `code:lint` before the house
-linter and SwiftLint run. Only with no `.git` entry and no `GIT_DIR`, or no
-git installed, do both walk the tree instead.
+empty list. Only with no `.git` entry and no `GIT_DIR`, or no git installed, do
+they walk the tree instead.
 
-`code:format` without `--fix` is read-only, so it is safe as a gate. The
-pre-commit hook calls `code:format --fix` with the staged files, so only those
-are formatted — and the strict lint that follows the rewrite runs over the
+`code:format:all` without `--fix` is read-only, so it is safe as a gate. The
+pre-commit hook calls `code:format:all --fix` with the staged files, so only
+those are formatted — and `code:lint:swift-format`'s strict lint runs over the
 same files, so a finding the formatter cannot fix fails the commit rather than
-CI. The hook calls `code:lint --fix` with the staged files too; shellcheck and
-actionlint take that list, but the house linter's rules read across files, so
-it always takes every file git does not ignore, and SwiftLint always takes the
-whole Swift scope.
+CI. The hook calls `code:lint:all --fix` with the staged files too; SwiftLint's
+rules read across files, so it always takes the whole Swift scope.
 
 ## Warnings
 

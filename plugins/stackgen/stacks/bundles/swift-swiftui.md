@@ -64,10 +64,10 @@ native edge.
 - **A committed Xcode project** owns the app's targets. It is created once, by
   a person, in Xcode — no generator, and no pack lands the `.xcodeproj`; the
   tasks call `xcodebuild` and `swift` alone. The Xcode version is pinned by
-  `XCODE_VERSION`, beside the golden simulator's pin, each added by the
-  pack's `tool-config:` calls in its `# >>> swiftui` block of
-  `.config/mise/conf.d/env.toml`; `/vwf:setup` asks for each value as it
-  lands the pack, offering what this machine answers. Every task that builds
+  `XCODE_VERSION`, beside the golden simulator's pin, each rendered from the
+  pack's template into `.config/mise/conf.d/swiftui/mise.toml`;
+  `/vwf:setup` asks for each value as it lands the pack, offering what this
+  machine answers. Every task that builds
   checks `xcodebuild -version` against the pin and fails fast on the wrong
   one.
 - **Packages are added through Xcode**, into the project, and locked in the
@@ -76,8 +76,10 @@ native edge.
   local package the app splits out — a `Package.swift` of its own — never the
   app's dependencies.
 - **swift-format** formats and **SwiftLint** lints, both reading their
-  configuration from `.config/` and both running inside the repo's
-  `code:format` and `code:lint` tasks.
+  configuration from `.config/`. Each pack ships its own subtasks —
+  `code:format:swift-format` and `code:lint:swift-format`, and
+  `code:lint:swiftlint` — which the repo's `code:format:all` and
+  `code:lint:all` run.
 - **Goldens** through
   [swift-snapshot-testing](https://github.com/pointfreeco/swift-snapshot-testing),
   added through Xcode to a `SnapshotTests` unit-test target, under a

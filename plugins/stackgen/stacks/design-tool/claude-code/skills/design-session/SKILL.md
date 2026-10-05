@@ -65,7 +65,7 @@ Confirm the `taste-skill` plugin is installed — its skills appear as
 `taste-skill:<name>` in the session's skill list. If none do, halt with
 exactly:
 
-> `taste-skill` is not installed. Run `mise run setup:ai`, which installs
+> `taste-skill` is not installed. Run `mise run setup:ai:all`, which installs
 > `taste-skill@taste-skill` at user scope, then restart the session.
 
 The `review` mode needs no plugin for the server; it needs it for applying
@@ -213,10 +213,10 @@ only files under the canvas, and is a review surface for one person on one
 machine, never a deployment.
 
 1. **Check `node`.** The script is a single-file Node program with no
-   dependencies. If `node` is not on the path, say so with the remedy — pin
-   `node` at an exact version in `.config/mise/conf.d/tools.toml` and run
-   `mise install`, through the repo-local mise skill where the repo has one
-   — and halt; the toolchain manager is already in every shaped repo.
+   dependencies. If `node` is not on the path, say so with the remedy —
+   `MISE_ENV=dev mise run setup:all`, which installs the `node` every shaped
+   repo pins in `.config/mise/conf.d/_base/`, through the repo-local mise
+   skill where the repo has one — and halt.
 
 2. **Resolve the platforms** as §6.1 does, and halt naming
    `/design-session screens <flow>` for a platform whose

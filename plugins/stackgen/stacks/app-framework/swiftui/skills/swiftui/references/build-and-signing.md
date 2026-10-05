@@ -24,8 +24,8 @@ tasks rather than the tools by hand; a CI job runs the same tasks.
 
 The Xcode version is part of the build's inputs: it decides the Swift compiler,
 the SDKs and the simulators. The repo pins it as `XCODE_VERSION` in mise's
-environment, which `/vwf:setup` fills from this machine through
-`/stackgen:tool-config` and the repo commits, and every task that builds checks
+environment, which `/vwf:setup` fills from this machine and the repo
+commits, and every task that builds checks
 the selected Xcode against it before doing any work: `xcodebuild -version` must
 succeed — a Mac with only the Command Line Tools fails it, since they carry no
 `xcodebuild` that can build an app — and must report the pinned version. On a

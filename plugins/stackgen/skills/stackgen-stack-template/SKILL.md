@@ -92,8 +92,6 @@ capabilities: [] # backing axis — the components' capability tokens
 artifact: <token> # deploy axis
 package_manager: <token> # repo axis
 lockfile: [ <path or glob> ] # beside package_manager — passed through from the package-manager pack; omitted when none declares it
-machine_env: # passed through from every component that declares it, for /vwf:setup to ask; omitted when none does
-  - { name: <ENV_VAR>, detect: <command>, question: <prompt> }
 harness:
   <capability>: { task: <name>, mechanism: <one line> } # or n/a
 conventions: |
@@ -106,15 +104,13 @@ these emitted facts — doctor verifies against them instead of against a
 language plugin. Emitting them honestly (`n/a` included) is what keeps that
 check real.
 
-`machine_env` is what the caller asks, not what this skill fills. The
-materializer leaves each value **unset**; `/vwf:setup`'s materialize pass
-runs each `detect` — only while the committed entry matches the hash its
-lockfile records, asking with no default otherwise — offers the value
-preselected, refuses one its reader would not take literally, and writes
-the answer with
-`/stackgen:tool-config mise set-env --key <KEY> --value <value> --for <pack>`
-(`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). A `binaries`
-probe is gated the same way in `/vwf:doctor`, which reports it not run on
+A value only the machine can answer — swiftui's `XCODE_VERSION` — is not a
+payload field. It is a `@@NAME@@` tag in the pack's `templates/`, stored
+under `packs.<slug>` in the repo's `.config/stackgen.yaml` and filled by
+tool-config's `pack --set <key>=<value>`
+(`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`); who asks for it is the
+caller's. A `binaries` probe runs in `/vwf:doctor` only while the committed
+entry matches the hash its lockfile records, and is reported not run on
 drift. It adds no consent tier.
 
 ## Rules
@@ -149,8 +145,8 @@ drift. It adds no consent tier.
   would overwrite the framework pack's.
 - **A landing is not confined to `.claude/`.** A component may also declare
   repo config files in a `config/` tree that mirrors the **repo root** —
-  `config/.config/mise/tasks/code/format` lands at
-  `<repo>/.config/mise/tasks/code/format`. It is a **target, not a fifth
+  `config/.config/mise/tasks/code/lint/swiftlint` lands at
+  `<repo>/.config/mise/tasks/code/lint/swiftlint`. It is a **target, not a fifth
   artifact kind**: copied verbatim, gated on its own tier-2 consent line,
   merging rather than owning, recorded per file in the lockfile with the
   component that supplied it, and executable where mise requires it. The
@@ -160,11 +156,13 @@ drift. It adds no consent tier.
   `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. The procedure is the
   materializer.
 - **The universal tools are not slugs.** No `mise` or gates bundle exists;
-  the toolchain manager's and the gates' files are `stackgen:tool-config`'s,
-  and a pack asks for what it needs — a tool pin, a formatter plugin, a
-  hook, an exclude, an ignore — through its `tool-config:` list, which the
-  materializer previews inside its one consent and then runs with those
-  answers. No pre-commit hook fragment is landed or merged.
+  the toolchain manager's and the gates' files are `stackgen:tool-config`'s
+  universal supersets. A pack's own mise folder sits in its `templates/`,
+  which the materializer never copies: it has tool-config render them with
+  `pack --slug <slug> --dir <pack dir>`, previewed inside its one consent
+  and then run with those answers, and that call also re-renders the
+  `…:all` tasks the pack's subtasks join. No pre-commit hook fragment is
+  landed or merged.
 - **A `config/_<name>/` directory is pack-private and is never copied**
   (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). It is payload a reader
   picks from — the licence texts are the case — so landing the directory
@@ -182,19 +180,19 @@ drift. It adds no consent tier.
   its own lockfile — never one repo's copies pasted around.
 - **A caller may pass answers the same way**: an optional `answers:` map
   beside the `repo:` line, at most one value per axis of the
-  `conditional:` vocabulary — `forge`, `secrets`, `update_bot`
+  `conditional:` vocabulary — `forge`, `secrets`
   (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). The materializer
   evaluates every pack's `conditional:` entries against it in its step 1
   and skips the paths whose answer differs, recording them in the
   lockfile's `skipped:` list. **Three callers pass the map now** —
-  `/vwf:init`, which asks the three questions and records them in the
-  base repo's `.config/vwf.yaml` under its `answers:` block (`secrets`
-  once for the product, `forge` and `update_bot` per repo);
+  `/vwf:init`, which records them in the base repo's `.config/vwf.yaml`
+  under its `answers:` block (`secrets` once for the product, `forge` per
+  repo);
   `/vwf:setup`'s materialize pass, which lands a pinned template long
   after init ran; and `/stackgen:stackgen-sync`, which re-derives a
   pack's landing set. Each reads that block, re-reads `forge` from the
   repo's `origin` host live and passes that, and passes the full map per
-  repo; a caller that finds no block infers the three values from the
+  repo; a caller that finds no block infers the values from the
   tree, passes those and writes nothing. An axis the map leaves out, or
   a map not passed at all, reads as **true** and lands the path — the
   **fallback** for a caller that passes none, which keeps a caller this

@@ -45,8 +45,10 @@ member's secrets are rotated.
 | `.config/mise/tasks/setup/secrets` | the fill for the toolchain manager's slot   |
 | `hooks/fnox-ciphertext-guard.sh`   | the gate the encrypt-into-git mode requires |
 
-The CLI pin is not a file this pack lands: its `tool-config:` call in
-`pack.yaml` asks `/stackgen:tool-config` for it.
+The CLI pin is the pack's template, not a copied file:
+`templates/.config/mise/conf.d/fnox/mise.toml`, which `stackgen:tool-config`
+renders into the repo, pinning `fnox` exactly since every environment loads
+it.
 
 **`fnox.toml` at the repository root is an accepted exception**, and the only
 one this pack takes. fnox searches upward from the working directory; a copy
@@ -55,7 +57,9 @@ under `.config/` is reachable only by passing `--config` on every call, and
 moving the file would take `fnox.local.toml` out of the scheme with it. The
 pin, which has no such constraint, does live under `.config/`.
 
-**The task overlays a slot and never prints a value.** `setup:secrets` checks
+**The task fills a slot and never prints a value.** `setup:secrets` replaces
+the universal `#PLACEHOLDER` task at that path — the one file a pack may ship
+where tool-config ships its own — and checks
 that the CLI and the config are both present and reports the keychain service
 and prefix. It never runs a command whose normal output is a secret — `get` is
 that command, and a scrollback and a CI log are both more widely readable than

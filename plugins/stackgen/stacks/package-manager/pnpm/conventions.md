@@ -19,8 +19,9 @@ dependency's install-time code, and `fund=false`, so it never prints a banner
 over what it did. A dependency that genuinely has to build is allowed by name
 in `pnpm-workspace.yaml` (`allowBuilds`, or `onlyBuiltDependencies` before
 pnpm 10.26) — the exception is a reviewable line, not a switch.
-Beside it, the pack's `tool-config:` call in `pack.yaml` asks
-`/stackgen:tool-config` to alias `npx` to `pnpm dlx` in dev, so a one-off
+Beside it, the pack's template
+`templates/.config/mise/conf.d/pnpm/mise.dev.toml`, rendered into the repo by
+`stackgen:tool-config`, aliases `npx` to `pnpm dlx` in dev, so a one-off
 package runs through this manager's store, resolver and registry settings
 rather than another tool's.
 
@@ -42,37 +43,28 @@ Its `sed` stays BSD-compatible: no `\s`, no `\b`.
 
 ## The task library this pack owns
 
-This pack ships a `config/.config/mise/tasks/` tree — `code/format`,
-`code/lint`, and `setup/deps/{install,outdated,audit,upgrade,cleanup}` — landing
-at the repo's own `.config/mise/tasks/` behind the materializer's config consent
-line.
+This pack ships a `config/.config/mise/tasks/` tree — the `code/format/pnpm`
+subtask and the five `setup/deps/<verb>/pnpm` subtasks — landing at the
+repo's own `.config/mise/tasks/` behind the materializer's config consent
+line. Every file is named for the pack, so no other component writes the same
+path: the repo's `code:format:all` and `setup:deps:<verb>:all`, which
+tool-config renders, call each subtask by name.
 
-**It owns `code/format` and `code/lint` whole, not a fragment of each.**
-`code:format` runs **dprint first**, then sort-package-json: one task file
-co-authored by the repo formatter and the package manager. The sorter is a
-mise pin in the dev environment only — the pack's `tool-config:` asks for it —
+**`code:format:pnpm` sorts every `package.json`, and only that.** dprint runs
+beside it as the universal `code:format:dprint` subtask, so this file carries
+no formatter step of its own. The sorter, `npm:sort-package-json`, is a mise
+pin in the dev environment only, in the same `mise.dev.toml` template —
 resolved by its mise path, and the step is skipped where it is not installed,
-as shfmt's is. The seam is ownership-plus-contract — this component writes the
-file, and the contract it honours is that the repo formatter goes first. It is
-written whole rather than assembled from contributed fragments because
-stackgen's dispatch is copy-verbatim or generate, with nothing in between; a
-fragment layer would be a templating mechanism this plugin deliberately does
-not have.
+as in CI.
 
-**Both tasks take an optional file list, and the empty case is the whole
+**The subtask takes an optional file list, and the empty case is the whole
 tree.** That is the whole pre-commit story for this pack: it ships **no
-fragment**, because the gate config's `format` and `lint` hooks call the two
-tasks with the staged files. dprint and the sorter narrow to what they are
-given; the house linter does not — its rules are cross-file, so it runs the
-whole tree either way, and every exclusion it needs lives in
+fragment**, because the gate config's `format` and `lint` hooks call
+`code:format:all` and `code:lint:all` with the staged files. The sorter
+narrows to the `package.json` files it is given. Linting is the house linter's,
+through the universal `code:lint:house`, which runs the whole tree either way —
+its rules are cross-file — and every exclusion it needs lives in
 `.config/linter.yaml`, which `stackgen:tool-config` lands.
-
-**Composition order, since more than one component writes this tree:**
-the mise base `stackgen:tool-config` writes, then `package-manager` /
-`language`, then `toolchain-gate`, then `app-framework` — a later component's
-file wins, recorded per file in the lockfile. So this pack's `code/format`
-replaces the mise base's, and a `toolchain-gate` or `app-framework`
-component's would replace this one's.
 
 **The `setup/deps/*` verbs are `install`, `outdated`, `audit`, `upgrade` and
 `cleanup` — all five slots.** `install` is `pnpm install --recursive`, because a
@@ -98,7 +90,7 @@ diff is the review surface. `cleanup` prunes the store's `.pnpm` link farm
 rather than deleting it, which would re-download every unchanged package. The
 verbs print no header of their own; `setup:deps:all` frames each.
 
-`code:format`'s sorter pair is the inverse of dprint's — sorting is its
+`code:format:pnpm`'s sorter pair is the inverse of dprint's — sorting is its
 default, `--check` its read-only mode — and the sorter, like the house linter,
 runs by its mise path so a package in `node_modules/.bin` cannot shadow the
 pin.
