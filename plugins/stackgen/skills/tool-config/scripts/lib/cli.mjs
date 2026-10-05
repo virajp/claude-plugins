@@ -1,52 +1,138 @@
-// The flag grammar. Five shapes, each of which `preview` may open:
+// The flag grammar. Four shapes, each of which `preview` may open:
 //
-//   [preview] <tool> <verb> [--<key> <value>]… [--for <requester>] [--answers <id>:<answer>,…]
-//   [preview] <tool> [--<all key> <value>]…   [--answers …]   one tool's base, as `all` lands it
-//   [preview] all [--<all key> <value>]…      [--answers …]
-//   [preview] all <verb> [--<key> <value>]… [--for <requester>] [--answers …]   a cross-tool verb
-//   [preview] apply-entries --pack <slug> --file <pack.yaml> [--answers …]
-//   check [<tool>]
+//   [preview] all [--repo-name <n>] [--merge-model-develop direct|pr]
+//                 [--merge-model-main direct|pr] [--members <a,b>] [--scopes <a,b>]
+//                 [--node true|false] [--external true|false] [--forge <f>]
+//                 [--secrets <s>] [--answers <id>:<answer>,…]
+//   [preview] pack --slug <s> --dir <pack dir> [--set <key>=<value>]… [--answers …]
+//   [preview] pack-remove --slug <s> [--answers …]
+//   [preview] upgrade [--answers …]
 //
 // plus the globals --repo-root and --plugin-root, anywhere. `--key=value` and
 // `--key value` both read; a flag followed by another flag, or by nothing, is
-// empty — save a `bool` flag, which reads `true`. Lists are comma-separated,
-// no spaces. The gate tools' and `all`'s verb flags are schema.mjs's GATE_VERBS.
+// empty — save a bool flag, which reads `true`. Lists are comma-separated, no
+// spaces; `--set` alone may repeat. Every value lands raw inside a quoted
+// string, so each is held to a character set that cannot break the quoting.
 
 import {
   parseAnswers,
   RefusalError,
 } from "./rows.mjs";
-import {
-  FLAG_TYPES,
-  isBasicString,
-  isControl,
-  PATTERNS,
-} from "./schema.mjs";
 
-/** `all`'s keys, as flags — SKILL.md's Arguments table. */
-export const ALL_KEYS = [
-  "repo",
-  "members",
-  "linkage",
-  "merge-model-develop",
-  "merge-model-main",
-  "runtimes",
-  "forge",
-  "secrets",
-  "update-bot",
-  "scopes",
-];
+export const COMMANDS = ["all", "pack", "pack-remove", "upgrade"];
+
+const SURFACE =
+  "the script takes all, pack, pack-remove or upgrade (each optionally after preview)";
 
 const GLOBALS = ["repo-root", "plugin-root"];
 
-/** argv (after the script) → the call, unvalidated against any tool's verbs. */
+const WORD = /^[A-Za-z0-9._-]+$/;
+const SLUG = /^[a-z0-9][a-z0-9-]*$/;
+const MEMBER = /^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$/;
+const SET_KEY = /^[a-z][a-z0-9_]*$/;
+
+const bool = (key, v) => {
+  if (v === "" || v === "true") {
+    return true;
+  }
+  if (v === "false") {
+    return false;
+  }
+  throw new RefusalError(`--${key} must be true or false, not ${v}`);
+};
+
+const word = (key, v) => {
+  if (!WORD.test(v)) {
+    throw new RefusalError(
+      `--${key} ${JSON.stringify(v)} must be letters, digits, ., _ or -`,
+    );
+  }
+  return v;
+};
+
+const mergeModel = (key, v) => {
+  if (v !== "direct" && v !== "pr") {
+    throw new RefusalError(`--${key} must be direct or pr, not ${v}`);
+  }
+  return v;
+};
+
+const list = test => (key, v) => {
+  if (v === "") {
+    return [];
+  }
+  const items = v.split(",");
+  for (const item of items) {
+    if (
+      !test.test(item) || item.split("/").some(s => s === "." || s === "..")
+    ) {
+      throw new RefusalError(
+        `--${key}: ${JSON.stringify(item)} is not a valid entry`,
+      );
+    }
+  }
+  if (new Set(items).size !== items.length) {
+    throw new RefusalError(`--${key} names an entry twice`);
+  }
+  return items;
+};
+
+/** `all`'s flags → the stackgen.yaml key each writes, and how its value reads. */
+export const ALL_FLAGS = {
+  "repo-name": ["repo_name", word],
+  "merge-model-develop": ["merge_model.develop", mergeModel],
+  "merge-model-main": ["merge_model.main", mergeModel],
+  members: ["members", list(MEMBER)],
+  scopes: ["scopes", list(WORD)],
+  node: ["node", bool],
+  external: ["external", bool],
+  forge: ["forge", word],
+  secrets: ["secrets", word],
+};
+
+const FLAGS = {
+  all: Object.keys(ALL_FLAGS),
+  pack: ["slug", "dir", "set"],
+  "pack-remove": ["slug"],
+  upgrade: [],
+};
+
+/** `--set key=value` → [key, value]; the value is held like any other. */
+function setPair(text) {
+  const eq = text.indexOf("=");
+  const key = eq > 0 ? text.slice(0, eq) : "";
+  const value = eq > 0 ? text.slice(eq + 1) : "";
+  if (!SET_KEY.test(key)) {
+    throw new RefusalError(
+      `--set ${
+        JSON.stringify(text)
+      } is not <key>=<value> with a lowercase key (letters, digits, _)`,
+    );
+  }
+  if (
+    [...value].some(c => {
+      const code = c.codePointAt(0);
+      return code <= 0x1f
+        || (code >= 0x7f && code <= 0x9f)
+        || code === 0x2028
+        || code === 0x2029;
+    })
+    || /["\\]|@@/.test(value)
+  ) {
+    throw new RefusalError(
+      `--set ${key}: the value holds a quote, a backslash, @@ or a control character`,
+    );
+  }
+  return [key, value];
+}
+
+/** argv (after the script) → the call: `{preview, command, flags, globals, answers}`. */
 export function parseArgs(argv) {
   const args = [...argv];
   const call = {
     preview: false,
     flags: {},
     globals: {},
-    for: null,
     answers: null,
   };
   if (args[0] === "preview") {
@@ -55,14 +141,21 @@ export function parseArgs(argv) {
   }
   const head = args.shift();
   if (head === undefined || head.startsWith("--")) {
-    throw new RefusalError("name a tool, all, check or apply-entries");
+    throw new RefusalError(`name a command — ${SURFACE}`);
   }
-  const positional = [];
+  if (!COMMANDS.includes(head)) {
+    throw new RefusalError(`${head} is retired or unknown — ${SURFACE}`);
+  }
+  call.command = head;
+  const sets = [];
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (!arg.startsWith("--")) {
-      positional.push(arg);
-      continue;
+      throw new RefusalError(
+        head === "all"
+          ? `all takes no verb (${arg}) — ${SURFACE}; an exclude is a line in the repo's own part of the file`
+          : `unexpected argument: ${arg}`,
+      );
     }
     let key = arg.slice(2);
     let value;
@@ -83,11 +176,20 @@ export function parseArgs(argv) {
     if (GLOBALS.includes(key)) {
       call.globals[key] = value;
     }
-    else if (key === "for") {
-      call.for = value;
-    }
     else if (key === "answers") {
       call.answers = value;
+    }
+    else if (key === "for") {
+      throw new RefusalError(
+        `--for is retired: a pack's lines come from its templates/ — ${SURFACE}`,
+      );
+    }
+    else if (!FLAGS[head].includes(key)) {
+      const names = FLAGS[head].map(k => `--${k}`).join(", ") || "none";
+      throw new RefusalError(`unknown flag --${key} — valid: ${names}`);
+    }
+    else if (key === "set") {
+      sets.push(value);
     }
     else if (key in call.flags) {
       throw new RefusalError(`--${key} is given twice`);
@@ -97,200 +199,43 @@ export function parseArgs(argv) {
     }
   }
 
-  if (head === "all" && positional.length) {
-    // `all <verb>`: the cross-tool verbs, the tool module registered as `all`
-    call.command = "tool";
-    call.tool = "all";
-    call.verb = positional.shift();
-  }
-  else if (head === "all" || head === "apply-entries") {
-    call.command = head;
-  }
-  else if (head === "check") {
-    call.command = "check";
-    call.tool = positional.shift() ?? null;
-  }
-  else {
-    call.command = "tool";
-    call.tool = head;
-    call.verb = positional.length ? positional.shift() : "all";
-  }
-  if (positional.length) {
-    throw new RefusalError(`unexpected argument: ${positional[0]}`);
-  }
-
   if (call.answers !== null) {
     if (call.preview) {
       throw new RefusalError("a preview never carries --answers");
     }
-    if (call.command === "check") {
-      throw new RefusalError("check writes nothing and takes no --answers");
-    }
     call.answers = parseAnswers(call.answers);
   }
-  if (call.command === "check") {
-    if (call.preview) {
-      throw new RefusalError("check is a preview already — drop preview");
+  if (head === "all") {
+    call.values = {};
+    for (const [flag, value] of Object.entries(call.flags)) {
+      const [key, read] = ALL_FLAGS[flag];
+      call.values[key] = read(flag, value);
     }
-    refuseUnknown(call.flags, []);
   }
-  if (call.for !== null) {
-    if (call.command !== "tool" || call.verb === "all") {
+  if (head === "pack" || head === "pack-remove") {
+    if (!call.flags.slug) {
+      throw new RefusalError(`${head} needs --slug`);
+    }
+    if (!SLUG.test(call.flags.slug)) {
       throw new RefusalError(
-        `--for names whose lines a verb writes; ${head} takes none`,
+        `--slug ${
+          JSON.stringify(call.flags.slug)
+        } is not a pack slug (lowercase letters, digits, -)`,
       );
     }
-    if (!PATTERNS.requester.test(call.for)) {
-      throw new RefusalError(
-        `--for ${
-          JSON.stringify(call.for)
-        } is not a requester slug (lowercase letters, digits, -)`,
-      );
+  }
+  if (head === "pack") {
+    if (!call.flags.dir) {
+      throw new RefusalError("pack needs --dir <the pack's folder>");
     }
-  }
-  if (
-    call.command === "all" || (call.command === "tool" && call.verb === "all")
-  ) {
-    refuseUnknown(call.flags, ALL_KEYS);
-  }
-  if (call.command === "apply-entries") {
-    refuseUnknown(call.flags, ["pack", "file"]);
-    for (const key of ["pack", "file"]) {
-      if (!call.flags[key]) {
-        throw new RefusalError(`apply-entries needs --${key}`);
+    call.sets = {};
+    for (const text of sets) {
+      const [key, value] = setPair(text);
+      if (key in call.sets) {
+        throw new RefusalError(`--set ${key} is given twice`);
       }
-    }
-    if (!PATTERNS.requester.test(call.flags.pack)) {
-      throw new RefusalError(`--pack ${call.flags.pack} is not a slug`);
+      call.sets[key] = value;
     }
   }
   return call;
-}
-
-function refuseUnknown(flags, valid) {
-  for (const key of Object.keys(flags)) {
-    if (!valid.includes(key)) {
-      const names = valid.length ? valid.map(k => `--${k}`).join(", ") : "none";
-      throw new RefusalError(`unknown flag --${key} — valid: ${names}`);
-    }
-  }
-}
-
-// --- values ----------------------------------------------------------------------
-
-const NAMED = {
-  "\b": "\\b",
-  "\t": "\\t",
-  "\n": "\\n",
-  "\f": "\\f",
-  "\r": "\\r",
-  "\"": "\\\"",
-  "\\": "\\\\",
-};
-
-/**
- * A value as a TOML basic string. Given quoted, it must parse as one and is
- * written verbatim; given bare it is raw, and `\`, `"` and every control
- * character are escaped.
- */
-export function tomlString(value) {
-  if (value.startsWith("\"")) {
-    if (!isBasicString(value)) {
-      throw new RefusalError(`${value} does not parse as a TOML basic string`);
-    }
-    return value;
-  }
-  const escaped = [...value]
-    .map(c =>
-      NAMED[c]
-        ?? (isControl(c)
-          ? `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`
-          : c)
-    )
-    .join("");
-  return `"${escaped}"`;
-}
-
-const TYPES = {
-  string: () => null,
-  envKey: v => (PATTERNS.envKey.test(v)
-    ? null
-    : "is not an env key ([A-Za-z_][A-Za-z0-9_]*)"),
-  aliasName: v => (PATTERNS.aliasName.test(v)
-    ? null
-    : "is not an alias name ([A-Za-z_][A-Za-z0-9_-]*)"),
-  toolName: v => (PATTERNS.toolName.test(v)
-    ? null
-    : "is not a tool name (letters, digits and : / . - _ @)"),
-  requester:
-    v => (PATTERNS.requester.test(v) ? null : "is not a requester slug"),
-  value: v => {
-    try {
-      tomlString(v);
-      return null;
-    }
-    catch (e) {
-      return e.message;
-    }
-  },
-  ...FLAG_TYPES,
-};
-
-/**
- * Hold a call's flags to its verb's spec, refusing the whole call on the first
- * fault: `{flags: {<name>: {type, required, values, template, default}},
- * requester, check?}`. `template: "own"` allows `{{`, `{%`, `{#` only on a
- * call carrying --for — a pack's own shipped line; every other value refuses
- * one. A `bool` flag given bare reads `true`; `check(flags)` returns the
- * cross-flag faults, the first refusing the call.
- */
-export function validateCall(call, spec, tool) {
-  const flags = spec.flags ?? {};
-  for (const key of Object.keys(call.flags)) {
-    if (!(key in flags)) {
-      const names = Object.keys(flags).map(k => `--${k}`).join(", ") || "none";
-      throw new RefusalError(
-        `${tool} ${call.verb} takes no --${key} — valid: ${names}`,
-      );
-    }
-  }
-  for (const [key, f] of Object.entries(flags)) {
-    if (f.type === "bool" && call.flags[key] === "") {
-      call.flags[key] = "true";
-    }
-    const value = call.flags[key];
-    if (value === undefined || value === "") {
-      if (f.required) {
-        throw new RefusalError(`${tool} ${call.verb} needs --${key}`);
-      }
-      if (value === undefined && f.default !== undefined) {
-        call.flags[key] = f.default;
-      }
-      continue;
-    }
-    if (f.values && !f.values.includes(value)) {
-      throw new RefusalError(
-        `--${key} must be one of ${f.values.join(", ")}, not ${value}`,
-      );
-    }
-    const fault = TYPES[f.type ?? "string"](value);
-    if (fault) {
-      throw new RefusalError(`--${key} ${JSON.stringify(value)} ${fault}`);
-    }
-    if (PATTERNS.template.test(value) && !(f.template === "own" && call.for)) {
-      throw new RefusalError(
-        `--${key} holds a template ({{, {% or {#) — legal only in a pack's own line (--for); mise renders every env value on every load`,
-      );
-    }
-  }
-  const [fault] = spec.check?.(call.flags) ?? [];
-  if (fault) {
-    throw new RefusalError(`${tool} ${call.verb}: ${fault}`);
-  }
-  if (spec.requester === "required" && !call.for) {
-    throw new RefusalError(`${tool} ${call.verb} needs --for <requester>`);
-  }
-  if (spec.requester === "forbidden" && call.for) {
-    throw new RefusalError(`${tool} ${call.verb} takes no --for`);
-  }
 }

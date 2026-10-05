@@ -24,7 +24,7 @@ export const MISSING_MISE =
 /** What installs every tool the repo's mise config pins. */
 export const SETUP_REMEDY = "MISE_ENV=dev mise run setup:all";
 
-/** dprint, pre-commit and node are pinned in tools.dev.toml — every tool runs in dev. */
+/** dprint and pre-commit are pinned in conf.d/_base/mise.dev.toml — every tool runs in dev. */
 const TOOL_ENV = { MISE_ENV: "dev" };
 
 /** A path as mise prints it — `~/…` under the home directory — made real for comparing. */
@@ -134,6 +134,61 @@ export class Runner {
       );
     }
     return res;
+  }
+
+  /** Whether the repo's mise config has `tool` installed — asked once, never refused. */
+  has(tool) {
+    if (!onPath("mise")) {
+      return false;
+    }
+    try {
+      this.ensure(tool);
+      return true;
+    }
+    catch (e) {
+      if (e instanceof RefusalError) {
+        return false;
+      }
+      throw e;
+    }
+  }
+
+  /**
+   * `text` as the repo's formatter leaves it for `path` — `mise x -- dprint
+   * fmt --stdin` under the repo's own config — or null when it cannot say.
+   */
+  format(path, text, config) {
+    const res = spawnSync(
+      "mise",
+      ["x", "--", "dprint", "fmt", "--config", config, "--stdin", path],
+      {
+        cwd: this.repoRoot,
+        encoding: "utf8",
+        input: text,
+        stdio: ["pipe", "pipe", "pipe"],
+        maxBuffer: 64 * 1024 * 1024,
+        env: { ...process.env, ...TOOL_ENV },
+      },
+    );
+    return res.status === 0 && !res.error ? res.stdout : null;
+  }
+
+  /** `mise latest <tool>`, once per tool per call; no version refuses, naming the tool. */
+  latest(tool) {
+    this.latests ??= new Map();
+    if (!this.latests.has(tool)) {
+      const res = this.mise(["latest", tool]);
+      const out = (res.stdout ?? "").trim().split("\n")[0]?.trim() ?? "";
+      if (res.status !== 0 || !out || /\s/.test(out)) {
+        const why = (res.stderr ?? "").trim().split("\n")[0]
+          || `exit ${res.status}`;
+        throw new RefusalError(
+          `mise latest ${tool} gave no version (${why}) — a pin CI loads is only ever written exact`,
+        );
+      }
+      this.latests.set(tool, out);
+    }
+    return this.latests.get(tool);
   }
 
   /** `MISE_ENV=dev mise run setup:all` — installs and sets up everything the repo pins. */

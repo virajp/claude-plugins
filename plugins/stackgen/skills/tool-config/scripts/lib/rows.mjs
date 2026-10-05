@@ -1,6 +1,6 @@
 // The rows a call shows before it writes, numbered r1, r2, … in order, each
-// with the answer names SKILL.md's table gives, and the check that a call's
-// `--answers` names exactly the rows its preview showed, unchanged.
+// with the answers its kind takes, and the check that a call's `--answers`
+// names exactly the rows its preview showed, unchanged.
 
 import { spawnSync } from "node:child_process";
 import {
@@ -15,32 +15,18 @@ import {
   isAbsolute,
   join,
 } from "node:path";
-import { sha256 } from "./record.mjs";
+import { sha256 } from "./paths.mjs";
 
-/** The answers each kind of row takes. A tool's own conflict rows name theirs. */
+/**
+ * The answers each kind of row takes: `ok` takes the render, `keep-existing`
+ * leaves the file — or the pin — as it stands.
+ */
 export const ANSWERS = {
   create: ["ok"],
-  write: ["ok"],
-  delete: ["ok"],
-  fold: ["ok"],
-  move: ["ok"],
-  record: ["ok"],
-  share: ["ok"],
-  drift: ["take-theirs", "keep-mine", "merge"],
-  conflict: ["keep-existing", "overwrite"],
-  "needs-edit": ["done", "skip"],
+  write: ["ok", "keep-existing"],
+  delete: ["ok", "keep-existing"],
+  pin: ["ok", "keep-existing"],
 };
-
-/** A needs-edit row: a change the script cannot make, for the LLM to make and re-check. */
-export function needsEdit({ file, reason, target }) {
-  return {
-    kind: "needs-edit",
-    file,
-    reason,
-    target,
-    answers: ANSWERS["needs-edit"],
-  };
-}
 
 const hidden = key => key === "effects" || key === "id" || key.startsWith("_");
 
