@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+#MISE description="The Claude plugin checks the setup:ai subtasks share"
+#MISE hide=true
+
+# Sourced after `helpers`. Project scope resolves against the working directory,
+# so every caller runs from the repo root.
+
+# Whether `claude` is on PATH; a caller exits 0 without it.
+claude_available() {
+  command -v claude >/dev/null 2>&1
+}
+
+# The rows that hold here, as `<id>|<scope>`: user scope, or project or local scope
+# whose projectPath resolves to this repo — never another repo's.
+plugins_here() {
+  local root rows id scope path
+  root="$(cd "${MISE_PROJECT_ROOT}" && pwd -P)"
+  rows="$(claude plugin list --json |
+    jq -r '.[] | select(.scope == "user" or .scope == "project" or .scope == "local") | "\(.id)|\(.scope)|\(.projectPath // "")"')"
+  while IFS="|" read -r id scope path; do
+    [ -n "${id}" ] || continue
+    if [ "${scope}" != "user" ]; then
+      [ -n "${path}" ] || continue
+      path="$(cd "${path}" 2>/dev/null && pwd -P)" || continue
+      [ "${path}" = "${root}" ] || continue
+    fi
+    echo "${id}|${scope}"
+  done <<<"${rows}"
+}
+
+# Installed here at any of those scopes: any is enough.
+plugin_installed() { # <name@marketplace>
+  local here
+  here="$(plugins_here | cut -d"|" -f1)"
+  grep -Fqx "$1" <<<"${here}"
+}
+
+marketplace_registered() { # <name>
+  claude plugin marketplace list --json |
+    jq -e --arg name "$1" 'any(.[]; .name == $name)' >/dev/null
+}
+
+# A pack's plugin: nothing when installed at user scope, or at local or project scope
+# whose projectPath resolves to this repo's root; else installed at user scope.
+ensure_plugin() { # <name@marketplace> <source>
+  if ! claude_available; then
+    print_warn "- $1: claude is not on PATH — skipped"
+    return
+  fi
+  if plugin_installed "$1"; then
+    print_yellow "- $1: installed"
+    return
+  fi
+  if ! marketplace_registered "${1##*@}" && ! claude plugin marketplace add "$2" </dev/null >/dev/null; then
+    print_warn "- $1: adding its marketplace from $2 failed — continuing"
+    return
+  fi
+  if ! claude plugin install --scope user "$1" </dev/null >/dev/null; then
+    print_warn "- $1: installing it at user scope failed — continuing"
+    return
+  fi
+  print_yellow "- $1: installed at user scope"
+}

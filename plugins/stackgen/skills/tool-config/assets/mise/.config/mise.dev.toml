@@ -1,5 +1,0 @@
-# The developer laptop — loaded when MISE_ENV=dev.
-
-[settings]
-env_shell_expand     = true
-status.missing_tools = "always"

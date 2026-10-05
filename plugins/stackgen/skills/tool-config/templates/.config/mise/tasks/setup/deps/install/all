@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+#MISE description="Install this repo's dependencies — every setup:deps:install subtask"
+#MISE hide=true
+
+#USAGE flag "--frozen" help="Install exactly what the lockfile records, and fail rather than resolve"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Rendered by stackgen tool-config: one call per subtask under setup/deps/install/, re-rendered whenever a pack adds or removes one.
+@@#if DEPS_INSTALL_SUBTASKS@@
+
+args=()
+[[ "${usage_frozen:-false}" == "true" ]] && args+=(--frozen)
+@@#each DEPS_INSTALL_SUBTASKS@@
+
+mise run setup:deps:install:@@.@@ ${args[@]+"${args[@]}"}
+@@/each@@
+@@#else@@
+
+print_yellow "setup:deps:install: nothing to run — this repo has no setup:deps:install:<name> subtask."
+@@/if@@

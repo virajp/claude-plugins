@@ -1,0 +1,6 @@
+# What the code-intelligence graph does not ingest; the repo's own paths go below the tool-config block.
+
+# >>> tool-config
+# The graph's own output: ingesting it feeds the last run back in as source.
+graphify-out/
+# <<< tool-config

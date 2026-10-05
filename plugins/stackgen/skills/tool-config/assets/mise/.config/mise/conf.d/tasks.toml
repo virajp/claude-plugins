@@ -1,7 +1,0 @@
-# Tasks defined inline; the file-based task library lives in mise/tasks/.
-
-[tasks.init]
-# In the base, not dev: CI needs the task files executable too.
-description = "Initialize mise tasks"
-hide        = true
-run         = "find .config/mise/tasks/ -name '*' -type f -not -path '*/*.env' -exec chmod 755 {} \\;"

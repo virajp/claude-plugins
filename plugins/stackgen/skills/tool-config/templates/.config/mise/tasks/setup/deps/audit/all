@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+#MISE description="Report known vulnerabilities in the dependency trees — every setup:deps:audit subtask"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Rendered by stackgen tool-config: one call per subtask under setup/deps/audit/, re-rendered whenever a pack adds or removes one.
+@@#if DEPS_AUDIT_SUBTASKS@@
+@@#each DEPS_AUDIT_SUBTASKS@@
+
+mise run setup:deps:audit:@@.@@
+@@/each@@
+@@#else@@
+
+print_yellow "setup:deps:audit: nothing to run — this repo has no setup:deps:audit:<name> subtask."
+@@/if@@

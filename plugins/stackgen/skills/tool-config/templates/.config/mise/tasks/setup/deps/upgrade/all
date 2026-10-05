@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+#MISE description="Move the lockfiles forward within their declared ranges — every setup:deps:upgrade subtask"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Rendered by stackgen tool-config: one call per subtask under setup/deps/upgrade/, re-rendered whenever a pack adds or removes one.
+@@#if DEPS_UPGRADE_SUBTASKS@@
+@@#each DEPS_UPGRADE_SUBTASKS@@
+
+mise run setup:deps:upgrade:@@.@@
+@@/each@@
+@@#else@@
+
+print_yellow "setup:deps:upgrade: nothing to run — this repo has no setup:deps:upgrade:<name> subtask."
+@@/if@@

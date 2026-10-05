@@ -9,7 +9,7 @@ repo root, because git reads them nowhere else.
 This reference is the `git` row of the skill's tool table. The contract every
 tool shares — the argument shapes, the block markers, drift, removal and the
 lock record — is [the skill's](../SKILL.md); what follows is git's own. The
-files it lands are under `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/git/`,
+files it lands are under `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/`,
 laid out as they land under the repo root.
 
 | Section                                                 | Read before                                         |

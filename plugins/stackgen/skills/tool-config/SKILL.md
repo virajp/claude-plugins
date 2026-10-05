@@ -32,16 +32,15 @@ told apart, shown, and taken out again.
 
 ## The tools it owns
 
-| Tool         | Reference                                            | Assets                                                        | Run by          |
-| ------------ | ---------------------------------------------------- | ------------------------------------------------------------- | --------------- |
-| `mise`       | [references/mise.md](references/mise.md)             | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/mise/`       | the script      |
-| `dprint`     | [references/dprint.md](references/dprint.md)         | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/dprint/`     | the script      |
-| `pre-commit` | [references/pre-commit.md](references/pre-commit.md) | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/pre-commit/` | the script      |
-| `gitleaks`   | [references/gitleaks.md](references/gitleaks.md)     | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/gitleaks/`   | the script      |
-| `grype`      | [references/grype.md](references/grype.md)           | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/grype/`      | the script      |
-| `git`        | [references/git.md](references/git.md)               | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/git/`        | its reference   |
-| `graphify`   | [references/graphify.md](references/graphify.md)     | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/graphify/`   | its reference   |
-| `renovate`   | [references/renovate.md](references/renovate.md)     | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/renovate/`   | its reference   |
+| Tool         | Reference                                            | Assets                                             | Run by        |
+| ------------ | ---------------------------------------------------- | -------------------------------------------------- | ------------- |
+| `mise`       | [references/mise.md](references/mise.md)             | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/` | the script    |
+| `dprint`     | [references/dprint.md](references/dprint.md)         | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/` | the script    |
+| `pre-commit` | [references/pre-commit.md](references/pre-commit.md) | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/` | the script    |
+| `gitleaks`   | [references/gitleaks.md](references/gitleaks.md)     | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/` | the script    |
+| `grype`      | [references/grype.md](references/grype.md)           | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/` | the script    |
+| `git`        | [references/git.md](references/git.md)               | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/` | its reference |
+| `graphify`   | [references/graphify.md](references/graphify.md)     | `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/` | its reference |
 
 A row is a tool: its assets hold the static files and templates, laid out
 exactly as they land under the repo root, and its reference says what lands

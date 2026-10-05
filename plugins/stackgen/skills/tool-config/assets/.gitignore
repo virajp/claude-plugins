@@ -1,0 +1,94 @@
+# The repo's ignore set, in banner sections: every stack's, whether or not this repo uses it.
+# The repo's own lines go below the tool-config block.
+
+# >>> tool-config
+# ==== macOS ====
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# ==== Editors ====
+# .vscode/ is deliberately not here: what a repo puts there is shared.
+.idea/
+*.swp
+*.swo
+
+# ==== AI tooling ====
+# One developer's agent state; the shared half of .claude/ stays tracked.
+.claude/settings.local.json
+.claude/worktrees/
+.claude/cache/
+.claude/todos.json
+.worktrees/
+.opencode/
+# The code-intelligence graph is rebuilt on every commit, per checkout.
+graphify-out/
+
+# ==== mise ====
+# Bare names match at any depth, conf.d folders included.
+mise.local.toml
+mise.*.local.toml
+**/mise.local.lock
+
+# ==== Secrets and env ====
+# .env.example is tracked: its negation stays after `.env.*`.
+.env
+.env.*
+!.env.example
+fnox.local.toml
+# Private keys and identities: the one hit that is always real.
+*.pem
+*.key
+*.p12
+
+# ==== Build output ====
+build/
+dist/
+coverage/
+
+# ==== Node ====
+node_modules/
+.turbo/
+.pnpm-store/
+*.tsbuildinfo
+npm-debug.log*
+pnpm-debug.log*
+
+# ==== Python ====
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ==== Dart and Flutter ====
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+
+# ==== Swift and Xcode ====
+.build/
+.swiftpm/
+Derived/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+
+# ==== Scratch ====
+# Local-only working notes, never reviewed and never shipped.
+docs/scratchpad/
+
+# ==== Reports ====
+# Gate output is regenerable, and a scanner report quotes what it found.
+gitleaks-report.*
+grype-report.*
+sbom.*
+# <<< tool-config

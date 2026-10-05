@@ -1,0 +1,27 @@
+---
+# The house linter's config — zero-config without it, and shipped empty of overrides.
+
+version: 1
+
+# Generated trees only — the linter does not read .gitignore.
+ignores:
+  # >>> tool-config
+  - "**/.build/"
+  - "**/.dart_tool/"
+  - "**/.swiftpm/"
+  - "**/.venv/"
+  - "**/Derived/"
+  - "**/DerivedData/"
+  - "**/build/"
+  - "**/graphify-out/"
+  # <<< tool-config
+
+# overrides:
+#   typescript:
+#     rules:
+#       "@typescript-eslint/no-explicit-any": "error"
+#
+# configs:
+#   - name: "custom"
+#     files: ["**/*.ts"]
+#     rules: {}

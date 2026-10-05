@@ -11,7 +11,7 @@ This reference is the `dprint` row of the skill's tool table. The contract every
 tool shares — the argument shapes, the block markers, drift, removal and the
 lock record — is [the skill's](../SKILL.md); what follows is dprint's own. The
 files it lands are under
-`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/dprint/`, laid out as they land
+`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/`, laid out as they land
 under the repo root.
 
 **dprint is scripted.** `tool-config.mjs` — [run as the skill

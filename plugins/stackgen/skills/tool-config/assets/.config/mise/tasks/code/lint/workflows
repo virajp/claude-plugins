@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+#MISE description="Lint the repo's GitHub workflows with actionlint"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to lint (default: every tracked workflow)"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+files=()
+eval "files+=(${usage_files:-})"
+
+if ! command -v actionlint >/dev/null 2>&1; then
+  exit 0
+fi
+
+# actionlint runs over the workflows in scope only.
+workflow_scope=()
+if [ "${#files[@]}" -gt 0 ]; then
+  for candidate in "${files[@]}"; do
+    case "${candidate}" in
+      .github/workflows/*.yml | .github/workflows/*.yaml)
+        if [ -f "${candidate}" ]; then
+          workflow_scope+=("${candidate}")
+        fi
+        ;;
+    esac
+  done
+else
+  while IFS= read -r workflow; do
+    if [ -n "${workflow}" ]; then
+      workflow_scope+=("${workflow}")
+    fi
+  done < <(git -C "${MISE_PROJECT_ROOT}" ls-files '.github/workflows/*.yml' '.github/workflows/*.yaml' 2>/dev/null || true)
+fi
+
+if [ "${#workflow_scope[@]}" -gt 0 ]; then
+  actionlint "${workflow_scope[@]}"
+fi

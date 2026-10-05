@@ -10,7 +10,7 @@ This reference is the `gitleaks` row of the skill's tool table. The contract
 every tool shares — the argument shapes, the block markers, drift, removal and
 the lock record — is [the skill's](../SKILL.md); what follows is gitleaks' own.
 The file it lands is under
-`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/gitleaks/`, laid out as it
+`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/`, laid out as it
 lands under the repo root.
 
 **gitleaks is scripted.** `tool-config.mjs` — [run as the skill

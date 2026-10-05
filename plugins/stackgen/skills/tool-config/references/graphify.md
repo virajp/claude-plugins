@@ -10,7 +10,7 @@ This reference is the `graphify` row of the skill's tool table. The contract
 every tool shares — the argument shapes, the block markers, drift, removal and
 the lock record — is [the skill's](../SKILL.md); what follows is graphify's
 own. The file it lands is under
-`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/graphify/`, laid out as it
+`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/`, laid out as it
 lands under the repo root.
 
 ## 1. What `all` lands

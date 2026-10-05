@@ -1,0 +1,86 @@
+# The developer laptop's base — loaded when MISE_ENV includes dev. Dev tools stay on latest.
+
+[settings]
+# Python, pipx, uv settings
+# every pipx: tool installs through uv
+pipx.uvx            = true
+python.compile      = false
+python.uv_venv_auto = "create|source"
+@@#if NODE@@
+@@#else@@
+
+# The tool-config script runs on node; a node repo pins it in mise.toml instead.
+[tools.node]
+version = "latest"
+
+[tools.pnpm]
+depends = [ "node" ]
+version = "latest"
+@@/if@@
+
+# mise's pipx backend installs through uv, and uv needs a Python >= 3.10 to lock graphifyy's dependencies.
+[tools.python]
+version = "latest"
+
+[tools.uv]
+depends = [ "python" ]
+version = "latest"
+
+[tools."pre-commit"]
+depends = [ "python", "uv" ]
+uvx     = true
+version = "latest"
+
+# OSV Scanner is a tool for scanning open source vulnerabilities.
+[tools.osv-scanner]
+version = "latest"
+
+# Grype is a vulnerability scanner for container images
+# and filesystems
+[tools.grype]
+version = "latest"
+
+# Gitleaks is a SAST tool for detecting hardcoded secrets like
+# passwords, API keys, and tokens in git repositories
+[tools.gitleaks]
+version = "latest"
+
+# Dprint is a code formatter for various programming languages
+[tools.dprint]
+version = "latest"
+
+# Taplo is a code formatter for TOML files
+[tools.taplo]
+depends = [ "dprint" ]
+version = "latest"
+
+# Shell and workflow gates: `code:{format,lint}:shell` and `code:lint:workflows`.
+[tools.shellcheck]
+version = "latest"
+
+[tools.shfmt]
+version = "latest"
+
+[tools.actionlint]
+version = "latest"
+
+# The house linter, run by `code:lint:house`.
+[tools."npm:@askviraj/linter"]
+allow_low_downloads = true
+version             = "latest"
+
+[shell_alias]
+precommit = "mise run code:precommit"
+setup     = "mise run setup:all"
+worktrees = "mise run code:worktrees"
+@@#each MEMBER_ENTRIES@@
+setup-@@.slug@@ = "mise run setup:all --@@.slug@@"
+@@/each@@
+
+[env]
+PRE_COMMIT_HOME = "$HOME/.cache/pre-commit"
+
+# Python (uv)
+UV_NO_CACHE          = true
+UV_NO_MANAGED_PYTHON = true
+UV_PYTHON_DOWNLOADS  = "never"

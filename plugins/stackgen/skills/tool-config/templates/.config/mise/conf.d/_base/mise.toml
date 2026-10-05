@@ -1,0 +1,38 @@
+# Every repo's base, loaded in every MISE_ENV. A tool is pinned in exactly one conf.d folder.
+@@#if NODE@@
+
+[settings]
+# NodeJS settings
+node.compile        = false
+npm.package_manager = "pnpm"
+
+# Node has good backward compatibility: node and pnpm stay on latest even where CI loads them.
+[tools.node]
+version = "latest"
+
+[tools.pnpm]
+depends = [ "node" ]
+version = "latest"
+@@/if@@
+
+[tasks.init]
+# In the base, not dev: `setup:all` depends on it, and CI needs the task files executable too.
+description = "Initialize mise tasks"
+dir         = "{{exec(command='git rev-parse --show-toplevel')}}"
+hide        = true
+run         = "find .config/mise/tasks/ -name '*' -type f -not -path '*/*.env' -exec chmod 755 {} \\;"
+
+[env]
+@@#if NODE@@
+_.path = { path = "node_modules/.bin", tools = true }
+
+@@/if@@
+# A literal: never derive it at load time, since a linked worktree's folder is named for its branch.
+REPO_NAME = "@@REPO_NAME@@"
+
+# `direct` merges locally, `pr` opens a pull request.
+MERGE_MODEL_DEVELOP = "@@MERGE_MODEL_DEVELOP@@"
+MERGE_MODEL_MAIN    = "@@MERGE_MODEL_MAIN@@"
+
+# Member repo paths, space-separated; empty when the members are submodules.
+MEMBERS = "@@MEMBERS_SPACED@@"

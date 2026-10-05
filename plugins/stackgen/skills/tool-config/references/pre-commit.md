@@ -12,7 +12,7 @@ This reference is the `pre-commit` row of the skill's tool table. The contract
 every tool shares — the argument shapes, the block markers, drift, removal and
 the lock record — is [the skill's](../SKILL.md); what follows is pre-commit's
 own. The files it lands are under
-`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/pre-commit/`, laid out as they
+`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/`, laid out as they
 land under the repo root.
 
 **pre-commit is scripted.** `tool-config.mjs` — [run as the skill

@@ -1,5 +1,0 @@
-# CI builds and the deployed runtime — loaded when MISE_ENV=ci.
-
-[settings]
-# Node only — mise's Node release-key import fails on Linux runners. Uncomment for a Node project:
-#   node.gpg_verify = false

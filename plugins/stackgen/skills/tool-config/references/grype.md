@@ -11,7 +11,7 @@ advisories and reports green.
 This reference is the `grype` row of the skill's tool table. The contract every
 tool shares — the argument shapes, the block markers, drift, removal and the
 lock record — is [the skill's](../SKILL.md); what follows is grype's own. The
-file it lands is under `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/grype/`,
+file it lands is under `${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/`,
 laid out as it lands under the repo root.
 
 **grype is scripted.** `tool-config.mjs` — [run as the skill

@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+#MISE description="Lint the repo's files — every code:lint subtask"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to lint (default: the whole repo)"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Rendered by stackgen tool-config: one call per subtask under code/lint/, re-rendered whenever a pack adds or removes one.
+@@#if LINT_SUBTASKS@@
+
+files=()
+eval "files+=(${usage_files:-})"
+
+args=()
+[[ "${usage_debug:-false}" == "true" ]] && args+=(--debug)
+[[ "${usage_fix:-false}" == "true" ]] && args+=(--fix)
+@@#each LINT_SUBTASKS@@
+
+mise run code:lint:@@.@@ ${args[@]+"${args[@]}"} ${files[@]+"${files[@]}"}
+@@/each@@
+@@#else@@
+
+print_yellow "code:lint: nothing to run — this repo has no code:lint:<name> subtask."
+@@/if@@
