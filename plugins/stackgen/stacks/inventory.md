@@ -81,10 +81,10 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `framework/html` | HTML | `language-bundle` | project | document |  | 0.2.1 | A hand-authored HTML5 page tree with plain CSS and ES-module JavaScript as the whole of a static site — no framework, no components, no content model; Vite serves it in development and builds it into `./dist`, with a copy-only build as the documented opt-out. It also carries the head doctrine every page states itself through — title, description, canonical, icons, sitemap and structured data, repeated per page since no layout owns them — and lands the one task that rasterizes the favicon set from the product's mark. |
 | `language/bash` | Bash | `language-bundle` | project |  |  | 0.1.0 | Shell as a project's incidental second language — the hook scripts and small executables a markdown-authored project ships, held to portability and exit-code discipline rather than to a toolchain. |
 | `language/markdown` | Markdown | `language-bundle` | project |  |  | 0.1.0 | Markdown as a project's own language — the case where prose with frontmatter is the deliverable rather than documentation beside one, and the toolchain is the repo axis's rather than the language's. |
-| `language/swift` | Swift | `language-bundle` | project |  |  | 0.2.0 | The Swift package baseline — standards and public-API design, the error model, strict concurrency, Swift Testing, build and run, config and observability wiring. |
+| `language/swift` | Swift | `language-bundle` | project |  |  | 0.2.1 | The Swift package baseline — standards and public-API design, the error model, strict concurrency, Swift Testing, build and run, config and observability wiring. |
 | `language/typescript` | TypeScript | `language-bundle` | project |  |  | 0.3.1 | The Node/TypeScript language baseline — standards, error semantics, the async model, testing, build and run, config and observability wiring. |
 | `package-manager/pnpm` | pnpm | `language-bundle` | repo |  |  | 0.6.1 | Dependency installation, locking and workspace layout for the Node ecosystem — the manifest contract and the monorepo shape. |
-| `package-manager/pub` | pub | `app-framework` | repo |  |  | 0.3.0 | Dependency declaration and locking for a Flutter app — pubspec.yaml, which also carries the SDK constraints and native package-manager config. |
+| `package-manager/pub` | pub | `app-framework` | repo |  |  | 0.3.1 | Dependency declaration and locking for a Flutter app — pubspec.yaml, which also carries the SDK constraints and native package-manager config. |
 | `package-manager/swiftpm` | SwiftPM | `language-bundle` | repo |  |  | 0.3.1 | Dependency declaration, resolution and locking for a Swift package — Package.swift as the manifest, Package.resolved as the lockfile, .build/ as the one build tree. |
 | `package-manager/uv` | uv | `language-bundle` | repo |  |  | 0.3.1 | Dependency resolution, locking, virtualenv management and process running for Python — one tool where the ecosystem historically had four. |
 | `stylesheet/plain-css` | Plain CSS | `stylesheet` | stylesheet | plain |  | 0.2.1 | The design system's roles as CSS custom properties and hand-authored rules in cascade layers — no build step of its own, no generated classes, and nothing between the contract and the browser. |
@@ -134,7 +134,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `cloudflare-workflows` | Cloudflare Workflows | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.0`, `cloud-service/workflows@0.1.0` |
 | `cloudflare-zero-trust` | Cloudflare Zero Trust Access | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.0`, `cloud-service/zero-trust-access@0.1.0` |
 | `container-generic` | OCI image · any container host | `deploy-target` | deploy | `deploy-target/container-image@0.2.1` |
-| `dart-flutter` | Dart · Flutter | `app-framework` | project | `app-framework/flutter@0.7.1`, `package-manager/pub@0.3.0`, `toolchain-gate/analysis-options@0.2.2` |
+| `dart-flutter` | Dart · Flutter | `app-framework` | project | `app-framework/flutter@0.7.1`, `package-manager/pub@0.3.1`, `toolchain-gate/analysis-options@0.2.2` |
 | `fnox` | fnox | `capability-provider` | backing | `capability-provider/fnox@1.2.1` |
 | `gcp-cloud-run` | Google Cloud · Cloud Run · Artifact Registry | `cloud-provider` | deploy | `cloud-provider/gcp@0.1.0`, `cloud-service/cloud-run@0.2.1` |
 | `gcp-cloud-sql` | Google Cloud · Cloud SQL | `cloud-provider` | backing | `cloud-provider/gcp@0.1.0`, `cloud-service/cloud-sql@0.1.0`, `cloud-service/firebase-auth@0.1.0`, `cloud-service/firebase-storage@0.1.0` |
@@ -153,7 +153,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `postgres` | PostgreSQL | `database` | backing | `datastore/postgres@0.1.0` |
 | `stitch` | Google Stitch | `design-tool` | design | `design-tool/stitch@0.1.0` |
 | `stylex` | StyleX | `stylesheet` | stylesheet | `stylesheet/stylex@0.2.1` |
-| `swift-package` | Swift · package | `language-bundle` | project | `language/swift@0.2.0`, `package-manager/swiftpm@0.3.1`, `toolchain-gate/swift-format@0.1.3`, `toolchain-gate/swiftlint@0.2.1` |
+| `swift-package` | Swift · package | `language-bundle` | project | `language/swift@0.2.1`, `package-manager/swiftpm@0.3.1`, `toolchain-gate/swift-format@0.1.3`, `toolchain-gate/swiftlint@0.2.1` |
 | `swift-swiftui` | Swift · SwiftUI | `app-framework` | project | `app-framework/swiftui@0.5.1`, `package-manager/swiftpm@0.3.1`, `toolchain-gate/swift-format@0.1.3`, `toolchain-gate/swiftlint@0.2.1` |
 | `tailwindcss` | Tailwind CSS | `stylesheet` | stylesheet | `stylesheet/tailwindcss@0.2.1` |
 | `temporal` | Temporal | `capability-provider` | backing | `capability-provider/temporal@0.1.0` |
