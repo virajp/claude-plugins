@@ -680,8 +680,8 @@ describe("the pack config tier", () => {
       + "pack ships the lines it needs as files in its templates/ tier, which "
       + "tool-config renders, or as a subtask under .config/mise/tasks/",
       "stacks/app-framework/swiftui/pack.yaml: `machine_env:` is retired — a "
-      + "machine value is a `@@NAME@@` in the pack's templates/, filled from "
-      + "its `packs.<slug>` keys in .config/stackgen.yaml",
+      + "machine value is a `values:` entry — name, detect and question — read "
+      + "as `@@NAME@@` in the pack's templates/",
     ]);
   });
 
@@ -1172,13 +1172,16 @@ describe("the pack config tier", () => {
   });
 
   it("reads a pack template's own names, and refuses a malformed tag", () => {
-    // A pack's own `packs.<slug>` key is upper snake case; anything the engine
-    // cannot read lands verbatim in the rendered file.
+    // A pack's own name is upper snake case; anything the engine cannot read
+    // lands verbatim in the rendered file.
     const file = "stacks/app-framework/swiftui/templates/.config/mise/conf.d/"
       + "swiftui/mise.toml";
     const clean = tree({
       stackgen: {
         files: {
+          "stacks/app-framework/swiftui/pack.yaml": "values:\n"
+            + "  - { name: XCODE_VERSION, detect: \"xcodebuild -version\", "
+            + "question: Which Xcode? }\n",
           [file]: "[env]\nXCODE_VERSION = \"@@XCODE_VERSION@@\"\n"
             + "REPO = \"@@REPO_NAME@@\"\n",
         },
@@ -1199,6 +1202,84 @@ describe("the pack config tier", () => {
       `${file}:3: \`@@#unless NODE@@\` is not a template tag — a name is `
       + "upper snake case, read as @@NAME@@, @@#if NAME@@ or @@#each NAME@@",
     ]);
+  });
+
+  describe("a pack's values list", () => {
+    const yaml = "stacks/app-framework/swiftui/pack.yaml";
+    const file = "stacks/app-framework/swiftui/templates/.config/mise/conf.d/"
+      + "swiftui/mise.toml";
+    const pack = (values: string, template: string) =>
+      tree({
+        stackgen: {
+          files: { [yaml]: `slug: swiftui\n${values}`, [file]: template },
+        },
+      });
+
+    it("accepts each declared name read in the templates", () => {
+      const root = pack(
+        "values:\n"
+          + "  - name: XCODE_VERSION\n"
+          + "    detect: xcodebuild -version | head -1\n"
+          + "    question: Which Xcode version?\n"
+          + "  - name: SIMULATOR_OS\n"
+          + "    detect: xcrun simctl list runtimes\n"
+          + "    question: Which simulator OS?\n",
+        "[env]\nX = \"@@XCODE_VERSION@@\"\n"
+          + "@@#if SIMULATOR_OS@@\nY = \"@@SIMULATOR_OS@@\"\n@@/if@@\n",
+      );
+      expect(messages(check(root))).toEqual([]);
+    });
+
+    it("flags each malformed entry by its line", () => {
+      const root = pack(
+        "values:\n"
+          + "  - XCODE_VERSION\n"
+          + "  - { name: xcode, detect: x, question: y }\n"
+          + "  - { name: REPO_NAME, detect: x, question: y }\n"
+          + "  - { name: A, detect: \"\", question: y, default: z }\n"
+          + "  - { detect: x }\n",
+        "@@A@@\n",
+      );
+      expect(messages(check(root))).toEqual([
+        `${yaml}:3: \`values[0]\` is not a { name, detect, question } map`,
+        `${yaml}:4: \`values[1]\` \`name\` (xcode) is not upper snake case`,
+        `${yaml}:5: \`values[2]\` \`name\` (REPO_NAME) is a global template `
+        + "name — tool-config fills it, not the pack",
+        `${yaml}:6: \`values[3]\` carries \`default\` — only \`name\`, `
+        + "`detect` and `question`",
+        `${yaml}:6: \`values[3]\` \`detect\` is not a non-empty string`,
+        `${yaml}:7: \`values[4]\` \`name\` is not a non-empty string`,
+        `${yaml}:7: \`values[4]\` \`question\` is not a non-empty string`,
+      ]);
+    });
+
+    it("flags a values key that is not a list", () => {
+      const root = pack("values: XCODE_VERSION\n", "[env]\n");
+      expect(messages(check(root))).toEqual([
+        `${yaml}:2: \`values:\` is not a list of { name, detect, question } `
+        + "maps",
+      ]);
+    });
+
+    it("flags a declared name no template reads", () => {
+      const root = pack(
+        "values:\n  - { name: SIMULATOR_OS, detect: x, question: y }\n",
+        "[env]\n",
+      );
+      expect(messages(check(root))).toEqual([
+        `${yaml}:3: \`values:\` declares SIMULATOR_OS, which no file in the `
+        + "pack's templates/ reads as @@SIMULATOR_OS@@",
+      ]);
+    });
+
+    it("flags a template name the pack does not declare", () => {
+      const root = pack("", "[env]\nX = \"@@XCODE_VERSION@@\"\n");
+      expect(messages(check(root))).toEqual([
+        `${file}:2: \`@@XCODE_VERSION@@\` names XCODE_VERSION, which is `
+        + "neither a global template name nor declared in the pack's "
+        + "`values:`",
+      ]);
+    });
   });
 });
 

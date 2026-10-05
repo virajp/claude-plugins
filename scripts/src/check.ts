@@ -33,7 +33,12 @@ import {
   resolve,
   sep,
 } from "node:path";
-import { parse as parseYaml } from "yaml";
+import {
+  isSeq,
+  LineCounter,
+  parse as parseYaml,
+  parseDocument,
+} from "yaml";
 // Plain zero-dependency `.mjs` modules with no declaration file beside them,
 // so the exports used here are typed by hand below — the checker reads the
 // script's own vocabulary rather than a copy of it.
@@ -569,7 +574,10 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  * `config/`, and so are `stackgen:tool-config`'s `assets/` and `templates/`,
  * as is each `/vwf:init` asset tree — which lands only its hygiene allowlist.
  * Every template tree's `@@` tags are held to the engine's grammar and its
- * names to {@link TEMPLATE_GLOBAL_NAMES} (`templateNameFaults`).
+ * names to {@link TEMPLATE_GLOBAL_NAMES} (`templateNameFaults`) — a pack's to
+ * those and the names its `values:` list declares, each entry `name`,
+ * `detect` and `question`, and each declared name read in its templates
+ * (`packValues`).
  *
  * The walk is its own rather than `plugin.files`: most of these paths run
  * through `.config/`, and the reader's glob does not descend into a dot
@@ -723,7 +731,26 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     // a pack's mise files live in its templates.
     const templates = join(plugin.root, pack, PACK_TEMPLATES);
     landedTree(templates, "pack templates/ tier", PACK_CONFIG_ROOT_FILES);
-    for (const fault of templateNameFaults(templates, basename(pack))) {
+
+    // A pack's templates read the global names and the ones its `values:`
+    // declares, and every declared name is read somewhere in them.
+    const packYaml = join(plugin.root, pack, "pack.yaml");
+    const source = existsSync(packYaml) ? readText(packYaml) : null;
+    let document: unknown;
+    let values: PackValues = { declared: new Map(), faults: [] };
+    let yamlFault: string | null = null;
+    if (source !== null) {
+      try {
+        document = parseYaml(source);
+        values = packValues(source);
+      }
+      catch (error) {
+        yamlFault = firstLine(error);
+      }
+    }
+    const read = new Set<string>();
+    const declared = new Set(values.declared.keys());
+    for (const fault of templateNameFaults(templates, declared, read)) {
       at(`${path(fault.absolute)}:${fault.line}: ${fault.message}`);
     }
 
@@ -817,20 +844,10 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       );
     }
 
-    const packYaml = join(plugin.root, pack, "pack.yaml");
-    if (existsSync(packYaml)) {
-      let document: unknown;
-      try {
-        document = parseYaml(readText(packYaml));
-      }
-      catch (error) {
-        at(
-          `${path(packYaml)}: pack.yaml is not valid YAML — ${
-            firstLine(error)
-          }`,
-        );
-        continue;
-      }
+    if (yamlFault !== null) {
+      at(`${path(packYaml)}: pack.yaml is not valid YAML — ${yamlFault}`);
+    }
+    else if (source !== null) {
       for (
         const message of [
           ...conditionalFaults(document, config),
@@ -838,6 +855,17 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
         ]
       ) {
         at(`${path(packYaml)}: ${message}`);
+      }
+      for (const fault of values.faults) {
+        at(`${path(packYaml)}:${fault.line}: ${fault.message}`);
+      }
+      for (const [name, line] of values.declared) {
+        if (!read.has(name)) {
+          at(
+            `${path(packYaml)}:${line}: \`values:\` declares ${name}, which no `
+              + `file in the pack's templates/ reads as @@${name}@@`,
+          );
+        }
       }
     }
   }
@@ -951,10 +979,103 @@ const RETIRED_PACK_KEYS: ReadonlyMap<string, string> = new Map([
   ],
   [
     "machine_env",
-    "a machine value is a `@@NAME@@` in the pack's templates/, filled from "
-    + "its `packs.<slug>` keys in .config/stackgen.yaml",
+    "a machine value is a `values:` entry — name, detect and question — read "
+    + "as `@@NAME@@` in the pack's templates/",
   ],
 ]);
+
+/** A `values:` entry's fault, by its pack.yaml line. */
+interface ValueFault {
+  readonly line: number;
+  readonly message: string;
+}
+
+/** A pack's `values:` names, each with its pack.yaml line, and its faults. */
+interface PackValues {
+  readonly declared: ReadonlyMap<string, number>;
+  readonly faults: readonly ValueFault[];
+}
+
+/** The keys a `values:` entry carries, each a non-empty string. */
+const PACK_VALUE_KEYS = ["name", "detect", "question"];
+
+/** A `values:` name: upper snake case, as the template grammar reads it. */
+const PACK_VALUE_NAME = /^[A-Z][A-Z0-9_]*$/;
+
+/**
+ * A pack's `values:` list — the machine values its templates read, each
+ * `name`, `detect` (a command printing the value, non-zero when unknown) and
+ * `question` (asked when `detect` fails).
+ *
+ * A name that is not upper snake case is never read by the engine, and one
+ * that takes a {@link TEMPLATE_GLOBAL_NAMES} entry is refused by the script —
+ * so either is a finding here, with the line the entry sits on.
+ */
+function packValues(source: string): PackValues {
+  const lines = new LineCounter();
+  const document = parseDocument(source, { lineCounter: lines });
+  const node = document.get("values", true);
+  const declared = new Map<string, number>();
+  const faults: ValueFault[] = [];
+  if (node === undefined) {
+    return { declared, faults };
+  }
+  const lineOf = (item: unknown) =>
+    lines
+      .linePos(
+        (item as { range?: [number, number, number]; } | null)?.range?.[0] ?? 0,
+      )
+      .line;
+  if (!isSeq(node)) {
+    faults.push({
+      line: lineOf(node),
+      message: "`values:` is not a list of { name, detect, question } maps",
+    });
+    return { declared, faults };
+  }
+  const entries = asArray(
+    (document.toJS() as Record<string, unknown>).values,
+  );
+  node.items.forEach((item, index) => {
+    const line = lineOf(item);
+    const at = (message: string) =>
+      faults.push({ line, message: `\`values[${index}]\` ${message}` });
+    const entry = entries[index];
+    if (!isPlainObject(entry)) {
+      at("is not a { name, detect, question } map");
+      return;
+    }
+    const extra = Object.keys(entry).filter(k => !PACK_VALUE_KEYS.includes(k));
+    if (extra.length > 0) {
+      at(
+        `carries ${extra.map(k => `\`${k}\``).join(", ")} — only \`name\`, `
+          + `\`detect\` and \`question\``,
+      );
+    }
+    for (const key of PACK_VALUE_KEYS) {
+      if (typeof entry[key] !== "string" || entry[key] === "") {
+        at(`\`${key}\` is not a non-empty string`);
+      }
+    }
+    const name = entry.name;
+    if (typeof name !== "string" || name === "") {
+      return;
+    }
+    if (!PACK_VALUE_NAME.test(name)) {
+      at(`\`name\` (${name}) is not upper snake case`);
+    }
+    else if (TEMPLATE_GLOBAL_NAMES.has(name)) {
+      at(
+        `\`name\` (${name}) is a global template name — tool-config fills it, `
+          + `not the pack`,
+      );
+    }
+    else {
+      declared.set(name, line);
+    }
+  });
+  return { declared, faults };
+}
 
 /** A template file's tag fault, by where it sits. */
 interface TemplateFault {
@@ -968,16 +1089,16 @@ interface TemplateFault {
  *
  * A tag outside the engine's grammar — a lowercase name, a stray block word —
  * is left in the rendered file verbatim, and nothing downstream reports it.
- * In `stackgen:tool-config`'s own templates (`pack` null) every name is one of
- * {@link TEMPLATE_GLOBAL_NAMES}, since no pack keys are in scope there; a
- * name outside it renders as a missing value. In a pack's templates a name
- * outside that set is the pack's own `packs.<slug>` key — the script refuses a
- * stored key that takes a global name, so no static collision is left to
- * catch beyond the grammar.
+ * In `stackgen:tool-config`'s own templates (`declared` null) every name is
+ * one of {@link TEMPLATE_GLOBAL_NAMES}, since no pack keys are in scope there;
+ * a name outside it renders as a missing value. In a pack's templates a name
+ * outside that set is one its `values:` declares, or it renders as a missing
+ * value too. Every name the tree reads is added to `read`.
  */
 function templateNameFaults(
   tree: string,
-  pack: string | null,
+  declared: ReadonlySet<string> | null,
+  read: Set<string> = new Set(),
 ): TemplateFault[] {
   const faults: TemplateFault[] = [];
   for (const absolute of filesUnder(tree)) {
@@ -994,15 +1115,21 @@ function templateNameFaults(
           continue;
         }
         const name = parsed[1] ?? parsed[2];
-        if (
-          pack === null
-          && name !== undefined
-          && !TEMPLATE_GLOBAL_NAMES.has(name)
-        ) {
+        if (name === undefined || TEMPLATE_GLOBAL_NAMES.has(name)) {
+          continue;
+        }
+        read.add(name);
+        if (declared === null) {
           at(
             `\`${tag}\` names ${name}, which is not a template name — `
               + `tool-config's templates read the stored and derived names `
               + `alone`,
+          );
+        }
+        else if (!declared.has(name)) {
+          at(
+            `\`${tag}\` names ${name}, which is neither a global template `
+              + `name nor declared in the pack's \`values:\``,
           );
         }
       }

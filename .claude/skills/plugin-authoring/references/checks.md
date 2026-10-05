@@ -176,9 +176,17 @@ much smaller than the one it replaced: whole families of assertion became
       matches something the repo does not own — both silently. A `tool-config:`
       or `machine_env:` key is **refused** outright: nothing reads either any
       more — a pack ships the lines it needs as files in its `templates/` tier
-      or as a subtask, and a machine value is a `@@NAME@@` in its templates,
-      filled from its `packs.<slug>` keys in `.config/stackgen.yaml`. The
-      finding names the pack and the entry;
+      or as a subtask, and a machine value is a `values:` entry. The finding
+      names the pack and the entry;
+    - the pack's optional **`values:` list** — the machine values its templates
+      read — is a block list of maps, each exactly `name` (upper snake case, and
+      not one of `TEMPLATE_GLOBAL_NAMES`, which tool-config fills), `detect` (a
+      non-empty shell command printing the value, exiting non-zero when it
+      cannot) and `question` (a non-empty prompt, asked when `detect` fails). A
+      malformed entry is a finding naming the `pack.yaml` line it sits on. Every
+      declared name must be read in the pack's `templates/` as `@@NAME@@` (or an
+      `#if`/`#each` on it) — a value nothing reads is asked for and lands
+      nowhere;
     - every **`@@` tag in a template tree** — tool-config's `templates/` and
       each pack's `templates/` — is one the template engine reads: a name in
       upper snake case as `@@NAME@@`, `@@#if NAME@@` or `@@#each NAME@@`, the
@@ -187,10 +195,9 @@ much smaller than the one it replaced: whole families of assertion became
       tool-config's own templates every name is one of `TEMPLATE_GLOBAL_NAMES` —
       the stored and derived names of `.config/stackgen.yaml`, its `…:all` lists
       read off the script's own `SUBTASK_DIRS` — since no pack keys are in scope
-      there; in a pack's, any other name is the pack's own `packs.<slug>` key,
-      and the script refuses a stored key that takes a global name, so no
-      collision is left to catch statically. The finding names the file, the
-      line and the tag.
+      there; in a pack's, any other name must be one its `values:` declares, or
+      it renders as a missing value. The finding names the file, the line and
+      the tag.
 
     A pack's `config/` tier holding any mise `conf.d/` fragment or any
     `pre-commit.d/` file is a finding too: a pack's mise files live in its
