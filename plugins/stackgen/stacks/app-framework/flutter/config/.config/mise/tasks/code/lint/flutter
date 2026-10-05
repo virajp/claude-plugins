@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+#MISE description="Validate the Dart dependencies and analyze the Dart sources"
+#MISE dir="{{ config_root }}"
+#MISE hide=true
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to lint (default: the whole repo)"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Whole project even with a file list: neither the analyzer nor the dependency check subsumes the other.
+
+print_subheader "Validating Dart dependencies ..."
+dart run dependency_validator
+
+print_subheader "Analyzing Dart sources ..."
+dart analyze --fatal-infos

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+#MISE description="Report known vulnerabilities in the dependency tree"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# A deliberate no-op, so the audit says why it has nothing to check.
+
+print_warn "setup:deps:audit:swift: SwiftPM ships no advisory command, so there is nothing to audit."
+print_yellow "Vulnerabilities in the resolved tree are covered by the repo's SCA gate, if one is pinned."

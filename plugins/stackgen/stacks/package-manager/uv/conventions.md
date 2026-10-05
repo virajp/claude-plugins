@@ -13,16 +13,18 @@ library invokes goes through `uv run`, so the version that executes is the
 version the lockfile pinned — including the gates, which is why the `ruff` pack
 calls `uv run ruff` rather than a `ruff` on `PATH`.
 
-**Install and upgrade are separate verbs, and Python is the only overlay that
-splits them.** `setup:deps:install` is `uv sync --all-extras` and never moves a
-pin; `setup:deps:upgrade` is `uv lock --upgrade` followed by the same sync, so
-moving the lockfile forward is always something someone asked for. The node
-overlay has no `upgrade` verb at all.
+**Install and upgrade are separate verbs.** `setup:deps:install:uv` is
+`uv sync --all-extras` and never moves a pin; `setup:deps:upgrade:uv` is
+`uv lock --upgrade` followed by the same sync, so moving the lockfile forward
+is always something someone asked for. This pack ships all five
+`setup/deps/<verb>/uv` subtasks, and the repo's `setup:deps:<verb>:all`, which
+tool-config renders, calls each by name.
 
-That asymmetry is not an omission to reconcile. **The optional `setup/deps/*`
-verbs are probed by name**: a verb a pack does not ship means the manager has
-no such verb, not that the choice is still pending. `setup:deps:all` calls what
-it finds.
+**The lockfile is checked on every commit.** This pack's `code/check/uv`
+subtask runs `uv lock --check` for each tracked `uv.lock` with a
+`pyproject.toml` beside it, and passes where there is none — uv installed as
+mise's pipx backend leaves no lockfile. The gate config's `check` hook runs it
+through `code:check:all`, so the pack ships no pre-commit fragment.
 
 **The verbs, and why each reads as it does.** `install --frozen` maps to uv's
 `--locked`, never to uv's `--frozen`: a plain sync re-locks whenever the

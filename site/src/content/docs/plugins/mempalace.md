@@ -77,7 +77,7 @@ remedy, and checks the memory **files** either way. The one Python-toolchain
 prerequisite `vwf` genuinely leans on belongs to **graphify**, not to mempalace,
 and doctor §8 treats a missing `graphify` CLI as a **blocking** finding with
 `MISE_ENV=dev mise install` as the remedy — `/stackgen:tool-config` pins
-`pipx:graphifyy` in the repo's `.config/mise/conf.d/tools.dev.toml`.
+`pipx:graphifyy` in the repo's `.config/mise/conf.d/ai/mise.dev.toml`.
 
 ## Auto-save
 

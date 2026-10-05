@@ -3,7 +3,7 @@ name: Swift · package
 axis: project
 kind: language-bundle
 components:
-- language/swift@0.2.0
+- language/swift@0.2.1
 - package-manager/swiftpm@0.3.1
 - toolchain-gate/swift-format@0.1.3
 - toolchain-gate/swiftlint@0.2.1
@@ -29,8 +29,9 @@ other packages and apps through SwiftPM, tagged with semantic versions.
   resolve, update and clean through `swift package`.
 - **swift-format** (`swift format`, from the toolchain) formats, and
   **SwiftLint**, through mise, lints. Both read their configuration from
-  `.config/`, and both run inside the repo's `code:format` and `code:lint`
-  tasks.
+  `.config/`. Each pack ships its own subtasks — `code:format:swift-format`
+  and `code:lint:swift-format`, and `code:lint:swiftlint` — which the repo's
+  `code:format:all` and `code:lint:all` run.
 
 ## Multi-platform availability
 

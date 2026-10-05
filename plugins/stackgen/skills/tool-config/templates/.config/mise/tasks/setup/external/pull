@@ -1,0 +1,18 @@
+@@#if EXTERNAL@@
+#!/usr/bin/env bash
+
+#MISE description="Fetch or build the external services this repo runs against"
+#MISE hide=true
+#PLACEHOLDER
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/placeholder"
+
+# Local-only, like the rest of `setup:external:*`.
+if [[ ",${MISE_ENV:-}," != *",dev,"* ]]; then
+  exit 0
+fi
+
+placeholder_notice "setup:external:pull" "this repo runs against external services, and this task is not written yet"
+@@/if@@

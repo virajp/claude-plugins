@@ -1,0 +1,7 @@
+# Sorts every package.json; code:format:pnpm skips the step where it is absent
+[tools."npm:sort-package-json"]
+version = "latest"
+
+[shell_alias]
+# A one-off package runs through pnpm's store, resolver and registry settings
+npx = "pnpm dlx"

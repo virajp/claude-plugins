@@ -20,19 +20,17 @@ identical gate.
 
 ## What this pack writes
 
-Two files. `.config/mise/tasks/code/lint` is the one task name the gate is
-reachable as, and it is the only place the linter is configured: this pack
-ships **no pre-commit fragment**, because the gate config's `lint` hook already
-calls `mise run code:lint --fix` with the staged files. The task
-takes an optional file list — empty means the whole tree. It sits on the
-toolchain-gate axis, so where a package-manager pack that ships its own
-`code/lint` — `pnpm` — is also pinned, that file wins the composition and this
-one never runs; the two run the same zero-config linter, so that is harmless,
-and this file earns its place on stacks with no such overlay.
+No file: its skill and these conventions. ESLint runs only inside the house
+linter, `@askviraj/linter`, which `stackgen:tool-config` pins in every repo
+and runs through the universal `code:lint:house` subtask — so this pack ships
+no `code/lint/eslint` subtask and **no pre-commit fragment**: the gate
+config's `lint` hook calls `mise run code:lint:all --fix`, which runs
+`code:lint:house` with every other lint subtask. The house linter reads the
+whole tree whatever list it is given — its rules are cross-file.
 
-`.config/linter.yaml`, the linter's own config, is **not** this pack's:
-`stackgen:tool-config` lands it with pre-commit, because every pack whose
-`code:lint` runs the linter reads it, not this one alone. It lands **empty of
+`.config/linter.yaml`, the linter's own config, is **not** this pack's either:
+`stackgen:tool-config` lands it with the other gate configs, because the house
+linter reads it in every repo, not on this stack alone. It lands **empty of
 overrides** — the linter is zero-config without it, so the file exists to give
 a misfiring default one obvious place to be answered — with an `ignores:` list
 of the generated trees the stack packs produce. The `eslint` skill still guides

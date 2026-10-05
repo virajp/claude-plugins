@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+#MISE description="Reconcile the AI tooling — every setup:ai subtask"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Rendered by stackgen tool-config: one call per subtask under setup/ai/, re-rendered whenever a pack adds or removes one.
+@@#if AI_SUBTASKS@@
+@@#each AI_SUBTASKS@@
+
+mise run setup:ai:@@.@@
+@@/each@@
+@@#else@@
+
+print_yellow "setup:ai: nothing to run — this repo has no setup:ai:<name> subtask."
+@@/if@@

@@ -75,7 +75,10 @@ the two files that still have the problem.
    re-acquire the defect; when a payload file genuinely needs formatting, run
    the **shipped** config over it, never this repo's.
    `plugins/stackgen/skills/tool-config/assets/` is excluded on the same terms:
-   it is the payload `stackgen:tool-config` lands.
+   it is the payload `stackgen:tool-config` lands. The template trees —
+   `skills/tool-config/templates/` and each pack's `templates/` — are excluded
+   from every gate here too, since a file holding `@@` tags is not yet the TOML,
+   JSON or YAML it renders to.
 3. **A dependency stays inside this marketplace.** Add the name to
    `dependencies` in `plugin.json` with `"marketplace": "virajp-plugins"`; the
    marketplace entry is generated from it, and `p:plugins:check` asserts it
@@ -111,44 +114,49 @@ The payload's other two halves have rules of their own. Rule 13 covers its
 plugin-relative, because the file is copied into a repo where no plugin is
 installed and the path resolves to nothing without a word. Rule 4 covers its
 **frontmatter**, parsing every pack skill and pack agent under `stacks/*/*/`,
-and every repo-local skill a tool-config asset tree lands (mise's
-`.claude/skills/mise/SKILL.md`), on the same strict terms as a plugin's own.
+and every repo-local skill a tool-config tree lands (mise's
+`.claude/skills/mise/SKILL.md`, a template), on the same strict terms as a
+plugin's own.
 
 ## Skill scripts
 
 A skill may ship a node script for the mechanical half of its work —
-`stackgen:tool-config`'s `scripts/tool-config.mjs` plus `scripts/lib/` is the
-first — and the judgement stays with the session. Bash or node only, never
-python. Rule 16 holds every `skills/*/scripts/**/*.mjs`: an entry directly under
-`scripts/` starts `#!/usr/bin/env node` and is executable, and no file calls
-`require(` or imports anything but a `node:` built-in or a relative module,
-since the installed plugin ships no `node_modules`. No formatter and no shell
-gate read `.mjs`; its gate is a vitest suite under `scripts/src/` that spawns
-the script in temp repos, as `tool-config-core.test.ts`,
-`tool-config-mise.test.ts` and `tool-config-gates.test.ts` do. Only the owning
-plugin may cite the script's path — rule 6 refuses `${CLAUDE_PLUGIN_ROOT}`
-across plugins — so vwf invokes `/stackgen:tool-config`, never the file.
+`stackgen:tool-config`'s `scripts/tool-config.mjs` plus `scripts/lib/` — the
+template engine, the values reader, the renderer, the rows — is the first — and
+the judgement stays with the session. Bash or node only, never python. Rule 16
+holds every `skills/*/scripts/**/*.mjs`: an entry directly under `scripts/`
+starts `#!/usr/bin/env node` and is executable, and no file calls `require(` or
+imports anything but a `node:` built-in or a relative module, since the
+installed plugin ships no `node_modules`. No formatter and no shell gate read
+`.mjs`; its gate is a vitest suite under `scripts/src/` that spawns the script
+in temp repos, as `tool-config-render.test.ts` and `tool-config-pack.test.ts`
+do. Only the owning plugin may cite the script's path — rule 6 refuses
+`${CLAUDE_PLUGIN_ROOT}` across plugins — so vwf invokes `/stackgen:tool-config`,
+never the file.
 
 Rule 17 fails any `mise use` a plugin ships, dot directories included, unless
 the line forbids it (`never` or `bare` right before it, `is never` or `— never`
-right after). A tool is entered into its `conf.d/tools*.toml` file first, then
-installed with `mise install`.
+right after). A tool is entered into the `mise.toml` of the `conf.d/` folder
+that owns it first — `_base/`, `ai/` or a pack's own `<slug>/` — then installed
+with `mise install`.
 
 ## Comments in shipped config and task files
 
-Anything under a `stackgen:tool-config` `assets/` tree, or a pack's `config/` or
-`hooks/`, lands in a repo as its own file, so its comments are read by every
-person who opens it. Keep only the comments something reads:
+Anything under `stackgen:tool-config`'s `assets/` or `templates/`, or a pack's
+`config/`, `templates/` or `hooks/`, lands in a repo as its own file, so its
+comments are read by every person who opens it. Keep only the comments something
+reads:
 
 - `#MISE` and `#USAGE` lines, and shebangs
 - `# shellcheck` directives
-- the tool-config block markers, `# >>> <requester>` / `# <<< <requester>`
+- the tool-config marker pair, `# >>> tool-config` / `# <<< tool-config` (`//`
+  in dprint's JSONC), in the six files that carry it
 - `MARKED POSITION` lines, plus whatever a filler needs beside one to find its
   value
 - grype ignore-reason comments, one unit with their entry
 - commented-out templates a skill fills in and uncomments
 - any comment the owning reference names as load-bearing — grep that reference
-  before removing a comment from a tool-config asset
+  before removing a comment from a tool-config asset or template
 
 Beyond those, a comment is at most **one line**, and only as a warning where a
 reader would otherwise break something non-obvious. Every longer explanation

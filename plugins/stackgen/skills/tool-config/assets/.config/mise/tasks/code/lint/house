@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+#MISE description="Lint the repo with the house linter"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="ignored: the linter's rules read across files, so it lints the whole tree"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+args=()
+if [[ "${usage_debug:-false}" == "true" ]]; then
+  args+=(--debug)
+fi
+if [[ "${usage_fix:-false}" == "true" ]]; then
+  args+=(--fix)
+fi
+
+# By mise path: a `node_modules/.bin` on PATH would shadow the pin in `conf.d/_base/`.
+if ! linter_bin="$(mise which linter --tool npm:@askviraj/linter 2>/dev/null)"; then
+  print_warn "The house linter is not installed — skipping (MISE_ENV=dev mise run setup:all)."
+  exit 0
+fi
+
+# Whole tree even with a file list: an unused export or a duplicate is only visible across files.
+"${linter_bin}" ${args[@]+"${args[@]}"}

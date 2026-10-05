@@ -1,0 +1,66 @@
+I reviewed the plan's own commits (`e53f4a10..HEAD`). I checked the main finding by hand: I generated a `stackgen.yaml`, ran the shipped dprint config over it, and parsed the result with `lib/yaml.mjs`, which refused it. I also ran the script against a scratch repo with a stub `mise`. `all`, then `pack` swiftlint and swiftui, then a `pack-remove` preview all behaved, and a second `preview all` returned no rows. `p:plugins:check` and the two new tool-config test suites pass.
+
+```json
+[
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/tool-config.mjs",
+    "line": 666,
+    "summary": "land() runs dprint over every file the call wrote, and that includes .config/stackgen.yaml; dprint's YAML plugin (printWidth 80) splits a long flow list across lines, and lib/yaml.mjs refuses that form.",
+    "failure_scenario": "Run `all --members apps/backend-service,apps/frontend-web-app,apps/data-pipeline-x`. stackgenText writes `members: [\"…\", \"…\", \"…\"]` on one line, wider than 80 columns, and land's dprint pass rewrites it as a multi-line `[` … `]` list. Every later all/pack/pack-remove/upgrade call then exits 2 with `.config/stackgen.yaml:9: an unterminated flow list — multi-line flow lists are not supported`. The pre-commit `format` hook (code:format:dprint) does the same to the file on commit. Confirmed by running the shipped dprint config and readStackgen."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/tool-config.mjs",
+    "line": 478,
+    "summary": "`pack` only refuses a template at .config/stackgen.yaml or under .git/; nothing at run time stops a pack template from overwriting tool-config's own files or another pack's conf.d folder.",
+    "failure_scenario": "A generated pack, or any `--dir`, with templates/.config/mise/conf.d/_base/mise.toml, templates/.gitignore or templates/.config/mise/conf.d/fnox/mise.toml is rendered over the universal base or another pack's file. rerenderAll only re-renders tier 1–2 templates, so the base stays overwritten. The 'beside, never over' rule exists only in check.ts, which never sees a generated pack."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/.gitattributes",
+    "line": 1,
+    "summary": ".gitattributes lost its marker block and .config/grype.yaml (`ignore: []`) has none, so both are owned whole; the repo's own attribute lines or vulnerability ignores show as removals on every `all`.",
+    "failure_scenario": "A repo with `*.psd filter=lfs diff=lfs merge=lfs -text`, or a grype ignore entry the file itself invites, gets a write row on every `all`. Answering `ok` deletes the LFS attributes (binaries then commit as plain blobs) or re-fails code:sec. `keep-existing` freezes the file against every later asset change. The old asset kept repo lines outside its `# >>> git` block."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/lib/render.mjs",
+    "line": 121,
+    "summary": "splice() keeps every line outside the markers as the repo's own, so after the first render, shipped changes outside the marked region (pre-commit hooks, dprint plugin URLs and settings, gitleaks rules) never reach the repo again.",
+    "failure_scenario": "A later stackgen release changes a hook entry in pre-commit-config.yaml or bumps a dprint plugin wasm URL. On a repo that already has the single `# >>> tool-config` pair, place() splices only the exclude block, so the preview shows no row and the repo keeps the stale hooks and plugins indefinitely. A fix limited to these marked regions does not address it; this is a design-level gap."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/lib/render.mjs",
+    "line": 325,
+    "summary": "taskNames reads every .toml under conf.d, including gitignored mise.local.toml and mise.*.local.toml, so the committed .claude/skills/mise/SKILL.md lists one machine's private tasks.",
+    "failure_scenario": "A developer has `[tasks.scratch]` in conf.d/_base/mise.local.toml. Their `all` or `pack` render adds `scratch` to the committed TASKS table. On every other machine the render lacks it, so each run there shows a SKILL.md write row and the file flips back and forth between machines."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/lib/render.mjs",
+    "line": 225,
+    "summary": "pinExact writes whatever `mise latest` prints without checking it with isExact; a two-part version is then not treated as held and is skipped by upgrade.",
+    "failure_scenario": "For a CI-loaded pin, `mise latest <tool>` returns a two-part version such as `2024.1` (or a tool tagged that way). It is written as the 'exact' pin. On the next render, `held` filters it out because isExact fails, so the script calls latest() again and moves the pin whenever upstream moves. Meanwhile cmdUpgrade skips it as not exact. The promise that a pin CI loads is only ever written exact does not hold."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/tool-config.mjs",
+    "line": 625,
+    "summary": "refuseOrphans only catches a kept file that still calls a deleted task, not the reverse: a kept subtask whose `…:all` caller drops it.",
+    "failure_scenario": "`pack-remove --slug swiftlint` answered r1:ok (delete conf.d/swiftlint/mise.toml), r2:keep-existing (code/lint/swiftlint), r3:ok (code/lint/all rewritten without swiftlint). code/lint/swiftlint is left with no caller and no SwiftLint pin, and the next unrelated render silently re-adds the call to a tool that is no longer pinned."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/tool-config.mjs",
+    "line": 379,
+    "summary": "While planning, place() spawns `mise x -- dprint fmt --stdin` once for every rendered file that differs, including extensionless shell tasks dprint never formats, and land() then formats them all again.",
+    "failure_scenario": "A pack call that re-renders 8 …:all tasks plus SKILL.md starts dprint (and loads its wasm plugins) about 9 times on preview and again on the answering call, then once more in land. Most of those spawns are for files dprint passes through unchanged. Cheaper: skip files no dprint plugin matches, or batch the files into one dprint call. The same pattern shows in valuesFrom, which writes a temp dir and spawns git twice for every pack call."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 2005,
+    "summary": "stripJsonComments/walkJson is about 55 lines of hand-written JSONC handling (comments plus trailing commas), but jsonc-parser is already a root dependency and installer/src/config/json.ts uses it.",
+    "failure_scenario": "Two JSONC readers to maintain; the hand-rolled one has its own string and comment edge cases. `parse(source, errors, { allowTrailingComma: true })` from jsonc-parser does the same job."
+  },
+  {
+    "file": "CLAUDE.md",
+    "line": 164,
+    "summary": "This breaks the repo CLAUDE.md rule \"Docs ship with the change. Any change to plugin behavior must reconcile readme.md, this file, and the manual … in the same commit\". CLAUDE.md:164-165 and :241 and readme.md:320 still describe `tool-config:` entries validated by the script's schema, and the shipped tool-config SKILL.md argument-hint still advertises apply-entries, check and --for.",
+    "failure_scenario": "Since ca08c79f and 31a41ade the checker refuses `tool-config:` and schema.mjs is deleted, and cli.mjs answers `apply-entries`/`check` with \"is retired or unknown\". Any session that follows the shipped SKILL.md or CLAUDE.md issues calls the script refuses. The doc updates are scheduled for waves 5–6 rather than the same commits."
+  }
+]
+```

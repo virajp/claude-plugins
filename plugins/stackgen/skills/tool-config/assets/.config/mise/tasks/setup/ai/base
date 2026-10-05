@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+#MISE description="Check for the workflow plugin, then update every marketplace and plugin"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/plugins"
+
+if ! claude_available; then
+  print_warn "claude is not on PATH — skipping AI setup."
+  print_yellow "Install it from https://claude.com/code, then re-run this task."
+  exit 0
+fi
+
+# Project scope resolves against the working directory.
+cd "${MISE_PROJECT_ROOT}"
+
+# The workflow plugin; each pack's plugins are its own `setup:ai:<pack>` subtask.
+print_subheader "Checking plugins ..."
+if plugin_installed "vwf@virajp-plugins"; then
+  print_yellow "- vwf@virajp-plugins: installed"
+elif command -v pnpx >/dev/null 2>&1; then
+  print_yellow "- vwf@virajp-plugins: absent — installing it at user scope"
+  if ! pnpx @virajp.dev/claude-plugins@latest --all; then
+    print_warn "- the installer failed — continuing; re-run: pnpx @virajp.dev/claude-plugins@latest --all"
+  fi
+else
+  print_warn "- vwf@virajp-plugins: absent, and pnpx is not on PATH — run: pnpx @virajp.dev/claude-plugins@latest --all"
+fi
+
+# Whether or not anything was installed: every marketplace, then every plugin at its own scope.
+print_subheader "Updating marketplaces ..."
+if ! claude plugin marketplace update >/dev/null; then
+  print_warn "- a marketplace update failed — updating plugins from what is cached"
+fi
+
+print_subheader "Updating plugins ..."
+rows="$(plugins_here)"
+while IFS='|' read -r plugin scope; do
+  [ -n "${plugin}" ] || continue
+  print_wait "- ${plugin} (${scope}) ... "
+  if claude plugin update --scope "${scope}" "${plugin}" </dev/null >/dev/null; then
+    print_ok
+  else
+    print_warn "failed — continuing"
+  fi
+done <<<"${rows}"
+
+print_subheader "Pruning plugins nothing references ..."
+if ! claude plugin autoremove --scope project --yes >/dev/null; then
+  print_warn "- pruning failed — continuing"
+fi
+
+print_success "AI tooling reconciled."

@@ -34,7 +34,7 @@ user's clock.
 
    **Entries are not all under `.claude/`.** A component may have landed
    repo config files from its `config/` tree — a gate's own config file,
-   a root config file, a task overlay, a deploy target's root config —
+   a root config file, a subtask, a deploy target's root config —
    and those are ordinary lockfile entries carrying a `path`, a
    `component`, a `hash` and a `mode`. Inventory them with the rest; they
    differ only in where they sit and in the consent line they take. What
@@ -42,12 +42,12 @@ user's clock.
    `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`, which is the one
    statement of it — never re-list it here.
 
-   **Entries recorded `source: tool-config/…` are not this skill's.** The
+   **What `stackgen:tool-config` renders is not this skill's.** The
    toolchain manager's and the gates' files — mise, dprint, pre-commit,
-   gitleaks, grype — are `stackgen:tool-config`'s; list them as such and
-   diff nothing in them. The one exception is step 2's retired record: a
-   tool-config record whose path the skill no longer writes and whose
-   file is gone is dropped there.
+   gitleaks, grype — and each pack's `templates/` tree, rendered into
+   `.config/mise/conf.d/<slug>/`, carry no lockfile record: tool-config
+   compares them with a fresh render on its own calls. This skill diffs
+   nothing in them.
 
 2. **Diff pack-sourced components.** For each component, re-derive its
    landing set from the current pack
@@ -61,9 +61,8 @@ user's clock.
    deleted.
 
    **A retired record whose file is gone is dropped.** A recorded path
-   that its recording component — the `component:` ref, or the
-   `source: tool-config/<tool>@…` skill, the one case this step reads a
-   tool-config record — no longer ships, **and** that is absent from the
+   that its recording component — the `component:` ref — no longer
+   ships, **and** that is absent from the
    tree, leaves `entries:` at step 6 with no row in the delta: nothing
    lands and nothing is deleted, so there is nothing to consent to. The
    sync report names every record it dropped. The motivating case is the
@@ -71,22 +70,24 @@ user's clock.
    path the component no longer ships that is still **present** is not
    this rule's.
 
-   **A pack whose `tool-config:` list changed is reported, not applied.**
-   Name the pack and the calls added, dropped or changed, and give the
-   remedy as "run `/vwf:setup`": its materialize pass re-runs every landed
-   pack's list on each run, so no reshape is needed. `machine_env` values
-   live in tool-config's blocks, so no pin is carried here.
+   **A pack whose `templates/` changed is reported, not applied.** Name
+   the pack and the template files added, dropped or changed, and give the
+   remedy as tool-config's `pack --slug <slug> --dir <pack dir>`, whose
+   rows show the render against the repo
+   (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md#packs`). A pack
+   value its templates name lives under `packs.<slug>` in
+   `.config/stackgen.yaml`, so no value is carried here.
 
    **Conditional paths are evaluated first, against the same answers the
    materializer takes.** Read the product's `.config/vwf.yaml` `answers:`
-   block — `secrets` once for the product, `forge` and `update_bot` per
+   block — `secrets` once for the product, `forge` per
    repo — and re-read `forge` live from this repo's `origin` host, so a
    remote that appeared since init ran is what the forge conditions are
    judged against. A config carrying **no** block —
-   a repo never reshaped since the key existed — gets the three inferred
+   a repo never reshaped since the key existed — gets the two inferred
    from the tree the way `/vwf:init` seeds them: the forge from
-   `origin`, the secrets provider from the lockfile's pinned provider, the
-   update bot from a renovate or dependabot file — and with no block to
+   `origin`, the secrets provider from the lockfile's pinned provider —
+   and with no block to
    correct, this skill **writes nothing** into that config: the block is
    `/vwf:init`'s to write, and a missing one is drift `/vwf:doctor`
    reports and the reshape fixes. Where a block **is** there and the

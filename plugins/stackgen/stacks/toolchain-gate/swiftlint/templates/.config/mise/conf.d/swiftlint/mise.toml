@@ -1,0 +1,4 @@
+# SwiftLint, the correctness gate for Swift; CI loads this file, so the
+# render pins it exact — under --strict a new release can fail the build
+[tools."aqua:realm/SwiftLint"]
+version = "latest"

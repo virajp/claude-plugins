@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+#MISE description="Check or format the Dart sources and their imports"
+#MISE dir="{{ config_root }}"
+#MISE hide=true
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to format (default: the whole repo)"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# The import sorter is a formatter, not a lint: a gate that rewrites cannot run read-only.
+
+files=()
+eval "files+=(${usage_files:-})"
+
+dart_targets=()
+if [ ${#files[@]} -gt 0 ]; then
+  for f in "${files[@]}"; do
+    case "${f}" in
+      lib/*.dart) dart_targets+=("${f}") ;;
+    esac
+  done
+else
+  dart_targets=(lib/)
+fi
+
+format_args=()
+sorter_args=()
+if [[ "${usage_fix:-false}" != "true" ]]; then
+  format_args=(--set-exit-if-changed --output none)
+  sorter_args=(--exit-if-changed)
+fi
+
+if [ ${#dart_targets[@]} -gt 0 ]; then
+  print_subheader "Formatting Dart sources ..."
+  dart format ${format_args[@]+"${format_args[@]}"} "${dart_targets[@]}"
+
+  print_subheader "Sorting Dart imports ..."
+  if [ ${#files[@]} -gt 0 ]; then
+    dart run import_sorter:main ${sorter_args[@]+"${sorter_args[@]}"} "${dart_targets[@]}"
+  else
+    dart run import_sorter:main ${sorter_args[@]+"${sorter_args[@]}"}
+  fi
+fi

@@ -43,16 +43,13 @@ guard it ships refuses a commit when any of them is missing.
 accepted exception to the rule that everything configurable lives under
 `.config/`, because this tool discovers its config by walking up from the
 working directory and a nested one would be found from some directories and
-not others. Beside it, through the `config/` tier of stackgen's output
-charter: an environment fragment under
-`.config/mise/conf.d/`, which the toolchain manager auto-loads, and an
-overlay of the manager's `setup/secrets` slot that verifies the tool is
-reachable and reports the keychain prefix in use. A capability provider
-**outranks every language and framework pack** in composition order, so its
-overlay wins over anything one of them put in that slot; only a cloud
-deploy target composes later still, and it writes different files. The
-local override file is gitignored by the hygiene
-pack, and the ciphertext guard this pack ships is what makes the
+not others. Beside it: the tool's pin, rendered from the pack's template
+into `.config/mise/conf.d/fnox/`, which the toolchain manager auto-loads, and
+a fill of the manager's `setup/secrets` slot that verifies the tool is
+reachable and reports the keychain prefix in use — it replaces the shipped
+placeholder, the one tool-config path a pack may fill. The local override
+file, `fnox.local.toml`, is gitignored by the repo's universal `.gitignore`,
+and the ciphertext guard this pack ships is what makes the
 encrypt-into-git allowance safe rather than merely permitted.
 
 Full judgment: the component's own skill and its references. The contract it

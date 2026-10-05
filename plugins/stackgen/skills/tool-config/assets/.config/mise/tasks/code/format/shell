@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+#MISE description="Format the repo's shell scripts with shfmt"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to format (default: every tracked shell script)"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+files=()
+eval "files+=(${usage_files:-})"
+
+if ! command -v shfmt >/dev/null 2>&1; then
+  exit 0
+fi
+
+shell_scope=()
+while IFS= read -r shell_file; do
+  if [ -n "${shell_file}" ]; then
+    shell_scope+=("${shell_file}")
+  fi
+done < <(shell_files_in_scope ${files[@]+"${files[@]}"})
+
+if [ "${#shell_scope[@]}" -eq 0 ]; then
+  exit 0
+fi
+
+# The flags match `code:lint:shell`'s, so formatting and checking cannot disagree.
+if [[ "${usage_fix:-false}" == "true" ]]; then
+  shfmt -w -i 2 -ci "${shell_scope[@]}"
+else
+  shfmt -d -i 2 -ci "${shell_scope[@]}"
+fi

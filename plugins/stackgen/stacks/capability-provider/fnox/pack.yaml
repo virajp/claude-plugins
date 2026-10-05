@@ -14,7 +14,3 @@ axis: backing
 # readiness gate, so it satisfies no harness capability. What it contributes is
 # the injector that WRAPS every harness task; see the local-stack reference.
 harness: n/a
-# The lines this pack asks /stackgen:tool-config for.
-tool-config:
-  - { tool: mise, verb: add-tool, name: fnox, version: "latest", env: all }
-  - git add ignore fnox.local.toml

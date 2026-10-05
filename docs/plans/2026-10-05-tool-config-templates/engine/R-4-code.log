@@ -1,0 +1,68 @@
+I found 10 issues on `2026-10-05-tool-config-templates`, ranked most severe first below. I left out round 1–3 findings that the fix commits already resolved, and anything owned by the pending units (U6–U8 docs, the reshape-migration plan).
+
+I confirmed the top finding by running the shipped `.config/dprint.json` (dprint 0.60.1) over a sample `tsconfig.json`: it adds trailing commas, and Python's `json.load`, which `check-json` uses, then refuses the file. The tool-config render and pack test suites pass (85/85). Everything else comes from reading the code and was not reproduced.
+
+```json
+[
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/.config/pre-commit-config.yaml",
+    "line": 160,
+    "summary": "The shipped check-json exclude now covers `^\\.vscode/` and `^\\.config/dprint\\.json$`, but not `tsconfig.json` / `tsconfig.*.json`. The shipped dprint config also lists those two in `jsonTrailingCommaFiles`, so dprint writes trailing commas into them. This repo's own config excludes `(^|/)tsconfig[^/]*\\.json$` for exactly this reason.",
+    "failure_scenario": "In any TypeScript repo, the `format` hook runs `code:format:dprint --fix` over a staged tsconfig.json, which turns `\"target\": \"es2022\"` into `\"target\": \"es2022\",`. check-json then fails with 'Illegal trailing comma'. Reproduced with the shipped config. Any commit that touches a tsconfig can't pass the gate."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/.config/mise/tasks/code/lint/house",
+    "line": 23,
+    "summary": "The house-linter pin moved from the CI-loaded `conf.d/tools.toml` (exact 1.1.6) to the dev-only `_base/mise.dev.toml` (line 68). Its subtask now prints a warning and exits 0 when `mise which linter` fails. The old code:lint failed hard there.",
+    "failure_scenario": "Under MISE_ENV=ci the linter is never installed, so `mise run code:lint:all` (or `code:all`) passes without the house linter ever running. Linter regressions reach main with a green CI. Before, the missing binary failed the task."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/.gitignore",
+    "line": 32,
+    "summary": "The rewritten mise section dropped `.mise.local.toml`, `.config/mise/config*.local.toml` and `.config/mise/conf.d/*.local.toml`. The remaining bare `mise.local.toml` and `mise.*.local.toml` patterns match neither `.mise.local.toml` nor `config.local.toml`.",
+    "failure_scenario": "A developer keeps a token or machine override in `.mise.local.toml` or `.config/mise/config.local.toml`, both of which mise still loads. After `all` rewrites `.gitignore`, the file is no longer ignored, and a `git add -A` commits it."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/tool-config.mjs",
+    "line": 488,
+    "summary": "The checker and the script disagree on #PLACEHOLDER slots. check.ts lets a pack's `templates/` fill one (`owned.get(rel) === false` only flags non-placeholders, for both tiers). `refusedDestination` refuses every path in `shipped`, placeholders included.",
+    "failure_scenario": "A pack ships `templates/.config/mise/tasks/setup/secrets` or `setup/external/start` to render a filled slot with `@@VALUES@@`. `p:plugins:check` passes, but every `pack --slug <s>` call exits 2 with 'tool-config ships that path itself', so the pack can never be applied."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/tool-config.mjs",
+    "line": 480,
+    "summary": "The run-time `refusedDestination` lacks the checker's subtask rule (leaf must equal the slug) and its folder rule (no file where tool-config ships a folder). A generated pack, which `p:plugins:check` never sees, can render over another pack's subtask or over a task folder.",
+    "failure_scenario": "A generated pack `foo` ships `templates/.config/mise/tasks/code/lint/swiftlint`, and the call overwrites swiftlint's subtask. `pack-remove foo` then leaves it behind. Or it ships `.config/mise/tasks/code/check` as a file in a repo without that folder yet: it gets written, and every later `all` refuses with 'needs code/check to be a folder'."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/lib/stackgen-file.mjs",
+    "line": 121,
+    "summary": "`withValues` replaces a list value wholesale, so `--scopes` drops any scope it omits. The template promises the opposite (git-conventional-commits.yaml:19: 'A scope that stops existing stays in stackgen.yaml's `scopes`'), and the old marker layout kept retired scopes marked `# retired`.",
+    "failure_scenario": "A repo has `scopes: [web, api]` and a later `all --scopes web` (say, from setup after a project is removed). `commitScopes` loses `api`, and the changelog (`includeInvalidCommits: false`) silently drops every past `feat(api)` and `fix(api)` commit."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/tool-config.mjs",
+    "line": 526,
+    "summary": "pack-remove lists every file under `conf.d/<slug>/`, including a developer's gitignored `mise.local.toml` or `mise.dev.local.toml`. `taskNames` treats those files as the machine's own, never the repo's.",
+    "failure_scenario": "A developer keeps `conf.d/swiftlint/mise.local.toml` with a local override. `pack-remove --slug swiftlint` shows it as a delete row. Answering the batch `ok` deletes the private, untracked file, which can't be recovered from git."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/.config/mise/tasks/code/graph",
+    "line": 92,
+    "summary": "`clear_dead_lock` is not atomic. The mv it uses can move a *live* lock away (one another run just re-created), which opens a window where any run can mkdir the lock. The put-back `mv \"${moved}\" \"${LOCK}\"` then moves the lock *inside* that new lock directory.",
+    "failure_scenario": "A dead lock exists and three post-commit hooks run close together. B clears it and takes the lock. A, still acting on its stale 'dead' judgement, moves B's live lock aside. C mkdirs the lock, and A's put-back nests B's lock inside C's. B and C now run `graphify update .` on the same graphify-out/ at the same time."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/.config/taplo.toml",
+    "line": 4,
+    "summary": "taplo.toml lost its marker pair and is now owned whole. The hook config's comment (pre-commit-config.yaml:15) still tells repos to keep the exclusion set equal across dprint, taplo and pre-commit, and to add their own lines below the tool-config block, which taplo no longer has.",
+    "failure_scenario": "A repo adds `**/vendor/**` to taplo's exclude to match its dprint and pre-commit entries. Every later `all` shows a write row reverting it. `ok` makes taplo format vendored TOML again; `keep-existing` freezes taplo.toml against every later shipped exclude."
+  },
+  {
+    "file": "CLAUDE.md",
+    "line": 187,
+    "summary": "This breaks the repo-root CLAUDE.md rule: 'Docs ship with the change. Any change to plugin behavior must reconcile `readme.md`, this file, and the manual under `site/src/content/docs/` in the same commit'. CLAUDE.md:187-188/218, readme.md:130 and site plugins/stackgen.md:279-284 still name the retired `code:format`, `code:lint` and `setup:ai` tasks.",
+    "failure_scenario": "Since 98116003 and ca08c79f those names are folders (`code:format:all`, `code:lint:all`, `setup:ai:all`). A session or user following the docs runs `mise run code:lint` or `mise run setup:ai` in a repo that has been set up, and gets 'task not found'. The shipped init asset CONTRIBUTING.md:69-70 says the same thing."
+  }
+]
+```

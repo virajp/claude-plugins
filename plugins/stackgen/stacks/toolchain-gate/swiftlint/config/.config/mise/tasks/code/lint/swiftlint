@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+
+#MISE description="Lint the Swift sources with SwiftLint, strictly"
+#MISE dir="{{ config_root }}"
+#MISE hide=true
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to lint (default: the whole repo)"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# `--fix` is ignored: layout is swift-format's, not SwiftLint's.
+
+# Whole tree from git's list, even with a file list: SwiftLint does not read `.gitignore`.
+swift_scope=()
+in_git=false
+if command -v git >/dev/null 2>&1; then
+  if [ -n "${GIT_DIR:-}" ]; then
+    in_git=true
+  fi
+  dir="${PWD}"
+  while [ "${in_git}" = "false" ]; do
+    if [ -e "${dir}/.git" ]; then
+      in_git=true
+    elif [ -z "${dir}" ]; then
+      break
+    else
+      dir="${dir%/*}"
+    fi
+  done
+fi
+
+if [ "${in_git}" = "true" ]; then
+  # To a file, not a process substitution, so a failed listing stops the task.
+  git_list="$(mktemp "${TMPDIR:-/tmp}/code-lint.XXXXXX")"
+  trap 'rm -f "${git_list}"' EXIT
+  git_status=0
+  git -c core.quotePath=off ls-files -z --cached --others --exclude-standard -- '*.swift' \
+    >"${git_list}" || git_status=$?
+  if [ "${git_status}" -ne 0 ]; then
+    print_error "git ls-files failed (exit ${git_status})"
+    exit "${git_status}"
+  fi
+  # Mid-merge git lists a conflicted path once per stage; skip the repeats.
+  previous=""
+  while IFS= read -r -d '' path; do
+    if [ "${path}" = "${previous}" ]; then
+      continue
+    fi
+    previous="${path}"
+    case "/${path}" in
+      */.build/* | */.swiftpm/* | */Derived/* | */DerivedData/* | *.generated.swift) ;;
+      *.swift)
+        if [ -f "${path}" ]; then
+          swift_scope+=("./${path}")
+        fi
+        ;;
+    esac
+  done <"${git_list}"
+else
+  while IFS= read -r -d '' swift_file; do
+    swift_scope+=("${swift_file}")
+  done < <(find . \( -name .build -o -name .swiftpm -o -name Derived -o -name DerivedData \) -prune \
+    -o -name '*.swift' ! -name '*.generated.swift' -print0)
+fi
+
+# SwiftLint's "No lintable files" exit is an empty gate, not a failure.
+if [ "${#swift_scope[@]}" -gt 0 ]; then
+  print_subheader "Linting Swift sources with SwiftLint ..."
+  if ! swiftlint_output="$(swiftlint lint --strict --quiet --force-exclude \
+    --config .config/swiftlint.yml "${swift_scope[@]}" 2>&1)"; then
+    if [[ "${swiftlint_output}" == *"No lintable files found"* ]]; then
+      print_yellow "Every Swift file is excluded by .config/swiftlint.yml; nothing to lint."
+    else
+      printf '%s\n' "${swiftlint_output}"
+      exit 1
+    fi
+  elif [ -n "${swiftlint_output}" ]; then
+    printf '%s\n' "${swiftlint_output}"
+  fi
+fi

@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+#MISE description="Report dependencies that have moved on — every setup:deps:outdated subtask"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Rendered by stackgen tool-config: one call per subtask under setup/deps/outdated/, re-rendered whenever a pack adds or removes one.
+@@#if DEPS_OUTDATED_SUBTASKS@@
+@@#each DEPS_OUTDATED_SUBTASKS@@
+
+mise run setup:deps:outdated:@@.@@
+@@/each@@
+@@#else@@
+
+print_yellow "setup:deps:outdated: nothing to run — this repo has no setup:deps:outdated:<name> subtask."
+@@/if@@

@@ -127,7 +127,7 @@ its materialize pass, `/stackgen:stackgen-sync` after a re-sync, and
 none runs it unasked.
 
 Once a repo **is** shaped, its own task library takes the plugin side over:
-`mise run setup:ai` checks that `vwf` is installed — at user scope, or at
+`mise run setup:ai:all` checks that `vwf` is installed — at user scope, or at
 project or local scope for this repo — and only when it is not runs the command
 above to install it at **user** scope. Whether or not it installed anything, it
 then updates every registered marketplace and upgrades every plugin installed at
@@ -297,30 +297,33 @@ deploy target's own root config and the deploy task beside it, a project task a
 framework pack owns — the Astro pack's favicon rasterizer is the first — on the
 same merges-never-owns terms, behind their own consent line, and capped by a
 fixed allowlist of what may sit at a repo's root. The mise config, the
-file-based task library everything else runs through, the dprint, pre-commit,
-gitleaks and grype configs, and the ignore, attribute, graph-ignore and Renovate
-files belong to no pack: they are written by `/stackgen:tool-config`, a skill
-you can also run yourself
-(`/stackgen:tool-config mise add-tool --name <name> --version latest --env dev`),
-which keeps each requester's lines between its own `# >>> <name>` markers and
-writes a line outside them only on your approval. mise, dprint, pre-commit,
-gitleaks and grype are configured by a shipped node script that renders the
-templates, writes every pin as an exact version — there is no mise lockfile —
-and shows each change as a numbered row before it writes, so a new repo's gate
-config needs no model judgement; it runs each tool only as `mise x -- <tool>`,
-the version your config pins, formats every file it wrote with the shipped
-dprint config and validates the hook config before it records anything. Its
-`all` ends in a set-up repo: it lands every file, then runs
-`MISE_ENV=dev mise run setup:all`. Trusting the repo's mise config is yours to
-do first — typically its path in `trusted_config_paths` in your global mise
-config; the script checks it and never grants it. It also lands a repo-local
-mise skill, and a tool is never added with a bare `mise use`. A pack asks it for
-a tool pin, an environment value, an alias, a formatter plugin, an exclude, a
-linter ignore, a hook, an ignore line, a pinned GitHub ignore template or an
-attribute through `tool-config:` in its `pack.yaml`. Language manifests, CI
-workflow files and editor settings stay outside that fence: the first two
-declare what the project *is*, the third is yours — neither plugin ships, asks
-about or merges any editor configuration — and no pack decides any of them. The
+file-based task library everything else runs through, the dprint, taplo,
+pre-commit, gitleaks, grype and house-linter configs, the ignore, attribute and
+graph-ignore files, the editor settings and the statusline config belong to no
+pack: they are written by `/stackgen:tool-config`, a skill you can also run
+yourself (`/stackgen:tool-config preview all`). A shipped node script copies its
+`assets/` as they are and renders its `templates/` from `.config/stackgen.yaml`
+— the repo's values, which the script alone writes — in four calls: `all`,
+`pack`, `pack-remove` and `upgrade`. Each list a pack once appended to — the
+ignore set, the exclusion set, the formatter's plugins — ships as a universal
+superset, every stack's entries whether or not your repo uses that stack; six
+files carry one `# >>> tool-config` marker pair, and every line outside it is
+yours and survives every render. Dev-only mise files pin `latest`; a file CI
+loads gets exact versions, save node and pnpm — there is no mise lockfile. Every
+change is shown as a numbered row before it writes, so a new repo's gate config
+needs no model judgement; it runs each tool only as `mise x -- <tool>`, the
+version your config pins, formats every file it wrote with the shipped dprint
+config and validates the hook config. Its `all` ends in a set-up repo: it lands
+every file, then runs `MISE_ENV=dev mise run setup:all`. Trusting the repo's
+mise config is yours to do first — typically its path in `trusted_config_paths`
+in your global mise config; the script checks it and never grants it. It also
+lands a repo-local mise skill, and a tool is never added with a bare `mise use`.
+A pack asks it for nothing: it ships `config/` payload — its subtasks among it,
+which the rendered `code:lint:all`, `code:format:all`, `code:check:all`,
+`setup:ai:all` and `setup:deps:<verb>:all` tasks call — and a `templates/`
+folder, its own `conf.d/<slug>/` mise files and any file needing a value, which
+the script renders. Language manifests and CI workflow files stay outside that
+fence: they declare what the project *is*, and no pack decides either. The
 packs, bundles and kinds that ship are inventoried in
 [`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md), generated from
 the tree itself; the newest kind is `stylesheet`, the one that answers vwf's

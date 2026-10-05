@@ -90,15 +90,13 @@ licence, asked only for a public repo, and a security contact, an
 advisories-page URL for a public repo or a free email or internal URL for a
 private one; then which **update bot** watches Relay — `renovate`, `dependabot`
 or `none`, seeded `renovate` on a repo carrying no policy — then shows **one
-plan** and applies it on one yes. That last answer, with the forge read from
-Relay's `origin` and the provider you picked, decides the packs' conditional
-files: the Renovate policy lands because the bot is Renovate, and the GitHub
-issue forms where Relay's `origin` is on GitHub — a repo with no remote yet
-skips them and lands them on the reshape after you add one — and a path a
-condition skips is listed in the plan under **Skipped**, never silently missing.
-Relay is one repo, so every one of those questions is a single row; on a product
-with member repos the same seven rounds simply carry a row per repo where the
-answer can differ.
+plan** and applies it on one yes. The forge read from Relay's `origin` and the
+provider you picked decide the conditional files: the GitHub issue forms land
+where Relay's `origin` is on GitHub — a repo with no remote yet skips them and
+lands them on the reshape after you add one — and a path a condition skips is
+listed in the plan under **Skipped**, never silently missing. Relay is one repo,
+so every one of those questions is a single row; on a product with member repos
+the same seven rounds simply carry a row per repo where the answer can differ.
 
 It closes with a git pass: it asks how work lands in this repo, **one row per
 branch** — `direct`, which merges locally and pushes, or `pr`, which pushes the

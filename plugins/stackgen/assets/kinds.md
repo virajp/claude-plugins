@@ -272,15 +272,17 @@ pre-commit — the formatter, the two scanners and the hook runner — are
 written by `stackgen:tool-config`
 (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`), which also holds the
 doctrine this section used to bar. Nothing generates one, and no bundle
-composes one. A pack asks the skill for a formatter plugin, a hook, an
-exclude or an ignore through `tool-config:` in its `pack.yaml`. The seam the
+composes one. The skill ships every stack's formatter plugins, excludes and
+ignores as universal supersets, and a pack adds a gate as a subtask the
+skill's `…:all` task calls (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`),
+never as a hook. The seam the
 kind held stands: a gate meaningful for one toolchain is topic 10 of that
 language's bundle, never the skill's.
 
 ## Retired 2026-09-26: `toolchain-manager`
 
-The toolchain manager is no kind any more. Its files — the mise config
-split, the section files and the task library — are written by
+The toolchain manager is no kind any more. Its files — the mise config,
+the universal `_base/` and `ai/` folders and the task library — are written by
 `stackgen:tool-config` (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`),
 which also holds the doctrine this section used to bar. Nothing generates
 one, and no bundle composes one.

@@ -42,18 +42,18 @@ The closed list. A component is exactly one of:
 - **`toolchain-gate`** — a gate meaningful for one toolchain: its linter,
   its formatter, its compiler config. The repo-wide gates — the formatter,
   the two scanners and the hook runner — are no type since 2026-09-26:
-  `stackgen:tool-config` writes them, and a pack asks it for a plugin, a
-  hook, an exclude or an ignore through `tool-config:`.
+  `stackgen:tool-config` writes them as universal supersets, and a pack
+  adds a gate as a subtask the universal `…:all` task calls.
 - **The toolchain manager is no type** since 2026-09-26: the repo's mise
   config and task library are written by `stackgen:tool-config`
-  (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`), and a pack asks it
-  for tool pins, environment values and aliases through `tool-config:` in its
-  `pack.yaml`.
-- **Repo hygiene is no type** since 2026-09-27: the ignore, attribute,
-  graphify-ignore and Renovate files are `stackgen:tool-config`'s tools, and
-  the licence, security contact, contributing guide and issue forms are
-  `/vwf:init`'s own assets; a pack asks for its ignore and attribute lines
-  through `tool-config:`.
+  (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`), and a pack ships
+  its own tool pins, environment values and aliases as a mise folder in its
+  `templates/`, which the skill renders.
+- **Repo hygiene is no type** since 2026-09-27: the ignore, attribute and
+  graphify-ignore files are `stackgen:tool-config`'s universal supersets,
+  carrying every stack's lines, and the licence, security contact,
+  contributing guide and issue forms are `/vwf:init`'s own assets; a pack
+  adds no line to any of them.
 - **`cloud-provider`** — a provider itself: the account/IAM/billing and
   emulator judgment that spans its services.
 - **`cloud-service`** — one service of one provider: a compute target, a
@@ -90,9 +90,10 @@ The closed list. A component is exactly one of:
   a project declaring a `site` or `webapp` platform. Composes into a
   Stylesheet-Bundle.
 
-Any type may declare a pack-level **`machine_env:`** list — environment
-values detected from the developer's machine, which `/vwf:setup` asks for
-when it lands the pack (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`).
+Any type may name a value only the developer's machine can answer — the
+Xcode it builds with — as a `@@NAME@@` tag in its `templates/`, stored
+under `packs.<slug>` in the repo's `.config/stackgen.yaml`
+(`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`).
 
 ## Categories
 

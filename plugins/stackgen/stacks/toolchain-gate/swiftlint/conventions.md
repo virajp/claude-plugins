@@ -26,15 +26,17 @@ rule as another rule identifier.
 
 ## What this pack writes
 
-One file, and one `tool-config:` call in `pack.yaml` that asks
-`/stackgen:tool-config` to pin the tool — a fixed
-version, never `latest`, because under `--strict` a release that adds a rule
-is a failing build nobody touched. `.config/swiftlint.yml` is the
-configuration. SwiftLint resolves its `excluded:` paths **relative to the
-configuration file**, so every entry climbs one level to the repository root —
-a bare `.build` would name `.config/.build` and exclude nothing. It excludes
-SwiftPM's `.build/` and `.swiftpm/`, any `Derived` or `DerivedData` tree, and
-`*.generated.swift`. SwiftLint's own discovery never looks under `.config/`, so
-every invocation names the file with `--config`.
+Two files and one template. `templates/.config/mise/conf.d/swiftlint/mise.toml`
+pins the tool; CI loads that file, so the render writes an exact version, never
+`latest`, because under `--strict` a release that adds a rule is a failing
+build nobody touched — only tool-config's `upgrade` moves it.
+`.config/mise/tasks/code/lint/swiftlint` is the subtask the repo's
+`code:lint:all` runs. `.config/swiftlint.yml` is the configuration. SwiftLint
+resolves its `excluded:` paths **relative to the configuration file**, so every
+entry climbs one level to the repository root — a bare `.build` would name
+`.config/.build` and exclude nothing. It excludes SwiftPM's `.build/` and
+`.swiftpm/`, any `Derived` or `DerivedData` tree, and `*.generated.swift`.
+SwiftLint's own discovery never looks under `.config/`, so every invocation
+names the file with `--config`.
 
 Full judgment: the `swiftlint` skill.

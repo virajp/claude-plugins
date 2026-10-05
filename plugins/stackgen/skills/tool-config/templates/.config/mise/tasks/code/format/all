@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+#MISE description="Format the repo's files — every code:format subtask"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to format (default: the whole repo)"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Rendered by stackgen tool-config: one call per subtask under code/format/, re-rendered whenever a pack adds or removes one.
+@@#if FORMAT_SUBTASKS@@
+
+files=()
+eval "files+=(${usage_files:-})"
+
+args=()
+[[ "${usage_debug:-false}" == "true" ]] && args+=(--debug)
+[[ "${usage_fix:-false}" == "true" ]] && args+=(--fix)
+@@#each FORMAT_SUBTASKS@@
+
+mise run code:format:@@.@@ ${args[@]+"${args[@]}"} ${files[@]+"${files[@]}"}
+@@/each@@
+@@#else@@
+
+print_yellow "code:format: nothing to run — this repo has no code:format:<name> subtask."
+@@/if@@

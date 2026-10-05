@@ -338,10 +338,10 @@ first of these surfaces at `/vwf:execute`:
   wing, where submodule linkage keeps one at the base.
 - **The member paths go in `MEMBERS`.** The base repo's task library finds its
   members through one helper, which reads `.gitmodules` where there is one and
-  the `MEMBERS` value in `.config/mise/conf.d/env.toml` otherwise — so under
-  `siblings` that value is what `setup:all --all` and `code:worktrees` walk.
-  `init` fills it from the members it resolved; a submodule product leaves it
-  exactly as shipped. The **flags** beside it — `setup:all --api`, and the
+  the `MEMBERS` value in `.config/mise/conf.d/_base/mise.toml` otherwise — so
+  under `siblings` that value is what `setup:all --all` and `code:worktrees`
+  walk. `init` fills it from the members it resolved; a submodule product leaves
+  it exactly as shipped. The **flags** beside it — `setup:all --api`, and the
   `setup-api` alias — are one per member repo under either linkage, named for
   the member and never for a project id.
 

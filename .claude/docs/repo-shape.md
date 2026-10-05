@@ -122,7 +122,12 @@ on this list because none is a `p:` task: `format` and `lint` call
 `mise run code:format --fix` and `mise run code:lint --fix` with the staged
 files, `sec` calls `mise run code:sec --staged`. Every gate tool is inside those
 tasks and nowhere else — dprint in `code:format`, the house linter in
-`code:lint`, gitleaks in `code:sec`; no gate lints or formats shell.
+`code:lint`, gitleaks in `code:sec`; no gate lints or formats shell. That is
+this repo's own, hand-edited config; the shape `stackgen:tool-config` lands has
+four such hooks calling `code:format:all --fix`, `code:lint:all --fix`,
+`code:check:all` and `code:sec --staged`, each `…:all` task calling every
+subtask beside it — dprint and shfmt under `code/format/`, the house linter,
+shellcheck and actionlint under `code/lint/`, plus each pack's own.
 
 - **`p:plugins:marketplace`** — generates **both** marketplace manifests from
   the 2 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →
@@ -157,39 +162,39 @@ tasks and nowhere else — dprint in `code:format`, the house linter in
   and free of a 13 or 17 component, those two integers never being issued on any
   version line this repo maintains; dependencies resolving within the
   marketplace; hook scripts existing and executable; **a pack's `config/`
-  payload tier being materializable as-is** (six assertions in one rule, the
-  landed-tree ones also run over each `skills/tool-config/assets/<tool>/` tree
-  `stackgen:tool-config` lands, its root admitting that tool's own root files
-  and the repo-local skills it lands — mise's `.claude/skills/mise/SKILL.md`,
-  nothing else under `.claude/` — and over `/vwf:init`'s
-  `skills/init/assets/<name>/` trees with no root allowlist: exec bit *and* a
-  known shebang on every file under `config/.config/mise/tasks/**`, because mise
-  reports a 644 task as an *unknown* one rather than a permission error and
-  execs the file directly; the same two on every `hooks/*.sh`, which the host
-  execs from a bare path in `settings.json`; the tier's root against the
-  **landable** tier of the root allowlist, whose two allowed **directories** are
-  `.config/` and `.github/` and whose sibling tier — the root files vwf writes,
-  `CLAUDE.md` and `mempalace.yaml` — no pack may land; a **CI workflow refused
-  inside `.github/`**, since a pack names the task CI runs and never the
-  workflow; every `conditional:` entry in the pack's `pack.yaml` naming a
-  relative path or glob with no `..` segment that matches at least one file
-  under `config/` — resolved by the checker's own walk, so `**` enters
-  dot-directories — and a `when:` of exactly one known axis, `forge`, `secrets`
-  or `update_bot`, with a value that axis takes, `secrets: none` refused, since
-  an unknown axis is one no caller answers and its file lands everywhere
-  silently; and the pack's three doctor- and setup-read facts in the shapes
-  their readers trust — every `binaries` entry a bare name or a map of exactly
-  `name` and an optional non-empty `probe`, `lockfile` a non-empty list of
-  relative paths or globs with no `..`, and every `machine_env` entry a `name`
-  that is an env-var name plus a non-empty `detect` and `question`, the name set
-  by a mise `add-env` entry of the pack's `tool-config:` list, since a question
-  whose answer lands nowhere fails silently; every mise, dprint, pre-commit,
-  grype and `all` `tool-config:` entry a mapping the tool-config script's own
-  schema accepts (`validateEntry`, imported from its `scripts/lib/schema.mjs`, a
-  dprint `name` held to the plugin table — a string entry for any of them
-  refused), and every other entry a string parsing as one of the git verbs
-  (`git add ignore`, `git add attribute`); and no mise `conf.d` fragment and no
-  `pre-commit.d` file in the tier, since a pack asks the skill instead);
+  payload tier being materializable as-is** (seven assertions in one rule, the
+  landed-tree ones also run over a pack's `templates/` tier, over
+  `stackgen:tool-config`'s `skills/tool-config/assets/` and
+  `skills/tool-config/templates/` trees, each landed whole at the repo root and
+  admitting the git and graphify ignore files, `.vscode/` and the repo-local
+  mise skill — `.claude/skills/mise/SKILL.md`, nothing else under `.claude/` —
+  and over `/vwf:init`'s `skills/init/assets/<name>/` trees against init's own
+  allowlist (`CONTRIBUTING.md`, `SECURITY.md`, `licenses/`,
+  `.github/ISSUE_TEMPLATE/`): exec bit *and* a known shebang on every file under
+  `config/.config/mise/tasks/**`, because mise reports a 644 task as an
+  *unknown* one rather than a permission error and execs the file directly; the
+  same two on every `hooks/*.sh`, which the host execs from a bare path in
+  `settings.json`; the tier's root against the **landable** tier of the root
+  allowlist, whose two allowed **directories** are `.config/` and `.github/` and
+  whose sibling tier — the root files vwf writes, `CLAUDE.md` and
+  `mempalace.yaml` — no pack may land; a **CI workflow refused inside
+  `.github/`**, since a pack names the task CI runs and never the workflow;
+  every `conditional:` entry in the pack's `pack.yaml` naming a relative path or
+  glob with no `..` segment that matches at least one file under `config/` —
+  resolved by the checker's own walk, so `**` enters dot-directories — and a
+  `when:` of exactly one known axis, `forge` or `secrets`, with a value that
+  axis takes, `secrets: none` refused, since an unknown axis is one no caller
+  answers and its file lands everywhere silently; the pack's two doctor-read
+  facts in the shapes their readers trust — every `binaries` entry a bare name
+  or a map of exactly `name` and an optional non-empty `probe`, and `lockfile` a
+  non-empty list of relative paths or globs with no `..` — and a `tool-config:`
+  or `machine_env:` key refused outright, since a pack now ships files and `@@`
+  names instead; every `@@` tag in a template tree one the engine reads,
+  tool-config's own held to the global names; and no mise `conf.d` fragment and
+  no `pre-commit.d` file in `config/`, a pack's mise files in its own
+  `templates/.config/mise/conf.d/<slug>/` alone, a subtask's leaf its own slug
+  and never a universal subtask's, no reserved slug (`all`, `ai`, `_base`), and
+  no pack file at a path tool-config ships, bar a `#PLACEHOLDER` slot);
   **strict-YAML frontmatter** (every skill and agent a plugin ships, every
   repo-local skill a tool-config asset tree lands, and every
   `stacks/*/*/skills/*/SKILL.md` and `stacks/*/*/agents/*.md` a pack ships — the
@@ -228,26 +233,26 @@ tasks and nowhere else — dprint in `code:format`, the house linter in
   decided by file order, and the finding names both files plus the platform they
   share, or the one that declares no list); and **the formatters' exclusion
   lists state one set, and the scanner's allowlist is a subset of it** (the
-  `dprint.json` `excludes` and `taplo.toml` `exclude` under
-  `skills/tool-config/assets/dprint/`, both globs, and the global `exclude`
-  under `skills/tool-config/assets/pre-commit/`, one regex whose top-level
-  alternatives are the entries, a `(?x)` block stripped of its whitespace and
-  comments first, are the **formatters'** three and are held equal after
-  normalisation — anchors, `**/`, `\.` escapes, `[^/]*` and a trailing `/`, `/*`
-  or `/**` stripped, so `**/dist/`, `dist/*` and `(^|/)dist/` are one entry; the
-  gitleaks `[allowlist] paths` is the **scanner's** and is held to a subset of
-  their union instead, since the asset extends upstream's default allowlist and
-  `.claude/` is authored source a scanner must scan — a finding names the entry
-  and the files that carry it and do not; in the plugin carrying the skill a
-  missing list is a finding, and a file present but unparseable is its own
-  finding); **a skill's node script runs with nothing installed** (every
-  `skills/*/scripts/**/*.mjs`: an entry directly under `scripts/` starts
-  `#!/usr/bin/env node` and is executable, and no file calls `require(` or
-  imports anything but a `node:` built-in or a relative module); and **no bare
-  `mise use`** anywhere a plugin ships, dot directories included, unless the
-  line forbids it. The retired-vocabulary, plugin-path and bare-`mise use` rules
-  are the three that report a **line number**, being the three that fire on a
-  sentence rather than a file.
+  `dprint.json` `excludes` — JSONC, a `../X` entry and its `**/X` twin read as
+  one — and `taplo.toml` `exclude` under `skills/tool-config/assets/.config/`,
+  both globs, and the global `exclude` beside them in `pre-commit-config.yaml`,
+  one regex whose top-level alternatives are the entries, a `(?x)` block
+  stripped of its whitespace and comments first, are the **formatters'** three
+  and are held equal after normalisation — anchors, `**/`, `\.` escapes, `[^/]*`
+  and a trailing `/`, `/*` or `/**` stripped, so `**/dist/`, `dist/*` and
+  `(^|/)dist/` are one entry; the gitleaks `[allowlist] paths` is the
+  **scanner's** and is held to a subset of their union instead, since the asset
+  extends upstream's default allowlist and `.claude/` is authored source a
+  scanner must scan — a finding names the entry and the files that carry it and
+  do not; in the plugin carrying the skill a missing list is a finding, and a
+  file present but unparseable is its own finding); **a skill's node script runs
+  with nothing installed** (every `skills/*/scripts/**/*.mjs`: an entry directly
+  under `scripts/` starts `#!/usr/bin/env node` and is executable, and no file
+  calls `require(` or imports anything but a `node:` built-in or a relative
+  module); and **no bare `mise use`** anywhere a plugin ships, dot directories
+  included, unless the line forbids it. The retired-vocabulary, plugin-path and
+  bare-`mise use` rules are the three that report a **line number**, being the
+  three that fire on a sentence rather than a file.
 
   Two of those are worth the extra sentence. The technology-free guard bans vwf
   naming a concrete technology **only where the mention prescribes**, which is
@@ -269,9 +274,11 @@ tasks and nowhere else — dprint in `code:format`, the house linter in
   business in a language-agnostic workflow plugin.
 - **`vitest run`** — the `scripts/` and `installer/` suites. The `scripts/`
   suite is also the gate on `stackgen:tool-config`'s shipped node script:
-  `tool-config-core.test.ts` and `tool-config-mise.test.ts` spawn it in temp
-  repos against a fake `mise`, with a golden greenfield fixture under
-  `scripts/src/fixtures/tool-config/`.
+  `tool-config-render.test.ts` and `tool-config-pack.test.ts` spawn it in temp
+  repos against a fake `mise`, through the shared harness and the golden
+  greenfield render under `scripts/src/fixtures/tool-config/`, and
+  `tool-config-template.test.ts` and `tool-config-values.test.ts` unit-test the
+  template engine and the values reader.
 - **`tsc --noEmit`** per TypeScript project — `installer/` and `scripts/`.
   Nothing emits, so `tsc` is only ever a checker, and there are no project
   references to walk.

@@ -6,53 +6,38 @@ entering history. **History** is scanned once, deliberately, because it
 answers a different question — what is already in there — and running it on
 every commit buys nothing and costs the gate its speed.
 
-This reference is the `gitleaks` row of the skill's tool table. The contract
-every tool shares — the argument shapes, the block markers, drift, removal and
-the lock record — is [the skill's](../SKILL.md); what follows is gitleaks' own.
-The file it lands is under
-`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/assets/gitleaks/`, laid out as it
-lands under the repo root.
+This reference is gitleaks' part of the universal files tool-config lands.
+What every file shares — the values, the render, the rows, the six marked
+files and drift — is [the skill's](../SKILL.md); what follows is gitleaks'
+own.
 
-**gitleaks is scripted.** `tool-config.mjs` — [run as the skill
-says](../SKILL.md#running-the-script) — lands the file, writes each
-generated tree [`all add-exclude --generated`](../SKILL.md#the-one-cross-tool-verb)
-carries into the allowlist, takes a requester's block out again, and raises
-the drift and migration rows. It never writes a custom rule or a fingerprint
-entry: those are the person's, by hand, outside every block. Your part is
-relaying its rows, and the one change it hands back — an allowlist it cannot
-read, a `needs-edit` row: put `paths = [` and its closing `]` on their own
-lines, one entry per line, then re-run the same call's `preview` and finish
-with `check`.
+## 1. What lands
 
-## 1. What `all` lands
-
-| Landed                  | As                                                   |
-| ----------------------- | ---------------------------------------------------- |
-| `.config/gitleaks.toml` | the frame, the base unmarked, a `gitleaks` block in `paths` |
+| File                    | As                                                       |
+| ----------------------- | -------------------------------------------------------- |
+| `.config/gitleaks.toml` | an asset, marked — the allowlist's `paths` between the pair |
 
 `[extend] useDefault = true`, the commented template for a custom rule, and
-`[allowlist] paths`. It reads none of `all`'s keys. By
-[the skill's](../SKILL.md#blocks) per-position rule the base's allowlist
-entries are the `gitleaks` block inside `paths`, a requester's block follows
-it there, and the rest below the frame is the base's, unmarked. **The
-person's own rules and settings survive every `all`**: each table the asset
-does not hold — every custom `[[rules]]` — is carried whole, and each key
-the person added to one of the asset's tables stays at that table's end.
+`[allowlist] paths`, whose entries sit between `# >>> tool-config` and
+`# <<< tool-config`. Once the file is in the repo only those lines are
+rewritten ([the marked files](../SKILL.md#the-marked-files)): a custom
+`[[rules]]` table, a fingerprint, a path of the repo's own below the closing
+marker — every line outside the pair survives every render.
 
 **`useDefault` is load-bearing, and its absence is a silent hole.** A
 `--config` file **replaces** gitleaks' built-in ruleset rather than adding to
 it, so without `[extend]` the rules in the file become the entire scan — a repo
 that added one vendor key pattern would stop detecting the ~170 credential
-shapes gitleaks knows, and both gates would keep reporting green. The dangerous
-state is not "no config"; it is a config somebody wrote by hand to add one rule.
-Landing the file with `[extend]` already in it makes the first custom rule an
-addition by construction. Precedence, highest first: `--config`, then
-`GITLEAKS_CONFIG`, then `<target>/.gitleaks.toml`.
+shapes gitleaks knows, and both gates would keep reporting green. The
+dangerous state is not "no config"; it is a config somebody wrote by hand to
+add one rule. Landing the file with `[extend]` already in it makes the first
+custom rule an addition by construction. Precedence, highest first:
+`--config`, then `GITLEAKS_CONFIG`, then `<target>/.gitleaks.toml`.
 
 **A custom rule** is one per credential shape this repo can leak that the
 defaults do not know — in practice a vendor's own key format — with an `id`, a
 `description` and a `regex` anchored tightly enough not to fire on a UUID. It
-is the user's, written by hand outside every block.
+is the repo's own, written by hand outside the marker pair.
 
 ## 2. The allowlist
 
@@ -60,33 +45,18 @@ is the user's, written by hand outside every block.
 anyway: `dir` mode reads the filesystem and does not honour `.gitignore`, and
 the default ruleset's `generic-api-key` fires on any long high-entropy string —
 a cache index full of hashes fails the gate for a hash, not a credential. The
-base's `gitleaks` block holds `graphify-out`, `build` and `dist`; every other
-entry arrives through
-[`all add-exclude --generated`](../SKILL.md#the-one-cross-tool-verb) and
-nothing else, so the list is a subset of the formatters' set by construction:
-
-```toml
-[allowlist]
-paths = [
-  # >>> gitleaks
-  '''(^|/)build/''',
-  '''(^|/)dist/''',
-  '''(^|/)graphify-out/''',
-  # <<< gitleaks
-  # >>> uv
-  '''(^|/)\.venv/''',
-  # <<< uv
-]
-```
+shipped block holds every stack's generated trees, whether or not the repo
+uses that stack: `.build`, `.swiftpm`, `.turbo`, `.venv`, `Derived`,
+`DerivedData`, `build`, `dist`, `graphify-out`, `node_modules`.
 
 Each entry is [the hook config's](pre-commit.md#3-the-global-exclude) regex
-for the path — a directory `<d>` (a trailing `/` or no glob) as
-`'''(^|/)<d>/'''`, a file glob anchored with `$` — each a TOML literal
-string. The list is **narrower** than the formatters' on purpose: the
-scanner already skips `.git`, `node_modules` and the named lockfiles through
-upstream's defaults, and `.claude/` is authored source a scanner must scan. An
-exclude added without `--generated` never reaches it. Widening it to tracked
-source is how a scanner quietly stops scanning.
+for the path, as a TOML literal string — a directory `<d>` as
+`'''(^|/)<d>/'''`. The list is a **subset** of
+[the exclusion set](dprint.md#3-the-exclusion-set), and the toolkit's checker
+holds it to that: no lockfile, no `.claude/`, no `.git/`. The scanner already
+skips `.git` and the named lockfiles through upstream's defaults, and
+`.claude/` is authored source a scanner must scan. Widening the list to
+tracked source is how a scanner quietly stops scanning.
 
 **A gitignored `.env` is not on the list.** `code:sec`'s full scan skips one
 through a run-time overlay that extends this file for `dir` mode alone; an
@@ -96,32 +66,21 @@ Only the staged gate reads them, and one already committed — a tracked
 `.env.example`, or one that got past the hook — is found by a by-hand
 `gitleaks git` run over history.
 
-**Allowlist a finding by fingerprint or by path, never by rule.** A fingerprint
-silences one known finding at one location; disabling the rule that found it
-blinds the scanner across the whole repo, including the file someone adds next
-week, and nothing reports that it happened. A test fixture, an example value,
-the committed ciphertext of an encrypt-into-git secret — each is the user's
-line, by hand, and **every entry carries why**: an unexplained fingerprint is
-indistinguishable from a real secret somebody got tired of looking at.
+**Allowlist a finding by fingerprint or by path, never by rule.** A
+fingerprint silences one known finding at one location; disabling the rule
+that found it blinds the scanner across the whole repo, including the file
+someone adds next week, and nothing reports that it happened. A test fixture,
+an example value, the committed ciphertext of an encrypt-into-git secret —
+each is the repo's own line, by hand, outside the marker pair, and **every
+entry carries why**: an unexplained fingerprint is indistinguishable from a
+real secret somebody got tired of looking at.
 
-## 3. The verbs
-
-| Call                                | Writes to                                     |
-| ----------------------------------- | --------------------------------------------- |
-| `gitleaks remove --for <requester>` | `.config/gitleaks.toml` — its allowlist block |
-
-Nothing else. The allowlist is written only through
-[`all add-exclude --generated`](../SKILL.md#the-one-cross-tool-verb);
-`gitleaks add-allowlist` or `gitleaks add-exclude` is refused, naming it.
-`all remove --for <requester>` takes the same block out, along with
-everything else the requester holds in dprint and pre-commit.
-
-## 4. Running it
+## 3. Running it
 
 `code:sec` is the only thing that calls gitleaks:
 
 ```sh
-mise run code:sec            # gitleaks dir . --config .config/gitleaks.toml --redact=50, plus grype
+mise run code:sec            # gitleaks dir . --redact=50 (with the .env overlay), plus grype
 mise run code:sec --staged   # gitleaks git --staged over the index; what the `sec` hook runs
 mise x -- gitleaks git . --config .config/gitleaks.toml --log-opts="--all"   # the whole history, once, by hand
 ```
@@ -133,7 +92,7 @@ than the repo. **The hook runner carries no gitleaks hook of its own** — its
 the task are one configuration, and the binary is the one mise pins. Where the
 binary is absent the task warns and continues.
 
-## 5. A hit is a credential to rotate
+## 4. A hit is a credential to rotate
 
 1. **Rotate it first.** It is compromised from the moment it was committed —
    pushed or not, a local clone is a copy.
@@ -144,19 +103,7 @@ binary is absent the task warns and continues.
    un-compromise a rotated credential, and it breaks every existing clone.
 
 Deleting the line is **not** a fix — the value is still in history and still
-valid. **A baseline on an existing repo**: scan history once, rotate everything
-real it finds, then allowlist what remains by fingerprint, each entry carrying
-why. A baseline that allowlists by rule, or is adopted before the rotation,
-turns a backlog into a permanent blind spot.
-
-## 6. The migration
-
-`all` on a repo the retired gitleaks gate pack shaped: its allowlist entries
-become the `gitleaks` block where the base holds them, and stay user lines
-until a pack's `all add-exclude --generated` claims them — `target`, which
-no pack produces, offered for removal as a `migrate` row; any line of the
-old file the rewrite does not carry is named in a `needs-edit` row, to
-re-add where the layout keeps it; its lockfile entry is re-recorded as
-`tool-config/gitleaks@<version>`; and the repo-local gitleaks skill under
-`.claude/skills/gitleaks/` is deleted where it still matches its record, kept
-and reported where it does not.
+valid. **A baseline on an existing repo**: scan history once, rotate
+everything real it finds, then allowlist what remains by fingerprint, each
+entry carrying why. A baseline that allowlists by rule, or is adopted before
+the rotation, turns a backlog into a permanent blind spot.

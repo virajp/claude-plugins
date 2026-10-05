@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+
+#MISE description="Lint the Swift sources with swift-format, strictly"
+#MISE dir="{{ config_root }}"
+#MISE hide=true
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to lint (default: the whole repo)"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Runs under `--fix` too, after `code:format:swift-format`: `format --in-place` exits 0 on what it cannot fix.
+
+files=()
+eval "files+=(${usage_files:-})"
+
+# Keep this exclusion list the same as `code:format:swift-format`'s.
+swift_targets=()
+add_swift_target() {
+  case "/$1" in
+    */.build/* | */.swiftpm/* | */Derived/* | */DerivedData/* | *.generated.swift) ;;
+    *.swift)
+      if [ -f "$1" ]; then
+        case "$1" in
+          /* | ./*) swift_targets+=("$1") ;;
+          *) swift_targets+=("./$1") ;;
+        esac
+      fi
+      ;;
+  esac
+}
+
+in_git=false
+if [ ${#files[@]} -eq 0 ] && command -v git >/dev/null 2>&1; then
+  if [ -n "${GIT_DIR:-}" ]; then
+    in_git=true
+  fi
+  dir="${PWD}"
+  while [ "${in_git}" = "false" ]; do
+    if [ -e "${dir}/.git" ]; then
+      in_git=true
+    elif [ -z "${dir}" ]; then
+      break
+    else
+      dir="${dir%/*}"
+    fi
+  done
+fi
+
+if [ ${#files[@]} -gt 0 ]; then
+  for f in "${files[@]}"; do
+    add_swift_target "${f}"
+  done
+elif [ "${in_git}" = "true" ]; then
+  # To a file, not a process substitution, so a failed listing stops the task.
+  git_list="$(mktemp "${TMPDIR:-/tmp}/code-lint.XXXXXX")"
+  trap 'rm -f "${git_list}"' EXIT
+  git_status=0
+  git -c core.quotePath=off ls-files -z --cached --others --exclude-standard -- '*.swift' \
+    >"${git_list}" || git_status=$?
+  if [ "${git_status}" -ne 0 ]; then
+    print_error "git ls-files failed (exit ${git_status})"
+    exit "${git_status}"
+  fi
+  previous=""
+  while IFS= read -r -d '' f; do
+    if [ "${f}" != "${previous}" ]; then
+      add_swift_target "${f}"
+    fi
+    previous="${f}"
+  done <"${git_list}"
+else
+  while IFS= read -r -d '' f; do
+    add_swift_target "${f}"
+  done < <(find . \( -name .build -o -name .swiftpm -o -name Derived -o -name DerivedData \) -prune \
+    -o -name '*.swift' -print0)
+fi
+
+if [ ${#swift_targets[@]} -gt 0 ]; then
+  print_subheader "Linting Swift sources with swift-format ..."
+  swift format lint --strict \
+    --configuration .config/swift-format.json \
+    --parallel \
+    "${swift_targets[@]}"
+fi

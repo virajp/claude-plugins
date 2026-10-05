@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+#MISE description="Check or format the Python sources with ruff"
+#MISE dir="{{ config_root }}"
+#MISE hide=true
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to format (default: the whole repo)"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+files=()
+eval "files+=(${usage_files:-})"
+
+ruff_args=()
+if [[ "${usage_fix:-false}" != "true" ]]; then
+  ruff_args=(--check)
+fi
+
+# ruff refuses a path that is not Python.
+ruff_targets=()
+if [ ${#files[@]} -gt 0 ]; then
+  for f in "${files[@]}"; do
+    case "${f}" in
+      *.py | *.pyi) ruff_targets+=("${f}") ;;
+    esac
+  done
+else
+  ruff_targets=(.)
+fi
+
+if [ ${#ruff_targets[@]} -gt 0 ]; then
+  print_subheader "Formatting Python sources ..."
+  uv run ruff format ${ruff_args[@]+"${ruff_args[@]}"} "${ruff_targets[@]}"
+fi

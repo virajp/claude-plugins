@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+
+#MISE description="Refresh the graphify knowledge graph, run by the graphify-refresh post-commit hook (code only, no LLM)"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--force" help="Rebuild even when the last commit only touched graphify-out/"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Run by pre-commit's graphify-refresh post-commit hook; graphify's own git hook is removed.
+
+if [ "${GRAPHIFY_SKIP_HOOK:-0}" = "1" ]; then
+  exit 0
+fi
+
+if ! command -v graphify >/dev/null 2>&1; then
+  print_warn "graphify is not on PATH — graph not refreshed (MISE_ENV=dev mise run setup:all)"
+  exit 0
+fi
+
+# Only the main checkout holds a graph; a linked worktree never rebuilds one.
+GIT_DIR_ABS="$(cd "$(git rev-parse --git-dir)" && pwd -P)"
+GIT_COMMON_ABS="$(cd "$(git rev-parse --git-common-dir)" && pwd -P)"
+if [ "${GIT_DIR_ABS}" != "${GIT_COMMON_ABS}" ]; then
+  exit 0
+fi
+
+# Never mid-rebase, merge, cherry-pick or revert: the rebuild would race the working tree.
+for marker in rebase-merge rebase-apply sequencer; do
+  [ -d "${GIT_DIR_ABS}/${marker}" ] && exit 0
+done
+for marker in MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD; do
+  [ -f "${GIT_DIR_ABS}/${marker}" ] && exit 0
+done
+
+force=()
+if [[ "${usage_force:-false}" == "true" ]]; then
+  force=(--force)
+else
+  # A first commit has no parent, so every file it tracks counts as changed.
+  if git rev-parse -q --verify HEAD~1 >/dev/null; then
+    changed="$(git diff --name-only HEAD~1 HEAD)"
+  else
+    changed="$(git ls-tree -r --name-only HEAD 2>/dev/null || true)"
+  fi
+  # A commit touching only graphify-out/ is the previous rebuild landing; rebuilding would loop.
+  if [ -z "$(printf '%s\n' "${changed}" | grep -v '^graphify-out/' || true)" ]; then
+    exit 0
+  fi
+fi
+
+# Pinned so louvain's set iteration, and so the community ids, stay stable across runs.
+export PYTHONHASHSEED=0
+
+LOG="${HOME}/.cache/graphify-rebuild.log"
+mkdir -p "$(dirname "${LOG}")"
+
+# One rebuild at a time: mkdir is atomic, and the lock holds its holder's PID. A
+# run finding the lock held leaves the re-run marker and exits; the holder
+# rebuilds once more if the marker is there when it finishes. Nobody takes a
+# live lock over: a lock is cleared only when its holder is dead or it is older
+# than any rebuild runs.
+LOCK="${GIT_DIR_ABS}/graphify-refresh.lock"
+RERUN="${GIT_DIR_ABS}/graphify-refresh.rerun"
+# Past this age a lock is cleared whatever its PID: after a reboot that PID may be reused.
+STALE_MINUTES=120
+
+# Dead: older than STALE_MINUTES, or holding a PID that is no longer alive.
+lock_is_dead() { # <lock dir>
+  local holder
+  if [ -n "$(find "$1" -maxdepth 0 -mmin +"${STALE_MINUTES}" 2>/dev/null)" ]; then
+    return 0
+  fi
+  holder="$(cat "$1/pid" 2>/dev/null || true)"
+  if [ -z "${holder}" ] || kill -0 "${holder}" 2>/dev/null; then
+    return 1
+  fi
+}
+
+# Atomic: only the run whose mv succeeds clears it, and only if what it moved is
+# still the dead lock it judged — a lock taken since is put back.
+clear_dead_lock() {
+  local seen moved="${LOCK}.dead.$$"
+  seen="$(cat "${LOCK}/pid" 2>/dev/null || true)"
+  lock_is_dead "${LOCK}" || return 0
+  mv "${LOCK}" "${moved}" 2>/dev/null || return 0
+  if [ "$(cat "${moved}/pid" 2>/dev/null || true)" = "${seen}" ] && lock_is_dead "${moved}"; then
+    rm -rf "${moved}"
+  else
+    mv "${moved}" "${LOCK}" 2>/dev/null || true
+  fi
+}
+
+if ! mkdir "${LOCK}" 2>/dev/null; then
+  clear_dead_lock
+  if ! mkdir "${LOCK}" 2>/dev/null; then
+    touch "${RERUN}"
+    print_yellow "graphify: a refresh is already running — it re-runs once when done"
+    exit 0
+  fi
+fi
+# Held by this run until the rebuild writes its own PID over it.
+echo "$$" >"${LOCK}/pid"
+# This run's own marker is spent: the rebuild below sees this commit already.
+rm -f "${RERUN}"
+
+print_yellow "graphify: refreshing the graph in the background (log: ${LOG})"
+# Detached so the commit returns at once; the rebuild removes the lock only while it is its own.
+# shellcheck disable=SC2016
+nohup bash -c 'lock="$1"
+rerun="$2"
+shift 2
+release() { [ "$(cat "${lock}/pid" 2>/dev/null)" = "$$" ] && rm -rf "${lock}"; }
+trap release EXIT
+echo "$$" >"${lock}/pid"
+graphify update . "$@"
+if [ -e "${rerun}" ]; then
+  rm -f "${rerun}"
+  graphify update . "$@"
+fi
+release
+# A commit landing between that check and the release left a marker no holder reads: take the lock back once.
+if [ -e "${rerun}" ] && mkdir "${lock}" 2>/dev/null; then
+  echo "$$" >"${lock}/pid"
+  rm -f "${rerun}"
+  graphify update . "$@"
+fi' graphify-refresh "${LOCK}" "${RERUN}" ${force[@]+"${force[@]}"} >>"${LOG}" 2>&1 </dev/null &
+echo "$!" >"${LOCK}/pid"
+disown
+exit 0

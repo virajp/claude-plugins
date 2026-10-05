@@ -1,0 +1,23 @@
+# The repo's attributes, every stack's whether or not this repo uses it.
+
+# LF everywhere, so another platform never turns one edited line into a whole-file diff.
+* text=auto eol=lf
+
+# Lockfiles are generated: collapsed in review, out of the language statistics.
+*.lock           linguist-generated
+pnpm-lock.yaml   linguist-generated
+Package.resolved linguist-generated
+
+# Binaries: never EOL-normalised, never diffed.
+*.png   -text -diff
+*.jpg   -text -diff
+*.jpeg  -text -diff
+*.gif   -text -diff
+*.ico   -text -diff
+*.webp  -text -diff
+*.pdf   -text -diff
+*.woff  -text -diff
+*.woff2 -text -diff
+*.ttf   -text -diff
+*.otf   -text -diff
+*.zip   -text -diff

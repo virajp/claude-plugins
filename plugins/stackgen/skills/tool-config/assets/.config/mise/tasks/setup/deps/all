@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+#MISE description="Install and refresh this repo's package-manager dependencies"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+print_subheader "Cleaning up ..."
+mise run setup:deps:cleanup:all
+
+print_subheader "Installing ..."
+mise run setup:deps:install:all
+
+print_subheader "Upgrading ..."
+mise run setup:deps:upgrade:all
+
+print_subheader "Checking what is outdated ..."
+mise run setup:deps:outdated:all
+
+print_subheader "Auditing for known vulnerabilities ..."
+mise run setup:deps:audit:all

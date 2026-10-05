@@ -1,0 +1,66 @@
+I found 10 problems on `2026-10-05-tool-config-templates`. The most serious is that the packs' dependency-install subtasks and several format and lint subtasks were deleted instead of moved. I had no access to the U6 and U7 (pending) docs, so I did not count stale task names in prose as findings.
+
+```json
+[
+  {
+    "file": "plugins/stackgen/stacks/package-manager/pnpm/templates/.config/mise/conf.d/pnpm/mise.dev.toml",
+    "line": 1,
+    "summary": "U3 deleted the packs' task overlays without moving them to subtasks, despite E10 and edit 3 of its unit: no setup/deps/<verb>/<slug> exists for flutter, swiftui, swift, pnpm or uv, and the flutter dart, ruff and pnpm sort-package-json format/lint subtasks are gone. This file's comment even names a code:format:pnpm task that does not exist.",
+    "failure_scenario": "In a pnpm, uv, flutter or swift repo, setup:deps:install:all renders the 'nothing to run' branch, so `mise run setup:all` and `setup:worktree --frozen` never run pnpm install, uv sync or flutter pub get. code:format:all and code:lint:all never run dart format, ruff or sort-package-json, so the pre-commit format and lint hooks silently stop enforcing those tools."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/tool-config.mjs",
+    "line": 274,
+    "summary": "writeFiles() writes paths one at a time with no try/restore. A mkdirSync that fails halfway (EEXIST/ENOTDIR) escapes as an internal fault and leaves earlier files overwritten; restore() is only built after the loop and only called on formatter or validate failures.",
+    "failure_scenario": "A repo shaped by the previous release has .config/mise/tasks/code/format as a file. `all` writes .config/dprint.json, .config/mise.toml, _scripts/* and code/all, then mkdirSync('.config/mise/tasks/code/format') throws EEXIST. The script exits 1 with a half-written tree and nothing put back. Preview could not show this, because safe()/disk() treat ENOTDIR as absent."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/.config/mise/tasks/code/graph",
+    "line": 69,
+    "summary": "The PID-liveness and takeover guards were replaced with a lock-dir mtime check. A live lock older than 30 minutes is now deleted, and two runs that both see a stale lock can each rm -rf and re-mkdir it.",
+    "failure_scenario": "A large repo's rebuild, now up to two full `graphify update` passes under one lock, takes over 30 minutes; the next commit's hook removes the live lock and starts a second concurrent `graphify update .` writing the same graphify-out/. Or: hooks A and B both see a stale lock, A re-mkdirs it, B's rm -rf removes A's fresh lock and B also proceeds."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/lib/render.mjs",
+    "line": 283,
+    "summary": "subtaskNames() keeps every file directly in a subtask folder except `all`. Unlike taskNames() it does not skip dot-files or non-task files, so they get rendered into the …:all tasks as subtask calls.",
+    "failure_scenario": "Finder drops .config/mise/tasks/code/lint/.DS_Store. The next render writes `mise run code:lint:.DS_Store …` into code/lint/all, which fails with task-not-found, so the pre-commit lint hook and code:all fail on every commit."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/assets/.config/pre-commit-config.yaml",
+    "line": 93,
+    "summary": "uv's lock check moved from a hook gated on `files: (^|.*/)pyproject\\.toml$` to the always_run, pass_filenames:false `check` hook. The changed-manifest gate was dropped.",
+    "failure_scenario": "In a Python repo every commit, including docs-only ones, runs code:check:all, which runs `mise x -- uv lock --check` for every uv.lock. Commits get slower, can need index/network access, and fail offline where the old hook was skipped."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/tool-config.mjs",
+    "line": 697,
+    "summary": "Rows are answered independently, so a pack-remove can leave a re-rendered …:all task inconsistent with the subtask deletions it was computed against.",
+    "failure_scenario": "`pack-remove --slug swiftlint` shows a delete row for code/lint/swiftlint and a write row for code/lint/all. Answering r1:ok and r2:keep-existing deletes the subtask but keeps the old lint:all that still runs `mise run code:lint:swiftlint`, so the lint hook fails on every commit."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/tool-config.mjs",
+    "line": 466,
+    "summary": "cmdUpgrade calls runner.latest(), which throws a RefusalError when `mise latest` fails. One unresolvable tool therefore aborts the whole upgrade, even though the `!isExact(to)` check right after it shows the intent was to skip such a pin.",
+    "failure_scenario": "A repo pins aqua:realm/SwiftLint and fnox exactly in CI-loaded files. `mise latest` for one backend fails (rate limit, offline registry, a tool with no releases listing), so `upgrade` exits 2 and no other pin moves."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/tool-config.mjs",
+    "line": 308,
+    "summary": "place() deletes a target whose source renders empty before the filledSlot() check, so the `#PLACEHOLDER never overwrites a filled slot` rule does not protect a repo-written setup/external task when EXTERNAL turns false.",
+    "failure_scenario": "A repo replaces the setup/external/start placeholder with its own docker-compose script, then runs `all --external false`. The render is empty, so the repo's hand-written start, stop and pull scripts are offered as delete rows; an `ok` answer loses them."
+  },
+  {
+    "file": "scripts/src/check.ts",
+    "line": 676,
+    "summary": "The checker requires a pack subtask's leaf to be the pack slug, but does not require a pack's templates/ mise files to sit under conf.d/<slug>/. pack-remove deletes only conf.d/<slug>/ and slug-named subtasks.",
+    "failure_scenario": "A pack ships templates/.config/mise/conf.d/_base/mise.toml or conf.d/<other>/mise.toml. The checker passes. `pack` overwrites the universal base or another pack's folder, and `pack-remove` never deletes it, leaving orphaned pins. The fix is to apply the same slug rule to the templates/ conf.d folder."
+  },
+  {
+    "file": "plugins/stackgen/skills/tool-config/scripts/lib/render.mjs",
+    "line": 257,
+    "summary": "valueNames() refuses empty and duplicate member slugs but not a slug equal to `all`, which collides with setup:all's own `--all` usage flag and usage_all variable.",
+    "failure_scenario": "`all --members apps/all` renders `#USAGE flag \"--all\"` twice in setup/all. mise's usage spec rejects the duplicate flag, or it is read as 'set up every member', so `MISE_ENV=dev mise run setup:all` breaks."
+  }
+]
+```

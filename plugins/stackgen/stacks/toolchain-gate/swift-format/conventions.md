@@ -24,12 +24,15 @@ blank line, trailing commas on multi-line collections. The lint-style rules
 swift-format also carries stay at upstream's defaults — SwiftLint is the
 correctness gate, and two linters reporting one finding is noise.
 
-**Formatting is a task, not an editor action.** The task library's
-`code:format` checks, and with `--fix` rewrites, through this configuration.
+**Formatting is a task, not an editor action.** This pack's
+`code:format:swift-format` subtask checks, and with `--fix` rewrites, through
+this configuration; `code:lint:swift-format` runs the strict lint, under
+`--fix` too. The repo's `code:format:all` and `code:lint:all` run them.
 
 ## What this pack writes
 
-One file. `.config/swift-format.json` is the configuration — every key spelled
+Three files: the two subtasks, and `.config/swift-format.json`, the
+configuration — every key spelled
 out, so a toolchain upgrade that changes a default does not change the layout
 unannounced.
 

@@ -2,38 +2,44 @@
 
 ## mise environments
 
-The mise config is split by `MISE_ENV`, all under `.config/`, in the layout
-`stackgen:tool-config` lands: settings-only top-level files, one section file
-per table in `.config/mise/conf.d/`, and `.config/miserc.toml` turning on
-`env_conf_d` so a `<section>.<env>.toml` loads only under that environment.
+The mise config is split by `MISE_ENV`, all under `.config/`, in the folder
+layout `stackgen:tool-config` lands: a settings-only `.config/mise.toml`,
+`.config/miserc.toml` turning on `env_conf_d` so a `mise.<env>.toml` inside a
+`conf.d/` folder loads only under that environment, and one folder per owner
+under `.config/mise/conf.d/`. There is no root `mise.<env>.toml`.
 
-- `.config/mise.toml` — **generic**, loaded everywhere: settings only
-  (`task.run_auto_install = false`, the Node runtime settings, and the Python
-  ones — `pipx.uvx = true`, so every `pipx:` tool installs through uv) and
-  `min_version`. `conf.d/tools.toml` holds the common `node` + `pnpm` runtime
-  and `osv-scanner`, which both dev and CI need. `conf.d/env.toml` and
-  `conf.d/tasks.toml` hold the env values and `tasks.init`.
-- `.config/mise.dev.toml` — loaded when `MISE_ENV=dev` (the maintainer's machine
-  has this exported): a header, no settings. `conf.d/tools.dev.toml` holds the
-  dev toolchain (doppler, pre-commit, dprint, taplo, gitleaks, grype, jq,
-  python, uv), `conf.d/shell_alias.dev.toml` the aliases.
-- `.config/mise.ci.toml` — loaded when `MISE_ENV=ci` (the workflows set this).
-  It sets one thing, `node.gpg_verify = false` to work around a mise-on-Linux
-  bug where its bundled Node release-key import fails on the CI runner's gpg
-  with "no valid OpenPGP data found" (the Node tarball is still SHA256-checksum
-  verified). Same mise version verifies fine on macOS; see jdx/mise discussion
-  #10553.
+- `.config/mise.toml` — `min_version` and `[settings]` only
+  (`task.run_auto_install = true`, `all_compile = false`, `gpg_verify`).
+- `conf.d/_base/mise.toml` — loaded everywhere: the Node settings
+  (`node.compile = false`, `npm.package_manager = "pnpm"`), `node`, `pnpm` and
+  `osv-scanner`, which both dev and CI need, `node_modules/.bin` on the path,
+  and the repo's values (`REPO_NAME`, `MEMBERS`, the legacy `MERGE_MODEL`).
+- `conf.d/_base/mise.dev.toml` — loaded when `MISE_ENV=dev` (the maintainer's
+  machine has this exported): the Python, pipx and uv settings, the dev
+  toolchain (python, uv, pre-commit, grype, gitleaks, dprint, taplo),
+  `tasks.init` and the shell aliases.
+- `conf.d/ai/mise.dev.toml` — dev only: jq, yq, `pipx:mempalace`,
+  `pipx:graphifyy` and the `MEMPALACE_*` values.
+- `conf.d/cloudflare/mise.toml` — this repo's own folder: `npm:cf`.
+- `conf.d/_base/mise.ci.toml` — loaded when `MISE_ENV=ci` (the workflows set
+  this). It sets one thing, `node.gpg_verify = false` to work around a
+  mise-on-Linux bug where its bundled Node release-key import fails on the CI
+  runner's gpg with "no valid OpenPGP data found" (the Node tarball is still
+  SHA256-checksum verified). Same mise version verifies fine on macOS; see
+  jdx/mise discussion #10553.
 
 **There is no mise lockfile.** It was dropped on 2026-09-30 — it slowed every
-install and caused more failures than it prevented — here and in the base
-`stackgen:tool-config` lands, which instead writes every pin as an exact
-version, so CI installs what the config names and moving a pin is a diff.
+install and caused more failures than it prevented. The base
+`stackgen:tool-config` lands keeps dev-only files on `latest` and resolves every
+pin in a file CI loads to an exact version at render, save `node` and `pnpm`, so
+CI installs what the config names and moving a pin is a diff its `upgrade` call
+offers. This repo's own files, edited by hand, pin `latest` throughout.
 `setup:mise` here is `mise reshim`, `mise doctor`, `mise install` and
 `mise upgrade --local`; the landed base's `setup:mise` stops at the install and
 moves no pin.
 
-Pin each tool in one file only: a tool two environments need goes in
-`conf.d/tools.toml`, an environment's own in `conf.d/tools.<env>.toml`.
+Pin each tool in one folder only: mise does not document which of two folders
+wins when both pin one tool.
 
 ## The branch model, and the three tag families
 
@@ -56,12 +62,12 @@ still push directly.
 `MERGE_MODEL_DEVELOP` for `code:merge:develop`, `MERGE_MODEL_MAIN` for
 `code:merge:main`, each `direct` (merge locally and push) or `pr` (push and open
 a pull request); its defaults are `direct` and `pr`. This repo's own
-`.config/mise/conf.d/env.toml` still carries the single legacy `MERGE_MODEL`,
-which every reader takes as both values — the merge tasks with a warning naming
-it legacy, git-workflow's Step 4 silently as the shared fallback, and doctor's
-predicate (f) as one drift row — until the next `/vwf:setup reshape`, whose
-`/stackgen:tool-config all` rewrites it into the pair and lands the new merge
-scripts.
+`.config/mise/conf.d/_base/mise.toml` still carries the single legacy
+`MERGE_MODEL`, which every reader takes as both values — the merge tasks with a
+warning naming it legacy, git-workflow's Step 4 silently as the shared fallback,
+and doctor's predicate (f) as one drift row — until the next
+`/vwf:setup reshape`, whose `/stackgen:tool-config all` rewrites it into the
+pair and lands the new merge scripts.
 
 That is why **no release task commits**: `p:i:release`, `p:plugins:release` and
 `p:site:release` all tag what has already landed on `main`, and the version bump

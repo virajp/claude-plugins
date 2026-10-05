@@ -7,26 +7,3 @@ package_manager: pnpm
 kind: language-bundle
 axis: repo
 harness: n/a
-# The lines this pack asks /stackgen:tool-config for.
-tool-config:
-  - { tool: mise, verb: add-alias, name: npx, command: "pnpm dlx" }
-  - {
-      tool: mise,
-      verb: add-tool,
-      name: npm:sort-package-json,
-      version: "4.0.0",
-      env: dev,
-    }
-  - {
-      tool: all,
-      verb: add-exclude,
-      paths: [ node_modules, .turbo ],
-      generated: true,
-    }
-  - {
-      tool: all,
-      verb: add-exclude,
-      paths: [ "*-lock.json", "*-lock.yaml" ],
-    }
-  - git add ignore template=Node
-  - git add attribute pnpm-lock.yaml linguist-generated

@@ -93,6 +93,8 @@ How the overrides are used in tests and previews is [testing](testing.md)'s.
   (see [performance](performance.md)).
 - Previews are part of the view: every screen-level view has one per
   meaningful state, fed by preview dependencies, never by the network.
-- The format and lint gates are swift-format and SwiftLint through the repo's
-  `code:format` and `code:lint` tasks; a rule is disabled in configuration with
-  a reason, never inline without one.
+- The format and lint gates are swift-format and SwiftLint, through their
+  `code:format:swift-format`, `code:lint:swift-format` and
+  `code:lint:swiftlint` subtasks, which the repo's `code:format:all` and
+  `code:lint:all` run; a rule is disabled in configuration with a reason,
+  never inline without one.
