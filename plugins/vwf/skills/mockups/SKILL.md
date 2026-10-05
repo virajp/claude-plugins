@@ -69,10 +69,11 @@ command consumes are missing — then tell the user to run `/vwf:setup` and stop
 ### 1. Ensure the scratchpad is ignored
 
 Before any write, verify `docs/scratchpad/` is gitignored:
-`git check-ignore -q docs/scratchpad`. If it is not, stop and say so: the line
-is tool-config's universal `.gitignore`'s, landed by `/vwf:setup reshape`, and
-this skill never writes the file. Rendered mockups must never become
-committable.
+`git check-ignore -q docs/scratchpad/x` — a child path, since the directory
+pattern does not match the bare name until it exists. If it is not, stop and
+say so: the line is tool-config's universal `.gitignore`'s, landed by
+`/vwf:setup reshape`, and this skill never writes the file. Rendered mockups
+must never become committable.
 
 ### 2. Resolve scope
 
