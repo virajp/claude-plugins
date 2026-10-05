@@ -31,6 +31,9 @@ const SLUG = /^[a-z0-9][a-z0-9-]*$/;
 const MEMBER = /^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$/;
 const SET_KEY = /^[a-z][a-z0-9_]*$/;
 
+/** Slugs no pack may take: each names a folder or a task tool-config renders itself. */
+export const RESERVED_SLUGS = ["all", "ai", "_base"];
+
 const bool = (key, v) => {
   if (v === "" || v === "true") {
     return true;
@@ -215,6 +218,13 @@ export function parseArgs(argv) {
   if (head === "pack" || head === "pack-remove") {
     if (!call.flags.slug) {
       throw new RefusalError(`${head} needs --slug`);
+    }
+    if (RESERVED_SLUGS.includes(call.flags.slug)) {
+      throw new RefusalError(
+        `--slug ${call.flags.slug} is reserved — ${
+          RESERVED_SLUGS.join(", ")
+        } name tool-config's own folders and tasks`,
+      );
     }
     if (!SLUG.test(call.flags.slug)) {
       throw new RefusalError(

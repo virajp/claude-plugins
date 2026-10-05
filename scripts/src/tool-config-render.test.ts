@@ -555,3 +555,75 @@ describe("mise", () => {
     );
   });
 });
+
+describe("review round 1", () => {
+  it("refuses a member whose slug is all", () => {
+    const { status, out } = h.run([
+      "preview",
+      "all",
+      "--repo-name",
+      "widget",
+      "--members",
+      "x/all",
+    ]);
+    expect(status).toBe(2);
+    expect(out.error).toContain("no usable slug (all)");
+  });
+
+  it("refuses, before any row, a file standing where a folder goes", () => {
+    h.write(".config/mise/tasks/code/format", "#!/bin/sh\n");
+    const { status, out } = h.run(["preview", ...NODE_ALL]);
+    expect(status).toBe(2);
+    expect(out.error).toContain(
+      "needs .config/mise/tasks/code/format to be a folder",
+    );
+  });
+
+  it("puts back everything written so far when a write fails midway", () => {
+    const rows = h.run(["preview", ...NODE_ALL]).out.rows ?? [];
+    // .vscode/ is written after .config/: a folder it cannot write into fails midway
+    mkdirSync(join(h.repo, ".vscode"), { mode: 0o555 });
+    const { status } = h.run([
+      ...NODE_ALL,
+      "--answers",
+      rows.map(r => `${r.id}:ok`).join(","),
+    ]);
+    chmodSync(join(h.repo, ".vscode"), 0o755);
+    expect(status).not.toBe(0);
+    expect(existsSync(join(h.repo, ".config/stackgen.yaml"))).toBe(false);
+    expect(existsSync(join(h.repo, ".config/dprint.json"))).toBe(false);
+  });
+
+  it("upgrade skips, with a note, a pin mise latest cannot resolve", () => {
+    h.write(
+      ".config/mise/conf.d/tools/mise.toml",
+      "[tools.alpha]\nversion = \"1.0.0\"\n",
+    );
+    const { status, out } = h.run(["preview", "upgrade"], {
+      FAKE_MISE_LATEST_FAIL: "1",
+    });
+    expect(status).toBe(0);
+    expect(out.rows).toEqual([]);
+    expect(out.notes?.join("\n")).toContain("alpha left at 1.0.0");
+  });
+
+  it("never offers a filled slot for deletion when its template renders empty", () => {
+    h.apply([...NODE_ALL, "--external", "true"]);
+    const start = ".config/mise/tasks/setup/external/start";
+    h.write(start, "#!/usr/bin/env bash\necho start\n");
+    chmodSync(join(h.repo, start), 0o755);
+    const { out } = h.run(["preview", "all", "--external", "false"]);
+    expect(out.rows?.filter(r => r.kind === "delete").map(r => r.path))
+      .toEqual([
+        ".config/mise/tasks/setup/external/pull",
+        ".config/mise/tasks/setup/external/stop",
+      ]);
+  });
+
+  it("lists no dot-file or non-executable file as a subtask or a task", () => {
+    h.apply(NODE_ALL);
+    h.write(".config/mise/tasks/code/lint/.DS_Store", "x");
+    h.write(".config/mise/tasks/code/lint/notes", "not a task\n");
+    expect(h.run(["preview", "all"]).out.rows).toEqual([]);
+  });
+});

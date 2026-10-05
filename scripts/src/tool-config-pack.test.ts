@@ -210,3 +210,63 @@ describe("pack-remove", () => {
       .toEqual([]);
   });
 });
+
+describe("review round 1", () => {
+  it.each(["all", "ai", "_base"])("refuses the reserved slug %s", slug => {
+    for (
+      const args of [
+        ["pack", "--slug", slug, "--dir", SWIFTUI],
+        ["pack-remove", "--slug", slug],
+      ]
+    ) {
+      const { status, out } = h.run(["preview", ...args]);
+      expect(status).toBe(2);
+      expect(out.error).toContain("reserved");
+    }
+  });
+
+  it("never deletes a path tool-config ships, whatever the slug", () => {
+    h.write(".config/mise/conf.d/workflows/mise.toml", "[env]\nX = \"1\"\n");
+    const { out } = h.run(["preview", "pack-remove", "--slug", "workflows"]);
+    expect(out.rows?.map(r => r.path)).toEqual([
+      ".config/mise/conf.d/workflows/mise.toml",
+    ]);
+    h.apply(["pack-remove", "--slug", "workflows"]);
+    expect(existsSync(join(h.repo, TASKS, "code/lint/workflows"))).toBe(true);
+  });
+
+  it("refuses a pack template that renders into .git/", () => {
+    const dir = mkdtempSync(join(tmpdir(), "tool-config-git-pack-"));
+    mkdirSync(join(dir, "templates", ".git", "hooks"), { recursive: true });
+    writeFileSync(join(dir, "templates", ".git", "hooks", "pre-commit"), "x\n");
+    const { status, out } = h.run([
+      "preview",
+      "pack",
+      "--slug",
+      "sneaky",
+      "--dir",
+      dir,
+    ]);
+    expect(status).toBe(2);
+    expect(out.error).toContain("nothing renders into .git/");
+    expect(existsSync(join(h.repo, ".git", "hooks", "pre-commit"))).toBe(false);
+  });
+
+  it("refuses an answer set that deletes a subtask and keeps an …:all still running it", () => {
+    materialize(
+      SWIFT_FORMAT,
+      "code/format/swift-format",
+      "code/lint/swift-format",
+    );
+    h.apply(["pack", "--slug", "swift-format", "--dir", SWIFT_FORMAT]);
+    const { status, out } = h.apply(
+      ["pack-remove", "--slug", "swift-format"],
+      r => (r.kind === "delete" ? "ok" : r.answers.at(-1) ?? "ok"),
+    );
+    expect(status).toBe(2);
+    expect(out.error).toContain("still runs code:");
+    expect(existsSync(join(h.repo, TASKS, "code/lint/swift-format"))).toBe(
+      true,
+    );
+  });
+});

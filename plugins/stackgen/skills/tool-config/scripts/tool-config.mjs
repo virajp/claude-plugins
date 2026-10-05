@@ -165,6 +165,41 @@ class Workspace {
     return this.files.has(path) ? this.files.get(path) : this.disk(path);
   }
 
+  /** Whether the file is executable as the call would leave it. */
+  isExec(path) {
+    return typeof this.files.get(path) === "string"
+      ? this.modes.get(path) === "755"
+      : this.diskExec(path) === true;
+  }
+
+  /**
+   * Refuse a write a non-file already stands in the way of: a parent that is
+   * a file (an old layout's task where a folder now goes), or a folder at the
+   * path itself — never seen as absent, never half-written.
+   */
+  clear(path) {
+    const abs = this.safe(path);
+    let at = this.realRoot;
+    for (const part of path.split("/").slice(0, -1)) {
+      at = join(at, part);
+      if (!existsSync(at)) {
+        return;
+      }
+      if (!statSync(at).isDirectory()) {
+        throw new RefusalError(
+          `${path} needs ${
+            relative(this.realRoot, at)
+          } to be a folder, and a file is there — move it aside, then re-run`,
+        );
+      }
+    }
+    if (existsSync(abs) && !statSync(abs).isFile()) {
+      throw new RefusalError(
+        `${path} is a folder where a file goes — move it aside, then re-run`,
+      );
+    }
+  }
+
   touch(path) {
     if (!this.order.includes(path)) {
       this.order.push(path);
@@ -172,6 +207,7 @@ class Workspace {
   }
 
   write(path, text, mode) {
+    this.clear(path);
     this.touch(path);
     this.files.set(path, text);
     this.modes.set(path, mode);
@@ -252,6 +288,30 @@ class Workspace {
           : null,
       );
     }
+    const restore = () => {
+      for (const [path, was] of before) {
+        const abs = targets.get(path);
+        if (was === null) {
+          rmSync(abs, { force: true });
+          continue;
+        }
+        mkdirSync(dirname(abs), { recursive: true });
+        writeFileSync(abs, was.bytes);
+        chmodSync(abs, was.mode);
+      }
+    };
+    try {
+      this.writeEach(targets, written, deleted);
+    }
+    catch (e) {
+      // a failure midway leaves nothing half-written
+      restore();
+      throw e;
+    }
+    return { written, deleted, restore };
+  }
+
+  writeEach(targets, written, deleted) {
     for (const path of this.order) {
       const text = this.files.get(path);
       const abs = targets.get(path);
@@ -276,19 +336,6 @@ class Workspace {
       chmodSync(abs, parseInt(this.modes.get(path) ?? "644", 8));
       written.push(path);
     }
-    const restore = () => {
-      for (const [path, was] of before) {
-        const abs = targets.get(path);
-        if (was === null) {
-          rmSync(abs, { force: true });
-          continue;
-        }
-        mkdirSync(dirname(abs), { recursive: true });
-        writeFileSync(abs, was.bytes);
-        chmodSync(abs, was.mode);
-      }
-    };
-    return { written, deleted, restore };
   }
 }
 
@@ -301,17 +348,18 @@ class Workspace {
  * markers; a CI-loaded mise file gets exact pins; and a render the repo's
  * formatter would leave as the file already reads is no change.
  */
-function place(ctx, path, source, exec) {
+function place(ctx, path, source, exec, raw = source) {
   const { ws, env, notes } = ctx;
   const existing = ws.disk(path);
   ws.drop(path);
+  // a filled slot wins over everything, an empty render's delete included
+  if (filledSlot(raw, existing)) {
+    return;
+  }
   if (source.trim() === "") {
     if (existing !== null) {
       ws.remove(path);
     }
-    return;
-  }
-  if (filledSlot(source, existing)) {
     return;
   }
   let text = source;
@@ -359,7 +407,13 @@ function renderTree(ctx, templates, values, { tiers = [0, 1, 2] } = {}) {
       continue;
     }
     for (const t of templates.filter(t => t.tier === tier)) {
-      place(ctx, t.path, renderTemplate(t.text, names, t.path), t.exec);
+      place(
+        ctx,
+        t.path,
+        renderTemplate(t.text, names, t.path),
+        t.exec,
+        t.text,
+      );
     }
   }
 }
@@ -427,6 +481,11 @@ function cmdPack(ctx, call) {
         `${slug}'s templates/ holds ${STACKGEN_PATH} — the values file is the script's alone`,
       );
     }
+    if (t.path.split("/").includes(".git")) {
+      throw new RefusalError(
+        `${slug}'s templates/ holds ${t.path} — nothing renders into .git/`,
+      );
+    }
   }
   renderTree(ctx, templates, valuesFrom(text, ctx.ws.root, slug));
   rerenderAll(ctx, text);
@@ -435,6 +494,10 @@ function cmdPack(ctx, call) {
 function cmdPackRemove(ctx, call) {
   const slug = call.flags.slug;
   const text = setDoc(ctx, withPack(readDoc(ctx.ws), slug, null));
+  // a path tool-config ships itself is never a pack's to delete
+  const shipped = new Set(
+    [...walk(ctx.assetsDir), ...walk(ctx.templatesDir)].map(f => f.path),
+  );
   const owned = [
     ...ctx.ws.list(`${CONF_D}/${slug}/`),
     ...Object
@@ -442,7 +505,7 @@ function cmdPackRemove(ctx, call) {
       .map(d => `${TASKS_DIR}/${d}/${slug}`)
       .filter(p => ctx.ws.read(p) !== null),
   ];
-  for (const path of owned.sort()) {
+  for (const path of owned.filter(p => !shipped.has(p)).sort()) {
     ctx.ws.remove(path);
   }
   rerenderAll(ctx, text);
@@ -463,7 +526,20 @@ function cmdUpgrade(ctx) {
       if (!isExact(pin.version)) {
         continue;
       }
-      const to = env.runner.latest(pin.tool);
+      let to;
+      try {
+        to = env.runner.latest(pin.tool);
+      }
+      catch (e) {
+        if (!(e instanceof RefusalError)) {
+          throw e;
+        }
+        // one tool mise cannot resolve holds no other pin back
+        ctx.notes.push(
+          `${path}: ${pin.tool} left at ${pin.version} — ${e.message}`,
+        );
+        continue;
+      }
       if (
         !isExact(to) || to.replace(/^v/, "") === pin.version.replace(/^v/, "")
       ) {
@@ -538,6 +614,36 @@ function fileRows(ws) {
     rows.push(row);
   }
   return rows;
+}
+
+/**
+ * Refuse an answer set that deletes a task while keeping a file that still
+ * runs it — a kept `…:all` naming a subtask the same call removes.
+ */
+function refuseOrphans(ws, rows, answers) {
+  const gone = rows
+    .filter(r =>
+      r.kind === "delete"
+      && answers.get(r.id) === "ok"
+      && r.path.startsWith(`${TASKS_DIR}/`)
+    )
+    .map(r => r.path.slice(TASKS_DIR.length + 1).split("/").join(":"));
+  for (const row of rows) {
+    if (answers.get(row.id) !== "keep-existing") {
+      continue;
+    }
+    const kept = ws.disk(row.path) ?? "";
+    // a task name holds no pattern syntax but `.`, which only widens the match
+    const task = gone.find(t =>
+      new RegExp(`mise run ${t}(\\s|$)`, "m").test(kept)
+    );
+    if (task) {
+      throw new RefusalError(
+        `${row.id} keeps ${row.path}, which still runs ${task} — a task this call deletes; answer both rows alike`,
+        rows,
+      );
+    }
+  }
 }
 
 // --- landing -----------------------------------------------------------------------
@@ -698,6 +804,7 @@ async function run(argv) {
       ws.drop(row.path);
     }
   }
+  refuseOrphans(ws, rows, call.answers ?? new Map());
   const { written, deleted, setup } = land(ws, env, call.command === "all");
   store.drop(signature);
   return { written, deleted, ...(setup && { setup }), ...extra };

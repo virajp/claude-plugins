@@ -138,7 +138,7 @@ export function splice(existing, source) {
 
 // --- slots --------------------------------------------------------------------
 
-const PLACEHOLDER = /^#PLACEHOLDER\s*$/m;
+export const PLACEHOLDER = /^#PLACEHOLDER\s*$/m;
 
 /** A slot a pack or the repo has filled: the source is a placeholder, the file in place is not. */
 export const filledSlot = (source, existing) =>
@@ -256,8 +256,12 @@ export function valueNames(values) {
   const seen = new Map();
   out.MEMBER_ENTRIES = out.MEMBERS.map(path => {
     const slug = slugOf(path);
-    if (!slug) {
-      throw new RefusalError(`member ${path} has no slug — rename its folder`);
+    if (!slug || slug === "all") {
+      throw new RefusalError(
+        `member ${path} has no usable slug (${
+          slug || "empty"
+        }) — rename its folder`,
+      );
     }
     if (seen.has(slug)) {
       throw new RefusalError(
@@ -272,6 +276,12 @@ export function valueNames(values) {
   return out;
 }
 
+/** A file task: executable, and named neither `.` nor `_` first. */
+const isTask = (ws, path) => {
+  const leaf = path.split("/").at(-1);
+  return !leaf.startsWith(".") && !leaf.startsWith("_") && ws.isExec(path);
+};
+
 /** Every `*_SUBTASKS` list: the task files directly in each folder, `all` excluded, sorted. */
 export function subtaskNames(ws) {
   const out = {};
@@ -280,7 +290,9 @@ export function subtaskNames(ws) {
     out[name] = ws
       .list(prefix)
       .map(p => p.slice(prefix.length))
-      .filter(leaf => !leaf.includes("/") && leaf !== "all")
+      .filter(leaf =>
+        !leaf.includes("/") && leaf !== "all" && isTask(ws, prefix + leaf)
+      )
       .sort();
   }
   return out;
@@ -303,6 +315,7 @@ export function taskNames(ws) {
     const rel = path.slice(TASKS_DIR.length + 1);
     if (
       rel.split("/").some(seg => seg.startsWith("_") || seg.startsWith("."))
+      || !ws.isExec(path)
     ) {
       continue;
     }
