@@ -173,8 +173,8 @@ worktree:
    checkout is the one root every session resolves.
 2. Write the same document verbatim to `docs/memory/handoff/next.md` under that
    root, overwriting any previous one in place (never a second file, never a
-   dated variant). **Do not commit it** — the `.gitignore` entry
-   `/vwf:setup` maintains keeps it out of every diff.
+   dated variant). **Do not commit it** — the `.gitignore` entry tool-config's
+   universal file carries keeps it out of every diff.
 
 If mempalace was unreachable, step 6's fallback and this step converge on the
 same file — write it once and report the drawer as skipped.

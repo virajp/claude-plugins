@@ -69,10 +69,10 @@ command consumes are missing — then tell the user to run `/vwf:setup` and stop
 ### 1. Ensure the scratchpad is ignored
 
 Before any write, verify `docs/scratchpad/` is gitignored:
-`git check-ignore -q docs/scratchpad`. If it is not, append `docs/scratchpad/`
-to the repo's `.gitignore` and commit that one line via `/vwf:git-workflow`
-(`ops: gitignore docs/scratchpad`), then proceed. Rendered mockups must
-never become committable.
+`git check-ignore -q docs/scratchpad`. If it is not, stop and say so: the line
+is tool-config's universal `.gitignore`'s, landed by `/vwf:setup reshape`, and
+this skill never writes the file. Rendered mockups must never become
+committable.
 
 ### 2. Resolve scope
 
@@ -135,7 +135,7 @@ unavailable.
 
 **Git.** This command writes no repo docs — docs-sync does not fire, and the
 scratchpad tree is gitignored. The single exception is a changed
-`.config/vwf.yaml` (the `flows_rendered` stamp, or the one-time `.gitignore`
-line from §1): hand that to `/vwf:git-workflow` with a
+`.config/vwf.yaml` (the `flows_rendered` stamp): hand that to
+`/vwf:git-workflow` with a
 `ops: stamp rendered flows` message. When nothing in the config changed,
 touch no git state at all.

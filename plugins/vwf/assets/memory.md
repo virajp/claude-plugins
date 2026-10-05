@@ -64,9 +64,10 @@ what only one developer needs.**
 | `decisions`, `planning`, `gaps`, `problems` | committed  | Durable product knowledge the whole team works from |
 | `handoff`, `doctor`, `runs`                 | gitignored | One developer's session state, machine, or run      |
 
-`/vwf:setup` writes the `.gitignore` entries (`docs/memory/handoff/`,
-`docs/memory/doctor/`, `docs/memory/runs/`) when they are missing, the same way
-it adds the `docs/scratchpad/` line.
+The `.gitignore` entries (`docs/memory/handoff/`, `docs/memory/doctor/`,
+`docs/memory/runs/`) and the `docs/scratchpad/` line are tool-config's: its
+universal `.gitignore` carries them inside the `tool-config` markers, and no
+vwf skill writes the file.
 
 `doctor` is ignored because its findings are about *this machine's* toolchain,
 not the repo. `runs` is ignored because it mirrors one developer's run — the

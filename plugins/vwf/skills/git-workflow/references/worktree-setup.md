@@ -32,7 +32,9 @@ Verify the directory is git-ignored before creating the worktree:
 git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
 ```
 
-If NOT ignored: add it to `.gitignore`, commit that change, then proceed.
+If NOT ignored: stop and say so. `.worktrees/` is a line in tool-config's
+universal `.gitignore`, landed by `/vwf:setup reshape`; this skill never writes
+the file.
 
 ### Branch name
 
