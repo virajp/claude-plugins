@@ -1003,13 +1003,24 @@ const PACK_VALUE_KEYS = ["name", "detect", "question"];
 const PACK_VALUE_NAME = /^[A-Z][A-Z0-9_]*$/;
 
 /**
+ * The names a pack's `values:` may not take: every template name, and `FORMAT`
+ * — `.config/stackgen.yaml`'s `format` key, which the script holds global
+ * though no template reads it.
+ */
+const PACK_VALUE_REFUSED: ReadonlySet<string> = new Set([
+  ...TEMPLATE_GLOBAL_NAMES,
+  "FORMAT",
+]);
+
+/**
  * A pack's `values:` list — the machine values its templates read, each
  * `name`, `detect` (a command printing the value, non-zero when unknown) and
  * `question` (asked when `detect` fails).
  *
- * A name that is not upper snake case is never read by the engine, and one
- * that takes a {@link TEMPLATE_GLOBAL_NAMES} entry is refused by the script —
- * so either is a finding here, with the line the entry sits on.
+ * A name that is not upper snake case is never read by the engine, one in
+ * {@link PACK_VALUE_REFUSED} is refused by the script, and a second entry of
+ * one name would silently replace the first — so each is a finding here, with
+ * the line the entry sits on.
  */
 function packValues(source: string): PackValues {
   const lines = new LineCounter();
@@ -1064,10 +1075,16 @@ function packValues(source: string): PackValues {
     if (!PACK_VALUE_NAME.test(name)) {
       at(`\`name\` (${name}) is not upper snake case`);
     }
-    else if (TEMPLATE_GLOBAL_NAMES.has(name)) {
+    else if (PACK_VALUE_REFUSED.has(name)) {
       at(
         `\`name\` (${name}) is a global template name — tool-config fills it, `
           + `not the pack`,
+      );
+    }
+    else if (declared.has(name)) {
+      at(
+        `\`name\` (${name}) is declared already, at line `
+          + `${declared.get(name)}`,
       );
     }
     else {

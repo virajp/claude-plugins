@@ -1237,7 +1237,9 @@ describe("the pack config tier", () => {
           + "  - { name: xcode, detect: x, question: y }\n"
           + "  - { name: REPO_NAME, detect: x, question: y }\n"
           + "  - { name: A, detect: \"\", question: y, default: z }\n"
-          + "  - { detect: x }\n",
+          + "  - { detect: x }\n"
+          + "  - { name: FORMAT, detect: x, question: y }\n"
+          + "  - { name: A, detect: x, question: y }\n",
         "@@A@@\n",
       );
       expect(messages(check(root))).toEqual([
@@ -1250,6 +1252,9 @@ describe("the pack config tier", () => {
         `${yaml}:6: \`values[3]\` \`detect\` is not a non-empty string`,
         `${yaml}:7: \`values[4]\` \`name\` is not a non-empty string`,
         `${yaml}:7: \`values[4]\` \`question\` is not a non-empty string`,
+        `${yaml}:8: \`values[5]\` \`name\` (FORMAT) is a global template `
+        + "name — tool-config fills it, not the pack",
+        `${yaml}:9: \`values[6]\` \`name\` (A) is declared already, at line 6`,
       ]);
     });
 

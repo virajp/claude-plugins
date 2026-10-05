@@ -179,12 +179,13 @@ much smaller than the one it replaced: whole families of assertion became
       or as a subtask, and a machine value is a `values:` entry. The finding
       names the pack and the entry;
     - the pack's optional **`values:` list** — the machine values its templates
-      read — is a block list of maps, each exactly `name` (upper snake case, and
-      not one of `TEMPLATE_GLOBAL_NAMES`, which tool-config fills), `detect` (a
-      non-empty shell command printing the value, exiting non-zero when it
-      cannot) and `question` (a non-empty prompt, asked when `detect` fails). A
-      malformed entry is a finding naming the `pack.yaml` line it sits on. Every
-      declared name must be read in the pack's `templates/` as `@@NAME@@` (or an
+      read — is a block list of maps, each exactly `name` (upper snake case,
+      unique in the list, and neither one of `TEMPLATE_GLOBAL_NAMES` nor
+      `FORMAT`, which tool-config holds), `detect` (a non-empty shell command
+      printing the value, exiting non-zero when it cannot) and `question` (a
+      non-empty prompt, asked when `detect` fails). A malformed or duplicate
+      entry is a finding naming the `pack.yaml` line it sits on. Every declared
+      name must be read in the pack's `templates/` as `@@NAME@@` (or an
       `#if`/`#each` on it) — a value nothing reads is asked for and lands
       nowhere;
     - every **`@@` tag in a template tree** — tool-config's `templates/` and
