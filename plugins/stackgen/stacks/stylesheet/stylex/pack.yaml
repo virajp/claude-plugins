@@ -13,6 +13,3 @@ axis: stylesheet
 # stood up or probed. The lint gate it can feed is a task stackgen:tool-config
 # lands and owns.
 harness: n/a
-# The lines this pack asks /stackgen:tool-config for.
-tool-config:
-  - { tool: dprint, verb: add-plugin, name: malva }

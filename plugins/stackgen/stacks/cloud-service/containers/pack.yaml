@@ -49,6 +49,3 @@ harness:
       can refuse connections locally without it. There is still no backing
       engine to compose behind a readiness gate, so the harness answer
       stays `n/a`
-# The lines this pack asks /stackgen:tool-config for.
-tool-config:
-  - { tool: dprint, verb: add-plugin, name: dockerfile }

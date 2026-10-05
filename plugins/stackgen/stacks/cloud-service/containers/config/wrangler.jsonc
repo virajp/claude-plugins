@@ -24,28 +24,28 @@
       "image": "./Dockerfile",
 
       // A cost ceiling, not a target — raise it once concurrency is measured.
-      "max_instances": 3
-    }
+      "max_instances": 3,
+    },
   ],
 
   "durable_objects": {
     "bindings": [
       {
         "name": "APP_CONTAINER",
-        "class_name": "AppContainer"
-      }
-    ]
+        "class_name": "AppContainer",
+      },
+    ],
   },
 
   // Append a new entry for a later class change; never edit this one.
   "migrations": [
     {
       "tag": "v1",
-      "new_sqlite_classes": ["AppContainer"]
-    }
+      "new_sqlite_classes": ["AppContainer"],
+    },
   ],
 
   "observability": {
-    "enabled": true
-  }
+    "enabled": true,
+  },
 }

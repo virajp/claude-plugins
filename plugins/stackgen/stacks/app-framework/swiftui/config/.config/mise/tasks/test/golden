@@ -33,14 +33,14 @@ os="${usage_os:-${SIMULATOR_OS:-}}"
 
 if [ -z "${platform}" ]; then
   print_error "test:golden: no simulator is pinned — SIMULATOR_PLATFORM is unset or empty."
-  print_yellow "Run /stackgen:tool-config mise set-env --key SIMULATOR_PLATFORM --value <platform> --for swiftui, and SIMULATOR_DEVICE and SIMULATOR_OS the same way (or pass --platform, --device and --os), then re-run."
+  print_yellow "Run /vwf:setup to pin the simulator (or pass --platform, --device and --os), then re-run."
   exit 1
 fi
 if [ "${platform}" == "macOS" ]; then
   destination="platform=macOS"
 elif [ -z "${device}" ] || [ -z "${os}" ]; then
   print_error "test:golden: the ${platform} pin is incomplete — SIMULATOR_DEVICE and SIMULATOR_OS are both required."
-  print_yellow "Run /stackgen:tool-config mise set-env --key SIMULATOR_DEVICE --value <device> --for swiftui, and SIMULATOR_OS the same way (or pass --device and --os); xcrun simctl list devices available lists the choices."
+  print_yellow "Run /vwf:setup to complete the pin (or pass --device and --os); xcrun simctl list devices available lists the choices."
   exit 1
 else
   destination="platform=${platform},name=${device},OS=${os}"
@@ -53,10 +53,10 @@ if [[ "${usage_record:-false}" == "true" ]] &&
   overrides="${usage_platform:+ --platform \"${usage_platform}\"}${usage_device:+ --device \"${usage_device}\"}${usage_os:+ --os \"${usage_os}\"}"
   if [ -n "${SIMULATOR_PLATFORM:-}" ]; then
     print_error "test:golden: --record records only on a pinned simulator, and the overrides${overrides} move the destination off the pin, to ${destination}."
-    print_yellow "Drop --platform, --device and --os to record on the pin, or move the pin with /stackgen:tool-config mise set-env --key <KEY> --value <value> --for swiftui first."
+    print_yellow "Drop --platform, --device and --os to record on the pin, or move the pin with /vwf:setup first."
   else
     print_error "test:golden: --record records only on a pinned simulator, and the overrides${overrides} name no pin — none is set."
-    print_yellow "Pin the simulator to record on with /stackgen:tool-config mise set-env --key <KEY> --value <value> --for swiftui first."
+    print_yellow "Pin the simulator to record on with /vwf:setup first."
   fi
   exit 1
 fi

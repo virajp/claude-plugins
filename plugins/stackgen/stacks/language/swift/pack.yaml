@@ -26,6 +26,3 @@ lsp_servers:
       ".swift": swift
     startupTimeout: 1000
 harness: n/a
-# The lines this pack asks /stackgen:tool-config for.
-tool-config:
-  - git add ignore template=Swift

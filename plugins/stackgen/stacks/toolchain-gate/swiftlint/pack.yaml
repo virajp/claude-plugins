@@ -9,12 +9,3 @@ axis: repo
 # this linter is meaningful only for one toolchain, so it belongs to its
 # language's bundle — and to the Swift app bundle, which reuses it unchanged.
 harness: n/a
-# A fixed pin: under --strict a new SwiftLint release fails the build.
-tool-config:
-  - {
-      tool: mise,
-      verb: add-tool,
-      name: aqua:realm/SwiftLint,
-      version: "0.65.1",
-      env: all,
-    }

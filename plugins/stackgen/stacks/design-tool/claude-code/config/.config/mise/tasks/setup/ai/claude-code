@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+#MISE description="Install the taste-skill plugin the canvas authoring runs through"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/plugins"
+
+# Project scope resolves against the working directory.
+cd "${MISE_PROJECT_ROOT}"
+
+print_subheader "Checking the claude-code pack's plugins ..."
+ensure_plugin "taste-skill@taste-skill" "Leonxlnx/taste-skill"

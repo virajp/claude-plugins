@@ -16,14 +16,3 @@ axis: repo
 # task: the dependency tasks call `swift package`, and they are the language
 # pack's, which owns the toolchain they run.
 harness: n/a
-# The lines this pack asks /stackgen:tool-config for.
-tool-config:
-  - {
-      tool: all,
-      verb: add-exclude,
-      paths: [ .build, .swiftpm ],
-      generated: true,
-    }
-  - { tool: pre-commit, verb: add-linter-ignore, paths: [ .build, .swiftpm ] }
-  - git add ignore template=Swift
-  - git add attribute Package.resolved linguist-generated

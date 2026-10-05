@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+#MISE description="Fail when a uv lockfile no longer matches its pyproject.toml"
+#MISE dir="{{ config_root }}"
+#MISE hide=true
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE arg "[files]" var=#true help="ignored: every lockfile is checked against its manifest"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Only a Python project locks: uv as mise's pipx backend leaves no uv.lock, so it passes.
+
+checked=0
+while IFS= read -r -d '' lockfile; do
+  project="$(dirname "${lockfile}")"
+  if [ -f "${project}/pyproject.toml" ]; then
+    print_subheader "Checking ${lockfile} ..."
+    (cd "${project}" && mise x -- uv lock --check)
+    checked=$((checked + 1))
+  fi
+done < <(git ls-files -z --cached --others --exclude-standard -- 'uv.lock' '*/uv.lock')
+
+if [ "${checked}" -eq 0 ]; then
+  print_yellow "No pyproject.toml with a uv.lock beside it; nothing to check."
+fi

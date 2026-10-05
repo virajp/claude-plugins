@@ -1,0 +1,7 @@
+[env]
+# The Xcode every building task requires, and the simulator the goldens are
+# recorded on — filled per machine by /vwf:setup
+SIMULATOR_DEVICE   = "@@SIMULATOR_DEVICE@@"
+SIMULATOR_OS       = "@@SIMULATOR_OS@@"
+SIMULATOR_PLATFORM = "@@SIMULATOR_PLATFORM@@"
+XCODE_VERSION      = "@@XCODE_VERSION@@"

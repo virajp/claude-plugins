@@ -17,8 +17,8 @@ languages:
         pack as `sourcekit-lsp` and provisioned via the generated local plugin
       mise_tool: >-
         n/a — Swift comes with Xcode, which mise does not install; the repo
-        pins the Xcode it builds with as XCODE_VERSION, one of this pack's
-        tool-config: calls
+        pins the Xcode it builds with as XCODE_VERSION, which this
+        pack's mise template carries
       manifest: >-
         n/a — the dependency list lives in <Name>.xcodeproj/project.pbxproj,
         a path whose name is the app's, which this fact cannot fix
@@ -29,52 +29,6 @@ languages:
         - name: xcodebuild
           probe: "xcodebuild -version"
         - swift
-# The four pins this pack's tool-config: calls add empty, each filled by
-# /vwf:setup from this machine when it lands the pack. Each detect prints the
-# one value or exits non-zero. The simulator three read `xcrun simctl`'s JSON
-# with jq, which macOS ships at /usr/bin/jq, and agree on one simulator: the
-# first available iPhone on the newest iOS runtime that has one.
-machine_env:
-  - name: XCODE_VERSION
-    detect: >-
-      xcodebuild -version
-      | awk 'NR == 1 && $1 == "Xcode" { print $2; found = 1 } END { exit !found }'
-    question: >-
-      Which Xcode version does this repo build with? Every task that builds
-      refuses any other.
-  - name: SIMULATOR_PLATFORM
-    detect: >-
-      xcrun simctl list devices available -j
-      | jq -er '[.devices | to_entries[] | select(.key | test("\\.iOS-[0-9]"))
-      | (.key | capture("iOS-(?<v>[0-9-]+)$").v | split("-") | map(tonumber)) as $v
-      | .value[] | select(.deviceTypeIdentifier | test("\\.iPhone-")) | {v: $v, name}]
-      | (map(.v) | max) as $newest | map(select(.v == $newest))[0] // empty
-      | "iOS Simulator"'
-    question: >-
-      Which destination platform are the goldens recorded on? `iOS Simulator`
-      for an iPhone or iPad pin, `macOS` for a Mac-only app.
-  - name: SIMULATOR_DEVICE
-    detect: >-
-      xcrun simctl list devices available -j
-      | jq -er '[.devices | to_entries[] | select(.key | test("\\.iOS-[0-9]"))
-      | (.key | capture("iOS-(?<v>[0-9-]+)$").v | split("-") | map(tonumber)) as $v
-      | .value[] | select(.deviceTypeIdentifier | test("\\.iPhone-")) | {v: $v, name}]
-      | (map(.v) | max) as $newest | map(select(.v == $newest))[0] // empty
-      | .name'
-    question: >-
-      Which simulator, by name, are the goldens recorded on? `xcrun simctl
-      list devices available` lists the choices; empty for a macOS pin.
-  - name: SIMULATOR_OS
-    detect: >-
-      xcrun simctl list devices available -j
-      | jq -er '[.devices | to_entries[] | select(.key | test("\\.iOS-[0-9]"))
-      | (.key | capture("iOS-(?<v>[0-9-]+)$").v | split("-") | map(tonumber)) as $v
-      | .value[] | select(.deviceTypeIdentifier | test("\\.iPhone-")) | {v: $v, name}]
-      | (map(.v) | max) as $newest | map(select(.v == $newest))[0] // empty
-      | .v | map(tostring) | join(".")'
-    question: >-
-      Which OS version of that simulator? The runtime's version, `27.0` say;
-      empty for a macOS pin.
 lsp_servers:
   sourcekit-lsp:
     command: mise
@@ -89,23 +43,3 @@ harness:
       swift-snapshot-testing image snapshots of SwiftUI views, run through
       xcodebuild test on the pinned simulator — recorded under --record,
       compared otherwise
-# Asks /stackgen:tool-config for the four machine_env pins, shipped empty.
-tool-config:
-  - { tool: mise, verb: add-env, key: XCODE_VERSION, value: "", env: all }
-  - { tool: mise, verb: add-env, key: SIMULATOR_PLATFORM, value: "", env: all }
-  - { tool: mise, verb: add-env, key: SIMULATOR_DEVICE, value: "", env: all }
-  - { tool: mise, verb: add-env, key: SIMULATOR_OS, value: "", env: all }
-  # Keeps the build trees out of the formatters, the scanner and the linter.
-  - {
-      tool: all,
-      verb: add-exclude,
-      paths: [ Derived, DerivedData ],
-      generated: true,
-    }
-  - { tool: all, verb: add-exclude, paths: [ "*.xcassets/" ] }
-  - {
-      tool: pre-commit,
-      verb: add-linter-ignore,
-      paths: [ Derived, DerivedData ],
-    }
-  - git add ignore template=Swift

@@ -44,7 +44,3 @@ lsp_servers:
       ".jsx": javascriptreact
     startupTimeout: 60000
 harness: n/a
-# The lines this pack asks /stackgen:tool-config for.
-tool-config:
-  - { tool: dprint, verb: add-plugin, name: typescript }
-  - git add ignore template=Node
