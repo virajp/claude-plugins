@@ -29,6 +29,11 @@ ignores:
   # HTML composition that drew it. Scratch, not source, and its HTML rewrite
   # fights dprint's the same way site/public/ does.
   - "brag-output/**"
+  # Template trees: `@@` lines are not valid TOML, YAML or shell until rendered.
+  - "plugins/stackgen/skills/tool-config/templates/**"
+  - "plugins/*/stacks/*/*/templates/**"
+  # JSONC once it carries the tool-config markers.
+  - "plugins/stackgen/skills/tool-config/assets/.config/dprint.json"
 
 overrides:
   markdown:
