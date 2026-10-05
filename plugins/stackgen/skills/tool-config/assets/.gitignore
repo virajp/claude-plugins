@@ -35,9 +35,9 @@ mise.*.local.toml
 .mise.*.local.toml
 **/mise.local.lock
 # mise's other local names, and the old flat conf.d layout's.
-.config/mise/config.local.toml
-.config/mise/config.*.local.toml
-.config/mise/conf.d/*.local.toml
+**/.config/mise/config.local.toml
+**/.config/mise/config.*.local.toml
+**/.config/mise/conf.d/*.local.toml
 
 # ==== Secrets and env ====
 # .env.example is tracked: its negation stays after `.env.*`.
