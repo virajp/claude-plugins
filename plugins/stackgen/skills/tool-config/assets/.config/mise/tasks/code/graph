@@ -57,38 +57,69 @@ export PYTHONHASHSEED=0
 LOG="${HOME}/.cache/graphify-rebuild.log"
 mkdir -p "$(dirname "${LOG}")"
 
-# One rebuild at a time: mkdir is atomic. A run finding the lock held leaves the
-# re-run marker and exits; the holder rebuilds once more if the marker is there
-# when it finishes. Nobody takes a live lock over.
+# One rebuild at a time: mkdir is atomic, and the lock holds its holder's PID. A
+# run finding the lock held leaves the re-run marker and exits; the holder
+# rebuilds once more if the marker is there when it finishes. Nobody takes a
+# live lock over: only a dead holder's lock is cleared.
 LOCK="${GIT_DIR_ABS}/graphify-refresh.lock"
 RERUN="${GIT_DIR_ABS}/graphify-refresh.rerun"
-# A lock older than this is a killed run's, and is cleared.
+# A lock with no PID yet is a run between its mkdir and its write; past this age it was killed there.
 STALE_MINUTES=30
 
-if ! mkdir "${LOCK}" 2>/dev/null; then
-  if [ -n "$(find "${LOCK}" -maxdepth 0 -mmin +"${STALE_MINUTES}" 2>/dev/null)" ]; then
-    rm -rf "${LOCK}" || true
+# Dead: its PID is no longer alive, or it never got one and is past STALE_MINUTES.
+lock_is_dead() { # <lock dir>
+  local holder
+  holder="$(cat "$1/pid" 2>/dev/null || true)"
+  if [ -n "${holder}" ]; then
+    if kill -0 "${holder}" 2>/dev/null; then
+      return 1
+    fi
+  else
+    [ -n "$(find "$1" -maxdepth 0 -mmin +"${STALE_MINUTES}" 2>/dev/null)" ]
   fi
+}
+
+# Atomic: only the run whose mv succeeds clears it, and only if what it moved is
+# still the dead lock it judged — a lock taken since is put back.
+clear_dead_lock() {
+  local seen moved="${LOCK}.dead.$$"
+  seen="$(cat "${LOCK}/pid" 2>/dev/null || true)"
+  lock_is_dead "${LOCK}" || return 0
+  mv "${LOCK}" "${moved}" 2>/dev/null || return 0
+  if [ "$(cat "${moved}/pid" 2>/dev/null || true)" = "${seen}" ] && lock_is_dead "${moved}"; then
+    rm -rf "${moved}"
+  else
+    mv "${moved}" "${LOCK}" 2>/dev/null || true
+  fi
+}
+
+if ! mkdir "${LOCK}" 2>/dev/null; then
+  clear_dead_lock
   if ! mkdir "${LOCK}" 2>/dev/null; then
     touch "${RERUN}"
     print_yellow "graphify: a refresh is already running — it re-runs once when done"
     exit 0
   fi
 fi
+# Held by this run until the rebuild writes its own PID over it.
+echo "$$" >"${LOCK}/pid"
 # This run's own marker is spent: the rebuild below sees this commit already.
 rm -f "${RERUN}"
 
 print_yellow "graphify: refreshing the graph in the background (log: ${LOG})"
-# Detached so the commit returns at once; the lock goes when the rebuild ends.
+# Detached so the commit returns at once; the rebuild removes the lock only while it is its own.
 # shellcheck disable=SC2016
 nohup bash -c 'lock="$1"
 rerun="$2"
 shift 2
-trap "rm -rf \"${lock}\"" EXIT
+release() { [ "$(cat "${lock}/pid" 2>/dev/null)" = "$$" ] && rm -rf "${lock}"; }
+trap release EXIT
+echo "$$" >"${lock}/pid"
 graphify update . "$@"
 if [ -e "${rerun}" ]; then
   rm -f "${rerun}"
   graphify update . "$@"
 fi' graphify-refresh "${LOCK}" "${RERUN}" ${force[@]+"${force[@]}"} >>"${LOG}" 2>&1 </dev/null &
+echo "$!" >"${LOCK}/pid"
 disown
 exit 0
