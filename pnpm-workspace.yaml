@@ -28,3 +28,9 @@ overrides:
   # GHSA-g7r4-m6w7-qqqr — via tsup and vitest; first fixed version.
   # Not a newer release: minimumReleaseAge exists to keep one that fresh out.
   "esbuild": "0.28.1"
+
+  # GHSA-ch52-4w7c-c8xp — via astro (site); first fixed version.
+  "http-cache-semantics": "4.3.0"
+
+  # GHSA-f23m-r3pf-42rh, GHSA-r5fr-rjxr-66jc — via mermaid → dagre-d3-es (site).
+  "lodash-es": "4.18.1"
