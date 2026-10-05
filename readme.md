@@ -124,7 +124,10 @@ across every member — and is what `/vwf:doctor` prints when a shaped repo has
 fallen behind. You rarely have to remember it: `setup` re-checks the shape after
 its materialize pass, `/stackgen:stackgen-sync` after a re-sync, and
 `/vwf:recall` prints one drift line at session start — each offers the reshape,
-none runs it unasked.
+none runs it unasked. A repo is shaped when it carries `.config/stackgen.yaml`,
+the values file `init` writes through `stackgen:tool-config`; one still on the
+older mise layout (`.config/mise/conf.d/tools.toml` and its siblings) is named
+and left as it is until the reshape that moves it ships.
 
 Once a repo **is** shaped, its own task library takes the plugin side over:
 `mise run setup:ai:all` checks that `vwf` is installed — at user scope, or at
@@ -322,9 +325,11 @@ A pack asks it for nothing: it ships `config/` payload — its subtasks among it
 which the rendered `code:lint:all`, `code:format:all`, `code:check:all`,
 `setup:ai:all` and `setup:deps:<verb>:all` tasks call — and a `templates/`
 folder, its own `conf.d/<slug>/` mise files and any file needing a value, which
-the script renders. Language manifests and CI workflow files stay outside that
-fence: they declare what the project *is*, and no pack decides either. The
-packs, bundles and kinds that ship are inventoried in
+the script renders — each value the machine must answer declared in the pack's
+`values:` list with a `detect` command and a `question`, which `/vwf:setup` runs
+or asks as it lands the pack. Language manifests and CI workflow files stay
+outside that fence: they declare what the project *is*, and no pack decides
+either. The packs, bundles and kinds that ship are inventoried in
 [`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md), generated from
 the tree itself; the newest kind is `stylesheet`, the one that answers vwf's
 seventh axis — how a web frontend's styles are authored, with `tailwindcss`,

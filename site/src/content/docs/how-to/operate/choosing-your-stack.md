@@ -56,8 +56,9 @@ native Apple app pins `swift-swiftui` instead — `app-framework/swiftui`, servi
 `mobile`, `tablet`, `desktop` and `auto` like Flutter plus `watch`, `tv` and
 `spatial`, from a committed Xcode project a person creates in Xcode, with the
 Xcode version pinned as `XCODE_VERSION` in the pack's own
-`.config/mise/conf.d/swiftui/mise.toml`, which `/vwf:setup` asks for — offering
-the version it detects on your machine — as it lands the pack. Pick it when the
+`.config/mise/conf.d/swiftui/mise.toml`, which `/vwf:setup` reads off your
+machine as it lands the pack — the pack's `values:` list gives each value a
+`detect` command — and asks for only when it cannot detect it. Pick it when the
 app ships on Apple platforms alone or reaches one Flutter does not; pick Flutter
 when it must also ship on Android. A Swift library on the `packages` platform
 pins `swift-package` — SwiftPM, swift-format and SwiftLint over the host's Swift

@@ -340,8 +340,9 @@ first of these surfaces at `/vwf:execute`:
   members through one helper, which reads `.gitmodules` where there is one and
   the `MEMBERS` value in `.config/mise/conf.d/_base/mise.toml` otherwise — so
   under `siblings` that value is what `setup:all --all` and `code:worktrees`
-  walk. `init` fills it from the members it resolved; a submodule product leaves
-  it exactly as shipped. The **flags** beside it — `setup:all --api`, and the
+  walk. It is rendered from `members` in the base's `.config/stackgen.yaml`,
+  which `init` passes to `/stackgen:tool-config all` as `--members` from the
+  members it resolved. The **flags** beside it — `setup:all --api`, and the
   `setup-api` alias — are one per member repo under either linkage, named for
   the member and never for a project id.
 

@@ -56,65 +56,66 @@ Restart Claude Code, then `cd` into the empty Relay repo.
 ```
 
 One command, and it does two things in order. **Step 0 runs first and finds no
-shape** — no adapter lockfile, no config layout, no task library — so it says
-what is absent and offers [`init`](../../plugins/vwf.md#vwfinit), which is what
-lays it down. Say yes. `init` is not something you type: this offer and
+shape** — no `.config/stackgen.yaml`, no config layout, no task library — so it
+says what is absent and offers [`init`](../../plugins/vwf.md#vwfinit), which is
+what lays it down. Say yes. `init` is not something you type: this offer and
 `/vwf:setup reshape` are the only two ways it is reached. Declining is legal and
 is recorded as a deferral, with `/vwf:setup reshape` as the unlock whenever you
 want it.
 
 Relay's repo is empty — at most a readme, which is not evidence — so `init`
-resolves it to mode **`blank`**: no lockfile, no manifest, no source directory,
-no root tool config. It runs the new-repo landing alone, shaping the repo before
-anything else runs: the config layout, the toolchain manager's config split, the
-task library grouped `setup:*` / `code:*` / `p:*`, the four repo gates with
-their configs and hook fragments, the hygiene files, and the licence Relay
-chose. Its stack read finds nothing on a blank repo, so no `.gitignore` language
-section lands and the toolchain config's runtime positions stay empty until a
-stack is pinned. (Had the repo already carried a `package.json` or a `src/`
-directory, the mode would be **`source`**: the same landing, with every file
-already there offered as replace-or-keep rather than overwritten.) It asks seven
-questions in one round each — the repo name, proposed from this repo's own
-folder name and the one thing that fills `REPO_NAME`, and a one-line brief (both
-proposed or skippable); the ids it will write task groups and commit scopes for,
-each shown with its slug and where the name came from and yours to replace —
-with no registry and no sub-project directories yet (a sub-project directory
-being, on a first run, one that carries its own language manifest), Relay's one
-project is proposed from its **platform token**, which you pick from the closed
-list (`service`, `worker`, `webapp`, `site`, `cli`, `iac`, …) or type as *other
-— type any id you want*, the option that says outright you are never stuck with
-the list; which provider holds Relay's secrets, and whether Relay is **public or
-private** — proposed from what the forge says where the repo already has an
-`origin`, `private` otherwise — with the sixth round shaped by that answer: the
-licence, asked only for a public repo, and a security contact, an
-advisories-page URL for a public repo or a free email or internal URL for a
-private one; then which **update bot** watches Relay — `renovate`, `dependabot`
-or `none`, seeded `renovate` on a repo carrying no policy — then shows **one
-plan** and applies it on one yes. The forge read from Relay's `origin` and the
-provider you picked decide the conditional files: the GitHub issue forms land
-where Relay's `origin` is on GitHub — a repo with no remote yet skips them and
-lands them on the reshape after you add one — and a path a condition skips is
-listed in the plan under **Skipped**, never silently missing. Relay is one repo,
-so every one of those questions is a single row; on a product with member repos
-the same seven rounds simply carry a row per repo where the answer can differ.
+resolves it to mode **`blank`**: no `stackgen.yaml`, no manifest, no source
+directory, no root tool config. It runs the new-repo landing alone, shaping the
+repo before anything else runs: the config layout, the toolchain manager's
+config split, the task library grouped `setup:*` / `code:*` / `p:*`, the four
+repo gates with their configs and hook fragments, the hygiene files, and the
+licence Relay chose. Every value it gathers lands in Relay's
+`.config/stackgen.yaml`, the file `/stackgen:tool-config all` writes and renders
+the rest from; the `.gitignore` is the universal set, every stack's section in
+every repo, so no language template is asked for. (Had the repo already carried
+a `package.json` or a `src/` directory, the mode would be **`source`**: the same
+landing, with every file already there offered as replace-or-keep rather than
+overwritten.) It asks five questions in six rounds — the repo name, proposed
+from this repo's own folder name and the one thing that fills `REPO_NAME`, and a
+one-line brief (both proposed or skippable); the ids it will write task groups
+and commit scopes for, each shown with its slug and where the name came from and
+yours to replace — with no registry and no sub-project directories yet (a
+sub-project directory being, on a first run, one that carries its own language
+manifest), Relay's one project is proposed from its **platform token**, which
+you pick from the closed list (`service`, `worker`, `webapp`, `site`, `cli`,
+`iac`, …) or type as *other — type any id you want*, the option that says
+outright you are never stuck with the list; which provider holds Relay's
+secrets, and whether Relay is **public or private** — proposed from what the
+forge says where the repo already has an `origin`, `private` otherwise — with
+the sixth round shaped by that answer: the licence, asked only for a public
+repo, and a security contact, an advisories-page URL for a public repo or a free
+email or internal URL for a private one — then shows **one plan** and applies it
+on one yes. The forge read from Relay's `origin` and the provider you picked
+decide the conditional files: the GitHub issue forms land where Relay's `origin`
+is on GitHub — a repo with no remote yet skips them and lands them on the
+reshape after you add one — and a path a condition skips is listed in the plan
+under **Skipped**, never silently missing. Relay is one repo, so every one of
+those questions is a single row; on a product with member repos the same six
+rounds simply carry a row per repo where the answer can differ.
 
 It closes with a git pass: it asks how work lands in this repo, **one row per
 branch** — `direct`, which merges locally and pushes, or `pr`, which pushes the
 branch and opens a pull request; `develop` preselected `direct` and `main`
-preselected `pr` — writes the two answers to `MERGE_MODEL_DEVELOP` and
-`MERGE_MODEL_MAIN`, then stages exactly what it wrote — mise keeps no lock, its
-pins exact — and asks once whether to commit, commit and push, or leave it. The
-commit lands on `develop` — Relay is brand new, so `develop` is its first branch
-and `main` is created from that first commit. If you chose *commit and push*,
-the **forge pass** follows on one more consent: it shows what it will set on the
-forge — the default branch (`develop` preselected), protection on `develop` and
-`main` (no force-push, no deletion, and a pull request required on whichever of
-the two you set to `pr`), and the backlog project it hands you the browser to
-create — and applies it through the forge CLI, leaving any protection already
-there untouched. Without the CLI, or on a forge it has none for, it prints the
-same list for you to apply by hand — the form the hygiene assets'
-`CONTRIBUTING.md` keeps — and carries on. Its report prints, and setup carries
-on with its own work.
+preselected `pr` — passes the two answers to `/stackgen:tool-config all`, which
+stores them in `.config/stackgen.yaml` and renders them into
+`MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`, then stages exactly what it wrote
+— mise keeps no lock, its pins exact — and asks once whether to commit, commit
+and push, or leave it. The commit lands on `develop` — Relay is brand new, so
+`develop` is its first branch and `main` is created from that first commit. If
+you chose *commit and push*, the **forge pass** follows on one more consent: it
+shows what it will set on the forge — the default branch (`develop`
+preselected), protection on `develop` and `main` (no force-push, no deletion,
+and a pull request required on whichever of the two you set to `pr`), and the
+backlog project it hands you the browser to create — and applies it through the
+forge CLI, leaving any protection already there untouched. Without the CLI, or
+on a forge it has none for, it prints the same list for you to apply by hand —
+the form the hygiene assets' `CONTRIBUTING.md` keeps — and carries on. Its
+report prints, and setup carries on with its own work.
 
 **Then setup does its half.** A repo with no manifest, no source directories and
 no `docs/blueprint/` is *blank*, and setup treats it as such: it asks nothing

@@ -31,16 +31,17 @@ The memory layer and The vendored guidelines below.
 **stackgen is load-bearing at `init` and at `setup`, not only at
 `architecture`.** `/vwf:init` first calls `/stackgen:tool-config all`, which
 lands the toolchain manager's config and the repo gates the `devtools` plugin
-used to scaffold with init's answers as its arguments — the ignore, attribute,
-graph-ignore and Renovate files among them since 2026-09-27 — then writes its
-own hygiene assets and materializes the secrets provider the user picked, the
-only thing it fetches through the stack adapter; it fetches no bundle for its
-baseline. With no stack adapter installed, `init` **halts** with the install
+used to scaffold, with init's answers as its flags — the ignore, attribute and
+graph-ignore files among them since 2026-09-27 — and records those answers in
+the repo's `.config/stackgen.yaml`, the file only its script writes; then writes
+its own hygiene assets and materializes the secrets provider the user picked,
+the only thing it fetches through the stack adapter; it fetches no bundle for
+its baseline. With no stack adapter installed, `init` **halts** with the install
 command rather than printing an empty plan that reads like an already-shaped
 repo. All of it lands **per repo** — the base and every member `init` resolved,
-each recording its own lockfile — so a member is shaped on its own evidence.
-`/vwf:setup` no longer fetches any of them: it checks **each repo's** adapter
-lockfile for the `tool-config/…` records — and each repo's shape against
+each with its own `stackgen.yaml` — so a member is shaped on its own evidence.
+`/vwf:setup` no longer fetches any of them: it checks that **each repo** carries
+`.config/stackgen.yaml` with `format: 1` — and each repo's shape against
 doctor's seven baseline predicates — and offers `/vwf:init` once when any of
 them is missing or behind, which is why `init` is model-invocable and, being
 hidden from the `/` menu, reached no other way. Note that `mise` legitimately
@@ -51,10 +52,12 @@ on once a stack axis is pinned.
 Setup is the third site, and the one that grew: since the consumer-gaps work
 `/vwf:architecture` records a pin and materializes nothing, and **`/vwf:setup`'s
 materialize pass** is what invokes `-stack-template` for every pinned axis, once
-per `(repo, slug)`, in the repo the project belongs to. So the adapter is
-reached from `init` (`tool-config all` and the secrets provider), from `setup`
-(every pinned axis) and from `plan`/`execute` (pure conventions reads) —
-`architecture` reaches only `-stack-menu`.
+per `(repo, slug)`, in the repo the project belongs to, carrying the pack's
+`values:` it gathered (each entry's `detect`, else its `question`) for the
+materializer's `tool-config pack` call. So the adapter is reached from `init`
+(`tool-config all` and the secrets provider), from `setup` (every pinned axis)
+and from `plan`/`execute` (pure conventions reads) — `architecture` reaches only
+`-stack-menu`.
 
 **Required binaries are no longer gated at install time.** A plugin used to
 declare `requires:`, and the CLI computed the union over the dependency-expanded

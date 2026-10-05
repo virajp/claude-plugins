@@ -79,8 +79,9 @@ history left behind, each proposed with its evidence — and a vwf section merge
 into the existing `CLAUDE.md` (merged, not overwritten).
 
 The repo's own tooling is **not** in that plan. Before the mode fork, setup
-checks whether the repo is *shaped* — whether the toolchain config, the repo
-gates and the hygiene files are recorded as materialized, and whether what is
+checks whether the repo is *shaped* — whether it carries the
+`.config/stackgen.yaml` that `/stackgen:tool-config all` writes as it lands the
+toolchain config, the repo gates and the hygiene files — and whether what is
 there is still current against the seven baseline predicates `/vwf:doctor` owns
 — the seventh reading the forge's default branch, branch protection and backlog
 project back where the forge CLI answers — and it asks both of those of **every
@@ -90,43 +91,49 @@ offers [`/vwf:init`](../../plugins/vwf.md#vwfinit) once, naming which repos
 showed what. `init` is what lays them down and what brings them forward.
 Bookable has a `Makefile`, a hand-rolled CI script, a `.pre-commit-config.yaml`
 and a `.husky/` directory, and nothing has ever been shaped, so the offer comes
-up. `init` decides each repo's mode from its tree: Bookable has no adapter
-lockfile, but it carries a `package.json` and a `src/` directory, so it resolves
-to **`source`**, not to the full existing-repo survey and not to the empty-repo
-landing either. That mode runs the new-repo landing plus the survey passes that
-have something to read, and what the plan shows Bookable is what a brownfield
-repo actually has: a **root tool config** row for the `.pre-commit-config.yaml`
-— *move*, by default, into `.config/` where `stackgen:tool-config` lands it,
-then shown as that skill's conflict row so the hooks Bookable wrote are read
-before the skill's land; a **hook manager** row for `.husky/` — *keep*, by
-default, so the first commit runs under husky and the shipped gate is landed but
-not wired until you flip the row to *switch*; and, over every other file already
-sitting at a path a pack would land, a **replace-or-keep** row shown before the
-one consent — a keep is recorded under `enforcement.kept_files`, in a stub
-`.config/vwf.yaml` `init` writes since setup has not made one yet, carrying the
-`answers:` block of the run's four conditional answers beside it, so it is never
-re-offered. Bookable's `.gitignore` is one row of its own:
-`/stackgen:tool-config` renders the universal ignore set between one
-`# >>> tool-config` marker pair, and a file carrying no marker pair yet is
-replaced whole only on your `ok` — answer `keep-existing` and Bookable's file
-stands for that run; once the pair is in, every line Bookable keeps outside it
-survives every later render. A readme, a licence file under any spelling or a
-`SECURITY.md` already there is kept outright. Its **stack read** finds the
-`package.json` and, on this first run with no pin yet, asks the git tool for
-GitHub's `Node` ignore template as a `gitignore:Node` block and lands the Node
-runtime settings. (Had Bookable already been shaped once, it would carry the
-lockfile and resolve to **`shaped`**, whose ten-pass survey adopts rather than
-flattens: a task the repo wrote for itself — a file or an inline `[tasks.*]`
-table — is kept and listed, a helper function the pack's library has no name for
-moves into a repo-owned `_scripts/local` sidecar rather than breaking, and a
-file a pack owns whose **content** has diverged is offered as replace or keep —
-a file differing only inside the positions `init` fills is not an offer at all.)
-In every mode the landing is followed by the same four steps — the secrets
-provider, the placeholders, the readme-licence-security step and the bootstrap —
-and by a re-hash of everything `init` filled or merged, so the next
-`/vwf:doctor` reads none of it as drift. Either way it shows **one** plan, with
-a section per repo naming the mode it got, and takes one consent for all of it
-before setup carries on. Declining is recorded as a deferral, with
+up. `init` decides each repo's mode from its tree: Bookable has no
+`.config/stackgen.yaml`, but it carries a `package.json` and a `src/` directory,
+so it resolves to **`source`**, not to the full existing-repo survey and not to
+the empty-repo landing either. That mode runs the new-repo landing plus the
+survey passes that have something to read, and what the plan shows Bookable is
+what a brownfield repo actually has: a **root tool config** row for the
+`.pre-commit-config.yaml` — *move*, by default, into `.config/` where
+`stackgen:tool-config` lands it, then shown as that skill's conflict row so the
+hooks Bookable wrote are read before the skill's land; a **hook manager** row
+for `.husky/` — *keep*, by default, so the first commit runs under husky and the
+shipped gate is landed but not wired until you flip the row to *switch*; and,
+over every other file already sitting at a path a pack would land, a
+**replace-or-keep** row shown before the one consent — a keep is recorded under
+`enforcement.kept_files`, in a stub `.config/vwf.yaml` `init` writes since setup
+has not made one yet, so it is never re-offered — the forge and the secrets
+provider go to Bookable's `.config/stackgen.yaml` instead. Bookable's
+`.gitignore` is one row of its own: `/stackgen:tool-config` renders the
+universal ignore set between one `# >>> tool-config` marker pair, and a file
+carrying no marker pair yet is one `write` row that would replace it whole — so
+`init` lists every line of Bookable's own beneath the row as
+`kept below the markers: <line>`, and on your `ok` appends them below the
+closing marker, unchanged and in order; answer `keep-existing` and Bookable's
+file stands for that run. Once the pair is in, every line Bookable keeps outside
+it survives every later render. `.graphifyignore` takes the same row, and
+`.gitattributes`, which has no markers, keeps its own lines the same way —
+appended to the end, with every later reshape preselecting `keep-existing` so
+they are never dropped by default. A readme, a licence file under any spelling
+or a `SECURITY.md` already there is kept outright. Its **stack read** finds the
+`package.json` and proposes Bookable's sub-projects from it; no ignore template
+is asked for, since the ignore set is a universal superset. (Had Bookable
+already been shaped once, it would carry `.config/stackgen.yaml` and resolve to
+**`shaped`**, whose ten-pass survey adopts rather than flattens: a task the repo
+wrote for itself — a file or an inline `[tasks.*]` table — is kept and listed, a
+helper function the pack's library has no name for moves into a repo-owned
+`_scripts/local` sidecar rather than breaking, and a file a pack owns whose
+**content** has diverged is offered as replace or keep — a file
+`/stackgen:tool-config` renders is never offered, since its own preview shows
+the difference as a row.) In every mode the landing is followed by the same four
+steps — the secrets provider, the placeholders, the readme-licence-security step
+and the bootstrap — and by a re-hash of everything `init` filled or merged, so
+the next `/vwf:doctor` reads none of it as drift. Either way it shows **one**
+plan, with a section per repo naming the mode it got, and takes one consent for
+all of it before setup carries on. Declining is recorded as a deferral, with
 `/vwf:setup reshape` as the unlock, and the onboard continues — the repo shape
 and the vwf format are two different things. The offer comes back on its own:
 setup re-checks the shape once more after its materialize pass and on every
