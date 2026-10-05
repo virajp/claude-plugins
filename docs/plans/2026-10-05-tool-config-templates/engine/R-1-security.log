@@ -1,0 +1,4 @@
+security-review engine, row R, round 1, range e53f4a10..3b0e5526
+(the /security-review skill diffed against origin/HEAD, 3MB; re-run scoped to the row range by a subagent)
+
+No high-confidence vulnerabilities found.
