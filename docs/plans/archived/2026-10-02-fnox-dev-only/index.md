@@ -10,9 +10,10 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**ARCHIVED**
 
-APPROVED 2026-10-02 by the user
+ARCHIVED 2026-10-05 — not run; was APPROVED (superseded by
+docs/plans/2026-10-05-fnox-dev-only)
 
 ## Consent
 
