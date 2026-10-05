@@ -149,6 +149,23 @@ as it stands and nothing is appended. A line is never dropped silently: an
 empty list is said as `no lines of its own`. A later run finds the markers
 and leaves every line below them alone, so the append is made once.
 
+**`.gitattributes` keeps its own lines too, though it carries no markers.**
+The skill owns that file whole, so its `write` row on a repo's existing file
+drops every line the shipped one lacks — a `filter=` line for git-crypt,
+transcrypt or LFS among them, after which the paths it protected are
+committed in plaintext. `init` lists those lines under the row the same way,
+every attribute line the shipped file does not carry, and on `ok` appends
+them, unchanged and in order, to the end of the file the call wrote, on the
+same consent. With no marker to stand behind, the appended lines differ from
+the next render, so every later run's preview shows the file as a `write`
+row again whose removed lines are exactly those: `init` lists them under it
+once more and **preselects `keep-existing`**, so a reshape answered by
+default never drops them, and an `ok` there is the person removing them
+knowingly. The same rule covers any other line-per-entry file the skill
+takes whole that a repo already carries: list its own lines, append them on
+`ok`, preselect `keep-existing` while they stand. Nothing is dropped
+unshown.
+
 **Then `init`'s own hygiene assets**, from
 `${CLAUDE_PLUGIN_ROOT}/skills/init/assets/hygiene/`, laid down as
 [hygiene assets](readme-and-license.md) states — no adapter fetch and no

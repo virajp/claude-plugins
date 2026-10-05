@@ -222,8 +222,9 @@ consent, and none where the repo carries none of it:
 - **The lock record.** The `repo-hygiene/repo-hygiene` record is removed —
   the ignore, attributes and graph-ignore files are the skill's `all` call's
   now, whose preview shows a file with no marker pair as one `write` row
-  replacing it whole — an ignore file's own lines listed under it and
-  re-appended below the markers, per [new repo](new-repo.md) §2. The files
+  replacing it whole — each file's own lines, the attributes file's
+  included, listed under it and re-appended on `ok`, per
+  [new repo](new-repo.md) §2. The files
   it recorded that the hygiene assets now carry lose their record and keep
   their content, on the already-there rule.
 - **`.editorconfig`.** Nothing lands it any more. One at the root whose hash
