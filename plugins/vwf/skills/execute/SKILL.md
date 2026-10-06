@@ -10,8 +10,9 @@ description: Execute an approved plan folder — a cycle plan from /vwf:plan or
   and UX pass and the blueprint reconcile run when the plan has a covers list.
   It claims the plan's row in docs/plans/index.md through plan-management,
   keeps a run log the final report renders, lands per the plan's recorded
-  consent — archiving the folder when no gap is open — and runs each
-  after-landing step on the mode the plan recorded, run or ask.
+  consent — archiving the folder when no gap is open — and runs every
+  after-landing step the plan recorded, each `run`. It asks the user nothing
+  at run time — every answer is in the folder.
   Invoke as /vwf:execute <plan-folder> or /vwf:execute next — the latter asks
   plan-management for the runnable plan of highest priority in
   docs/plans/index.md, of either kind. Requires an approved plan folder in
@@ -39,14 +40,20 @@ two reviewers over the branch delta since the previous review row, with
 findings looped back to the owning units' coders before it counts as done.
 Acceptance and UX conformance run once after all units when the plan has
 `covers:`. There are **no per-stage human gates** — decisions come from the
-**Autonomous Rules** below, and the run stops only at the **Pause
-Conditions**, at the **final report** when something stands in the way of the
-landing, and once before each after-landing step whose recorded mode is
-`ask`. You own the orchestration and dispatch the five stage subagents —
+**Autonomous Rules** below, and the run stops only at a runtime stop — the
+**Pause Conditions**, or the **final report** when something stands in the way
+of the landing — each reported with its resume command. You own the
+orchestration and dispatch the five stage subagents —
 `execute-coder` for `code` units, `execute-code-reviewer` and
 `execute-security-reviewer` at `review` rows, `execute-acceptance-verifier`
 and `execute-ux-reviewer` once per plan — the unit agents for `edit` units,
 and the wave reviewer for every wave.
+
+**Execute asks the user nothing.** Every answer a run could need was asked by
+the planner and recorded in the folder; where the folder is silent and the
+rules below do not decide, the run reports what is missing and stops — it
+never offers a choice, waits for a yes, or asks how to proceed. A fix goes
+into the folder, and the person re-runs `/vwf:execute <folder>`.
 
 Run it in a session that has done nothing else. It cannot check that, so the
 plan's launch line says it and this skill trusts it.
@@ -96,9 +103,13 @@ so a walk would report the product's plans as a function of what happens to be
 cloned. Halt if no approved plan exists: "No approved plan found. Run
 `/vwf:plan` or `/vwf:change-plan` first."
 
-**Halt if the target repo is absent.** Offer the consent-gated clone first; on
-decline, **stop**. Unlike `plan` and `doctor`, there is no honest partial
-result — you cannot write code into a repo you do not have.
+**Halt if the target repo is absent.** Report the missing repo and the command
+that fetches it, per `${CLAUDE_PLUGIN_ROOT}/assets/membership.md` —
+`git submodule update --init <path>` under submodule linkage,
+`git clone <url> <path>` under siblings — and **stop**; the run clones
+nothing. The person fetches it and re-runs `/vwf:execute <folder>`. Unlike
+`plan` and `doctor`, there is no honest partial result — you cannot write code
+into a repo you do not have.
 
 **Read the folder.** Resolve `$ARGUMENTS` to `<folder>/index.md` — a folder
 shaped by `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`; `execute`
@@ -136,8 +147,9 @@ tip, the way the contract's *Reading the queue* reads it. Then:
   merged Reconcile commit, an executed-but-unmerged prerequisite correctly
   halts too. For a **change** entry, say "run /vwf:execute <that folder>
   first" when its row is `APPROVED` and "another session is running <that
-  folder>; wait for it to land — or, when that run is gone, ask to unclaim
-  it" when it is `RUNNING`. An entry the verb names
+  folder>; re-run this plan once it lands — or, when that run is gone, make
+  the `plan-management unclaim <that folder>` request yourself" when it is
+  `RUNNING`. An entry the verb names
   as unresolvable → "<entry> is neither in the plan index nor archived; fix
   the `requires:` line by hand".
 - Status `APPROVED` with no row at all → stop: "not in the plan index; re-run
@@ -161,8 +173,9 @@ tip, the way the contract's *Reading the queue* reads it. Then:
   fix — edit the folder by hand in the worktree, then re-launch: a non-green
   `code` unit with no `review` row ahead that covers it (add a `NN-review.md`
   and its row), since it would land with no review; and an After landing
-  table with no *Mode* column, or a step whose mode is neither `run` nor
-  `ask` (re-record the step).
+  table with no *Mode* column, or a step whose mode is not `run` — an `ask`
+  step included, a mode no longer issued — naming the planner to re-run on
+  the step, `/vwf:plan` or `/vwf:change-plan` by the folder's `type:`.
 - Status `APPROVED` with an `APPROVED` row → a fresh run. Seven refusals are
   read off the folder here, before the claim, each stopping the run with the
   fix — amend the row and re-approve the plan — since execute runs what is
@@ -178,9 +191,11 @@ tip, the way the contract's *Reading the queue* reads it. Then:
   wave than itself that no earlier `review` row covers (the range would carry
   that unit's commits while the coverage would not, so the row's range and
   its coverage must agree) — naming the row and the unit. **An After landing
-  table with no *Mode* column, or a step whose mode is neither `run` nor
-  `ask`** — the planner that wrote it re-records the step; a section reading
-  `none`, with no table, is valid and exempt. The last three read the backlog
+  table with no *Mode* column, or a step whose mode is not `run`** — an `ask`
+  step included, a mode no longer issued — naming the planner that wrote it,
+  `/vwf:plan` or `/vwf:change-plan` by the folder's `type:`, to re-run and
+  record the step `run` or drop it; a section reading `none`, with no table,
+  is valid and exempt. The last three read the backlog
   lists against Parked, since a landing turns `backlog:` into `Done` and
   `backlog_pieces:` into `Partially done` and checks nothing else; each names
   the id, and the fix is to move the id to the list its Parked lines say it
@@ -229,10 +244,12 @@ only, and the folder's status line keeps the run detail.
 ## Format Check
 
 With `covers:`, before the first unit, run the preflight in
-`${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`. Since the run is autonomous: if
-the format drift is **non-blocking**, log it and continue; if it is **blocking**
-(the run needs an artifact the old format lacks), **pause** for `/vwf:setup` per
-the pause rules — never migrate autonomously. Without `covers:` the check is
+`${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`, taking its report and never its
+offer — the run asks nothing. If the format drift is **non-blocking**, log it
+and continue; if it is **blocking** (the run needs an artifact the old format
+lacks), it is a **blocking-gap stop** per the Pause Conditions: report the
+drift, name `/vwf:setup` as what reconciles it, and give the resume command —
+never migrate autonomously. Without `covers:` the check is
 skipped — one Run log row saying so, journaled — since the plan reads no
 blueprint artifact.
 
@@ -270,8 +287,8 @@ otherwise.
   Reorder only to honor a real dependency
   the table left implicit. If the derivation finds a **cycle or genuine
   ambiguity**, fall back to the table's **written order** as-is; if even that
-  is not executable, treat it as an **uncovered decision** and pause (per the
-  Pause Conditions) — never invent an order.
+  is not executable, it is a **blocking-gap stop** (per the Pause Conditions)
+  naming the order the folder must state — never invent an order.
 - **One plan, one worktree.** Via `/vwf:git-workflow`, create a dedicated
   isolated worktree for this plan — declared preference: **yes, isolate; do not
   prompt**. Implement everything there and **commit each unit autonomously** (no
@@ -444,8 +461,11 @@ second, per the Resume check.
   against another finding). These can never be downgraded to gaps, so the loop
   has nowhere to exit to. Pause with the finding, the rounds tried, and what
   each round changed.
-- **Uncovered irreversible decision** — any decision the rules above do not
-  cover that is irreversible or outward-facing. Pause and ask.
+- **Uncovered decision** — any decision the rules above and the folder do not
+  cover that is irreversible or outward-facing, an ambiguous wave order the
+  written order cannot settle, or blocking format drift. It is a
+  blocking-gap stop: commit what is safe, write the gap section, report the
+  ruling the folder needs, and give the resume command. Never ask.
 
 Everything else is decided from the rules — do not pause for routine approvals.
 Destructive operations (`--force`, `reset --hard`, deleting files the run did
@@ -758,13 +778,20 @@ the gap list holding no blocking gap, prepare the landing commit:
    `plan-management status <folder> RUNNING "RUNNING — ready to land by hand on <branch>"`
    on `no`.
 3. **The folder.** On `yes`, when the gap list is **empty**, invoke
-   `plan-management archive <folder>` in the worktree — it moves the folder to
+   `plan-management archive <folder>` in the worktree, with the declared
+   preference **do not ask** — on any completion warning the verb raises, the
+   folder is **not** archived: it stays live at its path, the backlog split
+   below is made instead, the Status block still reads `COMPLETE`, the row
+   still goes `COMPLETE` at the merge, and the final report names the warning
+   and the `plan-management archive <folder>` request to make once it is
+   settled. Archived, it moves the folder to
    `docs/plans/archived/`, leaves the `COMPLETE` block as written, closes the
    `backlog:` ids through `/vwf:backlog done` and records the
    `backlog_pieces:` ids through `/vwf:backlog partial`, marks the run's
    mempalace drawer archived, and edits no row, since the index never rides a
    run branch. The folder is finished and the archive is its record. When any
-   gap is **open**, or on `no`, `archive` is not invoked: the folder stays live
+   gap is **open**, or on `no`, `archive` is not invoked — and when it warned,
+   it archived nothing: the folder stays live
    at its path — as the working record of what needs reconciling, or for the
    hand merge — and the same split is made here instead: when index.md's
    `backlog:` names ids, invoke `/vwf:backlog done <ids> <folder>`, and when
@@ -797,83 +824,66 @@ Then act on that consent row:
 
 When any landing condition fails — a red gate line, a unit that is not green,
 a blocking gap → **stop at the report** with what failed and the exact resume
-command, `/vwf:execute <folder>`. The worktree stays committed; the folder's
-Status reads `BLOCKED` with the detail. Two things a user can say at that stop:
-
-- **Fix first** → the user names what to address → loop the affected units back
-  through their pipeline: a `code` unit's coder re-dispatched with the
-  finding, an `edit` unit re-dispatched with the finding appended, each
-  committed; then, for a unit of either Kind a `review` row covers, the last
-  covering row re-run over the fix commits per *Late loop-backs re-run the
-  last row* in [review-unit.md](references/review-unit.md), with its `R-late`
-  contract review; re-verify acceptance/ux if touched; then re-present the
-  report and re-read the Consent block.
-- **Reject** → leave the worktree intact and committed for inspection; nothing
-  merges.
+command, `/vwf:execute <folder>`. The worktree stays committed and nothing
+merges; the folder's Status reads `BLOCKED` with the detail. The report lists
+each failed condition — the gate line, the unit and its outcome, the blocking
+gap — and the run ends there, asking nothing. A fix goes into the folder — a
+ruling into the unit file or the decisions table, a finding appended to the
+unit — and the person re-runs `/vwf:execute <folder>`, whose resume loops the
+affected units back through their pipeline per
+[blocking and resume](references/blocking.md).
 
 **Gap reconciliation (after the landing) — with `covers:`.** Whatever the
-landing decision, walk the consolidated gap list and offer to close each —
-**never silently rewrite either doc**: blueprint holes → `/vwf:blueprint` (the
-sweep re-stamps coverage); plan holes → `/vwf:plan` to re-derive the slice
-against the now-updated blueprint. When a gap is reconciled, note its
-resolution back into the `gaps` room so a later cycle's recall sees it as
-closed. Once no gap is open, the folder that stayed live is retired by asking
-the session to archive it — `plan-management archive <folder>`, which the user
-reaches in prose, never by a typed command — so say that and stop there.
+landing decision, list each gap in the consolidated gap list with the command
+that closes it, and offer nothing — **never silently rewrite either doc**:
+blueprint holes → `/vwf:blueprint` (the sweep re-stamps coverage); plan holes →
+`/vwf:plan` to re-derive the slice against the now-updated blueprint. Whoever
+closes a gap notes its resolution back into the `gaps` room so a later cycle's
+recall sees it as closed. Say too that once no gap is open, the folder that
+stayed live is retired by the `plan-management archive <folder>` request,
+which the person makes in prose, never by a typed command.
 
 **Chain forward — with `covers:`.** Scan the one table of the base repo's
 `docs/plans/index.md` — not a walk of the members, most of which are not cloned
-here — for rows whose `Requires` names the folder just completed. If one is
+here — for rows whose `Requires` names the folder just completed. For each one
 now unblocked (`plan-management resolve <that folder>` returns *runnable*, per
 the contract's *Resolution* in
 `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`),
-offer `/vwf:execute <next-folder>` — chained plans land one focused run at a
-time.
+print its launch line, `/vwf:execute <next-folder>`, for a fresh session —
+chained plans land one focused run at a time — and launch nothing.
 
-## After landing — each step runs on the mode the plan recorded
+## After landing — every step runs as the plan recorded it
 
-Read index.md's **After landing** table. Each step carries a *Mode*, `run` or
-`ask`, decided at the planner's interview and written there. On a **green
-landing** — the branch merged and pushed per the Consent row — the steps go in
-table order: a `run` step runs with no prompt, since the `run` recorded in the
-folder is its authorisation, consented at the interview that wrote it; before
-an `ask` step the run stops once, reports what the step would do in the step's
-own terms, and waits — a yes authorises exactly that step and nothing else. A
+Read index.md's **After landing** table. Every step carries the *Mode* `run`,
+decided at the planner's interview and written there. On a **green landing** —
+the branch merged and pushed per the Consent row — the steps run in table
+order from the main checkout, with no prompt: the `run` recorded in the folder
+is each step's authorisation, consented at the interview that wrote it. A
 release step recorded `run` runs on the same terms. An empty table, or `none`,
 skips this section and is said in one clause. A table with no *Mode* column or
-an unknown mode never reaches here: preflight refused it, on a fresh run and a
-resume alike.
+a mode other than `run` never reaches here: preflight refused it, on a fresh
+run and a resume alike.
 
-The steps run from the repo root the landing left behind: the main checkout
-when the branch merged, the worktree when it did not — and when the branch did
-**not** merge, whether the landing was not consented or was consented and the
-merge hit a conflict (the hard halt of the `yes` branch above — the folder's
-Status reads `BLOCKED` with the files), only those steps whose *Notes* say
-they may run from the
-worktree are offered, and every one of them as an `ask`: a `run` step's
-authorisation was for a green landing, and this is not one. The orchestrator
-runs them, never a unit — a step may mutate the machine rather than the tree
-under review, and a unit never reaches outside the worktree.
+When the branch did **not** merge — the landing was not consented, or was
+consented and the merge hit a conflict (the hard halt of the `yes` branch
+above — the folder's Status reads `BLOCKED` with the files) — **no step
+runs**: a step's authorisation was for a green landing, and this is not one.
+The report lists every step with its command, to run by hand after the hand
+merge. The orchestrator runs the steps, never a unit — a step may mutate the
+machine rather than the tree under review, and a unit never reaches outside
+the worktree.
 
-**Before an `ask` step, offer waiting as the equal option, not the fallback.**
-Where a step stages something, it is exercised only in a restarted session —
-so "not yet, I want to look first" is the answer the two-stage shape exists to
-make easy. Say that the table names the remaining steps whenever the user comes
-back to them.
-
-Each step taken is reported with its outcome:
+Each step is reported with its outcome:
 
 - **Ran.** Say what it did in the step's own terms. A step whose *Notes* say a
   **restarted** session is needed for its effect is reported with that sentence
   — this session already loaded what the step replaced.
-- **Exited non-zero.** Report the failure verbatim, stop running — the
-  remaining steps, `run` or `ask`, are offered rather than run, since a step
-  after a failed one may assume its effect — and never work around it. A step
-  that refuses is usually a fact about the machine rather than a failure of the
-  run, and the plan named that step, not a substitute for it.
-
-If the branch did not merge and no step may run from the worktree, there is
-nothing to offer yet; say so in the final line and stop.
+- **Exited non-zero.** Report the failed step, its exit code and its output
+  verbatim, and stop: the remaining steps do **not** run, since a step after a
+  failed one may assume its effect, and the report names each step not run
+  with its command. Never work around it. A step that refuses is usually a
+  fact about the machine rather than a failure of the run, and the plan named
+  that step, not a substitute for it.
 
 ## What does not stop the run
 
@@ -882,10 +892,10 @@ pause to re-ask a ruling, confirm a unit's scope, report progress between units
 or waves, ask whether to continue after a green gate, ask before a commit, ask
 before the claim or the landing row, ask about a missing LSP server, or ask
 what to do about a gap or a `GAP:` — a gap is recorded and the stated
-assumption stands until the final report. It pauses on the Pause Conditions —
-an inherited red preflight, a merge conflict, a resource cap among them — at
-the report when the landing conditions fail, and once before each
-after-landing step recorded `ask`. Everything else is recorded in the Run log
+assumption stands until the final report. It stops at the Pause Conditions —
+an inherited red preflight, a merge conflict, a resource cap among them — and
+at the final report, nowhere else, and at neither does it ask: each stop is a
+report with its resume command. Everything else is recorded in the Run log
 and answered at the end.
 
 ## What this skill never does
@@ -899,14 +909,16 @@ and answered at the end.
 - Runs a generator or bumps a version outside the gates-and-bump unit — a
   consented after-landing step is the one exception, and it is the
   orchestrator's because it may write outside the worktree
-- Runs an `ask` step without the in-the-moment yes, runs a `run` step on a
-  landing that was not green, or merges past the integration branch
+- Asks the user anything at run time
+- Runs an after-landing step on a landing that was not green, or merges past
+  the integration branch
 - Edits `docs/plans/index.md` or a folder's Status block itself — every such
   edit is a `plan-management` verb, the index one only in the main checkout,
   and never a row but its own plan's and the sweep the landing's `complete`
   applies
-- Takes a `RUNNING` row, however stale — `unclaim` on the user's ask, once its
-  worktree is gone, is the only release
+- Takes a `RUNNING` row, however stale, or invokes `unclaim` — the person's
+  own `plan-management unclaim <folder>` request, once its worktree is gone,
+  is the only release
 - Edits the backlog itself, or lets a unit do it — `/vwf:backlog` owns the
   project, and the landing calls it, `done` for `backlog:` and `partial` for
   `backlog_pieces:`

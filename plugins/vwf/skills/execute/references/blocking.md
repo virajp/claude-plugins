@@ -28,9 +28,9 @@ answered in the final report.
   to run. Go straight to the final report.
 
 Either way the run stops **once**, at the final report, with every ruling needed
-listed together — one question per blocked unit, specific enough that the answer
-is a sentence the user pastes into the plan. Never mid-wave, never "how should I
-proceed".
+listed together — one per blocked unit, specific enough that the answer is a
+sentence the user pastes into the plan — and the resume command. The report
+asks nothing: never mid-wave, never "how should I proceed".
 
 ## The mechanical re-dispatch
 
@@ -61,16 +61,14 @@ row is released only by `plan-management`'s `unclaim`, on the user's ask.
 A re-run against `BLOCKED` or `RUNNING`:
 
 1. Confirm the worktree in the status line exists. If it does not, the run
-   cannot resume — say so, report it, and **offer** the reset: "the run's
-   worktree is gone; unclaim `<folder>` so it can be claimed afresh?" On yes,
-   invoke `plan-management unclaim <folder>` in the main checkout — the verb
-   in `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/SKILL.md`, which proves
-   the worktree absent, never touches the run's branch, asks once, then resets
-   the row and the folder's Status block to `APPROVED` — commit and push what
-   it reports through `/vwf:git-workflow` on the integration branch
-   (`docs: plan queue — <folder> unclaimed`), relay its note on the stale
-   branch, and end: the fresh claim is a new `/vwf:execute <folder>`. On no,
-   end with the row as it was; nothing takes a `RUNNING` row otherwise.
+   cannot resume — report it and **stop**, with the row as it was. The report
+   names the request the person makes to reset it, in prose to a session:
+   `plan-management unclaim <folder>` — the verb in
+   `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/SKILL.md`, which proves the
+   worktree absent, never touches the run's branch, and resets the row and
+   the folder's Status block to `APPROVED` — then the fresh claim, a new
+   `/vwf:execute <folder>`. Execute never invokes `unclaim` itself; nothing
+   takes a `RUNNING` row otherwise.
 2. The index row stays `RUNNING` through the resume and is not touched. A row
    found reading `APPROVED` was unclaimed, and the Resolve step claims it
    again before continuing.
