@@ -34,6 +34,8 @@ ignores:
   - "plugins/*/stacks/*/*/templates/**"
   # JSONC once it carries the tool-config markers.
   - "plugins/stackgen/skills/tool-config/assets/.config/dprint.json"
+  # The gitignored dev-marketplace staging copies of plugins/ — linted at source.
+  - ".dev-marketplace/**"
 
 overrides:
   markdown:
