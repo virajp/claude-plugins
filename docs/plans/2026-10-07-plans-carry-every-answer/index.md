@@ -11,9 +11,10 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-10-07 by the user
+RUNNING since 2026-10-07 in
+/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-10-07-plans-carry-every-answer
 
 ## Consent
 
@@ -156,13 +157,13 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                                      | Kind | Owns                                                                                                                                                                                                                                                              | Depends on | Status  | Commit |
-| -- | ---- | ---------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-execute.md](01-execute.md)                 | edit | `plugins/vwf/skills/execute/**`                                                                                                                                                                                                                                   | —          | pending |        |
-| U2 | 1    | [02-planners.md](02-planners.md)               | edit | `plugins/vwf/skills/change-plan/SKILL.md`, `plugins/vwf/skills/plan/SKILL.md`, `plugins/vwf/assets/plan-interview.md`, `plugins/vwf/assets/templates/plan-folder.md`                                                                                              | —          | pending |        |
-| U3 | 1    | [03-plan-management.md](03-plan-management.md) | edit | `plugins/vwf/skills/plan-management/**`                                                                                                                                                                                                                           | —          | pending |        |
-| U4 | 2    | [04-docs.md](04-docs.md)                       | edit | `CLAUDE.md`, `readme.md`, `.claude/skills/vwf-plugin/**`, `.claude/skills/release/SKILL.md`, `.claude/docs/ci-and-releases.md`, `site/src/content/docs/**`, `docs/memory/decisions/2026-10-07-plans-carry-every-answer.md`, and any other passage docs-sync finds | U1, U2, U3 | pending |        |
-| U5 | 3    | [05-gates-and-bump.md](05-gates-and-bump.md)   | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`                                                                                                                                                                                       | U4         | pending |        |
+| Id | Wave | Unit file                                      | Kind | Owns                                                                                                                                                                                                                                                              | Depends on | Status  | Commit      |
+| -- | ---- | ---------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ----------- |
+| U1 | 1    | [01-execute.md](01-execute.md)                 | edit | `plugins/vwf/skills/execute/**`                                                                                                                                                                                                                                   | —          | green   | 933e52bb    |
+| U2 | 1    | [02-planners.md](02-planners.md)               | edit | `plugins/vwf/skills/change-plan/SKILL.md`, `plugins/vwf/skills/plan/SKILL.md`, `plugins/vwf/assets/plan-interview.md`, `plugins/vwf/assets/templates/plan-folder.md`                                                                                              | —          | green   | be3c1546    |
+| U3 | 1    | [03-plan-management.md](03-plan-management.md) | edit | `plugins/vwf/skills/plan-management/**`                                                                                                                                                                                                                           | —          | green   | see run log |
+| U4 | 2    | [04-docs.md](04-docs.md)                       | edit | `CLAUDE.md`, `readme.md`, `.claude/skills/vwf-plugin/**`, `.claude/skills/release/SKILL.md`, `.claude/docs/ci-and-releases.md`, `site/src/content/docs/**`, `docs/memory/decisions/2026-10-07-plans-carry-every-answer.md`, and any other passage docs-sync finds | U1, U2, U3 | pending |             |
+| U5 | 3    | [05-gates-and-bump.md](05-gates-and-bump.md)   | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`                                                                                                                                                                                       | U4         | pending |             |
 
 ## Shared-file rule
 
@@ -280,8 +281,20 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit               | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                          | Commit   |
+| ---- | ------------------ | ----- | ----- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 0    | preflight          | —     | 1     | pass        | doctor: no blocking (repo not onboarded, no .config/vwf.yaml — noted); wave gate 7/7 green                                                                                                                                                                                                                                      | —        |
+| 0    | format-check       | —     | —     | skipped     | why: no covers: — plan reads no blueprint artifact                                                                                                                                                                                                                                                                              | —        |
+| 0    | conventions        | —     | —     | skipped     | why: no code unit                                                                                                                                                                                                                                                                                                               | —        |
+| 1    | U2 planners        | opus  | 1     | pass        | edit; DECIDED: E's closing line as a paragraph after item 18, not a numbered item (no renumber); GAP: verify grep false positives ("or task") at change-plan:273, plan-interview:119                                                                                                                                            | —        |
+| 1    | U3 plan-management | opus  | 1     | pass        | edit; DECIDED: archive's "do not ask" preference in words, not a new flag; removed execute→unclaim caller rows (contradicted D6)                                                                                                                                                                                                | —        |
+| 1    | U1 execute         | opus  | 1     | pass        | edit; DECIDED: description uses a dash, not a colon (strict YAML); 4 residual "offer" hits are negations/other skills; GAP: plan cites execute/references/format-check.md, real file is assets/format-check.md (outside Owns) — handled in SKILL.md; DOCS FALSIFIED: assets/format-check.md:23-24, plan-management SKILL.md:426 | 933e52bb |
+| 1    | R1                 | opus  | 1     | findings(5) | fold width plan/SKILL.md:339, plan-management/SKILL.md:364, plan-interview.md:154; D8 completeness plan-index.md:66, plan-management/SKILL.md:244 (empty gap list no longer always archives); CONTRACT clean; RULINGS clean; gate grep clean                                                                                    | —        |
+| 1    | U2 planners        | opus  | 2     | pass        | edit; R1 fixes: refolded plan/SKILL.md:339 and plan-interview.md:154, wording unchanged                                                                                                                                                                                                                                         | be3c1546 |
+| 1    | U3 plan-management | opus  | 2     | pass        | edit; R1 fixes: refold SKILL.md:364; D8 archive-at-landing needs empty gap list and no completion warning (SKILL.md:244, plan-index.md complete row, completion step, Folder cell)                                                                                                                                              | —        |
+| 1    | R1                 | opus  | 2     | findings(3) | round-1 #1-5 verified fixed; new on U1: stub lines execute/SKILL.md:46,:198,:250,:786,:794; description :13 omits the completion-warning case of D8; CONTRACT clean; RULINGS clean                                                                                                                                              | —        |
+| 1    | R1                 | opus  | 2     | contested   | loop at its two-round cap; the 3 U1 findings above stand as contested residue (fold width, description wording)                                                                                                                                                                                                                 | —        |
+| 1    | gate               | —     | 1     | pass        | wave gate 7/7 green (code:precommit after its fix pass); no UNRESOLVED                                                                                                                                                                                                                                                          | —        |
 
 ## Launch
 
