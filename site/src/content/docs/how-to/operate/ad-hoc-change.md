@@ -118,19 +118,20 @@ are worth answering carefully:
   the repo has no task runner and no stamp, the answer is `none`, and the plan
   says plainly that the wave review is then the only gate.
 - **The after-landing steps.** What happens once the branch is in. Each one is
-  recorded `run` or `ask`, here, whether it stages something on your machine or
-  ships a release: a `run` step runs on a green landing without a prompt — the
-  yes you give now is the consent — and an `ask` step stops the run once before
-  it and waits. An empty list is a perfectly good answer.
+  recorded `run`, here, or dropped, whether it stages something on your machine
+  or ships a release: a `run` step runs on a green landing without a prompt —
+  the yes you give now is the consent. A step you want to check first is
+  dropped, and you run it by hand later; the run never stops to ask. An empty
+  list is a perfectly good answer.
 - **The release intent.** Per project the change touches: does a user see a
   difference, and what command ships it. Recorded as `none`, `patch`, `minor` or
   `major`. Relay's answer is `none` — CI plumbing, no user-visible change — so
   nothing ships and the version stays put.
 
-A release recorded here is **intent, not authorization** — unless its
-after-landing step is recorded `run`, in which case this answer is the consent
-and the run ships it on a green landing. Saying `minor` with an `ask` step, or
-no step, authorizes nothing; the run still stops and asks in the moment.
+A release recorded here is **intent only** — unless its after-landing step is
+recorded `run`, in which case this answer is the consent and the run ships it on
+a green landing. Saying `minor` with no step authorizes nothing: the change
+waits for a later release, cut by hand.
 
 ### 3. Approve the shape, then walk away
 
@@ -226,7 +227,7 @@ hand-written step from the contributing guide.
 The orchestrator never reads a unit's files itself, so a long run costs you the
 size of the reports, not the size of the diff.
 
-### 5. Read the report, then answer the one question
+### 5. Read the report
 
 The final report is rendered from the run log rather than from memory — by then
 the run may have spanned dozens of dispatches. It gives you every unit with its
@@ -243,15 +244,14 @@ instead, to be archived when you ask), and lands per the consent you recorded.
 Once the merge is in, one more commit on the integration branch sets the plan's
 row to `COMPLETE`, pointing at the archived folder, and drops every `COMPLETE`
 row that no waiting plan still requires — the queue only ever holds what is
-waiting, running, or still needed. Then it walks the after-landing steps on the
-mode you recorded: a `run` step runs without a prompt, and before an `ask` step
-it stops **once** to say what the step would do and wait for your yes — that yes
-covers that step and nothing else.
-
-"Not yet" is offered as an equal option, not a fallback — where a step stages
-something, only a **restarted** session will pick it up. Coming back to the
-remaining `ask` steps tomorrow is a normal ending, and the table still names
-them.
+waiting, running, or still needed. Then it runs the after-landing steps, every
+one recorded `run`, in order and without a prompt — where a step stages
+something, only a **restarted** session will pick it up. A step that fails stops
+the rest, and the report names it, its exit code and each step not run. If the
+branch did not merge, no step runs; the report lists each with its command, for
+after your hand merge. If the archive raises a completion warning, the folder
+stays live, the row still goes `COMPLETE`, and the report names the warning and
+the archive to ask for once it is settled.
 
 ## When it stops early
 
@@ -302,8 +302,8 @@ the next plan's recall still reads it.
   adjacent it looks once the run is underway. That is what the next plan's
   recall is for.
 - **It will not release anything you did not consent to.** A publishing step
-  recorded `run` ships because you said so at the interview; one recorded `ask`,
-  or a release intent with no step behind it, stops the run and asks.
+  recorded `run` ships because you said so at the interview; a release intent
+  with no step behind it ships nothing, and the run does not ask.
 
 ## Where to go next
 

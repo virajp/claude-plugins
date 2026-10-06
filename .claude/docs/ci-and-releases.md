@@ -94,11 +94,10 @@ mise run p:plugins:release                                 → creates + pushes 
 
 The third line is the **local half** of a release: it publishes nothing, commits
 nothing and cuts no tag. `/vwf:execute` — the folder named, or `next` — runs it
-as the plan folder's after-landing step in the mode the interview recorded: a
-`run` step runs on a green landing without a prompt, an `ask` step stops the run
-once before it — and the author's next **restarted** session is on the plugin
-that just landed. Only the last line reaches users, and it is the one
-`CLAUDE.md`'s hard rule guards.
+as the plan folder's after-landing step, recorded `run` at the interview: it
+runs on a green landing without a prompt — and the author's next **restarted**
+session is on the plugin that just landed. Only the last line reaches users, and
+it is the one `CLAUDE.md`'s hard rule guards.
 
 The tracked version is always plain `X.Y.Z` — `p:plugins:check` fails a manifest
 carrying build metadata, and fails one whose version has a **13 or 17

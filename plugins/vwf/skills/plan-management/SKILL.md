@@ -170,7 +170,9 @@ units are worth keeping. The verb never deletes a branch.
 
 **Consent.** Print what was found — the row `RUNNING`, the worktree absent,
 the branch present or absent, the Status detail line — and ask once: reset
-`<folder>` to `APPROVED`? A no ends the verb with nothing edited.
+`<folder>` to `APPROVED`? A no ends the verb with nothing edited. `unclaim` is
+a person's request alone: `/vwf:execute` never invokes it — its resume path
+names the `unclaim <folder>` request for the person to make.
 
 **The edits.** The row's `Status` cell `RUNNING` → `APPROVED`, nothing else in
 the row. The folder's Status block: when it already reads `**APPROVED**`,
@@ -217,6 +219,14 @@ re-applies the same row until it lands, and never re-picks.
 Retire a plan folder. **Never delete** — archive. `--force` overrides the one
 refusal in step 2, and nothing else.
 
+**The declared preference "do not ask".** A caller that cannot wait on a
+person — `/vwf:execute` at its landing — invokes `archive <folder>` declaring
+the preference *do not ask*. With it, the verb asks nothing: a completion
+warning in step 2 neither archives nor asks — the verb returns each warning to
+its caller and stops, the folder left live and the row as the caller set it —
+and a destination collision in step 3 takes the suffix. Without it, the verb
+asks as below: a person asked to archive, and is there to answer.
+
 **1. Resolve which plan(s).**
 
 - If `<folder>` names a **directory**, read its `index.md` frontmatter. A
@@ -231,13 +241,14 @@ refusal in step 2, and nothing else.
     offered; a `RUNNING` row belongs to a live `/vwf:execute` run, so it is
     shown marked *in flight* and left out of the offer; a `COMPLETE` row is
     offered only while its `Folder` still points under `docs/plans/` — a
-    landing whose gap list was empty moved the folder and re-pointed the row
-    under `archived/`, so that row is not offered — it is swept, or waits on a
-    `Requires`; a landing with an open gap left the folder live as the working
-    record, its row `COMPLETE` at the live path, and the sweep never removes a
-    row whose `Folder` is a live path, so it waits here until the move. Either
-    way the plan's kind does not matter. Read the index, never walk the
-    members;
+    landing whose gap list was empty and whose `archive` returned no
+    completion warning moved the folder and re-pointed the row under
+    `archived/`, so that row is not offered — it is swept, or waits on a
+    `Requires`; a landing with an open gap or a completion warning left the
+    folder live as the working record, its row `COMPLETE` at the live path,
+    and the sweep never removes a row whose `Folder` is a live path, so it
+    waits here until the move. Either way the plan's kind does not matter.
+    Read the index, never walk the members;
   - then glance at the folders directly under `docs/plans/` of the current
     repo: any `<date>-<name>/index.md` reading either `type:` with no row is
     listed as **unindexed**, so a hand-made folder is still visible and can be
@@ -247,8 +258,9 @@ refusal in step 2, and nothing else.
   a folder in a repo you do not have is not something to fake.
 
 **2. Completion check.** Before moving, verify each plan is actually complete.
-**Warn and ask to proceed** — never refuse, save the one refusal below — when
-any of these are unfinished:
+**Warn and ask to proceed** — never refuse, save the one refusal below; under
+*do not ask*, warn and return without moving — when any of these are
+unfinished:
 
 - the folder's **Status block** does not read `COMPLETE` — `DRAFT`, `APPROVED`,
   `RUNNING` or `BLOCKED` means the run never landed. A warning, not a refusal:
@@ -273,6 +285,9 @@ any of these are unfinished:
   through those stamps, so this is the one check a dependent of it needs.
 
 Surface what's outstanding and let the user decide whether to archive anyway.
+Under *do not ask*, surface it to the caller instead: the warnings are the
+verb's return, nothing moves, and the caller reports the archive request to
+make later.
 
 **The one refusal — a backlog list that contradicts itself.** Read the
 frontmatter's `backlog:` list — the ids the plan **finishes** — and its
@@ -292,7 +307,8 @@ left. Closing it `Done` would close an item the folder itself says is open.
 `archive <folder> --force` archives anyway, and every id the refusal named is
 then landed as a piece — `partial`, **never** `done` (step 3's *Close the
 backlog items*). `--force` overrides this refusal and nothing else: the
-warnings above are still shown and still asked.
+warnings above are still shown and still asked — or, under *do not ask*, still
+returned.
 
 **3. Move (never delete).** Move the whole directory —
 `mv docs/plans/<date>-<name> docs/plans/archived/<date>-<name>` — unit files,
@@ -346,9 +362,9 @@ so the archive commit carries no backlog change.
 
 **Guard collisions.** Before each move, check the destination does **not**
 already exist. On a collision, suffix the archived name (e.g. `-2`) or ask the
-user — **never overwrite**. `mv` onto an existing directory **nests** it
-instead of failing, so check first. If a move fails, halt and report — do not
-delete or overwrite.
+user — under *do not ask*, suffix — **never overwrite**. `mv` onto an
+existing directory **nests** it instead of failing, so check first. If a
+move fails, halt and report — do not delete or overwrite.
 
 **4. Report and mark archived.** Report the moved paths, the row edit made or
 left for `complete`, and the commit message the caller should use —
@@ -423,9 +439,8 @@ carrying the procedure:
 | `/vwf:execute`                  | at preflight, on the named folder                                   | `resolve <folder>`                 |
 | `/vwf:execute`                  | before the worktree is cut                                          | `claim <folder>`                   |
 | `/vwf:execute`                  | at every Status change — start, pause, block, landing               | `status <folder> <state> [detail]` |
-| `/vwf:execute`                  | on a green landing with no open gap                                 | `archive <folder>`                 |
+| `/vwf:execute`                  | on a green landing with no open gap, declaring *do not ask*         | `archive <folder>`                 |
 | `/vwf:execute`                  | after the merge lands                                               | `complete <folder>`                |
-| `/vwf:execute`                  | on its resume path, on the user's yes once the worktree is gone     | `unclaim <folder>`                 |
 | a session, on the user's word   | the user asks to unclaim a stale plan                               | `unclaim <folder>`                 |
 | a session, on the user's word   | the user asks to retire a folder, or to see the queue               | `archive [folder]`, `list`         |
 
@@ -440,8 +455,9 @@ carrying the procedure:
 - **Re-point a `requires:` line.** An entry that resolves to nothing is named;
   the user fixes it by hand.
 - **Delete a folder.** Archive moves; nothing here removes.
-- **Decide whether a warning blocks.** Every completion warning asks; the user
-  decides.
+- **Decide whether a warning blocks.** Every completion warning asks and the
+  user decides — or, under *do not ask*, is returned to the caller and nothing
+  moves.
 - **Take a `RUNNING` row.** `next` never picks one and `claim` refuses one;
   a stale claim is released only by `unclaim`, on the user's consent, once the
   worktree it names is gone — never by a hand edit.

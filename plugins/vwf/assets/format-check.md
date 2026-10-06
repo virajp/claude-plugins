@@ -24,6 +24,10 @@ Steps:
      then offer `/vwf:setup`:
      > "This repo is on blueprint format `<N>`; vwf now ships `<M>`. Run
      > `/vwf:setup` to reconcile the tree to the current format."
+
+     `/vwf:execute` takes this report and never the offer: it asks nothing at
+     run time, so blocking drift ends its run as a blocking-gap stop, reported
+     with what is needed — `/vwf:setup` — and the resume command.
    - **No config and no blueprint tree at all** → not a drift case; the
      command's own bootstrap halt handles it.
 4. **Halt only if blocking.** Proceed with the requested operation when its

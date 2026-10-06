@@ -335,9 +335,10 @@ state what it returns: `10 + max` over the `Priority` column of every unarchived
 requires none of them — and which row it stands on. Item 10a places the `review`
 row(s) — one after the last code unit by default, an earlier one only on a
 ruling recorded in the decisions table. Items 16–18 produce the Consent block:
-the landing answer, the after-landing steps each carrying `run` or `ask`, and
-the release intent per project the units touch — a release step recorded `run`
-is authorised by item 18's answer; the LSP rows come from §2.
+the landing answer, the after-landing steps each carrying `run` — a step not
+confirmed `run` is dropped — and the release intent per project the units
+touch — a release step recorded `run` is authorised by item 18's answer; the
+LSP rows come from §2.
 
 ### 6. Present the shape — the approval gate (per chain element)
 
@@ -441,7 +442,9 @@ Verification names a gate line (a `review` row has none, by shape); every
 finding; every `backlog_pieces:` id has a `- Bnn:` Parked line, no id sits on
 both `backlog:` and `backlog_pieces:`, and no `backlog:` id has a `- Bnn:`
 Parked line; the derived priority matches what
-`plan-management priority <folder>` returns; the launch line names this folder.
+`plan-management priority <folder>` returns; every Consent row carries an
+answer, and no After landing step carries a mode other than `run`; the launch
+line names this folder.
 
 ### 8. Hand off
 

@@ -38,7 +38,7 @@ Header row, exactly:
 
 | Column        | Meaning                                                                                                          |
 | ------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `Folder`      | the folder's path relative to its repo's root, in a code span; moves under `docs/plans/archived/` at landing     |
+| `Folder`      | the folder's path relative to its repo's root, in a code span; moves under `docs/plans/archived/` when archived  |
 | `Kind`        | `cycle` or `change`, read from the folder's `type:` frontmatter — `vwf-plan` is `cycle`, `vwf-change-plan` is `change` |
 | `Plan`        | the plan's `title:` from its `index.md` frontmatter                                                              |
 | `Target repo` | for a cycle plan, the member repo whose code it changes, resolved per `assets/membership.md`; `—` for a change plan, and for any plan in a `repo` or `monorepo` topology |
@@ -58,13 +58,13 @@ The three statuses:
 
 ## Writers and their edits
 
-| Verb       | Caller                          | Edit                                                                                                                                                                                                                                                                                       |
-| ---------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `add`      | `/vwf:plan`, `/vwf:change-plan` | appends the row, `APPROVED`, in the planner's hand-off commit                                                                                                                                                                                                                              |
-| `claim`    | `/vwf:execute`                  | sets `RUNNING` — before the worktree is cut; the commit `docs: plan queue — <folder> running`                                                                                                                                                                                              |
-| `unclaim`  | a session, on the user's word   | sets `APPROVED` back from `RUNNING` — the one reverse edit, in the main checkout, once the run's worktree is gone and the user consents; invoked by a session on the user's word, or by `/vwf:execute`'s resume path on a yes; the commit `docs: plan queue — <folder> unclaimed`          |
-| `complete` | `/vwf:execute`                  | sets `COMPLETE` after the merge lands, re-pointing `Folder` under `archived/` when the landing archived the folder (an empty gap list) and leaving it at the live path otherwise — `archive` re-points it later — then runs the **sweep**; the commit `docs: plan queue — <folder> complete` |
-| `archive`  | a session, on the user's word   | applies the landing edit to one folder's row, in the commit of the session that asked; a folder with no row gets none                                                                                                                                                                      |
+| Verb       | Caller                          | Edit                                                                                                                                                                                                                                                                                                                                  |
+| ---------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `add`      | `/vwf:plan`, `/vwf:change-plan` | appends the row, `APPROVED`, in the planner's hand-off commit                                                                                                                                                                                                                                                                         |
+| `claim`    | `/vwf:execute`                  | sets `RUNNING` — before the worktree is cut; the commit `docs: plan queue — <folder> running`                                                                                                                                                                                                                                         |
+| `unclaim`  | a session, on the user's word   | sets `APPROVED` back from `RUNNING` — the one reverse edit, in the main checkout, once the run's worktree is gone and the user consents; invoked by a session on the user's word, never by `/vwf:execute`; the commit `docs: plan queue — <folder> unclaimed`                                                                         |
+| `complete` | `/vwf:execute`                  | sets `COMPLETE` after the merge lands, re-pointing `Folder` under `archived/` when the landing archived the folder (an empty gap list and no completion warning from `archive`) and leaving it at the live path otherwise — `archive` re-points it later — then runs the **sweep**; the commit `docs: plan queue — <folder> complete` |
+| `archive`  | a session, on the user's word   | applies the landing edit to one folder's row, in the commit of the session that asked; a folder with no row gets none                                                                                                                                                                                                                 |
 
 No verb commits: the caller named in each row commits the edit.
 
@@ -211,9 +211,10 @@ was taken.
    - **Completion** — the row `Status` to `COMPLETE`, then the sweep below.
      The `Folder` cell is re-pointed to `docs/plans/archived/<basename>` by
      whichever skill moves the folder: the completion edit itself when the
-     landing's gap list is empty and `/vwf:execute` archives the folder at
-     landing; the `archive` verb when a gap was open and the folder stayed
-     live as the working record. A `COMPLETE` row whose `Folder` is still a
+     landing's gap list is empty, `archive` returned no completion warning,
+     and `/vwf:execute` archives the folder at landing; the `archive` verb
+     when a gap was open or a completion warning left the folder live as the
+     working record. A `COMPLETE` row whose `Folder` is still a
      live path is one `archive` has yet to move, and the sweep leaves it alone
      until `archive`'s own landing edit re-points it.
 5. `git add -- docs/plans/index.md` — that file alone; nothing else the
@@ -267,9 +268,9 @@ sweep may remove it.
 
 ## After landing
 
-A plan folder's After landing table carries one *Mode* per step, `run` or
-`ask`, as the planner's interview recorded it. On a green landing
-`/vwf:execute` runs a `run` step in table order without a prompt — the `run`
-in the folder is its authorisation — and stops once before an `ask` step. A
-table with no *Mode* column, or a mode that is neither, is refused at
-execute's preflight.
+A plan folder's After landing table carries one *Mode* per step, and the mode
+is `run`: the planner's interview records every step it keeps as `run`, or
+drops it. On a green landing `/vwf:execute` runs every step in table order
+without a prompt — the `run` in the folder is its authorisation. A table with
+no *Mode* column, or a mode other than `run`, is refused at execute's
+preflight, naming the planner to re-run.

@@ -137,24 +137,30 @@ table says why.
 16. **Landing.** May a fully green run merge to the integration branch and push
     without a further prompt? Default when unanswered is **no**.
 17. **After-landing steps.** Walk the steps the planner proposed one at a time;
-    each is confirmed as `run`, `ask` or dropped, and the mode is written to the
-    After landing table. `run` means a green landing runs the step with no
-    prompt — the consent given here is the consent; `ask` means the run stops
-    once before it, reports what it would do, and waits. Where a step stages
-    something this session already loaded, say that a **restarted** session is
-    what picks it up. No steps at all is a valid answer.
+    each is confirmed as `run` or dropped, and `run` is written to the After
+    landing table. `run` means a green landing runs the step with no prompt —
+    the consent given here is the consent. A step the user wants to check
+    first is dropped, and run by hand later; the executor never stops before a
+    step to ask. Where a step stages something this session already loaded,
+    say that a **restarted** session is what picks it up. No steps at all is a
+    valid answer.
 18. **Release intent, per affected project.** Release to users or not, and
     `none` / `patch` / `minor` / `major`, together with the command that bumps
     the version. Record every answer including "not this time". This question
     doubles as the consent for a release step recorded `run` in item 17: a
     release the user names here and records `run` is authorised, and the
-    executor runs it on a green landing without asking again. A release
-    recorded `ask`, or with no after-landing step, is **intent, not
-    authorisation** — the executor stops once and asks. A bump that
-    would land on a component equal to 13 or 17 goes one further — `x.12.0`
-    minor becomes `x.14.0`, `x.y.16` patch becomes `x.y.18`; those two integers
-    are never issued on any version line, and the consent row names the version
-    the bump actually reaches.
+    executor runs it on a green landing without asking again. A release with no
+    after-landing step is intent only — the change waits for a later release,
+    cut by hand. A bump that would land on a component equal to 13 or 17 goes
+    one further — `x.12.0` minor becomes `x.14.0`, `x.y.16` patch becomes
+    `x.y.18`; those two integers are never issued on any version line, and the
+    consent row names the version the bump actually reaches.
+
+The executor asks nothing at run time — it follows the plan, and only a runtime
+stop ends a run. So the interview is not done while any question the run would
+otherwise raise is unanswered: every Consent row carries an answer, every
+after-landing step reads `run`, and every decision a unit or the executor
+would otherwise have to pause on is a ruling in the plan.
 
 ## F. Parked
 

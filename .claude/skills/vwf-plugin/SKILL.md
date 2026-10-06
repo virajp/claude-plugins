@@ -80,9 +80,9 @@ acceptance and UX pass and the blueprint reconcile only when the plan has
 `covers:`), and sets the row `COMPLETE` after the merge lands — moving the
 folder to `archived/` and re-pointing the row when no gap is open, leaving it
 live when one is, for the `archive` verb once the user asks in prose — and runs
-each after-landing step on the mode the interview recorded, `run` without a
-prompt on a green landing or `ask` with one stop before it. `init` is not a
-command on that line: since 2026-09-06 it is **skill-invoked** and runs inside
+each after-landing step without a prompt on a green landing — every one is
+recorded `run` at the interview, and it asks nothing at run time. `init` is not
+a command on that line: since 2026-09-06 it is **skill-invoked** and runs inside
 setup's Step 0, or alone via `/vwf:setup reshape`. `init` shapes the **base repo
 and every member repo the product has** and `setup` sets up **vwf** in the base
 — two different things, and a repo can have either without the other. It

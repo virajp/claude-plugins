@@ -168,12 +168,13 @@ when the change lands runnable code (item 10a), with its reason in the
 decisions table.
 
 **(b) After landing.** Propose the ordered steps that follow a consented
-landing, and confirm each. Each step gets one mode at the interview (item 17),
-`run` or `ask`, written to the After landing table: a `run` step runs on a
-green landing without a prompt — a local staging step and a release step alike
-— and an `ask` step stops the run once before it, reports what it would do,
-and waits. Where a step stages something the session already loaded, say
-plainly that it is picked up only by a **restarted** session.
+landing, and confirm each. Each step is confirmed at the interview (item 17) as
+`run` or dropped, and `run` is written to the After landing table: a `run` step
+runs on a green landing without a prompt — a local staging step and a release
+step alike. A step the user wants to check first is dropped and run by hand
+later; the executor never stops before a step to ask. Where a step stages
+something the session already loaded, say plainly that it is picked up only by
+a **restarted** session.
 
 Empty is a valid answer. These become `index.md`'s **After landing** section.
 
@@ -186,11 +187,11 @@ The gates-and-bump unit bumps with the command the plan names.
 
 This question doubles as the consent for a release step recorded `run`: a
 release the user names here and (b) records `run` is authorised, and the
-executor runs it on a green landing without asking again. A release recorded
-`ask`, or with no after-landing step, is **intent, not authorisation**. Record
-every answer including "not this time" — a changed project with no public
-release recorded is a valid answer, and it means the change waits for the next
-one.
+executor runs it on a green landing without asking again. A release with no
+after-landing step is intent only — the change waits for a later release, cut
+by hand. Record every answer including "not this time" — a changed project with
+no public release recorded is a valid answer, and it means the change waits for
+the next one.
 
 ### 5. Present the shape — the hard gate
 
@@ -313,6 +314,8 @@ Re-read the folder with fresh eyes before handing it off, and fix inline:
   `backlog:` and `backlog_pieces:`, and no `backlog:` id has a `- Bnn:` Parked
   line
 - the derived priority equals what `plan-management priority <folder>` returns
+- every Consent row carries an answer, and no After landing step carries a mode
+  other than `run` — `/vwf:execute` asks nothing at run time
 - the launch line names this folder
 
 ### 8. Hand off

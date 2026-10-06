@@ -57,9 +57,10 @@ not on that branch, claims the row `RUNNING` with a pushed commit before it cuts
 a worktree, and marks it `COMPLETE` once the merge lands (archiving the folder
 there and re-pointing the row when no gap is open; leaving it live when one is,
 archived once you ask) — each plan folder carries this repo's gate lines, and
-`mise run p:plugins:local` and `/release` as after-landing steps, each carrying
-`run` or `ask` as the interview recorded: `/vwf:execute` runs the `run` steps on
-a green landing without a prompt and stops once before each `ask` step.
+`mise run p:plugins:local` and `/release` as after-landing steps, each recorded
+`run` at the interview or dropped: `/vwf:execute` runs them on a green landing
+without a prompt, and asks nothing at run time — every stop is a report with its
+resume command.
 
 | Read                                                         | For                                                                                                                                                                                                                                                                                                                                                           |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -331,9 +332,8 @@ not a component.
 first — `mise run p:plugins:local` stages the changed plugins into the dev
 marketplace and updates this machine's install, publishing nothing and cutting
 no tag, so `/vwf:execute` takes it as the plan's first after-landing step — run
-without a prompt on a green landing when the plan records it `run`, asked for
-once when it records `ask` — and a staged plugin loads in the next **restarted**
-session. Public second — the tags.
+without a prompt on a green landing, as the plan records it `run` — and a staged
+plugin loads in the next **restarted** session. Public second — the tags.
 
 **Ask the user before running `p:plugins:release`, `p:i:release` or
 `p:site:release`** — unless the plan folder being landed records that release as
