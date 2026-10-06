@@ -51,9 +51,8 @@ is `mise run p:plugins:local`: it copies each changed plugin into the gitignored
 dev marketplace under `X.Y.Z+N` and updates this machine's install, so the
 author runs the plugin they are about to publish. It commits nothing, pushes
 nothing and cuts no tag; `/vwf:execute` takes it as the plan folder's
-after-landing step on the mode the interview recorded — `run` without a prompt
-on a green landing, `ask` with one stop before it — and a hand-made change
-reaches it the same way.
+after-landing step, recorded `run` at the interview — run without a prompt on a
+green landing — and a hand-made change reaches it the same way.
 
 So, before `p:plugins:release`, confirm the plugin being tagged has been staged
 and actually exercised — in a **restarted** session, since skills are read at

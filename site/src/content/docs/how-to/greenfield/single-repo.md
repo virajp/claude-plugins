@@ -330,10 +330,10 @@ recorded rather than guessed at.
 
 Both folders recorded consent to merge on green, so each run lands itself —
 merge and push through `/vwf:git-workflow`, the index row set `COMPLETE` — and
-Relay then accepts the offer to close that gap at its source through
-`/vwf:blueprint`. A red gate, a blocking gap or a `no` in the consent block
-would have stopped at the report instead, with the worktree left intact. The
-stage table and the resource caps:
+the report names that gap with the command that closes it at its source,
+`/vwf:blueprint`, which Relay then runs. A red gate, a blocking gap or a `no` in
+the consent block would have stopped at the report instead, with the worktree
+left intact. The stage table and the resource caps:
 [`/vwf:execute`](../../plugins/vwf.md#vwfexecute).
 
 A long run can pause on a resource cap and hand off instead of finishing, which
@@ -473,12 +473,15 @@ reviewers — code and security — at the review row the plan places. What stop
 the run at its report instead is a red gate line, a gap that blocks, or a
 consent block that said no; then you read the run's account — the gap list, the
 acceptance and UX results, whether the stages that were skipped were skipped for
-reasons you accept — and say *fix first* or *reject*. If the folder could not be
-read and the report came from the memory mirror, it says it is reconstructed;
-that changes how much weight it carries.
+reasons you accept. The run asks nothing: a fix goes into the folder — a ruling
+into the unit file or the decisions table — and you re-run
+`/vwf:execute <folder>` to resume; leaving it unmerged is the rejection. If the
+folder could not be read and the report came from the memory mirror, it says it
+is reconstructed; that changes how much weight it carries.
 
 Non-blocking gaps do not stop the landing and should not be treated as blockers.
-Let it land, then take the offer to close each one at its source.
+Let it land, then close each one at its source with the command the report names
+beside it.
 
 ## When things halt
 
