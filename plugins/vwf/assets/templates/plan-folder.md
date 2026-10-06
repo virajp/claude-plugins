@@ -59,23 +59,23 @@ exposure: dark # cycle plans only, optional — the slice ships behind a flag
 | Action                                            | Granted                      |
 | ------------------------------------------------- | ---------------------------- |
 | Merge to the integration branch and push on green | yes / no                     |
-| After landing: <step>                             | run / ask                    |
+| After landing: <step>                             | run                          |
 | Release <project> publicly                        | none / patch / minor / major |
 | LSP <language>                                    | installed / proceed without  |
 
-<one `After landing:` row per step, in order, carrying the mode the interview
-answered; one `Release` row per project the units touch, each naming the
-command that bumps its version; one `LSP` row per language `/vwf:doctor`
+<one `After landing:` row per step, in order, each reading `run`; one
+`Release` row per project the units touch, each naming the command that bumps
+its version; one `LSP` row per language `/vwf:doctor`
 flagged without a server — cycle plans only, answered at `/vwf:plan`'s stack
 gate. That row is what `/vwf:execute`'s preflight reads instead of asking.>
 
 **The mode recorded here is the consent.** A `run` step runs on a green landing
-without a prompt; an `ask` step stops the run once before it, reports what it
-would do, and waits. The mode is the interview's answer (item 17), and a
-release step recorded `run` is authorised by the interview's release question
-(item 18) — a release recorded `ask`, or with no step at all, is intent, not
-authorisation. Where a step stages something this session already loaded, it is
-picked up only by a **restarted** session.
+without a prompt, and `run` is the only mode — a step the interview did not
+confirm `run` (item 17) is not in the plan, and `/vwf:execute` asks nothing at
+run time. A release step recorded `run` is authorised by the interview's
+release question (item 18); a release with no step is intent only, and waits
+for a later release cut by hand. Where a step stages something this session
+already loaded, it is picked up only by a **restarted** session.
 
 ## Goal
 
@@ -182,12 +182,12 @@ only once a unit has landed belongs in that unit's **Verification**, not here.
 
 ## After landing
 
-| Step                          | Mode      | Notes                               |
-| ----------------------------- | --------- | ----------------------------------- |
-| <the command or skill to run> | run / ask | <what it does, and what it reaches> |
+| Step                          | Mode | Notes                               |
+| ----------------------------- | ---- | ----------------------------------- |
+| <the command or skill to run> | run  | <what it does, and what it reaches> |
 
-<or "none". Mode is the interview's answer per step: `run` lands it on a green
-landing with no prompt; `ask` stops the run once before it.>
+<or "none". A step is `run`, or it is not in the table: a `run` step lands on a
+green landing with no prompt.>
 
 ## Gates the orchestrator keeps
 
