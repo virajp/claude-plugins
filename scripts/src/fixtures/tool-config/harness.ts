@@ -39,7 +39,7 @@ case "$1" in
   trust)
     p=$(pwd -P); h=$(cd "$HOME" && pwd -P)
     case "$p" in "$h" | "$h"/*) p="~\${p#"$h"}" ;; esac
-    [ -n "$FAKE_MISE_UNTRUSTED" ] && echo "$p/.config/mise.toml: untrusted"
+    [ -n "$FAKE_MISE_UNTRUSTED" ] && [ -f .config/mise.toml ] && echo "$p/.config/mise.toml: untrusted"
     exit 0 ;;
   which)
     [ "$2" = "$FAKE_MISE_MISSING" ] && { echo "mise ERROR $2 is not a mise bin" >&2; exit 1; }
