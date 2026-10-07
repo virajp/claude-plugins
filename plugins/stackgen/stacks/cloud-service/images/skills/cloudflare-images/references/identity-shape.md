@@ -58,9 +58,10 @@ doctrine — never in the repo, catalogued by name in the project's
 environment doc, injected rather than read from a file. Where it is
 injected differs by environment, and both homes are pinned components
 rather than improvisations: `capability-provider/fnox` holds it for a
-developer machine and for CI, and `stacks/cloud-service/secrets-store/`
-is the account-level store a deployed Worker reads it from in staging and
-production. Neither replaces the other.
+developer machine, CI takes it from the forge, and
+`stacks/cloud-service/secrets-store/` is the account-level store a
+deployed Worker reads it from in staging and production. Neither
+replaces the other.
 
 The reason it deserves that care rather than a shrug: **the key is the
 whole privacy model.** Anyone holding it can mint a valid URL for any

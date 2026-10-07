@@ -12,9 +12,9 @@ category: secrets-manager
 # The category name is shared with `capability-provider/fnox` on purpose,
 # and the two do not compete. This component is the RUNTIME store a
 # deployed Worker or Container reads in staging and production; fnox is
-# the developer-machine and CI provider that injects secrets on the way
-# in. A repo pins both, for different environments, and neither replaces
-# the other.
+# the developer-machine provider that injects secrets on the way in, and
+# CI takes its own from the forge. A repo pins both, for different
+# environments, and neither replaces the other.
 kind: cloud-provider
 axis: backing
 harness:
