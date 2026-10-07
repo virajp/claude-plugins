@@ -23,7 +23,7 @@ header row, then its own row; a writer finding the file writes only its row.
 
     The product's plans as a set — the one file every vwf command reads to find
     a plan without walking the member repos, and the queue `/vwf:execute next`
-    reads to pick the next runnable plan.
+    and `/vwf:execute all` read to pick the next runnable plan.
 
     ## Plans
 
@@ -118,14 +118,15 @@ refusal, named.
 ## The pick
 
 `next` is taken by the one executor — `/vwf:execute next` reads this table
-alone, rows of either kind:
+alone, rows of either kind, and `/vwf:execute all` takes it again after each
+plan its runner lands, until nothing is runnable:
 
 - **candidates** are `APPROVED` rows, `cycle` or `change`, whose every
   `Requires` entry is satisfied;
 - **order** is `Priority` ascending, then the folder's date prefix ascending,
   then folder name;
 - the pick prints the folder, its `Kind` and its `Priority`;
-- a `RUNNING` row is **never** taken — resuming one is
+- a `RUNNING` row is **never** taken, by `next` or by `all` — resuming one is
   `/vwf:execute <folder>`, and a claim whose session is gone is released by
   `unclaim <folder>`, once the worktree it names is gone, in a commit on the
   integration branch;

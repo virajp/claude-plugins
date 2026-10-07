@@ -435,7 +435,7 @@ carrying the procedure:
 | `/vwf:plan`, `/vwf:change-plan` | at the gate, over the `requires:` list decided at interview item 12 | `priority <requires…>`             |
 | `/vwf:plan`, `/vwf:change-plan` | at self-review, checking `requires:`                                | `resolve <folder>`                 |
 | `/vwf:plan`, `/vwf:change-plan` | at hand-off, once the folder is approved                            | `add <folder>`                     |
-| `/vwf:execute`                  | in its `next` mode, picking the plan                                | `next`                             |
+| `/vwf:execute`                  | in its `next` and `all` modes, picking the plan                     | `next`                             |
 | `/vwf:execute`                  | at preflight, on the named folder                                   | `resolve <folder>`                 |
 | `/vwf:execute`                  | before the worktree is cut                                          | `claim <folder>`                   |
 | `/vwf:execute`                  | at every Status change — start, pause, block, landing               | `status <folder> <state> [detail]` |
