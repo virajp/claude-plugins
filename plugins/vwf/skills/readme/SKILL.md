@@ -72,7 +72,7 @@ Gather the facts before writing:
 - **Local development.** The toolchain manager (this marketplace standardizes on
   **mise** — `MISE_ENV=dev mise run setup:all` alone, the single bootstrap
   entrypoint, which installs the pinned tools itself, over the `setup:*` steps
-  it already orders), env setup (`.env.example`, doppler, mise `[env]`), and
+  it already orders), env setup (`.env.example`, mise `[env]`), and
   prerequisites. Note `MISE_ENV=dev mise run setup:worktree` too where the
   repo has one — it is the lighter
   bootstrap a fresh worktree runs, and a contributor who does not know it

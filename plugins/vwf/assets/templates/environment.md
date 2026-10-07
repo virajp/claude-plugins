@@ -11,11 +11,12 @@ status: draft # draft | reviewed | stable
 
 > **The authoritative inventory of every environment variable and secret the
 > system needs** — names, purpose, issuer, and which projects consume them. It
-> holds **no values**: values live only in the deployment env / secrets manager
-> and are injected at runtime or build; nothing sensitive is committed. This
-> catalog is **tool-agnostic** — it documents *what* variables exist and *where
-> they come from*, not the injection tool (which is a decision recorded in
-> [config](./conventions.md#config)).
+> holds **no values**: development values live only in the secrets manager, CI's
+> in the forge's secrets, staging and production values in the cloud provider's
+> secret store, injected at runtime or build; nothing sensitive is committed.
+> This catalog is **tool-agnostic** — it documents *what* variables exist and
+> *where they come from*, not the injection tool (which is a decision recorded
+> in [config](./conventions.md#config)).
 
 <!-- Maintained by `blueprint`; bootstrapped and kept current by `setup`. One row
      per variable, grouped by the consuming project (names from the architecture
@@ -86,15 +87,18 @@ status: draft # draft | reviewed | stable
 
 ## Rotation
 
-<!-- Secrets are rotated at the issuer and updated in the deployment env / secrets
-     manager; no code change is needed (values are env-injected at runtime/build).
+<!-- Secrets are rotated at the issuer and updated where each environment keeps
+     them — the secrets manager (development), the forge's secrets (CI), the
+     cloud provider's secret store (staging, production); no code change is
+     needed (values are env-injected at runtime/build).
      Note any variable with a rotation cadence or coordination requirement. -->
 
 ## Adding a variable
 
 1. Obtain or create the value at the issuer (console / dashboard).
-2. Store it in the deployment env / secrets manager for each environment (dev /
-   staging / prod) — never in the repo.
+2. Store it where each environment keeps its secrets — the secrets manager for
+   development, the forge's secrets for CI, the cloud provider's secret store
+   for staging and production — never in the repo.
 3. Wire it into the consuming project's config loading (this is realization —
    see `plan`, not the blueprint).
 4. Add a row to this catalog — name, purpose, issuer, used-by, required, secret
