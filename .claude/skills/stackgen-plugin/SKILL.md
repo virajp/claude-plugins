@@ -66,9 +66,11 @@ config and validates the hook config, restoring the files byte for byte on a
 failure; `all` runs `MISE_ENV=dev mise run setup:all` between the landing and
 the formatter, so it ends in a set-up repo, and renders a repo-local
 `.claude/skills/mise/SKILL.md` whose task table lists every task. Its references
-are the why behind each file. vwf's callers — `/vwf:init`'s `all` flags,
-`/vwf:setup`'s pack values, doctor's drift — move onto the four calls in the
-plan `2026-10-05-vwf-callers-on-templates`.
+are the why behind each file. vwf's callers are on the four calls since the plan
+`2026-10-05-vwf-callers-on-templates`: `/vwf:init` shapes through `all` with its
+answers as flags and `.config/stackgen.yaml`, `/vwf:setup` applies packs through
+`pack` with their values, and doctor previews drift from `preview all` and
+`preview pack` at `config_format` 23.
 
 **Each asset is authoritative for its own subject.** This file is a map; do not
 restate a count or a rule that an asset below already owns.

@@ -62,20 +62,21 @@ Two, both from upstream, now shipped as `vwf` skills:
 | `/vwf:mempalace-recall` | The recall protocol — search the palace before answering about past work or prior decisions.  |
 
 Deliberately **not** taken: the Python package, the MCP server implementation,
-and the `integrations/` tree. `vwf` declares the server itself and connects to
-it over HTTP; what you provide out of band is the `mempalace` tool (through
-mise), Qdrant, and the running daemon with its environment — nothing else.
+and the `integrations/` tree. `vwf` declares the server itself and Claude Code
+starts it over stdio; what you provide out of band is the `mempalace` tool
+(through mise), Qdrant, and the repo's mise environment — nothing else.
 
 **Nothing checks for the server at install time**, and nothing ever will: the
 install-time binary gate is retired, so `vwf` installs on a machine with no
 mempalace on it and says nothing. That is the right shape — memory is
 best-effort, and a missing server degrades rather than breaks. What does report
-it is `/vwf:doctor`: §7 probes the daemon with
-`curl -s -o /dev/null --max-time 2 http://127.0.0.1:8765/mcp`, reports a refused
-connection or a timeout as a **degradation** with the start command as its
-remedy, and checks the memory **files** either way. The one Python-toolchain
-prerequisite `vwf` genuinely leans on belongs to **graphify**, not to mempalace,
-and doctor §8 treats a missing `graphify` CLI as a **blocking** finding with
+it is `/vwf:doctor`: §7 probes the server with `mise x -- mempalace status` from
+the repo root, reports a non-zero exit as a **degradation** — no mempalace
+tools, recall falling back to the markdown tree — with what failed as its
+remedy, reports a missing `MEMPALACE_PALACE_PATH` the same way, and checks the
+memory **files** either way. The one Python-toolchain prerequisite `vwf`
+genuinely leans on belongs to **graphify**, not to mempalace, and doctor §8
+treats a missing `graphify` CLI as a **blocking** finding with
 `MISE_ENV=dev mise install` as the remedy — `/stackgen:tool-config` pins
 `pipx:graphifyy` in the repo's `.config/mise/conf.d/ai/mise.dev.toml`.
 
@@ -123,49 +124,52 @@ direction: it saves too often rather than silently never.
 Both are POSIX sh with BSD-portable tooling only, because they run on macOS,
 where `sed` has no `\s`/`\b` and `grep -P` does not exist.
 
-## Running the server (HTTP daemon)
+## Running the server
 
-`vwf` declares mempalace over **HTTP** — see its `mcpServers` block in
-`plugins/vwf/.claude-plugin/plugin.json`: `type: "http"` and
-`url: "http://127.0.0.1:8765/mcp"`. Claude Code connects to that URL and never
-starts the server: it is one daemon, shared by every session, which you run
-yourself:
+`vwf` declares mempalace over **stdio** — see its `mcpServers` block in
+`plugins/vwf/.claude-plugin/plugin.json`: `type: "stdio"`, `command`
+`${HOME}/.local/bin/mise` and `args` `["x", "--", "mempalace-mcp"]`. Claude Code
+starts the server itself, once per session, in the project directory. There is
+nothing to run and nothing to keep running: no daemon, no supervisor, no port.
 
-```sh
-mempalace-mcp --transport http --host 127.0.0.1 --port 8765
+The server's environment is therefore the **repo's mise environment**. The
+`MEMPALACE_*` values — the shared backend settings (see the backend section
+below) and the repo's own `MEMPALACE_PALACE_PATH` — live in the `[env]` of
+`.config/mise/conf.d/ai/mise.dev.toml`, which `/stackgen:tool-config` renders in
+every repo, not in `~/.claude/settings.json`. mise loads that file only under
+`MISE_ENV=dev`, so **the shell that starts Claude Code must export
+`MISE_ENV=dev`**; without it the server starts with none of those values. The
+command names no palace: the server reads its palace path and backend from that
+environment and `~/.mempalace/config.json` — with a per-setting precedence flip
+documented below — and reading `MEMPALACE_PALACE_PATH` from the environment is
+what lets mempalace expand a `~` in it. A `--palace` flag would take the value
+verbatim.
+
+**Every repo needs its own `MEMPALACE_PALACE_PATH` — one palace per repo.**
+tool-config renders it as:
+
+```toml
+MEMPALACE_PALACE_PATH = "~/.local/share/mempalace/<repo>"
 ```
 
-Run it under any supervisor — pitchfork and launchd are two examples — and keep
-it running before a Claude Code session starts: a session that finds nothing
-listening has no mempalace tools, and `/vwf:doctor` reports the daemon
-unreachable as a **degradation**, with this command as the remedy.
+Without it the server falls back to a palace shared by every repo on the
+machine. `/vwf:doctor` reports a `mise env` that does not name it as a
+**degradation**, with that line, through `/vwf:setup reshape`, as the remedy.
 
-The daemon's environment is its **supervisor's**, never a Claude session's, so
-the `MEMPALACE_*` variables are set on the supervisor (see the backend section
-below), not in `~/.claude/settings.json`. The command names no palace: the
-server reads its palace path and backend from that environment and
-`~/.mempalace/config.json` — with a per-setting precedence flip documented below
-— and reading `MEMPALACE_PALACE_PATH` from the environment is what lets
-mempalace expand a `~` in it. A `--palace` flag would take the value verbatim.
-
-One daemon is also what keeps the palace's local JSON state whole. The palace
-keeps `hallways.json` and the tunnel file beside the store, rewritten whole with
-no lock; a single server serialises those writes in-process, where one server
-per session would race and silently drop entity links. And it loads one embedder
-rather than one per session. The ruling is in the repo's decision record
-`docs/memory/decisions/2026-09-29-mempalace-http-daemon.md`, which supersedes
-the 2026-09-23 stdio record.
+A session whose server fails to start has no mempalace tools, and recall falls
+back to the markdown tree; doctor's `mise x -- mempalace status` probe, run from
+the repo root, is the same start the session makes.
 
 ### The shape that runs
 
-One **daemon** and one **container**:
+One **stdio server per session** and one **container**:
 
-| Piece           | Runs as                                                                    | Where                                   |
-| --------------- | -------------------------------------------------------------------------- | --------------------------------------- |
-| `mempalace-mcp` | one **HTTP daemon** shared by every Claude Code session (mempalace 3.10.0) | `127.0.0.1:8765`, under your supervisor |
-| Qdrant          | the **only** container — one `docker compose` service, loopback-only       | `127.0.0.1:6333`                        |
-| The palace      | a directory of config + backend metadata (vectors live in Qdrant)          | `~/.local/share/mempalace`              |
-| Mining          | the **host CLI**                                                           | run in the repo being mined             |
+| Piece           | Runs as                                                                         | Where                                       |
+| --------------- | ------------------------------------------------------------------------------- | ------------------------------------------- |
+| `mempalace-mcp` | a **stdio** process Claude Code starts for each session (`mise x -- …`)         | the project directory, under the repo's env |
+| Qdrant          | the **only** container — one `docker compose` service, loopback-only, you run   | `127.0.0.1:6333`                            |
+| The palace      | a directory of config + backend metadata (vectors live in Qdrant), one per repo | `~/.local/share/mempalace/<repo>`           |
+| Mining          | the **host CLI**                                                                | run in the repo being mined                 |
 
 **There is no mempalace container**, so any instruction of the form
 `docker compose exec mempalace mempalace mine …` cannot work — mining is the
@@ -185,14 +189,20 @@ and lets a collection be inspected, counted and backed up with `curl`. The
 ChromaDB default is genuinely fine for a small palace and needs no container at
 all — that is the trade, not solo-versus-team.
 
-If you choose Qdrant, set **both** variables. The server is a daemon, so its
-environment is its supervisor's, and the whole `MEMPALACE_*` set goes there:
+If you choose Qdrant, set **both** variables. The server's environment is the
+repo's mise environment, and the whole `MEMPALACE_*` set is in the `[env]` of
+`.config/mise/conf.d/ai/mise.dev.toml`, as tool-config renders it:
 
-```sh
-MEMPALACE_BACKEND=qdrant
-MEMPALACE_MAX_BACKUPS=4
-MEMPALACE_PALACE_PATH=~/.local/share/mempalace
-MEMPALACE_QDRANT_URL=http://127.0.0.1:6333
+```toml
+MEMPALACE_BACKEND               = "qdrant"
+MEMPALACE_EMBEDDING_DEVICE      = "auto"
+MEMPALACE_EMBEDDING_MODEL       = "minilm"
+MEMPALACE_MAX_BACKUPS           = 4
+MEMPALACE_MCP_ALLOW_PEER_WRITER = 1
+MEMPALACE_MCP_IDLE_HOURS        = 0
+MEMPALACE_QDRANT_URL            = "http://127.0.0.1:6333"
+
+MEMPALACE_PALACE_PATH = "~/.local/share/mempalace/<repo>"
 ```
 
 `~/.mempalace/config.json` carries the same facts:
@@ -260,18 +270,17 @@ palaces were created in a single evening by four different spellings of the same
 directory. **Never type a palace path by hand** — pass one canonical absolute
 path, from one place, to everything that opens the palace.
 
-### What the supervisor's environment expands
+### What the environment expands
 
-Assume nothing. A supervisor may pass each value **literally**: `$HOME` and
-`${HOME}` then stay exactly as typed, so a palace path written with either names
-a directory called `$HOME` or `${HOME}` under the daemon's working directory.
-Write the palace path with `~` — it survives to mempalace, which expands it when
-it reads `MEMPALACE_PALACE_PATH` — or as an absolute path.
+Assume nothing. Write the palace path with `~` — it survives to mempalace, which
+expands it when it reads `MEMPALACE_PALACE_PATH` — or as an absolute path, never
+with a `$HOME` or `${HOME}` that some layer may pass **literally**, naming a
+directory called `$HOME` under the server's working directory.
 
-A supervised daemon also inherits the environment its supervisor captured when
-the supervisor started, so after changing a variable, restart the supervisor,
-not only the daemon. The history behind both — a stale captured environment, and
-the literal `~` directories a relative path created — is in the decision records
+The server reads its environment once, when Claude Code starts it, so after
+changing a variable — or exporting `MISE_ENV=dev` — restart the session. The
+history behind both — a stale captured environment, and the literal `~`
+directories a relative path created — is in the decision records
 `docs/memory/decisions/2026-09-23-mempalace-stdio-settings-env.md` and
 `docs/memory/decisions/2026-09-29-mempalace-http-daemon.md`.
 
@@ -316,19 +325,12 @@ drawer records, which is why you mine the **checkout itself** and never an
 export or a copy — a copy points every recall at a path that does not exist and
 breaks the prune.
 
-### If you also install the upstream plugin, turn its stdio server off
+### If you also install the upstream plugin, turn its server off
 
 Nothing here installs it any more, but the upstream `mempalace` plugin bundles
-`{"command": "mempalace-mcp"}`, and its docs are explicit that two server
-processes must not point at the same backend. On Chroma that is a **single
-writer lease**; on Qdrant the lease is never taken (the backend coordinates its
-own clients), but a second server beside vwf's daemon is still wrong — the
-palace's local JSON state beside the store, `hallways.json` and the tunnel file,
-is rewritten whole with no lock, so two writers silently drop each other's
-entity edges. Toggle it off in `/mcp`; Claude Code records that in
-`~/.claude.json` under `disabledMcpServers` (which covers plugin servers). The
-toggle is per project. Confirm with `/mcp` that exactly **one** mempalace server
-is connected.
+its own `{"command": "mempalace-mcp"}` — a second server in the same session, on
+the same palace as vwf's. Toggle it off in `/mcp` and confirm that exactly
+**one** mempalace server is connected.
 
 ## How vwf uses it
 

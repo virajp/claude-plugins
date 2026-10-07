@@ -56,8 +56,9 @@ container.
   the file** here — so a stale variable in the server's environment can point
   it at the wrong qdrant even when config.json is right.
 
-The MCP server is a daemon, so the environment it sees is the one its supervisor
-starts it with, never a Claude session's. Keep the file and the env vars stating
+Claude Code starts the MCP server through mise, so the environment it sees is
+the repo's mise environment, never `~/.claude/settings.json`. Keep the file and
+the env vars stating
 the same values, as below, so the flip never bites. The palace lives at
 `~/.local/share/mempalace`. A sample `~/.mempalace/config.json` (`palace_path`
 is one canonical absolute spelling — the path string is the palace's identity):
@@ -71,18 +72,22 @@ is one canonical absolute spelling — the path string is the palace's identity)
 }
 ```
 
-The environment variables are set on the supervisor that runs the server (see
-*The MCP server* below):
+The environment variables live in the `[env]` of the repo's
+`.config/mise/conf.d/ai/mise.dev.toml`, which `stackgen:tool-config` renders in
+every repo and mise loads only under `MISE_ENV=dev` — export it in the shell
+that starts Claude Code:
 
-```bash
-MEMPALACE_BACKEND=qdrant
-MEMPALACE_MAX_BACKUPS=4
-MEMPALACE_PALACE_PATH=~/.local/share/mempalace
-MEMPALACE_QDRANT_URL=http://127.0.0.1:6333
+```toml
+MEMPALACE_BACKEND     = "qdrant"
+MEMPALACE_MAX_BACKUPS = 4
+MEMPALACE_QDRANT_URL  = "http://127.0.0.1:6333"
+MEMPALACE_PALACE_PATH = "~/.local/share/mempalace/<repo>"
 ```
 
-A supervisor may pass these values literally, with no shell expansion, so write
-the palace path with `~` (mempalace expands it) or as an absolute path.
+**Every repo sets its own `MEMPALACE_PALACE_PATH`** — one palace per repo,
+named for it. Without it the server falls back to a palace every repo on the
+machine shares. Write the path with `~` (mempalace expands it) or as an
+absolute path.
 
 Set `MEMPALACE_BACKEND` and `MEMPALACE_QDRANT_URL` **together** — the URL
 without the backend key silently selects chroma.
@@ -96,20 +101,18 @@ refiling them into a fresh palace.
 
 ### The MCP server
 
-vwf's plugin manifest connects to the server over HTTP, at
-`http://127.0.0.1:8765/mcp`, and never starts it — the server is one daemon
-shared by every Claude session, which you run yourself:
+vwf's plugin manifest declares the server over stdio, and Claude Code starts it
+for each session, in the project directory:
 
 ```bash
-mempalace-mcp --transport http --host 127.0.0.1 --port 8765
+mise x -- mempalace-mcp
 ```
 
-Run it under any supervisor — pitchfork and launchd are two examples — with the
-environment above set on that supervisor, and keep it running before a Claude
-session starts, since a session that finds nothing listening has no mempalace
-tools. The daemon reads its palace path and backend from that environment and
-`~/.mempalace/config.json`. `/vwf:doctor` reports it unreachable as a
-degradation.
+There is no daemon to run. The server reads its palace path and backend from
+the repo's mise environment above and `~/.mempalace/config.json`; Qdrant, when
+it is the backend, is the one service you keep running. `/vwf:doctor` probes
+with `mise x -- mempalace status` and reports a failure, or a repo with no
+`MEMPALACE_PALACE_PATH`, as a degradation.
 
 ## Usage
 
@@ -136,7 +139,7 @@ search-before-answer so the agent reads the palace instead of guessing.
   MemPalace MCP tools (`mempalace_search`, `mempalace_add_drawer`,
   `mempalace_diary_write`, `mempalace_check_duplicate`, `mempalace_diary_read`,
   etc.) are available to the agent once the plugin is installed, `mempalace` is
-  installed through mise, and the daemon above is running with its environment
-  set.
+  installed through mise, and the repo's mise environment sets the values
+  above.
 - For automatic background saving every N agent turns plus session-start memory recall, also install the Cursor hooks separately by running `hooks/cursor/install.sh --scope user` from a cloned MemPalace repo.
 - The recommended `agent_name` when calling `mempalace_diary_write` from a Cursor session is `cursor-ide` (matches the precedent of `claude-code` and `codex`).

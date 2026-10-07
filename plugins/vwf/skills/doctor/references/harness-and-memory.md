@@ -94,23 +94,31 @@ missing directory is fine (nothing written there yet); a **committed** handoff,
 doctor or runs file is drift to report, since it puts one developer's session
 state in everyone's diff.
 
-**The server is reachable.** vwf's mempalace server is an HTTP daemon the user
-runs, never one a session starts, so probe it:
+**The server can start.** vwf's mempalace server is a stdio process Claude
+Code starts for each session as `mise x -- mempalace-mcp`, in the project
+directory, so it sees the repo's mise environment — the `MEMPALACE_*` values
+and the repo's own `MEMPALACE_PALACE_PATH` in `.config/mise/conf.d/ai/mise.dev.toml`,
+which mise loads only under `MISE_ENV=dev`. Probe it the same way, from the
+repo root:
 
 ```bash
-curl -s -o /dev/null --max-time 2 http://127.0.0.1:8765/mcp
+mise x -- mempalace status
 ```
 
-- **Any HTTP response** — curl exits 0, whatever the status code — is
-  reachable, and not a finding.
-- **A refused connection or a timeout** — curl exits non-zero — is a
-  **degradation**: every memory read and write this session makes fails. The
-  remedy is to start the daemon under a supervisor (pitchfork and launchd are
-  two examples) with
-  `mempalace-mcp --transport http --host 127.0.0.1 --port 8765`, setting
-  `MEMPALACE_BACKEND` and `MEMPALACE_QDRANT_URL` together and
-  `MEMPALACE_PALACE_PATH` on that supervisor rather than in
-  `~/.claude/settings.json`, then restart the session.
+- **Exit 0** — the tool resolves and the palace opens — is not a finding.
+- **A non-zero exit**, or `mempalace` not resolvable through mise, is a
+  **degradation**: the session has no mempalace tools, and every memory read
+  and write falls back to the markdown tree. The remedy names what failed:
+  `pipx:mempalace` in `ai/mise.dev.toml` and `mise install`; Qdrant running
+  when `MEMPALACE_BACKEND` is `qdrant`; `MISE_ENV=dev` exported in the shell
+  that starts Claude Code — then restart the session.
+
+**The palace path is the repo's.** `mise env` run from the repo root must name
+`MEMPALACE_PALACE_PATH`. Absent is a **degradation**: the server falls back to
+a palace shared with every other repo on the machine. The remedy is the
+`ai/mise.dev.toml` line `stackgen:tool-config` renders —
+`MEMPALACE_PALACE_PATH = "~/.local/share/mempalace/<repo>"` — through
+`/vwf:setup reshape`, and `MISE_ENV=dev` exported as above.
 
 An unreachable server does not stop the rest of §7: still check the **files**
 (they are on disk).

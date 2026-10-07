@@ -740,11 +740,12 @@ line to any of them:
   `**/`-prefixed.
 - **Ignore lines and attributes.** `.gitignore` is a curated set in banner
   sections — macOS, editors, AI tooling, mise, secrets and env, build output,
-  Node, Python, Dart and Flutter, Swift and Xcode, scratch, reports — never an
-  upstream template fetched over the network. `fnox.local.toml` is in the
-  secrets section, so the base names the one secrets manager that writes a local
-  file. `.gitattributes` marks `*.lock`, `pnpm-lock.yaml` and `Package.resolved`
-  `linguist-generated`.
+  Node, Python, Dart and Flutter, Swift and Xcode, vwf's working notes and
+  scratch (`docs/memory/handoff/`, `docs/memory/doctor/`, `docs/memory/runs/`,
+  `docs/scratchpad/`), reports — never an upstream template fetched over the
+  network. `fnox.local.toml` is in the secrets section, so the base names the
+  one secrets manager that writes a local file. `.gitattributes` marks `*.lock`,
+  `pnpm-lock.yaml` and `Package.resolved` `linguist-generated`.
 
 **Six files carry one marker pair**, `# >>> tool-config` / `# <<< tool-config`
 (`//` in dprint's JSONC): `.gitignore`, `.graphifyignore`, dprint's `excludes`,
@@ -770,9 +771,11 @@ are a Markdown hard break.
   as `-text -diff`; there is no graphify merge driver. It carries no marker: an
   attribute line of your own is a `write` row you answer `keep-existing` to
   keep.
-- **`.graphifyignore`** holds `graphify-out/` between its markers, and the AI
-  tooling section of `.gitignore` ignores `graphify-out/` whole: the graph is
-  rebuilt per checkout. No merge driver and no raw git hook: the commit gate's
+- **`.graphifyignore`** holds `graphify-out/` between its markers, with vwf's
+  committed trees that are not code intelligence — `docs/memory/`,
+  `docs/plans/archived/`, `docs/prompts/` and `archived/` — and the AI tooling
+  section of `.gitignore` ignores `graphify-out/` whole: the graph is rebuilt
+  per checkout. No merge driver and no raw git hook: the commit gate's
   `graphify-refresh` hook rebuilds the graph, and `setup:precommit` strips any
   raw hook, `merge=graphify` line and `merge.graphify.*` git config an earlier
   install left.

@@ -159,7 +159,7 @@ for this repo's prior findings. Anything still present that a previous run
 already reported is marked **known** in §9 rather than presented as new — the
 same treatment `/vwf:verify` gives a criterion it already knows is failing. Skip
 silently if mempalace is unavailable; §7 then reports the outage itself, as the
-daemon-reachability degradation its `curl` probe decides.
+server degradation its `mempalace status` probe decides.
 
 ### 2. Stamps
 
@@ -178,7 +178,7 @@ optional, and no reference restates a rule that lives above.
 | Sections                                                   | Reference                                                 | Covers                                                                                            |
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, required binaries on `PATH` or their declared probes, an unknown language, framework/dependency drift per manifest, the seven stack axes, a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, each lockfile where a pinned payload's `lockfile:` fact says (project templates included), the recommended `rtk`, the recommended forge CLI, and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups and the commit scopes, whether the repo is shaped (`.config/stackgen.yaml` at `format: 1`) or still on the old layout, the base's `stackgen.yaml` members against `.config/vwf.yaml`'s, the two branches, `repo_name` against the repo's folder, the `tool-config` skill's `preview all` and per-pack `preview pack` rows as drift, every pack-copied file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — the `merge_model` and `members` values beside it, and the forge state — the default branch, both branches' protection, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
-| **6–7** — harness & health, memory config                  | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `mempalace.yaml` placement, wing/room contract and secret excludes, the markdown mirror, and the mempalace daemon's reachability. **Blocking findings live here** |
+| **6–7** — harness & health, memory config                  | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `mempalace.yaml` placement, wing/room contract and secret excludes, the markdown mirror, the mempalace server's `status` probe and the repo's palace path. **Blocking findings live here** |
 | **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, a graph per locally-present checkout, staleness, the pre-commit refresh hook (a raw graphify hook is drift), the `.graphifyignore`. **Blocking findings live here** |
 
 **Dependency audit (per in-scope project).** Alongside the manifest checks,
@@ -242,7 +242,7 @@ rather than one per token, reached only after a declined landing or on a repo
 setup has not re-run on, and blocking while the pin stands), **degraded**
 (something optional is absent and a fallback is carrying the work, or the run
 simply costs more — a missing `rtk`, whose guarded hook no-ops (§5), the
-mempalace daemon unreachable at `127.0.0.1:8765` (§7), a forge CLI
+mempalace server unable to start or with no repo palace path (§7), a forge CLI
 that is absent, unauthenticated or without the `project` scope, which leaves
 `/vwf:backlog` unreadable and predicate (g) of the repo-shape check unread (§5)
 — **or** a decision the user has not yet made or has declined on the record: an

@@ -151,8 +151,8 @@ auto-enables** these dependencies at the same scope. Key rules:
 
 The memory layer arrives in three pieces, from three different places, and it is
 worth knowing which is which: **the skills are vendored**, **the MCP server is
-declared by vwf**, and **its environment is yours to set**, in Claude's
-settings.
+declared by vwf**, and **its environment is the repo's**, in its mise
+environment.
 
 **Why vendored rather than depended on.** `mempalace` was a `url`-sourced entry
 and a vwf dependency, and a url-sourced plugin had no rendered bundle for the
@@ -177,64 +177,70 @@ resync must not skip.
 **The auto-save hooks are reimplemented, not vendored** — see Hooks below for
 why upstream's could not be wrapped.
 
-vwf declares its own mempalace server in its `plugin.json` — `type: "http"`,
-`url: "http://127.0.0.1:8765/mcp"` — so the memory layer is **one daemon the
-user runs**, shared by every Claude Code session and never started by one:
-`mempalace-mcp --transport http --host 127.0.0.1 --port 8765`, under any
-supervisor (pitchfork and launchd are two examples), running before a session
-starts. `/vwf:doctor` §7 probes it with `curl` and reports it unreachable as a
-**degradation**. The command names **no palace on purpose**: a
+vwf declares its own mempalace server in its `plugin.json` — `type: "stdio"`,
+`command: ${HOME}/.local/bin/mise`, `args: ["x", "--", "mempalace-mcp"]` — so
+Claude Code **starts the server per session**, in the project directory, with no
+daemon and no port. `/vwf:doctor` §7 probes it the same way, with
+`mise x -- mempalace status` from the repo root, and reports a non-zero exit as
+a **degradation**. The command names **no palace on purpose**: a
 `--palace $MEMPALACE_PALACE_PATH` takes its value verbatim, so a `~` in it
 opened `<cwd>/~/…`, while mempalace expands `~` itself when it reads
 `MEMPALACE_PALACE_PATH` from the environment.
 
-Its environment is **the supervisor's**, never `~/.claude/settings.json` —
-`MEMPALACE_BACKEND` and `MEMPALACE_QDRANT_URL` together, `MEMPALACE_PALACE_PATH`
-as `~/.local/share/mempalace`, `MEMPALACE_MAX_BACKUPS` — beside
-`~/.mempalace/config.json`. A supervisor may pass those values literally, so
-`$HOME` and `${HOME}` are not safe there, while `~` survives to mempalace, which
-expands it; and a daemon keeps the environment its supervisor captured, so a
-changed variable needs the supervisor restarted. The precedence **differs by
-setting**, which is the fact to reach for when debugging. The backend choice
-runs `--backend` flag → config.json → `MEMPALACE_BACKEND` → chroma default
-(**file beats env**); the qdrant connection settings run `MEMPALACE_QDRANT_*` →
-config.json → defaults (`http://localhost:6333`, 10 s) (**env beats file**).
-Keep file and env stating the same values so the flip never bites.
-`MEMPALACE_EMBEDDING_MODEL` and `MEMPALACE_EMBEDDING_DEVICE` are optional; a
-palace is bound to the model it was built with — another fails with
-`EmbedderIdentityMismatchError` — and mempalace 3.10.0's `repair` cannot
-re-embed a qdrant palace, so a switch means dumping and refiling. The full setup
-— the mise-managed install, the qdrant container, the config file and the
-daemon's environment — is the `mempalace` skill's Prerequisites, which is
-authoritative for it.
+Its environment is **the repo's mise environment**, never
+`~/.claude/settings.json` — the `[env]` of
+`.config/mise/conf.d/ai/mise.dev.toml`, rendered by `stackgen:tool-config` and
+loaded only under `MISE_ENV=dev`: the shared `MEMPALACE_*` values
+(`MEMPALACE_BACKEND` and `MEMPALACE_QDRANT_URL` together,
+`MEMPALACE_MAX_BACKUPS`, `MEMPALACE_MCP_ALLOW_PEER_WRITER = 1`) and a
+**per-repo** `MEMPALACE_PALACE_PATH`, `~/.local/share/mempalace/<repo>` — beside
+`~/.mempalace/config.json`. Every repo needs its own palace path, so doctor
+reports one missing from `mise env` as a **degradation**: the server would fall
+back to a palace shared with every other repo. A changed variable reaches the
+server at the next session start. The precedence **differs by setting**, which
+is the fact to reach for when debugging. The backend choice runs `--backend`
+flag → config.json → `MEMPALACE_BACKEND` → chroma default (**file beats env**);
+the qdrant connection settings run `MEMPALACE_QDRANT_*` → config.json → defaults
+(`http://localhost:6333`, 10 s) (**env beats file**). Keep file and env stating
+the same values so the flip never bites. `MEMPALACE_EMBEDDING_MODEL` and
+`MEMPALACE_EMBEDDING_DEVICE` are optional; a palace is bound to the model it was
+built with — another fails with `EmbedderIdentityMismatchError` — and mempalace
+3.10.0's `repair` cannot re-embed a qdrant palace, so a switch means dumping and
+refiling. The full setup — the mise-managed install, the qdrant container, the
+config file and the server's environment — is the `mempalace` skill's
+Prerequisites, which is authoritative for it.
 
-**This reverses an earlier ruling, which itself reversed one.** vwf first ran
-mempalace as one shared HTTP daemon on `127.0.0.1:8765`; commit `9dbef1d1`
-(2026-09-23) moved the manifest to stdio, and the
+**The transport has reversed three times; stdio is the current ruling.** vwf
+first ran mempalace as one shared HTTP daemon on `127.0.0.1:8765`; commit
+`9dbef1d1` (2026-09-23) moved the manifest to stdio, and the
 [stdio decision](../../../../docs/memory/decisions/2026-09-23-mempalace-stdio-settings-env.md)
-confirmed it for **zero setup**. Commit `3a62fa48` (2026-09-26) moved the
-manifest back to HTTP, shipped in `vwf-v20.0.0`, and the
+confirmed it for **zero setup**. Commit `3a62fa48` (2026-09-26) moved it back to
+HTTP, shipped in `vwf-v20.0.0`, and the
 [HTTP daemon decision](../../../../docs/memory/decisions/2026-09-29-mempalace-http-daemon.md)
-confirms it on the user's ruling, "HTTP is intended", for every vwf user. One
-daemon solves both costs stdio accepted. **`hallways.json` is a lockless
-read-modify-write**: on Qdrant the store itself is safe for concurrent processes
-(`palace.py`'s `_MULTI_PROCESS_WRITER_BACKENDS` opts it out of the single-writer
-lease), but `_save_hallways` replaces the whole file atomically and takes no
-lock, so N per-session servers race and last-writer-wins silently drops entity
-edges, while one daemon serialises those writes in-process. It is local JSON
-beside the palace, which Qdrant never sees; tunnels are the same shape. And one
-daemon holds **one embedder**, ~140 MB, where stdio held one per session. The
-daemon-era lessons — the supervisor's captured environment, the literal-`~`
-directory — live in the 2026-09-23 decision doc, not here.
+confirmed that on the user's ruling, "HTTP is intended". Its reasons were the
+costs per-session servers carried: **`hallways.json` was a lockless
+read-modify-write** — on Qdrant the store itself is safe for concurrent
+processes (`palace.py`'s `_MULTI_PROCESS_WRITER_BACKENDS` opts it out of the
+single-writer lease), but `_save_hallways` replaces the whole file atomically
+and takes no lock, so N per-session servers raced and last-writer-wins dropped
+entity edges, which one daemon serialised in-process — and one daemon held **one
+embedder**, ~140 MB, where stdio held one per session. Commit `31a8fc34`
+(2026-10-03, vwf 21.0.0) moved the manifest back to stdio, launched through
+`mise x` so each session inherits the repo's mise environment and its own palace
+path, and the user confirmed it deliberate on 2026-10-07. The hallway race is
+now handled per server by the environment, which carries
+`MEMPALACE_MCP_ALLOW_PEER_WRITER = 1`. The daemon-era lessons — the supervisor's
+captured environment, the literal-`~` directory — live in the 2026-09-23
+decision doc, not here.
 
 **If the upstream mempalace plugin is separately installed, its own stdio server
-must be turned off** — because a second writer beside vwf's daemon reopens that
-same hallway race, and because its docs say so (*"don't point two server
-processes at the same backend collection"*). Nothing here installs it any more,
-so this only bites a user who adds it themselves. Toggle it off in `/mcp` —
-Claude Code records that in `~/.claude.json` under `disabledMcpServers`, which
-covers plugin servers. The toggle is recorded **per project**. Confirm with
-`/mcp` that exactly one mempalace server is connected.
+must be turned off** — because a second server beside vwf's on the same palace
+is one this repo's environment does not configure, and because its docs say so
+(*"don't point two server processes at the same backend collection"*). Nothing
+here installs it any more, so this only bites a user who adds it themselves.
+Toggle it off in `/mcp` — Claude Code records that in `~/.claude.json` under
+`disabledMcpServers`, which covers plugin servers. The toggle is recorded **per
+project**. Confirm with `/mcp` that exactly one mempalace server is connected.
 
 **Tool names are scoped to whichever plugin declares the server**, so the
 execute subagents' `tools:` lists carry **both** —

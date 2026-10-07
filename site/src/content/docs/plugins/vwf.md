@@ -94,27 +94,30 @@ the `project` scope as a **degradation** with the remedy, every run, and skips
 the forge-state predicate with a note; init prints the by-hand list and carries
 on.
 
-**The memory server is a daemon you run.** `vwf` declares mempalace over
-**HTTP** at `http://127.0.0.1:8765/mcp` and never starts it — run
-`mempalace-mcp --transport http --host 127.0.0.1 --port 8765` under any
-supervisor (pitchfork and launchd are two examples), and keep it running before
-a Claude Code session starts. What you install is the `mempalace` tool through
-mise and, for the Qdrant backend, Qdrant; what you configure is the supervisor's
-environment, not `~/.claude/settings.json` — `MEMPALACE_BACKEND` and
-`MEMPALACE_QDRANT_URL` together, `MEMPALACE_PALACE_PATH` as
-`~/.local/share/mempalace`, and `MEMPALACE_MAX_BACKUPS`. A supervisor may pass
-those values literally, so write the path with `~` or absolute, never with
-`$HOME`. `/vwf:doctor` probes the daemon and reports it unreachable as a
-**degradation** with that command as the remedy. If you separately install the
-upstream `mempalace` plugin, toggle **its** stdio server off in `/mcp` — two
-servers writing one palace lose each other's local graph state. See
-[mempalace](./mempalace.md#running-the-server-http-daemon).
+**The memory server is started by Claude Code.** `vwf` declares mempalace over
+**stdio** as `mise x -- mempalace-mcp`, so Claude Code starts it once per
+session, in the project directory, under the repo's mise environment — there is
+no daemon to run. What you install is the `mempalace` tool through mise and, for
+the Qdrant backend, Qdrant, which you run; what configures the server is the
+`[env]` of `.config/mise/conf.d/ai/mise.dev.toml`, which `/stackgen:tool-config`
+renders in every repo, not `~/.claude/settings.json` — the shared `MEMPALACE_*`
+values (`MEMPALACE_BACKEND` and `MEMPALACE_QDRANT_URL` together among them) and
+the repo's own `MEMPALACE_PALACE_PATH`. mise loads that file only under
+`MISE_ENV=dev`, so export `MISE_ENV=dev` in the shell that starts Claude Code.
+**Every repo needs its own `MEMPALACE_PALACE_PATH`** —
+`~/.local/share/mempalace/<repo>`, one palace per repo; without it the server
+falls back to a palace shared by every repo on the machine. `/vwf:doctor` probes
+with `mise x -- mempalace status` from the repo root and reports a failure, or a
+missing palace path, as a **degradation** with the fix as the remedy. If you
+separately install the upstream `mempalace` plugin, toggle **its** server off in
+`/mcp` — it would be a second server on the same palace. See
+[mempalace](./mempalace.md#running-the-server).
 
-Nothing beyond that daemon and its supervisor's environment needs installing for
-memory. The two mempalace skills are **vendored into `vwf`** (`/vwf:mempalace`,
-`/vwf:mempalace-recall`) and its auto-save hooks are reimplemented here, so
-memory arrives with the plugin rather than depending on anything being reachable
-at install time.
+Nothing beyond the `mempalace` tool, Qdrant and the repo's mise environment
+needs installing for memory. The two mempalace skills are **vendored into
+`vwf`** (`/vwf:mempalace`, `/vwf:mempalace-recall`) and its auto-save hooks are
+reimplemented here, so memory arrives with the plugin rather than depending on
+anything being reachable at install time.
 
 `vwf` also depends on one plugin — `stackgen` — resolved from the same
 `virajp-plugins` marketplace. Claude Code **auto-installs and auto-enables** it
@@ -217,12 +220,12 @@ adopting it.
   a by-hand list. Dependency auto-install/enable needs Claude Code ≥ 2.1.143.
   See [Prerequisites](#prerequisites).
 - **Memory is written twice, so mempalace is optional.** Every memory write goes
-  to both `mempalace` (an **HTTP daemon you run** at `127.0.0.1:8765`, its
-  environment set on its supervisor) and a markdown tree under `docs/memory/`.
-  Without the server nothing is lost, but recall degrades from semantic search
-  to grep, and says so. `decisions`, `planning`, `gaps` and `problems` are
-  committed; `handoff`, `doctor` and `runs` are gitignored, being one
-  developer's state rather than the team's.
+  to both `mempalace` (a **stdio server Claude Code starts** per session, its
+  environment the repo's mise env, its palace the repo's own) and a markdown
+  tree under `docs/memory/`. Without the server nothing is lost, but recall
+  degrades from semantic search to grep, and says so. `decisions`, `planning`,
+  `gaps` and `problems` are committed; `handoff`, `doctor` and `runs` are
+  gitignored, being one developer's state rather than the team's.
 - **Leans on review engines.** `execute` runs the `/code-review` and
   `/security-review` engines itself at each review row the plan places, over the
   branch delta since the previous one, and hands their findings to the code- and
@@ -3766,14 +3769,15 @@ rules:
 
 `vwf` declares two, and they are the only MCP servers the workflow needs.
 
-### mempalace — memory, over HTTP
+### mempalace — memory, over stdio
 
-Declared as `type: http` at `http://127.0.0.1:8765/mcp` — one daemon, shared by
-every Claude Code session, that you run under a supervisor with its environment
-set there, and that `/vwf:doctor` reports unreachable as a degradation. The two
-skills that drive it are vendored into `vwf` under MIT, which is what lets
-memory ship on every target rather than only where a marketplace reaches. Setup,
-why one daemon, the second-server trap and the provenance record are in
+Declared as `type: stdio`, running `mise x -- mempalace-mcp` — started by Claude
+Code once per session in the project directory, its environment the repo's mise
+env (`MISE_ENV=dev`, one `MEMPALACE_PALACE_PATH` per repo), and reported by
+`/vwf:doctor` as a degradation when it cannot start. The two skills that drive
+it are vendored into `vwf` under MIT, which is what lets memory ship on every
+target rather than only where a marketplace reaches. Setup, the per-repo palace,
+the second-server trap and the provenance record are in
 [Prerequisites](#prerequisites) above and [mempalace](./mempalace.md) in full.
 
 ### Context7 — current library docs

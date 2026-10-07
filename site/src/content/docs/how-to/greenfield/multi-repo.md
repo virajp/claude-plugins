@@ -284,9 +284,10 @@ Two things make the answer less free than it looks. An `iac` project settles it
 on its own, as Stallfront's did. And what you pick decides where the blueprint
 lives and how a plan maps a slice to code, so changing it later is real work
 rather than a config edit. Against that, multi-repo costs coordination on every
-run that touches code: member resolution, clone offers, and a plan index that
-exists only because no single checkout can see everything. Take it when the
-product's shape demands it, not to keep future options open.
+run that touches code: member resolution, clone offers when planning, a stop
+when `/vwf:execute` finds a member missing, and a plan index that exists only
+because no single checkout can see everything. Take it when the product's shape
+demands it, not to keep future options open.
 
 The spine covers the same decision from the other side:
 [the topology answer](./single-repo.md#the-topology-answer).
