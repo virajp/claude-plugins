@@ -13,7 +13,8 @@ description: Execute an approved plan folder — a cycle plan from /vwf:plan or
   keeps a run log the final report renders, lands per the plan's recorded
   consent — archiving the folder when no gap is open and archive raises no
   warning — and runs every after-landing step the plan recorded, each `run`.
-  It asks the user nothing at run time — every answer is in the folder.
+  It asks the user nothing at run time — every answer is in the folder, save
+  the run-level questions /vwf:execute all asks once, before its first plan.
   Invoke as /vwf:execute <plan-folder> or /vwf:execute next — the latter asks
   plan-management for the runnable plan of highest priority in
   docs/plans/index.md, of either kind — or /vwf:execute all, which runs every
@@ -55,7 +56,9 @@ wave.
 the planner and recorded in the folder; where the folder is silent and the
 rules below do not decide, the run reports what is missing and stops — it
 never offers a choice, waits for a yes, or asks how to proceed. A fix goes
-into the folder, and the person re-runs `/vwf:execute <folder>`.
+into the folder, and the person re-runs `/vwf:execute <folder>`. The one
+exception is `all`'s run-level questions — asked once by the loop, before its
+first plan, about the run of several plans, and never by a run.
 
 Run it in a fresh context: a fresh session, or a runner that `all`
 dispatches. It cannot check that, so the plan's launch line says it and this
@@ -87,8 +90,10 @@ branches load on demand, each named where it applies — never upfront.
 
 **`all`.** When `$ARGUMENTS` is `all`, this session is the loop, not an
 orchestrator: follow [`all` and runner mode](references/all.md) and nothing
-below. It picks with `plan-management next`, dispatches one `execute-runner`
-per pick — handed the folder and this file's absolute path — waits for its
+below. It asks its run-level questions once, before the first plan — the one
+place `all` asks anything — then picks with `plan-management next`,
+dispatches one `execute-runner` per pick — handed the folder, this file's
+absolute path and the run's overrides for that folder — waits for its
 five-line return, and repeats until nothing is runnable, a runner returns
 `STOPPED`, a plan's return reads `ENDS RUN: yes`, or a cap directive has
 reached the session; then it prints one table and the stop reason. A runner
@@ -524,6 +529,19 @@ Skip every memory step silently if mempalace is unavailable.
    in a wave own disjoint paths. Record the worktree path in the folder's
    status line.
 
+   **Under an `all` override** — the dispatch prompt's overrides block names a
+   `shared worktree: <branch>`, per
+   [`all` and runner mode](references/all.md) — cut no worktree of the
+   folder's name. When a worktree on that branch exists, reuse it: stop when
+   it is not clean, then bring it up to date with a plain
+   `git merge <integration branch>` run inside it — where the plan before it
+   landed — and treat a conflict as the hard halt *Land* names: abort, keep
+   the worktree, mark the folder `BLOCKED` with the conflicting files. When
+   none exists, invoke `/vwf:git-workflow` with the same preferences, the
+   branch named as given instead of after the folder. Record that path in
+   the status line. Once the preflight row below is written, write the
+   `override:` Run log row the reference describes.
+
    **In a `multi-repo` product, which repo the worktree is of follows the
    linkage** — `/vwf:git-workflow` resolves it, and the two
    cases differ in a way worth knowing:
@@ -784,6 +802,8 @@ With every unit `green`, every Wave gate line and orchestrator gate passed, and
 the gap list holding no blocking gap, prepare the landing commit:
 
 1. Read the Consent row *Merge to the integration branch and push on green*.
+   Under an `all` override reading `land: yes`, read `yes` in its place —
+   the row itself is never edited.
 2. **The Status block.** In the worktree, invoke
    `plan-management status <folder> COMPLETE "COMPLETE <date> — <commits>"`
    on `yes`, and
@@ -816,7 +836,10 @@ Then act on that consent row:
 
 - **yes** → hand off to `/vwf:git-workflow` step 4, *merge, push & clean up*,
   **with the declared preference that consent was recorded in the plan — do
-  not ask again**. A merge conflict is a hard halt: abort, keep the worktree,
+  not ask again**. Under an `all` shared-worktree override the option is
+  *merge, push & keep worktree*: the next plan reuses it, and the loop's exit
+  removes it unless the run ends on a `STOPPED` plan. A merge conflict is a
+  hard halt: abort, keep the worktree,
   invoke `plan-management status <folder> BLOCKED "<the conflicting files>"`
   there, report the files. When step 4 returns from the merge and push,
   invoke `plan-management complete <folder>` in the main checkout — it sets
@@ -875,6 +898,12 @@ release step recorded `run` runs on the same terms. An empty table, or `none`,
 skips this section and is said in one clause. A table with no *Mode* column or
 a mode other than `run` never reaches here: preflight refused it, on a fresh
 run and a resume alike.
+
+**Under an `all` override**, a step whose command the block names under
+`skip as deduped` or `hold release` does not run here: it is reported as
+deferred to the loop's exit — *skipped (deduped)* or *held (release)* —
+recorded in the Run log, and the remaining steps run in table order without
+it. It is neither a failure nor a step not run.
 
 When the branch did **not** merge — the landing was not consented, or was
 consented and the merge hit a conflict (the hard halt of the `yes` branch

@@ -11,9 +11,9 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-10-07 by the user
+RUNNING since 2026-10-07 in .worktrees/2026-10-07-execute-all-overrides
 
 ## Consent
 
@@ -74,8 +74,8 @@ none
 
 | Id | Wave | Unit file                      | Kind | Owns                                                                                                                                                                       | Depends on | Status  | Commit |
 | -- | ---- | ------------------------------ | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-execute.md](01-execute.md) | edit | `plugins/vwf/skills/execute/**`                                                                                                                                            | —          | pending |        |
-| U2 | 1    | [02-runner.md](02-runner.md)   | edit | `plugins/vwf/agents/execute-runner.md`                                                                                                                                     | —          | pending |        |
+| U1 | 1    | [01-execute.md](01-execute.md) | edit | `plugins/vwf/skills/execute/**`                                                                                                                                            | —          | green   |        |
+| U2 | 1    | [02-runner.md](02-runner.md)   | edit | `plugins/vwf/agents/execute-runner.md`                                                                                                                                     | —          | green   |        |
 | U3 | 2    | [03-docs.md](03-docs.md)       | edit | `CLAUDE.md`, `readme.md`, `.claude/skills/vwf-plugin/**`, `.claude/docs/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-10-07-execute-all-overrides.md` (new) | U1, U2     | pending |        |
 | U4 | 3    | [04-gates.md](04-gates.md)     | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (both expected unchanged)                                                                      | U3         | pending |        |
 
@@ -148,8 +148,15 @@ none
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Commit |
+| ---- | --------- | ----- | ----- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight | —     | 1     | green       | doctor: no .config/vwf.yaml (not onboarded), no blocking finding; mempalace daemon unreachable — memory steps skipped; format check skipped — no covers:; conventions skipped — no code unit; 7 wave-gate lines green                                                                                                                                                                                                                                                | —      |
+| 1    | U2        | opus  | 1     | green       | DECIDED: Overrides block entries named shared worktree / skip / hold / land: yes; absent block → Consent alone. GAP: wrote before U1's SKILL.md passage existed — align names at wave review                                                                                                                                                                                                                                                                         | —      |
+| 1    | U1        | opus  | 1     | green       | DECIDED: block lines shared worktree: <branch> / skip as deduped: / hold release: / land: yes / Overrides: none; override row wave 0 after preflight. GAP: keeps shared worktree on STOPPED (resume needs it) against O2 exit removal; release step = anything that publishes; held releases run only with no stop; plan-management unclaim finds worktree by folder basename — misses all-… worktree (outside Owns)                                                 | —      |
+| 1    | R1        | opus  | 1     | findings(8) | 4 U2 drift vs all.md block shape (worktree path, skip/hold names, exit removal, DETAIL shape); U1 SKILL.md:536 + all.md:132 cite a git-workflow refresh/removal op it never defines; U1 all.md:119 'never edits the tree' falsified; rule 5 unowned: plan-management/SKILL.md:157 unclaim misses all-… worktree, assets/plan-interview.md:167 'asks nothing' unqualified → handed to U3. RULINGS: U1 keeps the worktree on STOPPED against O2; O5 asked one per turn | —      |
+| 1    | U2        | opus  | 2     | green       | aligned Overrides block to all.md literal lines and DETAIL shape; removal left to all.md                                                                                                                                                                                                                                                                                                                                                                             | —      |
+| 1    | U1        | opus  | 2     | green       | refresh = plain git merge of the integration branch in the clean shared worktree (conflict = hard halt); exit removal = plain git worktree remove, asks nothing; all.md:119 reworded; STOPPED exception made explicit; O5 lists all no-merge plans first                                                                                                                                                                                                             | —      |
+| 1    | R1        | opus  | 2     | findings(1) | 8→1 converging; round-1 items resolved; contested (cap 2): SKILL.md:543 [U1] the override: Run log row instruction sits inside the shared-worktree paragraph only (all.md:72 and runner step 5 cover it). CONTRACT clean, RULINGS clean, orchestrator gate clean                                                                                                                                                                                                     | —      |
 
 ## Launch
 
