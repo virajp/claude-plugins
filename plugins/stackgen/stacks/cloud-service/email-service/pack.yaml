@@ -2,7 +2,7 @@ name: Cloudflare Email Service
 summary: Transactional email a Worker sends through a binding, and inbound
   mail routed back into a Worker — the product's own email provider on its
   own domain, with the bounce, SPF and DKIM records held at the zone.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: messaging
 capability: email

@@ -2,7 +2,7 @@ name: fnox
 summary: The development-only secrets manager — values live in the OS
   keychain or behind a reference into your own cloud store, and nothing
   secret is ever in the repo.
-version: 1.2.1
+version: 2.0.0
 type: capability-provider
 category: secrets-manager
 # `capability` is deliberately unset: `secrets-manager` has no vwf capability
